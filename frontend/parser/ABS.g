@@ -173,7 +173,8 @@ branch 	:
 	guard=(pattern | ELSE) ARROW expression -> ^(ARROW $guard expression) 
 	;
 	
-pattern :	localVariableReference | 
+pattern :	
+        localVariableReference | 
 		UNDERSCORE | 
 		functionMethodName LPAREN (pattern (COMMA pattern)*)? RPAREN -> ^(FUNCTIONEVAL functionMethodName pattern*)
 	// TODO: -> ... (pattern*)?  OR...?	
