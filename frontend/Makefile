@@ -23,6 +23,8 @@ parser/%.class : parser/%.java
 
 parser/ABSLexer.java parser/ABSParser.java: parser/ABS.g
 	$(ANTLR) -o . $<
+	# TODO: solve this the right way
+	mv ABS.tokens parser
 
 clean: clean_java clean_antlr
 
