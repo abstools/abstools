@@ -1,0 +1,14 @@
+interface foo  extends slkj, sd, d, a3 { }
+
+interface foo { }
+
+interface foo extends foo { }
+
+
+// interface foo extends fooz { }
+
+// class     foo implements foobr { }
+
+
+34
+
