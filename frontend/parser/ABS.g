@@ -34,18 +34,43 @@ package parser;
 
 @members {
 public static void main(String[] args) throws Exception {
+
+    boolean treeflag = true;
 	ABSLexer lex = new ABSLexer(new ANTLRFileStream(args[0]));
 	CommonTokenStream tokens = new CommonTokenStream(lex);
-
 	ABSParser parser = new ABSParser(tokens);
 
 	try {
-    	parser.program();
-	} catch (RecognitionException e)  {
+        //    	parser.program();
+   	    ABSParser.program_return r = parser.program(); 
+         // print tree if building trees
+        if ( treeflag && r!=null ) {
+            //System.out.println(r); 
+            System.out.println(((CommonTree)r.tree).toStringTree());
+            printTree((CommonTree)r.tree, 2 );
+        } else 
+            System.out.println("Parse OK");
+    } catch (RecognitionException e)  {
 		e.printStackTrace();
 	}
 }
+
+public static void printTree(CommonTree t, int indent) {
+	if ( t != null ) {
+		StringBuffer sb = new StringBuffer(indent);
+		for ( int i = 0; i < indent; i++ )
+			sb = sb.append("   ");
+		for ( int i = 0; i < t.getChildCount(); i++ ) {
+			System.out.println(sb.toString() + t.getChild(i).toString());
+			printTree((CommonTree)t.getChild(i), indent+1);
+		}
+	}
 }
+
+
+}
+
+
 
 program
 	:	
