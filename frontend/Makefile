@@ -31,10 +31,12 @@ clean: clean_java clean_antlr
 
 clean_java:
 	@echo "Removing class files"
+	@rm -rf $(GENERATED_SRC)
 	@rm -rf $(COMPILED)
 
 clean_antlr:
 	@echo "Removing automatically generated Antlr files"
+	@rm -rf $(GENERATED_SRC)
 	@rm -rf $(COMPILED)
 
 sense:
