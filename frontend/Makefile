@@ -7,7 +7,7 @@ GENERATED_SRC = compiled/
 CP	 = .
 JAVAC	 = javac -sourcepath $(GENERATED_SRC) -cp $(LIB):$(COMPILED) -d $(COMPILED)
 ANTLR	 = java -cp $(LIB) org.antlr.Tool
-PARSER	 = java -cp $(LIB):$(COMPILED) parser.ABSParser
+PARSER	 = java -cp $(LIB):$(CP) parser.ABSParser
 
 
 # TESTS	= $(wildcard tests/*.abs)
