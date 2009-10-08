@@ -24,12 +24,11 @@ tokens {
 }
 
 @parser::header { 
-package parser;
-
+package abs.frontend.parser;
 }
 
 @lexer::header { 
-package parser;
+package abs.frontend.parser;
 }
 
 @members {
