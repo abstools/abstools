@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<project name="ABS Frontend" default="compile" basedir=".">
+
+  <property environment = "env" /> <!-- include environment variables -->
+
+  <property name = "src.dir"   value = "${basedir}/src" />
+  <property name = "build.dir" value = "${basedir}/bin" />
+  <property name = "dist.dir"  value = "${basedir}/dist" />
+  <property name = "gen.dir"   value = "${basedir}/gen" />
+  <property name = "ext.dir"   value = "${basedir}/lib"   />
+  
+  <target name = "prepare">
+    <mkdir dir = "${gen.dir}"/>
+    <mkdir dir = "${gen.dir}/abs/frontend/parser/" />
+    <mkdir dir = "${build.dir}"/>
+    <mkdir dir = "${dist.dir}"/>
+  </target>
+
+  <target name = "compile" depends = "prepare, absParser"
+	  description = "Compiles all java files into the source directory.">
+    <!--  	<copy todir = "${build.dir}">
+	 <fileset dir = "${basedir}/resources/"/>
+	 </copy> -->
+    <javac srcdir =  "${src.dir}:${gen.dir}"
+	   destdir = "${build.dir}"
+	   deprecation = "on"
+	   debug = "on"
+	   depend = "${build.depend}"
+	   optimize = "off">
+      <classpath>
+	<pathelement location = "${ext.dir}/antlr-3.2.jar" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name = "clean">
+    <delete failonerror = "true" includeemptydirs = "true"> 
+      <fileset dir = "${build.dir}"/>
+      <fileset dir = "${gen.dir}"/>
+      <fileset dir = "${dist.dir}"/>
+    </delete>
+  </target>
+
+ <target name="test" depends="compile">
+    <java classname="abs.frontend.parser.ABSParser">
+      <arg value="tests/trivial.abs"/>   
+      <classpath>
+           <pathelement location="${ext.dir}/antlr-3.2.jar"/>
+           <pathelement path="${build.dir}"/>
+         </classpath>
+       </java>
+  </target>  
+
+  <!--  <target name = "jar" depends = "compile">
+       <jar destfile = "${dist.dir}/frontend.jar"
+       basedir = "${build.dir}"
+       manifest = "${basedir}/resources/MANIFEST.MF"
+       />
+       </target> -->
+  
+  <target name="absParser" depends="prepare">
+    <antlr:antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr"
+		  target="${src.dir}/abs/frontend/parser/ABS.g"
+		  outputdirectory="${gen.dir}/abs/frontend/parser"
+		  libdirectory="${gen.dir}/abs/frontend/parser"		  
+		  multithreaded="true">
+      <classpath>
+	<pathelement location = "${ext.dir}/antlr-3.2.jar" />
+      </classpath>
+    </antlr:antlr3> 
+  </target>
+
+</project>
