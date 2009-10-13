@@ -1,14 +1,29 @@
 //$Id$
 
-interface foo  extends slkj, sd, d, a3 { }
+//Case 1 
 
-interface bar { }
+//program 
 
-//interface foo extends foo { }
+//ifdecl
+interface foo {}
+
+//classdecl
+class bar implements foo { 
+    //fieldDeclList
+    ; 
+    //method * 
+}
+
+//Main
+{
+//varDeclList
+; 
+//stmtRet
+    skip;
+    return null 
+}
 
 
-// interface foo extends fooz { }
 
 
-34
 

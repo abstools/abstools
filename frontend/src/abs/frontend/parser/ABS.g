@@ -1,3 +1,5 @@
+//$Id$
+
 grammar ABS;
 
 options {
@@ -22,6 +24,7 @@ tokens {
 	
 	FUNCTIONEVAL;
 }
+
 
 @parser::header { 
 package abs.frontend.parser;
@@ -69,281 +72,248 @@ public static void printTree(CommonTree t, int indent) {
 
 }
 
+/*
+The grammar as define in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
+¯
+P ::= ¯D¯ ¯L¯ {¯(T x)¯; sr}                     program
+D ::= interface I {¯Ms¯}                        ifDecl
+sr ::= s; return e                              stmtReturn
+L ::= class C implements ¯I¯ {¯T f¯; ¯M¯}       clDecl
+v ::= f | x                                     var
+M ::= Ms{¯T x¯; sr}                             method
+b ::= true | false                              bool
+e ::= v | e.get | null | b                      expr
+T ::= I | bool | fut(T)                         type
+s ::= v = e | await g | skip | s; s |           stmt
+            if e then s else s | release| 
+            v = new C( ) | v = e!m(¯e¯) | 
+            v = o.m(¯e¯) | v = m(¯e¯) 
+
+Ms ::= T m (¯T x¯)                              methSign
+
+g ::= v? | g && g                               guard
+
+x                                               localVar 
+f                                               field
+m                                               methName 
+
+Derived entities: 
+
+xD ::= T x                                       varDecl
+fD ::= T f                                       fieldDecl   
+
+
+ 
+
+*** 
+Does ¯X¯ indicate X,X,X or X X X 
+
+I make ¯X¯ a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
+However ¯D¯ and ¯L¯ does not need commas. Since they end with rbrace. 
+  ¯Ms¯ does not need comma since it ends with rparen 
+
+* I assume that XLists can always be empty (cf.igarashi.pierce.wadler_featherweight.pdf) : 
+
+"We write ¯f¯ as shorthand for a possibly empty sequence f1, ...  ,fn (and
+similarly for ¯C¯, ¯x¯, ¯e¯, etc.) and write ¯M¯ as shorthand for M1 ... Mn (with no commas)."
+
+* thus XList is: (X (COMMA! X)*)? 
+* or  just X* 
+
+Deviations : 
+- I use && for ^
+- I use "if then else _fi_" 
+*/
 
 
 program
 	:	
-	declaration* expression 
-		-> ^(PROGRAM declaration* expression)
-	;
+	ifDecl* clDecl* LBRACE varDeclList SEMI stmtRet RBRACE 
+//		-> ^(PROGRAM ifDeclList clDeclList varDeclList stmtRet)
+    ;
 
-// ================
-//   Declarations
-// ================
-	
-declaration 
+ifDecl
 	:	
-	interfaceDeclaration        | 
-	classDeclaration            | 
-	abstractDataTypeDeclaration | 
-	functionDeclaration		
-	;
-	
-interfaceDeclaration
-	:	
-	INTERFACE typeName (EXTENDS typeNameList)? LBRACE RBRACE
-  	                        -> ^(INTERFACE typeName (EXTENDS typeNameList)? ) 
-	                       
-	;
-	
-foo : typeName  (COMMA! typeName)* ;
-
-// FOOEXT : 'suppe';
-
-classDeclaration
-	:
-	CLASS typeName (LPAREN parameterList RPAREN)? (IMPLEMENTS typeNameList)? 	
-	LBRACE classBody RBRACE 
-        -> ^(CLASS typeName ^(IMPLEMENTS typeNameList) ^(EXTFIELDS parameterList)? classBody)
-	;
-    // TODO: -> .. ^(IMPLEMENTS typeNameList)?
-
-typeNameList
-	:
-	typeName (COMMA! typeName)* 	                     
+	INTERFACE ifName LBRACE methSign* RBRACE
+//  	                        -> ^(INTERFACE ifName (mettypeNameList)? ) 
 	;
 
-classBody
-	:
-	((variableOrFieldDeclaration ASSIGN expression SEMI)* methodDeclaration*)
-		-> ^(FIELDSPECIFICATION variableOrFieldDeclaration expression)* methodDeclaration*
-	;
-		
-methodDeclaration
-	:
-	functionMethodName LPAREN parameterList RPAREN 
-	LBRACE
-	  // methodBody to come
-	RBRACE -> ^(METHODDECLARATION functionMethodName parameterList)
-	;		
-		
-functionDeclaration
-	:	
-	DEF functionMethodName LPAREN parameterList RPAREN
-		-> ^(FUNCTIONDECLARATION functionMethodName parameterList)
-	;
-	
-abstractDataTypeDeclaration
-	:
-	DATA typeName ASSIGN constructor (OR constructor)*
-	-> ^(DATA typeName constructor+)
-	;
-	
-constructor
-	:
-	functionMethodName LPAREN typeReference RPAREN
-		->^(CONSTRUCTORDECLARATION functionMethodName typeReference)
-	;
 
-variableOrFieldDeclaration
-	:
-	(locationName COLON typeReference) -> ^(VARIABLEDECLARATION locationName typeReference)
-	;	
+clDecl
+    :
+    CLASS className (IMPLEMENTS ifNameList)? LBRACE fieldDeclList  SEMI method* RBRACE 
+    ;
 
-parameterList 
-	:	
-	(variableOrFieldDeclaration (COMMA! variableOrFieldDeclaration)*)?
-	;
 
-// ================
-// EXPRESSIONS
-// ================
 
-expression
-	:
-		selectorExpression (ASSIGN^ expression)?
-	;		
+varDeclList : (varDecl (COMMA! varDecl)*)? ;
 
-selectorExpression
-	:
-	(primaryExpression -> primaryExpression)
-	  (selector -> ^(MEMBERREFERENCE primaryExpression selector)) ?
-	;
-	
-selector 
-	:
-	 DOT! (suspendExpressionSuffix | methodReferenceSuffix | locationName)
-	; 
-		
-primaryExpression
-	:	
-	THIS                   | 
-	localVariableReference | 	
-	functionOrConstructorEvaluation |
-	creationExpression     |
-	caseExpression         |
-	YIELD |
-	INTEGER
-	;
-	
-caseExpression
-	:
-	CASE expression OF
-	  branch (OR branch)*
-	END -> ^(CASE expression branch+)
-	;	
 
-branch 	:	
-	guard=(pattern | ELSE) ARROW expression -> ^(ARROW $guard expression) 
-	;
-	
-pattern :	
-        localVariableReference | 
-		UNDERSCORE | 
-		functionMethodName LPAREN (pattern (COMMA pattern)*)? RPAREN -> ^(FUNCTIONEVAL functionMethodName pattern*)
-	// TODO: -> ... (pattern*)?  OR...?	
-	;
-	
-// side effect free expressions and initialising expression should be checked in a second pass
-// and not encode in the grammar, otherwise consistency problems with the expression rule
-	
-localVariableReference 
-	:
-	locationName -> ^(VARIABLEREFERENCE locationName)
-	;
-		
-methodReferenceSuffix
-	:
-	functionMethodName LPAREN argumentList RPAREN 
-	;
+stmtRet : stmList SEMI RETURN expr ;  
 
-suspendExpressionSuffix
-	:	
-	    AWAIT | GET 
-	;
 
-functionOrConstructorEvaluation
-	:
-	functionMethodName LPAREN argumentList RPAREN 
-	 -> ^(FUNCTIONEVAL functionMethodName argumentList)
-	;
+methSign 
+    : 
+    type methName LPAREN varDeclList RPAREN      
+    ;
 
-argumentList
-	:
-	(expression (COMMA! expression)*)?
-	;	
 
-creationExpression
-	:
-	NEW^ typeName LPAREN! argumentList RPAREN!
-	;
+ifNameList : (ifName (COMMA! ifName)*)? ;
 
-typeReference
-	:
-	typeName LT (typeReference (COMMA typeReference)*)? GT | 
-	typeName |
-	BOOL | UNIT | MAYBE 
-	// | tv ??
-	;
-	
+
+fieldDeclList : (fieldDecl (COMMA! fieldDecl)*)? ;
+
+
+method : methSign LBRACE varDeclList SEMI stmtRet RBRACE ;
+
+varDecl : type localVar ; 
+
+fieldDecl: type field ; 
+
+
+/*
+stmt : 
+        assignStmt | 
+        AWAIT guard |
+        SKIP |
+        stmt SEMI stmt |
+        IF expr THEN stmt ELSE stmt |
+        RELEASE 
+    ;
+*/
+
+stmt :  assignStmt |
+        AWAIT guard |
+        SKIP |
+        IF expr THEN stmList ELSE stmList FI |
+        RELEASE
+    ; 
+
+stmList : (stmt (SEMI! stmt)*) ;
+
+/* This is left recursive: 
+expr : var | expr DOT GET | NULL | boolEx 
+
+rewrites to the following: 
+
+*/
+        
+expr :  
+        var expTail |
+        boolEx expTail |
+        NULL expTail
+    ; 
+
+expTail :  
+        DOT GET |
+    ;
+
+
+type : 
+        ifName |
+        BOOL |
+        FUT LPAREN type RPAREN
+    ;
+
+assignStmt : 
+        var ASSIGN expr |
+        var ASSIGN NEW className LPAREN RPAREN |
+        var ASSIGN expr BANG methName LPAREN expr* RPAREN | 
+        var ASSIGN objName DOT methName LPAREN expr* RPAREN | 
+        var ASSIGN methName LPAREN expr* RPAREN 
+    ;
+
+
+guard : var QMARK gTail ;
+
+gTail : AND guard | ;
+
+/* Left recursive 
+
+guard : var QMARK | guard AND guard ; 
+
+*/     
+
+   
+//var : field | localVar ; 
+
+var : IDENT ; 
+
+
+boolEx : TRUE | FALSE ; 
+
+
 // ================
 //     Names
 // ================
 	 
-// for the moment these rules could be inlined, but maybe we want 
-// to allow different character sequence for certain names
-typeName
-	:	 IDENT
-	;
+ifName      :   IDENT ; 
+className   :   IDENT ; 
 
-functionMethodName 
-	:	 IDENT
-	;
+methName    :   IDENT ; 
 
-locationName 
-	:	 IDENT
-	;
+objName     :   IDENT ; 
+
+localVar    :   IDENT ; 
+field       :   IDENT ; 
 
 
 // ================
 // Core ABS Lexer
 // ================
 
-INTERFACE
-	:	'interface';
-CLASS	:	'class';
-DATA	:	'data';
-EXTENDS	:	'extends';
-IMPLEMENTS 
-	:	'implements';
-DEF	:	'DEF';
-
-BOOL	: 	'Bool';
-UNIT	:	'Unit';
-MAYBE	:	'Maybe';
-
-JUST	:	'Just';
-NOTHING	:	'Nothing';
-
-TRUE	:	'True';
-FALSE	:	'False';
-
-AWAIT	:	'await';
-CASE	: 	'case';
-ELSE	:	'else';
-END	:	'end';
-GET	:	'get';
-NEW	:	'new';
-OF	:	'of';
-YIELD  	:	'yield';
+INTERFACE	:	'interface';
+CLASS	    :	'class';
+IMPLEMENTS	:	'implements';
+RETURN      :   'return';
 
 
-DOT	:	'.';
-COLON	:	':';
-COMMA	:	',';
-SEMI	:	';';
-ARROW 	:	'->';
+LPAREN	    :	'(';
+RPAREN      :	')';
 
-THIS	:	'this';
-ASSIGN 	:	':=';
-EQUALS 	:	'=';
+LBRACE      :	'{';
+RBRACE 	    :	'}';
 
-LPAREN	:	'(';
-RPAREN  :	')';
 
-LBRACE  :	'{';
-RBRACE 	:	'}';
+BOOL	    : 	'bool';
+FUT         :   'fut';
 
-LBRACKET:	'[';
-RBRACKET:	']';
+TRUE	    :	'true';
+FALSE	    :	'false';
 
-PLUS	:	'+';
-MINUS	:	'-';
-TIMES	:	'*';
-DIV	:	'/';
-MOD	:	'%';
-EXP	:	'^';
+SKIP        :   'skip';
+GET	        :	'get';
+NULL        :	'null';
 
-LT	:	'<';
-LEQ	:	'<=';
-GT	:	'>';
-GEQ	:	'>=';
+AWAIT	    :	'await';
 
-AND	:	'&';
-OR	:	'|';
-NOT	:	'!';
-IMPLIES	:	'=>';
+IF	        :	'if';
+THEN	    :	'then';
+ELSE	    :	'else';
+FI	        :	'fi';
+RELEASE     :   'release'; 
+NEW         :   'new'; 
 
-UNDERSCORE 
-	:	'_';
+ASSIGN 	    :	'=' ;
+ASSIGNSTMT 	    :	'dummy' ;
+
+SEMI	    :	';';
+DOT	        :	'.' ;
+COMMA	    :	',' ;
+QMARK       :   '?' ; 
+BANG        :   '!' ; 
+
+AND	        :	'&&';
+
 
 fragment DIGIT 
 	:
 		'0'..'9'	
 	;
 
-INTEGER :
-	DIGIT+	
+INTEGER 
+    :
+        DIGIT+	
 	;
 
 fragment LETTER 
@@ -380,3 +350,5 @@ LINE_COMMENT
     :   '//' ~('\n'|'\r')*  ('\r\n' | '\r' | '\n') { skip(); }
     |   '//' ~('\n'|'\r')*  { skip();  }
     ;   
+
+
