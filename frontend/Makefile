@@ -17,7 +17,7 @@ PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser
 # Fix this target with to use variable $(TESTS) and change parser
 # to run on all input files, not just one 
 tests: absparser
-	$(PARSER) tests/skeleton.abs
+#	$(PARSER) tests/skeleton.abs
 	$(PARSER) tests/trivial.abs
 
 absparser: $(COMPILED)abs/frontend/parser/ABSLexer.class $(COMPILED)abs/frontend/parser/ABSParser.class
