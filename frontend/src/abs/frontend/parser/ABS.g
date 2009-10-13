@@ -9,15 +9,17 @@ options {
 
 tokens {
 	PROGRAM;
-	METHODDECLARATION;
-	FUNCTIONDECLARATION;
-	VARIABLEDECLARATION;
-	CONSTRUCTORDECLARATION;
-	
+    FIELDDECL;
+    INTERFACE ;
+	METHODDECL;
+	FUNCTIONDECL;
+	VARDECL;
+	CONSTRUCTORDECL;
+    METHSIGN ;
 	EXTFIELDS;
 	INTFIELDS;
 	FIELDSPECIFICATION;
-
+    PARAMS ; 
 	MEMBERREFERENCE;
 	VARIABLEREFERENCE;
 	TYPEREFERENCE;
@@ -48,7 +50,9 @@ public static void main(String[] args) throws Exception {
          // print tree if building trees
         if ( treeflag && r!=null ) {
             //System.out.println(r); 
+                        System.out.println();
             System.out.println(((CommonTree)r.tree).toStringTree());
+            System.out.println();
             printTree((CommonTree)r.tree, 2 );
         } else 
             System.out.println("Parse OK");
@@ -123,30 +127,48 @@ similarly for ¯C¯, ¯x¯, ¯e¯, etc.) and write ¯M¯ as shorthand for M1 ... Mn (wit
 Deviations : 
 - I use && for ^
 - I use "if then else _fi_" 
+
+
+questions: 
+
+the following is allowed by the grammar as it is now, is that correct:
+
+class foo implements { ; } i.e. ¯I¯  is empty 
+
+this is _not_ allowed in the current grammar: 
+
+class foo  { ; } i.e. "implements" is left out
+
+
+
+
+
 */
 
 
 program
 	:	
 	ifDecl* clDecl* LBRACE varDeclList SEMI stmtRet RBRACE 
-//		-> ^(PROGRAM ifDeclList clDeclList varDeclList stmtRet)
+		-> ^(PROGRAM ifDecl* clDecl* varDeclList? stmtRet)
     ;
 
 ifDecl
 	:	
 	INTERFACE ifName LBRACE methSign* RBRACE
-//  	                        -> ^(INTERFACE ifName (mettypeNameList)? ) 
+        -> ^(INTERFACE ifName (methSign)* ) 
 	;
 
 
 clDecl
     :
-    CLASS className (IMPLEMENTS ifNameList)? LBRACE fieldDeclList  SEMI method* RBRACE 
+    CLASS className IMPLEMENTS ifNameList LBRACE fieldDeclList  SEMI method* RBRACE 
+        -> ^(CLASS className ^(IMPLEMENTS ifNameList?)  ^(FIELDDECL fieldDeclList?)  ^(METHODDECL method*)) 
     ;
 
 
 
 varDeclList : (varDecl (COMMA! varDecl)*)? ;
+    
 
 
 stmtRet : stmList SEMI RETURN expr ;  
@@ -155,6 +177,8 @@ stmtRet : stmList SEMI RETURN expr ;
 methSign 
     : 
     type methName LPAREN varDeclList RPAREN      
+        -> ^(METHSIGN type methName ^(PARAMS varDeclList?)) 
+        
     ;
 
 
@@ -166,7 +190,8 @@ fieldDeclList : (fieldDecl (COMMA! fieldDecl)*)? ;
 
 method : methSign LBRACE varDeclList SEMI stmtRet RBRACE ;
 
-varDecl : type localVar ; 
+varDecl : type localVar 
+    -> ^(VARDECL type localVar) ; 
 
 fieldDecl: type field ; 
 
