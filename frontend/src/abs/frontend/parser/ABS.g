@@ -78,22 +78,22 @@ public static void printTree(CommonTree t, int indent) {
 
 /*
 The grammar as define in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
-¯
-P ::= ¯D¯ ¯L¯ {¯(T x)¯; sr}                     program
-D ::= interface I {¯Ms¯}                        ifDecl
+
+P ::= D L {(T x); sr}                     program
+D ::= interface I {Ms}                        ifDecl
 sr ::= s; return e                              stmtReturn
-L ::= class C implements ¯I¯ {¯T f¯; ¯M¯}       clDecl
+L ::= class C implements I {T f; M}       clDecl
 v ::= f | x                                     var
-M ::= Ms{¯T x¯; sr}                             method
+M ::= Ms{T x; sr}                             method
 b ::= true | false                              bool
 e ::= v | e.get | null | b                      expr
 T ::= I | bool | fut(T)                         type
 s ::= v = e | await g | skip | s; s |           stmt
             if e then s else s | release| 
-            v = new C( ) | v = e!m(¯e¯) | 
-            v = o.m(¯e¯) | v = m(¯e¯) 
+            v = new C( ) | v = e!m(e) | 
+            v = o.m(e) | v = m(e) 
 
-Ms ::= T m (¯T x¯)                              methSign
+Ms ::= T m (T x)                              methSign
 
 g ::= v? | g && g                               guard
 
@@ -110,16 +110,16 @@ fD ::= T f                                       fieldDecl
  
 
 *** 
-Does ¯X¯ indicate X,X,X or X X X 
+Does X indicate X,X,X or X X X 
 
-I make ¯X¯ a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
-However ¯D¯ and ¯L¯ does not need commas. Since they end with rbrace. 
-  ¯Ms¯ does not need comma since it ends with rparen 
+I make X a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
+However D and L does not need commas. Since they end with rbrace. 
+  Ms does not need comma since it ends with rparen 
 
 * I assume that XLists can always be empty (cf.igarashi.pierce.wadler_featherweight.pdf) : 
 
-"We write ¯f¯ as shorthand for a possibly empty sequence f1, ...  ,fn (and
-similarly for ¯C¯, ¯x¯, ¯e¯, etc.) and write ¯M¯ as shorthand for M1 ... Mn (with no commas)."
+"We write f as shorthand for a possibly empty sequence f1, ...  ,fn (and
+similarly for C, x, e, etc.) and write M as shorthand for M1 ... Mn (with no commas)."
 
 * thus XList is: (X (COMMA! X)*)? 
 * or  just X* 
@@ -133,7 +133,7 @@ questions:
 
 the following is allowed by the grammar as it is now, is that correct:
 
-class foo implements { ; } i.e. ¯I¯  is empty 
+class foo implements { ; } i.e. I  is empty 
 
 this is _not_ allowed in the current grammar: 
 
