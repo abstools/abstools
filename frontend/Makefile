@@ -1,13 +1,16 @@
 # Targets to compile and test the Antlr-based ABS parser.
 # GNU make required for (future versions of) target `tests'
 
+
 SOURCE   = src/
 LIB	 = lib/antlr-3.2.jar
 COMPILED = bin/
 GENERATED_SRC = gen/
 JAVAC	 = javac -sourcepath $(SOURCE):$(GENERATED_SRC) -cp $(LIB):$(COMPILED) -d $(COMPILED)
 ANTLR	 = java -cp $(LIB) org.antlr.Tool
-PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser
+#PARSEROPTS = -tree 
+PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
+
 
 
 # TESTS	= $(wildcard tests/*.abs)
@@ -18,7 +21,7 @@ PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser
 # to run on all input files, not just one 
 tests: absparser
 #	$(PARSER) tests/skeleton.abs
-	$(PARSER) tests/trivial.abs
+	$(PARSER) tests/trivial.abs $(PARSEROPTS)
 
 absparser: $(COMPILED)abs/frontend/parser/ABSLexer.class $(COMPILED)abs/frontend/parser/ABSParser.class
 
