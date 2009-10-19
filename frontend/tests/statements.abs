@@ -1,0 +1,68 @@
+//$Id$
+
+
+//Main
+{
+
+; 
+
+//stmtReturn
+
+//stmt
+//assignStmt
+a = b ; 
+a = b.get ;
+a = null ; 
+a = true ;  
+
+a = new foo() ; 
+a = b!meth(); 
+a = b!meth(c,d,e); 
+a = b.meth(); 
+a = b.meth(c,d,e); 
+a = meth(c,d,e); 
+a = meth(); 
+
+//await g
+await a? ; 
+await b? && c? ; 
+await b? && c? && d?; 
+
+//skip
+skip ; 
+
+//If-then-else 
+if true then skip else skip ; 
+//sblock
+if true then {skip ; skip} else skip  ; 
+
+//optional else 
+if true then skip ; 
+
+//nested
+if x then 
+  if y then 
+    a = b 
+  else 
+    skip 
+else 
+  skip  ; 
+
+//nested
+if x then 
+  if y then 
+    a = b ; 
+
+if true then {a = b ; c = d} else skip ; 
+
+release ; 
+
+return null
+
+}
+
+
+
+
+
+
