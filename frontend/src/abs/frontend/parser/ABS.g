@@ -83,7 +83,7 @@ public static void printTree(CommonTree t, int indent) {
 /*
 The grammar as define in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
 
-P ::= _D_ _L_ {_(T x)_; sr}                     program
+P ::= _D_ _L_ {_T x_ ; sr}                     program
 D ::= interface I {_Ms_}                        ifDecl
 L ::= class C implements _I_ {_T f_; _M_}       clDecl
 T ::= I | bool | fut(T)                         type
@@ -151,8 +151,6 @@ clDecl
 
 
 
-varDeclList : (varDecl (COMMA! varDecl)*)? ;
-    
 
 
 stmtRet : stmList SEMI RETURN expr ;  
@@ -168,6 +166,7 @@ methSign
 
 ifNameList : (ifName (COMMA! ifName)*)? ;
 
+varDeclList : (varDecl (COMMA! varDecl)*)? ;
 
 fieldDeclList : (fieldDecl (COMMA! fieldDecl)*)? ;
 
