@@ -4,14 +4,33 @@
 
 //program 
 
+//ifdecl 
+interface baz {
+    
+}
+
 //ifdecl
-interface foo {}
+interface foo {
+    //methSign*
+
+    //methSign 
+    bool isOK ()
+    bool isNOTOK ()
+	
+    //methSign 
+    myIf getIf (
+		//varDecl	
+		bool aVar, myIF bVar)
+
+}
 
 //classdecl
-class bar implements foo { 
+class bar implements foo, baz { 
     //fieldDeclList
+    bool aField 
     ; 
-    //method * 
+    //method*
+    bool isOK () {bool mVar ; skip ; return true }
 }
 
 //Main
@@ -20,7 +39,7 @@ class bar implements foo {
 ; 
 //stmtRet
     skip;
-    return null 
+    //    return null 
 }
 
 

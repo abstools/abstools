@@ -39,12 +39,16 @@ package abs.frontend.parser;
 @members {
 public static void main(String[] args) throws Exception {
 
-    boolean treeflag = true;
+    boolean treeflag = false;
 	ABSLexer lex = new ABSLexer(new ANTLRFileStream(args[0]));
 	CommonTokenStream tokens = new CommonTokenStream(lex);
 	ABSParser parser = new ABSParser(tokens);
-
-	try {
+    int argind ; 
+    for (argind=0 ; argind < args.length ; argind++){
+        if (args[argind].equals("-tree"))
+            treeflag = true; 
+    }        
+    try {
         //    	parser.program();
    	    ABSParser.program_return r = parser.program(); 
          // print tree if building trees
@@ -79,22 +83,21 @@ public static void printTree(CommonTree t, int indent) {
 /*
 The grammar as define in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
 
-P ::= D L {(T x); sr}                     program
-D ::= interface I {Ms}                        ifDecl
+P ::= _D_ _L_ {_(T x)_; sr}                     program
+D ::= interface I {_Ms_}                        ifDecl
+L ::= class C implements _I_ {_T f_; _M_}       clDecl
+T ::= I | bool | fut(T)                         type
 sr ::= s; return e                              stmtReturn
-L ::= class C implements I {T f; M}       clDecl
+Ms ::= T m (_T x_)                              methSign
+M ::= Ms{_T x_; sr}                             method
+
 v ::= f | x                                     var
-M ::= Ms{T x; sr}                             method
 b ::= true | false                              bool
 e ::= v | e.get | null | b                      expr
-T ::= I | bool | fut(T)                         type
 s ::= v = e | await g | skip | s; s |           stmt
             if e then s else s | release| 
-            v = new C( ) | v = e!m(e) | 
-            v = o.m(e) | v = m(e) 
-
-Ms ::= T m (T x)                              methSign
-
+            v = new C( ) | v = e!m(_e_) | 
+            v = o.m(_e_) | v = m(_e_) 
 g ::= v? | g && g                               guard
 
 x                                               localVar 
@@ -107,13 +110,12 @@ xD ::= T x                                       varDecl
 fD ::= T f                                       fieldDecl   
 
 
- 
-
 *** 
-Does X indicate X,X,X or X X X 
+Does _X_ indicate X,X,X or X X X 
 
-I make X a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
-However D and L does not need commas. Since they end with rbrace. 
+I make _X_ a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
+However D and L does not need commas, since they end with rbrace. 
+
   Ms does not need comma since it ends with rparen 
 
 * I assume that XLists can always be empty (cf.igarashi.pierce.wadler_featherweight.pdf) : 
@@ -121,30 +123,12 @@ However D and L does not need commas. Since they end with rbrace.
 "We write f as shorthand for a possibly empty sequence f1, ...  ,fn (and
 similarly for C, x, e, etc.) and write M as shorthand for M1 ... Mn (with no commas)."
 
-* thus XList is: (X (COMMA! X)*)? 
-* or  just X* 
-
-Deviations : 
-- I use && for ^
-- I use "if then else _fi_" 
-
-
-questions: 
-
-the following is allowed by the grammar as it is now, is that correct:
-
-class foo implements { ; } i.e. I  is empty 
-
-this is _not_ allowed in the current grammar: 
-
-class foo  { ; } i.e. "implements" is left out
-
-
-
-
+In genral XList therefore is: 
+  (X (COMMA! X)*)? 
+or  just 
+  X* 
 
 */
-
 
 program
 	:	
@@ -207,12 +191,15 @@ stmt :
     ;
 */
 
-stmt :  assignStmt |
+stmt :  stmtBlock | 
+        assignStmt |
         AWAIT guard |
         SKIP |
-        IF expr THEN stmList ELSE stmList FI |
+        IF expr THEN stmt ELSE stmt |
         RELEASE
     ; 
+
+stmtBlock : LBRACE stmList RBRACE   ;
 
 stmList : (stmt (SEMI! stmt)*) ;
 
