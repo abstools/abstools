@@ -8,23 +8,19 @@ options {
 }
 
 tokens {
-	PROGRAM;
-    FIELDDECL;
-    INTERFACE ;
-	METHODDECL;
-	FUNCTIONDECL;
-	VARDECL;
-	CONSTRUCTORDECL;
-    METHSIGN ;
-	EXTFIELDS;
-	INTFIELDS;
-	FIELDSPECIFICATION;
-    PARAMS ; 
-	MEMBERREFERENCE;
-	VARIABLEREFERENCE;
-	TYPEREFERENCE;
-	
-	FUNCTIONEVAL;
+
+
+PROGRAM;
+FIELDS;
+METHODS;
+METHSIGN ;
+PARAMS ; 
+METHOD ; 
+VARS; 
+DECL;
+STMTS;
+STMLIST ; 
+ASS ; 
 }
 
 
@@ -44,6 +40,7 @@ public static void main(String[] args) throws Exception {
 	CommonTokenStream tokens = new CommonTokenStream(lex);
 	ABSParser parser = new ABSParser(tokens);
     int argind ; 
+    //Get command line options.
     for (argind=0 ; argind < args.length ; argind++){
         if (args[argind].equals("-tree"))
             treeflag = true; 
@@ -77,11 +74,34 @@ public static void printTree(CommonTree t, int indent) {
 	}
 }
 
-
+public String getErrorMessage(RecognitionException e,
+                                String[] tokenNames)
+{
+    List stack = getRuleInvocationStack(e, this.getClass().getName());
+    String msg = null;
+    if ( e instanceof NoViableAltException ) {
+        NoViableAltException nvae = (NoViableAltException)e;
+        msg = " no viable alt; \ntoken="+e.token+
+            " (decision="+nvae.decisionNumber+
+            " state "+nvae.stateNumber+")"+
+            " \ndecision=<<"+nvae.grammarDecisionDescription+">>";
+    }
+    else     {
+        msg = super.getErrorMessage(e, tokenNames);
+    }
+    return stack+" "+msg;
 }
 
+public String getTokenErrorDisplay(Token t) {
+    return t.toString();
+}
+
+        }//@members
+
+
+
 /*
-The grammar as define in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
+The grammar as defined in ~/svn/hats/WP1_Framework/Task-1.1_CoreABSLanguage/notes/abs.tex
 
 P ::= _D_ _L_ {_T x_ ; sr}                     program
 D ::= interface I {_Ms_}                        ifDecl
@@ -133,7 +153,7 @@ or  just
 program
 	:	
 	ifDecl* clDecl* LBRACE varDeclList SEMI stmtRet RBRACE 
-		-> ^(PROGRAM ifDecl* clDecl* varDeclList? stmtRet)
+		-> ^(PROGRAM ifDecl* clDecl* varDeclList? ^(stmtRet))
     ;
 
 ifDecl
@@ -146,14 +166,15 @@ ifDecl
 clDecl
     :
     CLASS className IMPLEMENTS ifNameList LBRACE fieldDeclList  SEMI method* RBRACE 
-        -> ^(CLASS className ^(IMPLEMENTS ifNameList?)  ^(FIELDDECL fieldDeclList?)  ^(METHODDECL method*)) 
+        -> ^(CLASS className ^(IMPLEMENTS ifNameList?)  ^(FIELDS fieldDeclList?)  ^(METHODS method*)) 
     ;
 
 
 
 
 
-stmtRet : stmList SEMI RETURN expr ;  
+stmtRet : stmtList SEMI RETURN exPure
+    -> ^(STMTS stmtList ^(RETURN exPure)) ;  
 
 
 methSign 
@@ -171,73 +192,69 @@ varDeclList : (varDecl (COMMA! varDecl)*)? ;
 fieldDeclList : (fieldDecl (COMMA! fieldDecl)*)? ;
 
 
-method : methSign LBRACE varDeclList SEMI stmtRet RBRACE ;
-
-varDecl : type localVar 
-    -> ^(VARDECL type localVar) ; 
-
-fieldDecl: type field ; 
-
-
-/*
-stmt : 
-        assignStmt | 
-        AWAIT guard |
-        SKIP |
-        stmt SEMI stmt |
-        IF expr THEN stmt ELSE stmt |
-        RELEASE 
+method : methSign LBRACE varDeclList SEMI stmtRet RBRACE 
+        -> ^(methSign ^(VARS varDeclList) ^(STMTS stmtRet)) 
     ;
-*/
 
-stmt :  stmtBlock | 
-        assignStmt |
-        AWAIT guard |
-        SKIP |
-        IF expr THEN stmt ELSE stmt |
-        RELEASE
-    ; 
+varDecl : type localVar ;
 
-stmtBlock : LBRACE stmList RBRACE   ;
 
-stmList : (stmt (SEMI! stmt)*) ;
+fieldDecl : type field ; 
+
+
+stmt :  stmtBlock 
+    |   assignStmt  
+    |   AWAIT guard 
+    |   SKIP 
+    |   IF exPure THEN stmt (ELSE stmt)? 
+    |   RELEASE ; 
+
+
+stmtBlock : LBRACE stmtList RBRACE
+        //        -> stmtList 
+    ;      
+
+
+stmtList : (stmt (SEMI stmt)*) 
+    ;
 
 /* This is left recursive: 
 expr : var | expr DOT GET | NULL | boolEx 
-
-rewrites to the following: 
-
+we redefine as: 
 */
-        
-expr :  
-        var expTail |
-        boolEx expTail |
-        NULL expTail
+
+exPure :  
+        var exPureTail  |
+        boolEx exPureTail |
+        NULL exPureTail
     ; 
 
-expTail :  
-        DOT GET |
-    ;
+exPureTail :  (DOT GET)*  ;
 
+exprList : (exPure (COMMA! exPure)*)? ;
 
 type : 
-        ifName |
-        BOOL |
-        FUT LPAREN type RPAREN
+        ifName -> ^(ifName)
+    |   BOOL -> ^(BOOL)
+    |   FUT LPAREN type RPAREN ->  ^(FUT type) 
     ;
 
 assignStmt : 
-        var ASSIGN expr |
-        var ASSIGN NEW className LPAREN RPAREN |
-        var ASSIGN expr BANG methName LPAREN expr* RPAREN | 
-        var ASSIGN objName DOT methName LPAREN expr* RPAREN | 
-        var ASSIGN methName LPAREN expr* RPAREN 
+        var ASSIGN exPure 
+    |   var ASSIGN exEffect 
     ;
+
+exEffect : 
+      methName LPAREN exprList RPAREN 
+    | exPure DOT methName LPAREN exprList RPAREN 
+    | exPure BANG methName LPAREN exprList RPAREN
+    | NEW className LPAREN RPAREN ; 
 
 
 guard : var QMARK gTail ;
 
-gTail : AND guard | ;
+gTail : (AND guard)* ;
+
 
 /* Left recursive 
 
