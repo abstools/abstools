@@ -6,10 +6,13 @@
 
 ; 
 
+
 //stmtReturn
 
 //stmt
 //assignStmt
+if a.get.get then skip else skip  ; 
+
 a = b ; 
 a = b.get ;
 a = null ; 
