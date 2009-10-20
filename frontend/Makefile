@@ -8,9 +8,10 @@ COMPILED = bin/
 GENERATED_SRC = gen/
 JAVAC	 = javac -sourcepath $(SOURCE):$(GENERATED_SRC) -cp $(LIB):$(COMPILED) -d $(COMPILED)
 ANTLR	 = java -cp $(LIB) org.antlr.Tool
-#PARSEROPTS = -tree 
+#ANTLROPTS ="-dfa -nfa"
+#PARSEROPTS =" -tree "
 PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
-
+DOTS 	 = `ls gen/abs/frontend/parser/*.dot` 	
 
 
 # TESTS	= $(wildcard tests/*.abs)
@@ -20,7 +21,8 @@ PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser
 # Fix this target with to use variable $(TESTS) and change parser
 # to run on all input files, not just one 
 tests: absparser
-#	$(PARSER) tests/skeleton.abs
+	$(PARSER) tests/statements.abs  $(PARSEROPTS)
+#	$(PARSER) tests/skeleton.abs  $(PARSEROPTS)
 	$(PARSER) tests/trivial.abs $(PARSEROPTS)
 
 absparser: $(COMPILED)abs/frontend/parser/ABSLexer.class $(COMPILED)abs/frontend/parser/ABSParser.class
@@ -31,9 +33,9 @@ $(COMPILED)abs/frontend/parser/%.class : $(GENERATED_SRC)abs/frontend/parser/%.j
 
 $(GENERATED_SRC)abs/frontend/parser/ABSLexer.java \
 $(GENERATED_SRC)abs/frontend/parser/ABSParser.java: $(SOURCE)abs/frontend/parser/ABS.g
-	$(ANTLR)  -fo $(GENERATED_SRC)abs/frontend/parser  $<
+	$(ANTLR) $(ANTLROPTS) -fo $(GENERATED_SRC)abs/frontend/parser  $<
 
-clean: clean_java clean_antlr
+clean: clean_java clean_antlr 
 
 clean_java:
 	@echo "Removing class files"
@@ -47,3 +49,18 @@ clean_antlr:
 
 sense:
 	@fortune
+
+
+#generate jpg files from dot files for nfas/dfas 
+automata: absparser
+	@echo ${DOTS} ; 
+	@for file in $(DOTS); do \
+	dot -Tjpg  "$${file}" -O ;  \
+	done ;
+
+
+
+
+#	@for f in {gen/abs/frontend/parser/*.dot} ; do echo $f ; done
+#	dot -Tjpg -o $out creolc.out 	@for f in . ; do echo $f ; done ; 
+#	dot -Tjpg -o $out creolc.out 
