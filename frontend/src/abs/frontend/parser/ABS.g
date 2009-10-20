@@ -130,23 +130,6 @@ xD ::= T x                                       varDecl
 fD ::= T f                                       fieldDecl   
 
 
-*** 
-Does _X_ indicate X,X,X or X X X 
-
-I make _X_ a Xlist and then define Xlist as X (COMMA! X*) then it is easier to change later. 
-However D and L does not need commas, since they end with rbrace. 
-
-  Ms does not need comma since it ends with rparen 
-
-* I assume that XLists can always be empty (cf.igarashi.pierce.wadler_featherweight.pdf) : 
-
-"We write f as shorthand for a possibly empty sequence f1, ...  ,fn (and
-similarly for C, x, e, etc.) and write M as shorthand for M1 ... Mn (with no commas)."
-
-In genral XList therefore is: 
-  (X (COMMA! X)*)? 
-or  just 
-  X* 
 
 */
 
@@ -174,7 +157,7 @@ clDecl
 
 
 stmtRet : stmtList SEMI RETURN exPure
-    -> ^(STMTS stmtList ^(RETURN exPure)) ;  
+    -> ^(STMTS stmtList? ^(RETURN exPure)) ;  
 
 
 methSign 
@@ -215,8 +198,7 @@ stmtBlock : LBRACE stmtList RBRACE
     ;      
 
 
-stmtList : (stmt (SEMI stmt)*) 
-    ;
+stmtList : (stmt (SEMI stmt)*)?  ;
 
 /* This is left recursive: 
 expr : var | expr DOT GET | NULL | boolEx 

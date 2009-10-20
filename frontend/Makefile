@@ -8,8 +8,8 @@ COMPILED = bin/
 GENERATED_SRC = gen/
 JAVAC	 = javac -sourcepath $(SOURCE):$(GENERATED_SRC) -cp $(LIB):$(COMPILED) -d $(COMPILED)
 ANTLR	 = java -cp $(LIB) org.antlr.Tool
-#ANTLROPTS ="-dfa -nfa"
-#PARSEROPTS =" -tree "
+ANTLROPTS =-dfa -nfa
+#PARSEROPTS = -tree 
 PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
 DOTS 	 = `ls gen/abs/frontend/parser/*.dot` 	
 

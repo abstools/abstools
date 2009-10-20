@@ -34,6 +34,9 @@ class bar implements foo, baz {
 }
 
 //Main
+{ ; ; return null }
+/*
+//Main
 {
 //varDeclList
 ; 
@@ -41,7 +44,7 @@ class bar implements foo, baz {
 skip ; skip ;  
     return null 
 }
-
+*/
 
 
 
