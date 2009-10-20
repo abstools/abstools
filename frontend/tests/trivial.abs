@@ -15,7 +15,7 @@ interface foo {
 
     //methSign 
     bool isOK ()
-    bool isNOTOK ()
+    bool isNotOK ()
 	
     //methSign 
     myIf getIf (
@@ -30,6 +30,7 @@ class bar implements foo, baz {
     bool aField , foo fooRef1, fut(foo) fooRef ; 
     //method*
     bool isOK () {bool mVar ; skip ; return true }
+    bool isNotOK () {bool mVar ; skip ; return false }
 }
 
 //Main
@@ -37,7 +38,7 @@ class bar implements foo, baz {
 //varDeclList
 ; 
 //stmtRet
-    skip;
+skip ; skip ;  
     return null 
 }
 
