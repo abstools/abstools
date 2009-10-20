@@ -1,18 +1,5 @@
 //$Id$
 
-//Case 1 
-
-//program 
-
-//ifdecl
-interface foo {}
-
-//classdecl
-class bar implements foo { 
-    //fieldDeclList
-    ; 
-    //method * 
-}
 
 //Main
 {
