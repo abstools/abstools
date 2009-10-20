@@ -1,0 +1,102 @@
+
+/*
+ * BoundedBuffer.abs -- Bounded buffer example
+ *
+ * Inspired by Nancy Lynch, "Distributed Systems"
+ *
+ */
+
+interface Buffer {
+
+    Data remove()
+    void append(Data d)
+
+}
+
+interface Consumer {} 
+
+interface Producer {}
+
+
+class BoundedBuffer implements Buffer {
+    ListofData buffer, 
+    Int max , 
+    Int n 
+	;
+
+    void append(Data d){
+	
+	;
+	// await n_less_than_max ; //n < max --- No boolean guards in abs 
+	buffer = append_buffer_d;
+	n = n_pluss_one ; 
+	return null    
+    }
+
+}
+//Main
+{ ; skip ;  return null }
+/*
+
+}
+
+{
+
+}
+
+}
+
+
+    Data remove() {
+	
+	; 
+	await n_larger_than_0; 
+	d = head(buffer); 
+	buffer = tail(buffer) ; 
+	n = n_minus_one ;
+	return d 
+    }
+
+}
+
+class Producer implements Producer {
+
+    void loop(Data b, Int i){
+	
+	; 
+	b.append(i); 
+	this!loop(b , i_plus_one); //i+1
+	return null ; 
+    }
+}
+
+class Consumer implements Consumer {
+    
+    void loop(Data b) {
+	Data y 
+	    ;
+	y = b.remove(); 
+	!loop(y);
+	return null
+	    }
+    
+}
+//Main
+{
+    Buffer b, 
+    Producer p,
+    Consumer c
+	; 
+	
+    b = new BoundedBuffer(); 
+    p = new Producer(); 	
+    p!loop(b,0);
+    c = new Consumer();
+    c!loop(b);
+    return null
+}
+
+
+
+
+*/
