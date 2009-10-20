@@ -12,7 +12,8 @@ ANTLROPTS =-dfa -nfa
 #PARSEROPTS = -tree 
 PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
 DOTS 	 = `ls gen/abs/frontend/parser/*.dot` 	
-TESTS 	 =  statements.abs  trivial.abs boundedbuffer.abs
+TESTS 	 =  statements.abs  trivial.abs 
+#boundedbuffer.abs
 #skeleton.abs	
 
 # TESTS	= $(wildcard tests/*.abs)
