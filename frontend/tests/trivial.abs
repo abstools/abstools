@@ -34,7 +34,12 @@ class bar implements foo, baz {
 }
 
 //Main
-{ ; ; return null }
+{ // T x 
+    ; 
+  // slist  
+    ; 
+return null }
+
 /*
 //Main
 {

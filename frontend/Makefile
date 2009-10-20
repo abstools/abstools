@@ -12,7 +12,8 @@ ANTLROPTS =-dfa -nfa
 #PARSEROPTS = -tree 
 PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
 DOTS 	 = `ls gen/abs/frontend/parser/*.dot` 	
-
+TESTS 	 =  statements.abs  trivial.abs boundedbuffer.abs
+#skeleton.abs	
 
 # TESTS	= $(wildcard tests/*.abs)
 
@@ -20,10 +21,13 @@ DOTS 	 = `ls gen/abs/frontend/parser/*.dot`
 
 # Fix this target with to use variable $(TESTS) and change parser
 # to run on all input files, not just one 
+# Doing it with a for loop for now. 
 tests: absparser
-	$(PARSER) tests/statements.abs  $(PARSEROPTS)
-#	$(PARSER) tests/skeleton.abs  $(PARSEROPTS)
-	$(PARSER) tests/trivial.abs $(PARSEROPTS)
+	@for file in $(TESTS); do \
+	echo $(PARSER) "tests/$${file}" $(PARSEROPTS) ; $(PARSER) "tests/$${file}" $(PARSEROPTS) ;  \
+	done ;
+
+
 
 absparser: $(COMPILED)abs/frontend/parser/ABSLexer.class $(COMPILED)abs/frontend/parser/ABSParser.class
 

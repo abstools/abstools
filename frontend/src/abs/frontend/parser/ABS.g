@@ -176,7 +176,7 @@ fieldDeclList : (fieldDecl (COMMA! fieldDecl)*)? ;
 
 
 method : methSign LBRACE varDeclList SEMI stmtRet RBRACE 
-        -> ^(methSign ^(VARS varDeclList) ^(STMTS stmtRet)) 
+        -> ^(methSign ^(VARS varDeclList?) ^(STMTS stmtRet)) 
     ;
 
 varDecl : type localVar ;
