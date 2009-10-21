@@ -1,0 +1,112 @@
+
+/*
+ * PingPong.abs -- PingPong example
+ *
+ * An  ABS program. To test core parser.  
+ *
+ */
+
+interface Void {
+    //All method signatures must have a return type. 
+} 
+
+interface Ping {
+
+    Void init(Pong p) 
+    //We dont have strings yet bbut use it anyway. 
+    String m(String m)
+    Void run()	
+}
+
+interface Pong {
+
+    Void init(Ping p) 
+    String m(String m)
+    Void run()	
+
+}
+
+class Ping  implements Ping {
+    
+    Pong pong ,
+    String hello_pong
+	;
+
+    Void init(Pong p){
+	;
+	pong = p ; return null 
+    }
+
+
+    Void run(){
+
+      Void x , 
+      fut(String) reply
+      ;
+      reply = pong!m(hello_pong); 
+      await reply? ; 
+      x = this!run();
+      return null
+   }
+
+    String m(String msg){
+	
+	String reply
+	    ; 
+	if msg_equals_hello_ping then  
+	  reply = thanks_pong 
+	else
+	    reply = who_are_you ;
+        return reply 
+    }
+} 
+
+
+
+class Pong implements Pong {
+
+    Ping ping ,  
+    String hi_ping 	
+	;
+
+    Void init(Ping p){
+	;
+	ping = p ; return null 
+    }
+
+    Void run(){
+      
+      Void x , 
+      fut(String) reply
+      ;
+      reply = ping!m(hi_ping); 
+      await reply? ; 
+      x = this!run();
+      return null
+   }
+
+    String m(String msg){
+	
+	String reply
+	    ; 
+	if msg_equals_hello_pong then  
+	  reply = thanks_ping 
+	else
+	    reply = who_are_you ;
+        return reply 
+    } 
+
+}
+{
+    Ping ping , Pong pong , Void x
+	; 
+    ping = new Ping(); 
+    pong = new Pong(); 
+
+    x = ping.init(); 
+    x = pong.init(); 
+    x = ping!run(); 
+    x = pong!run(); 
+    return null
+
+}
