@@ -55,11 +55,11 @@ public static void main(String[] args) throws Exception {
             System.out.println(((CommonTree)r.tree).toStringTree());
             System.out.println();
             printTree((CommonTree)r.tree, 2 );
-        } else 
-            System.out.println("Parse OK");
+        } 
     } catch (RecognitionException e)  {
 		e.printStackTrace();
 	}
+
 }
 
 public static void printTree(CommonTree t, int indent) {
