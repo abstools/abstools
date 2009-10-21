@@ -13,22 +13,26 @@ interface Void {
 
 interface Buffer {
 
+    Void init()
+    Void append(Int i)
     Data remove()
-	
-
-    void append(Data d)
 
 }
 
-interface Consumer {} 
+interface Consumer {
 
-interface Producer {}
+
+} 
+
+interface Producer {
+
+}
 
 
 class BoundedBuffer implements Buffer {
     
-    //A faulty bounded buffer. It lacks synchronization
-    ListofData buffer, 
+    //A bounded buffer
+    ListofInt buffer, 
 	Int max , 
 	Int n 
 	;
@@ -43,7 +47,7 @@ class BoundedBuffer implements Buffer {
 	return null 
 	    }
     
-    Void append(Data d){
+    Void append(Int i){
 	Void x 
 	;
 	//await n < max ; // --- No boolean guards in abs  
@@ -54,14 +58,14 @@ class BoundedBuffer implements Buffer {
 	  //Synchronization without boolean guards
 	  release;
 	  //Try to append again 
-	  x = this.append(d)
+	  x = this.append(i)
 	      } ;
 	//All methods must return something
 	return null    
 	    }
     
-    Data remove() {
-	Data y 
+    Int remove() {
+	Int y 
 	; 
 	//await n > 0 ; // --- No boolean guards in abs 
 	if n_larger_than_zero then {
