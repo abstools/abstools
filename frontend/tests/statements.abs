@@ -6,12 +6,17 @@
 
 ; 
 
+b = b.append(i); 
 
 //stmtReturn
 
 //stmt
 //assignStmt
 if a.get.get then skip else skip  ; 
+
+if a.get then skip  ; 
+if a.get then { skip ; skip }  ; 
+
 
 a = b ; 
 a = b.get ;

@@ -2,13 +2,20 @@
 /*
  * BoundedBuffer.abs -- Bounded buffer example
  *
- * Inspired by Nancy Lynch, "Distributed Systems"
+ * A first non-functioning ABS program. To test core parser.  
  *
  */
+
+interface Void {
+
+    //All method signatures must have a return type. 
+} 
 
 interface Buffer {
 
     Data remove()
+	
+
     void append(Data d)
 
 }
@@ -19,84 +26,127 @@ interface Producer {}
 
 
 class BoundedBuffer implements Buffer {
+    
+    //A faulty bounded buffer. It lacks synchronization
     ListofData buffer, 
-    Int max , 
-    Int n 
+	Int max , 
+	Int n 
 	;
-
-    void append(Data d){
+    
+    // no assignments in variable declarations, so  we need an init method
+    Void init(){
 	
 	;
-	// await n_less_than_max ; //n < max --- No boolean guards in abs 
-	buffer = append_buffer_d;
-	n = n_pluss_one ; 
+	buffer = nil ;
+	max = ten ; // = 10 --- no numbers yet  
+	n = zero ; // = 0 --- no numbers yet  
+	return null 
+	    }
+    
+    Void append(Data d){
+	Void x 
+	;
+	//await n < max ; // --- No boolean guards in abs  
+	if n_less_than_max then { // no arithmetic 
+		buffer = append_d_to_buffer; //no list operations 
+		n = n_pluss_one // no artihmetic 
+	} else {
+	  //Synchronization without boolean guards
+	  release;
+	  //Try to append again 
+	  x = this.append(d)
+	      } ;
+	//All methods must return something
 	return null    
-    }
-
-}
-//Main
-{ ; skip ;  return null }
-/*
-
-}
-
-{
-
-}
-
-}
-
-
+	    }
+    
     Data remove() {
-	
+	Data y 
 	; 
-	await n_larger_than_0; 
-	d = head(buffer); 
-	buffer = tail(buffer) ; 
-	n = n_minus_one ;
-	return d 
-    }
-
-}
+	//await n > 0 ; // --- No boolean guards in abs 
+	if n_larger_than_zero then {
+		y = head(buffer); // no list  opreations 
+		buffer = tail(buffer) ; //d.o. 
+		n = n_minus_one  // no arithmetic
+		    } else {
+	    //Synchronization without boolean guards
+	    release;
+	    //Try to remove again
+	    y = this.remove()
+		} ; 
+	return y 
+	    }
+    
+}    
 
 class Producer implements Producer {
+    
+    //Field declarations 
+    BoundedBuffer b 
 
-    void loop(Data b, Int i){
+    ;
+    
+    Void init(BoundedBuffer buff){
+	;
+	b = buff ; 
+	return null
+    }	
+    
+    Void loop(Int i){
 	
+	//local vars 
+        Void x
 	; 
-	b.append(i); 
-	this!loop(b , i_plus_one); //i+1
-	return null ; 
+	b = b.append(i); 
+	//cannot do a call without assignment Assume a "this" keyword
+	x = this!loop(i_plus_one); //i+1
+	return null 
     }
 }
 
 class Consumer implements Consumer {
     
-    void loop(Data b) {
-	Data y 
-	    ;
-	y = b.remove(); 
-	!loop(y);
+    //Field declarations 
+    BoundedBuffer b
+    ; 
+
+    Void init(BoundedBuffer buff){
+	;
+	b = buff ; 
 	return null
-	    }
+    }	
+
+    Void loop() {
+
+	//local vars 
+	Void x
+	    ;
+	b = b.remove(); 
+	//cannot do a call without assignment 
+	x = this!loop();
+	return null
+   }
     
 }
 //Main
 {
-    Buffer b, 
+    //Local vars 
+    Buffer buff, 
     Producer p,
-    Consumer c
+    Consumer c, 
+    Void x
+
 	; 
-	
-    b = new BoundedBuffer(); 
+
+    //Init 
+    buff = new BoundedBuffer(); 
+    x = buff.init();
     p = new Producer(); 	
-    p!loop(b,0);
+    x = p.init(buff);
     c = new Consumer();
-    c!loop(b);
+    x = c.init(buff) ;
+    x = p!loop(zero); //We don't have 0
+    x = c!loop();
     return null
 }
 
-
-
-
-*/
