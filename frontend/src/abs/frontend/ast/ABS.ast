@@ -12,36 +12,38 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-Program ::= InterfaceOrClassDecl* Block;
+Program ::= IntOrClassDecl* Block;
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
 abstract 	IntOrClassDecl	::= <Name:String>; // TODO: simplify to <Name>
-ClassDecl:	IntOrClassDecl	::= Implements:[IdUse] Body:ClassBlock;
-IntDecl:	IntOrClassDecl	::= Body:[Signature];
+ClassDecl:	IntOrClassDecl	::= Implements:IdUse* Body:ClassBlock;
+IntDecl:	IntOrClassDecl	::= Body:Signature*;
+
+ClassBlock			::= Fields:VarOrParamDecl* Methods:Method*;
+
+Method				::= Signature Block;
+
+Signature			::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
 
 Block				::= BlockStmt*;
 
-ClassBlock			::= Fields:[VarDecl] Methods;
-Methods				::= 
-
 // A `BlockStmt' is either a variable declaration or a regular statement
 abstract BlockStmt;
-VarDecl:	BlockStmt	::= <Name:String> Type:TypeAccess;
+VarOrParamDecl:	BlockStmt	::= <Name:String> Type:TypeAccess;
 abstract Stmt:	BlockStmt;
 
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
-IfStmt: Stmt			::= Condition:PureExp IfPart:PureStmts ElsePart:PureStmts;
-WhileStmt: Stmt			::= Condition:PureExp Body:PureStmts;
+IfStmt: Stmt			::= Condition:PureExp IfPart:Stmt* ElsePart:Stmt*;
+WhileStmt: Stmt			::= Condition:PureExp Body:Stmt*;
 ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= <Variable:String> Value:Exp;
 
-// `PureStmts' is a non-empty sequence of regular statements (no var. decls.)
-abstract PureBlockStmt		::= Stmt+;
+// TODO: assume that parsing guarantees that `Stmt*' is never empty?
 
 abstract Guard;
 Put: Guard			::= <Variable:String>;
-And: Guard			::= Guard Guard;
+And: Guard			::= Left:Guard right:Guard;
 
 abstract Exp;
 abstract PureExp: Exp;
@@ -53,7 +55,7 @@ NullExpr: PureExp;
 Bool: PureExp;
 
 NewExp: ImpureExp		::= <ClassRef:String>;
-abstract MethCall: ImpureExp 	::= <Method:String> Params:[PureExp];
+abstract MethCall: ImpureExp 	::= <Method:String> Params:PureExp*;
 LocalSyncMethCall: MethCall;
 NonlocalSyncMethCall: MethCall	::= <Callee:String>;
 AsyncMethCall: MethCall		::= Callee:Exp;

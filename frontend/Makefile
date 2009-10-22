@@ -3,11 +3,12 @@
 
 
 SOURCE   = src/
-LIB	 = lib/antlr-3.2.jar
+LIB	 = lib/antlr-3.2.jar:lib/jastadd2.jar
 COMPILED = bin/
 GENERATED_SRC = gen/
 JAVAC	 = javac -sourcepath $(SOURCE):$(GENERATED_SRC) -cp $(LIB):$(COMPILED) -d $(COMPILED)
 ANTLR	 = java -cp $(LIB) org.antlr.Tool
+JASTADD	 = java -jar lib/jastadd2.jar --o=$(GENERATED_SRC)abs/frontend/ast
 #ANTLROPTS =-dfa -nfa
 #PARSEROPTS = -tree 
 PARSER	 = java -cp $(LIB):$(COMPILED) abs.frontend.parser.ABSParser 
@@ -37,6 +38,10 @@ $(COMPILED)abs/frontend/parser/%.class : $(GENERATED_SRC)abs/frontend/parser/%.j
 $(GENERATED_SRC)abs/frontend/parser/ABSLexer.java \
 $(GENERATED_SRC)abs/frontend/parser/ABSParser.java: $(SOURCE)abs/frontend/parser/ABS.g
 	$(ANTLR) $(ANTLROPTS) -fo $(GENERATED_SRC)abs/frontend/parser  $<
+
+$(GENERATED_SRC)abs/frontend/ast/ASTNode.java: $(SOURCE)abs/frontend/ast/ABS.ast
+	@mkdir -p $(GENERATED_SRC)abs/frontend/ast
+	$(JASTADD) $^
 
 clean: clean_java clean_antlr 
 
