@@ -1,0 +1,82 @@
+specification AST
+
+backend java { 
+  package abs.frontend.ast.katja
+  import java.lang.String
+  import java.lang.Boolean
+  import java.lang.Integer
+}
+
+root Program Pos
+
+external String
+external Boolean  
+external Integer
+
+Name ( String name )
+Type = Name 
+
+VarDecl ( Name name, Type type )
+
+Decl = ClassDecl 
+     | IntfDecl
+     | ADTDecl
+     | FunDecl
+    
+     
+Program ( Decl* decls, Expr expr )
+
+ClassDecl ( Name name, 
+   VarDecl* classParams,
+   VarDeclInit* classVarDecls, 
+   Name* implIntfs,
+   ClassBody body)
+   
+VarDeclInit ( VarDecl decl, InitExpr expr )
+   
+ClassBody ( ClassMember* members ) 
+ClassMember = MethodDecl 
+            | VarDecl
+   
+IntfDecl ( Name name, Name* superIntfs, IntfBody )
+IntfBody ( MethodDecl* methods ) 
+
+
+MethodDecl ( Name name, Type retType, VarDecl* params, [Expr body] )
+ADTDecl ( Name name, ConstrDecl* constrs)
+ConstrDecl ( Name name, Type* args ) 
+
+FunDecl ( Name name, VarDecl* params, ADTExpr expr)
+
+Expr = This ()     
+     | FieldSelect ( Name name )
+     | FieldUpdate ( Name name, Expr expr )
+     | SyncCall ( Expr target, Name name, Expr* args)
+     | AsyncCall ( Expr target, Name name, Expr* args)
+     | Await ( Expr target )
+     | Get ( Expr target )
+     | Yield ( )
+     | InitExpr
+     
+InitExpr = New ( Boolean aog, Name name, Expr* args ) 
+         | ADTExpr
+         
+ADTExpr = FunCall ( Name name, Expr* args )
+        | Let ( VarDecl var, Expr init, Expr body )
+        | Constr ( Name name, Expr* args )        
+        | Case ( Expr target, Branch* branches )
+        | Equal ( Expr left, Expr right )
+        | Variable ( Name name )
+
+Branch ( Pattern pattern, Expr expr )
+
+Pattern = Underline ()
+        | Variable
+        | ConstrPattern ( Pattern* patterns ) 
+
+VarDeclScope = Let
+             | MethodDecl
+             | ClassBody
+             | ClassDecl 
+
+Position ( String fileName, Integer line, Integer col )

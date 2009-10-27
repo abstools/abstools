@@ -16,7 +16,7 @@
     <mkdir dir = "${dist.dir}"/>
   </target>
 
-  <target name = "compile" depends = "prepare, absParser"
+  <target name = "compile" depends = "prepare, absParser, ast.katja"
 	  description = "Compiles all java files into the source directory.">
     <!--  	<copy todir = "${build.dir}">
 	 <fileset dir = "${basedir}/resources/"/>
@@ -69,5 +69,33 @@
       </classpath>
     </antlr:antlr3> 
   </target>
+
+   
+   <!-- KATJA -->
+   
+   <property name = "ast.src.dir" value = "${src.dir}/abs/frontend/ast" />
+   <property name = "ast.katja.gen.dir" value = "${gen.dir}/abs/frontend/ast/katja" />
+   
+   <target name="ast.katja.deps">
+      <dependset>
+         <srcfileset dir="${ast.src.dir}" includes="ast.katja" />
+         <targetfileset dir="${ast.katja.gen.dir}" includes="*.java" />
+      </dependset>
+      <available property="ast.katja.up-to-date" file="${ast.katja.gen.dir}/AST.java" />
+   </target>   
+   
+   <target name="ast.katja" depends="prepare, ast.katja.deps" unless="ast.katja.up-to-date">
+     <java jar="${ext.dir}/katja.jar" fork="true">
+        <arg line="-b java"/>
+        <arg value="-o"/>
+        <arg value="-s"/>
+        <arg line="-d ${gen.dir}"/>
+        <arg value="${ast.src.dir}/ast.katja"/>
+     </java>
+      <unzip src="${gen.dir}/AST.jar" dest="${gen.dir}" />
+      <delete file="${gen.dir}/AST.jar" />
+   </target>
+   
+   <!-- END KATJA -->
 
 </project>
