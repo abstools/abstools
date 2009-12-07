@@ -8,15 +8,37 @@
   <property name = "dist.dir"  value = "${basedir}/dist" />
   <property name = "gen.dir"   value = "${basedir}/gen" />
   <property name = "ext.dir"   value = "${basedir}/lib"   />
-  
+  <property name = "ast.src.dir" value = "${src.dir}/abs/frontend/ast" />  
+  <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
+  <property name = "ast.gen.dir" value = "${gen.dir}/abs/frontend" />  
+  <property name = "parser.src.dir" value = "${src.dir}/abs/frontend/parser" />
+  <property name = "parser.gen.dir" value = "${gen.dir}/abs/frontend/parser" />
+
+  <!-- The package name of JastAdd generated files -->
+  <property name="ast.package" value="ast"/>
+
+  <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
+  <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" 
+	   classpath="${ext.dir}/JFlex.jar"/>
+
+  <!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
+  <taskdef name="beaver" classname="beaver.comp.run.AntTask" 
+	   classpath="${ext.dir}/beaver.jar"/>
+
+  <!-- "jastadd" is an ant task class in jastadd2.jar -->
+  <taskdef name="jastadd" classname="jastadd.JastAddTask"
+	   classpath="${ext.dir}/jastadd2.jar"/>
+
+
   <target name = "prepare">
     <mkdir dir = "${gen.dir}"/>
-    <mkdir dir = "${gen.dir}/abs/frontend/parser/" />
+    <mkdir dir = "${ast.gen.dir}"/>
+    <mkdir dir = "${parser.gen.dir}" />
     <mkdir dir = "${build.dir}"/>
     <mkdir dir = "${dist.dir}"/>
   </target>
 
-  <target name = "compile" depends = "prepare, absParser, ast.katja"
+  <target name = "compile" depends = "prepare, gen"
 	  description = "Compiles all java files into the source directory.">
     <!--  	<copy todir = "${build.dir}">
 	 <fileset dir = "${basedir}/resources/"/>
@@ -28,7 +50,8 @@
 	   depend = "${build.depend}"
 	   optimize = "off">
       <classpath>
-	<pathelement location = "${ext.dir}/antlr-3.2.jar" />
+	<pathelement location = "${ext.dir}/beaver.jar" />
+	<pathelement location = "${ext.dir}/jastadd2.jar" />
       </classpath>
     </javac>
   </target>
@@ -60,9 +83,9 @@
   
   <target name="absParser" depends="prepare">
     <antlr:antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr"
-		  target="${src.dir}/abs/frontend/parser/ABS.g"
-		  outputdirectory="${gen.dir}/abs/frontend/parser"
-		  libdirectory="${gen.dir}/abs/frontend/parser"		  
+		  target="${parser.src.dir}/ABS.g"
+		  outputdirectory="${parser.gen.dir}"
+		  libdirectory="${parser.gen.dir}"		  
 		  multithreaded="true">
       <classpath>
 	<pathelement location = "${ext.dir}/antlr-3.2.jar" />
@@ -70,10 +93,39 @@
     </antlr:antlr3> 
   </target>
 
+  <target name="gen" depends="genparser, genast">
+  </target>
+
+  <target name="genast">
+    <jastadd package="${ast.package}" rewrite="true" beaver="true"
+	     novisitcheck="true" outdir="${ast.gen.dir}" debug="true">
+      <fileset dir=".">
+        <include name="**/*.ast"/>
+        <include name="**/*.jrag"/>
+        <include name="**/*.jadd"/>
+      </fileset>
+    </jastadd>
+  </target>
+
+  <target name="genparser" depends="prepare">
+    <!-- generate the scanner -->
+    <echo message = "Running jflex"/>
+    <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
+	     nobak="yes"/>
+    <!-- generate the parser phase 1, translating .lalr to .beaver -->
+    <java fork="true" dir="${parser.src.dir}" 
+	    classpath="${ext.dir}/proj.jar:${ext.dir}/beaver-rt.jar"
+	    classname="Main">
+	<arg line="ABS.parser ${parser.gen.dir}/ABSParser.beaver"/>
+    </java>
+    <!-- generate the parser phase 2, translating .beaver to .java -->
+    <beaver file="${parser.gen.dir}/ABSParser.beaver"
+	    terminalNames="yes" compress="no" useSwitch="yes"/>
+  </target>
    
+
    <!-- KATJA -->
    
-   <property name = "ast.src.dir" value = "${src.dir}/abs/frontend/ast" />
    <property name = "ast.katja.gen.dir" value = "${gen.dir}/abs/frontend/ast/katja" />
    
    <target name="ast.katja.deps">

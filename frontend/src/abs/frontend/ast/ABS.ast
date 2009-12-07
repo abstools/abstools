@@ -12,12 +12,12 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-Program ::= IntOrClassDecl* Block;
+Program ::= TypeDecl* Block;
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
-abstract 	IntOrClassDecl	::= <Name:String>; // TODO: simplify to <Name>
-ClassDecl:	IntOrClassDecl	::= Implements:IdUse* Body:ClassBlock;
-IntDecl:	IntOrClassDecl	::= Body:Signature*;
+abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
+ClassDecl:	TypeDecl	::= Implements:IdUse* Body:ClassBlock;
+IntDecl:	TypeDecl	::= Body:Signature*;
 
 ClassBlock			::= Fields:VarOrParamDecl* Methods:Method*;
 
