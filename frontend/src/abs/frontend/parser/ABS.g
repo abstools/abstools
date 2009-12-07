@@ -300,7 +300,6 @@ AWAIT	    :	'await';
 IF	        :	'if';
 THEN	    :	'then';
 ELSE	    :	'else';
-FI	        :	'fi';
 RELEASE     :   'release'; 
 NEW         :   'new'; 
 
