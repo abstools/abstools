@@ -12,20 +12,13 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-Program ::= TypeDecl* Block;
-// TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
+//Program ::= TypeDecl* Block;
 
-abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
-ClassDecl:	TypeDecl	::= Implements:IdUse* Body:ClassBlock;
-IntDecl:	TypeDecl	::= Body:Signature*;
+Program ::= Block;
 
-ClassBlock			::= Fields:VarOrParamDecl* Methods:Method*;
+//Block				::= BlockStmt*;
 
-Method				::= Signature Block;
-
-Signature			::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
-
-Block				::= BlockStmt*;
+Block				::= SkipStmt;
 
 // A `BlockStmt' is either a variable declaration or a regular statement
 abstract BlockStmt;
@@ -69,3 +62,5 @@ Future: TypeAccess;
 InterfaceRef:	TypeAccess;
 PrimitiveTypeRef: TypeAccess;	// e.g. bool
 UnknownDecl:	TypeAccess;
+
+

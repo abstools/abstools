@@ -13,7 +13,7 @@ interface Void {
 interface Ping {
 
     Void init(Pong p) 
-    //We dont have strings yet bbut use it anyway. 
+    //We dont have strings yet but use it anyway. 
     String m(String m)
     Void run()	
 }

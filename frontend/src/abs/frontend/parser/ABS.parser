@@ -1,6 +1,8 @@
 %header {:
- package parser;
- import ast.*;
+
+package parser;
+import ast.*;
+
 :};
 %embed {:
   class Events extends Parser.Events {
@@ -21,31 +23,27 @@
   { report = new Events(); } // Use error handler in parser
 :};
 
+
 Program goal =
-  typedecl_list.l? vblock	{: return new Program(l, vblock); :}
+    program.p		{: return p ; :}
   ;
 
-List typedecl_list =
-    typedecl.t			{: return new List().add(t); :}
-  | typedecl_list.l typedecl.t	{: return l.add(t); :}
+Program program = 
+    vblock.b		{: return new Program(b) ; :}
+  ; 
+
+
+Block vblock	=
+  LBRACE SKIP RBRACE	{: return new Block() ; :}
   ;
 
-TypeDecl typedecl =
-    interfacedecl.i		{: return i; :}
-  ;
-
-InterfaceDecl interfacedecl =
-  INTERFACE IDENTIFIER LBRACE methodsig_list.l? RBRACE
-				{: return new InterfaceDecl(IDENTIFIER, l); :}
-  ;
+//This is just to harmonize with ternminals defiend in ABS.flex
 
 
 
-Block vblock =
-  LBRACE RBRACE {: return new Block(); :}
-  ;
 
 /*
+
 Block block =
   LBRACE block_stmt_list_opt RBRACE {: return new Block(block_stmt_list_opt); :}
   ;
@@ -105,3 +103,4 @@ Exp boolean_literal =
   BOOLEAN_LITERAL              {: return new BooleanLiteral(BOOLEAN_LITERAL); :}
   ;
 */
+

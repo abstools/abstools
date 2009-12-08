@@ -22,12 +22,26 @@ TESTS 	 =  statements.abs  trivial.abs boundedbuffer.abs pingpong.abs
 # Fix this target with to use variable $(TESTS) and change parser
 # to run on all input files, not just one 
 # Doing it with a for loop for now. 
+
+beavertests: absparser
+	@for file in $(TESTS); do \
+	echo $(PARSER) "tests/$${file}" $(PARSEROPTS) ; $(PARSER) "tests/$${file}" $(PARSEROPTS) ;  \
+	done ;
+
+
 tests: absparser
 	@for file in $(TESTS); do \
 	echo $(PARSER) "tests/$${file}" $(PARSEROPTS) ; $(PARSER) "tests/$${file}" $(PARSEROPTS) ;  \
 	done ;
 
 
+compileast: genastsrc $(COMPILED)abs/frontend/ast/%.class 
+
+$(COMPILED)abs/frontend/ast/%.class : $(wildcard $(GENERATED_SRC)abs/frontend/ast/*.java)
+	mkdir -p $(COMPILED)
+	$(JAVAC) $^
+
+genastsrc: $(GENERATED_SRC)abs/frontend/ast/%.java
 
 absparser: $(COMPILED)abs/frontend/parser/ABSLexer.class $(COMPILED)abs/frontend/parser/ABSParser.class
 
@@ -39,7 +53,7 @@ $(GENERATED_SRC)abs/frontend/parser/ABSLexer.java \
 $(GENERATED_SRC)abs/frontend/parser/ABSParser.java: $(SOURCE)abs/frontend/parser/ABS.g
 	$(ANTLR) $(ANTLROPTS) -fo $(GENERATED_SRC)abs/frontend/parser  $<
 
-$(GENERATED_SRC)abs/frontend/ast/ASTNode.java: $(SOURCE)abs/frontend/ast/ABS.ast
+$(GENERATED_SRC)abs/frontend/ast/%.java: $(SOURCE)abs/frontend/ast/ABS.ast
 	@mkdir -p $(GENERATED_SRC)abs/frontend/ast
 	$(JASTADD) $^
 

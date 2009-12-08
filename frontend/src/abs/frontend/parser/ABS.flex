@@ -2,7 +2,7 @@ package parser;
 
 import beaver.Symbol;
 import beaver.Scanner;
-//import AST.ABSParser.Terminals;
+import parser.ABSParser.Terminals;
 
 %%
 
@@ -35,41 +35,41 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 
 %% // Rules
 
-"class"       { return sym(Terminals.CLASS); }
-"interface"   { return sym(Terminals.INTERFACE); }
-"extends"     { return sym(Terminals.EXTENDS); }
-"implements"  { return sym(Terminals.IMPLEMENTS); }
-"while"       { return sym(Terminals.WHILE); }
-"return"      { return sym(Terminals.RETURN); }
-"fut"         { return sym(Terminals.FUT); }
-"skip"        { return sym(Terminals.SKIP); }
-"get"         { return sym(Terminals.GET); }
-"null"        { return sym(Terminals.NULL); }
-"await"       { return sym(Terminals.AWAIT); }
-"if"          { return sym(Terminals.IF); }
-"then"        { return sym(Terminals.THEN); }
-"else"        { return sym(Terminals.ELSE); }
-"release"     { return sym(Terminals.RELEASE); }
-"new"         { return sym(Terminals.NEW); }
+// "class"       { return sym(Terminals.CLASS); }
+// "interface"   { return sym(Terminals.INTERFACE); }
+// "extends"     { return sym(Terminals.EXTENDS); }
+// "implements"  { return sym(Terminals.IMPLEMENTS); }
+// "while"       { return sym(Terminals.WHILE); }
+// "return"      { return sym(Terminals.RETURN); }
+// "fut"         { return sym(Terminals.FUT); }
+ "skip"        { return sym(Terminals.SKIP); }
+// "get"         { return sym(Terminals.GET); }
+// "null"        { return sym(Terminals.NULL); }
+// "await"       { return sym(Terminals.AWAIT); }
+// "if"          { return sym(Terminals.IF); }
+// "then"        { return sym(Terminals.THEN); }
+// "else"        { return sym(Terminals.ELSE); }
+// "release"     { return sym(Terminals.RELEASE); }
+// "new"         { return sym(Terminals.NEW); }
 
-"true"        { return sym(Terminals.BOOLEAN_LITERAL); }
-"false"       { return sym(Terminals.BOOLEAN_LITERAL); }
-"bool"        { return sym(Terminals.BOOL); }
+// "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
+// "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
+// "bool"        { return sym(Terminals.BOOL); }
 
-"("           { return sym(Terminals.LPAREN); }
-")"           { return sym(Terminals.RPAREN); }
-"{"           { return sym(Terminals.LBRACE); }
-"}"           { return sym(Terminals.RBRACE); }
-";"           { return sym(Terminals.SEMICOLON); }
-"?"           { return sym(Terminals.QMARK); }
-"."           { return sym(Terminals.DOT); }
-"!"           { return sym(Terminals.BANG); }
-"="           { return sym(Terminals.ASSIGN); }
-"&&"          { return sym(Terminals.AND); }
+// "("           { return sym(Terminals.LPAREN); }
+// ")"           { return sym(Terminals.RPAREN); }
+ "{"           { return sym(Terminals.LBRACE); }
+ "}"           { return sym(Terminals.RBRACE); }
+// ";"           { return sym(Terminals.SEMICOLON); }
+// "?"           { return sym(Terminals.QMARK); }
+// "."           { return sym(Terminals.DOT); }
+// "!"           { return sym(Terminals.BANG); }
+// "="           { return sym(Terminals.ASSIGN); }
+// "&&"          { return sym(Terminals.AND); }
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
-{Identifier}  { return sym(Terminals.IDENTIFIER); }
+// {Identifier}  { return sym(Terminals.IDENTIFIER); }
 
 .|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
 <<EOF>>       { return sym(Terminals.EOF); }
