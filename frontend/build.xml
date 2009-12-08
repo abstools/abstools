@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <project name="ABS Frontend" default="compile" basedir=".">
+<!-- $Id$ -->
 
   <property environment = "env" /> <!-- include environment variables -->
 
