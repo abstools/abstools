@@ -53,6 +53,7 @@
       <classpath>
 	<pathelement location = "${ext.dir}/beaver.jar" />
 	<pathelement location = "${ext.dir}/jastadd2.jar" />
+	<pathelement location = "${ext.dir}/JastAddParser.jar" />
       </classpath>
     </javac>
   </target>
@@ -66,14 +67,27 @@
   </target>
 
  <target name="test" depends="compile">
-    <java classname="abs.frontend.parser.ABSParser">
-      <arg value="tests/trivial.abs"/>   
+    <java classname="tests.ParserTest">
+      <arg value="tests/skipblock.abs"/>
       <classpath>
-           <pathelement location="${ext.dir}/antlr-3.2.jar"/>
+	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
            <pathelement path="${build.dir}"/>
          </classpath>
        </java>
-  </target>  
+    <java classname="tests.ParserTest">
+      <arg value="tests/failblock.abs"/>
+      <classpath>
+	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
+           <pathelement path="${build.dir}"/>
+         </classpath>
+       </java>
+
+
+
+  </target>
+
+
+<!-- java -cp lib/beaver-rt.jar:bin tests.ParserTest tests/skipblock.abs -->
 
   <!--  <target name = "jar" depends = "compile">
        <jar destfile = "${dist.dir}/frontend.jar"
@@ -82,17 +96,17 @@
        />
        </target> -->
   
-  <target name="absParser" depends="prepare">
-    <antlr:antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr"
-		  target="${parser.src.dir}/ABS.g"
-		  outputdirectory="${parser.gen.dir}"
-		  libdirectory="${parser.gen.dir}"		  
-		  multithreaded="true">
-      <classpath>
-	<pathelement location = "${ext.dir}/antlr-3.2.jar" />
-      </classpath>
-    </antlr:antlr3> 
-  </target>
+<!--   <target name="absParser" depends="prepare"> -->
+<!--     <antlr:antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr" -->
+<!-- 		  target="${parser.src.dir}/ABS.g" -->
+<!-- 		  outputdirectory="${parser.gen.dir}" -->
+<!-- 		  libdirectory="${parser.gen.dir}"		   -->
+<!-- 		  multithreaded="true"> -->
+<!--       <classpath> -->
+<!-- 	<pathelement location = "${ext.dir}/antlr-3.2.jar" /> -->
+<!--       </classpath> -->
+<!--     </antlr:antlr3>  -->
+<!--   </target> -->
 
   <target name="gen" depends="genparser, genast">
   </target>
@@ -108,22 +122,36 @@
     </jastadd>
   </target>
 
-  <target name="genparser" depends="prepare">
-    <!-- generate the scanner -->
+  <target name="genparser" depends="genflex,genp1,genp2">
+  
+   </target>
+
+
+   <target name="genflex">
+<!-- generate the scanner -->
     <echo message = "Running jflex"/>
     <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
 	     nobak="yes"/>
+</target> 
+
+   <target name="genp1">
+    <echo message = "Parser phase1"/>
     <!-- generate the parser phase 1, translating .lalr to .beaver -->
     <java fork="true" dir="${parser.src.dir}" 
-	    classpath="${ext.dir}/proj.jar:${ext.dir}/beaver-rt.jar"
+	    classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt.jar"
 	    classname="Main">
 	<arg line="ABS.parser ${parser.gen.dir}/ABSParser.beaver"/>
     </java>
+</target> 
+
+   <target name="genp2">
     <!-- generate the parser phase 2, translating .beaver to .java -->
+
+    <echo message = "Parser phase"/>
     <beaver file="${parser.gen.dir}/ABSParser.beaver"
 	    terminalNames="yes" compress="no" useSwitch="yes"/>
-  </target>
-   
+  
+   </target> 
 
    <!-- KATJA -->
    
