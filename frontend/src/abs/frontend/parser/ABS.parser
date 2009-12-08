@@ -1,0 +1,107 @@
+%header {:
+ package parser;
+ import ast.*;
+:};
+%embed {:
+  class Events extends Parser.Events {
+    public void syntaxError(Symbol token) {
+      StringBuffer s = new StringBuffer();
+      s.append(token.getLine(token.getStart()) + ", " + token.getColumn(token.getStart()) + "\n");
+      s.append("  *** Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
+      throw new Error(s.toString());
+    }
+    public void scannerError(Scanner.Exception e) {
+      StringBuffer s = new StringBuffer();
+      s.append(e.line + ", " + e.column + "\n");
+      s.append("  *** Lexical error: " + e.getMessage());
+      throw new Error(s.toString());
+    }
+  }
+
+  { report = new Events(); } // Use error handler in parser
+:};
+
+Program goal =
+  typedecl_list.l? vblock	{: return new Program(l, vblock); :}
+  ;
+
+List typedecl_list =
+    typedecl.t			{: return new List().add(t); :}
+  | typedecl_list.l typedecl.t	{: return l.add(t); :}
+  ;
+
+TypeDecl typedecl =
+    interfacedecl.i		{: return i; :}
+  ;
+
+InterfaceDecl interfacedecl =
+  INTERFACE IDENTIFIER LBRACE methodsig_list.l? RBRACE
+				{: return new InterfaceDecl(IDENTIFIER, l); :}
+  ;
+
+
+
+Block vblock =
+  LBRACE RBRACE {: return new Block(); :}
+  ;
+
+/*
+Block block =
+  LBRACE block_stmt_list_opt RBRACE {: return new Block(block_stmt_list_opt); :}
+  ;
+
+List block_stmt_list_opt =
+                               {: return new List(); :}
+  | block_stmt_list            {: return block_stmt_list; :}
+  ;
+
+List block_stmt_list =
+    block_stmt                 {: return new List().add(block_stmt); :}
+  | block_stmt_list block_stmt {: return block_stmt_list.add(block_stmt); :}
+  ;
+
+BlockStmt block_stmt =
+    class_decl 
+  | var_decl
+  | stmt
+  ;
+
+Stmt stmt =
+    assign_stmt
+  | while_stmt
+  ;
+
+ClassDecl class_decl =
+  CLASS IDENTIFIER extends_opt block {: return new ClassDecl(IDENTIFIER, extends_opt, block); :}
+  ;
+Opt extends_opt =
+                               {: return new Opt(); :}
+  | EXTENDS IDENTIFIER         {: return new Opt(new Use(IDENTIFIER)); :}
+  ;
+
+VarDecl var_decl = 
+  name IDENTIFIER SEMICOLON    {: return new VarDecl(IDENTIFIER, name); :}
+  ;
+
+AssignStmt assign_stmt =
+  name ASSIGN exp SEMICOLON    {: return new AssignStmt(name, exp); :}
+  ;
+
+WhileStmt while_stmt =
+  WHILE LPAREN exp RPAREN stmt {: return new WhileStmt(exp, stmt); :}
+  ;
+
+Exp exp =
+    name
+  | boolean_literal
+  ;
+
+Access name =
+    IDENTIFIER                 {: return new Use(IDENTIFIER); :}
+  | name DOT IDENTIFIER        {: return new Dot(name, new Use(IDENTIFIER)); :}
+  ;
+
+Exp boolean_literal =
+  BOOLEAN_LITERAL              {: return new BooleanLiteral(BOOLEAN_LITERAL); :}
+  ;
+*/
