@@ -59,23 +59,25 @@
   </target>
 
   <target name = "clean">
-    <delete failonerror = "true" includeemptydirs = "true"> 
-      <fileset dir = "${build.dir}"/>
+    <delete failonerror = "false" includeemptydirs = "true"> 
       <fileset dir = "${gen.dir}"/>
+      <fileset dir = "${ast.gen.dir}"/>
+      <fileset dir = "${parser.gen.dir}"/>
+      <fileset dir = "${build.dir}"/>
       <fileset dir = "${dist.dir}"/>
     </delete>
   </target>
 
  <target name="test" depends="compile">
     <java classname="tests.ParserTest">
-      <arg value="tests/skipblock.abs"/>
-      <classpath>
-	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
-           <pathelement path="${build.dir}"/>
-         </classpath>
+        <arg value="tests/failblock.abs"/>
+    <classpath>
+    <pathelement location="${ext.dir}/beaver-rt.jar"/>
+        <pathelement path="${build.dir}"/>
+     </classpath>
        </java>
     <java classname="tests.ParserTest">
-      <arg value="tests/failblock.abs"/>
+        <arg value="tests/skipblock.abs"/>
       <classpath>
 	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
            <pathelement path="${build.dir}"/>
@@ -140,7 +142,7 @@
     <java fork="true" dir="${parser.src.dir}" 
 	    classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt.jar"
 	    classname="Main">
-	<arg line="ABS.parser ${parser.gen.dir}/ABSParser.beaver"/>
+	<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'"/>
     </java>
 </target> 
 
