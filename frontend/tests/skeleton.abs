@@ -2,12 +2,16 @@
 
 
 //Main
+
+interface foo {} 
+
+interface bar { } 
+
+class bazclass implements foo, bar {}
+
+
 {
-//varDeclList
-; 
-//stmtRet
-    skip;
-    return null 
+
 }
 
 

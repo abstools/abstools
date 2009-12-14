@@ -35,14 +35,18 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 
 %% // Rules
 
-// "class"       { return sym(Terminals.CLASS); }
-// "interface"   { return sym(Terminals.INTERFACE); }
+//temporary for development
+ "msig"       { return sym(Terminals.MSIG); }
+
+
+ "class"       { return sym(Terminals.CLASS); }
+ "interface"   { return sym(Terminals.INTERFACE); }
 // "extends"     { return sym(Terminals.EXTENDS); }
-// "implements"  { return sym(Terminals.IMPLEMENTS); }
+ "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }
 // "return"      { return sym(Terminals.RETURN); }
 // "fut"         { return sym(Terminals.FUT); }
- "skip"        { return sym(Terminals.SKIP); }
+// "skip"        { return sym(Terminals.SKIP); }
 // "get"         { return sym(Terminals.GET); }
 // "null"        { return sym(Terminals.NULL); }
 // "await"       { return sym(Terminals.AWAIT); }
@@ -60,6 +64,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 // ")"           { return sym(Terminals.RPAREN); }
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
+ ","           { return sym(Terminals.COMMA); }
 // ";"           { return sym(Terminals.SEMICOLON); }
 // "?"           { return sym(Terminals.QMARK); }
 // "."           { return sym(Terminals.DOT); }
@@ -69,7 +74,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
-// {Identifier}  { return sym(Terminals.IDENTIFIER); }
+{Identifier}  { return sym(Terminals.IDENTIFIER); }
 
 .|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
 <<EOF>>       { return sym(Terminals.EOF); }

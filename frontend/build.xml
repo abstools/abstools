@@ -70,14 +70,14 @@
 
  <target name="test" depends="compile">
     <java classname="tests.ParserTest">
-        <arg value="tests/failblock.abs"/>
+        <arg value="tests/emptyblock.abs"/>
     <classpath>
     <pathelement location="${ext.dir}/beaver-rt.jar"/>
         <pathelement path="${build.dir}"/>
      </classpath>
        </java>
     <java classname="tests.ParserTest">
-        <arg value="tests/skipblock.abs"/>
+        <arg value="tests/skeleton.abs"/>
       <classpath>
 	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
            <pathelement path="${build.dir}"/>
@@ -136,7 +136,7 @@
 	     nobak="yes"/>
 </target> 
 
-   <target name="genp1">
+   <target name="genp1" depends="genflex">
     <echo message = "Parser phase1"/>
     <!-- generate the parser phase 1, translating .lalr to .beaver -->
     <java fork="true" dir="${parser.src.dir}" 
@@ -146,7 +146,7 @@
     </java>
 </target> 
 
-   <target name="genp2">
+   <target name="genp2" depends="genp1">
     <!-- generate the parser phase 2, translating .beaver to .java -->
 
     <echo message = "Parser phase"/>

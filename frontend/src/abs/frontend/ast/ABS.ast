@@ -12,19 +12,40 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-//Program ::= TypeDecl* Block;
+Program ::= TypeDecl* Block;
 
-Program ::= Block;
+Block				::= BlockStmt*;
 
-//Block				::= BlockStmt*;
 
-Block				::= SkipStmt;
+//Program ::= Block;
+//Block				::= SkipStmt;
+
+
+// TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
+
+abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
+ClassDecl:	TypeDecl	::= Implements:IdUse* Body:DeclBlock;
+IntDecl:	TypeDecl	::= Body:MethodSig*;
+
+DeclBlock			::= Fields:VarOrParamDecl* Methods:Method*;
+
+Method				::= MethodSig Block;
+
+MethodSig			::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
+
+
+//Ato Added for the sake of the line Access ifName ... in ABS.parser 
+
+
+IdUse ::= <ID:String>;
+
+
+//end of added section ATO  
 
 // A `BlockStmt' is either a variable declaration or a regular statement
 abstract BlockStmt;
 VarOrParamDecl:	BlockStmt	::= <Name:String> Type:TypeAccess;
 abstract Stmt:	BlockStmt;
-
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 IfStmt: Stmt			::= Condition:PureExp IfPart:Stmt* ElsePart:Stmt*;
@@ -55,8 +76,9 @@ AsyncMethCall: MethCall		::= Callee:Exp;
 
 // TODO: unfinished
 abstract TypeAccess;
-abstract IdUse:	TypeAccess ::= <Name:String>;
+//abstract IdUse:	TypeAccess ::= <Name:String>;
 Future: TypeAccess;
+
 
 // Created by NTA equations
 InterfaceRef:	TypeAccess;

@@ -9,12 +9,12 @@ aspect DumpTree {
 	  getChildNoTransform(i).dumpTree(childIndent, pStream);
   }
 
-  public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
-      pStream.println(indent + "BLOCK" + " " +  this.getClass());
-      pStream.println(indent + getNumChild());
-      pStream.println(children);
+  //  public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
+  //   pStream.println(indent + "BLOCK" + " " +  this.getClass());
+  //   pStream.println(indent + getNumChild());
+  //    pStream.println(children);
       
-  }
+  //}
 
 
 
