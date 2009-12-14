@@ -1,3 +1,6 @@
+//$Id$ 
+//Grammar definition for the ABS language, this file is input to Beaver 
+
 %header {:
 
 package parser;
