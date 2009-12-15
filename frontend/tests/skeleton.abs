@@ -3,9 +3,20 @@
 
 //Main
 
+
 interface Foo {} 
 
 interface Bar { } 
+
+interface Buffer {
+
+    Void init(Foo f, Bar b)
+    Void append(Int i)
+    Data remove()
+
+}
+
+
 
 class BoundedBuffer implements Buffer {
     
