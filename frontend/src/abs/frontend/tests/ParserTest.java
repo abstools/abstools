@@ -23,7 +23,7 @@ public class ParserTest {
 		System.out.println("Done parsing. Result:");
 		System.out.println(p);
 		p.dumpTree("  ", System.out);
-		System.out.println("Bye");
+		System.out.println("Parsing suceeded. Bye");
 	    } catch (Error err) {
 		System.err.println("Parsing failed");
 		System.err.println(err.getMessage());
@@ -38,12 +38,32 @@ public class ParserTest {
                
   protected static Program parse(String args[]) throws Exception {
       Reader reader = getReader(args);
+      BufferedReader rd = null ;
+      boolean dumpinput=true;
+      if (dumpinput){
+	  try {
+	      rd = new BufferedReader(reader);
+	      String line = null;
+	      int i = 1 ; 
+	      while ((line = rd.readLine()) != null) {
+		  System.out.println(i++ + "\t" + line);
+	      }
+	  } catch (IOException x) {
+	      System.err.println(x);
+	  } finally {
+	      if (rd != null) rd.close();
+	  }
+	  reader = getReader(args);
+	  
+      }
+      
       ABSParser parser = new ABSParser();
       ABSScanner scanner = new ABSScanner(reader);
       Program p = (Program)parser.parse(scanner);
       reader.close();
       return p; 
   }
+    
     
     private static Reader getReader(String[] args) {
 	Reader r = null;

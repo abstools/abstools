@@ -3,18 +3,31 @@
 
 //Main
 
-interface foo {} 
+interface Foo {} 
 
-interface bar { } 
+interface Bar { } 
 
-class bazclass implements foo, bar {}
+class BoundedBuffer implements Buffer {
+    
+    //var_or_field_decl_list
+    ListofInt buffer, 
+    Int max , 
+    Int n 
+	
+	;
+    
+    //Method list 
+    
+    //block not implemented
+    Void init(Foo x, Bar y){}
+	
 
+    //block not implemented
+    Void append(Int i){}
 
+}
+//MAIN
 {
 
 }
-
-
-
-
 

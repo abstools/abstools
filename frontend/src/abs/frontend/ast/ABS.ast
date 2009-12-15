@@ -13,14 +13,9 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-Program ::= TypeDecl* Block;
+Program                         ::= TypeDecl* Block;
 
-Block				::= BlockStmt*;
-
-
-//Program ::= Block;
-//Block				::= SkipStmt;
-
+Block				::= Stmt*;
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
@@ -28,25 +23,33 @@ abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
 ClassDecl:	TypeDecl	::= Implements:IdUse* Body:DeclBlock;
 IntDecl:	TypeDecl	::= Body:MethodSig*;
 
-DeclBlock			::= Fields:VarOrParamDecl* Methods:Method*;
+
+DeclBlock			::= Fields:VarOrFieldDecl* Methods:Method*;
+
+VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; //<Name:String> for the name of the variable or field is inherited from TypeDecl and 
+                                                     //IdUse is a subclass of TypeAccess, parsing returns an instance of IdUse. 
 
 Method				::= MethodSig Block;
 
-MethodSig			::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
+//MethodSig                      ::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
+MethodSig : TypeDecl 		::= ReturnType:TypeAccess Params:VarOrFieldDecl*; //<Name:String> (for the name) inherited from TypeDecl.
+                                                                                  //IdUse (for the type)  
+
+abstract TypeAccess;
+IdUse:	TypeAccess ::= <ID:String>;
+
+//Testing ClassDecl 
+//Old stuff below.
 
 
-//Ato Added for the sake of the line Access ifName ... in ABS.parser 
+// A `BlockStmt' is either a variable declaration or a regular statement. 
+// ATO: Why? , ABS does not allow variable declarations in blocks. 
 
+//abstract BlockStmt;
+//abstract Stmt:	BlockStmt;
 
-IdUse ::= <ID:String>;
+abstract Stmt; 
 
-
-//end of added section ATO  
-
-// A `BlockStmt' is either a variable declaration or a regular statement
-abstract BlockStmt;
-VarOrParamDecl:	BlockStmt	::= <Name:String> Type:TypeAccess;
-abstract Stmt:	BlockStmt;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 IfStmt: Stmt			::= Condition:PureExp IfPart:Stmt* ElsePart:Stmt*;
@@ -75,9 +78,9 @@ LocalSyncMethCall: MethCall;
 NonlocalSyncMethCall: MethCall	::= <Callee:String>;
 AsyncMethCall: MethCall		::= Callee:Exp;
 
+
+
 // TODO: unfinished
-abstract TypeAccess;
-//abstract IdUse:	TypeAccess ::= <Name:String>;
 Future: TypeAccess;
 
 

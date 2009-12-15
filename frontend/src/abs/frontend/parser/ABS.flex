@@ -36,7 +36,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 %% // Rules
 
 //temporary for development
- "msig"       { return sym(Terminals.MSIG); }
+// "msig"       { return sym(Terminals.MSIG); }
 
 
  "class"       { return sym(Terminals.CLASS); }
@@ -60,12 +60,12 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 // "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
 // "bool"        { return sym(Terminals.BOOL); }
 
-// "("           { return sym(Terminals.LPAREN); }
-// ")"           { return sym(Terminals.RPAREN); }
+ "("           { return sym(Terminals.LPAREN); }
+ ")"           { return sym(Terminals.RPAREN); }
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
  ","           { return sym(Terminals.COMMA); }
-// ";"           { return sym(Terminals.SEMICOLON); }
+ ";"           { return sym(Terminals.SEMICOLON); }
 // "?"           { return sym(Terminals.QMARK); }
 // "."           { return sym(Terminals.DOT); }
 // "!"           { return sym(Terminals.BANG); }
