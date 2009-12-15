@@ -11,19 +11,30 @@ public class ParserTest {
 
     public static void main(String[] args) throws Exception {
 
+	Program p = null; 
+
 	System.out.println("Testing parser");
 	if (args.length == 0) {
-	    	System.out.println("Usage java ParserTest filename");
+	    System.out.println("Usage java ParserTest filename");
 	} else {
 	    System.out.println("Trying to parse: " + java.util.Arrays.toString(args));
-	Program p = parse(args);
-	System.out.println("Done parsing. Result:");
-	System.out.println(p);
-	p.dumpTree("  ", System.out);
-	System.out.println("Bye");
-     }
-    }
+	    try{
+		p = parse(args);
+		System.out.println("Done parsing. Result:");
+		System.out.println(p);
+		p.dumpTree("  ", System.out);
+		System.out.println("Bye");
+	    } catch (Error err) {
+		System.err.println("Parsing failed");
+		System.err.println(err.getMessage());
+	    }catch (Exception e1) {
+		System.err.println("Parsing failed");
+		System.err.println(e1.getMessage());
+	    }
 
+	}
+    }
+    
                
   protected static Program parse(String args[]) throws Exception {
       Reader reader = getReader(args);
