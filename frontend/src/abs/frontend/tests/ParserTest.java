@@ -10,9 +10,9 @@ public class ParserTest {
 
 
     public static void main(String[] args) throws Exception {
-
+	
 	Program p = null; 
-
+	
 	System.out.println("Testing parser");
 	if (args.length == 0) {
 	    System.out.println("Usage java ParserTest filename");
@@ -20,49 +20,53 @@ public class ParserTest {
 	    System.out.println("Trying to parse: " + java.util.Arrays.toString(args));
 	    try{
 		p = parse(args);
-		System.out.println("Done parsing. Result:");
-		System.out.println(p);
-		p.dumpTree("  ", System.out);
-		System.out.println("Parsing suceeded. Bye");
+		System.out.println("Parsing suceeded. Result:");
 	    } catch (Error err) {
 		System.err.println("Parsing failed");
+		System.err.println(err);
 		System.err.println(err.getMessage());
-	    }catch (Exception e1) {
+	    } catch (Exception e1) {
 		System.err.println("Parsing failed");
+		System.err.println(e1);
 		System.err.println(e1.getMessage());
+	    }
+	    //Dump tree for debug
+	    if (p!=null){
+		System.out.println(p);
+		p.dumpTree("  ", System.out);
 	    }
 
 	}
     }
     
                
-  protected static Program parse(String args[]) throws Exception {
-      Reader reader = getReader(args);
-      BufferedReader rd = null ;
-      boolean dumpinput=true;
-      if (dumpinput){
-	  try {
-	      rd = new BufferedReader(reader);
-	      String line = null;
-	      int i = 1 ; 
-	      while ((line = rd.readLine()) != null) {
+    protected static Program parse(String args[]) throws Exception {
+	Reader reader = getReader(args);
+	BufferedReader rd = null ;
+	boolean dumpinput=true;
+	if (dumpinput){
+	    try {
+		rd = new BufferedReader(reader);
+		String line = null;
+		int i = 1 ; 
+		while ((line = rd.readLine()) != null) {
 		  System.out.println(i++ + "\t" + line);
-	      }
-	  } catch (IOException x) {
-	      System.err.println(x);
-	  } finally {
-	      if (rd != null) rd.close();
-	  }
-	  reader = getReader(args);
-	  
-      }
-      
-      ABSParser parser = new ABSParser();
-      ABSScanner scanner = new ABSScanner(reader);
-      Program p = (Program)parser.parse(scanner);
-      reader.close();
-      return p; 
-  }
+		}
+	    } catch (IOException x) {
+		System.err.println(x);
+	    } finally {
+		if (rd != null) rd.close();
+	    }
+	    reader = getReader(args);
+	    
+	}
+	
+	ABSParser parser = new ABSParser();
+	ABSScanner scanner = new ABSScanner(reader);
+	Program p = (Program)parser.parse(scanner);
+	reader.close();
+	return p; 
+    }
     
     
     private static Reader getReader(String[] args) {
@@ -78,7 +82,7 @@ public class ParserTest {
 	}
 	return r;
     }
-
-
-
+    
+    
+    
 }
