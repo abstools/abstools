@@ -1,8 +1,8 @@
-package parser;
+package abs.frontend.parser;
 
 import beaver.Symbol;
 import beaver.Scanner;
-import parser.ABSParser.Terminals;
+import abs.frontend.parser.ABSParser.Terminals;
 
 %%
 

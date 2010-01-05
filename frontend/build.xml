@@ -69,14 +69,14 @@
   </target>
 
  <target name="test" depends="compile">
-    <java classname="tests.ParserTest">
+    <java classname="abs.frontend.tests.ParserTest">
         <arg value="tests/block.abs"/>
     <classpath>
     <pathelement location="${ext.dir}/beaver-rt.jar"/>
         <pathelement path="${build.dir}"/>
      </classpath>
        </java>
-    <java classname="tests.ParserTest">
+    <java classname="abs.frontend.tests.ParserTest">
         <arg value="tests/skeleton.abs"/>
       <classpath>
 	   <pathelement location="${ext.dir}/beaver-rt.jar"/>

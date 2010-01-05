@@ -1,9 +1,9 @@
 //$Id$
-package tests;
+package abs.frontend.tests;
 
 
 import ast.*;
-import parser.*;
+import abs.frontend.parser.*;
 import java.io.*;
 
 public class ParserTest {

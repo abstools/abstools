@@ -3,7 +3,7 @@
 
 %header {:
 
-package parser;
+package abs.frontend.parser;
 import ast.*;
 
 :};
