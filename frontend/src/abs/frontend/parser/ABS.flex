@@ -44,11 +44,11 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 // "extends"     { return sym(Terminals.EXTENDS); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }
-// "return"      { return sym(Terminals.RETURN); }
+ "return"      { return sym(Terminals.RETURN); }
 // "fut"         { return sym(Terminals.FUT); }
-// "skip"        { return sym(Terminals.SKIP); }
-// "get"         { return sym(Terminals.GET); }
-// "null"        { return sym(Terminals.NULL); }
+ "skip"        { return sym(Terminals.SKIP); }
+ "get"         { return sym(Terminals.GET); }
+ "null"        { return sym(Terminals.NULL); }
 // "await"       { return sym(Terminals.AWAIT); }
 // "if"          { return sym(Terminals.IF); }
 // "then"        { return sym(Terminals.THEN); }
@@ -56,8 +56,8 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 // "release"     { return sym(Terminals.RELEASE); }
 // "new"         { return sym(Terminals.NEW); }
 
-// "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
-// "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
+ "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
+ "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
 // "bool"        { return sym(Terminals.BOOL); }
 
  "("           { return sym(Terminals.LPAREN); }
@@ -67,7 +67,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
  ","           { return sym(Terminals.COMMA); }
  ";"           { return sym(Terminals.SEMICOLON); }
 // "?"           { return sym(Terminals.QMARK); }
-// "."           { return sym(Terminals.DOT); }
+ "."           { return sym(Terminals.DOT); }
 // "!"           { return sym(Terminals.BANG); }
 // "="           { return sym(Terminals.ASSIGN); }
 // "&&"          { return sym(Terminals.AND); }

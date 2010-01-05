@@ -70,7 +70,7 @@
 
  <target name="test" depends="compile">
     <java classname="tests.ParserTest">
-        <arg value="tests/emptyblock.abs"/>
+        <arg value="tests/block.abs"/>
     <classpath>
     <pathelement location="${ext.dir}/beaver-rt.jar"/>
         <pathelement path="${build.dir}"/>
@@ -83,10 +83,7 @@
            <pathelement path="${build.dir}"/>
          </classpath>
        </java>
-
-
-
-  </target>
+ </target>
 
 
 <!-- To run from command line: 

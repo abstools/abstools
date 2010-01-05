@@ -1,9 +1,8 @@
 //$Id$
 
 
-//Main
 
-
+//Interface declarations 
 interface Foo {} 
 
 interface Bar { } 
@@ -17,28 +16,36 @@ interface Buffer {
 }
 
 
-
+//Class declarations 
 class BoundedBuffer implements Buffer {
     
     //var_or_field_decl_list
     ListofInt buffer, 
     Int max , 
     Int n 
+	;
+
+    //Method list 
+  
+    Void init(Foo x, Bar y){
 	
 	;
+	skip ;
+	return null
     
-    //Method list 
-    
-    //block not implemented
-    Void init(Foo x, Bar y){}
+    }
 	
-
-    //block not implemented
-    Void append(Int i){}
+    Void append(Int i){ ; skip; return null}
 
 }
 //MAIN
 {
-
+    //var_or_field_decl_list
+    Int x
+    ;
+    //stmt_return
+    skip
+    ;
+    return null 
 }
 

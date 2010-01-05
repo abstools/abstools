@@ -36,11 +36,17 @@ Program program =
   ;
 
 
-
 TypeDecl typedecl =
-    interfacedecl.i		{: return i; :}
-    | classdecl.c       	{: return c; :}
+    interfacedecl
+    | classdecl
     ;
+
+//The above is equivalent to the more explicit:  
+// TypeDecl typedecl =
+//     interfacedecl.i		{: return i; :}
+//     | classdecl.c       	{: return c; :}
+//     ;
+
 
 IntDecl interfacedecl =
   INTERFACE IDENTIFIER LBRACE methodsig_list.l? RBRACE
@@ -117,11 +123,48 @@ MethodSig methodsig =
 
 
 
-//Program block, just an empty block for now, no statements.
-//Is to be used in program, i.e· {_T x_ ; sr}
+//Program block
+//Is to be used in program, and method i.e. {_T x_ ; sr}
 Block block	=
-    LBRACE RBRACE	{: return new Block() ; :}
+    //    LBRACE RBRACE {: return new Block() ; :} //For empty block
+        LBRACE var_or_field_decl_list.l? SEMICOLON stmt_ret.s RBRACE	{: return new Block(l,s) ; :}
     ;
+
+StmtRet stmt_ret = 
+    stmt_list.l? SEMICOLON RETURN pure_exp.e                                  {: return new StmtRet(l,e) ; :}
+    
+    ;
+
+PureExp pure_exp = 
+    var_ref
+    | get_exp
+    | BOOLEAN_LITERAL.b    {: return new BoolExp(b); :}
+    | NULL                 {: return new NullExpr() ; :}
+    ;
+
+VarRef var_ref =
+    IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
+    ;
+
+GetExp get_exp =
+    pure_exp.p DOT GET             {: return new GetExp(p) ; :}
+    ;
+
+List stmt_list =
+    stmt.i                              {: return new List().add(i); :}
+    | stmt_list.l SEMICOLON stmt.i        {: return l.add(i); :}
+  ;
+
+
+Stmt stmt = 
+    //    stmtBlock.b                   {: return b ; :}
+    //    |   assignStmt.a              {: return a ; :}
+    //    |   AWAIT guard               {: return new AwaitStmt(guard) ; :}
+    |   SKIP                      {: return new SkipStmt() ; :}
+	//    |   ifstmt.i                  {: return i ; :} 
+//    |   RELEASE                   {: return new ReleaseStmt() ; :} 
+    ;
+
 
 
 
@@ -132,14 +175,7 @@ List XXX_list =
     | XXX_list.l SEPARATOR XXX.i        {: return l.add(i); :}
   ;
 
-IdUse ifName =
-    IDENTIFIE {: return new IdUse(IDENTIFIER) ; :}
-    ;
 
-
-
-Method method = 
-    methodSig block {: return ned  
     
 
 

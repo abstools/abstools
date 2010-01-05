@@ -15,7 +15,13 @@
 
 Program                         ::= TypeDecl* Block;
 
-Block				::= Stmt*;
+//A Block is the body of programs and methods. 
+//It contains a list of zero or more ast.VarOrFieldDecl and one ast.StmtRet, 
+//these are named Fields and Stmts resp.  
+Block				::= Fields:VarOrFieldDecl*  Stmts:StmtRet;
+
+DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
+
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
@@ -24,10 +30,8 @@ ClassDecl:	TypeDecl	::= Implements:IdUse* Body:DeclBlock;
 IntDecl:	TypeDecl	::= Body:MethodSig*;
 
 
-DeclBlock			::= Fields:VarOrFieldDecl* Methods:Method*;
-
 VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; //<Name:String> for the name of the variable or field is inherited from TypeDecl and 
-                                                     //IdUse is a subclass of TypeAccess, parsing returns an instance of IdUse. 
+                                                     //IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 Method				::= MethodSig Block;
 
@@ -45,8 +49,12 @@ IdUse:	TypeAccess ::= <ID:String>;
 // A `BlockStmt' is either a variable declaration or a regular statement. 
 // ATO: Why? , ABS does not allow variable declarations in blocks. 
 
+
 //abstract BlockStmt;
 //abstract Stmt:	BlockStmt;
+
+
+StmtRet                         ::= Stmts:Stmt* RetExp:PureExp; 
 
 abstract Stmt; 
 
@@ -67,10 +75,10 @@ abstract Exp;
 abstract PureExp: Exp;
 abstract ImpureExp: Exp;
 
-VarRef: PureExp			::= <VarRef:String>;
+VarRef: PureExp			::= <VarName:String>;
 GetExp: PureExp			::= PureExp;
 NullExpr: PureExp;
-Bool: PureExp;
+BoolExp: PureExp                ::= <Value:String>;        
 
 NewExp: ImpureExp		::= <ClassRef:String>;
 abstract MethCall: ImpureExp 	::= <Method:String> Params:PureExp*;
