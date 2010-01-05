@@ -44,7 +44,8 @@ public class ParserTest {
 	protected static Program parse(String args[]) throws Exception {
 		Reader reader = getReader(args);
 		BufferedReader rd = null ;
-		boolean dumpinput=true;
+		//Set to true to print source before parsing 
+		boolean dumpinput=false;
 		if (dumpinput){
 			try {
 				rd = new BufferedReader(reader);
