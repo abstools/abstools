@@ -1,35 +1,35 @@
 aspect DumpTree {
-    
-    //Added by ATO: 
-    public void ASTNode.dumpTree(String indent, java.io.PrintStream pStream) {
-	pStream.println(indent + this.toString());
-	String childIndent = indent + "  ";
-	for(int i = 0; i < getNumChild(); i++)
-	    getChildNoTransform(i).dumpTree(childIndent, pStream);
-    }
-    
-    public void VarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
-	pStream.println(indent + this.toString() + "\t\t" +  this.getName() + " : " +  ((IdUse)this.getType()).getID());
-	String childIndent = indent + "  ";
-	for(int i = 0; i < getNumChild(); i++)
-	    getChildNoTransform(i).dumpTree(childIndent, pStream);
-    }
 
- 
-    
-    public void IdUse.dumpTree(String indent, java.io.PrintStream pStream) {
-	//Handled by parent. 
-    }
-    
+	//Added by ATO: 
+	public void ASTNode.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.println(indent + this.toString());
+		String childIndent = indent + "  ";
+		for(int i = 0; i < getNumChild(); i++)
+			getChildNoTransform(i).dumpTree(childIndent, pStream);
+	}
+
+	public void VarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.println(indent + this.toString() + "\t\t" +  this.getName() + " : " +  ((IdUse)this.getType()).getID());
+		String childIndent = indent + "  ";
+		for(int i = 0; i < getNumChild(); i++)
+			getChildNoTransform(i).dumpTree(childIndent, pStream);
+	}
 
 
-    // public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
-    // pStream.println(indent + "BLOCK" + " " +  this.getClass());
-    // pStream.println(indent + getNumChild());
-    // pStream.println(children);
-    
-    //  }
-    
-    
-    
+
+	public void IdUse.dumpTree(String indent, java.io.PrintStream pStream) {
+		//Handled by parent. 
+	}
+
+
+
+	// public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
+	// pStream.println(indent + "BLOCK" + " " +  this.getClass());
+	// pStream.println(indent + getNumChild());
+	// pStream.println(children);
+
+	//  }
+
+
+
 }  
