@@ -89,7 +89,10 @@
   </target>
 
 
-<!-- java -cp lib/beaver-rt.jar:bin tests.ParserTest tests/skipblock.abs -->
+<!-- To run from command line: 
+     java -cp lib/beaver-rt.jar:bin tests.ParserTest tests/skeleton.abs
+  
+-->
 
   <!--  <target name = "jar" depends = "compile">
        <jar destfile = "${dist.dir}/frontend.jar"
