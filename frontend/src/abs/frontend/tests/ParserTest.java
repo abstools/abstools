@@ -23,13 +23,11 @@ public class ParserTest {
 				p = parse(args);
 				System.out.println("Parsing suceeded. Result:");
 			} catch (Error err) {
-				System.err.println("Parsing failed");
+				System.err.println("Parsing failed with Error");
 				System.err.println(err);
-				System.err.println(err.getMessage());
 			} catch (Exception e1) {
-				System.err.println("Parsing failed");
+				System.err.println("Exception");
 				System.err.println(e1);
-				System.err.println(e1.getMessage());
 			}
 			//Dump tree for debug
 			if (p!=null){
