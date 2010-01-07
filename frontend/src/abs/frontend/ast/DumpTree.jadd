@@ -15,16 +15,6 @@ aspect DumpTree {
 			getChildNoTransform(i).dumpTree(childIndent, pStream);
 	}
 
-
-	//XXX 	public void VarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
-		pStream.println(indent + this.toString() + "\t\t" +  this.getName() + " : " +  ((IdUse)this.getType()).getID());
-		String childIndent = indent + "  ";
-		for(int i = 0; i < getNumChild(); i++)
-			getChildNoTransform(i).dumpTree(childIndent, pStream);
-	}
-
-
-
 	public void IdUse.dumpTree(String indent, java.io.PrintStream pStream) {
 		//Handled by parent. 
 	}
