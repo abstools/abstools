@@ -1,8 +1,7 @@
 //$Id$
 package abs.frontend.tests;
 
-
-import ast.*;
+import abs.frontend.ast.*;
 import abs.frontend.parser.*;
 import java.io.*;
 
@@ -25,9 +24,11 @@ public class ParserTest {
 			} catch (Error err) {
 				System.err.println("Parsing failed with Error");
 				System.err.println(err);
+				err.printStackTrace(System.err);
 			} catch (Exception e1) {
 				System.err.println("Exception");
 				System.err.println(e1);
+				e1.printStackTrace(System.err);
 			}
 			//Dump tree for debug
 			if (p!=null){
