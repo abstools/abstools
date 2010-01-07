@@ -19,6 +19,13 @@ aspect DumpTree {
 		//Handled by parent. 
 	}
 
+	public void VarRef.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVarName());
+	}
+
+	public void AssignStmt.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
+	}
 
 
 	// public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
