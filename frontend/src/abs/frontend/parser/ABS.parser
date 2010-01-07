@@ -4,7 +4,7 @@
 %header {:
 
 package abs.frontend.parser;
-import ast.*;
+import abs.frontend.ast.*;
 
 :};
 %embed {:
@@ -67,8 +67,10 @@ IdUse ifName =
     IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
     ;
 
-IdUse type =
-    IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
+TypeAccess type =
+	IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
+	| BOOL  {: return new IdUse(BOOL) ; :}
+	| FUT LPAREN IDENTIFIER RPAREN {: return new Future(IDENTIFIER) ; :}
     ;
 
 
@@ -110,6 +112,13 @@ List ifName_list =
     | ifName_list.l COMMA ifName.i        {: return l.add(i); :}
   ;
 
+List pure_exp_list =
+    pure_exp.i                              {: return new List().add(i); :}
+    | pure_exp_list.l COMMA pure_exp.i        {: return l.add(i); :}
+  ;
+
+
+
 
 
 Method method = 
@@ -138,9 +147,17 @@ StmtRet stmt_ret =
 PureExp pure_exp = 
     var_ref
     | get_exp
-    | BOOLEAN_LITERAL.b    {: return new BoolExp(b); :}
-    | NULL                 {: return new NullExpr() ; :}
+    | bool_exp
+    | NULL                 {: return new NullExp() ; :}
     ;
+
+
+BoolExp bool_exp = 
+	NEG pure_exp.e         {: return new BoolExpNeg(e); :} 
+	| pure_exp.e1 ANDAND pure_exp.e2  	{: return new BoolExpAnd(e1,e2); :} 
+	| pure_exp.e1 OROR pure_exp.e2  	{: return new BoolExpOr(e1,e2); :} 
+	| 	BOOLEAN_LITERAL.b    {: return new BoolLiteral(b); :}
+	;
 
 VarRef var_ref =
     IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
@@ -150,22 +167,67 @@ GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
     ;
 
+EffExp eff_exp = 
+    new_exp 
+	| asynch_call 
+	| synch_call
+	| local_sync_call 
+	; 
+
+
+NewExp  new_exp = 
+	NEW IDENTIFIER.i LPAREN RPAREN {: return new NewExp(i) ; :} 
+	;
+
+AsyncCall asynch_call = 
+	pure_exp.callee BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
+	;
+SyncCall synch_call = 
+	pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
+	;
+LocalSyncCall local_sync_call =
+	IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new LocalSyncCall(method,params) ; :} 
+	;
+
+
+
+Stmt stmt = 
+	assign_stmt             
+	|  AWAIT guard               {: return new AwaitStmt(guard) ; :}
+	|  SKIP                      {: return new SkipStmt() ; :}
+	|  RELEASE                   {: return new ReleaseStmt() ; :} 
+	|  if_then_else_stmt         
+	|  stmt_block
+		;
+
+
+
+Guard guard = 	
+	| var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
+	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
+	  //	| bool_exp.b  {: return new BoolGuard(b) ; :} 
+	;
+
+
+IfStmt if_then_else_stmt = 
+	IF pure_exp.e1 THEN stmt.s1 ELSE stmt.s2 {: return new IfStmt(e1,s1,new Opt(s2)) ; :} 
+	| IF pure_exp.e1 THEN stmt.s1 {: return new IfStmt(e1, s1, new Opt()); :}
+	;
+
+AssignStmt assign_stmt =  
+	var_ref.r ASSIGN pure_exp.e        {: return new AssignStmt(r,e) ; :}
+    |   var_ref.r ASSIGN eff_exp.e  {: return new AssignStmt(r,e) ; :}
+    ;
+
+
+StmtBlock stmt_block = 
+	LBRACE stmt_list.s RBRACE       {:	return new StmtBlock(s) ; :}
+    ;      
+
 List stmt_list =
     stmt.i                              {: return new List().add(i); :}
     | stmt_list.l SEMICOLON stmt.i        {: return l.add(i); :}
   ;
-
-
-Stmt stmt = 
-    //    stmtBlock.b                   {: return b ; :}
-    //    |   assignStmt.a              {: return a ; :}
-    //    |   AWAIT guard               {: return new AwaitStmt(guard) ; :}
-    |   SKIP                      {: return new SkipStmt() ; :}
-	//    |   ifstmt.i                  {: return i ; :} 
-//    |   RELEASE                   {: return new ReleaseStmt() ; :} 
-    ;
-
-
 
 
 /*
@@ -175,11 +237,7 @@ List XXX_list =
     | XXX_list.l SEPARATOR XXX.i        {: return l.add(i); :}
   ;
 
-
     
-
-
-
 /*
 
 List block_stmt_list_opt =
@@ -187,10 +245,6 @@ List block_stmt_list_opt =
   | block_stmt_list            {: return block_stmt_list; :}
   ;
 
-List block_stmt_list =
-    block_stmt                 {: return new List().add(block_stmt); :}
-  | block_stmt_list block_stmt {: return block_stmt_list.add(block_stmt); :}
-  ;
 
 BlockStmt block_stmt =
     class_decl 
