@@ -37,7 +37,7 @@
     <mkdir dir = "${ast.gen.dir}"/>
     <mkdir dir = "${parser.gen.dir}" />
     <mkdir dir = "${build.dir}"/>
-    <mkdir dir = "${dist.dir}"/>
+    <!-- <mkdir dir = "${dist.dir}"/> -->
     <mkdir dir = "${apidoc.dir}"/>
   </target>
 
