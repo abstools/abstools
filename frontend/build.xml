@@ -133,9 +133,9 @@
     <jastadd package="${ast.package}" rewrite="true" beaver="true"
 	     novisitcheck="true" outdir="${gen.dir}" debug="true">
       <fileset dir=".">
-        <include name="**/*.ast"/>
-        <include name="**/*.jrag"/>
-        <include name="**/*.jadd"/>
+        <include name="src/**/*.ast"/>
+        <include name="src/**/*.jrag"/>
+        <include name="src/**/*.jadd"/>
       </fileset>
     </jastadd>
   </target>
