@@ -32,25 +32,36 @@ Program goal =
   ;
 
 Program program = 
-  typedecl_list.l? block	{: return new Program(l, block); :}
+	decl_list.l? block	{: return new Program(l, block); :}
   ;
 
 
+Decl decl =
+		typedecl
+//	|	behaviordecl
+;
+
 TypeDecl typedecl =
-    interfacedecl
-    | classdecl
+		interfacedecl
+	|	classdecl // TODO: move to behaviordecl cf. AST def
+//	| adtdecl
     ;
 
-//The above is equivalent to the more explicit:  
+// The above is equivalent to the more explicit:  
 // TypeDecl typedecl =
-//     interfacedecl.i		{: return i; :}
-//     | classdecl.c       	{: return c; :}
-//     ;
+// 		interfacedecl.i		{: return i; :}
+// 	| classdecl.c       	{: return c; :}
+// 	;
+
+// BehaviorDecl behaviordecl =
+//		classdecl
+//	|	defdecl
+// ; 
 
 
-IntDecl interfacedecl =
+InterfaceDecl interfacedecl =
   INTERFACE IDENTIFIER LBRACE methodsig_list.l? RBRACE
-				{: return new IntDecl(IDENTIFIER, l); :}
+				{: return new InterfaceDecl(IDENTIFIER, l); :}
   ;
 
 ClassDecl classdecl =
@@ -102,10 +113,20 @@ List methodsig_list =
   | methodsig_list.l methodsig.m	{: return l.add(m); :}
   ;
 
-List typedecl_list =
-    typedecl.t			{: return new List().add(t); :}
-  | typedecl_list.l typedecl.t	{: return l.add(t); :}
+List decl_list =
+    decl.t			{: return new List().add(t); :}
+  | decl_list.l decl.t	{: return l.add(t); :}
   ;
+
+//List typedecl_list =
+//    typedecl.t			{: return new List().add(t); :}
+//  | typedecl_list.l typedecl.t	{: return l.add(t); :}
+//  ;
+
+//List behaviordecl_list =
+//    behaviordecl.t			{: return new List().add(t); :}
+//  | behaviordecl_list.l behaviordecl.t	{: return l.add(t); :}
+//  ;
 
 List ifName_list =
     ifName.i                              {: return new List().add(i); :}

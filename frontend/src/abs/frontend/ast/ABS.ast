@@ -18,9 +18,16 @@ DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
-abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
+abstract Decl	::= <Name:String>; // TODO: simplify to <Name>
+abstract BehavioralDecl:	Decl; // Entities used in behavioural expressions
+abstract TypeDecl:			Decl; // Entities used in type expressions
+
+
+// abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
+//ClassDecl:	BehavioralDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
 ClassDecl:	TypeDecl	::= Implements:IdUse* Body:DeclBlock;
-IntDecl:	TypeDecl	::= Body:MethodSig*;
+InterfaceDecl:	TypeDecl	::= Body:MethodSig*;
+
 
 
 VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; //<Name:String> for the name of the variable or field is inherited from TypeDecl and 

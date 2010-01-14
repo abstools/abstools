@@ -50,6 +50,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
+// "data"        { return sym(Terminals.DATA); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
