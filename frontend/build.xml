@@ -152,7 +152,7 @@
 	     nobak="yes"/>
 </target> 
 
-   <target name="genp1" depends="genflex">
+   <target name="genp1" depends="genflex, genast">
     <echo message = "Parser phase1"/>
     <!-- generate the parser phase 1, translating .lalr to .beaver -->
     <java fork="true" dir="${parser.src.dir}" 
