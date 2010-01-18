@@ -6,7 +6,7 @@
 // - In blocks, allow declarations and statements in any order
 // 
 
-Program                         ::= TypeDecl* Block;
+Program                         ::= Decl* Block;
 
 // A Block is the body of programs and methods. 
 // It contains a list of zero or more ast.VarOrFieldDecl and one ast.StmtRet, 
@@ -19,15 +19,13 @@ DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
 abstract Decl	::= <Name:String>; // TODO: simplify to <Name>
-abstract BehavioralDecl:	Decl; // Entities used in behavioural expressions
+abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:			Decl; // Entities used in type expressions
 
 
-// abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
-//ClassDecl:	BehavioralDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
-ClassDecl:	TypeDecl	::= Implements:IdUse* Body:DeclBlock;
+//abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
+ClassDecl:	BehaviorDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
 InterfaceDecl:	TypeDecl	::= Body:MethodSig*;
-
 
 
 VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; //<Name:String> for the name of the variable or field is inherited from TypeDecl and 
