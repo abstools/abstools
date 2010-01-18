@@ -1,4 +1,6 @@
-{ ; skip ; return x.get   } 
+{ Int x , Int y ;  skip ; return x.get   } 
+
+// {   skip ; return x.get   } 
 
 //{ ; skip ; return null   } 
 

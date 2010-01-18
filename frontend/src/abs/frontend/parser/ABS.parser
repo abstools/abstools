@@ -77,7 +77,7 @@ TypeAccess type =
 
 // Used in class_decl, i.e. {_T f_ ; _M_}
 DeclBlock declblock =  
-    LBRACE var_or_field_decl_list.l?  SEMICOLON method_list.m? RBRACE	{: return new DeclBlock(l,m) ; :}
+    LBRACE varfielddecls.l? method_list.m? RBRACE	{: return new DeclBlock(l,m) ; :}
   ;
 
 
@@ -147,9 +147,12 @@ MethodSig methodsig =
 //Program block
 //Is to be used in program, and method i.e. {_T x_ ; sr}
 Block block	=
-    //    LBRACE RBRACE {: return new Block() ; :} //For empty block
-        LBRACE var_or_field_decl_list.l? SEMICOLON stmt_ret.s RBRACE	{: return new Block(l,s) ; :}
+        LBRACE varfielddecls.l? stmt_ret.s RBRACE	{: return new Block(l,s) ; :}
     ;
+
+List varfielddecls =  
+	var_or_field_decl_list.l  SEMICOLON 	{: return l ; :}
+	; 
 
 StmtRet stmt_ret = 
     stmt_list.l? SEMICOLON RETURN pure_exp.e                                  {: return new StmtRet(l,e) ; :}

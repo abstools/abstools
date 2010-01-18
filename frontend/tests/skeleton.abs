@@ -5,7 +5,11 @@
 //Interface declarations 
 interface Foo {} 
 
-class FooClass implements Foo { ; }
+//No semicolon needed if there are no declarations. 
+class FooClass implements Foo {  }
+
+//Must have semicolon if there are declarations
+class BarClass implements Foo { Int n , Field f ; }
 
 interface Bar { } 
 
@@ -31,13 +35,12 @@ class BoundedBuffer implements Buffer {
   
     Void init(Foo x, Bar y){
 	
-	;
 	skip ;
 	return null
     
     }
 	
-    Void append(Int i){ ; skip; return null}
+    Void append(Int i){ skip; return null}
 
 }
 //MAIN
