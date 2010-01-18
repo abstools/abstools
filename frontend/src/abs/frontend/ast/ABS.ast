@@ -18,7 +18,7 @@ DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
-abstract Decl	::= <Name:String>; // TODO: simplify to <Name>
+abstract Decl	::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:			Decl; // Entities used in type expressions
 
@@ -43,7 +43,6 @@ Future: TypeAccess;
 
 
 StmtRet                         ::= Stmts:Stmt* RetExp:PureExp; 
-StmtBlock                         ::= Stmts:Stmt* ;
 
 abstract Stmt; 
 
@@ -53,8 +52,8 @@ IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 //WhileStmt: Stmt			::= Condition:PureExp Body:Stmt*;
 ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= Var:VarRef Value:Exp;
+StmtBlock : Stmt        ::= Stmts:Stmt* ;
 
-// TODO: assume that parsing guarantees that `Stmt*' is never empty?
 
 abstract Guard;
 ClaimGuard: Guard			::= Var:VarRef ;
