@@ -84,6 +84,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
  "~"          { return sym(Terminals.NEG); }
  "&&"          { return sym(Terminals.ANDAND); }
  "||"          { return sym(Terminals.OROR); }
+ "=="          { return sym(Terminals.EQEQ); }
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
