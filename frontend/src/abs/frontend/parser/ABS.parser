@@ -151,7 +151,7 @@ Block block	=
     ;
 
 List varfielddecls =  
-	var_or_field_decl_list.l  SEMICOLON 	{: return l ; :}
+	var_or_field_decl_list.l?  SEMICOLON 	{: return l ; :}
 	; 
 
 StmtRet stmt_ret = 

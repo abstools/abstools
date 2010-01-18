@@ -1,4 +1,4 @@
-{ Int x , Int y ;  skip ; return x.get   } 
+{ ;  skip ; return x.get   } 
 
 // {   skip ; return x.get   } 
 
