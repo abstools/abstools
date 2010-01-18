@@ -75,6 +75,7 @@ BoolLiteral: BoolExp   ::= <Value:String>;
 BoolExpNeg: BoolExp ::= PureExp ; 
 BoolExpAnd: BoolExp ::= e1:PureExp e2:PureExp ; 
 BoolExpOr: BoolExp ::= e1:PureExp e2:PureExp ; 
+BoolExpComp: BoolExp ::= e1:PureExp e2:PureExp ; 
 
 
 // Expressions with side effects. 
