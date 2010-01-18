@@ -3,14 +3,14 @@
 
 
 //Also legal: 
-{   skip ; return x.get   } 
+//{   skip ; return x.get   } 
 
 //And  
-{   return x.get   } 
+//{   return x.get   } 
 
 //But not
 
-{ ; return x.get   } 
+//{ ; return x.get   } 
 
 // {   skip ; return x.get   } 
 

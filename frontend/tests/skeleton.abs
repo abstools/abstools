@@ -5,8 +5,9 @@
 //Interface declarations 
 interface Foo {} 
 
-//Alt1: No semicolon needed if there are no declarations. 
-//Alt2: Semicolon is not allowed if there are no declarations 
+//Semicolon after variable or field declaration IFF there are declarations. 
+//I.e 
+//No semicolon if there are no declarations 
 class FooClass implements Foo {  }
 
 //Must have semicolon if there are declarations
@@ -36,8 +37,9 @@ class BoundedBuffer implements Buffer {
   
     Void init(Foo x, Bar y){
 		
-		Int x, Int y ; 
-		skip ;
+	Int x, Int y ; 
+
+
 	return null
     
     }
@@ -61,6 +63,7 @@ class BoundedBuffer implements Buffer {
 	x = ~y ; 
 	x = y && z ; 
 	x = y || z ; 
+	x = y == z ; 
 	x = true ;
 	x = false ; 
 	/* Assignments to expressions 
@@ -82,13 +85,14 @@ class BoundedBuffer implements Buffer {
 	skip ; 
 	release ; 
 	if x then y = true ; 
-	if x then y = true else y = false 
+	if x then y = true else y = false ;
+	if x then y = true else { y = false ; x = null }  ;
+	
 
 	//Stmtblock
-	// Not implemented yet. 
-	// { x = y } 
+	{ x = y ; skip ; await x?  } ;
 								
-    ;
+    skip ;
 	//Return  
     return null 
 }
