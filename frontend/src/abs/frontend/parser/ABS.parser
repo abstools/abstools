@@ -179,6 +179,7 @@ BoolExp bool_exp =
 	NEG pure_exp.e         {: return new BoolExpNeg(e); :} 
 	| pure_exp.e1 ANDAND pure_exp.e2  	{: return new BoolExpAnd(e1,e2); :} 
 	| pure_exp.e1 OROR pure_exp.e2  	{: return new BoolExpOr(e1,e2); :} 
+	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new BoolExpComp(e1,e2); :} 
 	| 	BOOLEAN_LITERAL.b    {: return new BoolLiteral(b); :}
 	;
 
