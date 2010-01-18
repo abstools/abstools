@@ -5,8 +5,9 @@
 //Interface declarations 
 interface Foo {} 
 
-//No semicolon needed if there are no declarations. 
-class FooClass implements Foo { ; }
+//Alt1: No semicolon needed if there are no declarations. 
+//Alt2: Semicolon is not allowed if there are no declarations 
+class FooClass implements Foo {  }
 
 //Must have semicolon if there are declarations
 class BarClass implements Foo { Int n , Field f ; }
@@ -34,8 +35,9 @@ class BoundedBuffer implements Buffer {
     //Method list 
   
     Void init(Foo x, Bar y){
-	
-	skip ;
+		
+		Int x, Int y ; 
+		skip ;
 	return null
     
     }

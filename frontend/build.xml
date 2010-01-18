@@ -129,6 +129,10 @@
   <target name="gen" depends="genparser, genast">
   </target>
 
+  <target name="rebuild" depends="clean, compile">
+  </target>
+
+
   <target name="genast">
     <jastadd package="${ast.package}" rewrite="true" beaver="true"
 	     novisitcheck="true" outdir="${gen.dir}" debug="true">

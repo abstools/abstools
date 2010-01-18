@@ -1,4 +1,16 @@
-{ ;  skip ; return x.get   } 
+//Legal
+{ Int x , Int y ;  skip ; return x.get   } 
+
+
+//Also legal: 
+{   skip ; return x.get   } 
+
+//And  
+{   return x.get   } 
+
+//But not
+
+{ ; return x.get   } 
 
 // {   skip ; return x.get   } 
 

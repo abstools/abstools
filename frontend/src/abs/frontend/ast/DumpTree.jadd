@@ -27,6 +27,14 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
 	}
 
+	public void MethodSig.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
+			String childIndent = indent + "  ";
+		for(int i = 0; i < getNumChild(); i++)
+			getChildNoTransform(i).dumpTree(childIndent, pStream);
+	}
+
+
 
 	// public void Block.dumpTree(String indent, java.io.PrintStream pStream) {
 	// pStream.println(indent + "BLOCK" + " " +  this.getClass());
