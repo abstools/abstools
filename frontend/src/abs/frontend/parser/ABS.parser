@@ -248,7 +248,7 @@ AssignStmt assign_stmt =
 
 
 StmtBlock stmt_block = 
-	LBRACE stmt_list.s RBRACE       {:	return new StmtBlock(s) ; :}
+	LBRACE stmt_list.s? RBRACE       {:	return new StmtBlock(s) ; :}
     ;      
 
 List stmt_list =
