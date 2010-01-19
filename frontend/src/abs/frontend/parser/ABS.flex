@@ -40,7 +40,16 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 																  //Comment = "//" {InputCharacter}* {LineTerminator}?   // TODO: C-style comments
 
-Identifier = [:letter:]([:letter:] | [:digit:])*
+Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
+
+//Identifier = [:letter:]([:letter:] | [:digit:])*
+
+
+//Alpha = [a-zA-Z]
+//Identifier = {Alpha}({Alpha} | [:digit:] | "_")*
+//ID       [a-z][a-z0-9]*
+
+
 
 %% // Rules
 
@@ -50,6 +59,7 @@ Identifier = [:letter:]([:letter:] | [:digit:])*
 
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
+ "extends"   { return sym(Terminals.EXTENDS); }
  "data"        { return sym(Terminals.DATA); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }

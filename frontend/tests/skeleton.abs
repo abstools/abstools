@@ -2,13 +2,19 @@
 
 
 
-//Interface declarations 
+//Interface declarations, extends is optional 
 interface Foo {} 
+interface Foo extends Foo1, Foo2 {} 
+
+// "implements" is optional
+class BazClass  {  }
+class BazClass implements Foo1, Foo2 {  }
 
 //Semicolon after variable or field declaration IFF there are declarations. 
 //I.e 
 //No semicolon if there are no declarations 
 class FooClass implements Foo {  }
+
 
 //Must have semicolon if there are declarations
 class BarClass implements Foo { Int n , Field f ; }

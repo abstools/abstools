@@ -1,4 +1,3 @@
-
 /*
  * BoundedBuffer.abs -- Bounded buffer example
  *
@@ -40,7 +39,7 @@ class BoundedBuffer implements Buffer {
     // no assignments in variable declarations, so  we need an init method
     Void init(){
 	
-	;
+	
 	buffer = nil ;
 	max = ten ; // = 10 --- no numbers yet  
 	n = zero ; // = 0 --- no numbers yet  
@@ -86,12 +85,10 @@ class BoundedBuffer implements Buffer {
 class Producer implements Producer {
     
     //Field declarations 
-    BoundedBuffer b 
-
-    ;
+    BoundedBuffer b ;
     
     Void init(BoundedBuffer buff){
-	;
+	
 	b = buff ; 
 	return null
     }	
@@ -99,8 +96,8 @@ class Producer implements Producer {
     Void loop(Int i){
 	
 	//local vars 
-        Void x
-	; 
+    Void x ; 
+
 	b = b.append(i); 
 	//cannot do a call without assignment Assume a "this" keyword
 	x = this!loop(i_plus_one); //i+1
@@ -111,11 +108,10 @@ class Producer implements Producer {
 class Consumer implements Consumer {
     
     //Field declarations 
-    BoundedBuffer b
-    ; 
+    BoundedBuffer b ; 
 
     Void init(BoundedBuffer buff){
-	;
+	
 	b = buff ; 
 	return null
     }	
@@ -123,8 +119,7 @@ class Consumer implements Consumer {
     Void loop() {
 
 	//local vars 
-	Void x
-	    ;
+	Void x ;
 	b = b.remove(); 
 	//cannot do a call without assignment 
 	x = this!loop();
@@ -135,12 +130,8 @@ class Consumer implements Consumer {
 //Main
 {
     //Local vars 
-    Buffer buff, 
-    Producer p,
-    Consumer c, 
-    Void x
+    Buffer buff, Producer p, Consumer c, Void x ; 
 
-	; 
 
     //Init 
     buff = new BoundedBuffer(); 

@@ -49,8 +49,7 @@ Decl decl =
 // 	;
 
 InterfaceDecl interface_decl =
-  INTERFACE IDENTIFIER LBRACE methodsig_list.l? RBRACE
-				{: return new InterfaceDecl(IDENTIFIER, l); :}
+  INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, i, l); :}
   ;
 
 ClassDecl class_decl =
@@ -59,6 +58,10 @@ ClassDecl class_decl =
 
 List implement_interfaces =
     IMPLEMENTS ifName_list.i           {: return i; :}
+  ;
+
+List extends_interfaces =
+    EXTENDS ifName_list.i           {: return i; :}
   ;
 
 

@@ -74,12 +74,10 @@
 
   <target name = "clean">
     <delete failonerror = "false" includeemptydirs = "true"> 
-      <fileset dir = "${gen.dir}"/>
-      <fileset dir = "${ast.gen.dir}"/>
-      <fileset dir = "${parser.gen.dir}"/>
+      <fileset dir = "${gen.dir}/abs"/>
+<!--       <fileset dir = "${gen.dir}/docs"/> -->
       <fileset dir = "${build.dir}"/>
       <fileset dir = "${dist.dir}"/>
-      <fileset dir = "${apidoc.dir}"/>
     </delete>
   </target>
 
