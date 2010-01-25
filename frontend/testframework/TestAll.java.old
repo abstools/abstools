@@ -1,0 +1,75 @@
+package abs.frontend.testframework;
+
+import junit.framework.*;
+import org.junit.runner.*;
+import abs.frontend.ast.*;
+import beaver.*;
+import java.io.*;
+import java.lang.reflect.Modifier;
+
+public class TestAll {
+  public TestAll() {
+  }
+
+  public static String testAllPath() {
+    String[] paths = System.getProperty("java.class.path").split(
+        File.pathSeparator);
+    for (int i = 0; i < paths.length; i++) {
+      String path = paths[i];
+      File f = new File(path, "abs/frontend/testframework/TestAll.class");
+      if (f.exists()) {
+        return path;
+      }
+    }
+    return null;
+  }
+
+  public static String[] suite() {
+    TestSuite result = new TestSuite();
+    String path = testAllPath();
+    if (path != null) {
+      addDirectory(result, new File(path), path.length() + 1);
+    }
+    return result;
+  }
+
+  public static void addDirectory(TestSuite suite, File directory,
+      int splitIndex) {
+    String as[] = directory.list();
+    for (int i = 0; i < as.length; i++) {
+      File candidate = new File(directory, as[i]);
+      if (candidate.isFile()) {
+        String s = candidate.getPath();
+        if (s.endsWith(".class")) {
+          String className = s.substring(splitIndex, s.length() - 6)
+              .replace(File.separatorChar, '.');
+          try {
+            Class classCand = Class.forName(className);
+            Class iter = classCand;
+            while (iter != null
+                && !iter.getName().equals(
+                    "junit.framework.TestCase")) {
+              iter = iter.getSuperclass();
+            }
+            if (iter != null) {
+              if (!Modifier.isAbstract(classCand.getModifiers())) {
+                suite.addTestSuite(classCand);
+              }
+            }
+          } catch (ClassNotFoundException e) {
+          }
+        }
+      } else if (candidate.isDirectory()) {
+        addDirectory(suite, candidate, splitIndex);
+      }
+    }
+  }
+
+  public static void main(String args[]) {
+	  //Junit 3.8. style
+      junit.textui.TestRunner.run(TestAll.suite());
+  }
+
+
+}
+
