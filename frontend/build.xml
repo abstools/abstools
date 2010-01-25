@@ -5,6 +5,8 @@
   <property environment = "env" /> <!-- include environment variables -->
 
   <property name = "src.dir"   value = "${basedir}/src" />
+  <property name = "tests.dir"   value = "${basedir}/tests" />
+  <property name = "testframework.dir"   value = "${basedir}/testframework" />
   <property name = "build.dir" value = "${basedir}/bin" />
   <property name = "dist.dir"  value = "${basedir}/dist" />
   <property name = "gen.dir"   value = "${basedir}/gen" />
@@ -15,6 +17,7 @@
   <property name = "ast.gen.dir" value = "${gen.dir}/abs/frontend" />  
   <property name = "parser.src.dir" value = "${src.dir}/abs/frontend/parser" />
   <property name = "parser.gen.dir" value = "${gen.dir}/abs/frontend/parser" />
+  <property name = "junit.jar" value = "junit-4.8.1.jar" />
 
   <!-- The package name of JastAdd generated files -->
   <property name="ast.package" value="abs.frontend.ast"/>
@@ -42,11 +45,8 @@
   </target>
 
   <target name = "compile" depends = "prepare, gen"
-	  description = "Compiles all java files into the source directory.">
-    <!--  	<copy todir = "${build.dir}">
-	 <fileset dir = "${basedir}/resources/"/>
-	 </copy> -->
-    <javac srcdir =  "${src.dir}:${gen.dir}"
+	  description = "Compiles all java files in the source directory.">
+    <javac srcdir =  "${src.dir}:${gen.dir}:${tests.dir}:${testframework.dir}"
 	   destdir = "${build.dir}"
 	   deprecation = "on"
 	   debug = "on"
@@ -56,6 +56,7 @@
 	<pathelement location = "${ext.dir}/beaver.jar" />
 	<pathelement location = "${ext.dir}/jastadd2.jar" />
 	<pathelement location = "${ext.dir}/JastAddParser.jar" />
+	<pathelement location = "${ext.dir}/${junit.jar}" />
       </classpath>
     </javac>
   </target>
@@ -83,14 +84,14 @@
 
  <target name="test" depends="compile">
     <java classname="abs.frontend.tests.ParserTest">
-        <arg value="tests/block.abs"/>
+        <arg value="tests/abssamples/block.abs"/>
     <classpath>
     <pathelement location="${ext.dir}/beaver-rt.jar"/>
         <pathelement path="${build.dir}"/>
      </classpath>
        </java>
     <java classname="abs.frontend.tests.ParserTest">
-        <arg value="tests/skeleton.abs"/>
+        <arg value="tests/abssamples/skeleton.abs"/>
       <classpath>
 	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
            <pathelement path="${build.dir}"/>
@@ -101,7 +102,7 @@
 
 <!-- To run from command line: 
 
-      java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/block.abs
+      java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/abssamples/block.abs
   
 -->
 
@@ -172,6 +173,59 @@
 	    terminalNames="yes" compress="no" useSwitch="yes"/>
   
    </target> 
+
+<!-- test classpath -->
+<path id="test.classpath">
+  <pathelement location="${build.dir}" />
+  <pathelement location="${ext.dir}/${junit.jar}" />
+  <fileset dir="${ext.dir}">
+    <include name="**/*.jar"/>
+  </fileset>
+</path>
+
+
+  <!-- TARGET junittest , run junit tests through testrunner-->
+  <target name="junittest" depends="compile">
+  <java fork="true" classname="testframework.TestRunner" >
+    <classpath refid="test.classpath"/>
+  </java>
+</target>
+
+
+  <!-- TARGET antjunit , run junit tests using an ant target and an explicit -->
+<!-- suite file -->
+
+<!-- suite file -->
+  <property name = "test.suite.name"   value = "tests.AllTests" />
+
+<target name="junit">
+  <junit fork="yes" haltonfailure="yes">
+    <test name="${test.suite.name}" />
+    <formatter type="plain" usefile="false" />
+    <classpath refid="test.classpath" />
+  </junit>
+</target>
+
+<!-- From command line -->
+<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore tests.AllTests -->
+
+<!-- TARGET junitbatch does not work yet -->
+<!-- <target name="junitbatch"> -->
+<!-- <junit printsummary="yes" haltonfailure="yes"> -->
+<!--   <formatter type="plain" usefile="false" /> -->
+<!--   <classpath refid="test.classpath" /> -->
+<!--   <batchtest fork="yes"> -->
+<!--     <fileset dir="${tests.dir}"> -->
+<!--        <include name="**/*Test.java" />  -->
+<!--         <include name="**/Test*.java" /> -->
+<!--         <exclude name="**/AllTests.java" />  -->
+<!--     </fileset> -->
+<!--   </batchtest> -->
+<!-- </junit>  -->
+<!-- </target> -->
+
+
+
 
    <!-- KATJA -->
    
