@@ -1,5 +1,6 @@
+{   return null  } 
 //Legal
-{ Int x , Int y ;  skip ; return x.get   } 
+//{ Int x , Int y ;  skip ; return x.get   } 
 
 
 //Also legal: 
