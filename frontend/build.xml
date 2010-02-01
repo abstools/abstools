@@ -178,9 +178,7 @@
 <path id="test.classpath">
   <pathelement location="${build.dir}" />
   <pathelement location="${ext.dir}/${junit.jar}" />
-  <fileset dir="${ext.dir}">
-    <include name="**/*.jar"/>
-  </fileset>
+  <pathelement location="${ext.dir}/beaver-rt.jar"/>
 </path>
 
 
@@ -190,6 +188,8 @@
     <classpath refid="test.classpath"/>
   </java>
 </target>
+
+<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
 
 
   <!-- TARGET antjunit , run junit tests using an ant target and an explicit -->
