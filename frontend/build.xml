@@ -198,7 +198,7 @@
 <!-- suite file -->
   <property name = "test.suite.name"   value = "tests.AllTests" />
 
-<target name="junit">
+<target name="junit" depends="compile">
   <junit fork="yes" haltonfailure="yes">
     <test name="${test.suite.name}" />
     <formatter type="plain" usefile="false" />
