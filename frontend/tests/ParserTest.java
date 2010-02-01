@@ -94,7 +94,7 @@ public class ParserTest {
 		assertParseError("{ while ( a ) { a = b; } }");
 	}
 	
-	protected static void assertParseOk(String s) {
+	protected void assertParseOk(String s) {
 		try {
 			parse(s);
 		} catch (Throwable t) {
