@@ -15,31 +15,131 @@ import static org.junit.Assert.*;
 public class ParserTest {
 
 
-	private String rest ; 
+	private String emptyblock ; 	
+	private String decls, ifdecl1, ifdecl2  , cldecl1,   cldecl2 , cldecl3 ; 
+	private String ms1, ms2, ms3 , meth1, meth2 , fields, comment, comment2  ; 
+	private String prestmt, poststmt ; 
 	
 	@Before
         public void setUp() {
-		rest = new String("{   return null   }"); 
+		
+		prestmt = "{" ; 
+		poststmt = " return null }" ; 
+		emptyblock = "{   return null   }"; 
+		//methodsignatures 
+		ms1 = "Void init(Foo x, Bar y)";
+		ms2 = "Void append(Int i)";
+		ms3 = "Data remove()";
+		
+		meth1 = ms1 + "{ Int x, Int y ;	return null }";
+	    meth2 = ms2 + "{ skip; return null}";
+		fields = "ListofInt buffer,     Int max ,     Int n 	;"; 
+
+		comment = "// one line";
+		comment2 = "/* Multi \n line \n comment */";
+		ifdecl1 = " interface Foo {}";
+		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
+		cldecl1 = " class FooClass  {}";
+		cldecl2 = " class FooClass implements Foo {}";
+		cldecl3 = "class BoundedBuffer implements Buffer { " + fields + meth1 + meth2 + "}";
+		decls = ifdecl1 + ifdecl2   + cldecl1 +   cldecl2 + cldecl3 ; 
+
+		
+   	}
+		
+		@Test
+		public void testBlock() {
+		assertParseOk(emptyblock); 
+		assertParseOk("{   return x.get   }"); 
+		assertParseOk("{   skip ; return x.get   }") ;
+		assertParseOk("{ Int x , Int y ;  skip ; return x.get   }");
+		assertParseError("{   ; return x.get   }") ;
+		assertParseError("{   ; skip  ; return x.get   }") ;
+		assertParseError("{ }");
+	}
+	
+	// Interface declarations
+	@Test
+		public void testIfDecl() {
+		assertParseOk(ifdecl1 + emptyblock );
+		assertParseOk(ifdecl2 + emptyblock );
+		assertParseError("interface Foo extends {}" + emptyblock );
+		assertParseError("interface extends {}" + emptyblock );
 	}
 
-	
-   	@Test
-		public void testSimpleBlock() {
-		assertParseOk(rest); 
-		// assertParseOk("{   return x.get   }"); 
-		//assertParseOk("{   skip ; return x.get   }") ;
-		//assertParseOk("{ Int x , Int y ;  skip ; return x.get   }");
-		//assertParseError("{   ; return x.get   }") ;
-		//assertParseError("{   ; skip  ; return x.get   }") ;
-		//assertParseError("{ }");
-	}
-	
+
+
 	// Class declarations
-	//@Test
-		public void testIfDecl() {
-		assertParseOk("interface Foo {}" + rest );
-		assertParseOk("interface Foo extends Foo1 , Foo2 {}" + rest );
+	@Test
+		public void testClassDecl() {
+		assertParseOk(cldecl1 + emptyblock );
+		assertParseOk(cldecl2 + emptyblock );
+		assertParseOk(cldecl3 + emptyblock );
+		assertParseError("class FooClass implements {}" + emptyblock );
 	}
+	
+
+	@Test
+		public void testProg() {
+		assertParseOk(decls + emptyblock );
+	}
+
+
+// 	@Before
+// 		public void setupStmts() {
+		
+// 		String[] assignPure = 	
+// 			{"x = y ;", 
+// 			"x = null ;",  
+// 			"x = y.get ;", 
+// 			"x = ~y ;",  
+// 			"x = y && z ;",
+// 			"x = y || z ;",  
+// 			"x = y == z ;",
+// 			"x = true ;",
+// 			 "x = false ;"};
+		
+// 		String[] assignEff = 	
+// 			{"x = new Foo() ;", 
+// 			 "x = o!init();", 
+// 			 "x = o!init(y);", 
+// 			"x = o!init(y,z);", 
+// 			 "x = o.init(y,z,w);", 
+// 			 "x = init(y,z);"} ; 
+
+// 		String[] awaitStmt = 	
+// 			"await y? ; 
+// 	"await y? & z?; 
+// 	"await y? & z? & w?  ;
+// 	// No boolean guards
+// 	// await true ; 
+// 	//skip, release, if_th_else
+// 	skip ; 
+// 	release ; 
+// 	if x then y = true ; 
+// 	if x then y = true else y = false ;
+// 	if x then y = true else { y = false ; x = null }  ;
+	
+
+// 	//Stmtblock
+// 	{ x = y ; skip ; await x?  } ;
+// 	{  } ;
+//     skip ;
+// 	//Return  
+// new String[]
+		
+// 		assertParseOk(prestmt + poststmt );
+// 		assertParseOk(prestmt + poststmt );
+// assertParseOk(prestmt + poststmt );
+// assertParseOk(prestmt + poststmt );
+// assertParseOk(prestmt + poststmt );
+// assertParseOk(prestmt + poststmt );
+// assertParseOk(prestmt + poststmt );
+
+		
+// 	}
+
+
 	
 	//TODO more testcases 
 
@@ -96,9 +196,10 @@ public class ParserTest {
 	
 	protected void assertParseOk(String s) {
 		try {
+			System.out.println("Assert OK:"+s);
 			parse(s);
 		} catch (Throwable t) {
-			fail(t.getMessage());
+			fail("Failed to parse: "+ s+"\n"+t.getMessage());
 		}
   }
 	
