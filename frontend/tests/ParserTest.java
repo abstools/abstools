@@ -18,13 +18,55 @@ public class ParserTest {
 	private String emptyblock ; 	
 	private String decls, ifdecl1, ifdecl2  , cldecl1,   cldecl2 , cldecl3 ; 
 	private String ms1, ms2, ms3 , meth1, meth2 , fields, comment, comment2  ; 
-	private String prestmt, poststmt ; 
+	
+	private String prestmt = "{" ; 
+	private String poststmt = " return null }" ; 
+
+	private static boolean verbose = true ; 
+
+	private String[] assignPure = 
+	{"x = y", 
+	 "x = null",  
+	 "x = y.get", 
+	 "x = ~y",  
+	 "x = y && z",
+	 "x = y || z",  
+	 "x = y == z",
+	 "x = true",
+	 "x = false"};
+	
+	
+	private String[] assignEff = 	
+	{"x = new Foo()", 
+	 "x = o!init()", 
+	 "x = o!init(y)", 
+	 "x = o!init(y,z)", 
+	 "x = o.init(y,z,w)", 
+	 "x = init(y,z)"} ; 
+	
+	private String[] awaitStmt = 	
+	{"await y?" ,
+	 "await y? & z?" ,
+	 "await y? & z? & w?"};
+	
+	private		String[] otherStmt = 	
+	{"skip",
+	 "release"};
+	
+	private 	String[] ifStmt = 
+	{"if x then y = true",
+	 "if x then y = true else y = false",
+	 "if x then y = true else { y = false ; x = null } "};
+	
+	
+	private	 String[] stmtBlock = 
+	{"{ x = y ; skip ; await x?  }", 
+	 "{  }"};
+ 
 	
 	@Before
         public void setUp() {
 		
-		prestmt = "{" ; 
-		poststmt = " return null }" ; 
 		emptyblock = "{   return null   }"; 
 		//methodsignatures 
 		ms1 = "Void init(Foo x, Bar y)";
@@ -41,13 +83,16 @@ public class ParserTest {
 		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
 		cldecl1 = " class FooClass  {}";
 		cldecl2 = " class FooClass implements Foo {}";
-		cldecl3 = "class BoundedBuffer implements Buffer { " + fields + meth1 + meth2 + "}";
-		decls = ifdecl1 + ifdecl2   + cldecl1 +   cldecl2 + cldecl3 ; 
+		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
+		decls = ifdecl1 + "\n" + ifdecl2   + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
 
+		
+
+		
 		
    	}
 		
-		@Test
+	@Test
 		public void testBlock() {
 		assertParseOk(emptyblock); 
 		assertParseOk("{   return x.get   }"); 
@@ -85,118 +130,30 @@ public class ParserTest {
 	}
 
 
-// 	@Before
-// 		public void setupStmts() {
-		
-// 		String[] assignPure = 	
-// 			{"x = y ;", 
-// 			"x = null ;",  
-// 			"x = y.get ;", 
-// 			"x = ~y ;",  
-// 			"x = y && z ;",
-// 			"x = y || z ;",  
-// 			"x = y == z ;",
-// 			"x = true ;",
-// 			 "x = false ;"};
-		
-// 		String[] assignEff = 	
-// 			{"x = new Foo() ;", 
-// 			 "x = o!init();", 
-// 			 "x = o!init(y);", 
-// 			"x = o!init(y,z);", 
-// 			 "x = o.init(y,z,w);", 
-// 			 "x = init(y,z);"} ; 
 
-// 		String[] awaitStmt = 	
-// 			"await y? ; 
-// 	"await y? & z?; 
-// 	"await y? & z? & w?  ;
-// 	// No boolean guards
-// 	// await true ; 
-// 	//skip, release, if_th_else
-// 	skip ; 
-// 	release ; 
-// 	if x then y = true ; 
-// 	if x then y = true else y = false ;
-// 	if x then y = true else { y = false ; x = null }  ;
-	
+	@Test
+		public void testStmts() {
+		//		System.out.println(assignPure);
+		for (String s : assignPure)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : otherStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : ifStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : stmtBlock)	assertParseOk(prestmt + s + ";" + poststmt); 
+	}		
 
-// 	//Stmtblock
-// 	{ x = y ; skip ; await x?  } ;
-// 	{  } ;
-//     skip ;
-// 	//Return  
-// new String[]
-		
-// 		assertParseOk(prestmt + poststmt );
-// 		assertParseOk(prestmt + poststmt );
-// assertParseOk(prestmt + poststmt );
-// assertParseOk(prestmt + poststmt );
-// assertParseOk(prestmt + poststmt );
-// assertParseOk(prestmt + poststmt );
-// assertParseOk(prestmt + poststmt );
+	@Test
+		public void testStmtList() {
+				assertParseOk(prestmt + "x = null; x = y.get ; x = ~y ; " + poststmt); 
+				assertParseError(prestmt + ";" + poststmt); 
+				
+	}
 
-		
-// 	}
-
-
-	
 	//TODO more testcases 
-
-	//@Test
-		public void testClassDeclWithExtends() {
-		assertParseOk("{ class A extends B { } }");
-	}
-	//@Test
-		public void testClassDeclWithQualifiedExtends() { // TODO: should this be valid?
-		assertParseError("{ class A extends A.B { } }");
-	}
-	//@Test
-		public void testNestedClassDecl() {
-		assertParseOk("{ class A { class B { } } }");
-	}
-	
-	// Variable declarations
-	//@Test
-		public void testVarDecl() {
-		assertParseOk("{ A a; }");
-	}
-	//@Test
-		public void testVarDeclQualifiedType() {
-		assertParseOk("{ A.B.C a; }");
-	}
-	//@Test
-		public void testVarDeclComplexName() {
-    assertParseError("{ A.B.C a.b; }");
-	}
-	
-	// Assignment
-	//@Test
-		public void testAssignStmt() {
-		assertParseOk("{ a = b; }");
-	}
-	//@Test
-		public void testAssignStmtQualifiedLHS() {
-		assertParseOk("{ a.b.c = b; }");
-	}
-	//@Test
-		public void testAssignStmtQualifiedRHS() {
-		assertParseOk("{ a = b.c.d; }");
-	}
-	
-	// While statement
-	//@Test
-		public void testWhileStmt() {
-		assertParseOk("{ while ( a ) a = b; }");
-	}
-	//@Test
-		public void testWhileStmtBlock() { // TODO: should this be valid?
-		assertParseError("{ while ( a ) { a = b; } }");
-	}
-	
-	protected void assertParseOk(String s) {
+	protected static void assertParseOk(String s) {
 		try {
-			System.out.println("Assert OK:"+s);
+			if (verbose) 
+				System.out.println("Assert OK: "+s);
 			parse(s);
 		} catch (Throwable t) {
 			fail("Failed to parse: "+ s+"\n"+t.getMessage());
@@ -205,6 +162,8 @@ public class ParserTest {
 	
 	protected static void assertParseError(String s) {
 		try {
+			if (verbose) 
+				System.out.println("Assert Error: "+s);
 			parse(s);
 		} catch (Throwable t) {
 			return;
