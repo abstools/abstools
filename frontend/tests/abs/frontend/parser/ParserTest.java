@@ -60,9 +60,6 @@ public class ParserTest {
 	 "if x then y = true else { y = false ; x = null } "};
 	
 	
-	private	 String[] stmtBlock = 
-	{"{ x = y ; skip ; await x?  }","{  }"};
-			
  
 	
 	@Before
@@ -146,11 +143,21 @@ public class ParserTest {
 		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : otherStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : ifStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
-		for (String s : stmtBlock)	assertParseOk(prestmt + s + ";" + poststmt); 
+		
 	}		
 
 	@Test
-		public void testStmtList() {
+		public void testStmtBlock(){
+		assertParseOk("{ { x = y ; skip ; await x?  } ; return null }" ); 
+		assertParseOk("{ { x = y } ; return null }" );
+		//assertParseOk("{ { } ; return null }" );
+		 	
+	}
+	//{"","{  }"};
+			
+
+	@Test
+	public void testStmtList() {
 				assertParseOk(prestmt + "x = null; x = y.get ; x = ~y ; " + poststmt); 
 				assertParseError(prestmt + ";" + poststmt); 
 				
