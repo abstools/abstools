@@ -151,10 +151,9 @@ public class ParserTest {
 		assertParseOk("{ { x = y ; skip ; await x?  } ; return null }" ); 
 		assertParseOk("{ { x = y } ; return null }" );
 		//TODO This ought to work: 
-		//assertParseOk(" { { } ; return null }" );
+		//assertParseOk(" { { } ; return null }  " );
 		 	
 	}
-	//{"","{  }"};
 			
 
 	@Test
@@ -170,7 +169,7 @@ public class ParserTest {
 			if (verbose) 
 				System.out.println("Assert OK: "+s);
 			parse(s);
-		} catch (Throwable t) {
+		} catch (Throwable t) {	
 			fail("Failed to parse: "+ s+"\n"+t.getMessage());
 		}
   }
@@ -189,7 +188,8 @@ public class ParserTest {
 	protected static void parse(String s) throws Throwable {
 		ABSParser parser = new ABSParser();
 		Reader reader = new StringReader(s);
-		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
+		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
+		ABSScanner scanner = new ABSScanner(reader);
 		Program p = (Program)parser.parse(scanner);
 		reader.close();
 	}
