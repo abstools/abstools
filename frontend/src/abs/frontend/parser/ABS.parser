@@ -163,7 +163,7 @@ List varfielddecls =
 
 
 StmtRet stmt_ret = 
-    stmt_semi.l? RETURN pure_exp.e                                  {: return new StmtRet(l,e) ; :}
+    stmt_semi.l? RETURN exp.e                                  {: return new StmtRet(l,e) ; :}
      ;
 
 List stmt_semi = 
@@ -242,13 +242,12 @@ IfStmt if_then_else_stmt =
 	;
 
 AssignStmt assign_stmt =  
-	var_ref.r ASSIGN pure_exp.e        {: return new AssignStmt(r,e) ; :}
-    |   var_ref.r ASSIGN eff_exp.e  {: return new AssignStmt(r,e) ; :}
+	var_ref.r ASSIGN exp.e        {: return new AssignStmt(r,e) ; :}
     ;
 
 
 StmtBlock stmt_block = 
-	LBRACE stmt_list.s? RBRACE       {:	return new StmtBlock(s) ; :}
+	LBRACE stmt_semi.l? RBRACE       {:	return new StmtBlock(l) ; :}
     ;      
 
 List stmt_list =
@@ -257,65 +256,9 @@ List stmt_list =
   ;
 
 
-/*
 
-List XXX_list =
-    XXX.i                              {: return new List().add(i); :}
-    | XXX_list.l SEPARATOR XXX.i        {: return l.add(i); :}
-  ;
-
-    
-/*
-
-List block_stmt_list_opt =
-                               {: return new List(); :}
-  | block_stmt_list            {: return block_stmt_list; :}
-  ;
-
-
-BlockStmt block_stmt =
-    class_decl 
-  | var_decl
-  | stmt
-  ;
-
-Stmt stmt =
-    assign_stmt
-  | while_stmt
-  ;
-
-ClassDecl class_decl =
-  CLASS IDENTIFIER extends_opt block {: return new ClassDecl(IDENTIFIER, extends_opt, block); :}
-  ;
-Opt extends_opt =
-                               {: return new Opt(); :}
-  | EXTENDS IDENTIFIER         {: return new Opt(new Use(IDENTIFIER)); :}
-  ;
-
-VarDecl var_decl = 
-  name IDENTIFIER SEMICOLON    {: return new VarDecl(IDENTIFIER, name); :}
-  ;
-
-AssignStmt assign_stmt =
-  name ASSIGN exp SEMICOLON    {: return new AssignStmt(name, exp); :}
-  ;
-
-WhileStmt while_stmt =
-  WHILE LPAREN exp RPAREN stmt {: return new WhileStmt(exp, stmt); :}
-  ;
-
-Exp exp =
-    name
-  | boolean_literal
-  ;
-
-Access name =
-    IDENTIFIER                 {: return new Use(IDENTIFIER); :}
-  | name DOT IDENTIFIER        {: return new Dot(name, new Use(IDENTIFIER)); :}
-  ;
-
-Exp boolean_literal =
-  BOOLEAN_LITERAL              {: return new BooleanLiteral(BOOLEAN_LITERAL); :}
-  ;
-*/
+Exp exp = 
+	pure_exp	
+	| eff_exp
+	;
 

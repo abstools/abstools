@@ -8,8 +8,8 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        ScannerTest.class,
-        ParserTest.class
+        //ScannerTest.class
+		ParserTest.class
         })
 public class AllTests {
 }

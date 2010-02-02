@@ -42,7 +42,7 @@ IdUse:	TypeAccess;
 Future: TypeAccess;
 
 
-StmtRet                         ::= Stmts:Stmt* RetExp:PureExp; 
+StmtRet                         ::= Stmts:Stmt* RetExp:Exp; 
 
 abstract Stmt; 
 
