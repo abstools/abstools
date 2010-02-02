@@ -1,8 +1,7 @@
 
-package tests;
+package abs.frontend.parser;
 
 import abs.frontend.ast.*;
-import abs.frontend.parser.*;
 import java.io.*;
 import beaver.*;
 

@@ -1,23 +1,24 @@
 
-package tests;
+package abs.frontend.parser;
 
 //import junit.framework.*;
-import abs.frontend.ast.*;
-import abs.frontend.parser.*;
-import beaver.*;
-import java.io.*;
+import static org.junit.Assert.fail;
 
-import org.junit.Before; 
-import org.junit.Ignore; 
-import org.junit.Test; 
-import static org.junit.Assert.*;
+import java.io.BufferedReader;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import abs.frontend.ast.Program;
 
 public class ParserTest {
 
 
 	private String emptyblock ; 	
 	private String decls, ifdecl1, ifdecl2  , cldecl1,   cldecl2 , cldecl3 ; 
-	private String ms1, ms2, ms3 , meth1, meth2 , fields, comment, comment2  ; 
+	private String ms1, ms2, meth1, meth2 , fields, comment, comment2  ; 
 	
 	private String prestmt = "{" ; 
 	private String poststmt = " return null }" ; 
@@ -60,8 +61,8 @@ public class ParserTest {
 	
 	
 	private	 String[] stmtBlock = 
-	{"{ x = y ; skip ; await x?  }", 
-	 "{  }"};
+	{"{ x = y ; skip ; await x?  }","{  }"};
+			
  
 	
 	@Before
@@ -71,13 +72,11 @@ public class ParserTest {
 		//methodsignatures 
 		ms1 = "Void init(Foo x, Bar y)";
 		ms2 = "Void append(Int i)";
-		ms3 = "Data remove()";
-		
 		meth1 = ms1 + "{ Int x, Int y ;	return null }";
 	    meth2 = ms2 + "{ skip; return null}";
 		fields = "ListofInt buffer,     Int max ,     Int n 	;"; 
 
-		comment = "// one line";
+		comment = "// one line\n";
 		comment2 = "/* Multi \n line \n comment */";
 		ifdecl1 = " interface Foo {}";
 		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
@@ -121,6 +120,14 @@ public class ParserTest {
 		assertParseOk(cldecl2 + emptyblock );
 		assertParseOk(cldecl3 + emptyblock );
 		assertParseError("class FooClass implements {}" + emptyblock );
+	}
+	
+	// Class declarations
+	@Test
+		public void testComment() {
+		assertParseOk(prestmt + comment  + poststmt);
+		assertParseOk(prestmt + comment2  + poststmt);
+		
 	}
 	
 
