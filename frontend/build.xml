@@ -182,8 +182,8 @@
 </path>
 
 
-  <!-- TARGET junittest , run junit tests through testrunner-->
-  <target name="junittest" depends="compile">
+  <!-- TARGET testrunner , run junit tests through testrunner-->
+  <target name="testrunner" depends="compile">
   <java fork="true" classname="testframework.TestRunner" >
     <classpath refid="test.classpath"/>
   </java>
@@ -196,7 +196,7 @@
 <!-- suite file -->
 
 <!-- suite file -->
-  <property name = "test.suite.name"   value = "tests.AllTests" />
+  <property name = "test.suite.name"   value = "abs.frontend.AllTests" />
 
 <target  name="junit" depends="compile">
   <junit fork="yes" haltonfailure="yes">

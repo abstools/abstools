@@ -1,4 +1,4 @@
-{   return null  } 
+{ {   } ; return null }
 //Legal
 //{ Int x , Int y ;  skip ; return x.get   } 
 
