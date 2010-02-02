@@ -150,8 +150,7 @@ public class ParserTest {
 		public void testStmtBlock(){
 		assertParseOk("{ { x = y ; skip ; await x?  } ; return null }" ); 
 		assertParseOk("{ { x = y } ; return null }" );
-		//TODO This ought to work: 
-		//assertParseOk(" { { } ; return null }  " );
+		assertParseOk(" { { } ; return null }  " );
 		 	
 	}
 			
