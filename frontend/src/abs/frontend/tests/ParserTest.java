@@ -44,7 +44,7 @@ public class ParserTest {
 		Reader reader = getReader(args);
 		BufferedReader rd = null ;
 		//Set to true to print source before parsing 
-		boolean dumpinput=false;
+		boolean dumpinput=true;
 		if (dumpinput){
 			try {
 				rd = new BufferedReader(reader);

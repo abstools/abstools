@@ -1,1 +1,13 @@
-{ {   } ; return null ; }
+{ 
+  if x then y = true ; 
+
+  if x then  y = true ;   else y = false ;   
+  if x then { y = true ; z = false ; } else y = false ;   
+
+  return null ; }
+
+
+// 	 "if x then y = true else y = false",
+// 	 "if x then y = true else { y = false ; x = null ; } "};
+
+//   if 	

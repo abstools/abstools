@@ -157,18 +157,11 @@ List varfielddecls =
 	var_or_field_decl_list.l  SEMICOLON 	{: return l ; :}
 	; 
 
-// StmtRet stmt_ret = 
-//     stmt_list.l? SEMICOLON RETURN pure_exp.e                                  {: return new StmtRet(l,e) ; :}
-//      ;
-
-
 StmtRet stmt_ret = 
-    stmt_semi.l? RETURN exp.e                                  {: return new StmtRet(l,e) ; :}
-     ;
+     stmt_list.l? RETURN exp.e                                  {: return new StmtRet(l,e) ; :}
+	;
 
-List stmt_semi = 
-	stmt_list.l SEMICOLON  	{: return l ; :}
-	; 
+
 
 PureExp pure_exp = 
     var_ref
@@ -219,13 +212,13 @@ LocalSyncCall local_sync_call =
 
 
 Stmt stmt = 
-	assign_stmt SEMICOLON             
-	|  AWAIT guard SEMICOLON              {: return new AwaitStmt(guard) ; :}
-	|  SKIP SEMICOLON                      {: return new SkipStmt() ; :}
+	assign_stmt             
+	|  AWAIT guard SEMICOLON      {: return new AwaitStmt(guard) ; :}
+	|  SKIP SEMICOLON                       {: return new SkipStmt() ; :}
 	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
 	|  if_then_else_stmt         
 	|  stmt_block
-	|  SEMICOLON
+	| SEMICOLON               {: return new EmptyStmt() ; :}
 		;
 
 
@@ -243,17 +236,17 @@ IfStmt if_then_else_stmt =
 	;
 
 AssignStmt assign_stmt =  
-	var_ref.r ASSIGN exp.e        {: return new AssignStmt(r,e) ; :}
+	var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
     ;
 
 
 StmtBlock stmt_block = 
-	LBRACE stmt_semi.l? RBRACE       {:	return new StmtBlock(l) ; :}
+	LBRACE stmt_list.l? RBRACE       {:	return new StmtBlock(l) ; :}
     ;      
 
 List stmt_list =
     stmt.i                              {: return new List().add(i); :}
-    | stmt_list.l SEMICOLON stmt.i        {: return l.add(i); :}
+    | stmt_list.l  stmt.i        {: return l.add(i); :}
   ;
 
 

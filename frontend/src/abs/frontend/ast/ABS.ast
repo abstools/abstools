@@ -53,6 +53,7 @@ IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= Var:VarRef Value:Exp;
 StmtBlock : Stmt        ::= Stmts:Stmt* ;
+EmptyStmt : Stmt        ;
 
 
 abstract Guard;
