@@ -52,14 +52,10 @@ public class ParserTest {
 	
 	private		String[] otherStmt = 	
 	{"skip",
-	 "release"};
+	 "release"
+	};
 	
-	private 	String[] ifStmt = 
-	{"if x then y = true",
-	 "if x then y = true else y = false",
-	 "if x then y = true else { y = false ; x = null ; } "};
-	
-	
+
  
 	
 	@Before
@@ -94,8 +90,8 @@ public class ParserTest {
 		assertParseOk("{   return x.get ;   }"); 
 		assertParseOk("{   skip ; return x.get ;    }") ;
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
-		assertParseError("{   ; return x.get ;   }") ;
-		assertParseError("{   ; skip  ; return x.get ;  }") ;
+		assertParseOk("{   ; return x.get ;   }") ;
+		assertParseOk("{   ; skip  ; return x.get ;  }") ;
 		assertParseError("{ }");
 	}
 	
@@ -131,7 +127,7 @@ public class ParserTest {
 	@Test
 		public void testProg() {
 		assertParseOk(decls + emptyblock );
-r	}
+	}
 
 
 
@@ -142,12 +138,31 @@ r	}
 		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : otherStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
-		for (String s : ifStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		
 	}		
 
+	@Test
+	public void testIfStmts() {
+		
+		assertParseOk("{ if x then y = true ; return null ; }") ; 
+		assertParseOk("{ if x then y = true ;  else y = false ; return null ; }") ; 
+		assertParseOk("{ if x then { y = true ; z = false; }  else y = false ; return null ; }") ; 
+		assertParseError("{ if x then { y = true ; z = false }  else y = false ; return null ; }") ; 
+		
+		
+		
+}	
+	
 	//@Test
 		public void testStmtBlock(){
+			assertParseOk("{ return null ; }" );
+			assertParseError(" { return null }" );
+			
+			assertParseOk("{ x = y ; return null ; }" ); 
+			assertParseError("{ x = y  return null ; }" ); 
+			
+			assertParseOk("{ x = y ; y = z ; return null ; }" ); 
+			
 		assertParseOk("{ { x = y ; skip ; await x? ; } ; return null ; }" ); 
 		assertParseOk("{ { x = y ; } ; return null ; }" );
 		assertParseOk(" { { } ; return null ; }  " );
