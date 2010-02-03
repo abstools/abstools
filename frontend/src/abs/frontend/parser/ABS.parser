@@ -158,9 +158,11 @@ List varfielddecls =
 	; 
 
 StmtRet stmt_ret = 
-     stmt_list.l? RETURN exp.e                                  {: return new StmtRet(l,e) ; :}
+     stmt_list.l? return_exp.e                                  {: return new StmtRet(l,e) ; :}
 	;
 
+Exp return_exp = 
+	RETURN exp.e                                                {: return e ; :}
 
 
 PureExp pure_exp = 
