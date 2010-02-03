@@ -166,18 +166,8 @@ StmtRet stmt_ret =
 PureExp pure_exp = 
     var_ref
     | get_exp
-    | bool_exp
     | NULL                 {: return new NullExp() ; :}
     ;
-
-
-BoolExp bool_exp = 
-	NEG pure_exp.e         {: return new BoolExpNeg(e); :} 
-	| pure_exp.e1 ANDAND pure_exp.e2  	{: return new BoolExpAnd(e1,e2); :} 
-	| pure_exp.e1 OROR pure_exp.e2  	{: return new BoolExpOr(e1,e2); :} 
-	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new BoolExpComp(e1,e2); :} 
-	| 	BOOLEAN_LITERAL.b    {: return new BoolLiteral(b); :}
-	;
 
 VarRef var_ref =
     IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
@@ -189,8 +179,9 @@ GetExp get_exp =
 
 EffExp eff_exp = 
     new_exp 
-	| asynch_call 
-	| synch_call
+	| async_call 
+	| local_async_call 
+	| sync_call
 	| local_sync_call 
 	; 
 
@@ -199,10 +190,15 @@ NewExp  new_exp =
 	NEW IDENTIFIER.i LPAREN RPAREN {: return new NewExp(i) ; :} 
 	;
 
-AsyncCall asynch_call = 
+AsyncCall async_call = 
 	pure_exp.callee BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
 	;
-SyncCall synch_call = 
+
+LocalAsyncCall local_async_call = 
+	BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new LocalAsyncCall(method,params) ; :} 
+	;
+
+SyncCall sync_call = 
 	pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
 	;
 LocalSyncCall local_sync_call =
@@ -227,7 +223,8 @@ Stmt stmt =
 Guard guard = 	
 	| var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
 	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
-	  //	| bool_exp.b  {: return new BoolGuard(b) ; :} 
+	  //For booelan guards 
+	| pure_exp.e    {: return new ExpGuard(e) ; :} 
 	;
 
 

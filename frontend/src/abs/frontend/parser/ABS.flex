@@ -75,8 +75,8 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "release"     { return sym(Terminals.RELEASE); }
  "new"         { return sym(Terminals.NEW); }
 
- "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
- "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
+// "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
+// "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
 // "bool"        { return sym(Terminals.BOOL); }
 
  "("           { return sym(Terminals.LPAREN); }
@@ -91,10 +91,10 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "="           { return sym(Terminals.ASSIGN); }
 "&"          { return sym(Terminals.GUARDAND); }
 //Logical operators 
- "~"          { return sym(Terminals.NEG); }
- "&&"          { return sym(Terminals.ANDAND); }
- "||"          { return sym(Terminals.OROR); }
- "=="          { return sym(Terminals.EQEQ); }
+// "~"          { return sym(Terminals.NEG); }
+// "&&"          { return sym(Terminals.ANDAND); }
+// "||"          { return sym(Terminals.OROR); }
+// "=="          { return sym(Terminals.EQEQ); }
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }

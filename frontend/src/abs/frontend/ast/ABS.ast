@@ -60,8 +60,8 @@ ReturnStmt : Stmt       ::= RetExp:Exp ;
 abstract Guard;
 ClaimGuard: Guard			::= Var:VarRef ;
 AndGuard: Guard			::= Left:Guard Right:Guard;
-//No boolguards yet 
-//BoolGuard: Guard           ::= BoolExp ; 
+//For boolean guards   
+ExpGuard: Guard           ::= PureExp ; 
 
 abstract Exp;
 abstract PureExp: Exp;
@@ -71,18 +71,12 @@ abstract EffExp: Exp;
 VarRef: PureExp			::= <VarName:String>;
 GetExp: PureExp			::= PureExp;
 NullExp: PureExp ;
-BoolExp: PureExp ; 
-BoolLiteral: BoolExp   ::= <Value:String>;        
-BoolExpNeg: BoolExp ::= PureExp ; 
-BoolExpAnd: BoolExp ::= e1:PureExp e2:PureExp ; 
-BoolExpOr: BoolExp ::= e1:PureExp e2:PureExp ; 
-BoolExpComp: BoolExp ::= e1:PureExp e2:PureExp ; 
-
 
 // Expressions with side effects. 
 NewExp: EffExp		        ::= <ClassRef:String>;
 abstract Call: EffExp 	::= <Method:String> Params:PureExp*;
 LocalSyncCall: Call;
+LocalAsyncCall: Call;
 SyncCall: Call	    ::= Callee:PureExp;
 AsyncCall: Call		::= Callee:PureExp;
 
