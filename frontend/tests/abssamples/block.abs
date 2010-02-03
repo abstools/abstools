@@ -1,7 +1,8 @@
 { 
   if x then y = true ; 
-
+  return null ; 
   if x then  y = true ;   else y = false ;   
+  return o!init(y) ; 
   if x then { y = true ; z = false ; } else y = false ;   
 
   return null ; }

@@ -27,6 +27,10 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
 	}
 
+	public void ReturnStmt.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getRetExp());
+	}
+
 	public void MethodSig.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 			String childIndent = indent + "  ";

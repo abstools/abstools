@@ -54,6 +54,7 @@ ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= Var:VarRef Value:Exp;
 StmtBlock : Stmt        ::= Stmts:Stmt* ;
 EmptyStmt : Stmt        ;
+ReturnStmt : Stmt       ::= RetExp:Exp ; 
 
 
 abstract Guard;

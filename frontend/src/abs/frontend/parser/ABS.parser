@@ -150,7 +150,7 @@ MethodSig methodsig =
 //Program block
 //Is to be used in program, and method i.e. {_T x_ ; sr}
 Block block	=
-        LBRACE varfielddecls.l? stmt_ret.s SEMICOLON RBRACE	{: return new Block(l,s) ; :}
+        LBRACE varfielddecls.l? stmt_ret.s  RBRACE	{: return new Block(l,s) ; :}
     ;
 
 List varfielddecls =  
@@ -158,11 +158,9 @@ List varfielddecls =
 	; 
 
 StmtRet stmt_ret = 
-     stmt_list.l? return_exp.e                                  {: return new StmtRet(l,e) ; :}
+	stmt_list.l? return_stmt.s                                   {: return new StmtRet(l,s.getRetExp()) ; :}
 	;
 
-Exp return_exp = 
-	RETURN exp.e                                                {: return e ; :}
 
 
 PureExp pure_exp = 
@@ -218,6 +216,7 @@ Stmt stmt =
 	|  AWAIT guard SEMICOLON      {: return new AwaitStmt(guard) ; :}
 	|  SKIP SEMICOLON                       {: return new SkipStmt() ; :}
 	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
+	|  return_stmt
 	|  if_then_else_stmt         
 	|  stmt_block
 	| SEMICOLON               {: return new EmptyStmt() ; :}
@@ -239,6 +238,10 @@ IfStmt if_then_else_stmt =
 
 AssignStmt assign_stmt =  
 	var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
+    ;
+
+ReturnStmt return_stmt =  
+	RETURN exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
     ;
 
 
