@@ -219,12 +219,13 @@ LocalSyncCall local_sync_call =
 
 
 Stmt stmt = 
-	assign_stmt             
-	|  AWAIT guard               {: return new AwaitStmt(guard) ; :}
-	|  SKIP                      {: return new SkipStmt() ; :}
-	|  RELEASE                   {: return new ReleaseStmt() ; :} 
+	assign_stmt SEMICOLON             
+	|  AWAIT guard SEMICOLON              {: return new AwaitStmt(guard) ; :}
+	|  SKIP SEMICOLON                      {: return new SkipStmt() ; :}
+	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
 	|  if_then_else_stmt         
 	|  stmt_block
+	|  SEMICOLON
 		;
 
 
