@@ -6,7 +6,7 @@
 
   <property name = "src.dir"   value = "${basedir}/src" />
   <property name = "tests.dir"   value = "${basedir}/tests" />
-  <property name = "testframework.dir"   value = "${basedir}/testframework" />
+  <property name = "testframework.dir"   value = "${basedir}/tests/testframework" />
   <property name = "build.dir" value = "${basedir}/bin" />
   <property name = "dist.dir"  value = "${basedir}/dist" />
   <property name = "gen.dir"   value = "${basedir}/gen" />

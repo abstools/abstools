@@ -9,9 +9,9 @@
 Program                         ::= Decl* Block;
 
 // A Block is the body of programs and methods. 
-// It contains a list of zero or more ast.VarOrFieldDecl and one ast.StmtRet, 
-// these are named Fields and Stmts resp.  
-Block				::= Fields:VarOrFieldDecl*  Stmts:StmtRet;
+// It contains a list of zero or more ast.VarOrFieldDecl 
+// and zero or more ast.Stmt, these are named Fields and Stmts resp.  
+Block				::= Fields:VarOrFieldDecl*  Stmts:Stmt*;
 
 DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
 
@@ -41,8 +41,6 @@ abstract TypeAccess ::= <ID:String>;
 IdUse:	TypeAccess; 
 Future: TypeAccess;
 
-
-StmtRet                         ::= Stmts:Stmt* RetExp:Exp; 
 
 abstract Stmt; 
 
