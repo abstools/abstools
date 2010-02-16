@@ -18,9 +18,9 @@ abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
-
-ClassDecl:		BehaviorDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
-InterfaceDecl:	TypeDecl		::= Extends:IdUse* Body:MethodSig*;
+UnknownDecl:	Decl;			// Unknown declarations
+ClassDecl:		BehaviorDecl	::= ImplementedInterfaceUse:IdUse* Body:DeclBlock;
+InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
@@ -43,9 +43,9 @@ IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 //WhileStmt: Stmt			::= Condition:PureExp Body:Stmt*;
 ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= Var:VarRef Value:Exp;
-StmtBlock: Stmt			::= Stmts:Stmt* ;
+StmtBlock: Stmt			::= Stmt:Stmt*;
 EmptyStmt: Stmt;
-ReturnStmt: Stmt		::= RetExp:Exp ; 
+ReturnStmt: Stmt		::= RetExp:Exp; 
 
 
 abstract Guard;
@@ -61,11 +61,11 @@ abstract EffExp: Exp;
 // Side effect free expressions 
 VarRef: PureExp			::= <VarName>;
 GetExp: PureExp			::= PureExp;
-NullExp: PureExp ;
+NullExp: PureExp;
 
 // Expressions with side effects. 
 NewExp: EffExp			::= <ClassRef>;
-abstract Call: EffExp 	::= <Method> Params:PureExp*;
+abstract Call: EffExp 	::= <Method> Param:PureExp*;
 LocalSyncCall: Call;
 LocalAsyncCall: Call;
 SyncCall: Call			::= Callee:PureExp;
@@ -73,10 +73,9 @@ AsyncCall: Call			::= Callee:PureExp;
 
 
 
-
+/*
 // Created by NTA equations
 InterfaceRef:	TypeAccess;
 PrimitiveTypeRef: TypeAccess;	// e.g. bool
 UnknownDecl:	TypeAccess;
-
-
+*/
