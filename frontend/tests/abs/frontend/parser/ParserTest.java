@@ -23,7 +23,7 @@ public class ParserTest {
 	private String prestmt = "{" ; 
 	private String poststmt = " return null ; }" ; 
 
-	private static boolean verbose = true ; 
+	private static boolean verbose = false ; 
 
 	private String[] assignPure = 
 	{"x = y", 
