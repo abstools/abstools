@@ -208,7 +208,8 @@ Stmt stmt =
 	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
 	|  RETURN exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
 	|  if_then_else_stmt 
-	|  stmt_block
+	|  stmt_block	
+	| SEMICOLON               {: return new EmptyStmt() ; :}
 		;
 
 
