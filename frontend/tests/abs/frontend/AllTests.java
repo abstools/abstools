@@ -8,7 +8,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        //ScannerTest.class
+        ScannerTest.class, 
 		ParserTest.class
         })
 public class AllTests {
