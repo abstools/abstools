@@ -1,10 +1,6 @@
 //$Id$ 
 //
-// Remarks:
-// Liberalisation's wrt. EBJ's grammar in the formal spec. of ABS (abs.tex):
-// - Allow interfaces and classes in any order
-// - In blocks, allow declarations and statements in any order
-// 
+ 
 
 Program                         ::= Decl* Block;
 
@@ -18,26 +14,23 @@ DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
 
-abstract Decl	::= <Name>;
+abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
-abstract TypeDecl:			Decl; // Entities used in type expressions
+abstract TypeDecl:		Decl; // Entities used in type expressions
 
 
-//abstract 	TypeDecl	::= <Name:String>; // TODO: simplify to <Name>
-ClassDecl:	BehaviorDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
-InterfaceDecl:	TypeDecl	::= Extends:IdUse* Body:MethodSig*;
+ClassDecl:		BehaviorDecl	::= Implements:IdUse* Body:DeclBlock; // TODO: make implements optional
+InterfaceDecl:	TypeDecl		::= Extends:IdUse* Body:MethodSig*;
+	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
-VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; //<Name:String> for the name of the variable or field is inherited from TypeDecl and 
-                                                     //IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
+VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; 
+Method						::= MethodSig Block;
 
-Method				::= MethodSig Block;
+MethodSig: TypeDecl	::= ReturnType:TypeAccess Params:VarOrFieldDecl*;
 
-//MethodSig                      ::= <ReturnType:String> <Name:String> Params:VarOrParamDecl*;
-MethodSig : TypeDecl 		::= ReturnType:TypeAccess Params:VarOrFieldDecl*; //<Name:String> (for the name) inherited from TypeDecl.
-                                                                                  //IdUse (for the type)  
 
-abstract TypeAccess ::= <ID:String>;
+abstract TypeAccess ::= <ID>;
 IdUse:	TypeAccess; 
 Future: TypeAccess;
 
@@ -50,33 +43,33 @@ IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 //WhileStmt: Stmt			::= Condition:PureExp Body:Stmt*;
 ReleaseStmt: Stmt;
 AssignStmt: Stmt		::= Var:VarRef Value:Exp;
-StmtBlock : Stmt        ::= Stmts:Stmt* ;
-EmptyStmt : Stmt        ;
-ReturnStmt : Stmt       ::= RetExp:Exp ; 
+StmtBlock: Stmt			::= Stmts:Stmt* ;
+EmptyStmt: Stmt;
+ReturnStmt: Stmt		::= RetExp:Exp ; 
 
 
 abstract Guard;
-ClaimGuard: Guard			::= Var:VarRef ;
+ClaimGuard: Guard		::= Var:VarRef;
 AndGuard: Guard			::= Left:Guard Right:Guard;
 //For boolean guards   
-ExpGuard: Guard           ::= PureExp ; 
+ExpGuard: Guard			::= PureExp ; 
 
 abstract Exp;
 abstract PureExp: Exp;
 abstract EffExp: Exp;
 
 // Side effect free expressions 
-VarRef: PureExp			::= <VarName:String>;
+VarRef: PureExp			::= <VarName>;
 GetExp: PureExp			::= PureExp;
 NullExp: PureExp ;
 
 // Expressions with side effects. 
-NewExp: EffExp		        ::= <ClassRef:String>;
-abstract Call: EffExp 	::= <Method:String> Params:PureExp*;
+NewExp: EffExp			::= <ClassRef>;
+abstract Call: EffExp 	::= <Method> Params:PureExp*;
 LocalSyncCall: Call;
 LocalAsyncCall: Call;
-SyncCall: Call	    ::= Callee:PureExp;
-AsyncCall: Call		::= Callee:PureExp;
+SyncCall: Call			::= Callee:PureExp;
+AsyncCall: Call			::= Callee:PureExp;
 
 
 
