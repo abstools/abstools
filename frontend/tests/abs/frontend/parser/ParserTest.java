@@ -133,7 +133,7 @@ public class ParserTest {
 
 	@Test
 		public void testStmts() {
-		//		System.out.println(assignPure);
+		System.out.println(assignPure);
 		for (String s : assignPure)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
