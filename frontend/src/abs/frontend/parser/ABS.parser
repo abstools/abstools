@@ -150,7 +150,7 @@ MethodSig methodsig =
 //Program block
 //Is to be used in program, and method i.e. {_T x_ ; sr}
 Block block	=
-        LBRACE varfielddecls.l? stmt_list.s  RBRACE	{: return new Block(l,s) ; :}
+        LBRACE varfielddecls.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
     ;
 
 List varfielddecls =  
