@@ -88,7 +88,8 @@ public class ParserTest {
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
 		assertParseOk("{   ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
-		assertParseOk("{ }");
+		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;
+		assertParseOk("{  }");
 	}
 	
 	// Interface declarations
