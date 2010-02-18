@@ -70,13 +70,11 @@ IdUse ifName =
     IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
     ;
 
-TypeAccess type =
-	IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
-	| BOOL  {: return new IdUse(BOOL) ; :}
-	| FUT LPAREN IDENTIFIER RPAREN {: return new Future(IDENTIFIER) ; :}
-    ;
 
-
+TypeExp type_exp = 
+	IDENTIFIER 		{: return new UnresolvedType(IDENTIFIER); :}
+	| FUT LPAREN IDENTIFIER RPAREN {: return new FutureType(new UnresolvedType(IDENTIFIER)); :}
+	;	
 
 // Used in class_decl, i.e. {_T f_ ; _M_}
 DeclBlock declblock =  
@@ -86,7 +84,7 @@ DeclBlock declblock =
 
 // Type the type, IDENTIFIER for the name of the variable/field.
 VarOrFieldDecl var_or_field_decl = 
-    type IDENTIFIER  {: return new VarOrFieldDecl(IDENTIFIER,type); :}
+    type_exp IDENTIFIER  {: return new VarOrFieldDecl(IDENTIFIER,type_exp); :}
     ;
 
 
@@ -141,7 +139,7 @@ Method method =
     ;
 
 MethodSig methodsig = 
-    type IDENTIFIER LPAREN  var_or_field_decl_list.l? RPAREN       {: return new MethodSig(IDENTIFIER,type,l); :}
+    type_exp IDENTIFIER LPAREN  var_or_field_decl_list.l? RPAREN       {: return new MethodSig(IDENTIFIER,type_exp,l); :}
     ;
 
 
@@ -160,6 +158,7 @@ List varfielddecls =
 PureExp pure_exp = 
     var_ref
     | get_exp
+ //   | eq_exp 	FIXME
     | NULL                 {: return new NullExp() ; :}
     ;
 
@@ -180,9 +179,16 @@ EffExp eff_exp =
 	; 
 
 
+//EqExp  eq_exp = 
+//	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
+//	;
+
 NewExp  new_exp = 
 	NEW IDENTIFIER.i LPAREN RPAREN {: return new NewExp(i) ; :} 
 	;
+
+
+
 
 AsyncCall async_call = 
 	pure_exp.callee BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 

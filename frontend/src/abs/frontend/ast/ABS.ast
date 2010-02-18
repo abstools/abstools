@@ -24,15 +24,22 @@ InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
-VarOrFieldDecl:	TypeDecl	::= Type:TypeAccess; 
+VarOrFieldDecl	::= <Name> TypeExp; 
+ 
 Method						::= MethodSig Block;
 
-MethodSig: TypeDecl	::= ReturnType:TypeAccess Params:VarOrFieldDecl*;
+MethodSig	::= <Name> ReturnType:TypeExp Params:VarOrFieldDecl*;
 
+IdUse				::= <Name>;
 
-abstract TypeAccess ::= <ID>;
-IdUse:	TypeAccess; 
-Future: TypeAccess;
+abstract TypeExp ; 
+abstract NamedTypeExp : TypeExp  ::= <Name> ; 
+DataType:	NamedTypeExp ;
+InterfaceType:	NamedTypeExp ;
+UnresolvedType : NamedTypeExp ;     // A type expression whose type cannot be resolved at parse time.
+										// Will be  resolved by rewriting. 
+FutureType: TypeExp ::= TypeExp ;  // A future doesn't have a name as such
+
 
 
 abstract Stmt; 
@@ -62,6 +69,7 @@ abstract EffExp: Exp;
 VarRef: PureExp			::= <VarName>;
 GetExp: PureExp			::= PureExp;
 NullExp: PureExp;
+EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
 
 // Expressions with side effects. 
 NewExp: EffExp			::= <ClassRef>;

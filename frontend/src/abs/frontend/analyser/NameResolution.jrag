@@ -1,0 +1,51 @@
+import java.util.HashSet;
+
+aspect NameResolution {
+  
+  // ***API***
+  
+  // Declaration of *decl*
+  // *decl* refers to the appropriate declaration of the IdUse
+  // or to unknownDecl if the declaration is missing
+  syn lazy Decl IdUse.decl();  
+
+  // Declaration of *lookup*
+  // Finds a declaration (Decl) based on a name, or attribute unknownDecl if not found
+  syn lazy Decl Program.lookup(String name);
+  
+  // ***Implementation***
+  
+  //   Definitions of *decl*
+  eq IdUse.decl() = lookup(getName());
+  
+  //   Definitions of *lookup*
+  eq Program.getDecl().lookup(String name) = localLookup(name);
+  // eq Program.getPredefinedType(int index).lookup(String name) = unknownDecl();
+  eq Program.lookup(String name) = localLookup(name);
+  
+    
+  // Expose *lookup* at various places in the AST
+  // Technically, this re-uses definition from Program.InterfaceDecl
+  inh Decl IdUse.lookup(String name); 
+
+  //inh Decl InterfaceDecl.lookup(String name);
+  
+  
+  // *localLookup* - looks through the local declarations in a block
+
+  syn lazy Decl Program.localLookup(String name) {
+    for (int k = 0; k < getNumDecl(); k++) {
+      Decl d = getDecl(k).declarationOf(name);
+      if (d != null) return d;
+    }
+    return unknownDecl();
+  }
+  
+  syn Decl Decl.declarationOf(String name);
+ 
+  eq Decl.declarationOf(String name) {
+    if (getName().equals(name)) return this;
+    return null;
+  }
+
+}

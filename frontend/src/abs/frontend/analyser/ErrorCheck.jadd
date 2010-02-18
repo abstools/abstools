@@ -1,0 +1,47 @@
+import java.util.Collection;
+import java.util.ArrayList;
+
+aspect ErrorCheck {
+  public Collection Program.errors() {
+    Collection c = new ArrayList();
+    collectErrors(c);
+    return c;
+  }
+
+  // generic traversal that collects errors in AST
+  public void ASTNode.collectErrors(Collection c) {
+    for(int i = 0; i < getNumChild(); i++)
+      getChild(i).collectErrors(c);
+  }
+
+  // add an error msg associated with a certain context
+  protected void ASTNode.error(Collection c, String s) {
+    //c.add(getLine(getStart()) + ": " + s);
+    c.add(s);
+  }
+
+  // add error for cyclic interface inheritance hierarchy
+  public void InterfaceDecl.collectErrors(Collection c) {
+    super.collectErrors(c);
+    if(hasCycleOnExtendedInterfacesChain())
+      error(c, "Cyclic inheritance chain for interface " + getName());
+  }
+
+  // add error for undeclared interfaces
+  public void IdUse.collectErrors(Collection c) {
+    super.collectErrors(c);
+    if(decl().isUnknown())
+      error(c, "Unknown identifier " + getName());
+  }
+
+  // add error for duplicate interfaces
+  public void Program.collectErrors(Collection c) {
+    super.collectErrors(c);
+    if(duplicateInterfaces().size() > 0) {
+    	for (String name : duplicateInterfaces()) {
+        	error(c, "Duplicate interface " + name);
+    	}
+    }
+  }
+
+}

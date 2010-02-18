@@ -29,12 +29,8 @@ public class ParserTest {
 	{"x = y", 
 	 "x = null",  
 	 "x = y.get", 
-	 "x = ~y",  
-	 "x = y && z",
-	 "x = y || z",  
-	 "x = y == z",
-	 "x = true",
-	 "x = false"};
+	 //"x = y == z",
+	 };
 	
 	
 	private String[] assignEff = 	
@@ -92,7 +88,7 @@ public class ParserTest {
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
 		assertParseOk("{   ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
-		assertParseError("{ }");
+		assertParseOk("{ }");
 	}
 	
 	// Interface declarations
@@ -183,7 +179,8 @@ public class ParserTest {
 			if (verbose) 
 				System.out.println("Assert OK: "+s);
 			parse(s);
-		} catch (Throwable t) {	
+		} catch (Throwable t) {
+			//fail("something failed");
 			fail("Failed to parse: "+ s+"\n"+t.getMessage());
 		}
   }

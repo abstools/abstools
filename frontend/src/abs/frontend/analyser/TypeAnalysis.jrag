@@ -1,0 +1,81 @@
+aspect TypeAnalysis {
+
+	// ***API***
+  
+	// *hasCycleOnExtendedInterfaceChain*
+	// True if there is a cycle somewhere on the superinterface chain
+	syn lazy boolean InterfaceDecl.hasCycleOnExtendedInterfacesChain() circular [true];
+  
+	/*
+	 * TODO: not sure if we need this attr
+	 * 
+	// *extendedInterfaces*
+	// A non-empty list of interfaces that the interface is declared to extend,
+	// not including transitive extending; the empty list if there is no extends clause.
+	syn lazy List<InterfaceDecl> InterfaceDecl.extendedInterfaces(); // TODO: rename to ..Decl?
+  	*/
+	
+	// ***Implementation***
+
+	// A helper method that resolves interface names to interface declarations.
+	public List<InterfaceDecl> InterfaceDecl.resolveExtendedInterfaces() {
+		List<IdUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
+		List<InterfaceDecl> interfaceDecls = new List<InterfaceDecl>();
+
+		for (IdUse ref : refs) {
+			Decl decl = ref.decl(); // Note decl var. distinct from decl() method
+			if (decl instanceof InterfaceDecl) {
+				interfaceDecls.add((InterfaceDecl)decl);
+			} else {
+				; // TODO: add some kind of ErrorObject that is later checked.
+			    //       for now, we just ignore it!  FIXME!
+			}
+		}
+		{
+			int count = 0;
+			System.out.print("Resolved: " + getName() + " extends ");
+			for (Decl decl : interfaceDecls) {
+				count++;
+				System.out.println(decl.getName() + " ");
+			}
+			if (count == 0)
+				System.out.print("nothing");
+			System.out.println("");
+		}
+		
+		return interfaceDecls;
+	}
+	
+	// *hasCycleOnExtendedInterfacesChain* - true if there is a cycle somewhere on the extendedInterfaces chain
+	eq InterfaceDecl.hasCycleOnExtendedInterfacesChain() {
+		List<IdUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
+		boolean cycleFound = false;
+
+		for (IdUse ref : refs) {
+			Decl decl = ref.decl(); // Note decl var. distinct from decl() method
+			if (decl instanceof InterfaceDecl) {
+				cycleFound = cycleFound || ((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain();
+			} else { // Semantic errors in input program can cause dell==null
+				if (decl != null)
+					System.err.println("panic"); // TODO: add some kind of ErrorObject that is later checked?
+			    //       for now, we just ignore it!  FIXME!
+			}
+		}
+
+		return cycleFound;
+	}
+
+	/*
+	// Definition of *extendedInterfaces*
+	eq InterfaceDecl.extendedInterfaces() {
+		if (!hasCycleOnExtendedInterfacesChain()) {
+			return resolveExtendedInterfaces(); // TODO: only used here, inline
+		} else {
+			return null; // TODO: ok since error catched by circularity check??
+						 // TODO: return empty list??
+		}
+	}
+	*/
+	
+}
+

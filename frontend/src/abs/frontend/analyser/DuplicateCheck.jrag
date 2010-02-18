@@ -1,0 +1,46 @@
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.Collections;
+
+aspect DuplicateCheck {
+	// ***API***
+	
+
+	// *duplicateDeclaration* - true if there is more than one interface declared with the same name
+	// TODO: generalise to other kinds of declarations: ADTs, classes, functions
+	syn lazy Set<String> Program.duplicateInterfaces();
+	
+	
+	// ***Implementation***
+	
+	// TODO: refactor into a method for to check dupes for any kind of decl
+	eq Program.duplicateInterfaces() {
+		// Note: must use fully qualified name to avoid conflicts with ast.List
+		java.util.List<String> interfaceNames = new ArrayList<String>();
+		Set<String> duplicateNames = new HashSet<String>();
+		String previousName = "";
+
+		// TODO: simplify this:
+		// Add the interfaceNames to a (Hash)Set and compare the size of the set to
+		// the number of names
+		
+		for (int k = 0; k < getNumDecl(); k++) {
+			Decl decl = getDecl(k);
+			if (decl instanceof InterfaceDecl)
+				interfaceNames.add(decl.getName());
+		}
+		
+		Collections.sort(interfaceNames);
+		for (String currentName : interfaceNames) {
+			if (previousName.equals(currentName)) {
+				duplicateNames.add(currentName);
+			}
+			previousName = currentName;				
+		}
+		
+		return duplicateNames;
+		//return new HashSet(interfaceNames); // TODO: test hack
+		
+	}
+
+}
