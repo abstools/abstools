@@ -32,7 +32,7 @@ Program goal =
   ;
 
 Program program = 
-	decl_list.l? block	{: return new Program(l, block); :}
+	decl_list.l? block?	{: return new Program(l, block); :}
   ;
 
 Decl decl =

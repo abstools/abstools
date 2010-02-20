@@ -2,11 +2,12 @@
 //
  
 
-Program                         ::= Decl* Block;
+Program                         ::= Decl* [Block];
 
 // A Block is the body of programs and methods. 
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
+// and an optional "main" Block 
 Block				::= Fields:VarOrFieldDecl*  Stmts:Stmt*;
 
 DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;

@@ -57,7 +57,7 @@ public class ParserTest {
 	@Before
         public void setUp() {
 		
-		emptyblock = "{   return null ;  }"; 
+		emptyblock = "{    }"; 
 		//methodsignatures 
 		ms1 = "Void init(Foo x, Bar y)";
 		ms2 = "Void append(Int i)";
@@ -72,7 +72,7 @@ public class ParserTest {
 		cldecl1 = " class FooClass  {}";
 		cldecl2 = " class FooClass implements Foo {}";
 		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
-		decls = ifdecl1 + "\n" + ifdecl2   + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
+		decls = ifdecl1 + "\n" + ifdecl2  + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
 
 		
 
@@ -82,23 +82,25 @@ public class ParserTest {
 		
 	@Test
 		public void testBlock() {
-		assertParseOk(emptyblock); 
+		//NO decls no block 
+		assertParseOk(" "); 
+		//emptyblock
+		assertParseOk("{ }"); 
 		assertParseOk("{   return x.get ;   }"); 
 		assertParseOk("{   skip ; return x.get ;    }") ;
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
 		assertParseOk("{   ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
-		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;
-		assertParseOk("{  }");
-	}
+		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;	
+}
 	
 	// Interface declarations
 		@Test
 		public void testIfDecl() {
-		assertParseOk(ifdecl1 + emptyblock );
-		assertParseOk(ifdecl2 + emptyblock );
-		assertParseError("interface Foo extends {}" + emptyblock );
-		assertParseError("interface extends {}" + emptyblock );
+			assertParseOk(" interface Foo {} {}");
+		assertParseOk(" interface Bar extends Bar1, Bar2 {} {}" );
+		assertParseError("interface Foo extends {} {}" );
+		assertParseError("interface extends {} {}" );
 	}
 
 
@@ -106,10 +108,10 @@ public class ParserTest {
 	// Class declarations
 	@Test
 		public void testClassDecl() {
-		assertParseOk(cldecl1 + emptyblock );
-		assertParseOk(cldecl2 + emptyblock );
-		assertParseOk(cldecl3 + emptyblock );
-		assertParseError("class FooClass implements {}" + emptyblock );
+		assertParseOk(cldecl1 + "{}" );
+		assertParseOk(cldecl2 + "{}" );
+		assertParseOk(cldecl3 + "{}" );
+		assertParseError("class FooClass implements {}" + "{}" );
 	}
 	
 	// Class declarations
@@ -123,7 +125,7 @@ public class ParserTest {
 
 	@Test
 		public void testProg() {
-		assertParseOk(decls + emptyblock );
+		assertParseOk(decls + "{}" );
 	}
 
 
