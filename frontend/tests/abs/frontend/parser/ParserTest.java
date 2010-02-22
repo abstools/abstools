@@ -133,7 +133,8 @@ public class ParserTest {
 
 	@Test
 		public void testFunctionDecl() {
-		assertParseOk("def Int inc(Int x) = x"); //Only supports variables as function bodies for now 
+		assertParseOk("def Int inc(Int x) = x"); 
+		assertParseOk("def Datatype fn(Int x , Int y) = x"); 
 		//		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
 	}
 

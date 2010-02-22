@@ -241,30 +241,26 @@ VarRef var_ref =
 
 
 FunExp fun_exp = 
-	fun_val.v  // return v {: return new FunVal(v) ; :} //x or t 
+	IDENTIFIER            {: return new FunVar(IDENTIFIER) ; :} //variable x 
+	| term 
 	; 
 
-FunVal fun_val = 
-	IDENTIFIER            {: return new FunVar(IDENTIFIER) ; :} //variable x 
-//	| term // or term t 
-		;
+Term term = 
+	IDENTIFIER.co LPAREN term_list.l? RPAREN {: return new Term(co,l) ; :}  //FIXME : UCIDENTIFIER "Co"
+	| PAIR LPAREN term.left COMMA term.right RPAREN  {: return new TermPair(left,right) ; :}
+	;
 
-//Term term = 
-//	IDENTIFIER.co term_params.p? {: return new Term(co,p) ; :}  //FIXME : UCIDENTIFIER "Co"
-//	| LPAREN term.left COMMA term.right RPAREN  {: return new TermPair(left,right) ; :}
-//	;
 
-//List term_params = 
-//	LPAREN term_list.l? RPAREN     {: return l; :}
-//	;
-
-//List term_list =
-//   term.i                              {: return new List().add(i); :}
-//   | term_list.l COMMA term.i        {: return l.add(i); :}
-//  ;
+//TODO make parens optional
+//I got some precedence conflicts when i made parens optional here.
+//could probably be fixed by explixit declaration of productionrule precedence.
 
 
 
+List term_list =
+   term.i                              {: return new List().add(i); :}
+   | term_list.l COMMA term.i        {: return l.add(i); :}
+  ;
 
 
 GetExp get_exp =
