@@ -57,6 +57,7 @@ AssignStmt: Stmt		::= Var:VarRef Value:Exp;
 StmtBlock: Stmt			::= Stmt:Stmt*;
 EmptyStmt: Stmt;
 ReturnStmt: Stmt		::= RetExp:Exp; 
+ExpressionStmt: Stmt	::= Exp:Exp; 
 
 
 abstract Guard;
@@ -76,7 +77,7 @@ NullExp: PureExp;
 EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
 
 // Expressions with side effects. 
-NewExp: EffExp			::= <ClassRef>;
+NewExp: EffExp			::= <ClassRef> Param:PureExp*; 
 abstract Call: EffExp 	::= <Method> Param:PureExp*;
 LocalSyncCall: Call;
 LocalAsyncCall: Call;

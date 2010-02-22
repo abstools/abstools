@@ -102,7 +102,7 @@ VarDecl var_decl =
 
 List var_decl_list =
     var_decl.i                                    {: return new List().add(i); :}
-    | var_decl_list.l SEMICOLON var_decl.i        {: return l.add(i); :}
+    | var_decl_list.l COMMA var_decl.i        {: return l.add(i); :}
   ;
 
 
@@ -202,10 +202,12 @@ EffExp eff_exp =
 //	;
 
 NewExp  new_exp = 
-	NEW IDENTIFIER.i LPAREN RPAREN {: return new NewExp(i) ; :} 
+	NEW IDENTIFIER.i params.p?   {: return new NewExp(i,p) ; :} 
 	;
 
-
+List params = 
+	LPAREN pure_exp_list.l? RPAREN {: return l ; :} 
+	;
 
 
 AsyncCall async_call = 
@@ -231,8 +233,9 @@ Stmt stmt =
 	|  SKIP SEMICOLON                       {: return new SkipStmt() ; :}
 	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
 	|  RETURN exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
+	|  eff_exp.e SEMICOLON               {: return new ExpressionStmt(e) ; :}	
 	|  if_then_else_stmt 
-	|  stmt_block	
+	|  stmt_block
 	| SEMICOLON               {: return new EmptyStmt() ; :}
 		;
 

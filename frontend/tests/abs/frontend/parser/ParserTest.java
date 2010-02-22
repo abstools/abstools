@@ -35,6 +35,7 @@ public class ParserTest {
 	
 	private String[] assignEff = 	
 	{"x = new Foo()", 
+	 "x = new Foo(a,b)", 
 	 "x = o!init()", 
 	 "x = o!init(y)", 
 	 "x = o!init(y,z)", 
@@ -59,11 +60,11 @@ public class ParserTest {
 		
 		emptyblock = "{    }"; 
 		//methodsignatures 
-		ms1 = "Void init(Foo x, Bar y)";
+		ms1 = "Void init(Foo x ,  Bar y)";
 		ms2 = "Void append(Int i)";
-		meth1 = ms1 + "{ Int x, Int y ;	return null ; }";
+		meth1 = ms1 + "{ Int x ,  Int y ;	return null ; }";
 	    meth2 = ms2 + "{ skip; return null ; }";
-		fields = "ListofInt buffer,     Int max ,     Int n 	;"; 
+		fields = "ListofInt buffer ,     Int max ,      Int n 	;"; 
 
 		comment = "// one line\n";
 		comment2 = "/* Multi \n line \n comment */";
@@ -82,17 +83,15 @@ public class ParserTest {
 		
 	@Test
 		public void testBlock() {
-		//NO decls no block 
-		assertParseOk(" "); 
-		//emptyblock
-		assertParseOk("{ }"); 
-		assertParseOk("{   return x.get ;   }"); 
-		assertParseOk("{   skip ; return x.get ;    }") ;
-		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
+		assertParseOk(" "); 		//NO decls no block 
+		assertParseOk("{ }"); //No decls. 
+		assertParseOk("{   return x.get ;   }"); //one statement
+		assertParseOk("{   skip ; return x.get ;    }") ;  //n statements
+		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }"); //Variable decls
 		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
-  		assertParseOk("{ fut(I) x , J z ;  }") ;	
-		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;	
+  		assertParseOk("{ fut(I) x , J z ; }") ;	//need trailing semicolon here. 
+		assertParseOk("{ fut(I) x , fut(fut(I)) y ,  J z , K w  ; }") ;	
 
 }
 	
@@ -113,7 +112,7 @@ public class ParserTest {
 		assertParseOk("class FooClass  {} {}"); 
 		assertParseOk("class FooClass  implements Foo {} {}");
 		assertParseOk("class FooClass  implements Foo {}"); //optional main body 
-		assertParseOk("class FooClass(T x ; T y)  implements Foo {}"); //class params 
+		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
 		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //init block
@@ -170,9 +169,9 @@ public class ParserTest {
 			
 			assertParseOk("{ x = y ; y = z ; return null ; }" ); 
 			
-		assertParseOk("{ { x = y ; skip ; await x? ; } ; return null ; }" ); 
-		assertParseOk("{ { x = y ; } ; return null ; }" );
-		assertParseOk(" { { } ; return null ; }  " );
+			assertParseOk("{ { x = y ; skip ; await x? ; } ; return null ; }" ); 
+			assertParseOk("{ { x = y ; } ; return null ; }" );
+			assertParseOk(" { { } ; return null ; }  " );
 		 	
 	}
 			
@@ -184,7 +183,6 @@ public class ParserTest {
 				
 	}
 
-	//TODO more testcases 
 	protected static void assertParseOk(String s) {
 		try {
 			if (verbose) 
