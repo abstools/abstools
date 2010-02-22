@@ -1,7 +1,8 @@
 //$Id: skeleton.abs 1007 2010-01-19 10:33:57Z atorjusen $
 
 //Interface declarations, extends is optional 
-interface Foo {} 
+interface Foo1 {} 
+interface Foo2 {}
 interface Foo extends Foo1, Foo2 {} 
 
 // "implements" is optional
@@ -69,16 +70,16 @@ class BoundedBuffer implements Buffer {
 	/* Assignments to expressions 
 	   with side effects.
 	 */
-	x = new Foo() ;
+	x = new FooClass() ;
 	x = o!init();
 	x = o!init(y);
 	x = o!init(y,z);
 	x = o.init(y,z,w);
 	x = init(y,z); 
 	//Await statements 
-	await y? ; 
-	await y? & z?; 
-	await y? & z? & w?  ;
+	await y.get ; 
+	await y.get && z.get; 
+	await y.get && z.get && w.get  ;
 	// No boolean guards
 	// await true ; 
 	//skip, release, if_th_else
@@ -90,7 +91,7 @@ class BoundedBuffer implements Buffer {
 	
 
 	//Stmtblock
-	{ x = y ; skip ; await x? ; } 
+	{ x = y ; skip ; await x.get ; } 
     skip ;
 	//Return  
     return null ;
