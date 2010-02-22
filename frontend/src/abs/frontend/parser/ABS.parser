@@ -76,10 +76,15 @@ TypeExp type_exp =
 	| FUT LPAREN type_exp.t RPAREN {: return new FutureType(t); :}
 	;	
 
-// Used in class_decl, i.e. {_T f_ ; _M_}
+// Used in class_decl, i.e. { initblock _T f_ ; _M_}
 DeclBlock declblock =  
-    LBRACE varfielddecls.l? method_list.m? RBRACE	{: return new DeclBlock(l,m) ; :}
+    LBRACE initblock.i? varfielddecls.l? method_list.m? RBRACE	{: return new DeclBlock(i,l,m) ; :}
   ;
+
+
+List initblock =  
+        LBRACE stmt_list.s RBRACE  {: return s ; :}
+    ;
 
 
 // Type the type, IDENTIFIER for the name of the variable/field.

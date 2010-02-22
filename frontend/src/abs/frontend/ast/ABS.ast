@@ -10,7 +10,7 @@ Program                         ::= Decl* [Block];
 // and an optional "main" Block 
 Block				::= Fields:VarOrFieldDecl*  Stmts:Stmt*;
 
-DeclBlock			::= Fields:VarOrFieldDecl*  Methods:Method*;
+DeclBlock			::= InitBlock:InitStmt* Fields:VarOrFieldDecl*  Methods:Method*;
 
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
@@ -44,6 +44,7 @@ FutureType: TypeExp ::= TypeExp ;  // A future doesn't have a name as such
 
 
 abstract Stmt; 
+abstract InitStmt : Stmt ;   //FIXME not all statements can be init statements.  
 
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
