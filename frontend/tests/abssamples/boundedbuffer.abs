@@ -5,10 +5,12 @@
  *
  */
 
-interface Void {
+data Void  {  }  
+data Bool { True , False }
+data IntList { IntNil , Cons(Int, IntList) } 
 
-    //All method signatures must have a return type. 
-} 
+def Bool lt(Int x , Int y) = notimplemented
+
 
 interface Buffer {
 
@@ -46,7 +48,7 @@ class BoundedBuffer implements Buffer {
     Void append(Int i){
         Void x 
         ;
-        //await n < max ; // --- No boolean guards in abs  
+        //await lt(n,max) ; // --- not implemented yet
         if n_less_than_max then { // no arithmetic 
             buffer = append_d_to_buffer; //no list operations 
             n = n_pluss_one; // no artihmetic 
