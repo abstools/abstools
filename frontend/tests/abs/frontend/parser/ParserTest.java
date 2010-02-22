@@ -89,7 +89,7 @@ public class ParserTest {
 		assertParseOk("{   return x.get ;   }"); 
 		assertParseOk("{   skip ; return x.get ;    }") ;
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
-		assertParseOk("{   ; return x.get ;   }") ;
+		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
 		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;	
 }
@@ -97,7 +97,7 @@ public class ParserTest {
 	// Interface declarations
 		@Test
 		public void testIfDecl() {
-			assertParseOk(" interface Foo {} {}");
+		assertParseOk(" interface Foo {} {}");
 		assertParseOk(" interface Bar extends Bar1, Bar2 {} {}" );
 		assertParseError("interface Foo extends {} {}" );
 		assertParseError("interface extends {} {}" );
@@ -108,8 +108,10 @@ public class ParserTest {
 	// Class declarations
 	@Test
 		public void testClassDecl() {
-		assertParseOk(cldecl1 + "{}" );
-		assertParseOk(cldecl2 + "{}" );
+		assertParseOk("class FooClass  {} {}"); 
+		assertParseOk("class FooClass  implements Foo {} {}");
+		assertParseOk("class FooClass  implements Foo {}"); //optional main body 
+		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //empty init block
 		assertParseOk(cldecl3 + "{}" );
 		assertParseError("class FooClass implements {}" + "{}" );
 	}
