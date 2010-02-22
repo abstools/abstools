@@ -1,3 +1,4 @@
+//$Id$ 
 package abs.frontend.parser;
 
 import beaver.Symbol;
