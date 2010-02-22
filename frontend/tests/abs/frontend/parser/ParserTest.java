@@ -45,7 +45,9 @@ public class ParserTest {
 	private String[] awaitStmt = 	
 	{"await y?" ,
 	 "await y? & z?" ,
-	 "await y? & z? & w?"};
+	 "await y? & z? & w?", 
+	 "await y" //using pure exp v as guard. 
+	};
 	
 	private		String[] otherStmt = 	
 	{"skip",
@@ -121,7 +123,18 @@ public class ParserTest {
 		assertParseError("class FooClass implements {}" + "{}" );
 	}
 	
-	// Class declarations
+
+	// datatype declarations
+	@Test
+		public void testDatatypeDecl() {
+		assertParseOk("data Bool { True , False }"); 
+		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
+	}
+
+	
+
+
+	// comments
    @Test
 		public void testComment() {
 		assertParseOk(prestmt + comment  + poststmt);

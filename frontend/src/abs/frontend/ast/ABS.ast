@@ -22,6 +22,7 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 UnknownDecl:	Decl;			// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Params:VarDecl* ImplementedInterfaceUse:IdUse* Body:DeclBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
+DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
@@ -44,9 +45,20 @@ UnresolvedType : NamedTypeExp ;     // A type expression whose type cannot be re
 FutureType: TypeExp ::= TypeExp ;  // A future doesn't have a name as such
 
 
+/*
+Constructors occur as 
+- DataConstructors as in data declarations Co(_D_)
+- term consctructors as in Co(_t_)
+- patterns as in Co(_p_)
+- Don't know yet how to organise these.   
+*/
+
+abstract Constructor ; 
+DataConstructor : Constructor ::= ConstructorArgs:DataType* ;
+
 
 abstract Stmt; 
-abstract InitStmt : Stmt ;   //FIXME not all statements can be init statements.  
+abstract InitStmt : Stmt ;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;

@@ -39,7 +39,7 @@ Decl decl =
 		class_decl
 //	|	function_decl
 	|	interface_decl
-	|	DATA // TODO: change to     adt_decl
+	|	datatype_decl
 	;
 
 // The above is equivalent to the more explicit:  
@@ -56,25 +56,45 @@ ClassDecl class_decl =
 	CLASS IDENTIFIER class_params.p? implement_interfaces.i? declblock {: return new ClassDecl(IDENTIFIER, p,  i , declblock); :}
   ;
 
+DatatypeDecl  datatype_decl = 
+	DATA IDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(IDENTIFIER, l); :}
+  ;
+
+List data_constructor_list =
+    data_constructor.i                                         {: return new List().add(i); :}
+    | data_constructor_list.l COMMA data_constructor.i        {: return l.add(i); :}
+  ;
+
+DataConstructor data_constructor = 
+	IDENTIFIER  data_constructor_params.p? {: return new DataConstructor(p) ; :} 
+	;
+
+List data_constructor_params = 
+	LPAREN typename_list.l? RPAREN     {: return l; :}
+	;
+
 
 List class_params = 
 	LPAREN var_decl_list.l? RPAREN     {: return l; :}
 	;
 
 List implement_interfaces =
-    IMPLEMENTS ifName_list.i           {: return i; :}
+    IMPLEMENTS ifname_list.i           {: return i; :}
   ;
 
 List extends_interfaces =
-    EXTENDS ifName_list.i           {: return i; :}
+    EXTENDS ifname_list.i           {: return i; :}
   ;
 
 
 
-IdUse ifName =
+IdUse ifname =
     IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
     ;
 
+IdUse typename =
+    IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
+    ;
 
 TypeExp type_exp = 
 	IDENTIFIER 		{: return new UnresolvedType(IDENTIFIER); :}
@@ -138,10 +158,18 @@ List typedecl_list =
 //  | behaviordecl_list.l behaviordecl.t	{: return l.add(t); :}
 //  ;
 
-List ifName_list =
-    ifName.i                              {: return new List().add(i); :}
-    | ifName_list.l COMMA ifName.i        {: return l.add(i); :}
+List ifname_list =
+    ifname.i                              {: return new List().add(i); :}
+    | ifname_list.l COMMA ifname.i        {: return l.add(i); :}
   ;
+
+
+List typename_list =
+    typename.i                              {: return new List().add(i); :}
+    | typename_list.l COMMA typename.i        {: return l.add(i); :}
+  ;
+
+
 
 List pure_exp_list =
     pure_exp.i                              {: return new List().add(i); :}
@@ -244,7 +272,7 @@ Stmt stmt =
 Guard guard = 	
 	| var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
 	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
-	  //For booelan guards 
+	  //For boolean guards 
 	| pure_exp.e    {: return new ExpGuard(e) ; :} 
 	;
 
