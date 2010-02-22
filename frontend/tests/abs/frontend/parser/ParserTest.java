@@ -111,7 +111,8 @@ public class ParserTest {
 		assertParseOk("class FooClass  {} {}"); 
 		assertParseOk("class FooClass  implements Foo {} {}");
 		assertParseOk("class FooClass  implements Foo {}"); //optional main body 
-		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //empty init block
+		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //init block
+		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(cldecl3 + "{}" );
 		assertParseError("class FooClass implements {}" + "{}" );
 	}
