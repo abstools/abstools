@@ -56,10 +56,6 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 %% // Rules
 
-//temporary for development
- "fundef"       { return sym(Terminals.FUNDEF); }
-
-
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"   { return sym(Terminals.EXTENDS); }

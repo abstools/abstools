@@ -117,7 +117,7 @@ public class ParserTest {
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
-		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //init block
+		assertParseOk("class FooClass  implements Foo { T x ; {x = a ; } } {} "); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(cldecl3 + "{}" );
 		assertParseError("class FooClass implements {}" + "{}" );
@@ -129,6 +129,12 @@ public class ParserTest {
 		public void testDatatypeDecl() {
 		assertParseOk("data Bool { True , False }"); 
 		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
+	}
+
+	@Test
+		public void testFunctionDecl() {
+		assertParseOk("def Int inc(Int x) = x"); //Only supports variables as function bodies for now 
+		//		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
 	}
 
 	

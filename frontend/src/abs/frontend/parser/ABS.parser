@@ -62,8 +62,8 @@ DatatypeDecl  datatype_decl =
 
 
 FunctionDecl  function_decl = 
-	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN EQ fun_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
-  ;
+	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN fun_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+	; //TODO : ASSIGN (=) or EQEQ == ? 
 
 
 List data_constructor_list =
@@ -72,7 +72,7 @@ List data_constructor_list =
   ;
 
 DataConstructor data_constructor = 
-	IDENTIFIER  data_constructor_params.p? {: return new DataConstructor(p) ; :} 
+	IDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -241,8 +241,30 @@ VarRef var_ref =
 
 
 FunExp fun_exp = 
-	FUNDEF
+	fun_val.v  // return v {: return new FunVal(v) ; :} //x or t 
 	; 
+
+FunVal fun_val = 
+	IDENTIFIER            {: return new FunVar(IDENTIFIER) ; :} //variable x 
+//	| term // or term t 
+		;
+
+//Term term = 
+//	IDENTIFIER.co term_params.p? {: return new Term(co,p) ; :}  //FIXME : UCIDENTIFIER "Co"
+//	| LPAREN term.left COMMA term.right RPAREN  {: return new TermPair(left,right) ; :}
+//	;
+
+//List term_params = 
+//	LPAREN term_list.l? RPAREN     {: return l; :}
+//	;
+
+//List term_list =
+//   term.i                              {: return new List().add(i); :}
+//   | term_list.l COMMA term.i        {: return l.add(i); :}
+//  ;
+
+
+
 
 
 GetExp get_exp =

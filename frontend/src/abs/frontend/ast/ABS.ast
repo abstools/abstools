@@ -58,7 +58,7 @@ Constructors occur as
 - Don't know yet how to organise these.   
 */
 
-abstract Constructor ; 
+abstract Constructor ::= <Name>; 
 DataConstructor : Constructor ::= ConstructorArgs:DataType* ;
 
 
@@ -89,8 +89,13 @@ abstract EffExp: Exp;
 abstract FunExp : Exp ; 
 
 //FunctionalExpression 
-FunVal  : FunExp ; // ::= Value ; 
-LetExp  : FunExp ; // ::= Value ; 
+abstract FunVal  : FunExp ; 
+
+FunVar : FunVal ::= <Name> ; //Name = Variable name 
+Term : FunVal  ::= <Constructor> Params:Term* ;
+TermPair : FunVal ::= Left:Term Right:Term ;
+
+LetExp  : FunExp ; 
 FnApp  : FunExp ;
 CaseExp  : FunExp ;
 
