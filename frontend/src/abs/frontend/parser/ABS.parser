@@ -110,6 +110,16 @@ List initblock =
         LBRACE stmt_list.s? RBRACE  {: return s ; :}
     ;
 
+// Parameters and parameter lists for methods
+ParamDecl param_decl =
+	type_exp IDENTIFIER {: return new ParamDecl(IDENTIFIER,type_exp); :}
+	;
+
+List param_decl_list =
+	param_decl.p {: return new List().add(p); :}
+	| param_decl_list.l COMMA param_decl.p {: return l.add(p); :}
+	;
+
 
 // Type the type, IDENTIFIER for the name of the variable/field.
 VarOrFieldDecl var_or_field_decl = 
@@ -185,7 +195,7 @@ Method method =
     ;
 
 MethodSig methodsig = 
-    type_exp IDENTIFIER LPAREN  var_or_field_decl_list.l? RPAREN       {: return new MethodSig(IDENTIFIER,type_exp,l); :}
+    type_exp IDENTIFIER LPAREN  param_decl_list.l? RPAREN       {: return new MethodSig(IDENTIFIER,type_exp,l); :}
     ;
 
 

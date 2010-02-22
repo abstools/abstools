@@ -10,7 +10,7 @@ Program                         ::= Decl* [Block];
 // and an optional "main" Block 
 Block				::= Fields:VarOrFieldDecl*  Stmts:Stmt*;
 
-DeclBlock			::= InitBlock:InitStmt* Fields:VarOrFieldDecl*  Methods:Method*;
+DeclBlock			::= Fields:VarOrFieldDecl* InitBlock:InitStmt* Methods:Method*;
 
 
 // TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
@@ -29,10 +29,11 @@ DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
 VarOrFieldDecl	::= <Name> TypeExp; 
 VarDecl : VarOrFieldDecl ; 
 FieldDecl : VarOrFieldDecl ; 
+ParamDecl : VarOrFieldDecl ;
 
 Method						::= MethodSig Block;
 
-MethodSig	::= <Name> ReturnType:TypeExp Params:VarOrFieldDecl*;
+MethodSig	::= <Name> ReturnType:TypeExp Params:ParamDecl*;
 
 IdUse				::= <Name>;
 
