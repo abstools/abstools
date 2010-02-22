@@ -20,7 +20,6 @@ interface Buffer {
 
 interface Consumer {
 
-
 } 
 
 interface Producer {
@@ -37,100 +36,84 @@ class BoundedBuffer implements Buffer {
 	;
     
     // no assignments in variable declarations, so  we need an init method
-    Void init(){
-	
-	
-	buffer = nil ;
-	max = ten ; // = 10 --- no numbers yet  
-	n = zero ; // = 0 --- no numbers yet  
-	return null 
-	    }
+    {
+        buffer = nil ;
+        max = ten ; // = 10 --- no numbers yet  
+        n = zero ; // = 0 --- no numbers yet  
+        return null ;
+    }
     
     Void append(Int i){
-	Void x 
-	;
-	//await n < max ; // --- No boolean guards in abs  
-	if n_less_than_max then { // no arithmetic 
-		buffer = append_d_to_buffer; //no list operations 
-		n = n_pluss_one // no artihmetic 
-	} else {
-	  //Synchronization without boolean guards
-	  release;
-	  //Try to append again 
-	  x = this.append(i)
-	      } ;
-	//All methods must return something
-	return null    
-	    }
+        Void x 
+        ;
+        //await n < max ; // --- No boolean guards in abs  
+        if n_less_than_max then { // no arithmetic 
+            buffer = append_d_to_buffer; //no list operations 
+            n = n_pluss_one; // no artihmetic 
+        } else {
+            //Synchronization without boolean guards
+            release;
+            //Try to append again 
+            x = this.append(i);
+        }
+        //All methods must return something
+        return null    ;
+    }
     
     Int remove() {
-	Int y 
-	; 
-	//await n > 0 ; // --- No boolean guards in abs 
-	if n_larger_than_zero then {
-		y = head(buffer); // no list  opreations 
-		buffer = tail(buffer) ; //d.o. 
-		n = n_minus_one  // no arithmetic
-		    } else {
-	    //Synchronization without boolean guards
-	    release;
-	    //Try to remove again
-	    y = this.remove()
-		} ; 
-	return y 
-	    }
+        Int y 
+        ; 
+        //await n > 0 ; // --- No boolean guards in abs 
+        if n_larger_than_zero then {
+            y = head(buffer); // no list  opreations 
+            buffer = tail(buffer) ; //d.o. 
+            n = n_minus_one ;  // no arithmetic
+        } else {
+            //Synchronization without boolean guards
+            release;
+            //Try to remove again
+            y = this.remove();
+		}
+        return y ;
+    }
     
 }    
 
-class Producer implements Producer {
+class Producer (BoundedBuffer b) implements Producer {
     
-    //Field declarations 
-    BoundedBuffer b ;
-    
-    Void init(BoundedBuffer buff){
+    Void loop(Int i) {
 	
-	b = buff ; 
-	return null
-    }	
-    
-    Void loop(Int i){
-	
-	//local vars 
-    Void x ; 
+        //local vars 
+        Void x ; 
 
-	b = b.append(i); 
-	//cannot do a call without assignment Assume a "this" keyword
-	x = this!loop(i_plus_one); //i+1
-	return null 
+        b = b.append(i); 
+        //cannot do a call without assignment Assume a "this" keyword
+        x = this!loop(i_plus_one); //i+1
+        return null ;
     }
 }
 
-class Consumer implements Consumer {
+class Consumer (BoundedBuffer b) implements Consumer {
     
-    //Field declarations 
-    BoundedBuffer b ; 
-
-    Void init(BoundedBuffer buff){
-	
-	b = buff ; 
-	return null
-    }	
-
     Void loop() {
 
-	//local vars 
-	Void x ;
-	b = b.remove(); 
-	//cannot do a call without assignment 
-	x = this!loop();
-	return null
-   }
+        //local vars 
+        Void x ;
+        b = b.remove(); 
+        //cannot do a call without assignment 
+        x = this!loop();
+        return null ;
+    }
     
 }
+
 //Main
 {
     //Local vars 
-    Buffer buff, Producer p, Consumer c, Void x ; 
+    Buffer buff,
+    Producer p,
+    Consumer c,
+    Void x ; 
 
 
     //Init 
@@ -142,6 +125,6 @@ class Consumer implements Consumer {
     x = c.init(buff) ;
     x = p!loop(zero); //We don't have 0
     x = c!loop();
-    return null
+    return null;
 }
 
