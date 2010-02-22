@@ -40,8 +40,8 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
 //Identifiers defined using character classes 
-LC_Identifier  = [:lower:] ([:letter:] | [:digit:] | "_")*																 
-UC_Identifier  = [:upper:] ([:letter:] | [:digit:] | "_")*																 
+//LCIdentifier  = [:lower:] ([:letter:] | [:digit:] | "_")*																 
+//UCIdentifier  = [:upper:] ([:letter:] | [:digit:] | "_")*																 
 Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 //Identifier = [:letter:]([:letter:] | [:digit:])*
@@ -101,8 +101,8 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
-{LC_Identifier}  { return sym(Terminals.LCIDENTIFIER); }
-{UC_Identifier}  { return sym(Terminals.UCIDENTIFIER); }
+//{LCIdentifier}  { return sym(Terminals.LCIDENTIFIER); }
+//{UCIdentifier}  { return sym(Terminals.UCIDENTIFIER); }
 {Identifier}  { return sym(Terminals.IDENTIFIER); }
 
 

@@ -53,8 +53,13 @@ InterfaceDecl interface_decl =
   ;
 
 ClassDecl class_decl =
-  CLASS IDENTIFIER implement_interfaces.i? declblock {: return new ClassDecl(IDENTIFIER, i , declblock); :}
+	CLASS IDENTIFIER class_params.p? implement_interfaces.i? declblock {: return new ClassDecl(IDENTIFIER, p,  i , declblock); :}
   ;
+
+
+List class_params = 
+	LPAREN var_decl_list.l? RPAREN     {: return l; :}
+	;
 
 List implement_interfaces =
     IMPLEMENTS ifName_list.i           {: return i; :}
@@ -81,9 +86,8 @@ DeclBlock declblock =
     LBRACE initblock.i? varfielddecls.l? method_list.m? RBRACE	{: return new DeclBlock(i,l,m) ; :}
   ;
 
-
 List initblock =  
-        LBRACE stmt_list.s RBRACE  {: return s ; :}
+        LBRACE stmt_list.s? RBRACE  {: return s ; :}
     ;
 
 
@@ -91,6 +95,15 @@ List initblock =
 VarOrFieldDecl var_or_field_decl = 
     type_exp IDENTIFIER  {: return new VarOrFieldDecl(IDENTIFIER,type_exp); :}
     ;
+
+VarDecl var_decl = 
+    type_exp.t IDENTIFIER.id  {: return new VarDecl(id,t); :}
+    ;
+
+List var_decl_list =
+    var_decl.i                                    {: return new List().add(i); :}
+    | var_decl_list.l SEMICOLON var_decl.i        {: return l.add(i); :}
+  ;
 
 
 List var_or_field_decl_list =

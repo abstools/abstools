@@ -91,7 +91,9 @@ public class ParserTest {
 		assertParseOk("{ Int x , Int y ;  skip ; return x.get ;   }");
 		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
+  		assertParseOk("{ fut(I) x , J z ;  }") ;	
 		assertParseOk("{ fut(I) x , fut(fut(I)) y , J z , K w  ;  }") ;	
+
 }
 	
 	// Interface declarations
@@ -111,6 +113,9 @@ public class ParserTest {
 		assertParseOk("class FooClass  {} {}"); 
 		assertParseOk("class FooClass  implements Foo {} {}");
 		assertParseOk("class FooClass  implements Foo {}"); //optional main body 
+		assertParseOk("class FooClass(T x ; T y)  implements Foo {}"); //class params 
+		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
+		assertParseOk("class FooClass()  implements Foo {}"); //class params 
 		assertParseOk("class FooClass  implements Foo { {x = a ; } } {} "); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(cldecl3 + "{}" );
@@ -137,7 +142,7 @@ public class ParserTest {
 		public void testStmts() {
 		System.out.println(assignPure);
 		for (String s : assignPure)	assertParseOk(prestmt + s + ";" + poststmt); 
-		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
+  		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		for (String s : otherStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
 		

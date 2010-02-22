@@ -20,13 +20,15 @@ abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	Decl;			// Unknown declarations
-ClassDecl:		BehaviorDecl	::= ImplementedInterfaceUse:IdUse* Body:DeclBlock;
+ClassDecl:		BehaviorDecl	::= Params:VarDecl* ImplementedInterfaceUse:IdUse* Body:DeclBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
 VarOrFieldDecl	::= <Name> TypeExp; 
- 
+VarDecl : VarOrFieldDecl ; 
+FieldDecl : VarOrFieldDecl ; 
+
 Method						::= MethodSig Block;
 
 MethodSig	::= <Name> ReturnType:TypeExp Params:VarOrFieldDecl*;
