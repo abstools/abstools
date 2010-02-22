@@ -57,13 +57,14 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 %% // Rules
 
 //temporary for development
-// "msig"       { return sym(Terminals.MSIG); }
+ "fundef"       { return sym(Terminals.FUNDEF); }
 
 
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"   { return sym(Terminals.EXTENDS); }
  "data"        { return sym(Terminals.DATA); }
+ "def"        { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }

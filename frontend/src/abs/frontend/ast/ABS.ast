@@ -23,6 +23,8 @@ UnknownDecl:	Decl;			// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Params:VarDecl* ImplementedInterfaceUse:IdUse* Body:DeclBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
+FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:FunExp ;
+
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
@@ -30,6 +32,8 @@ VarOrFieldDecl	::= <Name> TypeExp;
 VarDecl : VarOrFieldDecl ; 
 FieldDecl : VarOrFieldDecl ; 
 ParamDecl : VarOrFieldDecl ;
+
+FunVarDecl ::= <Name> DataType;   
 
 Method						::= MethodSig Block;
 
@@ -82,12 +86,21 @@ ExpGuard: Guard			::= PureExp ;
 abstract Exp;
 abstract PureExp: Exp;
 abstract EffExp: Exp;
+abstract FunExp : Exp ; 
+
+//FunctionalExpression 
+FunVal  : FunExp ; // ::= Value ; 
+LetExp  : FunExp ; // ::= Value ; 
+FnApp  : FunExp ;
+CaseExp  : FunExp ;
+
+
 
 // Side effect free expressions 
 VarRef: PureExp			::= <VarName>;
 GetExp: PureExp			::= PureExp;
 NullExp: PureExp;
-EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
+//EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
 
 // Expressions with side effects. 
 NewExp: EffExp			::= <ClassRef> Param:PureExp*; 

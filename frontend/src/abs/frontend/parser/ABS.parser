@@ -37,7 +37,7 @@ Program program =
 
 Decl decl =
 		class_decl
-//	|	function_decl
+	|	function_decl
 	|	interface_decl
 	|	datatype_decl
 	;
@@ -60,6 +60,12 @@ DatatypeDecl  datatype_decl =
 	DATA IDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(IDENTIFIER, l); :}
   ;
 
+
+FunctionDecl  function_decl = 
+	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN EQ fun_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+  ;
+
+
 List data_constructor_list =
     data_constructor.i                                         {: return new List().add(i); :}
     | data_constructor_list.l COMMA data_constructor.i        {: return l.add(i); :}
@@ -70,7 +76,7 @@ DataConstructor data_constructor =
 	;
 
 List data_constructor_params = 
-	LPAREN typename_list.l? RPAREN     {: return l; :}
+	LPAREN datatypename_list.l? RPAREN     {: return l; :}
 	;
 
 
@@ -92,8 +98,8 @@ IdUse ifname =
     IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
     ;
 
-IdUse typename =
-    IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
+DataType datatypename =
+    IDENTIFIER {: return new DataType(IDENTIFIER) ; :}
     ;
 
 TypeExp type_exp = 
@@ -129,6 +135,17 @@ VarOrFieldDecl var_or_field_decl =
 VarDecl var_decl = 
     type_exp.t IDENTIFIER.id  {: return new VarDecl(id,t); :}
     ;
+
+FunVarDecl fun_var_decl = 
+    datatypename.d IDENTIFIER.id  {: return new FunVarDecl(id,d); :}
+    ;
+
+List fun_var_decl_list =
+    fun_var_decl.i                                    {: return new List().add(i); :}
+    | fun_var_decl_list.l COMMA fun_var_decl.i        {: return l.add(i); :}
+  ;
+
+
 
 List var_decl_list =
     var_decl.i                                    {: return new List().add(i); :}
@@ -174,9 +191,9 @@ List ifname_list =
   ;
 
 
-List typename_list =
-    typename.i                              {: return new List().add(i); :}
-    | typename_list.l COMMA typename.i        {: return l.add(i); :}
+List datatypename_list =
+    datatypename.i                              {: return new List().add(i); :}
+    | datatypename_list.l COMMA datatypename.i        {: return l.add(i); :}
   ;
 
 
@@ -221,6 +238,12 @@ PureExp pure_exp =
 VarRef var_ref =
     IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
     ;
+
+
+FunExp fun_exp = 
+	FUNDEF
+	; 
+
 
 GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
