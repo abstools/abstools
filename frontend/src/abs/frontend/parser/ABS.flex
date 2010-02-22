@@ -39,13 +39,15 @@ TraditionalComment = "/*" [^*] ~"*/" | "/*" "*"+ "/" | "/*" "*"+ [^/*] ~"*/"
 EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
-																  //Comment = "//" {InputCharacter}* {LineTerminator}?   // TODO: C-style comments
-
+//Identifiers defined using character classes 
+LC_Identifier  = [:lower:] ([:letter:] | [:digit:] | "_")*																 
+UC_Identifier  = [:upper:] ([:letter:] | [:digit:] | "_")*																 
 Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 //Identifier = [:letter:]([:letter:] | [:digit:])*
 
 
+//Alternative, explicit definition 
 //Alpha = [a-zA-Z]
 //Identifier = {Alpha}({Alpha} | [:digit:] | "_")*
 //ID       [a-z][a-z0-9]*
@@ -99,7 +101,10 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
+{LC_Identifier}  { return sym(Terminals.LCIDENTIFIER); }
+{UC_Identifier}  { return sym(Terminals.UCIDENTIFIER); }
 {Identifier}  { return sym(Terminals.IDENTIFIER); }
+
 
 .|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
 <<EOF>>       { return sym(Terminals.EOF); }
