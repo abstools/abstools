@@ -321,8 +321,8 @@ Stmt stmt =
 
 
 Guard guard = 	
-	| var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
-	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
+//	| var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
+	guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	  //For boolean guards 
 	| pure_exp.e    {: return new ExpGuard(e) ; :} 
 	;
