@@ -28,15 +28,15 @@ public class ParserTest {
 			System.out.println("==========");
 			try{
 				p = parse(arg);
-				System.out.println("Parsing suceeded. Result:");
+				System.out.println("Parsing of " + arg + " suceeded. Result:");
 			} catch (Error err) {
-				System.err.println("Parsing failed with Error");
+				System.err.println("Parsing of " + arg + " failed with Error");
 				System.err.println(err);
 				err.printStackTrace(System.err);
 				errorfiles.add(arg);
 				errorcount++;
 			} catch (Exception e1) {
-				System.err.println("Exception");
+				System.err.println("Parsing of " + arg +  " failed with Exception");
 				System.err.println(e1);
 				e1.printStackTrace(System.err);
 				errorfiles.add(arg);
@@ -46,10 +46,12 @@ public class ParserTest {
 			if (p!=null){
 				System.out.println(p);
 				p.dumpTree("  ", System.out);
+			} else {
+				System.out.println("(No result)");
 			}
 		}
 		if (errorcount == 0) {
-			System.out.println("All tests succeeded.");
+			System.out.println("All " + Integer.toString(args.length) + " tests succeeded.");
 		} else {
 			System.out.println(Integer.toString(errorcount) + " out of "
 					+ Integer.toString(args.length) + " tests failed:");
