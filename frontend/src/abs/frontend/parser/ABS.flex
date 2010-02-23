@@ -85,7 +85,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "}"           { return sym(Terminals.RBRACE); }
  ","           { return sym(Terminals.COMMA); }
  ";"           { return sym(Terminals.SEMICOLON); }
-// "?"           { return sym(Terminals.QMARK); }
+ "?"           { return sym(Terminals.QMARK); }
  "."           { return sym(Terminals.DOT); }
  "!"           { return sym(Terminals.BANG); }
  "="           { return sym(Terminals.ASSIGN); }

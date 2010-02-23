@@ -32,9 +32,9 @@ a = meth(c,d,e);
 a = meth(); 
 
 //await g
-await a.get ; 
-await b.get && c.get ; 
-await b.get && c.get && d.get; 
+await a? ; 
+await b? && c? ; 
+await b? && c && d.get; 
 
 //skip
 skip ; 

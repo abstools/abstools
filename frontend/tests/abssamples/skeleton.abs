@@ -77,9 +77,9 @@ class BoundedBuffer implements Buffer {
 	x = o.init(y,z,w);
 	x = init(y,z); 
 	//Await statements 
-	await y.get ; 
-	await y.get && z.get; 
-	await y.get && z.get && w.get  ;
+	await y? ; 
+	await y? && z? ; 
+	await y? && z? && w?  ;
 	// No boolean guards
 	// await true ; 
 	//skip, release, if_th_else
@@ -91,7 +91,7 @@ class BoundedBuffer implements Buffer {
 	
 
 	//Stmtblock
-	{ x = y ; skip ; await x.get ; } 
+	{ x = y ; skip ; await x? ; } 
     skip ;
 	//Return  
     return null ;
