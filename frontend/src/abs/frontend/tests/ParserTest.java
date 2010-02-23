@@ -18,7 +18,13 @@ public class ParserTest {
 
 		System.out.println("Testing parser");
 		if (args.length == 0) {
-			args = new String[]{"block.abs", "boundedbuffer.abs"};
+			args = new String[]{"block.abs", "boundedbuffer.abs", "emptyblock.abs",
+					"pingpong.abs", 
+					//"skeleton.abs"
+					"skipblock.abs", 
+					//"statements.abs"
+					"trivial.abs",
+					};
 		} 
 		for (String arg : args){
 			System.out.println("Trying to parse: " + arg);
