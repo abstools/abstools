@@ -3,7 +3,7 @@
 //data type declarations 
 data Void // builtin  
 data String // builtin  
-data Int { builtin } 
+data Int // builtin 
 data Package { ... } 
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
