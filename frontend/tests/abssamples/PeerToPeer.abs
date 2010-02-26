@@ -4,7 +4,7 @@
 data Void // builtin  
 data String // builtin  
 data Int // builtin 
-data Package { ... } 
+data Package 
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
@@ -17,7 +17,7 @@ data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File) }
 data MapOfFilenameToFile { EmptyMap, InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile) }
 
 //function definitions 
-def File getFromMap(MapOfFileNameToFile map , Filename fId) = ... 
+def File getFromMap(MapOfFileNameToFile map , Filename fId) = null
 
 //type synonyms 
 type Filename = String 
@@ -47,7 +47,7 @@ interface Server {
 
 class DataBase(MapOfFilenameFile db) implements DB {
   File getFile(Filename fId) { return getFromMap(db, fId); }
-  Int getLength(Filename fId){ return #(getFromMap(db,fId)); }
+  Int getLength(Filename fId){ return length(getFromMap(db,fId)); }
   Void storeFile(Filename fId, File file) { db = insert(db,fId,file); } 
   Filenames listFiles() { return keys(db); }
 }
@@ -56,18 +56,20 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
   Catalog catalog ; 
 
   Server findServer(Filename fId, Catalog catalog){
-    if (isempty(catalog)){
+    if isempty(catalog) {
       return null ;   
-    } else if (fId in snd(head(catalog))) { 
-      return fst(head(catalog)) ;  
-    } else { 
-        return findServer(fId, tail(catalog)) ;  
-    }
+    } else {
+      if contains(snd(head(catalog)), fId) {
+        return fst(head(catalog)) ;
+    } else {
+        return findServer(fId, tail(catalog)) ;
+   	}
+   	}
   }
 
   Void run(){
-    Fut(Catalog) c ; 
-    ListOfServer neighbors ; 
+    fut(Catalog) c , 
+    ListOfServer neighbors , 
     Server server ; 
     neighbors = admin.getNeighbors(); 
     c = !availFiles(neighbors); 
@@ -78,28 +80,28 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
   }
   
   Filenames enquire() { 
-    Fut(Filenames) f ; 
+    fut(Filenames) f ; 
     f = db!listfiles(); await f?; return f.get; 
   }
         
   Int getLength(Filename fId){
-    Fut(Int) lth ; 
+    fut(Int) lth ; 
     lth = db!getLength(fId); await lth?; return lth.get;
   }
 
   Package getPack(Filename fId, Int pNbr){
-    File f; 
-    Fut(File) = ff ; 
+    File f,
+    fut(File) ff ; 
     ff = db!getFile(fId) ; await ff? ; f = ff.get;
     pack = nth(f, pNbr);
   }
 
   Catalog availFiles (ListOfServer sList){
-    Catalog cat ; 
-    Filenames fNames ;
-    Fut(Filenames) l1 ; 
-    Fut(Catalog) l2 ; 
-    if (sList = NilServer) { 
+    Catalog cat ,
+    Filenames fNames ,
+    fut(Filenames) l1 ,
+    fut(Catalog) l2 ; 
+    if equals(sList, NilServer) /*sList = NilServer*/ {
       cat = NilPairOfServerNFilenames ; 
     } else {
       l1 = head(sList)!enquire(); 
@@ -107,24 +109,24 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
       await l1? && l2?; 
       fNames = l1.get; 
       cat = l2.get; 
-      cat = cat |- (head(sList), fNames); 
-    }
+      cat = append(cat, head(sList), fNames); 
+      }
     return cat; 
   }
 
   Void reqFile(Server sId){
-    File file ; 
-    Package pack;
-    Int lth ; 
-    Fut(Int) l1 ;
-    Fut(Package) l2 ; 
+    File file ,
+    Package pack,
+    Int lth , 
+    fut(Int) l1 ,
+    fut(Package) l2 ; 
     l = sId!getLength(fId); await l? ; lth = l.get; 
-    while (lth > 0) {
+    while gt(lth, zero) {
       l2 = sId!getPack(fId, lth); await l2? ; pack = l2.get ; 
-      file = pack -| file; 
-      lth = lth - 1 ; 
+      file = prepend(pack, file); 
+      lth = minus(lth, one) ; 
     } 
-    !db.storeFile(fId, file) ; 
+    db.storeFile(fId, file) ; 
   }
 }
 
