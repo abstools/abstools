@@ -8,9 +8,9 @@ data Package { ... }
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
-data ListOfPairOfServerFilenames {NilPairOfServerFilenames , ConsPairOfServerFilenames(PairOfServerFilenames, ListOfPairOfServerFilenames)} 
+data ListOfPairOfServerNFilenames {NilPairOfServerNFilenames , ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)} 
 
-data PairOfServerFilenames { PairOfServerFilenames(Server,Filenames) }
+data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
 data MapOfFilenameToFile { MapOfFilenameToFile(Filename,File) }
 
 
@@ -21,8 +21,7 @@ def File getM(MapOfFileNameToFile map , Filename fId) = ...
 type Filename = String 
 type Filenames = SetOfString 
 type File =  ListOfPackage
-type Catalog = ListOfPairOfServerFilenames
-
+type Catalog = ListOfPairOfServerNFilenames
 
 interface Peer extends Client, Server {}
 
@@ -34,7 +33,7 @@ interface DB {
 }
 
 interface Client {
-  PairOfServerFilenames availFiles(ListOfServer sList) 
+  PairOfServerNFilenames availFiles(ListOfServer sList) 
   Void reqFile(Server sId, Filename fId)
 }
 
@@ -69,7 +68,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
 
     Void run() {
-	  fut(Catalog) c ; 
+	  Fut(Catalog) c ; 
       ListOfServer neighbors ; 
       Server server ; 
       neighbors = admin.getNeighbors(); 
@@ -81,37 +80,42 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 	}
   
     Filenames enquire() { 
-      fut(Filenames) f ; 
+      Fut(Filenames) f ; 
       f = db!listfiles(); await f?; return f.get; 
     }
         
 	Int getLength(Filename fId){
-		fut(Int) lth ; 
+		Fut(Int) lth ; 
 		lth = db!getLength(fId); await lth?; return lth.get;
 	}
 
     Package getPack(Filename fId, Int pNbr){
 		File f; 
-		fut(File) = ff ; 
+		Fut(File) = ff ; 
 		ff = db!getFile(fId) ; await ff? ; f = ff.get;
-		await db.getFile(fId; f); 
-		pack := nth(f, pNbr)
+		pack = nth(f, pNbr);
+	}
 
-  with Client
-    op availFiles (in  sList: List[Server]; out files: List[[Server, Set[String]]]) ==
-      var l1: Label[Set[String]]; 
-      var l2: Label[List[[Server, Set[String]]]] ;
-      var fList: Set[String];
-      if (sList = nil) then 
-        files := nil
-      else 
-        l1!head(sList).enquire(); 
-        l2!this.availFiles(tail(sList));
-        await l1? && l2?; 
-        l1?(fList); 
-        l2?(files);
-        files := files |- (head(sList), fList) 
-      end
+	//return cat : Catalog
+	//change var names
+    Catalog availFiles (ListOfServer sList){
+
+		Catalog cat ; 
+		Filenames fNames ;
+		Fut(Filenames) l1 ; 
+		Fut(Catalog) l2 ; 
+		if (x) then   
+	      cat = NilPairOfServerNFilenames ; 
+        else {
+		  l1 = head(sList)!enquire(); 
+		  l2 = !availFiles(tail(sList));
+		  await l1? && l2?; 
+		  fNames = l1.get; 
+		  cat = l2.get; 
+		  cat = cat |- (head(sList), fNames); 
+		}
+		return cat; 
+	}
 
     op reqFile(in sId: Server, Filename fId) ==
       var file: List[Package] := nil; 
