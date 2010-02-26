@@ -8,7 +8,11 @@ data Package { ... }
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
-data ListOfPairOfServerNFilenames {NilPairOfServerNFilenames , ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)} 
+
+data ListOfPairOfServerNFilenames {
+  NilPairOfServerNFilenames , 
+  ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)
+} 
 
 data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
 data MapOfFilenameToFile { MapOfFilenameToFile(Filename,File) }
@@ -45,88 +49,92 @@ interface Server {
 
 class DataBase(MapOfFilenameFile db) implements DB {
 
-  File getFile(Filename fId) { return get(db, fId); }
-  Int getLength(Filename fId){ return #(get(db,fId)); }
+  File getFile(Filename fId) { return getM(db, fId); }
+  Int getLength(Filename fId){ return #(getM(db,fId)); }
   Void storeFile(Filename fId, File file) { db = insert(db,fId,file); } 
   Filenames listFiles() { return keys(db); }
 
 }
 
 class Node(DB db, Peer admin, Filename file) implements Peer {
-
-	Catalog catalog ; 
-
-    Server findServer(Filename fId, Catalog catalog){
-      if isempty(catalog) then 
-        return null ;   
-      else 
-        if (fId in snd(head(catalog))) then 
-		   return fst(head(catalog)) ;  
-        else 
-			return findServer(fId, tail(catalog)) ;  
-	}
-
-
-    Void run() {
-	  Fut(Catalog) c ; 
-      ListOfServer neighbors ; 
-      Server server ; 
-      neighbors = admin.getNeighbors(); 
-	  c = !availFiles(neighbors); 
-	  await c?; 
-	  catalog = c.get;
-      server = findServer(file,catalog); 
-	  reqFile(server,file) ; 
-	}
   
-    Filenames enquire() { 
-      Fut(Filenames) f ; 
-      f = db!listfiles(); await f?; return f.get; 
-    }
+  Catalog catalog ; 
+
+  Server findServer(Filename fId, Catalog catalog){
+    if (isempty(catalog))
+      return null ;   
+    else 
+      if (fId in snd(head(catalog))) 
+        return fst(head(catalog)) ;  
+      else 
+        return findServer(fId, tail(catalog)) ;  
+  }
+
+
+  Void run(){
+    Fut(Catalog) c ; 
+    ListOfServer neighbors ; 
+    Server server ; 
+    neighbors = admin.getNeighbors(); 
+    c = !availFiles(neighbors); 
+    await c?;
+    catalog = c.get;
+    server = findServer(file,catalog); 
+    reqFile(server,file) ; 
+  }
+  
+  Filenames enquire() { 
+    Fut(Filenames) f ; 
+    f = db!listfiles(); await f?; return f.get; 
+  }
         
-	Int getLength(Filename fId){
-		Fut(Int) lth ; 
-		lth = db!getLength(fId); await lth?; return lth.get;
-	}
+  Int getLength(Filename fId){
+    Fut(Int) lth ; 
+    lth = db!getLength(fId); await lth?; return lth.get;
+  }
 
-    Package getPack(Filename fId, Int pNbr){
-		File f; 
-		Fut(File) = ff ; 
-		ff = db!getFile(fId) ; await ff? ; f = ff.get;
-		pack = nth(f, pNbr);
-	}
+  Package getPack(Filename fId, Int pNbr){
+    File f; 
+    Fut(File) = ff ; 
+    ff = db!getFile(fId) ; await ff? ; f = ff.get;
+    pack = nth(f, pNbr);
+  }
 
-	//return cat : Catalog
-	//change var names
-    Catalog availFiles (ListOfServer sList){
+  Catalog availFiles (ListOfServer sList){
+    Catalog cat ; 
+    Filenames fNames ;
+    Fut(Filenames) l1 ; 
+    Fut(Catalog) l2 ; 
+    if (sList = NilServer) 
+      cat = NilPairOfServerNFilenames ; 
+    else {
+      l1 = head(sList)!enquire(); 
+      l2 = !availFiles(tail(sList));
+      await l1? && l2?; 
+      fNames = l1.get; 
+      cat = l2.get; 
+      cat = cat |- (head(sList), fNames); 
+      }
+    return cat; 
+    }
 
-		Catalog cat ; 
-		Filenames fNames ;
-		Fut(Filenames) l1 ; 
-		Fut(Catalog) l2 ; 
-		if (x) then   
-	      cat = NilPairOfServerNFilenames ; 
-        else {
-		  l1 = head(sList)!enquire(); 
-		  l2 = !availFiles(tail(sList));
-		  await l1? && l2?; 
-		  fNames = l1.get; 
-		  cat = l2.get; 
-		  cat = cat |- (head(sList), fNames); 
-		}
-		return cat; 
-	}
+  Void reqFile(Server sId){
+    File file ; 
+    Package pack;
+    Int lth ; 
+    Fut(Int) l1 ;
+    Fut(Package) l2 ; 
+    l = sId!getLength(fId); await l? ; lth = l.get; 
+    while (lth > 0) {
+      l2 = sId!getPack(fId, lth); await l2? ; pack = l2.get ; 
+      file = pack -| file; 
+      lth = lth - 1 ; 
+    } 
+    !db.storeFile(fId, file) ; 
+  }
+}
 
-    op reqFile(in sId: Server, Filename fId) ==
-      var file: List[Package] := nil; 
-      var pack: Package; 
-      var lth: Int;
-      await sId.getLength(fId; lth);
-      while (lth > 0) do 
-        await sId.getPack(fId, lth; pack);
-        file := pack -| file; 
-        lth := lth - 1 
-      end; 
-      !db.storeFile(fId, file)
-end 
+{ 
+//Main 
+}
 
