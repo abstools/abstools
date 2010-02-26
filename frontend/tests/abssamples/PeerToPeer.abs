@@ -8,18 +8,16 @@ data Package { ... }
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
-
 data ListOfPairOfServerNFilenames {
   NilPairOfServerNFilenames , 
   ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)
 } 
-
 data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
-data MapOfFilenameToFile { MapOfFilenameToFile(Filename,File) }
-
+data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File) }
+data MapOfFilenameToFile { EmptyMap, InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile) }
 
 //function definitions 
-def File getM(MapOfFileNameToFile map , Filename fId) = ... 
+def File getFromMap(MapOfFileNameToFile map , Filename fId) = ... 
 
 //type synonyms 
 type Filename = String 
@@ -48,28 +46,24 @@ interface Server {
 }
 
 class DataBase(MapOfFilenameFile db) implements DB {
-
-  File getFile(Filename fId) { return getM(db, fId); }
-  Int getLength(Filename fId){ return #(getM(db,fId)); }
+  File getFile(Filename fId) { return getFromMap(db, fId); }
+  Int getLength(Filename fId){ return #(getFromMap(db,fId)); }
   Void storeFile(Filename fId, File file) { db = insert(db,fId,file); } 
   Filenames listFiles() { return keys(db); }
-
 }
 
 class Node(DB db, Peer admin, Filename file) implements Peer {
-  
   Catalog catalog ; 
 
   Server findServer(Filename fId, Catalog catalog){
-    if (isempty(catalog))
+    if (isempty(catalog)){
       return null ;   
-    else 
-      if (fId in snd(head(catalog))) 
-        return fst(head(catalog)) ;  
-      else 
+    } else if (fId in snd(head(catalog))) { 
+      return fst(head(catalog)) ;  
+    } else { 
         return findServer(fId, tail(catalog)) ;  
+    }
   }
-
 
   Void run(){
     Fut(Catalog) c ; 
@@ -105,18 +99,18 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
     Filenames fNames ;
     Fut(Filenames) l1 ; 
     Fut(Catalog) l2 ; 
-    if (sList = NilServer) 
+    if (sList = NilServer) { 
       cat = NilPairOfServerNFilenames ; 
-    else {
+    } else {
       l1 = head(sList)!enquire(); 
       l2 = !availFiles(tail(sList));
       await l1? && l2?; 
       fNames = l1.get; 
       cat = l2.get; 
       cat = cat |- (head(sList), fNames); 
-      }
-    return cat; 
     }
+    return cat; 
+  }
 
   Void reqFile(Server sId){
     File file ; 
@@ -137,4 +131,3 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 { 
 //Main 
 }
-
