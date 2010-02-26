@@ -1,23 +1,27 @@
 //$Id$ 
 
 //data type declarations 
-data Void { builtin } 
-data String { builtin } 
+data Void // builtin  
+data String // builtin  
 data Int { builtin } 
 data Package { ... } 
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPackage {NilPackage , ConsPackage(Package, ListOfPackage)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
+data ListOfPairOfServerFilenames {NilPairOfServerFilenames , ConsPairOfServerFilenames(PairOfServerFilenames, ListOfPairOfServerFilenames)} 
+
 data PairOfServerFilenames { PairOfServerFilenames(Server,Filenames) }
 data MapOfFilenameToFile { MapOfFilenameToFile(Filename,File) }
 
+
 //function definitions 
-def File get(MapOfFileNameToFile map , Filename fId) = ... 
+def File getM(MapOfFileNameToFile map , Filename fId) = ... 
 
 //type synonyms 
 type Filename = String 
 type Filenames = SetOfString 
-type File =  ListOfPackage //
+type File =  ListOfPackage
+type Catalog = ListOfPairOfServerFilenames
 
 
 interface Peer extends Client, Server {}
@@ -49,40 +53,49 @@ class DataBase(MapOfFilenameFile db) implements DB {
 
 }
 
+class Node(DB db, Peer admin, Filename file) implements Peer {
 
-/*
+	Catalog catalog ; 
 
-
-class Node(db: DB, admin:Peer, file:String) implements Peer
-begin
-    var catalog : List[[Server, Set[String]]];
-
-    op  findServer(in  fId:String, catalog : List[[Server, Set[String]]]; out server:Server)==
+    Server findServer(Filename fId, Catalog catalog){
       if isempty(catalog) then 
-        server := null 
+        return null ;   
       else 
-        if (fId in  snd(head(catalog))) then 
-          server := fst(head(catalog)) 
+        if (fId in snd(head(catalog))) then 
+		   return fst(head(catalog)) ;  
         else 
-          findServer(fId, tail(catalog); server) 
-        end 
-      end 
+			return findServer(fId, tail(catalog)) ;  
+	}
 
-    op run == 
-      var l:Label[List[[Server, Set[String]]]]; 
-      var neighbors: List[Server]; 
-      var server:Server;
-      admin.getNeighbors(;neighbors); 
-      l!this.availFiles(neighbors); await l?; l?(catalog);
-      findServer(file,catalog; server); this.reqFile(server,file;)
 
-  with Server
-    op enquire(out files: Set[String]) == await db.listFiles(; files)
-    op getLength(in Filename fId; out lth: Int) == await db.getLength(fId; lth)
-    op getPack(in Filename fId, pNbr: Int; out pack: Package) ==
-      var f: List[Package]; 
-      await db.getFile(fId; f); 
-      pack := nth(f, pNbr)
+    Void run() {
+	  fut(Catalog) c ; 
+      ListOfServer neighbors ; 
+      Server server ; 
+      neighbors = admin.getNeighbors(); 
+	  c = !availFiles(neighbors); 
+	  await c?; 
+	  catalog = c.get;
+      server = findServer(file,catalog); 
+	  reqFile(server,file) ; 
+	}
+  
+    Filenames enquire() { 
+      fut(Filenames) f ; 
+      f = db!listfiles(); await f?; return f.get; 
+    }
+        
+	Int getLength(Filename fId){
+		fut(Int) lth ; 
+		lth = db!getLength(fId); await lth?; return lth.get;
+	}
+
+    Package getPack(Filename fId, Int pNbr){
+		File f; 
+		fut(File) = ff ; 
+		ff = db!getFile(fId) ; await ff? ; f = ff.get;
+		await db.getFile(fId; f); 
+		pack := nth(f, pNbr)
 
   with Client
     op availFiles (in  sList: List[Server]; out files: List[[Server, Set[String]]]) ==
@@ -112,4 +125,4 @@ begin
       end; 
       !db.storeFile(fId, file)
 end 
-*/
+
