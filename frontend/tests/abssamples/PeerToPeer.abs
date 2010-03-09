@@ -165,7 +165,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
     Catalog cat ,
     Fut(Filenames) fNames ,
     Fut(Catalog) catList ; 
-    if equals(sList, NilServer) /*sList = NilServer*/ {
+    if (sList == NilServer) {
       cat = NilPairOfServerNFilenames ; 
     } else {
       fNames = head(sList)!enquire(); 
