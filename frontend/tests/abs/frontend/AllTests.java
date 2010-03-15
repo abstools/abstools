@@ -9,9 +9,9 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        ScannerTest.class, 
-		ParserTest.class,
-		InterfaceDeclarationTest.class
+		//        ScannerTest.class, 
+		ParserTest.class
+			//	InterfaceDeclarationTest.class
         })
 public class AllTests {
 }

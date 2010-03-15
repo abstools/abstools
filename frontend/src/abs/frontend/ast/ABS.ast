@@ -4,23 +4,23 @@
 
 Program                         ::= Decl* [Block];
 
-// A Block is the body of programs and methods. 
+// A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
-// and an optional "main" Block 
-Block				::= Fields:VarOrFieldDecl*  Stmts:Stmt*;
+Block				::= Fields:VarDecl*  Stmts:Stmt*;
 
-DeclBlock			::= Fields:VarOrFieldDecl* InitBlock:InitStmt* Methods:Method*;
-
-
-// TODO: add this too?: /Predefined:InterfaceOrClassDecl*/;
+// A ClassBlock is the body of a Class. 
+ClassBlock			::= [InitBlock:Block] Fields:VarDecl* Methods:Method*;
+//ClassBlock			::= Fields:VarDecl*  Methods:Method*;
+//ClassBlock              ::= [InitBlock:Block] Decls:ClassBlockDecl* ;                          
 
 abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
+//abstract ClassBlockDecl ; 
 
 UnknownDecl:	Decl;			// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Params:VarDecl* ImplementedInterfaceUse:IdUse* Body:DeclBlock;
+ClassDecl:		BehaviorDecl	::= Params:ParamDecl* ImplementedInterfaceUse:IdUse* Body:ClassBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
 FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:FunExp ;
@@ -28,14 +28,14 @@ FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:FunExp ;
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
 
-VarOrFieldDecl	::= <Name> TypeExp; 
-VarDecl : VarOrFieldDecl ; 
-FieldDecl : VarOrFieldDecl ; 
+abstract  VarOrFieldDecl  ::= <Name> TypeExp; 
+
+VarDecl : VarOrFieldDecl  ; 
 ParamDecl : VarOrFieldDecl ;
 
 FunVarDecl ::= <Name> DataType;   
 
-Method						::= MethodSig Block;
+Method  ::= MethodSig Block;
 
 MethodSig	::= <Name> ReturnType:TypeExp Params:ParamDecl*;
 
@@ -90,6 +90,10 @@ abstract FunExp : Exp ;
 
 //FunctionalExpression 
 abstract FunVal  : FunExp ; 
+abstract Pattern ; 
+
+PatVar : Pattern ::= <Name> ; 
+
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
 Term : FunVal  ::= <Constructor> Params:Term* ;

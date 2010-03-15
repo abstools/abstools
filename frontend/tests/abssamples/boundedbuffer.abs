@@ -32,8 +32,8 @@ interface Producer {
 class BoundedBuffer implements Buffer {
     
     //A bounded buffer
-    ListofInt buffer, 
-	Int max , 
+    ListofInt buffer; 
+	Int max ;
 	Int n 
 	;
     
@@ -49,7 +49,7 @@ class BoundedBuffer implements Buffer {
         Void x 
         ;
         //await lt(n,max) ; // --- not implemented yet
-        if n_less_than_max then { // no arithmetic 
+        if (n_less_than_max)  { // no arithmetic 
             buffer = append_d_to_buffer; //no list operations 
             n = n_pluss_one; // no artihmetic 
         } else {
@@ -66,7 +66,7 @@ class BoundedBuffer implements Buffer {
         Int y 
         ; 
         //await n > 0 ; // --- No boolean guards in abs 
-        if n_larger_than_zero then {
+        if (n_larger_than_zero) {
             y = head(buffer); // no list  opreations 
             buffer = tail(buffer) ; //d.o. 
             n = n_minus_one ;  // no arithmetic
@@ -87,7 +87,7 @@ class Producer (BoundedBuffer b) implements Producer {
 	
         //local vars 
         Void x ; 
-
+	skip ; 
         b = b.append(i); 
         //cannot do a call without assignment Assume a "this" keyword
         x = this!loop(i_plus_one); //i+1
@@ -101,6 +101,7 @@ class Consumer (BoundedBuffer b) implements Consumer {
 
         //local vars 
         Void x ;
+	skip ; 
         b = b.remove(); 
         //cannot do a call without assignment 
         x = this!loop();
@@ -112,14 +113,15 @@ class Consumer (BoundedBuffer b) implements Consumer {
 //Main
 {
     //Local vars 
-    Buffer buff,
-    Producer p,
-    Consumer c,
+    Buffer buff;
+    Producer p;
+    Consumer c;
     Void x ; 
 
-
+    ;
     //Init 
     buff = new BoundedBuffer(); 
+    skip ;   
     x = buff.init();
     p = new Producer(); 	
     x = p.init(buff);

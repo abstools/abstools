@@ -24,6 +24,7 @@ import abs.frontend.parser.ABSParser.Terminals;
   }
 %}
 
+
 // Helper Definitions
 
 LineTerminator = \r|\n|\r\n
@@ -41,10 +42,9 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 //Identifiers defined using character classes 
 //LCIdentifier  = [:lower:] ([:letter:] | [:digit:] | "_")*																 
-//UCIdentifier  = [:upper:] ([:letter:] | [:digit:] | "_")*																 
+//UCIdentifier  = [:upper:] ([:letter:] | [:digit:] | "_")* 																 
 Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
-//Identifier = [:letter:]([:letter:] | [:digit:])*
 
 
 //Alternative, explicit definition 
@@ -64,13 +64,13 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "implements"  { return sym(Terminals.IMPLEMENTS); }
 // "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
- "fut"         { return sym(Terminals.FUT); }
+ "Fut"         { return sym(Terminals.FUT); }
  "skip"        { return sym(Terminals.SKIP); }
  "get"         { return sym(Terminals.GET); }
  "null"        { return sym(Terminals.NULL); }
  "await"       { return sym(Terminals.AWAIT); }
  "if"          { return sym(Terminals.IF); }
- "then"        { return sym(Terminals.THEN); }
+// "then"        { return sym(Terminals.THEN); }
  "else"        { return sym(Terminals.ELSE); }
  "release"     { return sym(Terminals.RELEASE); }
  "new"         { return sym(Terminals.NEW); }
@@ -102,6 +102,10 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 //{LCIdentifier}  { return sym(Terminals.LCIDENTIFIER); }
 //{UCIdentifier}  { return sym(Terminals.UCIDENTIFIER); }
 {Identifier}  { return sym(Terminals.IDENTIFIER); }
+
+//An identifier with a trailing paren is a method identifier. 
+//{Identifier} / "("  { return sym(Terminals.METHIDENTIFIER); }
+
 
 
 .|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }

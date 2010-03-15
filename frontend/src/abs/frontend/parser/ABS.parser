@@ -1,5 +1,7 @@
 //$Id$ 
-//Grammar definition for the ABS language, this file is input to Beaver 
+//Grammar definition for the ABS language 
+
+
 
 %header {:
 
@@ -7,6 +9,7 @@ package abs.frontend.parser;
 import abs.frontend.ast.*;
 
 :};
+
 %embed {:
   class Events extends Parser.Events {
     public void syntaxError(Symbol token) {
@@ -24,7 +27,9 @@ import abs.frontend.ast.*;
   }
 
   { report = new Events(); } // Use error handler in parser
+
 :};
+
 
 
 Program goal =
@@ -35,26 +40,35 @@ Program program =
 	decl_list.l? block?	{: return new Program(l, block); :}
   ;
 
+List decl_list =
+	decl.t			{: return new List().add(t); :}
+  | decl_list.l decl.t	{: return l.add(t); :}
+  ;
+
 Decl decl =
-		class_decl
+		datatype_decl
 	|	function_decl
 	|	interface_decl
-	|	datatype_decl
+	|	class_decl
 	;
-
 // The above is equivalent to the more explicit:  
 // Decl decl =
 // 		class_decl.i		{: return i; :}
 // 	| ...
 // 	;
 
-InterfaceDecl interface_decl =
-  INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, i, l); :}
-  ;
 
-ClassDecl class_decl =
-	CLASS IDENTIFIER class_params.p? implement_interfaces.i? declblock {: return new ClassDecl(IDENTIFIER, p,  i , declblock); :}
-  ;
+//Program block
+//used in program, init blocks and method body
+Block block	=
+	LBRACE var_decls.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
+    ;
+
+
+List var_decls = 
+	var_decl_list.l SEMICOLON {: return l ; :} 
+	; 
+
 
 DatatypeDecl  datatype_decl = 
 	DATA IDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(IDENTIFIER, l); :}
@@ -64,6 +78,27 @@ DatatypeDecl  datatype_decl =
 FunctionDecl  function_decl = 
 	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN fun_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; //TODO : ASSIGN (=) or EQEQ == ? 
+
+
+InterfaceDecl interface_decl =
+  INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, i, l); :}
+  ;
+
+
+ClassDecl class_decl =
+	CLASS IDENTIFIER param_decls.params? implement_interfaces.i? classblock {: return new ClassDecl(IDENTIFIER, params,  i , classblock); :}
+  ;
+
+
+FunVarDecl fun_var_decl = 
+    datatypename.d IDENTIFIER.id  {: return new FunVarDecl(id,d); :}
+    ;
+
+List fun_var_decl_list =
+    fun_var_decl.i                                    {: return new List().add(i); :}
+    | fun_var_decl_list.l COMMA fun_var_decl.i        {: return l.add(i); :}
+  ;
+
 
 
 List data_constructor_list =
@@ -80,9 +115,7 @@ List data_constructor_params =
 	;
 
 
-List class_params = 
-	LPAREN var_decl_list.l? RPAREN     {: return l; :}
-	;
+
 
 List implement_interfaces =
     IMPLEMENTS ifname_list.i           {: return i; :}
@@ -107,71 +140,51 @@ TypeExp type_exp =
 	| FUT LPAREN type_exp.t RPAREN {: return new FutureType(t); :}
 	;	
 
-// Used in class_decl, i.e. { initblock _T f_ ; _M_}
-DeclBlock declblock =  
-    LBRACE varfielddecls.l? initblock.i? method_list.m? RBRACE	{: return new DeclBlock(i,l,m) ; :}
-  ;
-
-List initblock =  
-        LBRACE stmt_list.s? RBRACE  {: return s ; :}
-    ;
-
-// Parameters and parameter lists for methods
-ParamDecl param_decl =
-	type_exp IDENTIFIER {: return new ParamDecl(IDENTIFIER,type_exp); :}
+// Used in class_decl, i.e. { [b] _T f_ ;  _M_ }
+ClassBlock classblock =  
+	LBRACE block.init_block? class_var_decls.fields? method_list.methods? RBRACE	{: return new ClassBlock(init_block,fields,methods) ; :}
 	;
 
-List param_decl_list =
-	param_decl.p {: return new List().add(p); :}
-	| param_decl_list.l COMMA param_decl.p {: return l.add(p); :}
-	;
-
-
-// Type the type, IDENTIFIER for the name of the variable/field.
-VarOrFieldDecl var_or_field_decl = 
-    type_exp IDENTIFIER  {: return new VarOrFieldDecl(IDENTIFIER,type_exp); :}
-    ;
-
-VarDecl var_decl = 
-    type_exp.t IDENTIFIER.id  {: return new VarDecl(id,t); :}
-    ;
-
-FunVarDecl fun_var_decl = 
-    datatypename.d IDENTIFIER.id  {: return new FunVarDecl(id,d); :}
-    ;
-
-List fun_var_decl_list =
-    fun_var_decl.i                                    {: return new List().add(i); :}
-    | fun_var_decl_list.l COMMA fun_var_decl.i        {: return l.add(i); :}
-  ;
+List class_var_decls = 
+	var_decl_list.l SEMICOLON SEMICOLON  {: return l ; :} 
+	; 
 
 
 
 List var_decl_list =
     var_decl.i                                    {: return new List().add(i); :}
-    | var_decl_list.l COMMA var_decl.i        {: return l.add(i); :}
+    | var_decl_list.l SEMICOLON var_decl.i        {: return l.add(i); :}
   ;
 
 
-List var_or_field_decl_list =
-    var_or_field_decl.i                                         {: return new List().add(i); :}
-    | var_or_field_decl_list.l COMMA var_or_field_decl.i        {: return l.add(i); :}
+VarDecl var_decl = 
+    type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t); :}
+    ;
+
+
+List param_decls = 
+	LPAREN param_decl_list.f? RPAREN     {: return f ; :}
+	;
+
+List param_decl_list =
+    param_decl.i                                    {: return new List().add(i); :}
+    |param_decl_list.l COMMA param_decl.i        {: return l.add(i); :}
   ;
+
+ParamDecl param_decl = 
+    type_exp.t IDENTIFIER.i  {: return new ParamDecl(i,t); :}
+    ;
 
 List method_list =
-    method.i                        {: return new List().add(i); :}
-    | method_list.l method.i        {: return l.add(i); :}
-  ;
+     method.i                        {: return new List().add(i); :}
+     | method_list.l method.i        {: return l.add(i); :}
+   ;
 
 List methodsig_list = 
     methodsig.m			        {: return new List().add(m); :}
   | methodsig_list.l methodsig.m	{: return l.add(m); :}
   ;
 
-List decl_list =
-	decl.t			{: return new List().add(t); :}
-  | decl_list.l decl.t	{: return l.add(t); :}
-  ;
 
 /*
 List typedecl_list =
@@ -211,22 +224,18 @@ Method method =
     methodsig.ms block.b {: return new Method(ms,b); :}
     ;
 
-MethodSig methodsig = 
-    type_exp IDENTIFIER LPAREN  param_decl_list.l? RPAREN       {: return new MethodSig(IDENTIFIER,type_exp,l); :}
+MethodSig methodsig =
+	type_exp.returntype IDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(IDENTIFIER,returntype,params); :}
     ;
 
 
 
 
-//Program block
-//Is to be used in program, and method i.e. {_T x_ ; sr}
-Block block	=
-        LBRACE varfielddecls.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
-    ;
 
-List varfielddecls =  
-	var_or_field_decl_list.l  SEMICOLON 	{: return l ; :}
-	; 
+
+
+
+
 
 PureExp pure_exp = 
     var_ref
@@ -329,8 +338,8 @@ Guard guard =
 
 
 IfStmt if_then_else_stmt = 
-	IF pure_exp.e1 THEN stmt.s1 ELSE stmt.s2 {: return new IfStmt(e1,s1,new Opt(s2)) ; :} 
-	| IF pure_exp.e1 THEN stmt.s1 {: return new IfStmt(e1, s1, new Opt()); :}
+	IF LPAREN pure_exp.e1 RPAREN stmt.s1 ELSE stmt.s2 {: return new IfStmt(e1,s1,new Opt(s2)) ; :} 
+	| IF LPAREN pure_exp.e1 RPAREN stmt.s1 {: return new IfStmt(e1, s1, new Opt()); :}
 	;
 
 AssignStmt assign_stmt =  
