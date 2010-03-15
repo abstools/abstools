@@ -20,38 +20,36 @@ public class ParserTest {
 	private String decls, ifdecl1, ifdecl2  , cldecl1,   cldecl2 , cldecl3 ; 
 	private String ms1, ms2, meth1, meth2 , fields, comment, comment2  ; 
 	
-	private String prestmt = "{" ; 
-	private String poststmt = " return null ; }" ; 
 
 	private static boolean verbose = false ; 
 
 	private String[] assignPure = 
-	{"x = y", 
-	 "x = null",  
-	 "x = y.get", 
+	{"x = y ; ", 
+	 "x = null ; ",  
+	 "x = y.get ; ", 
 	 //"x = y == z",
 	 };
 	
 	
 	private String[] assignEff = 	
-	{"x = new Foo()", 
-	 "x = new Foo(a,b)", 
-	 "x = o!init()", 
-	 "x = o!init(y)", 
-	 "x = o!init(y,z)", 
-	 "x = o.init(y,z,w)", 
-	 "x = init(y,z)"} ; 
+	{"x = new Foo() ; ", 
+	 "x = new Foo(a,b) ; ", 
+	 "x = o!init() ; ", 
+	 "x = o!init(y) ; ", 
+	 "x = o!init(y,z) ; ", 
+	 "x = o.init(y,z,w) ; ", 
+	 "x = init(y,z) ; "} ; 
 	
 	private String[] awaitStmt = 	
-	{"await y?" ,
-	 "await y? & z?" ,
-	 "await y? & z? & w?", 
-	 "await y" //using pure exp v as guard. 
+	{"await y? ; " ,
+	 "await y? & z? ; " ,
+	 "await y? & z? & w? ; ", 
+	 "await y ; " //using pure exp v as guard. 
 	};
 	
 	private		String[] otherStmt = 	
-	{"skip",
-	 "release"
+	{"skip ; ",
+	 "release ; "
 	};
 	
 
@@ -64,17 +62,15 @@ public class ParserTest {
 		//methodsignatures 
 		ms1 = "Void init(Foo x ,  Bar y)";
 		ms2 = "Void append(Int i)";
-		meth1 = ms1 + "{ Int x ,  Int y ;	return null ; }";
+		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
 	    meth2 = ms2 + "{ skip; return null ; }";
 		fields = "ListofInt buffer ;     Int max ;      Int n 	;"; 
 
-		comment = "// one line\n";
-		comment2 = "/* Multi \n line \n comment */";
 		ifdecl1 = " interface Foo {}";
 		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
 		cldecl1 = " class FooClass  {}";
 		cldecl2 = " class FooClass implements Foo {}";
-		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
+		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + ";" + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
 		decls = ifdecl1 + "\n" + ifdecl2  + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
 
 		
@@ -148,44 +144,43 @@ public class ParserTest {
 
 
 	// comments
-	//@Test
+	@Test
 		public void testComment() {
-		assertParseOk(prestmt + comment  + poststmt);
-		assertParseOk(prestmt + comment2  + poststmt);
-		
+		assertParseOk("// one line\n");
+		assertParseOk("/* Multi \n line \n comment */");
 	}
 	
 
-	//@Test
+	@Test
 		public void testProg() {
 		assertParseOk(decls + "{}" );
 	}
 
 
 
-	//@Test
+	@Test
 		public void testStmts() {
 		System.out.println(assignPure);
-		for (String s : assignPure)	assertParseOk(prestmt + s + ";" + poststmt); 
-  		for (String s : assignEff)	assertParseOk(prestmt + s + ";" + poststmt); 
-		for (String s : awaitStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
-		for (String s : otherStmt)	assertParseOk(prestmt + s + ";" + poststmt); 
+		for (String s : assignPure)	assertParseOk("{"+ s + "}");
+  		for (String s : assignEff)	assertParseOk("{"+ s + "}");
+		for (String s : awaitStmt)	assertParseOk("{"+ s + "}");
+		for (String s : otherStmt)	assertParseOk("{"+ s + "}");
 		
 	}		
 
-	//@Test
+	@Test
 	public void testIfStmts() {
 		
 		assertParseOk("{ if (x) y = true ; return null ; }") ; 
-		assertParseOk("{ if x then y = true ;  else y = false ; return null ; }") ; 
-		assertParseOk("{ if x then { y = true ; z = false; }  else y = false ; return null ; }") ; 
+		assertParseOk("{ if (x) y = true ; else y = false ; return null ; }") ; 
+		assertParseOk("{ if (x) { y = true ; z = false; }  else y = false ; return null ; }") ; 
 		assertParseError("{ if x then { y = true ; z = false }  else y = false ; return null ; }") ; 
 		
 		
 		
 }	
 	
-	//@Test
+	@Test
 		public void testStmtBlock(){
 			assertParseOk("{ return null ; }" );
 			assertParseError(" { return null }" );
@@ -202,10 +197,9 @@ public class ParserTest {
 	}
 			
 
-	//@Test
+	@Test
 	public void testStmtList() {
-				assertParseOk(prestmt + "x = null; x = y.get ; x = ~y ; " + poststmt); 
-				assertParseError(prestmt + ";" + poststmt); 
+				assertParseOk("{ x = null; x = y.get ; x = y ; } ");
 				
 	}
 
