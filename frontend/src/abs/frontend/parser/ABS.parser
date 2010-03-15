@@ -246,7 +246,8 @@ PureExp pure_exp =
 
 VarRef var_ref =
     IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
-    ;
+	| THIS DOT IDENTIFIER   {: return new LocalVarRef(IDENTIFIER) ; :}
+ ;
 
 
 FunExp fun_exp = 

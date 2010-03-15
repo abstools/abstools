@@ -74,6 +74,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "else"        { return sym(Terminals.ELSE); }
  "release"     { return sym(Terminals.RELEASE); }
  "new"         { return sym(Terminals.NEW); }
+ "this"         { return sym(Terminals.THIS); }
 
 // "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
 // "false"       { return sym(Terminals.BOOLEAN_LITERAL); }

@@ -107,6 +107,7 @@ CaseExp  : FunExp ;
 
 // Side effect free expressions 
 VarRef: PureExp			::= <VarName>;
+LocalVarRef: VarRef ;            
 GetExp: PureExp			::= PureExp;
 NullExp: PureExp;
 //EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 

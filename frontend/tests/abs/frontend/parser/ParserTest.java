@@ -27,6 +27,7 @@ public class ParserTest {
 	{"x = y ; ", 
 	 "x = null ; ",  
 	 "x = y.get ; ", 
+	 "this.x = y.get ; ", 
 	 //"x = y == z",
 	 };
 	
@@ -54,7 +55,6 @@ public class ParserTest {
 	
 
  
-	
 	@Before
         public void setUp() {
 		
