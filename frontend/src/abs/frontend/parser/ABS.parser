@@ -146,7 +146,7 @@ ClassBlock classblock =
 	;
 
 List class_var_decls = 
-	var_decl_list.l SEMICOLON SEMICOLON  {: return l ; :} 
+	var_decl_list.l    {: return l ; :} 
 	; 
 
 
@@ -225,7 +225,7 @@ Method method =
     ;
 
 MethodSig methodsig =
-	type_exp.returntype IDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(IDENTIFIER,returntype,params); :}
+	type_exp.returntype METHIDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(METHIDENTIFIER,returntype,params); :}
     ;
 
 

@@ -113,10 +113,10 @@ public class ParserTest {
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
-		assertParseOk("class FooClass  implements Foo { { x = a ; } T x ;; }"); //init block
+		assertParseOk("class FooClass  implements Foo { { x = a ; } T x  }"); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk("class BoundedBuffer implements Buffer { \n"+
-					  "  ListofInt buffer ;     Int max ;      Int n 	;;\n"+
+					  "  ListofInt buffer ;     Int max ;      Int n 	\n"+
 					  "  Void init(Foo x){ Int x ;  Int y ;	return null ; }\n"+
 					  "  Void append(Int i){ skip; return null ; }}" + "{}"
 					  );
