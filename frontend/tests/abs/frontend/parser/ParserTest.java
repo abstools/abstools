@@ -17,7 +17,7 @@ public class ParserTest {
 
 
 	private String emptyblock ; 	
-	private String decls, ifdecl1, ifdecl2  , cldecl1,   cldecl2 , cldecl3 ; 
+	private String bbclass; 
 	private String ms1, ms2, meth1, meth2 , fields, comment, comment2  ; 
 	
 
@@ -54,6 +54,7 @@ public class ParserTest {
 	};
 	
 
+
  
 	@Before
         public void setUp() {
@@ -66,15 +67,10 @@ public class ParserTest {
 	    meth2 = ms2 + "{ skip; return null ; }";
 		fields = "ListofInt buffer ;     Int max ;      Int n "; 
 
-		ifdecl1 = " interface Foo {}";
-		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
-		cldecl1 = " class FooClass  {}";
-		cldecl2 = " class FooClass implements Foo {}";
-		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
-		decls = ifdecl1 + "\n" + ifdecl2  + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
-
-		
-
+		bbclass = "class BoundedBuffer implements Buffer { \n"+
+			       "  ListofInt buffer ;     Int max ;      Int n 	\n"+
+			       "  Void init(Foo x){ Int x ;  Int y ;	return null ; }\n"+
+			       "  Void append(Int i){ skip; return null ; }}";
 		
 		
    	}
@@ -115,11 +111,7 @@ public class ParserTest {
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
 		assertParseOk("class FooClass  implements Foo { { x = a ; } T x  }"); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
-		assertParseOk("class BoundedBuffer implements Buffer { \n"+
-					  "  ListofInt buffer ;     Int max ;      Int n 	\n"+
-					  "  Void init(Foo x){ Int x ;  Int y ;	return null ; }\n"+
-					  "  Void append(Int i){ skip; return null ; }}" + "{}"
-					  );
+		assertParseOk(bbclass);
 		assertParseError("class FooClass implements {}" + "{}" );
 	   
 	}
@@ -153,7 +145,7 @@ public class ParserTest {
 
 	@Test
 		public void testProg() {
-		assertParseOk(decls + "{}" );
+		assertParseOk("interface Foo {} \n interface Bar extends Bar1, Bar2 {} \n class FooClass implements Foo {} {}");
 	}
 
 
