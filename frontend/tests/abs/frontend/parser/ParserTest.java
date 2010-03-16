@@ -64,13 +64,13 @@ public class ParserTest {
 		ms2 = "Void append(Int i)";
 		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
 	    meth2 = ms2 + "{ skip; return null ; }";
-		fields = "ListofInt buffer ;     Int max ;      Int n 	;"; 
+		fields = "ListofInt buffer ;     Int max ;      Int n "; 
 
 		ifdecl1 = " interface Foo {}";
 		ifdecl2 = " interface Bar extends Bar1, Bar2 {}";
 		cldecl1 = " class FooClass  {}";
 		cldecl2 = " class FooClass implements Foo {}";
-		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + ";" + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
+		cldecl3 = "\nclass BoundedBuffer implements Buffer { \n" + fields + "\n" + meth1 + "\n" + meth2 + "\n" + "}";
 		decls = ifdecl1 + "\n" + ifdecl2  + "\n" + cldecl1 + "\n" +   cldecl2 + "\n" + cldecl3 ; 
 
 		

@@ -106,7 +106,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 //An identifier with a trailing paren is a method identifier. 
 //We allow whitespcae between methodname and paren.      
-{Identifier} / [ \t\f]* "("  { return sym(Terminals.METHIDENTIFIER); }
+//{Identifier} / [ \t\f]* "("  { return sym(Terminals.METHIDENTIFIER); }
 
 
 
