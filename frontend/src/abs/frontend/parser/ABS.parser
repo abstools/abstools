@@ -142,14 +142,12 @@ TypeExp type_exp =
 
 // Used in class_decl, i.e. { [b] _T f_ ;  _M_ }
 ClassBlock classblock =  
-	LBRACE block.init_block? class_var_decls.fields? method_list.methods? RBRACE	{: return new ClassBlock(init_block,fields,methods) ; :}
+	LBRACE class_var_decls.fields? block.init_block? method_list.methods? RBRACE	{: return new ClassBlock(init_block,fields,methods) ; :}
 	;
 
 List class_var_decls = 
 	var_decl_list.l    {: return l ; :} 
 	; 
-
-
 
 List var_decl_list =
     var_decl.i                                    {: return new List().add(i); :}
@@ -286,9 +284,9 @@ EffExp eff_exp =
 	; 
 
 
-//EqExp  eq_exp = 
-//	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
-//	;
+EqExp  eq_exp = 
+	| exp.e1 EQEQ exp.e2  	{: return new EqExp(e1,e2); :}
+	;
 
 NewExp  new_exp = 
 	NEW IDENTIFIER.i params.p?   {: return new NewExp(i,p) ; :} 
@@ -320,10 +318,11 @@ Stmt stmt =
 	assign_stmt             
 	|  AWAIT guard SEMICOLON      {: return new AwaitStmt(guard) ; :}
 	|  SKIP SEMICOLON                       {: return new SkipStmt() ; :}
-	|  RELEASE SEMICOLON                   {: return new ReleaseStmt() ; :} 
+	|  SUSPEND SEMICOLON                   {: return new SuspendStmt() ; :} 
 	|  RETURN exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
 	|  eff_exp.e SEMICOLON               {: return new ExpressionStmt(e) ; :}	
 	|  if_then_else_stmt 
+	|  while_stmt 
 	|  stmt_block
 	| SEMICOLON               {: return new EmptyStmt() ; :}
 		;
@@ -343,6 +342,11 @@ IfStmt if_then_else_stmt =
 	| IF LPAREN pure_exp.e1 RPAREN stmt.s1 {: return new IfStmt(e1, s1, new Opt()); :}
 	;
 
+WhileStmt while_stmt = 
+	WHILE LPAREN pure_exp.e1 RPAREN stmt.s1  {: return new WhileStmt(e1,s1) ; :} 
+	;
+
+
 AssignStmt assign_stmt =  
 	var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
     ;
@@ -361,5 +365,6 @@ List stmt_list =
 Exp exp = 
 	pure_exp	
 	| eff_exp
+	| eq_exp
 	;
 

@@ -23,37 +23,28 @@ public class ParserTest {
 
 	private static boolean verbose = false ; 
 
-	private String[] assignPure = 
-	{"x = y ; ", 
-	 "x = null ; ",  
-	 "x = y.get ; ", 
-	 "this.x = y.get ; ", 
-	 //"x = y == z",
+	private String[] pureExp = 
+	{" x ", 
+	 " this.x ",  
+	 //Functional exps
+	 "null"
 	 };
 	
 	
-	private String[] assignEff = 	
-	{"x = new Foo() ; ", 
-	 "x = new Foo(a,b) ; ", 
-	 "x = o!init() ; ", 
-	 "x = o!init(y) ; ", 
-	 "x = o!init(y,z) ; ", 
-	 "x = o.init(y,z,w) ; ", 
-	 "x = init(y,z) ; "} ; 
+	private String[] effExp = 	
+	{"new Foo()  ", 
+	 "new Foo(a,b)  ", 
+	 "o!init()  ", 
+	 "o!init(y)  ", 
+	 "o!init(y,z)  ", 
+	 "!init(y,z)  ", 
+	 "o.init(y,z,w)  ", 
+	 "init(y,z)", 
+	 "y.get"} ; 
 	
-	private String[] awaitStmt = 	
-	{"await y? ; " ,
-	 "await y? & z? ; " ,
-	 "await y? & z? & w? ; ", 
-	 "await y ; " //using pure exp v as guard. 
-	};
-	
-	private		String[] otherStmt = 	
-	{"skip ; ",
-	 "release ; "
-	};
-	
+	private String[] eqExp = { "a == b "} ; 
 
+	
 
  
 	@Before
@@ -109,7 +100,7 @@ public class ParserTest {
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
-		assertParseOk("class FooClass  implements Foo { { x = a ; } T x  }"); //init block
+		assertParseOk("class FooClass  implements Foo { T x  { x = a ; }  }"); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(bbclass);
 		assertParseError("class FooClass implements {}" + "{}" );
@@ -151,40 +142,69 @@ public class ParserTest {
 
 
 	@Test
-		public void testStmts() {
-		System.out.println(assignPure);
-		for (String s : assignPure)	assertParseOk("{"+ s + "}");
-  		for (String s : assignEff)	assertParseOk("{"+ s + "}");
-		for (String s : awaitStmt)	assertParseOk("{"+ s + "}");
-		for (String s : otherStmt)	assertParseOk("{"+ s + "}");
+		public void testAssignStmts() {
 		
+		for (String e : pureExp) {
+			assertParseOk("{ v = " + e + ";}");
+			assertParseOk("{ this.f = " + e + ";}");
+		}
+		for (String e : effExp) {
+			assertParseOk("{ v = " + e + ";}");
+			assertParseOk("{ this.f = " + e + ";}");
+		}
+		for (String e : eqExp) {
+			assertParseOk("{ v = " + e + ";}");
+			assertParseOk("{ this.f = " + e + ";}");
+		}
+	}
+
+	@Test
+		public void testAwaitStmts() {
+		String[] guards = 	
+			{"y?", "y? & z? " , " y? & z? & w?", 
+			 //any functional expression
+			};  
+		for (String g : guards)	assertParseOk("{ await "+ g + " ; }");
+	}
+
+	@Test
+		public void testOtherStmts() {
+		String[] otherStmt = 	
+			{"skip ; ",
+			 "suspend ; ", 
+			 "return e ; "
+			};
+		for (String s : otherStmt)	assertParseOk("{"+ s + "}");
 	}		
 
 	@Test
-	public void testIfStmts() {
+	public void testControlStmts() {
 		
-		assertParseOk("{ if (x) y = true ; return null ; }") ; 
-		assertParseOk("{ if (x) y = true ; else y = false ; return null ; }") ; 
-		assertParseOk("{ if (x) { y = true ; z = false; }  else y = false ; return null ; }") ; 
-		assertParseError("{ if x then { y = true ; z = false }  else y = false ; return null ; }") ; 
+		assertParseOk("{ if (x) y = true  ; }") ; 
+		assertParseOk("{ if (x) y = true ; else y = false  ; }") ; 
+		assertParseOk("{ if (x) { y = true ; z = false; }  else y = false  ; }") ; 
+		assertParseOk("{ if (x) { if (y) skip ; else skip ; } else skip ; }") ; 
+		assertParseOk("{ if (x) if (y) skip ; else skip ; else skip ; }"); 
+		assertParseOk("{ while (x) skip ;  }") ; 
+		assertParseOk("{ while (x) { x = y ; skip ; } }") ; 
+		assertParseOk("{ if (x) y = true ; else y = false  ; }") ; 
+		assertParseOk("{ if (x) { y = true ; z = false; }  else y = false  ; }") ; 
 		
-		
-		
-}	
+	}	
 	
 	@Test
 		public void testStmtBlock(){
-			assertParseOk("{ return null ; }" );
-			assertParseError(" { return null }" );
+			assertParseOk("{ skip ; }" );
+			assertParseError(" { skip  }" );
 			
-			assertParseOk("{ x = y ; return null ; }" ); 
-			assertParseError("{ x = y  return null ; }" ); 
+			assertParseOk("{ x = y ; skip ; }" ); 
+			assertParseError("{ x = y  skip  ; }" ); 
 			
-			assertParseOk("{ x = y ; y = z ; return null ; }" ); 
+			assertParseOk("{ x = y ; y = z ; skip  ; }" ); 
 			
-			assertParseOk("{ { x = y ; skip ; await x? ; } ; return null ; }" ); 
-			assertParseOk("{ { x = y ; } ; return null ; }" );
-			assertParseOk(" { { } ; return null ; }  " );
+			assertParseOk("{ { x = y ; skip ; await x? ; } skip ; }" ); 
+			assertParseOk("{ { x = y ; } ; skip ; }" );
+			assertParseOk(" { { } { } { } }  " );
 		 	
 	}
 			

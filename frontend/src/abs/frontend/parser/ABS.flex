@@ -62,7 +62,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "data"        { return sym(Terminals.DATA); }
  "def"        { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
-// "while"       { return sym(Terminals.WHILE); }
+ "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
  "Fut"         { return sym(Terminals.FUT); }
  "skip"        { return sym(Terminals.SKIP); }
@@ -72,7 +72,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "if"          { return sym(Terminals.IF); }
 // "then"        { return sym(Terminals.THEN); }
  "else"        { return sym(Terminals.ELSE); }
- "release"     { return sym(Terminals.RELEASE); }
+ "suspend"     { return sym(Terminals.SUSPEND); }
  "new"         { return sym(Terminals.NEW); }
  "this"         { return sym(Terminals.THIS); }
 
@@ -96,7 +96,7 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 // "~"          { return sym(Terminals.NEG); }
 // "&&"          { return sym(Terminals.ANDAND); }
 // "||"          { return sym(Terminals.OROR); }
-//"=="          { return sym(Terminals.EQEQ); }
+"=="          { return sym(Terminals.EQEQ); }
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }

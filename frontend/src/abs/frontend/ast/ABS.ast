@@ -65,16 +65,19 @@ DataConstructor : Constructor ::= ConstructorArgs:DataType* ;
 abstract Stmt; 
 abstract InitStmt : Stmt ;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
+AssignStmt: Stmt		::= Var:VarRef Value:Exp;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
+SuspendStmt: Stmt;
+ReturnStmt: Stmt		::= RetExp:Exp; 
+ExpressionStmt: Stmt	::= Exp:EffExp; 
+
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
-//WhileStmt: Stmt			::= Condition:PureExp Body:Stmt*;
-ReleaseStmt: Stmt;
-AssignStmt: Stmt		::= Var:VarRef Value:Exp;
+WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
 StmtBlock: Stmt			::= Stmt:Stmt*;
 EmptyStmt: Stmt;
-ReturnStmt: Stmt		::= RetExp:Exp; 
-ExpressionStmt: Stmt	::= Exp:Exp; 
+
+
 
 
 abstract Guard;
@@ -83,10 +86,37 @@ AndGuard: Guard			::= Left:Guard Right:Guard;
 //For boolean guards   
 ExpGuard: Guard			::= PureExp ; 
 
+//Expressions 
 abstract Exp;
+//Pure expressions
 abstract PureExp: Exp;
+//Expressions with side effect. 
 abstract EffExp: Exp;
-abstract FunExp : Exp ; 
+
+//equality predicate 
+EqExp: Exp   		::= Left:Exp Right:Exp ; 
+
+
+// Side effect free expressions 
+VarRef: PureExp			::= <VarName>;
+LocalVarRef: VarRef ;                  //this.f            
+abstract FunExp : PureExp ; 
+NullExp: PureExp;
+
+
+// Expressions with side effects. 
+NewExp: EffExp			::= <ClassRef> Param:PureExp*; //todo, optional cog 
+abstract Call: EffExp 	::= <Method> Param:PureExp*;
+LocalSyncCall: Call;
+LocalAsyncCall: Call;
+SyncCall: Call			::= Callee:PureExp;
+AsyncCall: Call			::= Callee:PureExp;
+GetExp: EffExp			::= PureExp;
+
+
+
+
+
 
 //FunctionalExpression 
 abstract FunVal  : FunExp ; 
@@ -105,20 +135,13 @@ CaseExp  : FunExp ;
 
 
 
-// Side effect free expressions 
-VarRef: PureExp			::= <VarName>;
-LocalVarRef: VarRef ;            
-GetExp: PureExp			::= PureExp;
-NullExp: PureExp;
-//EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
 
-// Expressions with side effects. 
-NewExp: EffExp			::= <ClassRef> Param:PureExp*; 
-abstract Call: EffExp 	::= <Method> Param:PureExp*;
-LocalSyncCall: Call;
-LocalAsyncCall: Call;
-SyncCall: Call			::= Callee:PureExp;
-AsyncCall: Call			::= Callee:PureExp;
+
+
+
+
+
+
 
 
 
