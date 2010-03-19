@@ -54,7 +54,7 @@ class BoundedBuffer implements Buffer {
             n = n_pluss_one; // no artihmetic 
         } else {
             //Synchronization without boolean guards
-            release;
+            suspend;
             //Try to append again 
             x = this.append(i);
         }
@@ -72,7 +72,7 @@ class BoundedBuffer implements Buffer {
             n = n_minus_one ;  // no arithmetic
         } else {
             //Synchronization without boolean guards
-            release;
+            suspend;
             //Try to remove again
             y = this.remove();
 		}

@@ -81,9 +81,9 @@ class BoundedBuffer implements Buffer {
 	await y? && z? && w?  ;
 	// No boolean guards
 	// await true ; 
-	//skip, release, if_th_else
+	//skip, suspend, if_th_else
 	skip ; 
-	release ; 
+	suspend ; 
 	if x then y = true ; 
 	if x then y = true ; else y = false ;
 	if x then y = true ; else { y = false ; x = null ; } 

@@ -63,7 +63,7 @@ if x then
 
 if true then {a = b ; c = d ;} else skip ; 
 
-release ; 
+suspend ; 
 
 return null ;
 
