@@ -5,7 +5,10 @@
  *
  */
 
-data Void  {  }  
+data Void { }
+data Int { }
+data Data { }
+data ListofInt { }
 data Bool { True , False }
 data IntList { IntNil , Cons(Int, IntList) } 
 
@@ -81,7 +84,7 @@ class BoundedBuffer implements Buffer {
     
 }    
 
-class Producer (BoundedBuffer b) implements Producer {
+class Producer (Buffer b) implements Producer {
     
     Void loop(Int i) {
 	
@@ -95,7 +98,7 @@ class Producer (BoundedBuffer b) implements Producer {
     }
 }
 
-class Consumer (BoundedBuffer b) implements Consumer {
+class Consumer (Buffer b) implements Consumer {
     
     Void loop() {
 

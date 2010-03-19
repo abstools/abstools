@@ -12,10 +12,10 @@ b = b.append(i);
 
 //stmt
 //assignStmt
-if (a.get.get) then skip ; else skip  ; 
+if (a.get.get) skip ; else skip  ; 
 
-if (a.get) then skip  ; 
-if (a.get) then { skip ; skip ; }  ; 
+if (a.get) skip  ; 
+if (a.get) { skip ; skip ; }  ; 
 
 
 a = b ; 
