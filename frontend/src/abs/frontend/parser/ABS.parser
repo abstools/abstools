@@ -235,16 +235,16 @@ MethodSig methodsig =
 
 
 
-PureExp pure_exp = 
-    var_ref
-    | get_exp
+PureExp pure_exp =
+	THIS                   {: return new ThisExp() ; :}
+    | var_ref
  //   | eq_exp 	FIXME
     | NULL                 {: return new NullExp() ; :}
     ;
 
 VarRef var_ref =
-    IDENTIFIER            {: return new VarRef(IDENTIFIER) ; :}
-	| THIS DOT IDENTIFIER   {: return new LocalVarRef(IDENTIFIER) ; :}
+    IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}
+	| THIS DOT IDENTIFIER   {: return new FieldRef(IDENTIFIER) ; :}
  ;
 
 
@@ -278,9 +278,8 @@ GetExp get_exp =
 EffExp eff_exp = 
     new_exp 
 	| async_call 
-	| local_async_call 
 	| sync_call
-	| local_sync_call 
+    | get_exp
 	; 
 
 
@@ -301,17 +300,9 @@ AsyncCall async_call =
 	pure_exp.callee BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
 	;
 
-LocalAsyncCall local_async_call = 
-	BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new LocalAsyncCall(method,params) ; :} 
-	;
-
 SyncCall sync_call = 
 	pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
 	;
-LocalSyncCall local_sync_call =
-	IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new LocalSyncCall(method,params) ; :} 
-	;
-
 
 
 Stmt stmt = 
@@ -363,7 +354,7 @@ List stmt_list =
 
 
 Exp exp = 
-	pure_exp	
+	pure_exp
 	| eff_exp
 	| eq_exp
 	;

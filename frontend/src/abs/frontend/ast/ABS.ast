@@ -98,17 +98,17 @@ EqExp: Exp   		::= Left:Exp Right:Exp ;
 
 
 // Side effect free expressions 
-VarRef: PureExp			::= <VarName>;
-LocalVarRef: VarRef ;                  //this.f            
+abstract VarRef: PureExp    ::= <VarName> ;
+LocalVarRef: VarRef ;
+FieldRef: VarRef ;          //this.f            
 abstract FunExp : PureExp ; 
 NullExp: PureExp;
+ThisExp: PureExp;
 
 
 // Expressions with side effects. 
 NewExp: EffExp			::= <ClassRef> Param:PureExp*; //todo, optional cog 
 abstract Call: EffExp 	::= <Method> Param:PureExp*;
-LocalSyncCall: Call;
-LocalAsyncCall: Call;
 SyncCall: Call			::= Callee:PureExp;
 AsyncCall: Call			::= Callee:PureExp;
 GetExp: EffExp			::= PureExp;
