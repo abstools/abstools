@@ -28,9 +28,8 @@ interface Pong {
 
 class Ping  implements Ping {
     
-    Pong pong ,
-    String hello_pong
-	;
+    Pong pong ;
+    String hello_pong ;
 
     Void init(Pong p){
 	
@@ -65,9 +64,8 @@ class Ping  implements Ping {
 
 class Pong implements Pong {
 
-    Ping ping ,  
-    String hi_ping 	
-	;
+    Ping ping ;
+    String hi_ping ;
 
     Void init(Ping p){
 	

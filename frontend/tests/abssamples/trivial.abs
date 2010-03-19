@@ -27,7 +27,7 @@ interface foo {
 //classdecl
 class bar implements foo, baz { 
     //fieldDeclList
-    bool aField , foo fooRef1, fut(foo) fooRef ; 
+    bool aField ; foo fooRef1 ; fut(foo) fooRef ; 
     //method*
     bool isOK () {bool mVar ; skip ; return true ; }
     bool isNotOK () {bool mVar ; skip ; return false ; }

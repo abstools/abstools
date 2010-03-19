@@ -16,7 +16,7 @@ class FooClass implements Foo {  }
 
 
 //Must have semicolon if there are declarations
-class BarClass implements Foo { Int n , Field f ; }
+class BarClass implements Foo { Int n ; Field f ; }
 
 interface Bar { } 
 
@@ -33,10 +33,9 @@ interface Buffer {
 class BoundedBuffer implements Buffer {
     
     //var_or_field_decl_list
-    ListofInt buffer, 
-    Int max , 
-    Int n 
-	;
+    ListofInt buffer;
+    Int max ;
+    Int n ;
 
     //Method list 
   
