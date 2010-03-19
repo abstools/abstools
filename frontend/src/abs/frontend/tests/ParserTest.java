@@ -21,6 +21,7 @@ public class ParserTest {
 			args = new String[]{
 					"block.abs", "boundedbuffer.abs", "emptyblock.abs", "pingpong.abs", 
 					"skeleton.abs", "skipblock.abs", "statements.abs", "trivial.abs",
+					"PeerToPeer.abs",
 					};
 		} 
 		for (String arg : args){
