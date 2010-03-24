@@ -56,10 +56,8 @@ public class ParserTest {
 		ms2 = "Void append(Int i)";
 		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
 	    meth2 = ms2 + "{ skip; return null ; }";
-		fields = "ListofInt buffer ;     Int max ;      Int n "; 
-
 		bbclass = "class BoundedBuffer implements Buffer { \n"+
-			       "  ListofInt buffer ;     Int max ;      Int n 	\n"+
+			       "  ListofInt buffer ;     Int max ;      Int n ;	\n"+
 			       "  Void init(Foo x){ Int x ;  Int y ;  return null ; }\n"+
 			       "  Void append(Int i){ skip; return null ; }}";
 		
@@ -100,7 +98,7 @@ public class ParserTest {
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
-		assertParseOk("class FooClass  implements Foo { T x  { x = a ; }  }"); //init block
+		assertParseOk("class FooClass  implements Foo { T x ; { x = a ; }  }"); //init block
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(bbclass);
 		assertParseError("class FooClass implements {}" + "{}" );

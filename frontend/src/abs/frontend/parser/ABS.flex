@@ -41,9 +41,9 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
 //Identifiers defined using character classes 
-//LCIdentifier  = [:lower:] ([:letter:] | [:digit:] | "_")*																 
-//UCIdentifier  = [:upper:] ([:letter:] | [:digit:] | "_")* 																 
-Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
+Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
+TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")* 																 
+//Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 
 
@@ -105,9 +105,11 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
 //{LCIdentifier}  { return sym(Terminals.LCIDENTIFIER); }
-//{UCIdentifier}  { return sym(Terminals.UCIDENTIFIER); }
+
+
 <YYINITIAL> {
-	    {Identifier}  { return sym(Terminals.IDENTIFIER); }
+    {TypeIdentifier}  { return sym(Terminals.TYPEIDENTIFIER); }	
+    {Identifier}  { return sym(Terminals.IDENTIFIER); }
 }
 
 //An identifier with a trailing paren is a method identifier. 

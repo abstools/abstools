@@ -71,7 +71,7 @@ List var_decls =
 
 
 DatatypeDecl  datatype_decl = 
-	DATA IDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(IDENTIFIER, l); :}
+	DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(TYPEIDENTIFIER, l); :}
   ;
 
 
@@ -81,12 +81,12 @@ FunctionDecl  function_decl =
 
 
 InterfaceDecl interface_decl =
-  INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, i, l); :}
+  INTERFACE TYPEIDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(TYPEIDENTIFIER, i, l); :}
   ;
 
 
 ClassDecl class_decl =
-	CLASS IDENTIFIER param_decls.params? implement_interfaces.i? classblock {: return new ClassDecl(IDENTIFIER, params,  i , classblock); :}
+	CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? classblock {: return new ClassDecl(TYPEIDENTIFIER, params,  i , classblock); :}
   ;
 
 
@@ -107,7 +107,7 @@ List data_constructor_list =
   ;
 
 DataConstructor data_constructor = 
-	IDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
+	TYPEIDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -128,25 +128,28 @@ List extends_interfaces =
 
 
 IdUse ifname =
-    IDENTIFIER {: return new IdUse(IDENTIFIER) ; :}
+    TYPEIDENTIFIER {: return new IdUse(TYPEIDENTIFIER) ; :}
     ;
 
 DataType datatypename =
-    IDENTIFIER {: return new DataType(IDENTIFIER) ; :}
+    TYPEIDENTIFIER {: return new DataType(TYPEIDENTIFIER) ; :}
     ;
 
 TypeExp type_exp = 
-	IDENTIFIER 		{: return new UnresolvedType(IDENTIFIER); :}
+	TYPEIDENTIFIER.id 		{: return new UnresolvedType(id); :}
 	| FUT LPAREN type_exp.t RPAREN {: return new FutureType(t); :}
 	;	
 
-// Used in class_decl, i.e. { [b] _T f_ ;  _M_ }
+// Used in class_decl, i.e. { _T f_ ; {b]  _M_ }
 ClassBlock classblock =  
-	LBRACE class_var_decls.fields? block.init_block? method_list.methods? RBRACE	{: return new ClassBlock(init_block,fields,methods) ; :}
+	LBRACE field_decls.fields? block.init_block? method_list.methods? RBRACE	{: return new ClassBlock(init_block,fields,methods) ; :}
 	;
 
-List class_var_decls = 
-	var_decl_list.l    {: return l ; :} 
+
+//fix class_var --> field
+List field_decls = 
+	var_decl.i  SEMICOLON                          {: return new List().add(i); :}
+	| field_decls.l var_decl.i SEMICOLON        {: return l.add(i); :}
 	; 
 
 List var_decl_list =
@@ -256,7 +259,7 @@ FunExp fun_exp =
 	; 
 
 Term term = 
-	IDENTIFIER.co LPAREN term_list.l? RPAREN {: return new Term(co,l) ; :}  //FIXME : UCIDENTIFIER "Co"
+	TYPEIDENTIFIER.co LPAREN term_list.l? RPAREN {: return new Term(co,l) ; :}  //FIXME : UCIDENTIFIER "Co"
 	| PAIR LPAREN term.left COMMA term.right RPAREN  {: return new TermPair(left,right) ; :}
 	;
 
@@ -290,7 +293,7 @@ EqExp  eq_exp =
 	;
 
 NewExp  new_exp = 
-	NEW IDENTIFIER.i params.p?   {: return new NewExp(i,p) ; :} 
+	NEW TYPEIDENTIFIER.i params.p?   {: return new NewExp(i,p) ; :} 
 	;
 
 List params = 
