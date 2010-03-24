@@ -55,7 +55,8 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 
 %% // Rules
-
+//Keywords 
+<YYINITIAL> {
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"   { return sym(Terminals.EXTENDS); }
@@ -75,38 +76,42 @@ Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
  "suspend"     { return sym(Terminals.SUSPEND); }
  "new"         { return sym(Terminals.NEW); }
  "this"         { return sym(Terminals.THIS); }
+}
 
 // "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
 // "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
 // "bool"        { return sym(Terminals.BOOL); }
 
+//Separators
+<YYINITIAL> {
  "("           { return sym(Terminals.LPAREN); }
  ")"           { return sym(Terminals.RPAREN); }
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
  ","           { return sym(Terminals.COMMA); }
  ";"           { return sym(Terminals.SEMICOLON); }
+}
+
+//Operators
+<YYINITIAL> { 
  "?"           { return sym(Terminals.QMARK); }
  "."           { return sym(Terminals.DOT); }
  "!"           { return sym(Terminals.BANG); }
  "="           { return sym(Terminals.ASSIGN); }
-// "P"           { return sym(Terminals.PAIR); }
  "&"          { return sym(Terminals.GUARDAND); }
-//Logical operators 
-// "~"          { return sym(Terminals.NEG); }
-// "&&"          { return sym(Terminals.ANDAND); }
-// "||"          { return sym(Terminals.OROR); }
-"=="          { return sym(Terminals.EQEQ); }
+ "=="          { return sym(Terminals.EQEQ); }
+}
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
 //{LCIdentifier}  { return sym(Terminals.LCIDENTIFIER); }
 //{UCIdentifier}  { return sym(Terminals.UCIDENTIFIER); }
-{Identifier}  { return sym(Terminals.IDENTIFIER); }
+<YYINITIAL> {
+	    {Identifier}  { return sym(Terminals.IDENTIFIER); }
+}
 
 //An identifier with a trailing paren is a method identifier. 
-//We allow whitespcae between methodname and paren.      
-//{Identifier} / [ \t\f]* "("  { return sym(Terminals.METHIDENTIFIER); }
+//{Identifier} / [ \t\f]* "("  { return sym(Terminals.PARENIDENTIFIER); }
 
 
 

@@ -37,9 +37,9 @@ public class ParserTest {
 	 "o!init()  ", 
 	 "o!init(y)  ", 
 	 "o!init(y,z)  ", 
-	 "!init(y,z)  ", 
+	 "this!init(y,z)  ", 
 	 "o.init(y,z,w)  ", 
-	 "init(y,z)", 
+	 //	 "this.init(y,z)", 
 	 "y.get"} ; 
 	
 	private String[] eqExp = { "a == b "} ; 
@@ -60,7 +60,7 @@ public class ParserTest {
 
 		bbclass = "class BoundedBuffer implements Buffer { \n"+
 			       "  ListofInt buffer ;     Int max ;      Int n 	\n"+
-			       "  Void init(Foo x){ Int x ;  Int y ;	return null ; }\n"+
+			       "  Void init(Foo x){ Int x ;  Int y ;  return null ; }\n"+
 			       "  Void append(Int i){ skip; return null ; }}";
 		
 		

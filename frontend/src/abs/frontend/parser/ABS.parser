@@ -238,9 +238,11 @@ MethodSig methodsig =
 PureExp pure_exp =
 	THIS                   {: return new ThisExp() ; :}
     | var_ref
- //   | eq_exp 	FIXME
     | NULL                 {: return new NullExp() ; :}
     ;
+
+ //   | eq_exp 	FIXME
+
 
 VarRef var_ref =
     IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}
@@ -301,7 +303,8 @@ AsyncCall async_call =
 	;
 
 SyncCall sync_call = 
-	pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
+	THIS.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,new ThisExp()) ; :} 
+	| pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
 	;
 
 
