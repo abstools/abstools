@@ -1,0 +1,639 @@
+***
+*** abs-datatypes.maude -- Datatypes for ABS
+***
+*** Copyright (c) 2010 Rudolf Schlatte
+*** 
+*** Based upon `creol-datatypes.maude' by Marcel Kyas, which is
+*** Copyright (c) 2007, 2008 Marcel Kyas
+***
+*** This program is free software; you can redistribute it and/or
+*** modify it under the terms of the GNU General Public License as
+*** published by the Free Software Foundation; either version 3 of the
+*** License, or (at your option) any later version.
+***
+*** This program is distributed in the hope that it will be useful, but
+*** WITHOUT ANY WARRANTY; without even the implied warranty of
+*** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*** General Public License for more details.
+***
+*** You should have received a copy of the GNU General Public License
+*** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+***
+
+--- The banner is useful for debugging.  It allows us to figure out the
+--- exact version of that file in our subversion repository.
+---
+fmod ABS-DATA-BANNER is
+    protecting STRING .
+    op datarev : -> String .
+    eq datarev = "$Revision$" .
+endfm
+
+
+*** This module specifies multisets.  It has been derived from the set
+*** module.
+***
+fmod MULTISET{X :: TRIV} is
+    protecting EXT-BOOL .
+    protecting NAT .
+
+    sorts NeMSet{X} MSet{X} .
+    subsort X$Elt < NeMSet{X} < MSet{X} .
+
+    op empty : -> MSet{X} [ctor] .
+    op _,_ : MSet{X} MSet{X} -> MSet{X} [ctor assoc comm id: empty prec 121 format (d r os d)] .
+    op _,_ : NeMSet{X} MSet{X} -> NeMSet{X} [ctor ditto] .
+
+    var E : X$Elt .
+    var N : NeMSet{X} .
+    var M : MSet{X} .
+    var C : Nat .
+
+    op insert : X$Elt MSet{X} -> NeMSet{X} .
+    eq insert(E, M) = E, M .
+
+    op delete : X$Elt MSet{X} -> MSet{X} .
+    eq delete(E, (E, M)) = delete (E, M) .
+    eq delete(E, M) = M [owise] .
+
+    op _in_ : X$Elt MSet{X} -> Bool .
+    eq E in (E, M) = true .
+    eq E in M = false [owise] .
+
+    op count : X$Elt MSet{X} -> Nat .
+    eq count(E, (E, M)) = 1 + count(E, M) .
+    eq count(E, M) = 0 [owise] .
+
+    op |_| : MSet{X} -> Nat .
+    op |_| : NeMSet{X} -> NzNat .
+    eq | M | = $card(M, 0) .
+
+    op $card : MSet{X} Nat -> Nat .
+    eq $card(empty, C) = C .
+    eq $card((E, M), C) = $card(M, C + 1) [owise] .
+endfm
+
+
+*** The basic concepts of Abs's data type.
+***
+fmod ABS-DATA-SIG is
+
+    protecting META-LEVEL .
+
+    sorts Expr Data .
+    subsort Data < Expr .
+    subsort String < Expr .
+
+    op null : -> Data [ctor format (! o)] .
+
+    sorts   NeExprList ExprList NeDataList DataList .
+    subsort Expr < NeExprList < ExprList .
+    subsort Data < NeDataList < DataList .
+    subsort DataList < ExprList .
+    subsort NeDataList < NeExprList .
+
+    op emp : -> DataList [ctor] .
+
+    op _::_ : ExprList ExprList -> ExprList
+	[ctor assoc id: emp prec 27 format (d r os d)] .
+    op _::_ : NeExprList ExprList -> NeExprList [ctor ditto] .
+    op _::_ : ExprList NeExprList -> NeExprList [ctor ditto] .
+    op _::_ : DataList DataList  -> DataList [ctor ditto] .
+    op _::_ : NeDataList DataList  -> NeDataList [ctor ditto] .
+    op _::_ : DataList NeDataList  -> NeDataList [ctor ditto] .
+
+endfm
+
+view Data from TRIV to ABS-DATA-SIG is
+    sort Elt to Data .
+endv
+
+view Expr from TRIV to ABS-DATA-SIG is
+    sort Elt to Expr .
+endv
+
+
+fmod ABS-DATA-VID is
+    extending ABS-DATA-SIG .
+    protecting STRING .
+
+    sort Vid .
+    subsort String < Vid < Expr .
+
+    op _@_ : String String -> Vid [ctor] .
+endfm
+
+view Vid from TRIV to ABS-DATA-VID is
+    sort Elt to Vid .
+endv
+
+fmod ABS-DATA-VIDLIST is
+    protecting LIST{Vid} * (sort List{Vid} to VidList,
+			    sort NeList{Vid} to NeVidList,
+			    op nil : -> List{Vid} to noVid,
+			    op __ : List{Vid} List{Vid} -> List{Vid} to _`,_ [format (d r os d)]) .
+endfm
+
+
+*** The interpreter should extend this module with his own definition
+*** of label values.  For example, the model checker uses his own version
+*** of labels.  This definition is the one used in the interpreter.
+*** op label : Nat -> Label [ctor] .
+fmod ABS-DATA-LABEL is
+
+    extending ABS-DATA-SIG .
+
+    sort Label .
+    subsort Label < Data .
+
+    op caller : Label -> Data .
+
+    --- Needed in the model checker for tail recursion.
+    op tag : Label -> Label [ctor format (c o)] .
+    var L : Label .
+    eq tag(tag(L)) = L .
+
+endfm
+
+view Label from TRIV to ABS-DATA-LABEL is
+  sort Elt to Label .
+endv
+
+
+
+*** Specification of all Abs expressions.  This is the abstract syntax.
+*** Semantics will be provided by the different modules.
+***
+fmod ABS-EXPRESSION is
+
+    protecting ABS-DATA-SIG .
+    protecting STRING .
+
+    op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+    op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
+    op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
+
+endfm
+
+*** Specification of the Bool datatype.
+***
+fmod ABS-DATA-BOOL is
+
+    protecting ABS-EXPRESSION .
+
+    op bool(_) : Bool -> Data [ctor format(o d ! o d)] .
+
+    vars B B' : Bool .
+    vars D D' : Data .
+    vars E : Expr .
+
+    op _asBool : Data -> Bool .
+    eq bool(B) asBool = B .
+
+    eq "=" (D :: D') = bool(D == D') .
+    eq "/=" (D :: D') = bool(D =/= D') .
+
+    eq "~" (bool(false)) = bool(true) .  
+    eq "~" (bool(true)) = bool(false) . 
+    eq "&&" (bool(false) :: E) = bool(false) .
+    eq "&&" (bool(true) ::  E) = E .
+    eq "||" (bool(true) :: E) = bool(true) .
+    eq "||" (bool(false) :: E) = E .
+    eq "=>" (bool(true) :: E) = E .
+    eq "=>" (bool(false) :: E) = bool(true) .
+    eq "^" (bool(B) :: bool(B')) = bool(B xor B') .
+    eq "<=>" (bool(B) :: bool(B')) = bool(B == B') .
+
+endfm
+
+
+
+*** Specification of floats and functions on floats.
+***
+fmod ABS-DATA-FLOAT is
+  extending ABS-DATA-BOOL .
+  protecting FLOAT .
+
+  op float(_): Float -> Data [ctor format(o d ! o d)] . 
+
+  vars F F' : Float .
+
+  op _asFloat : Data -> Float .
+  eq float(F) asFloat = F .
+
+  eq "-" (float(F)) = float(-(F)) .
+  eq "+" (float(F) :: float(F')) = float(F + F') .
+  eq "-" (float(F) :: float(F')) = float( _-_(F, F')) .
+  eq "*" (float(F) :: float(F')) = float(F * F') .
+  eq "/" (float(F) :: float(F')) = float(F / F') .
+  eq "%" (float(F) :: float(F')) = float(F rem F') .
+  eq "**" (float(F) :: float(F')) = float(F ^ F') .
+
+  eq "<"  (float(F) :: float(F')) = bool(F < F') .
+  eq "<=" (float(F) :: float(F')) = bool(F <= F') .
+  eq ">"  (float(F) :: float(F')) = bool(F > F') .
+  eq ">=" (float(F) :: float(F')) = bool(F >= F') .
+endfm
+
+
+
+*** Specification of integers and functions on integers.
+***
+fmod ABS-DATA-INT is
+  extending ABS-DATA-FLOAT .
+
+  protecting INT .
+  protecting RANDOM .
+  protecting CONVERSION .
+
+  op int(_)  : Int -> Data [ctor format(o d ! o d)] . 
+
+  vars I I' : Int .
+  var N : Nat .
+
+  op _asInt : Data -> Int .
+  eq int(I) asInt = I .
+
+  op _asNat : Data -> Nat .
+  eq int(N) asNat = N .
+
+  eq "-" (int(I)) = int(-(I)) .
+  eq "+" (int(I) :: int(I')) = int(I + I') .
+  eq "-" (int(I) :: int(I')) = int( _-_(I, I')) .
+  eq "*" (int(I) :: int(I')) = int(I * I') .
+  eq "/" (int(I) :: int(I')) = int(I quo I') .
+  eq "div" (int(I) :: int(I')) = int(I quo I') .
+  eq "%" (int(I) :: int(I')) = int(I rem I') .
+  eq "**" (int(I) :: int(I')) = int(I ^ I') .
+  eq "random" (int(I)) = int(random(I)) .
+  eq "real_of_int" (int(I)) = float(float(I)) .
+
+  eq "<"  (int(I) :: int(I')) = bool(I < I') .
+  eq "<=" (int(I) :: int(I')) = bool(I <= I') .
+  eq ">"  (int(I) :: int(I')) = bool(I > I') .
+  eq ">=" (int(I) :: int(I')) = bool(I >= I') .
+endfm
+
+
+
+*** Specification of strings and functions on strings.
+***
+fmod ABS-DATA-STRING is
+    extending ABS-DATA-INT .
+
+    protecting STRING .
+
+    op str(_) : String    -> Data [ctor format(o d ! o d)] .
+
+    vars S S' : String .
+    vars M N : Nat .
+
+    op _asString : Data -> String .
+    eq str(S) asString = S .
+
+    eq "|-" (str(S) :: str(S')) = str(S + S') .
+    eq "-|" (str(S) :: str(S')) = str(S + S') .
+    eq "|-|" (str(S) :: str(S')) = str(S + S') .
+    eq "#" (str(S)) = int(length(S)) .
+    eq "ascii" (str(S)) = int(ascii(S)) .
+    eq "char" (int(N)) = str(char(N)) .
+    eq "substr" (str(S) :: int(M) :: int(N)) = str(substr(S, M, N)) .
+    eq "find" (str(S) :: str(S') :: int(N)) = int(find(S, S', N)) .
+    eq "rfind" (str(S) :: str(S') :: int(N)) = int(rfind(S, S', N)) .
+
+    eq "<" (str(S):: str(S')) = bool(S < S') .
+    eq "<=" (str(S):: str(S')) = bool(S <= S') .
+    eq ">" (str(S):: str(S')) = bool(S > S') .
+    eq ">=" (str(S):: str(S')) = bool(S >= S') .
+
+
+    --- Conversions.  Since Abs does not support rational numbers yet,
+    --- we may have failures here which will remain unchecked.
+    protecting CONVERSION .
+    var I : Int .
+    var F : Float .
+
+    eq "string_of_int" (int(I)) = str(string(I, 10)) .
+    eq "int_of_string" (str(S)) = int(rat(S, 10)) .
+    eq "string_of_real" (float(F)) = str(string(F)) .
+    eq "real_of_string" (str(S)) = float(float(S)) .
+endfm
+
+
+
+*** Specification of lists and functions on lists.
+***
+fmod ABS-DATA-LIST is
+    extending ABS-DATA-INT .
+
+    op list(_) : ExprList -> Expr [ctor format (o d ! o d)] .
+    op list(_) : DataList -> Data [ctor ditto] .
+
+    vars M N : Nat .
+    vars I J K : Int .
+    vars D D' : Data .
+    vars L L' : DataList .
+
+    --- list-functions
+    eq "head" (list(emp)) = null .
+    eq "head" (list(D :: L)) = D .
+
+    eq "tail" (list(emp)) = null .
+    eq "tail" (list(D :: L)) = list(L) .
+
+    eq "last" (list(emp)) = null .
+    eq "last" (list(L :: D)) = D .
+
+    eq "rest" (list(emp)) = null .
+    eq "rest" (list(L :: D)) = list(L) .
+
+    eq "nth" ((list(L)) :: int(0)) = null .
+    eq "nth" ((list(emp)) :: int(N)) = null .
+    eq "nth" ((list(D :: L)) :: int(N)) =
+      if (N == 1) then D else "nth" (list(L) :: int(_-_(N, 1))) fi .
+
+    eq "rnth" (list(L) :: int(N)) = "nth" ("reverse" (list(L)) :: int(N)) .
+
+    eq "in" (D :: list(emp)) = bool(false) .
+    eq "in" (D' :: list(D :: L)) =
+      if D == D' then bool(true) else "in" (D' :: list(L)) fi .
+
+    eq "remove" (list(emp) :: D) = list(emp) .
+    eq "remove" (list(D :: L) :: D') =
+      if D == D'
+	then "remove" ((list(L)):: D') 
+	else "|-|" (list(D) :: ("remove" (list(L) :: D'))) fi .
+
+    eq "-|" (D :: list(L)) = list(D :: L) .
+    eq "|-" (list(L) :: D) = list(L :: D) .
+    eq "|-|" (list(L) :: list(L'))   = list(L :: L') .
+
+    eq "#" (list(emp)) = int(0) .
+    eq "#" (list(D :: L)) = "+" ("#" (list(L)) :: int(1)) .
+  
+    eq "isempty" (list(emp)) = bool(true) .
+    eq "isempty" (list(L :: D)) = bool(false) .
+
+    --- Reverse a list
+    eq "reverse" (list(emp)) = list (emp) .
+    eq "reverse" (list(D :: L)) = "|-" ("reverse" (list(L)) :: D) .
+
+    --- index starts at 1
+    eq "after" (list(emp) :: int(N)) = null . 
+    eq "after" (list(L) :: int(0)) = list(L) .
+    eq "after" (list(D :: L) :: int(N)) = "after" (list(L) :: int(_-_(N, 1))) .
+
+    --- Compute a slice of a sequence.
+    eq "sub" (list(L) :: int(N) :: int(M)) =
+	".sub" (list(L) :: int(N) :: int(M) :: list(emp)) .
+    ceq ".sub" (list(D :: L) :: int(N) :: int(M) :: list(L')) =
+	".sub" (list(L) :: int(_-_(N, 1)) :: int(_-_(M, 1)) :: list(L'))
+      if N > 1 .
+    ceq ".sub" (list(D :: L) :: int(1) :: int(M) :: list(L')) =
+	".sub" (list(L) :: int(1) :: int(_-_(M, 1)) :: list(L' :: D))
+      if M >= 1 .
+    eq ".sub" (list(L) :: int(1) :: int(0) :: list(L')) = list(L') .
+
+    eq "begwith" (list(emp) :: list(L :: D)) = bool(false) .
+    eq "begwith" (list(L) :: list(emp)) = bool(true) .
+    eq "begwith" (list(D :: L) :: list(D' :: L')) =
+      if D == D' then "begwith" (list(L) :: list(L')) else bool(false) fi .
+
+    eq "endswith" (list(emp) :: list(L :: D)) = bool(false) .
+    eq "endswith" (list(L) :: list(emp)) = bool(true) .
+    eq "endswith" (list(L :: D) :: list(L' :: D')) =
+      if D == D' then "endswith" (list(L) :: list(L')) else bool(false) fi .
+
+    --- If E is not in the list, these will fail with the term
+    --- "+" (int(N) :: null)
+    eq "index" (list(emp) :: D) = null .
+    eq "index" (list(D :: L) :: D') =
+      if D == D' then int(1) else "+" (int(1) :: "index" (list(L) :: D')) fi .
+
+    --- If E is not in the list, these will fail with the term
+    --- "-" (int(N) :: null)
+    eq "rindex" (list(L) :: D) =
+	"-" ("#" (list(L)) :: ".rindex" (list(L) :: D)) .
+    eq ".rindex" (list(emp) :: D') = null .
+    eq ".rindex" (list(L :: D) :: D') =
+      if D == D' then int(1) else "+" (int(1) :: "rindex" (list(L) :: D')) fi .
+
+    eq "replace" (list(emp) :: D :: int(N)) = null .
+    eq "replace" (list(L) :: D :: int(0)) = null .
+    eq "replace" (list(D :: L) :: D' :: int(1)) = list(D' :: L) .
+    ceq "replace" (list(D :: L) :: D' :: int(N)) =
+	"-|"(D :: "replace" (list(L) :: D' :: int(_-_(N, 1)))) if N > 1 .
+
+    eq "make_list" (D :: int(0)) = list(emp) .
+    ceq "make_list" (D :: int(N)) = "|-"("make_list" (D :: int(_-_(N, 1))) :: D)
+      if N > 0 .
+
+    eq "make_range" (int(I)) = "make_range" (int(1) :: int(I)) .
+
+    eq "make_range" (int(I) :: int(J)) =
+      if I < J then "make_range" (int(I) :: int(J) :: int(1))
+	else  "make_range" (int(I) :: int(J) :: int(-1))
+	fi .
+
+    eq "make_range" (int(I) :: int(J) :: int(K)) =
+      if K > 0 and I <= J then
+	  "-|"(int(I) :: "make_range" (int(I + K) :: int(J) :: int(K)))
+	else
+	if K < 0 and I >= J  then
+            "-|"(int(I) :: "make_range" (int(I + K) :: int(J) :: int(K)))
+	  else
+            list(emp)
+	  fi
+	fi .
+
+endfm
+
+
+
+*** Specification of sets and functions on sets.
+***
+fmod ABS-DATA-SET is
+
+    extending ABS-DATA-SIG .
+    extending ABS-DATA-INT .
+
+    sorts DataSet NeDataSet ExprSet NeExprSet .
+    subsort NeDataSet < DataSet .
+    subsort NeExprSet < ExprSet .
+    subsort DataSet < ExprSet .
+    subsort NeDataSet < NeExprSet .
+    subsort Data < NeDataSet .
+    subsort Expr < NeExprSet .
+
+    op emptyset : -> DataSet [ctor] .
+    op _:_ : DataSet DataSet -> DataSet [ctor comm assoc id: emptyset format (d r o d)] .
+    op _:_ : NeDataSet DataSet -> NeDataSet [ctor ditto] .
+    op _:_ : DataSet NeDataSet -> DataSet [ctor ditto] .
+    op _:_ : ExprSet ExprSet -> ExprSet [ctor ditto] .
+    op _:_ : NeExprSet ExprSet -> NeExprSet [ctor ditto] .
+    op _:_ : ExprSet NeExprSet -> ExprSet [ctor ditto] .
+
+    op set : ExprSet -> Expr [ctor] .
+    op set : DataSet -> Data [ctor] .
+
+    var N : Nat .
+    vars D D' : Data .
+    vars E E' : Expr .
+    vars S S' : DataSet .
+
+    eq D : D = D . --- Collapse multiple elements.
+
+    eq "#" (set(emptyset)) = int(0) .
+    eq "#" (set(S : D)) = "+" (int(1) :: ("#" (set(S)))) .
+
+    eq "isempty" (set(emptyset)) = bool(true) .
+    eq "isempty" (set(S : D)) = bool(false) .
+
+    eq "remove" (set(emptyset) :: E)  = set(emptyset) .
+    eq "remove" (set(S : D) :: D') =
+      if D == D' then "remove" (set(S) :: D') else
+          "add" ("remove" (set(S) :: D') :: D) fi .
+
+    eq "add" (set(S) :: D) = set(S : D) .
+
+    eq "in" (E :: set(emptyset)) = bool(false) .
+    eq "in" (D' :: set(S : D)) =
+      if D == D' then bool(true) else "in" (D' :: set(S)) fi .
+
+    eq "union" (set(emptyset) :: set(S)) = set(S) .
+    eq "union" (set(S) :: set(emptyset)) = set(S) .
+    eq "union" (set(S : D) :: set(S')) =
+      if "in" (D :: set(S')) asBool
+	then "union" (set(S) :: set(S'))
+        else "union" (set(S) :: set(S' : D))
+	fi .
+
+    eq "inter" (set(emptyset) :: set(S)) = set(emptyset) .
+    eq "inter" (set(S) :: set(emptyset)) = set(emptyset) .
+    eq "inter" (set(S : D) :: set(S')) =
+      if "in" (D :: set(S')) asBool
+	then "add" ("inter" (set(S) :: set(S')) :: D)
+        else "inter" (set(S) :: set(S'))
+	fi .
+
+    eq "diff" (set(S) :: set(emptyset)) = set(S) .
+    eq "diff" (set(emptyset) :: set(S)) = set(emptyset) .
+    eq "diff" (set(S : D) :: set(S')) =
+      if "in" (D :: set(S')) asBool
+	then "diff" (set(S) :: set(S'))
+        else "add" ("diff" (set(S) :: set(S')) :: D)
+	fi .
+
+    eq "choose" (set(S : D)) = D .
+    eq "choose" (set(emptyset)) = null .
+
+endfm
+
+
+
+*** Specification of paits and functions on paits.
+***
+fmod ABS-DATA-PAIR is
+    extending ABS-DATA-LIST .
+
+    vars D D' : Data .
+
+    eq "pair" (D :: D') = list(D :: D') .
+    eq "fst" (list(D :: D')) = D . 
+    eq "snd" (list(D :: D')) = D' .
+endfm
+
+
+
+*** Specification of maps and functions on maps.
+***
+fmod ABS-DATA-MAP is
+
+    protecting ABS-DATA-SET .
+
+    --- We have to define our own map here, again.
+    sorts ExprEntry DataEntry ExprMap DataMap .
+
+    subsorts DataEntry < ExprEntry < ExprMap .
+    subsorts DataEntry < DataMap < ExprMap .
+
+    op mapentry : Expr Expr -> ExprEntry [ctor format (! o)] .
+    op mapentry : Data Data -> DataEntry [ctor ditto] .
+    op empty : -> DataMap [ctor] .
+    op _,_ : ExprMap ExprMap -> ExprMap [ctor assoc comm id: empty prec 121 format (d r os d)] .
+    op _,_ : DataMap DataMap -> DataMap [ctor ditto] .
+
+    op map(_) : ExprMap -> Expr [ctor format (o d ! o d)] .
+    op map(_) : DataMap -> Data [ctor ditto] .
+
+    vars DM DM' : DataMap .
+    vars D D' D'' : Data .
+
+    --- We have to carefully evaluate whether this makes things better or
+    --- worse.
+
+    eq "empty" (emp) = map(empty) .
+
+    eq "isempty" (map(DM)) =
+      if DM == empty then bool(true) else bool(false) fi .
+
+    eq "get" (map(empty) :: D'') = null .
+    eq "get" (map(DM, mapentry(D, D')) :: D'') = 
+      if D == D'' then D' else "get" (map(DM) :: D'') fi .
+
+    eq "insert" (map(DM) :: D :: D') =
+      if "in" (D :: map(DM)) asBool
+	then "insert" ("remove" (map(DM) :: D) :: D :: D')
+	else map(DM, mapentry(D, D'))
+	fi .
+
+    eq "remove" (map(DM) :: D) = ".remove"(map(DM) :: D :: map(empty)) .
+    eq ".remove" (map(empty) :: D :: map(DM)) = map(DM) .
+    eq ".remove" (map(DM , mapentry(D, D')) :: D'' :: map(DM')) =
+      if D == D''
+	then ".remove" (map(DM) :: D'' :: map(DM'))
+	else ".remove" (map(DM) :: D'' :: map(DM', mapentry(D, D')))
+	fi .
+
+    eq "in" (D :: map(empty)) = bool(false) .
+    eq "in" (D :: map(mapentry(D', D''), DM)) =
+      if D == D' then bool(true) else "in" (D :: map(DM)) fi .
+
+    eq "keys" (map(empty)) = set(emptyset) .
+    eq "keys" (map(mapentry(D, D'), DM)) = "add" ("keys" (map(DM)) :: D) .
+
+    eq "values" (map(empty)) = set(emptyset) .
+    eq "values" (map(mapentry(D, D'), DM)) = "add" ("values" (map(DM)) :: D') .
+
+    eq "#" (map(empty)) = int(0) .
+    eq "#" (map(mapentry(D, D'), DM)) = "+" ("#" (map(DM)) :: int(1)) .
+
+endfm
+
+
+
+*** The DATATYPES module collects all data types into one module.
+*** One may easily keep various data types in separate file(s),
+*** and them plug in upon need.
+***
+fmod ABS-DATATYPES is
+
+    extending ABS-DATA-SIG .
+    extending ABS-EXPRESSION .
+    extending ABS-DATA-BOOL .
+    extending ABS-DATA-LABEL .
+    extending ABS-DATA-FLOAT .
+    extending ABS-DATA-INT .
+    extending ABS-DATA-STRING .
+    extending ABS-DATA-LIST .
+    extending ABS-DATA-SET .
+    extending ABS-DATA-MAP .
+    extending ABS-DATA-PAIR .
+endfm
+
+eof
+
+*** Local Variables:
+*** maude-indent: 2
+*** fill-column: 78
+*** End:

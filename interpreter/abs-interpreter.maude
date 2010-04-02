@@ -1,0 +1,1020 @@
+***
+*** An ABS interpreter on the Maude platform
+***
+*** Copyright (c) 2010 Rudolf Schlatte
+*** 
+*** Based upon `creol-interpreter.maude' by Marcel Kyas, which was
+*** generated from interpreter.m4, Copyright (c) 2007, 2008 Marcel Kyas
+***
+***
+*** This program is free software; you can redistribute it and/or
+*** modify it under the terms of the GNU General Public License as
+*** published by the Free Software Foundation; either version 3 of the
+*** License, or (at your option) any later version.
+***
+*** This program is distributed in the hope that it will be useful, but
+*** WITHOUT ANY WARRANTY; without even the implied warranty of
+*** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+*** General Public License for more details.
+***
+*** You should have received a copy of the GNU General Public License
+*** along with this program.  If not, see <http://www.gnu.org/licenses/>.
+***
+
+load abs-datatypes .
+
+***************************************************************************
+***
+*** Signature of programs and states.
+***
+***************************************************************************
+
+***
+*** Binding variables to values.
+***
+*** Uses MAP from prelude.
+***
+fmod ABS-SUBST is
+  protecting ABS-DATATYPES .
+  extending MAP{Vid, Data} * (sort Map{Vid,Data} to Subst,
+                              sort Entry{Vid,Data} to Binding,
+                              op empty : -> Map{Vid,Data} to noSubst) .
+
+  vars A A' : Vid .
+  vars D D' : Data .
+  vars S1 S2  : Subst .
+
+  *** Lazy composition operator for substitutions
+  op _::_ : Subst Subst -> Subst .
+  eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
+
+  --- Composition operater for substitutions
+  ---
+  --- Insert all bindings of S2 into S1, overriding the binding in S1.
+  op compose : Subst Subst -> Subst .
+  eq compose(S1, noSubst) = S1 .
+  eq compose(noSubst, S2) = S2 .
+  eq compose(S1, (S2, (A |-> D))) = compose(insert(A, D, S1), S2) .
+
+  --- Remove all bindings of S2 from S1.
+  op remove : Subst Subst -> Subst .
+  eq remove(S1, noSubst) = S1 .
+  eq remove(noSubst, S2) = S2 .
+  eq remove((S1, (A |-> D)), (S2, (A |-> D'))) = remove(S1, S2) .
+  eq remove(S1, (S2, (A |-> D'))) = remove(S1, S2) [owise] .
+endfm
+
+
+*** The sort of a class identifier.
+***
+fmod ABS-CID is
+  protecting STRING .
+  sort Cid .
+
+  subsort String < Cid .
+
+  op Class : -> Cid [ctor] .
+  op Start : -> Cid [ctor] .
+  op None : -> Cid [ctor] .
+endfm
+
+view Cid from TRIV to ABS-CID is
+  sort Elt to Cid .
+endv
+
+
+*** The sort of an object identifier.
+***
+fmod ABS-OID is
+  protecting NAT .
+  protecting STRING .
+  protecting CONVERSION .
+  extending ABS-DATA-SIG .
+  sort Oid .
+
+  subsort Oid < Data .
+
+  --- Constructor of object names
+  op ob(_) : String -> Oid [ctor format (d d ! o d)] .
+
+  var B : String .
+  var F : Nat .
+
+  --- Create a new fresh name for an object
+  op newId : String Nat -> Oid .
+  eq newId(B, F)  = ob(B + "-" + string(F,10)) .
+
+endfm
+
+view Oid from TRIV to ABS-OID is
+  sort Elt to Oid .
+endv
+
+
+
+*** Abs Statements
+***
+*** The following module defines all elementary statements of Abs.
+***
+*** Colouring rules: Statements from the programmer syntax are displayed
+*** in blue.  Statements inserted by the compiler only are displayed in
+*** cyan.  Statements inserted by the run-time system are displayed in
+*** red.  It may indicate a problem if a red term appears in a
+*** configuration.
+
+fmod ABS-STATEMENT is
+
+  protecting ABS-DATA-VIDLIST .
+  protecting ABS-EXPRESSION .
+  protecting ABS-SUBST .
+  protecting ABS-CID .
+
+  *** SuspStmt is a statement which can be suspended.  It includes
+  *** await and [] (the latter defined in ABS-STM-LIST).
+  sorts Stmt SuspStmt .
+  subsort SuspStmt < Stmt .
+
+  op skip : -> Stmt [ctor format (b o)] .
+  op release : -> Stmt [ctor format (b o)] .
+  op await_ : Expr -> SuspStmt [ctor format (b o d)] .
+  op assert_ : Expr -> Stmt [ctor format (b o d)] .
+  op assign(_;_) : VidList ExprList -> Stmt [ctor format (b d o b o b o)] .
+  op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
+  op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
+  op static(_;_;_;_;_) : Vid String Cid Cid ExprList -> Stmt [ctor format (b d o b o b o b o b o b o)] . 
+  op multicast(_;_;_) : Expr String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
+  op get(_;_)  : Vid VidList -> Stmt [ctor format (b d o b o b o)] .
+  op get(_;_)  : Label VidList -> Stmt [ctor ditto] .
+
+  op return(_) : ExprList -> Stmt [ctor format (c d o c o)] .
+  op free(_) : Vid -> Stmt [ctor format (c d o c o)] .
+  op tailcall(_;_;_) : Expr String ExprList -> Stmt [ctor format (c d o c o c o c o)] .
+  op statictail(_;_;_;_) : String Cid Cid ExprList -> Stmt [ctor format (c d o c o c o c o c o)] .
+
+  op $cont_ : Label -> Stmt [ctor format (r o d)] .
+  op $accept_ : Label -> Stmt [ctor format (r o d)] .
+
+
+  --- Assertion Failure.
+  --- This `statement' represents an assertion failure.  It 
+  --- stops evaluation of the executing object at that point.
+  op failure_ : Expr -> [Stmt] [ctor format (r! o d)] .
+
+  --- Multiple Assignment.
+  --- For the model checker the following will be evaluated as an
+  --- equation and the old rule is not confluent.
+  op $assign(_;_) : VidList DataList -> Stmt  [format (r d o r o r o)] .
+
+  --- Multicast
+  --- This `statement' emanates from the ordinary multicast statement
+  --- after the argument and the target collection have been evaluated.
+  --- It will generate the actual invocation messages.
+  op $multicast(_;_;_) : Data String DataList -> Stmt [format (r d o r o r o r o)] .
+
+endfm
+
+view Stmt from TRIV to ABS-STATEMENT is
+  sort Elt to Stmt .
+endv
+
+
+
+*** Specification of compound statements.
+***
+fmod ABS-STM-LIST is
+  protecting ABS-STATEMENT .                
+  protecting LIST{Stmt} * (sort List{Stmt} to StmtList,
+                           sort NeList{Stmt} to NeStmtList,
+                           op nil : -> List{Stmt} to noStmt,
+                           op __ : List{Stmt} List{Stmt} -> List{Stmt} to _;_ [format (d r o d)]) .
+
+  op if_th_el_fi : Expr StmtList StmtList -> Stmt [ctor format (b o b o b o b o)] . 
+  op while_do_od : Expr StmtList -> Stmt [ctor format (b o b o b o)] .
+  op _[]_  : StmtList StmtList -> SuspStmt [ctor comm assoc prec 45 format (d b d o d)] .
+
+
+  var SL : StmtList .
+  var E : Expr .
+
+  --- optimize some statements.
+  eq noStmt [] SL = SL .
+
+  --- Optimize assignments.  This way we save reducing a skip.  Also note
+  --- that the empty assignment is /not/ programmer syntax, it is inserted
+  --- during run-time.
+  eq assign(noVid ; emp) = noStmt .
+  eq $assign(noVid ; emp) = noStmt .
+
+endfm
+
+
+fmod ABS-PROCESS is
+
+  protecting ABS-STM-LIST .
+
+  sort Process .
+
+  op idle : -> Process [ctor format (!b o)] .  
+  op notFound : -> Process [ctor format (!b o)] .  
+  op {_|_} : Subst StmtList -> Process [ctor format (r o r o r o)] . 
+
+  var L : Subst .
+  eq { L | noStmt } = idle . --- if ".label" is needed this is dangerous!
+  eq idle = { noSubst | noStmt } [nonexec metadata "Causes infinite loops."] .
+
+endfm
+
+view Process from TRIV to ABS-PROCESS is
+  sort Elt to Process .
+endv
+
+
+*** Specifies a process pool, here a multiset of Processes
+***
+fmod ABS-PROCESS-POOL is
+
+protecting ABS-PROCESS .
+
+  sort MProc .
+  subsort Process < MProc .
+  op noProc : -> MProc [ctor] .
+  op _,_ : MProc MProc -> MProc
+    [ctor assoc comm id: noProc prec 41 format (d r os d)] .
+
+endfm
+
+
+*** An inherits declaration
+***
+fmod ABS-INHERIT is
+  protecting ABS-DATATYPES .
+  protecting ABS-CID .
+  sort Inh .
+
+  op  _<_> : Cid ExprList -> Inh [ctor prec 15] .
+endfm
+
+view Inh from TRIV to ABS-INHERIT is
+  sort Elt to Inh .
+endv
+
+
+
+*** A method declaration
+***
+fmod ABS-METHOD is
+  protecting ABS-STM-LIST .
+  sort Method .
+
+  op <_: Method | Param:_, Att:_, Code:_> : 
+    String VidList Subst StmtList -> Method
+    [ctor format (c ! oc o d sc o d sc o d sc o c o)] .
+
+endfm
+
+view Method from TRIV to ABS-METHOD is
+  sort Elt to Method .
+endv
+
+
+*** Abs's state configuration.
+***
+*** Modeled after the CONFIGURATION module in "prelude.maude"
+***
+mod ABS-CONFIGURATION is
+
+  protecting ABS-DATA-LABEL .
+  protecting ABS-PROCESS-POOL .
+  protecting ABS-CID .
+  protecting ABS-OID .
+  protecting LIST{Inh} * (sort List{Inh} to InhList,
+                          sort NeList{Inh} to NeInhList,
+                          op nil : -> List{Inh} to noInh,
+                          op __ : List{Inh} List{Inh} -> List{Inh} to _`,_) .
+  protecting SET{Method} * (sort Set{Method} to MMtd,
+                            op empty : -> Set{Method} to noMethod) .
+ 
+  --- Define object identifiers.
+  protecting CONVERSION .
+
+  sorts Msg Class Object Configuration .
+  subsorts Class Msg Object < Configuration .
+
+  vars B M : String .
+  var C : Cid .
+  vars O O' : Oid .
+  vars L S S1 : Subst .
+  vars I I1 : InhList .
+  vars P P' : Process .
+  vars MS MS1 : MMtd .
+  var W : MProc .
+  var AL : VidList .
+  vars SL SL1 : StmtList .
+  var EL : ExprList .
+  var DL : DataList .
+  var N : Label .
+  var F : Nat .
+
+  --- Invocation message.
+  ---
+  --- invoc(S,R,N,M,DL)
+  --- S: The sender.
+  --- R: The receiver.
+  --- N: The label.
+  --- M: The called method.
+  --- DL: The actual arguments.
+  op invoc(_,_,_,_,_) : Oid Oid Label String DataList -> Msg
+    [ctor format (b d o  b so  b so  b so  b so b on)] .
+
+  --- Error and warning messages are intended to stop the machine.
+  --- For now, nothing is emitting these.
+  --- op error(_) : String -> [Msg] [ctor format (nnr r o! or onn)] .
+  op warning(_) : String -> [Msg] [ctor format (nnr! r! r! or onn)] .
+
+  --- Fetch pair { code |  vars } to bind call to process.
+  ---
+  --- M   represents the name of the method.
+  --- C   represents the name of the class.
+  --- MS  represents the methods we search through.
+  --- O   represents the identity of the caller.
+  --- N   represents the label used to return the value computed by the
+  ---     method.
+  --- DL  represents the list of actual arguments.
+  op get : String Cid MMtd Oid Label DataList -> Process .
+
+  eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
+    { "caller" |-> O, ".class" |-> str(B), ".label" |-> N,
+      ".method" |-> str(M), S | assign(AL ; DL) ; SL } .
+  eq get(M, C, MS, O, N, DL) = notFound [owise] .
+
+  --- Terms of sort Object represent objects (and classes) in the
+  --- run-time configuration.
+  ---
+  op noObj : -> Object [ctor] .
+  op <_:_ | Att:_, Pr:_, PrQ:_, Lcnt:_> : 
+    Oid Cid Subst Process MProc Nat -> Object 
+    [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o--  r on)] .
+
+  --- Terms that represent futures.
+  ---
+  op <_: Future | Completed:_, References:_, Value:_> :
+    Label Bool Nat DataList -> Object 
+    [ctor format (nr d d g ++r ir o  r i o  r i o--  r on)] .
+
+  --- Completed futures without references can be removed.
+  ---
+  eq < N : Future | Completed: true, References: 0, Value: DL > = none .
+
+  --- Define Classes.
+  --- Class declaration.
+  ---
+  op <_: Class | Inh:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
+    Cid InhList VidList Subst MMtd Nat -> Class 
+    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
+
+  --- Method binding messages.
+  --- Bind method request
+  --- Given: caller callee label method params (list of classes to look in)
+  op bindMtd : Oid Oid Label String DataList InhList -> Msg [format(!r d)] .
+
+  --- Successfully bound method body. 
+  --- Consider the call O.Q(I). bindMtd(O,Q,I,C S) tries to find Q in
+  --- class C or superclasses, then in S. boundMtd(O,Mt) is the result.
+  op boundMtd : Oid Process -> Msg [format(!r d)] .
+
+  --- Method binding with multiple inheritance
+  ---
+  eq
+    bindMtd(O, O', N, M, DL, (C < EL > , I1))
+    < C : Class | Inh: I , Param: AL, Att: S , Mtds: MS , Ocnt: F >
+  =
+    if get(M, C, MS, O', N, DL) == notFound then
+      bindMtd(O, O', N, M, DL, (I , I1))
+    else
+      boundMtd(O, get(M, C, MS, O', N, DL))
+    fi
+    < C : Class | Inh: I , Param: AL, Att: S , Mtds: MS , Ocnt: F > .
+
+  eq
+    boundMtd(O, { L | SL })
+    < O : B | Att: S, Pr: P, PrQ: W, Lcnt: F >
+  =
+    < O : B | Att: S, Pr: P, PrQ: (W , { L | SL }), Lcnt: F > .
+
+  --- Define a configuration
+  op none : -> Configuration [ctor] .
+  op __ : Configuration Configuration -> Configuration
+    [ctor assoc comm id: none] .
+
+  *** Useful for real-time maude and some other tricks.
+  *** We should not provide sort State, since this is used in LOOP-MODE.
+  *** For now, we do.
+  sort State .
+
+  op {_} : Configuration -> State [ctor] .
+
+  var CN : Configuration .
+
+  --- Insert a warning into the current state.
+  op warn : State String -> State .
+  eq warn({ CN }, M) = { warning(M) CN } .
+
+  --- System initialisation, old style.
+  op main : Configuration String DataList -> State .
+  eq main(CN, B, DL) =
+    { CN < ob("main") : Start | Att: noSubst, 
+      Pr: { "var" |-> null | new("var" ; B ; DL) },
+      PrQ: noProc, Lcnt: 0 > } .
+
+  --- System initialisation, new style.
+  op main : State String DataList -> State .
+  eq main({ CN }, B, DL) =
+    { CN < ob("main") : Start | Att: noSubst, 
+      Pr: { "var" |-> null | new("var" ; B ; DL) },
+      PrQ: noProc, Lcnt: 0 > } .
+
+  --- The initial object commits suicide after it did its job.
+  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+    none .
+
+endm
+
+
+*** Definition of the family of evaluation functions.
+***
+mod ABS-EVAL is
+
+  protecting ABS-CONFIGURATION .
+
+  vars L L' : Label .
+  vars E E' E'' : Expr .
+  vars D D' : Data .
+  var DL : DataList .
+  var EL : ExprList .
+  var NeEL : NeExprList .
+  var ES : ExprSet .
+  var NeES : NeExprSet .
+  var DS : DataSet .
+  var EM : ExprMap .
+  var A : Vid .
+  var AL : VidList .
+  vars Q C : String .
+  vars S S' : Subst .
+  vars ST ST' : Stmt . 
+  vars SL SL1 SL2 : StmtList .
+  var CN : Configuration .
+  var CL : Class .
+  var OB : Object .
+  var MS : Msg .
+  var N : Nat .
+  var B : Bool .
+
+  --- Check if a message is in the queue.
+  op inqueue  : Label Configuration -> Bool .
+  eq inqueue(L, < L' : Future | Completed: B, References: N, Value: DL > CN) =
+    if L == L' then B else inqueue(L, CN) fi .
+  eq inqueue(L, CL CN) = inqueue(L, CN) .
+  eq inqueue(L, OB CN) = inqueue(L, CN) .
+  eq inqueue(L, MS CN) = inqueue(L, CN) .
+  eq inqueue(L, none) = false .
+
+  op evalGuard : Expr Subst Configuration -> Data .
+  op evalGuardList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
+  op evalGuardSet : ExprSet Subst Configuration -> DataSet [strat (1 0 0 0)] .
+  op evalGuardMap : ExprMap Subst Configuration -> DataMap [strat (1 0 0 0)] .
+  op enabled : StmtList Subst Configuration -> Bool .
+  op ready : StmtList Subst Configuration -> Bool .
+
+  eq evalGuard(D, S, CN) = D .
+  eq evalGuard((Q @ C), (S :: S'), CN) =  S [Q] .
+  eq evalGuard(A, S, CN) =  S [A] .
+  eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
+  eq evalGuard(?(A), S, CN) = bool(inqueue(S[A], CN)) .
+  eq evalGuard(?(L), S, CN) = bool(inqueue(L, CN)) .
+  eq evalGuard(list(EL), S, CN) = list(evalGuardList(EL, S, CN)) .
+  eq evalGuard(set(ES), S, CN) = set(evalGuardSet(ES, S, CN)) .
+  eq evalGuard(map(EM), S, CN) = map(evalGuardMap(EM, S, CN)) .
+  eq evalGuard(if E th E' el E'' fi, S, CN) =
+    if evalGuard(E, S, CN) asBool
+    then evalGuard(E', S, CN)
+    else evalGuard(E'', S, CN) fi .
+
+  --- Evaluate guard lists.  This is almost the same as evalList, but we
+  --- had to adapt this to guards.
+  eq evalGuardList(emp, S, CN) = emp .
+  eq evalGuardList(DL, S, CN) = DL .   --- No need to evaluate.
+  eq evalGuardList(E, S, CN) = evalGuard(E, S, CN) .
+  eq evalGuardList(E :: NeEL, S, CN) =
+    evalGuard(E, S, CN) :: evalGuardList(NeEL, S, CN) .
+
+  --- Evaluate a set.
+  eq evalGuardSet(emptyset, S, CN) = emptyset .
+  eq evalGuardSet(DS, S, CN) = DS .  ---  No need to evaluate
+  eq evalGuardSet(E, S, CN) = evalGuard(E, S, CN) .
+  eq evalGuardSet(E : NeES, S, CN) =
+    evalGuard(E, S, CN) : evalGuardSet(NeES, S, CN) .
+
+  --- Evaluate a map.
+  eq evalGuardMap(empty, S, CN) = empty .
+  eq evalGuardMap((mapentry(D, D'), EM), S, CN) =
+    (mapentry(D, D') , evalGuardMap(EM, S, CN)) .  --- No need to evaluate .
+  eq evalGuardMap((mapentry(D, E'), EM), S, CN) =
+    (mapentry(D, evalGuard(E', S, CN)) , evalGuardMap(EM, S, CN)) .
+  eq evalGuardMap((mapentry(E, D'), EM), S, CN) =
+    (mapentry(evalGuard(E, S, CN), D') , evalGuardMap(EM, S, CN)) .
+  eq evalGuardMap((mapentry(E, E'), EM), S, CN) =
+    (mapentry(evalGuard(E, S, CN), evalGuard(E', S, CN)) ,
+      evalGuardMap(EM, S, CN)) .
+
+  --- Enabledness
+  eq enabled(await E ; SL, S, CN) = evalGuard(E, S, CN) asBool .
+  eq enabled((SL1 [] SL2) ; SL, S, CN) =
+    enabled(SL1, S, CN) or enabled(SL2, S, CN) .
+  eq enabled(SL, S, CN) = true [owise] .
+
+  --- The ready predicate holds, if a statement is ready for execution,
+  --- i.e., the corresponding process may be waken up.
+  eq ready(get(A ; AL) ; SL , S, CN) = inqueue(S[A], CN) . 
+  eq ready(get(L ; AL) ; SL , S, CN) = inqueue(L, CN) . 
+  eq ready((SL1 [] SL2) ; SL, S, CN) =
+    ready(SL1, S, CN) or ready(SL2, S, CN) .
+  eq ready(SL, S, CN) = enabled(SL, S, CN) [owise] .
+
+endm
+
+
+fmod ABS-SIMULATOR-BANNER is
+
+  protecting STRING .
+  op simurev : -> String .
+  eq simurev = "interpreter $Revision: 1466 $" .
+
+endfm
+
+*** The machine.
+***
+mod ABS-SIMULATOR is
+
+  protecting ABS-EVAL .
+
+  vars F G : Nat .                     --- Counters for generating fresh names
+  vars O O1 : Oid .                    --- Object identifiers
+  vars C CC : Cid .                    --- Class names
+  var Q : String .                     --- Generic names (attribute and method)
+  var A : Vid .                        --- Generic attribute names
+  var AL : VidList .                   --- List of LHS
+  var N : Label .                      --- Call label
+  var D : Data .                       --- Value
+  vars DL DL2 : DataList .             --- List of values
+  vars DS : DataSet .		       --- Set of data items
+  var E : Expr .                       --- Expression
+  var EL : ExprList .                  --- List of Expressions
+  var ST : Stmt .                      --- Statement
+  var SST : SuspStmt .                 --- Suspendable statement
+  vars S S1 L L1 : Subst .             --- Object and process states
+  vars SL SL1 SL2 : StmtList .         --- List of statements
+  var P : Process .
+  var W : MProc .
+  vars I I1 : InhList .
+  var MS : MMtd .
+  var CN : Configuration .
+  var CO : Bool .                      --- Whether a future completed
+  var B : Cid .
+
+  op label : Oid Nat -> Label [ctor format (o o)] .
+  eq caller(label(O, F)) = O .
+
+  --- assignment
+  ---
+  --- Execute an assignment.  First, all expressions on the left hand side
+  --- of the assignment are evaluated and the statement is rewritten to
+  --- an assign form.
+  rl
+    < O : C | Att: S, Pr: { L | assign(AL ; EL) ; SL },
+	      PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { L | $assign(AL ; evalGuardList(EL, (S :: L), none)) ; SL }, 
+	      PrQ: W, Lcnt: F > 
+    [label assignment] .
+
+  eq
+    < O : C | Att: S, Pr: { L | $assign((Q @ B), AL ; D :: DL) ; SL },
+              PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: insert(Q, D, S), Pr: { L | $assign(AL ; DL) ; SL },
+              PrQ: W, Lcnt: F > 
+    [label do-static-assign] .
+
+  eq
+    < O : C | Att: S, Pr: { L | $assign( (Q, AL) ; D :: DL) ; SL },
+              PrQ: W, Lcnt: F >
+  =
+    if $hasMapping(L, Q) then
+      < O : C | Att: S, Pr: { insert(Q, D, L) | $assign(AL ; DL) ; SL },
+                PrQ: W, Lcnt: F > 
+    else
+      < O : C | Att: insert(Q, D, S), Pr: { L | $assign(AL ; DL) ; SL },
+                PrQ: W, Lcnt: F >
+    fi
+    [label do-assign] .
+
+
+
+  --- Skip
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label skip] .
+
+  --- if_then_else
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+  =>
+    if evalGuard(E, (S :: L), none) asBool then
+      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+    fi
+    [label if-then-else] .
+
+
+  --- while
+  ---
+  --- During model checking we want to be able to observe infinite loops.
+  --- Therefore, it is always a rule.
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S,
+              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
+              PrQ: W, Lcnt: F >
+    [label while] .
+
+
+  --- Non-deterministic choice
+  ---
+  --- Choice is comm, so [choice] considers both SL1 and SL2.
+  ---
+  crl
+    { < O : C | Att: S, Pr: { L | (SL1 [] SL2); SL }, PrQ: W, Lcnt: F > CN  }
+  =>
+    { < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F > CN  }
+  if ready(SL1, (S :: L), CN)
+      [label choice] .
+
+
+  --- PROCESS SUSPENSION
+
+  --- release
+  ---
+  --- The release statement is an unconditional processor release point.
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | release ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    [label release] .
+
+
+  --- suspend
+  ---
+  crl
+    { < O : C | Att: S, Pr: { L | SST ; SL }, PrQ: W, Lcnt: F > CN  }
+  =>
+    { < O : C | Att: S, Pr: idle, PrQ: W , { L | SST ; SL}, Lcnt: F > CN  }
+  if not enabled(SST, (S :: L), CN)
+      [label suspend] .
+
+
+  --- await
+  ---
+  crl
+    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+  =>
+    { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+  if evalGuard(E, (S :: L), CN) asBool
+      [label await] .
+
+  --- Optimize label access in await statements.
+  eq
+    < O : C | Att: S, Pr: { L | await ?(A) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | await ?(L[A]) ; SL }, PrQ: W, Lcnt: F > .
+
+
+  --- Schedule a new process for execution, if it is ready.
+  ---
+  --- Must be a rule to preserve confluence.
+  ---
+  crl
+    { < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
+  =>
+    { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+  if ready(SL, (S :: L), CN)
+      [label PrQ-ready] .
+
+
+  --- METHOD CALLS
+  ---
+
+  --- OPTIMISATION: Reduce the value of a label in a process to avoid
+  --- constant re-evaluation
+  eq < O : C | Att: S, Pr: { L | get(A ; AL) ; SL }, PrQ: W, Lcnt: F > =
+    < O : C | Att: S, Pr: { L | get(L[A] ; AL) ; SL }, PrQ: W, Lcnt: F > .
+
+
+  --- receive-comp
+  ---
+  --- Must be a rule in the model checker, because there might be
+  --- multiple completion messages with the same label but different
+  --- return values in the queue.
+  ---
+  rl
+    < O : C |  Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: true, References: G, Value: DL >
+  =>
+    < O : C |  Att: S, Pr: { L | assign(AL ; DL) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: true, References: G, Value: DL >
+    [label receive-comp] .
+
+
+  --- local-reply
+  ---
+  crl
+    < O : C | Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
+              PrQ: W , { L | get(N ; AL) ; SL }, Lcnt: F >
+  if L1[".label"] == N
+      [label local-reply] .
+
+
+  --- continue
+  ---
+  --- Continue after executing the code of a local reply.  This is
+  --- always a rule.  We want it to be a rule in the interpreter.
+  --- 
+  --- If we support shared futures, this must be a rule in the model
+  --- checker, because there might be two processes in PrQ which await a
+  --- reply to the label.
+  rl
+    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; AL) ; SL1},
+              Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L1 | get(N ; AL) ; SL1 }, PrQ: W,
+              Lcnt: F >
+    [label continue] .
+
+
+  --- local-async-static-call
+  ---
+  crl
+    < O : C | Att: S, Pr: { L | static( A ; Q ; CC ; None ; EL ); SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
+    < N : Future | Completed: false, References: 1, Value: emp >
+    bindMtd(O, O, N, Q, evalGuardList(EL, (S :: L), none), CC < emp >) 
+  if N := label(O, F)
+      [label local-async-static-call] .
+
+
+  --- remote-async-call
+  ---
+  crl
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
+    invoc(O, O1, N, Q , DL)
+  if DL :=  evalGuardList(EL, (S :: L), none)
+      /\ O1 := evalGuard(E, (S :: L), none)
+      /\ N := label(O, F)
+      /\ O =/= O1
+      [label remote-async-call] .
+
+  --- remote-async-self-call
+  ---
+  crl
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
+    invoc(O, O, N, Q , evalGuardList(EL, (S :: L), none))
+  if N := label(O, F) /\ O = evalGuard(E, (S :: L), none)
+      [label remote-async-self-call] .
+
+
+
+  rl
+    < O : C | Att: S, Pr: { L | multicast(E ; Q ; EL) ; SL }, PrQ: W,
+              Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { L | $multicast(evalGuard(E, (S :: L), none) ; Q ; evalGuardList(EL, (S :: L), none)) ; SL }, PrQ: W,
+              Lcnt: F > 
+    [label multicast-eval] .
+
+  eq 
+    < O : C | Att: S, Pr: { L | $multicast(list(emp) ; Q ; DL) ; SL }, PrQ: W,
+              Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label multicast-emit-list-emp] .
+
+  eq
+    < O : C | Att: S, Pr: { L | $multicast(list(O1 :: DL) ; Q ; DL2) ; SL },
+              PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | $multicast(list(DL) ; Q ; DL2) ; SL },
+              PrQ: W, Lcnt: (s F) >
+    invoc(O, O1, label(O, F), Q , DL2)
+    [label multicast-emit-list] .
+
+  eq 
+    < O : C | Att: S, Pr: { L | $multicast(set(emptyset) ; Q ; DL); SL },
+              PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label multicast-emit-set-emp] .
+
+  eq
+    < O : C | Att: S, Pr: { L | $multicast(set(O1 : DS) ; Q ; DL2) ; SL },
+              PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | $multicast(set(DS) ; Q ; DL2) ; SL },
+              PrQ: W, Lcnt: (s F) >
+    invoc(O, O1, label(O, F), Q , DL2)
+    [label multicast-emit-set] .
+
+  --- return
+  ---
+  crl
+    < O : C |  Att: S, Pr: { L | return(EL); SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Completed: false, References: G, Value: emp >
+  =>
+    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Completed: true, References: G, Value: evalGuardList(EL, (S :: L), none) >
+  if N == L[".label"]
+      [label return] .
+
+
+  --- transport
+  ---
+  --- Receive an invocation message to bind the method body.
+  ---
+  eq
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    invoc(O1, O, N, Q, DL)
+  =
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < N : Future | Completed: false, References: 1, Value: emp >
+    bindMtd(O, O1, N, Q, DL, C < emp >)
+    [label transport-imsg] .
+
+  --- free
+  ---
+  --- Free a label.  Make sure that the use of labels is linear.
+  ---
+  --- sd(G,1) works, because G is always positive. Maude does not have a
+  --- nice decrement operator.
+  crl
+    < O : C | Att: S, Pr: { L | free(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: CO, References: G, Value: DL >
+  =>
+    < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: CO, References: sd(G, 1), Value: DL >
+  if N = L[A]
+      [label free] .
+
+
+  --- TAIL CALLS
+  ---
+  --- Fake the caller and the label and tag the label.  Since we do not
+  --- want to interleave, this can also be an equation.
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W,
+              Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    invoc(O, evalGuard(E, (S :: L), none), L[".label"], Q, evalGuardList(EL, (S :: L), none))
+    [label tailcall] .
+
+  --- STATIC TAIL CALLS
+  ---
+  --- Fake the caller and the label and tag the label.  Since we do not
+  --- want to interleave, this can also be an equation.
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"])  }, PrQ: W, Lcnt: F >
+    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), C < emp >)
+  [label local-tailcall] .
+
+  rl
+    < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"]) }, PrQ: W, Lcnt: F >
+    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), CC < emp >) 
+    [label static-tailcall] .
+
+  *** If we receive the method body, the call is accepted and the label
+  *** untagged.
+  crl
+    < O : C | Att: S, Pr: { noSubst | $accept N }, PrQ: W , { L | SL },
+              Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { insert(".label", tag(N), L) | SL }, PrQ: W,
+              Lcnt: F >
+  if L[".label"] = N
+      [label tailcall-accept] .
+
+
+  --- OBJECT CREATION
+  ---
+  --- Set up an init process, which is essentially init(;); !run()
+  ---
+  --- It is smarter to invoke the run method asynchronously from the
+  --- initialisation process, to make sure that the initialisation
+  --- process will terminate instead of waiting for the return of run in
+  --- ill-behaved programs.  We cannot use a tail-call here, because
+  --- there is no caller the initialisation will return to.
+  ---
+  --- The new object will receive its initial attributes from the
+  --- foundAttr message below and will not have attributes before that.
+  ---
+  rl
+    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Inh: I , Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =>
+    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W, Lcnt: (s F) >
+    <  B : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < newId(B, G) :  B | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 0 >
+    findAttr(newId(B, G), I, S1, 
+      $assign(AL ; evalGuardList(EL, compose(S,  L), none)),
+      { ".label" |-> label(O, F) |
+        call(".anon" ; "this" ; "init" ; emp) ;
+        get(".anon" ; noVid) ;
+        free(".anon") ;
+        call (".anon" ; "this" ; "run" ; emp) ;
+        free(".anon") }) 
+    [label new-object] .
+
+
+  --- ATTRIBUTE inheritance with multiple inheritance
+  --- CMC assumes that all attributes names are (globally) different.
+  --- For the purpose of the CMC the class parameters are treated as
+  --- attributes!
+  ---
+  op findAttr  : Oid InhList Subst StmtList Process -> Msg [ctor format (n d)] .
+  op foundAttr : Oid Subst  StmtList Process -> Msg [ctor format (n d)] .
+
+  eq findAttr(O, noInh, S, SL, P) = foundAttr(O, S, SL, P) .
+
+  --- The initialisation of the attributes is ordered from class to
+  --- super-class, because we want to pass on the class parameters to
+  --- the super-class.  The initialisation, i.e., calling the init
+  --- method, is done from the super classes to the sub-classes, making
+  --- sure that the state of the object at the beginning of the init
+  --- call is in a consistent state.
+  ---
+  eq
+    findAttr(O,(C < EL > , I1), S, SL, { L1 | SL1 }) 
+    < C : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =
+    findAttr(O, (I1 , I), compose(S1, S),
+      SL ; assign(AL ; EL), 
+      { L1 | static(".init" ; "init" ; C ; None ; emp) ;
+        get(".init" ; noVid) ; free(".init") ; SL1 })
+    < C : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: G > .
+
+  eq
+    foundAttr(O, S1, SL, { L1 | SL1 })
+    < O : C | Att: S, Pr: idle, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: ("this" |-> O, S1), Pr: { L1 | SL ; SL1 }, PrQ: W, Lcnt: F > .
+
+
+
+  --- assert
+  ---
+  rl
+    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
+  =>
+    { if evalGuard(E, (S :: L), CN) asBool then
+        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      else
+        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
+      fi CN  }
+    [label assert] .
+
+endm
+
+eof
+
+*** Local Variables:
+*** maude-indent: 2
+*** fill-column: 78
+*** End:
