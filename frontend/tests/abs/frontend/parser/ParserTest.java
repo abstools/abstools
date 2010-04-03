@@ -11,7 +11,7 @@ import java.io.StringReader;
 import org.junit.Before;
 import org.junit.Test;
 
-import abs.frontend.ast.Program;
+import abs.frontend.ast.Model;
 
 public class ParserTest {
 
@@ -240,7 +240,7 @@ public class ParserTest {
 		Reader reader = new StringReader(s);
 		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
 		ABSScanner scanner = new ABSScanner(reader);
-		Program p = (Program)parser.parse(scanner);
+		Model p = (Model)parser.parse(scanner);
 		reader.close();
 	}
 }

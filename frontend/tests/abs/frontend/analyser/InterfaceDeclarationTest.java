@@ -11,7 +11,7 @@ import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 
-import abs.frontend.ast.Program;
+import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 
@@ -19,28 +19,28 @@ public class InterfaceDeclarationTest {
 
 	@Test
 	public void trivial() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface I {} {}");
 		assertTrue(p.errors().size() == 0);
 	}
 
 	@Test
 	public void extending() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface I {} interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 0);
 	}
 
 	@Test
 	public void extendingReversed() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface J extends I {} interface I {} {}"); 
 		assertTrue(p.errors().size() == 0);
 	}
 
 	@Test
 	public void extendingUndefined() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
 	    assertEquals("Unknown identifier I", p.errors().iterator().next());
@@ -48,7 +48,7 @@ public class InterfaceDeclarationTest {
 
 	@Test
 	public void circular() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface I extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
 	    assertEquals("Cyclic inheritance chain for interface I", p.errors().iterator().next());
@@ -56,7 +56,7 @@ public class InterfaceDeclarationTest {
 
 	@Test
 	public void mutuallyCircular() {
-		Program p;
+		Model p;
 		p = assertParseOk("interface I extends J {} interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 2);
 		Iterator i = p.errors().iterator();
@@ -65,8 +65,8 @@ public class InterfaceDeclarationTest {
 	}
 
 	// TODO refactor this into testframework stuff? 
-	protected static Program assertParseOk(String s) {
-		Program p = null;
+	protected static Model assertParseOk(String s) {
+		Model p = null;
 		try {
 			p = parse(s);
 		} catch (Throwable t) {
@@ -77,12 +77,12 @@ public class InterfaceDeclarationTest {
   }
 	
 	
-	protected static Program parse(String s) throws Throwable {
+	protected static Model parse(String s) throws Throwable {
 		ABSParser parser = new ABSParser();
 		Reader reader = new StringReader(s);
 		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
 		ABSScanner scanner = new ABSScanner(reader);
-		Program p = (Program)parser.parse(scanner);
+		Model p = (Model)parser.parse(scanner);
 		reader.close();
 		return p;
 	}
