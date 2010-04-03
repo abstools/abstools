@@ -12,7 +12,7 @@ public class ParserTest {
 
 	public static void main(String[] args) throws Exception {
 
-		Program p = null;
+		Model m = null;
 		int errorcount = 0;
 		ArrayList<String> errorfiles = new ArrayList<String>();
 
@@ -28,25 +28,29 @@ public class ParserTest {
 			System.out.println("Trying to parse: " + arg);
 			System.out.println("==========");
 			try{
-				p = parse(arg);
+				m = parse(arg);
 				System.out.println("Parsing of " + arg + " suceeded. Result:");
 			} catch (Error err) {
+				System.out.flush();
 				System.err.println("Parsing of " + arg + " failed with Error");
 				System.err.println(err);
 				err.printStackTrace(System.err);
+				System.err.flush();
 				errorfiles.add(arg);
 				errorcount++;
 			} catch (Exception e1) {
+				System.out.flush();
 				System.err.println("Parsing of " + arg +  " failed with Exception");
 				System.err.println(e1);
 				e1.printStackTrace(System.err);
+				System.err.flush();
 				errorfiles.add(arg);
 				errorcount++;
 			}
 			//Dump tree for debug
-			if (p!=null){
-				System.out.println(p);
-				p.dumpTree("  ", System.out);
+			if (m!=null){
+				System.out.println(m);
+				m.dumpTree("  ", System.out);
 			} else {
 				System.out.println("(No result)");
 			}
@@ -63,7 +67,7 @@ public class ParserTest {
 	}
 
 
-	protected static Program parse(String file) throws Exception {
+	protected static Model parse(String file) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
@@ -77,7 +81,9 @@ public class ParserTest {
 					System.out.println(i++ + "\t" + line);
 				}
 			} catch (IOException x) {
+				System.out.flush();
 				System.err.println(x);
+				System.err.flush();
 			} finally {
 				if (rd != null) rd.close();
 			}
@@ -85,9 +91,9 @@ public class ParserTest {
 
 		ABSParser parser = new ABSParser();
 		ABSScanner scanner = new ABSScanner(reader);
-		Program p = (Program)parser.parse(scanner);
+		Model m = (Model)parser.parse(scanner);
 		reader.close();
-		return p; 
+		return m; 
 	}
 
 }
