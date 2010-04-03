@@ -2,7 +2,7 @@
 //
  
 
-Program                         ::= Decl* [Block];
+Model                         ::= Decl* [Block];
 
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl 

@@ -2,7 +2,7 @@
 
 aspect GenerateMaude {
 
-    public void Program.generateMaude(java.io.PrintStream stream) {
+    public void Model.generateMaude(java.io.PrintStream stream) {
         stream.println("in abs-interpreter");
     }
 

@@ -2,7 +2,7 @@ import java.util.Collection;
 import java.util.ArrayList;
 
 aspect ErrorCheck {
-  public Collection Program.errors() {
+  public Collection Model.errors() {
     Collection c = new ArrayList();
     collectErrors(c);
     return c;
@@ -35,7 +35,7 @@ aspect ErrorCheck {
   }
 
   // add error for duplicate interfaces
-  public void Program.collectErrors(Collection c) {
+  public void Model.collectErrors(Collection c) {
     super.collectErrors(c);
     if(duplicateInterfaces().size() > 0) {
     	for (String name : duplicateInterfaces()) {

@@ -32,12 +32,12 @@ import abs.frontend.ast.*;
 
 
 
-Program goal =
-    program.p		{: return p ; :}
+Model goal =
+    model.m		{: return m ; :}
   ;
 
-Program program = 
-	decl_list.l? block?	{: return new Program(l, block); :}
+Model model = 
+	decl_list.l? block?	{: return new Model(l, block); :}
   ;
 
 List decl_list =

@@ -11,7 +11,7 @@ aspect NameResolution {
 
   // Declaration of *lookup*
   // Finds a declaration (Decl) based on a name, or attribute unknownDecl if not found
-  syn lazy Decl Program.lookup(String name);
+  syn lazy Decl Model.lookup(String name);
   
   // ***Implementation***
   
@@ -19,13 +19,13 @@ aspect NameResolution {
   eq IdUse.decl() = lookup(getName());
   
   //   Definitions of *lookup*
-  eq Program.getDecl().lookup(String name) = localLookup(name);
-  // eq Program.getPredefinedType(int index).lookup(String name) = unknownDecl();
-  eq Program.lookup(String name) = localLookup(name);
+  eq Model.getDecl().lookup(String name) = localLookup(name);
+  // eq Model.getPredefinedType(int index).lookup(String name) = unknownDecl();
+  eq Model.lookup(String name) = localLookup(name);
   
     
   // Expose *lookup* at various places in the AST
-  // Technically, this re-uses definition from Program.InterfaceDecl
+  // Technically, this re-uses definition from Model.InterfaceDecl
   inh Decl IdUse.lookup(String name); 
 
   //inh Decl InterfaceDecl.lookup(String name);
@@ -33,7 +33,7 @@ aspect NameResolution {
   
   // *localLookup* - looks through the local declarations in a block
 
-  syn lazy Decl Program.localLookup(String name) {
+  syn lazy Decl Model.localLookup(String name) {
     for (int k = 0; k < getNumDecl(); k++) {
       Decl d = getDecl(k).declarationOf(name);
       if (d != null) return d;

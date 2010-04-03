@@ -8,13 +8,13 @@ aspect DuplicateCheck {
 
 	// *duplicateDeclaration* - true if there is more than one interface declared with the same name
 	// TODO: generalise to other kinds of declarations: ADTs, classes, functions
-	syn lazy Set<String> Program.duplicateInterfaces();
+	syn lazy Set<String> Model.duplicateInterfaces();
 	
 	
 	// ***Implementation***
 	
 	// TODO: refactor into a method for to check dupes for any kind of decl
-	eq Program.duplicateInterfaces() {
+	eq Model.duplicateInterfaces() {
 		// Note: must use fully qualified name to avoid conflicts with ast.List
 		java.util.List<String> interfaceNames = new ArrayList<String>();
 		Set<String> duplicateNames = new HashSet<String>();
