@@ -235,19 +235,29 @@ PureExp pure_exp =
 	THIS                   {: return new ThisExp() ; :}
     | var_ref
     | NULL                 {: return new NullExp() ; :}
-	| TYPEIDENTIFIER.co LPAREN pure_exp_list.l? RPAREN {: return new Term(co,l) ; :}
+	| data_constructor_exp
 	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
 	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
+	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
 List pure_exp_list =
-    pure_exp.i                              {: return new List().add(i); :}
-    | pure_exp_list.l COMMA pure_exp.i        {: return l.add(i); :}
+    pure_exp.i                            {: return new List().add(i); :}
+    | pure_exp_list.l COMMA pure_exp.i    {: return l.add(i); :}
   ;
 
+List case_branch_list =
+    case_branch.b                         {: return new List().add(b); :}
+    | case_branch_list.l case_branch.b    {: return l.add(b); :}
+	;
 
- //   | eq_exp 	FIXME
+CaseBranch case_branch =
+	data_constructor_exp.lhs RARROW pure_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	; 
 
+DataConstructorExp data_constructor_exp =
+	TYPEIDENTIFIER.co LPAREN pure_exp_list.l? RPAREN {: return new DataConstructorExp(co,l) ; :}
+	;
 
 VarRef var_ref =
     IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}

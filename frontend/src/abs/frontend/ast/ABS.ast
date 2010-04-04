@@ -112,12 +112,13 @@ PatVar : Pattern ::= <Name> ;
 
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
-Term : FunVal  ::= <Constructor> Params:Term* ;
+DataConstructorExp : FunVal  ::= <Constructor> Params:PureExp* ;
 TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 
 LetExp  : PureExp ; 
-FnApp  : PureExp ::= <Name> Params:Term* ;
-CaseExp  : PureExp ;
+FnApp  : PureExp ::= <Name> Params:PureExp* ;
+CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
+CaseBranch ::= Lhs:DataConstructorExp Rhs:PureExp ; 
 
 
 

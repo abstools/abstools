@@ -98,8 +98,9 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
  "."           { return sym(Terminals.DOT); }
  "!"           { return sym(Terminals.BANG); }
  "="           { return sym(Terminals.ASSIGN); }
- "&"          { return sym(Terminals.GUARDAND); }
+ "&"           { return sym(Terminals.GUARDAND); }
  "=="          { return sym(Terminals.EQEQ); }
+ "=>"          { return sym(Terminals.RARROW); }
 }
 
 {Comment}     { /* discard token */ }
