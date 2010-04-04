@@ -76,7 +76,7 @@ DatatypeDecl  datatype_decl =
 
 
 FunctionDecl  function_decl = 
-	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN fun_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN pure_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; //TODO : ASSIGN (=) or EQEQ == ? 
 
 
@@ -212,13 +212,6 @@ List datatypename_list =
 
 
 
-List pure_exp_list =
-    pure_exp.i                              {: return new List().add(i); :}
-    | pure_exp_list.l COMMA pure_exp.i        {: return l.add(i); :}
-  ;
-
-
-
 
 
 Method method = 
@@ -242,7 +235,16 @@ PureExp pure_exp =
 	THIS                   {: return new ThisExp() ; :}
     | var_ref
     | NULL                 {: return new NullExp() ; :}
+	| TYPEIDENTIFIER.co LPAREN pure_exp_list.l? RPAREN {: return new Term(co,l) ; :}
+	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
     ;
+
+List pure_exp_list =
+    pure_exp.i                              {: return new List().add(i); :}
+    | pure_exp_list.l COMMA pure_exp.i        {: return l.add(i); :}
+  ;
+
 
  //   | eq_exp 	FIXME
 
@@ -253,27 +255,11 @@ VarRef var_ref =
  ;
 
 
-FunExp fun_exp = 
-	IDENTIFIER            {: return new FunVar(IDENTIFIER) ; :} //variable x 
-	| term 
-	; 
-
-Term term = 
-	TYPEIDENTIFIER.co LPAREN term_list.l? RPAREN {: return new Term(co,l) ; :}  //FIXME : UCIDENTIFIER "Co"
-	| PAIR LPAREN term.left COMMA term.right RPAREN  {: return new TermPair(left,right) ; :}
-	;
-
 
 //TODO make parens optional
 //I got some precedence conflicts when i made parens optional here.
 //could probably be fixed by explixit declaration of productionrule precedence.
 
-
-
-List term_list =
-   term.i                              {: return new List().add(i); :}
-   | term_list.l COMMA term.i        {: return l.add(i); :}
-  ;
 
 
 GetExp get_exp =

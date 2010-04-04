@@ -23,7 +23,7 @@ UnknownDecl:	Decl;			// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Params:ParamDecl* ImplementedInterfaceUse:IdUse* Body:ClassBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
-FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:FunExp ;
+FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:PureExp ;
 
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
@@ -101,9 +101,25 @@ EqExp: Exp   		::= Left:Exp Right:Exp ;
 abstract VarRef: PureExp    ::= <VarName> ;
 LocalVarRef: VarRef ;
 FieldRef: VarRef ;          //this.f            
-abstract FunExp : PureExp ; 
 NullExp: PureExp;
 ThisExp: PureExp;
+
+//FunctionalExpression 
+abstract FunVal  : PureExp ; 
+abstract Pattern ; 
+
+PatVar : Pattern ::= <Name> ; 
+
+
+FunVar : FunVal ::= <Name> ; //Name = Variable name 
+Term : FunVal  ::= <Constructor> Params:Term* ;
+TermPair : FunVal ::= Left:PureExp Right:PureExp ;
+
+LetExp  : PureExp ; 
+FnApp  : PureExp ::= <Name> Params:Term* ;
+CaseExp  : PureExp ;
+
+
 
 
 // Expressions with side effects. 
@@ -117,21 +133,6 @@ GetExp: EffExp			::= PureExp;
 
 
 
-
-//FunctionalExpression 
-abstract FunVal  : FunExp ; 
-abstract Pattern ; 
-
-PatVar : Pattern ::= <Name> ; 
-
-
-FunVar : FunVal ::= <Name> ; //Name = Variable name 
-Term : FunVal  ::= <Constructor> Params:Term* ;
-TermPair : FunVal ::= Left:Term Right:Term ;
-
-LetExp  : FunExp ; 
-FnApp  : FunExp ;
-CaseExp  : FunExp ;
 
 
 
