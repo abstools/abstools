@@ -39,9 +39,9 @@ class Ping  implements Ping {
 
     Void run(){
 
-      Void x , 
-      fut(String) reply
-      ;
+      Void x; 
+      Fut(String) reply;
+      
       reply = pong!m(hello_pong); 
       await reply? ; 
       x = this!run();
@@ -49,10 +49,8 @@ class Ping  implements Ping {
    }
 
     String m(String msg){
-	
-	String reply
-	    ; 
-	if msg_equals_hello_ping then  
+	String reply; 
+	if (msg_equals_hello_ping) 
 	  reply = thanks_pong ;
 	else
 	    reply = who_are_you ;
@@ -74,9 +72,9 @@ class Pong implements Pong {
 
     Void run(){
       
-      Void x , 
-      fut(String) reply
-      ;
+      Void x;
+      Fut(String) reply;
+      
       reply = ping!m(hi_ping); 
       await reply? ; 
       x = this!run();
@@ -85,9 +83,9 @@ class Pong implements Pong {
 
     String m(String msg){
 	
-	String reply
-	    ; 
-	if msg_equals_hello_pong then  
+	String reply;
+	 
+	if (msg_equals_hello_pong)  
 	  reply = thanks_ping ;
 	else
 	    reply = who_are_you ;
@@ -95,9 +93,12 @@ class Pong implements Pong {
     } 
 
 }
+
 {
-    Ping ping , Pong pong , Void x
-	; 
+    Ping ping;
+    Pong pong;
+    Void x;
+     
     ping = new Ping(); 
     pong = new Pong(); 
 
@@ -106,5 +107,4 @@ class Pong implements Pong {
     x = ping!run(); 
     x = pong!run(); 
     return null;
-
 }
