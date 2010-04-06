@@ -37,13 +37,15 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
 	}
 
-	public void CaseBranch.dumpTree(String indent, java.io.PrintStream pStream) {
-		String childIndent = indent + "  ";
+	/*
+	  public void CaseBranch.dumpTree(String indent, java.io.PrintStream pStream) {
+		String childIndent = indent;
 	   	pStream.println(indent + this.toString() + "\t\tLEFT:");
 		this.getLeft().dumpTree(childIndent, pStream);
 		pStream.println(indent + this.toString() + "\t\tRIGHT:");
 		this.getRight().dumpTree(childIndent, pStream);
 	}
+	*/
 
 	public void ReturnStmt.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getRetExp());

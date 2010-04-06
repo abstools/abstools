@@ -37,7 +37,9 @@ public class ParserTest {
 	 //pair constructor 
 	 "pair(x,y)",
 	 //case expression 
-	"case set { EmptyStringSet() => False ; }"
+	 "case set { EmptyStringSet => False ; }",
+	 "case set { EmptyStringSet() => False() ; }",
+	 "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}"
 	};
 
 	
