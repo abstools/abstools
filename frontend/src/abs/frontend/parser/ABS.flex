@@ -76,6 +76,8 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
  "suspend"     { return sym(Terminals.SUSPEND); }
  "new"         { return sym(Terminals.NEW); }
  "this"         { return sym(Terminals.THIS); }
+ "pair"         { return sym(Terminals.PAIR); }
+ "case"         { return sym(Terminals.CASE); }
 }
 
 // "true"        { return sym(Terminals.BOOLEAN_LITERAL); }

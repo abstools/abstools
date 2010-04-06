@@ -115,8 +115,6 @@ List data_constructor_params =
 	;
 
 
-
-
 List implement_interfaces =
     IMPLEMENTS ifname_list.i           {: return i; :}
   ;
@@ -232,8 +230,8 @@ MethodSig methodsig =
 
 
 PureExp pure_exp =
-	THIS                   {: return new ThisExp() ; :}
-    | var_ref
+	var_ref
+	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
 	| data_constructor_exp
 	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
@@ -253,11 +251,15 @@ List case_branch_list =
 
 CaseBranch case_branch =
 	data_constructor_exp.lhs RARROW pure_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+//Do we allow the special pair constructor or a variable in the LHS 
+//TODO add catchall 
 	; 
 
 DataConstructorExp data_constructor_exp =
-	TYPEIDENTIFIER.co LPAREN pure_exp_list.l? RPAREN {: return new DataConstructorExp(co,l) ; :}
+	TYPEIDENTIFIER.co pure_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
 	;
+
+
 
 VarRef var_ref =
     IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}
@@ -265,10 +267,6 @@ VarRef var_ref =
  ;
 
 
-
-//TODO make parens optional
-//I got some precedence conflicts when i made parens optional here.
-//could probably be fixed by explixit declaration of productionrule precedence.
 
 
 
@@ -289,10 +287,10 @@ EqExp  eq_exp =
 	;
 
 NewExp  new_exp = 
-	NEW TYPEIDENTIFIER.i params.p?   {: return new NewExp(i,p) ; :} 
+	NEW TYPEIDENTIFIER.i pure_exp_params.p?   {: return new NewExp(i,p) ; :} 
 	;
 
-List params = 
+List pure_exp_params = 
 	LPAREN pure_exp_list.l? RPAREN {: return l ; :} 
 	;
 

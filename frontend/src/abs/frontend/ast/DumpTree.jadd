@@ -25,6 +25,14 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVarName());
 	}
 
+	public void DataConstructorExp.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getConstructor());
+		String childIndent = indent + "  ";
+		for(int i = 0; i < getNumChild(); i++)
+			getChildNoTransform(i).dumpTree(childIndent, pStream);
+		
+	}
+
 	public void AssignStmt.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
 	}

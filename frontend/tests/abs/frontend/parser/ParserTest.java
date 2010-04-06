@@ -26,9 +26,20 @@ public class ParserTest {
 	private String[] pureExp = 
 	{" x ", 
 	 " this.x ",  
-	 //Functional exps
-	 "null"
-	 };
+	 "null",
+	 "this",
+	 //function expressions 
+	 //data constructor expression 
+	 "Int(x , y)", 
+	 //function application 
+	 "pluss(x,y)", 
+	 "nth(tail(file,n))", 
+	 //pair constructor 
+	 "pair(x,y)",
+	 //case expression 
+	"case set { EmptyStringSet() => False ; }"
+	};
+
 	
 	
 	private String[] effExp = 	
@@ -42,6 +53,8 @@ public class ParserTest {
 	 //	 "this.init(y,z)", 
 	 "y.get"} ; 
 	
+
+
 	private String[] eqExp = { "a == b "} ; 
 
 	
@@ -113,17 +126,20 @@ public class ParserTest {
 		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
 	}
 
-	//@Test
+   @Test
 		public void testFunctionDecl() {
 		assertParseOk("def Int inc(Int x) = x"); //fun_exp = IDENTIFIER 
 		assertParseOk("def Int inc(Int x) = plus(x,one())"); //fun_exp = Term(co,l)
 		assertParseOk("def Datatype fn(Int x , Int y) = x"); 
-		//		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
 	}
 
+	@Test 
+		public void testPureExp(){ 
+		//i.e. test pure_exp 
+	}
+
+
 	
-
-
 	// comments
 	@Test
 		public void testComment() {
