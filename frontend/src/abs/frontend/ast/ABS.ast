@@ -93,8 +93,8 @@ abstract PureExp: Exp;
 //Expressions with side effect. 
 abstract EffExp: Exp;
 
-//equality predicate 
-EqExp: Exp   		::= Left:Exp Right:Exp ; 
+//equality expressions
+EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
 
 
 // Side effect free expressions 

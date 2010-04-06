@@ -233,11 +233,15 @@ PureExp pure_exp =
 	var_ref
 	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
+	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
 	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
+
+
+
 
 List pure_exp_list =
     pure_exp.i                            {: return new List().add(i); :}
@@ -280,11 +284,6 @@ EffExp eff_exp =
 	| sync_call
     | get_exp
 	; 
-
-
-EqExp  eq_exp = 
-	| exp.e1 EQEQ exp.e2  	{: return new EqExp(e1,e2); :}
-	;
 
 
 NewExp  new_exp = 
@@ -357,6 +356,5 @@ List stmt_list =
 Exp exp = 
 	pure_exp
 	| eff_exp
-	| eq_exp
 	;
 
