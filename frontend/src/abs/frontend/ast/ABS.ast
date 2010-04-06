@@ -115,7 +115,7 @@ FunVar : FunVal ::= <Name> ; //Name = Variable name
 DataConstructorExp : FunVal  ::= <Constructor> Params:PureExp* ;
 TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 
-LetExp  : PureExp ; 
+LetExp  : PureExp ::= Var:FunVarDecl Val:PureExp Exp:PureExp ; 
 FnApp  : PureExp ::= <Name> Params:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
 CaseBranch ::= Left:DataConstructorExp Right:PureExp ; 
