@@ -133,6 +133,11 @@ public class ParserTest {
 		assertParseOk("def Int inc(Int x) = x"); //fun_exp = IDENTIFIER 
 		assertParseOk("def Int inc(Int x) = plus(x,one())"); //fun_exp = Term(co,l)
 		assertParseOk("def Datatype fn(Int x , Int y) = x"); 
+		assertParseOk("def TPair revPair(TPair p) = pair(snd(p),fst(p))");
+		//using let
+		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x)");
+		//using nested let
+		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x)");
 	}
 
 	@Test 
