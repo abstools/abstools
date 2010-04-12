@@ -106,6 +106,7 @@ ThisExp: PureExp;
 
 LiteralExp: PureExp;
 StringLiteral: LiteralExp  ::= <Content> ;
+IntLiteral: LiteralExp     ::= <Content:int> ;
 
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 

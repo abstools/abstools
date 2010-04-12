@@ -43,8 +43,8 @@ class BoundedBuffer implements Buffer {
     // no assignments in variable declarations, so  we need an init method
     {
         buffer = nil ;
-        max = ten ; // = 10 --- no numbers yet  
-        n = zero ; // = 0 --- no numbers yet  
+        max = 10 ;
+        n = 0 ;
         return null ;
     }
     
@@ -130,7 +130,7 @@ class Consumer (Buffer b) implements Consumer {
     x = p.init(buff);
     c = new Consumer();
     x = c.init(buff) ;
-    x = p!loop(zero); //We don't have 0
+    x = p!loop(0);
     x = c!loop();
     return null;
 }

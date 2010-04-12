@@ -48,9 +48,9 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 //Identifiers defined using character classes 
 Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
 TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")* 																 
-//Identifier     = [:letter:] ([:letter:] | [:digit:] | "_")*
 
 
+IntLiteral = 0 | "-"?[1-9][0-9]*
 
 //Alternative, explicit definition 
 //Alpha = [a-zA-Z]
@@ -122,6 +122,7 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
 //Literals
 <YYINITIAL> {
  \"            { string.setLength(0); yybegin(STRING); }
+ {IntLiteral}  { return sym(Terminals.INTLITERAL); }
 }
 
 <STRING> {

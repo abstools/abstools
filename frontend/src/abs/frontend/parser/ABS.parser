@@ -243,9 +243,12 @@ PureExp pure_exp =
     ;
 
 LiteralExp literal_exp =
-	string_literal ;
+	string_literal
+	| int_literal ;
 	
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
+
+IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(java.lang.Integer.parseInt(i)); :} ;
 
 LetExp let_exp = 
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN pure_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
@@ -330,9 +333,9 @@ Stmt stmt =
 
 Guard guard = 	
 	var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
-	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	  //For boolean guards 
 	| pure_exp.e    {: return new ExpGuard(e) ; :} 
+	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	;
 
 
