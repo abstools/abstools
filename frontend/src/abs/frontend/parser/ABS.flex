@@ -19,8 +19,13 @@ import abs.frontend.parser.ABSParser.Terminals;
 %column
 
 %{
+  StringBuffer string = new StringBuffer();
+
   private Symbol sym(short id) {
     return new Symbol(id, yyline + 1, yycolumn + 1, yylength(), yytext());
+  }
+  private Symbol sym(short id, String text) {
+    return new Symbol(id, yyline + 1, yycolumn + 1, text.length(), text);
   }
 %}
 
@@ -52,6 +57,8 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
 //Identifier = {Alpha}({Alpha} | [:digit:] | "_")*
 //ID       [a-z][a-z0-9]*
 
+%state STRING
+
 
 
 %% // Rules
@@ -59,9 +66,9 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
 <YYINITIAL> {
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
- "extends"   { return sym(Terminals.EXTENDS); }
+ "extends"     { return sym(Terminals.EXTENDS); }
  "data"        { return sym(Terminals.DATA); }
- "def"        { return sym(Terminals.DEF); }
+ "def"         { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
@@ -71,20 +78,15 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
  "null"        { return sym(Terminals.NULL); }
  "await"       { return sym(Terminals.AWAIT); }
  "if"          { return sym(Terminals.IF); }
-// "then"        { return sym(Terminals.THEN); }
  "else"        { return sym(Terminals.ELSE); }
  "suspend"     { return sym(Terminals.SUSPEND); }
  "new"         { return sym(Terminals.NEW); }
- "this"         { return sym(Terminals.THIS); }
- "pair"         { return sym(Terminals.PAIR); }
- "case"         { return sym(Terminals.CASE); }
+ "this"        { return sym(Terminals.THIS); }
+ "pair"        { return sym(Terminals.PAIR); }
+ "case"        { return sym(Terminals.CASE); }
  "let"         { return sym(Terminals.LET); }
- "in"         { return sym(Terminals.IN); }
+ "in"          { return sym(Terminals.IN); }
 }
-
-// "true"        { return sym(Terminals.BOOLEAN_LITERAL); }
-// "false"       { return sym(Terminals.BOOLEAN_LITERAL); }
-// "bool"        { return sym(Terminals.BOOL); }
 
 //Separators
 <YYINITIAL> {
@@ -117,9 +119,22 @@ TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
 }
 
-//An identifier with a trailing paren is a method identifier. 
-//{Identifier} / [ \t\f]* "("  { return sym(Terminals.PARENIDENTIFIER); }
+//Literals
+<YYINITIAL> {
+ \"            { string.setLength(0); yybegin(STRING); }
+}
 
+<STRING> {
+ \"            { yybegin(YYINITIAL); 
+                 return sym(Terminals.STRINGLITERAL, 
+                 string.toString()); }
+ [^\n\r\"\\]+  { string.append( yytext() ); }
+ \\t           { string.append('\t'); }
+ \\n           { string.append('\n'); }
+ \\r           { string.append('\r'); }
+ \\\"          { string.append('\"'); }
+ \\            { string.append('\\'); }
+}
 
 
 .|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }

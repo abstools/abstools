@@ -104,6 +104,9 @@ FieldRef: VarRef ;          //this.f
 NullExp: PureExp;
 ThisExp: PureExp;
 
+LiteralExp: PureExp;
+StringLiteral: LiteralExp  ::= <Content> ;
+
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 
 abstract Pattern ; 

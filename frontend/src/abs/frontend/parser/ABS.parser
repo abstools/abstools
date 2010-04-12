@@ -233,6 +233,7 @@ PureExp pure_exp =
 	var_ref
 	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
+    | literal_exp
 	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| let_exp
@@ -241,6 +242,10 @@ PureExp pure_exp =
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
+LiteralExp literal_exp =
+	string_literal ;
+	
+StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 
 LetExp let_exp = 
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN pure_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
