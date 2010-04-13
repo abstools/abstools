@@ -106,7 +106,6 @@ ThisExp: PureExp;
 
 LiteralExp: PureExp;
 StringLiteral: LiteralExp  ::= <Content> ;
-IntLiteral: LiteralExp     ::= <Content:int> ;
 
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 
@@ -133,6 +132,33 @@ abstract Call: EffExp 	::= <Method> Param:PureExp*;
 SyncCall: Call			::= Callee:PureExp;
 AsyncCall: Call			::= Callee:PureExp;
 GetExp: EffExp			::= PureExp;
+
+
+abstract Unary : PureExp ::= Operand:PureExp;
+IntMinusExp : Unary ;  
+
+abstract Binary : PureExp ::= Left:PureExp Right:PureExp; 
+
+LiteralExp : PureExp  
+IntLiteral: LiteralExp ::= <Value:String>;        
+
+abstract MultExp :  Binary ;   
+MultIntExp  : MultExp ;
+DivIntExp  : MultExp ;
+ModIntExp : MultExp ; 
+
+abstract IntExp :  Binary ;   
+AddIntExp  : IntExp ;
+SubIntExp : IntExp ;
+
+
+// BoolExp: PureExp ; 
+// BoolLiteral: BoolExp   ::= <Value:String>;        
+// BoolExpNeg: BoolExp ::= PureExp ; 
+
+// BoolExpOr: BoolExp ::= e1:PureExp e2:PureExp ; 
+// BoolExpComp: BoolExp ::= e1:PureExp e2:PureExp ; 
+
 
 
 

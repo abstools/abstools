@@ -245,10 +245,32 @@ PureExp pure_exp =
 LiteralExp literal_exp =
 	string_literal
 	| int_literal ;
-	
+
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 
-IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(java.lang.Integer.parseInt(i)); :} ;
+IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
+
+PureExp int_exp = 
+	mult_exp.e  {: return e; :}
+	| int_exp.e1 PLUS mult_exp.e2   {: return new AddIntExp(e1, e2); :}
+	| int_exp.e1 MINUS mult_exp.e2  {: return new SubIntExp(e1, e2); :}
+  ;
+
+PureExp mult_exp =
+	factor.f {: return f; :}
+	| mult_exp.e1 MULT factor.e2 {: return new MultIntExp(e1, e2); :}
+	| mult_exp.e1 DIV factor.e2 {: return new DivIntExp(e1, e2); :}
+	| mult_exp.e1 MOD factor.e2 {: return new ModIntExp(e1, e2); :}
+	;
+
+PureExp factor =  
+ 	int_literal.i {: return i ; :} 
+//	| pure_exp // for variables and anything. (e.g. function app) 
+	| LPAREN int_exp.e RPAREN {: return e; :}
+ 	;
+
+
+
 
 LetExp let_exp = 
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN pure_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}

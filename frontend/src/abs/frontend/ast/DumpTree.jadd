@@ -34,7 +34,9 @@ aspect DumpTree {
 	}
 
 	public void AssignStmt.dumpTree(String indent, java.io.PrintStream pStream) {
-	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=" + this.getValue());
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=");
+		this.getValue().dumpTree("",pStream);
+		pStream.println();
 	}
 
 	/*
@@ -66,13 +68,49 @@ aspect DumpTree {
 	}
 
 
+	public void MultIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("(");
+		this.getLeft().dumpTree(indent,pStream);
+		pStream.print(" * ");
+		this.getRight().dumpTree(indent,pStream);
+		pStream.print(")");
+	}
+
+	public void DivIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("(");
+		this.getLeft().dumpTree(indent,pStream);
+		pStream.print(" / ");
+		this.getRight().dumpTree(indent,pStream);
+		pStream.print(")");
+	}
+
+
+	public void AddIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("(");
+		this.getLeft().dumpTree(indent,pStream);
+		pStream.print("  + ");
+		this.getRight().dumpTree(indent,pStream);
+		pStream.print(")");
+	}
+
+	public void SubIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("(");
+		this.getLeft().dumpTree(indent,pStream);
+		pStream.print("  - ");
+		this.getRight().dumpTree(indent,pStream);
+		pStream.print(")");
+	}
+
+	public void IntLiteral.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print(" " + this.getValue() + " ");
+	}
+
 	public void Decl.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 			String childIndent = indent + "  ";
 		for(int i = 0; i < getNumChild(); i++)
 			getChildNoTransform(i).dumpTree(childIndent, pStream);
 	}
-
 
 
 
