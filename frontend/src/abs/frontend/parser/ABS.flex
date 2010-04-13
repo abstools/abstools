@@ -50,7 +50,7 @@ Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*
 TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")* 																 
 
 
-IntLiteral = 0 | "-"?[1-9][0-9]*
+IntLiteral = 0 | [1-9][0-9]*
 
 //Alternative, explicit definition 
 //Alpha = [a-zA-Z]
@@ -107,12 +107,15 @@ IntLiteral = 0 | "-"?[1-9][0-9]*
  "&"           { return sym(Terminals.GUARDAND); }
  "=="          { return sym(Terminals.EQEQ); }
  "=>"          { return sym(Terminals.RARROW); }
+  "+"	       { return sym(Terminals.PLUS); }
+  "-"          { return sym(Terminals.MINUS); }
+  "*"          { return sym(Terminals.MULT); }
+  "/"          { return sym(Terminals.DIV); }
+  "%"          { return sym(Terminals.MOD); }
 }
 
 {Comment}     { /* discard token */ }
 {WhiteSpace}  { /* discard token */ }
-//{LCIdentifier}  { return sym(Terminals.LCIDENTIFIER); }
-
 
 <YYINITIAL> {
     {TypeIdentifier}  { return sym(Terminals.TYPEIDENTIFIER); }	
