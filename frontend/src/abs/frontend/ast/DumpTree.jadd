@@ -102,7 +102,7 @@ aspect DumpTree {
 	}
 
 	public void IntLiteral.dumpTree(String indent, java.io.PrintStream pStream) {
-		pStream.print(" " + this.getValue() + " ");
+		pStream.print(" " + this.getContent() + " ");
 	}
 
 	public void Decl.dumpTree(String indent, java.io.PrintStream pStream) {

@@ -106,6 +106,7 @@ ThisExp: PureExp;
 
 LiteralExp: PureExp;
 StringLiteral: LiteralExp  ::= <Content> ;
+IntLiteral: LiteralExp ::= <Content>;        
 
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 
@@ -139,8 +140,6 @@ IntMinusExp : Unary ;
 
 abstract Binary : PureExp ::= Left:PureExp Right:PureExp; 
 
-LiteralExp : PureExp  
-IntLiteral: LiteralExp ::= <Value:String>;        
 
 abstract MultExp :  Binary ;   
 MultIntExp  : MultExp ;
