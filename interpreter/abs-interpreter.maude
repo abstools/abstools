@@ -245,22 +245,6 @@ protecting ABS-PROCESS .
 endfm
 
 
-*** An inherits declaration
-***
-fmod ABS-INHERIT is
-  protecting ABS-DATATYPES .
-  protecting ABS-CID .
-  sort Inh .
-
-  op  _<_> : Cid ExprList -> Inh [ctor prec 15] .
-endfm
-
-view Inh from TRIV to ABS-INHERIT is
-  sort Elt to Inh .
-endv
-
-
-
 *** A method declaration
 ***
 fmod ABS-METHOD is
@@ -288,10 +272,6 @@ mod ABS-CONFIGURATION is
   protecting ABS-PROCESS-POOL .
   protecting ABS-CID .
   protecting ABS-OID .
-  protecting LIST{Inh} * (sort List{Inh} to InhList,
-                          sort NeList{Inh} to NeInhList,
-                          op nil : -> List{Inh} to noInh,
-                          op __ : List{Inh} List{Inh} -> List{Inh} to _`,_) .
   protecting SET{Method} * (sort Set{Method} to MMtd,
                             op empty : -> Set{Method} to noMethod) .
  
@@ -305,7 +285,6 @@ mod ABS-CONFIGURATION is
   var C : Cid .
   vars O O' : Oid .
   vars L S S1 : Subst .
-  vars I I1 : InhList .
   vars P P' : Process .
   vars MS MS1 : MMtd .
   var W : MProc .
@@ -369,32 +348,28 @@ mod ABS-CONFIGURATION is
   --- Define Classes.
   --- Class declaration.
   ---
-  op <_: Class | Inh:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
-    Cid InhList VidList Subst MMtd Nat -> Class 
-    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
+  op <_: Class | Param:_, Att:_, Mtds:_, Ocnt:_> : 
+    Cid VidList Subst MMtd Nat -> Class 
+    [ctor format (ng ! og o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
 
   --- Method binding messages.
   --- Bind method request
-  --- Given: caller callee label method params (list of classes to look in)
-  op bindMtd : Oid Oid Label String DataList InhList -> Msg [format(!r d)] .
+  --- Given: caller callee label method params class
+  op bindMtd : Oid Oid Label String DataList Cid -> Msg [format(!r d)] .
 
   --- Successfully bound method body. 
-  --- Consider the call O.Q(I). bindMtd(O,Q,I,C S) tries to find Q in
-  --- class C or superclasses, then in S. boundMtd(O,Mt) is the result.
+  --- Consider the call O.Q(I). bindMtd(O,Q,I,C) tries to find Q in
+  --- class C. boundMtd(O,Mt) is the result.
   op boundMtd : Oid Process -> Msg [format(!r d)] .
 
-  --- Method binding with multiple inheritance
+  --- Method binding
   ---
   eq
-    bindMtd(O, O', N, M, DL, (C < EL > , I1))
-    < C : Class | Inh: I , Param: AL, Att: S , Mtds: MS , Ocnt: F >
+    bindMtd(O, O', N, M, DL, C)
+    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
   =
-    if get(M, C, MS, O', N, DL) == notFound then
-      bindMtd(O, O', N, M, DL, (I , I1))
-    else
-      boundMtd(O, get(M, C, MS, O', N, DL))
-    fi
-    < C : Class | Inh: I , Param: AL, Att: S , Mtds: MS , Ocnt: F > .
+    boundMtd(O, get(M, C, MS, O', N, DL))
+    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F > .
 
   eq
     boundMtd(O, { L | SL })
@@ -576,7 +551,6 @@ mod ABS-SIMULATOR is
   vars SL SL1 SL2 : StmtList .         --- List of statements
   var P : Process .
   var W : MProc .
-  vars I I1 : InhList .
   var MS : MMtd .
   var CN : Configuration .
   var CO : Bool .                      --- Whether a future completed
@@ -778,7 +752,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Completed: false, References: 1, Value: emp >
-    bindMtd(O, O, N, Q, evalGuardList(EL, (S :: L), none), CC < emp >) 
+    bindMtd(O, O, N, Q, evalGuardList(EL, (S :: L), none), CC) 
   if N := label(O, F)
       [label local-async-static-call] .
 
@@ -870,7 +844,7 @@ mod ABS-SIMULATOR is
   =
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
     < N : Future | Completed: false, References: 1, Value: emp >
-    bindMtd(O, O1, N, Q, DL, C < emp >)
+    bindMtd(O, O1, N, Q, DL, C)
     [label transport-imsg] .
 
   --- free
@@ -911,14 +885,14 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"])  }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), C < emp >)
+    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), C)
   [label local-tailcall] .
 
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"]) }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), CC < emp >) 
+    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), CC) 
     [label static-tailcall] .
 
   *** If we receive the method body, the call is accepted and the label
@@ -943,60 +917,23 @@ mod ABS-SIMULATOR is
   --- ill-behaved programs.  We cannot use a tail-call here, because
   --- there is no caller the initialisation will return to.
   ---
-  --- The new object will receive its initial attributes from the
-  --- foundAttr message below and will not have attributes before that.
-  ---
   rl
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Inh: I , Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W, Lcnt: (s F) >
-    <  B : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 0 >
-    findAttr(newId(B, G), I, S1, 
-      $assign(AL ; evalGuardList(EL, compose(S,  L), none)),
-      { ".label" |-> label(O, F) |
-        call(".anon" ; "this" ; "init" ; emp) ;
-        get(".anon" ; noVid) ;
-        free(".anon") ;
-        call (".anon" ; "this" ; "run" ; emp) ;
-        free(".anon") }) 
+    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < newId(B, G) :  B | Att: ("this" |-> newId(B, G), S1),
+                         Pr: { ".label" |-> label(O, F) |
+                               $assign(AL ; evalGuardList(EL, compose(S,  L), none)) ;
+                               call(".anon" ; "this" ; "init" ; emp) ;
+                               get(".anon" ; noVid) ;
+                               free(".anon") ;
+                               call (".anon" ; "this" ; "run" ; emp) ;
+                               free(".anon") }, 
+                         PrQ: noProc, Lcnt: 0 >
     [label new-object] .
-
-
-  --- ATTRIBUTE inheritance with multiple inheritance
-  --- CMC assumes that all attributes names are (globally) different.
-  --- For the purpose of the CMC the class parameters are treated as
-  --- attributes!
-  ---
-  op findAttr  : Oid InhList Subst StmtList Process -> Msg [ctor format (n d)] .
-  op foundAttr : Oid Subst  StmtList Process -> Msg [ctor format (n d)] .
-
-  eq findAttr(O, noInh, S, SL, P) = foundAttr(O, S, SL, P) .
-
-  --- The initialisation of the attributes is ordered from class to
-  --- super-class, because we want to pass on the class parameters to
-  --- the super-class.  The initialisation, i.e., calling the init
-  --- method, is done from the super classes to the sub-classes, making
-  --- sure that the state of the object at the beginning of the init
-  --- call is in a consistent state.
-  ---
-  eq
-    findAttr(O,(C < EL > , I1), S, SL, { L1 | SL1 }) 
-    < C : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
-  =
-    findAttr(O, (I1 , I), compose(S1, S),
-      SL ; assign(AL ; EL), 
-      { L1 | static(".init" ; "init" ; C ; None ; emp) ;
-        get(".init" ; noVid) ; free(".init") ; SL1 })
-    < C : Class | Inh: I, Param: AL, Att: S1, Mtds: MS, Ocnt: G > .
-
-  eq
-    foundAttr(O, S1, SL, { L1 | SL1 })
-    < O : C | Att: S, Pr: idle, PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: ("this" |-> O, S1), Pr: { L1 | SL ; SL1 }, PrQ: W, Lcnt: F > .
-
 
 
   --- assert
