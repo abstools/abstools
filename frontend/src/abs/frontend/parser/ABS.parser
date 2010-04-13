@@ -8,6 +8,7 @@
 package abs.frontend.parser;
 import abs.frontend.ast.*;
 
+
 :};
 
 %embed {:
@@ -209,9 +210,6 @@ List datatypename_list =
   ;
 
 
-
-
-
 Method method = 
     methodsig.ms block.b {: return new Method(ms,b); :}
     ;
@@ -221,28 +219,29 @@ MethodSig methodsig =
     ;
 
 
-
-
-
-
-
-
-
-
 PureExp pure_exp =
 	var_ref
 	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
-    | string_literal
 	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| let_exp
 	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
 	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
-	| int_exp 
+	| built_in_data_exp
     ;
 
+
+PureExp built_in_data_exp = 
+	int_exp
+	|string_exp
+	//bool_exp 
+	; 
+
+PureExp string_exp = 
+	string_literal 
+	;
 
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 
@@ -262,10 +261,11 @@ PureExp mult_exp =
 	;
 
 PureExp factor =  
- 	int_literal.i {: return i ; :} 
-//	| pure_exp // for variables and anything. (e.g. function app) 
+ 	int_literal.i              {: return i ; :} 
+	| MINUS factor.e           {: return new MinusIntExp(e); :} 
 	| LPAREN int_exp.e RPAREN {: return e; :}
- 	;
+	| LPAREN pure_exp.e RPAREN            {: return e ;  :}
+	;
 
 
 

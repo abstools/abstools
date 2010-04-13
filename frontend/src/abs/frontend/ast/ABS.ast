@@ -136,7 +136,7 @@ GetExp: EffExp			::= PureExp;
 
 
 abstract Unary : PureExp ::= Operand:PureExp;
-IntMinusExp : Unary ;  
+MinusIntExp : Unary ;  
 
 abstract Binary : PureExp ::= Left:PureExp Right:PureExp; 
 

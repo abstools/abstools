@@ -68,6 +68,13 @@ aspect DumpTree {
 	}
 
 
+	public void MinusIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("( - ");
+		this.getOperand().dumpTree(indent,pStream);
+		pStream.print(" ) ");
+	}
+
+
 	public void MultIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.print("(");
 		this.getLeft().dumpTree(indent,pStream);
@@ -76,10 +83,19 @@ aspect DumpTree {
 		pStream.print(")");
 	}
 
+
 	public void DivIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.print("(");
 		this.getLeft().dumpTree(indent,pStream);
 		pStream.print(" / ");
+		this.getRight().dumpTree(indent,pStream);
+		pStream.print(")");
+	}
+
+	public void ModIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("(");
+		this.getLeft().dumpTree(indent,pStream);
+		pStream.print(" % ");
 		this.getRight().dumpTree(indent,pStream);
 		pStream.print(")");
 	}
@@ -102,6 +118,10 @@ aspect DumpTree {
 	}
 
 	public void IntLiteral.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print(" " + this.getContent() + " ");
+	}
+
+	public void StringLiteral.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.print(" " + this.getContent() + " ");
 	}
 
