@@ -1,6 +1,8 @@
 
  {  
 
+
+
 //Strings 
 y = "Hello world."; 
 
@@ -12,12 +14,13 @@ x = 6 ;
 x = 6 * 7 + 8 ; 
 x = 1 + 2 + 3 * 4 * 5  + 6 + 7 ;
 
-//default 
+//default operator precedence. 
 x = (((1 + 2) + ((3 * 4) * 5))  + 6) + 7 ;
 
-//special
+//Use of prantheses
 x = (1 + 2) + ((((3 * 4) * 5) + 6) + 7) ;
 
+//Mix
 x = 1 + 2 / 3 * 4 - 7 % 6  ; 
 
 
