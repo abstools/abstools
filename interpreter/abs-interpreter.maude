@@ -323,8 +323,8 @@ mod ABS-CONFIGURATION is
   op get : String Cid MMtd Oid Label DataList -> Process .
 
   eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
-    { "caller" |-> O, ".class" |-> str(B), ".label" |-> N,
-      ".method" |-> str(M), S | assign(AL ; DL) ; SL } .
+    { "caller" |-> O, ".class" |-> "str"[B], ".label" |-> N,
+      ".method" |-> "str"[M], S | assign(AL ; DL) ; SL } .
   eq get(M, C, MS, O, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects (and classes) in the
@@ -465,8 +465,8 @@ mod ABS-EVAL is
   eq evalGuard((Q @ C), (S :: S'), CN) =  S [Q] .
   eq evalGuard(A, S, CN) =  S [A] .
   eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
-  eq evalGuard(?(A), S, CN) = bool(inqueue(S[A], CN)) .
-  eq evalGuard(?(L), S, CN) = bool(inqueue(L, CN)) .
+  eq evalGuard(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
+  eq evalGuard(?(L), S, CN) = "bool"[inqueue(L, CN)] .
   eq evalGuard(list(EL), S, CN) = list(evalGuardList(EL, S, CN)) .
   eq evalGuard(set(ES), S, CN) = set(evalGuardSet(ES, S, CN)) .
   eq evalGuard(map(EM), S, CN) = map(evalGuardMap(EM, S, CN)) .

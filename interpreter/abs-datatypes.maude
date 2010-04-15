@@ -120,6 +120,7 @@ fmod ABS-DATA-VID is
     sort Vid .
     subsort String < Vid < Expr .
 
+    *** remove next line? There is no inheritance anymore
     op _@_ : String String -> Vid [ctor] .
 endfm
 
@@ -166,11 +167,22 @@ endv
 ***
 fmod ABS-EXPRESSION is
 
+    protecting ABS-DATA-VIDLIST .
     protecting ABS-DATA-SIG .
     protecting STRING .
 
+    *** function application
     op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+    *** constructor terms
+    op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+    op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
+    *** conditional
     op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
+    *** case expression -- FIXME define patterns
+    op case_of {_} : Expr ExprList -> Expr [ctor] .
+    *** let expression
+    op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
+    *** guard expression -- do we need this?
     op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
 
 endfm
@@ -181,28 +193,28 @@ fmod ABS-DATA-BOOL is
 
     protecting ABS-EXPRESSION .
 
-    op bool(_) : Bool -> Data [ctor format(o d ! o d)] .
+    op _[_] : String Bool -> Data [ctor prec 12 format (! o d d d)] .
 
     vars B B' : Bool .
     vars D D' : Data .
     vars E : Expr .
 
     op _asBool : Data -> Bool .
-    eq bool(B) asBool = B .
+    eq "bool"[B] asBool = B .
 
-    eq "=" (D :: D') = bool(D == D') .
-    eq "/=" (D :: D') = bool(D =/= D') .
+    eq "=" (D :: D') = "bool"[D == D'] .
+    eq "/=" (D :: D') = "bool"[D =/= D'] .
 
-    eq "~" (bool(false)) = bool(true) .  
-    eq "~" (bool(true)) = bool(false) . 
-    eq "&&" (bool(false) :: E) = bool(false) .
-    eq "&&" (bool(true) ::  E) = E .
-    eq "||" (bool(true) :: E) = bool(true) .
-    eq "||" (bool(false) :: E) = E .
-    eq "=>" (bool(true) :: E) = E .
-    eq "=>" (bool(false) :: E) = bool(true) .
-    eq "^" (bool(B) :: bool(B')) = bool(B xor B') .
-    eq "<=>" (bool(B) :: bool(B')) = bool(B == B') .
+    eq "~"("bool"[false]) = "bool"[true] .  
+    eq "~"("bool"[true]) = "bool"[false] . 
+    eq "&&"("bool"[false] :: E) = "bool"[false] .
+    eq "&&"("bool"[true] ::  E) = E .
+    eq "||"("bool"[true] :: E) = "bool"[true] .
+    eq "||"("bool"[false] :: E) = E .
+    eq "=>"("bool"[true] :: E) = E .
+    eq "=>"("bool"[false] :: E) = "bool"[true] .
+    eq "^"("bool"[B] :: "bool"[B']) = "bool"[B xor B'] .
+    eq "<=>"("bool"[B] :: "bool"[B']) = "bool"[B == B'] .
 
 endfm
 
@@ -214,25 +226,25 @@ fmod ABS-DATA-FLOAT is
   extending ABS-DATA-BOOL .
   protecting FLOAT .
 
-  op float(_): Float -> Data [ctor format(o d ! o d)] . 
+  op _[_] : String Float -> Data [ctor prec 12 format (! o d d d)] .
 
   vars F F' : Float .
 
   op _asFloat : Data -> Float .
-  eq float(F) asFloat = F .
+  eq "float"[F] asFloat = F .
 
-  eq "-" (float(F)) = float(-(F)) .
-  eq "+" (float(F) :: float(F')) = float(F + F') .
-  eq "-" (float(F) :: float(F')) = float( _-_(F, F')) .
-  eq "*" (float(F) :: float(F')) = float(F * F') .
-  eq "/" (float(F) :: float(F')) = float(F / F') .
-  eq "%" (float(F) :: float(F')) = float(F rem F') .
-  eq "**" (float(F) :: float(F')) = float(F ^ F') .
+  eq "-" ("float"[F]) = "float"[-(F)] .
+  eq "+" ("float"[F] :: "float"[F']) = "float"[F + F'] .
+  eq "-" ("float"[F] :: "float"[F']) = "float"[ _-_(F, F')] .
+  eq "*" ("float"[F] :: "float"[F']) = "float"[F * F'] .
+  eq "/" ("float"[F] :: "float"[F']) = "float"[F / F'] .
+  eq "%" ("float"[F] :: "float"[F']) = "float"[F rem F'] .
+  eq "**" ("float"[F] :: "float"[F']) = "float"[F ^ F'] .
 
-  eq "<"  (float(F) :: float(F')) = bool(F < F') .
-  eq "<=" (float(F) :: float(F')) = bool(F <= F') .
-  eq ">"  (float(F) :: float(F')) = bool(F > F') .
-  eq ">=" (float(F) :: float(F')) = bool(F >= F') .
+  eq "<"  ("float"[F] :: "float"[F']) = "bool"[F < F'] .
+  eq "<=" ("float"[F] :: "float"[F']) = "bool"[F <= F'] .
+  eq ">"  ("float"[F] :: "float"[F']) = "bool"[F > F'] .
+  eq ">=" ("float"[F] :: "float"[F']) = "bool"[F >= F'] .
 endfm
 
 
@@ -246,32 +258,32 @@ fmod ABS-DATA-INT is
   protecting RANDOM .
   protecting CONVERSION .
 
-  op int(_)  : Int -> Data [ctor format(o d ! o d)] . 
+  op _[_] : String Int -> Data [ctor prec 12 format (! o d d d)] .
 
   vars I I' : Int .
   var N : Nat .
 
   op _asInt : Data -> Int .
-  eq int(I) asInt = I .
+  eq "int"[I] asInt = I .
 
   op _asNat : Data -> Nat .
-  eq int(N) asNat = N .
+  eq "int"[N] asNat = N .
 
-  eq "-" (int(I)) = int(-(I)) .
-  eq "+" (int(I) :: int(I')) = int(I + I') .
-  eq "-" (int(I) :: int(I')) = int( _-_(I, I')) .
-  eq "*" (int(I) :: int(I')) = int(I * I') .
-  eq "/" (int(I) :: int(I')) = int(I quo I') .
-  eq "div" (int(I) :: int(I')) = int(I quo I') .
-  eq "%" (int(I) :: int(I')) = int(I rem I') .
-  eq "**" (int(I) :: int(I')) = int(I ^ I') .
-  eq "random" (int(I)) = int(random(I)) .
-  eq "real_of_int" (int(I)) = float(float(I)) .
+  eq "-" ("int"[I]) = "int"[-(I)] .
+  eq "+" ("int"[I] :: "int"[I']) = "int"[I + I'] .
+  eq "-" ("int"[I] :: "int"[I']) = "int"[ _-_(I, I')] .
+  eq "*" ("int"[I] :: "int"[I']) = "int"[I * I'] .
+  eq "/" ("int"[I] :: "int"[I']) = "int"[I quo I'] .
+  eq "div" ("int"[I] :: "int"[I']) = "int"[I quo I'] .
+  eq "%" ("int"[I] :: "int"[I']) = "int"[I rem I'] .
+  eq "**" ("int"[I] :: "int"[I']) = "int"[I ^ I'] .
+  eq "random" ("int"[I]) = "int"[random(I)] .
+  eq "real_of_int" ("int"[I]) = "float"[float(I)] .
 
-  eq "<"  (int(I) :: int(I')) = bool(I < I') .
-  eq "<=" (int(I) :: int(I')) = bool(I <= I') .
-  eq ">"  (int(I) :: int(I')) = bool(I > I') .
-  eq ">=" (int(I) :: int(I')) = bool(I >= I') .
+  eq "<"  ("int"[I] :: "int"[I']) = "bool"[I < I'] .
+  eq "<=" ("int"[I] :: "int"[I']) = "bool"[I <= I'] .
+  eq ">"  ("int"[I] :: "int"[I']) = "bool"[I > I'] .
+  eq ">=" ("int"[I] :: "int"[I']) = "bool"[I >= I'] .
 endfm
 
 
@@ -283,28 +295,28 @@ fmod ABS-DATA-STRING is
 
     protecting STRING .
 
-    op str(_) : String    -> Data [ctor format(o d ! o d)] .
+    op _[_] : String String -> Data [ctor prec 12 format (! o d d d)] .
 
     vars S S' : String .
     vars M N : Nat .
 
     op _asString : Data -> String .
-    eq str(S) asString = S .
+    eq "str"[S] asString = S .
 
-    eq "|-" (str(S) :: str(S')) = str(S + S') .
-    eq "-|" (str(S) :: str(S')) = str(S + S') .
-    eq "|-|" (str(S) :: str(S')) = str(S + S') .
-    eq "#" (str(S)) = int(length(S)) .
-    eq "ascii" (str(S)) = int(ascii(S)) .
-    eq "char" (int(N)) = str(char(N)) .
-    eq "substr" (str(S) :: int(M) :: int(N)) = str(substr(S, M, N)) .
-    eq "find" (str(S) :: str(S') :: int(N)) = int(find(S, S', N)) .
-    eq "rfind" (str(S) :: str(S') :: int(N)) = int(rfind(S, S', N)) .
+    eq "|-" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+    eq "-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+    eq "|-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+    eq "#" ("str"[S]) = "int"[length(S)] .
+    eq "ascii" ("str"[S]) = "int"[ascii(S)] .
+    eq "char" ("int"[N]) = "str"[char(N)] .
+    eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
+    eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
+    eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
-    eq "<" (str(S):: str(S')) = bool(S < S') .
-    eq "<=" (str(S):: str(S')) = bool(S <= S') .
-    eq ">" (str(S):: str(S')) = bool(S > S') .
-    eq ">=" (str(S):: str(S')) = bool(S >= S') .
+    eq "<" ("str"[S]:: "str"[S']) = "bool"[S < S'] .
+    eq "<=" ("str"[S]:: "str"[S']) = "bool"[S <= S'] .
+    eq ">" ("str"[S]:: "str"[S']) = "bool"[S > S'] .
+    eq ">=" ("str"[S]:: "str"[S']) = "bool"[S >= S'] .
 
 
     --- Conversions.  Since Abs does not support rational numbers yet,
@@ -313,10 +325,10 @@ fmod ABS-DATA-STRING is
     var I : Int .
     var F : Float .
 
-    eq "string_of_int" (int(I)) = str(string(I, 10)) .
-    eq "int_of_string" (str(S)) = int(rat(S, 10)) .
-    eq "string_of_real" (float(F)) = str(string(F)) .
-    eq "real_of_string" (str(S)) = float(float(S)) .
+    eq "string_of_int" ("int"[I]) = "str"[string(I, 10)] .
+    eq "int_of_string" ("str"[S]) = "int"[rat(S, 10)] .
+    eq "string_of_real" ("float"[F]) = "str"[string(F)] .
+    eq "real_of_string" ("str"[S]) = "float"[float(S)] .
 endfm
 
 
@@ -347,16 +359,16 @@ fmod ABS-DATA-LIST is
     eq "rest" (list(emp)) = null .
     eq "rest" (list(L :: D)) = list(L) .
 
-    eq "nth" ((list(L)) :: int(0)) = null .
-    eq "nth" ((list(emp)) :: int(N)) = null .
-    eq "nth" ((list(D :: L)) :: int(N)) =
-      if (N == 1) then D else "nth" (list(L) :: int(_-_(N, 1))) fi .
+    eq "nth" ((list(L)) :: "int"[0]) = null .
+    eq "nth" ((list(emp)) :: "int"[N]) = null .
+    eq "nth" ((list(D :: L)) :: "int"[N]) =
+      if (N == 1) then D else "nth" (list(L) :: "int"[_-_(N, 1)]) fi .
 
-    eq "rnth" (list(L) :: int(N)) = "nth" ("reverse" (list(L)) :: int(N)) .
+    eq "rnth" (list(L) :: "int"[N]) = "nth" ("reverse" (list(L)) :: "int"[N]) .
 
-    eq "in" (D :: list(emp)) = bool(false) .
+    eq "in" (D :: list(emp)) = "bool"[false] .
     eq "in" (D' :: list(D :: L)) =
-      if D == D' then bool(true) else "in" (D' :: list(L)) fi .
+      if D == D' then "bool"[true] else "in" (D' :: list(L)) fi .
 
     eq "remove" (list(emp) :: D) = list(emp) .
     eq "remove" (list(D :: L) :: D') =
@@ -368,79 +380,79 @@ fmod ABS-DATA-LIST is
     eq "|-" (list(L) :: D) = list(L :: D) .
     eq "|-|" (list(L) :: list(L'))   = list(L :: L') .
 
-    eq "#" (list(emp)) = int(0) .
-    eq "#" (list(D :: L)) = "+" ("#" (list(L)) :: int(1)) .
+    eq "#" (list(emp)) = "int"[0] .
+    eq "#" (list(D :: L)) = "+" ("#" (list(L)) :: "int"[1]) .
   
-    eq "isempty" (list(emp)) = bool(true) .
-    eq "isempty" (list(L :: D)) = bool(false) .
+    eq "isempty" (list(emp)) = "bool"[true] .
+    eq "isempty" (list(L :: D)) = "bool"[false] .
 
     --- Reverse a list
     eq "reverse" (list(emp)) = list (emp) .
     eq "reverse" (list(D :: L)) = "|-" ("reverse" (list(L)) :: D) .
 
     --- index starts at 1
-    eq "after" (list(emp) :: int(N)) = null . 
-    eq "after" (list(L) :: int(0)) = list(L) .
-    eq "after" (list(D :: L) :: int(N)) = "after" (list(L) :: int(_-_(N, 1))) .
+    eq "after" (list(emp) :: "int"[N]) = null . 
+    eq "after" (list(L) :: "int"[0]) = list(L) .
+    eq "after" (list(D :: L) :: "int"[N]) = "after" (list(L) :: "int"[_-_(N, 1)]) .
 
     --- Compute a slice of a sequence.
-    eq "sub" (list(L) :: int(N) :: int(M)) =
-	".sub" (list(L) :: int(N) :: int(M) :: list(emp)) .
-    ceq ".sub" (list(D :: L) :: int(N) :: int(M) :: list(L')) =
-	".sub" (list(L) :: int(_-_(N, 1)) :: int(_-_(M, 1)) :: list(L'))
+    eq "sub" (list(L) :: "int"[N] :: "int"[M]) =
+	".sub" (list(L) :: "int"[N] :: "int"[M] :: list(emp)) .
+    ceq ".sub" (list(D :: L) :: "int"[N] :: "int"[M] :: list(L')) =
+	".sub" (list(L) :: "int"[_-_(N, 1)] :: "int"[_-_(M, 1)] :: list(L'))
       if N > 1 .
-    ceq ".sub" (list(D :: L) :: int(1) :: int(M) :: list(L')) =
-	".sub" (list(L) :: int(1) :: int(_-_(M, 1)) :: list(L' :: D))
+    ceq ".sub" (list(D :: L) :: "int"[1] :: "int"[M] :: list(L')) =
+	".sub" (list(L) :: "int"[1] :: "int"[_-_(M, 1)] :: list(L' :: D))
       if M >= 1 .
-    eq ".sub" (list(L) :: int(1) :: int(0) :: list(L')) = list(L') .
+    eq ".sub" (list(L) :: "int"[1] :: "int"[0] :: list(L')) = list(L') .
 
-    eq "begwith" (list(emp) :: list(L :: D)) = bool(false) .
-    eq "begwith" (list(L) :: list(emp)) = bool(true) .
+    eq "begwith" (list(emp) :: list(L :: D)) = "bool"[false] .
+    eq "begwith" (list(L) :: list(emp)) = "bool"[true] .
     eq "begwith" (list(D :: L) :: list(D' :: L')) =
-      if D == D' then "begwith" (list(L) :: list(L')) else bool(false) fi .
+      if D == D' then "begwith" (list(L) :: list(L')) else "bool"[false] fi .
 
-    eq "endswith" (list(emp) :: list(L :: D)) = bool(false) .
-    eq "endswith" (list(L) :: list(emp)) = bool(true) .
+    eq "endswith" (list(emp) :: list(L :: D)) = "bool"[false] .
+    eq "endswith" (list(L) :: list(emp)) = "bool"[true] .
     eq "endswith" (list(L :: D) :: list(L' :: D')) =
-      if D == D' then "endswith" (list(L) :: list(L')) else bool(false) fi .
+      if D == D' then "endswith" (list(L) :: list(L')) else "bool"[false] fi .
 
     --- If E is not in the list, these will fail with the term
-    --- "+" (int(N) :: null)
+    --- "+" ("int"[N] :: null)
     eq "index" (list(emp) :: D) = null .
     eq "index" (list(D :: L) :: D') =
-      if D == D' then int(1) else "+" (int(1) :: "index" (list(L) :: D')) fi .
+      if D == D' then "int"[1] else "+" ("int"[1] :: "index" (list(L) :: D')) fi .
 
     --- If E is not in the list, these will fail with the term
-    --- "-" (int(N) :: null)
+    --- "-" ("int"[N] :: null)
     eq "rindex" (list(L) :: D) =
 	"-" ("#" (list(L)) :: ".rindex" (list(L) :: D)) .
     eq ".rindex" (list(emp) :: D') = null .
     eq ".rindex" (list(L :: D) :: D') =
-      if D == D' then int(1) else "+" (int(1) :: "rindex" (list(L) :: D')) fi .
+      if D == D' then "int"[1] else "+" ("int"[1] :: "rindex" (list(L) :: D')) fi .
 
-    eq "replace" (list(emp) :: D :: int(N)) = null .
-    eq "replace" (list(L) :: D :: int(0)) = null .
-    eq "replace" (list(D :: L) :: D' :: int(1)) = list(D' :: L) .
-    ceq "replace" (list(D :: L) :: D' :: int(N)) =
-	"-|"(D :: "replace" (list(L) :: D' :: int(_-_(N, 1)))) if N > 1 .
+    eq "replace" (list(emp) :: D :: "int"[N]) = null .
+    eq "replace" (list(L) :: D :: "int"[0]) = null .
+    eq "replace" (list(D :: L) :: D' :: "int"[1]) = list(D' :: L) .
+    ceq "replace" (list(D :: L) :: D' :: "int"[N]) =
+	"-|"(D :: "replace" (list(L) :: D' :: "int"[_-_(N, 1)])) if N > 1 .
 
-    eq "make_list" (D :: int(0)) = list(emp) .
-    ceq "make_list" (D :: int(N)) = "|-"("make_list" (D :: int(_-_(N, 1))) :: D)
+    eq "make_list" (D :: "int"[0]) = list(emp) .
+    ceq "make_list" (D :: "int"[N]) = "|-"("make_list" (D :: "int"[_-_(N, 1)]) :: D)
       if N > 0 .
 
-    eq "make_range" (int(I)) = "make_range" (int(1) :: int(I)) .
+    eq "make_range" ("int"[I]) = "make_range" ("int"[1] :: "int"[I]) .
 
-    eq "make_range" (int(I) :: int(J)) =
-      if I < J then "make_range" (int(I) :: int(J) :: int(1))
-	else  "make_range" (int(I) :: int(J) :: int(-1))
+    eq "make_range" ("int"[I] :: "int"[J]) =
+      if I < J then "make_range" ("int"[I] :: "int"[J] :: "int"[1])
+	else  "make_range" ("int"[I] :: "int"[J] :: "int"[-1])
 	fi .
 
-    eq "make_range" (int(I) :: int(J) :: int(K)) =
+    eq "make_range" ("int"[I] :: "int"[J] :: "int"[K]) =
       if K > 0 and I <= J then
-	  "-|"(int(I) :: "make_range" (int(I + K) :: int(J) :: int(K)))
+	  "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
 	else
 	if K < 0 and I >= J  then
-            "-|"(int(I) :: "make_range" (int(I + K) :: int(J) :: int(K)))
+            "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
 	  else
             list(emp)
 	  fi
@@ -483,11 +495,11 @@ fmod ABS-DATA-SET is
 
     eq D : D = D . --- Collapse multiple elements.
 
-    eq "#" (set(emptyset)) = int(0) .
-    eq "#" (set(S : D)) = "+" (int(1) :: ("#" (set(S)))) .
+    eq "#" (set(emptyset)) = "int"[0] .
+    eq "#" (set(S : D)) = "+" ("int"[1] :: ("#" (set(S)))) .
 
-    eq "isempty" (set(emptyset)) = bool(true) .
-    eq "isempty" (set(S : D)) = bool(false) .
+    eq "isempty" (set(emptyset)) = "bool"[true] .
+    eq "isempty" (set(S : D)) = "bool"[false] .
 
     eq "remove" (set(emptyset) :: E)  = set(emptyset) .
     eq "remove" (set(S : D) :: D') =
@@ -496,9 +508,9 @@ fmod ABS-DATA-SET is
 
     eq "add" (set(S) :: D) = set(S : D) .
 
-    eq "in" (E :: set(emptyset)) = bool(false) .
+    eq "in" (E :: set(emptyset)) = "bool"[false] .
     eq "in" (D' :: set(S : D)) =
-      if D == D' then bool(true) else "in" (D' :: set(S)) fi .
+      if D == D' then "bool"[true] else "in" (D' :: set(S)) fi .
 
     eq "union" (set(emptyset) :: set(S)) = set(S) .
     eq "union" (set(S) :: set(emptyset)) = set(S) .
@@ -575,7 +587,7 @@ fmod ABS-DATA-MAP is
     eq "empty" (emp) = map(empty) .
 
     eq "isempty" (map(DM)) =
-      if DM == empty then bool(true) else bool(false) fi .
+      if DM == empty then "bool"[true] else "bool"[false] fi .
 
     eq "get" (map(empty) :: D'') = null .
     eq "get" (map(DM, mapentry(D, D')) :: D'') = 
@@ -595,9 +607,9 @@ fmod ABS-DATA-MAP is
 	else ".remove" (map(DM) :: D'' :: map(DM', mapentry(D, D')))
 	fi .
 
-    eq "in" (D :: map(empty)) = bool(false) .
+    eq "in" (D :: map(empty)) = "bool"[false] .
     eq "in" (D :: map(mapentry(D', D''), DM)) =
-      if D == D' then bool(true) else "in" (D :: map(DM)) fi .
+      if D == D' then "bool"[true] else "in" (D :: map(DM)) fi .
 
     eq "keys" (map(empty)) = set(emptyset) .
     eq "keys" (map(mapentry(D, D'), DM)) = "add" ("keys" (map(DM)) :: D) .
@@ -605,8 +617,8 @@ fmod ABS-DATA-MAP is
     eq "values" (map(empty)) = set(emptyset) .
     eq "values" (map(mapentry(D, D'), DM)) = "add" ("values" (map(DM)) :: D') .
 
-    eq "#" (map(empty)) = int(0) .
-    eq "#" (map(mapentry(D, D'), DM)) = "+" ("#" (map(DM)) :: int(1)) .
+    eq "#" (map(empty)) = "int"[0] .
+    eq "#" (map(mapentry(D, D'), DM)) = "+" ("#" (map(DM)) :: "int"[1]) .
 
 endfm
 
@@ -634,6 +646,6 @@ endfm
 eof
 
 *** Local Variables:
-*** maude-indent: 2
+*** maude-indent: 4
 *** fill-column: 78
 *** End:
