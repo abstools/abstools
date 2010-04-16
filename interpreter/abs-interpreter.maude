@@ -323,8 +323,8 @@ mod ABS-CONFIGURATION is
   op get : String Cid MMtd Oid Label DataList -> Process .
 
   eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
-    { "caller" |-> O, ".class" |-> "str"[B], ".label" |-> N,
-      ".method" |-> "str"[M], S | assign(AL ; DL) ; SL } .
+    { @ "caller" |-> O, @ ".class" |-> "str"[B], @ ".label" |-> N,
+      @ ".method" |-> "str"[M], S | assign(AL ; DL) ; SL } .
   eq get(M, C, MS, O, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects (and classes) in the
@@ -399,14 +399,14 @@ mod ABS-CONFIGURATION is
   op main : Configuration String DataList -> State .
   eq main(CN, B, DL) =
     { CN < ob("main") : Start | Att: noSubst, 
-      Pr: { "var" |-> null | new("var" ; B ; DL) },
+      Pr: { @ "var" |-> null | new(@ "var" ; B ; DL) },
       PrQ: noProc, Lcnt: 0 > } .
 
   --- System initialisation, new style.
   op main : State String DataList -> State .
   eq main({ CN }, B, DL) =
     { CN < ob("main") : Start | Att: noSubst, 
-      Pr: { "var" |-> null | new("var" ; B ; DL) },
+      Pr: { @ "var" |-> null | new(@ "var" ; B ; DL) },
       PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
@@ -462,7 +462,8 @@ mod ABS-EVAL is
   op ready : StmtList Subst Configuration -> Bool .
 
   eq evalGuard(D, S, CN) = D .
-  eq evalGuard((Q @ C), (S :: S'), CN) =  S [Q] .
+  *** shortcut for instance variable lookup
+  eq evalGuard((Q @ C), (S :: S'), CN) =  S [(Q @ C)] .
   eq evalGuard(A, S, CN) =  S [A] .
   eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
   eq evalGuard(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
@@ -576,19 +577,19 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | $assign((Q @ B), AL ; D :: DL) ; SL },
               PrQ: W, Lcnt: F >
   =
-    < O : C | Att: insert(Q, D, S), Pr: { L | $assign(AL ; DL) ; SL },
+    < O : C | Att: insert((Q @ B), D, S), Pr: { L | $assign(AL ; DL) ; SL },
               PrQ: W, Lcnt: F > 
     [label do-static-assign] .
 
   eq
-    < O : C | Att: S, Pr: { L | $assign( (Q, AL) ; D :: DL) ; SL },
+    < O : C | Att: S, Pr: { L | $assign( (A, AL) ; D :: DL) ; SL },
               PrQ: W, Lcnt: F >
   =
-    if $hasMapping(L, Q) then
-      < O : C | Att: S, Pr: { insert(Q, D, L) | $assign(AL ; DL) ; SL },
+    if $hasMapping(L, A) then
+      < O : C | Att: S, Pr: { insert(A, D, L) | $assign(AL ; DL) ; SL },
                 PrQ: W, Lcnt: F > 
     else
-      < O : C | Att: insert(Q, D, S), Pr: { L | $assign(AL ; DL) ; SL },
+      < O : C | Att: insert(A, D, S), Pr: { L | $assign(AL ; DL) ; SL },
                 PrQ: W, Lcnt: F >
     fi
     [label do-assign] .
@@ -724,7 +725,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
               PrQ: W , { L | get(N ; AL) ; SL }, Lcnt: F >
-  if L1[".label"] == N
+  if L1[@ ".label"] == N
       [label local-reply] .
 
 
@@ -830,7 +831,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Completed: true, References: G, Value: evalGuardList(EL, (S :: L), none) >
-  if N == L[".label"]
+  if N == L[@ ".label"]
       [label return] .
 
 
@@ -873,7 +874,7 @@ mod ABS-SIMULATOR is
               Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    invoc(O, evalGuard(E, (S :: L), none), L[".label"], Q, evalGuardList(EL, (S :: L), none))
+    invoc(O, evalGuard(E, (S :: L), none), L[@ ".label"], Q, evalGuardList(EL, (S :: L), none))
     [label tailcall] .
 
   --- STATIC TAIL CALLS
@@ -884,15 +885,15 @@ mod ABS-SIMULATOR is
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"])  }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), C)
+    < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"])  }, PrQ: W, Lcnt: F >
+    bindMtd(O, O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none), C)
   [label local-tailcall] .
 
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { noSubst | $accept tag(L[".label"]) }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[".label"]), Q, evalGuardList(EL, (S :: L), none), CC) 
+    < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"]) }, PrQ: W, Lcnt: F >
+    bindMtd(O, O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none), CC) 
     [label static-tailcall] .
 
   *** If we receive the method body, the call is accepted and the label
@@ -901,9 +902,9 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { noSubst | $accept N }, PrQ: W , { L | SL },
               Lcnt: F >
   =>
-    < O : C | Att: S, Pr: { insert(".label", tag(N), L) | SL }, PrQ: W,
+    < O : C | Att: S, Pr: { insert(@ ".label", tag(N), L) | SL }, PrQ: W,
               Lcnt: F >
-  if L[".label"] = N
+  if L[@ ".label"] = N
       [label tailcall-accept] .
 
 
@@ -924,14 +925,14 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: ("this" |-> newId(B, G), S1),
-                         Pr: { ".label" |-> label(O, F) |
+    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1),
+                         Pr: { @ ".label" |-> label(O, F) |
                                $assign(AL ; evalGuardList(EL, compose(S,  L), none)) ;
-                               call(".anon" ; "this" ; "init" ; emp) ;
-                               get(".anon" ; noVid) ;
-                               free(".anon") ;
-                               call (".anon" ; "this" ; "run" ; emp) ;
-                               free(".anon") }, 
+                               call(@ ".anon" ; @ "this" ; "init" ; emp) ;
+                               get(@ ".anon" ; noVid) ;
+                               free(@ ".anon") ;
+                               call (@ ".anon" ; @ "this" ; "run" ; emp) ;
+                               free(@ ".anon") }, 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 

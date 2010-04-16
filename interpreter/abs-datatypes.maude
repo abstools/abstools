@@ -82,7 +82,6 @@ fmod ABS-DATA-SIG is
 
     sorts Expr Data .
     subsort Data < Expr .
-    subsort String < Expr .
 
     op null : -> Data [ctor format (! o)] .
 
@@ -118,9 +117,12 @@ fmod ABS-DATA-VID is
     protecting STRING .
 
     sort Vid .
-    subsort String < Vid < Expr .
+    subsort Vid < Expr .
 
-    *** remove next line? There is no inheritance anymore
+    *** Variable references
+    op @_ : String -> Vid [ctor] .
+
+    *** Instance variable references
     op _@_ : String String -> Vid [ctor] .
 endfm
 
