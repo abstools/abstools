@@ -51,23 +51,23 @@ def File concatenate(File file1, File file2) =
      ConsPacket(head, tail) =>  ConsPacket(head, concatenate(tail,file2)) ;
   }
 
-def File appendright(File file, Packet p) = concatenate(file, ConsPacket(p,NilPacket)) ;
+def File appendright(File file, Packet p) = concatenate(file, ConsPacket(p,NilPacket))
 
 //Set functions 
 def Bool element(String string, SetOfString set)=
   case set {
     EmptyStringSet => False ;
-    InsertString(string2, set2) => string == string2 or element(string, set2) ;
+    InsertString(string2, set2) => string == string2 || element(string, set2) ;
   }
 
 //Maps 
 def File getFromMap(Filename fid, MapOfFilenameToFile map) =  // retrieve a file from the map
   case map {
-    InsertAssoc(PairOfFilenameToFile(fid,file), _) = file ;
-    InsertAssoc(_, tail) = getFromMap(fid,tail) ;
+    InsertAssoc(PairOfFilenameToFile(fid,file), _) => file ;
+    InsertAssoc(_, tail) => getFromMap(fid,tail) ;
   }
     
-def MapOfFilenameToFile insert(PairOfFilenameNFile assoc, MapOfFilenameToFile map) = InsertAssoc(assoc, map) ;
+def MapOfFilenameToFile insert(PairOfFilenameNFile assoc, MapOfFilenameToFile map) = InsertAssoc(assoc, map)
 
 def Filenames keys(MapOfFilenameToFile map) =
   case map {

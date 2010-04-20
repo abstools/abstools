@@ -226,7 +226,7 @@ PureExp pure_exp =
 	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| let_exp
-	| IDENTIFIER.f LPAREN param_list.l? RPAREN {: return new FnApp(f, l) ; :}
+	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
 	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
@@ -239,9 +239,9 @@ PureExp pure_exp =
 
 
 //built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
-List param_list = 
+List data_exp_list = 
 	data_exp.i                            {: return new List().add(i); :}
-	| param_list.l COMMA data_exp.i    {: return l.add(i); :}
+	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
 
 	;
 
@@ -307,6 +307,7 @@ PureExp literal =
 	int_literal.i              {: return i ; :} 
 	| bool_literal.b                 {: return b ; :} 
 	| string_literal.s                 {: return s ; :} 
+	|  USCORE {: return new UnderscoreExp() ; :}
 	;
 
 LetExp let_exp = 
@@ -326,19 +327,16 @@ List case_branch_list =
 CaseBranch case_branch =
 	case_branch_lhs.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
 	
-//xxx	
-
 //Do we allow the special pair constructor or a variable in the LHS 
 //TODO add catchall 
 	; 
 
 PureExp case_branch_lhs = 
 	data_exp 
-	|  USCORE {: return new UnderscoreExp() ; :}
 	;
 
 PureExp data_constructor_exp =
-	TYPEIDENTIFIER.co pure_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
+	TYPEIDENTIFIER.co data_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
 	;
 
 VarRef var_ref =
@@ -362,11 +360,11 @@ Exp eff_exp =
 	; 
 
 NewExp  new_exp = 
-	NEW TYPEIDENTIFIER.i pure_exp_params.p?   {: return new NewExp(i,p) ; :} 
+	NEW TYPEIDENTIFIER.i data_exp_params.p?   {: return new NewExp(i,p) ; :} 
 	;
 
-List pure_exp_params = 
-	LPAREN pure_exp_list.l? RPAREN {: return l ; :} 
+List data_exp_params = 
+	LPAREN data_exp_list.l? RPAREN {: return l ; :} 
 	;
 
 
