@@ -77,7 +77,7 @@ DatatypeDecl  datatype_decl =
 
 
 FunctionDecl  function_decl = 
-	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN pure_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; //TODO : ASSIGN (=) or EQEQ == ? 
 
 

@@ -100,6 +100,9 @@
  </target>
 
 
+
+
+
 <!-- To run from command line: 
 
       java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/abssamples/block.abs
@@ -125,10 +128,13 @@
 <!--     </antlr:antlr3>  -->
 <!--   </target> -->
 
-  <target name="gen" depends="genparser, genast">
+  <target name="gen" depends="genshell, genparser, genast">
   </target>
 
   <target name="rebuild" depends="clean, compile">
+  </target>
+
+  <target name="build" depends="compile">
   </target>
 
 
@@ -142,6 +148,17 @@
       </fileset>
     </jastadd>
   </target>
+
+  
+  <target name="genshell">
+    <copy file="${tests.dir}/parseABS" toFile="${build.dir}/parseABS">
+      <filterset>
+	<filter token="BASEDIR" value="${basedir}"/>
+      </filterset>
+    </copy>
+    <chmod file="${build.dir}/parseABS" perm="ugo+x"/>
+  </target>
+
 
   <target name="genparser" depends="genflex,genp1,genp2">
   
