@@ -94,6 +94,8 @@ IntLiteral = 0 | [1-9][0-9]*
  ")"           { return sym(Terminals.RPAREN); }
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
+// "["           { return sym(Terminals.LBRACK); }
+// "]"           { return sym(Terminals.RBRACK); }
  ","           { return sym(Terminals.COMMA); }
  ";"           { return sym(Terminals.SEMICOLON); }
 }
@@ -127,6 +129,10 @@ IntLiteral = 0 | [1-9][0-9]*
  \"            { string.setLength(0); yybegin(STRING); }
  {IntLiteral}  { return sym(Terminals.INTLITERAL); }
 }
+
+"True"        { return sym(Terminals.BOOLLITERAL); }
+"False"        { return sym(Terminals.BOOLLITERAL); }
+
 
 <STRING> {
  \"            { yybegin(YYINITIAL); 

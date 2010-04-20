@@ -70,7 +70,7 @@ AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
 ReturnStmt: Stmt		::= RetExp:Exp; 
-ExpressionStmt: Stmt	::= Exp:EffExp; 
+ExpressionStmt: Stmt	::= Exp:Exp; 
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
@@ -105,8 +105,10 @@ NullExp: PureExp;
 ThisExp: PureExp;
 
 LiteralExp: PureExp;
+//For now the literal just contain a variable Content of type String. 
 StringLiteral: LiteralExp  ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;        
+BoolLiteral: LiteralExp ::= <Content>;        
 
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 
@@ -136,29 +138,35 @@ GetExp: EffExp			::= PureExp;
 
 
 abstract Unary : PureExp ::= Operand:PureExp;
-MinusIntExp : Unary ;  
 
 abstract Binary : PureExp ::= Left:PureExp Right:PureExp; 
 
 
+//Integers
+MinusIntExp : Unary ;  
+
 abstract MultExp :  Binary ;   
-MultIntExp  : MultExp ;
-DivIntExp  : MultExp ;
-ModIntExp : MultExp ; 
+MultMultExp  : MultExp ;
+DivMultExp  : MultExp ;
+ModMultExp : MultExp ; 
 
 abstract IntExp :  Binary ;   
 AddIntExp  : IntExp ;
 SubIntExp : IntExp ;
 
+//Booleans 
+NegBoolExp: Unary ; 
 
-// BoolExp: PureExp ; 
-// BoolLiteral: BoolExp   ::= <Value:String>;        
-// BoolExpNeg: BoolExp ::= PureExp ; 
+abstract BoolExp : Binary ; 
+AndBoolExp : BoolExp ; 
+OrBoolExp : BoolExp ; 
 
-// BoolExpOr: BoolExp ::= e1:PureExp e2:PureExp ; 
-// BoolExpComp: BoolExp ::= e1:PureExp e2:PureExp ; 
-
-
+//Relations
+abstract RelationalExpr : Binary;
+LTExp : RelationalExpr ;
+GTExp : RelationalExpr ;
+LEExp : RelationalExpr ;
+GEExp : RelationalExpr ;
 
 
 

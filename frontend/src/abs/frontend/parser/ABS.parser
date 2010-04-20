@@ -226,22 +226,42 @@ PureExp pure_exp =
 	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| let_exp
-	| IDENTIFIER.f LPAREN pure_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+	| IDENTIFIER.f LPAREN param_list.l? RPAREN {: return new FnApp(f, l) ; :}
 	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
-	| built_in_data_exp
     ;
 
+//pure_exp_list
+//List pure_exp_list =
+//    pure_exp.i                            {: return new List().add(i); :}
+//    | pure_exp_list.l COMMA pure_exp.i    {: return l.add(i); :}
+//;
 
-PureExp built_in_data_exp = 
+
+//built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
+List param_list = 
+	data_exp.i                            {: return new List().add(i); :}
+	| param_list.l COMMA data_exp.i    {: return l.add(i); :}
+
+	;
+PureExp data_exp = 
 	int_exp
 	|string_exp
-	//bool_exp 
+	//	| bool_exp 
 	; 
+
 
 PureExp string_exp = 
 	string_literal 
 	;
+
+PureExp bool_exp = 
+	bool_literal 
+	;  
+
+//Literals 
+BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
+  
 
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 
@@ -255,23 +275,22 @@ PureExp int_exp =
 
 PureExp mult_exp =
 	factor.f {: return f; :}
-	| mult_exp.e1 MULT factor.e2 {: return new MultIntExp(e1, e2); :}
-	| mult_exp.e1 DIV factor.e2 {: return new DivIntExp(e1, e2); :}
-	| mult_exp.e1 MOD factor.e2 {: return new ModIntExp(e1, e2); :}
+	| mult_exp.e1 MULT factor.e2 {: return new MultMultExp(e1, e2); :}
+	| mult_exp.e1 DIV factor.e2 {: return new DivMultExp(e1, e2); :}
+	| mult_exp.e1 MOD factor.e2 {: return new ModMultExp(e1, e2); :}
 	;
 
 PureExp factor =  
  	int_literal.i              {: return i ; :} 
+	| bool_exp.b                 {: return b ; :} 
 	| MINUS factor.e           {: return new MinusIntExp(e); :} 
 	| LPAREN int_exp.e RPAREN {: return e; :}
-	| LPAREN pure_exp.e RPAREN            {: return e ;  :}
+	| pure_exp
 	;
 
 
-
-
 LetExp let_exp = 
-	LET LPAREN fun_var_decl.var RPAREN ASSIGN pure_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
+	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
 	;
 
 List pure_exp_list =
@@ -285,7 +304,8 @@ List case_branch_list =
 	;
 
 CaseBranch case_branch =
-	data_constructor_exp.lhs RARROW pure_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	data_constructor_exp.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	
 //Do we allow the special pair constructor or a variable in the LHS 
 //TODO add catchall 
 	; 
@@ -293,8 +313,6 @@ CaseBranch case_branch =
 DataConstructorExp data_constructor_exp =
 	TYPEIDENTIFIER.co pure_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
 	;
-
-
 
 VarRef var_ref =
     IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}
@@ -309,13 +327,16 @@ GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
     ;
 
-EffExp eff_exp = 
+Exp eff_exp = 
     new_exp 
 	| async_call 
 	| sync_call
     | get_exp
 	; 
 
+//Exp exp = 
+//	eff_exp 
+//	| pure_exp ; 
 
 NewExp  new_exp = 
 	NEW TYPEIDENTIFIER.i pure_exp_params.p?   {: return new NewExp(i,p) ; :} 
@@ -341,7 +362,7 @@ Stmt stmt =
 	|  AWAIT guard SEMICOLON      {: return new AwaitStmt(guard) ; :}
 	|  SKIP SEMICOLON                       {: return new SkipStmt() ; :}
 	|  SUSPEND SEMICOLON                   {: return new SuspendStmt() ; :} 
-	|  RETURN exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
+	|  return_stmt 
 	|  eff_exp.e SEMICOLON               {: return new ExpressionStmt(e) ; :}	
 	|  if_then_else_stmt 
 	|  while_stmt 
@@ -350,6 +371,10 @@ Stmt stmt =
 		;
 
 
+Stmt return_stmt = 
+	  RETURN eff_exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
+	|  RETURN data_exp.e SEMICOLON        {: return new ReturnStmt(e) ; :}
+	;
 
 Guard guard = 	
 	var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
@@ -370,8 +395,15 @@ WhileStmt while_stmt =
 
 
 AssignStmt assign_stmt =  
-	var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
+	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
+	|	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
     ;
+
+//Exp some_exp = 
+//	eff_exp.e 
+//	| pure_exp.e
+//	| built_in_data_exp.e
+//	; 
 
 StmtBlock stmt_block = 
 	LBRACE stmt_list.l? RBRACE       {:	return new StmtBlock(l) ; :}
@@ -383,9 +415,4 @@ List stmt_list =
   ;
 
 
-
-Exp exp = 
-	pure_exp
-	| eff_exp
-	;
 
