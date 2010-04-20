@@ -8,15 +8,23 @@ import java.util.ArrayList;
 
 public class ParserTest {
 
-
+	static boolean verbose = false ; 
 
 	public static void main(String[] args) throws Exception {
 
+		String[] shiftedArgs = null  ; 
 		Model m = null;
 		int errorcount = 0;
 		ArrayList<String> errorfiles = new ArrayList<String>();
-
-		System.out.println("Testing parser");
+		
+		//		System.out.println(args[0]);
+		//shifting option -v 
+		if (args[0].equals("-v")) {
+			verbose = true;
+			shiftedArgs = new String[args.length-1];
+			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
+			args = shiftedArgs ;
+		}
 		if (args.length == 0) {
 			args = new String[]{
 					"block.abs", "boundedbuffer.abs", "emptyblock.abs", "pingpong.abs", 
@@ -48,11 +56,13 @@ public class ParserTest {
 				errorcount++;
 			}
 			//Dump tree for debug
-			if (m!=null){
-				System.out.println(m);
-				m.dumpTree("  ", System.out);
-			} else {
-				System.out.println("(No result)");
+			if (verbose){ 
+				if (m!=null){
+					System.out.println(m);
+					m.dumpTree("  ", System.out);
+				} else {
+					System.out.println("(No result)");
+				}
 			}
 		}
 		if (errorcount == 0) {
@@ -71,7 +81,7 @@ public class ParserTest {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
-		boolean dumpinput = true;
+		boolean dumpinput = verbose;
 		if (dumpinput){
 			try {
 				rd = new BufferedReader(new FileReader(file));
