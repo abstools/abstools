@@ -207,24 +207,7 @@
 </target>
 
 <!-- From command line -->
-<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore tests.AllTests -->
-
-<!-- TARGET junitbatch does not work yet -->
-<!-- <target name="junitbatch"> -->
-<!-- <junit printsummary="yes" haltonfailure="yes"> -->
-<!--   <formatter type="plain" usefile="false" /> -->
-<!--   <classpath refid="test.classpath" /> -->
-<!--   <batchtest fork="yes"> -->
-<!--     <fileset dir="${tests.dir}"> -->
-<!--        <include name="**/*Test.java" />  -->
-<!--         <include name="**/Test*.java" /> -->
-<!--         <exclude name="**/AllTests.java" />  -->
-<!--     </fileset> -->
-<!--   </batchtest> -->
-<!-- </junit>  -->
-<!-- </target> -->
-
-
+<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
 
    <!-- KATJA -->

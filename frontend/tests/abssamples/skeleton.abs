@@ -41,7 +41,7 @@ class BoundedBuffer implements Buffer {
   
     Void init(Foo x, Bar y){
 		
-	Int x, Int y ; 
+	Int x;  Int y ; 
 
 
 	return null ;
@@ -54,9 +54,9 @@ class BoundedBuffer implements Buffer {
 //MAIN
 {
     //var_or_field_decl_list
-    Int x , 
-	Int y , 
-	Bool z , 	
+        Int x ; 
+	Int y ; 
+	Bool z ; 	
 	Buffer o 	
 	;
 	//Stmts 
