@@ -10,8 +10,16 @@ def TPair revPair(TPair p) = let(T x) = 10 + 20  in pair(snd(p),x)
 
 //MAIN
 {  
+
+
 //Booleans 
-z = ! True && False || True  ; 
+z = ! true && False || True  ; 
+
+
+}
+
+
+/*
 z = ! a && b || c  ; // (!A && B) || C  
 w = False ; 
 
@@ -35,14 +43,14 @@ x = 1 + fst(pair(a(1+2),b(3+four())));
 
 x = 6 ;   
 x = 6 * 7 + 8 ; 
-x = 1 + 2 + 3 * 4 * 5  + 6 + 7 ;
+
 x = 1 + 2 * 3 ; //  1 + (2*3)  
 x = 1 * 2 + 3 ;  // (1*2) + 3 
 x = 1 * (2 + 3); 
 x = (1 + 2) * 3 ; 
 
- 
 //default operator precedence. 
+x = 1 + 2 + 3 * 4 * 5  + 6 + 7 ;
 x = (((1 + 2) + ((3 * 4) * 5))  + 6) + 7 ;
 
 //Use of prantheses
@@ -56,5 +64,8 @@ skip;
 return 1 + 2 * 3   ;
 
 return x ; 
+x = 1 * 2 * 3 * 4; 
+x = 1 - 2 - 3 ;
 }
 
+*/

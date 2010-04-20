@@ -12,7 +12,7 @@ b = b.append(i);
 
 //stmt
 //assignStmt
-if (a.get.get) skip ; else skip  ; 
+if (a.get) skip ; else skip  ; 
 
 if (a.get) skip  ; 
 if (a.get) { skip ; skip ; }  ; 

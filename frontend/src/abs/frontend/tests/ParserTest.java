@@ -37,12 +37,12 @@ public class ParserTest {
 			System.out.println("==========");
 			try{
 				m = parse(arg);
-				System.out.println("Parsing of " + arg + " suceeded. Result:");
+				System.out.println("Parsing of " + arg + " suceeded.");
 			} catch (Error err) {
 				System.out.flush();
-				System.err.println("Parsing of " + arg + " failed with Error");
-				System.err.println(err);
-				err.printStackTrace(System.err);
+				//System.err.println("Parsing of " + arg + " failed with Error");
+				System.err.println(arg + ":" + err.getMessage());
+				//err.printStackTrace(System.err);
 				System.err.flush();
 				errorfiles.add(arg);
 				errorcount++;
@@ -57,6 +57,7 @@ public class ParserTest {
 			}
 			//Dump tree for debug
 			if (verbose){ 
+				System.out.println("Result:");
 				if (m!=null){
 					System.out.println(m);
 					m.dumpTree("  ", System.out);

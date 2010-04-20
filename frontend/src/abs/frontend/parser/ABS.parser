@@ -15,14 +15,14 @@ import abs.frontend.ast.*;
   class Events extends Parser.Events {
     public void syntaxError(Symbol token) {
       StringBuffer s = new StringBuffer();
-      s.append(token.getLine(token.getStart()) + ", " + token.getColumn(token.getStart()) + "\n");
-      s.append("  *** Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
+      s.append(token.getLine(token.getStart()) + "," + token.getColumn(token.getStart()) + "\n");
+      s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
       throw new Error(s.toString());
     }
     public void scannerError(Scanner.Exception e) {
       StringBuffer s = new StringBuffer();
       s.append(e.line + ", " + e.column + "\n");
-      s.append("  *** Lexical error: " + e.getMessage());
+      s.append("Lexical error: " + e.getMessage());
       throw new Error(s.toString());
     }
   }
