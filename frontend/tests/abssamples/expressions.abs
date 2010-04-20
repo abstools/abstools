@@ -1,5 +1,6 @@
 {
-z = true ; 
+z = True ; 
+w = False ; 
 }
 /*
 def Int length(File file) =  

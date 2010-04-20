@@ -395,9 +395,8 @@ WhileStmt while_stmt =
 
 
 AssignStmt assign_stmt =  
-	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
-	|	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
-    ;
+	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
+	|	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}    ;
 
 //Exp some_exp = 
 //	eff_exp.e 
