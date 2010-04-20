@@ -38,7 +38,7 @@ public class ParserTest {
 	 "pair(x,y)",
 	 //case expression 
 	 "case set { EmptyStringSet => False ; }",
-	 "case set { EmptyStringSet() => False() ; }",
+	 "case set { EmptyStringSet() => False ; }",
 	 "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}"
 	};
 
@@ -124,7 +124,7 @@ public class ParserTest {
 	// datatype declarations
 	@Test
 		public void testDatatypeDecl() {
-		assertParseOk("data Bool { True , False }"); 
+		assertParseOk("data Foo { XCons , YCons }"); 
 		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
 	}
 
