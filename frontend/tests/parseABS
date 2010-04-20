@@ -1,6 +1,8 @@
 #!/bin/bash
 # Arild Torjusen April 2010
 
+$BASEDIR=@BASEDIR@
+
 function usage
 {
     echo 'Usage: parseABS [-v] absfiles'
@@ -31,8 +33,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ -n "$1" ] ; then 
-    DIR=$(pwd)
-    eval java -cp $DIR/../lib/beaver-rt.jar:$DIR/../bin abs.frontend.tests.ParserTest $verbose $@
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.ParserTest $verbose $@
 else
     echo 'Please specify source abs file(s).'
     usage; exit 1
