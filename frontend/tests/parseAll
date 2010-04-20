@@ -1,0 +1,21 @@
+#!/bin/bash
+# Arild Torjusen April 2010
+
+files="PeerToPeer.abs block.abs boundedbuffer.abs emptyblock.abs expressions.abs failblock.abs pingpong.abs skeleton.abs skipblock.abs statements.abs trivial.abs"
+
+while getopts ":v" Option
+do
+  case $Option in
+    v ) verbose="-v";;
+    * ) echo "Illegal option: $1";usage;exit 1;;      
+  esac
+done
+shift $(($OPTIND - 1))
+
+for f in $files ; do 
+args="$args abssamples/$f" 
+done 
+eval ./parseABS $verbose $args 
+exit 0
+
+

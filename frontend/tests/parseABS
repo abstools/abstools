@@ -30,11 +30,6 @@ do
 done
 shift $(($OPTIND - 1))
 
-#echo $outfile  
-#echo $verbose
-#echo $@    
-#processing
-
 if [ -n "$1" ] ; then 
     DIR=$(pwd)
     eval java -cp $DIR/../lib/beaver-rt.jar:$DIR/../bin abs.frontend.tests.ParserTest $verbose $@
