@@ -108,6 +108,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "="           { return sym(Terminals.ASSIGN); }
  "&"           { return sym(Terminals.GUARDAND); }
  "=="          { return sym(Terminals.EQEQ); }
+ "!="          { return sym(Terminals.NOTEQ); }
  "=>"          { return sym(Terminals.RARROW); }
   "+"	       { return sym(Terminals.PLUS); }
   "-"          { return sym(Terminals.MINUS); }
@@ -116,6 +117,11 @@ IntLiteral = 0 | [1-9][0-9]*
   "%"          { return sym(Terminals.MOD); }
  "&&"          { return sym(Terminals.ANDAND); }
  "||"          { return sym(Terminals.OROR); }
+ "~"          { return sym(Terminals.NEGATION); }
+ "<"          { return sym(Terminals.LT); }
+ ">"          { return sym(Terminals.GT); }
+ "<="          { return sym(Terminals.LTEQ); }
+ ">="          { return sym(Terminals.GTEQ); }
 }
 
 {Comment}     { /* discard token */ }

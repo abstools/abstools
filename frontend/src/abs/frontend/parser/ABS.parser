@@ -252,16 +252,6 @@ StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :
 
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
-//Expressions
-/* Order of precedence,  low - to high (standard): 
-|| ,
-&& ,
-== , != 
-< > >= <= ,
-+,-
-	*,/,% , 
-!,-
-*/
 
 PureExp data_exp = 
 	or_exp
@@ -309,7 +299,7 @@ PureExp factor =
  	literal 
 	| pure_exp
 	| MINUS factor.e           {: return new MinusExp(e); :} 
-	| BANG factor.b            {: return new NegExp(b); :} //Todo consider notation for boolean negation 
+	| NEGATION factor.b            {: return new NegExp(b); :} 
 	| LPAREN or_exp.e RPAREN {: return e; :}
 	;
 

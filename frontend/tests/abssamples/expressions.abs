@@ -13,8 +13,17 @@ def TPair revPair(TPair p) = let(T x) = 10 + 20  in pair(snd(p),x)
 
 
 //Booleans 
-z = ! true && False || True  ; 
+z = ~True && False || True  ; 
 
+//Relational 
+
+a = x >= y ; 
+x = a < b ; 
+x = a <= b ; 
+x = a > b ; 
+x = a >= b ; 
+x = a == b ; 
+x = a != b ; 
 
 }
 
