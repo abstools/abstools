@@ -324,13 +324,20 @@ List case_branch_list =
 	;
 
 CaseBranch case_branch =
-	data_constructor_exp.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	case_branch_lhs.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
 	
+//xxx	
+
 //Do we allow the special pair constructor or a variable in the LHS 
 //TODO add catchall 
 	; 
 
-DataConstructorExp data_constructor_exp =
+PureExp case_branch_lhs = 
+	data_exp 
+	|  USCORE {: return new UnderscoreExp() ; :}
+	;
+
+PureExp data_constructor_exp =
 	TYPEIDENTIFIER.co pure_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
 	;
 
