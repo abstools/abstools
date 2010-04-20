@@ -1,0 +1,47 @@
+#!/bin/bash
+# Arild Torjusen April 2010
+
+function usage
+{
+    echo 'Usage: parseABS [-v] absfiles'
+    echo
+}
+
+function help
+{
+    echo 'parseABS.sh'
+    usage;
+    echo 
+    echo 'Legal options: '
+    echo '-h : Display help'
+    echo '-v : Verbose'
+    exit 0
+}
+echo
+
+while getopts ":ho:v" Option
+do
+  case $Option in
+    h ) help;; 
+    v ) verbose="-v";;
+    o ) outfile=$OPTARG;;
+    * ) echo "Illegal option: $1";usage;exit 1;;      
+  esac
+done
+shift $(($OPTIND - 1))
+
+#echo $outfile  
+#echo $verbose
+#echo $@    
+#processing
+
+if [ -n "$1" ] ; then 
+    DIR=$(pwd)
+    eval java -cp $DIR/../lib/beaver-rt.jar:$DIR/../bin abs.frontend.tests.ParserTest $verbose $@
+else
+    echo 'Please specify source abs file(s).'
+    usage; exit 1
+fi
+exit 0
+
+
