@@ -93,10 +93,6 @@ abstract PureExp: Exp;
 //Expressions with side effect. 
 abstract EffExp: Exp;
 
-//equality expressions
-EqExp: PureExp   		::= Left:PureExp Right:PureExp ; 
-
-
 // Side effect free expressions 
 abstract VarRef: PureExp    ::= <VarName> ;
 LocalVarRef: VarRef ;
@@ -143,19 +139,21 @@ abstract Binary : PureExp ::= Left:PureExp Right:PureExp;
 
 
 //Integers
-MinusIntExp : Unary ;  
+MinusExp : Unary ;  
 
-abstract MultExp :  Binary ;   
+abstract ArithmeticExp : Binary ; 
+
+abstract MultExp :  ArithmeticExp ;   
 MultMultExp  : MultExp ;
 DivMultExp  : MultExp ;
-ModMultExp : MultExp ; 
+ModMultExp : MultExp ;
 
-abstract IntExp :  Binary ;   
-AddIntExp  : IntExp ;
-SubIntExp : IntExp ;
+abstract AddExp :  ArithmeticExp ;
+AddAddExp  : AddExp ;
+SubAddExp : AddExp ;
 
 //Booleans 
-NegBoolExp: Unary ; 
+NegExp: Unary ; 
 
 abstract BoolExp : Binary ; 
 AndBoolExp : BoolExp ; 
@@ -165,10 +163,12 @@ OrBoolExp : BoolExp ;
 abstract RelationalExpr : Binary;
 LTExp : RelationalExpr ;
 GTExp : RelationalExpr ;
-LEExp : RelationalExpr ;
-GEExp : RelationalExpr ;
+LTEQExp : RelationalExpr ;
+GTEQExp : RelationalExpr ;
 
-
+abstract EqualityExpr : RelationalExpr;
+EqExp : EqualityExpr ;
+NotEqExp : EqualityExpr ;
 
 
 

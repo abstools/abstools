@@ -114,6 +114,8 @@ IntLiteral = 0 | [1-9][0-9]*
   "*"          { return sym(Terminals.MULT); }
   "/"          { return sym(Terminals.DIV); }
   "%"          { return sym(Terminals.MOD); }
+ "&&"          { return sym(Terminals.ANDAND); }
+ "||"          { return sym(Terminals.OROR); }
 }
 
 {Comment}     { /* discard token */ }

@@ -244,33 +244,58 @@ List param_list =
 	| param_list.l COMMA data_exp.i    {: return l.add(i); :}
 
 	;
-PureExp data_exp = 
-	int_exp
-	|string_exp
-	//	| bool_exp 
-	; 
-
-
-PureExp string_exp = 
-	string_literal 
-	;
-
-PureExp bool_exp = 
-	bool_literal 
-	;  
 
 //Literals 
 BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
   
-
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
-PureExp int_exp = 
+//Expressions
+/* Order of precedence,  low - to high (standard): 
+|| ,
+&& ,
+== , != 
+< > >= <= ,
++,-
+	*,/,% , 
+!,-
+*/
+
+PureExp data_exp = 
+	or_exp
+	;
+
+PureExp or_exp = 
+    and_exp   
+	| or_exp.e1 OROR and_exp.e2 {: return new OrBoolExp(e1, e2); :}
+	;
+
+PureExp and_exp = 
+	equality_exp 
+	| and_exp.e1 ANDAND equality_exp.e2  {: return new AndBoolExp(e1, e2); :}
+	;
+
+
+PureExp equality_exp = 
+	relational_exp 
+	| equality_exp.e1 EQEQ relational_exp.e2  {: return new EqExp(e1, e2); :}
+	| equality_exp.e1 NOTEQ relational_exp.e2  {: return new NotEqExp(e1, e2); :}
+	;
+
+PureExp relational_exp = 
+	add_exp
+	|relational_exp.e1 LT add_exp.e2     {: return new LTExp(e1, e2); :}
+	|relational_exp.e1 GT add_exp.e2     {: return new GTExp(e1, e2); :}
+	|relational_exp.e1 LTEQ add_exp.e2   {: return new LTEQExp(e1, e2); :}
+	|relational_exp.e1 GTEQ add_exp.e2   {: return new GTEQExp(e1, e2); :}
+	;
+
+PureExp add_exp = 
 	mult_exp.e  {: return e; :}
-	| int_exp.e1 PLUS mult_exp.e2   {: return new AddIntExp(e1, e2); :}
-	| int_exp.e1 MINUS mult_exp.e2  {: return new SubIntExp(e1, e2); :}
+	| add_exp.e1 PLUS mult_exp.e2   {: return new AddAddExp(e1, e2); :}
+	| add_exp.e1 MINUS mult_exp.e2  {: return new SubAddExp(e1, e2); :}
   ;
 
 PureExp mult_exp =
@@ -281,13 +306,18 @@ PureExp mult_exp =
 	;
 
 PureExp factor =  
- 	int_literal.i              {: return i ; :} 
-	| bool_exp.b                 {: return b ; :} 
-	| MINUS factor.e           {: return new MinusIntExp(e); :} 
-	| LPAREN int_exp.e RPAREN {: return e; :}
+ 	literal 
 	| pure_exp
+	| MINUS factor.e           {: return new MinusExp(e); :} 
+	| BANG factor.b            {: return new NegExp(b); :} //Todo consider notation for boolean negation 
+	| LPAREN or_exp.e RPAREN {: return e; :}
 	;
 
+PureExp literal = 
+	int_literal.i              {: return i ; :} 
+	| bool_literal.b                 {: return b ; :} 
+	| string_literal.s                 {: return s ; :} 
+	;
 
 LetExp let_exp = 
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
@@ -333,10 +363,6 @@ Exp eff_exp =
 	| sync_call
     | get_exp
 	; 
-
-//Exp exp = 
-//	eff_exp 
-//	| pure_exp ; 
 
 NewExp  new_exp = 
 	NEW TYPEIDENTIFIER.i pure_exp_params.p?   {: return new NewExp(i,p) ; :} 
@@ -397,12 +423,6 @@ WhileStmt while_stmt =
 AssignStmt assign_stmt =  
 	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
 	|	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}    ;
-
-//Exp some_exp = 
-//	eff_exp.e 
-//	| pure_exp.e
-//	| built_in_data_exp.e
-//	; 
 
 StmtBlock stmt_block = 
 	LBRACE stmt_list.l? RBRACE       {:	return new StmtBlock(l) ; :}

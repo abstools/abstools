@@ -68,7 +68,7 @@ aspect DumpTree {
 	}
 
 
-	public void MinusIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+	public void MinusExp.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.print("( - ");
 		this.getOperand().dumpTree(indent,pStream);
 		pStream.print(" ) ");
@@ -100,11 +100,11 @@ aspect DumpTree {
 		pStream.print(")");
 	}
 
-	public void IntExp.dumpTree(String indent, java.io.PrintStream pStream) {
-		pStream.print("IntExp:");
+	public void AddExp.dumpTree(String indent, java.io.PrintStream pStream) {
+		pStream.print("AddExp:");
 	}
 
-	public void AddIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+	public void AddAddExp.dumpTree(String indent, java.io.PrintStream pStream) {
 		//		super.dumpTree(indent, pStream);
 		pStream.print("(");
 		this.getLeft().dumpTree(indent,pStream);
@@ -113,7 +113,7 @@ aspect DumpTree {
 		pStream.print(")");
 	}
 
-	public void SubIntExp.dumpTree(String indent, java.io.PrintStream pStream) {
+	public void SubAddExp.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.print("(");
 		this.getLeft().dumpTree(indent,pStream);
 		pStream.print("  - ");
@@ -126,7 +126,7 @@ aspect DumpTree {
 	}
 
 	public void StringLiteral.dumpTree(String indent, java.io.PrintStream pStream) {
-		pStream.print(" " + this.getContent() + " ");
+		pStream.print("StrLit: " + this.getContent() + " ");
 	}
 
 	public void Decl.dumpTree(String indent, java.io.PrintStream pStream) {
