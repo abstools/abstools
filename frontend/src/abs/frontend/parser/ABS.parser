@@ -313,7 +313,7 @@ PureExp literal =
 	;
 
 LetExp let_exp = 
-	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN pure_exp.exp {: return new LetExp(var,val,exp) ; :}
+	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
 	;
 
 List pure_exp_list =
