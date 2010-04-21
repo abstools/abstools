@@ -173,6 +173,17 @@ fmod ABS-EXPRESSION is
     protecting ABS-DATA-SIG .
     protecting STRING .
 
+    sorts CaseBranch CaseBranchList .
+    subsort CaseBranch < CaseBranchList .
+    *** KLUDGE (rs 2010-04-20) Only certain kinds of expressions can be used
+    *** as pattern: literals and variable references.  We should introduce a
+    *** sort `Pattern' and use it.  For now, we rely on the compiler to only
+    *** produce valid pattern expressions.
+    op _=>_ : Expr Expr -> CaseBranch .
+    op _;_ : CaseBranchList CaseBranchList -> CaseBranchList
+        [ctor assoc id: noBranch prec 27 format (d b os d)] .
+    op noBranch : -> CaseBranch .
+
     *** function application
     op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
     *** constructor terms
@@ -180,8 +191,8 @@ fmod ABS-EXPRESSION is
     op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
     *** conditional
     op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
-    *** case expression -- FIXME define patterns
-    op case_of {_} : Expr ExprList -> Expr [ctor] .
+    *** case expression
+    op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
     *** let expression
     op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
     *** guard expression -- do we need this?

@@ -442,6 +442,7 @@ mod ABS-EVAL is
   var DL : DataList .
   var EL : ExprList .
   var NeEL : NeExprList .
+  var CBL : CaseBranchList .
   var ES : ExprSet .
   var NeES : NeExprSet .
   var DS : DataSet .
@@ -495,6 +496,41 @@ mod ABS-EVAL is
     else evalGuard(E'', S, CN) fi .
   eq evalGuard(let AL = EL in E, S, CN) = 
     evalGuard(E, S :: createSubst(AL, evalGuardList(EL, S, CN)), CN) .
+
+  *** evaluate a case statement.  If the pattern matches, augment environment
+  *** with the resulting bindings.
+  sort MatchResult .
+  subsort Subst < MatchResult .
+  op noMatch : -> MatchResult [ctor] .
+  op match : Data Expr -> MatchResult .
+  eq match(D, E) = $match(D, E, noSubst) .
+  op $match : Data Expr MatchResult -> MatchResult .
+  eq $match(Q[emp], Q[emp], S) = S . *** base case
+  eq $match(D, D, S) = S .           *** matching two literals
+  eq $match(D, @ "_", S) = S .       *** "Don't care" placeholder
+  eq $match(D, A, S) =               *** Create / check variable binding
+    if S[A] == undefined
+    then insert(A, D, S)             *** Generate new binding
+    else                             *** Match against existing binding
+      if S[A] == D then S else noMatch fi
+    fi .
+  eq $match(Q[D :: DL], Q[E :: EL], S) = *** Destructure constructor pattern
+    $match(Q[DL], Q[EL], $match(D, E, S)) .
+  eq $match(D, E, noMatch) = noMatch .
+  eq $match(D, E, S) = noMatch [owise] .
+
+  *** internal operator $case avoids endless loop between "case D of" and
+  *** "case E of" when first case branch doesn't match
+  op $case : Data CaseBranchList -> Expr .
+  ceq evalGuard($case(D, (E => E') ; CBL), S, CN) = 
+    if M:MatchResult == noMatch
+    then evalGuard($case(D, CBL), S, CN)
+    else evalGuard(E', S :: M:MatchResult, CN) fi
+  if M:MatchResult := match(D, E) .
+
+  eq evalGuard(case E of { CBL }, S, CN) = 
+    evalGuard($case(evalGuard(E, S, CN), CBL), S, CN) .
+
 
   --- Evaluate guard lists.  This is almost the same as evalList, but we
   --- had to adapt this to guards.
