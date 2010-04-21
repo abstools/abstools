@@ -229,12 +229,6 @@ PureExp pure_exp =
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
-//pure_exp_list
-//List pure_exp_list =
-//    pure_exp.i                            {: return new List().add(i); :}
-//    | pure_exp_list.l COMMA pure_exp.i    {: return l.add(i); :}
-//;
-
 
 //built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
 List data_exp_list = 
@@ -316,10 +310,6 @@ LetExp let_exp =
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
 	;
 
-List pure_exp_list =
-    pure_exp.i                            {: return new List().add(i); :}
-    | pure_exp_list.l COMMA pure_exp.i    {: return l.add(i); :}
-  ;
 
 List case_branch_list =
     case_branch.b                         {: return new List().add(b); :}
@@ -364,14 +354,13 @@ List data_exp_params =
 	LPAREN data_exp_list.l? RPAREN {: return l ; :} 
 	;
 
-
 AsyncCall async_call = 
-	pure_exp.callee BANG IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
+	pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
 	;
 
 SyncCall sync_call = 
-	THIS.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,new ThisExp()) ; :} 
-	| pure_exp.callee DOT IDENTIFIER.method LPAREN pure_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
+	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(method,params,new ThisExp()) ; :} 
+	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
 	;
 
 
