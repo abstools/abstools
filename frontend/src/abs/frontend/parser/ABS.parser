@@ -227,7 +227,6 @@ PureExp pure_exp =
 	| data_constructor_exp
 	| let_exp
 	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
-	| PAIR LPAREN pure_exp.left COMMA pure_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
@@ -252,6 +251,9 @@ StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :
 
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
+PureExp pair_exp = 
+	PAIR LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
+	;
 
 PureExp data_exp = 
 	or_exp
@@ -326,9 +328,7 @@ List case_branch_list =
 
 CaseBranch case_branch =
 	case_branch_lhs.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
-	
-//Do we allow the special pair constructor or a variable in the LHS 
-//TODO add catchall 
+
 	; 
 
 PureExp case_branch_lhs = 
