@@ -226,7 +226,7 @@ PureExp pure_exp =
 	| data_constructor_exp
 	| let_exp
 	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
-	| CASE pure_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
+	| CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
 
