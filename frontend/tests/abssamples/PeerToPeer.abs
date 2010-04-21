@@ -140,7 +140,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
     neighbors = ConsServer(admin, NilServer); 
     f = admin!getNeighbors();   // Asynchronous call to admin
-    await f?; newNeighbors = f . get ;
+    await f?; newNeighbors = f.get ;
     neighbors = concatenate(neighbors, newNeighbors) ;
     c = this!availFiles(neighbors);         // Asynchronous call
     await c?;                           // Allow other peers to call in the meantime
@@ -187,11 +187,12 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
   }
 
 	Void reqFile(Server sId, Filename fId){
-    File file ,
-    Packet pack,
-    Int lth , 
-    Fut(Int) l1 ,
-    Fut(Packet) l2 ; 
+		File file ;
+		Packet pack;
+		Int lth ;
+		Fut(Int) l1 ;
+		Fut(Packet) l2 ; 
+
     l1 = sId!getLength(fId); await l1? ; lth = l1.get; 
     while (lth > 0) {
       l2 = sId!getPack(fId, lth); await l2? ; pack = l2.get ; 
@@ -207,4 +208,3 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 }
 
 
-*/
