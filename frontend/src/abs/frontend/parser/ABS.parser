@@ -223,7 +223,6 @@ PureExp pure_exp =
 	var_ref
 	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
-	| pure_exp.e1 EQEQ pure_exp.e2  	{: return new EqExp(e1,e2); :}
 	| data_constructor_exp
 	| let_exp
 	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
@@ -252,7 +251,7 @@ StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
 PureExp pair_exp = 
-	PAIR LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
+	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 	;
 
 PureExp data_exp = 
@@ -300,6 +299,7 @@ PureExp mult_exp =
 PureExp factor =  
  	literal 
 	| pure_exp
+	| pair_exp 
 	| MINUS factor.e           {: return new MinusExp(e); :} 
 	| NEGATION factor.b            {: return new NegExp(b); :} 
 	| LPAREN or_exp.e RPAREN {: return e; :}
@@ -343,9 +343,6 @@ VarRef var_ref =
     IDENTIFIER            {: return new LocalVarRef(IDENTIFIER) ; :}
 	| THIS DOT IDENTIFIER   {: return new FieldRef(IDENTIFIER) ; :}
  ;
-
-
-
 
 
 GetExp get_exp =
@@ -400,7 +397,7 @@ Stmt return_stmt =
 Guard guard = 	
 	var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
 	  //For boolean guards 
-	| pure_exp.e    {: return new ExpGuard(e) ; :} 
+	| data_exp.e    {: return new ExpGuard(e) ; :} 
 	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	;
 
@@ -416,8 +413,9 @@ WhileStmt while_stmt =
 
 
 AssignStmt assign_stmt =  
-	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
-	|	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}    ;
+	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :} 
+	|	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
+	;	
 
 StmtBlock stmt_block = 
 	LBRACE stmt_list.l? RBRACE       {:	return new StmtBlock(l) ; :}

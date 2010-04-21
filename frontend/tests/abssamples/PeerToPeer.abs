@@ -120,32 +120,33 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
 
 
   Server findServer(Filename fId, Catalog catalog){
-    if isempty(catalog) {
+    if (isempty(catalog)) {
       return null ;   
     } else {
-      if (element(fId,snd(head(catalog)))) {
-        return fst(head(catalog)) ;
-    } else {
-        return findServer(fId, tail(catalog)) ;
-   	}
-   	}
+		if (element(fId,snd(head(catalog)))) {
+			return fst(head(catalog)) ;
+		} else {
+			return findServer(fId, tail(catalog)) ;
+		}
+	}	
   }
 
-
   Void run(){
-    Fut(Catalog) c , 
-	Fut(ListOfServer) f,
-	ListOfServer newNeighbors, 
-	Server server ; 
+	  
+	  Fut(Catalog) c ; 
+	  Fut(ListOfServer) f;
+	  ListOfServer newNeighbors;
+	  Server server ; 
+
     neighbors = ConsServer(admin, NilServer); 
     f = admin!getNeighbors();   // Asynchronous call to admin
-    await f?; newNeighbors = f.get ;
+    await f?; newNeighbors = f . get ;
     neighbors = concatenate(neighbors, newNeighbors) ;
     c = this!availFiles(neighbors);         // Asynchronous call
     await c?;                           // Allow other peers to call in the meantime
     catalog = c.get;                    // Build the catalog
     server = findServer(file,catalog);  // Find the server for the requested file
-    reqFile(server,file) ;              // Download file
+	this.reqFile(server,file) ;              // Download file
   }
 
  
@@ -160,28 +161,32 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
   }
 
   Packet getPack(Filename fId, Int pNbr){
-    File f,
+	  File f;
     Fut(File) ff ; 
     ff = db!getFile(fId) ; await ff? ; f = ff.get;
     pack = nth(f, pNbr);
   }
 
   Catalog availFiles (ListOfServer sList){
-    Catalog cat ,
-    Fut(Filenames) fNames ,
-    Fut(Catalog) catList ; 
+	  Catalog cat ;
+	  Filenames fNames; 
+	  Fut(Filenames) fN ;
+	  Catalog catList; 
+	  Fut(Catalog) cL ; 
     if (sList == NilServer) {
       cat = NilPairOfServerNFilenames ; 
     } else {
-      fNames = head(sList)!enquire(); 
-      catList = !availFiles(tail(sList));
-      await fNames? && catList?; 
-      cat = appendright(catList.get, (head(sList), fNames.get)); 
+      fN = head(sList)!enquire(); 
+      cL = this!availFiles(tail(sList));
+      await fN? & cL?; 
+	  catList = cL.get ;
+	  fNames = fN.get ; 
+      cat = appendright(catList, (head(sList), fNames)); 
       }
     return cat; 
   }
 
-  Void reqFile(Server sId){
+	Void reqFile(Server sId, Filename fId){
     File file ,
     Packet pack,
     Int lth , 

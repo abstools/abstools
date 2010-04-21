@@ -82,7 +82,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "suspend"     { return sym(Terminals.SUSPEND); }
  "new"         { return sym(Terminals.NEW); }
  "this"        { return sym(Terminals.THIS); }
- "pair"        { return sym(Terminals.PAIR); }
  "case"        { return sym(Terminals.CASE); }
  "let"         { return sym(Terminals.LET); }
  "in"          { return sym(Terminals.IN); }
