@@ -485,6 +485,7 @@ mod ABS-EVAL is
   eq evalGuard((Q @ C), (S :: S'), CN) =  S [(Q @ C)] .
   eq evalGuard(A, S, CN) =  S [A] .
   eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
+  eq evalGuard(Q [EL], S, CN) = Q [ evalGuardList(EL, S, CN) ] .
   eq evalGuard(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
   eq evalGuard(?(L), S, CN) = "bool"[inqueue(L, CN)] .
   eq evalGuard(list(EL), S, CN) = list(evalGuardList(EL, S, CN)) .
