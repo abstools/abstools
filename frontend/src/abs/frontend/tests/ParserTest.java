@@ -17,6 +17,13 @@ public class ParserTest {
 		int errorcount = 0;
 		ArrayList<String> errorfiles = new ArrayList<String>();
 		
+		if (args.length == 0) {
+			args = new String[]{
+					"block.abs", "boundedbuffer.abs", "emptyblock.abs", "pingpong.abs", 
+					"skeleton.abs", "skipblock.abs", "statements.abs", "trivial.abs",
+					"PeerToPeer.abs",
+					};
+		} 
 		//		System.out.println(args[0]);
 		//shifting option -v 
 		if (args[0].equals("-v")) {
@@ -25,13 +32,6 @@ public class ParserTest {
 			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
 			args = shiftedArgs ;
 		}
-		if (args.length == 0) {
-			args = new String[]{
-					"block.abs", "boundedbuffer.abs", "emptyblock.abs", "pingpong.abs", 
-					"skeleton.abs", "skipblock.abs", "statements.abs", "trivial.abs",
-					"PeerToPeer.abs",
-					};
-		} 
 		for (String arg : args){
 			System.out.println("Trying to parse: " + arg);
 			System.out.println("==========");
