@@ -24,15 +24,27 @@ aspect GenerateMaude {
 	}
 
 	public void DatatypeDecl.generateMaude(java.io.PrintStream stream) {
-		stream.println("*** Datatype code ...");
+		stream.println("*** Datatype " + getName());
 	}
 	
 	public void FunctionDecl.generateMaude(java.io.PrintStream stream) {
-		stream.println("*** Function code ...");
+		boolean inList = false;
+		stream.println("*** Function " + getName());
+		stream.print("eq \"" + getName() + "\" (");
+		for (FunVarDecl param : getParamss()) {
+			if (inList == false) inList = true; else stream.print(" :: ");
+			stream.print(param.getName() + ":Data");
+		}
+		stream.println(") ==") ;
+		getFunDef().generateMaude(stream);
+	}
+	
+	public void PureExp.generateMaude(java.io.PrintStream stream) {
+		stream.println("*** PureExp code for " + getClass().toString());
 	}
 	
 	public void UnknownDecl.generateMaude(java.io.PrintStream stream) {
-		stream.println("*** Unknown declaration code ...");
+		stream.println("*** Unknown declaration " + getName());
 	}
 
 	public void Block.generateMaude(java.io.PrintStream stream) {
