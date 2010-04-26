@@ -1,5 +1,6 @@
 #!/bin/bash
 # Arild Torjusen April 2010
+# $Id$ 
 
 BASEDIR="@BASEDIR@" 
 
