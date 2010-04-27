@@ -157,6 +157,12 @@
       </filterset>
     </copy>
     <chmod file="${build.dir}/parseABS" perm="ugo+x"/>
+    <copy file="${tests.dir}/parseAll" toFile="${build.dir}/parseAll">
+      <filterset>
+	<filter token="BASEDIR" value="${basedir}"/>
+      </filterset>
+    </copy>
+    <chmod file="${build.dir}/parseAll" perm="ugo+x"/>
   </target>
 
 

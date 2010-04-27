@@ -1,7 +1,16 @@
 #!/bin/bash
 # Arild Torjusen April 2010
 
+BASEDIR="@BASEDIR@" 
+
 files="PeerToPeer.abs block.abs boundedbuffer.abs emptyblock.abs expressions.abs failblock.abs pingpong.abs skeleton.abs skipblock.abs statements.abs trivial.abs"
+
+function usage
+{
+    echo 'Usage: parseAll [-v]'
+    echo 'Parses all ABS samples'
+}
+
 
 while getopts ":v" Option
 do
@@ -15,7 +24,8 @@ shift $(($OPTIND - 1))
 for f in $files ; do 
 args="$args tests/abssamples/$f" 
 done 
-echo "eval ./parseABS $verbose $args "
+eval bin/parseABS $verbose $args 
+
 
 exit 0
 
