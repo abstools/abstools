@@ -31,7 +31,7 @@ aspect GenerateMaude {
 		boolean inList = false;
 		stream.println("*** Function " + getName());
 		stream.print("eq \"" + getName() + "\" (");
-		for (FunVarDecl param : getParamss()) {
+		for (FunVarDecl param : getParams()) {
 			if (inList == false) inList = true; else stream.print(" :: ");
 			stream.print(param.getName() + ":Data");
 		}
