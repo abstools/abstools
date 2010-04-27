@@ -5,6 +5,7 @@ import abs.frontend.ast.*;
 import abs.frontend.parser.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ParserTest {
 
@@ -74,6 +75,11 @@ public class ParserTest {
 			for (String file : errorfiles) {
 				System.out.println("   " + file);
 			}
+		}
+		if (m != null) {
+			System.out.println("Semantic errors: " + m.errors().size());
+			for (Object error : m.errors())
+				System.out.println(error);
 		}
 	}
 
