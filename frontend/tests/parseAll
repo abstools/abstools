@@ -13,9 +13,10 @@ done
 shift $(($OPTIND - 1))
 
 for f in $files ; do 
-args="$args abssamples/$f" 
+args="$args tests/abssamples/$f" 
 done 
-eval ./parseABS $verbose $args 
+echo "eval ./parseABS $verbose $args "
+
 exit 0
 
 

@@ -36,8 +36,8 @@ shift $(($OPTIND - 1))
 if [ -n "$1" ] ; then 
     eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.ParserTest $verbose $@
 else
-    echo 'Please specify source abs file(s).'
-    usage; exit 1
+    echo 'No files specified, trying to parse default test suite.'
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.ParserTest $verbose $@
 fi
 exit 0
 

@@ -221,7 +221,6 @@ MethodSig methodsig =
 
 PureExp pure_exp =
 	var_ref
-	| THIS                   {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
 	| data_constructor_exp
 	| let_exp
@@ -236,13 +235,6 @@ List data_exp_list =
 	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
 
 	;
-
-//Literals 
-BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
-  
-StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
-
-IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
 PureExp pair_exp = 
 	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
@@ -299,12 +291,16 @@ PureExp factor =
 	| LPAREN or_exp.e RPAREN {: return e; :}
 	;
 
-PureExp literal = 
+LiteralExp literal = 
 	int_literal.i              {: return i ; :} 
 	| bool_literal.b                 {: return b ; :} 
 	| string_literal.s                 {: return s ; :} 
-	|  USCORE {: return new UnderscoreExp() ; :}
 	;
+
+//Literals 
+BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
+StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
+IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
 LetExp let_exp = 
 	LET LPAREN fun_var_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
@@ -317,13 +313,33 @@ List case_branch_list =
 	;
 
 CaseBranch case_branch =
-	case_branch_lhs.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	pattern.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
 
 	; 
 
-PureExp case_branch_lhs = 
-	data_exp 
+Pattern pattern = 
+	IDENTIFIER.v  {: return new PatternVar(new LocalVarRef(v)) ; :}
+	| constructor_pattern 
+	| literal.l  	{: return new LiteralPattern(l) ; :}
+	| LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
+	| USCORE {: return new UnderscorePattern() ; :}
 	;
+
+
+//sss
+Pattern constructor_pattern = 
+	TYPEIDENTIFIER.co  pattern_params.p? {: return new ConstructorPattern(co,p) ; :} 
+	;
+
+List pattern_params = 
+	LPAREN pattern_list.l? RPAREN     {: return l; :}
+	;
+List pattern_list =
+    pattern.i                              {: return new List().add(i); :}
+    | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
+  ;
+
+//eee
 
 PureExp data_constructor_exp =
 	TYPEIDENTIFIER.co data_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
@@ -334,6 +350,14 @@ VarRef var_ref =
 	| THIS DOT IDENTIFIER   {: return new FieldRef(IDENTIFIER) ; :}
  ;
 
+
+//VarRef var_ref =
+//    local_var_ref.v             {: return new LocalVarRef(v) ; :}
+//	| THIS DOT local_var_ref.v   {: return new FieldRef(v) ; :}
+// ;
+
+//VarRef local_var_ref =
+//    IDENTIFIER ; 
 
 GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
@@ -355,7 +379,8 @@ List data_exp_params =
 	;
 
 AsyncCall async_call = 
-	pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
+	THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,new ThisExp()) ; :} 
+	| pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
 	;
 
 SyncCall sync_call = 

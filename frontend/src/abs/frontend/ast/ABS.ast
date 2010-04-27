@@ -105,14 +105,9 @@ LiteralExp: PureExp;
 StringLiteral: LiteralExp  ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;        
 BoolLiteral: LiteralExp ::= <Content>;        
-UnderscoreExp: PureExp ; 
 
 //FunctionalExpression 
 abstract FunVal  : PureExp ; 
-abstract Pattern ; 
-
-PatVar : Pattern ::= <Name> ; 
-
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
 DataConstructorExp : FunVal  ::= <Constructor> Params:PureExp* ;
@@ -121,8 +116,17 @@ TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 LetExp  : PureExp ::= Var:FunVarDecl Val:PureExp Exp:PureExp ; 
 FnApp  : PureExp ::= <Name> Params:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
-CaseBranch ::= Left:PureExp Right:PureExp ; 
+CaseBranch ::= Left:Pattern Right:PureExp ; 
 
+
+//Patterns 
+abstract Pattern ; 
+
+PatternVar: Pattern ::= Var:VarRef ; 
+ConstructorPattern: Pattern ::= <Constructor> Param:Pattern* ;
+LiteralPattern: Pattern ::= Literal:LiteralExp ;
+PatternPair: Pattern ::= Left:Pattern Right:Pattern ;
+UnderscorePattern: Pattern ; 
 
 
 
