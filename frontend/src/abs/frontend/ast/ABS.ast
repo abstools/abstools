@@ -7,10 +7,10 @@ Model                         ::= Decl* [Block];
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
-Block				::= Fields:VarDecl*  Stmts:Stmt*;
+Block				::= Field:VarDecl*  Stmt:Stmt*;
 
 // A ClassBlock is the body of a Class. 
-ClassBlock			::= [InitBlock:Block] Fields:VarDecl* Methods:Method*;
+ClassBlock			::= [InitBlock:Block] Field:VarDecl* Method:Method*;
 //ClassBlock			::= Fields:VarDecl*  Methods:Method*;
 //ClassBlock              ::= [InitBlock:Block] Decls:ClassBlockDecl* ;                          
 
@@ -20,10 +20,10 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 //abstract ClassBlockDecl ; 
 
 UnknownDecl:	Decl;			// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Params:ParamDecl* ImplementedInterfaceUse:IdUse* Body:ClassBlock;
+ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:IdUse* Body:ClassBlock;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
-DatatypeDecl:	TypeDecl		::= DataConstructors:DataConstructor* ;
-FunctionDecl:	Decl		    ::= DataType:DataType Params:FunVarDecl* FunDef:PureExp ;
+DatatypeDecl:	TypeDecl		::= DataConstructor* ;
+FunctionDecl:	Decl		    ::= DataType:DataType Param:FunVarDecl* FunDef:PureExp ;
 
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 
@@ -110,11 +110,11 @@ BoolLiteral: LiteralExp ::= <Content>;
 abstract FunVal  : PureExp ; 
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
-DataConstructorExp : FunVal  ::= <Constructor> Params:PureExp* ;
+DataConstructorExp : FunVal  ::= <Constructor> Param:PureExp* ;
 TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 
 LetExp  : PureExp ::= Var:FunVarDecl Val:PureExp Exp:PureExp ; 
-FnApp  : PureExp ::= <Name> Params:PureExp* ;
+FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
 
