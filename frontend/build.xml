@@ -84,31 +84,21 @@
 
  <target name="test" depends="compile">
     <java classname="abs.frontend.tests.ParserTest">
-        <arg value="tests/abssamples/block.abs"/>
-    <classpath>
-    <pathelement location="${ext.dir}/beaver-rt.jar"/>
-        <pathelement path="${build.dir}"/>
-     </classpath>
-       </java>
-    <java classname="abs.frontend.tests.ParserTest">
-        <arg value="tests/abssamples/skeleton.abs"/>
+        <arg value="tests/abssamples/PeerToPeer.abs"/>
       <classpath>
-	   <pathelement location="${ext.dir}/beaver-rt.jar"/>
-           <pathelement path="${build.dir}"/>
-         </classpath>
-       </java>
+      <pathelement location="${ext.dir}/beaver-rt.jar"/>
+        <pathelement path="${build.dir}"/>
+      </classpath>
+    </java>
  </target>
-
-
-
-
 
 <!-- To run from command line: 
 
-      java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/abssamples/block.abs
+      java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/abssamples/PeerToPeer.abs
   
 -->
 
+	
   <!--  <target name = "jar" depends = "compile">
        <jar destfile = "${dist.dir}/frontend.jar"
        basedir = "${build.dir}"
