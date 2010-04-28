@@ -22,7 +22,7 @@ public class ParserTest {
 		Model m = null;
 
 		//shifting option -v 
-		if (args[0].equals("-v")) {
+		if (args.length > 0 && args[0].equals("-v")) {
 			verbose = true;
 			shiftedArgs = new String[args.length-1];
 			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
