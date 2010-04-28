@@ -3,7 +3,29 @@
 //data type declarations 
 data Void {} // builtin  
 data String {} // builtin  
-data Int {} // builtin 
+data Int {} // builtin
+data Bool {} // builtin
+
+
+//type synonyms  
+// Not implemented 
+
+//type Filename = String 
+//type Filenames = SetOfString 
+//type Packet = String 
+//type File =  ListOfPacket
+//type Catalog = ListOfPairOfServerNFilenames
+
+// dummy definitions to make eclipse / typechecking happy for now
+data Server {}
+data Packet {}
+data Filename {}
+data Filenames {}
+data File {}
+data Catalog {}
+
+
+
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPacket {NilPacket , ConsPacket(Packet, ListOfPacket)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
@@ -14,17 +36,6 @@ data ListOfPairOfServerNFilenames {
 data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
 data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File) }
 data MapOfFilenameToFile { EmptyMap, InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile) }
-
-//type synonyms  
-/* Not implemented 
-
-type Filename = String 
-type Filenames = SetOfString 
-type Packet = String 
-type File =  ListOfPacket
-type Catalog = ListOfPairOfServerNFilenames
-
-*/
 
 
 //function definitions 
@@ -77,12 +88,13 @@ def Filenames keys(MapOfFilenameToFile map) =
 
 //Pairs
 
-def String fst(Pair p) = case p { (l,r) => l ; }
-def String snd(Pair p) = case p { (l,r) => r ; }
+data StringPair { StringPair(String, String) }
+def String fst(StringPair p) = case p { StringPair(l,r) => l ; }
+def String snd(StringPair p) = case p { StringPair(l,r) => r ; }
 
 
 interface Peer extends Client, Server {
-	ListOfServers getNeighbors()
+	ListOfServer getNeighbors()
 }
 
 interface DB {
@@ -103,7 +115,7 @@ interface Server {
   Packet getPack(Filename fId, Int pNbr)
 }
 
-class DataBase(MapOfFilenameFile db) implements DB {
+class DataBase(MapOfFilenameToFile db) implements DB {
   File getFile(Filename fId) { return getFromMap(db, fId); }
   Int getLength(Filename fId){ return length(getFromMap(db,fId)); }
   Void storeFile(Filename fId, File file) { db = insert(db,fId,file); } 
