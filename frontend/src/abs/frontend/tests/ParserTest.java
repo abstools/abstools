@@ -1,11 +1,16 @@
 //$Id$
 package abs.frontend.tests;
 
-import abs.frontend.ast.*;
-import abs.frontend.parser.*;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+
+import abs.frontend.ast.Model;
+import abs.frontend.parser.ABSParser;
+import abs.frontend.parser.ABSScanner;
+import abs.frontend.parser.SyntaxError;
 
 public class ParserTest {
 
@@ -15,17 +20,7 @@ public class ParserTest {
 
 		String[] shiftedArgs = null  ; 
 		Model m = null;
-		int errorcount = 0;
-		ArrayList<String> errorfiles = new ArrayList<String>();
-		
-		if (args.length == 0) {
-			args = new String[]{
-					"block.abs", "boundedbuffer.abs", "emptyblock.abs", "pingpong.abs", 
-					"skeleton.abs", "skipblock.abs", "statements.abs", "trivial.abs",
-					"PeerToPeer.abs",
-					};
-		} 
-		//		System.out.println(args[0]);
+
 		//shifting option -v 
 		if (args[0].equals("-v")) {
 			verbose = true;
@@ -33,30 +28,25 @@ public class ParserTest {
 			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
 			args = shiftedArgs ;
 		}
+
 		for (String arg : args){
-			System.out.println("Trying to parse: " + arg);
-			System.out.println("==========");
 			try{
 				m = parse(arg);
-				System.out.println("Parsing of " + arg + " suceeded.");
-			} catch (Error err) {
-				System.out.flush();
-				//System.err.println("Parsing of " + arg + " failed with Error");
-				System.err.println(arg + ":" + err.getMessage());
-				//err.printStackTrace(System.err);
+			} catch (FileNotFoundException e1) {
+				System.err.println("File not found: " + arg);
 				System.err.flush();
-				errorfiles.add(arg);
-				errorcount++;
+			} catch (SyntaxError pex) {
+				// Exc. thrown by the parser
+				System.err.println(arg + ":" + pex.getMessage());
+				System.err.flush();
 			} catch (Exception e1) {
-				System.out.flush();
-				System.err.println("Parsing of " + arg +  " failed with Exception");
+				// Catch-all
+				System.err.println("Compilation of " + arg +  " failed with Exception");
 				System.err.println(e1);
-				e1.printStackTrace(System.err);
+//				e1.printStackTrace(System.err);
 				System.err.flush();
-				errorfiles.add(arg);
-				errorcount++;
 			}
-			//Dump tree for debug
+			// Dump tree for debug
 			if (verbose){ 
 				System.out.println("Result:");
 				if (m!=null){
@@ -66,20 +56,16 @@ public class ParserTest {
 					System.out.println("(No result)");
 				}
 			}
-		}
-		if (errorcount == 0) {
-			System.out.println("All " + Integer.toString(args.length) + " tests succeeded.");
-		} else {
-			System.out.println(Integer.toString(errorcount) + " out of "
-					+ Integer.toString(args.length) + " tests failed:");
-			for (String file : errorfiles) {
-				System.out.println("   " + file);
+			if (m != null) {
+				int numSemErrs = m.errors().size();
+				
+				if (numSemErrs > 0) {
+					System.out.println("Semantic errors: " + numSemErrs);
+					for (Object error : m.errors())
+						System.err.println(arg + ":" + error);
+					System.err.flush();
+				}
 			}
-		}
-		if (m != null) {
-			System.out.println("Semantic errors: " + m.errors().size());
-			for (Object error : m.errors())
-				System.out.println(error);
 		}
 	}
 

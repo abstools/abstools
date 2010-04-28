@@ -16,8 +16,7 @@ aspect ErrorCheck {
 
   // add an error msg associated with a certain context
   protected void ASTNode.error(Collection c, String s) {
-    //c.add(getLine(getStart()) + ": " + s);
-    c.add(s);
+    c.add(getLine(getStart()) + ":" + getColumn(getStart()) + ": " + s);
   }
 
   // add error for cyclic interface inheritance hierarchy

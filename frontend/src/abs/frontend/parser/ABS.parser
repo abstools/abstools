@@ -15,9 +15,9 @@ import abs.frontend.ast.*;
   class Events extends Parser.Events {
     public void syntaxError(Symbol token) {
       StringBuffer s = new StringBuffer();
-      s.append(token.getLine(token.getStart()) + "," + token.getColumn(token.getStart()) + "\n");
+      s.append(token.getLine(token.getStart()) + ":" + token.getColumn(token.getStart()) + ": ");
       s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
-      throw new Error(s.toString());
+      throw new SyntaxError(s.toString());
     }
     public void scannerError(Scanner.Exception e) {
       StringBuffer s = new StringBuffer();
