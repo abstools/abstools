@@ -48,6 +48,7 @@ List decl_list =
 
 Decl decl =
 		datatype_decl
+	|   typesyn_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
@@ -73,6 +74,10 @@ List var_decls =
 
 DatatypeDecl  datatype_decl = 
 	DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DatatypeDecl(TYPEIDENTIFIER, l); :}
+  ;
+
+TypeSynDecl  typesyn_decl = 
+	TYPE TYPEIDENTIFIER.lhs ASSIGN TYPEIDENTIFIER.rhs  {: return new TypeSynDecl(lhs, rhs); :}
   ;
 
 

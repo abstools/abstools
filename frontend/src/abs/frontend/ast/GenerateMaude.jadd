@@ -26,6 +26,11 @@ aspect GenerateMaude {
 	public void DatatypeDecl.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** Datatype " + getName());
 	}
+
+	public void TypeSynDecl.generateMaude(java.io.PrintStream stream) {
+		stream.println("*** Type synonym: Datatype " + getName());
+	}
+
 	
 	public void FunctionDecl.generateMaude(java.io.PrintStream stream) {
 		boolean inList = false;

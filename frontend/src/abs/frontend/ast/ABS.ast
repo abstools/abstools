@@ -24,6 +24,8 @@ ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:IdUse* Bod
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
 DatatypeDecl:	TypeDecl		::= DataConstructor* ;
 FunctionDecl:	Decl		    ::= DataType:DataType Param:FunVarDecl* FunDef:PureExp ;
+TypeSynDecl:    Decl               ::= <Value> ; 
+
 
 	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
 

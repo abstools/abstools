@@ -10,11 +10,12 @@ data Bool {} // builtin
 //type synonyms  
 // Not implemented 
 
-//type Filename = String 
-//type Filenames = SetOfString 
-//type Packet = String 
-//type File =  ListOfPacket
-//type Catalog = ListOfPairOfServerNFilenames
+type Filename = String 
+type Filenames = SetOfString 
+type Server = String 
+type Packet = String 
+type File =  ListOfPacket
+type Catalog = ListOfPairOfServerNFilenames
 
 // dummy definitions to make eclipse / typechecking happy for now
 data Server {}
@@ -92,8 +93,14 @@ data StringPair { StringPair(String, String) }
 def String fst(StringPair p) = case p { StringPair(l,r) => l ; }
 def String snd(StringPair p) = case p { StringPair(l,r) => r ; }
 
+interface ServerIF {
+  Filenames enquire()
+  Int getLength(Filename fId)
+  Packet getPack(Filename fId, Int pNbr)
+}
 
-interface Peer extends Client, Server {
+
+interface Peer extends Client, ServerIF {
 	ListOfServer getNeighbors()
 }
 
@@ -109,11 +116,6 @@ interface Client {
   Void reqFile(Server sId, Filename fId)
 }
 
-interface Server {
-  Filenames enquire()
-  Int getLength(Filename fId)
-  Packet getPack(Filename fId, Int pNbr)
-}
 
 class DataBase(MapOfFilenameToFile db) implements DB {
   File getFile(Filename fId) { return getFromMap(db, fId); }

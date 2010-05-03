@@ -20,6 +20,10 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 	}
 
+	public void DataType.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
+	}
+
 
 	public void VarRef.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVarName());
