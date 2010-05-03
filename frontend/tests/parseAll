@@ -24,6 +24,8 @@ shift $(($OPTIND - 1))
 for f in $files ; do 
 args="$args tests/abssamples/$f" 
 done 
+echo "parsing files in ./tests/abssamples/ : "; 
+echo $files; 
 eval bin/parseABS $verbose $args 
 
 

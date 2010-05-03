@@ -6,10 +6,10 @@
  */
 
 data Void { }
-data Int { }
+//data Int // builtin
 data Data { }
 data ListofInt { }
-data Bool { True , False }
+//data Bool // builtin
 data IntList { IntNil , Cons(Int, IntList) } 
 
 def Bool lt(Int x , Int y) = notimplemented
