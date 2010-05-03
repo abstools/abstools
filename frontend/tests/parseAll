@@ -3,7 +3,7 @@
 
 BASEDIR="@BASEDIR@" 
 
-files="PeerToPeer.abs block.abs boundedbuffer.abs emptyblock.abs expressions.abs failblock.abs pingpong.abs skeleton.abs skipblock.abs statements.abs trivial.abs"
+files="PeerToPeer.abs block.abs boundedbuffer.abs emptyblock.abs expressions.abs  pingpong.abs skeleton.abs skipblock.abs statements.abs trivial.abs"
 
 function usage
 {

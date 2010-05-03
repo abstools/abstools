@@ -78,7 +78,7 @@ DatatypeDecl  datatype_decl =
 
 FunctionDecl  function_decl = 
 	DEF datatypename.t IDENTIFIER.fn LPAREN fun_var_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
-	; //TODO : ASSIGN (=) or EQEQ == ? 
+	; 
 
 
 InterfaceDecl interface_decl =
@@ -371,7 +371,7 @@ Exp eff_exp =
 	; 
 
 NewExp  new_exp = 
-	NEW TYPEIDENTIFIER.i data_exp_params.p?   {: return new NewExp(i,p) ; :} 
+	NEW COG.c? TYPEIDENTIFIER.i data_exp_params.p?   {: return new NewExp(i,p,c) ; :} 
 	;
 
 List data_exp_params = 

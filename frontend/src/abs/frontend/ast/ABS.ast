@@ -131,7 +131,7 @@ UnderscorePattern: Pattern ;
 
 
 // Expressions with side effects. 
-NewExp: EffExp			::= <ClassRef> Param:PureExp*; //todo, optional cog 
+NewExp: EffExp			::= <ClassRef> Param:PureExp* <Cog> ; //todo, optional cog 
 abstract Call: EffExp 	::= <Method> Param:PureExp*;
 SyncCall: Call			::= Callee:PureExp;
 AsyncCall: Call			::= Callee:PureExp;

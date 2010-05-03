@@ -5,51 +5,39 @@
 //program 
 
 //ifdecl 
-interface baz {
+interface Baz {
     
 }
 
 //ifdecl
-interface foo {
+interface Foo {
     //methSign*
 
     //methSign 
-    bool isOK ()
-    bool isNotOK ()
+    Bool isOK ()
+    Bool isNotOK ()
 	
     //methSign 
-    myIf getIf (
-		//varDecl	
-		bool aVar, myIF bVar)
+    MyIf getIf (Bool aVar, MyIF bVar)
 
 }
 
 //classdecl
-class bar implements foo, baz { 
+class Bar implements Foo, Baz { 
     //fieldDeclList
-    bool aField ; foo fooRef1 ; fut(foo) fooRef ; 
+    Bool aField ; 
+    Foo fooRef1 ; 
+    Fut(Foo) fooRef ; 
     //method*
-    bool isOK () {bool mVar ; skip ; return true ; }
-    bool isNotOK () {bool mVar ; skip ; return false ; }
+    Bool isOK () {Bool mVar ; skip ; return true ; }
+    Bool isNotOK () {Bool mVar ; skip ; return false ; }
 }
 
-//Main
-{ // T x 
+{
     ; 
-  // slist  
+ // slist  
     ; 
 return null ; }
-
-/*
-//Main
-{
-//varDeclList
-; 
-//stmtRet
-skip ; skip ;  
-    return null 
-}
-*/
 
 
 

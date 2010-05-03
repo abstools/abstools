@@ -12,10 +12,10 @@ b = b.append(i);
 
 //stmt
 //assignStmt
-if (a.get) skip ; else skip  ; 
+if (a) skip ; else skip  ; 
 
-if (a.get) skip  ; 
-if (a.get) { skip ; skip ; }  ; 
+if (a) skip  ; 
+if (a) { skip ; skip ; }  ; 
 
 
 a = b ; 
@@ -34,23 +34,23 @@ a = meth();
 
 //await g
 await a? ; 
-await b? && c? ; 
-await b? && c && d.get; 
+await b? & c? ; 
+await b? & c & d; 
 
 //skip
 skip ; 
 
 //If-then-else 
-if (true) then skip ; else skip ; 
+if (true) skip ; else skip ; 
 //sblock
-if (true) then {skip ; skip ;} else skip  ; 
+if (true) {skip ; skip ;} else skip  ; 
 
 //optional else 
-if (true) then skip ; 
+if (true) skip ; 
 
 //nested
-if (x) then 
-  if (y) then 
+if (x)  
+  if (y)  
     a = b ;
   else 
     skip ;
@@ -58,11 +58,11 @@ else
   skip  ; 
 
 //nested
-if (x) then 
-  if (y) then 
+if (x)  
+  if (y)  
     a = b ; 
 
-if (true) then {a = b ; c = d ;} else skip ; 
+if (true) {a = b ; c = d ;} else skip ; 
 
 suspend ; 
 

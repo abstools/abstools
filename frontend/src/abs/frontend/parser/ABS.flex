@@ -85,6 +85,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "case"        { return sym(Terminals.CASE); }
  "let"         { return sym(Terminals.LET); }
  "in"          { return sym(Terminals.IN); }
+ "cog"          { return sym(Terminals.COG); }
 }
 
 //Separators

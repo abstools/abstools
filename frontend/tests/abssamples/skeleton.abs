@@ -70,6 +70,7 @@ class BoundedBuffer implements Buffer {
 	   with side effects.
 	 */
 	x = new FooClass() ;
+	y = new cog FooClass() ;
 	x = o!init();
 	x = o!init(y);
 	x = o!init(y,z);
@@ -77,16 +78,15 @@ class BoundedBuffer implements Buffer {
 	x = init(y,z); 
 	//Await statements 
 	await y? ; 
-	await y? && z? ; 
-	await y? && z? && w?  ;
-	// No boolean guards
-	// await true ; 
+	await y? & z? ; 
+	await y? & z? & w?  ;
+	await true ; 
 	//skip, suspend, if_th_else
 	skip ; 
 	suspend ; 
-	if x then y = true ; 
-	if x then y = true ; else y = false ;
-	if x then y = true ; else { y = false ; x = null ; } 
+	if (x) y = true ; 
+	if (x) y = true ; else y = false ;
+	if (x) y = true ; else { y = false ; x = null ; } 
 	
 
 	//Stmtblock
