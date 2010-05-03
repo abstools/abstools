@@ -57,7 +57,7 @@ aspect TypeAnalysis {
 				cycleFound = cycleFound || ((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain();
 			} else { // Semantic errors in input program can cause dell==null
 				if (decl != null)
-					System.err.println("panic"); // TODO: add some kind of ErrorObject that is later checked?
+					System.err.println("panic:  analysing reference to "+ref.getName()); // TODO: add some kind of ErrorObject that is later checked?
 			    //       for now, we just ignore it!  FIXME!
 			}
 		}
