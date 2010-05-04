@@ -1,4 +1,4 @@
-// -*- mode: java -*-
+// -*- mode: java; tab-width: 4; -*-
 
 aspect GenerateMaude {
 
@@ -35,19 +35,140 @@ aspect GenerateMaude {
 	public void FunctionDecl.generateMaude(java.io.PrintStream stream) {
 		boolean inList = false;
 		stream.println("*** Function " + getName());
-		stream.print("eq \"" + getName() + "\" (");
+		stream.print("eq \"" + getName() + "\"(");
 		for (FunVarDecl param : getParams()) {
 			if (inList == false) inList = true; else stream.print(" :: ");
 			stream.print(param.getName() + ":Data");
 		}
 		stream.println(") ==") ;
 		getFunDef().generateMaude(stream);
+        stream.println(".");
 	}
 	
 	public void PureExp.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** PureExp code for " + getClass().toString());
 	}
+
+    public void LiteralExp.generateMaude(java.io.PrintStream stream) {
+        stream.println("*** LiteralExp code for " + getClass().toString());
+    }
+
+    public void StringLiteral.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"str\"[\"" + this.getContent() + "\"] ");
+    }
+
+    public void IntLiteral.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"int\"[" + this.getContent() + "] ");
+    }
+
+    public void BoolLiteral.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"bool\"[" + this.getContent().toLowerCase() + "] ");
+    }
+
+    public void EqExp.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"=\"( ");
+        getLeft().generateMaude(stream);
+        stream.print(":: ");
+        getRight().generateMaude(stream);
+        stream.print(") ");
+    }
+
+    public void OrBoolExp.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"||\"( ");
+        getLeft().generateMaude(stream);
+        stream.print(":: ");
+        getRight().generateMaude(stream);
+        stream.print(") ");
+    }
+
+    public void AddAddExp.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"+\"( ");
+        getLeft().generateMaude(stream);
+        stream.print(":: ");
+        getRight().generateMaude(stream);
+        stream.print(") ");
+    }
+
+    public void SubAddExp.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"-\"( ");
+        getLeft().generateMaude(stream);
+        stream.print(":: ");
+        getRight().generateMaude(stream);
+        stream.print(") ");
+    }
+
+    public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
+        boolean inlist = false;
+        stream.print("\"" + getConstructor() + "\"[ ");
+        for (PureExp param : getParams()) {
+            if (inlist) stream.print(":: "); else inlist = true;
+            param.generateMaude(stream);
+        }
+        stream.print("] ");
+    }
+
+	public void VarRef.generateMaude(java.io.PrintStream stream) {
+		stream.print("@ \"" + this.getVarName() + "\" ");
+	}
+
+    public void FunVar.generateMaude(java.io.PrintStream stream) {
+        stream.print(getName() + ":Data ");
+    }
+
+    public void FnApp.generateMaude(java.io.PrintStream stream) {
+        boolean inlist = false;
+        stream.print("\"" + getName() + "\"( ");
+        for (PureExp param : getParams()) {
+            if (inlist) stream.print(":: "); else inlist = true;
+            param.generateMaude(stream);
+        }
+        stream.print(") ");
+    }
+
+	public void CaseExp.generateMaude(java.io.PrintStream stream) {
+        boolean inlist = false;
+		stream.print("case " );
+		this.getExpr().generateMaude(stream);
+		stream.print("of { ");
+		for (CaseBranch branch : this.getBranchess()) {
+            if (inlist) stream.print("; "); else inlist = true;
+			branch.generateMaude(stream);
+		}
+		stream.print("} ");
+	}
 	
+	public void CaseBranch.generateMaude(java.io.PrintStream stream) {
+		this.getLeft().generateMaude(stream);
+        stream.print("=> ");
+        this.getRight().generateMaude(stream);
+	}
+	
+	public void Pattern.generateMaude(java.io.PrintStream stream) {
+		stream.println("*** Abstract pattern code for " + getClass().toString());
+	}
+
+    public void UnderscorePattern.generateMaude(java.io.PrintStream stream) {
+        stream.print("@ \"_\" ");
+    }
+
+    public void PatternVar.generateMaude(java.io.PrintStream stream) {
+        this.getVar().generateMaude(stream);
+    }
+
+    public void LiteralPattern.generateMaude(java.io.PrintStream stream) {
+        this.getLiteral().generateMaude(stream);
+    }
+
+    public void ConstructorPattern.generateMaude(java.io.PrintStream stream) {
+        boolean inlist = false;
+        stream.print("\"" + getConstructor() + "\"[ ");
+        for (Pattern pattern : getParamList()) {
+            if (inlist) stream.print(":: "); else inlist = true;
+            pattern.generateMaude(stream);
+        }
+        stream.print("] ");
+    }
+
 	public void UnknownDecl.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** Unknown declaration " + getName());
 	}
