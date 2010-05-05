@@ -2,6 +2,10 @@
 
 aspect GenerateMaude {
 
+    // eq FunctionDecl.getFunDef().amWithinFunction() = true;
+    // eq Model.getBlock().amWithinFunction() = false;
+    // inh boolean PureExp.amWithinFunction();
+
     public void Model.generateMaude(java.io.PrintStream stream) {
         stream.println("in abs-interpreter");
         stream.println();
@@ -65,7 +69,7 @@ aspect GenerateMaude {
         stream.print("\"bool\"[" + this.getContent().toLowerCase() + "] ");
     }
 
-    syn String Unary.maudePrefixOperator() = "(undefined)";
+    syn String Unary.maudePrefixOperator();
     eq MinusExp.maudePrefixOperator() = "-";
     eq NegExp.maudePrefixOperator() = "~";
     public void Unary.generateMaude(java.io.PrintStream stream) {
@@ -74,7 +78,7 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    syn String Binary.maudeInfixOperator() = "(undefined)";
+    syn String Binary.maudeInfixOperator();
     eq EqExp.maudeInfixOperator() = "=";
     eq NotEqExp.maudeInfixOperator() = "/=";
     eq AndBoolExp.maudeInfixOperator() = "&&";
@@ -107,7 +111,9 @@ aspect GenerateMaude {
     }
 
 	public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
-		stream.print("@ \"" + this.getName() + "\" ");
+            // FIXME (rs 2010-05-05): print as name:Data if it's a function
+            // argument
+            stream.print("@ \"" + this.getName() + "\" ");
 	}
 
     public void FunVar.generateMaude(java.io.PrintStream stream) {
