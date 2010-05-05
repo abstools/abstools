@@ -65,32 +65,31 @@ aspect GenerateMaude {
         stream.print("\"bool\"[" + this.getContent().toLowerCase() + "] ");
     }
 
-    public void EqExp.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"=\"( ");
-        getLeft().generateMaude(stream);
-        stream.print(":: ");
-        getRight().generateMaude(stream);
+    syn String Unary.maudePrefixOperator() = "(undefined)";
+    eq MinusExp.maudePrefixOperator() = "-";
+    eq NegExp.maudePrefixOperator() = "~";
+    public void Unary.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"" + maudePrefixOperator() + "\"( ");
+        getOperand().generateMaude(stream);
         stream.print(") ");
     }
 
-    public void OrBoolExp.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"||\"( ");
-        getLeft().generateMaude(stream);
-        stream.print(":: ");
-        getRight().generateMaude(stream);
-        stream.print(") ");
-    }
-
-    public void AddAddExp.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"+\"( ");
-        getLeft().generateMaude(stream);
-        stream.print(":: ");
-        getRight().generateMaude(stream);
-        stream.print(") ");
-    }
-
-    public void SubAddExp.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"-\"( ");
+    syn String Binary.maudeInfixOperator() = "(undefined)";
+    eq EqExp.maudeInfixOperator() = "=";
+    eq NotEqExp.maudeInfixOperator() = "/=";
+    eq AndBoolExp.maudeInfixOperator() = "&&";
+    eq OrBoolExp.maudeInfixOperator() = "||";
+    eq LTExp.maudeInfixOperator() = "<";
+    eq GTExp.maudeInfixOperator() = ">";
+    eq LTEQExp.maudeInfixOperator() = "<=";
+    eq GTEQExp.maudeInfixOperator() = ">=";
+    eq AddAddExp.maudeInfixOperator() = "+";
+    eq SubAddExp.maudeInfixOperator() = "-";
+    eq MultMultExp.maudeInfixOperator() = "*";
+    eq DivMultExp.maudeInfixOperator() = "/";
+    eq ModMultExp.maudeInfixOperator() = "%";
+    public void Binary.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"" + maudeInfixOperator() + "\"( ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
         getRight().generateMaude(stream);
@@ -176,4 +175,5 @@ aspect GenerateMaude {
 	public void Block.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** Block code ...");
 	}
+
 }
