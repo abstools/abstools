@@ -11,7 +11,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
 		//        ScannerTest.class, 
 		ParserTest.class
-			//	InterfaceDeclarationTest.class
+		, InterfaceDeclarationTest.class
         })
 public class AllTests {
 }

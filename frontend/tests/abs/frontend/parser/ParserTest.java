@@ -27,7 +27,6 @@ public class ParserTest {
 	{" x ", 
 	 " this.x ",  
 	 "null",
-	 "this",
 	 //function expressions 
 	 //data constructor expression 
 	 "Int(x , y)", 

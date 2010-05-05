@@ -5,12 +5,11 @@ import java.util.Collections;
 aspect DuplicateCheck {
 	// ***API***
 	
-
 	// *duplicateDeclaration* - true if there is more than one interface declared with the same name
 	// TODO: generalise to other kinds of declarations: ADTs, classes, functions
 	syn lazy Set<String> Model.duplicateInterfaces();
-	
-	
+		
+
 	// ***Implementation***
 	
 	// TODO: refactor into a method for to check dupes for any kind of decl
