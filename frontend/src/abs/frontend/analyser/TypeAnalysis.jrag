@@ -9,10 +9,10 @@ aspect TypeAnalysis {
 	
 	// *hasCycleOnExtendedInterfacesChain* - true if there is a cycle somewhere on the extendedInterfaces chain
 	eq InterfaceDecl.hasCycleOnExtendedInterfacesChain() {
-		List<IdUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
+		List<InterfaceTypeUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
 		boolean cycleFound = false;
 
-		for (IdUse ref : refs) {
+		for (InterfaceTypeUse ref : refs) {
 			Decl decl = ref.decl(); // Note decl var. distinct from decl() method
 			if (decl instanceof InterfaceDecl) {
 				cycleFound = cycleFound || ((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain();

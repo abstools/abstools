@@ -20,36 +20,33 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 //abstract ClassBlockDecl ; 
 
 UnknownDecl:	Decl;			// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:IdUse* Body:ClassBlock;
-InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:IdUse* Body:MethodSig*;
-DatatypeDecl:	TypeDecl		::= DataConstructor* ;
-FunctionDecl:	Decl		    ::= DataType:DataType Param:FunVarDecl* FunDef:PureExp ;
-TypeSynDecl:    Decl               ::= <Value> ; 
+ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* Body:ClassBlock;
+InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
+DataTypeDecl:	TypeDecl		::= DataConstructor* ;
+FunctionDecl:	Decl		    ::= TypeUse Param:VarOrFieldDecl* FunDef:PureExp ;
+TypeSynDecl:    Decl            ::= <Value> ; 
 
 
-	//IdUse is a subclass of TypeAccess, parsing (cf. ABS.parser) returns an instance of IdUse. 
-
-
-abstract  VarOrFieldDecl  ::= <Name> TypeExp; 
-
-VarDecl : VarOrFieldDecl  ; 
-ParamDecl : VarOrFieldDecl ;
-
-FunVarDecl ::= <Name> DataType;   
+abstract	VarOrFieldDecl  ::= <Name> Access; 
+VarDecl:	VarOrFieldDecl; 
+ParamDecl:	VarOrFieldDecl;
 
 Method  ::= MethodSig Block;
 
-MethodSig	::= <Name> ReturnType:TypeExp Params:ParamDecl*;
+MethodSig	::= <Name> ReturnType:Access Param:ParamDecl*;
 
-IdUse				::= <Name>;
-
-abstract TypeExp ; 
-abstract NamedTypeExp : TypeExp  ::= <Name> ; 
-DataType:	NamedTypeExp ;
-InterfaceType:	NamedTypeExp ;
-UnresolvedType : NamedTypeExp ;     // A type expression whose type cannot be resolved at parse time.
-										// Will be  resolved by rewriting. 
-FutureType: TypeExp ::= TypeExp ;  // A future doesn't have a name as such
+// Uses of various identifiers
+abstract Access:		PureExp;
+abstract IdUse:			Access	::= <Name>;
+abstract TypeUse:		IdUse;
+InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
+DataTypeUse:			TypeUse;
+abstract VarOrFieldUse: IdUse;
+VarUse:					VarOrFieldUse;
+FieldUse:				VarOrFieldUse;        // this.f            
+UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
+									// Will be  resolved by rewriting.   TODO: needed? 
+FutureTypeUse:			Access ::= Access ;  // A future doesn't have a name as such
 
 
 /*
@@ -61,13 +58,13 @@ Constructors occur as
 */
 
 abstract Constructor ::= <Name>; 
-DataConstructor : Constructor ::= ConstructorArgs:DataType* ;
+DataConstructor : Constructor ::= ConstructorArg:DataTypeUse* ;
 
 
 abstract Stmt; 
-abstract InitStmt : Stmt ;   //FIXME not all statements can be init statements, i.e. occur in an init block
+abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
-AssignStmt: Stmt		::= Var:VarRef Value:Exp;
+AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
@@ -80,42 +77,39 @@ StmtBlock: Stmt			::= Stmt:Stmt*;
 EmptyStmt: Stmt;
 
 
-
-
 abstract Guard;
-ClaimGuard: Guard		::= Var:VarRef;
+ClaimGuard: Guard		::= Var:VarOrFieldUse;
 AndGuard: Guard			::= Left:Guard Right:Guard;
 //For boolean guards   
 ExpGuard: Guard			::= PureExp ; 
 
-//Expressions 
+
+// Expressions 
 abstract Exp;
-//Pure expressions
+// Pure expressions
 abstract PureExp: Exp;
-//Expressions with side effect. 
+// Expressions with side effect. 
 abstract EffExp: Exp;
 
 // Side effect free expressions 
-abstract VarRef: PureExp    ::= <VarName> ;
-LocalVarRef: VarRef ;
-FieldRef: VarRef ;          //this.f            
 NullExp: PureExp;
 ThisExp: PureExp;
+// plus *Use-s
 
 LiteralExp: PureExp;
-//For now the literal just contain a variable Content of type String. 
+// For now the literal just contain a variable Content of type String. 
 StringLiteral: LiteralExp  ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;        
 BoolLiteral: LiteralExp ::= <Content>;        
 
-//FunctionalExpression 
+// Functional expression 
 abstract FunVal  : PureExp ; 
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
 DataConstructorExp : FunVal  ::= <Constructor> Param:PureExp* ;
 TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 
-LetExp  : PureExp ::= Var:FunVarDecl Val:PureExp Exp:PureExp ; 
+LetExp  : PureExp ::= Var:VarOrFieldDecl Val:PureExp Exp:PureExp ; 
 FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
@@ -124,11 +118,11 @@ CaseBranch ::= Left:Pattern Right:PureExp ;
 //Patterns 
 abstract Pattern ; 
 
-PatternVar: Pattern ::= Var:VarRef ; 
-ConstructorPattern: Pattern ::= <Constructor> Param:Pattern* ;
-LiteralPattern: Pattern ::= Literal:LiteralExp ;
-PatternPair: Pattern ::= Left:Pattern Right:Pattern ;
-UnderscorePattern: Pattern ; 
+PatternVar:			Pattern ::= Var:VarOrFieldUse; 
+ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
+LiteralPattern:		Pattern ::= Literal:LiteralExp;
+PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
+UnderscorePattern:	Pattern; 
 
 
 
@@ -176,18 +170,6 @@ GTEQExp : RelationalExpr ;
 abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

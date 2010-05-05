@@ -10,7 +10,7 @@ aspect DumpTree {
 
 	public void VarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.println(indent + this.toString() + "\t\t" +  this.getName() + " : " 
-						+  (this.getTypeExp()));
+						+  (this.getAccess()));
 		String childIndent = indent + "  ";
 		for(int i = 0; i < getNumChild(); i++)
 			getChildNoTransform(i).dumpTree(childIndent, pStream);
@@ -20,13 +20,12 @@ aspect DumpTree {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 	}
 
-	public void DataType.dumpTree(String indent, java.io.PrintStream pStream) {
+	public void DataTypeUse.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 	}
 
-
-	public void VarRef.dumpTree(String indent, java.io.PrintStream pStream) {
-	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVarName());
+	public void VarOrFieldUse.dumpTree(String indent, java.io.PrintStream pStream) {
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 	}
 
 	public void DataConstructorExp.dumpTree(String indent, java.io.PrintStream pStream) {
@@ -38,7 +37,7 @@ aspect DumpTree {
 	}
 
 	public void AssignStmt.dumpTree(String indent, java.io.PrintStream pStream) {
-	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getVarName() + "=");
+	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getName() + "=");
 		this.getValue().dumpTree("",pStream);
 		pStream.println();
 	}

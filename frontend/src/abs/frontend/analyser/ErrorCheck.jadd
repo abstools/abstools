@@ -27,7 +27,8 @@ aspect ErrorCheck {
   }
 
   // add error for undeclared interfaces
-  public void IdUse.collectErrors(Collection c) {
+  // TODO: generalise to check other IdUse's too.
+  public void InterfaceTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(decl().isUnknown())
       error(c, "Unknown identifier " + getName());

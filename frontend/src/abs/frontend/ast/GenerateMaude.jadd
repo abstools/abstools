@@ -23,7 +23,7 @@ aspect GenerateMaude {
 		stream.println("*** Interface code ...");
 	}
 
-	public void DatatypeDecl.generateMaude(java.io.PrintStream stream) {
+	public void DataTypeDecl.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** Datatype " + getName());
 	}
 
@@ -36,7 +36,7 @@ aspect GenerateMaude {
 		boolean inList = false;
 		stream.println("*** Function " + getName());
 		stream.print("eq \"" + getName() + "\"(");
-		for (FunVarDecl param : getParams()) {
+		for (VarOrFieldDecl param : getParams()) {
 			if (inList == false) inList = true; else stream.print(" :: ");
 			stream.print(param.getName() + ":Data");
 		}
@@ -106,8 +106,8 @@ aspect GenerateMaude {
         stream.print("] ");
     }
 
-	public void VarRef.generateMaude(java.io.PrintStream stream) {
-		stream.print("@ \"" + this.getVarName() + "\" ");
+	public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
+		stream.print("@ \"" + this.getName() + "\" ");
 	}
 
     public void FunVar.generateMaude(java.io.PrintStream stream) {
