@@ -96,7 +96,7 @@ NullExp: PureExp;
 ThisExp: PureExp;
 // plus *Use-s
 
-LiteralExp: PureExp;
+abstract LiteralExp: PureExp;
 // For now the literal just contain a variable Content of type String. 
 StringLiteral: LiteralExp  ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;        
