@@ -121,7 +121,7 @@ abstract Pattern ;
 PatternVar:			Pattern ::= Var:VarOrFieldUse; 
 ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
 LiteralPattern:		Pattern ::= Literal:LiteralExp;
-PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
+//PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
 UnderscorePattern:	Pattern; 
 
 

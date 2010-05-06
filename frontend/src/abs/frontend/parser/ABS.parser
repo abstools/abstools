@@ -313,7 +313,7 @@ Pattern pattern =
 	  IDENTIFIER.v  {: return new PatternVar(new VarUse(v)) ; :}
 	| constructor_pattern 
 	| literal.l  	{: return new LiteralPattern(l) ; :}
-	| LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
+	//| LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
 	| USCORE {: return new UnderscorePattern() ; :}
 	;
 
