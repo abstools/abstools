@@ -193,7 +193,7 @@ fmod ABS-EXPRESSION is
     op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
     *** let expression
     op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
-    *** guard expression -- do we need this?
+    *** guard expression
     op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
 
 endfm
