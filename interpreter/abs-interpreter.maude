@@ -152,15 +152,15 @@ fmod ABS-STATEMENT is
   op suspend : -> Stmt [ctor format (b o)] .
   op await_ : Expr -> SuspStmt [ctor format (b o d)] .
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
-  op assign(_;_) : VidList ExprList -> Stmt [ctor format (b d o b o b o)] .
+  op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
   op static(_;_;_;_;_) : Vid String Cid Cid ExprList -> Stmt [ctor format (b d o b o b o b o b o b o)] . 
   op multicast(_;_;_) : Expr String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
-  op get(_;_)  : Vid VidList -> Stmt [ctor format (b d o b o b o)] .
-  op get(_;_)  : Label VidList -> Stmt [ctor ditto] .
+  op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
+  op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
-  op return(_) : ExprList -> Stmt [ctor format (c d o c o)] .
+  op return(_) : Expr -> Stmt [ctor format (c d o c o)] .
   op free(_) : Vid -> Stmt [ctor format (c d o c o)] .
   op tailcall(_;_;_) : Expr String ExprList -> Stmt [ctor format (c d o c o c o c o)] .
   op statictail(_;_;_;_) : String Cid Cid ExprList -> Stmt [ctor format (c d o c o c o c o c o)] .
@@ -177,6 +177,9 @@ fmod ABS-STATEMENT is
   --- Multiple Assignment.
   --- For the model checker the following will be evaluated as an
   --- equation and the old rule is not confluent.
+  --- 
+  --- This is only used in object initialization etc. - no multiple
+  --- assignments in ABS.
   op $assign(_;_) : VidList DataList -> Stmt  [format (r d o r o r o)] .
 
   --- Multicast
@@ -337,7 +340,7 @@ mod ABS-CONFIGURATION is
 
   eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
     { @ "caller" |-> O, @ ".class" |-> "str"[B], @ ".label" |-> N,
-      @ ".method" |-> "str"[M], S | assign(AL ; DL) ; SL } .
+      @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
   eq get(M, C, MS, O, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects (and classes) in the
@@ -351,7 +354,7 @@ mod ABS-CONFIGURATION is
   --- Terms that represent futures.
   ---
   op <_: Future | Completed:_, References:_, Value:_> :
-    Label Bool Nat DataList -> Object 
+    Label Bool Nat Data -> Object 
     [ctor format (nr d d g ++r ir o  r i o  r i o--  r on)] .
 
   --- Completed futures without references can be removed.
@@ -447,7 +450,7 @@ mod ABS-EVAL is
   var NeES : NeExprSet .
   var DS : DataSet .
   var EM : ExprMap .
-  var A : Vid .
+  vars A A' : Vid .
   var AL : VidList .
   vars Q C : String .
   vars S S' : Subst .
@@ -462,7 +465,7 @@ mod ABS-EVAL is
 
   --- Check if a message is in the queue.
   op inqueue  : Label Configuration -> Bool .
-  eq inqueue(L, < L' : Future | Completed: B, References: N, Value: DL > CN) =
+  eq inqueue(L, < L' : Future | Completed: B, References: N, Value: D > CN) =
     if L == L' then B else inqueue(L, CN) fi .
   eq inqueue(L, CL CN) = inqueue(L, CN) .
   eq inqueue(L, OB CN) = inqueue(L, CN) .
@@ -568,8 +571,8 @@ mod ABS-EVAL is
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(A ; AL) ; SL , S, CN) = inqueue(S[A], CN) . 
-  eq ready(get(L ; AL) ; SL , S, CN) = inqueue(L, CN) . 
+  eq ready(get(A ; A') ; SL , S, CN) = inqueue(S[A], CN) . 
+  eq ready(get(L ; A') ; SL , S, CN) = inqueue(L, CN) . 
   eq ready((SL1 [] SL2) ; SL, S, CN) =
     ready(SL1, S, CN) or ready(SL2, S, CN) .
   eq ready(SL, S, CN) = enabled(SL, S, CN) [owise] .
@@ -595,7 +598,7 @@ mod ABS-SIMULATOR is
   vars O O1 : Oid .                    --- Object identifiers
   vars C CC : Cid .                    --- Class names
   var Q : String .                     --- Generic names (attribute and method)
-  var A : Vid .                        --- Generic attribute names
+  vars A A' : Vid .                        --- Generic attribute names
   var AL : VidList .                   --- List of LHS
   var N : Label .                      --- Call label
   var D : Data .                       --- Value
@@ -618,15 +621,19 @@ mod ABS-SIMULATOR is
 
   --- assignment
   ---
-  --- Execute an assignment.  First, all expressions on the left hand side
-  --- of the assignment are evaluated and the statement is rewritten to
-  --- an assign form.
-  rl
-    < O : C | Att: S, Pr: { L | assign(AL ; EL) ; SL },
+  --- Execute an assignment.  The expression on the right hand side of the
+  --- assignment is evaluated and stored as new value for the left hand side
+  --- identifier.
+  crl
+    < O : C | Att: S, Pr: { L | assign(A ; E) ; SL },
 	      PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { L | $assign(AL ; evalGuardList(EL, (S :: L), none)) ; SL }, 
-	      PrQ: W, Lcnt: F > 
+    if $hasMapping(L, A) then
+      < O : C | Att: S, Pr: { insert(A, D, L) |  SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    fi
+    if D := evalGuard(E, (S :: L), none)
     [label assignment] .
 
   eq
@@ -755,8 +762,8 @@ mod ABS-SIMULATOR is
 
   --- OPTIMISATION: Reduce the value of a label in a process to avoid
   --- constant re-evaluation
-  eq < O : C | Att: S, Pr: { L | get(A ; AL) ; SL }, PrQ: W, Lcnt: F > =
-    < O : C | Att: S, Pr: { L | get(L[A] ; AL) ; SL }, PrQ: W, Lcnt: F > .
+  eq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F > =
+    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F > .
 
 
   --- receive-comp
@@ -766,21 +773,21 @@ mod ABS-SIMULATOR is
   --- return values in the queue.
   ---
   rl
-    < O : C |  Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: true, References: G, Value: DL >
+    < O : C |  Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: true, References: G, Value: D >
   =>
-    < O : C |  Att: S, Pr: { L | assign(AL ; DL) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: true, References: G, Value: DL >
+    < O : C |  Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: true, References: G, Value: D >
     [label receive-comp] .
 
 
   --- local-reply
   ---
   crl
-    < O : C | Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
+    < O : C | Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
   =>
     < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
-              PrQ: W , { L | get(N ; AL) ; SL }, Lcnt: F >
+              PrQ: W , { L | get(N ; A) ; SL }, Lcnt: F >
   if L1[@ ".label"] == N
       [label local-reply] .
 
@@ -794,10 +801,10 @@ mod ABS-SIMULATOR is
   --- checker, because there might be two processes in PrQ which await a
   --- reply to the label.
   rl
-    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; AL) ; SL1},
+    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; A) ; SL1},
               Lcnt: F >
   =>
-    < O : C | Att: S, Pr: { L1 | get(N ; AL) ; SL1 }, PrQ: W,
+    < O : C | Att: S, Pr: { L1 | get(N ; A) ; SL1 }, PrQ: W,
               Lcnt: F >
     [label continue] .
 
@@ -882,11 +889,11 @@ mod ABS-SIMULATOR is
   --- return
   ---
   crl
-    < O : C |  Att: S, Pr: { L | return(EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Completed: false, References: G, Value: emp >
   =>
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Completed: true, References: G, Value: evalGuardList(EL, (S :: L), none) >
+    < N : Future | Completed: true, References: G, Value: evalGuard(E, (S :: L), none) >
   if N == L[@ ".label"]
       [label return] .
 
@@ -912,10 +919,10 @@ mod ABS-SIMULATOR is
   --- nice decrement operator.
   crl
     < O : C | Att: S, Pr: { L | free(A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: G, Value: DL >
+    < N : Future | Completed: CO, References: G, Value: D >
   =>
     < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: sd(G, 1), Value: DL >
+    < N : Future | Completed: CO, References: sd(G, 1), Value: D >
   if N = L[A]
       [label free] .
 
