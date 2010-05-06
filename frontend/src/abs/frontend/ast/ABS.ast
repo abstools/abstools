@@ -107,7 +107,7 @@ abstract FunVal  : PureExp ;
 
 FunVar : FunVal ::= <Name> ; //Name = Variable name 
 DataConstructorExp : FunVal  ::= <Constructor> Param:PureExp* ;
-TermPair : FunVal ::= Left:PureExp Right:PureExp ;
+//TermPair : FunVal ::= Left:PureExp Right:PureExp ;
 
 LetExp  : PureExp ::= Var:VarOrFieldDecl Val:PureExp Exp:PureExp ; 
 FnApp  : PureExp ::= <Name> Param:PureExp* ;

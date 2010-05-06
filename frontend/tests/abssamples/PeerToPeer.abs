@@ -195,7 +195,7 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
       await fN? & cL?; 
 	  catList = cL.get ;
 	  fNames = fN.get ; 
-      cat = appendright(catList, (head(sList), fNames)); 
+      cat = appendright(catList, ConsPacket(head(sList), fNames)); 
       }
     return cat; 
   }

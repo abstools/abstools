@@ -228,9 +228,9 @@ List data_exp_list =
 
 	;
 
-PureExp pair_exp = 
-	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
-	;
+//PureExp pair_exp = 
+//	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
+//	;
 
 PureExp data_exp = 
 	or_exp
@@ -277,7 +277,7 @@ PureExp mult_exp =
 PureExp factor =  
  	literal 
 	| pure_exp
-	| pair_exp 
+//	| pair_exp 
 	| MINUS factor.e           {: return new MinusExp(e); :} 
 	| NEGATION factor.b            {: return new NegExp(b); :} 
 	| LPAREN or_exp.e RPAREN {: return e; :}
