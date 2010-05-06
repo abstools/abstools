@@ -149,7 +149,7 @@ fmod ABS-STATEMENT is
   subsort SuspStmt < Stmt .
 
   op skip : -> Stmt [ctor format (b o)] .
-  op release : -> Stmt [ctor format (b o)] .
+  op suspend : -> Stmt [ctor format (b o)] .
   op await_ : Expr -> SuspStmt [ctor format (b o d)] .
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
   op assign(_;_) : VidList ExprList -> Stmt [ctor format (b d o b o b o)] .
@@ -615,7 +615,6 @@ mod ABS-SIMULATOR is
   var B : Cid .
 
   op label : Oid Nat -> Label [ctor format (o o)] .
-  eq caller(label(O, F)) = O .
 
   --- assignment
   ---
@@ -702,15 +701,15 @@ mod ABS-SIMULATOR is
 
   --- PROCESS SUSPENSION
 
-  --- release
+  --- suspend
   ---
-  --- The release statement is an unconditional processor release point.
+  --- The suspend statement is an unconditional processor release point.
   ---
   rl
-    < O : C | Att: S, Pr: { L | release ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
-    [label release] .
+    [label suspend] .
 
 
   --- suspend

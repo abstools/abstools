@@ -149,8 +149,6 @@ fmod ABS-DATA-LABEL is
     sort Label .
     subsort Label < Data .
 
-    op caller : Label -> Data .
-
     --- Needed in the model checker for tail recursion.
     op tag : Label -> Label [ctor format (c o)] .
     var L : Label .
