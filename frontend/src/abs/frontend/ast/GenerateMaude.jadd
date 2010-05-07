@@ -2,16 +2,31 @@
 
 aspect GenerateMaude {
 
+    // FIXME: this does not consider shadowing rebinding of variables
+    // inside the function body
+    eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
+    eq FunctionDecl.getFunDef().functionParameters() = getParams();
+    inh List<VarOrFieldDecl> Stmt.functionParameters();
+    inh List<VarOrFieldDecl> Exp.functionParameters();
+
+    syn boolean VarOrFieldUse.isFunctionParameter();
+    eq VarOrFieldUse.isFunctionParameter() {
+        for (VarOrFieldDecl param : functionParameters()) {
+            if (param.getName().equals(getName())) return true;
+        }
+        return false;
+    }
+
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
     public void Model.generateMaude(java.io.PrintStream stream) {
         stream.println("in abs-interpreter\n\nmod PROGRAM is\nprotecting ABS-SIMULATOR .\n");
-        for (Decl decl : this.getDecls()) {
+        for (Decl decl : getDecls()) {
         	decl.generateMaude(stream);
         }
-        if (this.hasBlock()) {
-        	this.getBlock().generateMaude(stream);
+        if (hasBlock()) {
+        	getBlock().generateMaude(stream);
         }
         stream.println("endm");
     }
@@ -123,15 +138,15 @@ aspect GenerateMaude {
     abstract public void LiteralExp.generateMaude(java.io.PrintStream stream);
 
     public void StringLiteral.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"str\"[\"" + this.getContent() + "\"] ");
+        stream.print("\"str\"[\"" + getContent() + "\"] ");
     }
 
     public void IntLiteral.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"int\"[" + this.getContent() + "] ");
+        stream.print("\"int\"[" + getContent() + "] ");
     }
 
     public void BoolLiteral.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"bool\"[" + this.getContent().toLowerCase() + "] ");
+        stream.print("\"bool\"[" + getContent().toLowerCase() + "] ");
     }
 
     syn String Unary.maudePrefixOperator();
@@ -184,9 +199,11 @@ aspect GenerateMaude {
     }
 
 	public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
-            // FIXME (rs 2010-05-05): print as name:Data if it's a function
-            // argument
-            stream.print("@ \"" + this.getName() + "\" ");
+        if (isFunctionParameter()) {
+            stream.print(getName() + ":Data ");
+        } else {
+            stream.print("@ \"" + getName() + "\" ");
+        }
 	}
 
     public void FunVar.generateMaude(java.io.PrintStream stream) {
@@ -214,9 +231,9 @@ aspect GenerateMaude {
 	public void CaseExp.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
 		stream.print("case " );
-		this.getExpr().generateMaude(stream);
+		getExpr().generateMaude(stream);
 		stream.print("of { ");
-		for (CaseBranch branch : this.getBranchess()) {
+		for (CaseBranch branch : getBranchess()) {
             if (inlist) stream.print("; "); else inlist = true;
 			branch.generateMaude(stream);
 		}
@@ -224,9 +241,9 @@ aspect GenerateMaude {
 	}
 	
 	public void CaseBranch.generateMaude(java.io.PrintStream stream) {
-		this.getLeft().generateMaude(stream);
+		getLeft().generateMaude(stream);
         stream.print("=> ");
-        this.getRight().generateMaude(stream);
+        getRight().generateMaude(stream);
 	}
 	
 	abstract public void Pattern.generateMaude(java.io.PrintStream stream);
@@ -236,11 +253,11 @@ aspect GenerateMaude {
     }
 
     public void PatternVar.generateMaude(java.io.PrintStream stream) {
-        this.getVar().generateMaude(stream);
+        getVar().generateMaude(stream);
     }
 
     public void LiteralPattern.generateMaude(java.io.PrintStream stream) {
-        this.getLiteral().generateMaude(stream);
+        getLiteral().generateMaude(stream);
     }
 
     public void ConstructorPattern.generateMaude(java.io.PrintStream stream) {
