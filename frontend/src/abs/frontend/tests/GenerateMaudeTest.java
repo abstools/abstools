@@ -14,17 +14,17 @@ public class GenerateMaudeTest {
 	 */
 	public static void main(String[] args) {
 		Model m = null;
-        if (args.length == 0) args = new String[]{"PeerToPeer.abs"};
+        //if (args.length == 0) args = new String[]{"PeerToPeer.abs"};
         for (String arg : args) {
             try {
                 m = parse(arg);
             } catch (Error err) {
-				System.out.println(arg + ":" + err.getMessage());
+				System.err.println(arg + ":" + err.getMessage());
                 return;
             } catch (Exception e) {
-				System.out.println("Parsing of " + arg +  " failed with Exception");
-				System.out.println(e);
-				e.printStackTrace(System.out);
+				System.err.println("Parsing of " + arg +  " failed with Exception");
+				System.err.println(e);
+				e.printStackTrace(System.err);
                 return;
             }
             if (m != null) m.generateMaude(System.out);
