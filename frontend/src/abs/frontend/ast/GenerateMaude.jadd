@@ -6,14 +6,14 @@ aspect GenerateMaude {
     // up, but has to leave whitespace at the end if needed.
 
     public void Model.generateMaude(java.io.PrintStream stream) {
-        stream.println("in abs-interpreter");
-        stream.println();
+        stream.println("in abs-interpreter\n\nmod PROGRAM is\nprotecting ABS-SIMULATOR .\n");
         for (Decl decl : this.getDecls()) {
         	decl.generateMaude(stream);
         }
         if (this.hasBlock()) {
         	this.getBlock().generateMaude(stream);
         }
+        stream.println("endm");
     }
 
 	abstract public void Decl.generateMaude(java.io.PrintStream stream);
@@ -38,7 +38,7 @@ aspect GenerateMaude {
 			if (inList == false) inList = true; else stream.print(" :: ");
 			stream.print(param.getName() + ":Data");
 		}
-		stream.println(") ==") ;
+		stream.print(") =\n   ") ;
 		getFunDef().generateMaude(stream);
         stream.println(".");
 	}
@@ -46,7 +46,7 @@ aspect GenerateMaude {
     abstract public void Exp.generateMaude(java.io.PrintStream stream);
 
     public void Access.generateMaude(java.io.PrintStream stream) {
-        stream.println("+++ Hey, I didn't expect this to be generated! " + getClass().toString());
+        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
 
     abstract public void Exp.generateMaudeAsStatement(java.io.PrintStream stream, String var);
@@ -56,7 +56,7 @@ aspect GenerateMaude {
     }
 
     public void EffExp.generateMaude(java.io.PrintStream stream) {
-        stream.println("+++ Hey, you used a side-effecting expression as a normal one! " + getClass().toString());
+        stream.println("--- Hey, you used a side-effecting expression as a normal one! " + getClass().toString());
     }
     public void AsyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
@@ -254,7 +254,7 @@ aspect GenerateMaude {
     }
 
 	public void UnknownDecl.generateMaude(java.io.PrintStream stream) {
-		stream.println("+++ Unknown declaration " + getName());
+		stream.println("--- Unknown declaration " + getName());
 	}
 
     public void ClassDecl.generateMaude(java.io.PrintStream stream) {
@@ -282,10 +282,28 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
+        // DANGER: here we generate a method list from 2 sources: the
+        // init block and the defined methods.  `inlist's value carries
+        // meaning across these two blocks.
+        inlist = false;
+        if (getBody().hasInitBlock()) {
+            // hand-craft "init" method
+            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            stream.print(",\n      Code: ");
+            if (getBody().getInitBlock().getNumStmt() == 0) {
+                stream.print("noStmt");
+            } else {
+                inlist = false;
+                for (Stmt stmt : getBody().getInitBlock().getStmts()) {
+                    if (inlist) stream.print("; "); else inlist = true;
+                    stmt.generateMaude(stream);
+                }
+            }
+            inlist = true;
+        }
         if (getBody().getNumMethod() == 0) {
             stream.print("noMethod");
         } else {
-            inlist = false;
             stream.print("(");
             for (Method method : getBody().getMethods()) {
                 if (inlist) stream.print(",\n    "); else inlist = true;
@@ -432,6 +450,6 @@ aspect GenerateMaude {
 	}
 
     public void Block.generateMaude(java.io.PrintStream stream) {
-        stream.println("+++ Block");
+        stream.println("--- Block");
     }
 }
