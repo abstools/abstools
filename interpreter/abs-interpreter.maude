@@ -307,6 +307,7 @@ mod ABS-CONFIGURATION is
   var AL : VidList .
   vars SL SL1 : StmtList .
   var EL : ExprList .
+  var D : Data .
   var DL : DataList .
   var N : Label .
   var F : Nat .
@@ -339,7 +340,7 @@ mod ABS-CONFIGURATION is
   op get : String Cid MMtd Oid Label DataList -> Process .
 
   eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
-    { @ "caller" |-> O, @ ".class" |-> "str"[B], @ ".label" |-> N,
+    { @ ".class" |-> "str"[B], @ ".label" |-> N,
       @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
   eq get(M, C, MS, O, N, DL) = notFound [owise] .
 
@@ -359,7 +360,7 @@ mod ABS-CONFIGURATION is
 
   --- Completed futures without references can be removed.
   ---
-  eq < N : Future | Completed: true, References: 0, Value: DL > = none .
+  eq < N : Future | Completed: true, References: 0, Value: D > = none .
 
   --- Define Classes.
   --- Class declaration.
@@ -815,7 +816,7 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | static( A ; Q ; CC ; None ; EL ); SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
-    < N : Future | Completed: false, References: 1, Value: emp >
+    < N : Future | Completed: false, References: 1, Value: null >
     bindMtd(O, O, N, Q, evalGuardList(EL, (S :: L), none), CC) 
   if N := label(O, F)
       [label local-async-static-call] .
@@ -890,7 +891,7 @@ mod ABS-SIMULATOR is
   ---
   crl
     < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Completed: false, References: G, Value: emp >
+    < N : Future | Completed: false, References: G, Value: null >
   =>
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Completed: true, References: G, Value: evalGuard(E, (S :: L), none) >
@@ -907,7 +908,7 @@ mod ABS-SIMULATOR is
     invoc(O1, O, N, Q, DL)
   =
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < N : Future | Completed: false, References: 1, Value: emp >
+    < N : Future | Completed: false, References: 1, Value: null >
     bindMtd(O, O1, N, Q, DL, C)
     [label transport-imsg] .
 
@@ -992,7 +993,7 @@ mod ABS-SIMULATOR is
                          Pr: { @ ".label" |-> label(O, F) |
                                $assign(AL ; evalGuardList(EL, compose(S,  L), none)) ;
                                call(@ ".anon" ; @ "this" ; "init" ; emp) ;
-                               get(@ ".anon" ; noVid) ;
+                               get(@ ".anon" ; @ "_") ;
                                free(@ ".anon") ;
                                call (@ ".anon" ; @ "this" ; "run" ; emp) ;
                                free(@ ".anon") }, 
