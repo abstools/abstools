@@ -320,13 +320,14 @@ aspect GenerateMaude {
             stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBody().getInitBlock().getNumStmt() == 0) {
-                stream.print("noStmt");
+                stream.print("return( null) ");
             } else {
                 inlist = false;
                 for (Stmt stmt : getBody().getInitBlock().getStmts()) {
                     if (inlist) stream.print("; "); else inlist = true;
                     stmt.generateMaude(stream);
                 }
+                stream.print("; return( null) ");
             }
             stream.print("> ");
             inlist = true;
@@ -367,12 +368,16 @@ aspect GenerateMaude {
         }
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
-            stream.print("noStmt");
+            stream.print("return( null ) ");
         } else {
             inlist = false;
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
+            }
+            if (getBlock().getStmt(getBlock().getNumStmt() - 1).getClass()
+                != ReturnStmt.class) {
+                stream.print("; return( null ) ");
             }
         }
         stream.print("> ");
