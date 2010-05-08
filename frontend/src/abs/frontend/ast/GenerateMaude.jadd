@@ -23,8 +23,16 @@ aspect GenerateMaude {
     public void Model.generateMaude(java.io.PrintStream stream) {
         stream.println("in abs-interpreter\n\nmod PROGRAM is\nprotecting ABS-SIMULATOR .\n");
         for (Decl decl : getDecls()) {
-        	decl.generateMaude(stream);
+            if (decl.getClass() == FunctionDecl.class)
+                decl.generateMaude(stream);
         }
+        stream.println("op classes : -> Configuration .");
+        stream.println("eq classes =");
+        for (Decl decl : getDecls()) {
+            if (decl.getClass() == ClassDecl.class)
+                decl.generateMaude(stream);
+        }
+        stream.println(" .");
         if (hasBlock()) {
         	getBlock().generateMaude(stream);
         }
@@ -191,9 +199,13 @@ aspect GenerateMaude {
     public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getConstructor() + "\"[ ");
-        for (PureExp param : getParams()) {
-            if (inlist) stream.print(":: "); else inlist = true;
-            param.generateMaude(stream);
+        if (getNumParam() == 0) {
+            stream.print("emp ");
+        } else {
+            for (PureExp param : getParams()) {
+                if (inlist) stream.print(":: "); else inlist = true;
+                param.generateMaude(stream);
+            }
         }
         stream.print("] ");
     }
@@ -276,7 +288,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-		stream.println("< " + getName() + " : Class |");
+		stream.println("< \"" + getName() + "\" : Class |");
         stream.print("  Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -316,17 +328,16 @@ aspect GenerateMaude {
                     stmt.generateMaude(stream);
                 }
             }
+            stream.print("> ");
             inlist = true;
         }
-        if (getBody().getNumMethod() == 0) {
+        if (getBody().getNumMethod() == 0 && !getBody().hasInitBlock()) {
             stream.print("noMethod");
         } else {
-            stream.print("(");
             for (Method method : getBody().getMethods()) {
                 if (inlist) stream.print(",\n    "); else inlist = true;
                 method.generateMaude(stream);
             }
-            stream.print(")");
         }
         stream.println(",\n  Ocnt: 0 > ");
 	}
@@ -380,7 +391,7 @@ aspect GenerateMaude {
 
     public void AssignStmt.generateMaude(java.io.PrintStream stream) {
         if (getValue() instanceof PureExp) {
-            stream.print("assign( @ \"" + getVar().getName() + "\"; ");
+            stream.print("assign( @ \"" + getVar().getName() + "\" ; ");
             getValue().generateMaude(stream);
             stream.print(") ");
         } else {
