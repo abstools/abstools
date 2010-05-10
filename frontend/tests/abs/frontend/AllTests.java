@@ -12,6 +12,7 @@ import org.junit.runners.Suite;
 		//        ScannerTest.class, 
 		ParserTest.class
 		, InterfaceDeclarationTest.class
+		, ParseSamplesTest.class
         })
 public class AllTests {
 }
