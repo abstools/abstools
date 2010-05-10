@@ -6,14 +6,13 @@
  *
  */
 
-interface Void {
-    //All method signatures must have a return type. 
-} 
+data Void {}
+data String {}
+
 
 interface Ping {
 
-    Void init(Pong p) 
-    //We dont have strings yet but use it anyway. 
+    Void init(Pong p)  
     String m(String m)
     Void run()	
 }
@@ -33,8 +32,9 @@ class Ping  implements Ping {
 
     Void init(Pong p){
 	
-	pong = p ; return null ;
-    }
+	pong = p ; 
+	return null ;
+   	}
 
 
     Void run(){
@@ -57,8 +57,6 @@ class Ping  implements Ping {
         return reply ;
     }
 } 
-
-
 
 class Pong implements Pong {
 

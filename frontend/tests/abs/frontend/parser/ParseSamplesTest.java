@@ -30,7 +30,7 @@ public class ParseSamplesTest {
 	protected static void assertParseOk(String s) {
 		Model m = null;
 		try {
-			m = parse(s);
+			m = Main.parse(s);
 			if (m != null) {
 				int numSemErrs = m.errors().size();
 				if (numSemErrs > 0){
@@ -45,17 +45,6 @@ public class ParseSamplesTest {
 		}
 	}
 
-	protected static Model parse(String file) throws Exception {
-		Reader reader = new FileReader(file);
-		ABSParser parser = new ABSParser();
-		ABSScanner scanner = new ABSScanner(reader);
-		Model m = (Model)parser.parse(scanner);
-		reader.close();
-		return m; 
-	}
-
-	
-	
 }
 
   

@@ -52,7 +52,7 @@ def Int length(File file) =             // the length of a list
   } 
 
 def Packet nth(File file, Int n) =
-  case n {
+  case n {   
     0 => head(file) ;
     _ => nth(tail(file), n-1) ;
   }

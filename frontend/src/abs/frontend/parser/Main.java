@@ -1,7 +1,5 @@
-//$Id$
-
-//This class to be removed, use abs.frontend.parser.Main instead 
-package abs.frontend.tests;
+//$Id: ParserTest.java 4233 2010-04-28 16:24:27Z rschlatte $
+package abs.frontend.parser;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -14,7 +12,7 @@ import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
 
-public class ParserTest {
+public class Main {
 
 	static boolean verbose = false ; 
 
