@@ -306,7 +306,7 @@ aspect GenerateMaude {
         } else {
             inlist = false;
             for (VarDecl field : getBody().getFields()) {
-                if (inlist) stream.print(":: "); else inlist = true;
+                if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + field.getName() + "\" |-> null ");
             }
         }
@@ -362,7 +362,7 @@ aspect GenerateMaude {
         } else {
             inlist = false;
             for (VarDecl var : getBlock().getFields()) {
-                if (inlist) stream.print(":: "); else inlist = true;
+                if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + var.getName() + "\" |-> null ");
             }
         }
