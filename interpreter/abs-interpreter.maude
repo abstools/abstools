@@ -157,6 +157,8 @@ fmod ABS-STATEMENT is
   op $cont_ : Label -> Stmt [ctor format (r o d)] .
   op $accept_ : Label -> Stmt [ctor format (r o d)] .
 
+  op $push_ : SSubst -> Stmt [ctor format (r o d)] .
+  op $pop : -> Stmt [ctor format(r o)] .
 
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It 
@@ -599,6 +601,7 @@ mod ABS-SIMULATOR is
   var ST : Stmt .                      --- Statement
   var SST : SuspStmt .                 --- Suspendable statement
   vars S S1 L L1 : Subst .             --- Object and process states
+  var S2 : SSubst .
   vars SL SL1 SL2 : StmtList .         --- List of statements
   var P : Process .
   var W : MProc .
@@ -988,6 +991,18 @@ mod ABS-SIMULATOR is
                                free(@ ".anon") }, 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
+
+  rl
+    < O : C | Att: S, Pr: { L | $push S2 ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L :: S2 | SL }, PrQ: W, Lcnt: F >
+    [label $push] .
+
+  rl
+    < O : C | Att: S, Pr: { L :: S2 | $pop ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label $pop] .
 
 
   --- assert
