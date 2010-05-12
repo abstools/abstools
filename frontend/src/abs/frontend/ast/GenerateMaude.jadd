@@ -84,9 +84,9 @@ aspect GenerateMaude {
     public void AsyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("call(@ \"" + var + "\", ");
+        stream.print("call(@ \"" + var + "\" ; ");
         getCallee().generateMaude(stream);
-        stream.print(", " + getMethod() + ", ");
+        stream.print(" ; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
@@ -116,20 +116,20 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
-        stream.print(") ; get( @ \"" + var + "_future\", @ \"" + var + "\") ");
+        stream.print(") ; get( @ \"" + var + "_future\" ; @ \"" + var + "\") ");
     }
 
     public void GetExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
         stream.print("get(");
         getPureExp().generateMaude(stream);
-        stream.print(", @ \"" + var + "\") ");        
+        stream.print(" ; @ \"" + var + "\") ");        
     }
 
     public void NewExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("new(@ \"" + var + "\", \"" + getClassRef() + "\", ");
+        stream.print("new(@ \"" + var + "\" ; \"" + getClassRef() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
