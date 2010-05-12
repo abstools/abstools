@@ -37,45 +37,34 @@ load abs-datatypes .
 ***
 fmod ABS-SUBST is
   protecting ABS-DATATYPES .
-  extending MAP{Vid, Data} * (sort Map{Vid,Data} to Subst,
+  extending MAP{Vid, Data} * (sort Map{Vid,Data} to SSubst,
                               sort Entry{Vid,Data} to Binding,
                               op empty : -> Map{Vid,Data} to noSubst) .
 
+  sort Subst .
+  subsort SSubst < Subst .
   vars A A' : Vid .
   var AL : VidList .
   vars D D' : Data .
   var DL : DataList .
-  vars S1 S2  : Subst .
+  var S1 : Subst . 
+  var S2 : SSubst .
 
   *** Lazy composition operator for substitutions
-  op _::_ : Subst Subst -> Subst .
+  *** FIXME: make this operator have less precedence than |->
+  op _::_ : Subst SSubst -> Subst .
   eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
   *** optimization: let-expressions with empty binding list (e.g. result of
   *** default case branches) generate empty environment - get rid of it
   eq S1 :: noSubst = S1 .
 
-  --- Composition operater for substitutions
-  ---
-  --- Insert all bindings of S2 into S1, overriding the binding in S1.
-  op compose : Subst Subst -> Subst .
-  eq compose(S1, noSubst) = S1 .
-  eq compose(noSubst, S2) = S2 .
-  eq compose(S1, (S2, (A |-> D))) = compose(insert(A, D, S1), S2) .
-
-  --- Remove all bindings of S2 from S1.
-  op remove : Subst Subst -> Subst .
-  eq remove(S1, noSubst) = S1 .
-  eq remove(noSubst, S2) = S2 .
-  eq remove((S1, (A |-> D)), (S2, (A |-> D'))) = remove(S1, S2) .
-  eq remove(S1, (S2, (A |-> D'))) = remove(S1, S2) [owise] .
-
   --- Create a substitution from a list of identifiers and data values.
-  op createSubst : VidList DataList -> Subst .
+  op createSubst : VidList DataList -> SSubst .
   eq createSubst(AL, DL) = $createSubst(noSubst, AL, DL) .
-  op $createSubst : Subst VidList DataList -> Subst .
-  eq $createSubst(S1, noVid, emp) = S1 .
-  eq $createSubst(S1, (A, AL), (D :: DL)) = 
-    $createSubst(insert(A, D, S1), AL, DL) .
+  op $createSubst : SSubst VidList DataList -> SSubst .
+  eq $createSubst(S2, noVid, emp) = S2 .
+  eq $createSubst(S2, (A, AL), (D :: DL)) = 
+    $createSubst(insert(A, D, S2), AL, DL) .
 endfm
 
 
@@ -991,7 +980,7 @@ mod ABS-SIMULATOR is
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1),
                          Pr: { @ ".label" |-> label(O, F) |
-                               $assign(AL ; evalGuardList(EL, compose(S,  L), none)) ;
+                               $assign(AL ; evalGuardList(EL, S :: L, none)) ;
                                call(@ ".anon" ; @ "this" ; "init" ; emp) ;
                                get(@ ".anon" ; @ "_") ;
                                free(@ ".anon") ;
