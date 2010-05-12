@@ -184,6 +184,7 @@ fmod ABS-EXPRESSION is
 
     *** function application
     op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+    op _(_) : String DataList -> Data [ctor prec 12 format (! o d d d)] .
     *** constructor terms
     op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
     op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
@@ -191,6 +192,7 @@ fmod ABS-EXPRESSION is
     op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
     *** case expression
     op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
+    op case_of {_} : Data CaseBranchList -> Data [ctor] .
     *** let expression
     op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
     *** guard expression
