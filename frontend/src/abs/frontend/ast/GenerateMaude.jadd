@@ -4,8 +4,8 @@ aspect GenerateMaude {
 
     // FIXME: this does not consider shadowing rebinding of variables
     // inside the function body
-    eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
     eq FunctionDecl.getFunDef().functionParameters() = getParams();
+    eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
     inh List<VarOrFieldDecl> Stmt.functionParameters();
     inh List<VarOrFieldDecl> Exp.functionParameters();
 
@@ -34,7 +34,8 @@ aspect GenerateMaude {
         }
         stream.println(" .");
         if (hasBlock()) {
-        	getBlock().generateMaude(stream);
+        	//getBlock().generateMaude(stream);
+            stream.println("--- Block");
         }
         stream.println("endm");
     }
@@ -320,14 +321,14 @@ aspect GenerateMaude {
             stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBody().getInitBlock().getNumStmt() == 0) {
-                stream.print("return( null) ");
+                stream.print("return( null ) ");
             } else {
                 inlist = false;
                 for (Stmt stmt : getBody().getInitBlock().getStmts()) {
                     if (inlist) stream.print("; "); else inlist = true;
                     stmt.generateMaude(stream);
                 }
-                stream.print("; return( null) ");
+                stream.print("; return( null ) ");
             }
             stream.print("> ");
             inlist = true;
@@ -470,9 +471,19 @@ aspect GenerateMaude {
         stream.print("od ");
     }
 
-	public void StmtBlock.generateMaude(java.io.PrintStream stream) {
+	public void Block.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-        if (getNumStmt() == 0) {
+        if (getNumField() > 0) {
+            stream.print("$push ( ");
+            inlist = false;
+            for (VarDecl field : getFields()) {
+                if (inlist) stream.print(", "); else inlist = true;
+                stream.print("@ \"" + field.getName() + "\" |-> null ");
+            }
+            stream.print(") ");
+            inlist = true;      // set up for rest of the statements
+        }
+        if (getNumStmt() == 0 && getNumField() == 0) {
             stream.print("noStmt ");
         } else {
             for (Stmt stmt : getStmts()) {
@@ -480,9 +491,9 @@ aspect GenerateMaude {
                 stmt.generateMaude(stream);
             }
         }
+        if (getNumField() > 0) {
+            stream.print("; $pop ");
+        }
 	}
 
-    public void Block.generateMaude(java.io.PrintStream stream) {
-        stream.println("--- Block");
-    }
 }

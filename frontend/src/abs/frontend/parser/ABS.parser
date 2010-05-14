@@ -390,7 +390,7 @@ Stmt stmt =
 	|  eff_exp.e SEMICOLON               {: return new ExpressionStmt(e) ; :}	
 	|  if_then_else_stmt 
 	|  while_stmt 
-	|  stmt_block
+	|  block
 	| SEMICOLON               {: return new EmptyStmt() ; :}
 		;
 
@@ -422,10 +422,6 @@ AssignStmt assign_stmt =
 	var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :} 
 	|	var_ref.r ASSIGN data_exp.e SEMICOLON        {: return new AssignStmt(r,e) ; :}
 	;	
-
-StmtBlock stmt_block = 
-	LBRACE stmt_list.l? RBRACE       {:	return new StmtBlock(l) ; :}
-    ;      
 
 List stmt_list =
     stmt.i                              {: return new List().add(i); :}

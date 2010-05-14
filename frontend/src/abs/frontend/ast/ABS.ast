@@ -4,20 +4,14 @@
 
 Model                         ::= Decl* [Block];
 
-// A Block is the body of programs and methods and is also used for initblocks
-// It contains a list of zero or more ast.VarOrFieldDecl 
-// and zero or more ast.Stmt, these are named Fields and Stmts resp.  
-Block				::= Field:VarDecl*  Stmt:Stmt*;
+// (see below for Blocks)
 
 // A ClassBlock is the body of a Class. 
 ClassBlock			::= [InitBlock:Block] Field:VarDecl* Method:Method*;
-//ClassBlock			::= Fields:VarDecl*  Methods:Method*;
-//ClassBlock              ::= [InitBlock:Block] Decls:ClassBlockDecl* ;                          
 
 abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
-//abstract ClassBlockDecl ; 
 
 UnknownDecl:	Decl;			// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* Body:ClassBlock;
@@ -73,8 +67,12 @@ ExpressionStmt: Stmt	::= Exp:Exp;
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
-StmtBlock: Stmt			::= Stmt:Stmt*;
 EmptyStmt: Stmt;
+// A Block is the body of programs and methods and is also used for initblocks
+// It contains a list of zero or more ast.VarOrFieldDecl 
+// and zero or more ast.Stmt, these are named Fields and Stmts resp.  
+Block: Stmt				::= Field:VarDecl*  Stmt:Stmt*;
+
 
 
 abstract Guard;

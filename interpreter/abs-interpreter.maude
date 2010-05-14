@@ -39,7 +39,8 @@ fmod ABS-SUBST is
   protecting ABS-DATATYPES .
   extending MAP{Vid, Data} * (sort Map{Vid,Data} to SSubst,
                               sort Entry{Vid,Data} to Binding,
-                              op empty : -> Map{Vid,Data} to noSubst) .
+                              op empty : -> Map{Vid,Data} to noSubst,
+                              op insert : Vid Data Map{Vid,Data} -> Map{Vid,Data} to $insert ) .
 
   sort Subst .
   subsort SSubst < Subst .
@@ -52,11 +53,19 @@ fmod ABS-SUBST is
 
   *** Lazy composition operator for substitutions
   *** FIXME: make this operator have less precedence than |->
-  op _::_ : Subst SSubst -> Subst .
+  op _::_ : Subst Subst -> Subst [assoc] .
   eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
   *** optimization: let-expressions with empty binding list (e.g. result of
   *** default case branches) generate empty environment - get rid of it
   eq S1 :: noSubst = S1 .
+
+  op hasMapping : Subst Vid -> Bool .
+  eq hasMapping(S2, A) = $hasMapping(S2, A) .
+  eq hasMapping(S1 :: S2, A) = $hasMapping(S2, A) or hasMapping(S1, A) .
+
+  op insert : Vid Data Subst -> Subst .
+  eq insert(A, D, S2) = $insert(A, D, S2) .
+  eq insert(A, D, S1 :: S2) = S1 :: $insert(A, D, S2) .
 
   --- Create a substitution from a list of identifiers and data values.
   op createSubst : VidList DataList -> SSubst .
@@ -210,7 +219,6 @@ fmod ABS-STM-LIST is
   --- Optimize assignments.  This way we save reducing a skip.  Also note
   --- that the empty assignment is /not/ programmer syntax, it is inserted
   --- during run-time.
-  eq assign(noVid ; emp) = noStmt .
   eq $assign(noVid ; emp) = noStmt .
 
 endfm
@@ -446,6 +454,7 @@ mod ABS-EVAL is
   var AL : VidList .
   vars Q C : String .
   vars S S' : Subst .
+  var SS : SSubst .
   vars ST ST' : Stmt . 
   vars SL SL1 SL2 : StmtList .
   var CN : Configuration .
@@ -472,12 +481,12 @@ mod ABS-EVAL is
   op ready : StmtList Subst Configuration -> Bool .
 
   eq evalGuard(D, S, CN) = D .
-  *** shortcut for instance variable lookup
 
-  *** FIXME (rs 2010-04-19): is this still valid? Do blocks / let / case
-  *** append their environment via :: or via compose?  Anyway, it can't hurt -
-  *** just will be less of a performance win.
-  eq evalGuard((Q @ C), (S :: S'), CN) =  S [(Q @ C)] .
+  *** shortcut for instance variable lookup.
+
+  *** NOTICE: this assumes that the object state always is the left-most
+  *** SSubst in a Subst.
+  eq evalGuard((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
   eq evalGuard(A, S, CN) =  S [A] .
   eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
   eq evalGuard(Q [EL], S, CN) = Q [ evalGuardList(EL, S, CN) ] .
@@ -621,7 +630,7 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | assign(A ; E) ; SL },
 	      PrQ: W, Lcnt: F > 
   =>
-    if $hasMapping(L, A) then
+    if hasMapping(L, A) then
       < O : C | Att: S, Pr: { insert(A, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
@@ -641,7 +650,7 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | $assign( (A, AL) ; D :: DL) ; SL },
               PrQ: W, Lcnt: F >
   =
-    if $hasMapping(L, A) then
+    if hasMapping(L, A) then
       < O : C | Att: S, Pr: { insert(A, D, L) | $assign(AL ; DL) ; SL },
                 PrQ: W, Lcnt: F > 
     else
