@@ -336,12 +336,12 @@ mod ABS-CONFIGURATION is
   --- N   represents the label used to return the value computed by the
   ---     method.
   --- DL  represents the list of actual arguments.
-  op get : String Cid MMtd Oid Label DataList -> Process .
+  op makeProcess : String Cid MMtd Oid Label DataList -> Process .
 
-  eq get(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
+  eq makeProcess(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
     { @ ".class" |-> "str"[B], @ ".label" |-> N,
       @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
-  eq get(M, C, MS, O, N, DL) = notFound [owise] .
+  eq makeProcess(M, C, MS, O, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects (and classes) in the
   --- run-time configuration.
@@ -384,7 +384,7 @@ mod ABS-CONFIGURATION is
     bindMtd(O, O', N, M, DL, C)
     < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
   =
-    boundMtd(O, get(M, C, MS, O', N, DL))
+    boundMtd(O, makeProcess(M, C, MS, O', N, DL))
     < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F > .
 
   eq
