@@ -309,7 +309,7 @@ mod ABS-CONFIGURATION is
   var D : Data .
   var DL : DataList .
   var N : Label .
-  var F : Nat .
+  vars F F' : Nat .
 
   --- Invocation message.
   ---
@@ -330,18 +330,15 @@ mod ABS-CONFIGURATION is
   --- Fetch pair { code |  vars } to bind call to process.
   ---
   --- M   represents the name of the method.
-  --- C   represents the name of the class.
   --- MS  represents the methods we search through.
-  --- O   represents the identity of the caller.
   --- N   represents the label used to return the value computed by the
   ---     method.
   --- DL  represents the list of actual arguments.
-  op makeProcess : String Cid MMtd Oid Label DataList -> Process .
+  op makeProcess : String MMtd Label DataList -> Process .
 
-  eq makeProcess(M, B, (MS, < M : Method | Param: AL, Att: S, Code: SL >), O, N, DL) =
-    { @ ".class" |-> "str"[B], @ ".label" |-> N,
-      @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
-  eq makeProcess(M, C, MS, O, N, DL) = notFound [owise] .
+  eq makeProcess(M, (MS, < M : Method | Param: AL, Att: S, Code: SL >), N, DL) =
+    { @ ".label" |-> N, @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
+  eq makeProcess(M, MS, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects (and classes) in the
   --- run-time configuration.
@@ -370,28 +367,19 @@ mod ABS-CONFIGURATION is
 
   --- Method binding messages.
   --- Bind method request
-  --- Given: caller callee label method params class
-  op bindMtd : Oid Oid Label String DataList Cid -> Msg [format(!r d)] .
-
-  --- Successfully bound method body. 
-  --- Consider the call O.Q(I). bindMtd(O,Q,I,C) tries to find Q in
-  --- class C. boundMtd(O,Mt) is the result.
-  op boundMtd : Oid Process -> Msg [format(!r d)] .
+  --- Given: callee label method params class
+  op bindMtd : Oid Label String DataList -> Msg [format(!r d)] .
 
   --- Method binding
   ---
-  eq
-    bindMtd(O, O', N, M, DL, C)
+  ceq
+    bindMtd(O, N, M, DL)
     < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
+    < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F' >
   =
-    boundMtd(O, makeProcess(M, C, MS, O', N, DL))
-    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F > .
-
-  eq
-    boundMtd(O, { L | SL })
-    < O : B | Att: S, Pr: P, PrQ: W, Lcnt: F >
-  =
-    < O : B | Att: S, Pr: P, PrQ: (W , { L | SL }), Lcnt: F > .
+    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
+    < O : C | Att: S1, Pr: P, PrQ: (W , P' ), Lcnt: F' >
+  if P' := makeProcess(M, MS, N, DL) .
 
   --- Define a configuration
   op none : -> Configuration [ctor] .
@@ -818,7 +806,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Completed: false, References: 1, Value: null >
-    bindMtd(O, O, N, Q, evalGuardList(EL, (S :: L), none), CC) 
+    bindMtd(O, N, Q, evalGuardList(EL, (S :: L), none)) 
   if N := label(O, F)
       [label local-async-static-call] .
 
@@ -910,7 +898,7 @@ mod ABS-SIMULATOR is
   =
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
     < N : Future | Completed: false, References: 1, Value: null >
-    bindMtd(O, O1, N, Q, DL, C)
+    bindMtd(O, N, Q, DL)
     [label transport-imsg] .
 
   --- free
@@ -951,14 +939,14 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"])  }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none), C)
+    bindMtd(O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none))
   [label local-tailcall] .
 
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"]) }, PrQ: W, Lcnt: F >
-    bindMtd(O, O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none), CC) 
+    bindMtd(O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none)) 
     [label static-tailcall] .
 
   *** If we receive the method body, the call is accepted and the label
