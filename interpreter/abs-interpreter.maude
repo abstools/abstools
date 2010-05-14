@@ -154,7 +154,6 @@ fmod ABS-STATEMENT is
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
   op static(_;_;_;_;_) : Vid String Cid Cid ExprList -> Stmt [ctor format (b d o b o b o b o b o b o)] . 
-  op multicast(_;_;_) : Expr String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -181,12 +180,6 @@ fmod ABS-STATEMENT is
   --- This is only used in object initialization etc. - no multiple
   --- assignments in ABS.
   op $assign(_;_) : VidList DataList -> Stmt  [format (r d o r o r o)] .
-
-  --- Multicast
-  --- This `statement' emanates from the ordinary multicast statement
-  --- after the argument and the target collection have been evaluated.
-  --- It will generate the actual invocation messages.
-  op $multicast(_;_;_) : Data String DataList -> Stmt [format (r d o r o r o r o)] .
 
 endfm
 
@@ -834,47 +827,6 @@ mod ABS-SIMULATOR is
   if N := label(O, F) /\ O = evalGuard(E, (S :: L), none)
       [label remote-async-self-call] .
 
-
-
-  rl
-    < O : C | Att: S, Pr: { L | multicast(E ; Q ; EL) ; SL }, PrQ: W,
-              Lcnt: F > 
-  =>
-    < O : C | Att: S, Pr: { L | $multicast(evalGuard(E, (S :: L), none) ; Q ; evalGuardList(EL, (S :: L), none)) ; SL }, PrQ: W,
-              Lcnt: F > 
-    [label multicast-eval] .
-
-  eq 
-    < O : C | Att: S, Pr: { L | $multicast(list(emp) ; Q ; DL) ; SL }, PrQ: W,
-              Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label multicast-emit-list-emp] .
-
-  eq
-    < O : C | Att: S, Pr: { L | $multicast(list(O1 :: DL) ; Q ; DL2) ; SL },
-              PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | $multicast(list(DL) ; Q ; DL2) ; SL },
-              PrQ: W, Lcnt: (s F) >
-    invoc(O, O1, label(O, F), Q , DL2)
-    [label multicast-emit-list] .
-
-  eq 
-    < O : C | Att: S, Pr: { L | $multicast(set(emptyset) ; Q ; DL); SL },
-              PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label multicast-emit-set-emp] .
-
-  eq
-    < O : C | Att: S, Pr: { L | $multicast(set(O1 : DS) ; Q ; DL2) ; SL },
-              PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | $multicast(set(DS) ; Q ; DL2) ; SL },
-              PrQ: W, Lcnt: (s F) >
-    invoc(O, O1, label(O, F), Q , DL2)
-    [label multicast-emit-set] .
 
   --- return
   ---
