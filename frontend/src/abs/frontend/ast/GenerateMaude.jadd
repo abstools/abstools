@@ -331,13 +331,16 @@ aspect GenerateMaude {
                 stream.print("; return( null ) ");
             }
             stream.print("> ");
-            inlist = true;
+        } else {
+            // interpreter expects an init method
+            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            stream.print(",\n      Code: return( null ) > ");
         }
         if (getBody().getNumMethod() == 0 && !getBody().hasInitBlock()) {
             stream.print("noMethod");
         } else {
             for (Method method : getBody().getMethods()) {
-                if (inlist) stream.print(",\n    "); else inlist = true;
+                stream.print(",\n    ");
                 method.generateMaude(stream);
             }
         }
