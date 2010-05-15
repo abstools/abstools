@@ -454,34 +454,34 @@ mod ABS-EVAL is
   eq inqueue(L, MS CN) = inqueue(L, CN) .
   eq inqueue(L, none) = false .
 
-  op evalGuard : Expr Subst Configuration -> Data .
-  op evalGuardList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
-  op evalGuardSet : ExprSet Subst Configuration -> DataSet [strat (1 0 0 0)] .
-  op evalGuardMap : ExprMap Subst Configuration -> DataMap [strat (1 0 0 0)] .
+  op eval : Expr Subst Configuration -> Data .
+  op evalList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
+  op evalSet : ExprSet Subst Configuration -> DataSet [strat (1 0 0 0)] .
+  op evalMap : ExprMap Subst Configuration -> DataMap [strat (1 0 0 0)] .
   op enabled : StmtList Subst Configuration -> Bool .
   op ready : StmtList Subst Configuration -> Bool .
 
-  eq evalGuard(D, S, CN) = D .
+  eq eval(D, S, CN) = D .
 
   *** shortcut for instance variable lookup.
 
   *** NOTICE: this assumes that the object state always is the left-most
   *** SSubst in a Subst.
-  eq evalGuard((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
-  eq evalGuard(A, S, CN) =  S [A] .
-  eq evalGuard(Q (EL), S, CN) = Q ( evalGuardList(EL, S, CN) ) .
-  eq evalGuard(Q [EL], S, CN) = Q [ evalGuardList(EL, S, CN) ] .
-  eq evalGuard(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
-  eq evalGuard(?(L), S, CN) = "bool"[inqueue(L, CN)] .
-  eq evalGuard(list(EL), S, CN) = list(evalGuardList(EL, S, CN)) .
-  eq evalGuard(set(ES), S, CN) = set(evalGuardSet(ES, S, CN)) .
-  eq evalGuard(map(EM), S, CN) = map(evalGuardMap(EM, S, CN)) .
-  eq evalGuard(if E th E' el E'' fi, S, CN) =
-    if evalGuard(E, S, CN) asBool
-    then evalGuard(E', S, CN)
-    else evalGuard(E'', S, CN) fi .
-  eq evalGuard(let AL = EL in E, S, CN) = 
-    evalGuard(E, S :: createSubst(AL, evalGuardList(EL, S, CN)), CN) .
+  eq eval((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
+  eq eval(A, S, CN) =  S [A] .
+  eq eval(Q (EL), S, CN) = Q ( evalList(EL, S, CN) ) .
+  eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
+  eq eval(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
+  eq eval(?(L), S, CN) = "bool"[inqueue(L, CN)] .
+  eq eval(list(EL), S, CN) = list(evalList(EL, S, CN)) .
+  eq eval(set(ES), S, CN) = set(evalSet(ES, S, CN)) .
+  eq eval(map(EM), S, CN) = map(evalMap(EM, S, CN)) .
+  eq eval(if E th E' el E'' fi, S, CN) =
+    if eval(E, S, CN) asBool
+    then eval(E', S, CN)
+    else eval(E'', S, CN) fi .
+  eq eval(let AL = EL in E, S, CN) = 
+    eval(E, S :: createSubst(AL, evalList(EL, S, CN)), CN) .
 
   *** evaluate a case statement.  If the pattern matches, augment environment
   *** with the resulting bindings.
@@ -508,45 +508,45 @@ mod ABS-EVAL is
   *** internal operator $case avoids endless loop between "case D of" and
   *** "case E of" when first case branch doesn't match
   op $case : Data CaseBranchList -> Expr .
-  ceq evalGuard($case(D, (E => E') ; CBL), S, CN) = 
+  ceq eval($case(D, (E => E') ; CBL), S, CN) = 
     if M:MatchResult == noMatch
-    then evalGuard($case(D, CBL), S, CN)
-    else evalGuard(E', S :: M:MatchResult, CN) fi
+    then eval($case(D, CBL), S, CN)
+    else eval(E', S :: M:MatchResult, CN) fi
   if M:MatchResult := match(D, E) .
 
-  eq evalGuard(case E of { CBL }, S, CN) = 
-    evalGuard($case(evalGuard(E, S, CN), CBL), S, CN) .
+  eq eval(case E of { CBL }, S, CN) = 
+    eval($case(eval(E, S, CN), CBL), S, CN) .
 
 
   --- Evaluate guard lists.  This is almost the same as evalList, but we
   --- had to adapt this to guards.
-  eq evalGuardList(emp, S, CN) = emp .
-  eq evalGuardList(DL, S, CN) = DL .   --- No need to evaluate.
-  eq evalGuardList(E, S, CN) = evalGuard(E, S, CN) .
-  eq evalGuardList(E :: NeEL, S, CN) =
-    evalGuard(E, S, CN) :: evalGuardList(NeEL, S, CN) .
+  eq evalList(emp, S, CN) = emp .
+  eq evalList(DL, S, CN) = DL .   --- No need to evaluate.
+  eq evalList(E, S, CN) = eval(E, S, CN) .
+  eq evalList(E :: NeEL, S, CN) =
+    eval(E, S, CN) :: evalList(NeEL, S, CN) .
 
   --- Evaluate a set.
-  eq evalGuardSet(emptyset, S, CN) = emptyset .
-  eq evalGuardSet(DS, S, CN) = DS .  ---  No need to evaluate
-  eq evalGuardSet(E, S, CN) = evalGuard(E, S, CN) .
-  eq evalGuardSet(E : NeES, S, CN) =
-    evalGuard(E, S, CN) : evalGuardSet(NeES, S, CN) .
+  eq evalSet(emptyset, S, CN) = emptyset .
+  eq evalSet(DS, S, CN) = DS .  ---  No need to evaluate
+  eq evalSet(E, S, CN) = eval(E, S, CN) .
+  eq evalSet(E : NeES, S, CN) =
+    eval(E, S, CN) : evalSet(NeES, S, CN) .
 
   --- Evaluate a map.
-  eq evalGuardMap(empty, S, CN) = empty .
-  eq evalGuardMap((mapentry(D, D'), EM), S, CN) =
-    (mapentry(D, D') , evalGuardMap(EM, S, CN)) .  --- No need to evaluate .
-  eq evalGuardMap((mapentry(D, E'), EM), S, CN) =
-    (mapentry(D, evalGuard(E', S, CN)) , evalGuardMap(EM, S, CN)) .
-  eq evalGuardMap((mapentry(E, D'), EM), S, CN) =
-    (mapentry(evalGuard(E, S, CN), D') , evalGuardMap(EM, S, CN)) .
-  eq evalGuardMap((mapentry(E, E'), EM), S, CN) =
-    (mapentry(evalGuard(E, S, CN), evalGuard(E', S, CN)) ,
-      evalGuardMap(EM, S, CN)) .
+  eq evalMap(empty, S, CN) = empty .
+  eq evalMap((mapentry(D, D'), EM), S, CN) =
+    (mapentry(D, D') , evalMap(EM, S, CN)) .  --- No need to evaluate .
+  eq evalMap((mapentry(D, E'), EM), S, CN) =
+    (mapentry(D, eval(E', S, CN)) , evalMap(EM, S, CN)) .
+  eq evalMap((mapentry(E, D'), EM), S, CN) =
+    (mapentry(eval(E, S, CN), D') , evalMap(EM, S, CN)) .
+  eq evalMap((mapentry(E, E'), EM), S, CN) =
+    (mapentry(eval(E, S, CN), eval(E', S, CN)) ,
+      evalMap(EM, S, CN)) .
 
   --- Enabledness
-  eq enabled(await E ; SL, S, CN) = evalGuard(E, S, CN) asBool .
+  eq enabled(await E ; SL, S, CN) = eval(E, S, CN) asBool .
   eq enabled((SL1 [] SL2) ; SL, S, CN) =
     enabled(SL1, S, CN) or enabled(SL2, S, CN) .
   eq enabled(SL, S, CN) = true [owise] .
@@ -616,7 +616,7 @@ mod ABS-SIMULATOR is
     else
       < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
-    if D := evalGuard(E, (S :: L), none)
+    if D := eval(E, (S :: L), none)
     [label assignment] .
 
   eq
@@ -655,7 +655,7 @@ mod ABS-SIMULATOR is
   rl
     < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =>
-    if evalGuard(E, (S :: L), none) asBool then
+    if eval(E, (S :: L), none) asBool then
       < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -718,7 +718,7 @@ mod ABS-SIMULATOR is
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =>
     { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
-  if evalGuard(E, (S :: L), CN) asBool
+  if eval(E, (S :: L), CN) asBool
       [label await] .
 
   --- Optimize label access in await statements.
@@ -799,7 +799,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Completed: false, References: 1, Value: null >
-    bindMtd(O, N, Q, evalGuardList(EL, (S :: L), none)) 
+    bindMtd(O, N, Q, evalList(EL, (S :: L), none)) 
   if N := label(O, F)
       [label local-async-static-call] .
 
@@ -811,8 +811,8 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
-  if DL :=  evalGuardList(EL, (S :: L), none)
-      /\ O1 := evalGuard(E, (S :: L), none)
+  if DL :=  evalList(EL, (S :: L), none)
+      /\ O1 := eval(E, (S :: L), none)
       /\ N := label(O, F)
       /\ O =/= O1
       [label remote-async-call] .
@@ -823,8 +823,8 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O, O, N, Q , evalGuardList(EL, (S :: L), none))
-  if N := label(O, F) /\ O = evalGuard(E, (S :: L), none)
+    invoc(O, O, N, Q , evalList(EL, (S :: L), none))
+  if N := label(O, F) /\ O = eval(E, (S :: L), none)
       [label remote-async-self-call] .
 
 
@@ -835,7 +835,7 @@ mod ABS-SIMULATOR is
     < N : Future | Completed: false, References: G, Value: null >
   =>
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Completed: true, References: G, Value: evalGuard(E, (S :: L), none) >
+    < N : Future | Completed: true, References: G, Value: eval(E, (S :: L), none) >
   if N == L[@ ".label"]
       [label return] .
 
@@ -879,7 +879,7 @@ mod ABS-SIMULATOR is
               Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    invoc(O, evalGuard(E, (S :: L), none), L[@ ".label"], Q, evalGuardList(EL, (S :: L), none))
+    invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
     [label tailcall] .
 
   --- STATIC TAIL CALLS
@@ -891,14 +891,14 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"])  }, PrQ: W, Lcnt: F >
-    bindMtd(O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none))
+    bindMtd(O, tag(L[@ ".label"]), Q, evalList(EL, (S :: L), none))
   [label local-tailcall] .
 
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"]) }, PrQ: W, Lcnt: F >
-    bindMtd(O, tag(L[@ ".label"]), Q, evalGuardList(EL, (S :: L), none)) 
+    bindMtd(O, tag(L[@ ".label"]), Q, evalList(EL, (S :: L), none)) 
     [label static-tailcall] .
 
   *** If we receive the method body, the call is accepted and the label
@@ -932,7 +932,7 @@ mod ABS-SIMULATOR is
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1),
                          Pr: { @ ".label" |-> label(O, F) |
-                               $assign(AL ; evalGuardList(EL, S :: L, none)) ;
+                               $assign(AL ; evalList(EL, S :: L, none)) ;
                                call(@ ".anon" ; @ "this" ; "init" ; emp) ;
                                get(@ ".anon" ; @ "_") ;
                                free(@ ".anon") ;
@@ -959,7 +959,7 @@ mod ABS-SIMULATOR is
   rl
     { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
   =>
-    { if evalGuard(E, (S :: L), CN) asBool then
+    { if eval(E, (S :: L), CN) asBool then
         < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
         < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
