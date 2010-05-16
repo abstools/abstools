@@ -17,13 +17,13 @@ type Packet = String
 type File =  ListOfPacket
 type Catalog = ListOfPairOfServerNFilenames
 
-// dummy definitions to make eclipse / typechecking happy for now
-data Server {}
-data Packet {}
-data Filename {}
-data Filenames {}
-data File {}
-data Catalog {}
+// dummy definitions to make typechecking happy for now
+//data Server {}
+//data Packet {}
+//data Filename {}
+//data Filenames {}
+//data File {}
+//data Catalog {}
 
 
 
@@ -120,7 +120,7 @@ interface Client {
 class DataBase(MapOfFilenameToFile db) implements DB {
   File getFile(Filename fId) { return getFromMap(db, fId); }
   Int getLength(Filename fId){ return length(getFromMap(db,fId)); }
-  Void storeFile(Filename fId, File file) { db = insert(db,fId,file); } 
+  Void storeFile(Filename fId, File file) { db = insert(PairOfFilenameNFile(fId,file), db); } 
   Filenames listFiles() { return keys(db); }
 }
 
@@ -192,11 +192,11 @@ class Node(DB db, Peer admin, Filename file) implements Peer {
     } else {
       fN = head(sList)!enquire(); 
       cL = this!availFiles(tail(sList));
-      await fN? & cL?; 
+      await fN? && cL?; 
 	  catList = cL.get ;
 	  fNames = fN.get ; 
       cat = appendright(catList, ConsPacket(head(sList), fNames)); 
-      }
+    }
     return cat; 
   }
 
