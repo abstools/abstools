@@ -336,13 +336,9 @@ aspect GenerateMaude {
             stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: return( null ) > ");
         }
-        if (getBody().getNumMethod() == 0 && !getBody().hasInitBlock()) {
-            stream.print("noMethod");
-        } else {
-            for (Method method : getBody().getMethods()) {
-                stream.print(",\n    ");
-                method.generateMaude(stream);
-            }
+        for (Method method : getBody().getMethods()) {
+            stream.print(",\n    ");
+            method.generateMaude(stream);
         }
         stream.println(",\n  Ocnt: 0 > ");
 	}
