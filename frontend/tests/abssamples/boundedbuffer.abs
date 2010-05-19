@@ -12,7 +12,8 @@ data ListofInt { }
 //data Bool // builtin
 data IntList { IntNil , Cons(Int, IntList) } 
 
-def Bool lt(Int x , Int y) = notimplemented
+def Bool lt(Int x , Int y) = x < y 
+
 
 
 interface Buffer {

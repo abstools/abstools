@@ -63,11 +63,17 @@ Decl decl =
 //Program block
 //used in program, init blocks and method body
 Block block	=
-	LBRACE var_decl_list.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
+	LBRACE var_decls.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
     ;
 
+
+List var_decls = 
+	var_decl_list.l SEMICOLON {: return l ; :} 
+	; 
+
+
 List var_decl_list =
-      var_decl.i SEMICOLON                        {: return new List().add(i); :}
+      var_decl.i                                  {: return new List().add(i); :}
     | var_decl_list.l SEMICOLON var_decl.i        {: return l.add(i); :}
     ;
 
