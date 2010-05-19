@@ -23,7 +23,7 @@ aspect ErrorCheck {
   public void InterfaceDecl.collectErrors(Collection c) {
     super.collectErrors(c);
     if(hasCycleOnExtendedInterfacesChain())
-      error(c, "Cyclic inheritance chain for interface " + getName());
+      error(c, "Cyclic inheritance chain for interface: " + getName());
   }
 
   // add error for undeclared interfaces
@@ -31,15 +31,23 @@ aspect ErrorCheck {
   public void InterfaceTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(decl().isUnknown())
-      error(c, "Unknown identifier " + getName());
+      error(c, "Unknown interface: " + getName());
+  }
+
+  // add error for undeclared interfaces
+  // TODO: generalise to check other IdUse's too.
+  public void DataTypeUse.collectErrors(Collection c) {
+    super.collectErrors(c);
+    if(decl().isUnknown())
+      error(c, "Unknown datatype: " + getName());
   }
 
   // add error for duplicate interfaces
   public void Model.collectErrors(Collection c) {
     super.collectErrors(c);
-    if(duplicateInterfaces().size() > 0) {
-    	for (String name : duplicateInterfaces()) {
-        	error(c, "Duplicate interface " + name);
+    if(duplicateTypeDecls().size() > 0) {
+    	for (String name : duplicateTypeDecls()) {
+        	error(c, "Duplicate type declaration: " + name);
     	}
     }
   }

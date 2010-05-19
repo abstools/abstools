@@ -7,30 +7,30 @@ aspect DuplicateCheck {
 	
 	// *duplicateDeclaration* - true if there is more than one interface declared with the same name
 	// TODO: generalise to other kinds of declarations: ADTs, classes, functions
-	syn lazy Set<String> Model.duplicateInterfaces();
+	syn lazy Set<String> Model.duplicateTypeDecls();
 		
 
 	// ***Implementation***
 	
 	// TODO: refactor into a method for to check dupes for any kind of decl
-	eq Model.duplicateInterfaces() {
+	eq Model.duplicateTypeDecls() {
 		// Note: must use fully qualified name to avoid conflicts with ast.List
-		java.util.List<String> interfaceNames = new ArrayList<String>();
+		java.util.List<String> typeNames = new ArrayList<String>();
 		Set<String> duplicateNames = new HashSet<String>();
 		String previousName = "";
 
 		// TODO: simplify this:
-		// Add the interfaceNames to a (Hash)Set and compare the size of the set to
+		// Add the TypeDeclNames to a (Hash)Set and compare the size of the set to
 		// the number of names
 		
 		for (int k = 0; k < getNumDecl(); k++) {
 			Decl decl = getDecl(k);
-			if (decl instanceof InterfaceDecl)
-				interfaceNames.add(decl.getName());
+			if (decl instanceof TypeDecl)
+				typeNames.add(decl.getName());
 		}
 		
-		Collections.sort(interfaceNames);
-		for (String currentName : interfaceNames) {
+		Collections.sort(typeNames);
+		for (String currentName : typeNames) {
 			if (previousName.equals(currentName)) {
 				duplicateNames.add(currentName);
 			}
@@ -38,7 +38,7 @@ aspect DuplicateCheck {
 		}
 		
 		return duplicateNames;
-		//return new HashSet(interfaceNames); // TODO: test hack
+		//return new HashSet(typeDeclNames); // TODO: test hack
 		
 	}
 

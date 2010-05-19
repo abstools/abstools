@@ -84,7 +84,7 @@
 
  <target name="test" depends="compile">
     <java classname="abs.frontend.tests.ParserTest">
-        <arg value="tests/abssamples/PeerToPeer.abs"/>
+        <arg value="${tests.dir}/abssamples/PeerToPeer.abs"/>
       <classpath>
       <pathelement location="${ext.dir}/beaver-rt.jar"/>
         <pathelement path="${build.dir}"/>

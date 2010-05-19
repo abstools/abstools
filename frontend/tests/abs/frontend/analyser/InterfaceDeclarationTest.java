@@ -43,7 +43,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
-	    assertTrue(((String)p.errors().iterator().next()).endsWith("Unknown identifier I"));
+	    assertTrue(((String)p.errors().iterator().next()).endsWith("Unknown interface: I"));
 	}
 
 	@Test
@@ -51,7 +51,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface I extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
-	    assertTrue(((String)p.errors().iterator().next()).endsWith("Cyclic inheritance chain for interface I"));
+	    assertTrue(((String)p.errors().iterator().next()).endsWith("Cyclic inheritance chain for interface: I"));
 	}
 
 	@Test
@@ -60,8 +60,8 @@ public class InterfaceDeclarationTest {
 		p = assertParseOk("interface I extends J {} interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 2);
 		Iterator i = p.errors().iterator();
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface I"));
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface J"));
+	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
+	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
 	}
 
 	// TODO refactor this into testframework stuff? 

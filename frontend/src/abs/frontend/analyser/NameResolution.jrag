@@ -20,7 +20,6 @@ aspect NameResolution {
   
   //   Definitions of *lookup*
   eq Model.getDecl().lookup(String name) = localLookup(name);
-  // eq Model.getPredefinedType(int index).lookup(String name) = unknownDecl();
   eq Model.lookup(String name) = localLookup(name);
   
     
@@ -28,8 +27,7 @@ aspect NameResolution {
   // Technically, this re-uses definition from Model.InterfaceDecl
   inh Decl IdUse.lookup(String name); 
 
-  //inh Decl InterfaceDecl.lookup(String name);
-  
+//  eq ClassBlock.lookup(String name) = 
   
   // *localLookup* - looks through the local declarations in a block
 

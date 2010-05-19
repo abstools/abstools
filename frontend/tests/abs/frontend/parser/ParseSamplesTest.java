@@ -31,20 +31,20 @@ public class ParseSamplesTest {
 		Model m = null;
 		try {
 			m = Main.parse(s);
-			if (m != null) {
-				int numSemErrs = m.errors().size();
-				if (numSemErrs > 0){
-					StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-					for (Object error : m.errors())
-						errs = errs.append(s + ":" + error + "\n");
-				fail(errs.toString());
-				}		
-			}	
 		}	catch (Throwable e) {
 			fail("Failed to parse: "+ s+"\n"+e.getMessage());
 		}
+		if (m != null) {
+			int numSemErrs = m.errors().size();
+			if (numSemErrs > 0){
+				StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
+				for (Object error : m.errors())
+					errs = errs.append(s + ":" + error + "\n");	
+				fail(errs.toString());
+			}		
+		}
 	}
-
 }
+		
 
   

@@ -86,12 +86,12 @@ DataTypeDecl  datatype_decl =
   ;
 
 TypeSynDecl  typesyn_decl = 
-	TYPE TYPEIDENTIFIER.lhs ASSIGN TYPEIDENTIFIER.rhs  {: return new TypeSynDecl(lhs, rhs); :}
+	TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs  {: return new TypeSynDecl(lhs, rhs); :}
   ;
 
 
 FunctionDecl  function_decl = 
-	DEF datatypename.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+	DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; 
 
 InterfaceDecl interface_decl =
@@ -113,7 +113,7 @@ DataConstructor data_constructor =
 	;
 
 List data_constructor_params = 
-	LPAREN datatypename_list.l? RPAREN     {: return l; :}
+	LPAREN datatypeuse_list.l? RPAREN     {: return l; :}
 	;
 
 
@@ -131,7 +131,7 @@ InterfaceTypeUse ifname =
     TYPEIDENTIFIER {: return new InterfaceTypeUse(TYPEIDENTIFIER) ; :}
     ;
 
-DataTypeUse datatypename =
+DataTypeUse datatypeuse =
     TYPEIDENTIFIER {: return new DataTypeUse(TYPEIDENTIFIER) ; :}
     ;
 
@@ -200,9 +200,9 @@ List ifname_list =
   ;
 
 
-List datatypename_list =
-    datatypename.i                              {: return new List().add(i); :}
-    | datatypename_list.l COMMA datatypename.i        {: return l.add(i); :}
+List datatypeuse_list =
+    datatypeuse.i                              {: return new List().add(i); :}
+    | datatypeuse_list.l COMMA datatypeuse.i        {: return l.add(i); :}
   ;
 
 

@@ -15,10 +15,10 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	Decl;			// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* Body:ClassBlock;
+FunctionDecl:	BehaviorDecl    ::= TypeUse Param:VarOrFieldDecl* FunDef:PureExp ;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::= DataConstructor* ;
-FunctionDecl:	Decl		    ::= TypeUse Param:VarOrFieldDecl* FunDef:PureExp ;
-TypeSynDecl:    Decl            ::= <Value> ; 
+TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ; 
 
 
 abstract	VarOrFieldDecl  ::= <Name> Access; 
