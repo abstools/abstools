@@ -26,6 +26,7 @@ aspect NameResolution {
   // Expose *lookup* at various places in the AST
   // Technically, this re-uses definition from Model.InterfaceDecl
   inh Decl IdUse.lookup(String name); 
+  // FIXME: inh Decl UnresolvedTypeUse.lookup(String name);
 
 //  eq ClassBlock.lookup(String name) = 
   

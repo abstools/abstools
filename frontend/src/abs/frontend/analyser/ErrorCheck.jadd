@@ -27,12 +27,20 @@ aspect ErrorCheck {
   }
 
   // add error for undeclared interfaces
-  // TODO: generalise to check other IdUse's too.
   public void InterfaceTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(decl().isUnknown())
       error(c, "Unknown interface: " + getName());
   }
+
+/* FIXME:
+  // add error for undeclared identifiers (interfaces, datatypes/type synonyms)
+  public void UnresolvedTypeUse.collectErrors(Collection c) {
+    super.collectErrors(c);
+    if(decl().isUnknown())
+      error(c, "Unknown interface or datatype: " + getName());
+  }
+*/
 
   // add error for undeclared interfaces
   // TODO: generalise to check other IdUse's too.
