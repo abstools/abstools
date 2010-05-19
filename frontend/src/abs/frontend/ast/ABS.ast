@@ -23,6 +23,7 @@ TypeSynDecl:    Decl            ::= <Value> ;
 
 abstract	VarOrFieldDecl  ::= <Name> Access; 
 VarDecl:	VarOrFieldDecl; 
+FieldDecl:	VarOrFieldDecl; 
 ParamDecl:	VarOrFieldDecl;
 
 Method  ::= MethodSig Block;
