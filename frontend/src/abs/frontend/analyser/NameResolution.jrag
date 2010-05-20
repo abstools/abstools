@@ -20,6 +20,7 @@ aspect NameResolution {
   
   //   Definitions of *lookup*
   eq Model.getDecl().lookup(String name) = localLookup(name);
+  eq Model.getBlock().lookup(String name) = localLookup(name); // Model's main block
   eq Model.lookup(String name) = localLookup(name);
   
     

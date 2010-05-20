@@ -94,7 +94,7 @@ class Pong implements Pong {
 
 {
     Ping ping;
-    Pong pong;
+    Ping pong;
     Void x;
      
     ping = new Ping(); 
