@@ -108,19 +108,17 @@
 
   
   <target name="genshell">
-    <copy file="${bash.dir}/parseABS" toFile="${bash.build.dir}/parseABS">
-      <filterset>
-	<filter token="BASEDIR" value="${basedir}"/>
-      </filterset>
-    </copy>
-    <chmod file="${bash.build.dir}/parseABS" perm="ugo+x"/>
-    <copy file="${bash.dir}/parseAll" toFile="${bash.build.dir}/parseAll">
-      <filterset>
-	<filter token="BASEDIR" value="${basedir}"/>
-      </filterset>
-    </copy>
-    <chmod file="${bash.build.dir}/parseAll" perm="ugo+x"/>
+  <copy todir="${bash.build.dir}">
+   <filelist id="shellfiles" dir="${bash.dir}"  files="parseABS,parseAll,generateMaude"/>
+   <filterset>
+     <filter token="BASEDIR" value="${basedir}"/>
+   </filterset>
+  </copy>
+  <chmod perm="ugo+x"> 
+    <filelist dir="${bash.build.dir}"  files="parseABS,parseAll,generateMaude"/>
+    </chmod>
   </target>
+
 
 
   <target name="genparser" depends="genflex,genp1,genp2">

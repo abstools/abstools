@@ -2,6 +2,9 @@
 
 # Rudi Schlatte May 2010, based on parseABS by Arild Torjusen April 2010
 
+
+BASEDIR="@BASEDIR@" 
+
 function usage
 {
     echo "Usage: `basename $0` absfile"
@@ -35,7 +38,7 @@ if [ "$outfile" == "" ] ; then
 fi
 
 if [ -n "$1" ] ; then 
-    eval java -cp ../lib/beaver-rt.jar:../bin abs.frontend.tests.GenerateMaudeTest $1 > $outfile
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.GenerateMaudeTest $1 > $outfile
 else
     echo 'No file specified.'
     usage;
