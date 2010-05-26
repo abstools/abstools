@@ -20,7 +20,7 @@ public class ParseSamplesTest {
 	@Test
 	public void testSamples() {
 		String dir="tests/abssamples/"; 	
-		String[] files = {"PeerToPeer.abs", "pingpong.abs"};
+		String[] files = {"PeerToPeer.abs", "pingpong.abs", "boundedbuffer.abs"};
 		for (int i = 0 ; i < files.length; i++){
 			System.out.println("parsing " + files[i]);
 			assertParseOk(dir + files[i]);

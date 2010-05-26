@@ -6,20 +6,27 @@
  */
 
 data Void { }
-//data Int // builtin
-data Data { }
-data ListofInt { }
-//data Bool // builtin
-data IntList { IntNil , Cons(Int, IntList) } 
+data Int {} // builtin
+type Data = Int 
+data Bool {} // builtin
+//type Buffer = DataList
+data DataList { DataNil , ConsData(Data, DataList) } 
 
-def Bool lt(Int x , Int y) = x < y 
+def Data head(DataList dl) = case dl { ConsData(d,l) => d ; }  
+def Data tail(DataList dl) = case dl { ConsData(d,l) => l ; }  
 
+def DataList appendData(Data d, DataList list) = concat(list, ConsInt(d,DataNil))
 
+def DataList concat(DataList l1 , DataList l2) = 
+  case l1 {
+    DataNil => l2 ; 
+    ConsData(hd,tl) => ConsData(hd, concat(tl,l2)) ; 
+}	  
 
 interface Buffer {
 
     Void init()
-    Void append(Int i)
+    Void append(Data d)
     Data remove()
 
 }
@@ -36,103 +43,60 @@ interface Producer {
 class BoundedBuffer implements Buffer {
     
     //A bounded buffer
-    ListofInt buffer; 
-	Int max ;
-	Int n 
-	;
-    
-    // no assignments in variable declarations, so  we need an init method
+    DataList buffer; 
+    Int max ;
+    Int n ;
+
+    //init
     {
-        buffer = nil ;
+        buffer = DataNil;
         max = 10 ;
         n = 0 ;
-        return null ;
     }
     
-    Void append(Int i){
-        Void x 
-        ;
-        //await lt(n,max) ; // --- not implemented yet
-        if (n_less_than_max)  { // no arithmetic 
-            buffer = append_d_to_buffer; //no list operations 
-            n = n_pluss_one; // no artihmetic 
-        } else {
-            //Synchronization without boolean guards
-            suspend;
-            //Try to append again 
-            x = this.append(i);
-        }
-        //All methods must return something
-        return null    ;
+    Void append(Data d){
+        Void x ;
+	await (n < max) ; 
+	buffer = appendData(d,buffer);
+	n = n + 1 ; 
     }
     
-    Int remove() {
-        Int y 
-        ; 
-        //await n > 0 ; // --- No boolean guards in abs 
-        if (n_larger_than_zero) {
-            y = head(buffer); // no list  opreations 
-            buffer = tail(buffer) ; //d.o. 
-            n = n_minus_one ;  // no arithmetic
-        } else {
-            //Synchronization without boolean guards
-            suspend;
-            //Try to remove again
-            y = this.remove();
-		}
-        return y ;
+    Data remove() {
+        await n > 0 ; 
+        d = head(buffer);
+        buffer = tail(buffer);
+        n = n - 1 ; 
+	return d ; 
     }
     
-}    
+}
 
 class Producer (Buffer b) implements Producer {
     
-    Void loop(Int i) {
-	
-        //local vars 
-        Void x ; 
-	skip ; 
-        b = b.append(i); 
-        //cannot do a call without assignment Assume a "this" keyword
-        x = this!loop(i_plus_one); //i+1
-        return null ;
+    Void loop(Data d) {
+    	b.append(d);
+        this!loop(d + 1);
     }
 }
 
 class Consumer (Buffer b) implements Consumer {
     
     Void loop() {
-
-        //local vars 
-        Void x ;
-	skip ; 
-        b = b.remove(); 
-        //cannot do a call without assignment 
-        x = this!loop();
-        return null ;
+        Data x ; 
+    	x = b.remove();
+	this!loop();
     }
     
 }
-
 //Main
 {
-    //Local vars 
     Buffer buff;
     Producer p;
     Consumer c;
-    Void x ; 
-
-    ;
-    //Init 
     buff = new BoundedBuffer(); 
-    skip ;   
-    x = buff.init();
-    p = new Producer(); 	
-    x = p.init(buff);
-    c = new Consumer();
-    x = c.init(buff) ;
-    x = p!loop(0);
-    x = c!loop();
-    return null;
+    p = new Producer(buff); 	
+    c = new Consumer(buff);
+    p!loop(0);
+    c!loop();
 }
 
