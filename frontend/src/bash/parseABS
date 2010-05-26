@@ -34,10 +34,10 @@ done
 shift $(($OPTIND - 1))
 
 if [ -n "$1" ] ; then 
-    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin/bash abs.frontend.parser.Main $verbose $@
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $@
 else
     echo 'No files specified, trying to parse default test suite.'
-    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin/bash abs.frontend.parser.Main $verbose $@
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $@
 fi
 exit 0
 
