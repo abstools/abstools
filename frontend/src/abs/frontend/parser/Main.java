@@ -1,6 +1,7 @@
 //$Id$
 
-package abs.frontend.tests;
+package abs.frontend.parser;
+
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -13,7 +14,7 @@ import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
 
-public class ParserTest {
+public class Main {
 
 	static boolean verbose = false ; 
 
@@ -99,3 +100,4 @@ public class ParserTest {
 		reader.close();
 		return m; 
 	}
+}
