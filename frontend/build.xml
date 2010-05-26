@@ -84,41 +84,6 @@
     </delete>
   </target>
 
- <target name="test" depends="compile">
-    <java classname="abs.frontend.tests.ParserTest">
-        <arg value="${tests.dir}/abssamples/PeerToPeer.abs"/>
-      <classpath>
-      <pathelement location="${ext.dir}/beaver-rt.jar"/>
-        <pathelement path="${build.dir}"/>
-      </classpath>
-    </java>
- </target>
-
-<!-- To run from command line: 
-
-      java -cp lib/beaver-rt.jar:bin abs.frontend.tests.ParserTest tests/abssamples/PeerToPeer.abs
-  
--->
-
-	
-  <!--  <target name = "jar" depends = "compile">
-       <jar destfile = "${dist.dir}/frontend.jar"
-       basedir = "${build.dir}"
-       manifest = "${basedir}/resources/MANIFEST.MF"
-       />
-       </target> -->
-  
-<!--   <target name="absParser" depends="prepare"> -->
-<!--     <antlr:antlr3 xmlns:antlr="antlib:org/apache/tools/ant/antlr" -->
-<!-- 		  target="${parser.src.dir}/ABS.g" -->
-<!-- 		  outputdirectory="${parser.gen.dir}" -->
-<!-- 		  libdirectory="${parser.gen.dir}"		   -->
-<!-- 		  multithreaded="true"> -->
-<!--       <classpath> -->
-<!-- 	<pathelement location = "${ext.dir}/antlr-3.2.jar" /> -->
-<!--       </classpath> -->
-<!--     </antlr:antlr3>  -->
-<!--   </target> -->
 
   <target name="gen" depends="genshell, genparser, genast">
   </target>
