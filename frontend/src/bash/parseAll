@@ -26,7 +26,7 @@ args="$args tests/abssamples/$f"
 done 
 echo "parsing files in ./tests/abssamples/ : "; 
 echo $files; 
-eval bin/parseABS $verbose $args 
+eval $BASEDIR/bin/bash/parseABS $verbose $args 
 
 
 exit 0
