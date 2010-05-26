@@ -1,0 +1,44 @@
+#!/bin/bash
+# Arild Torjusen April 2010
+# $Id: parseABS 4147 2010-04-27 07:01:36Z atorjusen $ 
+
+BASEDIR="@BASEDIR@" 
+
+function usage
+{
+    echo 'Usage: parseABS [-v] absfiles'
+    echo
+}
+
+function help
+{
+    echo 'parseABS.sh'
+    usage;
+    echo 
+    echo 'Legal options: '
+    echo '-h : Display help'
+    echo '-v : Verbose'
+    exit 0
+}
+echo
+
+while getopts ":ho:v" Option
+do
+  case $Option in
+    h ) help;; 
+    v ) verbose="-v";;
+    o ) outfile=$OPTARG;;
+    * ) echo "Illegal option: $1";usage;exit 1;;      
+  esac
+done
+shift $(($OPTIND - 1))
+
+if [ -n "$1" ] ; then 
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.ParserTest $verbose $@
+else
+    echo 'No files specified, trying to parse default test suite.'
+    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.tests.ParserTest $verbose $@
+fi
+exit 0
+
+
