@@ -5,9 +5,11 @@
   <property environment = "env" /> <!-- include environment variables -->
 
   <property name = "src.dir"   value = "${basedir}/src" />
+  <property name = "bash.dir"   value = "${src.dir}/bash" />
   <property name = "tests.dir"   value = "${basedir}/tests" />
   <property name = "testframework.dir"   value = "${basedir}/tests/testframework" />
   <property name = "build.dir" value = "${basedir}/bin" />
+  <property name = "bash.build.dir" value = "${basedir}/bin/bash" />
   <property name = "dist.dir"  value = "${basedir}/dist" />
   <property name = "gen.dir"   value = "${basedir}/gen" />
   <property name = "ext.dir"   value = "${basedir}/lib"   />
@@ -61,7 +63,7 @@
     </javac>
   </target>
 
-  <target name="javadoc" depends="gen,compile" description="Build java doc.">
+	<target name="javadoc" depends="gen,compile" description="Build java doc.">
     <javadoc sourcepath="${src.dir}:${gen.dir}" 
              destdir ="${apidoc.dir}">
       <classpath>
@@ -141,18 +143,18 @@
 
   
   <target name="genshell">
-    <copy file="${tests.dir}/parseABS" toFile="${build.dir}/parseABS">
+    <copy file="${bash.dir}/parseABS" toFile="${bash.build.dir}/parseABS">
       <filterset>
 	<filter token="BASEDIR" value="${basedir}"/>
       </filterset>
     </copy>
-    <chmod file="${build.dir}/parseABS" perm="ugo+x"/>
-    <copy file="${tests.dir}/parseAll" toFile="${build.dir}/parseAll">
+    <chmod file="${bash.build.dir}/parseABS" perm="ugo+x"/>
+    <copy file="${bash.dir}/parseAll" toFile="${bash.build.dir}/parseAll">
       <filterset>
 	<filter token="BASEDIR" value="${basedir}"/>
       </filterset>
     </copy>
-    <chmod file="${build.dir}/parseAll" perm="ugo+x"/>
+    <chmod file="${bash.build.dir}/parseAll" perm="ugo+x"/>
   </target>
 
 
@@ -221,32 +223,5 @@
 
 <!-- From command line -->
 <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
-
-
-   <!-- KATJA -->
-   
-   <property name = "ast.katja.gen.dir" value = "${gen.dir}/abs/frontend/ast/katja" />
-   
-   <target name="ast.katja.deps">
-      <dependset>
-         <srcfileset dir="${ast.src.dir}" includes="ast.katja" />
-         <targetfileset dir="${ast.katja.gen.dir}" includes="*.java" />
-      </dependset>
-      <available property="ast.katja.up-to-date" file="${ast.katja.gen.dir}/AST.java" />
-   </target>   
-   
-   <target name="ast.katja" depends="prepare, ast.katja.deps" unless="ast.katja.up-to-date">
-     <java jar="${ext.dir}/katja.jar" fork="true">
-        <arg line="-b java"/>
-        <arg value="-o"/>
-        <arg value="-s"/>
-        <arg line="-d ${gen.dir}"/>
-        <arg value="${ast.src.dir}/ast.katja"/>
-     </java>
-      <unzip src="${gen.dir}/AST.jar" dest="${gen.dir}" />
-      <delete file="${gen.dir}/AST.jar" />
-   </target>
-   
-   <!-- END KATJA -->
 
 </project>
