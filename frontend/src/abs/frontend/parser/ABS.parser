@@ -181,33 +181,20 @@ List methodsig_list =
   | methodsig_list.l methodsig.m	{: return l.add(m); :}
   ;
 
-
-/*
-List typedecl_list =
-    typedecl.t			{: return new List().add(t); :}
-  | typedecl_list.l typedecl.t	{: returntypedecl l.add(t); :}
-  ;
-*/
-
-//List behaviordecl_list =
-//    behaviordecl.t			{: return new List().add(t); :}
-//  | behaviordecl_list.l behaviordecl.t	{: return l.add(t); :}
-//  ;
-
 List ifname_list =
-    	ifname.i                              {: return new List().add(i); :}
+	  ifname.i                              {: return new List().add(i); :}
     | ifname_list.l COMMA ifname.i        {: return l.add(i); :}
-  ;
+	;
 
 
 List datatypeuse_list =
-    datatypeuse.i                              {: return new List().add(i); :}
+      datatypeuse.i                              {: return new List().add(i); :}
     | datatypeuse_list.l COMMA datatypeuse.i        {: return l.add(i); :}
-  ;
+    ;
 
 
 Method method = 
-    methodsig.ms block.b {: return new Method(ms,b); :}
+	  methodsig.ms block.b {: return new Method(ms,b); :}
     ;
 
 MethodSig methodsig =
@@ -216,7 +203,7 @@ MethodSig methodsig =
 
 
 PureExp pure_exp =
-	var_ref
+	  var_ref
     | NULL                 {: return new NullExp() ; :}
 	| data_constructor_exp
 	| let_exp
@@ -224,24 +211,24 @@ PureExp pure_exp =
 	| CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
-
-//built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
-List data_exp_list = 
-	data_exp.i                            {: return new List().add(i); :}
-	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
-
-	;
-
 //PureExp pair_exp = 
 //	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
 //	;
 
+
+//built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
+List data_exp_list = 
+	  data_exp.i                            {: return new List().add(i); :}
+	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
+
+	;
+
 PureExp data_exp = 
-	or_exp
+	  or_exp
 	;
 
 PureExp or_exp = 
-    and_exp   
+      and_exp   
 	| or_exp.e1 OROR and_exp.e2 {: return new OrBoolExp(e1, e2); :}
 	;
 
@@ -288,20 +275,22 @@ PureExp factor =
 	;
 
 LiteralExp literal = 
-	int_literal.i              {: return i ; :} 
+	  int_literal.i              {: return i ; :} 
 	| bool_literal.b                 {: return b ; :} 
 	| string_literal.s                 {: return s ; :} 
 	;
 
-//Literals 
+// Literals 
+
 BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
+
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
+
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
 LetExp let_exp = 
 	LET LPAREN var_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
 	;
-
 
 List case_branch_list =
     case_branch.b                         {: return new List().add(b); :}
@@ -310,19 +299,16 @@ List case_branch_list =
 
 CaseBranch case_branch =
 	pattern.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
-
 	; 
 
 Pattern pattern = 
 	  IDENTIFIER.v  {: return new PatternVar(new VarUse(v)) ; :}
 	| constructor_pattern 
 	| literal.l  	{: return new LiteralPattern(l) ; :}
-	//| LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
+//  | LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
 	| USCORE {: return new UnderscorePattern() ; :}
 	;
 
-
-//sss
 Pattern constructor_pattern = 
 	TYPEIDENTIFIER.co  pattern_params.p? {: return new ConstructorPattern(co,p) ; :} 
 	;
@@ -333,9 +319,7 @@ List pattern_params =
 List pattern_list =
     pattern.i                              {: return new List().add(i); :}
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
-  ;
-
-//eee
+	;
 
 PureExp data_constructor_exp =
 	TYPEIDENTIFIER.co data_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
@@ -344,16 +328,7 @@ PureExp data_constructor_exp =
 VarOrFieldUse var_ref =
     IDENTIFIER            {: return new VarUse(IDENTIFIER) ; :}
 	| THIS DOT IDENTIFIER   {: return new FieldUse(IDENTIFIER) ; :}
- ;
-
-
-//VarRef var_ref =
-//    local_var_ref.v             {: return new LocalVarRef(v) ; :}
-//	| THIS DOT local_var_ref.v   {: return new FieldRef(v) ; :}
-// ;
-
-//VarRef local_var_ref =
-//    IDENTIFIER ; 
+	;
 
 GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
@@ -396,7 +371,7 @@ Stmt stmt =
 	|  while_stmt 
 	|  block
 	| SEMICOLON               {: return new EmptyStmt() ; :}
-		;
+	;
 
 
 Stmt return_stmt = 
@@ -406,7 +381,6 @@ Stmt return_stmt =
 
 Guard guard = 	
 	  var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
-	  // For boolean guards 
 	| data_exp.e    {: return new ExpGuard(e) ; :} 
 	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	;
@@ -430,7 +404,4 @@ AssignStmt assign_stmt =
 List stmt_list =
     stmt.i                              {: return new List().add(i); :}
     | stmt_list.l  stmt.i        {: return l.add(i); :}
-  ;
-
-
-
+	;
