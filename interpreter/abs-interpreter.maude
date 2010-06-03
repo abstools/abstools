@@ -333,7 +333,7 @@ mod ABS-CONFIGURATION is
   --- Terms of sort Object represent objects (and classes) in the
   --- run-time configuration.
   ---
-  op noObj : -> Object [ctor] .
+
   op <_:_ | Att:_, Pr:_, PrQ:_, Lcnt:_> : 
     Oid Cid Subst Process MProc Nat -> Object 
     [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o--  r on)] .
@@ -443,13 +443,9 @@ mod ABS-EVAL is
   var B : Bool .
 
   --- Check if a message is in the queue.
-  op inqueue  : Label Configuration -> Bool .
-  eq inqueue(L, < L' : Future | Completed: B, References: N, Value: D > CN) =
-    if L == L' then B else inqueue(L, CN) fi .
-  eq inqueue(L, CL CN) = inqueue(L, CN) .
-  eq inqueue(L, OB CN) = inqueue(L, CN) .
-  eq inqueue(L, MS CN) = inqueue(L, CN) .
-  eq inqueue(L, none) = false .
+  op completed : Label Configuration -> Bool .
+  eq completed(L, < L : Future | Completed: B, References: N, Value: D > CN) = B .
+  eq completed(L, CN) = false [owise] .
 
   op eval : Expr Subst Configuration -> Data .
   op evalList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
@@ -461,15 +457,14 @@ mod ABS-EVAL is
   eq eval(D, S, CN) = D .
 
   *** shortcut for instance variable lookup.
-
-  *** NOTICE: this assumes that the object state always is the left-most
+  *** NOTICE: this assumes that the object state is the left-most
   *** SSubst in a Subst.
   eq eval((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
   eq eval(A, S, CN) =  S [A] .
   eq eval(Q (EL), S, CN) = Q ( evalList(EL, S, CN) ) .
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
-  eq eval(?(A), S, CN) = "bool"[inqueue(S[A], CN)] .
-  eq eval(?(L), S, CN) = "bool"[inqueue(L, CN)] .
+  eq eval(?(A), S, CN) = "bool"[completed(S[A], CN)] .
+  eq eval(?(L), S, CN) = "bool"[completed(L, CN)] .
   eq eval(list(EL), S, CN) = list(evalList(EL, S, CN)) .
   eq eval(set(ES), S, CN) = set(evalSet(ES, S, CN)) .
   eq eval(map(EM), S, CN) = map(evalMap(EM, S, CN)) .
@@ -515,17 +510,16 @@ mod ABS-EVAL is
     eval($case(eval(E, S, CN), CBL), S, CN) .
 
 
-  --- Evaluate guard lists.  This is almost the same as evalList, but we
-  --- had to adapt this to guards.
+  --- Evaluate lists of expressions.
   eq evalList(emp, S, CN) = emp .
-  eq evalList(DL, S, CN) = DL .   --- No need to evaluate.
+  eq evalList(DL, S, CN) = DL .
   eq evalList(E, S, CN) = eval(E, S, CN) .
   eq evalList(E :: NeEL, S, CN) =
     eval(E, S, CN) :: evalList(NeEL, S, CN) .
 
   --- Evaluate a set.
   eq evalSet(emptyset, S, CN) = emptyset .
-  eq evalSet(DS, S, CN) = DS .  ---  No need to evaluate
+  eq evalSet(DS, S, CN) = DS .
   eq evalSet(E, S, CN) = eval(E, S, CN) .
   eq evalSet(E : NeES, S, CN) =
     eval(E, S, CN) : evalSet(NeES, S, CN) .
@@ -533,7 +527,7 @@ mod ABS-EVAL is
   --- Evaluate a map.
   eq evalMap(empty, S, CN) = empty .
   eq evalMap((mapentry(D, D'), EM), S, CN) =
-    (mapentry(D, D') , evalMap(EM, S, CN)) .  --- No need to evaluate .
+    (mapentry(D, D') , evalMap(EM, S, CN)) .
   eq evalMap((mapentry(D, E'), EM), S, CN) =
     (mapentry(D, eval(E', S, CN)) , evalMap(EM, S, CN)) .
   eq evalMap((mapentry(E, D'), EM), S, CN) =
@@ -550,8 +544,8 @@ mod ABS-EVAL is
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(A ; A') ; SL , S, CN) = inqueue(S[A], CN) . 
-  eq ready(get(L ; A') ; SL , S, CN) = inqueue(L, CN) . 
+  eq ready(get(A ; A') ; SL , S, CN) = completed(S[A], CN) . 
+  eq ready(get(L ; A') ; SL , S, CN) = completed(L, CN) . 
   eq ready((SL1 [] SL2) ; SL, S, CN) =
     ready(SL1, S, CN) or ready(SL2, S, CN) .
   eq ready(SL, S, CN) = enabled(SL, S, CN) [owise] .
