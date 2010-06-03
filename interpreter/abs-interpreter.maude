@@ -53,11 +53,8 @@ fmod ABS-SUBST is
 
   *** Lazy composition operator for substitutions
   *** FIXME: make this operator have less precedence than |->
-  op _::_ : Subst Subst -> Subst [assoc] .
+  op _::_ : Subst Subst -> Subst [assoc id: noSubst] .
   eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
-  *** optimization: let-expressions with empty binding list (e.g. result of
-  *** default case branches) generate empty environment - get rid of it
-  eq S1 :: noSubst = S1 .
 
   op hasMapping : Subst Vid -> Bool .
   eq hasMapping(S2, A) = $hasMapping(S2, A) .
