@@ -7,7 +7,7 @@ Model                         ::= Decl* [Block];
 // (see below for Blocks)
 
 // A ClassBlock is the body of a Class. 
-ClassBlock			::= [InitBlock:Block] Field:VarDecl* Method:Method*;
+ClassBlock			::= [InitBlock:Block] Field:FieldDecl* Method:Method*;
 
 abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl; // Entities used in behavior expressions

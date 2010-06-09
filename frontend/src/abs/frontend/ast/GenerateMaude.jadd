@@ -306,7 +306,7 @@ aspect GenerateMaude {
             stream.print("noSubst");
         } else {
             inlist = false;
-            for (VarDecl field : getBody().getFields()) {
+            for (FieldDecl field : getBody().getFields()) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + field.getName() + "\" |-> null ");
             }
