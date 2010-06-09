@@ -21,7 +21,7 @@ aspect GenerateMaude {
     // up, but has to leave whitespace at the end if needed.
 
     public void Model.generateMaude(java.io.PrintStream stream) {
-        stream.println("in abs-interpreter\n\nmod PROGRAM is\nprotecting ABS-SIMULATOR .\n");
+        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR .\n");
         for (Decl decl : getDecls()) {
             if (decl.getClass() == FunctionDecl.class)
                 decl.generateMaude(stream);

@@ -424,10 +424,6 @@ mod ABS-EVAL is
   var EL : ExprList .
   var NeEL : NeExprList .
   var CBL : CaseBranchList .
-  var ES : ExprSet .
-  var NeES : NeExprSet .
-  var DS : DataSet .
-  var EM : ExprMap .
   vars A A' : Vid .
   var AL : VidList .
   vars Q C : String .
@@ -449,8 +445,6 @@ mod ABS-EVAL is
 
   op eval : Expr Subst Configuration -> Data .
   op evalList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
-  op evalSet : ExprSet Subst Configuration -> DataSet [strat (1 0 0 0)] .
-  op evalMap : ExprMap Subst Configuration -> DataMap [strat (1 0 0 0)] .
   op enabled : StmtList Subst Configuration -> Bool .
   op ready : StmtList Subst Configuration -> Bool .
 
@@ -466,8 +460,6 @@ mod ABS-EVAL is
   eq eval(?(A), S, CN) = "bool"[completed(S[A], CN)] .
   eq eval(?(L), S, CN) = "bool"[completed(L, CN)] .
   eq eval(list(EL), S, CN) = list(evalList(EL, S, CN)) .
-  eq eval(set(ES), S, CN) = set(evalSet(ES, S, CN)) .
-  eq eval(map(EM), S, CN) = map(evalMap(EM, S, CN)) .
   eq eval(if E th E' el E'' fi, S, CN) =
     if eval(E, S, CN) asBool
     then eval(E', S, CN)
@@ -517,25 +509,6 @@ mod ABS-EVAL is
   eq evalList(E :: NeEL, S, CN) =
     eval(E, S, CN) :: evalList(NeEL, S, CN) .
 
-  --- Evaluate a set.
-  eq evalSet(emptyset, S, CN) = emptyset .
-  eq evalSet(DS, S, CN) = DS .
-  eq evalSet(E, S, CN) = eval(E, S, CN) .
-  eq evalSet(E : NeES, S, CN) =
-    eval(E, S, CN) : evalSet(NeES, S, CN) .
-
-  --- Evaluate a map.
-  eq evalMap(empty, S, CN) = empty .
-  eq evalMap((mapentry(D, D'), EM), S, CN) =
-    (mapentry(D, D') , evalMap(EM, S, CN)) .
-  eq evalMap((mapentry(D, E'), EM), S, CN) =
-    (mapentry(D, eval(E', S, CN)) , evalMap(EM, S, CN)) .
-  eq evalMap((mapentry(E, D'), EM), S, CN) =
-    (mapentry(eval(E, S, CN), D') , evalMap(EM, S, CN)) .
-  eq evalMap((mapentry(E, E'), EM), S, CN) =
-    (mapentry(eval(E, S, CN), eval(E', S, CN)) ,
-      evalMap(EM, S, CN)) .
-
   --- Enabledness
   eq enabled(await E ; SL, S, CN) = eval(E, S, CN) asBool .
   eq enabled((SL1 [] SL2) ; SL, S, CN) =
@@ -576,7 +549,6 @@ mod ABS-SIMULATOR is
   var N : Label .                      --- Call label
   var D : Data .                       --- Value
   vars DL DL2 : DataList .             --- List of values
-  vars DS : DataSet .		       --- Set of data items
   var E : Expr .                       --- Expression
   var EL : ExprList .                  --- List of Expressions
   var ST : Stmt .                      --- Statement

@@ -20,58 +20,6 @@
 *** along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ***
 
---- The banner is useful for debugging.  It allows us to figure out the
---- exact version of that file in our subversion repository.
----
-fmod ABS-DATA-BANNER is
-    protecting STRING .
-    op datarev : -> String .
-    eq datarev = "$Revision$" .
-endfm
-
-
-*** This module specifies multisets.  It has been derived from the set
-*** module.
-***
-fmod MULTISET{X :: TRIV} is
-    protecting EXT-BOOL .
-    protecting NAT .
-
-    sorts NeMSet{X} MSet{X} .
-    subsort X$Elt < NeMSet{X} < MSet{X} .
-
-    op empty : -> MSet{X} [ctor] .
-    op _,_ : MSet{X} MSet{X} -> MSet{X} [ctor assoc comm id: empty prec 121 format (d r os d)] .
-    op _,_ : NeMSet{X} MSet{X} -> NeMSet{X} [ctor ditto] .
-
-    var E : X$Elt .
-    var N : NeMSet{X} .
-    var M : MSet{X} .
-    var C : Nat .
-
-    op insert : X$Elt MSet{X} -> NeMSet{X} .
-    eq insert(E, M) = E, M .
-
-    op delete : X$Elt MSet{X} -> MSet{X} .
-    eq delete(E, (E, M)) = delete (E, M) .
-    eq delete(E, M) = M [owise] .
-
-    op _in_ : X$Elt MSet{X} -> Bool .
-    eq E in (E, M) = true .
-    eq E in M = false [owise] .
-
-    op count : X$Elt MSet{X} -> Nat .
-    eq count(E, (E, M)) = 1 + count(E, M) .
-    eq count(E, M) = 0 [owise] .
-
-    op |_| : MSet{X} -> Nat .
-    op |_| : NeMSet{X} -> NzNat .
-    eq | M | = $card(M, 0) .
-
-    op $card : MSet{X} Nat -> Nat .
-    eq $card(empty, C) = C .
-    eq $card((E, M), C) = $card(M, C + 1) [owise] .
-endfm
 
 
 *** The basic concepts of Abs's data type.
@@ -651,9 +599,6 @@ fmod ABS-DATATYPES is
     extending ABS-DATA-INT .
     extending ABS-DATA-STRING .
     extending ABS-DATA-LIST .
-    extending ABS-DATA-SET .
-    extending ABS-DATA-MAP .
-    extending ABS-DATA-PAIR .
 endfm
 
 eof
