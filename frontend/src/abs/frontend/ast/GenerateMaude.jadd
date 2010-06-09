@@ -32,12 +32,38 @@ aspect GenerateMaude {
             if (decl.getClass() == ClassDecl.class)
                 decl.generateMaude(stream);
         }
-        stream.println(" .");
         if (hasBlock()) {
-        	//getBlock().generateMaude(stream);
-            stream.println("--- Block");
+            // Create an artificial ".Main" class that is started by the
+            // interpreter.
+            stream.print("< \".Main\" : Class |\n  Param: noVid,\n  Att: ");
+            if (getBlock().getNumField() == 0) {
+                stream.println("noSubst,");
+            } else {
+                for (VarDecl field : getBlock().getFields()) {
+                    stream.print("@ \"" + field.getName() + "\" |-> null , ");
+                }
+            }
+            stream.print("\n  Mtds: ");
+            // hand-craft "init" method
+            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            stream.print(",\n          Code: ");
+            if (getBlock().getNumStmt() == 0) {
+                stream.print("return( null ) ");
+            } else {
+                boolean inlist = false;
+                for (Stmt stmt : getBlock().getStmts()) {
+                    if (inlist) stream.print("; "); else inlist = true;
+                    stmt.generateMaude(stream);
+                }
+                stream.print("; return( null ) ");
+            }
+            stream.print("> ,\n  Ocnt: 0 > ");
         }
-        stream.println("endm");
+        stream.println(" .");
+        stream.println("\n  --- Start the model with 'rew start .'");
+        stream.println("  op start : -> State .");
+        stream.println("  eq start = main(classes, \".Main\", emp) .");
+        stream.println("\nendm");
     }
 
 	abstract public void Decl.generateMaude(java.io.PrintStream stream);
