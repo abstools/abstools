@@ -21,21 +21,24 @@ aspect GenerateMaude {
     // up, but has to leave whitespace at the end if needed.
 
     public void Model.generateMaude(java.io.PrintStream stream) {
+        boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR .\n");
         for (Decl decl : getDecls()) {
             if (decl.getClass() == FunctionDecl.class)
                 decl.generateMaude(stream);
         }
         stream.println("op classes : -> Configuration .");
-        stream.println("eq classes =");
+        stream.print("eq classes =");
         for (Decl decl : getDecls()) {
-            if (decl.getClass() == ClassDecl.class)
+            if (decl.getClass() == ClassDecl.class) {
+                hasClasses = true;
                 decl.generateMaude(stream);
+            }
         }
         if (hasBlock()) {
             // Create an artificial ".Main" class that is started by the
             // interpreter.
-            stream.print("< \".Main\" : Class |\n  Param: noVid,\n  Att: ");
+            stream.print("\n\n< \".Main\" : Class |\n  Param: noVid,\n  Att: ");
             if (getBlock().getNumField() == 0) {
                 stream.println("noSubst,");
             } else {
@@ -46,7 +49,7 @@ aspect GenerateMaude {
             stream.print("\n  Mtds: ");
             // hand-craft "init" method
             stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
-            stream.print(",\n          Code: ");
+            stream.print(",\n      Code: ");
             if (getBlock().getNumStmt() == 0) {
                 stream.print("return( null ) ");
             } else {
@@ -59,10 +62,11 @@ aspect GenerateMaude {
             }
             stream.print("> ,\n  Ocnt: 0 > ");
         }
-        stream.println(" .");
-        stream.println("\n  --- Start the model with 'rew start .'");
-        stream.println("  op start : -> State .");
-        stream.println("  eq start = main(classes, \".Main\", emp) .");
+        if (!hasBlock() && !hasClasses) stream.print(" none ");
+        stream.println(".");
+        stream.println("\n--- Start the model with 'rew start .'");
+        stream.println("op start : -> State .");
+        stream.println("eq start = main(classes, \".Main\", emp) .");
         stream.println("\nendm");
     }
 
@@ -315,7 +319,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-		stream.println("< \"" + getName() + "\" : Class |");
+		stream.println("\n\n< \"" + getName() + "\" : Class |");
         stream.print("  Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -366,7 +370,7 @@ aspect GenerateMaude {
             stream.print(",\n    ");
             method.generateMaude(stream);
         }
-        stream.println(",\n  Ocnt: 0 > ");
+        stream.print(",\n  Ocnt: 0 > ");
 	}
 	
     public void Method.generateMaude(java.io.PrintStream stream) {

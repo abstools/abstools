@@ -969,16 +969,9 @@ mod ABS-CONFIGURATION is
   op warn : State String -> State .
   eq warn({ CN }, M) = { warning(M) CN } .
 
-  --- System initialisation, old style.
+  --- System initialisation with arbitrary class.
   op main : Configuration String DataList -> State .
   eq main(CN, B, DL) =
-    { CN < ob("main") : Start | Att: noSubst, 
-      Pr: { @ "var" |-> null | new(@ "var" ; B ; DL) },
-      PrQ: noProc, Lcnt: 0 > } .
-
-  --- System initialisation, new style.
-  op main : State String DataList -> State .
-  eq main({ CN }, B, DL) =
     { CN < ob("main") : Start | Att: noSubst, 
       Pr: { @ "var" |-> null | new(@ "var" ; B ; DL) },
       PrQ: noProc, Lcnt: 0 > } .
