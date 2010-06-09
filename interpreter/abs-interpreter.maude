@@ -735,6 +735,7 @@ fmod ABS-STATEMENT is
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
   op return(_) : Expr -> Stmt [ctor format (c d o c o)] .
+  op mark(_) : Vid -> Stmt [ctor format (c d o c o)] .
   op free(_) : Vid -> Stmt [ctor format (c d o c o)] .
   op tailcall(_;_;_) : Expr String ExprList -> Stmt [ctor format (c d o c o c o c o)] .
   op statictail(_;_;_;_) : String Cid Cid ExprList -> Stmt [ctor format (c d o c o c o c o c o)] .
@@ -1388,6 +1389,19 @@ mod ABS-SIMULATOR is
     < N : Future | Completed: false, References: 1, Value: null >
     bindMtd(O, N, Q, DL)
     [label transport-imsg] .
+
+  --- mark
+  ---
+  --- Mark a label in use.
+  crl
+    < O : C | Att: S, Pr: { L | mark(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: CO, References: G, Value: D >
+  =>
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Completed: CO, References: G + 1, Value: D >
+  if N = L[A]
+      [label mark] .
+
 
   --- free
   ---
