@@ -481,6 +481,7 @@ fmod ABS-DATATYPES is
     extending ABS-DATA-INT .
     extending ABS-DATA-STRING .
     extending ABS-DATA-LIST .
+    extending ABS-DATA-TIME .
 endfm
 
 
@@ -913,6 +914,7 @@ mod ABS-EVAL is
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
   eq eval(?(A), S, CN) = "bool"[completed(S[A], CN)] .
   eq eval(?(L), S, CN) = "bool"[completed(L, CN)] .
+  eq eval(now, S, CN) = "time"[0] . *** time is constant in the untimed version
   eq eval(list(EL), S, CN) = list(evalList(EL, S, CN)) .
   eq eval(if E th E' el E'' fi, S, CN) =
     if eval(E, S, CN) asBool
