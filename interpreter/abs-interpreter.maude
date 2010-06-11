@@ -28,63 +28,61 @@
 ***
 fmod ABS-DATA-SIG is
 
-    protecting META-LEVEL .
+  sorts Expr Data .
+  subsort Data < Expr .
 
-    sorts Expr Data .
-    subsort Data < Expr .
+  op null : -> Data [ctor format (! o)] .
 
-    op null : -> Data [ctor format (! o)] .
+  sorts   NeExprList ExprList NeDataList DataList .
+  subsort Expr < NeExprList < ExprList .
+  subsort Data < NeDataList < DataList .
+  subsort DataList < ExprList .
+  subsort NeDataList < NeExprList .
 
-    sorts   NeExprList ExprList NeDataList DataList .
-    subsort Expr < NeExprList < ExprList .
-    subsort Data < NeDataList < DataList .
-    subsort DataList < ExprList .
-    subsort NeDataList < NeExprList .
+  op emp : -> DataList [ctor] .
 
-    op emp : -> DataList [ctor] .
-
-    op _::_ : ExprList ExprList -> ExprList
-	[ctor assoc id: emp prec 27 format (d r os d)] .
-    op _::_ : NeExprList ExprList -> NeExprList [ctor ditto] .
-    op _::_ : ExprList NeExprList -> NeExprList [ctor ditto] .
-    op _::_ : DataList DataList  -> DataList [ctor ditto] .
-    op _::_ : NeDataList DataList  -> NeDataList [ctor ditto] .
-    op _::_ : DataList NeDataList  -> NeDataList [ctor ditto] .
+  op _::_ : ExprList ExprList -> ExprList
+    [ctor assoc id: emp prec 27 format (d r os d)] .
+  op _::_ : NeExprList ExprList -> NeExprList [ctor ditto] .
+  op _::_ : ExprList NeExprList -> NeExprList [ctor ditto] .
+  op _::_ : DataList DataList  -> DataList [ctor ditto] .
+  op _::_ : NeDataList DataList  -> NeDataList [ctor ditto] .
+  op _::_ : DataList NeDataList  -> NeDataList [ctor ditto] .
 
 endfm
 
 view Data from TRIV to ABS-DATA-SIG is
-    sort Elt to Data .
+  sort Elt to Data .
 endv
 
 view Expr from TRIV to ABS-DATA-SIG is
-    sort Elt to Expr .
+  sort Elt to Expr .
 endv
 
 
 fmod ABS-DATA-VID is
-    extending ABS-DATA-SIG .
-    protecting STRING .
+  extending ABS-DATA-SIG .
+  protecting STRING .
 
-    sort Vid .
-    subsort Vid < Expr .
+  sort Vid .
+  subsort Vid < Expr .
 
-    *** Variable references
-    op @_ : String -> Vid [ctor] .
+  *** Variable references
+  op @_ : String -> Vid [ctor] .
 
-    *** Instance variable references
-    op _@_ : String String -> Vid [ctor] .
+  *** Instance variable references
+  op _@_ : String String -> Vid [ctor] .
 endfm
 
 view Vid from TRIV to ABS-DATA-VID is
-    sort Elt to Vid .
+  sort Elt to Vid .
 endv
 
 fmod ABS-DATA-VIDLIST is
-    protecting LIST{Vid} * (sort List{Vid} to VidList,
-			    sort NeList{Vid} to NeVidList,
-			    op nil : -> List{Vid} to noVid,
-			    op __ : List{Vid} List{Vid} -> List{Vid} to _`,_ [format (d r os d)]) .
+  protecting LIST{Vid} * (sort List{Vid} to VidList,
+                          sort NeList{Vid} to NeVidList,
+                          op nil : -> List{Vid} to noVid,
+                          op __ : List{Vid} List{Vid} -> List{Vid} to _`,_ [format (d r os d)]) .
 endfm
 
 
@@ -94,15 +92,15 @@ endfm
 *** op label : Nat -> Label [ctor] .
 fmod ABS-DATA-LABEL is
 
-    extending ABS-DATA-SIG .
+  extending ABS-DATA-SIG .
 
-    sort Label .
-    subsort Label < Data .
+  sort Label .
+  subsort Label < Data .
 
-    --- Needed in the model checker for tail recursion.
-    op tag : Label -> Label [ctor format (c o)] .
-    var L : Label .
-    eq tag(tag(L)) = L .
+  --- Needed in the model checker for tail recursion.
+  op tag : Label -> Label [ctor format (c o)] .
+  var L : Label .
+  eq tag(tag(L)) = L .
 
 endfm
 
@@ -117,36 +115,36 @@ endv
 ***
 fmod ABS-EXPRESSION is
 
-    protecting ABS-DATA-VIDLIST .
-    protecting ABS-DATA-SIG .
-    protecting STRING .
+  protecting ABS-DATA-VIDLIST .
+  protecting ABS-DATA-SIG .
+  protecting STRING .
 
-    sorts CaseBranch CaseBranchList .
-    subsort CaseBranch < CaseBranchList .
-    *** KLUDGE (rs 2010-04-20) Only certain kinds of expressions can be used
-    *** as pattern: literals and variable references.  We should introduce a
-    *** sort `Pattern' and use it.  For now, we rely on the compiler to only
-    *** produce valid pattern expressions.
-    op _=>_ : Expr Expr -> CaseBranch .
-    op _;_ : CaseBranchList CaseBranchList -> CaseBranchList
-        [ctor assoc id: noBranch prec 27 format (d b os d)] .
-    op noBranch : -> CaseBranch .
+  sorts CaseBranch CaseBranchList .
+  subsort CaseBranch < CaseBranchList .
+  *** KLUDGE (rs 2010-04-20) Only certain kinds of expressions can be used as
+  *** pattern: literals and variable references.  We should introduce a sort
+  *** `Pattern' and use it.  For now, we rely on the compiler to only produce
+  *** valid pattern expressions.
+  op _=>_ : Expr Expr -> CaseBranch .
+  op _;_ : CaseBranchList CaseBranchList -> CaseBranchList
+    [ctor assoc id: noBranch prec 27 format (d b os d)] .
+  op noBranch : -> CaseBranch .
 
-    *** function application
-    op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
-    op _(_) : String DataList -> Data [ctor prec 12 format (! o d d d)] .
-    *** constructor terms
-    op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
-    op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
-    *** conditional
-    op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
-    *** case expression
-    op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
-    op case_of {_} : Data CaseBranchList -> Data [ctor] .
-    *** let expression
-    op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
-    *** guard expression
-    op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
+  *** function application
+  op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+  op _(_) : String DataList -> Data [ctor prec 12 format (! o d d d)] .
+  *** constructor terms
+  op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
+  op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
+  *** conditional
+  op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
+  *** case expression
+  op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
+  op case_of {_} : Data CaseBranchList -> Data [ctor] .
+  *** let expression
+  op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
+  *** guard expression
+  op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
 
 endfm
 
@@ -154,30 +152,30 @@ endfm
 ***
 fmod ABS-DATA-BOOL is
 
-    protecting ABS-EXPRESSION .
+  protecting ABS-EXPRESSION .
 
-    op _[_] : String Bool -> Data [ctor prec 12 format (! o d d d)] .
+  op _[_] : String Bool -> Data [ctor prec 12 format (! o d d d)] .
 
-    vars B B' : Bool .
-    vars D D' : Data .
-    vars E : Expr .
+  vars B B' : Bool .
+  vars D D' : Data .
+  vars E : Expr .
 
-    op _asBool : Data -> Bool .
-    eq "bool"[B] asBool = B .
+  op _asBool : Data -> Bool .
+  eq "bool"[B] asBool = B .
 
-    eq "=" (D :: D') = "bool"[D == D'] .
-    eq "/=" (D :: D') = "bool"[D =/= D'] .
+  eq "=" (D :: D') = "bool"[D == D'] .
+  eq "/=" (D :: D') = "bool"[D =/= D'] .
 
-    eq "~"("bool"[false]) = "bool"[true] .  
-    eq "~"("bool"[true]) = "bool"[false] . 
-    eq "&&"("bool"[false] :: E) = "bool"[false] .
-    eq "&&"("bool"[true] ::  E) = E .
-    eq "||"("bool"[true] :: E) = "bool"[true] .
-    eq "||"("bool"[false] :: E) = E .
-    eq "=>"("bool"[true] :: E) = E .
-    eq "=>"("bool"[false] :: E) = "bool"[true] .
-    eq "^"("bool"[B] :: "bool"[B']) = "bool"[B xor B'] .
-    eq "<=>"("bool"[B] :: "bool"[B']) = "bool"[B == B'] .
+  eq "~"("bool"[false]) = "bool"[true] .  
+  eq "~"("bool"[true]) = "bool"[false] . 
+  eq "&&"("bool"[false] :: E) = "bool"[false] .
+  eq "&&"("bool"[true] ::  E) = E .
+  eq "||"("bool"[true] :: E) = "bool"[true] .
+  eq "||"("bool"[false] :: E) = E .
+  eq "=>"("bool"[true] :: E) = E .
+  eq "=>"("bool"[false] :: E) = "bool"[true] .
+  eq "^"("bool"[B] :: "bool"[B']) = "bool"[B xor B'] .
+  eq "<=>"("bool"[B] :: "bool"[B']) = "bool"[B == B'] .
 
 endfm
 
@@ -208,6 +206,7 @@ fmod ABS-DATA-FLOAT is
   eq "<=" ("float"[F] :: "float"[F']) = "bool"[F <= F'] .
   eq ">"  ("float"[F] :: "float"[F']) = "bool"[F > F'] .
   eq ">=" ("float"[F] :: "float"[F']) = "bool"[F >= F'] .
+
 endfm
 
 
@@ -247,6 +246,7 @@ fmod ABS-DATA-INT is
   eq "<=" ("int"[I] :: "int"[I']) = "bool"[I <= I'] .
   eq ">"  ("int"[I] :: "int"[I']) = "bool"[I > I'] .
   eq ">=" ("int"[I] :: "int"[I']) = "bool"[I >= I'] .
+
 endfm
 
 
@@ -254,44 +254,45 @@ endfm
 *** Specification of strings and functions on strings.
 ***
 fmod ABS-DATA-STRING is
-    extending ABS-DATA-INT .
+  extending ABS-DATA-INT .
 
-    protecting STRING .
+  protecting STRING .
 
-    op _[_] : String String -> Data [ctor prec 12 format (! o d d d)] .
+  op _[_] : String String -> Data [ctor prec 12 format (! o d d d)] .
 
-    vars S S' : String .
-    vars M N : Nat .
+  vars S S' : String .
+  vars M N : Nat .
 
-    op _asString : Data -> String .
-    eq "str"[S] asString = S .
+  op _asString : Data -> String .
+  eq "str"[S] asString = S .
 
-    eq "|-" ("str"[S] :: "str"[S']) = "str"[S + S'] .
-    eq "-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
-    eq "|-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
-    eq "#" ("str"[S]) = "int"[length(S)] .
-    eq "ascii" ("str"[S]) = "int"[ascii(S)] .
-    eq "char" ("int"[N]) = "str"[char(N)] .
-    eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
-    eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
-    eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
+  eq "|-" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+  eq "-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+  eq "|-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+  eq "#" ("str"[S]) = "int"[length(S)] .
+  eq "ascii" ("str"[S]) = "int"[ascii(S)] .
+  eq "char" ("int"[N]) = "str"[char(N)] .
+  eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
+  eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
+  eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
-    eq "<" ("str"[S]:: "str"[S']) = "bool"[S < S'] .
-    eq "<=" ("str"[S]:: "str"[S']) = "bool"[S <= S'] .
-    eq ">" ("str"[S]:: "str"[S']) = "bool"[S > S'] .
-    eq ">=" ("str"[S]:: "str"[S']) = "bool"[S >= S'] .
+  eq "<" ("str"[S]:: "str"[S']) = "bool"[S < S'] .
+  eq "<=" ("str"[S]:: "str"[S']) = "bool"[S <= S'] .
+  eq ">" ("str"[S]:: "str"[S']) = "bool"[S > S'] .
+  eq ">=" ("str"[S]:: "str"[S']) = "bool"[S >= S'] .
 
 
-    --- Conversions.  Since Abs does not support rational numbers yet,
-    --- we may have failures here which will remain unchecked.
-    protecting CONVERSION .
-    var I : Int .
-    var F : Float .
+  --- Conversions.  Since Abs does not support rational numbers yet,
+  --- we may have failures here which will remain unchecked.
+  protecting CONVERSION .
+  var I : Int .
+  var F : Float .
 
-    eq "string_of_int" ("int"[I]) = "str"[string(I, 10)] .
-    eq "int_of_string" ("str"[S]) = "int"[rat(S, 10)] .
-    eq "string_of_real" ("float"[F]) = "str"[string(F)] .
-    eq "real_of_string" ("str"[S]) = "float"[float(S)] .
+  eq "string_of_int" ("int"[I]) = "str"[string(I, 10)] .
+  eq "int_of_string" ("str"[S]) = "int"[rat(S, 10)] .
+  eq "string_of_real" ("float"[F]) = "str"[string(F)] .
+  eq "real_of_string" ("str"[S]) = "float"[float(S)] .
+
 endfm
 
 
@@ -299,127 +300,127 @@ endfm
 *** Specification of lists and functions on lists.
 ***
 fmod ABS-DATA-LIST is
-    extending ABS-DATA-INT .
+  extending ABS-DATA-INT .
 
-    op list(_) : ExprList -> Expr [ctor format (o d ! o d)] .
-    op list(_) : DataList -> Data [ctor ditto] .
+  op list(_) : ExprList -> Expr [ctor format (o d ! o d)] .
+  op list(_) : DataList -> Data [ctor ditto] .
 
-    vars M N : Nat .
-    vars I J K : Int .
-    vars D D' : Data .
-    vars L L' : DataList .
+  vars M N : Nat .
+  vars I J K : Int .
+  vars D D' : Data .
+  vars L L' : DataList .
 
-    --- list-functions
-    eq "head" (list(emp)) = null .
-    eq "head" (list(D :: L)) = D .
+  --- list-functions
+  eq "head" (list(emp)) = null .
+  eq "head" (list(D :: L)) = D .
 
-    eq "tail" (list(emp)) = null .
-    eq "tail" (list(D :: L)) = list(L) .
+  eq "tail" (list(emp)) = null .
+  eq "tail" (list(D :: L)) = list(L) .
 
-    eq "last" (list(emp)) = null .
-    eq "last" (list(L :: D)) = D .
+  eq "last" (list(emp)) = null .
+  eq "last" (list(L :: D)) = D .
 
-    eq "rest" (list(emp)) = null .
-    eq "rest" (list(L :: D)) = list(L) .
+  eq "rest" (list(emp)) = null .
+  eq "rest" (list(L :: D)) = list(L) .
 
-    eq "nth" ((list(L)) :: "int"[0]) = null .
-    eq "nth" ((list(emp)) :: "int"[N]) = null .
-    eq "nth" ((list(D :: L)) :: "int"[N]) =
-      if (N == 1) then D else "nth" (list(L) :: "int"[_-_(N, 1)]) fi .
+  eq "nth" ((list(L)) :: "int"[0]) = null .
+  eq "nth" ((list(emp)) :: "int"[N]) = null .
+  eq "nth" ((list(D :: L)) :: "int"[N]) =
+  if (N == 1) then D else "nth" (list(L) :: "int"[_-_(N, 1)]) fi .
 
-    eq "rnth" (list(L) :: "int"[N]) = "nth" ("reverse" (list(L)) :: "int"[N]) .
+  eq "rnth" (list(L) :: "int"[N]) = "nth" ("reverse" (list(L)) :: "int"[N]) .
 
-    eq "in" (D :: list(emp)) = "bool"[false] .
-    eq "in" (D' :: list(D :: L)) =
-      if D == D' then "bool"[true] else "in" (D' :: list(L)) fi .
+  eq "in" (D :: list(emp)) = "bool"[false] .
+  eq "in" (D' :: list(D :: L)) =
+  if D == D' then "bool"[true] else "in" (D' :: list(L)) fi .
 
-    eq "remove" (list(emp) :: D) = list(emp) .
-    eq "remove" (list(D :: L) :: D') =
-      if D == D'
-	then "remove" ((list(L)):: D') 
-	else "|-|" (list(D) :: ("remove" (list(L) :: D'))) fi .
+  eq "remove" (list(emp) :: D) = list(emp) .
+  eq "remove" (list(D :: L) :: D') =
+    if D == D'
+    then "remove" ((list(L)):: D') 
+    else "|-|" (list(D) :: ("remove" (list(L) :: D'))) fi .
 
-    eq "-|" (D :: list(L)) = list(D :: L) .
-    eq "|-" (list(L) :: D) = list(L :: D) .
-    eq "|-|" (list(L) :: list(L'))   = list(L :: L') .
+  eq "-|" (D :: list(L)) = list(D :: L) .
+  eq "|-" (list(L) :: D) = list(L :: D) .
+  eq "|-|" (list(L) :: list(L'))   = list(L :: L') .
 
-    eq "#" (list(emp)) = "int"[0] .
-    eq "#" (list(D :: L)) = "+" ("#" (list(L)) :: "int"[1]) .
+  eq "#" (list(emp)) = "int"[0] .
+  eq "#" (list(D :: L)) = "+" ("#" (list(L)) :: "int"[1]) .
   
-    eq "isempty" (list(emp)) = "bool"[true] .
-    eq "isempty" (list(L :: D)) = "bool"[false] .
+  eq "isempty" (list(emp)) = "bool"[true] .
+  eq "isempty" (list(L :: D)) = "bool"[false] .
 
-    --- Reverse a list
-    eq "reverse" (list(emp)) = list (emp) .
-    eq "reverse" (list(D :: L)) = "|-" ("reverse" (list(L)) :: D) .
+  --- Reverse a list
+  eq "reverse" (list(emp)) = list (emp) .
+  eq "reverse" (list(D :: L)) = "|-" ("reverse" (list(L)) :: D) .
 
-    --- index starts at 1
-    eq "after" (list(emp) :: "int"[N]) = null . 
-    eq "after" (list(L) :: "int"[0]) = list(L) .
-    eq "after" (list(D :: L) :: "int"[N]) = "after" (list(L) :: "int"[_-_(N, 1)]) .
+  --- index starts at 1
+  eq "after" (list(emp) :: "int"[N]) = null . 
+  eq "after" (list(L) :: "int"[0]) = list(L) .
+  eq "after" (list(D :: L) :: "int"[N]) = "after" (list(L) :: "int"[_-_(N, 1)]) .
 
-    --- Compute a slice of a sequence.
-    eq "sub" (list(L) :: "int"[N] :: "int"[M]) =
-	".sub" (list(L) :: "int"[N] :: "int"[M] :: list(emp)) .
-    ceq ".sub" (list(D :: L) :: "int"[N] :: "int"[M] :: list(L')) =
-	".sub" (list(L) :: "int"[_-_(N, 1)] :: "int"[_-_(M, 1)] :: list(L'))
-      if N > 1 .
-    ceq ".sub" (list(D :: L) :: "int"[1] :: "int"[M] :: list(L')) =
-	".sub" (list(L) :: "int"[1] :: "int"[_-_(M, 1)] :: list(L' :: D))
-      if M >= 1 .
-    eq ".sub" (list(L) :: "int"[1] :: "int"[0] :: list(L')) = list(L') .
+  --- Compute a slice of a sequence.
+  eq "sub" (list(L) :: "int"[N] :: "int"[M]) =
+    ".sub" (list(L) :: "int"[N] :: "int"[M] :: list(emp)) .
+  ceq ".sub" (list(D :: L) :: "int"[N] :: "int"[M] :: list(L')) =
+    ".sub" (list(L) :: "int"[_-_(N, 1)] :: "int"[_-_(M, 1)] :: list(L'))
+  if N > 1 .
+  ceq ".sub" (list(D :: L) :: "int"[1] :: "int"[M] :: list(L')) =
+    ".sub" (list(L) :: "int"[1] :: "int"[_-_(M, 1)] :: list(L' :: D))
+  if M >= 1 .
+  eq ".sub" (list(L) :: "int"[1] :: "int"[0] :: list(L')) = list(L') .
 
-    eq "begwith" (list(emp) :: list(L :: D)) = "bool"[false] .
-    eq "begwith" (list(L) :: list(emp)) = "bool"[true] .
-    eq "begwith" (list(D :: L) :: list(D' :: L')) =
-      if D == D' then "begwith" (list(L) :: list(L')) else "bool"[false] fi .
+  eq "begwith" (list(emp) :: list(L :: D)) = "bool"[false] .
+  eq "begwith" (list(L) :: list(emp)) = "bool"[true] .
+  eq "begwith" (list(D :: L) :: list(D' :: L')) =
+    if D == D' then "begwith" (list(L) :: list(L')) else "bool"[false] fi .
 
-    eq "endswith" (list(emp) :: list(L :: D)) = "bool"[false] .
-    eq "endswith" (list(L) :: list(emp)) = "bool"[true] .
-    eq "endswith" (list(L :: D) :: list(L' :: D')) =
-      if D == D' then "endswith" (list(L) :: list(L')) else "bool"[false] fi .
+  eq "endswith" (list(emp) :: list(L :: D)) = "bool"[false] .
+  eq "endswith" (list(L) :: list(emp)) = "bool"[true] .
+  eq "endswith" (list(L :: D) :: list(L' :: D')) =
+    if D == D' then "endswith" (list(L) :: list(L')) else "bool"[false] fi .
 
-    --- If E is not in the list, these will fail with the term
-    --- "+" ("int"[N] :: null)
-    eq "index" (list(emp) :: D) = null .
-    eq "index" (list(D :: L) :: D') =
-      if D == D' then "int"[1] else "+" ("int"[1] :: "index" (list(L) :: D')) fi .
+  --- If E is not in the list, these will fail with the term
+  --- "+" ("int"[N] :: null)
+  eq "index" (list(emp) :: D) = null .
+  eq "index" (list(D :: L) :: D') =
+    if D == D' then "int"[1] else "+" ("int"[1] :: "index" (list(L) :: D')) fi .
 
-    --- If E is not in the list, these will fail with the term
-    --- "-" ("int"[N] :: null)
-    eq "rindex" (list(L) :: D) =
-	"-" ("#" (list(L)) :: ".rindex" (list(L) :: D)) .
-    eq ".rindex" (list(emp) :: D') = null .
-    eq ".rindex" (list(L :: D) :: D') =
-      if D == D' then "int"[1] else "+" ("int"[1] :: "rindex" (list(L) :: D')) fi .
+  --- If E is not in the list, these will fail with the term
+  --- "-" ("int"[N] :: null)
+  eq "rindex" (list(L) :: D) =
+    "-" ("#" (list(L)) :: ".rindex" (list(L) :: D)) .
+  eq ".rindex" (list(emp) :: D') = null .
+  eq ".rindex" (list(L :: D) :: D') =
+    if D == D' then "int"[1] else "+" ("int"[1] :: "rindex" (list(L) :: D')) fi .
 
-    eq "replace" (list(emp) :: D :: "int"[N]) = null .
-    eq "replace" (list(L) :: D :: "int"[0]) = null .
-    eq "replace" (list(D :: L) :: D' :: "int"[1]) = list(D' :: L) .
-    ceq "replace" (list(D :: L) :: D' :: "int"[N]) =
-	"-|"(D :: "replace" (list(L) :: D' :: "int"[_-_(N, 1)])) if N > 1 .
+  eq "replace" (list(emp) :: D :: "int"[N]) = null .
+  eq "replace" (list(L) :: D :: "int"[0]) = null .
+  eq "replace" (list(D :: L) :: D' :: "int"[1]) = list(D' :: L) .
+  ceq "replace" (list(D :: L) :: D' :: "int"[N]) =
+    "-|"(D :: "replace" (list(L) :: D' :: "int"[_-_(N, 1)])) if N > 1 .
 
-    eq "make_list" (D :: "int"[0]) = list(emp) .
-    ceq "make_list" (D :: "int"[N]) = "|-"("make_list" (D :: "int"[_-_(N, 1)]) :: D)
-      if N > 0 .
+  eq "make_list" (D :: "int"[0]) = list(emp) .
+  ceq "make_list" (D :: "int"[N]) = "|-"("make_list" (D :: "int"[_-_(N, 1)]) :: D)
+  if N > 0 .
 
-    eq "make_range" ("int"[I]) = "make_range" ("int"[1] :: "int"[I]) .
+  eq "make_range" ("int"[I]) = "make_range" ("int"[1] :: "int"[I]) .
 
-    eq "make_range" ("int"[I] :: "int"[J]) =
-      if I < J then "make_range" ("int"[I] :: "int"[J] :: "int"[1])
-	else  "make_range" ("int"[I] :: "int"[J] :: "int"[-1])
-	fi .
+  eq "make_range" ("int"[I] :: "int"[J]) =
+    if I < J then "make_range" ("int"[I] :: "int"[J] :: "int"[1])
+    else  "make_range" ("int"[I] :: "int"[J] :: "int"[-1])
+    fi .
 
-    eq "make_range" ("int"[I] :: "int"[J] :: "int"[K]) =
-      if K > 0 and I <= J then
-	  "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
-	else
-	if K < 0 and I >= J  then
-            "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
-	  else
-            list(emp)
-	  fi
-	fi .
+  eq "make_range" ("int"[I] :: "int"[J] :: "int"[K]) =
+    if K > 0 and I <= J then
+      "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
+    else
+    if K < 0 and I >= J  then
+        "-|"("int"[I] :: "make_range" ("int"[I + K] :: "int"[J] :: "int"[K]))
+      else
+        list(emp)
+      fi
+    fi .
 
 endfm
 
@@ -467,12 +468,8 @@ endfm
 
 
 
-*** The DATATYPES module collects all data types into one module.
-*** One may easily keep various data types in separate file(s),
-*** and them plug in upon need.
-***
+*** The DATATYPES module collects all predefined data types into one module.
 fmod ABS-DATATYPES is
-
     extending ABS-DATA-SIG .
     extending ABS-EXPRESSION .
     extending ABS-DATA-BOOL .
@@ -700,8 +697,7 @@ endv
 *** Specifies a process pool, here a multiset of Processes
 ***
 fmod ABS-PROCESS-POOL is
-
-protecting ABS-PROCESS .
+  protecting ABS-PROCESS .
 
   sort MProc .
   subsort Process < MProc .
@@ -716,6 +712,7 @@ endfm
 ***
 fmod ABS-METHOD is
   protecting ABS-STM-LIST .
+
   sort Method .
 
   op <_: Method | Param:_, Att:_, Code:_> : 
@@ -733,8 +730,7 @@ endv
 ***
 *** Modeled after the CONFIGURATION module in "prelude.maude"
 ***
-mod ABS-CONFIGURATION is
-
+fmod ABS-CONFIGURATION is
   protecting ABS-DATA-LABEL .
   protecting ABS-PROCESS-POOL .
   protecting ABS-CID .
@@ -792,10 +788,8 @@ mod ABS-CONFIGURATION is
     { @ ".label" |-> N, @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
   eq makeProcess(M, MS, N, DL) = notFound [owise] .
 
-  --- Terms of sort Object represent objects (and classes) in the
-  --- run-time configuration.
+  --- Terms of sort Object represent objects in the run-time configuration.
   ---
-
   op <_:_ | Att:_, Pr:_, PrQ:_, Lcnt:_> : 
     Oid Cid Subst Process MProc Nat -> Object 
     [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o--  r on)] .
@@ -822,7 +816,7 @@ mod ABS-CONFIGURATION is
   --- Given: callee label method params class
   op bindMtd : Oid Label String DataList -> Msg [format(!r d)] .
 
-  --- Method binding
+  --- Process creation
   ---
   ceq
     bindMtd(O, N, M, DL)
@@ -851,7 +845,11 @@ mod ABS-CONFIGURATION is
   op warn : State String -> State .
   eq warn({ CN }, M) = { warning(M) CN } .
 
-  --- System initialisation with arbitrary class.
+  --- System initialisation with arbitrary class.  In Abs, the compiler will
+  --- generate an operator "start" in the generated module that reduces to
+  --- this, with an instantiation of the anonymous class implementing the
+  --- block.  Still, this operator is useful by itself to create any active
+  --- object by itself.
   op main : Configuration String DataList -> State .
   eq main(CN, B, DL) =
     { CN < ob("main") : Start | Att: noSubst, 
@@ -862,13 +860,12 @@ mod ABS-CONFIGURATION is
   eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
     none .
 
-endm
+endfm
 
 
 *** Definition of the family of evaluation functions.
 ***
-mod ABS-EVAL is
-
+fmod ABS-EVAL is
   protecting ABS-CONFIGURATION .
   protecting ABS-DATA-VID .
 
@@ -979,16 +976,8 @@ mod ABS-EVAL is
     ready(SL1, S, CN) or ready(SL2, S, CN) .
   eq ready(SL, S, CN) = enabled(SL, S, CN) [owise] .
 
-endm
-
-
-fmod ABS-SIMULATOR-BANNER is
-
-  protecting STRING .
-  op simurev : -> String .
-  eq simurev = "interpreter $Revision: 1466 $" .
-
 endfm
+
 
 *** The machine.
 ***
