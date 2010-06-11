@@ -979,6 +979,74 @@ fmod ABS-EVAL is
 endfm
 
 
+fmod ABS-EVAL-TIMED is
+  protecting ABS-EVAL .
+
+  var D : Data .
+  var DL : DataList .
+  vars E E' E'' : Expr .
+  var EL : ExprList .
+  var NeEL : NeExprList .
+  vars A A' : Vid .
+  var AL : VidList .
+  vars SL SL1 SL2 : StmtList .
+  var L : Label .
+  var S : Subst .
+  var CN : Configuration .
+  var N : Nat .
+  var Q : String .
+  var CBL : CaseBranchList .
+
+  op eval : Expr Subst Configuration Nat -> Data .
+  op evalList : ExprList Subst Configuration Nat -> DataList [strat (1 0 0 0)] .
+  op enabled : StmtList Subst Configuration Nat -> Bool .
+  op ready : StmtList Subst Configuration Nat -> Bool .
+
+  eq eval(now, S, CN, N) = "time"[N] .
+  eq eval(Q (EL), S, CN, N) = Q ( evalList(EL, S, CN, N) ) .
+  eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
+  eq eval(list(EL), S, CN, N) = list(evalList(EL, S, CN, N)) .
+  eq eval(if E th E' el E'' fi, S, CN, N) =
+    if eval(E, S, CN, N) asBool
+    then eval(E', S, CN, N)
+    else eval(E'', S, CN, N) fi .
+  eq eval(let AL = EL in E, S, CN, N) = 
+    eval(E, S :: createSubst(AL, evalList(EL, S, CN, N)), CN, N) .
+
+  ceq eval($case(D, (E => E') ; CBL), S, CN, N) = 
+    if M:MatchResult == noMatch
+    then eval($case(D, CBL), S, CN, N)
+    else eval(E', S :: M:MatchResult, CN, N) fi
+  if M:MatchResult := match(D, E) .
+
+  eq eval(case E of { CBL }, S, CN, N) = 
+    eval($case(eval(E, S, CN), CBL), S, CN, N) .
+
+  eq eval(E, S, CN, N) = eval(E, S, CN) [owise] . *** Defer to untimed eval
+
+  --- Evaluate lists of expressions.
+  eq evalList(emp, S, CN, N) = emp .
+  eq evalList(DL, S, CN, N) = DL .
+  eq evalList(E, S, CN, N) = eval(E, S, CN, N) .
+  eq evalList(E :: NeEL, S, CN, N) =
+    eval(E, S, CN, N) :: evalList(NeEL, S, CN, N) .
+  
+  --- Enabledness
+  eq enabled(await E ; SL, S, CN, N) = eval(E, S, CN, N) asBool .
+  eq enabled((SL1 [] SL2) ; SL, S, CN, N) =
+    enabled(SL1, S, CN, N) or enabled(SL2, S, CN, N) .
+  eq enabled(SL, S, CN, N) = true [owise] .
+
+  --- The ready predicate holds, if a statement is ready for execution,
+  --- i.e., the corresponding process may be waken up.
+  eq ready(get(A ; A') ; SL , S, CN, N) = completed(S[A], CN) . 
+  eq ready(get(L ; A') ; SL , S, CN, N) = completed(L, CN) . 
+  eq ready((SL1 [] SL2) ; SL, S, CN, N) =
+    ready(SL1, S, CN, N) or ready(SL2, S, CN, N) .
+  eq ready(SL, S, CN, N) = enabled(SL, S, CN, N) [owise] .
+
+endfm
+
 *** The machine.
 ***
 mod ABS-SIMULATOR is
@@ -1020,6 +1088,9 @@ mod ABS-SIMULATOR is
 	      PrQ: W, Lcnt: F > 
   =>
     if hasMapping(L, A) then
+      *** FIXME (rs 2010-06-11): this will insert a new binding instead of
+      *** overwriting a binding higher up in the binding stack, causing the
+      *** assigned value to be lost later
       < O : C | Att: S, Pr: { insert(A, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
