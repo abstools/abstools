@@ -423,6 +423,48 @@ fmod ABS-DATA-LIST is
 
 endfm
 
+*** Specification of times and functions on times.
+***
+fmod ABS-DATA-TIME is
+  extending ABS-DATA-SIG .
+  extending ABS-DATA-INT .
+
+  *** The central problem is to evaluate this "expression", since the clock is
+  *** floating around in the global state.
+  op now : -> Expr [ctor] .
+
+  vars T T' D D' S : Int .
+  var I : Int .
+
+  op _asTime : Data -> Int .
+  eq "time"[I] asTime = I .
+  op _asDuration : Data -> Int .
+  eq "duration"[I] asDuration = I .
+
+
+  *** Define the usual predicates on time.
+  eq "<" ( "time"[T] :: "time"[T'] ) = "bool"[T < T'] .
+  eq "<=" ( "time"[T] :: "time"[T'] ) = "bool"[T <= T'] .
+  eq ">" ( "time"[T] :: "time"[T'] ) = "bool"[T > T'] .
+  eq ">=" ( "time"[T] :: "time"[T'] ) = "bool"[T >= T'] .
+
+  eq "+" ( "time"[T] :: "duration"[D] ) = "time"[T + D] .
+  eq "-" ( "time"[T] :: "duration"[D] ) = "time"[_-_(T, D)] .
+  eq "+" ( "duration"[D] :: "duration"[D'] ) = "duration"[D * D'] .
+  eq "-" ( "duration"[D] :: "duration"[D'] ) = "duration"[_-_(D, D')] .
+  eq "*" ( "duration"[D] :: "int"[S]) = "duration"[D * S] .
+  eq "*" ( "int"[S] :: "duration"[D] ) = "duration"[S * D] .
+  eq "/" ( "duration"[D] :: "int"[S]) = "duration"[S / D] .
+  eq "<" ( "duration"[D] :: "duration"[D'] ) = "bool"[D < D'] .
+  eq "<=" ( "duration"[D] :: "duration"[D'] ) = "bool"[D <= D'] .
+  eq ">" ( "duration"[D] :: "duration"[D'] ) = "bool"[D > D'] .
+  eq ">=" ( "duration"[D] :: "duration"[D'] ) = "bool"[D >= D'] .
+
+  --- Arithmetic on time
+  eq "-" ( "time"[T] :: "time"[T'] ) = "duration"[_-_(T, T')] .
+
+endfm
+
 
 
 *** The DATATYPES module collects all data types into one module.
