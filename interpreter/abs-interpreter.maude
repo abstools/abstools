@@ -864,8 +864,8 @@ mod ABS-CONFIGURATION is
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Msg Class Object Configuration .
-  subsorts Class Msg Object < Configuration .
+  sorts Msg Class Future Object Configuration .
+  subsorts Msg Class Future Object < Configuration .
 
   vars B M : String .
   var C : Cid .
@@ -922,7 +922,7 @@ mod ABS-CONFIGURATION is
   --- Terms that represent futures.
   ---
   op <_: Future | Completed:_, References:_, Value:_> :
-    Label Bool Nat Data -> Object 
+    Label Bool Nat Data -> Future
     [ctor format (nr d d g ++r ir o  r i o  r i o--  r on)] .
 
   --- Completed futures without references can be removed.
