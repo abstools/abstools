@@ -511,7 +511,7 @@ fmod ABS-SUBST is
 
   *** Lazy composition operator for substitutions
   *** FIXME: make this operator have less precedence than |->
-  op _::_ : Subst Subst -> Subst [assoc id: noSubst] .
+  op _::_ : Subst Subst -> Subst [assoc] .
   eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
 
   op hasMapping : Subst Vid -> Bool .
@@ -522,13 +522,20 @@ fmod ABS-SUBST is
   eq insert(A, D, S2) = $insert(A, D, S2) .
   eq insert(A, D, S1 :: S2) = S1 :: $insert(A, D, S2) .
 
+  *** Replace an existing binding even in the middle of the SSubst stack.
+  op update : Vid Data Subst -> Subst .
+  eq update(A, D, S1 :: S2) = if $hasMapping(S2, A) then S1 :: $insert(A, D, S2)
+      else update(A, D, S1) :: S2 fi .
+  ceq update(A, D, S2) = $insert(A, D, S2)
+  if $hasMapping(S2, A) .       *** Block if no mapping exists.
+
   --- Create a substitution from a list of identifiers and data values.
   op createSubst : VidList DataList -> SSubst .
   eq createSubst(AL, DL) = $createSubst(noSubst, AL, DL) .
   op $createSubst : SSubst VidList DataList -> SSubst .
   eq $createSubst(S2, noVid, emp) = S2 .
   eq $createSubst(S2, (A, AL), (D :: DL)) = 
-    $createSubst(insert(A, D, S2), AL, DL) .
+    $createSubst($insert(A, D, S2), AL, DL) .
 endfm
 
 
@@ -1088,10 +1095,7 @@ mod ABS-SIMULATOR is
 	      PrQ: W, Lcnt: F > 
   =>
     if hasMapping(L, A) then
-      *** FIXME (rs 2010-06-11): this will insert a new binding instead of
-      *** overwriting a binding higher up in the binding stack, causing the
-      *** assigned value to be lost later
-      < O : C | Att: S, Pr: { insert(A, D, L) |  SL }, PrQ: W, Lcnt: F >
+      < O : C | Att: S, Pr: { update(A, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
@@ -1111,7 +1115,7 @@ mod ABS-SIMULATOR is
               PrQ: W, Lcnt: F >
   =
     if hasMapping(L, A) then
-      < O : C | Att: S, Pr: { insert(A, D, L) | $assign(AL ; DL) ; SL },
+      < O : C | Att: S, Pr: { update(A, D, L) | $assign(AL ; DL) ; SL },
                 PrQ: W, Lcnt: F > 
     else
       < O : C | Att: insert(A, D, S), Pr: { L | $assign(AL ; DL) ; SL },
@@ -1276,6 +1280,7 @@ mod ABS-SIMULATOR is
   crl
     < O : C | Att: S, Pr: { L | static( A ; Q ; CC ; None ; EL ); SL }, PrQ: W, Lcnt: F > 
   =>
+    *** TODO: replace with `makeProcess'
     < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Completed: false, References: 1, Value: null >
     bindMtd(O, N, Q, evalList(EL, (S :: L), none)) 
@@ -1299,6 +1304,7 @@ mod ABS-SIMULATOR is
   --- remote-async-self-call
   ---
   crl
+    *** TODO: replace with `makeProcess'
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
@@ -1379,6 +1385,8 @@ mod ABS-SIMULATOR is
   --- Fake the caller and the label and tag the label.  Since we do not
   --- want to interleave, this can also be an equation.
   ---
+  *** TODO (rs 2010-06-12): replace the statictail rule pairs with one
+  *** `makeProcess' invocation
   rl
     < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
