@@ -36,9 +36,9 @@ aspect GenerateMaude {
             }
         }
         if (hasBlock()) {
-            // Create an artificial ".Main" class that is started by the
+            // Create an artificial class that is started by the
             // interpreter.
-            stream.print("\n\n< \".Main\" : Class |\n  Param: noVid,\n  Att: ");
+            stream.print("\n\n< \".Start\" : Class |\n  Param: noVid,\n  Att: ");
             if (getBlock().getNumField() == 0) {
                 stream.println("noSubst,");
             } else {
@@ -66,7 +66,7 @@ aspect GenerateMaude {
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
         stream.println("op start : -> State .");
-        stream.println("eq start = main(classes, \".Main\", emp) .");
+        stream.println("eq start = main(classes, \".Start\", emp) .");
         stream.println("\nendm");
     }
 
