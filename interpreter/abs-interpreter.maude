@@ -1432,11 +1432,9 @@ mod ABS-SIMULATOR is
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G),
                                createSubst(AL, evalList(EL, S :: L, none))),
-                         Pr: { @ ".label" |-> label(O, F) |
+                         Pr: { @ ".label" |-> label(O, F), @ "_" |-> null |
                                call(@ ".anon" ; @ "this" ; ".init" ; emp) ;
                                get(@ ".anon" ; @ "_") ;
-                               free(@ ".anon") ;
-                               call (@ ".anon" ; @ "this" ; "run" ; emp) ;
                                free(@ ".anon") }, 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .

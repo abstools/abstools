@@ -17,6 +17,14 @@ aspect GenerateMaude {
         return false;
     }
 
+    syn boolean ClassDecl.isActiveClass();
+    eq ClassDecl.isActiveClass() {
+        for (Method method : getBody().getMethods()) {
+            if (method.getMethodSig().getName().equals("run")) return true;
+        }
+        return false;
+    }
+
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
@@ -342,30 +350,21 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
-        // DANGER: here we generate a method list from 2 sources: the
-        // init block and the defined methods.  `inlist's value carries
-        // meaning across these two blocks.
-        inlist = false;
-        if (getBody().hasInitBlock()) {
-            // hand-craft "init" method
-            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
-            stream.print(",\n      Code: ");
-            if (getBody().getInitBlock().getNumStmt() == 0) {
-                stream.print("return( null ) ");
-            } else {
-                inlist = false;
-                for (Stmt stmt : getBody().getInitBlock().getStmts()) {
-                    if (inlist) stream.print("; "); else inlist = true;
-                    stmt.generateMaude(stream);
-                }
-                stream.print("; return( null ) ");
+        // interpreter always needs an init method
+        stream.println("< \".init\" : Method | Param: noVid, Att: noSubst,");
+        stream.print("      Code: ");
+        if (getBody().hasInitBlock() 
+            && getBody().getInitBlock().getNumStmt() > 0)
+        {
+            for (Stmt stmt : getBody().getInitBlock().getStmts()) {
+                stmt.generateMaude(stream);
+                stream.print("; ");
             }
-            stream.print("> ");
-        } else {
-            // interpreter expects an init method
-            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
-            stream.print(",\n      Code: return( null ) > ");
         }
+        if (isActiveClass()) {
+            stream.print("$push ( @ \"runlabel\" |-> null ) ; call (@ \"runlabel\" ; @ \"this\" ; \"run\" ; emp) ; $pop ; ");
+        }
+        stream.print("return( null ) > ");
         for (Method method : getBody().getMethods()) {
             stream.print(",\n    ");
             method.generateMaude(stream);
