@@ -47,8 +47,8 @@ aspect GenerateMaude {
                 }
             }
             stream.print("\n  Mtds: ");
-            // hand-craft "init" method
-            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            // hand-craft init method
+            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBlock().getNumStmt() == 0) {
                 stream.print("return( null ) ");
@@ -348,7 +348,7 @@ aspect GenerateMaude {
         inlist = false;
         if (getBody().hasInitBlock()) {
             // hand-craft "init" method
-            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBody().getInitBlock().getNumStmt() == 0) {
                 stream.print("return( null ) ");
@@ -363,7 +363,7 @@ aspect GenerateMaude {
             stream.print("> ");
         } else {
             // interpreter expects an init method
-            stream.print("< \"init\" : Method | Param: noVid, Att: noSubst");
+            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: return( null ) > ");
         }
         for (Method method : getBody().getMethods()) {
