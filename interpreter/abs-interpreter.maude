@@ -614,7 +614,7 @@ fmod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
-  op static(_;_;_;_;_) : Vid String Cid Cid ExprList -> Stmt [ctor format (b d o b o b o b o b o b o)] . 
+  op selfcall(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] . 
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -622,7 +622,7 @@ fmod ABS-STATEMENT is
   op mark(_) : Vid -> Stmt [ctor format (c d o c o)] .
   op free(_) : Vid -> Stmt [ctor format (c d o c o)] .
   op tailcall(_;_;_) : Expr String ExprList -> Stmt [ctor format (c d o c o c o c o)] .
-  op statictail(_;_;_;_) : String Cid Cid ExprList -> Stmt [ctor format (c d o c o c o c o c o)] .
+  op selftailcall(_;_) : String ExprList -> Stmt [ctor format (c d o c o c o)] .
 
   op $cont_ : Label -> Stmt [ctor format (r o d)] .
   op $accept_ : Label -> Stmt [ctor format (r o d)] .
@@ -1278,12 +1278,12 @@ mod ABS-SIMULATOR is
   --- local-async-static-call
   ---
   crl
-    < O : C | Att: S, Pr: { L | static( A ; Q ; CC ; None ; EL ); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Att: S, Pr: { L | selfcall( A ; Q ; EL ); SL }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    *** TODO: replace with `makeProcess'
-    < O : C | Att: S, Pr: { insert (A, N, L) | SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Att: S, Pr: { update(A, N, L) | SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Completed: false, References: 1, Value: null >
-    bindMtd(O, N, Q, evalList(EL, (S :: L), none)) 
   if N := label(O, F)
       [label local-async-static-call] .
 
@@ -1304,11 +1304,11 @@ mod ABS-SIMULATOR is
   --- remote-async-self-call
   ---
   crl
-    *** TODO: replace with `makeProcess'
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O, O, N, Q , evalList(EL, (S :: L), none))
+    < O : C | Att: S, Pr: { update(A, N, L) | SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   if N := label(O, F) /\ O = eval(E, (S :: L), none)
       [label remote-async-self-call] .
 
@@ -1373,8 +1373,7 @@ mod ABS-SIMULATOR is
   --- want to interleave, this can also be an equation.
   ---
   rl
-    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W,
-              Lcnt: F > 
+    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
@@ -1385,32 +1384,13 @@ mod ABS-SIMULATOR is
   --- Fake the caller and the label and tag the label.  Since we do not
   --- want to interleave, this can also be an equation.
   ---
-  *** TODO (rs 2010-06-12): replace the statictail rule pairs with one
-  *** `makeProcess' invocation
   rl
-    < O : C | Att: S, Pr: { L | statictail(Q ; None ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"])  }, PrQ: W, Lcnt: F >
-    bindMtd(O, tag(L[@ ".label"]), Q, evalList(EL, (S :: L), none))
-  [label local-tailcall] .
-
-  rl
-    < O : C | Att: S, Pr: { L | statictail(Q ; CC ; None ; EL) ; SL }, PrQ: W, Lcnt: F > 
-  =>
-    < O : C | Att: S, Pr: { noSubst | $accept tag(L[@ ".label"]) }, PrQ: W, Lcnt: F >
-    bindMtd(O, tag(L[@ ".label"]), Q, evalList(EL, (S :: L), none)) 
-    [label static-tailcall] .
-
-  *** If we receive the method body, the call is accepted and the label
-  *** untagged.
-  crl
-    < O : C | Att: S, Pr: { noSubst | $accept N }, PrQ: W , { L | SL },
-              Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: { insert(@ ".label", tag(N), L) | SL }, PrQ: W,
-              Lcnt: F >
-  if L[@ ".label"] = N
-      [label tailcall-accept] .
+    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  [label selftailcall] .
 
 
   --- OBJECT CREATION
