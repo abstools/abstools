@@ -140,7 +140,6 @@ fmod ABS-EXPRESSION is
   op if_th_el_fi : Expr Expr Expr -> Expr [ctor] .
   *** case expression
   op case_of {_} : Expr CaseBranchList -> Expr [ctor] .
-  op case_of {_} : Data CaseBranchList -> Data [ctor] .
   *** let expression
   op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
   *** guard expression
@@ -914,7 +913,8 @@ fmod ABS-EVAL is
   *** SSubst in a Subst.
   eq eval((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
   eq eval(A, S, CN) =  S [A] .
-  eq eval(Q (EL), S, CN) = Q ( evalList(EL, S, CN) ) .
+  *** Function expansions are expressions, subject to further evaluation
+  eq eval(Q (EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), S, CN) .
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
   eq eval(?(A), S, CN) = "bool"[completed(S[A], CN)] .
   eq eval(?(L), S, CN) = "bool"[completed(L, CN)] .
