@@ -1430,9 +1430,9 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1),
+    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G),
+                               createSubst(AL, evalList(EL, S :: L, none))),
                          Pr: { @ ".label" |-> label(O, F) |
-                               $assign(AL ; evalList(EL, S :: L, none)) ;
                                call(@ ".anon" ; @ "this" ; "init" ; emp) ;
                                get(@ ".anon" ; @ "_") ;
                                free(@ ".anon") ;
