@@ -26,7 +26,7 @@ VarDecl:	VarOrFieldDecl;
 FieldDecl:	VarOrFieldDecl; 
 ParamDecl:	VarOrFieldDecl;
 
-Method  ::= MethodSig Block;
+Method  ::= <Name> ReturnType:Access Param:ParamDecl* Block;
 
 MethodSig	::= <Name> ReturnType:Access Param:ParamDecl*;
 

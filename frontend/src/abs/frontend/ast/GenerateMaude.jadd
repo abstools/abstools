@@ -20,7 +20,7 @@ aspect GenerateMaude {
     syn boolean ClassDecl.isActiveClass();
     eq ClassDecl.isActiveClass() {
         for (Method method : getBody().getMethods()) {
-            if (method.getMethodSig().getName().equals("run")) return true;
+            if (method.getName().equals("run")) return true;
         }
         return false;
     }
@@ -393,12 +393,12 @@ aspect GenerateMaude {
 	
     public void Method.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-        stream.print("< \"" + getMethodSig().getName() + "\" : Method | Param: ");
-        if (getMethodSig().getNumParam() == 0) {
+        stream.print("< \"" + getName() + "\" : Method | Param: ");
+        if (getNumParam() == 0) {
             stream.print("noVid");
         } else {
             stream.print("(");
-            for (ParamDecl param : getMethodSig().getParams()) {
+            for (ParamDecl param : getParams()) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + param.getName() + "\"");
             }
@@ -428,9 +428,9 @@ aspect GenerateMaude {
             // branch has exactly one return statement.  At the moment,
             // getReturnType() returns nothing that has a name
             // attribute.
-            // if (getMethodSig().getReturnType().getName().equals("Void")
+            // if (getReturnType().getName().equals("Void")
             //     // HACK: the run method has no place to return anything to
-            //     && !getMethodSig().getName().equals("run"))
+            //     && !getName().equals("run"))
             // {
             //     stream.print("; return( null ) ");
             // }
