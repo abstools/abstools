@@ -349,25 +349,41 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
-        // interpreter always needs an init method
-        // FIXME (rs 2010-06-14): generate local variable bindings
-        stream.println("< \".init\" : Method | Param: noVid, Att: noSubst,");
-        stream.print("      Code: ");
-        if (getBody().hasInitBlock() 
-            && getBody().getInitBlock().getNumStmt() > 0)
-        {
-            inlist = false;
-            for (Stmt stmt : getBody().getInitBlock().getStmts()) {
-                if (inlist == false) inlist = true; else stream.print("; ");
-                stmt.generateMaude(stream);
+        if (getBody().hasInitBlock()) {
+            Block block = getBody().getInitBlock();
+            stream.print("< \".init\" : Method | Param: noVid, Att: ");
+            if (block.getNumField() == 0) {
+                stream.print("noSubst, ");
+            } else {
+                for (VarDecl field : block.getFields()) {
+                    stream.print("@ \"" + field.getName() + "\" |-> null, ");
+                }
             }
+            stream.print("\n      Code: ");
+            if (block.getNumStmt() > 0) {
+                inlist = false;
+                for (Stmt stmt : block.getStmts()) {
+                    if (inlist == false) inlist = true; else stream.print("; ");
+                    stmt.generateMaude(stream);
+                }
+            } else {
+                stream.print("noStmt ");
+            }
+            if (isActiveClass()) {
+                stream.print("; selftailcall (\"run\" ; emp) ");
+            }
+            stream.print("> ");
         } else {
-            stream.print("noStmt ");
+            // no init block, but interpreter always needs an init
+            // method, and `run' method might have to be called.
+            stream.println("< \".init\" : Method | Param: noVid, Att: noSubst, ");
+            stream.print("      Code: ");
+            if (isActiveClass()) {
+                stream.print("selftailcall (\"run\" ; emp) > ");
+            } else {
+                stream.print("noStmt > ");
+            }
         }
-        if (isActiveClass()) {
-            stream.print("; selftailcall (\"run\" ; emp) ");
-        }
-        stream.print("> ");
         for (Method method : getBody().getMethods()) {
             stream.print(",\n    ");
             method.generateMaude(stream);
