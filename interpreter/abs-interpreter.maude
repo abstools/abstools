@@ -625,7 +625,6 @@ fmod ABS-STATEMENT is
   op selftailcall(_;_) : String ExprList -> Stmt [ctor format (c d o c o c o)] .
 
   op $cont_ : Label -> Stmt [ctor format (r o d)] .
-  op $accept_ : Label -> Stmt [ctor format (r o d)] .
 
   op $push_ : SSubst -> Stmt [ctor format (r o d)] .
   op $pop : -> Stmt [ctor format(r o)] .
@@ -1359,23 +1358,26 @@ mod ABS-SIMULATOR is
 
   --- TAIL CALLS
   ---
-  --- Fake the caller and the label and tag the label.  Since we do not
-  --- want to interleave, this can also be an equation.
+  --- "pass on" our return label to the new process.
+  ---
+  ---  FIXME (rs 2010-06-15): `invoc' creates a new Future - this is not what
+  --- we want in this case.  Not so urgent since the `tailcall' statement is
+  --- not created currently.
   ---
   rl
     < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
     invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
     [label tailcall] .
 
   --- STATIC TAIL CALLS
   ---
-  --- Fake the caller and the label and tag the label.  Since we do not
-  --- want to interleave, this can also be an equation.
-  ---
+  --- Block if the `selftailcall' statement is followed by any more
+  --- statements.  If necessary, this could be replaced by putting `$cont' at
+  --- the end of the current process.
   rl
-    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
     < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
