@@ -254,12 +254,16 @@ aspect GenerateMaude {
         stream.print("] ");
     }
 
-	public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
+	public void VarUse.generateMaude(java.io.PrintStream stream) {
         if (isFunctionParameter()) {
             stream.print(getName() + ":Data ");
         } else {
             stream.print("@ \"" + getName() + "\" ");
         }
+	}
+
+	public void FieldUse.generateMaude(java.io.PrintStream stream) {
+        stream.print("\"this\" @ \"" + getName() + "\" ");
 	}
 
     public void FunVar.generateMaude(java.io.PrintStream stream) {
