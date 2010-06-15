@@ -2,8 +2,9 @@
 
 aspect GenerateMaude {
 
+    // Differentiate between function parameters and other variables.
     // FIXME: this does not consider shadowing rebinding of variables
-    // inside the function body
+    // inside the function body, e.g. via `case' expressions.
     eq FunctionDecl.getFunDef().functionParameters() = getParams();
     eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
     inh List<VarOrFieldDecl> Stmt.functionParameters();
@@ -17,9 +18,14 @@ aspect GenerateMaude {
         return false;
     }
 
+    // Calculate whether the method is inside an active class; needed
+    // for init block behavior.
+    eq ClassDecl.getMethod(int index).inActiveClass() = isActiveClass();
+    inh boolean Method.inActiveClass();
+
     syn boolean ClassDecl.isActiveClass();
     eq ClassDecl.isActiveClass() {
-        for (Method method : getBody().getMethods()) {
+        for (Method method : getMethods()) {
             if (method.getName().equals("run")) return true;
         }
         return false;
@@ -55,7 +61,7 @@ aspect GenerateMaude {
                 }
             }
             stream.print("\n  Mtds: ");
-            // hand-craft init method
+            // hand-craft init method - we're not inside a class
             stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBlock().getNumStmt() == 0) {
@@ -339,53 +345,29 @@ aspect GenerateMaude {
             stream.print(")");
         }
         stream.print(",\n  Att: ");
-        if (getBody().getNumField() == 0) {
+        if (getNumField() == 0) {
             stream.print("noSubst");
         } else {
             inlist = false;
-            for (FieldDecl field : getBody().getFields()) {
+            for (FieldDecl field : getFields()) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + field.getName() + "\" |-> null ");
             }
         }
         stream.print(",\n  Mtds: ");
-        if (getBody().hasInitBlock()) {
-            Block block = getBody().getInitBlock();
-            stream.print("< \".init\" : Method | Param: noVid, Att: ");
-            if (block.getNumField() == 0) {
-                stream.print("noSubst, ");
-            } else {
-                for (VarDecl field : block.getFields()) {
-                    stream.print("@ \"" + field.getName() + "\" |-> null, ");
-                }
-            }
-            stream.print("\n      Code: ");
-            if (block.getNumStmt() > 0) {
-                inlist = false;
-                for (Stmt stmt : block.getStmts()) {
-                    if (inlist == false) inlist = true; else stream.print("; ");
-                    stmt.generateMaude(stream);
-                }
-            } else {
-                stream.print("noStmt ");
-            }
-            if (isActiveClass()) {
-                stream.print("; selftailcall (\"run\" ; emp) ");
-            }
-            stream.print("> ");
+        // KLUDGE (rs 2010-06-15): this should be a general tree
+        // rewriting rule, not a tree mutation while generating source
+        // code.
+        if (hasInitBlock()) {
+            addMethod(new Method(".init", new DataTypeUse("Void"),
+                                 new List<ParamDecl>(), getInitBlock().copy()));
         } else {
-            // no init block, but interpreter always needs an init
-            // method, and `run' method might have to be called.
-            stream.println("< \".init\" : Method | Param: noVid, Att: noSubst, ");
-            stream.print("      Code: ");
-            if (isActiveClass()) {
-                stream.print("selftailcall (\"run\" ; emp) > ");
-            } else {
-                stream.print("noStmt > ");
-            }
+            addMethod(new Method(".init", new DataTypeUse("Void"),
+                                 new List<ParamDecl>(), new Block()));
         }
-        for (Method method : getBody().getMethods()) {
-            stream.print(",\n    ");
+        inlist = false;
+        for (Method method : getMethods()) {
+            if (inlist) stream.print(",\n    "); else inlist = true;
             method.generateMaude(stream);
         }
         stream.print(",\n  Ocnt: 0 > ");
@@ -393,6 +375,8 @@ aspect GenerateMaude {
 	
     public void Method.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
+        boolean amInitMethod = getName().equals(".init");
+        boolean amRunMethod = getName().equals("run");
         stream.print("< \"" + getName() + "\" : Method | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -416,24 +400,31 @@ aspect GenerateMaude {
         }
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
-            stream.print("return( null ) ");
+            if (amInitMethod) stream.print("noStmt ");
+            else stream.print("return( null ) ");
         } else {
             inlist = false;
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            // FIXME (rs 2010-06-14): Emit this for "Void" methods,
-            // otherwise rely on type-checker to ascertain that every
-            // branch has exactly one return statement.  At the moment,
-            // getReturnType() returns nothing that has a name
-            // attribute.
-            // if (getReturnType().getName().equals("Void")
-            //     // HACK: the run method has no place to return anything to
-            //     && !getName().equals("run"))
-            // {
-            //     stream.print("; return( null ) ");
-            // }
+            // KLUDGE (rs 2010-06-15): Emit this for "Void" methods for
+            // now, since we don't have an empty `return' statement
+            // currently.  Ideally we should flow-analyze where to
+            // insert a dummy return statement for Void methods, and
+            // give warnings about control paths not returning values
+            // otherwise.
+            Access returnType = getReturnType();
+            if (returnType instanceof DataTypeUse
+                && ((DataTypeUse)returnType).getName().equals("Void")
+                // the run method has no place to return anything to
+                && !amRunMethod && !amInitMethod)
+            {
+                stream.print("; return( null ) ");
+            }
+        }
+        if (amInitMethod && inActiveClass()) {
+            stream.print("; selftailcall (\"run\" ; emp) ");
         }
         stream.print("> ");
     }
