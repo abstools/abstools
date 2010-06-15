@@ -59,14 +59,13 @@ aspect GenerateMaude {
             stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
             stream.print(",\n      Code: ");
             if (getBlock().getNumStmt() == 0) {
-                stream.print("return( null ) ");
+                stream.print("noStmt ");
             } else {
                 boolean inlist = false;
                 for (Stmt stmt : getBlock().getStmts()) {
                     if (inlist) stream.print("; "); else inlist = true;
                     stmt.generateMaude(stream);
                 }
-                stream.print("; return( null ) ");
             }
             stream.print("> ,\n  Ocnt: 0 > ");
         }
@@ -351,20 +350,24 @@ aspect GenerateMaude {
         }
         stream.print(",\n  Mtds: ");
         // interpreter always needs an init method
+        // FIXME (rs 2010-06-14): generate local variable bindings
         stream.println("< \".init\" : Method | Param: noVid, Att: noSubst,");
         stream.print("      Code: ");
         if (getBody().hasInitBlock() 
             && getBody().getInitBlock().getNumStmt() > 0)
         {
+            inlist = false;
             for (Stmt stmt : getBody().getInitBlock().getStmts()) {
+                if (inlist == false) inlist = true; else stream.print("; ");
                 stmt.generateMaude(stream);
-                stream.print("; ");
             }
+        } else {
+            stream.print("noStmt ");
         }
         if (isActiveClass()) {
-            stream.print("$push ( @ \"runlabel\" |-> null ) ; call (@ \"runlabel\" ; @ \"this\" ; \"run\" ; emp) ; $pop ; ");
+            stream.print("; selftailcall (\"run\" ; emp) ");
         }
-        stream.print("return( null ) > ");
+        stream.print("> ");
         for (Method method : getBody().getMethods()) {
             stream.print(",\n    ");
             method.generateMaude(stream);
@@ -404,10 +407,17 @@ aspect GenerateMaude {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            if (getBlock().getStmt(getBlock().getNumStmt() - 1).getClass()
-                != ReturnStmt.class) {
-                stream.print("; return( null ) ");
-            }
+            // FIXME (rs 2010-06-14): Emit this for "Void" methods,
+            // otherwise rely on type-checker to ascertain that every
+            // branch has exactly one return statement.  At the moment,
+            // getReturnType() returns nothing that has a name
+            // attribute.
+            // if (getMethodSig().getReturnType().getName().equals("Void")
+            //     // HACK: the run method has no place to return anything to
+            //     && !getMethodSig().getName().equals("run"))
+            // {
+            //     stream.print("; return( null ) ");
+            // }
         }
         stream.print("> ");
     }

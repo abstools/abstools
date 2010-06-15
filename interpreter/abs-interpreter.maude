@@ -817,22 +817,6 @@ fmod ABS-CONFIGURATION is
     Cid VidList Subst MMtd Nat -> Class 
     [ctor format (ng ! og o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
 
-  --- Method binding messages.
-  --- Bind method request
-  --- Given: callee label method params class
-  op bindMtd : Oid Label String DataList -> Msg [format(!r d)] .
-
-  --- Process creation
-  ---
-  ceq
-    bindMtd(O, N, M, DL)
-    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
-    < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F' >
-  =
-    < C : Class | Param: AL, Att: S , Mtds: MS , Ocnt: F >
-    < O : C | Att: S1, Pr: P, PrQ: (W , P' ), Lcnt: F' >
-  if P' := makeProcess(M, MS, N, DL) .
-
   --- Define a configuration
   op none : -> Configuration [ctor] .
   op __ : Configuration Configuration -> Configuration
@@ -1319,6 +1303,11 @@ mod ABS-SIMULATOR is
     < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Completed: false, References: G, Value: null >
   =>
+    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
+    *** the process.  We cannot return immediately since there might be
+    *** `release' or `$pop' statements after this, so we must rely on the
+    *** compiler / type-checker to ascertain that there's one and only one
+    *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Completed: true, References: G, Value: eval(E, (S :: L), none) >
   if N == L[@ ".label"]
@@ -1331,11 +1320,12 @@ mod ABS-SIMULATOR is
   ---
   eq
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     invoc(O1, O, N, Q, DL)
   =
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Completed: false, References: 1, Value: null >
-    bindMtd(O, N, Q, DL)
     [label transport-imsg] .
 
   --- mark
@@ -1412,10 +1402,7 @@ mod ABS-SIMULATOR is
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none))),
-                         Pr: { @ ".label" |-> label(O, F), @ "_" |-> null |
-                               call(@ ".anon" ; @ "this" ; ".init" ; emp) ;
-                               get(@ ".anon" ; @ "_") ;
-                               free(@ ".anon") }, 
+                         Pr: makeProcess(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
