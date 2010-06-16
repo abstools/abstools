@@ -22,6 +22,10 @@ aspect VarResolution {
         return false;
     }
 
+    rewrite VarOrFieldUse {
+        when (isFunctionParameter() && !(this instanceof FunctionParamUse)) to FunctionParamUse new FunctionParamUse(getName());
+    }
+
 }
 
 // Local Variables:

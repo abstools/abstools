@@ -35,7 +35,9 @@ InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
 abstract VarOrFieldUse: IdUse;
 VarUse:					VarOrFieldUse;
-FieldUse:				VarOrFieldUse;        // this.f            
+FieldUse:				VarOrFieldUse;        // this.f
+FunctionParamUse:                       VarOrFieldUse;
+
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 
 FutureTypeUse:			Access ::= Access ;  // A future doesn't have a name as such
