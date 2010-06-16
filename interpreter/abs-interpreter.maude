@@ -69,9 +69,9 @@ fmod ABS-DATA-VID is
 
   *** Variable references
   op @_ : String -> Vid [ctor] .
-
   *** Instance variable references
-  op _@_ : String String -> Vid [ctor] .
+
+  op @@_ : String -> Vid [ctor] .
 endfm
 
 view Vid from TRIV to ABS-DATA-VID is
@@ -670,11 +670,6 @@ fmod ABS-STM-LIST is
   --- optimize some statements.
   eq noStmt [] SL = SL .
 
-  --- Optimize assignments.  This way we save reducing a skip.  Also note
-  --- that the empty assignment is /not/ programmer syntax, it is inserted
-  --- during run-time.
-  eq $assign(noVid ; emp) = noStmt .
-
 endfm
 
 
@@ -891,15 +886,16 @@ fmod ABS-EVAL is
 
   eq eval(D, S, CN) = D .
 
-  *** shortcut for instance variable lookup.
-  *** NOTICE: this assumes that the object state is the left-most
-  *** SSubst in a Subst.
-  eq eval((Q @ C), (SS :: S), CN) =  SS [(Q @ C)] .
-  eq eval(A, S, CN) =  S [A] .
+  *** Normal variable lookup.  Can be either instance or local variable.
+  eq eval(@ Q, S, CN) =  S [@ Q] .
+  *** Instance variable lookup.  The distinction between @@ and @ needs to be
+  *** made in all lookup operations.
+  eq eval(@@ Q, (SS :: S), CN) =  SS [@ Q] .
   *** Function expansions are expressions, subject to further evaluation
   eq eval(Q (EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), S, CN) .
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
-  eq eval(?(A), S, CN) = "bool"[completed(S[A], CN)] .
+  eq eval(?(@ Q), S, CN) = "bool"[completed(S[@ Q], CN)] .
+  eq eval(?(@@ Q), (SS :: S), CN) = "bool"[completed(SS[@ Q], CN)] .
   eq eval(?(L), S, CN) = "bool"[completed(L, CN)] .
   eq eval(now, S, CN) = "time"[0] . *** time is constant in the untimed version
   eq eval(list(EL), S, CN) = list(evalList(EL, S, CN)) .
@@ -960,7 +956,8 @@ fmod ABS-EVAL is
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(A ; A') ; SL , S, CN) = completed(S[A], CN) . 
+  eq ready(get(@ Q ; A') ; SL , S, CN) = completed(S[@ Q], CN) . 
+  eq ready(get(@@ Q ; A') ; SL , (SS :: S), CN) = completed(SS[@ Q], CN) . 
   eq ready(get(L ; A') ; SL , S, CN) = completed(L, CN) . 
   eq ready((SL1 [] SL2) ; SL, S, CN) =
     ready(SL1, S, CN) or ready(SL2, S, CN) .
@@ -1074,37 +1071,33 @@ mod ABS-SIMULATOR is
   --- assignment is evaluated and stored as new value for the left hand side
   --- identifier.
   crl
-    < O : C | Att: S, Pr: { L | assign(A ; E) ; SL },
+    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL },
 	      PrQ: W, Lcnt: F > 
   =>
-    if hasMapping(L, A) then
-      < O : C | Att: S, Pr: { update(A, D, L) |  SL }, PrQ: W, Lcnt: F >
+    if hasMapping(L, @ Q) then
+      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: insert(A, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none)
     [label assignment] .
 
-  eq
-    < O : C | Att: S, Pr: { L | $assign((Q @ B), AL ; D :: DL) ; SL },
-              PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: insert((Q @ B), D, S), Pr: { L | $assign(AL ; DL) ; SL },
-              PrQ: W, Lcnt: F > 
-    [label do-static-assign] .
+  crl
+    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none)
+    [label field-assignment] .
 
   eq
     < O : C | Att: S, Pr: { L | $assign( (A, AL) ; D :: DL) ; SL },
               PrQ: W, Lcnt: F >
   =
-    if hasMapping(L, A) then
-      < O : C | Att: S, Pr: { update(A, D, L) | $assign(AL ; DL) ; SL },
-                PrQ: W, Lcnt: F > 
-    else
-      < O : C | Att: insert(A, D, S), Pr: { L | $assign(AL ; DL) ; SL },
-                PrQ: W, Lcnt: F >
-    fi
-    [label do-assign] .
+    < O : C | Att: S, Pr: { L | assign(A ; D) ; $assign(AL ; DL) ; SL },
+              PrQ: W, Lcnt: F > 
+    [label do-assignlist] .
+
+  eq $assign(noVid ; emp) = noStmt .
 
 
 
@@ -1187,12 +1180,13 @@ mod ABS-SIMULATOR is
   if eval(E, (S :: L), CN) asBool
       [label await] .
 
-  --- Optimize label access in await statements.
-  eq
-    < O : C | Att: S, Pr: { L | await ?(A) ; SL }, PrQ: W, Lcnt: F >
+  --- Optimize label access in await statements.  We cannot do this for
+  --- instance variables because another process might change the binding.
+  ceq
+    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | await ?(L[A]) ; SL }, PrQ: W, Lcnt: F > .
-
+    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
+  if hasMapping(L, @ Q) .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1209,10 +1203,13 @@ mod ABS-SIMULATOR is
   --- METHOD CALLS
   ---
 
-  --- OPTIMISATION: Reduce the value of a label in a process to avoid
-  --- constant re-evaluation
-  eq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F > =
-    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F > .
+  --- OPTIMISATION: Reduce the value of a label in a process to avoid constant
+  --- re-evaluation.  Cannot be done for instance variables because another
+  --- process might change the binding.
+  ceq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F >
+  if hasMapping(L, A) .
 
 
   --- receive-comp
@@ -1264,7 +1261,7 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | selfcall( A ; Q ; EL ); SL }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { update(A, N, L) | SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) >
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) >
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Completed: false, References: 1, Value: null >
   if N := label(O, F)
@@ -1276,7 +1273,7 @@ mod ABS-SIMULATOR is
   crl
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { insert(A, N, L) | SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none)
       /\ O1 := eval(E, (S :: L), none)
@@ -1290,7 +1287,7 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { update(A, N, L) | SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   if N := label(O, F) /\ O = eval(E, (S :: L), none)
       [label remote-async-self-call] .
@@ -1336,7 +1333,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Completed: CO, References: G + 1, Value: D >
-  if N = L[A]
+  if N = (S :: L)[A]
       [label mark] .
 
 
@@ -1352,7 +1349,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
     < N : Future | Completed: CO, References: sd(G, 1), Value: D >
-  if N = L[A]
+  if N = (S :: L)[A]
       [label free] .
 
 

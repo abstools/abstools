@@ -263,7 +263,7 @@ aspect GenerateMaude {
 	}
 
 	public void FieldUse.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"this\" @ \"" + getName() + "\" ");
+        stream.print("@@ \"" + getName() + "\" ");
 	}
 
     public void FunVar.generateMaude(java.io.PrintStream stream) {
@@ -446,7 +446,9 @@ aspect GenerateMaude {
 
     public void AssignStmt.generateMaude(java.io.PrintStream stream) {
         if (getValue() instanceof PureExp) {
-            stream.print("assign( @ \"" + getVar().getName() + "\" ; ");
+            stream.print("assign( ");
+            getVar().generateMaude(stream);
+            stream.print("; ");
             getValue().generateMaude(stream);
             stream.print(") ");
         } else {
