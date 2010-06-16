@@ -268,7 +268,7 @@ aspect GenerateMaude {
 		stream.print("case " );
 		getExpr().generateMaude(stream);
 		stream.print("of { ");
-		for (CaseBranch branch : getBranchess()) {
+		for (CaseBranch branch : getBranchs()) {
             if (inlist) stream.print("; "); else inlist = true;
 			branch.generateMaude(stream);
 		}

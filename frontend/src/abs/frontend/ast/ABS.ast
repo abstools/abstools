@@ -109,7 +109,7 @@ DataConstructorExp : FunVal  ::= <Constructor> Param:PureExp* ;
 
 LetExp  : PureExp ::= Var:VarOrFieldDecl Val:PureExp Exp:PureExp ; 
 FnApp  : PureExp ::= <Name> Param:PureExp* ;
-CaseExp  : PureExp ::= Expr:PureExp Branches:CaseBranch* ;
+CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
 
 
