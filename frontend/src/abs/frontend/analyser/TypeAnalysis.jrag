@@ -28,3 +28,6 @@ aspect TypeAnalysis {
 	
 }
 
+// Local Variables:
+// mode: java
+// End:

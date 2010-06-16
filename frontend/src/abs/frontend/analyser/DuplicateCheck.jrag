@@ -43,3 +43,7 @@ aspect DuplicateCheck {
 	}
 
 }
+
+// Local Variables:
+// mode: java
+// End:

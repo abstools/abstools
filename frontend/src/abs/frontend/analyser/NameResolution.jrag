@@ -10,7 +10,8 @@ aspect NameResolution {
   syn lazy Decl IdUse.decl();  
 
   // Declaration of *lookup*
-  // Finds a declaration (Decl) based on a name, or attribute unknownDecl if not found
+  // Finds a declaration (Decl) based on a name, or attribute
+  // unknownDecl if not found
   syn lazy Decl Model.lookup(String name);
   
   // ***Implementation***
@@ -49,3 +50,7 @@ aspect NameResolution {
   }
 
 }
+
+// Local Variables:
+// mode: java
+// End:

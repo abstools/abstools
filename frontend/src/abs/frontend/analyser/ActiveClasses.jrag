@@ -1,0 +1,17 @@
+aspect ActiveClasses {
+
+    // Calculate whether a method is inside an active class
+    eq ClassDecl.getMethod(int index).inActiveClass() = isActiveClass();
+    inh boolean Method.inActiveClass();
+
+    syn boolean ClassDecl.isActiveClass();
+    eq ClassDecl.isActiveClass() {
+        for (Method method : getMethods()) {
+            if (method.getName().equals("run")) return true;
+        }
+        return false;
+    }
+}
+// Local Variables:
+// mode: java
+// End:

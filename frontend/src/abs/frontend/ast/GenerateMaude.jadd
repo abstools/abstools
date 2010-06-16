@@ -18,19 +18,6 @@ aspect GenerateMaude {
         return false;
     }
 
-    // Calculate whether the method is inside an active class; needed
-    // for init block behavior.
-    eq ClassDecl.getMethod(int index).inActiveClass() = isActiveClass();
-    inh boolean Method.inActiveClass();
-
-    syn boolean ClassDecl.isActiveClass();
-    eq ClassDecl.isActiveClass() {
-        for (Method method : getMethods()) {
-            if (method.getName().equals("run")) return true;
-        }
-        return false;
-    }
-
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
