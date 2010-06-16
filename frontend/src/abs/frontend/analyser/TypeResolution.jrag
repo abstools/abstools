@@ -1,0 +1,46 @@
+import java.util.HashSet;
+
+aspect TypeResolution {
+  
+    // Find the type declaration for a type use.
+  
+    // Declaration of *decl*
+
+    // *decl* refers to the appropriate declaration of the TypeUse or to
+    // UnknownDecl if the declaration is missing
+    syn lazy TypeDecl TypeUse.declaration();  
+
+    // Declaration of *lookup*
+    // Finds a declaration (TypeDecl) based on a name, or attribute
+    // UnknownDecl if not found
+    syn lazy TypeDecl Model.lookup(String name);
+  
+    // ***Implementation***
+  
+    //   Definitions of *decl*
+    eq TypeUse.declaration() = lookup(getName());
+  
+    //   Definitions of *lookup*
+    eq Model.getDecl().lookup(String name) = localLookup(name);
+    eq Model.getBlock().lookup(String name) = localLookup(name); // Model's main block
+    eq Model.lookup(String name) = localLookup(name);
+  
+    
+    // Expose *lookup* at various places in the AST
+    // Technically, this re-uses definition from Model.InterfaceDecl
+    inh TypeDecl TypeUse.lookup(String name); 
+    // FIXME: inh TypeDecl UnresolvedTypeUse.lookup(String name);
+
+    // *localLookup* - looks through the local declarations in a block
+
+    syn lazy TypeDecl Model.localLookup(String name) {
+        for (Decl d : getDecls())
+            if (d instanceof TypeDecl && d.getName().equals(name))
+                return (TypeDecl)d;
+        return unknownDecl();
+    }
+}
+
+// Local Variables:
+// mode: java
+// End:

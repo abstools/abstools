@@ -29,14 +29,14 @@ aspect ErrorCheck {
   // add error for undeclared interfaces
   public void InterfaceTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
-    if(decl().isUnknown())
+    if(declaration().isUnknown())
       error(c, "Unknown interface: " + getName());
   }
 
   // add error for undeclared identifiers (interfaces, datatypes/type synonyms)
   public void UnresolvedTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
-    if(decl().isUnknown())
+    if(declaration().isUnknown())
       error(c, "Unknown interface or datatype: " + getName());
   }
 
@@ -44,7 +44,7 @@ aspect ErrorCheck {
   // TODO: generalise to check other IdUse's too.
   public void DataTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
-    if(decl().isUnknown())
+    if(declaration().isUnknown())
       error(c, "Unknown datatype: " + getName());
   }
 
