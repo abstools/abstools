@@ -2,22 +2,6 @@
 
 aspect GenerateMaude {
 
-    // Differentiate between function parameters and other variables.
-    // FIXME: this does not consider shadowing rebinding of variables
-    // inside the function body, e.g. via `case' expressions.
-    eq FunctionDecl.getFunDef().functionParameters() = getParams();
-    eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
-    inh List<VarOrFieldDecl> Stmt.functionParameters();
-    inh List<VarOrFieldDecl> Exp.functionParameters();
-
-    syn boolean VarOrFieldUse.isFunctionParameter();
-    eq VarOrFieldUse.isFunctionParameter() {
-        for (VarOrFieldDecl param : functionParameters()) {
-            if (param.getName().equals(getName())) return true;
-        }
-        return false;
-    }
-
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
@@ -40,10 +24,10 @@ aspect GenerateMaude {
             // Create an artificial class that is started by the
             // interpreter.
             stream.print("\n\n< \".Start\" : Class |\n  Param: noVid,\n  Att: ");
-            if (getBlock().getNumField() == 0) {
+            if (getBlock().getNumVar() == 0) {
                 stream.println("noSubst,");
             } else {
-                for (VarDecl field : getBlock().getFields()) {
+                for (VarDecl field : getBlock().getVars()) {
                     stream.print("@ \"" + field.getName() + "\" |-> null , ");
                 }
             }
@@ -380,11 +364,11 @@ aspect GenerateMaude {
             stream.print(")");
         }
         stream.print(", Att: ");
-        if (getBlock().getNumField() == 0) {
+        if (getBlock().getNumVar() == 0) {
             stream.print("noSubst");
         } else {
             inlist = false;
-            for (VarDecl var : getBlock().getFields()) {
+            for (VarDecl var : getBlock().getVars()) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + var.getName() + "\" |-> null ");
             }
@@ -511,17 +495,17 @@ aspect GenerateMaude {
 
 	public void Block.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-        if (getNumField() > 0) {
+        if (getNumVar() > 0) {
             stream.print("$push ( ");
             inlist = false;
-            for (VarDecl field : getFields()) {
+            for (VarDecl var : getVars()) {
                 if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + field.getName() + "\" |-> null ");
+                stream.print("@ \"" + var.getName() + "\" |-> null ");
             }
             stream.print(") ");
             inlist = true;      // set up for rest of the statements
         }
-        if (getNumStmt() == 0 && getNumField() == 0) {
+        if (getNumStmt() == 0 && getNumVar() == 0) {
             stream.print("noStmt ");
         } else {
             for (Stmt stmt : getStmts()) {
@@ -529,7 +513,7 @@ aspect GenerateMaude {
                 stmt.generateMaude(stream);
             }
         }
-        if (getNumField() > 0) {
+        if (getNumVar() > 0) {
             stream.print("; $pop ");
         }
 	}

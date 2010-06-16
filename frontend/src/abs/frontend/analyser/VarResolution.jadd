@@ -1,0 +1,29 @@
+aspect VarResolution {
+
+    // Resolve variable use to their reference place and rewrite
+    // according to the definition (local variable reference, field
+    // reference, function parameter reference)
+
+    
+
+    // Differentiate between function parameters and other variables.
+    // FIXME: this does not consider shadowing rebinding of variables
+    // inside the function body, e.g. via `case' expressions.
+    eq FunctionDecl.getFunDef().functionParameters() = getParams();
+    eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
+    inh List<VarOrFieldDecl> Stmt.functionParameters();
+    inh List<VarOrFieldDecl> Exp.functionParameters();
+
+    syn boolean VarOrFieldUse.isFunctionParameter();
+    eq VarOrFieldUse.isFunctionParameter() {
+        for (VarOrFieldDecl param : functionParameters()) {
+            if (param.getName().equals(getName())) return true;
+        }
+        return false;
+    }
+
+}
+
+// Local Variables:
+// mode: java
+// End:
