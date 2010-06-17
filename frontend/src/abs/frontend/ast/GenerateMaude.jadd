@@ -118,9 +118,9 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("call(@ \"" + var + "_future\", ");
+        stream.print("call(@ \"" + var + "_future\" ; ");
         getCallee().generateMaude(stream);
-        stream.print(", " + getMethod() + ", ");
+        stream.print("; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
@@ -298,9 +298,13 @@ aspect GenerateMaude {
     public void ConstructorPattern.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getConstructor() + "\"[ ");
-        for (Pattern pattern : getParamList()) {
-            if (inlist) stream.print(":: "); else inlist = true;
-            pattern.generateMaude(stream);
+        if (getNumParam() == 0) {
+            stream.print("emp ");
+        } else {
+            for (Pattern pattern : getParamList()) {
+                if (inlist) stream.print(":: "); else inlist = true;
+                pattern.generateMaude(stream);
+            }
         }
         stream.print("] ");
     }
