@@ -64,6 +64,17 @@ public class InterfaceDeclarationTest {
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
 	}
 
+	@Test
+	public void mutuallyCircularIndirect() {
+		Model p;
+		p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}"); 
+		assertTrue(p.errors().size() == 3);
+		Iterator i = p.errors().iterator();
+	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
+	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
+	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: K"));
+	}
+
 	// TODO refactor this into testframework stuff? 
 	protected static Model assertParseOk(String s) {
 		Model p = null;
