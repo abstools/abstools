@@ -23,8 +23,7 @@ aspect DuplicateCheck {
 		// Add the TypeDeclNames to a (Hash)Set and compare the size of the set to
 		// the number of names
 		
-		for (int k = 0; k < getNumDecl(); k++) {
-			Decl decl = getDecl(k);
+		for (Decl decl : getDecls()) {
 			if (decl instanceof TypeDecl)
 				typeNames.add(decl.getName());
 		}
