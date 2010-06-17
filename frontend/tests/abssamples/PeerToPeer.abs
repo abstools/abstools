@@ -17,21 +17,11 @@ type Packet = String
 type File =  ListOfPacket
 type Catalog = ListOfPairOfServerNFilenames
 
-// dummy definitions to make typechecking happy for now
-//data Server {}
-//data Packet {}
-//data Filename {}
-//data Filenames {}
-//data File {}
-//data Catalog {}
-
-
-
 data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
 data ListOfPacket {NilPacket , ConsPacket(Packet, ListOfPacket)} 
 data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
 data ListOfPairOfServerNFilenames {
-  NilPairOfServerNFilenames , 
+  NilPairOfServerNFilenames,
   ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)
 } 
 data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
@@ -41,11 +31,14 @@ data MapOfFilenameToFile { EmptyMap, InsertAssoc(PairOfFilenameNFile, MapOfFilen
 
 //function definitions 
 //List functions 
-def Packet head(File file) = case file { ConsPacket(p,l) => p ; }    // the head of a non-empty file
-def File tail(File file) = case file { ConsPacket(p,l) => l ; }        // the tail of a non-empty file
-def Bool isEmpty(File file) = file == NilPacket   // test for empty file
+def Packet head(File file) = 
+  case file { ConsPacket(p,l) => p ; } // the head of a non-empty file
+def File tail(File file) = 
+  case file { ConsPacket(p,l) => l ; } // the tail of a non-empty file
+def Bool isEmpty(File file) = 
+  file == NilPacket             // test for empty file
 
-def Int length(File file) =             // the length of a list
+def Int length(File file) =     // the length of a list
   case file {
     NilPacket => 0 ;
     ConsPacket(p, list) => 1 + length(list) ;
@@ -59,11 +52,12 @@ def Packet nth(File file, Int n) =
 
 def File concatenate(File file1, File file2) =
   case file1 {
-     NilPacket => file2 ;
-     ConsPacket(head, tail) =>  ConsPacket(head, concatenate(tail,file2)) ;
+    NilPacket => file2 ;
+    ConsPacket(head, tail) =>  ConsPacket(head, concatenate(tail,file2)) ;
   }
 
-def File appendright(File file, Packet p) = concatenate(file, ConsPacket(p,NilPacket))
+def File appendright(File file, Packet p) = 
+  concatenate(file, ConsPacket(p,NilPacket))
 
 //Set functions 
 def Bool element(String string, SetOfString set)=
@@ -73,13 +67,15 @@ def Bool element(String string, SetOfString set)=
   }
 
 //Maps 
-def File getFromMap(Filename fid, MapOfFilenameToFile map) =  // retrieve a file from the map
+def File getFromMap(Filename fid, MapOfFilenameToFile map) = // retrieve a file from the map
   case map {
     InsertAssoc(PairOfFilenameToFile(fid,file), _) => file ;
     InsertAssoc(_, tail) => getFromMap(fid,tail) ;
   }
     
-def MapOfFilenameToFile insert(PairOfFilenameNFile assoc, MapOfFilenameToFile map) = InsertAssoc(assoc, map)
+def MapOfFilenameToFile insert(PairOfFilenameNFile assoc,
+                               MapOfFilenameToFile map) =
+  InsertAssoc(assoc, map)
 
 def Filenames keys(MapOfFilenameToFile map) =
   case map {
@@ -87,21 +83,21 @@ def Filenames keys(MapOfFilenameToFile map) =
     InsertAssoc(PairOfFilenameNFile(filename, file), tail) => InsertString(filename, keys(tail)) ;
   }
 
-//Pairs
+def Server fst(PairOfServerNFilenames p) =
+  case p { PairOfServerNFilenames(s, f) => s; }
 
-data StringPair { StringPair(String, String) }
-def String fst(StringPair p) = case p { StringPair(l,r) => l ; }
-def String snd(StringPair p) = case p { StringPair(l,r) => r ; }
+def Filenames snd(PairOfServerNFilenames p) =
+  case p { PairOfServerNFilenames(s, f) => f; }
 
-interface ServerIF {
+interface Server {
   Filenames enquire()
   Int getLength(Filename fId)
   Packet getPack(Filename fId, Int pNbr)
 }
 
 
-interface Peer extends Client, ServerIF {
-	ListOfServer getNeighbors()
+interface Peer extends Client, Server {
+  ListOfServer getNeighbors()
 }
 
 interface DB {
@@ -118,100 +114,120 @@ interface Client {
 
 
 class DataBase(MapOfFilenameToFile db) implements DB {
-  File getFile(Filename fId) { return getFromMap(db, fId); }
-  Int getLength(Filename fId){ return length(getFromMap(db,fId)); }
-  Void storeFile(Filename fId, File file) { db = insert(PairOfFilenameNFile(fId,file), db); } 
-  Filenames listFiles() { return keys(db); }
+  File getFile(Filename fId) {
+    return getFromMap(db, fId);
+  }
+
+  Int getLength(Filename fId) {
+    return length(getFromMap(db,fId));
+  }
+
+  Void storeFile(Filename fId, File file) {
+    db = insert(PairOfFilenameNFile(fId,file), db);
+  } 
+
+  Filenames listFiles() {
+    return keys(db);
+  }
 }
 
 class Node(DB db, Peer admin, Filename file) implements Peer {
   Catalog catalog ;
   ListOfServer myNeighbors; 
 
-  ListOfServer getNeighbors(){ 
-    return myNeighbors ; 
+  ListOfServer getNeighbors() {
+    return myNeighbors;
   }
 
-
-  Server findServer(Filename fId, Catalog catalog){
+  Server findServer(Filename fId, Catalog catalog) {
     if (isempty(catalog)) {
-      return null ;   
+      return null;
     } else {
-		if (element(fId,snd(head(catalog)))) {
-			return fst(head(catalog)) ;
-		} else {
-			return findServer(fId, tail(catalog)) ;
-		}
-	}	
+      if (element(fId, snd(head(catalog)))) {
+        return fst(head(catalog)) ;
+      } else {
+        return findServer(fId, tail(catalog)) ;
+      }
+    }
   }
 
-  Void run(){
-	  
-	  Fut(Catalog) c ; 
-	  Fut(ListOfServer) f;
-	  ListOfServer newNeighbors;
-	  Server server ; 
+  Void run() {
+    Fut(Catalog) c ; 
+    Fut(ListOfServer) f;
+    ListOfServer newNeighbors;
+    Server server ; 
 
     neighbors = ConsServer(admin, NilServer); 
     f = admin!getNeighbors();   // Asynchronous call to admin
-    await f?; newNeighbors = f.get ;
+    await f?;
+    newNeighbors = f.get ;
     neighbors = concatenate(neighbors, newNeighbors) ;
-    c = this!availFiles(neighbors);         // Asynchronous call
-    await c?;                           // Allow other peers to call in the meantime
-    catalog = c.get;                    // Build the catalog
-    server = findServer(file,catalog);  // Find the server for the requested file
-	this.reqFile(server,file) ;              // Download file
+    c = this!availFiles(neighbors); // Asynchronous call
+    await c?;               // Allow other peers to call in the meantime
+    catalog = c.get;        // Build the catalog
+    server = findServer(file,catalog); // Find the server for the requested file
+    this.reqFile(server,file) ;        // Download file
   }
-
  
   Filenames enquire() { 
     Fut(Filenames) f ;  
-    f = db!listfiles(); await f?; return f.get; 
+    f = db!listfiles();
+    await f?;
+    return f.get; 
   }
         
-  Int getLength(Filename fId){
+  Int getLength(Filename fId) {
     Fut(Int) length ; 
-    length = db!getLength(fId); await length?; return length.get;
+    length = db!getLength(fId);
+    await length?;
+    return length.get;
   }
 
-  Packet getPack(Filename fId, Int pNbr){
-	  File f;
-    Fut(File) ff ; 
-    ff = db!getFile(fId) ; await ff? ; f = ff.get;
-    pack = nth(f, pNbr);
+  Packet getPack(Filename fId, Int pNbr) {
+    File f;
+    Fut(File) ff;
+    ff = db!getFile(fId);
+    await ff?;
+    f = ff.get;
+    return nth(f, pNbr);
   }
 
-  Catalog availFiles (ListOfServer sList){
-	  Catalog cat ;
-	  Filenames fNames; 
-	  Fut(Filenames) fN ;
-	  Catalog catList; 
-	  Fut(Catalog) cL ; 
+  Catalog availFiles (ListOfServer sList) {
+    Catalog cat;
+    Filenames fNames; 
+    Fut(Filenames) fN;
+    Catalog catList; 
+    Fut(Catalog) cL;
+
     if (sList == NilServer) {
-      cat = NilPairOfServerNFilenames ; 
+      cat = NilPairOfServerNFilenames;
     } else {
-      fN = head(sList)!enquire(); 
+      fN = head(sList)!enquire();
       cL = this!availFiles(tail(sList));
-      await fN? & cL?; 
-	  catList = cL.get ;
-	  fNames = fN.get ; 
+      await fN? & cL?;
+      catList = cL.get;
+      fNames = fN.get;
       cat = appendright(catList, ConsPacket(head(sList), fNames)); 
     }
     return cat; 
   }
 
-	Void reqFile(Server sId, Filename fId){
-		File file ;
-		Packet pack;
-		Int lth ;
-		Fut(Int) l1 ;
-		Fut(Packet) l2 ; 
+  Void reqFile(Server sId, Filename fId) {
+    File file;
+    Packet pack;
+    Int lth;
+    Fut(Int) l1;
+    Fut(Packet) l2;
 
-    l1 = sId!getLength(fId); await l1? ; lth = l1.get; 
+    l1 = sId!getLength(fId);
+    await l1?;
+    lth = l1.get; 
     while (lth > 0) {
-      l2 = sId!getPack(fId, lth); await l2? ; pack = l2.get ; 
+      l2 = sId!getPack(fId, lth);
+      await l2?;
+      pack = l2.get ; 
       file = ConsPacket(pack, file); 
-      lth = lth - 1  ; 
+      lth = lth - 1;
     } 
     db!storeFile(fId, file) ; 
   }
