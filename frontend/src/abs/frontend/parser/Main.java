@@ -20,18 +20,19 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 
-		String[] shiftedArgs = null  ; 
+		String[] xargs = args; // Avoid (warnings about) assigning to parameter
+		String[] shiftedArgs = null; 
 		Model m = null;
 
 		//shifting option -v 
-		if (args.length > 0 && args[0].equals("-v")) {
+		if (xargs.length > 0 && xargs[0].equals("-v")) {
 			verbose = true;
-			shiftedArgs = new String[args.length-1];
-			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
-			args = shiftedArgs ;
+			shiftedArgs = new String[xargs.length-1];
+			System.arraycopy(xargs, 1, shiftedArgs, 0, xargs.length-1); 
+			xargs = shiftedArgs ;
 		}
 
-		for (String arg : args){
+		for (String arg : xargs){
 			try{
 				m = parse(arg);
 			} catch (FileNotFoundException e1) {
