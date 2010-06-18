@@ -1,183 +1,169 @@
 <?xml version="1.0"?>
 <project name="ABS Frontend" default="compile" basedir=".">
-<!-- $Id$ -->
+	<!-- $Id$ -->
 
-  <property environment = "env" /> <!-- include environment variables -->
+	<property environment="env" />
+	<!-- include environment variables -->
 
-  <property name = "src.dir"   value = "${basedir}/src" />
-  <property name = "bash.dir"   value = "${src.dir}/bash" />
-  <property name = "tests.dir"   value = "${basedir}/tests" />
-  <property name = "testframework.dir"   value = "${basedir}/tests/testframework" />
-  <property name = "build.dir" value = "${basedir}/bin" />
-  <property name = "bash.build.dir" value = "${basedir}/bin/bash" />
-  <property name = "dist.dir"  value = "${basedir}/dist" />
-  <property name = "gen.dir"   value = "${basedir}/gen" />
-  <property name = "ext.dir"   value = "${basedir}/lib"   />
-  <property name = "ast.src.dir" value = "${src.dir}/abs/frontend/ast" />  
-  <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
-  <property name = "apidoc.dir" value = "${gen.dir}/docs/api" />
-  <property name = "ast.gen.dir" value = "${gen.dir}/abs/frontend" />  
-  <property name = "parser.src.dir" value = "${src.dir}/abs/frontend/parser" />
-  <property name = "parser.gen.dir" value = "${gen.dir}/abs/frontend/parser" />
-  <property name = "junit.jar" value = "junit-4.8.1.jar" />
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="bash.dir" value="${src.dir}/bash" />
+	<property name="tests.dir" value="${basedir}/tests" />
+	<property name="testframework.dir" value="${basedir}/tests/testframework" />
+	<property name="build.dir" value="${basedir}/bin" />
+	<property name="bash.build.dir" value="${basedir}/bin/bash" />
+	<property name="dist.dir" value="${basedir}/dist" />
+	<property name="gen.dir" value="${basedir}/gen" />
+	<property name="ext.dir" value="${basedir}/lib" />
+	<property name="ast.src.dir" value="${src.dir}/abs/frontend/ast" />
+	<!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
+	<property name="apidoc.dir" value="${gen.dir}/docs/api" />
+	<property name="ast.gen.dir" value="${gen.dir}/abs/frontend" />
+	<property name="parser.src.dir" value="${src.dir}/abs/frontend/parser" />
+	<property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
+	<property name="junit.jar" value="junit-4.8.1.jar" />
 
-  <!-- The package name of JastAdd generated files -->
-  <property name="ast.package" value="abs.frontend.ast"/>
+	<!-- The package name of JastAdd generated files -->
+	<property name="ast.package" value="abs.frontend.ast" />
 
-  <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
-  <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" 
-	   classpath="${ext.dir}/JFlex.jar"/>
+	<!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
+	<taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${ext.dir}/JFlex.jar" />
 
-  <!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
-  <taskdef name="beaver" classname="beaver.comp.run.AntTask" 
-	   classpath="${ext.dir}/beaver.jar"/>
+	<!-- "beaver" is an ant task class for the parser generator in beaver.jar -->
+	<taskdef name="beaver" classname="beaver.comp.run.AntTask" classpath="${ext.dir}/beaver.jar" />
 
-  <!-- "jastadd" is an ant task class in jastadd2.jar -->
-  <taskdef name="jastadd" classname="jastadd.JastAddTask"
-	   classpath="${ext.dir}/jastadd2.jar"/>
+	<!-- "jastadd" is an ant task class in jastadd2.jar -->
+	<taskdef name="jastadd" classname="jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
 
 
-  <target name = "prepare">
-    <mkdir dir = "${gen.dir}"/>
-    <mkdir dir = "${ast.gen.dir}"/>
-    <mkdir dir = "${parser.gen.dir}" />
-    <mkdir dir = "${build.dir}"/>
-    <!-- <mkdir dir = "${dist.dir}"/> -->
-    <mkdir dir = "${apidoc.dir}"/>
-  </target>
+	<target name="prepare">
+		<mkdir dir="${gen.dir}" />
+		<mkdir dir="${ast.gen.dir}" />
+		<mkdir dir="${parser.gen.dir}" />
+		<mkdir dir="${build.dir}" />
+		<!-- <mkdir dir = "${dist.dir}"/> -->
+		<mkdir dir="${apidoc.dir}" />
+	</target>
 
-  <target name = "compile" depends = "prepare, gen"
-	  description = "Compiles all java files in the source directory.">
-    <javac srcdir =  "${src.dir}:${gen.dir}:${tests.dir}:${testframework.dir}"
-	   destdir = "${build.dir}"
-	   deprecation = "on"
-	   debug = "on"
-	   depend = "${build.depend}"
-	   optimize = "off">
-      <classpath>
-	<pathelement location = "${ext.dir}/beaver.jar" />
-	<pathelement location = "${ext.dir}/jastadd2.jar" />
-	<pathelement location = "${ext.dir}/JastAddParser.jar" />
-	<pathelement location = "${ext.dir}/${junit.jar}" />
-      </classpath>
-    </javac>
-  </target>
+	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
+		<javac srcdir="${src.dir}:${gen.dir}:${tests.dir}:${testframework.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
+			<classpath>
+				<pathelement location="${ext.dir}/beaver.jar" />
+				<pathelement location="${ext.dir}/jastadd2.jar" />
+				<pathelement location="${ext.dir}/JastAddParser.jar" />
+				<pathelement location="${ext.dir}/${junit.jar}" />
+			</classpath>
+		</javac>
+	</target>
 
 	<target name="javadoc" depends="gen,compile" description="Build java doc.">
-    <javadoc sourcepath="${src.dir}:${gen.dir}" 
-             destdir ="${apidoc.dir}">
-      <classpath>
-	<pathelement location = "${ext.dir}/beaver.jar" />
-	<pathelement location = "${ext.dir}/jastadd2.jar" />
-	<pathelement location = "${ext.dir}/JastAddParser.jar" />
-      </classpath>
-    </javadoc>
-  </target>
+		<javadoc sourcepath="${src.dir}:${gen.dir}" destdir="${apidoc.dir}">
+			<classpath>
+				<pathelement location="${ext.dir}/beaver.jar" />
+				<pathelement location="${ext.dir}/jastadd2.jar" />
+				<pathelement location="${ext.dir}/JastAddParser.jar" />
+			</classpath>
+		</javadoc>
+	</target>
 
 
-  <target name = "clean">
-    <delete failonerror = "false" includeemptydirs = "true"> 
-      <fileset dir = "${gen.dir}/abs"/>
-<!--       <fileset dir = "${gen.dir}/docs"/> -->
-      <fileset dir = "${build.dir}"/>
-      <fileset dir = "${dist.dir}"/>
-    </delete>
-  </target>
+	<target name="clean">
+		<delete failonerror="false" includeemptydirs="true">
+			<fileset dir="${gen.dir}/abs" />
+			<!--       <fileset dir = "${gen.dir}/docs"/> -->
+			<fileset dir="${build.dir}" />
+			<fileset dir="${dist.dir}" />
+		</delete>
+	</target>
 
 
-  <target name="gen" depends="genshell, genparser, genast">
-  </target>
+	<target name="gen" depends="genshell, genparser, genast">
+	</target>
 
-  <target name="rebuild" depends="clean, compile">
-  </target>
+	<target name="rebuild" depends="clean, compile">
+	</target>
 
-  <target name="build" depends="compile">
-  </target>
+	<target name="build" depends="compile">
+	</target>
 
 
-  <target name="genast">
-    <jastadd package="${ast.package}" rewrite="true" beaver="true"
-	     novisitcheck="true" outdir="${gen.dir}" debug="true">
-      <fileset dir=".">
-        <include name="src/**/*.ast"/>
-        <include name="src/**/*.jrag"/>
-        <include name="src/**/*.jadd"/>
-      </fileset>
-    </jastadd>
-  </target>
+	<target name="genast">
+		<jastadd package="${ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
+			<fileset dir=".">
+				<include name="src/**/*.ast" />
+				<include name="src/**/*.jrag" />
+				<include name="src/**/*.jadd" />
+			</fileset>
+		</jastadd>
+	</target>
 
-  
-  <target name="genshell">
-  <copy todir="${bash.build.dir}">
-   <filelist id="shellfiles" dir="${bash.dir}"  files="parseABS,parseAll,generateMaude"/>
-   <filterset>
-     <filter token="BASEDIR" value="${basedir}"/>
-   </filterset>
-  </copy>
-  <chmod perm="ugo+x"> 
-    <filelist dir="${bash.build.dir}"  files="parseABS,parseAll,generateMaude"/>
-    </chmod>
-  </target>
+
+	<target name="genshell">
+		<copy todir="${bash.build.dir}">
+			<filelist id="shellfiles" dir="${bash.dir}" files="parseABS,parseAll,generateMaude" />
+			<filterset>
+				<filter token="BASEDIR" value="${basedir}" />
+			</filterset>
+		</copy>
+		<chmod perm="ugo+x">
+			<filelist dir="${bash.build.dir}" files="parseABS,parseAll,generateMaude" />
+		</chmod>
+	</target>
 
 
 
-  <target name="genparser" depends="genflex,genp1,genp2">
-  </target>
+	<target name="genparser" depends="genflex,genp1,genp2">
+	</target>
 
 
-  <target name="genflex">
-<!-- generate the scanner -->
-    <echo message = "Running jflex"/>
-    <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
-	     nobak="yes"/>
-  </target> 
+	<target name="genflex">
+		<!-- generate the scanner -->
+		<echo message="Running jflex" />
+		<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}" nobak="yes" />
+	</target>
 
-  <target name="genp1" depends="genflex, genast">
-    <echo message = "Parser phase1"/>
-    <!-- generate the parser phase 1, translating .lalr to .beaver -->
-    <java fork="true" dir="${parser.src.dir}" 
-	    classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt.jar"
-	    classname="Main">
-	<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'"/>
-    </java>
-  </target> 
+	<target name="genp1" depends="genflex, genast">
+		<echo message="Parser phase1" />
+		<!-- generate the parser phase 1, translating .lalr to .beaver -->
+		<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt.jar" classname="Main">
+			<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
+		</java>
+	</target>
 
-  <target name="genp2" depends="genp1">
-    <!-- generate the parser phase 2, translating .beaver to .java -->
-    <echo message = "Parser phase"/>
-    <beaver file="${parser.gen.dir}/ABSParser.beaver"
-	    terminalNames="yes" compress="no" useSwitch="yes"/>
-  </target> 
+	<target name="genp2" depends="genp1">
+		<!-- generate the parser phase 2, translating .beaver to .java -->
+		<echo message="Parser phase" />
+		<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
+	</target>
 
-  <!-- test classpath -->
-  <path id="test.classpath">
-    <pathelement location="${build.dir}" />
-    <pathelement location="${ext.dir}/${junit.jar}" />
-    <pathelement location="${ext.dir}/beaver-rt.jar"/>
-  </path>
+	<!-- test classpath -->
+	<path id="test.classpath">
+		<pathelement location="${build.dir}" />
+		<pathelement location="${ext.dir}/${junit.jar}" />
+		<pathelement location="${ext.dir}/beaver-rt.jar" />
+	</path>
 
 
-  <!-- TARGET testrunner , run junit tests through testrunner-->
-  <target name="testrunner" depends="compile">
-    <java fork="true" classname="testframework.TestRunner" >
-      <classpath refid="test.classpath"/>
-    </java>
-  </target>
-  <!-- From command line: -->
-  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
+	<!-- TARGET testrunner , run junit tests through testrunner-->
+	<target name="testrunner" depends="compile">
+		<java fork="true" classname="testframework.TestRunner">
+			<classpath refid="test.classpath" />
+		</java>
+	</target>
+	<!-- From command line: -->
+	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
 
 
-  <!-- suite file -->
-  <property name = "test.suite.name"   value = "abs.frontend.AllTests" />
+	<!-- suite file -->
+	<property name="test.suite.name" value="abs.frontend.AllTests" />
 
-  <target  name="junit" depends="compile">
-    <junit fork="yes" haltonfailure="yes">
-      <test name="${test.suite.name}" />
-      <formatter type="plain" usefile="false" />
-      <classpath refid="test.classpath" />
-    </junit>
-  </target>
-  <!-- From command line: -->
-  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
+	<target name="junit" depends="compile">
+		<junit fork="yes" haltonfailure="yes">
+			<test name="${test.suite.name}" />
+			<formatter type="plain" usefile="false" />
+			<classpath refid="test.classpath" />
+		</junit>
+	</target>
+	<!-- From command line: -->
+	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
 </project>
