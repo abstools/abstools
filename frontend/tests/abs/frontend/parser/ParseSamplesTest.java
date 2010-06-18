@@ -4,12 +4,6 @@ package abs.frontend.parser;
 
 import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-
 import org.junit.Test;
 
 import abs.frontend.ast.Model;

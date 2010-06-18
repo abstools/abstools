@@ -15,5 +15,6 @@ import org.junit.runners.Suite;
 		, ParseSamplesTest.class
         })
 public class AllTests {
+	// TODO: document this
 }
 

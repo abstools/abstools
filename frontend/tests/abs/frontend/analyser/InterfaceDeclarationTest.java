@@ -1,14 +1,12 @@
 package abs.frontend.analyser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Iterator;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import abs.frontend.ast.Model;
@@ -59,7 +57,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface I extends J {} interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 2);
-		Iterator i = p.errors().iterator();
+		Iterator<?> i = p.errors().iterator();
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
 	}
@@ -69,7 +67,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}"); 
 		assertTrue(p.errors().size() == 3);
-		Iterator i = p.errors().iterator();
+		Iterator<?> i = p.errors().iterator();
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
 	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: K"));

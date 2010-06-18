@@ -1,24 +1,20 @@
-
 package abs.frontend.parser;
 
 //import junit.framework.*;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedReader;
 import java.io.Reader;
 import java.io.StringReader;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import abs.frontend.ast.Model;
-
 public class ParserTest {
 
 
-	private String emptyblock ; 	
+//	private String emptyblock ; 	
 	private String bbclass; 
-	private String ms1, ms2, meth1, meth2 , fields, comment, comment2  ; 
+//	private String ms1, ms2, meth1, meth2 , fields, comment, comment2  ; 
 	
 
 	private static boolean verbose = false ; 
@@ -64,12 +60,12 @@ public class ParserTest {
 	@Before
         public void setUp() {
 		
-		emptyblock = "{    }"; 
+//		emptyblock = "{    }"; 
 		//methodsignatures 
-		ms1 = "Void init(Foo x ,  Bar y)";
-		ms2 = "Void append(Int i)";
-		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
-	    meth2 = ms2 + "{ skip; return null ; }";
+//		ms1 = "Void init(Foo x ,  Bar y)";
+//		ms2 = "Void append(Int i)";
+//		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
+//	    meth2 = ms2 + "{ skip; return null ; }";
 		bbclass = "class BoundedBuffer implements Buffer { \n"+
 			       "  ListofInt buffer ;     Int max ;      Int n ;	\n"+
 			       "  Void init(Foo x){ Int x ;  Int y ;  return null ; }\n"+
@@ -262,7 +258,7 @@ public class ParserTest {
 		Reader reader = new StringReader(s);
 		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
 		ABSScanner scanner = new ABSScanner(reader);
-		Model p = (Model)parser.parse(scanner);
+		parser.parse(scanner);
 		reader.close();
 	}
 }
