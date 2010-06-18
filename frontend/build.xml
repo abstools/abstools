@@ -122,18 +122,17 @@
 
 
   <target name="genparser" depends="genflex,genp1,genp2">
-  
-   </target>
+  </target>
 
 
-   <target name="genflex">
+  <target name="genflex">
 <!-- generate the scanner -->
     <echo message = "Running jflex"/>
     <jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
 	     nobak="yes"/>
-</target> 
+  </target> 
 
-   <target name="genp1" depends="genflex, genast">
+  <target name="genp1" depends="genflex, genast">
     <echo message = "Parser phase1"/>
     <!-- generate the parser phase 1, translating .lalr to .beaver -->
     <java fork="true" dir="${parser.src.dir}" 
@@ -141,50 +140,44 @@
 	    classname="Main">
 	<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'"/>
     </java>
-</target> 
+  </target> 
 
-   <target name="genp2" depends="genp1">
+  <target name="genp2" depends="genp1">
     <!-- generate the parser phase 2, translating .beaver to .java -->
-
     <echo message = "Parser phase"/>
     <beaver file="${parser.gen.dir}/ABSParser.beaver"
 	    terminalNames="yes" compress="no" useSwitch="yes"/>
-  
-   </target> 
+  </target> 
 
-<!-- test classpath -->
-<path id="test.classpath">
-  <pathelement location="${build.dir}" />
-  <pathelement location="${ext.dir}/${junit.jar}" />
-  <pathelement location="${ext.dir}/beaver-rt.jar"/>
-</path>
+  <!-- test classpath -->
+  <path id="test.classpath">
+    <pathelement location="${build.dir}" />
+    <pathelement location="${ext.dir}/${junit.jar}" />
+    <pathelement location="${ext.dir}/beaver-rt.jar"/>
+  </path>
 
 
   <!-- TARGET testrunner , run junit tests through testrunner-->
   <target name="testrunner" depends="compile">
-  <java fork="true" classname="testframework.TestRunner" >
-    <classpath refid="test.classpath"/>
-  </java>
-</target>
+    <java fork="true" classname="testframework.TestRunner" >
+      <classpath refid="test.classpath"/>
+    </java>
+  </target>
+  <!-- From command line: -->
+  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
 
-<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
 
-
-  <!-- TARGET antjunit , run junit tests using an ant target and an explicit -->
-<!-- suite file -->
-
-<!-- suite file -->
+  <!-- suite file -->
   <property name = "test.suite.name"   value = "abs.frontend.AllTests" />
 
-<target  name="junit" depends="compile">
-  <junit fork="yes" haltonfailure="yes">
-    <test name="${test.suite.name}" />
-    <formatter type="plain" usefile="false" />
-    <classpath refid="test.classpath" />
-  </junit>
-</target>
-
-<!-- From command line -->
-<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
+  <target  name="junit" depends="compile">
+    <junit fork="yes" haltonfailure="yes">
+      <test name="${test.suite.name}" />
+      <formatter type="plain" usefile="false" />
+      <classpath refid="test.classpath" />
+    </junit>
+  </target>
+  <!-- From command line: -->
+  <!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
 </project>
