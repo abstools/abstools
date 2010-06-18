@@ -17,16 +17,16 @@ type Packet = String
 type File =  ListOfPacket
 type Catalog = ListOfPairOfServerNFilenames
 
-data SetOfString  {EmptyStringSet, InsertString(String, SetOfString)}
-data ListOfPacket {NilPacket , ConsPacket(Packet, ListOfPacket)} 
-data ListOfServer {NilServer , ConsServer(Server, ListOfServer)} 
+data SetOfString  {EmptyStringSet ; InsertString(String, SetOfString) ; }
+data ListOfPacket {NilPacket ; ConsPacket(Packet, ListOfPacket) ; } 
+data ListOfServer {NilServer ; ConsServer(Server, ListOfServer) ; } 
 data ListOfPairOfServerNFilenames {
-  NilPairOfServerNFilenames,
-  ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames)
+  NilPairOfServerNFilenames;
+  ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames);
 } 
-data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames) }
-data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File) }
-data MapOfFilenameToFile { EmptyMap, InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile) }
+data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames); }
+data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File); }
+data MapOfFilenameToFile { EmptyMap; InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile); }
 
 
 //function definitions 
@@ -89,31 +89,31 @@ def Server fst(PairOfServerNFilenames p) =
 def Filenames snd(PairOfServerNFilenames p) =
   case p { PairOfServerNFilenames(s, f) => f; }
 
-interface Server {
-  Filenames enquire()
-  Int getLength(Filename fId)
-  Packet getPack(Filename fId, Int pNbr)
+interface IServer {
+  Filenames enquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
 }
 
 
-interface Peer extends Client, Server {
-  ListOfServer getNeighbors()
+interface IPeer extends IClient, IServer {
+  ListOfServer getNeighbors();
 }
 
-interface DB {
-  File getFile(Filename fId) 			 
-  Int getLength(Filename fId)			 
-  Void storeFile(Filename fId, File file)
-  Filenames listFiles()                  
+interface IDB {
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Void storeFile(Filename fId, File file);
+  Filenames listFiles();
 }
 
-interface Client {
-  PairOfServerNFilenames availFiles(ListOfServer sList) 
-  Void reqFile(Server sId, Filename fId)
+interface IClient {
+  PairOfServerNFilenames availFiles(ListOfServer sList);
+  Void reqFile(Server sId, Filename fId);
 }
 
 
-class DataBase(MapOfFilenameToFile db) implements DB {
+class DataBase(MapOfFilenameToFile db) implements IDB {
   File getFile(Filename fId) {
     return getFromMap(db, fId);
   }
@@ -131,7 +131,7 @@ class DataBase(MapOfFilenameToFile db) implements DB {
   }
 }
 
-class Node(DB db, Peer admin, Filename file) implements Peer {
+class Node(IDB db, IPeer admin, Filename file) implements IPeer {
   Catalog catalog ;
   ListOfServer myNeighbors; 
 

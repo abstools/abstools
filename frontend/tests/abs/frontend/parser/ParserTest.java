@@ -119,8 +119,8 @@ public class ParserTest {
 	// datatype declarations
 	@Test
 		public void testDatatypeDecl() {
-		assertParseOk("data Foo { XCons , YCons }"); 
-		assertParseOk("data IntList { IntNil , Cons(Int, IntList)}");
+		assertParseOk("data Foo { XCons ; YCons ; }"); 
+		assertParseOk("data IntList { IntNil ; Cons(Int, IntList) ; }");
 	}
 
    @Test

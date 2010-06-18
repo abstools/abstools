@@ -105,11 +105,11 @@ ClassDecl class_decl =
 
 List data_constructor_list =
     data_constructor.i                                         {: return new List().add(i); :}
-    | data_constructor_list.l COMMA data_constructor.i        {: return l.add(i); :}
+    | data_constructor_list.l data_constructor.i        {: return l.add(i); :}
   ;
 
 DataConstructor data_constructor = 
-	TYPEIDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
+	TYPEIDENTIFIER.co  data_constructor_params.p? SEMICOLON {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -171,8 +171,8 @@ List method_list =
    ;
 
 List methodsig_list = 
-    methodsig.m			        {: return new List().add(m); :}
-  | methodsig_list.l methodsig.m	{: return l.add(m); :}
+    methodsig.m SEMICOLON	        	{: return new List().add(m); :}
+  | methodsig_list.l methodsig.m SEMICOLON	{: return l.add(m); :}
   ;
 
 List ifname_list =

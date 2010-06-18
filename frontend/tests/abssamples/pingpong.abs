@@ -12,16 +12,16 @@ data String {}
 
 interface Ping {
 
-    Void init(Pong p)  
-    String m(String m)
-    Void run()	
+    Void init(Pong p)  ;
+    String m(String m);
+    Void run()	;
 }
 
 interface Pong {
 
-    Void init(Ping p) 
-    String m(String m)
-    Void run()	
+    Void init(Ping p) ;
+    String m(String m);
+    Void run()	;
 
 }
 
