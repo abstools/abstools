@@ -45,8 +45,8 @@ aspect VarResolution {
         return false;
     }
 
-    rewrite VarOrFieldUse {
-        when (isFunctionParameter() && !(this instanceof FunctionParamUse))
+    rewrite VarUse {
+        when (isFunctionParameter())
             to FunctionParamUse new FunctionParamUse(getName());
     }
 
