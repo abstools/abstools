@@ -142,17 +142,6 @@
 		<pathelement location="${ext.dir}/beaver-rt.jar" />
 	</path>
 
-
-	<!-- TARGET testrunner , run junit tests through testrunner-->
-	<target name="testrunner" depends="compile">
-		<java fork="true" classname="testframework.TestRunner">
-			<classpath refid="test.classpath" />
-		</java>
-	</target>
-	<!-- From command line: -->
-	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  testframework.TestRunner -->
-
-
 	<!-- suite file -->
 	<property name="test.suite.name" value="abs.frontend.AllTests" />
 
