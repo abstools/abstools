@@ -9,13 +9,13 @@ aspect GenerateMaude {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR .\n");
         for (Decl decl : getDecls()) {
-            if (decl.getClass() == FunctionDecl.class)
+            if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);
         }
         stream.println("op classes : -> Configuration .");
         stream.print("eq classes =");
         for (Decl decl : getDecls()) {
-            if (decl.getClass() == ClassDecl.class) {
+            if (decl instanceof ClassDecl) {
                 hasClasses = true;
                 decl.generateMaude(stream);
             }

@@ -13,8 +13,10 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 UnknownDecl:	TypeDecl;		// Unknown declarations
 ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock:Block] Field:FieldDecl* Method:Method*;
 FunctionDecl:	BehaviorDecl    ::= TypeUse Param:VarOrFieldDecl* FunDef:PureExp ;
+ParametricFunctionDecl : FunctionDecl ::= TypeParameter:DataTypeUse* ;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::= DataConstructor* ;
+ParametricDataTypeDecl : DataTypeDecl ::= TypeParameter:IdUse* ;
 TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ; 
 
 
@@ -33,6 +35,7 @@ abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
+ParametricDataTypeUse:	DataTypeUse ::= TypeParameter:IdUse* ;
 abstract VarOrFieldUse: IdUse;
 VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f

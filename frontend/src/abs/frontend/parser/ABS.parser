@@ -82,7 +82,8 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DataTypeDecl(TYPEIDENTIFIER, l); :}
+	DATA TYPEIDENTIFIER LT datatypeuse_list.p GT LBRACE data_constructor_list.l? RBRACE {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
+	| DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DataTypeDecl(TYPEIDENTIFIER, l); :}
   ;
 
 TypeSynDecl  typesyn_decl = 
@@ -91,7 +92,8 @@ TypeSynDecl  typesyn_decl =
 
 
 FunctionDecl  function_decl = 
-	DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
+	DEF datatypeuse.t IDENTIFIER.fn LT datatypeuse_list.p GT LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
+	| DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; 
 
 InterfaceDecl interface_decl =
@@ -132,11 +134,13 @@ InterfaceTypeUse ifname =
     ;
 
 DataTypeUse datatypeuse =
-    TYPEIDENTIFIER {: return new DataTypeUse(TYPEIDENTIFIER) ; :}
+	TYPEIDENTIFIER LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(TYPEIDENTIFIER, p); :}
+    | TYPEIDENTIFIER {: return new DataTypeUse(TYPEIDENTIFIER) ; :}
     ;
 
-Access type_exp = 
-	  TYPEIDENTIFIER.id 		{: return new UnresolvedTypeUse(id); :}
+Access type_exp =
+	  TYPEIDENTIFIER.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
+	| TYPEIDENTIFIER.id 		{: return new UnresolvedTypeUse(id); :}
 	| FUT LPAREN type_exp.t RPAREN {: return new FutureTypeUse(t); :}
 	;	
 
