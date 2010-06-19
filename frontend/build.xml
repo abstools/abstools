@@ -8,7 +8,6 @@
 	<property name="src.dir" value="${basedir}/src" />
 	<property name="bash.dir" value="${src.dir}/bash" />
 	<property name="tests.dir" value="${basedir}/tests" />
-	<property name="testframework.dir" value="${basedir}/tests/testframework" />
 	<property name="build.dir" value="${basedir}/bin" />
 	<property name="bash.build.dir" value="${basedir}/bin/bash" />
 	<property name="dist.dir" value="${basedir}/dist" />
@@ -45,7 +44,7 @@
 	</target>
 
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-		<javac srcdir="${src.dir}:${gen.dir}:${tests.dir}:${testframework.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
+		<javac srcdir="${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
 			<classpath>
 				<pathelement location="${ext.dir}/beaver.jar" />
 				<pathelement location="${ext.dir}/jastadd2.jar" />
