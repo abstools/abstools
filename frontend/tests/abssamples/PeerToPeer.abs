@@ -16,7 +16,7 @@ data Map<A, B> { EmptyMap; InsertAssoc(Pair<A, B>, Map<A, B>); }
 //List functions 
 def A head<A>(List<A> list) = 
   case list { Cons(p,l) => p ; } // the head of a non-empty list
-def A tail<A>(List<A> list) = 
+def List<A> tail<A>(List<A> list) = 
   case list { Cons(p,l) => l ; } // the tail of a non-empty list
 def Bool isEmpty<A>(List<A> list) = 
   list == Nil             // test for empty list
@@ -33,28 +33,28 @@ def A nth<A>(List<A> list, Int n) =
     _ => nth(tail(list), n-1) ;
   }
 
-def A concatenate<A>(List<A> list1, List<A> list2) =
+def List<A> concatenate<A>(List<A> list1, List<A> list2) =
   case list1 {
     Nil => list2 ;
     Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
   }
 
-def A appendright<A>(List<A> list, A p) = 
+def List<A> appendright<A>(List<A> list, A p) = 
   concatenate(list, Cons(p, Nil))
 
 //Set functions 
-def Bool element<A>(A e, Set<A> set)=
+def Bool contains<A>(A e, Set<A> set)=
   case set {
     EmptySet => False ;
     Insert(e, set2) => True;
-    Insert(x, set2) => element(e, set2) ;
+    Insert(x, set2) => contains(e, set2) ;
   }
 
 //Maps 
-def B get<A, B>(A key, Map<A, B> map) = // retrieve from the map
+def B lookup<A, B>(A key, Map<A, B> map) = // retrieve from the map
   case map {
     InsertAssoc(Pair(key, elem), _) => elem ;
-    InsertAssoc(_, tail) => get(key, tail) ;
+    InsertAssoc(_, tail) => lookup(key, tail) ;
   }
     
 def Set<A> keys<A, B>(Map<A, B> map) =
@@ -105,11 +105,11 @@ interface IClient {
 
 class DataBase(Map<Filename, File> db) implements IDB {
   File getFile(Filename fId) {
-    return get(db, fId);
+    return lookup(db, fId);
   }
 
   Int getLength(Filename fId) {
-    return length(get(db,fId));
+    return length(lookup(db,fId));
   }
 
   Void storeFile(Filename fId, File file) {
@@ -133,7 +133,7 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
     if (isempty(catalog)) {
       return null;
     } else {
-      if (element(fId, snd(head(catalog)))) {
+      if (contains(fId, snd(head(catalog)))) {
         return fst(head(catalog)) ;
       } else {
         return findServer(fId, tail(catalog)) ;
