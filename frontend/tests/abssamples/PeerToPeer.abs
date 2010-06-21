@@ -6,88 +6,79 @@ data String {} // builtin
 data Int {} // builtin
 data Bool {} // builtin
 
-
-//type synonyms  
-// Not implemented 
-
-type Filename = String 
-type Filenames = SetOfString 
-type Server = String 
-type Packet = String 
-type File =  ListOfPacket
-type Catalog = ListOfPairOfServerNFilenames
-
-data SetOfString  {EmptyStringSet ; InsertString(String, SetOfString) ; }
-data ListOfPacket {NilPacket ; ConsPacket(Packet, ListOfPacket) ; } 
-data ListOfServer {NilServer ; ConsServer(Server, ListOfServer) ; } 
-data ListOfPairOfServerNFilenames {
-  NilPairOfServerNFilenames;
-  ConsPairOfServerNFilenames(PairOfServerNFilenames, ListOfPairOfServerNFilenames);
-} 
-data PairOfServerNFilenames { PairOfServerNFilenames(Server,Filenames); }
-data PairOfFilenameNFile { PairOfFilenameNFile(Filename,File); }
-data MapOfFilenameToFile { EmptyMap; InsertAssoc(PairOfFilenameNFile, MapOfFilenameToFile); }
+data Set<A> { EmptySet; Insert(A, Set<A>); }
+data List<A> { Nil; Cons(A, List<A>); }
+data Pair<A, B> { Pair(A, B); }
+data Map<A, B> { EmptyMap; InsertAssoc(Pair<A, B>, Map<A, B>); }
 
 
 //function definitions 
 //List functions 
-def Packet head(File file) = 
-  case file { ConsPacket(p,l) => p ; } // the head of a non-empty file
-def File tail(File file) = 
-  case file { ConsPacket(p,l) => l ; } // the tail of a non-empty file
-def Bool isEmpty(File file) = 
-  file == NilPacket             // test for empty file
+def A head<A>(List<A> list) = 
+  case list { Cons(p,l) => p ; } // the head of a non-empty list
+def A tail<A>(List<A> list) = 
+  case list { Cons(p,l) => l ; } // the tail of a non-empty list
+def Bool isEmpty<A>(List<A> list) = 
+  list == Nil             // test for empty list
 
-def Int length(File file) =     // the length of a list
-  case file {
-    NilPacket => 0 ;
-    ConsPacket(p, list) => 1 + length(list) ;
+def Int length<A>(List<A> list) =     // the length of a list
+  case list {
+    Nil => 0 ;
+    Cons(p, l) => 1 + length(l) ;
   } 
 
-def Packet nth(File file, Int n) =
+def A nth<A>(List<A> list, Int n) =
   case n {   
-    0 => head(file) ;
-    _ => nth(tail(file), n-1) ;
+    0 => head(list) ;
+    _ => nth(tail(list), n-1) ;
   }
 
-def File concatenate(File file1, File file2) =
-  case file1 {
-    NilPacket => file2 ;
-    ConsPacket(head, tail) =>  ConsPacket(head, concatenate(tail,file2)) ;
+def A concatenate<A>(List<A> list1, List<A> list2) =
+  case list1 {
+    Nil => list2 ;
+    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
   }
 
-def File appendright(File file, Packet p) = 
-  concatenate(file, ConsPacket(p,NilPacket))
+def A appendright<A>(List<A> list, A p) = 
+  concatenate(list, Cons(p, Nil))
 
 //Set functions 
-def Bool element(String string, SetOfString set)=
+def Bool element<A>(A e, Set<A> set)=
   case set {
-    EmptyStringSet => False ;
-    InsertString(string2, set2) => string == string2 || element(string, set2) ;
+    EmptySet => False ;
+    Insert(e, set2) => True;
+    Insert(x, set2) => element(e, set2) ;
   }
 
 //Maps 
-def File getFromMap(Filename fid, MapOfFilenameToFile map) = // retrieve a file from the map
+def B get<A, B>(A key, Map<A, B> map) = // retrieve from the map
   case map {
-    InsertAssoc(PairOfFilenameToFile(fid,file), _) => file ;
-    InsertAssoc(_, tail) => getFromMap(fid,tail) ;
+    InsertAssoc(Pair(key, elem), _) => elem ;
+    InsertAssoc(_, tail) => get(key, tail) ;
   }
     
-def MapOfFilenameToFile insert(PairOfFilenameNFile assoc,
-                               MapOfFilenameToFile map) =
-  InsertAssoc(assoc, map)
-
-def Filenames keys(MapOfFilenameToFile map) =
+def Set<A> keys<A, B>(Map<A, B> map) =
   case map {
-    EmptyMap => EmptyStringSet ;
-    InsertAssoc(PairOfFilenameNFile(filename, file), tail) => InsertString(filename, keys(tail)) ;
+    EmptyMap => EmptySet ;
+    InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)) ;
   }
 
-def Server fst(PairOfServerNFilenames p) =
-  case p { PairOfServerNFilenames(s, f) => s; }
+def A fst<A, B>(Pair<A, B> p) =
+  case p { Pair(s, f) => s; }
 
-def Filenames snd(PairOfServerNFilenames p) =
-  case p { PairOfServerNFilenames(s, f) => f; }
+def B snd<A, B>(Pair<A, B> p) =
+  case p { Pair(s, f) => f; }
+
+
+//type synonyms  
+
+type Filename = String 
+type Filenames = Set<String> 
+type Packet = String 
+type File = List<Packet>
+type Catalog = List<Pair<IServer, Filenames> >
+
+
 
 interface IServer {
   Filenames enquire();
@@ -97,7 +88,7 @@ interface IServer {
 
 
 interface IPeer extends IClient, IServer {
-  ListOfServer getNeighbors();
+  List<IServer> getNeighbors();
 }
 
 interface IDB {
@@ -108,22 +99,21 @@ interface IDB {
 }
 
 interface IClient {
-  PairOfServerNFilenames availFiles(ListOfServer sList);
-  Void reqFile(Server sId, Filename fId);
+  Pair<IServer, Filenames> availFiles(List<IServer> sList);
+  Void reqFile(IServer sId, Filename fId);
 }
 
-
-class DataBase(MapOfFilenameToFile db) implements IDB {
+class DataBase(Map<Filename, File> db) implements IDB {
   File getFile(Filename fId) {
-    return getFromMap(db, fId);
+    return get(db, fId);
   }
 
   Int getLength(Filename fId) {
-    return length(getFromMap(db,fId));
+    return length(get(db,fId));
   }
 
   Void storeFile(Filename fId, File file) {
-    db = insert(PairOfFilenameNFile(fId,file), db);
+    db = InsertAssoc(Pair(fId,file), db);
   } 
 
   Filenames listFiles() {
@@ -133,13 +123,13 @@ class DataBase(MapOfFilenameToFile db) implements IDB {
 
 class Node(IDB db, IPeer admin, Filename file) implements IPeer {
   Catalog catalog ;
-  ListOfServer myNeighbors; 
+  List<IServer> myNeighbors; 
 
-  ListOfServer getNeighbors() {
+  List<IServer> getNeighbors() {
     return myNeighbors;
   }
 
-  Server findServer(Filename fId, Catalog catalog) {
+  IServer findServer(Filename fId, Catalog catalog) {
     if (isempty(catalog)) {
       return null;
     } else {
@@ -153,14 +143,14 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
 
   Void run() {
     Fut(Catalog) c ; 
-    Fut(ListOfServer) f;
-    ListOfServer newNeighbors;
-    Server server ; 
+    Fut(List<IServer>) f;
+    List<IServer> newNeighbors;
+    IServer server ; 
 
-    neighbors = ConsServer(admin, NilServer); 
+    neighbors = Cons(admin, Nil); 
     f = admin!getNeighbors();   // Asynchronous call to admin
     await f?;
-    newNeighbors = f.get ;
+    newNeighbors = f.get;
     neighbors = concatenate(neighbors, newNeighbors) ;
     c = this!availFiles(neighbors); // Asynchronous call
     await c?;               // Allow other peers to call in the meantime
@@ -192,27 +182,27 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
     return nth(f, pNbr);
   }
 
-  Catalog availFiles (ListOfServer sList) {
+  Catalog availFiles (List<IServer> sList) {
     Catalog cat;
     Filenames fNames; 
     Fut(Filenames) fN;
     Catalog catList; 
     Fut(Catalog) cL;
 
-    if (sList == NilServer) {
-      cat = NilPairOfServerNFilenames;
+    if (sList == Nil) {
+      cat = Nil;
     } else {
       fN = head(sList)!enquire();
       cL = this!availFiles(tail(sList));
       await fN? & cL?;
       catList = cL.get;
       fNames = fN.get;
-      cat = appendright(catList, ConsPacket(head(sList), fNames)); 
+      cat = appendright(catList, Cons(head(sList), fNames)); 
     }
     return cat; 
   }
 
-  Void reqFile(Server sId, Filename fId) {
+  Void reqFile(IServer sId, Filename fId) {
     File file;
     Packet pack;
     Int lth;
@@ -226,7 +216,7 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
       l2 = sId!getPack(fId, lth);
       await l2?;
       pack = l2.get ; 
-      file = ConsPacket(pack, file); 
+      file = Cons(pack, file); 
       lth = lth - 1;
     } 
     db!storeFile(fId, file) ; 
