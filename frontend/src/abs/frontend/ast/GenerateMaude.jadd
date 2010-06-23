@@ -20,33 +20,7 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
-        if (hasBlock()) {
-            // Create an artificial class that is started by the
-            // interpreter.
-            stream.print("\n\n< \".Start\" : Class |\n  Param: noVid,\n  Att: ");
-            if (getBlock().getNumVar() == 0) {
-                stream.println("noSubst,");
-            } else {
-                for (VarDecl field : getBlock().getVars()) {
-                    stream.print("@ \"" + field.getName() + "\" |-> null , ");
-                }
-            }
-            stream.print("\n  Mtds: ");
-            // hand-craft init method - we're not inside a class
-            stream.print("< \".init\" : Method | Param: noVid, Att: noSubst");
-            stream.print(",\n      Code: ");
-            if (getBlock().getNumStmt() == 0) {
-                stream.print("noStmt ");
-            } else {
-                boolean inlist = false;
-                for (Stmt stmt : getBlock().getStmts()) {
-                    if (inlist) stream.print("; "); else inlist = true;
-                    stmt.generateMaude(stream);
-                }
-            }
-            stream.print("> ,\n  Ocnt: 0 > ");
-        }
-        if (!hasBlock() && !hasClasses) stream.print(" none ");
+        getInitialClass().generateMaude(stream);
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
         stream.println("op start : -> State .");
