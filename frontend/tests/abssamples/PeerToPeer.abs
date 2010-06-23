@@ -16,6 +16,7 @@ data Map<A, B> { EmptyMap; InsertAssoc(Pair<A, B>, Map<A, B>); }
 //List functions 
 def A head<A>(List<A> list) = 
   case list { Cons(p,l) => p ; } // the head of a non-empty list
+
 def List<A> tail<A>(List<A> list) = 
   case list { Cons(p,l) => l ; } // the tail of a non-empty list
 def Bool isEmpty<A>(List<A> list) = 
@@ -47,7 +48,7 @@ def Bool contains<A>(A e, Set<A> set)=
   case set {
     EmptySet => False ;
     Insert(e, set2) => True;
-    Insert(x, set2) => contains(e, set2) ;
+    Insert(_, set2) => contains(e, set2) ;
   }
 
 //Maps 
