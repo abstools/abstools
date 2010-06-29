@@ -18,21 +18,19 @@ public class Main {
 
 	static boolean verbose = false ; 
 
-	public static void main(String[] args) throws Exception {
+	public static void main(final String[] args) throws Exception {
 
-		String[] xargs = args; // Avoid (warnings about) assigning to parameter
-		String[] shiftedArgs = null; 
+		String[] shiftedArgs = args; 
 		Model m = null;
 
 		//shifting option -v 
-		if (xargs.length > 0 && xargs[0].equals("-v")) {
+		if (args.length > 0 && args[0].equals("-v")) {
 			verbose = true;
-			shiftedArgs = new String[xargs.length-1];
-			System.arraycopy(xargs, 1, shiftedArgs, 0, xargs.length-1); 
-			xargs = shiftedArgs ;
+			shiftedArgs = new String[args.length-1];
+			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
 		}
 
-		for (String arg : xargs){
+		for (String arg : shiftedArgs){
 			try{
 				m = parse(arg);
 			} catch (FileNotFoundException e1) {
