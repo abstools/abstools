@@ -36,6 +36,7 @@
 
 	<target name="prepare">
 		<mkdir dir="${gen.dir}" />
+      <mkdir dir="${dist.dir}" />
 		<mkdir dir="${ast.gen.dir}" />
 		<mkdir dir="${parser.gen.dir}" />
 		<mkdir dir="${build.dir}" />
@@ -134,6 +135,20 @@
 		<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
 	</target>
 
+   <target name="dist" depends="compile" description="create distribution files">
+         <jar jarfile="${dist.dir}/absfrontend.jar">
+             <fileset dir="${build.dir}" includes="abs/**" />
+            <zipfileset src="${ext.dir}/jastadd2.jar" />
+            <zipfileset src="${ext.dir}/beaver-rt.jar" />
+            <zipfileset src="${ext.dir}/JFlex.jar" />
+
+            <manifest>
+                <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
+             </manifest>
+         </jar>
+      </target>
+
+   
 	<!-- test classpath -->
 	<path id="test.classpath">
 		<pathelement location="${build.dir}" />
