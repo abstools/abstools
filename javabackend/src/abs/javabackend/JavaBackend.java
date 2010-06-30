@@ -5,7 +5,6 @@ import abs.frontend.parser.Main;
 
 public class JavaBackend {
 	public static void main(String[] args) throws Exception {
-	   Main parser = new Main();
-	   Model model = parser.parse(args[0]);
+	   Model model = Main.parse(args[0]);
    }
 }
