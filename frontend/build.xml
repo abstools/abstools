@@ -157,11 +157,20 @@
 	</path>
 
 	<!-- suite file -->
-	<property name="test.suite.name" value="abs.frontend.AllTests" />
+	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
+   <property name="test.backend.suite.name" value="abs.backend.AllTests" />
 
-	<target name="junit" depends="compile">
+   <target name="tests-backend" depends="compile">
+      <junit fork="yes" haltonfailure="yes">
+         <test name="${test.backend.suite.name}" />
+         <formatter type="plain" usefile="false" />
+         <classpath refid="test.classpath" />
+      </junit>
+   </target>
+
+   <target name="tests-frontend" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
-			<test name="${test.suite.name}" />
+			<test name="${test.frontend.suite.name}" />
 			<formatter type="plain" usefile="false" />
 			<classpath refid="test.classpath" />
 		</junit>

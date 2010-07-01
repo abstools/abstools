@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 
 import abs.frontend.ast.Model;
@@ -93,10 +95,18 @@ public class Main {
 			}
 		}
 
-		ABSParser parser = new ABSParser();
-		ABSScanner scanner = new ABSScanner(reader);
-		Model m = (Model)parser.parse(scanner);
-		reader.close();
-		return m; 
+		return parse(reader); 
+	}
+	
+	public static Model parse(InputStream stream) throws Exception {
+	    return parse(new BufferedReader(new InputStreamReader(stream)));
+	}
+	    
+    public static Model parse(Reader reader) throws Exception {
+        ABSParser parser = new ABSParser();
+        ABSScanner scanner = new ABSScanner(reader);
+        Model m = (Model)parser.parse(scanner);
+        reader.close();
+	    return m;
 	}
 }

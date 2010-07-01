@@ -1,0 +1,62 @@
+// -*- mode: java; tab-width: 4; -*-
+
+import java.io.*;
+
+aspect GenerateJava {
+
+    public void Model.generateJava(String packageName, PrintStream stream) {
+        if (packageName != null) {
+            stream.println("package "+packageName+";");
+        }
+        
+        
+        for (Decl decl : getDecls()) {
+            decl.generateJava(stream);
+        }
+    }
+
+    public void Model.generateJava(PrintStream stream) {
+        generateJava(null,stream);
+    }
+    
+    abstract void Decl.generateJava(PrintStream stream);
+
+    public void InterfaceDecl.generateJava(PrintStream stream) {
+        stream.println("interface "+getName()+" {");
+        stream.println("}");
+    }
+
+    public void ClassDecl.generateJava(PrintStream stream) {
+        stream.print("class "+getName());
+        boolean first = true;
+        for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
+            if (first) {
+                stream.print(" implements");
+                first = false;
+            }
+            stream.print(" "+use.getName());
+            
+        }
+        ClassDecl d = null;
+        stream.println(" {");
+        stream.println("}");
+    }
+
+    public void DataTypeDecl.generateJava(PrintStream stream) {
+        stream.println("class "+getName()+" {");
+        stream.println("}");
+    }
+    
+    public void FunctionDecl.generateJava(PrintStream stream) {
+        stream.println("class "+getName()+" {");
+        stream.println("}");
+    }
+
+    public void UnknownDecl.generateJava(PrintStream stream) {
+        stream.println("// WARNING: Unkown decl "+getName());
+    }
+
+    public void TypeSynDecl.generateJava(PrintStream stream) {
+        
+    }
+}
