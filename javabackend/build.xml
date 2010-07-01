@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<project name="ABS Java Backend" default="compile" basedir=".">
+   <!-- $Id: build.xml 4909 2010-06-29 13:12:50Z jschaefer $ -->
+
+   <property name="src.dir" value="${basedir}/src" />
+   <property name="gen.dir" value="${basedir}/gen" />
+   <property name="dist.dir" value="${basedir}/dist" />
+   <property name="ext.dir" value="${basedir}/lib" />
+   <property name="ast.src.dir" value="${src.dir}/abs/javabackend/ast" />
+   <property name="ast.gen.dir" value="${gen.dir}/abs/javabackend/ast" />
+   <property name="frontend.dir" value="${basedir}/../frontend/" />
+   <property name="frontend.ast.src.dir" value="${frontend.dir}/src/abs/frontend/ast" />
+   
+   <property name="ast.package" value="abs.frontend.ast" />
+   
+   
+   <!-- "jastadd" is an ant task class in jastadd2.jar -->
+   <taskdef name="jastadd" classname="jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
+   
+   
+   <target name="prepare">
+      <mkdir dir="${gen.dir}" />
+      <mkdir dir="${dist.dir}" />
+      <mkdir dir="${ast.gen.dir}" />
+   </target>
+   
+   <target name="compile" depends="gen">
+   </target>
+
+   <target name="gen" depends="genast">
+   </target>
+   
+      <target name="genast" depends="prepare">
+         <jastadd package="${ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
+            <fileset dir="${frontend.ast.src.dir}">
+               <include name="ABS.ast" />
+            </fileset>
+            <fileset dir=".">
+               <include name="${src.dir}/**/*.jadd" />
+            </fileset>
+
+         </jastadd>
+      </target>
+   
+   
+   <target name="clean">
+      <delete failonerror="false" includeemptydirs="true">
+         <fileset dir="${gen.dir}" />
+         <fileset dir="${dist.dir}" />
+      </delete>
+   </target>
+   
+   
+</project>   
