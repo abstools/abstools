@@ -1,6 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 
 import java.io.*;
+import abs.backend.java.*;
 
 aspect GenerateJava {
 
@@ -8,6 +9,8 @@ aspect GenerateJava {
         if (packageName != null) {
             stream.println("package "+packageName+";");
         }
+        
+        stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
         
         
         for (Decl decl : getDecls()) {
@@ -42,12 +45,16 @@ aspect GenerateJava {
     }
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
-        stream.println("class "+getName()+" {");
+        stream.println("class "+getName()+" implements ABSDataType {");
         stream.println("}");
     }
     
     public void FunctionDecl.generateJava(PrintStream stream) {
-        stream.println("class "+getName()+" {");
+        String typeArg = getTypeUse().getName();
+        stream.println("class "+getName()+" implements ABSFunction<"+typeArg+"> {");
+        stream.println("   public "+typeArg+" apply() {");
+        stream.println("      return null;");
+        stream.println("   }");
         stream.println("}");
     }
 

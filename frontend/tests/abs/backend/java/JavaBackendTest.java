@@ -2,8 +2,12 @@ package abs.backend.java;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 
 import junit.framework.Assert;
 
@@ -39,6 +43,10 @@ public class JavaBackendTest {
     }
 
     void assertEqual(String absCode, String javaCode) {
+        assertEqual(absCode, javaCode,null);
+    }
+    
+    void assertEqual(String absCode, String javaCode, String pkg) {
         try {
             InputStream in = getInputStream(absCode);
             Model model = Main.parse(in);
@@ -48,7 +56,20 @@ public class JavaBackendTest {
             res = res.replace('\n', ' ');
             res = res.replaceAll("[ ]+", " ");
             res = res.trim();
-            Assert.assertEquals(javaCode, res);
+            
+            StringBuffer expectedJavaCode = new StringBuffer();
+            if (pkg != null) {
+                expectedJavaCode.append("package "+pkg+"; ");
+            }
+            
+            expectedJavaCode.append(JavaBackendConstants.LIB_IMPORT_STATEMENT+" ");
+            expectedJavaCode.append(javaCode);
+            
+            Assert.assertEquals(expectedJavaCode.toString(), res);
+            
+            File tmpFile = getTempFile(out.toString());
+            JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
+            
         } catch (Exception e) {
             Assert.fail(e.getMessage());
         }
@@ -57,4 +78,15 @@ public class JavaBackendTest {
     private InputStream getInputStream(String absCode) {
         return new ByteArrayInputStream(absCode.getBytes());
     }
+    
+    private static File getTempFile(String testCode) throws IOException {
+        File tmpFile = File.createTempFile("abs", "test");
+        PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));
+        p.print(testCode);
+        p.close();
+        tmpFile.deleteOnExit();
+        
+        return tmpFile;
+    }
+    
 }

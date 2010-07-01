@@ -12,6 +12,8 @@
 	<property name="bash.build.dir" value="${basedir}/bin/bash" />
 	<property name="dist.dir" value="${basedir}/dist" />
 	<property name="gen.dir" value="${basedir}/gen" />
+   <!-- temporal directory used during tests -->
+   <property name="gen.test.dir" value="${basedir}/gen" />
 	<property name="ext.dir" value="${basedir}/lib" />
 	<property name="ast.src.dir" value="${src.dir}/abs/frontend/ast" />
 	<!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
@@ -36,6 +38,7 @@
 
 	<target name="prepare">
 		<mkdir dir="${gen.dir}" />
+      <mkdir dir="${gen.test.dir}" />
       <mkdir dir="${dist.dir}" />
 		<mkdir dir="${ast.gen.dir}" />
 		<mkdir dir="${parser.gen.dir}" />
@@ -124,7 +127,7 @@
 	<target name="genp1" depends="genflex, genast">
 		<echo message="Parser phase1" />
 		<!-- generate the parser phase 1, translating .lalr to .beaver -->
-		<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt.jar" classname="Main">
+		<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
 			<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
 		</java>
 	</target>
@@ -139,7 +142,7 @@
          <jar jarfile="${dist.dir}/absfrontend.jar">
              <fileset dir="${build.dir}" includes="abs/**" />
             <zipfileset src="${ext.dir}/jastadd2.jar" />
-            <zipfileset src="${ext.dir}/beaver-rt.jar" />
+            <zipfileset src="${ext.dir}/beaver-rt-src.jar" />
             <zipfileset src="${ext.dir}/JFlex.jar" />
 
             <manifest>
@@ -153,7 +156,7 @@
 	<path id="test.classpath">
 		<pathelement location="${build.dir}" />
 		<pathelement location="${ext.dir}/${junit.jar}" />
-		<pathelement location="${ext.dir}/beaver-rt.jar" />
+		<pathelement location="${ext.dir}/beaver-rt-src.jar" />
 	</path>
 
 	<!-- suite file -->
@@ -176,6 +179,6 @@
 		</junit>
 	</target>
 	<!-- From command line: -->
-	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
+	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
 </project>
