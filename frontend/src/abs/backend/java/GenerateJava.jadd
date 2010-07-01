@@ -22,21 +22,20 @@ aspect GenerateJava {
     abstract void Decl.generateJava(PrintStream stream);
 
     public void InterfaceDecl.generateJava(PrintStream stream) {
-        stream.println("interface "+getName()+" {");
+        stream.print("interface "+getName()+" extends ABSInterfaceType");
+        for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
+            stream.print(", "+use.getName());
+        }
+        stream.println(" {");
         stream.println("}");
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
-        stream.print("class "+getName());
-        boolean first = true;
+        stream.print("class "+getName()+" implements ABSClassType");
         for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
-            if (first) {
-                stream.print(" implements");
-                first = false;
-            }
-            stream.print(" "+use.getName());
-            
+            stream.print(", "+use.getName());
         }
+        
         ClassDecl d = null;
         stream.println(" {");
         stream.println("}");

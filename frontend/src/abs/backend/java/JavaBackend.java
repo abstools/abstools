@@ -1,5 +1,6 @@
 package abs.backend.java;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,8 +18,9 @@ import abs.frontend.parser.Main;
 public class JavaBackend {
     public static void main(String[] args) throws Exception {
 
-        File file = getTempFile(testCode());
-        Model model = Main.parse(file.getAbsolutePath());
+        
+        final Model model = 
+            Main.parse(new ByteArrayInputStream(testCode().getBytes()));
         model.generateJava(System.out);
     }
 
@@ -38,30 +40,4 @@ public class JavaBackend {
         	   "data Void { }\n";
     }
     
-    @Test
-    public void testEmptyClass() {
-        assertEqual("class A { }", "class A { }");
-    }
-    
-    @Test
-    public void testEmptyInterface() {
-        assertEqual("interface A { }", "interface A { }");
-    }
-
-    void assertEqual(String absCode, String javaCode) {
-        try {
-            File file = getTempFile(absCode);
-            Model model = Main.parse(file.getAbsolutePath());
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            model.generateJava(new PrintStream(out));
-            String res = out.toString();
-            res = res.replace('\n', ' ');
-            res = res.replaceAll("  ", " ");
-            res = res.trim();
-            Assert.assertEquals(javaCode, res);
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
-        
-    }
 }
