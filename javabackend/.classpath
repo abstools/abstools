@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/absfrontend.jar"/>
+	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="lib/Java1.5Compiler.jar"/>
+	<classpathentry kind="lib" path="lib/jastadd2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
