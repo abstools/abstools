@@ -4,6 +4,18 @@ aspect TypeResolution {
   
     // Find the type declaration for a type use.
   
+    syn lazy boolean TypeDecl.isInterface();
+    syn lazy boolean TypeDecl.isDataType();
+    syn lazy boolean TypeDecl.isTypeSyn();
+  
+    eq TypeDecl.isInterface() = false;
+    eq TypeDecl.isDataType() = false;
+    eq TypeDecl.isTypeSyn() = false;
+
+    eq InterfaceDecl.isInterface() = true;
+    eq DataTypeDecl.isDataType() = true;
+    eq TypeSynDecl.isTypeSyn() = true;
+  
     // Declaration of *decl*
 
     // *decl* refers to the appropriate declaration of the TypeUse or to
@@ -39,6 +51,16 @@ aspect TypeResolution {
                 return (TypeDecl)d;
         return unknownDecl();
     }
+    
+    rewrite UnresolvedTypeUse {
+        when (declaration().isInterface())
+            to InterfaceTypeUse new InterfaceTypeUse(getName());
+        when (declaration().isDataType())
+            to DataTypeUse new DataTypeUse(getName());
+        when (declaration().isTypeSyn())
+            to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue());
+    }
+    
 }
 
 // Local Variables:
