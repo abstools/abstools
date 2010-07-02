@@ -1,5 +1,6 @@
 import java.util.Collection;
 import java.util.ArrayList;
+import abs.frontend.analyser.*;
 
 aspect ErrorCheck {
   public Collection Model.errors() {
@@ -23,21 +24,21 @@ aspect ErrorCheck {
   public void InterfaceDecl.collectErrors(Collection c) {
     super.collectErrors(c);
     if(hasCycleOnExtendedInterfacesChain())
-      error(c, "Cyclic inheritance chain for interface: " + getName());
+      error(c, ErrorMessage.CYCLIC_INHERITANCE.withArgs(getName()));
   }
 
   // add error for undeclared interfaces
   public void InterfaceTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(declaration().isUnknown())
-      error(c, "Unknown interface: " + getName());
+      error(c, ErrorMessage.UNKOWN_INTERFACE.withArgs(getName()));
   }
 
   // add error for undeclared identifiers (interfaces, datatypes/type synonyms)
   public void UnresolvedTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(declaration().isUnknown())
-      error(c, "Unknown interface or datatype: " + getName());
+      error(c, ErrorMessage.UNKOWN_INTERFACE_OR_DATATYPE.withArgs(getName()));
   }
 
   // add error for undeclared interfaces
@@ -45,7 +46,7 @@ aspect ErrorCheck {
   public void DataTypeUse.collectErrors(Collection c) {
     super.collectErrors(c);
     if(declaration().isUnknown())
-      error(c, "Unknown datatype: " + getName());
+      error(c, ErrorMessage.UNKOWN_DATATYPE.withArgs(getName()));
   }
 
   // add error for duplicate interfaces
@@ -53,7 +54,7 @@ aspect ErrorCheck {
     super.collectErrors(c);
     if(duplicateTypeDecls().size() > 0) {
     	for (String name : duplicateTypeDecls()) {
-        	error(c, "Duplicate type declaration: " + name);
+        	error(c, ErrorMessage.DUPLICATE_TYPE_DECL.withArgs(name));
     	}
     }
   }
