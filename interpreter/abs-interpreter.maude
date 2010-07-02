@@ -614,7 +614,6 @@ fmod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
-  op selfcall(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] . 
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -1253,19 +1252,6 @@ mod ABS-SIMULATOR is
     < O : C | Att: S, Pr: { L1 | get(N ; A) ; SL1 }, PrQ: W,
               Lcnt: F >
     [label continue] .
-
-
-  --- local-async-static-call
-  ---
-  crl
-    < O : C | Att: S, Pr: { L | selfcall( A ; Q ; EL ); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =>
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Completed: false, References: 1, Value: null >
-  if N := label(O, F)
-      [label local-async-static-call] .
 
 
   --- remote-async-call
