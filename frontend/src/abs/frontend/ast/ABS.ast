@@ -36,6 +36,7 @@ abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
+ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; // FIXME: should be TypeParameterUse - fix in ABS.parser as well
 TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: IdUse;
 VarUse:					VarOrFieldUse;

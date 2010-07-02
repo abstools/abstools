@@ -65,6 +65,10 @@ aspect GenerateJava {
         stream.println("}");
     }
 
+    public void TypeParameterDecl.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
     public void UnknownDecl.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
@@ -102,6 +106,10 @@ aspect GenerateJava {
 
     public void InterfaceTypeUse.generateJava(PrintStream stream) {
         stream.print(getName());
+    }
+
+    public void TypeParameterUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
     }
     
     public void UnresolvedTypeUse.generateJava(PrintStream stream) {
