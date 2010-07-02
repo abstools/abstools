@@ -22,70 +22,65 @@ public class InterfaceDeclarationTest {
 	public void trivial() {
 		Model p;
 		p = assertParseOk("interface I {} {}");
-		assertTrue(p.errors().size() == 0);
+		assertTrue(p.getErrors().size() == 0);
 	}
 
 	@Test
 	public void extending() {
 		Model p;
 		p = assertParseOk("interface I {} interface J extends I {} {}"); 
-		assertTrue(p.errors().size() == 0);
+		assertTrue(p.getErrors().size() == 0);
 	}
 
 	@Test
 	public void extendingReversed() {
 		Model p;
 		p = assertParseOk("interface J extends I {} interface I {} {}"); 
-		assertTrue(p.errors().size() == 0);
+		assertTrue(p.getErrors().size() == 0);
 	}
 
 	@Test
 	public void extendingUndefined() {
 		Model p;
 		p = assertParseOk("interface J extends I {} {}"); 
-		assertTrue(p.errors().size() == 1);
-		assertEndsWith(firstErrorString(p),UNKOWN_INTERFACE.withArgs("I"));
+		assertTrue(p.getErrors().size() == 1);
+		assertEndsWith(p.getErrors().getFirst(),UNKOWN_INTERFACE.withArgs("I"));
 	}
 
 	@Test
 	public void circular() {
 		Model p;
 		p = assertParseOk("interface I extends I {} {}"); 
-		assertTrue(p.errors().size() == 1);
-		assertEndsWith(firstErrorString(p),CYCLIC_INHERITANCE.withArgs("I"));
+		assertTrue(p.getErrors().size() == 1);
+		assertEndsWith(p.getErrors().getFirst(),CYCLIC_INHERITANCE.withArgs("I"));
 	}
 
-	@Test
+    @Test
 	public void mutuallyCircular() {
 		Model p;
 		p = assertParseOk("interface I extends J {} interface J extends I {} {}"); 
-		assertTrue(p.errors().size() == 2);
-		Iterator<?> i = p.errors().iterator();
-		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("I"));
-		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("J"));
+		assertTrue(p.getErrors().size() == 2);
+		Iterator<SemanticError> i = p.getErrors().iterator();
+		assertEndsWith(i.next(),CYCLIC_INHERITANCE.withArgs("I"));
+		assertEndsWith(i.next(),CYCLIC_INHERITANCE.withArgs("J"));
 	}
 
 	@Test
 	public void mutuallyCircularIndirect() {
 		Model p;
 		p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}"); 
-		assertTrue(p.errors().size() == 3);
-		Iterator<?> i = p.errors().iterator();
-		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("I"));
-		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("J"));
-		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("K"));
+		assertTrue(p.getErrors().size() == 3);
+		Iterator<SemanticError> i = p.getErrors().iterator();
+		assertEndsWith(i.next(),CYCLIC_INHERITANCE.withArgs("I"));
+		assertEndsWith(i.next(),CYCLIC_INHERITANCE.withArgs("J"));
+		assertEndsWith(i.next(),CYCLIC_INHERITANCE.withArgs("K"));
 	}
 
 	
-    private void assertEndsWith(String expected, String actual) {
-        assertTrue("Expected that "+expected+" ends with "+actual,expected.endsWith(actual));
+    private void assertEndsWith(SemanticError expected, String actual) {
+        assertTrue("Expected that "+expected.getMsgString()+" ends with "+actual,expected.getMsgString().endsWith(actual));
     }
 
-    private String firstErrorString(Model p) {
-        return ((String)p.errors().iterator().next());
-    }
-
-	
 	// TODO refactor this into testframework stuff? 
 	protected static Model assertParseOk(String s) {
 		Model p = null;

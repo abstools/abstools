@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
@@ -60,12 +61,12 @@ public class Main {
 				}
 			}
 			if (m != null) {
-				int numSemErrs = m.errors().size();
+				int numSemErrs = m.getErrors().size();
 				
 				if (numSemErrs > 0) {
 					System.out.println("Semantic errors: " + numSemErrs);
-					for (Object error : m.errors())
-						System.err.println(arg + ":" + error);
+					for (SemanticError error : m.getErrors())
+						System.err.println(arg + ":" + error.getMsgString());
 					System.err.flush();
 				}
 			}

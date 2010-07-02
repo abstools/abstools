@@ -97,15 +97,15 @@ aspect GenerateJava {
     }
 
     public void DataTypeUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(getName());
     }
 
     public void InterfaceTypeUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(getName());
     }
     
     public void UnresolvedTypeUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        throw new JavaBackendException(this,"Type "+getName()+" is unresolved!");
     }
 
     public void FieldUse.generateJava(PrintStream stream) {

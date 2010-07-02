@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.ast.Model;
 
 
@@ -29,11 +30,11 @@ public class ParseSamplesTest {
 			fail("Failed to parse: "+ s+"\n"+e.getMessage());
 		}
 		if (m != null) {
-			int numSemErrs = m.errors().size();
+			int numSemErrs = m.getErrors().size();
 			if (numSemErrs > 0){
 				StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-				for (Object error : m.errors())
-					errs = errs.append(s + ":" + error + "\n");	
+				for (SemanticError error : m.getErrors())
+					errs = errs.append(s + ":" + error.getMsgString() + "\n");	
 				fail(errs.toString());
 			}		
 		}
