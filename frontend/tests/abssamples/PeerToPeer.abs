@@ -44,18 +44,18 @@ def List<A> appendright<A>(List<A> list, A p) =
   concatenate(list, Cons(p, Nil))
 
 //Set functions 
-def Bool contains<A>(A e, Set<A> set)=
+def Bool contains<A>(Set<A> set, A e) =
   case set {
     EmptySet => False ;
     Insert(e, set2) => True;
-    Insert(_, set2) => contains(e, set2) ;
+    Insert(_, set2) => contains(set2, e);
   }
 
 //Maps 
-def B lookup<A, B>(A key, Map<A, B> map) = // retrieve from the map
+def B lookup<A, B>(Map<A, B> map, A key) = // retrieve from the map
   case map {
     InsertAssoc(Pair(key, elem), _) => elem ;
-    InsertAssoc(_, tail) => lookup(key, tail) ;
+    InsertAssoc(_, tail) => lookup(tail, key) ;
   }
     
 def Set<A> keys<A, B>(Map<A, B> map) =
@@ -81,6 +81,15 @@ type Catalog = List<Pair<IServer, Filenames> >
 
 
 
+// Application functions
+def IServer findServer(File file, Catalog catalog) =
+  case catalog {
+    Nil => null;
+    Cons(Pair(server, files), rest) =>
+      case contains(files, file) { True => server;
+                                   False => findServer(file, rest); };
+  }
+
 interface IServer {
   Filenames enquire();
   Int getLength(Filename fId);
@@ -88,11 +97,13 @@ interface IServer {
 }
 
 
-interface IPeer extends IClient, IServer {
-  List<IServer> getNeighbors();
+interface IPeer extends IClient, IServer { }
+
+interface INetwork {
+  List<IServer> getNeighbors(IPeer caller);
 }
 
-interface IDB {
+interface DB {
   File getFile(Filename fId);
   Int getLength(Filename fId);
   Void storeFile(Filename fId, File file);
@@ -100,11 +111,10 @@ interface IDB {
 }
 
 interface IClient {
-  Pair<IServer, Filenames> availFiles(List<IServer> sList);
   Void reqFile(IServer sId, Filename fId);
 }
 
-class DataBase(Map<Filename, File> db) implements IDB {
+class DataBase(Map<Filename, File> db) implements DB {
   File getFile(Filename fId) {
     return lookup(db, fId);
   }
@@ -122,51 +132,46 @@ class DataBase(Map<Filename, File> db) implements IDB {
   }
 }
 
-class Node(IDB db, IPeer admin, Filename file) implements IPeer {
-  Catalog catalog ;
-  List<IServer> myNeighbors; 
+class Node(DB db, Filename file) implements IPeer {
+  Catalog catalog;
+  List<IServer> myNeighbors;
+  INetwork admin;
 
-  List<IServer> getNeighbors() {
-    return myNeighbors;
-  }
-
-  IServer findServer(Filename fId, Catalog catalog) {
-    if (isempty(catalog)) {
-      return null;
-    } else {
-      if (contains(fId, snd(head(catalog)))) {
-        return fst(head(catalog)) ;
-      } else {
-        return findServer(fId, tail(catalog)) ;
-      }
-    }
+  {
+    catalog = Nil;
+    myNeighbors = Nil;
+    admin = null;
   }
 
   Void run() {
     Fut(Catalog) c ; 
     Fut(List<IServer>) f;
-    List<IServer> newNeighbors;
     IServer server ; 
 
-    neighbors = Cons(admin, Nil); 
-    f = admin!getNeighbors();   // Asynchronous call to admin
+    await admin != null;
+    f = admin!getNeighbors(this);   // Asynchronous call to admin
     await f?;
-    newNeighbors = f.get;
-    neighbors = concatenate(neighbors, newNeighbors) ;
-    c = this!availFiles(neighbors); // Asynchronous call
+    myNeighbors = f.get;
+    c = this!availFiles(myNeighbors); // Asynchronous call
     await c?;               // Allow other peers to call in the meantime
     catalog = c.get;        // Build the catalog
-    server = findServer(file,catalog); // Find the server for the requested file
-    this.reqFile(server,file) ;        // Download file
+    server = findServer(file, catalog); // Find the server for the requested file
+    if (server != null) {
+      this.reqFile(server,file) ;        // Download file
+    }
   }
- 
+
+  Void setAdmin(INetwork admin) {
+    this.admin = admin;
+  }
+
   Filenames enquire() { 
     Fut(Filenames) f ;  
-    f = db!listfiles();
+    f = db!listFiles();
     await f?;
-    return f.get; 
+    return f.get;
   }
-        
+
   Int getLength(Filename fId) {
     Fut(Int) length ; 
     length = db!getLength(fId);
@@ -198,7 +203,7 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
       await fN? & cL?;
       catList = cL.get;
       fNames = fN.get;
-      cat = appendright(catList, Cons(head(sList), fNames)); 
+      cat = appendright(catList, Pair(head(sList), fNames)); 
     }
     return cat; 
   }
@@ -210,22 +215,58 @@ class Node(IDB db, IPeer admin, Filename file) implements IPeer {
     Fut(Int) l1;
     Fut(Packet) l2;
 
+    file = Nil;
     l1 = sId!getLength(fId);
     await l1?;
     lth = l1.get; 
     while (lth > 0) {
+      lth = lth - 1;            // indexing is zero-based
       l2 = sId!getPack(fId, lth);
       await l2?;
-      pack = l2.get ; 
+      pack = l2.get ;
       file = Cons(pack, file); 
-      lth = lth - 1;
     } 
-    db!storeFile(fId, file) ; 
+    db!storeFile(fId, file);
+  }
+}
+
+class OurTopology(IPeer node0,   IPeer node1,   IPeer node2,   IPeer node3)
+implements INetwork
+{
+  List<IServer> getNeighbors(IPeer caller) {
+    if (caller == node0) { return Cons(node1, Cons(node2, Nil)); }
+    if (caller == node1) { return Cons(node3, Nil); }
+    if (caller == node2) { return Cons(node0, Cons(node1, Cons(node3, Nil))); }
+    if (caller == node3) { return Cons(node0, Cons(node2, Nil)); }
   }
 }
 
 { 
-//Main 
+  IPeer node0;
+  IPeer node1;
+  IPeer node2;
+  IPeer node3;
+  DB db0;
+  DB db1;
+  DB db2;
+  INetwork admin;
+  // Map<Filename, File>
+  db0 = new DataBase(InsertAssoc(Pair("file0",
+      Cons("file", Cons("from", Cons("db0", Nil)))),
+    EmptyMap));
+  db1 = new DataBase(InsertAssoc(Pair("file1", 
+      Cons("file", Cons("from", Cons("db1", Nil)))),
+    EmptyMap));
+  db2 = new DataBase(InsertAssoc(Pair("file2",
+      Cons("file", Cons("from", Cons("db2", Nil)))),
+    EmptyMap));
+  node0 = new Node(db0, "file2");
+  node1 = new Node(db1, "file2");
+  node2 = new Node(db2, "file1");
+  node3 = new Node(db2, "file0");
+  admin = new OurTopology(node0, node1, node2, node3);
+  node0.setAdmin(admin);
+  node1.setAdmin(admin);
+  node2.setAdmin(admin);
+  node3.setAdmin(admin);
 }
-
-
