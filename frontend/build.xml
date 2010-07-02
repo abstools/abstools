@@ -50,6 +50,7 @@
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
 		<javac srcdir="${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
 			<classpath>
+            <pathelement location="${ext.dir}/Java1.5Compiler.jar" />
 				<pathelement location="${ext.dir}/beaver.jar" />
 				<pathelement location="${ext.dir}/jastadd2.jar" />
 				<pathelement location="${ext.dir}/JastAddParser.jar" />
