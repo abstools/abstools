@@ -13,6 +13,9 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 
+import static abs.frontend.analyser.ErrorMessage.*;
+
+
 public class InterfaceDeclarationTest {
 
 	@Test
@@ -41,7 +44,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
-	    assertTrue(((String)p.errors().iterator().next()).endsWith("Unknown interface: I"));
+		assertEndsWith(firstErrorString(p),UNKOWN_INTERFACE.withArgs("I"));
 	}
 
 	@Test
@@ -49,7 +52,7 @@ public class InterfaceDeclarationTest {
 		Model p;
 		p = assertParseOk("interface I extends I {} {}"); 
 		assertTrue(p.errors().size() == 1);
-	    assertTrue(((String)p.errors().iterator().next()).endsWith("Cyclic inheritance chain for interface: I"));
+		assertEndsWith(firstErrorString(p),CYCLIC_INHERITANCE.withArgs("I"));
 	}
 
 	@Test
@@ -58,8 +61,8 @@ public class InterfaceDeclarationTest {
 		p = assertParseOk("interface I extends J {} interface J extends I {} {}"); 
 		assertTrue(p.errors().size() == 2);
 		Iterator<?> i = p.errors().iterator();
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
+		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("I"));
+		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("J"));
 	}
 
 	@Test
@@ -68,11 +71,21 @@ public class InterfaceDeclarationTest {
 		p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}"); 
 		assertTrue(p.errors().size() == 3);
 		Iterator<?> i = p.errors().iterator();
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: I"));
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: J"));
-	    assertTrue(((String)i.next()).endsWith("Cyclic inheritance chain for interface: K"));
+		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("I"));
+		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("J"));
+		assertEndsWith(((String)i.next()),CYCLIC_INHERITANCE.withArgs("K"));
 	}
 
+	
+    private void assertEndsWith(String expected, String actual) {
+        assertTrue("Expected that "+expected+" ends with "+actual,expected.endsWith(actual));
+    }
+
+    private String firstErrorString(Model p) {
+        return ((String)p.errors().iterator().next());
+    }
+
+	
 	// TODO refactor this into testframework stuff? 
 	protected static Model assertParseOk(String s) {
 		Model p = null;

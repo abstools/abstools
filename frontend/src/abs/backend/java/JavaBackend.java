@@ -21,8 +21,20 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class JavaBackend {
+    private static String testCode() {
+        return 
+               "interface A { }\n" +
+               "class B implements A { } \n" +
+               "data Void { }\n" +
+               "def A f() = null\n" +
+               "{ " +
+               "  A a;"+
+               "}";
+    }
+    
+    
     public static void main(String[] args) throws Exception {
-        testCompile("interface I { }");
+        testCompile(testCode());
     }
 
     public static void testCompile(String javaCode) throws Exception {
@@ -30,7 +42,9 @@ public class JavaBackend {
         Model model = Main.parse(in);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
-        File tmpFile = getTempFile(out.toString());
+        String code = out.toString();
+        System.out.println(code);
+        File tmpFile = getTempFile(code);
         JavaCompiler.compile("-classpath","bin","-verbose", "-d", "gen/test", tmpFile.getAbsolutePath());
     }
 
@@ -38,7 +52,7 @@ public class JavaBackend {
         final parser.JavaParser javaParser = new parser.JavaParser();
         Program.initOptions();
         Program.setValueForOption("test", "-d");
-        Program.setOption("-verbose");
+        //Program.setOption("-verbose");
          
         Program p = new Program();
         BytecodeParser b = new BytecodeParser();
@@ -82,11 +96,4 @@ public class JavaBackend {
         return tmpFile;
     }
 
-    private static String testCode() {
-        return "interface A { }\n" +
-        	   "class B implements A { } \n" +
-        	   "data Void { }\n" +
-        	   "def A f() = null\n";
-    }
-    
 }

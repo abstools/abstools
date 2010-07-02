@@ -2,6 +2,13 @@ package abs.backend.java;
 
 import AST.*;
 
+/**
+ * This is a standard Java compiler implemented from JastAddJ
+ * it takes Java source files and generates JVM bytecode.
+ * 
+ * @author Jan Schäfer
+ *
+ */
 class JavaCompiler extends Frontend {
   public static void main(String... args) {
     if(!compile(args))

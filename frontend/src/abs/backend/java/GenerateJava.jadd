@@ -2,6 +2,7 @@
 
 import java.io.*;
 import abs.backend.java.*;
+import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
@@ -11,7 +12,13 @@ aspect GenerateJava {
         }
         
         stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
-        
+        if (hasBlock()) {
+            Block block = getBlock();
+            stream.println("public class Main {");
+            stream.print("   public static void main(String[] args) ");
+            block.generateJava("   ",stream);
+            stream.println("}");
+        }
         
         for (Decl decl : getDecls()) {
             decl.generateJava(stream);
@@ -59,10 +66,61 @@ aspect GenerateJava {
     }
 
     public void UnknownDecl.generateJava(PrintStream stream) {
-        stream.println("// WARNING: Unkown decl "+getName());
+        throw new NotImplementedYetException(this);
     }
 
     public void TypeSynDecl.generateJava(PrintStream stream) {
-        
+        throw new NotImplementedYetException(this);
+    }
+    
+    public void Block.generateJava(String indent, PrintStream stream) {
+        stream.println("{ ");
+        for (VarDecl varDecl : getVars()) {
+            varDecl.generateJava(incIndent(indent),stream);
+        }
+        stream.println(indent+"}");
+    }
+    
+    public void VarDecl.generateJava(String indent, PrintStream stream) {
+        stream.print(indent);
+        getAccess().generateJava(stream);
+        stream.print(" "+getName()+";");
+    }
+    
+    public abstract void Access.generateJava(PrintStream stream);
+    public abstract void IdUse.generateJava(PrintStream stream);
+    public abstract void TypeUse.generateJava(PrintStream stream);
+    public abstract void VarOrFieldUse.generateJava(PrintStream stream);
+    
+    public void FutureTypeUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void DataTypeUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void InterfaceTypeUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    
+    public void UnresolvedTypeUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void FieldUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void FunctionParamUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+
+    public void VarUse.generateJava(PrintStream stream) {
+        throw new NotImplementedYetException(this);
+    }
+    
+    public String ASTNode.incIndent(String indent) {
+        return indent+"   ";
     }
 }
