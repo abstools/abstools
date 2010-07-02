@@ -16,7 +16,8 @@ FunctionDecl:	BehaviorDecl    ::= TypeUse Param:VarOrFieldDecl* FunDef:PureExp ;
 ParametricFunctionDecl : FunctionDecl ::= TypeParameter:DataTypeUse* ;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::= DataConstructor* ;
-ParametricDataTypeDecl : DataTypeDecl ::= TypeParameter:IdUse* ;
+TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
+ParametricDataTypeDecl : DataTypeDecl ::= TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ; 
 
 
@@ -35,7 +36,7 @@ abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
-ParametricDataTypeUse:	DataTypeUse ::= TypeParameter:IdUse* ;
+TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: IdUse;
 VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f

@@ -38,6 +38,10 @@ aspect GenerateMaude {
 		stream.println("*** Datatype " + getName());
 	}
 
+    public void TypeParameterDecl.generateMaude(java.io.PrintStream stream) {
+        stream.println("*** Type parameter " + getName());
+    }
+
 	public void TypeSynDecl.generateMaude(java.io.PrintStream stream) {
 		stream.println("*** Type synonym: Datatype " + getName());
 	}
@@ -92,7 +96,7 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("call(@ \"" + var + "_future\" ; ");
+        stream.print("call(@ \".staticfuture\" ; ");
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
@@ -105,7 +109,7 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
-        stream.print(") ; get( @ \"" + var + "_future\" ; @ \"" + var + "\") ");
+        stream.print(") ; get( @ \".staticfuture\" ; @ \"" + var + "\") ");
     }
 
     public void GetExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
@@ -346,14 +350,11 @@ aspect GenerateMaude {
             stream.print(")");
         }
         stream.print(", Att: ");
-        if (getBlock().getNumVar() == 0) {
-            stream.print("noSubst");
-        } else {
-            inlist = false;
-            for (VarDecl var : getBlock().getVars()) {
-                if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + var.getName() + "\" |-> null ");
-            }
+        inlist = false;
+        stream.print("@ \".method\" |-> \"str\"[\"" + getName() + "\"], ");
+        stream.print("@ \".staticfuture\" |-> null");
+        for (VarDecl var : getBlock().getVars()) {
+            stream.print(", @ \"" + var.getName() + "\" |-> null ");
         }
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
@@ -372,8 +373,8 @@ aspect GenerateMaude {
             // give warnings about control paths not returning values
             // otherwise.
             Access returnType = getReturnType();
-            if (returnType instanceof DataTypeUse
-                && ((DataTypeUse)returnType).getName().equals("Void")
+            if (returnType instanceof IdUse
+                && ((IdUse)returnType).getName().equals("Void")
                 // the run method has no place to return anything to
                 && !amRunMethod && !amInitMethod)
             {

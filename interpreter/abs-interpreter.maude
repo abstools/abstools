@@ -784,7 +784,7 @@ fmod ABS-CONFIGURATION is
   op makeProcess : String MMtd Label DataList -> Process .
 
   eq makeProcess(M, (MS, < M : Method | Param: AL, Att: S, Code: SL >), N, DL) =
-    { @ ".label" |-> N, @ ".method" |-> "str"[M], S | $assign(AL ; DL) ; SL } .
+    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
   eq makeProcess(M, MS, N, DL) = notFound [owise] .
 
   --- Terms of sort Object represent objects in the run-time configuration.
@@ -795,13 +795,13 @@ fmod ABS-CONFIGURATION is
 
   --- Terms that represent futures.
   ---
-  op <_: Future | Completed:_, References:_, Value:_> :
-    Label Bool Nat Data -> Future
-    [ctor format (nr d d g ++r ir o  r i o  r i o--  r on)] .
+  op <_: Future | Name:_, Completed:_, References:_, Value:_> :
+    Label String Bool Nat Data -> Future
+    [ctor format (nr d d g ++r ir o  r i o  r i o  r i o--  r on)] .
 
   --- Completed futures without references can be removed.
   ---
-  eq < N : Future | Completed: true, References: 0, Value: D > = none .
+  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
 
   --- Define Classes.
   --- Class declaration.
@@ -875,7 +875,7 @@ fmod ABS-EVAL is
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
-  eq completed(L, < L : Future | Completed: B, References: N, Value: D > CN) = B .
+  eq completed(L, < L : Future | Name: Q, Completed: B, References: N, Value: D > CN) = B .
   eq completed(L, CN) = false [owise] .
 
   op eval : Expr Subst Configuration -> Data .
@@ -1219,11 +1219,20 @@ mod ABS-SIMULATOR is
   ---
   rl
     < O : C |  Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: true, References: G, Value: D >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
   =>
     < O : C |  Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: true, References: G, Value: D >
-    [label receive-comp] .
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+    [label receive-comp-label] .
+
+  crl
+    < O : C |  Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+  =>
+    < O : C |  Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+  if N = (S :: L)[A]
+    [label receive-comp-var] .
 
 
   --- local-reply
@@ -1275,6 +1284,7 @@ mod ABS-SIMULATOR is
   =>
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if N := label(O, F) /\ O = eval(E, (S :: L), none)
       [label remote-async-self-call] .
 
@@ -1283,7 +1293,7 @@ mod ABS-SIMULATOR is
   ---
   crl
     < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Completed: false, References: G, Value: null >
+    < N : Future | Name: Q, Completed: false, References: G, Value: null >
   =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
@@ -1291,7 +1301,7 @@ mod ABS-SIMULATOR is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Completed: true, References: G, Value: eval(E, (S :: L), none) >
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
   if N == L[@ ".label"]
       [label return] .
 
@@ -1307,7 +1317,7 @@ mod ABS-SIMULATOR is
   =
     < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Completed: false, References: 1, Value: null >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
     [label transport-imsg] .
 
   --- mark
@@ -1315,10 +1325,10 @@ mod ABS-SIMULATOR is
   --- Mark a label in use.
   crl
     < O : C | Att: S, Pr: { L | mark(A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: G, Value: D >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =>
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: G + 1, Value: D >
+    < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
   if N = (S :: L)[A]
       [label mark] .
 
@@ -1331,10 +1341,10 @@ mod ABS-SIMULATOR is
   --- nice decrement operator.
   crl
     < O : C | Att: S, Pr: { L | free(A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: G, Value: D >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =>
     < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Completed: CO, References: sd(G, 1), Value: D >
+    < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
   if N = (S :: L)[A]
       [label free] .
 

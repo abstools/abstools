@@ -82,7 +82,7 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	DATA TYPEIDENTIFIER LT datatypeuse_list.p GT LBRACE data_constructor_list.l? RBRACE {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
+	DATA TYPEIDENTIFIER LT datatypeparam_list.p GT LBRACE data_constructor_list.l? RBRACE {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
 	| DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DataTypeDecl(TYPEIDENTIFIER, l); :}
   ;
 
@@ -138,6 +138,10 @@ DataTypeUse datatypeuse =
     | TYPEIDENTIFIER {: return new DataTypeUse(TYPEIDENTIFIER) ; :}
     ;
 
+TypeParameterDecl datatypeparam =
+    TYPEIDENTIFIER {: return new TypeParameterDecl(TYPEIDENTIFIER); :}
+    ;
+
 Access type_exp =
 	  TYPEIDENTIFIER.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
 	| TYPEIDENTIFIER.id 		{: return new UnresolvedTypeUse(id); :}
@@ -190,6 +194,11 @@ List datatypeuse_list =
     | datatypeuse_list.l COMMA datatypeuse.i        {: return l.add(i); :}
     ;
 
+
+List datatypeparam_list =
+     datatypeparam.p {: return new List().add(p); :}
+   | datatypeparam_list.l COMMA datatypeparam.p {: return l.add(p); :}
+   ;
 
 Method method = 
 	  methodsig.ms block.b {: return new Method(ms.getName(), ms.getReturnType(), ms.getParams(), b); :}
@@ -325,6 +334,7 @@ PureExp data_constructor_exp =
 
 VarOrFieldUse var_ref =
     IDENTIFIER            {: return new VarUse(IDENTIFIER) ; :}
+    | THIS                {: return new ThisExp() ; :}
 	| THIS DOT IDENTIFIER   {: return new FieldUse(IDENTIFIER) ; :}
 	;
 
