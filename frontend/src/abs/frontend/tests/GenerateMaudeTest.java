@@ -19,7 +19,9 @@ public class GenerateMaudeTest {
             try {
                 m = parse(arg);
             } catch (Error err) {
-				System.err.println(arg + ":" + err.getMessage());
+				System.err.println("Parsing of " + arg + " failed with Error");
+				System.err.println(err);
+				err.printStackTrace(System.err);
                 return;
             } catch (Exception e) {
 				System.err.println("Parsing of " + arg +  " failed with Exception");
