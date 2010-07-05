@@ -54,9 +54,7 @@ public class ABSInteger implements ABSDataType {
     }
 
     public ABSBool notEq(ABSInteger o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(o.value.compareTo(this.value) != 0);
+        return eq(o).negate();
     }
     
     public ABSBool gt(ABSInteger i) {

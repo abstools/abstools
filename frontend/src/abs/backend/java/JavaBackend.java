@@ -21,6 +21,7 @@ import AST.JavaParser;
 import AST.Program;
 import abs.backend.java.lib.ABSBool;
 import abs.backend.java.lib.ABSInteger;
+import abs.backend.java.lib.ABSString;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
@@ -111,6 +112,7 @@ public class JavaBackend {
         final Map<String, String> res = new HashMap<String,String>();
         res.put("Int",ABSInteger.class.getName());
         res.put("Bool",ABSBool.class.getName());
+        res.put("String",ABSString.class.getName());
         return res;
     }
 

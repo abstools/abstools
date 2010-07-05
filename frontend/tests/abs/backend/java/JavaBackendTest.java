@@ -146,9 +146,14 @@ public class JavaBackendTest {
     
     @Test
     public void testStringLit() {
-//        assertValid("data String { } { String s; s = \"Test\"; }");
+        assertValid("data String { } { String s; s = \"Test\"; }");
     }
     
+    @Test
+    public void testStringCompareOps() {
+        assertValid("data String { } data Bool {} { Bool b; b = \"Test\" == \"Test\"; }");
+        assertValid("data String { } data Bool {} { Bool b; b = \"Test\" != \"Test\"; }");
+    }
 
     void assertEqual(String absCode, String javaCode) {
         assertEqual(absCode, javaCode,null);
