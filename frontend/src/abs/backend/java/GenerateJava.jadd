@@ -2,6 +2,7 @@
 
 import java.io.*;
 import abs.backend.java.*;
+import abs.backend.java.lib.*;
 import abs.frontend.ast.*;
 
 aspect GenerateJava {
@@ -172,7 +173,7 @@ aspect GenerateJava {
     }
 
     public void DataTypeUse.generateJava(PrintStream stream) {
-        stream.print(getName());
+        stream.print(JavaBackend.getJavaType(this));
     }
 
     public void InterfaceTypeUse.generateJava(PrintStream stream) {
@@ -220,15 +221,23 @@ aspect GenerateJava {
     }
     
     public void BoolLiteral.generateJava(PrintStream stream) {
-        stream.print(getContent());
+        stream.print(ABSBool.class.getName());
+        stream.print(".fromBoolean(");
+        stream.print(getContent().toLowerCase());
+        stream.print(")");
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(ABSInteger.class.getName());
+        stream.print(".fromString(\"");
+        stream.print(getContent());
+        stream.print("\")");
     }
 
     public void StringLiteral.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print('"');
+        stream.print(getContent());
+        stream.print('"');
     }
 
     public void NullExp.generateJava(PrintStream stream) {
@@ -236,67 +245,108 @@ aspect GenerateJava {
     }
 
     public void ThisExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("this");
     }
 
     public void MinusExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getOperand().generateJava(stream);
+        stream.print(".negate()");
     }
 
     public void NegExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getOperand().generateJava(stream);
+        stream.print(".negate()");
     }
 
     public void AddAddExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".add(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
 
     public void SubAddExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".subtract(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
 
     public void DivMultExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".divide(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void ModMultExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".mod(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void MultMultExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".multiply(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void AndBoolExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".and(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void OrBoolExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".or(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void EqExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".eq(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void NotEqExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".notEq(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void GTEQExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".gtEq(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void GTExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".gt(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void LTEQExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".ltEq(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public void LTExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getLeft().generateJava(stream);
+        stream.print(".lt(");
+        getRight().generateJava(stream);
+        stream.print(")");
     }
     
     public String ASTNode.incIndent(String indent) {

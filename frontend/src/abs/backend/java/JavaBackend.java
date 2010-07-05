@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -17,18 +19,25 @@ import AST.BytecodeParser;
 import AST.CompilationUnit;
 import AST.JavaParser;
 import AST.Program;
+import abs.backend.java.lib.ABSBool;
+import abs.backend.java.lib.ABSInteger;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.PureExp;
 import abs.frontend.parser.Main;
 
 public class JavaBackend {
     private static String testCode() {
-        return 
+        return "data Bool { }\n data Int { }\n" +
                "interface A { }\n" +
                "class B implements A { } \n" +
                "data Void { }\n" +
                "def A f() = null\n" +
                "{ " +
-               "  A a; a = null;"+
+               "  A a; Int i; Bool b; a = null; " +
+               "  i = 5;" +
+               "  i = i + 4;" +
+               "  b = True; "+
                "}";
     }
     
@@ -95,5 +104,22 @@ public class JavaBackend {
         
         return tmpFile;
     }
+    
+    private static final Map<String, String> dataTypeMap = initDataTypeMap();
+    
+    private static Map<String, String> initDataTypeMap() {
+        final Map<String, String> res = new HashMap<String,String>();
+        res.put("Int",ABSInteger.class.getName());
+        res.put("Bool",ABSBool.class.getName());
+        return res;
+    }
 
+
+    public static String getJavaType(DataTypeUse absType) {
+        String res = dataTypeMap.get(absType.getName());
+        if (res != null)
+            return res;
+        return absType.getName();
+    }
+    
 }

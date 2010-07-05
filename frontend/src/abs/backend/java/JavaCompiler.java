@@ -1,5 +1,7 @@
 package abs.backend.java;
 
+import java.util.Collection;
+
 import AST.*;
 
 /**
@@ -10,13 +12,16 @@ import AST.*;
  *
  */
 class JavaCompiler extends Frontend {
+    private Collection errors;
+    
   public static void main(String... args) {
     if(!compile(args))
       System.exit(1);
   }
-
+  
   public static boolean compile(String... args) {
-    return new JavaCompiler().process(
+      JavaCompiler compiler = new JavaCompiler();
+      boolean res = compiler.process(
         args,
         new BytecodeParser(),
         new JavaParser() {
@@ -25,7 +30,18 @@ class JavaCompiler extends Frontend {
           }
         }
     );
+      if (compiler.errors != null) {
+          throw new RuntimeException(compiler.errors.iterator().next().toString());
+      }
+    return res;
   }
+
+  @Override
+  protected void processErrors(Collection errors, CompilationUnit unit) {
+      this.errors = errors;
+      super.processErrors(errors, unit);
+  }
+  
   protected void processNoErrors(CompilationUnit unit) {
     unit.transformation();
     unit.generateClassfile();
