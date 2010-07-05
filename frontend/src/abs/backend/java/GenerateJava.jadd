@@ -137,11 +137,13 @@ aspect GenerateJava {
     }
 
     public void ReturnStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(indent+"return ");
+        getRetExp().generateJava(stream);
+        stream.println(";");
     }
 
     public void SkipStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.println(";");
     }
 
     public void SuspendStmt.generateJava(String indent, PrintStream stream) {
@@ -149,7 +151,10 @@ aspect GenerateJava {
     }
 
     public void WhileStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(indent+"while (");
+        getCondition().generateJava(stream);
+        stream.print(".toBoolean())");
+        getBody().generateJava(indent,stream);
     }
     
 

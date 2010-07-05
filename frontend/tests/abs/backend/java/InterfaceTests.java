@@ -4,11 +4,6 @@ import org.junit.Test;
 
 public class InterfaceTests extends JavaBackendTest {
     @Test
-    public void testEmptyBlock() {
-        assertValid("{ }");
-    }
-
-    @Test
     public void testEmptyClass() {
         assertEqual("class A { }", "class A implements ABSClassType { }");
     }
@@ -37,11 +32,6 @@ public class InterfaceTests extends JavaBackendTest {
         assertValid("interface I { } { I x; }");
     }
 
-    @Test
-    public void testEmptyStmt() {
-        assertValid("{ ; }");
-    }
-    
 
 
 }

@@ -4,7 +4,7 @@ package abs.backend;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import abs.backend.java.ExpressionTests;
+import abs.backend.java.StmtTests;
 import abs.backend.java.InterfaceTests;
 import abs.backend.java.PrimitiveTests;
 
@@ -12,7 +12,7 @@ import abs.backend.java.PrimitiveTests;
 @Suite.SuiteClasses( {
         PrimitiveTests.class,
         InterfaceTests.class,
-        ExpressionTests.class }
+        StmtTests.class }
         )
 public class AllTests {
 }
