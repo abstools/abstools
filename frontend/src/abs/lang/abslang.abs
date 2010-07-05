@@ -1,0 +1,18 @@
+/*
+  This file defines the predefined data types of ABS as described
+  in the ABS user guide.
+*/
+
+Bool { True; False; }
+
+Int { }
+
+Void { }
+
+String { }
+
+/* 
+  The following definitions are not yet described in the ABS user guide
+*/
+
+Opt<A> { None; Some(A); }
