@@ -201,7 +201,7 @@ List datatypeparam_list =
    ;
 
 Method method = 
-	  methodsig.ms block.b {: return new Method(ms.getName(), ms.getReturnType(), ms.getParams(), b); :}
+	  methodsig.ms block.b {: return new Method(ms.getName(), ms.getReturnTypeNoTransform(), ms.getParamsNoTransform(), b); :}
     ;
 
 MethodSig methodsig =
