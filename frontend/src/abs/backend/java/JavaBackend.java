@@ -28,7 +28,7 @@ public class JavaBackend {
                "data Void { }\n" +
                "def A f() = null\n" +
                "{ " +
-               "  A a; X x;"+
+               "  A a; a = null;"+
                "}";
     }
     

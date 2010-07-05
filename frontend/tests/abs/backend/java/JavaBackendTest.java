@@ -47,6 +47,21 @@ public class JavaBackendTest {
                     "class C implements ABSClassType, I { }");
     }
 
+    @Test
+    public void testVarDeclInterface() {
+        assertValid("interface I { } { I x; }");
+    }
+
+    @Test
+    public void testEmptyStmt() {
+        assertValid("{ ; }");
+    }
+    
+    @Test
+    public void testNullLit() {
+        assertValid("interface I { } { I i; i = null; }");
+    }
+
     void assertEqual(String absCode, String javaCode) {
         assertEqual(absCode, javaCode,null);
     }
@@ -68,8 +83,18 @@ public class JavaBackendTest {
     String getJavaCode(String absCode) {
         try {
         InputStream in = getInputStream(absCode);
-        Model model;
+        Model model = null;
+        try {
             model = Main.parse(in);
+        } catch (Exception e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+        
+        if (model.hasErrors()) {
+            Assert.fail(model.getErrors().getFirst().getMsgString());
+            return null;
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String res = out.toString();
@@ -77,7 +102,7 @@ public class JavaBackendTest {
         res = res.replaceAll("[ ]+", " ");
         res = res.trim();
         return res;
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
             Assert.fail(e.getMessage());
             return null;
         }
