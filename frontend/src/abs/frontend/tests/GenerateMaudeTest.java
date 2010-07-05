@@ -14,7 +14,7 @@ public class GenerateMaudeTest {
 	 */
 	public static void main(String[] args) {
 		Model m = null;
-        //if (args.length == 0) args = new String[]{"PeerToPeer.abs"};
+        //if (args.length == 0) args = new String[]{"/Users/rudi/Source/hats/Tools/ABS/trunk/frontend/tests/abssamples/PeerToPeer.abs"};
         for (String arg : args) {
             try {
                 m = parse(arg);
@@ -39,7 +39,7 @@ public class GenerateMaudeTest {
 		ABSScanner scanner = new ABSScanner(reader);
 		Model m = (Model)parser.parse(scanner);
 		reader.close();
-		return m; 
+		return m;
 	}
 }
 
