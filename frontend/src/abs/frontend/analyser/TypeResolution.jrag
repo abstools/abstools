@@ -58,7 +58,7 @@ aspect TypeResolution {
         when (declaration().isDataType())
             to DataTypeUse new DataTypeUse(getName());
         when (declaration().isTypeSyn())
-            to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue());
+            to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue().getName());
     }
     
 }
