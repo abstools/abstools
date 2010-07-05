@@ -29,6 +29,10 @@ public class ABSBool implements ABSDataType {
         return fromBoolean(value || b.value);
     }
     
+    public boolean toBoolean() {
+        return value;
+    }
+    
     public static ABSBool fromBoolean(boolean b) {
         if (b)
             return TRUE;

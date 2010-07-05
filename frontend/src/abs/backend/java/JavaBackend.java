@@ -38,7 +38,10 @@ public class JavaBackend {
                "  A a; Int i; Bool b; a = null; " +
                "  i = 5;" +
                "  i = i + 4;" +
-               "  b = True; "+
+               "  b = True; " +
+               "  if (b) { " +
+               "  } else {" +
+               "  }"+
                "}";
     }
     

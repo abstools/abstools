@@ -79,7 +79,7 @@ aspect GenerateJava {
     }
     
     public void Block.generateJava(String indent, PrintStream stream) {
-        stream.println("{ ");
+        stream.println(" {");
         String newIndent = incIndent(indent);
         for (VarDecl varDecl : getVars()) {
             varDecl.generateJava(newIndent,stream);
@@ -126,7 +126,14 @@ aspect GenerateJava {
     }
 
     public void IfStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(indent+"if (");
+        getCondition().generateJava(stream);
+        stream.print(".toBoolean())");
+        getThen().generateJava(indent,stream);
+        if (hasElse()) {
+            stream.print(indent+"else");
+            getElse().generateJava(indent,stream);
+        }
     }
 
     public void ReturnStmt.generateJava(String indent, PrintStream stream) {
