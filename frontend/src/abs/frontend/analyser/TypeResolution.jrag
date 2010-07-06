@@ -4,17 +4,20 @@ aspect TypeResolution {
   
     // Find the type declaration for a type use.
   
-    syn lazy boolean TypeDecl.isInterface();
-    syn lazy boolean TypeDecl.isDataType();
-    syn lazy boolean TypeDecl.isTypeSyn();
+    syn boolean TypeDecl.isInterface();
+    syn boolean TypeDecl.isDataType();
+    syn boolean TypeDecl.isTypeSyn();
+    syn boolean TypeDecl.isTypeParameter();
   
     eq TypeDecl.isInterface() = false;
     eq TypeDecl.isDataType() = false;
     eq TypeDecl.isTypeSyn() = false;
+    eq TypeDecl.isTypeParameter() = false;
 
     eq InterfaceDecl.isInterface() = true;
     eq DataTypeDecl.isDataType() = true;
     eq TypeSynDecl.isTypeSyn() = true;
+    eq TypeParameterDecl.isTypeParameter() = true;
   
     // Declaration of *decl*
 
@@ -59,6 +62,8 @@ aspect TypeResolution {
             to DataTypeUse new DataTypeUse(getName());
         when (declaration().isTypeSyn())
             to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue().getName());
+        when (declaration().isTypeParameter())
+        	to TypeParameterUse new TypeParameterUse(getName());
     }
     
     syn lazy TypeDecl Model.localLookupDataConstructor(DataConstructorExp e) {
