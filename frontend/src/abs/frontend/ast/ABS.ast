@@ -22,8 +22,8 @@ TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ;
 
 
 abstract	VarOrFieldDecl  ::= <Name> Access; 
-VarDecl:	VarOrFieldDecl; 
-FieldDecl:	VarOrFieldDecl; 
+VarDecl:	VarOrFieldDecl  ::= [InitExp:PureExp];
+FieldDecl:	VarOrFieldDecl  ::= [InitExp:PureExp];
 ParamDecl:	VarOrFieldDecl;
 
 Method  ::= <Name> ReturnType:Access Param:ParamDecl* Block;

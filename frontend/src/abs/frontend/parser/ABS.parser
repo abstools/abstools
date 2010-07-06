@@ -78,7 +78,8 @@ List var_decl_list =
     ;
 
 VarDecl var_decl = 
-    type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t); :}
+    type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new VarDecl(i,t, new Opt(e)); :}
+    | type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t, new Opt()); :}
     ;
 
 DataTypeDecl  datatype_decl = 
@@ -155,7 +156,8 @@ List field_decl_list =
 	; 
 
 FieldDecl field_decl = 
-    type_exp.t IDENTIFIER.i  {: return new FieldDecl(i,t); :}
+    type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e)); :}
+    | type_exp.t IDENTIFIER.i  {: return new FieldDecl(i,t, new Opt()); :}
     ;
 
 

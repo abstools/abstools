@@ -85,6 +85,7 @@ public class ParserTest {
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
   		assertParseOk("{ Fut(I) x ; J z ; }") ;	//need trailing semicolon here. 
 		assertParseOk("{ Fut(I) x ; Fut(Fut(I)) y ;  J z ; K w  ; }") ;	
+		assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable decls with/without initializers
 		//
 }
 	
@@ -108,7 +109,9 @@ public class ParserTest {
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
+		assertParseOk("class FooClass  implements Foo { T x ; }"); //field
 		assertParseOk("class FooClass  implements Foo { T x ; { x = a ; }  }"); //init block
+		assertParseOk("class FooClass  implements Foo { T x = a ; }"); //field with initializer
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
 		assertParseOk(bbclass);
 		assertParseError("class FooClass implements {}" + "{}" );
