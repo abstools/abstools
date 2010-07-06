@@ -188,21 +188,17 @@ aspect GenerateMaude {
     public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
        DataTypeDecl decl = (DataTypeDecl) lookupDataConstructor(this);
            
-       if (decl.getName().equals("Bool")) {
-           stream.print("\"bool\"[" + getConstructor().toLowerCase() + "] ");
+       boolean inlist = false;
+       stream.print("\"" + getConstructor() + "\"[ ");
+       if (getNumParam() == 0) {
+           stream.print("emp ");
        } else {
-           boolean inlist = false;
-           stream.print("\"" + getConstructor() + "\"[ ");
-           if (getNumParam() == 0) {
-               stream.print("emp ");
-           } else {
-               for (PureExp param : getParams()) {
-                   if (inlist) stream.print(":: "); else inlist = true;
-                   param.generateMaude(stream);
-               }
+           for (PureExp param : getParams()) {
+               if (inlist) stream.print(":: "); else inlist = true;
+               param.generateMaude(stream);
            }
-           stream.print("] ");
        }
+       stream.print("] ");
     }
 
     public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
@@ -322,10 +318,10 @@ aspect GenerateMaude {
         // rewriting rule, not a tree mutation while generating source
         // code.
         if (hasInitBlock()) {
-            addMethod(new Method(".init", new DataTypeUse("Void"),
+            addMethod(new Method(".init", new DataTypeUse("Unit"),
                                  new List<ParamDecl>(), getInitBlock().copy()));
         } else {
-            addMethod(new Method(".init", new DataTypeUse("Void"),
+            addMethod(new Method(".init", new DataTypeUse("Unit"),
                                  new List<ParamDecl>(), new Block()));
         }
         inlist = false;
@@ -368,7 +364,7 @@ aspect GenerateMaude {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            // KLUDGE (rs 2010-06-15): Emit this for "Void" methods for
+            // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for
             // now, since we don't have an empty `return' statement
             // currently.  Ideally we should flow-analyze where to
             // insert a dummy return statement for Void methods, and
@@ -376,7 +372,7 @@ aspect GenerateMaude {
             // otherwise.
             Access returnType = getReturnType();
             if (returnType instanceof IdUse
-                && ((IdUse)returnType).getName().equals("Void")
+                && ((IdUse)returnType).getName().equals("Unit")
                 // the run method has no place to return anything to
                 && !amRunMethod && !amInitMethod)
             {
