@@ -92,7 +92,7 @@ TypeSynDecl  typesyn_decl =
 
 
 FunctionDecl  function_decl = 
-	DEF datatypeuse.t IDENTIFIER.fn LT datatypeuse_list.p GT LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
+	DEF datatypeuse.t IDENTIFIER.fn LT datatypeparam_list.p GT LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
 	| DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef {: return new FunctionDecl(fn, t, l, ef); :}
 	; 
 
