@@ -24,35 +24,50 @@ aspect TypeResolution {
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
     syn lazy TypeDecl TypeUse.declaration();  
+    //   Definitions of *decl*
+    eq TypeUse.declaration() = lookup(getName());
+  
 
     // Declaration of *lookup*
     // Finds a declaration (TypeDecl) based on a name, or attribute
     // UnknownDecl if not found
-    syn lazy TypeDecl Model.lookup(String name);
-  
-    // ***Implementation***
-  
-    //   Definitions of *decl*
-    eq TypeUse.declaration() = lookup(getName());
-  
     //   Definitions of *lookup*
     eq Model.getDecl().lookup(String name) = localLookup(name);
     eq Model.getBlock().lookup(String name) = localLookup(name); // Model's main block
-    eq Model.lookup(String name) = localLookup(name);
+    eq ParametricDataTypeDecl.getDataConstructor().lookup(String name) = localLookup(name);
+    eq ParametricFunctionDecl.getFunDef().lookup(String name) = localLookup(name);
+    eq ParametricFunctionDecl.getTypeUse().lookup(String name) = localLookup(name);
+    eq ParametricFunctionDecl.getParam().lookup(String name) = localLookup(name);
   
+    // ***Implementation***
     
     // Expose *lookup* at various places in the AST
-    // Technically, this re-uses definition from Model.InterfaceDecl
-    inh TypeDecl TypeUse.lookup(String name); 
-    // FIXME: inh TypeDecl UnresolvedTypeUse.lookup(String name);
+    inh TypeDecl TypeUse.lookup(String name);
+    inh TypeDecl ParametricDataTypeDecl.lookup(String name);
+    inh TypeDecl ParametricFunctionDecl.lookup(String name);
 
-    // *localLookup* - looks through the local declarations in a block
-
+    // *localLookup* - look through the global declarations in the model
     syn lazy TypeDecl Model.localLookup(String name) {
         for (Decl d : getDecls())
             if (d instanceof TypeDecl && d.getName().equals(name))
                 return (TypeDecl)d;
         return unknownDecl();
+    }
+    // look through local declarations in parametric datatype, or defer
+    // to model
+    syn lazy TypeDecl ParametricDataTypeDecl.localLookup(String name) {
+        for (TypeParameterDecl d : getTypeParameters())
+            if (d.getName().equals(name))
+                return d;
+        return lookup(name);
+    }
+    // look through local declarations in parametric function, or defer
+    // to model
+    syn lazy TypeDecl ParametricFunctionDecl.localLookup(String name) {
+        for (TypeParameterDecl d : getTypeParameters())
+            if (d.getName().equals(name))
+                return d;
+        return lookup(name);
     }
     
     rewrite UnresolvedTypeUse {

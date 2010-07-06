@@ -122,6 +122,12 @@ public class ParserTest {
 		assertParseOk("data Foo { XCons ; YCons ; }"); 
 		assertParseOk("data IntList { IntNil ; Cons(Int, IntList) ; }");
 	}
+	
+	@Test
+		public void testParametricDatatypeDecl() {
+		assertParseOk("data List<A> { Nil ; Cons(A, List<A>); }");
+		assertParseOk("data Pair<A, B> { Pair(A, B); }");
+	}
 
    @Test
 		public void testFunctionDecl() {
@@ -134,6 +140,11 @@ public class ParserTest {
 		//using nested let
 		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x)");
 	}
+    @Test
+    	public void testParametricFunctionDecl() {
+    	assertParseOk("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); }");
+    	assertParseOk("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; }");
+    }
 
 	@Test 
 		public void testPureExp(){ 
