@@ -1,3 +1,5 @@
+data Bool { True; False; } // builtin
+
 def Int length(File file) =  
   case file {
     NilPacket => 0 ; 

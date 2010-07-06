@@ -1,5 +1,8 @@
 //$Id$
 
+data Bool { True; False; } // builtin
+
+
 class Foo {}
 //Main
 {
@@ -21,7 +24,7 @@ if (a) { skip ; skip ; }  ;
 a = b ; 
 a = b.get ;
 a = null ; 
-a = true ;  
+a = True ;  
 a = "foo" ;
 
 a = new Foo() ; 
@@ -41,12 +44,12 @@ await b? & c & d;
 skip ; 
 
 //If-then-else 
-if (true) skip ; else skip ; 
+if (True) skip ; else skip ; 
 //sblock
-if (true) {skip ; skip ;} else skip  ; 
+if (True) {skip ; skip ;} else skip  ; 
 
 //optional else 
-if (true) skip ; 
+if (True) skip ; 
 
 //nested
 if (x)  
@@ -62,7 +65,7 @@ if (x)
   if (y)  
     a = b ; 
 
-if (true) {a = b ; c = d ;} else skip ; 
+if (True) {a = b ; c = d ;} else skip ; 
 
 suspend ; 
 

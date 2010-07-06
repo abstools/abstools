@@ -11,8 +11,6 @@ import java.io.PrintWriter;
 
 import junit.framework.Assert;
 
-import org.junit.Test;
-
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 

@@ -283,13 +283,10 @@ PureExp factor =
 
 LiteralExp literal = 
 	  int_literal.i              {: return i ; :} 
-	| bool_literal.b                 {: return b ; :} 
 	| string_literal.s                 {: return s ; :} 
 	;
 
 // Literals 
-
-BoolLiteral bool_literal = 	BOOLLITERAL.b  {: return new BoolLiteral(b); :} ;
 
 StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :} ;
 

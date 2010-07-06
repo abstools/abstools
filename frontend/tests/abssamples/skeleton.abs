@@ -1,5 +1,7 @@
 //$Id: skeleton.abs 1007 2010-01-19 10:33:57Z atorjusen $
 
+data Bool { True; False; } // builtin
+
 //Interface declarations, extends is optional 
 interface Foo1 {} 
 interface Foo2 {}
@@ -64,8 +66,8 @@ class BoundedBuffer implements Buffer {
 	x = y ; 
 	x = null ; 
 	x = y.get ;
-	x = true ;
-	x = false ; 
+	x = True ;
+	x = False ; 
 	/* Assignments to expressions 
 	   with side effects.
 	 */
@@ -80,13 +82,13 @@ class BoundedBuffer implements Buffer {
 	await y? ; 
 	await y? & z? ; 
 	await y? & z? & w?  ;
-	await true ; 
+	await True ; 
 	//skip, suspend, if_th_else
 	skip ; 
 	suspend ; 
-	if (x) y = true ; 
-	if (x) y = true ; else y = false ;
-	if (x) y = true ; else { y = false ; x = null ; } 
+	if (x) y = True ; 
+	if (x) y = True ; else y = False ;
+	if (x) y = True ; else { y = False ; x = null ; } 
 	
 
 	//Stmtblock

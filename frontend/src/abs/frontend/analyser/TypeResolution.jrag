@@ -61,6 +61,32 @@ aspect TypeResolution {
             to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue().getName());
     }
     
+    syn lazy TypeDecl Model.localLookupDataConstructor(DataConstructorExp e) {
+        for (Decl d : getDecls()) {
+            if (d instanceof DataTypeDecl) {
+                DataTypeDecl dataDecl = (DataTypeDecl)d;
+                for (DataConstructor c : dataDecl.getDataConstructors()) {
+                    if (c.getName().equals(e.getConstructor())) {
+                        // FIXME: check argument types
+                        return dataDecl;
+                    }
+                }
+            }
+        }
+        return unknownDecl();
+    }
+    
+    syn lazy TypeDecl Model.lookupDataConstructor(DataConstructorExp c);
+    eq Model.lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
+    eq Model.getDecl().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
+    eq Model.getBlock().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
+    
+    inh TypeDecl DataConstructorExp.lookupDataConstructor(DataConstructorExp c);
+    
+    syn lazy TypeDecl DataConstructorExp.declaration() {
+        return lookupDataConstructor(this);
+    }
+    
 }
 
 // Local Variables:

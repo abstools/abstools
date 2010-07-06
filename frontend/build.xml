@@ -158,12 +158,15 @@
 		<pathelement location="${build.dir}" />
 		<pathelement location="${ext.dir}/${junit.jar}" />
 		<pathelement location="${ext.dir}/beaver-rt-src.jar" />
+      <pathelement location="${ext.dir}/Java1.5Compiler.jar" />
 	</path>
 
 	<!-- suite file -->
 	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
    <property name="test.backend.suite.name" value="abs.backend.AllTests" />
 
+   <target name="tests-all" depends="tests-frontend, tests-backend" />
+   
    <target name="tests-backend" depends="compile">
       <junit fork="yes" haltonfailure="yes">
          <test name="${test.backend.suite.name}" />

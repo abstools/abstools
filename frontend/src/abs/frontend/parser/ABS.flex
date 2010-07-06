@@ -128,8 +128,6 @@ IntLiteral = 0 | [1-9][0-9]*
 {WhiteSpace}  { /* discard token */ }
 
 <YYINITIAL> {
-    "True"        { return sym(Terminals.BOOLLITERAL); }
-    "False"        { return sym(Terminals.BOOLLITERAL); }
     {TypeIdentifier}  { return sym(Terminals.TYPEIDENTIFIER); }	
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
 }

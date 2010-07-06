@@ -146,10 +146,6 @@ aspect GenerateMaude {
         stream.print("\"int\"[" + getContent() + "] ");
     }
 
-    public void BoolLiteral.generateMaude(java.io.PrintStream stream) {
-        stream.print("\"bool\"[" + getContent().toLowerCase() + "] ");
-    }
-
     syn String Unary.maudePrefixOperator();
     eq MinusExp.maudePrefixOperator() = "-";
     eq NegExp.maudePrefixOperator() = "~";
@@ -190,17 +186,23 @@ aspect GenerateMaude {
     }
 
     public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
-        boolean inlist = false;
-        stream.print("\"" + getConstructor() + "\"[ ");
-        if (getNumParam() == 0) {
-            stream.print("emp ");
-        } else {
-            for (PureExp param : getParams()) {
-                if (inlist) stream.print(":: "); else inlist = true;
-                param.generateMaude(stream);
-            }
-        }
-        stream.print("] ");
+       DataTypeDecl decl = (DataTypeDecl) lookupDataConstructor(this);
+           
+       if (decl.getName().equals("Bool")) {
+           stream.print("\"bool\"[" + getConstructor().toLowerCase() + "] ");
+       } else {
+           boolean inlist = false;
+           stream.print("\"" + getConstructor() + "\"[ ");
+           if (getNumParam() == 0) {
+               stream.print("emp ");
+           } else {
+               for (PureExp param : getParams()) {
+                   if (inlist) stream.print(":: "); else inlist = true;
+                   param.generateMaude(stream);
+               }
+           }
+           stream.print("] ");
+       }
     }
 
     public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
@@ -500,5 +502,5 @@ aspect GenerateMaude {
             stream.print("; $pop ");
         }
 	}
-
+	
 }

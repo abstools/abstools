@@ -21,12 +21,12 @@ public class StmtTests extends JavaBackendTest {
     
     @Test
     public void testIfStmt() {
-        assertValid("{ if (True) { } }");
+        assertValid("data Bool { True; False; } { if (True) { } }");
     }
    
     @Test
     public void testIfElseStmt() {
-        assertValid("{ if (True) { } else { } }");
+        assertValid("data Bool { True; False; } { if (True) { } else { } }");
     }
     
     @Test
@@ -36,7 +36,7 @@ public class StmtTests extends JavaBackendTest {
 
     @Test
     public void testWhileStmt() {
-        assertValid("{ while (True) { } }");
+        assertValid("data Bool { True; False; } { while (True) { } }");
     }
 
 }

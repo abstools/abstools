@@ -1,13 +1,15 @@
+data Bool { True; False; } 
+
 { 
-  if (x) y = true ; 
+  if (x) y = True ; 
   return null ; 
-  if (x)  y = true ;   else y = false ;   
+  if (x)  y = True ;   else y = False ;   
   return o!init(y) ; 
-  if (x) { y = true ; z = false ; } else y = false ;   
+  if (x) { y = True ; z = False ; } else y = False ;   
   return null ; }
 
 
-// 	 "if x then y = true else y = false",
-// 	 "if x then y = true else { y = false ; x = null ; } "};
+// 	 "if x then y = True else y = False",
+// 	 "if x then y = True else { y = False ; x = null ; } "};
 
 //   if 	

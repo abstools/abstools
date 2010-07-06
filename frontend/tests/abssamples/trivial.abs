@@ -1,5 +1,8 @@
 //$Id: trivial.abs 509 2009-10-20 13:27:47Z atorjusen $
 
+data Bool { True; False; } // builtin
+
+
 //Case 1 
 
 //program 
@@ -29,8 +32,8 @@ class Bar implements Foo, Baz {
     Foo fooRef1 ; 
     Fut(Foo) fooRef ; 
     //method*
-    Bool isOK () {Bool mVar ; skip ; return true ; }
-    Bool isNotOK () {Bool mVar ; skip ; return false ; }
+    Bool isOK () {Bool mVar ; skip ; return True ; }
+    Bool isNotOK () {Bool mVar ; skip ; return False ; }
 }
 
 {

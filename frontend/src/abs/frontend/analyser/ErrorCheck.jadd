@@ -58,6 +58,13 @@ aspect ErrorCheck {
     	}
     }
   }
+  
+  public void DataConstructorExp.collectErrors(SemanticErrorList c) {
+      super.collectErrors(c);
+      if (declaration().isUnknown()) {
+          c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATACONSTRUCTOR,getConstructor()));
+      }
+  }
 
 }
 

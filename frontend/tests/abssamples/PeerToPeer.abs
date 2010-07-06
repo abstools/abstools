@@ -4,7 +4,7 @@
 data Void {} // builtin  
 data String {} // builtin  
 data Int {} // builtin
-data Bool {} // builtin
+data Bool { True; False; } // builtin
 
 data Set<A> { EmptySet; Insert(A, Set<A>); }
 data List<A> { Nil; Cons(A, List<A>); }

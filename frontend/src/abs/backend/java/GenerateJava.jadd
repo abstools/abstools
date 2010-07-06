@@ -221,7 +221,16 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        DataTypeDecl decl = (DataTypeDecl) lookupDataConstructor(this);
+        
+        if (decl.getName().equals("Bool")) {
+            stream.print(ABSBool.class.getName());
+            stream.print(".fromBoolean(");
+            stream.print(getConstructor().toLowerCase());
+            stream.print(")");
+        } else {
+            throw new NotImplementedYetException(this);
+        }
     }
 
     public void FunVar.generateJava(PrintStream stream) {
@@ -230,13 +239,6 @@ aspect GenerateJava {
     
     public void LetExp.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
-    }
-    
-    public void BoolLiteral.generateJava(PrintStream stream) {
-        stream.print(ABSBool.class.getName());
-        stream.print(".fromBoolean(");
-        stream.print(getContent().toLowerCase());
-        stream.print(")");
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {

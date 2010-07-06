@@ -4,6 +4,7 @@ public enum ErrorMessage {
     CYCLIC_INHERITANCE("Cyclic inheritance chain for interface: %s"),
     UNKOWN_INTERFACE("Unknown interface: %s"),
     UNKOWN_DATATYPE("Unknown datatype: %s"),
+    UNKOWN_DATACONSTRUCTOR("Unknown datatype constructor: %s"),
     UNKOWN_INTERFACE_OR_DATATYPE("Unknown interface or datatype: %s"),
     DUPLICATE_TYPE_DECL("Duplicate type declaration: %s");
 

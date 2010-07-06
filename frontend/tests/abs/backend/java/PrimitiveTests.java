@@ -10,32 +10,32 @@ public class PrimitiveTests extends JavaBackendTest {
 
     @Test
     public void testBoolLit() {
-        assertValid("data Bool {  } { Bool b; b = True; b = False; }");
+        assertValid("data Bool { True; False; } { Bool b; b = True; b = False; }");
     }
 
     @Test
     public void testBoolNeg() {
-        assertValid("data Bool {  } { Bool b; b = ~True; }");
+        assertValid("data Bool { True; False; } { Bool b; b = ~True; }");
     }
     
     @Test
     public void testBoolAnd() {
-        assertValid("data Bool {  } { Bool b; b = True && False; }");
+        assertValid("data Bool { True; False; } { Bool b; b = True && False; }");
     }
 
     @Test
     public void testBoolOr() {
-        assertValid("data Bool {  } { Bool b; b = True || False; }");
+        assertValid("data Bool { True; False; } { Bool b; b = True || False; }");
     }
 
     @Test
     public void testBoolEq() {
-        assertValid("data Bool {  } { Bool b; b = True == False; }");
+        assertValid("data Bool { True; False; } { Bool b; b = True == False; }");
     }
 
     @Test
     public void testBoolNotEq() {
-        assertValid("data Bool {  } { Bool b; b = True != False; }");
+        assertValid("data Bool { True; False; } { Bool b; b = True != False; }");
     }
     
     
