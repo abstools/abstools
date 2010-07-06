@@ -395,11 +395,6 @@ aspect GenerateMaude {
         stream.print("skip ");
     }
 
-    public void EmptyStmt.generateMaude(java.io.PrintStream stream) {
-        stream.print("noStmt ");
-    }
-
-
     public void AssignStmt.generateMaude(java.io.PrintStream stream) {
         if (getValue() instanceof PureExp) {
             stream.print("assign( ");

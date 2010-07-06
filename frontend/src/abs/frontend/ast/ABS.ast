@@ -72,7 +72,6 @@ ExpressionStmt: Stmt	::= Exp:Exp;
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
-EmptyStmt: Stmt;
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
