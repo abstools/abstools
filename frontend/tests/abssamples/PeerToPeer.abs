@@ -77,12 +77,12 @@ type Filename = String
 type Filenames = Set<String> 
 type Packet = String 
 type File = List<Packet>
-type Catalog = List<Pair<IServer, Filenames> >
+type Catalog = List<Pair<Server, Filenames> >
 
 
 
 // Application functions
-def IServer findServer(File file, Catalog catalog) =
+def Server findServer(File file, Catalog catalog) =
   case catalog {
     Nil => null;
     Cons(Pair(server, files), rest) =>
@@ -90,31 +90,31 @@ def IServer findServer(File file, Catalog catalog) =
                                    False => findServer(file, rest); };
   }
 
-interface IServer {
+interface Server {
   Filenames enquire();
   Int getLength(Filename fId);
   Packet getPack(Filename fId, Int pNbr);
 }
 
 
-interface IPeer extends IClient, IServer { }
+interface Peer extends Client, Server { }
 
-interface INetwork {
-  List<IServer> getNeighbors(IPeer caller);
+interface Network {
+  List<Server> getNeighbors(Peer caller);
 }
 
-interface DB {
+interface DataBase {
   File getFile(Filename fId);
   Int getLength(Filename fId);
   Unit storeFile(Filename fId, File file);
   Filenames listFiles();
 }
 
-interface IClient {
-  Unit reqFile(IServer sId, Filename fId);
+interface Client {
+  Unit reqFile(Server sId, Filename fId);
 }
 
-class DataBase(Map<Filename, File> db) implements DB {
+class DataBase(Map<Filename, File> db) implements DataBase {
   File getFile(Filename fId) {
     return lookup(db, fId);
   }
@@ -132,10 +132,10 @@ class DataBase(Map<Filename, File> db) implements DB {
   }
 }
 
-class Node(DB db, Filename file) implements IPeer {
+class Node(DataBase db, Filename file) implements Peer {
   Catalog catalog;
-  List<IServer> myNeighbors;
-  INetwork admin;
+  List<Server> myNeighbors;
+  Network admin;
 
   {
     catalog = Nil;
@@ -145,8 +145,8 @@ class Node(DB db, Filename file) implements IPeer {
 
   Unit run() {
     Fut(Catalog) c ; 
-    Fut(List<IServer>) f;
-    IServer server ; 
+    Fut(List<Server>) f;
+    Server server ; 
 
     await admin != null;
     f = admin!getNeighbors(this);   // Asynchronous call to admin
@@ -161,7 +161,7 @@ class Node(DB db, Filename file) implements IPeer {
     }
   }
 
-  Unit setAdmin(INetwork admin) {
+  Unit setAdmin(Network admin) {
     this.admin = admin;
   }
 
@@ -188,7 +188,7 @@ class Node(DB db, Filename file) implements IPeer {
     return nth(f, pNbr);
   }
 
-  Catalog availFiles (List<IServer> sList) {
+  Catalog availFiles (List<Server> sList) {
     Catalog cat;
     Filenames fNames; 
     Fut(Filenames) fN;
@@ -208,7 +208,7 @@ class Node(DB db, Filename file) implements IPeer {
     return cat; 
   }
 
-  Unit reqFile(IServer sId, Filename fId) {
+  Unit reqFile(Server sId, Filename fId) {
     File file;
     Packet pack;
     Int lth;
@@ -230,10 +230,10 @@ class Node(DB db, Filename file) implements IPeer {
   }
 }
 
-class OurTopology(IPeer node0,   IPeer node1,   IPeer node2,   IPeer node3)
-implements INetwork
+class OurTopology(Peer node0,   Peer node1,   Peer node2,   Peer node3)
+implements Network
 {
-  List<IServer> getNeighbors(IPeer caller) {
+  List<Server> getNeighbors(Peer caller) {
     if (caller == node0) { return Cons(node1, Cons(node2, Nil)); }
     if (caller == node1) { return Cons(node3, Nil); }
     if (caller == node2) { return Cons(node0, Cons(node1, Cons(node3, Nil))); }
@@ -242,14 +242,14 @@ implements INetwork
 }
 
 { 
-  IPeer node0;
-  IPeer node1;
-  IPeer node2;
-  IPeer node3;
-  DB db0;
-  DB db1;
-  DB db2;
-  INetwork admin;
+  Peer node0;
+  Peer node1;
+  Peer node2;
+  Peer node3;
+  DataBase db0;
+  DataBase db1;
+  DataBase db2;
+  Network admin;
   // Map<Filename, File>
   db0 = new DataBase(InsertAssoc(Pair("file0",
       Cons("file", Cons("from", Cons("db0", Nil)))),
