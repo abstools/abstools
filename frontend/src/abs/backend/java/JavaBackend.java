@@ -32,7 +32,7 @@ public class JavaBackend {
         return "data Bool { }\n data Int { }\n" +
                "interface A { }\n" +
                "class B implements A { } \n" +
-               "data Void { }\n" +
+               "data Unit { }\n" +
                "def A f() = null\n" +
                "{ " +
                "  A a; Int i; Bool b; a = null; " +

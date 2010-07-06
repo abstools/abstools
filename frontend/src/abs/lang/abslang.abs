@@ -7,7 +7,7 @@ Bool { True; False; }
 
 Int { }
 
-Void { }
+Unit { }
 
 Unit { Unit; }
 

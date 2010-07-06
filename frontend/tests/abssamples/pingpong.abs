@@ -6,22 +6,22 @@
  *
  */
 
-data Void {}
+data Unit {}
 data String {}
 
 
 interface Ping {
 
-    Void init(Pong p)  ;
+    Unit init(Pong p)  ;
     String m(String m);
-    Void run()	;
+    Unit run()	;
 }
 
 interface Pong {
 
-    Void init(Ping p) ;
+    Unit init(Ping p) ;
     String m(String m);
-    Void run()	;
+    Unit run()	;
 
 }
 
@@ -30,16 +30,16 @@ class Ping  implements Ping {
     Pong pong ;
     String hello_pong ;
 
-    Void init(Pong p){
+    Unit init(Pong p){
 	
 	pong = p ; 
 	return null ;
    	}
 
 
-    Void run(){
+    Unit run(){
 
-      Void x; 
+      Unit x; 
       Fut(String) reply;
       
       reply = pong!m(hello_pong); 
@@ -63,14 +63,14 @@ class Pong implements Pong {
     Ping ping ;
     String hi_ping ;
 
-    Void init(Ping p){
+    Unit init(Ping p){
 	
 	ping = p ; return null ;
     }
 
-    Void run(){
+    Unit run(){
       
-      Void x;
+      Unit x;
       Fut(String) reply;
       
       reply = ping!m(hi_ping); 
@@ -95,7 +95,7 @@ class Pong implements Pong {
 {
     Ping ping;
     Pong pong;
-    Void x;
+    Unit x;
      
     ping = new Ping(); 
     pong = new Pong(); 

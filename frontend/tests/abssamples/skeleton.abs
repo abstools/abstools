@@ -24,8 +24,8 @@ interface Bar { }
 
 interface Buffer {
 
-    Void init(Foo f, Bar b)
-    Void append(Int i)
+    Unit init(Foo f, Bar b)
+    Unit append(Int i)
     Data remove()
 
 }
@@ -41,7 +41,7 @@ class BoundedBuffer implements Buffer {
 
     //Method list 
   
-    Void init(Foo x, Bar y){
+    Unit init(Foo x, Bar y){
 		
 	Int x;  Int y ; 
 
@@ -50,7 +50,7 @@ class BoundedBuffer implements Buffer {
     
     }
 	
-    Void append(Int i){ skip; return null ; }
+    Unit append(Int i){ skip; return null ; }
 
 }
 //MAIN

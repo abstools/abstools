@@ -1,7 +1,7 @@
 //$Id$ 
 
 //data type declarations 
-data Void {} // builtin  
+data Unit {} // builtin  
 data String {} // builtin  
 data Int {} // builtin
 data Bool { True; False; } // builtin
@@ -106,12 +106,12 @@ interface INetwork {
 interface DB {
   File getFile(Filename fId);
   Int getLength(Filename fId);
-  Void storeFile(Filename fId, File file);
+  Unit storeFile(Filename fId, File file);
   Filenames listFiles();
 }
 
 interface IClient {
-  Void reqFile(IServer sId, Filename fId);
+  Unit reqFile(IServer sId, Filename fId);
 }
 
 class DataBase(Map<Filename, File> db) implements DB {
@@ -123,7 +123,7 @@ class DataBase(Map<Filename, File> db) implements DB {
     return length(lookup(db,fId));
   }
 
-  Void storeFile(Filename fId, File file) {
+  Unit storeFile(Filename fId, File file) {
     db = InsertAssoc(Pair(fId,file), db);
   } 
 
@@ -143,7 +143,7 @@ class Node(DB db, Filename file) implements IPeer {
     admin = null;
   }
 
-  Void run() {
+  Unit run() {
     Fut(Catalog) c ; 
     Fut(List<IServer>) f;
     IServer server ; 
@@ -161,7 +161,7 @@ class Node(DB db, Filename file) implements IPeer {
     }
   }
 
-  Void setAdmin(INetwork admin) {
+  Unit setAdmin(INetwork admin) {
     this.admin = admin;
   }
 
@@ -208,7 +208,7 @@ class Node(DB db, Filename file) implements IPeer {
     return cat; 
   }
 
-  Void reqFile(IServer sId, Filename fId) {
+  Unit reqFile(IServer sId, Filename fId) {
     File file;
     Packet pack;
     Int lth;

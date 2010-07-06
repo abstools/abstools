@@ -5,7 +5,7 @@
  *
  */
 
-data Void { }
+data Unit { }
 data Int {} // builtin
 type Data = Int 
 data Bool { True; False; } 
@@ -25,8 +25,8 @@ def DataList concat(DataList l1 , DataList l2) =
 
 interface Buffer {
 
-    Void init();
-    Void append(Data d);
+    Unit init();
+    Unit append(Data d);
     Data remove();
 
 }
@@ -54,8 +54,8 @@ class BoundedBuffer implements Buffer {
         n = 0 ;
     }
     
-    Void append(Data d){
-        Void x ;
+    Unit append(Data d){
+        Unit x ;
 	await (n < max) ; 
 	buffer = appendData(d,buffer);
 	n = n + 1 ; 
@@ -73,7 +73,7 @@ class BoundedBuffer implements Buffer {
 
 class Producer (Buffer b) implements Producer {
     
-    Void loop(Data d) {
+    Unit loop(Data d) {
     	b.append(d);
         this!loop(d + 1);
     }
@@ -81,7 +81,7 @@ class Producer (Buffer b) implements Producer {
 
 class Consumer (Buffer b) implements Consumer {
     
-    Void loop() {
+    Unit loop() {
         Data x ; 
     	x = b.remove();
 	this!loop();

@@ -62,14 +62,14 @@ public class ParserTest {
 		
 //		emptyblock = "{    }"; 
 		//methodsignatures 
-//		ms1 = "Void init(Foo x ,  Bar y)";
-//		ms2 = "Void append(Int i)";
+//		ms1 = "Unit init(Foo x ,  Bar y)";
+//		ms2 = "Unit append(Int i)";
 //		meth1 = ms1 + "{ Int x ;  Int y ;	return null ; }";
 //	    meth2 = ms2 + "{ skip; return null ; }";
 		bbclass = "class BoundedBuffer implements Buffer { \n"+
 			       "  ListofInt buffer ;     Int max ;      Int n ;	\n"+
-			       "  Void init(Foo x){ Int x ;  Int y ;  return null ; }\n"+
-			       "  Void append(Int i){ skip; return null ; }}";
+			       "  Unit init(Foo x){ Int x ;  Int y ;  return null ; }\n"+
+			       "  Unit append(Int i){ skip; return null ; }}";
 		
 		
    	}
