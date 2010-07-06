@@ -37,7 +37,7 @@ if [ "$outfile" == "" ] ; then
 fi
 
 if [ -n "$1" ] ; then 
-    java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.frontend.tests.GenerateMaudeTest $1 > $outfile
+    java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.backend.maude.MaudeCompiler $1 > $outfile
     if [ $? -ne 0 ] ; then
         rm -f $outfile
         exit 1

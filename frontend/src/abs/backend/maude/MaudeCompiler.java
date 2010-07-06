@@ -1,4 +1,4 @@
-package abs.frontend.tests;
+package abs.backend.maude;
 
 import java.io.FileReader;
 import java.io.Reader;
@@ -7,7 +7,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 
-public class GenerateMaudeTest {
+public class MaudeCompiler {
 
 	/**
 	 * @param args
