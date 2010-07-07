@@ -8,14 +8,19 @@ aspect DumpTree {
 			getChildNoTransform(i).dumpTree(childIndent, pStream);
 	}
 
-	public void VarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
+	public void VarOrFieldDecl.dumpTree(String indent, PrintStream stream) {
+	    stream.println(indent + this.toString() + "\t\t" + this.getName());
+	}
+	
+	
+	public void TypedVarOrFieldDecl.dumpTree(String indent, java.io.PrintStream pStream) {
 		pStream.println(indent + this.toString() + "\t\t" +  this.getName() + " : " 
 						+  (this.getAccess()));
 		String childIndent = indent + "  ";
 		for(int i = 0; i < getNumChild(); i++)
 			getChildNoTransform(i).dumpTree(childIndent, pStream);
 	}
-
+	
 	public void IdUse.dumpTree(String indent, java.io.PrintStream pStream) {
 	   	pStream.println(indent + this.toString() + "\t\t" +  this.getName());
 	}

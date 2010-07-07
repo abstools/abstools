@@ -21,10 +21,12 @@ ParametricDataTypeDecl : DataTypeDecl ::= TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ; 
 
 
-abstract	VarOrFieldDecl  ::= <Name> Access; 
-VarDecl:	VarOrFieldDecl  ::= [InitExp:PureExp];
-FieldDecl:	VarOrFieldDecl  ::= [InitExp:PureExp];
-ParamDecl:	VarOrFieldDecl;
+abstract	VarOrFieldDecl  ::= <Name>;
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
+VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:PureExp];
+FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp];
+ParamDecl:	TypedVarOrFieldDecl;
+PatternVarDecl: VarOrFieldDecl;
 
 Method  ::= <Name> ReturnType:Access Param:ParamDecl* Block;
 
@@ -119,7 +121,7 @@ CaseBranch ::= Left:Pattern Right:PureExp ;
 //Patterns 
 abstract Pattern ; 
 
-PatternVar:			Pattern ::= Var:VarOrFieldUse; 
+PatternVar:			Pattern ::= Var:PatternVarDecl; 
 ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
 LiteralPattern:		Pattern ::= Literal:LiteralExp;
 //PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
@@ -171,6 +173,15 @@ GTEQExp : RelationalExpr ;
 abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
+
+
+abstract Type;
+abstract ReferenceType : Type;
+InterfaceType : ReferenceType ::= <InterfaceDecl>;
+NullType : ReferenceType;
+DataType : Type ::= <DataTypeDecl>;
+TypeParameter : Type ::= <TypeParameterDecl>;
+UnkownType : Type;
 
 
 

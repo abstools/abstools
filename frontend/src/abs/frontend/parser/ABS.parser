@@ -308,7 +308,7 @@ CaseBranch case_branch =
 	; 
 
 Pattern pattern = 
-	  IDENTIFIER.v  {: return new PatternVar(new VarUse(v)) ; :}
+	  IDENTIFIER.v  {: return new PatternVar(new PatternVarDecl(v)) ; :}
 	| constructor_pattern 
 	| literal.l  	{: return new LiteralPattern(l) ; :}
 //  | LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}

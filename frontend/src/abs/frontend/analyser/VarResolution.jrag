@@ -49,7 +49,63 @@ aspect VarResolution {
         when (isFunctionParameter())
             to FunctionParamUse new FunctionParamUse(getName());
     }
+    
+    syn lazy VarOrFieldDecl VarOrFieldUse.getDecl();
+    eq VarUse.getDecl() = lookupVarName(getName());
+    eq FieldUse.getDecl() = lookupVarName(getName());
+    eq FunctionParamUse.getDecl() = lookupVarName(getName());
 
+
+    syn lazy VarOrFieldDecl Block.localLookupVarName(String name);
+    eq Block.localLookupVarName(String name) {
+        for (VarDecl decl : getVars()) {
+            if (decl.getName().equals(name))
+                return decl;
+        }
+        return null;
+    }
+
+    syn lazy PatternVarDecl Pattern.localLookupVarName(String name);
+    eq Pattern.localLookupVarName(String name) = null;
+    eq PatternVar.localLookupVarName(String name) {
+        if (getVar().getName().equals(name))
+            return getVar();
+        return null;
+    }
+    eq ConstructorPattern.localLookupVarName(String name) {
+        for (Pattern p : getParams()) {
+            PatternVarDecl d = p.localLookupVarName(name);
+            if (d != null)
+                return d;
+        }
+        return null;
+    }
+/*    
+    eq Case.localLookupVarName(String name) {
+        for (VarDecl decl : getVars()) {
+            if (decl.getName().equals(name))
+                return decl;
+        }
+        return null;
+    }
+*/    
+    eq Block.getStmt(int i).lookupVarName(String name) {
+        VarOrFieldDecl d = localLookupVarName(name);
+        if (d != null)
+            return d;
+        
+        return lookupVarName(name);
+    }
+    
+    eq Model.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
+    eq CaseExp.getBranch(int i).lookupVarName(String name) = getBranch(i).localLookupVarName(name);
+    
+    syn lazy PatternVarDecl CaseBranch.localLookupVarName(String name) = getLeft().localLookupVarName(name);
+    
+
+    inh VarOrFieldDecl Exp.lookupVarName(String name);
+    inh VarOrFieldDecl Block.lookupVarName(String name);
+    
 }
 
 // Local Variables:

@@ -1,22 +1,17 @@
 package abs.frontend.analyser;
 
+import static abs.frontend.analyser.ErrorMessage.CYCLIC_INHERITANCE;
+import static abs.frontend.analyser.ErrorMessage.UNKOWN_INTERFACE;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.Iterator;
 
 import org.junit.Test;
 
 import abs.frontend.ast.Model;
-import abs.frontend.parser.ABSParser;
-import abs.frontend.parser.ABSScanner;
-
-import static abs.frontend.analyser.ErrorMessage.*;
 
 
-public class InterfaceDeclarationTest {
+public class InterfaceDeclarationTest extends AnalyserTest {
 
 	@Test
 	public void trivial() {
@@ -81,25 +76,4 @@ public class InterfaceDeclarationTest {
         assertTrue("Expected that "+expected.getMsgString()+" ends with "+actual,expected.getMsgString().endsWith(actual));
     }
 
-	// TODO refactor this into testframework stuff? 
-	protected static Model assertParseOk(String s) {
-		Model p = null;
-		try {
-			p = parse(s);
-		} catch (Throwable t) {
-			fail("Failed to parse: "+ s+"\n"+t.getMessage());
-		}
-		return p;
-  }
-	
-	
-	protected static Model parse(String s) throws Throwable {
-		ABSParser parser = new ABSParser();
-		Reader reader = new StringReader(s);
-		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
-		ABSScanner scanner = new ABSScanner(reader);
-		Model p = (Model)parser.parse(scanner);
-		reader.close();
-		return p;
-	}
 }

@@ -1,3 +1,5 @@
+import abs.common.*;
+
 aspect TypeAnalysis {
 
 	// ***API***
@@ -24,6 +26,57 @@ aspect TypeAnalysis {
 
 		return cycleFound;
 	}
+	
+    syn boolean Type.isReferenceType() = false;
+    eq InterfaceType.isReferenceType() = true;
+    eq NullType.isReferenceType() = true;
+
+    syn boolean Type.isInterfaceType() = false;
+	eq InterfaceType.isInterfaceType() = true;
+	
+    syn boolean Type.isNullType() = false;
+    eq NullType.isNullType() = true;
+
+    syn boolean Type.isDataType() = false;
+    eq DataType.isDataType() = true;
+	
+    syn boolean Type.isTypeParameter() = false;
+    eq TypeParameter.isTypeParameter() = true;
+
+    syn boolean Type.isUnkownType() = false;
+    eq UnkownType.isUnkownType() = true;
+
+    syn lazy Type Exp.getType();
+	eq Exp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+	
+	eq AsyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq SyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq GetExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq NewExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FieldUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FunctionParamUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    
+    eq VarUse.getType() { 
+        throw new NotImplementedYetException("Type Checker",this);        
+    }
+    
+    eq TypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq ArithmeticExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq BoolExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq RelationalExpr.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq CaseExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FnApp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq DataConstructorExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq LetExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq IntLiteral.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq StringLiteral.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq NullExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq ThisExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq MinusExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq NegExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+	
 	
 }
 
