@@ -23,20 +23,21 @@ public class ParseSamplesTest {
 	}
 	
 	protected static void assertParseOk(String s) {
-		Model m = null;
+	    Model m = null;
 		try {
 			m = Main.parse(s);
-		}	catch (Throwable e) {
+		} catch (Throwable e) {
 			fail("Failed to parse: "+ s+"\n"+e.getMessage());
+			e.printStackTrace();
 		}
 		if (m != null) {
-			int numSemErrs = m.getErrors().size();
-			if (numSemErrs > 0){
-				StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-				for (SemanticError error : m.getErrors())
-					errs = errs.append(s + ":" + error.getMsgString() + "\n");	
-				fail(errs.toString());
-			}		
+		    int numSemErrs = m.getErrors().size();
+            if (numSemErrs > 0){
+                StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
+                for (SemanticError error : m.getErrors())
+                    errs = errs.append(s + ":" + error.getMsgString() + "\n");  
+                fail("Failed to parse: "+s+"\n"+errs.toString());
+            }
 		}
 	}
 }

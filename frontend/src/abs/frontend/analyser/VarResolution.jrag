@@ -17,7 +17,13 @@ aspect VarResolution {
     // Differentiate between function parameters and other variables.
     // FIXME: this does not consider shadowing rebinding of variables
     // inside the function body, e.g. via `case' expressions.
-    eq FunctionDecl.getFunDef().functionParameters() = getParams();
+    eq FunctionDecl.getFunDef().functionParameters() {
+        List<VarOrFieldDecl> result = new List<VarOrFieldDecl>();
+        for (ParamDecl v : getParams()) {
+            result.add((VarOrFieldDecl)v.copy());
+        }
+        return result;
+    }
     eq Block.getStmt(int index).functionParameters() = new List<VarOrFieldDecl>();
     eq CaseExp.getBranch(int index).functionParameters() {
         List<VarOrFieldDecl> result = new List<VarOrFieldDecl>();
@@ -64,7 +70,7 @@ aspect VarResolution {
         }
         return null;
     }
-
+    
     syn lazy PatternVarDecl Pattern.localLookupVarName(String name);
     eq Pattern.localLookupVarName(String name) = null;
     eq PatternVar.localLookupVarName(String name) {
@@ -80,15 +86,17 @@ aspect VarResolution {
         }
         return null;
     }
-/*    
-    eq Case.localLookupVarName(String name) {
-        for (VarDecl decl : getVars()) {
+    
+    syn lazy VarOrFieldDecl Decl.localLookupVarName(String name);
+    eq Decl.localLookupVarName(String name) = null;
+    eq FunctionDecl.localLookupVarName(String name) {
+        for (VarOrFieldDecl decl : getParams()) {
             if (decl.getName().equals(name))
                 return decl;
         }
         return null;
     }
-*/    
+
     eq Block.getStmt(int i).lookupVarName(String name) {
         VarOrFieldDecl d = localLookupVarName(name);
         if (d != null)
@@ -98,6 +106,7 @@ aspect VarResolution {
     }
     
     eq Model.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
+    eq Model.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
     eq CaseExp.getBranch(int i).lookupVarName(String name) = getBranch(i).localLookupVarName(name);
     
     syn lazy PatternVarDecl CaseBranch.localLookupVarName(String name) = getLeft().localLookupVarName(name);
