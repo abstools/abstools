@@ -66,6 +66,9 @@ Block block	=
 	LBRACE var_decls.l? stmt_list.s?  RBRACE	{: return new Block(l,s) ; :}
     ;
 
+InitBlock init_block =
+	block	{: return new InitBlock(block.getVarsNoTransform(), block.getStmtsNoTransform()); :}
+	;
 
 List var_decls = 
 	var_decl_list.l SEMICOLON {: return l ; :} 
@@ -103,7 +106,7 @@ InterfaceDecl interface_decl =
 
 
 ClassDecl class_decl =
-	CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? block.init_block? method_list.methods? RBRACE {: return new ClassDecl(TYPEIDENTIFIER, params,  i, init_block, fields, methods); :}
+	CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(TYPEIDENTIFIER, params,  i, init_block, fields, methods); :}
   ;
 
 List data_constructor_list =

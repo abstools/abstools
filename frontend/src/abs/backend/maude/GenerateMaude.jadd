@@ -318,19 +318,15 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
-        // KLUDGE (rs 2010-06-15): this should be a general tree
-        // rewriting rule, not a tree mutation while generating source
-        // code.
         if (hasInitBlock()) {
-            addMethod(new Method(".init", new DataTypeUse("Unit"),
-                                 new List<ParamDecl>(), getInitBlock().copy()));
+            getInitBlock().generateMaude(stream, getFields(), isActiveClass());
         } else {
-            addMethod(new Method(".init", new DataTypeUse("Unit"),
-                                 new List<ParamDecl>(), new Block()));
+            // minimal init method - this block is not connected to the
+            // AST so we pass in the field list in all cases.
+            new InitBlock(new List<VarDecl>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
         }
-        inlist = false;
         for (Method method : getMethods()) {
-            if (inlist) stream.print(",\n    "); else inlist = true;
+            stream.print(",\n    ");
             method.generateMaude(stream);
         }
         stream.print(",\n  Ocnt: 0 > ");
@@ -338,7 +334,6 @@ aspect GenerateMaude {
 	
     public void Method.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-        boolean amInitMethod = getName().equals(".init");
         boolean amRunMethod = getName().equals("run");
         stream.print("< \"" + getName() + "\" : Method | Param: ");
         if (getNumParam() == 0) {
@@ -359,11 +354,19 @@ aspect GenerateMaude {
             stream.print(", @ \"" + var.getName() + "\" |-> null ");
         }
         stream.print(",\n      Code: ");
+        inlist = false;    // value valid for statement emission as well
+        for (VarDecl var : getBlock().getVars()) {
+            if (var.hasInitExp()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stream.print("assign( @ \"" + var.getName() + "\" ; ");
+                var.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            }
+        }
         if (getBlock().getNumStmt() == 0) {
-            if (amInitMethod) stream.print("noStmt ");
-            else stream.print("return( null ) ");
+            if (inlist) stream.print("; ");
+            stream.print("return( null ) ");
         } else {
-            inlist = false;
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
@@ -378,13 +381,10 @@ aspect GenerateMaude {
             if (returnType instanceof IdUse
                 && ((IdUse)returnType).getName().equals("Unit")
                 // the run method has no place to return anything to
-                && !amRunMethod && !amInitMethod)
+                && !amRunMethod)
             {
                 stream.print("; return( null ) ");
             }
-        }
-        if (amInitMethod && inActiveClass()) {
-            stream.print("; selftailcall (\"run\" ; emp) ");
         }
         stream.print("> ");
     }
@@ -485,6 +485,14 @@ aspect GenerateMaude {
             stream.print(") ");
             inlist = true;      // set up for rest of the statements
         }
+        for (VarDecl var : getVars()) {
+            if (var.hasInitExp()) {
+                stream.print("; "); // we know there's a $push stmt before
+                stream.print("assign( @ \"" + var.getName() + "\" ; ");
+                var.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            }
+        }
         if (getNumStmt() == 0 && getNumVar() == 0) {
             stream.print("noStmt ");
         } else {
@@ -498,4 +506,57 @@ aspect GenerateMaude {
         }
 	}
 	
+    public void InitBlock.generateMaude(java.io.PrintStream stream,
+                                        List<FieldDecl> fields,
+                                        boolean isActiveClass) {
+        boolean inlist = false;
+        stream.print("< \".init\" : Method | Param: noVid, ");
+        stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
+        stream.print("@ \".staticfuture\" |-> null");
+        stream.print(",\n      Code: ");
+        // Process field initializers here
+        for (FieldDecl field : fields) {
+            if (field.hasInitExp()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stream.print("assign( @@ \"" + field.getName() + "\" ; ");
+                field.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            }
+        }
+        // Process local variable initializers now, since they might use
+        // field values
+        if (getNumVar() > 0) {
+            if (inlist) stream.print("; "); // emitted field init already
+            stream.print("$push ( ");
+            inlist = false;
+            for (VarDecl var : getVars()) {
+                if (inlist) stream.print(", "); else inlist = true;
+                stream.print("@ \"" + var.getName() + "\" |-> null ");
+            }
+            stream.print(") ");
+            inlist = true;      // set up for rest of the statements
+        }
+        for (VarDecl var : getVars()) {
+            if (var.hasInitExp()) {
+                stream.print("; "); // we know there's a $push stmt before
+                stream.print("assign( @ \"" + var.getName() + "\" ; ");
+                var.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            }
+        }
+        if (!inlist) {
+            // didn't emit anything until now - completely empty method
+            stream.print("noStmt ");
+        } else {
+            for (Stmt stmt : getStmts()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stmt.generateMaude(stream);
+            }
+        }
+        if (getNumVar() > 0) {
+            stream.print("; $pop ");
+        }
+        if (isActiveClass) stream.print("; selftailcall (\"run\" ; emp) ");
+        stream.print("> ");
+    }
 }

@@ -11,7 +11,7 @@ abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	TypeDecl;		// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock:Block] Field:FieldDecl* Method:Method*;
+ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:Method*;
 FunctionDecl:	BehaviorDecl    ::= TypeUse Param:ParamDecl* FunDef:PureExp ;
 ParametricFunctionDecl : FunctionDecl ::= TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
@@ -77,7 +77,7 @@ WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
 Block: Stmt				::= Var:VarDecl*  Stmt:Stmt*;
-
+InitBlock: Block;		// Initializer block in a class - can be handled specially during code generation
 
 
 abstract Guard;
