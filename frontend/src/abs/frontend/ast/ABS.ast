@@ -43,7 +43,6 @@ TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: IdUse;
 VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f
-FunctionParamUse:                       VarOrFieldUse;
 
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 

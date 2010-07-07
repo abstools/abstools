@@ -55,7 +55,6 @@ aspect TypeAnalysis {
     eq NewExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq FieldUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq FunctionParamUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
     
     eq VarUse.getType() { 
         throw new NotImplementedYetException("Type Checker",this);        

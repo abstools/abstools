@@ -200,10 +200,6 @@ aspect GenerateJava {
         throw new NotImplementedYetException(this);
     }
 
-    public void FunctionParamUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
-    }
-
     public void VarUse.generateJava(PrintStream stream) {
         stream.print(getName());
     }

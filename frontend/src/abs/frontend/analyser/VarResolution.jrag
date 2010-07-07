@@ -51,15 +51,9 @@ aspect VarResolution {
         return false;
     }
 
-    rewrite VarUse {
-        when (isFunctionParameter())
-            to FunctionParamUse new FunctionParamUse(getName());
-    }
-    
     syn lazy VarOrFieldDecl VarOrFieldUse.getDecl();
     eq VarUse.getDecl() = lookupVarName(getName());
     eq FieldUse.getDecl() = lookupVarName(getName());
-    eq FunctionParamUse.getDecl() = lookupVarName(getName());
 
 
     syn lazy VarOrFieldDecl Block.localLookupVarName(String name);
