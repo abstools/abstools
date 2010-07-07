@@ -295,7 +295,7 @@ StringLiteral string_literal = STRINGLITERAL.s {: return new StringLiteral(s); :
 IntLiteral int_literal = INTLITERAL.i {: return new IntLiteral(i); :} ;
 
 LetExp let_exp = 
-	LET LPAREN var_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
+	LET LPAREN param_decl.var RPAREN ASSIGN data_exp.val IN data_exp.exp {: return new LetExp(var,val,exp) ; :}
 	;
 
 List case_branch_list =

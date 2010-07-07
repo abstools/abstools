@@ -38,14 +38,15 @@ aspect TypeResolution {
     eq ParametricFunctionDecl.getFunDef().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(String name) = localLookup(name);
+
   
     // ***Implementation***
     
     // Expose *lookup* at various places in the AST
-    inh TypeDecl TypeUse.lookup(String name);
+    inh TypeDecl Exp.lookup(String name);
     inh TypeDecl ParametricDataTypeDecl.lookup(String name);
     inh TypeDecl ParametricFunctionDecl.lookup(String name);
-
+    
     // *localLookup* - look through the global declarations in the model
     syn lazy TypeDecl Model.localLookup(String name) {
         for (Decl d : getDecls())

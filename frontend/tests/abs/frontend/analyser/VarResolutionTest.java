@@ -8,12 +8,14 @@ import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.LetExp;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NegExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PatternVarDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 
 public class VarResolutionTest extends AnalyserTest {
@@ -54,5 +56,14 @@ public class VarResolutionTest extends AnalyserTest {
 
     }
     
+    @Test
+    public void testLetExp() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = b in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        VarOrFieldDecl decl = e.getVar();
+        VarUse u = (VarUse) e.getExp();
+        //assertEquals(decl, u.getDecl());
+
+    }
 
 }
