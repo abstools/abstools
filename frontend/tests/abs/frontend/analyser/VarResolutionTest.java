@@ -62,8 +62,57 @@ public class VarResolutionTest extends AnalyserTest {
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
-        //assertEquals(decl, u.getDecl());
+        assertEquals(decl, u.getDecl());
 
     }
 
+    @Test
+    public void testNestedLetExp() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = let (Bool y) = b in y in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        VarOrFieldDecl decl = e.getVar();
+        VarUse u = (VarUse) e.getExp();
+        assertEquals(decl, u.getDecl());
+
+    }
+
+    @Test
+    public void testNestedLetExp2() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = let (Bool x) = b in x in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        VarOrFieldDecl decl = e.getVar();
+        VarUse u = (VarUse) e.getExp();
+        assertEquals(decl, u.getDecl());
+
+    }
+
+    @Test
+    public void testNestedLetExp3() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = b in let (Bool y) = b in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        LetExp e2 = (LetExp) e.getExp();
+        VarOrFieldDecl decl = e.getVar();
+        VarUse u = (VarUse) e2.getExp();
+        assertEquals(decl, u.getDecl());
+    }
+    
+    @Test
+    public void testNestedLetExp4() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = b in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        LetExp e2 = (LetExp) e.getExp();
+        VarOrFieldDecl decl = e2.getVar();
+        VarUse u = (VarUse) e2.getExp();
+        assertEquals(decl, u.getDecl());
+    }
+    
+    @Test
+    public void testNestedLetExp5() {
+        Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = x in x");
+        LetExp e = (LetExp) getFirstFunctionExpr(m);
+        LetExp e2 = (LetExp) e.getExp();
+        VarOrFieldDecl decl = e.getVar();
+        VarUse u = (VarUse) e2.getVal();
+        assertEquals(decl, u.getDecl());
+    }
 }

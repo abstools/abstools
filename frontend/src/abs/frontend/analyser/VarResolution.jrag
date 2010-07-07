@@ -101,13 +101,17 @@ aspect VarResolution {
     
     eq Model.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
     eq Model.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
-    eq CaseExp.getBranch(int i).lookupVarName(String name) = getBranch(i).localLookupVarName(name);
-    
-    syn lazy PatternVarDecl CaseBranch.localLookupVarName(String name) = getLeft().localLookupVarName(name);
-    
+    eq CaseExp.getBranch(int i).lookupVarName(String name) = getBranch(i).getLeft().localLookupVarName(name);
 
+    eq LetExp.getExp().lookupVarName(String name) {
+        if (getVar().getName().equals(name))
+            return getVar();
+        return lookupVarName(name);
+    }
+    
     inh VarOrFieldDecl Exp.lookupVarName(String name);
-    inh VarOrFieldDecl Block.lookupVarName(String name);
+    inh VarOrFieldDecl Stmt.lookupVarName(String name);
+
     
 }
 
