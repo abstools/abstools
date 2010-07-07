@@ -4,10 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import abs.frontend.ast.CaseBranch;
-import abs.frontend.ast.CaseExp;
 import abs.frontend.ast.Exp;
-import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.LetExp;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NegExp;
@@ -35,17 +32,6 @@ public class VarResolutionTest extends AnalyserTest {
         assertEquals("x",decl.getName());
     }
 
-    private Exp getFirstCaseExpr(Model m) {
-        CaseExp ce = (CaseExp) getFirstFunctionExpr(m);
-        CaseBranch b = ce.getBranch(1);
-        return b.getRight();
-    }
-
-    private Exp getFirstFunctionExpr(Model m) {
-        FunctionDecl f = (FunctionDecl) m.getDecls().getChild(1);
-        return f.getFunDef();
-    }
-    
     @Test
     public void testFunctionParam() {
         Model m = assertParseOk("data Bool { False; True; } def Bool f(Bool b) = b");

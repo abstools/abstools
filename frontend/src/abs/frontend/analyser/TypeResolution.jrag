@@ -4,16 +4,22 @@ aspect TypeResolution {
   
     // Find the type declaration for a type use.
   
-    syn boolean TypeDecl.isInterface();
-    syn boolean TypeDecl.isDataType();
-    syn boolean TypeDecl.isTypeSyn();
-    syn boolean TypeDecl.isTypeParameter();
+    syn boolean Decl.isFunction();
+    syn boolean Decl.isClass();
+    syn boolean Decl.isDataType();
+    syn boolean Decl.isInterface();
+    syn boolean Decl.isTypeSyn();
+    syn boolean Decl.isTypeParameter();
   
-    eq TypeDecl.isInterface() = false;
-    eq TypeDecl.isDataType() = false;
-    eq TypeDecl.isTypeSyn() = false;
-    eq TypeDecl.isTypeParameter() = false;
+    eq Decl.isFunction() = false;
+    eq Decl.isClass() = false;
+    eq Decl.isInterface() = false;
+    eq Decl.isDataType() = false;
+    eq Decl.isTypeSyn() = false;
+    eq Decl.isTypeParameter() = false;
 
+    eq ClassDecl.isClass() = true;
+    eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
     eq DataTypeDecl.isDataType() = true;
     eq TypeSynDecl.isTypeSyn() = true;
@@ -25,7 +31,7 @@ aspect TypeResolution {
     // UnknownDecl if the declaration is missing
     syn lazy TypeDecl TypeUse.getDecl();  
     //   Definitions of *decl*
-    eq TypeUse.getDecl() = lookup(getName());
+    eq TypeUse.getDecl() = (TypeDecl) lookup(getName());
   
 
     // Declaration of *lookup*
@@ -42,20 +48,20 @@ aspect TypeResolution {
     // ***Implementation***
     
     // Expose *lookup* at various places in the AST
-    inh TypeDecl Exp.lookup(String name);
-    inh TypeDecl ParametricDataTypeDecl.lookup(String name);
-    inh TypeDecl ParametricFunctionDecl.lookup(String name);
+    inh Decl Exp.lookup(String name);
+    inh Decl ParametricDataTypeDecl.lookup(String name);
+    inh Decl ParametricFunctionDecl.lookup(String name);
     
     // *localLookup* - look through the global declarations in the model
-    syn lazy TypeDecl Model.localLookup(String name) {
+    syn lazy Decl Model.localLookup(String name) {
         for (Decl d : getDecls())
-            if (d instanceof TypeDecl && d.getName().equals(name))
-                return (TypeDecl)d;
+            if (d.getName().equals(name))
+                return d;
         return unknownDecl();
     }
     // look through local declarations in parametric datatype, or defer
     // to model
-    syn lazy TypeDecl ParametricDataTypeDecl.localLookup(String name) {
+    syn lazy Decl ParametricDataTypeDecl.localLookup(String name) {
         for (TypeParameterDecl d : getTypeParameters())
             if (d.getName().equals(name))
                 return d;
@@ -63,7 +69,7 @@ aspect TypeResolution {
     }
     // look through local declarations in parametric function, or defer
     // to model
-    syn lazy TypeDecl ParametricFunctionDecl.localLookup(String name) {
+    syn lazy Decl ParametricFunctionDecl.localLookup(String name) {
         for (TypeParameterDecl d : getTypeParameters())
             if (d.getName().equals(name))
                 return d;
@@ -106,6 +112,8 @@ aspect TypeResolution {
     syn lazy TypeDecl DataConstructorExp.getDecl() {
         return lookupDataConstructor(this);
     }
+    
+    
     
 }
 

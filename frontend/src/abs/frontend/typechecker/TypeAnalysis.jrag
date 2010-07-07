@@ -29,8 +29,11 @@ aspect TypeAnalysis {
 		return cycleFound;
 	}
 	
-    syn lazy Type Decl.getType();
-    eq BehaviorDecl.getType() { return UnknownType.INSTANCE; }
+	
+	syn lazy Type ClassDecl.getType() = new UnionType(getImplementedInterfaceUses());
+	
+    syn lazy Type TypeDecl.getType();
+    
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);
     }
@@ -60,26 +63,22 @@ aspect TypeAnalysis {
     syn Type Exp.getStringType() = new DataTypeType((DataTypeDecl)lookup("String"));
     
     syn lazy Type Exp.getType();
-	eq Exp.getType() { throw new NotImplementedYetException("Type Checker",this); }
-	
-	eq AsyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+	 eq AsyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq SyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq GetExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq NewExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq GetExp.getType() = getPureExp().getType();
+    eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
     eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq FieldUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    
     eq VarUse.getType() = getDecl().getType();
-    
-    eq TypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq TypeUse.getType() = getDecl().getType();
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
     eq CaseExp.getType() = getBranch(0).getRight().getType(); 
-    eq FnApp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FnApp.getType() = ((FunctionDecl) lookup(getName())).getTypeUse().getType();
     eq DataConstructorExp.getType() = lookupDataConstructor(this).getType();
     eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq LetExp.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getIntType();
     eq StringLiteral.getType() =  getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
