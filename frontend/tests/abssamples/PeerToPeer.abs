@@ -133,15 +133,9 @@ class DataBase(Map<Filename, File> db) implements DataBase {
 }
 
 class Node(DataBase db, Filename file) implements Peer {
-  Catalog catalog;
-  List<Server> myNeighbors;
-  Network admin;
-
-  {
-    catalog = Nil;
-    myNeighbors = Nil;
-    admin = null;
-  }
+  Catalog catalog = Nil;
+  List<Server> myNeighbors = Nil;
+  Network admin = null;
 
   Unit run() {
     Fut(Catalog) c ; 
@@ -209,13 +203,12 @@ class Node(DataBase db, Filename file) implements Peer {
   }
 
   Unit reqFile(Server sId, Filename fId) {
-    File file;
+    File file = Nil;
     Packet pack;
     Int lth;
     Fut(Int) l1;
     Fut(Packet) l2;
 
-    file = Nil;
     l1 = sId!getLength(fId);
     await l1?;
     lth = l1.get; 
