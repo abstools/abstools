@@ -13,7 +13,6 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.NegExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PatternVarDecl;
-import abs.frontend.ast.PureExp;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
@@ -115,4 +114,6 @@ public class VarResolutionTest extends AnalyserTest {
         VarUse u = (VarUse) e2.getVal();
         assertEquals(decl, u.getDecl());
     }
+
+
 }

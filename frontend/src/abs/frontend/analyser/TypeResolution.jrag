@@ -23,9 +23,9 @@ aspect TypeResolution {
 
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
-    syn lazy TypeDecl TypeUse.declaration();  
+    syn lazy TypeDecl TypeUse.getDecl();  
     //   Definitions of *decl*
-    eq TypeUse.declaration() = lookup(getName());
+    eq TypeUse.getDecl() = lookup(getName());
   
 
     // Declaration of *lookup*
@@ -39,7 +39,6 @@ aspect TypeResolution {
     eq ParametricFunctionDecl.getTypeUse().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(String name) = localLookup(name);
 
-  
     // ***Implementation***
     
     // Expose *lookup* at various places in the AST
@@ -72,13 +71,13 @@ aspect TypeResolution {
     }
     
     rewrite UnresolvedTypeUse {
-        when (declaration().isInterface())
+        when (getDecl().isInterface())
             to InterfaceTypeUse new InterfaceTypeUse(getName());
-        when (declaration().isDataType())
+        when (getDecl().isDataType())
             to DataTypeUse new DataTypeUse(getName());
-        when (declaration().isTypeSyn())
-            to DataTypeUse new DataTypeUse(((TypeSynDecl)declaration()).getValue().getName());
-        when (declaration().isTypeParameter())
+        when (getDecl().isTypeSyn())
+            to DataTypeUse new DataTypeUse(((TypeSynDecl)getDecl()).getValue().getName());
+        when (getDecl().isTypeParameter())
         	to TypeParameterUse new TypeParameterUse(getName());
     }
     
@@ -104,7 +103,7 @@ aspect TypeResolution {
     
     inh TypeDecl DataConstructorExp.lookupDataConstructor(DataConstructorExp c);
     
-    syn lazy TypeDecl DataConstructorExp.declaration() {
+    syn lazy TypeDecl DataConstructorExp.getDecl() {
         return lookupDataConstructor(this);
     }
     

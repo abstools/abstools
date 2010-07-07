@@ -8,7 +8,6 @@ import java.io.StringReader;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.Type;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 

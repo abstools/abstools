@@ -174,16 +174,6 @@ EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
 
 
-abstract Type;
-abstract ReferenceType : Type;
-InterfaceType : ReferenceType ::= <InterfaceDecl>;
-NullType : ReferenceType;
-DataType : Type ::= <DataTypeDecl>;
-TypeParameter : Type ::= <TypeParameterDecl>;
-UnkownType : Type;
-
-
-
 /*
 // Created by NTA equations
 InterfaceRef:	TypeAccess;
