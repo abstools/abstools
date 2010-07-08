@@ -26,6 +26,10 @@ public class UnionType extends ReferenceType {
 		return Collections.unmodifiableList(types);
 	}
 	
+	public InterfaceType getType(int i) {
+	    return types.get(i);
+	}
+	
 	
 	@Override
 	public boolean equals(Object o) {

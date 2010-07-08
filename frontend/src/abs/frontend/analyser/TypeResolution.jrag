@@ -32,8 +32,8 @@ aspect TypeResolution {
     syn lazy TypeDecl TypeUse.getDecl();  
     //   Definitions of *decl*
     eq TypeUse.getDecl() = (TypeDecl) lookup(getName());
-  
 
+    syn lazy Decl Model.lookup(String name) = localLookup(name);
     // Declaration of *lookup*
     // Finds a declaration (TypeDecl) based on a name, or attribute
     // UnknownDecl if not found
@@ -113,7 +113,13 @@ aspect TypeResolution {
         return lookupDataConstructor(this);
     }
     
-    
+    syn lazy Decl Decl.getContextDecl() = this;
+    eq Method.getBlock().getContextDecl() = getContextDecl();
+    eq Model.getBlock().getContextDecl() = unknownDecl();
+    eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
+    inh Decl Stmt.getContextDecl();
+    inh Decl Exp.getContextDecl();
+    inh Decl Method.getContextDecl();
     
 }
 

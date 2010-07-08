@@ -1,0 +1,75 @@
+import abs.common.*;
+
+import abs.frontend.typechecker.*;
+
+aspect Typing {
+    
+    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup("Unit"));
+    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup("Int"));
+    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup("Bool"));
+    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup("String"));
+
+    eq Model.getBlock().getUnitType() = getUnitType();
+    eq Model.getBlock().getIntType() = getIntType();
+    eq Model.getBlock().getBoolType() = getBoolType();
+    eq Model.getBlock().getStringType() = getStringType();
+
+    inh Type Exp.getUnitType();
+    inh Type Exp.getIntType();
+    inh Type Exp.getBoolType();
+    inh Type Exp.getStringType();
+    
+    syn lazy Type Decl.getType();
+    
+    eq ClassDecl.getType() = new UnionType(getImplementedInterfaceUses());
+    eq FunctionDecl.getType() = getTypeUse().getType();
+
+    eq DataTypeDecl.getType() {
+        return new DataTypeType(this);
+    }
+    eq ParametricDataTypeDecl.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq InterfaceDecl.getType() { 
+        return new InterfaceType(this);
+    }
+    eq TypeParameterDecl.getType() { 
+        return new TypeParameter(this);
+    }
+    eq TypeSynDecl.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq UnknownDecl.getType() = UnknownType.INSTANCE;
+    
+    syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
+    eq TypedVarOrFieldDecl.getType() {
+        Access a = getAccess();
+        if (a instanceof TypeUse) {
+            return ((TypeUse)a).getDecl().getType();
+        }
+        throw new NotImplementedYetException("Type Checker",this);
+    }
+    
+    /* EXPRESSIONS */
+    
+    syn lazy Type Exp.getType();
+     eq AsyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq SyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq GetExp.getType() = getPureExp().getType();
+    eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
+    eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FieldUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq VarUse.getType() = getDecl().getType();
+    eq TypeUse.getType() = getDecl().getType();
+    eq ArithmeticExp.getType() = getIntType();
+    eq BoolExp.getType() = getBoolType();
+    eq RelationalExpr.getType() = getBoolType();
+    eq CaseExp.getType() = getBranch(0).getRight().getType(); 
+    eq FnApp.getType() = ((FunctionDecl) lookup(getName())).getTypeUse().getType();
+    eq DataConstructorExp.getType() = lookupDataConstructor(this).getType();
+    eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq LetExp.getType() = getExp().getType();
+    eq IntLiteral.getType() = getIntType();
+    eq StringLiteral.getType() =  getStringType();
+    eq NullExp.getType() = NullType.INSTANCE;
+    eq ThisExp.getType() = getContextDecl().getType();
+    eq MinusExp.getType() = getIntType();
+    eq NegExp.getType() = getBoolType();
+
+}

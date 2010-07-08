@@ -7,8 +7,6 @@ Bool { True; False; }
 
 Int { }
 
-Unit { }
-
 Unit { Unit; }
 
 String { }

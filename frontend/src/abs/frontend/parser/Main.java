@@ -74,7 +74,9 @@ public class Main {
 	}
 
 
-	public static Model parse(String file) throws Exception {
+	
+	
+    public static Model parse(String file) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 

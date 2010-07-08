@@ -8,10 +8,11 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
 
 
-public class InterfaceDeclarationTest extends AnalyserTest {
+public class InterfaceDeclarationTest extends FrontendTest {
 
 	@Test
 	public void trivial() {

@@ -1,4 +1,4 @@
-package abs.frontend.analyser;
+package abs.frontend;
 
 import static org.junit.Assert.fail;
 
@@ -8,13 +8,15 @@ import java.io.StringReader;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
+import abs.frontend.typechecker.Type;
 
-public class AnalyserTest {
+public class FrontendTest {
 
     protected Model assertParseOk(String s) {
         Model p = null;
@@ -57,8 +59,18 @@ public class AnalyserTest {
 
 
 	protected Exp getFirstFunctionExpr(Model m) {
-        FunctionDecl f = (FunctionDecl) m.getDecls().getChild(1);
-        return f.getFunDef();
+	    for (Decl d : m.getDecls()) {
+	        if (d instanceof FunctionDecl) {
+	            return ((FunctionDecl)d).getFunDef();
+	        }
+	    }
+	    throw new IllegalArgumentException("The model does not contain any FunctionDecl.");
+    }
+
+
+    protected Type getTypeOfFirstAssignment(Model m) {
+        AssignStmt s = (AssignStmt) m.getBlock().getStmts().getChild(0);
+        return s.getValue().getType();
     }
     
     

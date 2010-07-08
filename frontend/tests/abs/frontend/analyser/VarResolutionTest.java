@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+import abs.frontend.FrontendTest;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.LetExp;
 import abs.frontend.ast.Model;
@@ -14,7 +15,7 @@ import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 
-public class VarResolutionTest extends AnalyserTest {
+public class VarResolutionTest extends FrontendTest {
     @Test
     public void testLocalVar() {
         Exp e = getFirstExp("interface I { } { I i; i = i; }");
