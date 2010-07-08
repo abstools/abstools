@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.io.Reader;
 import java.io.StringReader;
 
+import abs.common.StandardLib;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -20,6 +21,10 @@ import abs.frontend.typechecker.Type;
 
 public class FrontendTest {
 
+    protected Model assertParseOkStdLib(String s) {
+        return assertParseOk(StandardLib.STDLIB_STRING+s);
+    }
+    
     protected Model assertParseOk(String s) {
         Model p = null;
         try {

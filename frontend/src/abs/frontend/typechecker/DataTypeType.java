@@ -71,5 +71,11 @@ public class DataTypeType extends Type {
         return decl.getName().equals("String");
     }
     
+    public String toString() {
+        return decl.getName();
+    }
+    
+    
+    
 
 }

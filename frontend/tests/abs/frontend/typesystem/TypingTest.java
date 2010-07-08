@@ -8,7 +8,6 @@ import org.junit.Test;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.typechecker.UnionType;

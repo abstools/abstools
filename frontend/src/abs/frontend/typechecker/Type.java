@@ -1,6 +1,10 @@
 package abs.frontend.typechecker;
 
 public abstract class Type {
+    public String toString() {
+        return "type";
+    }
+    
     public boolean isReferenceType() {
         return false;
     }
