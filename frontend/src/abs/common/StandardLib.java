@@ -6,7 +6,8 @@ public class StandardLib {
         "data Unit { Unit; }\n" +
         "data Int { }\n" +
         "data String { }\n" +
-        "data Fut<A> { }\n"
+        "data Fut<A> { }\n" +
+        "data Opt<A> { None; Some(A); }\n" 
         ; 
     
 }

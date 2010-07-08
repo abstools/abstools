@@ -10,8 +10,10 @@ import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
+import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Stmt;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.typechecker.Type;
@@ -46,8 +48,12 @@ public class FrontendTest {
 
 
 	protected Exp getFirstExp(Model m) {
-	   AssignStmt s = (AssignStmt) m.getBlock().getStmts().getChild(0);
-        return s.getValue();
+	    Stmt s = m.getBlock().getStmt(0);
+	    if (s instanceof AssignStmt)
+	        return ((AssignStmt) s).getValue();
+	    if (s instanceof ExpressionStmt) 
+	        return ((ExpressionStmt) s).getExp();
+	    throw new IllegalArgumentException();
    }
 
 

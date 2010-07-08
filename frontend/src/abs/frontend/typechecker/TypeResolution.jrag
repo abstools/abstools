@@ -32,7 +32,7 @@ aspect TypeResolution {
     syn lazy TypeDecl TypeUse.getDecl();  
     //   Definitions of *decl*
     eq TypeUse.getDecl() = (TypeDecl) lookup(getName());
-
+    
     syn lazy Decl Model.lookup(String name) = localLookup(name);
     // Declaration of *lookup*
     // Finds a declaration (TypeDecl) based on a name, or attribute
@@ -87,29 +87,32 @@ aspect TypeResolution {
         	to TypeParameterUse new TypeParameterUse(getName());
     }
     
-    syn lazy TypeDecl Model.localLookupDataConstructor(DataConstructorExp e) {
+    
+    inh lazy DataTypeDecl DataConstructor.getDecl();
+    eq DataTypeDecl.getDataConstructor().getDecl() = this;
+    
+    syn lazy DataConstructor Model.localLookupDataConstructor(DataConstructorExp e) {
         for (Decl d : getDecls()) {
             if (d instanceof DataTypeDecl) {
                 DataTypeDecl dataDecl = (DataTypeDecl)d;
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
                     if (c.getName().equals(e.getConstructor())) {
-                        // FIXME: check argument types
-                        return dataDecl;
+                        return c;
                     }
                 }
             }
         }
-        return unknownDecl();
+        return null;
     }
     
-    syn lazy TypeDecl Model.lookupDataConstructor(DataConstructorExp c);
+    syn lazy DataConstructor Model.lookupDataConstructor(DataConstructorExp c);
     eq Model.lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
     eq Model.getDecl().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
     eq Model.getBlock().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
     
-    inh TypeDecl DataConstructorExp.lookupDataConstructor(DataConstructorExp c);
+    inh DataConstructor DataConstructorExp.lookupDataConstructor(DataConstructorExp c);
     
-    syn lazy TypeDecl DataConstructorExp.getDecl() {
+    syn lazy DataConstructor DataConstructorExp.getDecl() {
         return lookupDataConstructor(this);
     }
     
@@ -121,6 +124,14 @@ aspect TypeResolution {
     inh Decl Exp.getContextDecl();
     inh Decl Method.getContextDecl();
     
+    
+    syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {
+        for (MethodSig d : getBodys()) {
+            if (d.getName().equals(name))
+                return d;
+        }
+        return null;
+    }
 }
 
 // Local Variables:

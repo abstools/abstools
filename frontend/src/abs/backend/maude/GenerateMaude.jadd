@@ -186,7 +186,7 @@ aspect GenerateMaude {
     }
 
     public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
-       DataTypeDecl decl = (DataTypeDecl) lookupDataConstructor(this);
+       DataTypeDecl decl = lookupDataConstructor(this).getDecl();
            
        boolean inlist = false;
        stream.print("\"" + getConstructor() + "\"[ ");

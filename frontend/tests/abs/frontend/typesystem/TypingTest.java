@@ -85,5 +85,15 @@ public class TypingTest extends FrontendTest {
         assertEquals(f.getType(), s.getRetExp().getType());
     }
     
+    @Test
+    public void testSyncCall() {
+        Model m = assertParseOk(STDLIB_STRING + " interface I { Bool m(); } { I i; i.m(); }");
+        assertEquals(m.getBoolType(), getFirstExp(m).getType());
+    }
     
+    @Test
+    public void testAsyncCall() {
+        Model m = assertParseOk(STDLIB_STRING + " interface I { Bool m(); } { I i; i!m(); }");
+        assertEquals(m.getFutType(m.getBoolType()), getFirstExp(m).getType());
+    }
 }

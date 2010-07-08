@@ -57,8 +57,16 @@ aspect Typing {
     /* EXPRESSIONS */
     
     syn lazy Type Exp.getType();
-     eq AsyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq SyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq AsyncCall.getType() {  
+        InterfaceDecl decl = ((InterfaceType)getCallee().getType()).getDecl();
+        MethodSig s = decl.lookupMethod(getMethod());
+        return getFutType(s.getReturnType().getType());
+    }
+    eq SyncCall.getType() { 
+        InterfaceDecl decl = ((InterfaceType)getCallee().getType()).getDecl();
+        MethodSig s = decl.lookupMethod(getMethod());
+        return s.getReturnType().getType();
+    }
     eq GetExp.getType() = getPureExp().getType();
     eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
     eq FieldUse.getType() = getDecl().getType();
@@ -69,7 +77,7 @@ aspect Typing {
     eq RelationalExpr.getType() = getBoolType();
     eq CaseExp.getType() = getBranch(0).getRight().getType(); 
     eq FnApp.getType() = ((FunctionDecl) lookup(getName())).getTypeUse().getType();
-    eq DataConstructorExp.getType() = lookupDataConstructor(this).getType();
+    eq DataConstructorExp.getType() = lookupDataConstructor(this).getDecl().getType(); // FIXME: parameteric types
     eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getIntType();

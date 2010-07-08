@@ -1,11 +1,11 @@
-Bool { True; False; }
+data Bool { True; False; }
 
-Int { }
+data Int { }
 
-Unit { Unit; }
+data Unit { Unit; }
 
-String { }
+data String { }
 
-Fut<A> { }
+data Fut<A> { }
 
-Opt<A> { None; Some(A); }
+data Opt<A> { None; Some(A); }

@@ -209,7 +209,8 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        DataTypeDecl decl = (DataTypeDecl) lookupDataConstructor(this);
+        DataConstructor c = lookupDataConstructor(this);
+        DataTypeDecl decl = c.getDecl();
         
         if (decl.getName().equals("Bool")) {
             stream.print(ABSBool.class.getName());
