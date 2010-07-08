@@ -67,7 +67,17 @@ aspect TypeChecker {
     }
     
     public void Method.typeCheck(SemanticErrorList e) {
-   	 throw new NotImplementedYetException("Type Checker",this);
+   	 Block b = getBlock();
+   	 Type lastType = getUnitType();
+   	 if (b.getNumStmt() > 0) {
+   		 lastType = b.getStmt(b.getNumStmt()-1).getType();
+   	 }
+   	 
+   	 if (!lastType.isSubtypeOf(getReturnType().getType())) {
+   		 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,lastType,getReturnType().getType()));
+   	 }
+   	 
+   	 b.typeCheck(e);
     }
 
     public void FieldDecl.typeCheck(SemanticErrorList e) { 
@@ -83,7 +93,7 @@ aspect TypeChecker {
    		 }
    		 getInitExp().typeCheck(e);
    	 } else {
-   		 if (!t.isReferenceType()) {
+   		 if (!t.isReferenceType() && !t.isFutureType()) {
    			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
    		 }
    	 }
@@ -92,6 +102,9 @@ aspect TypeChecker {
     }
     
     public void Stmt.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void ExpressionStmt.typeCheck(SemanticErrorList e) {
+   	 getExp().typeCheck(e);
+    }
     public void AssignStmt.typeCheck(SemanticErrorList e) {
    	 Type rht = getValue().getType();
    	 Type lht = getVar().getType();
@@ -102,37 +115,68 @@ aspect TypeChecker {
 		 getVar().typeCheck(e);
     }
     
-    public abstract void Exp.typeCheck(SemanticErrorList e);
+    public void ReturnStmt.typeCheck(SemanticErrorList e) {
+   	 Method m = getContextMethod();
+   	 Type rht = getRetExp().getType();
+   	 Type lht = m.getReturnType().getType();
+		 if (!rht.isSubtypeOf(lht)) {
+			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
+		 }
+   		 
+   	 getRetExp().typeCheck(e); 
+    }
+    
+    public void Exp.typeCheck(SemanticErrorList e) { }
     public void AsyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void SyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void GetExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void NewExp.typeCheck(SemanticErrorList e) { }
-    public void FieldUse.typeCheck(SemanticErrorList e) { }
-    public void VarUse.typeCheck(SemanticErrorList e) { }
-    public void TypeUse.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void GetExp.typeCheck(SemanticErrorList e) {  
+   	 if (!getPureExp().getType().isFutureType()) {
+   		 e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType())); 
+   	 }
+   	 getPureExp().typeCheck(e);
+    }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
    	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getIntType());
    	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getIntType());
+   	 getLeft().typeCheck(e);
+   	 getRight().typeCheck(e);
     }
     public void BoolExp.typeCheck(SemanticErrorList e) { 
    	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getBoolType());
    	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getBoolType());
+   	 getLeft().typeCheck(e);
+   	 getRight().typeCheck(e);
     }
-    public void RelationalExpr.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void RelationalExpr.typeCheck(SemanticErrorList e) { 
+   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getIntType());
+   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getIntType());
+   	 getLeft().typeCheck(e);
+   	 getRight().typeCheck(e);
+    }
+
+    public void EqualityExpr.typeCheck(SemanticErrorList e) {
+   	 getLeft().typeCheck(e);
+   	 getRight().typeCheck(e);
+    }
+    
     public void CaseExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); } 
     public void FnApp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void DataConstructorExp.typeCheck(SemanticErrorList e) { }
-    public void FunVar.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void DataConstructorExp.typeCheck(SemanticErrorList e) {
+   	 DataConstructor c = getDecl();
+   	 if (c.getNumConstructorArg() > 0) {
+   		 throw new NotImplementedYetException("Type Checker",this);
+   	 }
+    }
     public void LetExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void IntLiteral.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void StringLiteral.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void NullExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void ThisExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void MinusExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+
+    public void MinusExp.typeCheck(SemanticErrorList e) { 
+   	 TypeCheckerHelper.assertEqualTypes(e,getOperand(),getOperand().getType(),getIntType());
+       getOperand().typeCheck(e);
+    }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-        if (!getOperand().getType().isBoolType())
-            e.add(new TypeError(getOperand(),ErrorMessage.EXPECTED_TYPE,getBoolType(),getOperand().getType()));
+   	 TypeCheckerHelper.assertEqualTypes(e,getOperand(),getOperand().getType(),getBoolType());
+       getOperand().typeCheck(e);
     }
     
 

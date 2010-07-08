@@ -124,6 +124,10 @@ aspect TypeResolution {
     inh Decl Exp.getContextDecl();
     inh Decl Method.getContextDecl();
     
+    eq Method.getBlock().getContextMethod() = this;
+    eq Model.getBlock().getContextMethod() = null;
+    inh Method Stmt.getContextMethod();
+    
     
     syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {
         for (MethodSig d : getBodys()) {

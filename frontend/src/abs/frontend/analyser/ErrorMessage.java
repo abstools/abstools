@@ -7,9 +7,10 @@ public enum ErrorMessage {
     , UNKOWN_DATACONSTRUCTOR("Unknown datatype constructor: %s")
     , UNKOWN_INTERFACE_OR_DATATYPE("Unknown interface or datatype: %s")
     , DUPLICATE_TYPE_DECL("Duplicate type declaration: %s")
-    , EXPECTED_TYPE("Expected type %s but found type %s instead")
+    , EXPECTED_TYPE("Expected type %s, but found type %s instead")
     , NO_SUBTYPE("Type %s must be a subtype of type %s")
     , VAR_INIT_REQUIRED("A variable must be initialized if it is not of a reference type")
+    , EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead")
     ;
 
         

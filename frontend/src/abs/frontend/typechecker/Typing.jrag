@@ -24,6 +24,12 @@ aspect Typing {
     
     inh Type Stmt.getUnitType();
 
+    eq Model.getDecl().getUnitType() = getUnitType();
+    inh Type Decl.getUnitType();
+    
+    eq ClassDecl.getMethod().getUnitType() = getUnitType();
+    inh Type Method.getUnitType();
+
     syn lazy Type Decl.getType();
     
     eq ClassDecl.getType() = new UnionType(getImplementedInterfaceUses());
@@ -32,7 +38,9 @@ aspect Typing {
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);
     }
-    eq ParametricDataTypeDecl.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq ParametricDataTypeDecl.getType() { 
+   	 return new DataTypeType(this); 
+    }
     eq InterfaceDecl.getType() { 
         return new InterfaceType(this);
     }

@@ -38,6 +38,27 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("{ Int i = 4 + 5; }");
     }
     
+    @Test
+    public void getOk() {
+        assertNoTypeErrors("{ Fut<Bool> f; f.get; }");
+    }
+
+    @Test
+    public void methodEmptyOk() {
+        assertNoTypeErrors("class C { Unit m() { } }");
+    }
+    
+    @Test
+    public void methodNoReturnOk() {
+        assertNoTypeErrors("class C { Unit m() { Bool b = True; b = False; } }");
+    }
+
+    @Test
+    public void methodReturnOk() {
+        assertNoTypeErrors("class C { Unit m() { Bool b = True; return Unit; } }");
+    }
+    
+    
     // NEGATIVE TESTS
     
     @Test
@@ -52,6 +73,11 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void getError() {
+        assertTypeErrors("{ Bool f = True; f.get; }");
+    }
+    
+    @Test
     public void orError() {
         assertTypeErrors("{ Bool b = True || 5; }");
     }
@@ -59,6 +85,16 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void andError() {
         assertTypeErrors("{ Bool b = 5 && True; }");
+    }
+    
+    @Test
+    public void methodReturnError() {
+        assertTypeErrors("class C { Unit m() { return True; } }");
+    }
+    
+    @Test
+    public void methodMissingReturn() {
+        assertTypeErrors("class C { Bool m() {  } }");
     }
     
     @Test
