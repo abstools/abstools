@@ -8,16 +8,19 @@ aspect Typing {
     syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup("Int"));
     syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup("Bool"));
     syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup("String"));
+    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup("Fut"), typeArg);
 
     eq Model.getBlock().getUnitType() = getUnitType();
     eq Model.getBlock().getIntType() = getIntType();
     eq Model.getBlock().getBoolType() = getBoolType();
     eq Model.getBlock().getStringType() = getStringType();
+    eq Model.getBlock().getFutType(Type typeArg) = getFutType(typeArg);
 
     inh Type Exp.getUnitType();
     inh Type Exp.getIntType();
     inh Type Exp.getBoolType();
     inh Type Exp.getStringType();
+    inh Type Exp.getFutType(Type typeArg);
     
     inh Type Stmt.getUnitType();
 
@@ -58,7 +61,6 @@ aspect Typing {
     eq SyncCall.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq GetExp.getType() = getPureExp().getType();
     eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
-    eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq FieldUse.getType() = getDecl().getType();
     eq VarUse.getType() = getDecl().getType();
     eq TypeUse.getType() = getDecl().getType();

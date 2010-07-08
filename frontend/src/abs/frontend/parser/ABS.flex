@@ -72,7 +72,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "implements"  { return sym(Terminals.IMPLEMENTS); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
- "Fut"         { return sym(Terminals.FUT); }
  "skip"        { return sym(Terminals.SKIP); }
  "get"         { return sym(Terminals.GET); }
  "null"        { return sym(Terminals.NULL); }

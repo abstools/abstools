@@ -9,6 +9,8 @@ import java.io.StringReader;
 import org.junit.Before;
 import org.junit.Test;
 
+import abs.common.StandardLib;
+
 public class ParserTest {
 
 
@@ -83,8 +85,8 @@ public class ParserTest {
 		assertParseOk("{ Int x ; Int y ;  skip ; return x.get ;   }"); //Variable decls
 		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
-  		assertParseOk("{ Fut(I) x ; J z ; }") ;	//need trailing semicolon here. 
-		assertParseOk("{ Fut(I) x ; Fut(Fut(I)) y ;  J z ; K w  ; }") ;	
+  		assertParseOk("{ Fut<I> x ; J z ; }") ;	//need trailing semicolon here. 
+		assertParseOk(StandardLib.STDLIB_STRING+" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }") ;	
 		assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable decls with/without initializers
 		//
 }

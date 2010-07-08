@@ -5,6 +5,7 @@ data Unit {} // builtin
 data String {} // builtin  
 data Int {} // builtin
 data Bool { True; False; } // builtin
+data Fut<A> { }
 
 data Set<A> { EmptySet; Insert(A, Set<A>); }
 data List<A> { Nil; Cons(A, List<A>); }
@@ -138,8 +139,8 @@ class Node(DataBase db, Filename file) implements Peer {
   Network admin = null;
 
   Unit run() {
-    Fut(Catalog) c ; 
-    Fut(List<Server>) f;
+    Fut<Catalog> c ; 
+    Fut<List<Server>> f;
     Server server ; 
 
     await admin != null;
@@ -160,14 +161,14 @@ class Node(DataBase db, Filename file) implements Peer {
   }
 
   Filenames enquire() { 
-    Fut(Filenames) f ;  
+    Fut<Filenames> f ;  
     f = db!listFiles();
     await f?;
     return f.get;
   }
 
   Int getLength(Filename fId) {
-    Fut(Int) length ; 
+    Fut<Int> length ; 
     length = db!getLength(fId);
     await length?;
     return length.get;
@@ -175,7 +176,7 @@ class Node(DataBase db, Filename file) implements Peer {
 
   Packet getPack(Filename fId, Int pNbr) {
     File f;
-    Fut(File) ff;
+    Fut<File> ff;
     ff = db!getFile(fId);
     await ff?;
     f = ff.get;
@@ -185,9 +186,9 @@ class Node(DataBase db, Filename file) implements Peer {
   Catalog availFiles (List<Server> sList) {
     Catalog cat;
     Filenames fNames; 
-    Fut(Filenames) fN;
+    Fut<Filenames> fN;
     Catalog catList; 
-    Fut(Catalog) cL;
+    Fut<Catalog> cL;
 
     if (sList == Nil) {
       cat = Nil;
@@ -206,8 +207,8 @@ class Node(DataBase db, Filename file) implements Peer {
     File file = Nil;
     Packet pack;
     Int lth;
-    Fut(Int) l1;
-    Fut(Packet) l2;
+    Fut<Int> l1;
+    Fut<Packet> l2;
 
     l1 = sId!getLength(fId);
     await l1?;

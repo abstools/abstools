@@ -30,7 +30,7 @@ class Bar implements Foo, Baz {
     //fieldDeclList
     Bool aField ; 
     Foo fooRef1 ; 
-    Fut(Foo) fooRef ; 
+    Fut<Foo> fooRef ; 
     //method*
     Bool isOK () {Bool mVar ; skip ; return True ; }
     Bool isNotOK () {Bool mVar ; skip ; return False ; }

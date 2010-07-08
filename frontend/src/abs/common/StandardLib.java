@@ -5,7 +5,8 @@ public class StandardLib {
         "data Bool { True; False; }\n" +
         "data Unit { Unit; }\n" +
         "data Int { }\n" +
-        "data String { }\n"
+        "data String { }\n" +
+        "data Fut<A> { }\n"
         ; 
     
 }

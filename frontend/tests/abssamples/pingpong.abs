@@ -8,6 +8,7 @@
 
 data Unit {}
 data String {}
+data Fut<A> {}
 
 
 interface Ping {
@@ -40,7 +41,7 @@ class Ping  implements Ping {
     Unit run(){
 
       Unit x; 
-      Fut(String) reply;
+      Fut<String> reply;
       
       reply = pong!m(hello_pong); 
       await reply? ; 
@@ -71,7 +72,7 @@ class Pong implements Pong {
     Unit run(){
       
       Unit x;
-      Fut(String) reply;
+      Fut<String> reply;
       
       reply = ping!m(hi_ping); 
       await reply? ; 

@@ -149,7 +149,6 @@ TypeParameterDecl datatypeparam =
 Access type_exp =
 	  TYPEIDENTIFIER.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
 	| TYPEIDENTIFIER.id 		{: return new UnresolvedTypeUse(id); :}
-	| FUT LPAREN type_exp.t RPAREN {: return new FutureTypeUse(t); :}
 	;	
 
 //fix class_var --> field

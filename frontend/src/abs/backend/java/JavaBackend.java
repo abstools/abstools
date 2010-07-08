@@ -20,6 +20,7 @@ import AST.CompilationUnit;
 import AST.JavaParser;
 import AST.Program;
 import abs.backend.java.lib.ABSBool;
+import abs.backend.java.lib.ABSFut;
 import abs.backend.java.lib.ABSInteger;
 import abs.backend.java.lib.ABSString;
 import abs.frontend.ast.DataTypeUse;
@@ -116,6 +117,7 @@ public class JavaBackend {
         res.put("Int",ABSInteger.class.getName());
         res.put("Bool",ABSBool.class.getName());
         res.put("String",ABSString.class.getName());
+        res.put("Fut",ABSFut.class.getName());
         return res;
     }
 
@@ -124,6 +126,9 @@ public class JavaBackend {
         String res = dataTypeMap.get(absType.getName());
         if (res != null)
             return res;
+        if (absType.getType().isFutureType()) {
+            // FIXME: implement future type
+        }
         return absType.getName();
     }
     

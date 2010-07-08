@@ -46,7 +46,6 @@ FieldUse:				VarOrFieldUse;        // this.f
 
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 
-FutureTypeUse:			Access ::= Access ;  // A future doesn't have a name as such
 
 
 /*
