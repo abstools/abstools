@@ -1,22 +1,17 @@
 package abs.frontend.typesystem;
 
+import static abs.common.StandardLib.STDLIB_STRING;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-
-import static org.junit.Assert.*;
-
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.Exp;
-import abs.frontend.ast.LetExp;
+import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ReturnStmt;
-import abs.frontend.typechecker.DataTypeType;
-import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.UnionType;
-
-import static abs.common.StandardLib.*;
 
 public class TypingTest extends FrontendTest {
 
@@ -80,5 +75,15 @@ public class TypingTest extends FrontendTest {
         Model m = assertParseOk("interface I {} class C implements I {} { I i; i = new C(); }");
         assertEquals(m.localLookup("I").getType(),((UnionType)getFirstExp(m).getType()).getType(0));
     }
+    
+    @Test
+    public void testFieldUse() {
+        Model m = assertParseOk(STDLIB_STRING + " class C { Bool f; Bool m() { return this.f; } }");
+        ClassDecl d = (ClassDecl) m.localLookup("C");
+        FieldDecl f = d.getField(0);
+        ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
+        assertEquals(f.getType(), s.getRetExp().getType());
+    }
+    
     
 }

@@ -19,6 +19,8 @@ aspect Typing {
     inh Type Exp.getBoolType();
     inh Type Exp.getStringType();
     
+    inh Type Stmt.getUnitType();
+
     syn lazy Type Decl.getType();
     
     eq ClassDecl.getType() = new UnionType(getImplementedInterfaceUses());
@@ -46,6 +48,9 @@ aspect Typing {
         throw new NotImplementedYetException("Type Checker",this);
     }
     
+    /* STMTS */
+    syn Type Stmt.getType() = getUnitType();
+    
     /* EXPRESSIONS */
     
     syn lazy Type Exp.getType();
@@ -54,7 +59,7 @@ aspect Typing {
     eq GetExp.getType() = getPureExp().getType();
     eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
     eq FutureTypeUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
-    eq FieldUse.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq FieldUse.getType() = getDecl().getType();
     eq VarUse.getType() = getDecl().getType();
     eq TypeUse.getType() = getDecl().getType();
     eq ArithmeticExp.getType() = getIntType();

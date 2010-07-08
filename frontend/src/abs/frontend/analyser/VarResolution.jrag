@@ -90,6 +90,14 @@ aspect VarResolution {
         }
         return null;
     }
+    
+    eq ClassDecl.localLookupVarName(String name) {
+        for (FieldDecl d : getFields()) {
+            if (d.getName().equals(name))
+                return d;
+        }
+        return null;
+    }
 
     eq Block.getStmt(int i).lookupVarName(String name) {
         VarOrFieldDecl d = localLookupVarName(name);
