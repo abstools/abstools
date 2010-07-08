@@ -2,6 +2,9 @@ import abs.common.*;
 
 import abs.frontend.typechecker.*;
 
+import abs.frontend.typechecker.TypeCheckerHelper;
+
+
 aspect TypeChecker {
     
     
@@ -16,7 +19,7 @@ aspect TypeChecker {
     
     public void Model.typeCheck(SemanticErrorList e) {
         for (Decl d : getDecls()) {
-            //d.typeCheck(e);
+            d.typeCheck(e);
         }
         
         if (hasBlock()) {
@@ -24,38 +27,101 @@ aspect TypeChecker {
         }
     }
     
-    public void Decl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    
+    // DECLS
+    
+    public abstract void Decl.typeCheck(SemanticErrorList e);  
+    
+    public void ClassDecl.typeCheck(SemanticErrorList e) {
+   	 // TODO: check that class implements an interface
+   	 // TODO: check that class does not implement same interface twice
+   	 for (FieldDecl f : getFields()) {
+   		  f.typeCheck(e);
+   	  }
+   	  for (Method m : getMethods()) {
+   		  m.typeCheck(e);
+   	  }
+    }
+    
+    public void FunctionDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void InterfaceDecl.typeCheck(SemanticErrorList e) {
+   	 // TODO: implement
+    }
+    public void DataTypeDecl.typeCheck(SemanticErrorList e) {
+   	 // TODO: implement
+    }
+    
+    public void TypeSynDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void TypeParameterDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void UnknownDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    
+    
     public void Block.typeCheck(SemanticErrorList e) {
         for (VarDecl v : getVars()) {
-            //v.typeCheck();
+            v.typeCheck(e);
         }
         
         for (Stmt s : getStmts()) {
             s.typeCheck(e);
         }
     }
+    
+    public void Method.typeCheck(SemanticErrorList e) {
+   	 throw new NotImplementedYetException("Type Checker",this);
+    }
 
-    public void VarDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void FieldDecl.typeCheck(SemanticErrorList e) { 
+   	 throw new NotImplementedYetException("Type Checker",this); 
+    }
+    
+    public void VarDecl.typeCheck(SemanticErrorList e) { 
+   	 Type t = getAccess().getType();
+   	 if (hasInitExp()) {
+   		 Type te = getInitExp().getType();
+   		 if (!te.isSubtypeOf(t)) {
+   			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,te,t));
+   		 }
+   		 getInitExp().typeCheck(e);
+   	 } else {
+   		 if (!t.isReferenceType()) {
+   			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
+   		 }
+   	 }
+   	 
+   	 
+    }
     
     public void Stmt.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void AssignStmt.typeCheck(SemanticErrorList e) {
-        getValue().typeCheck(e);
+   	 Type rht = getValue().getType();
+   	 Type lht = getVar().getType();
+		 if (!rht.isSubtypeOf(lht)) {
+			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
+		 }
+		 getValue().typeCheck(e);
+		 getVar().typeCheck(e);
     }
     
     public abstract void Exp.typeCheck(SemanticErrorList e);
     public void AsyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void SyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void GetExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void NewExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void FieldUse.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void VarUse.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void NewExp.typeCheck(SemanticErrorList e) { }
+    public void FieldUse.typeCheck(SemanticErrorList e) { }
+    public void VarUse.typeCheck(SemanticErrorList e) { }
     public void TypeUse.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void ArithmeticExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void BoolExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
+   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getIntType());
+   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getIntType());
+    }
+    public void BoolExp.typeCheck(SemanticErrorList e) { 
+   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getBoolType());
+   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getBoolType());
+    }
     public void RelationalExpr.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void CaseExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); } 
     public void FnApp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void DataConstructorExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void DataConstructorExp.typeCheck(SemanticErrorList e) { }
     public void FunVar.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void LetExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void IntLiteral.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }

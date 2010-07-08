@@ -11,4 +11,9 @@ public final class NullType extends ReferenceType {
     public boolean isNullType() {
         return true;
     }
+    
+    @Override
+   public boolean isSubtypeOf(Type t) {
+      return t instanceof ReferenceType;
+   }
 }

@@ -51,4 +51,9 @@ public abstract class Type {
             return false;
         return true;
     }
+    
+    public boolean isSubtypeOf(Type t) {
+   	 // default implementation 
+   	 return equals(t);
+    }
 }

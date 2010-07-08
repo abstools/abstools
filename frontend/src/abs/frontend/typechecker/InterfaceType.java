@@ -1,6 +1,7 @@
 package abs.frontend.typechecker;
 
 import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.InterfaceTypeUse;
 
 public class InterfaceType extends ReferenceType {
     private final InterfaceDecl decl;
@@ -29,6 +30,19 @@ public class InterfaceType extends ReferenceType {
     @Override
     public int hashCode() {
         return decl.hashCode();
+    }
+    
+    @Override
+    public boolean isSubtypeOf(Type t) {
+   	 if (this.equals(t))
+   		 return true;
+
+ 		 for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
+ 			 if (i.getType().isSubtypeOf(t))
+ 				 return true;
+   	 }
+   	 
+   	 return false;
     }
     
 }
