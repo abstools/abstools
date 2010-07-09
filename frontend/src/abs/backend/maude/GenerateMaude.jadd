@@ -7,7 +7,7 @@ aspect GenerateMaude {
 
     public void Model.generateMaude(java.io.PrintStream stream) {
         boolean hasClasses = false;
-        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR .\n");
+        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR-RL .\n");
         for (Decl decl : getDecls()) {
             if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);
