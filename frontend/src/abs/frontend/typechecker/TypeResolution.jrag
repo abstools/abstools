@@ -4,20 +4,13 @@ aspect TypeResolution {
   
     // Find the type declaration for a type use.
   
-    syn boolean Decl.isFunction();
-    syn boolean Decl.isClass();
-    syn boolean Decl.isDataType();
-    syn boolean Decl.isInterface();
-    syn boolean Decl.isTypeSyn();
-    syn boolean Decl.isTypeParameter();
+    syn boolean Decl.isFunction() = false;
+    syn boolean Decl.isClass() = false;
+    syn boolean Decl.isDataType() = false;
+    syn boolean Decl.isInterface() = false;
+    syn boolean Decl.isTypeSyn() = false;
+    syn boolean Decl.isTypeParameter() = false;
   
-    eq Decl.isFunction() = false;
-    eq Decl.isClass() = false;
-    eq Decl.isInterface() = false;
-    eq Decl.isDataType() = false;
-    eq Decl.isTypeSyn() = false;
-    eq Decl.isTypeParameter() = false;
-
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
