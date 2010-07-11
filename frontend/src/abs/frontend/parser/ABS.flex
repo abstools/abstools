@@ -152,5 +152,5 @@ IntLiteral = 0 | [1-9][0-9]*
 }
 
 
-.|\n          { throw new RuntimeException("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
+.|\n          { throw new SyntaxError("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
 <<EOF>>       { return sym(Terminals.EOF); }

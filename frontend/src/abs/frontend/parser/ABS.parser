@@ -28,6 +28,10 @@ import abs.frontend.ast.*;
   }
 
   { report = new Events(); } // Use error handler in parser
+  
+  public void setEventHandler(Parser.Events handler) {
+    report = handler;
+  }
 
 :};
 
