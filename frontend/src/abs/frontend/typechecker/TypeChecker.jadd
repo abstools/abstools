@@ -299,6 +299,7 @@ aspect TypeChecker {
    	 for (int i = 0; i < getNumParam(); i++) {
    		 Type argType = c.getConstructorArg(i).getType();
    		 Pattern p = getParam(i);
+   		 p.typeCheck(e,argType);
    		 if (!p.getType().isSubtypeOf(argType)) {
    			 e.add(new TypeError(this,ErrorMessage.PATTERN_WRONG_TYPE,argType,p.getType()));
    		 }
