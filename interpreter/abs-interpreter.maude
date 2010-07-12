@@ -86,29 +86,6 @@ fmod ABS-DATA-VIDLIST is
 endfm
 
 
-*** The interpreter should extend this module with his own definition
-*** of label values.  For example, the model checker uses his own version
-*** of labels.  This definition is the one used in the interpreter.
-*** op label : Nat -> Label [ctor] .
-fmod ABS-DATA-LABEL is
-
-  extending ABS-DATA-SIG .
-
-  sort Label .
-  subsort Label < Data .
-
-  --- Needed in the model checker for tail recursion.
-  op tag : Label -> Label [ctor format (c o)] .
-  var L : Label .
-  eq tag(tag(L)) = L .
-
-endfm
-
-view Label from TRIV to ABS-DATA-LABEL is
-  sort Elt to Label .
-endv
-
-
 
 *** Specification of all Abs expressions.  This is the abstract syntax.
 *** Semantics will be provided by the different modules.
@@ -469,6 +446,76 @@ endfm
 
 
 
+***************************************************************************
+***
+*** Signature of programs and states.
+***
+***************************************************************************
+
+*** The sort of a class identifier.
+***
+fmod ABS-CID is
+  protecting STRING .
+  sort Cid .
+
+  subsort String < Cid .
+
+  op Class : -> Cid [ctor] .
+  op Start : -> Cid [ctor] .
+  op None : -> Cid [ctor] .
+endfm
+
+view Cid from TRIV to ABS-CID is
+  sort Elt to Cid .
+endv
+
+
+*** The sort of an object identifier.
+***
+fmod ABS-OID is
+  protecting NAT .
+  protecting STRING .
+  protecting CONVERSION .
+  extending ABS-DATA-SIG .
+  sort Oid .
+
+  subsort Oid < Data .
+
+  --- Constructor of object names
+  op ob(_) : String -> Oid [ctor format (d d ! o d)] .
+
+  var B : String .
+  var F : Nat .
+
+  --- Create a new fresh name for an object
+  op newId : String Nat -> Oid .
+  eq newId(B, F)  = ob(B + "-" + string(F,10)) .
+
+endfm
+
+view Oid from TRIV to ABS-OID is
+  sort Elt to Oid .
+endv
+
+*** The interpreter could extend this module with his own definition
+*** of label values.  For example, the model checker uses his own version
+*** of labels.  This definition is the one used in the interpreter.
+fmod ABS-DATA-LABEL is
+
+  extending ABS-DATA-SIG .
+  protecting ABS-OID .
+
+  sort Label .
+  subsort Label < Data .
+
+  op label : Oid Nat -> Label [ctor format (o o)] .
+endfm
+
+view Label from TRIV to ABS-DATA-LABEL is
+  sort Elt to Label .
+endv
+
+
 *** The DATATYPES module collects all predefined data types into one module.
 fmod ABS-DATATYPES is
     extending ABS-DATA-SIG .
@@ -482,12 +529,6 @@ fmod ABS-DATATYPES is
     extending ABS-DATA-TIME .
 endfm
 
-
-***************************************************************************
-***
-*** Signature of programs and states.
-***
-***************************************************************************
 
 ***
 *** Binding variables to values.
@@ -538,52 +579,6 @@ fmod ABS-SUBST is
   eq $createSubst(S2, (A, AL), (D :: DL)) = 
     $createSubst($insert(A, D, S2), AL, DL) .
 endfm
-
-
-*** The sort of a class identifier.
-***
-fmod ABS-CID is
-  protecting STRING .
-  sort Cid .
-
-  subsort String < Cid .
-
-  op Class : -> Cid [ctor] .
-  op Start : -> Cid [ctor] .
-  op None : -> Cid [ctor] .
-endfm
-
-view Cid from TRIV to ABS-CID is
-  sort Elt to Cid .
-endv
-
-
-*** The sort of an object identifier.
-***
-fmod ABS-OID is
-  protecting NAT .
-  protecting STRING .
-  protecting CONVERSION .
-  extending ABS-DATA-SIG .
-  sort Oid .
-
-  subsort Oid < Data .
-
-  --- Constructor of object names
-  op ob(_) : String -> Oid [ctor format (d d ! o d)] .
-
-  var B : String .
-  var F : Nat .
-
-  --- Create a new fresh name for an object
-  op newId : String Nat -> Oid .
-  eq newId(B, F)  = ob(B + "-" + string(F,10)) .
-
-endfm
-
-view Oid from TRIV to ABS-OID is
-  sort Elt to Oid .
-endv
 
 
 
@@ -1011,165 +1006,25 @@ fmod ABS-EVAL-TIMED is
 
 endfm
 
+
+
 *** The machine.
 ***
 *** We have one module per statement per evaluation strategy, and combine them
 *** in the end.
 
-mod ABS-STMT-SKIP-RL is
+
+*** Some common functionality: scheduling, trivial statements that are always
+*** equations, etc.
+mod ABS-MACHINE-BASICS is
   protecting ABS-EVAL .
-  --- skip as rewrite rule.
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
 
-  rl
-    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label skip] .
-endm
-
-mod ABS-STMT-ASSIGN-RL is
-  protecting ABS-EVAL .
-  --- assign as rewrite rule.
-  ---
-  --- Execute an assignment.  The expression on the right hand side of the
-  --- assignment is evaluated and stored as new value for the left hand side
-  --- identifier.
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var Q : String .
-
-  crl
-    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
-  =>
-    if hasMapping(L, @ Q) then
-      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
-    else
-      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    fi
-    if D := eval(E, (S :: L), none)
-    [label assignment] .
-
-  crl
-    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none)
-    [label field-assignment] .
-endm
-
-mod ABS-STMT-COND-RL is
-  protecting ABS-EVAL .
-  --- if_then_else as rewrite rule.
-  ---
-  var O : Oid .                 var C : Cid .    vars S L : Subst .
-  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
-
-  rl
-    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
-  =>
-    if eval(E, (S :: L), none) asBool then
-      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
-    else
-      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
-    fi
-    [label if-then-else] .
-endm
-
-mod ABS-STMT-WHILE-RL is
-  protecting ABS-EVAL .
-  --- while as rewrite rule.
-  ---
-  --- During model checking we want to be able to observe infinite loops.
-  --- Therefore, while should always be a rule.
-  ---
-  var O : Oid .             var C : Cid .    vars S L : Subst .
-  vars SL SL1 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
-
-  rl
-    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: S,
-              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
-              PrQ: W, Lcnt: F >
-    [label while] .
-endm
-
-mod ABS-STMT-SUSPEND-RL is
-  protecting ABS-EVAL .
-  --- suspend as rewrite rule.
-  ---
-  --- The suspend statement is an unconditional processor release point.
-  ---
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-
-  rl
-    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
-    [label suspend] .
-endm
-
-mod ABS-STMT-AWAIT-RL is
-  protecting ABS-EVAL .
-  --- await as rewrite rule.
-  ---
-  --- We capture the entire state here since the condition E can depend on the
-  --- state of Futures contained in CN.
-  var O : Oid .             var C : Cid .    vars S L : Subst .
-  var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   var Q : String .
-
-  rl
-    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
-  =>
-    if enabled(await E, (S :: L), CN) then
-      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
-    else
-      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
-    fi
-      [label await] .
-endm
-
-
-mod ABS-SIMULATOR-RL is
-
-  --- A machine using rewrite rules.
-  protecting ABS-EVAL .
-  protecting ABS-STMT-SKIP-RL .
-  protecting ABS-STMT-ASSIGN-RL .
-  protecting ABS-STMT-COND-RL .
-  protecting ABS-STMT-WHILE-RL .
-  protecting ABS-STMT-SUSPEND-RL .
-  protecting ABS-STMT-AWAIT-RL .
-
-  vars F G : Nat .                     --- Counters for generating fresh names
-  vars O O1 : Oid .                    --- Object identifiers
-  vars C CC : Cid .                    --- Class names
-  var Q : String .                     --- Generic names (attribute and method)
-  vars A A' : Vid .                        --- Generic attribute names
-  var AL : VidList .                   --- List of LHS
-  var N : Label .                      --- Call label
-  var D : Data .                       --- Value
-  vars DL DL2 : DataList .             --- List of values
-  var E : Expr .                       --- Expression
-  var EL : ExprList .                  --- List of Expressions
-  var ST : Stmt .                      --- Statement
-  vars S S1 L L1 : Subst .             --- Object and process states
-  var S2 : SSubst .
-  vars SL SL1 SL2 : StmtList .         --- List of statements
-  var P : Process .
-  var W : MProc .
-  var MS : MMtd .
-  var CN : Configuration .
-  var CO : Bool .                      --- Whether a future completed
-  var B : Cid .
-
-  op label : Oid Nat -> Label [ctor format (o o)] .
+  vars O O1 : Oid .         var C : Cid .        vars S S1 S2 L : Subst .
+  var SL : StmtList .       var W : MProc .      vars F G : Nat .
+  var CN : Configuration .  var P : Process .    var A : Vid .
+  var E : Expr .            var AL : VidList .   var N : Label .
+  var Q : String .          var MS : MMtd .      var CO : Bool .
+  var D : Data .            var DL : DataList .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1184,7 +1039,272 @@ mod ABS-SIMULATOR-RL is
   if ready(SL, (S :: L), CN)
       [label PrQ-ready] .
 
+  --- transport
+  ---
+  --- Receive an invocation message to bind the method body.  We never make
+  --- this a rule -- scheduling is done elsewhere.
+  ---
+  eq
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    invoc(O1, O, N, Q, DL)
+  =
+    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
+    [label transport-imsg] .
 
+  --- mark
+  ---
+  --- Mark a label in use.  We don't bother to make this a rule until we need
+  --- it.
+  ceq
+    < O : C | Att: S, Pr: { L | $mark(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
+  if N = (S :: L)[A]
+      [label mark] .
+
+  --- free
+  ---
+  --- Free a label.  Make sure that the use of labels is linear.  We don't
+  --- bother to make this a rule until we need it.
+  ---
+  --- sd(G,1) works, because G is always positive. Maude does not have a
+  --- nice decrement operator.
+  ceq
+    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+  =
+    < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
+  if N = (S :: L)[A]
+      [label free] .
+
+
+  --- Create a new environment.  This is for supporting local declarations in
+  --- blocks etc.
+  eq
+    < O : C | Att: S, Pr: { L | $push S2 ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L :: S2 | SL }, PrQ: W, Lcnt: F >
+    [label $push] .
+
+  eq
+    < O : C | Att: S, Pr: { L :: S2 | $pop ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label $pop] .
+
+
+  --- assert
+  ---
+  eq
+    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
+  =
+    { if eval(E, (S :: L), CN) asBool then
+        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      else
+        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
+      fi CN  }
+    [label assert] .
+endm
+
+
+
+*** The Skip statement.
+mod ABS-STMT-SKIP-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+
+  rl
+    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label skip] .
+endm
+fmod ABS-STMT-SKIP-EQ is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+
+  eq
+    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label skip] .
+endfm
+
+*** The Assign statement.
+  
+*** Execute an assignment.  The expression on the right hand side of the
+*** assignment is evaluated and stored as new value for the left hand side
+*** identifier.
+mod ABS-STMT-ASSIGN-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .       var D : Data .   var Q : String .
+
+  *** Variable or field assignment
+  crl
+    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+  =>
+    if hasMapping(L, @ Q) then
+      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    fi
+    if D := eval(E, (S :: L), none)
+    [label assignment] .
+
+  *** Field assignment
+  crl
+    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none)
+    [label field-assignment] .
+endm
+fmod ABS-STMT-ASSIGN-EQ is
+  protecting ABS-EVAL .
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .       var D : Data .   var Q : String .
+
+  *** Variable or field assignment.
+  ceq
+    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+  =
+    if hasMapping(L, @ Q) then
+      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    fi
+    if D := eval(E, (S :: L), none)
+    [label assignment] .
+
+  *** Field assignment.
+  ceq
+    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none)
+    [label field-assignment] .
+endfm
+
+*** The conditional (if_then_else) statement.
+mod ABS-STMT-COND-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .                 var C : Cid .    vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+
+  rl
+    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+  =>
+    if eval(E, (S :: L), none) asBool then
+      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+    fi
+    [label if-then-else] .
+endm
+fmod ABS-STMT-COND-EQ is
+  protecting ABS-EVAL .
+
+  var O : Oid .                 var C : Cid .    vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+
+  eq
+    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+  =
+    if eval(E, (S :: L), none) asBool then
+      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+    fi
+    [label if-then-else] .
+endfm
+
+*** The looping (while) statement.
+mod ABS-STMT-WHILE-RL is
+  protecting ABS-EVAL .
+  var O : Oid .             var C : Cid .    vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+
+  rl
+    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S,
+              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
+              PrQ: W, Lcnt: F >
+    [label while] .
+endm
+fmod ABS-STMT-WHILE-EQ is
+  protecting ABS-EVAL .
+
+  var O : Oid .             var C : Cid .    vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+
+  eq
+    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S,
+              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
+              PrQ: W, Lcnt: F >
+    [label while] .
+endfm
+
+*** The Suspend statement.
+***
+*** The suspend statement is an unconditional processor release point.
+mod ABS-STMT-SUSPEND-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+
+  rl
+    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    [label suspend] .
+endm
+fmod ABS-STMT-SUSPEND-EQ is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+
+  eq
+    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    [label suspend] .
+endfm
+
+*** The Await statement.
+  
+*** These rules capture the entire state CN since the condition E can depend
+*** on the state of Futures (and therefore CN needs to be passed to
+*** "enabled").
+mod ABS-STMT-AWAIT-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .             var C : Cid .    vars S L : Subst .
+  var SL : StmtList .       var W : MProc .  var F : Nat .
+  var CN : Configuration .  var E : Expr .   var Q : String .
 
   --- OPTIMISATION: Optimize label access in await statements.  We cannot do
   --- this for instance variables because another process might change the
@@ -1195,70 +1315,52 @@ mod ABS-SIMULATOR-RL is
     < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
   if hasMapping(L, @ Q) .
 
+  rl
+    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+  =>
+    if enabled(await E, (S :: L), CN) then
+      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+    else
+      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+    fi
+      [label await] .
+endm
+fmod ABS-STMT-AWAIT-EQ is
+  protecting ABS-EVAL .
 
-  --- METHOD CALLS
-  ---
+  var O : Oid .             var C : Cid .    vars S L : Subst .
+  var SL : StmtList .       var W : MProc .  var F : Nat .
+  var CN : Configuration .  var E : Expr .   var Q : String .
 
-  --- OPTIMISATION: Reduce the value of a label in a process to avoid constant
-  --- re-evaluation.  Cannot be done for instance variables because another
-  --- process might change the binding.
-  ceq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+  --- OPTIMISATION: Optimize label access in await statements.  We cannot do
+  --- this for instance variables because another process might change the
+  --- binding.
+  ceq
+    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F >
-  if hasMapping(L, A) .
+    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
+  if hasMapping(L, @ Q) .
 
+  eq
+    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+  =
+    if enabled(await E, (S :: L), CN) then
+      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+    else
+      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+    fi
+      [label await] .
+endfm
 
-  --- receive-comp
-  ---
-  --- Must be a rule even in the model checker, because there might be
-  --- multiple completion messages with the same label but different return
-  --- values in the queue.
-  ---
-  rl
-    < O : C |  Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-  =>
-    < O : C |  Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-    [label receive-comp-label] .
+*** METHOD CALLS
+mod ABS-CALLSTMTS-RL is
+  protecting ABS-EVAL .
 
-  crl
-    < O : C |  Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-  =>
-    < O : C |  Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-  if N = (S :: L)[A]
-    [label receive-comp-var] .
-
-
-  --- local-reply
-  ---
-  crl
-    < O : C | Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
-  =>
-    < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
-              PrQ: W , { L | get(N ; A) ; SL }, Lcnt: F >
-  if L1[@ ".label"] == N
-      [label local-reply] .
-
-
-  --- continue
-  ---
-  --- Continue after executing the code of a local reply.  This is
-  --- always a rule.  We want it to be a rule in the interpreter.
-  --- 
-  --- If we support shared futures, this must be a rule in the model
-  --- checker, because there might be two processes in PrQ which await a
-  --- reply to the label.
-  rl
-    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; A) ; SL1},
-              Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: { L1 | get(N ; A) ; SL1 }, PrQ: W,
-              Lcnt: F >
-    [label continue] .
-
+  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
+  var SL : StmtList .       var W : MProc .      vars F G : Nat .
+  var CN : Configuration .  var E : Expr .       var Q : String .
+  var A : Vid .             var EL : ExprList .  var AL : VidList .
+  var N : Label .           var DL : DataList .  var MS : MMtd .
 
   --- remote-async-call
   ---
@@ -1284,67 +1386,6 @@ mod ABS-SIMULATOR-RL is
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if N := label(O, F) /\ O = eval(E, (S :: L), none)
       [label remote-async-self-call] .
-
-
-  --- return
-  ---
-  crl
-    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: false, References: G, Value: null >
-  =>
-    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
-    *** the process.  We cannot return immediately since there might be
-    *** `release' or `$pop' statements after this, so we must rely on the
-    *** compiler / type-checker to ascertain that there's one and only one
-    *** return statement in each code branch.
-    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
-  if N == L[@ ".label"]
-      [label return] .
-
-
-  --- transport
-  ---
-  --- Receive an invocation message to bind the method body.
-  ---
-  eq
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    invoc(O1, O, N, Q, DL)
-  =
-    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-    [label transport-imsg] .
-
-  --- mark
-  ---
-  --- Mark a label in use.
-  crl
-    < O : C | Att: S, Pr: { L | $mark(A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
-  =>
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
-  if N = (S :: L)[A]
-      [label mark] .
-
-
-  --- free
-  ---
-  --- Free a label.  Make sure that the use of labels is linear.
-  ---
-  --- sd(G,1) works, because G is always positive. Maude does not have a
-  --- nice decrement operator.
-  crl
-    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
-  =>
-    < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
-  if N = (S :: L)[A]
-      [label free] .
-
 
   --- TAIL CALLS
   ---
@@ -1374,17 +1415,81 @@ mod ABS-SIMULATOR-RL is
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 
+endm  
+fmod ABS-CALLSTMTS-EQ is
+  protecting ABS-EVAL .
 
-  --- OBJECT CREATION
+  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
+  var SL : StmtList .       var W : MProc .      vars F G : Nat .
+  var CN : Configuration .  var E : Expr .       var Q : String .
+  var A : Vid .             var EL : ExprList .  var AL : VidList .
+  var N : Label .           var DL : DataList .  var MS : MMtd .
+
+  --- remote-async-call
   ---
-  --- Set up an init process, which is essentially init(;); !run()
+  ceq
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    invoc(O, O1, N, Q , DL)
+  if DL :=  evalList(EL, (S :: L), none)
+      /\ O1 := eval(E, (S :: L), none)
+      /\ N := label(O, F)
+      /\ O =/= O1
+      [label remote-async-call] .
+
+  --- remote-async-self-call
   ---
-  --- It is smarter to invoke the run method asynchronously from the
-  --- initialisation process, to make sure that the initialisation
-  --- process will terminate instead of waiting for the return of run in
-  --- ill-behaved programs.  We cannot use a tail-call here, because
-  --- there is no caller the initialisation will return to.
+  ceq
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  =
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
+  if N := label(O, F) /\ O = eval(E, (S :: L), none)
+      [label remote-async-self-call] .
+
+  --- TAIL CALLS
   ---
+  --- "pass on" our return label to the new process.
+  ---
+  ---  FIXME (rs 2010-06-15): `invoc' creates a new Future - this is not what
+  --- we want in this case.  Not so urgent since the `tailcall' statement is
+  --- not emitted in the code generator currently.
+  ---
+  eq
+    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+  =
+    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
+    invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
+    [label tailcall] .
+
+  --- STATIC TAIL CALLS
+  ---
+  --- Currently block if the `selftailcall' statement is followed by any more
+  --- statements.
+  eq
+    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  =
+    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  [label selftailcall] .
+endfm
+
+
+*** OBJECT CREATION
+  
+*** Also start the ".init" method.
+mod ABS-NEW-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var E : Expr .       var A : Vid .     var EL : ExprList .
+  var AL : VidList .   var MS : MMtd .
+
   rl
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
@@ -1397,32 +1502,180 @@ mod ABS-SIMULATOR-RL is
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
+endm
+fmod ABS-NEW-EQ is
+  protecting ABS-EVAL .
 
-  rl
-    < O : C | Att: S, Pr: { L | $push S2 ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: { L :: S2 | SL }, PrQ: W, Lcnt: F >
-    [label $push] .
+  var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var E : Expr .       var A : Vid .     var EL : ExprList .
+  var AL : VidList .   var MS : MMtd .
 
-  rl
-    < O : C | Att: S, Pr: { L :: S2 | $pop ; SL }, PrQ: W, Lcnt: F >
-  =>
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label $pop] .
+  eq
+    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =
+    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
+                               createSubst(AL, evalList(EL, S :: L, none))),
+                         Pr: makeProcess(".init", MS, label(O, F), emp), 
+                         PrQ: noProc, Lcnt: 0 >
+    [label new-object] .
+endfm
 
 
-  --- assert
+*** The Return statement.
+mod ABS-STMT-RETURN-RL is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .      var N : Label .  var E : Expr .
+
+  crl
+    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: false, References: G, Value: null >
+   =>
+    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
+    *** the process.  We cannot return immediately since there might be
+    *** `release' or `$pop' statements after this, so we must rely on the
+    *** compiler / type-checker to ascertain that there's one and only one
+    *** return statement in each code branch.
+    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
+  if N == L[@ ".label"]
+      [label return] .
+endm
+fmod ABS-STMT-RETURN-EQ is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .      var N : Label .  var E : Expr .
+
+  ceq
+    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: false, References: G, Value: null >
+   =
+    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
+    *** the process.  We cannot return immediately since there might be
+    *** `release' or `$pop' statements after this, so we must rely on the
+    *** compiler / type-checker to ascertain that there's one and only one
+    *** return statement in each code branch.
+    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
+  if N == L[@ ".label"]
+      [label return] .
+endfm
+
+
+*** Receiving results from Futures.
+***
+*** Major source of nondeterminism and non-confluence if carelessly made into
+*** equations, according to Creol interpreter.  We leave them as rules for
+*** now.
+mod ABS-RECEIVE-RESULT is
+  protecting ABS-EVAL .
+
+  vars O : Oid .            var C : Cid .      vars S L L1 : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .    vars F G : Nat .
+  var Q : String .          vars A A' : Vid .  var N : Label .
+  var D : Data .
+
+  --- OPTIMISATION: Reduce the value of a label in a process to avoid constant
+  --- re-evaluation.  Cannot be done for instance variables because another
+  --- process might change the binding.
+  ceq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F >
+  if hasMapping(L, A) .
+
+  --- receive-comp
+  ---
+  --- Must be a rule even in the model checker, because there might be
+  --- multiple completion messages with the same label but different return
+  --- values in the queue.
   ---
   rl
-    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
+    < O : C |  Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
   =>
-    { if eval(E, (S :: L), CN) asBool then
-        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-      else
-        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
-      fi CN  }
-    [label assert] .
+    < O : C |  Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+    [label receive-comp-label] .
 
+  crl
+    < O : C |  Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+  =>
+    < O : C |  Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: true, References: G, Value: D >
+  if N = (S :: L)[A]
+    [label receive-comp-var] .
+
+
+  --- local-reply
+  ---
+  --- This avoids deadlocks from synchronous self-calls by manually scheduling
+  --- the process that is waited for, and afterwards manually scheduling the
+  --- waiting process again (see `continue' rule below).
+  crl
+    < O : C | Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
+  =>
+    < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
+              PrQ: W , { L | get(N ; A) ; SL }, Lcnt: F >
+  if L1[@ ".label"] == N
+      [label local-reply] .
+
+
+  --- continue
+  ---
+  --- Continue after executing the code of a local reply.  This is always a
+  --- rule.  We want it to be a rule in the interpreter.  (RS 2010-07-12:
+  --- why?)
+  --- 
+  --- If we support shared futures, this must be a rule in the model
+  --- checker, because there might be two processes in PrQ which await a
+  --- reply to the label.
+  rl
+    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; A) ; SL1},
+              Lcnt: F >
+  =>
+    < O : C | Att: S, Pr: { L1 | get(N ; A) ; SL1 }, PrQ: W,
+              Lcnt: F >
+    [label continue] .
+endm
+
+mod ABS-SIMULATOR-RL is
+  --- A machine using rewrite rules.
+  protecting ABS-MACHINE-BASICS .
+  protecting ABS-STMT-SKIP-RL .
+  protecting ABS-STMT-ASSIGN-RL .
+  protecting ABS-STMT-COND-RL .
+  protecting ABS-STMT-WHILE-RL .
+  protecting ABS-STMT-SUSPEND-RL .
+  protecting ABS-STMT-AWAIT-RL .
+  protecting ABS-CALLSTMTS-RL .
+  protecting ABS-NEW-RL .
+  protecting ABS-STMT-RETURN-RL .
+  protecting ABS-RECEIVE-RESULT .
+endm
+
+mod ABS-SIMULATOR-EQ is
+  --- A machine using equations.
+  protecting ABS-MACHINE-BASICS .
+  protecting ABS-STMT-SKIP-EQ .
+  protecting ABS-STMT-ASSIGN-EQ .
+  protecting ABS-STMT-COND-EQ .
+  protecting ABS-STMT-WHILE-EQ .
+  protecting ABS-STMT-SUSPEND-EQ .
+  protecting ABS-STMT-AWAIT-EQ .
+  protecting ABS-CALLSTMTS-EQ .
+  protecting ABS-NEW-EQ .
+  protecting ABS-STMT-RETURN-EQ .
+  protecting ABS-RECEIVE-RESULT .
 endm
 
 eof
