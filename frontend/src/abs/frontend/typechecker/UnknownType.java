@@ -9,4 +9,9 @@ public final class UnknownType extends Type {
     public boolean isUnknownType() {
         return true;
     }
+    
+    @Override
+    public boolean isSubtypeOf(Type t) {
+        return false;
+    }
 }

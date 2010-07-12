@@ -43,4 +43,13 @@ public class UnionType extends ReferenceType {
 	public int hashCode() {
 	   return types.hashCode();
 	}
+	
+	@Override
+	public boolean isSubtypeOf(Type t) {
+	    for (InterfaceType it : types) {
+	        if (it.isSubtypeOf(t))
+	            return true;
+	    }
+	    return super.isSubtypeOf(t);
+	}
 }

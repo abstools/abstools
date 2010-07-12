@@ -22,7 +22,17 @@ public class TypeCheckerTest extends FrontendTest {
 	 public void testVarDeclInit() {
 		 assertNoTypeErrors("interface I {} interface J extends I {} { J j; I i = j; }"); 
 	 }
-	 
+
+     @Test
+     public void testClass() {
+         assertNoTypeErrors("interface I {} class C implements I {} { I i; i = new C(); }"); 
+     }
+
+     @Test
+     public void testClass2() {
+         assertNoTypeErrors("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }"); 
+     }
+     
     @Test
     public void negTestOk() {
         assertNoTypeErrors("{ Bool b = ~True; }");
@@ -60,6 +70,11 @@ public class TypeCheckerTest extends FrontendTest {
     
     
     // NEGATIVE TESTS
+    
+    @Test
+    public void testClassError() {
+        assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }"); 
+    }
     
     @Test
     public void negTestError() {
