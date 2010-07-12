@@ -40,31 +40,31 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void testDataTypeBoolLit() {
-        Model m = assertParseOk(STDLIB_STRING + "{ Bool i; i = True; }");
+        Model m = assertParseOkStdLib("{ Bool i; i = True; }");
         assertEquals(m.getBoolType(),getTypeOfFirstAssignment(m));
     }
     
     @Test
     public void testDataTypeIntLit() {
-        Model m = assertParseOk(STDLIB_STRING + "{ Int i; i = 5; }");
+        Model m = assertParseOkStdLib("{ Int i; i = 5; }");
         assertEquals(m.getIntType(),getTypeOfFirstAssignment(m));
     }
 
     @Test
     public void testDataTypeStringLit() {
-        Model m = assertParseOk(STDLIB_STRING + "{ String i; i = \"5\"; }");
+        Model m = assertParseOkStdLib("{ String i; i = \"5\"; }");
         assertEquals(m.getStringType(),getTypeOfFirstAssignment(m));
     }
     
     @Test
     public void testLetExp() {
-   	 Model m = assertParseOk(STDLIB_STRING + "def Bool f() = let (Bool b) = True in b");
+   	 Model m = assertParseOkStdLib("def Bool f() = let (Bool b) = True in b");
         assertEquals(m.getBoolType(),getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testFnApp() {
-   	   Model m = assertParseOk(STDLIB_STRING + "def Bool f() = f()");
+   	   Model m = assertParseOkStdLib("def Bool f() = f()");
        assertEquals(m.getBoolType(),getFirstFunctionExpr(m).getType());
     }
 
@@ -77,7 +77,7 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void testFieldUse() {
-        Model m = assertParseOk(STDLIB_STRING + " class C { Bool f; Bool m() { return this.f; } }");
+        Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
         ClassDecl d = (ClassDecl) m.localLookup("C");
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
@@ -86,13 +86,13 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void testSyncCall() {
-        Model m = assertParseOk(STDLIB_STRING + " interface I { Bool m(); } { I i; i.m(); }");
+        Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i.m(); }");
         assertEquals(m.getBoolType(), getFirstExp(m).getType());
     }
     
     @Test
     public void testAsyncCall() {
-        Model m = assertParseOk(STDLIB_STRING + " interface I { Bool m(); } { I i; i!m(); }");
+        Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i!m(); }");
         assertEquals(m.getFutType(m.getBoolType()), getFirstExp(m).getType());
     }
 }

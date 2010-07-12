@@ -85,6 +85,8 @@ aspect TypeChecker {
     }
     
     public void VarDecl.typeCheck(SemanticErrorList e) { 
+   	 getAccess().typeCheck(e);
+
    	 Type t = getAccess().getType();
    	 if (hasInitExp()) {
    		 Type te = getInitExp().getType();
@@ -101,7 +103,9 @@ aspect TypeChecker {
    	 
     }
     
-    public void Stmt.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    // STMTS
+    
+    public abstract void Stmt.typeCheck(SemanticErrorList e);
     public void ExpressionStmt.typeCheck(SemanticErrorList e) {
    	 getExp().typeCheck(e);
     }
@@ -126,7 +130,64 @@ aspect TypeChecker {
    	 getRetExp().typeCheck(e); 
     }
     
+    public void AwaitStmt.typeCheck(SemanticErrorList e) {
+   	 getGuard().typeCheck(e);
+    }
+
+    public void SuspendStmt.typeCheck(SemanticErrorList e) { }
+    
+    
+    public void IfStmt.typeCheck(SemanticErrorList e) {
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+   	 
+   	 getCondition().typeCheck(e);
+   	 getThen().typeCheck(e);
+   	 if (hasElse())
+   		 getElse().typeCheck(e);
+   	 
+    }
+    
+    public void WhileStmt.typeCheck(SemanticErrorList e) {
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+   	 
+   	 getCondition().typeCheck(e);
+   	 getBody().typeCheck(e);
+    }
+    
+    public void SkipStmt.typeCheck(SemanticErrorList e) { }
+
+
+    // GUARDS
+    public abstract void Guard.typeCheck(SemanticErrorList e);
+    public void AndGuard.typeCheck(SemanticErrorList e) { 
+   	 getLeft().typeCheck(e);
+   	 getRight().typeCheck(e);
+    }
+    
+    public void ClaimGuard.typeCheck(SemanticErrorList e) { 
+   	 getVar().typeCheck(e);
+   	 Type t = getVar().getType();
+   	 if (!t.isFutureType()) {
+   		 e.add(new TypeError(getVar(),ErrorMessage.EXPECTED_FUT_TYPE, t));
+   	 }
+    }
+    public void ExpGuard.typeCheck(SemanticErrorList e) { 
+   	 getPureExp().typeCheck(e);
+   	 TypeCheckerHelper.assertHasType(e,getPureExp(),getBoolType());
+    }
+    
+    
+    
+    // EXPRESSIONS
+    
     public void Exp.typeCheck(SemanticErrorList e) { }
+    
+    public void TypeUse.typeCheck(SemanticErrorList e) {
+   	 if (getType().isUnknownType()) {
+   		 e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+   	 }
+    }
+    
     public void AsyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void SyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void GetExp.typeCheck(SemanticErrorList e) {  
@@ -179,5 +240,4 @@ aspect TypeChecker {
        getOperand().typeCheck(e);
     }
     
-
 }

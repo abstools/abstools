@@ -11,6 +11,7 @@ public enum ErrorMessage {
     , NO_SUBTYPE("Type %s must be a subtype of type %s")
     , VAR_INIT_REQUIRED("A variable must be initialized if it is not of a reference type")
     , EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead")
+    , TYPE_NOT_RESOLVABLE("Type %s cannot be resolved")
     ;
 
         

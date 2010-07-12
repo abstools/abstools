@@ -23,7 +23,11 @@ aspect Typing {
     inh Type Exp.getFutType(Type typeArg);
     
     inh Type Stmt.getUnitType();
+    inh Type Stmt.getBoolType();
 
+    inh Type Guard.getBoolType();
+    
+    
     eq Model.getDecl().getUnitType() = getUnitType();
     inh Type Decl.getUnitType();
     

@@ -13,6 +13,7 @@ public class TypeCheckerTest extends FrontendTest {
 
 	 // POSITIVE TESTS
 	
+	
 	 @Test
 	 public void testVarDecl() {
 		 assertNoTypeErrors("{ Bool b = True; }"); 
@@ -68,8 +69,38 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("class C { Unit m() { Bool b = True; return Unit; } }");
     }
     
+    @Test
+	 public void testIfOk() {
+		 assertNoTypeErrors("{ if (True) { } else { } }"); 
+	 }
+    
+    @Test
+	 public void testWhileOk() {
+		 assertNoTypeErrors("{ while (True) { } }"); 
+	 }
+    
+    @Test
+	 public void testAwaitClaimOk() {
+		 assertNoTypeErrors("{ Fut<Bool> f; await f?; }"); 
+	 }
+    
+    @Test
+	 public void testAwaitBoolOk() {
+		 assertNoTypeErrors("{ Bool b = False; await b; }"); 
+	 }
+    
+    @Test
+	 public void testAwaitAndOk() {
+		 assertNoTypeErrors("{ await False && True; }"); 
+	 }
     
     // NEGATIVE TESTS
+    
+	 @Test
+	 public void testUnresolvableType() {
+		 assertTypeErrors("{ I i; }"); 
+	 }
+
     
     @Test
     public void testClassError() {
@@ -120,6 +151,31 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
 	 public void testVarDeclInitMissingError() {
 		 assertTypeErrors("{ Bool b; }"); 
+	 }
+    
+    @Test
+	 public void testIfNoBool() {
+		 assertTypeErrors("{ if (5) { } else { } }"); 
+	 }
+
+    @Test
+	 public void testWhileNoBool() {
+		 assertTypeErrors("{ while (5) { } }"); 
+	 }
+    
+    @Test
+	 public void testAwaitNoFut() {
+		 assertTypeErrors("{ Bool b = True; await b?; }"); 
+	 }
+    
+    @Test
+	 public void testAwaitNoBool() {
+		 assertTypeErrors("{ await 5; }"); 
+	 }
+
+    @Test
+	 public void testAwaitAndError() {
+		 assertTypeErrors("{ await 5 && True; }"); 
 	 }
     
     
