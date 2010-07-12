@@ -87,9 +87,13 @@ aspect Typing {
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
-    eq CaseExp.getType() = getBranch(0).getRight().getType(); 
+    eq CaseExp.getType() = getBranch(0).getType(); 
     eq FnApp.getType() = ((FunctionDecl) lookup(getName())).getTypeUse().getType();
-    eq DataConstructorExp.getType() = lookupDataConstructor(this).getDecl().getType(); // FIXME: parameteric types
+    eq DataConstructorExp.getType() {
+   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
+   	 if (d == null) return UnknownType.INSTANCE;
+   	 return d.getDecl().getType(); // FIXME: parameteric types
+    }
     eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getIntType();
@@ -98,5 +102,19 @@ aspect Typing {
     eq ThisExp.getType() = getContextDecl().getType();
     eq MinusExp.getType() = getIntType();
     eq NegExp.getType() = getBoolType();
+    
+    syn lazy Type CaseBranch.getType() = getRight().getType();
+    
+    /* PATTERNS */
+    syn lazy Type Pattern.getType();
+    eq ConstructorPattern.getType() {
+   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
+   	 if (d == null) return UnknownType.INSTANCE;
+   	 return d.getDecl().getType(); 
+    }
+    eq PatternVar.getType() { return AnyType.INSTANCE; }
+    eq UnderscorePattern.getType() { return AnyType.INSTANCE; }
+    eq LiteralPattern.getType() { return getLiteral().getType(); }
+    
 
 }

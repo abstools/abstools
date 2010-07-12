@@ -209,7 +209,7 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        DataConstructor c = lookupDataConstructor(this);
+        DataConstructor c = lookupDataConstructor(this.getConstructor());
         DataTypeDecl decl = c.getDecl();
         
         if (decl.getName().equals("Bool")) {

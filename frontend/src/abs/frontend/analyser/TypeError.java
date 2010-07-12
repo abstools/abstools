@@ -13,6 +13,10 @@ public class TypeError extends SemanticError {
         super(node, msg, toString(args));
     }
 
+    public TypeError(ASTNode<?> node, ErrorMessage msg, Integer... args) {
+        super(node, msg, toString(args));
+    }
+
     private static String[] toString(Type[] args) {
         String[] res = new String[args.length];
         for (int i=0; i < args.length; i++) {
@@ -20,4 +24,13 @@ public class TypeError extends SemanticError {
         }
         return res;
     }
+
+    private static String[] toString(Integer[] args) {
+       String[] res = new String[args.length];
+       for (int i=0; i < args.length; i++) {
+           res[i] = args[i].toString();
+       }
+       return res;
+   }
+
 }

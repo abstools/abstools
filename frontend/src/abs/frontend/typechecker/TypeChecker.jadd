@@ -89,18 +89,17 @@ aspect TypeChecker {
 
    	 Type t = getAccess().getType();
    	 if (hasInitExp()) {
-   		 Type te = getInitExp().getType();
-   		 if (!te.isSubtypeOf(t)) {
-   			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,te,t));
-   		 }
+   		 TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
    		 getInitExp().typeCheck(e);
    	 } else {
    		 if (!t.isReferenceType() && !t.isFutureType()) {
    			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
    		 }
    	 }
-   	 
-   	 
+    }
+    
+    public void ParamDecl.typeCheck(SemanticErrorList e) {
+   	 getAccess().typeCheck(e);
     }
     
     // STMTS
@@ -138,19 +137,17 @@ aspect TypeChecker {
     
     
     public void IfStmt.typeCheck(SemanticErrorList e) {
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
-   	 
    	 getCondition().typeCheck(e);
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
    	 getThen().typeCheck(e);
    	 if (hasElse())
    		 getElse().typeCheck(e);
-   	 
+
     }
     
     public void WhileStmt.typeCheck(SemanticErrorList e) {
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
-   	 
    	 getCondition().typeCheck(e);
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
    	 getBody().typeCheck(e);
     }
     
@@ -197,20 +194,20 @@ aspect TypeChecker {
    	 getPureExp().typeCheck(e);
     }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
-   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getIntType());
-   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getIntType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
     public void BoolExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getBoolType());
-   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getBoolType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertEqualTypes(e,getLeft(),getLeft().getType(),getIntType());
-   	 TypeCheckerHelper.assertEqualTypes(e,getRight(),getRight().getType(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getIntType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
@@ -220,24 +217,93 @@ aspect TypeChecker {
    	 getRight().typeCheck(e);
     }
     
-    public void CaseExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); } 
+    public void CaseExp.typeCheck(SemanticErrorList e) {  
+   	 getExpr().typeCheck(e);
+   	 Type et = getExpr().getType();
+   	 if (!et.isDataType()) {
+   		 e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
+   		 return;
+   	 }
+   	 Type t = null;
+   	 for (CaseBranch b : getBranchs()) {
+   		 b.typeCheck(e,(DataTypeType) et);
+   		 if (t == null) {
+   			 t = b.getType();
+   		 } else {
+   			 Type t2 = b.getType();
+   			 if (!t.equals(t2)) {
+   				 e.add(new TypeError(this,ErrorMessage.BRANCH_NO_SAME_TYPE,t,t2));
+   			 }
+   		 }
+   	 }
+    } 
+    
+    public void CaseBranch.typeCheck(SemanticErrorList e, DataTypeType t) {
+   	 getLeft().typeCheck(e,t);
+   	 getRight().typeCheck(e);
+    }
+    
     public void FnApp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
    	 DataConstructor c = getDecl();
-   	 if (c.getNumConstructorArg() > 0) {
-   		 throw new NotImplementedYetException("Type Checker",this);
+   	 if (c == null) {
+   		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
+   		 return;
    	 }
+   	 if (c.getNumConstructorArg() != this.getNumParam()) {
+   		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
+   		 return;
+   	 }
+   	 for (int i = 0; i < getNumParam(); i++) {
+   		 Type argType = c.getConstructorArg(i).getType();
+   		 PureExp exp = getParam(i);
+   		 if (!exp.getType().isSubtypeOf(argType)) {
+   			 e.add(new TypeError(this,ErrorMessage.PATTERN_WRONG_TYPE,argType,exp.getType()));
+   		 }
+   	 }
+   	 
     }
-    public void LetExp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void LetExp.typeCheck(SemanticErrorList e) {  
+   	 getVar().typeCheck(e);
+   	 getVal().typeCheck(e);
+   	 getExp().typeCheck(e);
+		 TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
+   	 
+   	 
+    }
 
     public void MinusExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertEqualTypes(e,getOperand(),getOperand().getType(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getOperand(),getIntType());
        getOperand().typeCheck(e);
     }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-   	 TypeCheckerHelper.assertEqualTypes(e,getOperand(),getOperand().getType(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getOperand(),getBoolType());
        getOperand().typeCheck(e);
     }
+    
+    
+    // PATTERNS
+    
+    public void Pattern.typeCheck(SemanticErrorList e, DataTypeType t) {  }
+    public void ConstructorPattern.typeCheck(SemanticErrorList e, DataTypeType t) { 
+   	 DataConstructor c = lookupDataConstructor(getConstructor());
+   	 if (c == null) {
+   		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
+   		 return;
+   	 }
+   	 if (c.getNumConstructorArg() != this.getNumParam()) {
+   		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
+   		 return;
+   	 }
+   	 for (int i = 0; i < getNumParam(); i++) {
+   		 Type argType = c.getConstructorArg(i).getType();
+   		 Pattern p = getParam(i);
+   		 if (!p.getType().isSubtypeOf(argType)) {
+   			 e.add(new TypeError(this,ErrorMessage.PATTERN_WRONG_TYPE,argType,p.getType()));
+   		 }
+   	 }
+    }
+    
     
 }

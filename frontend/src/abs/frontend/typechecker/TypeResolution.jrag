@@ -84,12 +84,12 @@ aspect TypeResolution {
     inh lazy DataTypeDecl DataConstructor.getDecl();
     eq DataTypeDecl.getDataConstructor().getDecl() = this;
     
-    syn lazy DataConstructor Model.localLookupDataConstructor(DataConstructorExp e) {
+    syn lazy DataConstructor Model.localLookupDataConstructor(String name) {
         for (Decl d : getDecls()) {
             if (d instanceof DataTypeDecl) {
                 DataTypeDecl dataDecl = (DataTypeDecl)d;
                 for (DataConstructor c : dataDecl.getDataConstructors()) {
-                    if (c.getName().equals(e.getConstructor())) {
+                    if (c.getName().equals(name)) {
                         return c;
                     }
                 }
@@ -98,15 +98,16 @@ aspect TypeResolution {
         return null;
     }
     
-    syn lazy DataConstructor Model.lookupDataConstructor(DataConstructorExp c);
-    eq Model.lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
-    eq Model.getDecl().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
-    eq Model.getBlock().lookupDataConstructor(DataConstructorExp c) = localLookupDataConstructor(c);
+    syn lazy DataConstructor Model.lookupDataConstructor(String name);
+    eq Model.lookupDataConstructor(String name) = localLookupDataConstructor(name);
+    eq Model.getDecl().lookupDataConstructor(String name) = localLookupDataConstructor(name);
+    eq Model.getBlock().lookupDataConstructor(String name) = localLookupDataConstructor(name);
     
-    inh DataConstructor DataConstructorExp.lookupDataConstructor(DataConstructorExp c);
+    inh DataConstructor DataConstructorExp.lookupDataConstructor(String name);
+    inh DataConstructor Pattern.lookupDataConstructor(String name);
     
     syn lazy DataConstructor DataConstructorExp.getDecl() {
-        return lookupDataConstructor(this);
+        return lookupDataConstructor(this.getConstructor());
     }
     
     syn lazy Decl Decl.getContextDecl() = this;

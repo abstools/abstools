@@ -55,6 +55,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+	 public void letOk() {
+		 assertNoTypeErrors("{ Bool b = let (Bool x) = True in x; }"); 
+	 }
+    
+    @Test
+	 public void caseOk() {
+		 assertNoTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => True; }; }"); 
+	 }
+    
+    @Test
     public void methodEmptyOk() {
         assertNoTypeErrors("class C { Unit m() { } }");
     }
@@ -93,6 +103,8 @@ public class TypeCheckerTest extends FrontendTest {
 	 public void testAwaitAndOk() {
 		 assertNoTypeErrors("{ await False && True; }"); 
 	 }
+
+    
     
     // NEGATIVE TESTS
     
@@ -132,6 +144,41 @@ public class TypeCheckerTest extends FrontendTest {
     public void andError() {
         assertTypeErrors("{ Bool b = 5 && True; }");
     }
+    
+    @Test
+	 public void letError() {
+		 assertTypeErrors("{ Bool b = let (Bool x) = 5 in x; }"); 
+	 }
+    
+    @Test
+	 public void caseError() {
+		 assertTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => 5; }; }"); 
+	 }
+    
+    @Test
+	 public void caseErrorNoDataType() {
+		 assertTypeErrors("interface I { } { I i; Bool b = case i { True => False; False => 5; }; }"); 
+	 }
+
+    @Test
+	 public void caseErrorConstructorNotResolvable() {
+		 assertTypeErrors("{ Bool x = True; Bool b = case x { Foo => False; }; }"); 
+	 }
+
+    @Test
+	 public void caseErrorConstructorWrongArgNum() {
+		 assertTypeErrors("{ Bool x = True; Bool b = case x { True(5) => False; }; }"); 
+	 }
+    
+    @Test
+	 public void caseErrorConstructorWrongArgType() {
+		 assertTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(True); Bool b = case x { Bar(5) => False; }; }"); 
+	 }
+    
+    @Test
+	 public void caseErrorConstructorExpWrongArgType() {
+		 assertTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(5); }"); 
+	 }
     
     @Test
     public void methodReturnError() {

@@ -14,4 +14,8 @@ public final class UnknownType extends Type {
     public boolean isSubtypeOf(Type t) {
         return false;
     }
+    
+    public String toString() {
+   	 return "<UNKNOWN>";
+    }
 }

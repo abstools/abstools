@@ -45,4 +45,9 @@ public class InterfaceType extends ReferenceType {
    	 return false;
     }
     
+    @Override
+   public String toString() {
+      return decl.getName();
+   }
+    
 }
