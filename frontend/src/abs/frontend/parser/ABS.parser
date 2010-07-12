@@ -12,27 +12,35 @@ import abs.frontend.ast.*;
 :};
 
 %embed {:
-  class Events extends Parser.Events {
-    public void syntaxError(Symbol token) {
-      StringBuffer s = new StringBuffer();
-      s.append(token.getLine(token.getStart()) + ":" + token.getColumn(token.getStart()) + ": ");
-      s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
-      throw new SyntaxError(s.toString(), Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
-    }
-    public void scannerError(Scanner.Exception e) {
-      StringBuffer s = new StringBuffer();
-      s.append(e.line + ", " + e.column + "\n");
-      s.append("Lexical error: " + e.getMessage());
-      throw new LexicalError(s.toString(), e.line, e.column);
-    }
-  }
+	ArrayList<ParserError> errors = new ArrayList<ParserError>();
+    boolean raiseExceptions = true;
 
-  { report = new Events(); } // Use error handler in parser
+	class Events extends Parser.Events {
+		public void syntaxError(Symbol token) {
+			StringBuffer s = new StringBuffer();
+			s.append(Symbol.getLine(token.getStart()) + ":" + Symbol.getColumn(token.getStart()) + ": ");
+			s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
+			SyntaxError e = new SyntaxError(s.toString(), Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
+			errors.add(e);
+			if (raiseExceptions) throw e;
+		}
+		public void scannerError(Scanner.Exception e) {
+			StringBuffer s = new StringBuffer();
+			s.append(e.line + ", " + e.column + "\n");
+			s.append("Lexical error: " + e.getMessage());
+			LexicalError err = new LexicalError(s.toString(), e.line, e.column);
+			errors.add(err);
+			if (raiseExceptions) throw err;
+		}
+	}
+
+	{ report = new Events(); } // Use error handler in parser
   
-  public void setEventHandler(Parser.Events handler) {
-    report = handler;
-  }
+	public void doRaiseExceptions(boolean raiseExceptions) {
+		this.raiseExceptions = raiseExceptions;
+	}
 
+	public ArrayList<ParserError> getErrors() { return errors; }
 :};
 
 
@@ -418,3 +426,7 @@ List stmt_list =
     stmt.i                              {: return new List().add(i); :}
     | stmt_list.l  stmt.i        {: return l.add(i); :}
 	;
+
+// Local Variables:
+// tab-width: 4
+// End:
