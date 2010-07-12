@@ -110,6 +110,7 @@ aspect GenerateMaude {
             stream.print(")");
         }
         stream.print(") ; get( @ \".staticfuture\" ; @ \"" + var + "\") ");
+        stream.print("; $free(@ \".staticfuture\") ");
     }
 
     public void GetExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
