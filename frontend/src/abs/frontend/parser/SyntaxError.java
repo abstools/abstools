@@ -6,9 +6,16 @@ package abs.frontend.parser;
 public class SyntaxError extends RuntimeException {
 
 	private static final long serialVersionUID = 1L;
+	public int lineNumber = -1;
+	public int columnNumber = -1;
 
 	public SyntaxError(final String message) {
 		super(message);
 	}
 
+	public SyntaxError(final String message, int lineNumber, int columnNumber) {
+		super(message);
+		this.lineNumber = lineNumber;
+		this.columnNumber = columnNumber;
+	}	
 }

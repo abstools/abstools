@@ -17,13 +17,13 @@ import abs.frontend.ast.*;
       StringBuffer s = new StringBuffer();
       s.append(token.getLine(token.getStart()) + ":" + token.getColumn(token.getStart()) + ": ");
       s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
-      throw new SyntaxError(s.toString());
+      throw new SyntaxError(s.toString(), Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
     }
     public void scannerError(Scanner.Exception e) {
       StringBuffer s = new StringBuffer();
       s.append(e.line + ", " + e.column + "\n");
       s.append("Lexical error: " + e.getMessage());
-      throw new Error(s.toString());
+      throw new LexicalError(s.toString(), e.line, e.column);
     }
   }
 
