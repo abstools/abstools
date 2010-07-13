@@ -14,6 +14,7 @@ import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
@@ -64,10 +65,22 @@ public class FrontendTest {
 
 	protected Exp getFirstCaseExpr(Model m) {
         CaseExp ce = (CaseExp) getFirstFunctionExpr(m);
-        CaseBranch b = ce.getBranch(1);
+        CaseBranch b = ce.getBranch(0);
         return b.getRight();
     }
 
+	protected Exp getSecondCaseExpr(Model m) {
+      CaseExp ce = (CaseExp) getFirstFunctionExpr(m);
+      CaseBranch b = ce.getBranch(1);
+      return b.getRight();
+  }
+	
+	protected Pattern getFirstCasePattern(Model m) {
+      CaseExp ce = (CaseExp) getFirstFunctionExpr(m);
+      CaseBranch b = ce.getBranch(0);
+      return b.getLeft();
+  }
+	
 
 	protected Exp getFirstFunctionExpr(Model m) {
 	    for (Decl d : m.getDecls()) {

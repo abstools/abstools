@@ -63,6 +63,13 @@ public class TypeCheckerTest extends FrontendTest {
 	 public void caseOk() {
 		 assertNoTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => True; }; }"); 
 	 }
+
+    @Test
+	 public void caseVarOk() {
+		 assertNoTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(True);" +
+		 		" Bool b = case x { Bar(y) => y; }; }"); 
+	 }
+    
     
     @Test
     public void methodEmptyOk() {

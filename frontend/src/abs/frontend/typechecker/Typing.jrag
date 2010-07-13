@@ -62,6 +62,10 @@ aspect Typing {
         }
         throw new NotImplementedYetException("Type Checker",this);
     }
+    eq PatternVarDecl.getType() {
+   	 PatternVar v = (PatternVar) getParent(); 
+   	 return v.getType();
+    }
     
     /* STMTS */
     syn Type Stmt.getType() = getUnitType();
@@ -112,9 +116,20 @@ aspect Typing {
    	 if (d == null) return UnknownType.INSTANCE;
    	 return d.getDecl().getType(); 
     }
-    eq PatternVar.getType() { return AnyType.INSTANCE; }
+    eq PatternVar.getType() { return getPatternVarType(); }  
     eq UnderscorePattern.getType() { return AnyType.INSTANCE; }
     eq LiteralPattern.getType() { return getLiteral().getType(); }
     
-
+    inh Type Pattern.getPatternVarType();
+    eq CaseBranch.getLeft().getPatternVarType() {
+   	 CaseExp e = (CaseExp) getParent();
+   	 return e.getExpr().getType();
+    }
+    eq ConstructorPattern.getParam(int i).getPatternVarType() {
+   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
+   	 if (d == null) return null;
+   	 if (i >= d.getNumConstructorArg()) return null;
+   	 return d.getConstructorArg(i).getType(); 
+    }
+    
 }
