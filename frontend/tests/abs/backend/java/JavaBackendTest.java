@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 
 import junit.framework.Assert;
 
+import abs.common.StandardLib;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -18,6 +19,10 @@ public class JavaBackendTest {
     
     void assertEqual(String absCode, String javaCode) {
         assertEqual(absCode, javaCode,null);
+    }
+    
+    void assertValidStdLib(String absCode) {
+        assertValidJava(getJavaCode(StandardLib.STDLIB_STRING+" "+absCode));
     }
     
     void assertValid(String absCode) {

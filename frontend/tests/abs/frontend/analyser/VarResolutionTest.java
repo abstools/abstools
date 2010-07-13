@@ -45,7 +45,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testNestedPatternVar() {
-        Model m = assertParseOkStdLib("data Foo { Bar(Bool); } def Bool m(Foo f) = case f { Bar(y) => y; };");
+        Model m = assertParseOkStdLib("data Foo = Bar(Bool); def Bool m(Foo f) = case f { Bar(y) => y; };");
         VarUse v = (VarUse) getFirstCaseExpr(m);
         ConstructorPattern p = (ConstructorPattern) getFirstCasePattern(m);
         PatternVarDecl decl = ((PatternVar) p.getParam(0)).getVar();

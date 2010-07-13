@@ -98,17 +98,17 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	DATA TYPEIDENTIFIER LT datatypeparam_list.p GT LBRACE data_constructor_list.l? RBRACE {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
-	| DATA TYPEIDENTIFIER LBRACE data_constructor_list.l? RBRACE {: return new DataTypeDecl(TYPEIDENTIFIER, l); :}
+	DATA TYPEIDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
+   | DATA TYPEIDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, new List<DataConstructor>(), p); :}
   ;
 
 TypeSynDecl  typesyn_decl = 
-	TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs  {: return new TypeSynDecl(lhs, rhs); :}
+	TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, rhs); :}
   ;
 
 
 FunctionDecl  function_decl = 
-	DEF datatypeuse.t IDENTIFIER.fn LT datatypeparam_list.p GT LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
+	DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
 	| DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, t, l, ef); :}
 	; 
 
@@ -123,11 +123,11 @@ ClassDecl class_decl =
 
 List data_constructor_list =
     data_constructor.i                                         {: return new List().add(i); :}
-    | data_constructor_list.l data_constructor.i        {: return l.add(i); :}
+    | data_constructor_list.l BAR data_constructor.i        {: return l.add(i); :}
   ;
 
 DataConstructor data_constructor = 
-	TYPEIDENTIFIER.co  data_constructor_params.p? SEMICOLON {: return new DataConstructor(co,p) ; :} 
+	TYPEIDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -210,6 +210,10 @@ List datatypeuse_list =
     | datatypeuse_list.l COMMA datatypeuse.i        {: return l.add(i); :}
     ;
 
+
+List datatypeparam_list_decl = 
+  LT datatypeparam_list.l GT {: return l; :} 
+;
 
 List datatypeparam_list =
      datatypeparam.p {: return new List().add(p); :}

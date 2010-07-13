@@ -124,14 +124,14 @@ public class ParserTest {
 	// datatype declarations
 	@Test
 		public void testDatatypeDecl() {
-		assertParseOk("data Foo { XCons ; YCons ; }"); 
-		assertParseOk("data IntList { IntNil ; Cons(Int, IntList) ; }");
+		assertParseOk("data Foo = XCons | YCons ; "); 
+		assertParseOk("data IntList = IntNil | Cons(Int, IntList) ; ");
 	}
 	
 	@Test
 		public void testParametricDatatypeDecl() {
-		assertParseOk("data List<A> { Nil ; Cons(A, List<A>); }");
-		assertParseOk("data Pair<A, B> { Pair(A, B); }");
+		assertParseOk("data List<A> = Nil | Cons(A, List<A>); ");
+		assertParseOk("data Pair<A, B> = Pair(A, B); ");
 	}
 
    @Test

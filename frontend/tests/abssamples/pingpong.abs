@@ -6,9 +6,9 @@
  *
  */
 
-data Unit {}
-data String {}
-data Fut<A> {}
+data Unit = Unit ;
+data String;
+data Fut<A>;
 
 
 interface Ping {
