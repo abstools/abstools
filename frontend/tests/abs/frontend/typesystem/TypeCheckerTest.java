@@ -127,6 +127,23 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void functionDuplicateParams() {
+        assertTypeErrors("def Bool f(Bool b, Int b) = True; "); 
+    }
+
+    @Test
+    public void functionNestedErrors() {
+        assertTypeErrors("def X f(Bool b) = True; "); 
+        assertTypeErrors("def Bool f(X b) = True; "); 
+        assertTypeErrors("def Bool f(Bool b) = Foo(); "); 
+    }
+
+    @Test
+    public void functionWrongReturnType() {
+        assertTypeErrors("def Bool f() = 5; "); 
+    }
+    
+    @Test
     public void dataTypeDuplicateConstructors() {
         assertTypeErrors("data Foo = Bar | Bar ;"); 
     }
@@ -141,6 +158,11 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("interface I { Unit m(); Unit m(); }"); 
     }
 
+    @Test
+    public void methodDuplicateParams() {
+        assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
+    }
+    
     @Test
     public void interfaceWrongExtend() {
         assertTypeErrors("interface I extends Bool {} "); 

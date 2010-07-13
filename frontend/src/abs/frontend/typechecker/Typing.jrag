@@ -27,9 +27,17 @@ aspect Typing {
 
     inh Type Guard.getBoolType();
     
-    
     eq Model.getDecl().getUnitType() = getUnitType();
+    eq Model.getDecl().getIntType() = getIntType();
+    eq Model.getDecl().getBoolType() = getBoolType();
+    eq Model.getDecl().getStringType() = getStringType();
+    eq Model.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
+
     inh Type Decl.getUnitType();
+    inh Type Decl.getIntType();
+    inh Type Decl.getBoolType();
+    inh Type Decl.getStringType();
+    inh Type Decl.getFutType(Type typeArg);
     
     eq ClassDecl.getMethod().getUnitType() = getUnitType();
     inh Type MethodImpl.getUnitType();

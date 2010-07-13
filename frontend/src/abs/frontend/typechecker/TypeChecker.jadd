@@ -100,7 +100,11 @@ aspect TypeChecker {
     }
     
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
-        // TODO: implement
+        TypeCheckerHelper.typeCheckParamList(e,getParams());
+        getTypeUse().typeCheck(e);
+        getFunDef().typeCheck(e);
+        
+        TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), getFunDef());
     }
     
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
@@ -131,15 +135,7 @@ aspect TypeChecker {
     
     public void MethodSig.typeCheck(SemanticErrorList e) {
         getReturnType().typeCheck(e);
-        HashSet<String> names = new HashSet<String>();
-        for (ParamDecl d : getParams()) {
-            if (names.contains(d.getName())) {
-                e.add(new TypeError(d, ErrorMessage.DUPLICATE_PARAM_NAME, d.getName()));
-            } else {
-                names.add(d.getName());
-            }
-            d.typeCheck(e);
-        }
+        TypeCheckerHelper.typeCheckParamList(e,getParams());
     }
      
     public void DataTypeDecl.typeCheck(SemanticErrorList e) {
@@ -164,9 +160,11 @@ aspect TypeChecker {
         getValue().typeCheck(e);
     }
     
-    public void TypeParameterDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void TypeParameterDecl.typeCheck(SemanticErrorList e) {
+        /* nothing to check */ }
     
-    public void UnknownDecl.typeCheck(SemanticErrorList e) { }
+    public void UnknownDecl.typeCheck(SemanticErrorList e) { 
+        /* nothing to check */ }
     
     
     public void Block.typeCheck(SemanticErrorList e) {
@@ -266,7 +264,8 @@ aspect TypeChecker {
    	 getBody().typeCheck(e);
     }
     
-    public void SkipStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+    public void SkipStmt.typeCheck(SemanticErrorList e) { 
+        /* nothing to check */ }
 
 
     // GUARDS
