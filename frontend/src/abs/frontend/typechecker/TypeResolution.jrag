@@ -81,6 +81,8 @@ aspect TypeResolution {
     }
     
     
+    syn lazy Decl FnApp.getDecl() = lookup(getName());
+    
     inh lazy DataTypeDecl DataConstructor.getDecl();
     eq DataTypeDecl.getDataConstructor().getDecl() = this;
     

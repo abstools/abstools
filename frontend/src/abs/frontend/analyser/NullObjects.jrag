@@ -8,6 +8,9 @@ aspect NullObjects {
   // broadcast the unknown declaration null object to useful places in the AST
   syn lazy UnknownDecl Model.unknownDecl() = new UnknownDecl();
 //  eq Model.getPredefinedType().unknownDecl() = unknownDecl();
+  
+  inh UnknownDecl Exp.unknownDecl();
+  eq Model.getBlock().unknownDecl() = unknownDecl();
 
 }
 

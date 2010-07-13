@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import abs.common.StandardLib;
+import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -18,6 +20,7 @@ import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
+import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
 
 public class FrontendTest {
@@ -25,6 +28,43 @@ public class FrontendTest {
     protected Model assertParseOkStdLib(String s) {
         return assertParseOk(StandardLib.STDLIB_STRING+s);
     }
+    
+    protected static void assertParseFileOk(String fileName) {
+        assertParseFileOk(fileName, false);
+    }
+
+    protected static void assertTypeCheckFileOk(String fileName) {
+        assertParseFileOk(fileName, true);
+    }
+    
+    protected static void assertParseFileOk(String fileName, boolean typeCheck) {
+        Model m = null;
+        try {
+            m = Main.parse(fileName);
+        } catch (Throwable e) {
+            fail("Failed to parse: "+ fileName +"\n"+e.getMessage());
+            e.printStackTrace();
+        }
+        if (m != null) {
+            int numSemErrs = m.getErrors().size();
+            StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
+            if (numSemErrs > 0){
+                for (SemanticError error : m.getErrors())
+                    errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
+                fail("Failed to parse: "+fileName+"\n"+errs.toString());
+            } else if (typeCheck) {
+                SemanticErrorList l = m.typeCheck();
+                if (!l.isEmpty()) {
+                    for (SemanticError error : l)
+                        errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
+                    fail("Failed to typecheck: "+fileName+"\n"+errs.toString());
+                    
+                }
+            }
+            
+        }
+    }
+    
     
     protected Model assertParseOk(String s) {
         Model p = null;

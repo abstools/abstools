@@ -100,7 +100,11 @@ aspect Typing {
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
     eq CaseExp.getType() = getBranch(0).getType(); 
-    eq FnApp.getType() = ((FunctionDecl) lookup(getName())).getTypeUse().getType();
+    eq FnApp.getType() {
+        Decl d = lookup(getName());
+        if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
+        return ((FunctionDecl)d).getTypeUse().getType();
+    }
     eq DataConstructorExp.getType() {
    	 DataConstructor d = lookupDataConstructor(this.getConstructor());
    	 if (d == null) return UnknownType.INSTANCE;

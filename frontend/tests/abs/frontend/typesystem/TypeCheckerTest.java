@@ -275,6 +275,21 @@ public class TypeCheckerTest extends FrontendTest {
 	 }
     
     @Test
+    public void fnAppMissingDef() {
+        assertTypeErrors("def Bool f() = x(); "); 
+    }
+    
+    @Test
+    public void fnAppWrongArgNum() {
+        assertTypeErrors("def Bool f() = f(True); "); 
+    }
+
+    @Test
+    public void fnAppWrongArgType() {
+        assertTypeErrors("def Bool f(Bool b) = f(5); "); 
+    }
+    
+    @Test
     public void methodReturnError() {
         assertTypeErrors("class C { Unit m() { return True; } }");
     }

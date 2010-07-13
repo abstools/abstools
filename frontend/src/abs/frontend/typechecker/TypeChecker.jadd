@@ -353,27 +353,25 @@ aspect TypeChecker {
     } 
     
     public void CaseBranch.typeCheck(SemanticErrorList e, DataTypeType t) {
-   	 getLeft().typeCheck(e,t);
-   	 getRight().typeCheck(e);
+   	     getLeft().typeCheck(e,t);
+   	     getRight().typeCheck(e);
     }
     
-    public void FnApp.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void FnApp.typeCheck(SemanticErrorList e) {
+        Decl d = getDecl();
+        if (!d.isFunction()) {
+            e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
+        } else {
+            TypeCheckerHelper.typeCheckEqualParams(e,this,((FunctionDecl)d).getParams(),getParams());
+        }
+    }
+    
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
    	 DataConstructor c = getDecl();
    	 if (c == null) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
-   		 return;
-   	 }
-   	 if (c.getNumConstructorArg() != this.getNumParam()) {
-   		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
-   		 return;
-   	 }
-   	 for (int i = 0; i < getNumParam(); i++) {
-   		 Type argType = c.getConstructorArg(i).getType();
-   		 PureExp exp = getParam(i);
-   		 if (!exp.getType().isSubtypeOf(argType)) {
-   			 e.add(new TypeError(this,ErrorMessage.PATTERN_WRONG_TYPE,argType,exp.getType()));
-   		 }
+   	 } else {
+   	     TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
    	 }
    	 
     }
@@ -416,7 +414,7 @@ aspect TypeChecker {
    		 if (argType instanceof DataTypeType) {
    			 p.typeCheck(e,(DataTypeType) argType);
    			 if (!p.getType().isSubtypeOf(argType)) {
-   				 e.add(new TypeError(this,ErrorMessage.PATTERN_WRONG_TYPE,argType,p.getType()));
+   				 e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,argType,p.getType()));
    			 }
    		 }
    	 }
