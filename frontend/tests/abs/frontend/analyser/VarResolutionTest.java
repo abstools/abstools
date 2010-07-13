@@ -36,7 +36,7 @@ public class VarResolutionTest extends FrontendTest {
     
     @Test
     public void testPatternVar() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => ~x; }");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = case b { True => False; x => ~x; };");
         NegExp ne = (NegExp) getSecondCaseExpr(m);
         VarUse v = (VarUse) ne.getOperand();
         PatternVarDecl decl = (PatternVarDecl) v.getDecl();
@@ -45,7 +45,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testNestedPatternVar() {
-        Model m = assertParseOkStdLib("data Foo { Bar(Bool); } def Bool m(Foo f) = case f { Bar(y) => y; }");
+        Model m = assertParseOkStdLib("data Foo { Bar(Bool); } def Bool m(Foo f) = case f { Bar(y) => y; };");
         VarUse v = (VarUse) getFirstCaseExpr(m);
         ConstructorPattern p = (ConstructorPattern) getFirstCasePattern(m);
         PatternVarDecl decl = ((PatternVar) p.getParam(0)).getVar();
@@ -55,7 +55,7 @@ public class VarResolutionTest extends FrontendTest {
     
     @Test
     public void testFunctionParam() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = b");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = b;");
         VarUse u = (VarUse) getFirstFunctionExpr(m);
         ParamDecl d = (ParamDecl) u.getDecl();
         assertEquals("b", d.getName());
@@ -64,7 +64,7 @@ public class VarResolutionTest extends FrontendTest {
     
     @Test
     public void testLetExp() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in x");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
@@ -74,7 +74,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testNestedLetExp() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = let (Bool y) = b in y in x");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = let (Bool y) = b in y in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
@@ -84,7 +84,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testNestedLetExp2() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = let (Bool x) = b in x in x");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = let (Bool x) = b in x in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
@@ -94,7 +94,7 @@ public class VarResolutionTest extends FrontendTest {
 
     @Test
     public void testNestedLetExp3() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in let (Bool y) = b in x");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in let (Bool y) = b in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         LetExp e2 = (LetExp) e.getExp();
         VarOrFieldDecl decl = e.getVar();
@@ -104,7 +104,7 @@ public class VarResolutionTest extends FrontendTest {
     
     @Test
     public void testNestedLetExp4() {
-        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = b in x");
+        Model m = assertParseOkStdLib(" def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = b in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         LetExp e2 = (LetExp) e.getExp();
         VarOrFieldDecl decl = e2.getVar();
@@ -114,7 +114,7 @@ public class VarResolutionTest extends FrontendTest {
     
     @Test
     public void testNestedLetExp5() {
-        Model m = assertParseOkStdLib("def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = x in x");
+        Model m = assertParseOkStdLib("def Bool f(Bool b) = let (Bool x) = b in let (Bool x) = x in x;");
         LetExp e = (LetExp) getFirstFunctionExpr(m);
         LetExp e2 = (LetExp) e.getExp();
         VarOrFieldDecl decl = e.getVar();

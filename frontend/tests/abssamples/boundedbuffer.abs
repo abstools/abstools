@@ -12,16 +12,16 @@ data Bool { True; False; }
 //type Buffer = DataList
 data DataList { DataNil ; ConsData(Data, DataList) ; } 
 
-def Data head(DataList dl) = case dl { ConsData(d,l) => d ; }  
-def Data tail(DataList dl) = case dl { ConsData(d,l) => l ; }  
+def Data head(DataList dl) = case dl { ConsData(d,l) => d ; };  
+def Data tail(DataList dl) = case dl { ConsData(d,l) => l ; }; 
 
-def DataList appendData(Data d, DataList list) = concat(list, ConsData(d,DataNil))
+def DataList appendData(Data d, DataList list) = concat(list, ConsData(d,DataNil));
 
 def DataList concat(DataList l1 , DataList l2) = 
   case l1 {
     DataNil => l2 ; 
     ConsData(hd,tl) => ConsData(hd, concat(tl,l2)) ; 
-}	  
+};	  
 
 interface Buffer {
 

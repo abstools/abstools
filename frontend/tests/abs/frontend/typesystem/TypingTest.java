@@ -58,19 +58,19 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void testLetExp() {
-   	 Model m = assertParseOkStdLib("def Bool f() = let (Bool b) = True in b");
+   	 Model m = assertParseOkStdLib("def Bool f() = let (Bool b) = True in b;");
         assertEquals(m.getBoolType(),getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testCase() {
-   	 Model m = assertParseOkStdLib("def Bool f(Bool x) = case x { True => False; False => True; }");
+   	 Model m = assertParseOkStdLib("def Bool f(Bool x) = case x { True => False; False => True; };");
         assertEquals(m.getBoolType(),getFirstFunctionExpr(m).getType());
     }
 
     @Test
     public void testFnApp() {
-   	   Model m = assertParseOkStdLib("def Bool f() = f()");
+   	   Model m = assertParseOkStdLib("def Bool f() = f();");
        assertEquals(m.getBoolType(),getFirstFunctionExpr(m).getType());
     }
 

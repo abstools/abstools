@@ -136,19 +136,19 @@ public class ParserTest {
 
    @Test
 		public void testFunctionDecl() {
-		assertParseOk("def Int inc(Int x) = x"); //fun_exp = IDENTIFIER 
-		assertParseOk("def Int inc(Int x) = plus(x,one())"); //fun_exp = Term(co,l)
-		assertParseOk("def Datatype fn(Int x , Int y) = x"); 
-		assertParseOk("def TPair revPair(TPair p) = pair(snd(p),fst(p))");
+		assertParseOk("def Int inc(Int x) = x;"); //fun_exp = IDENTIFIER 
+		assertParseOk("def Int inc(Int x) = plus(x,one());"); //fun_exp = Term(co,l)
+		assertParseOk("def Datatype fn(Int x , Int y) = x;"); 
+		assertParseOk("def TPair revPair(TPair p) = pair(snd(p),fst(p));");
 		//using let
-		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x)");
+		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
 		//using nested let
-		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x)");
+		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in let(T y) = snd(p) in pair(y,x);");
 	}
     @Test
     	public void testParametricFunctionDecl() {
-    	assertParseOk("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); }");
-    	assertParseOk("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; }");
+    	assertParseOk("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
+    	assertParseOk("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
     }
 
 	@Test 

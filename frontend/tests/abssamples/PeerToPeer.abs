@@ -16,33 +16,33 @@ data Map<A, B> { EmptyMap; InsertAssoc(Pair<A, B>, Map<A, B>); }
 //function definitions 
 //List functions 
 def A head<A>(List<A> list) = 
-  case list { Cons(p,l) => p ; } // the head of a non-empty list
+  case list { Cons(p,l) => p ; }; // the head of a non-empty list
 
 def List<A> tail<A>(List<A> list) = 
-  case list { Cons(p,l) => l ; } // the tail of a non-empty list
+  case list { Cons(p,l) => l ; }; // the tail of a non-empty list
 def Bool isEmpty<A>(List<A> list) = 
-  list == Nil             // test for empty list
+  list == Nil;             // test for empty list
 
 def Int length<A>(List<A> list) =     // the length of a list
   case list {
     Nil => 0 ;
     Cons(p, l) => 1 + length(l) ;
-  } 
+  }; 
 
 def A nth<A>(List<A> list, Int n) =
   case n {   
     0 => head(list) ;
     _ => nth(tail(list), n-1) ;
-  }
+  };
 
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
   case list1 {
     Nil => list2 ;
     Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
-  }
+  };
 
 def List<A> appendright<A>(List<A> list, A p) = 
-  concatenate(list, Cons(p, Nil))
+  concatenate(list, Cons(p, Nil));
 
 //Set functions 
 def Bool contains<A>(Set<A> set, A e) =
@@ -50,26 +50,26 @@ def Bool contains<A>(Set<A> set, A e) =
     EmptySet => False ;
     Insert(e, set2) => True;
     Insert(_, set2) => contains(set2, e);
-  }
+  };
 
 //Maps 
 def B lookup<A, B>(Map<A, B> map, A key) = // retrieve from the map
   case map {
     InsertAssoc(Pair(key, elem), _) => elem ;
     InsertAssoc(_, tail) => lookup(tail, key) ;
-  }
+  };
     
 def Set<A> keys<A, B>(Map<A, B> map) =
   case map {
     EmptyMap => EmptySet ;
     InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)) ;
-  }
+  };
 
 def A fst<A, B>(Pair<A, B> p) =
-  case p { Pair(s, f) => s; }
+  case p { Pair(s, f) => s; };
 
 def B snd<A, B>(Pair<A, B> p) =
-  case p { Pair(s, f) => f; }
+  case p { Pair(s, f) => f; };
 
 
 //type synonyms  
@@ -89,7 +89,7 @@ def Server findServer(File file, Catalog catalog) =
     Cons(Pair(server, files), rest) =>
       case contains(files, file) { True => server;
                                    False => findServer(file, rest); };
-  }
+  };
 
 interface Server {
   Filenames enquire();
