@@ -73,17 +73,17 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
     public void methodEmptyOk() {
-        assertNoTypeErrors("class C { Unit m() { } }");
+        assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { } }");
     }
     
     @Test
     public void methodNoReturnOk() {
-        assertNoTypeErrors("class C { Unit m() { Bool b = True; b = False; } }");
+        assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { Bool b = True; b = False; } }");
     }
 
     @Test
     public void methodReturnOk() {
-        assertNoTypeErrors("class C { Unit m() { Bool b = True; return Unit; } }");
+        assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { Bool b = True; return Unit; } }");
     }
     
     @Test
@@ -164,6 +164,16 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void interfaceDupParams() {
         assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
+    }
+
+    @Test
+    public void classMethodOverride() {
+        assertTypeErrors("interface I { } class C implements I { Unit m() { } }"); 
+    }
+
+    @Test
+    public void classMethodWrongNumParams() {
+        assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }"); 
     }
     
     @Test

@@ -32,7 +32,7 @@ aspect Typing {
     inh Type Decl.getUnitType();
     
     eq ClassDecl.getMethod().getUnitType() = getUnitType();
-    inh Type Method.getUnitType();
+    inh Type MethodImpl.getUnitType();
 
     syn lazy Type Decl.getType();
     

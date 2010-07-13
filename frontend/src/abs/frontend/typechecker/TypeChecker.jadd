@@ -29,18 +29,52 @@ aspect TypeChecker {
     
     
     // DECLS
+    public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
+        for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+            TypeDecl d = u.getDecl();
+            if (d.isInterface()) {
+                InterfaceDecl id = (InterfaceDecl) d;
+                id.addAllMethodSigs(sigs);
+            }    
+        }
+        
+        for (MethodSig s : getBodys()) {
+            sigs.put(s.getName(),s);
+        }
+    }
+    
+    public void ClassDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
+        for (InterfaceTypeUse u : getImplementedInterfaceUses()) {
+            TypeDecl d = u.getDecl();
+            if (d.isInterface()) {
+                InterfaceDecl id = (InterfaceDecl) d;
+                id.addAllMethodSigs(sigs);
+            }
+        }
+    }
     
     public abstract void Decl.typeCheck(SemanticErrorList e);  
     
     public void ClassDecl.typeCheck(SemanticErrorList e) {
    	 // TODO: check that class implements an interface
    	 // TODO: check that class does not implement same interface twice
-   	 for (FieldDecl f : getFields()) {
+      HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+      addAllMethodSigs(sigs);  
+      
+   	  for (FieldDecl f : getFields()) {
    		  f.typeCheck(e);
    	  }
-   	  for (Method m : getMethods()) {
+   	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
+   		  String name = m.getMethodSig().getName();
+   		  if (!sigs.containsKey(name)) {
+   		     e.add(new TypeError(m, ErrorMessage.NO_METHOD_IMPL, name));   		      
+   		  } else {
+   		      MethodSig s = sigs.get(name);
+   		  }
    	  }
+   	  
+   	  
     }
     
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
@@ -71,7 +105,6 @@ aspect TypeChecker {
                 }
             }
         }
-        
     }
     
     public void MethodSig.typeCheck(SemanticErrorList e) {
@@ -124,15 +157,17 @@ aspect TypeChecker {
         }
     }
     
-    public void Method.typeCheck(SemanticErrorList e) {
+    public void MethodImpl.typeCheck(SemanticErrorList e) {
    	 Block b = getBlock();
+   	 MethodSig sig = getMethodSig();
+   	 sig.typeCheck(e);
    	 Type lastType = getUnitType();
    	 if (b.getNumStmt() > 0) {
    		 lastType = b.getStmt(b.getNumStmt()-1).getType();
    	 }
    	 
-   	 if (!lastType.isSubtypeOf(getReturnType().getType())) {
-   		 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,lastType,getReturnType().getType()));
+   	 if (!lastType.isSubtypeOf(sig.getReturnType().getType())) {
+   		 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,lastType,sig.getReturnType().getType()));
    	 }
    	 
    	 b.typeCheck(e);
@@ -177,9 +212,9 @@ aspect TypeChecker {
     }
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
-   	 Method m = getContextMethod();
+   	 MethodImpl m = getContextMethod();
    	 Type rht = getRetExp().getType();
-   	 Type lht = m.getReturnType().getType();
+   	 Type lht = m.getMethodSig().getReturnType().getType();
 		 if (!rht.isSubtypeOf(lht)) {
 			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
 		 }

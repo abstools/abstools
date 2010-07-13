@@ -111,16 +111,16 @@ aspect TypeResolution {
     }
     
     syn lazy Decl Decl.getContextDecl() = this;
-    eq Method.getBlock().getContextDecl() = getContextDecl();
+    eq MethodImpl.getBlock().getContextDecl() = getContextDecl();
     eq Model.getBlock().getContextDecl() = unknownDecl();
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
-    inh Decl Method.getContextDecl();
+    inh Decl MethodImpl.getContextDecl();
     
-    eq Method.getBlock().getContextMethod() = this;
+    eq MethodImpl.getBlock().getContextMethod() = this;
     eq Model.getBlock().getContextMethod() = null;
-    inh Method Stmt.getContextMethod();
+    inh MethodImpl Stmt.getContextMethod();
     
     
     syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {

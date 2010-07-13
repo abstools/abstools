@@ -326,22 +326,23 @@ aspect GenerateMaude {
             // AST so we pass in the field list in all cases.
             new InitBlock(new List<VarDecl>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
         }
-        for (Method method : getMethods()) {
+        for (MethodImpl method : getMethods()) {
             stream.print(",\n    ");
             method.generateMaude(stream);
         }
         stream.print(",\n  Ocnt: 0 > ");
 	}
 	
-    public void Method.generateMaude(java.io.PrintStream stream) {
+    public void MethodImpl.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
-        boolean amRunMethod = getName().equals("run");
-        stream.print("< \"" + getName() + "\" : Method | Param: ");
-        if (getNumParam() == 0) {
+        MethodSig sig = getMethodSig();
+        boolean amRunMethod = sig.getName().equals("run");
+        stream.print("< \"" + sig.getName() + "\" : Method | Param: ");
+        if (sig.getNumParam() == 0) {
             stream.print("noVid");
         } else {
             stream.print("(");
-            for (ParamDecl param : getParams()) {
+            for (ParamDecl param : sig.getParams()) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("@ \"" + param.getName() + "\"");
             }
@@ -349,7 +350,7 @@ aspect GenerateMaude {
         }
         stream.print(", Att: ");
         inlist = false;
-        stream.print("@ \".method\" |-> \"str\"[\"" + getName() + "\"], ");
+        stream.print("@ \".method\" |-> \"str\"[\"" + sig.getName() + "\"], ");
         stream.print("@ \".staticfuture\" |-> null");
         for (VarDecl var : getBlock().getVars()) {
             stream.print(", @ \"" + var.getName() + "\" |-> null ");
@@ -378,7 +379,7 @@ aspect GenerateMaude {
             // insert a dummy return statement for Void methods, and
             // give warnings about control paths not returning values
             // otherwise.
-            Access returnType = getReturnType();
+            Access returnType = sig.getReturnType();
             if (returnType instanceof IdUse
                 && ((IdUse)returnType).getName().equals("Unit")
                 // the run method has no place to return anything to

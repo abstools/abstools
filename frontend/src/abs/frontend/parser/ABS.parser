@@ -220,8 +220,8 @@ List datatypeparam_list =
    | datatypeparam_list.l COMMA datatypeparam.p {: return l.add(p); :}
    ;
 
-Method method = 
-	  methodsig.ms block.b {: return new Method(ms.getName(), ms.getReturnTypeNoTransform(), ms.getParamsNoTransform(), b); :}
+MethodImpl method = 
+	  methodsig.ms block.b {: return new MethodImpl(ms, b); :}
     ;
 
 MethodSig methodsig =

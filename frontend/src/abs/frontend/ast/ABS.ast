@@ -11,7 +11,7 @@ abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	TypeDecl;		// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:Method*;
+ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl:	BehaviorDecl    ::= TypeUse Param:ParamDecl* FunDef:PureExp ;
 ParametricFunctionDecl : FunctionDecl ::= TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
@@ -28,9 +28,10 @@ FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp];
 ParamDecl:	TypedVarOrFieldDecl;
 PatternVarDecl: VarOrFieldDecl;
 
-Method  ::= <Name> ReturnType:Access Param:ParamDecl* Block;
 
 MethodSig	::= <Name> ReturnType:Access Param:ParamDecl*;
+MethodImpl  ::= MethodSig Block;
+
 
 // Uses of various identifiers
 abstract Access:		PureExp;
