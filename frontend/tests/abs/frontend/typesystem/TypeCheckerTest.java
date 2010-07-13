@@ -66,7 +66,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
 	 public void caseVarOk() {
-		 assertNoTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(True);" +
+		 assertNoTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(True);" +
 		 		" Bool b = case x { Bar(y) => y; }; }"); 
 	 }
     
@@ -127,6 +127,12 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void dataTypeDuplicateConstructors() {
+        assertNoTypeErrors("data Foo = Bar | Bar ;"); 
+    }
+
+    
+    @Test
     public void negTestError() {
         Model m = assertParseOkStdLib(" { Bool b = ~5; }");
         assertEquals(ErrorMessage.EXPECTED_TYPE,m.typeCheck().getFirst().msg);
@@ -179,12 +185,12 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
 	 public void caseErrorConstructorWrongArgType() {
-		 assertTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(True); Bool b = case x { Bar(5) => False; }; }"); 
+		 assertTypeErrors("data Foo = Bar(Bool);  { Foo x = Bar(True); Bool b = case x { Bar(5) => False; }; }"); 
 	 }
     
     @Test
 	 public void caseErrorConstructorExpWrongArgType() {
-		 assertTypeErrors("data Foo { Bar(Bool); } { Foo x = Bar(5); }"); 
+		 assertTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(5); }"); 
 	 }
     
     @Test

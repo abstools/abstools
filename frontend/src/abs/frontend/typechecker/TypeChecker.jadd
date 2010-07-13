@@ -7,8 +7,6 @@ import abs.frontend.typechecker.TypeCheckerHelper;
 
 aspect TypeChecker {
     
-    
-    
     syn lazy boolean Model.hasTypeErrors() = !typeCheck().isEmpty();
     
     syn lazy SemanticErrorList Model.typeCheck() {
@@ -43,17 +41,25 @@ aspect TypeChecker {
    	  }
     }
     
-    public void FunctionDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void InterfaceDecl.typeCheck(SemanticErrorList e) {
-   	 // TODO: implement
-    }
-    public void DataTypeDecl.typeCheck(SemanticErrorList e) {
-   	 // TODO: implement
+    public void FunctionDecl.typeCheck(SemanticErrorList e) { 
+        // TODO: implement
     }
     
-    public void TypeSynDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void InterfaceDecl.typeCheck(SemanticErrorList e) {
+        // TODO: implement
+    }
+    public void DataTypeDecl.typeCheck(SemanticErrorList e) {
+        // TODO no duplicate constructor names
+        
+    }
+    
+    public void TypeSynDecl.typeCheck(SemanticErrorList e) {
+        getValue().typeCheck(e);
+    }
+    
     public void TypeParameterDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void UnknownDecl.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    
+    public void UnknownDecl.typeCheck(SemanticErrorList e) { }
     
     
     public void Block.typeCheck(SemanticErrorList e) {
@@ -81,7 +87,7 @@ aspect TypeChecker {
     }
 
     public void FieldDecl.typeCheck(SemanticErrorList e) { 
-   	 throw new NotImplementedYetException("Type Checker",this); 
+        getAccess().typeCheck(e);
     }
     
     public void VarDecl.typeCheck(SemanticErrorList e) { 
@@ -133,7 +139,7 @@ aspect TypeChecker {
    	 getGuard().typeCheck(e);
     }
 
-    public void SuspendStmt.typeCheck(SemanticErrorList e) { }
+    public void SuspendStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
     
     
     public void IfStmt.typeCheck(SemanticErrorList e) {
@@ -151,7 +157,7 @@ aspect TypeChecker {
    	 getBody().typeCheck(e);
     }
     
-    public void SkipStmt.typeCheck(SemanticErrorList e) { }
+    public void SkipStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
 
 
     // GUARDS
