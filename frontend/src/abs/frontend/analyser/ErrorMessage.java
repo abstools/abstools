@@ -21,9 +21,12 @@ public enum ErrorMessage {
     , DUPLICATE_CONSTRUCTOR("Constructor %s is already defined.")
     , DUPLICATE_METHOD_NAME("Method %s is already defined.")
     , DUPLICATE_PARAM_NAME("Parameter %s is already defined.")
+    , DUPLICATE_FIELD_NAME("Field %s is already defined.")
     , ONLY_INTERFACE_EXTEND("Interfaces can only extend other interfaces, but %s is not an interface.")
     , NO_METHOD_OVERRIDE("Method %s overrides an existing method of interface %s.")
     , NO_METHOD_IMPL("Method %s does not exist in any implemented interface.")
+    , METHOD_IMPL_WRONG_NUM_PARAMS("Method %s does not have the same number of parameters as defined in interface %s. Expected %s, but found %s.")
+    , METHOD_IMPL_WRONG_PARAM_TYPE("Parameter %s of method %s has a different type as defined in interface %s. Expected %s, but found %s.")
     ;
 
         

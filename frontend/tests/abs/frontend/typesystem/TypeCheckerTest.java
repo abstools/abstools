@@ -173,7 +173,22 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void classMethodWrongNumParams() {
-        assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }"); 
+        assertTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }"); 
+    }
+
+    @Test
+    public void classMethodWrongParamType() {
+        assertTypeErrors("interface I { Unit m(Bool b); } class C implements I { Unit m(Int i) { } }"); 
+    }
+    
+    @Test
+    public void classDuplicateFields() {
+        assertTypeErrors("class C { Bool f; Int f;}"); 
+    }
+
+    @Test
+    public void classFieldError() {
+        assertTypeErrors("class C { X f; }"); 
     }
     
     @Test

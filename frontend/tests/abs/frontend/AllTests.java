@@ -4,6 +4,7 @@ package abs.frontend;
 import abs.frontend.analyser.InterfaceDeclarationTest;
 import abs.frontend.analyser.VarResolutionTest;
 import abs.frontend.parser.*;
+import abs.frontend.typesystem.TypeCheckerTest;
 import abs.frontend.typesystem.TypingTest;
 
 import org.junit.runner.RunWith;
@@ -17,6 +18,7 @@ import org.junit.runners.Suite;
 		, ParseSamplesTest.class
 		, VarResolutionTest.class
 		, TypingTest.class
+		, TypeCheckerTest.class
 		
         })
 public class AllTests {

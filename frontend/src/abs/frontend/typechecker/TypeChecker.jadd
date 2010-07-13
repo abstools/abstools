@@ -57,13 +57,20 @@ aspect TypeChecker {
     
     public void ClassDecl.typeCheck(SemanticErrorList e) {
    	 // TODO: check that class implements an interface
-   	 // TODO: check that class does not implement same interface twice
+
+      HashMap<String, FieldDecl> fields = new HashMap<String, FieldDecl>();
+      for (FieldDecl f : getFields()) {
+   		  f.typeCheck(e);
+   		  if (fields.containsKey(f.getName())) {
+              e.add(new TypeError(f, ErrorMessage.DUPLICATE_FIELD_NAME, f.getName()));
+          } else {
+              fields.put(f.getName(),f);
+          }
+   	  }
+   	  
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
       addAllMethodSigs(sigs);  
       
-   	  for (FieldDecl f : getFields()) {
-   		  f.typeCheck(e);
-   	  }
    	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
    		  String name = m.getMethodSig().getName();
@@ -71,6 +78,21 @@ aspect TypeChecker {
    		     e.add(new TypeError(m, ErrorMessage.NO_METHOD_IMPL, name));   		      
    		  } else {
    		      MethodSig s = sigs.get(name);
+   		      MethodSig ms = m.getMethodSig();
+   		      InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+   		      if (s.getNumParam() != ms.getNumParam()) {
+   		          e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_NUM_PARAMS, name, d.getName(), ""+s.getNumParam(), ""+ms.getNumParam()));
+   		      } else {
+   		          for (int i = 0; i < s.getNumParam(); i++) {
+   		              Type texpected = s.getParam(i).getType();
+   		              Type t = ms.getParam(i).getType();
+   		              if (!texpected.equals(t)) {
+   		                  e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_PARAM_TYPE, 
+   		                        ms.getParam(i).getName(), name, d.getName(), 
+   		                        texpected.toString(), t.toString()));
+   		              }
+   		          }
+   		      }
    		  }
    	  }
    	  
