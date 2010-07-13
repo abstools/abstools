@@ -4,6 +4,8 @@ import abs.frontend.typechecker.*;
 
 import abs.frontend.typechecker.TypeCheckerHelper;
 
+import java.util.HashMap;
+
 
 aspect TypeChecker {
     
@@ -41,14 +43,50 @@ aspect TypeChecker {
    	  }
     }
     
-    public void FunctionDecl.typeCheck(SemanticErrorList e) { 
+    public void FunctionDecl.typeCheck(SemanticErrorList e) {
         // TODO: implement
     }
     
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
-        // TODO: implement
+        HashMap<String, MethodSig> names = new HashMap<String, MethodSig>();
+        for (MethodSig s : getBodys()) {
+            if (names.containsKey(s.getName())) {
+                e.add(new TypeError(s, ErrorMessage.DUPLICATE_METHOD_NAME, s.getName()));
+            } else {
+                names.put(s.getName(),s);
+            }
+            s.typeCheck(e);
+        }
+        
+        for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+            TypeDecl d = u.getDecl();
+            if (!d.isInterface()) {
+                e.add(new TypeError(u, ErrorMessage.ONLY_INTERFACE_EXTEND, d.getName()));
+            } else {
+                InterfaceDecl id = (InterfaceDecl) d;
+                for (MethodSig s : id.getBodys()) {
+                    if (names.containsKey(s.getName())) {
+                        e.add(new TypeError(names.get(s.getName()), ErrorMessage.NO_METHOD_OVERRIDE, s.getName(), id.getName()));
+                    }
+                }
+            }
+        }
+        
     }
     
+    public void MethodSig.typeCheck(SemanticErrorList e) {
+        getReturnType().typeCheck(e);
+        HashSet<String> names = new HashSet<String>();
+        for (ParamDecl d : getParams()) {
+            if (names.contains(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_PARAM_NAME, d.getName()));
+            } else {
+                names.add(d.getName());
+            }
+            d.typeCheck(e);
+        }
+    }
+     
     public void DataTypeDecl.typeCheck(SemanticErrorList e) {
         HashSet<String> names = new HashSet<String>();
         for (DataConstructor c : getDataConstructors()) {

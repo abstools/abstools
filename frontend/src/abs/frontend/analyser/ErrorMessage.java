@@ -19,6 +19,10 @@ public enum ErrorMessage {
     , WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s.")
     , PATTERN_WRONG_TYPE("Pattern type %s does not match declared type %s.")
     , DUPLICATE_CONSTRUCTOR("Constructor %s is already defined.")
+    , DUPLICATE_METHOD_NAME("Method %s is already defined.")
+    , DUPLICATE_PARAM_NAME("Parameter %s is already defined.")
+    , ONLY_INTERFACE_EXTEND("Interfaces can only extend other interfaces, but %s is not an interface.")
+    , NO_METHOD_OVERRIDE("Method %s overrides an existing method of interface %s.")
     ;
 
         

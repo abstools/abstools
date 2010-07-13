@@ -135,6 +135,36 @@ public class TypeCheckerTest extends FrontendTest {
     public void dataTypeNestedErrors() {
         assertTypeErrors("data Foo = Bar(X) ;"); 
     }
+
+    @Test
+    public void interfaceDuplicateMethods() {
+        assertTypeErrors("interface I { Unit m(); Unit m(); }"); 
+    }
+
+    @Test
+    public void interfaceWrongExtend() {
+        assertTypeErrors("interface I extends Bool {} "); 
+    }
+
+    @Test
+    public void interfaceMethodOverride() {
+        assertTypeErrors("interface I { Unit m(); } interface J extends I { Unit m(); }"); 
+    }
+
+    @Test
+    public void interfaceNestedError() {
+        assertTypeErrors("interface I { X m(); }"); 
+    }
+
+    @Test
+    public void interfaceNestedParamError() {
+        assertTypeErrors("interface I { Unit m(X x); }"); 
+    }
+    
+    @Test
+    public void interfaceDupParams() {
+        assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
+    }
     
     @Test
     public void negTestError() {
