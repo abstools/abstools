@@ -2,6 +2,7 @@ package abs.frontend.typechecker;
 
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
+import abs.frontend.ast.MethodSig;
 
 public class InterfaceType extends ReferenceType {
     private final InterfaceDecl decl;
@@ -49,5 +50,10 @@ public class InterfaceType extends ReferenceType {
    public String toString() {
       return decl.getName();
    }
+    
+    @Override
+    public MethodSig lookupMethod(String name) {
+        return decl.lookupMethod(name);
+    }
     
 }

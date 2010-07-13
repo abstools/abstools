@@ -1,5 +1,7 @@
 package abs.frontend.typechecker;
 
+import abs.frontend.ast.MethodSig;
+
 public abstract class Type {
     public String toString() {
         return "type";
@@ -49,6 +51,10 @@ public abstract class Type {
 		return false;
 	}
     
+ 	public MethodSig lookupMethod(String name) {
+ 	    return null;
+ 	}
+ 	
     public boolean equals(Object o) {
         if (o == null) return false;
         if (o.getClass() != this.getClass())

@@ -82,19 +82,38 @@ aspect Typing {
     
     syn lazy Type Exp.getType();
     eq AsyncCall.getType() {  
-        InterfaceDecl decl = ((InterfaceType)getCallee().getType()).getDecl();
+        Type t = getCallee().getType();
+        if (!t.isInterfaceType())
+            return UnknownType.INSTANCE;
+        
+        InterfaceType it = (InterfaceType) t;        
+        InterfaceDecl decl = it.getDecl();
         MethodSig s = decl.lookupMethod(getMethod());
         return getFutType(s.getReturnType().getType());
     }
+
     eq SyncCall.getType() { 
-        InterfaceDecl decl = ((InterfaceType)getCallee().getType()).getDecl();
+        Type t = getCallee().getType();
+        if (!t.isInterfaceType())
+            return UnknownType.INSTANCE;
+        
+        InterfaceType it = (InterfaceType) t;        
+        InterfaceDecl decl = it.getDecl();
         MethodSig s = decl.lookupMethod(getMethod());
         return s.getReturnType().getType();
     }
     eq GetExp.getType() = getPureExp().getType();
     eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
-    eq FieldUse.getType() = getDecl().getType();
-    eq VarUse.getType() = getDecl().getType();
+    eq FieldUse.getType() { 
+        VarOrFieldDecl d = getDecl();
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
+    eq VarUse.getType() { 
+        VarOrFieldDecl d = getDecl();
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
     eq TypeUse.getType() = getDecl().getType();
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();

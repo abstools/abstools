@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MethodSig;
 
 public class UnionType extends ReferenceType {
 	private final java.util.List<InterfaceType> types;
@@ -51,5 +52,15 @@ public class UnionType extends ReferenceType {
 	            return true;
 	    }
 	    return super.isSubtypeOf(t);
+	}
+	
+	@Override
+	public MethodSig lookupMethod(String name) {
+	    for (InterfaceType t : types) {
+	        MethodSig s = t.lookupMethod(name);
+	        if (s != null)
+	            return s;
+	    }
+	    return null;
 	}
 }

@@ -111,6 +111,27 @@ public class TypeCheckerTest extends FrontendTest {
 		 assertNoTypeErrors("{ await False && True; }"); 
 	 }
 
+    @Test
+    public void syncCallMethodThis() {
+        assertNoTypeErrors("interface I { Unit m(); } " +
+        		"class C implements I { Unit m() { this.m(); } }");
+    }
+
+    @Test
+    public void syncCallMethodThis2() {
+        assertNoTypeErrors("interface I { Unit m(); } interface J {}" +
+                "class C implements J,I { Unit m() { this.m(); } }");
+    }
+    
+    @Test
+    public void syncCallMethodIntf() {
+        assertNoTypeErrors("interface I { Unit m(); } {I i; i.m(); }");
+    }
+
+    @Test
+    public void asyncCallMethodIntf() {
+        assertNoTypeErrors("interface I { Unit m(); } {I i; i!m(); }");
+    }
     
     
     // NEGATIVE TESTS
@@ -297,6 +318,31 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void methodMissingReturn() {
         assertTypeErrors("class C { Bool m() {  } }");
+    }
+
+    @Test
+    public void syncCallWrongTarget() {
+        assertTypeErrors("class C { Unit m(Bool b) { b.m();  } }");
+    }
+
+    @Test
+    public void syncCallNoMethodThis() {
+        assertTypeErrors("class C { Unit m() { this.n(); } }");
+    }
+
+    @Test
+    public void syncCallNoMethodIntf() {
+        assertTypeErrors("interface I {} { I i; i.m(); }");
+    }
+
+    @Test
+    public void syncCallWrongArgNum() {
+        assertTypeErrors("interface I { Unit m(); } { I i; i.m(True); }");
+    }
+
+    @Test
+    public void syncCallWrongArgType() {
+        assertTypeErrors("interface I { Unit m(Int i); } { I i; i.m(True); }");
     }
     
     @Test

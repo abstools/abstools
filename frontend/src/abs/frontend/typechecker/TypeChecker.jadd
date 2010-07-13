@@ -299,8 +299,17 @@ aspect TypeChecker {
    	 }
     }
     
-    public void AsyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
-    public void SyncCall.typeCheck(SemanticErrorList e) { throw new NotImplementedYetException("Type Checker",this); }
+    public void Call.typeCheck(SemanticErrorList e) {
+        Type t = getCallee().getType();
+        MethodSig s = t.lookupMethod(getMethod());
+        if (s == null) {
+            e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
+        } else {
+            TypeCheckerHelper.typeCheckEqualParams(e,this,s.getParams(),getParams());
+        }
+    }
+    
+
     public void GetExp.typeCheck(SemanticErrorList e) {  
    	 if (!getPureExp().getType().isFutureType()) {
    		 e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType())); 

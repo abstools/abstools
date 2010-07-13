@@ -375,13 +375,13 @@ List data_exp_params =
 	;
 
 AsyncCall async_call = 
-	THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,new ThisExp()) ; :} 
-	| pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(method,params,callee) ; :} 
+	THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(new ThisExp(), method,params) ; :} 
+	| pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(callee,method,params) ; :} 
 	;
 
 SyncCall sync_call = 
-	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(method,params,new ThisExp()) ; :} 
-	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(method,params,callee) ; :} 
+	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(new ThisExp(),method,params) ; :} 
+	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :} 
 	;
 
 
