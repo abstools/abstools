@@ -18,6 +18,7 @@ public enum ErrorMessage {
     , CASE_NO_DATATYPE("Cases are only possible on data types, but found type %s.")
     , WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s.")
     , PATTERN_WRONG_TYPE("Pattern type %s does not match declared type %s.")
+    , DUPLICATE_CONSTRUCTOR("Constructor %s is already defined.")
     ;
 
         

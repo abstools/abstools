@@ -48,9 +48,23 @@ aspect TypeChecker {
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
         // TODO: implement
     }
+    
     public void DataTypeDecl.typeCheck(SemanticErrorList e) {
-        // TODO no duplicate constructor names
-        
+        HashSet<String> names = new HashSet<String>();
+        for (DataConstructor c : getDataConstructors()) {
+            c.typeCheck(e);
+            if (names.contains(c.getName())) {
+                e.add(new TypeError(c, ErrorMessage.DUPLICATE_CONSTRUCTOR, c.getName()));
+            } else {
+                names.add(c.getName());
+            }
+        }
+    }
+    
+    public void DataConstructor.typeCheck(SemanticErrorList e) {
+        for (DataTypeUse d : getConstructorArgs()) {
+            d.typeCheck(e);
+        }
     }
     
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {

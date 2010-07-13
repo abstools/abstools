@@ -128,9 +128,13 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
     public void dataTypeDuplicateConstructors() {
-        assertNoTypeErrors("data Foo = Bar | Bar ;"); 
+        assertTypeErrors("data Foo = Bar | Bar ;"); 
     }
 
+    @Test
+    public void dataTypeNestedErrors() {
+        assertTypeErrors("data Foo = Bar(X) ;"); 
+    }
     
     @Test
     public void negTestError() {
