@@ -3,9 +3,7 @@ package abs.frontend.typechecker;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
-    public String toString() {
-        return "type";
-    }
+    public abstract String toString();
     
     public boolean isReferenceType() {
         return false;

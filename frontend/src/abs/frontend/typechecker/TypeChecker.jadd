@@ -233,6 +233,8 @@ aspect TypeChecker {
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
    	 MethodImpl m = getContextMethod();
+   	 if (m == null) return;
+   	 
    	 Type rht = getRetExp().getType();
    	 Type lht = m.getMethodSig().getReturnType().getType();
 		 if (!rht.isSubtypeOf(lht)) {
@@ -306,6 +308,13 @@ aspect TypeChecker {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
             TypeCheckerHelper.typeCheckEqualParams(e,this,s.getParams(),getParams());
+        }
+    }
+    
+    public void NewExp.typeCheck(SemanticErrorList e) {
+        Decl d = lookup(getClassRef());
+        if (d == null || !d.isClass()) {
+            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassRef()));
         }
     }
     

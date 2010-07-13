@@ -9,7 +9,7 @@
 data Unit = Unit ;
 data String;
 data Fut<A>;
-
+data Bool = True | False;
 
 interface Ping {
 
@@ -33,24 +33,22 @@ class Ping  implements Ping {
 
     Unit init(Pong p){
 	
-	pong = p ; 
-	return null ;
+	  pong = p ; 
    	}
 
 
     Unit run(){
 
-      Unit x; 
+      Fut<Unit> x; 
       Fut<String> reply;
       
       reply = pong!m(hello_pong); 
       await reply? ; 
       x = this!run();
-      return null ;
    }
 
     String m(String msg){
-	String reply; 
+	String reply = ""; 
 	if (msg_equals_hello_ping) 
 	  reply = thanks_pong ;
 	else
@@ -65,8 +63,7 @@ class Pong implements Pong {
     String hi_ping ;
 
     Unit init(Ping p){
-	
-	ping = p ; return null ;
+   	ping = p ; 
     }
 
     Unit run(){
@@ -77,7 +74,6 @@ class Pong implements Pong {
       reply = ping!m(hi_ping); 
       await reply? ; 
       x = this!run();
-      return null;
    }
 
     String m(String msg){
@@ -105,5 +101,4 @@ class Pong implements Pong {
     x = pong.init(); 
     x = ping!run(); 
     x = pong!run(); 
-    return null;
 }

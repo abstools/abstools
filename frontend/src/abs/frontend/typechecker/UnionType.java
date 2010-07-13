@@ -63,4 +63,20 @@ public class UnionType extends ReferenceType {
 	    }
 	    return null;
 	}
+	
+	@Override
+	public String toString() {
+	    StringBuilder buf = new StringBuilder();
+	    buf.append("UnionType{");
+	    boolean first = true;
+	    for (InterfaceType t : types) {
+            if (!first) {
+                buf.append(", ");
+                first = false;
+            }
+	        buf.append(t.toString());
+	    }
+	    buf.append(" }");
+	    return buf.toString();
+	}
 }

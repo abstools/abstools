@@ -59,7 +59,10 @@ aspect Typing {
     eq TypeParameterDecl.getType() { 
         return new TypeParameter(this);
     }
-    eq TypeSynDecl.getType() { throw new NotImplementedYetException("Type Checker",this); }
+    eq TypeSynDecl.getType() { 
+        return getValue().getType(); 
+    }
+    
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     
     syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
@@ -77,6 +80,7 @@ aspect Typing {
     
     /* STMTS */
     syn Type Stmt.getType() = getUnitType();
+    eq ReturnStmt.getType() = getRetExp().getType();
     
     /* EXPRESSIONS */
     
@@ -103,7 +107,12 @@ aspect Typing {
         return s.getReturnType().getType();
     }
     eq GetExp.getType() = getPureExp().getType();
-    eq NewExp.getType() = ((ClassDecl)lookup(getClassRef())).getType();
+    eq NewExp.getType() {
+        Decl d = lookup(getClassRef());
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
+    
     eq FieldUse.getType() { 
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;

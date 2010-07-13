@@ -7,13 +7,23 @@ import abs.frontend.FrontendTest;
 public class ExamplesTypeChecking extends FrontendTest {
     
     @Test
-    public void testSamples() {
-        String dir="tests/abssamples/";     
-        String[] files = {"PeerToPeer.abs", "pingpong.abs", "boundedbuffer.abs"};
-        for (int i = 0 ; i < files.length; i++){
-//          System.out.println("parsing " + files[i]);
-            assertTypeCheckFileOk(dir + files[i]);
-        }   
+    public void peerToPeer() {
+        assertTypeCheckTestFileOk("PeerToPeer.abs");
+    }
+    
+    @Test
+    public void pingPong() {
+        assertTypeCheckTestFileOk("pingpong.abs");
+    }
+    
+    @Test
+    public void boundedBuffer() {
+        assertTypeCheckTestFileOk("boundedbuffer.abs");
+    }
+
+    private void assertTypeCheckTestFileOk(String fileName) {
+        String dir="tests/abssamples/";
+        assertTypeCheckFileOk(dir + fileName);
     }
     
 

@@ -85,6 +85,12 @@ public class TypeCheckerTest extends FrontendTest {
     public void methodReturnOk() {
         assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { Bool b = True; return Unit; } }");
     }
+
+    @Test
+    public void methodParameterOk() {
+        assertNoTypeErrors("interface I { Bool m(Bool b);} " +
+        		"class C implements I { Bool m(Bool b) { return b; } }");
+    }
     
     @Test
 	 public void testIfOk() {
@@ -260,6 +266,11 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("{ Bool b = 5 && True; }");
     }
     
+    @Test
+    public void newError() {
+        assertTypeErrors("interface I { } { I i; i = new I(); }"); 
+    }
+
     @Test
 	 public void letError() {
 		 assertTypeErrors("{ Bool b = let (Bool x) = 5 in x; }"); 

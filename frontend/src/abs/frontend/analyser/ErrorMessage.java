@@ -30,6 +30,7 @@ public enum ErrorMessage {
     , METHOD_IMPL_WRONG_PARAM_TYPE("Parameter %s of method %s has a different type as defined in interface %s. Expected %s, but found %s.")
     , TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface.")
     , METHOD_NOT_FOUND("Method %s could not be found")
+    , NO_CLASS_DECL("Class %s could not be found")
     ;
 
         

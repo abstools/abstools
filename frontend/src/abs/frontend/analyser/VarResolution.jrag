@@ -107,6 +107,46 @@ aspect VarResolution {
         return lookupVarName(name);
     }
     
+    syn lazy VarOrFieldDecl MethodSig.localLookupVarName(String name) {
+        for (ParamDecl d : getParams()) {
+            if (d.getName().equals(name))
+                return d;
+        }
+        return null;
+    }
+    
+    inh VarOrFieldDecl MethodImpl.lookupVarName(String name);
+    
+    eq ClassDecl.getMethod(int i).lookupVarName(String name) 
+        = localLookupVarName(name);
+    
+    syn lazy VarOrFieldDecl MethodImpl.localLookupVarName(String name) {
+        VarOrFieldDecl d = getMethodSig().localLookupVarName(name);
+        if (d != null) 
+            return d;
+        
+        return lookupVarName(name);
+    }
+
+    eq InterfaceDecl.getBody(int i).lookupVarName(String name) 
+        = getBody(i).localLookupVarName(name);
+    
+    eq MethodImpl.getMethodSig().lookupVarName(String name) { 
+        VarOrFieldDecl d = getMethodSig().localLookupVarName(name);
+        if (d != null) 
+            return d;
+
+        return lookupVarName(name);
+    }
+    
+    eq MethodImpl.getBlock().lookupVarName(String name) {
+        VarOrFieldDecl d = getBlock().localLookupVarName(name);
+        if (d != null) 
+            return d;
+            
+        return localLookupVarName(name);
+    }
+    
     eq Model.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
     eq Model.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
     eq CaseExp.getBranch(int i).lookupVarName(String name) = getBranch(i).getLeft().localLookupVarName(name);
@@ -119,7 +159,7 @@ aspect VarResolution {
     
     inh VarOrFieldDecl Exp.lookupVarName(String name);
     inh VarOrFieldDecl Stmt.lookupVarName(String name);
-
+    inh VarOrFieldDecl MethodSig.lookupVarName(String name);
     
 }
 

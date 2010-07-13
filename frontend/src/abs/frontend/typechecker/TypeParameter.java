@@ -25,4 +25,9 @@ public class TypeParameter extends Type {
     public int hashCode() {
         return decl.hashCode();
     }
+    
+    @Override
+    public String toString() {
+        return decl.getName();
+    }
 }
