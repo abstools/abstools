@@ -30,15 +30,22 @@ import abs.frontend.parser.Main;
 
 public class JavaBackend {
     private static String testCode() {
-        return "data Bool { }\n data Int { }\n" +
-               "interface A { }\n" +
-               "class B implements A { } \n" +
-               "data Unit { }\n" +
-               "def A f() = null\n" +
+        return "data Bool = True | False;\n " +
+        		   "data Int ;\n" +
+        		   "data Unit = Unit ;" +
+               "interface A { Unit m(Bool b, Int i); } \n" + 
+               "class B implements A { \n" +
+               "  Unit m(Bool b, Int i) { \n" +
+               "    A a; \n" +
+               "    a.m(True, 5);\n" +
+               "  }\n" +
+               "} \n" + 
+               "def A f() = null; \n" +
                "{ " +
                "  A a; Int i; Bool b; a = null; " +
                "  i = 5;" +
                "  i = i + 4;" +
+               "  a.m(True, 5);" +
                "  b = True; " +
                "  if (b) { " +
                "  } else {" +

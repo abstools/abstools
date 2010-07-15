@@ -35,6 +35,7 @@ public class JavaBackendTest {
             tmpFile = getTempFile(javaCode);
             JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
         } catch (Exception e) {
+           System.out.println(javaCode);
             Assert.fail(e.getMessage());
         }
     }

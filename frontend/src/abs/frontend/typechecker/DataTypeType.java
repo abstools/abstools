@@ -63,6 +63,10 @@ public class DataTypeType extends Type {
         return decl.getName().equals("Bool");
     }
 
+    public boolean isUnitType() {
+        return decl.getName().equals("Unit");
+    }
+
     public boolean isIntType() {
         return decl.getName().equals("Int");
     }

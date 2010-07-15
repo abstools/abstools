@@ -37,6 +37,10 @@ public abstract class Type {
         return false;
     }
     
+    public boolean isUnitType() {
+   	 return false;
+    }
+    
     public boolean isStringType() {
         return false;
     }

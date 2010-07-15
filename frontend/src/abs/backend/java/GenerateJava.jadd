@@ -38,7 +38,32 @@ aspect GenerateJava {
             stream.print(", "+use.getName());
         }
         stream.println(" {");
+        
+        for (MethodSig s : getBodys()) {
+      	  s.generateJava("   ", stream);
+      	  stream.println(";");
+        }
+        
         stream.println("}");
+    }
+    
+    public void MethodSig.generateJava(String indent, PrintStream stream) {
+   	  stream.print(indent+"public ");
+   	  getReturnType().generateJava(stream);
+   	  stream.print(" "+getName()+"(");
+   	  boolean first = true;
+   	  for (ParamDecl d : getParams()) {
+   		  if (!first)
+   			  stream.print(", ");
+   		  d.generateJava(stream);
+   		  first = false;
+   	  }
+   	  stream.print(")");
+    }
+    
+    public void ParamDecl.generateJava(PrintStream stream) {
+   	 getAccess().generateJava(stream);
+   	 stream.print(" "+getName());
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
@@ -49,8 +74,33 @@ aspect GenerateJava {
         
         ClassDecl d = null;
         stream.println(" {");
+        for (FieldDecl f : getFields()) {
+      	  f.generateJava("   ", stream);
+        }
+        for (MethodImpl m : getMethods()) {
+      	  m.generateJava("   ", stream);
+        }
         stream.println("}");
     }
+    
+    public void MethodImpl.generateJava(String indent, PrintStream stream) {
+   	 getMethodSig().generateJava(indent,stream);
+   	 boolean addReturn = false;
+   	 if (getMethodSig().getReturnType().getType().isUnitType()) {
+   		 if (getBlock().getNumStmt() == 0 ||
+   		     (! (getBlock().getStmt(getBlock().getNumStmt()-1) instanceof ReturnStmt))) {
+   			 addReturn = true;
+   		 }
+   	 }
+   	 getBlock().generateJava(indent, stream, addReturn);
+    }
+    
+    public void FieldDecl.generateJava(String indent, PrintStream stream) {
+   	 stream.print(indent);
+   	 getAccess().generateJava(stream);
+   	 stream.print(" "+getName()+";");
+    }
+    
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
         stream.println("class "+getName()+" implements ABSDataType {");
@@ -79,6 +129,10 @@ aspect GenerateJava {
     }
     
     public void Block.generateJava(String indent, PrintStream stream) {
+   	 generateJava(indent,stream,false);
+    }    
+    
+    public void Block.generateJava(String indent, PrintStream stream, boolean addReturn) {
         stream.println(" {");
         String newIndent = incIndent(indent);
         for (VarDecl varDecl : getVars()) {
@@ -88,7 +142,9 @@ aspect GenerateJava {
         for (Stmt stmt : getStmts()) {
             stmt.generateJava(newIndent,stream);
         }
-        
+
+        if (addReturn) 
+       	    stream.println(indent+"return null;"); // TODO: Fix Unit return
         stream.println(indent+"}");
     }
     
@@ -114,11 +170,15 @@ aspect GenerateJava {
     }
 
     public void AwaitStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+   	 stream.print(indent+JavaBackendConstants.ABSRUNTIME+".await(");
+   	 getGuard().generateJava(stream);
+   	 stream.println(");");
     }
 
     public void ExpressionStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+   	  stream.print(indent);
+   	  getExp().generateJava(stream);
+   	  stream.println(";");
     }
 
     public void IfStmt.generateJava(String indent, PrintStream stream) {
@@ -139,11 +199,11 @@ aspect GenerateJava {
     }
 
     public void SkipStmt.generateJava(String indent, PrintStream stream) {
-        stream.println(";");
+   	 stream.println(indent+";");
     }
 
     public void SuspendStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+   	 stream.println(indent+JavaBackendConstants.ABSRUNTIME+".suspend();");
     }
 
     public void WhileStmt.generateJava(String indent, PrintStream stream) {
@@ -156,6 +216,33 @@ aspect GenerateJava {
     public void AssertStmt.generateJava(String indent, PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
+    
+    /*
+     * GUARDS
+     */
+    
+    public abstract void Guard.generateJava(PrintStream stream);
+
+    public void AndGuard.generateJava(PrintStream stream) { 
+   	 stream.print("new "+JavaBackendConstants.ANDGUARD+"(");
+   	 getLeft().generateJava(stream);
+   	 stream.print(",");
+   	 getRight().generateJava(stream);
+   	 stream.print(")");
+    }
+    
+    public void ClaimGuard.generateJava(PrintStream stream) { 
+   	 stream.print("new "+JavaBackendConstants.CLAIMGUARD+"(");
+   	 getVar().generateJava(stream);
+   	 stream.print(")");
+    }
+    
+    public void ExpGuard.generateJava(PrintStream stream) { 
+   	 stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public ABSBool evaluateExp() { return ");
+   	 getPureExp().generateJava(stream);
+   	 stream.print("; }}");
+    }
+    
     /* 
      * EXPRESSIONS
      */
@@ -167,7 +254,17 @@ aspect GenerateJava {
     }
     
     public void SyncCall.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        getCallee().generateJava(stream);
+        stream.print("."+getMethod()+"(");
+        boolean first = true;
+        for (PureExp e : getParams()) {
+      	  if (!first) 
+      		  stream.print(", ");
+
+      	   e.generateJava(stream);
+   		  first = false;
+        }
+        stream.print(")");
     }
 
     public void GetExp.generateJava(PrintStream stream) {
@@ -358,4 +455,7 @@ aspect GenerateJava {
     public String ASTNode.incIndent(String indent) {
         return indent+"   ";
     }
+    
+    
+    
 }
