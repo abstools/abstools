@@ -69,7 +69,8 @@ AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
 ReturnStmt: Stmt		::= RetExp:Exp; 
-ExpressionStmt: Stmt	::= Exp:Exp; 
+ExpressionStmt: Stmt	::= Exp:Exp;
+AssertStmt: Stmt        ::= Condition:PureExp;
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;

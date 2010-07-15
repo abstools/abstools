@@ -269,6 +269,10 @@ aspect TypeChecker {
     public void SkipStmt.typeCheck(SemanticErrorList e) { 
         /* nothing to check */ }
 
+    public void AssertStmt.typeCheck(SemanticErrorList e) {
+   	  getCondition().typeCheck(e);
+   	  TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+    }
 
     // GUARDS
     public abstract void Guard.typeCheck(SemanticErrorList e);

@@ -475,6 +475,11 @@ aspect GenerateMaude {
         stream.print("od ");
     }
 
+    public void AssertStmt.generateMaude(java.io.PrintStream stream) {
+        stream.print("assert ");
+        getCondition().generateMaude(stream);
+    }
+
 	public void Block.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
         if (getNumVar() > 0) {

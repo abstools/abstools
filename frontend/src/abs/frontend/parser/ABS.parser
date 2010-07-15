@@ -396,6 +396,7 @@ Stmt stmt =
 	|  while_stmt 
 	|  block
 	| SEMICOLON               {: return new SkipStmt() ; :}
+    | ASSERT data_exp.e       {: return new AssertStmt(e) ; :}
 	;
 
 
