@@ -9,3 +9,14 @@ data String { }
 data Fut<A> { }
 
 data Opt<A> { None; Some(A); }
+
+def Bool isSome<A>(Opt<A> val) =
+  case val {
+    None => False ;
+    Some(x) => True ;
+  } ;
+
+def A fromSome<A>(Opt<A> val) =
+  case val {
+    Some(x) => x ;
+  } ;
