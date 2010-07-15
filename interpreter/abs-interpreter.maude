@@ -244,9 +244,7 @@ fmod ABS-DATA-STRING is
   op _asString : Data -> String .
   eq "str"[S] asString = S .
 
-  eq "|-" ("str"[S] :: "str"[S']) = "str"[S + S'] .
-  eq "-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
-  eq "|-|" ("str"[S] :: "str"[S']) = "str"[S + S'] .
+  eq "+" ("str"[S] :: "str"[S']) = "str"[S + S'] .
   eq "#" ("str"[S]) = "int"[length(S)] .
   eq "ascii" ("str"[S]) = "int"[ascii(S)] .
   eq "char" ("int"[N]) = "str"[char(N)] .
