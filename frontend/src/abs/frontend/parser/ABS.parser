@@ -98,27 +98,27 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	DATA TYPEIDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, p); :}
-   | DATA TYPEIDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, new List<DataConstructor>(), p); :}
+	annotation_list.al? DATA TYPEIDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, al, p); :}
+   | annotation_list.al? DATA TYPEIDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, new List<DataConstructor>(), al, p); :}
   ;
 
 TypeSynDecl  typesyn_decl = 
-	TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, rhs); :}
+	annotation_list.al? TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
 
 FunctionDecl  function_decl = 
-	DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, ef, p); :}
-	| DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, t, l, ef); :}
+	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, ef, al, p); :}
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, al, t, l, ef); :}
 	; 
 
 InterfaceDecl interface_decl =
-  INTERFACE TYPEIDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(TYPEIDENTIFIER, i, l); :}
+  annotation_list.al? INTERFACE TYPEIDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(TYPEIDENTIFIER, al, i, l); :}
   ;
 
 
 ClassDecl class_decl =
-	CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(TYPEIDENTIFIER, params,  i, init_block, fields, methods); :}
+	annotation_list.annotations? CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(TYPEIDENTIFIER, annotations, params,  i, init_block, fields, methods); :}
   ;
 
 List data_constructor_list =
@@ -144,6 +144,14 @@ List extends_interfaces =
   ;
 
 
+List annotation_list =
+     annotation.a                          {: return new List().add(a); :}
+     | annotation_list.l annotation.a      {: return l.add(a); :}
+     ;
+
+Annotation annotation =
+    LBRACKET TYPEIDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
+    ;
 
 InterfaceTypeUse ifname =
     TYPEIDENTIFIER {: return new InterfaceTypeUse(TYPEIDENTIFIER) ; :}
@@ -225,7 +233,7 @@ MethodImpl method =
     ;
 
 MethodSig methodsig =
-	type_exp.returntype IDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(IDENTIFIER,returntype,params); :}
+	annotation_list.al? type_exp.returntype IDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(IDENTIFIER, al, returntype,params); :}
     ;
 
 
@@ -395,8 +403,8 @@ Stmt stmt =
 	|  if_then_else_stmt 
 	|  while_stmt 
 	|  block
-	| SEMICOLON               {: return new SkipStmt() ; :}
-    | ASSERT data_exp.e       {: return new AssertStmt(e) ; :}
+	| SEMICOLON                    {: return new SkipStmt() ; :}
+    | ASSERT data_exp.e SEMICOLON  {: return new AssertStmt(e) ; :}
 	;
 
 

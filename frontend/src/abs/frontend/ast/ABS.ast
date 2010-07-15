@@ -7,18 +7,18 @@ Model                         ::= Decl* [Block];
 // (see below for Blocks)
 
 abstract 				Decl ::= <Name>;
-abstract BehaviorDecl:	Decl; // Entities used in behavior expressions
+abstract BehaviorDecl:	Decl ::= ; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	TypeDecl;		// Unknown declarations
-ClassDecl:		BehaviorDecl	::= Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-FunctionDecl:	BehaviorDecl    ::= TypeUse Param:ParamDecl* FunDef:PureExp ;
-ParametricFunctionDecl : FunctionDecl ::= TypeParameter:TypeParameterDecl* ;
-InterfaceDecl:	TypeDecl		::= ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
-DataTypeDecl:	TypeDecl		::= DataConstructor* ;
+ClassDecl:		BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
+FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunDef:PureExp ;
+ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
+InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
+DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
 TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
-ParametricDataTypeDecl : DataTypeDecl ::= TypeParameter:TypeParameterDecl* ;
-TypeSynDecl:    TypeDecl        ::= Value:DataTypeUse ; 
+ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
+TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
 
 
 abstract	VarOrFieldDecl  ::= <Name>;
@@ -29,7 +29,7 @@ ParamDecl:	TypedVarOrFieldDecl;
 PatternVarDecl: VarOrFieldDecl;
 
 
-MethodSig	::= <Name> ReturnType:Access Param:ParamDecl*;
+MethodSig	::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
 MethodImpl  ::= MethodSig Block;
 
 
@@ -60,6 +60,7 @@ Constructors occur as
 abstract Constructor ::= <Name>; 
 DataConstructor : Constructor ::= ConstructorArg:DataTypeUse* ;
 
+Annotation      ::= <Name> Value:PureExp;
 
 abstract Stmt; 
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block

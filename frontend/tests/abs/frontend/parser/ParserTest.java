@@ -119,7 +119,6 @@ public class ParserTest {
 		assertParseError("class FooClass implements {}" + "{}" );
 	   
 	}
-	
 
 	// datatype declarations
 	@Test
@@ -133,6 +132,7 @@ public class ParserTest {
 		assertParseOk("data List<A> = Nil | Cons(A, List<A>); ");
 		assertParseOk("data Pair<A, B> = Pair(A, B); ");
 	}
+	
 
    @Test
 		public void testFunctionDecl() {
@@ -149,6 +149,18 @@ public class ParserTest {
     	public void testParametricFunctionDecl() {
     	assertParseOk("def Int length<A>(List<A> list) = case list { Nil => 0; Cons(_, rest) => 1 + length(rest); };");
     	assertParseOk("def A nth<A>(List<A> list) = case n { 0 => head(list) ; _ => nth(tail(list), n-1) ; };");
+    }
+
+    @Test
+    public void testAnnotations() {
+    	assertParseOk("[Test : \"value\"] class FooClass {} {}");
+    	assertParseOk("[Test : \"value\"] [Test: Nil] class FooClass {} {}");
+    	assertParseOk("[Test: 5] data Foo;");
+    	assertParseOk("[Test2 : Pair(5, \"value\")] data Pair<A, B> = Pair(A, B);");
+    	assertParseOk("[Test : 5] def Int constant() = 5;");
+    	assertParseOk("[Test: Nil] def A constant<A>(A a) = a;");
+    	assertParseOk("interface A { [Pre : x > 5] [Post : x > 0] Int method(Int x); }");
+    	assertParseOk("class A { [Method : Testable] Int method(Int x) { return x; } }");
     }
 
 	@Test 

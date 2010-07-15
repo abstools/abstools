@@ -2,14 +2,16 @@
 aspect ModelBehavior {
     syn ClassDecl Model.getInitialClass() {
         if (hasBlock()) {
-            return new ClassDecl(".Start", new List<ParamDecl>(), 
+            return new ClassDecl(".Start", new List<Annotation>(),
+            					 new List<ParamDecl>(),
                                  new List<InterfaceTypeUse>(), 
                                  new Opt<InitBlock>(
                                                     new InitBlock(getBlock().getVars().copy(),
                                                                   getBlock().getStmts().copy())),
                                  new List<FieldDecl>(), new List<MethodImpl>());
         } else {
-            return new ClassDecl(".Start", new List<ParamDecl>(), 
+            return new ClassDecl(".Start", new List<Annotation>(), 
+            					 new List<ParamDecl>(), 
                                  new List<InterfaceTypeUse>(),
                                  new Opt<InitBlock>(), new List<FieldDecl>(),
                                  new List<MethodImpl>());

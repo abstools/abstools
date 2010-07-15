@@ -95,8 +95,11 @@ IntLiteral = 0 | [1-9][0-9]*
  ")"           { return sym(Terminals.RPAREN); }
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
+ "["           { return sym(Terminals.LBRACKET); }
+ "]"           { return sym(Terminals.RBRACKET); }
  ","           { return sym(Terminals.COMMA); }
  ";"           { return sym(Terminals.SEMICOLON); }
+ ":"           { return sym(Terminals.COLON); }
 }
 
 //Operators
