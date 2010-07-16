@@ -168,7 +168,11 @@ public class ParserTest {
 		//i.e. test pure_exp 
 	}
 
-
+	@Test
+	public void testNAryConstructors() {
+		assertParseOk("{ List<Int> l = list[]; }");
+		assertParseOk("{ Set<String> s = set[\"one\", \"Two\", \"three\"]; }");
+	}
 	
 	// comments
 	@Test

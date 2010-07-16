@@ -243,20 +243,36 @@ PureExp pure_exp =
 	| data_constructor_exp
 	| let_exp
 	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+    | IDENTIFIER.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
 	| CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
     ;
 
-//PureExp pair_exp = 
-//	LPAREN data_exp.left COMMA data_exp.right RPAREN  {: return new TermPair(left,right) ; :}
-//	;
+
 
 
 //built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
 List data_exp_list = 
 	  data_exp.i                            {: return new List().add(i); :}
 	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
-
 	;
+
+// The List literal.  Special syntax, but allows us to construct
+// arbitrary n-ary data structures (set, map, array ...) without resorting
+// to chains of constructors.
+PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
+ {: { 
+        DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
+        DataConstructorExp current = result;
+        for (Object e : l) {
+            DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
+            current.addParamNoTransform((PureExp)e);
+            current.addParamNoTransform(next);
+            current = next;
+        }
+        current.setConstructor("Nil");
+        return result ; }
+ :}
+ ;
 
 PureExp data_exp = 
 	  or_exp
