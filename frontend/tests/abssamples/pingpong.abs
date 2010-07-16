@@ -11,80 +11,77 @@ data String;
 data Fut<A>;
 data Bool = True | False;
 
+data Msg = NoMsg 
+         | HelloPing 
+         | HelloPong
+         | ThanksPong
+         | ThanksPing
+         | WhoAreYou 
+         ;
+
+
 interface Ping {
 
     Unit init(Pong p)  ;
-    String m(String m);
+    Msg m(Msg m);
     Unit run()	;
 }
 
 interface Pong {
 
     Unit init(Ping p) ;
-    String m(String m);
+    Msg m(Msg m);
     Unit run()	;
 
 }
 
-class Ping  implements Ping {
-    
+class PingImpl implements Ping {
     Pong pong ;
-    String hello_pong ;
 
-    Unit init(Pong p){
-	
-	  pong = p ; 
-   	}
+    Unit init(Pong p) {
+	   pong = p ; 
+    }
 
 
     Unit run(){
-
-      Fut<Unit> x; 
-      Fut<String> reply;
-      
-      reply = pong!m(hello_pong); 
+      Fut<Msg> reply;
+      reply = pong!m(HelloPong); 
       await reply? ; 
-      x = this!run();
+      this!run();
    }
 
-    String m(String msg){
-	String reply = ""; 
-	if (msg_equals_hello_ping) 
-	  reply = thanks_pong ;
-	else
-	    reply = who_are_you ;
-        return reply ;
-    }
+    Msg m(Msg msg){
+      Msg reply = NoMsg;
+   	if (msg == HelloPing) 
+	      reply = ThanksPong ;
+	   else
+	      reply = WhoAreYou ;
+      return reply;
+     }
 } 
 
-class Pong implements Pong {
+class PongImpl implements Pong {
 
     Ping ping ;
-    String hi_ping ;
 
     Unit init(Ping p){
    	ping = p ; 
     }
 
     Unit run(){
-      
-      Unit x;
-      Fut<String> reply;
-      
-      reply = ping!m(hi_ping); 
+      Fut<Msg> reply;
+      reply = ping!m(HelloPing); 
       await reply? ; 
-      x = this!run();
+      this!run();
    }
 
-    String m(String msg){
-	
-	String reply;
-	 
-	if (msg_equals_hello_pong)  
-	  reply = thanks_ping ;
+    Msg m(Msg msg){
+	    Msg reply = NoMsg;
+	if (msg == HelloPong)  
+	  reply = ThanksPing ;
 	else
-	    reply = who_are_you ;
-        return reply ;
+	   reply = WhoAreYou ;
+	   return reply;
     } 
 
 }
@@ -92,13 +89,12 @@ class Pong implements Pong {
 {
     Ping ping;
     Pong pong;
-    Unit x;
      
-    ping = new Ping(); 
-    pong = new Pong(); 
+    ping = new PingImpl(); 
+    pong = new PongImpl(); 
 
-    x = ping.init(); 
-    x = pong.init(); 
-    x = ping!run(); 
-    x = pong!run(); 
+    ping.init(pong); 
+    pong.init(ping); 
+    ping!run(); 
+    pong!run(); 
 }
