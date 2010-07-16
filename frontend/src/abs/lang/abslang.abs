@@ -20,3 +20,6 @@ def A fromSome<A>(Opt<A> val) =
   case val {
     Some(x) => x ;
   } ;
+
+data Either<A,B> = Left(A) | Right(B) ;
+
