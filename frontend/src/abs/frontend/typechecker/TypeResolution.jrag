@@ -72,7 +72,7 @@ aspect TypeResolution {
     rewrite UnresolvedTypeUse {
         when (getDecl().isInterface())
             to InterfaceTypeUse new InterfaceTypeUse(getName());
-        when (getDecl().isDataType())
+        when (getDecl().isDataType()) 
             to DataTypeUse new DataTypeUse(getName());
         when (getDecl().isTypeSyn())
             to DataTypeUse new DataTypeUse(((TypeSynDecl)getDecl()).getValue().getName());

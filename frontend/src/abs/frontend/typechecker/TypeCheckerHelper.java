@@ -77,7 +77,7 @@ public class TypeCheckerHelper {
 	    
 	}
 
-    private static ArrayList<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
+    public static ArrayList<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
             res.add(u.getType());

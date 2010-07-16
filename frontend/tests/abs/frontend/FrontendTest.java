@@ -16,6 +16,7 @@ import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
 import abs.frontend.parser.ABSParser;
@@ -121,14 +122,26 @@ public class FrontendTest {
       return b.getLeft();
   }
 	
+	protected Decl getFirstDecl(Model m, Class<?> clazz) {
+        for (Decl d : m.getDecls()) {
+            if (clazz.isInstance(d)) {
+                return d;
+            }
+        }
+        throw new IllegalArgumentException("The model does not contain any "+clazz.getSimpleName());
+	}
+	
+    protected FunctionDecl getFirstFunctionDecl(Model m) {
+        return (FunctionDecl) getFirstDecl(m, FunctionDecl.class);
+    }
 
+    protected ParametricFunctionDecl getFirstParametricFunctionDecl(Model m) {
+        return (ParametricFunctionDecl) getFirstDecl(m, ParametricFunctionDecl.class);
+    }
+
+	
 	protected Exp getFirstFunctionExpr(Model m) {
-	    for (Decl d : m.getDecls()) {
-	        if (d instanceof FunctionDecl) {
-	            return ((FunctionDecl)d).getFunDef();
-	        }
-	    }
-	    throw new IllegalArgumentException("The model does not contain any FunctionDecl.");
+	    return getFirstFunctionDecl(m).getFunDef();
     }
 
 

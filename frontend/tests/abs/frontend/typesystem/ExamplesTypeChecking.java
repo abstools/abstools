@@ -7,6 +7,11 @@ import abs.frontend.FrontendTest;
 public class ExamplesTypeChecking extends FrontendTest {
     
     @Test
+    public void abslang() {
+        assertTypeCheckFileOk("src/abs/lang/abslang.abs");
+    }
+
+    @Test
     public void pingPong() {
         assertTypeCheckTestFileOk("pingpong.abs");
     }

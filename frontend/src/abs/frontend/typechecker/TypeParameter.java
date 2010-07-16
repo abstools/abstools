@@ -30,4 +30,9 @@ public class TypeParameter extends Type {
     public String toString() {
         return decl.getName();
     }
+
+    @Override
+    public boolean isTypeParameter() {
+        return true;
+    }
 }

@@ -66,13 +66,7 @@ aspect Typing {
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     
     syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
-    eq TypedVarOrFieldDecl.getType() {
-        Access a = getAccess();
-        if (a instanceof TypeUse) {
-            return ((TypeUse)a).getDecl().getType();
-        }
-        throw new NotImplementedYetException("Type Checker",this);
-    }
+    eq TypedVarOrFieldDecl.getType() = getAccess().getType();
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
    	 return v.getType();
@@ -118,6 +112,14 @@ aspect Typing {
         return d.getType();
     }
     eq TypeUse.getType() = getDecl().getType();
+    eq ParametricDataTypeUse.getType() {
+        Decl d = getDecl();
+        if (d == null || !(d instanceof ParametricDataTypeDecl))
+            return UnknownType.INSTANCE;
+        
+        return new DataTypeType((ParametricDataTypeDecl)d,getParams());
+    }
+    
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
@@ -142,14 +144,39 @@ aspect Typing {
     eq NegExp.getType() = getBoolType();
     
     syn lazy Type CaseBranch.getType() = getRight().getType();
+
+    inh Type CaseBranch.getPatternExpType();
+    eq CaseExp.getBranch(int i).getPatternExpType() = getExpr().getType();
     
-    /* PATTERNS */
     syn lazy Type Pattern.getType();
-    eq ConstructorPattern.getType() {
-   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
-   	 if (d == null) return UnknownType.INSTANCE;
-   	 return d.getDecl().getType(); 
+    eq ConstructorPattern.getType() = getInhType();
+    eq PatternVar.getType() = getInhType();  
+    eq UnderscorePattern.getType() = AnyType.INSTANCE;
+    eq LiteralPattern.getType() = getLiteral().getType();
+    
+    inh Type Pattern.getInhType();
+    eq CaseBranch.getLeft().getInhType() {
+        return getPatternExpType();
     }
+    eq ConstructorPattern.getParam(int i).getInhType() {
+        DataConstructor d = lookupDataConstructor(this.getConstructor());
+        if (d == null) return null;
+        if (i >= d.getNumConstructorArg()) 
+            return UnknownType.INSTANCE;
+
+        Type declaredType = d.getConstructorArg(i).getType(); 
+        
+        Type dataType = getType();
+        if (dataType.isUnknownType())
+            return UnknownType.INSTANCE;
+
+        DataTypeType dt = (DataTypeType) dataType;
+        return dt.substituteTypeParams(declaredType);
+    }
+
+/*    
+    syn lazy Type Pattern.getType();
+    eq ConstructorPattern.getType() = getLocalType();
     eq PatternVar.getType() { return getPatternVarType(); }  
     eq UnderscorePattern.getType() { return AnyType.INSTANCE; }
     eq LiteralPattern.getType() { return getLiteral().getType(); }
@@ -160,10 +187,17 @@ aspect Typing {
    	 return e.getExpr().getType();
     }
     eq ConstructorPattern.getParam(int i).getPatternVarType() {
-   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
-   	 if (d == null) return null;
-   	 if (i >= d.getNumConstructorArg()) return null;
-   	 return d.getConstructorArg(i).getType(); 
+   	 //DataConstructor d = lookupDataConstructor(this.getConstructor());
+   	 //if (d == null) return null;
+   	 //if (i >= d.getNumConstructorArg()) return null;
+   	 Type type = getType();
+   	 if (type == null || !(type instanceof DataTypeType)) 
+   	     return null;
+   	 
+   	 DataTypeType dt = (DataTypeType) type;
+   	 if (i >= dt.numTypeArgs()) return null;
+   	 
+   	 return dt.getTypeArg(i); 
     }
-    
+*/    
 }

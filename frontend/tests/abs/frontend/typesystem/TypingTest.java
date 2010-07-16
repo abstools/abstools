@@ -8,8 +8,14 @@ import org.junit.Test;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.ReturnStmt;
+import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.UnionType;
 
 public class TypingTest extends FrontendTest {
@@ -101,4 +107,48 @@ public class TypingTest extends FrontendTest {
         Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i!m(); }");
         assertEquals(m.getFutType(m.getBoolType()), getFirstExp(m).getType());
     }
+
+    @Test
+    public void functionTypeParams() {
+        Model m = assertParseOkStdLib(" def A f<A>(A a) = a ;");
+        ParametricFunctionDecl d = getFirstParametricFunctionDecl(m);
+        assertEquals(d.getTypeParameter(0), ((TypeParameter)d.getFunDef().getType()).getDecl());
+    }
+
+    @Test
+    public void functionTypeArgs() {
+        Model m = assertParseOkStdLib(" def Opt<A> f<A>() = None ;");
+        ParametricFunctionDecl d = getFirstParametricFunctionDecl(m);
+        DataTypeType t = (DataTypeType) d.getTypeUse().getType();
+        TypeParameter typeArg = (TypeParameter) t.getTypeArg(0);
+        assertEquals(typeArg.getDecl(), d.getTypeParameter(0));
+    }
+    
+    @Test
+    public void functionTypeArgs2() {
+        Model m = assertParseOkStdLib(" def Opt<A> f<A>(Opt<A> o) = o ;");
+        ParametricFunctionDecl d = getFirstParametricFunctionDecl(m);
+        assertEquals(d.getTypeUse().getType(), d.getFunDef().getType());
+    }
+
+    @Test
+    public void functionTypeArgs3() {
+        Model m = assertParseOkStdLib(" def A f<A>(Opt<A> o) = case o { Some(a) => a; } ;");
+        ParametricFunctionDecl d = getFirstParametricFunctionDecl(m);
+        TypeParameterDecl typeParameter = d.getTypeParameter(0);
+        TypeParameter type = (TypeParameter)d.getFunDef().getType();
+        TypeParameterDecl decl = type.getDecl();
+        assertEquals(typeParameter, decl);
+    }
+
+    @Test
+    public void functionTypeArgs4() {
+        Model m = assertParseOkStdLib(" data Foo<A> = Bar(A,Bool); " +
+        		"def Bool f<A>(Foo<A> o) = case o { Bar(a,b) => b; } ;");
+        
+        ParametricFunctionDecl d = getFirstParametricFunctionDecl(m);
+        Type type = d.getFunDef().getType();
+        assertEquals(m.getBoolType(), type);
+    }
+    
 }
