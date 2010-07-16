@@ -1,14 +1,14 @@
-data Bool { True; False; }
+data Bool = True | False;
 
-data Int { }
+data Int ;
 
-data Unit { Unit; }
+data Unit = Unit ;
 
-data String { }
+data String ;
 
-data Fut<A> { }
+data Fut<A> = Fut(A) ;
 
-data Opt<A> { None; Some(A); }
+data Opt<A> = None | Some(A) ;
 
 def Bool isSome<A>(Opt<A> val) =
   case val {

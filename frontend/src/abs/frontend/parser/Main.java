@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
@@ -19,26 +20,41 @@ import abs.frontend.parser.SyntaxError;
 
 public class Main {
 
-	static boolean verbose = false ; 
+	static boolean verbose = false ;
+	static boolean typecheck = false;
 
 	public static void main(final String[] args) throws Exception {
-
-		String[] shiftedArgs = args; 
-		Model m = null;
-
-		//shifting option -v 
-		if (args.length > 0 && args[0].equals("-v")) {
-			verbose = true;
-			shiftedArgs = new String[args.length-1];
-			System.arraycopy(args, 1, shiftedArgs, 0, args.length-1); 
+		int numoptions = 0;
+		
+		for (String arg : args) {
+		    if (arg.equals("-v"))
+		        verbose = true;
+		    else if (arg.equals("-t")) 
+		        typecheck = true;
+		    else if (arg.equals("-h")) {
+		        printUsage();
+		        System.exit(1);
+		    } else
+		        break;
+		    
+		    numoptions++;
 		}
 
-		for (String arg : shiftedArgs){
+		for (int i = numoptions; i < args.length; i++){
+		    String arg = args[i];
+	        Model m = null;
+
 			try{
 				m = parse(arg);
+				
+				if (typecheck) {
+				    SemanticErrorList typeerrors = m.typeCheck();
+				    for (SemanticError se : typeerrors) {
+				        System.err.println(arg+ ":" + se.getMsgString());
+				    }
+				}
 			} catch (FileNotFoundException e1) {
 				System.err.println("File not found: " + arg);
-				System.err.flush();
 			} catch (SyntaxError pex) {
 				// Exc. thrown by the parser
 				System.err.println(arg + ":" + pex.getMessage());
@@ -76,6 +92,19 @@ public class Main {
 
 	
 	
+    private static void printUsage() {
+        System.out.println("Usage: java "+Main.class.getName()+" [options] <absfiles>\n" +
+        		"  <absfiles>   ABS files to parse\n" +
+        		"Options:\n"+
+        		"  -v   verbose output\n" +
+        		"  -t   enable typechecking\n" +
+        		"  -h   print this message\n");
+        
+    }
+
+
+
+
     public static Model parse(String file) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
