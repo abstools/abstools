@@ -6,7 +6,7 @@ data Unit = Unit ;
 
 data String ;
 
-data Fut<A> = Fut(A) ;
+data Fut<A> ;
 
 data Opt<A> = None | Some(A) ;
 
