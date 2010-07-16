@@ -659,7 +659,7 @@ fmod ABS-PROCESS is
 
   op idle : -> Process [ctor format (!b o)] .  
   op notFound : -> Process [ctor format (!b o)] .  
-  op {_|_} : Subst StmtList -> Process [ctor format (r o r o r o)] . 
+  op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] . 
 
   var L : Subst .
   eq { L | noStmt } = idle . --- if ".label" is needed this is dangerous!
