@@ -145,9 +145,33 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i!m(); }");
     }
 
-    // FIXME: parametric functions
+    @Test
     public void fnAppTypeArgs() {
-        assertNoTypeErrors("def A f<A>(A a) = a; { Bool b = True; b = f<Bool>(b); }");
+        assertNoTypeErrors("def A f<A>(A a) = a; { Bool b = True; b = f(b); }");
+    }
+
+    public void fnAppTypeArgs2() {
+   	 assertNoTypeErrors("def A optValue<A>(Opt<A> val) = fromSome(val);");
+    }
+    
+    
+    @Test
+    public void constructorTypeArgs() {
+        assertNoTypeErrors("{ Opt<Bool> o = Some(True); }");
+    }
+    
+    @Test
+    public void constructorTypeArgs2() {
+        assertNoTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,True); }");
+    }
+    
+    @Test
+    public void constructorTypeArgs3() {
+        assertNoTypeErrors("data Foo<A,B> = Bar(A,B); { Foo<A,B> o = Bar(True,5); }");
+    }
+
+    public void constructorTypeArgs4() {
+        assertNoTypeErrors("{ Either<A,B> o = Left(5); }");
     }
     
     // NEGATIVE TESTS
@@ -401,6 +425,10 @@ public class TypeCheckerTest extends FrontendTest {
 		 assertTypeErrors("{ await 5 && True; }"); 
 	 }
     
+    @Test
+    public void constructorTypeArgsError() {
+        assertTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,5); }");
+    }
     
     private void assertNoTypeErrors(String absCode) {
    	 assertTypeErrors(absCode, false);

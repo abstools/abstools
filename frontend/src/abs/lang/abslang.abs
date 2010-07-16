@@ -8,6 +8,7 @@ data String ;
 
 data Fut<A> ;
 
+
 data Opt<A> = None | Some(A) ;
 
 def Bool isSome<A>(Opt<A> val) =
@@ -21,5 +22,17 @@ def A fromSome<A>(Opt<A> val) =
     Some(x) => x ;
   } ;
 
+
+
 data Either<A,B> = Left(A) | Right(B) ;
 
+def A left<A,B>(Either<A,B> e) =
+  case e {
+     Left(x) => x;
+  } ;
+
+def B right<A,B>(Either<A,B> e) =
+  case e {
+     Right(x) => x;
+  } ;
+  

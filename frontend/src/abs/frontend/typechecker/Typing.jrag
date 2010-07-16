@@ -1,6 +1,7 @@
 import abs.common.*;
 
 import abs.frontend.typechecker.*;
+import java.util.Map;
 
 aspect Typing {
     
@@ -125,14 +126,31 @@ aspect Typing {
     eq RelationalExpr.getType() = getBoolType();
     eq CaseExp.getType() = getBranch(0).getType(); 
     eq FnApp.getType() {
-        Decl d = lookup(getName());
-        if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
-        return ((FunctionDecl)d).getTypeUse().getType();
+       Decl d = lookup(getName());
+       if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
+   	 
+   	 Type declaredResultType = ((FunctionDecl)d).getTypeUse().getType();
+   	 if (declaredResultType.isTypeParameter() && d instanceof ParametricFunctionDecl) {
+   		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
+   		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
+   	 } else {
+   		 return declaredResultType;
+   	 }
     }
     eq DataConstructorExp.getType() {
    	 DataConstructor d = lookupDataConstructor(this.getConstructor());
    	 if (d == null) return UnknownType.INSTANCE;
-   	 return d.getDecl().getType(); // FIXME: parameteric types
+
+   	 DataTypeDecl dataDecl = d.getDecl();
+   	 Type declaredResultType = dataDecl.getType();
+   	 if (declaredResultType.isTypeParameter() && dataDecl instanceof ParametricDataTypeDecl) {
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromDataTypeUse(d.getConstructorArgs(),getParams());
+   		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
+   	 } else {
+   		 return declaredResultType;
+   	 }
+   	 
     }
     eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq LetExp.getType() = getExp().getType();
@@ -174,30 +192,4 @@ aspect Typing {
         return dt.substituteTypeParams(declaredType);
     }
 
-/*    
-    syn lazy Type Pattern.getType();
-    eq ConstructorPattern.getType() = getLocalType();
-    eq PatternVar.getType() { return getPatternVarType(); }  
-    eq UnderscorePattern.getType() { return AnyType.INSTANCE; }
-    eq LiteralPattern.getType() { return getLiteral().getType(); }
-    
-    inh Type Pattern.getPatternVarType();
-    eq CaseBranch.getLeft().getPatternVarType() {
-   	 CaseExp e = (CaseExp) getParent();
-   	 return e.getExpr().getType();
-    }
-    eq ConstructorPattern.getParam(int i).getPatternVarType() {
-   	 //DataConstructor d = lookupDataConstructor(this.getConstructor());
-   	 //if (d == null) return null;
-   	 //if (i >= d.getNumConstructorArg()) return null;
-   	 Type type = getType();
-   	 if (type == null || !(type instanceof DataTypeType)) 
-   	     return null;
-   	 
-   	 DataTypeType dt = (DataTypeType) type;
-   	 if (i >= dt.numTypeArgs()) return null;
-   	 
-   	 return dt.getTypeArg(i); 
-    }
-*/    
 }

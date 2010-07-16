@@ -384,7 +384,11 @@ aspect TypeChecker {
         if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
         } else {
-            TypeCheckerHelper.typeCheckEqualParams(e,this,((FunctionDecl)d).getParams(),getParams());
+      	   if (d instanceof ParametricFunctionDecl) {
+      	   	TypeCheckerHelper.typeCheckMatchingParams(e,this,((ParametricFunctionDecl)d),getParams());
+      	   } else {
+      	   	TypeCheckerHelper.typeCheckEqualParams(e,this,((FunctionDecl)d).getParams(),getParams());
+      	   }
         }
     }
     
@@ -393,7 +397,11 @@ aspect TypeChecker {
    	 if (c == null) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    	 } else {
-   	     TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
+    	   if (c.getDecl() instanceof ParametricDataTypeDecl) {
+   	   	TypeCheckerHelper.typeCheckMatchingParams(e,this,c,getParams());
+   	   } else {
+    	     TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
+   	   }
    	 }
    	 
     }
