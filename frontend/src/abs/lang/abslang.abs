@@ -8,7 +8,6 @@ data String ;
 
 data Fut<A> ;
 
-
 data Opt<A> = None | Some(A) ;
 
 def Bool isSome<A>(Opt<A> val) =
@@ -22,8 +21,6 @@ def A fromSome<A>(Opt<A> val) =
     Some(x) => x ;
   } ;
 
-
-
 data Either<A,B> = Left(A) | Right(B) ;
 
 def A left<A,B>(Either<A,B> e) =
@@ -36,3 +33,32 @@ def B right<A,B>(Either<A,B> e) =
      Right(x) => x;
   } ;
   
+data List<A> = Nil | Cons(A, List<A>);
+def List<A> list<A>(List<A> l) = l; // constructor helper
+
+def Bool isEmpty<A>(List<A> list) = list == Nil;
+
+def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+
+def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+
+def Int length<A>(List<A> list) =
+  case list {
+    Nil => 0 ;
+    Cons(p, l) => 1 + length(l) ;
+  }; 
+
+def A nth<A>(List<A> list, Int n) =
+  case n {   
+    0 => head(list) ;
+    _ => nth(tail(list), n-1) ;
+  };
+
+def List<A> concatenate<A>(List<A> list1, List<A> list2) =
+  case list1 {
+    Nil => list2 ;
+    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
+  };
+
+def List<A> append<A>(List<A> list, A p) = 
+  concatenate(list, Cons(p, Nil));
