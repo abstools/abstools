@@ -15,6 +15,7 @@ data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
 
 //function definitions 
 //List functions 
+def List<A> list<A>(List<A> l) = l; // constructor helper
 def A head<A>(List<A> list) = 
   case list { Cons(p,l) => p ; }; // the head of a non-empty list
 
@@ -53,6 +54,12 @@ def Bool contains<A>(Set<A> set, A e) =
   };
 
 //Maps 
+def Map<A, B> map<A, B>(List<Pair<A, B>> l) = // constructor helper
+	case l {
+		Nil => EmptyMap;
+		Cons(hd, tl) => InsertAssoc(hd, map(tl));	
+	};
+
 def B lookup<A, B>(Map<A, B> map, A key) = // retrieve from the map
   case map {
     InsertAssoc(Pair(key, elem), _) => elem ;
@@ -228,10 +235,10 @@ class OurTopology(Peer node0,   Peer node1,   Peer node2,   Peer node3)
 implements Network
 {
   List<Server> getNeighbors(Peer caller) {
-    if (caller == node0) { return Cons(node1, Cons(node2, Nil)); }
-    if (caller == node1) { return Cons(node3, Nil); }
-    if (caller == node2) { return Cons(node0, Cons(node1, Cons(node3, Nil))); }
-    if (caller == node3) { return Cons(node0, Cons(node2, Nil)); }
+    if (caller == node0) { return list[node1, node2]; }
+    if (caller == node1) { return list[node3]; }
+    if (caller == node2) { return list[node0, node1, node3]; }
+    if (caller == node3) { return list[node0, node2]; }
   }
 }
 
@@ -245,15 +252,9 @@ implements Network
   DataBase db2;
   Network admin;
   // Map<Filename, File>
-  db0 = new DataBase(InsertAssoc(Pair("file0",
-      Cons("file", Cons("from", Cons("db0", Nil)))),
-    EmptyMap));
-  db1 = new DataBase(InsertAssoc(Pair("file1", 
-      Cons("file", Cons("from", Cons("db1", Nil)))),
-    EmptyMap));
-  db2 = new DataBase(InsertAssoc(Pair("file2",
-      Cons("file", Cons("from", Cons("db2", Nil)))),
-    EmptyMap));
+  db0 = new DataBase(map[Pair("file0", list["file", "from", "db0"])]);
+  db1 = new DataBase(map[Pair("file1", list["file", "from", "db1"])]);
+  db2 = new DataBase(map[Pair("file2", list["file", "from", "db2"])]);
   node0 = new Node(db0, "file2");
   node1 = new Node(db1, "file2");
   node2 = new Node(db2, "file1");
