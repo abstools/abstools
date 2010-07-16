@@ -87,23 +87,17 @@ aspect Typing {
     syn lazy Type Exp.getType();
     eq AsyncCall.getType() {  
         Type t = getCallee().getType();
-        if (!t.isInterfaceType())
+        MethodSig s = t.lookupMethod(getMethod());
+        if (s == null)
             return UnknownType.INSTANCE;
-        
-        InterfaceType it = (InterfaceType) t;        
-        InterfaceDecl decl = it.getDecl();
-        MethodSig s = decl.lookupMethod(getMethod());
         return getFutType(s.getReturnType().getType());
     }
 
     eq SyncCall.getType() { 
         Type t = getCallee().getType();
-        if (!t.isInterfaceType())
+        MethodSig s = t.lookupMethod(getMethod());
+        if (s == null)
             return UnknownType.INSTANCE;
-        
-        InterfaceType it = (InterfaceType) t;        
-        InterfaceDecl decl = it.getDecl();
-        MethodSig s = decl.lookupMethod(getMethod());
         return s.getReturnType().getType();
     }
     eq GetExp.getType() = getPureExp().getType();
