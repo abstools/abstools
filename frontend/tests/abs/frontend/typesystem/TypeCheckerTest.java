@@ -139,12 +139,16 @@ public class TypeCheckerTest extends FrontendTest {
     public void syncCallMethodIntf() {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i.m(); }");
     }
-
+    
     @Test
     public void asyncCallMethodIntf() {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i!m(); }");
     }
-    
+
+    // FIXME: parametric functions
+    public void fnAppTypeArgs() {
+        assertNoTypeErrors("def A f<A>(A a) = a; { Bool b = True; b = f<Bool>(b); }");
+    }
     
     // NEGATIVE TESTS
     
@@ -410,8 +414,9 @@ public class TypeCheckerTest extends FrontendTest {
        Model m = assertParseOkStdLib(absCode);
        String msg = "";
        SemanticErrorList l = m.typeCheck();
-       if (!l.isEmpty())
-           msg = l.getFirst().getMsgString();
+       if (!l.isEmpty()) {
+           msg = l.getFirst().getMsgWithHint(absCode);
+       }
        assertEquals(msg,expectErrors, !l.isEmpty());
    }
 
