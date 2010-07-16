@@ -1,13 +1,13 @@
     How to use the ABS Frontend tools
     ---------------------------------
 
-1. Build the dist/absparser.jar file with
+1. Build the dist/absfrontend.jar file with
 
    ant dist
 
 
-2. Use the ABS parser with 
+2. Use the ABS parser with
 
-   java -jar dist/absparser.jar [options] <absfiles>
+   java -jar dist/absfrontend.jar [options] <absfiles>
 
 
