@@ -48,7 +48,7 @@ def Int length<A>(List<A> list) =
     Cons(p, l) => 1 + length(l) ;
   }; 
 
-def A nth<A>(List<A> list, Int n) =
+def B nth<B>(List<B> list, Int n) =
   case n {   
     0 => head(list) ;
     _ => nth(tail(list), n-1) ;

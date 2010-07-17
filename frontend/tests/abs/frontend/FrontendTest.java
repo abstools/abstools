@@ -122,26 +122,30 @@ public class FrontendTest {
       return b.getLeft();
   }
 	
-	protected Decl getFirstDecl(Model m, Class<?> clazz) {
+	protected Decl getLastDecl(Model m, Class<?> clazz) {
+		  Decl lastMatching = null;
         for (Decl d : m.getDecls()) {
             if (clazz.isInstance(d)) {
-                return d;
+                lastMatching = d;
             }
         }
-        throw new IllegalArgumentException("The model does not contain any "+clazz.getSimpleName());
+        if (lastMatching == null)
+      	  throw new IllegalArgumentException("The model does not contain any "+clazz.getSimpleName());
+        else
+      	  return lastMatching;
 	}
 	
-    protected FunctionDecl getFirstFunctionDecl(Model m) {
-        return (FunctionDecl) getFirstDecl(m, FunctionDecl.class);
+    protected FunctionDecl getLastFunctionDecl(Model m) {
+        return (FunctionDecl) getLastDecl(m, FunctionDecl.class);
     }
 
-    protected ParametricFunctionDecl getFirstParametricFunctionDecl(Model m) {
-        return (ParametricFunctionDecl) getFirstDecl(m, ParametricFunctionDecl.class);
+    protected ParametricFunctionDecl getLastParametricFunctionDecl(Model m) {
+        return (ParametricFunctionDecl) getLastDecl(m, ParametricFunctionDecl.class);
     }
 
 	
 	protected Exp getFirstFunctionExpr(Model m) {
-	    return getFirstFunctionDecl(m).getFunDef();
+	    return getLastFunctionDecl(m).getFunDef();
     }
 
 

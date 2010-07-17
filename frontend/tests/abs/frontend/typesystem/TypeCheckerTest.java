@@ -161,6 +161,18 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void fnAppTypeArgs3() {
+   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+   			 "def List<B> tail2<B>(List<B> list) = tail(list) ; ");
+    }
+
+    @Test
+    public void fnAppTypeArgs4() {
+   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+   			 "def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
+    }
+    
+    @Test
     public void constructorTypeArgs() {
         assertNoTypeErrors("{ Opt<Bool> o = Some(True); }");
     }

@@ -9,7 +9,7 @@ public class StandardLib {
         "data Fut<A> ;\n" +
         "data Opt<A> = None | Some(A); \n" +
   		  "data Either<A,B> = Left(A) | Right(B) ; \n"+
-  		  ""
+  		  "data List<A> = Nil | Cons(A, List<A>);"
         ; 
     
     public static final String STDLIB_FUNCTIONS_STRING = 
@@ -35,5 +35,13 @@ public class StandardLib {
         "  case e {"+
         "      Right(x) => x;"+
         "  } ; \n"+
- 	     "";
+        
+        "def List<A> list<A>(List<A> l) = l;"+
+
+        "def Bool isEmpty<A>(List<A> list) = list == Nil;"+
+
+        "def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };"+
+
+        "def List<C> tail<C>(List<C> list) = case list { Cons(p,l) => l ; };"+
+ 	     "\n";
 }

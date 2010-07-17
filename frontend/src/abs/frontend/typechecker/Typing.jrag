@@ -130,7 +130,7 @@ aspect Typing {
        if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
    	 
    	 Type declaredResultType = ((FunctionDecl)d).getTypeUse().getType();
-   	 if (declaredResultType.isTypeParameter() && d instanceof ParametricFunctionDecl) {
+   	 if (d instanceof ParametricFunctionDecl) {
    		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
    		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);

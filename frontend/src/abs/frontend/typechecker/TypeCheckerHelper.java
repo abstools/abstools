@@ -89,9 +89,15 @@ public class TypeCheckerHelper {
       			 return t;
       		 else
       			 return res;
-      	 } else {
-      		 return t;
-      	 }
+      	 } else if (t.isDataType()) {
+      		 DataTypeType dt = (DataTypeType) t;
+      		 if (dt.hasTypeArgs()) {
+      			 java.util.List<Type> argTypes = applyBinding(binding,dt.getTypeArgs());
+      			 return new DataTypeType(dt.getDecl(),argTypes);
+      		 } 
+      	 } 
+      	 
+   		 return t;
 	 }
 
     public static void typeCheckEqualDataTypeUses(SemanticErrorList l, ASTNode<?> n, 

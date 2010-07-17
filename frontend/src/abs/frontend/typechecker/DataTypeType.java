@@ -29,6 +29,11 @@ public class DataTypeType extends Type {
             this.typeArgs.add(t);
         }
     }
+
+    public DataTypeType(DataTypeDecl decl, List<Type> typeArgs) {
+       this.decl = decl;
+       typeArgs.addAll(typeArgs);
+   }
     
     public List<Type> getTypeArgs() {
         return Collections.unmodifiableList(typeArgs);
@@ -89,7 +94,20 @@ public class DataTypeType extends Type {
     }
     
     public String toString() {
-        return decl.getName();
+   	 StringBuffer buf = new StringBuffer(decl.getName());
+   	 if (hasTypeArgs()) {
+   		 buf.append('<');
+   		 boolean first = true;
+   		 for (Type t : typeArgs) {
+   			 if (!first)
+   				 buf.append(',');
+   			 buf.append(t.toString());
+   			 first = false;
+   		 }
+   		 buf.append('>');
+   	 }
+   	 
+   	 return buf.toString();
     }
     
     public Type substituteTypeParams(Type t) {
