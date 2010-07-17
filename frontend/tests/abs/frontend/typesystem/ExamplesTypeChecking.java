@@ -16,7 +16,7 @@ public class ExamplesTypeChecking extends FrontendTest {
         assertTypeCheckTestFileOk("pingpong.abs");
     }
 
-    // not working yet
+    @Test // not working yet
     public void peerToPeer() {
         assertTypeCheckTestFileOk("PeerToPeer.abs");
     }

@@ -15,7 +15,7 @@ public enum ErrorMessage {
     , TYPE_NOT_RESOLVABLE("Type %s cannot be resolved.")
     , CONSTRUCTOR_NOT_RESOLVABLE("Constructor %s cannot be resolved.")
     , FUNCTION_NOT_RESOLVABLE("Function %s cannot be resolved.")
-    , BRANCH_NO_SAME_TYPE("Case branches with different types. Expected %s, but found %s.")
+    , BRANCH_INCOMPARABLE_TYPE("Case branches with incomparable types, %s and %s.")
     , CASE_NO_DATATYPE("Cases are only possible on data types, but found type %s.")
     , WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s.")
     , TYPE_MISMATCH("Type %s does not match declared type %s.")

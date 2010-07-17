@@ -366,8 +366,11 @@ aspect TypeChecker {
    			 t = b.getType();
    		 } else {
    			 Type t2 = b.getType();
-   			 if (!t.equals(t2)) {
-   				 e.add(new TypeError(this,ErrorMessage.BRANCH_NO_SAME_TYPE,t,t2));
+   			 if (!t.isSubtypeOf(t2) && !t2.isSubtypeOf(t)) {
+   				 e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+   			 } else {
+   				 if (t.isSubtypeOf(t2))
+   					 t = t2;
    			 }
    		 }
    	 }

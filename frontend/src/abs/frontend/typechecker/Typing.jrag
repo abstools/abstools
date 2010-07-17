@@ -146,7 +146,20 @@ aspect Typing {
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
-    eq CaseExp.getType() = getBranch(0).getType(); 
+    eq CaseExp.getType() {
+   	 Type mostGeneralType = null;
+   	 for (CaseBranch b : getBranchs()) {
+   		 if (mostGeneralType == null) {
+   			 mostGeneralType = b.getType();
+   		 } else {
+   			 Type t2 = b.getType();
+   			 if (mostGeneralType.isSubtypeOf(t2)) {
+   				 mostGeneralType = t2;
+   			 } 
+   		 }
+   	 }
+   	 return mostGeneralType;
+    }
     eq FnApp.getType() {
        Decl d = lookup(getName());
        if (d == null || !d.isFunction()) return UnknownType.INSTANCE;

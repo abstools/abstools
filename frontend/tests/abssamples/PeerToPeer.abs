@@ -90,7 +90,7 @@ type Catalog = List<Pair<Server, Filenames> > ;
 
 
 // Application functions
-def Server findServer(File file, Catalog catalog) =
+def Server findServer(Filename file, Catalog catalog) =
   case catalog {
     Nil => null;
     Cons(Pair(server, files), rest) =>
@@ -105,7 +105,9 @@ interface Server {
 }
 
 
-interface Peer extends Client, Server { }
+interface Peer extends Client, Server { 
+   Unit setAdmin(Network admin);
+}
 
 interface Network {
   List<Server> getNeighbors(Peer caller);
@@ -122,7 +124,7 @@ interface Client {
   Unit reqFile(Server sId, Filename fId);
 }
 
-class DataBase(Map<Filename, File> db) implements DataBase {
+class DataBaseImpl(Map<Filename, File> db) implements DataBase {
   File getFile(Filename fId) {
     return lookup(db, fId);
   }
@@ -182,7 +184,7 @@ class Node(DataBase db, Filename file) implements Peer {
   }
 
   Packet getPack(Filename fId, Int pNbr) {
-    File f;
+    File f = Nil;
     Fut<File> ff;
     ff = db!getFile(fId);
     await ff?;
@@ -191,15 +193,13 @@ class Node(DataBase db, Filename file) implements Peer {
   }
 
   Catalog availFiles (List<Server> sList) {
-    Catalog cat;
-    Filenames fNames; 
+    Catalog cat = Nil;
+    Filenames fNames = EmptySet; 
     Fut<Filenames> fN;
-    Catalog catList; 
+    Catalog catList = Nil; 
     Fut<Catalog> cL;
 
-    if (sList == Nil) {
-      cat = Nil;
-    } else {
+    if (sList != Nil) {
       fN = head(sList)!enquire();
       cL = this!availFiles(tail(sList));
       await fN? & cL?;
@@ -212,8 +212,8 @@ class Node(DataBase db, Filename file) implements Peer {
 
   Unit reqFile(Server sId, Filename fId) {
     File file = Nil;
-    Packet pack;
-    Int lth;
+    Packet pack = "";
+    Int lth = 0;
     Fut<Int> l1;
     Fut<Packet> l2;
 
@@ -235,10 +235,12 @@ class OurTopology(Peer node0,   Peer node1,   Peer node2,   Peer node3)
 implements Network
 {
   List<Server> getNeighbors(Peer caller) {
-    if (caller == node0) { return list[node1, node2]; }
-    if (caller == node1) { return list[node3]; }
-    if (caller == node2) { return list[node0, node1, node3]; }
-    if (caller == node3) { return list[node0, node2]; }
+    List<Server> res = Nil;
+    if (caller == node0) { res = list[node1, node2]; }
+    if (caller == node1) { res = list[node3]; }
+    if (caller == node2) { res = list[node0, node1, node3]; }
+    if (caller == node3) { res = list[node0, node2]; }
+    return res;
   }
 }
 
@@ -252,9 +254,9 @@ implements Network
   DataBase db2;
   Network admin;
   // Map<Filename, File>
-  db0 = new DataBase(map[Pair("file0", list["file", "from", "db0"])]);
-  db1 = new DataBase(map[Pair("file1", list["file", "from", "db1"])]);
-  db2 = new DataBase(map[Pair("file2", list["file", "from", "db2"])]);
+  db0 = new DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
+  db1 = new DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
+  db2 = new DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
   node0 = new Node(db0, "file2");
   node1 = new Node(db1, "file2");
   node2 = new Node(db2, "file1");
