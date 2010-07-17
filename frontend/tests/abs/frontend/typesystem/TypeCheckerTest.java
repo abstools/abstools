@@ -55,7 +55,7 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
     public void getOk() {
-        assertNoTypeErrors("{ Fut<Bool> f; f.get; }");
+        assertNoTypeErrors("{ Fut<Bool> f; Bool b = True; b = f.get; }");
     }
 
     @Test
@@ -192,7 +192,14 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("{ Either<A,B> o = Left(5); }");
     }
 
+    @Test
+    public void classParams() {
+   	 assertNoTypeErrors("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
+   	 
+    }
     
+    
+
     // NEGATIVE TESTS
     
 	 @Test

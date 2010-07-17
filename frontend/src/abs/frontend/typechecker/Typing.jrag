@@ -95,7 +95,15 @@ aspect Typing {
             return UnknownType.INSTANCE;
         return s.getReturnType().getType();
     }
-    eq GetExp.getType() = getPureExp().getType();
+    eq GetExp.getType() { 
+   	 Type t = getPureExp().getType();
+   	 if (! (t instanceof DataTypeType))
+   		 return UnknownType.INSTANCE;
+   	 DataTypeType dt = (DataTypeType) t;
+   	 if (!dt.hasTypeArgs())
+   		 return UnknownType.INSTANCE;
+   	 return dt.getTypeArg(0);
+    }
     eq NewExp.getType() {
         Decl d = lookup(getClassRef());
         if (d == null) return UnknownType.INSTANCE;
@@ -185,7 +193,7 @@ aspect Typing {
         Type declaredType = d.getConstructorArg(i).getType(); 
         
         Type dataType = getType();
-        if (dataType.isUnknownType())
+        if (!dataType.isDataType())
             return UnknownType.INSTANCE;
 
         DataTypeType dt = (DataTypeType) dataType;
