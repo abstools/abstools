@@ -1,6 +1,6 @@
 package abs.frontend.typesystem;
 
-import static abs.common.StandardLib.STDLIB_STRING;
+import static abs.common.StandardLib.STDLIB_DATATYPES_STRING;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;

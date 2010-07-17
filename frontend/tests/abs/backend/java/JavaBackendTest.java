@@ -22,7 +22,7 @@ public class JavaBackendTest {
     }
     
     void assertValidStdLib(String absCode) {
-        assertValidJava(getJavaCode(StandardLib.STDLIB_STRING+" "+absCode));
+        assertValidJava(getJavaCode(StandardLib.STDLIB_DATATYPES_STRING+" "+absCode));
     }
     
     void assertValid(String absCode) {

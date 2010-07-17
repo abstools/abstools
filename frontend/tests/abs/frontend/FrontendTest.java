@@ -27,7 +27,7 @@ import abs.frontend.typechecker.Type;
 public class FrontendTest {
 
     protected Model assertParseOkStdLib(String s) {
-        return assertParseOk(StandardLib.STDLIB_STRING+s);
+        return assertParseOk(StandardLib.STDLIB_DATATYPES_STRING+s);
     }
     
     protected static void assertParseFileOk(String fileName) {

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import abs.common.StandardLib;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -12,7 +13,10 @@ import abs.frontend.ast.Model;
 public class TypeCheckerTest extends FrontendTest {
 
 	 // POSITIVE TESTS
-	
+   @Test
+   public void stdLibFunctions() {
+       assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING);
+   }
 	
 	 @Test
 	 public void testVarDecl() {
@@ -150,10 +154,11 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("def A f<A>(A a) = a; { Bool b = True; b = f(b); }");
     }
 
+    @Test
     public void fnAppTypeArgs2() {
-   	 assertNoTypeErrors("def A optValue<A>(Opt<A> val) = fromSome(val);");
+   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+   			 "def B optValue<B>(Opt<B> val) = fromSome(val);");
     }
-    
     
     @Test
     public void constructorTypeArgs() {
@@ -170,9 +175,11 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("data Foo<A,B> = Bar(A,B); { Foo<A,B> o = Bar(True,5); }");
     }
 
+    @Test
     public void constructorTypeArgs4() {
         assertNoTypeErrors("{ Either<A,B> o = Left(5); }");
     }
+
     
     // NEGATIVE TESTS
     

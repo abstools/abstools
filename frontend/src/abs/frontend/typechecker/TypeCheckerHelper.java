@@ -52,15 +52,14 @@ public class TypeCheckerHelper {
 	public static void typeCheckEqualParams(SemanticErrorList l, ASTNode<?> n, 
 	        List<ParamDecl> params, List<PureExp> args) 
 	{
-	    ArrayList<Type> types = getTypes(params);
-	    typeCheckEqual(l,n,types,args);
+	    typeCheckEqual(l,n,getTypes(params),args);
 	}
 
 	public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, 
 	        DataConstructor decl, List<PureExp> args) 
 	{
 		Map<TypeParameter, Type> binding = getTypeParamBindingFromDataTypeUse(decl.getConstructorArgs(), args);
-		ArrayList<Type> types = applyBinding(binding, getTypesFromDataTypeUse(decl.getConstructorArgs()));
+		java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(decl.getConstructorArgs()));
 		typeCheckEqual(l,n,types,args);
 	}
 
@@ -68,12 +67,12 @@ public class TypeCheckerHelper {
 	        ParametricFunctionDecl decl, List<PureExp> args) 
 	{
 		Map<TypeParameter, Type> binding = getTypeParamBindingFromParamDecl(decl.getParams(), args);
-		ArrayList<Type> types = applyBinding(binding, getTypes(decl.getParams()));
+		java.util.List<Type> types = applyBinding(binding, getTypes(decl.getParams()));
 		typeCheckEqual(l,n,types,args);
 	}
 	
-    public static ArrayList<Type> applyBinding(
-         Map<TypeParameter, Type> binding, ArrayList<Type> types) 
+    public static java.util.List<Type> applyBinding(
+         Map<TypeParameter, Type> binding, java.util.List<Type> types) 
     {
        ArrayList<Type> res = new ArrayList<Type>();
        for (Type t : types) {
@@ -98,12 +97,12 @@ public class TypeCheckerHelper {
     public static void typeCheckEqualDataTypeUses(SemanticErrorList l, ASTNode<?> n, 
             List<DataTypeUse> params, List<PureExp> args) 
     {
-        ArrayList<Type> types = getTypesFromDataTypeUse(params);
+   	 java.util.List<Type> types = getTypesFromDataTypeUse(params);
         typeCheckEqual(l,n,types,args);
     }
 
     public static void typeCheckEqual(SemanticErrorList l, ASTNode<?> n, 
-            ArrayList<Type> params, List<PureExp> args) 
+   		 java.util.List<Type> params, List<PureExp> args) 
     {
         if (params.size() != args.getNumChild()) {
             l.add(new TypeError(n,ErrorMessage.WRONG_NUMBER_OF_ARGS,params.size(),args.getNumChild()));
@@ -121,7 +120,7 @@ public class TypeCheckerHelper {
 	    
 	}
 
-    public static ArrayList<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
+    public static java.util.List<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
             res.add(u.getType());
@@ -129,7 +128,7 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    private static ArrayList<Type> getTypes(List<ParamDecl> params) {
+    private static java.util.List<Type> getTypes(List<ParamDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (ParamDecl d : params) {
             res.add(d.getType());
@@ -137,7 +136,7 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    private static ArrayList<Type> getTypesFromExp(List<PureExp> args) {
+    private static java.util.List<Type> getTypesFromExp(List<PureExp> args) {
        ArrayList<Type> res = new ArrayList<Type>();
        for (PureExp e : args) {
            res.add(e.getType());
@@ -153,16 +152,29 @@ public class TypeCheckerHelper {
   	 return getTypeParamBinding(getTypes(params),args);
    }
    
-   public static Map<TypeParameter, Type> getTypeParamBinding(ArrayList<Type> params, List<PureExp> args) {
-   	 Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
-   	 
-   	 for (int i = 0; i < params.size(); i++) {
-   		 Type paramType = params.get(i);
-   		 if (paramType.isTypeParameter()) {
-   			 binding.put((TypeParameter) paramType, args.getChild(i).getType());
-   		 }
-   	 }
-   	 
+   public static Map<TypeParameter, Type> getTypeParamBinding(java.util.List<Type> params, List<PureExp> args) {
+   	return getTypeParamBinding(params,getTypesFromExp(args));
+   }
+   
+   public static Map<TypeParameter, Type> getTypeParamBinding(java.util.List<Type> params, java.util.List<Type> args) {
+   	Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
+   	 addTypeParamBinding(binding, params, args);
    	 return binding;
-    }
+   }
+
+   public static void addTypeParamBinding(Map<TypeParameter, Type> binding, java.util.List<Type> params, java.util.List<Type> args) {
+   	for (int i = 0; i < params.size(); i++) {
+   		Type paramType = params.get(i);
+   		Type argType = args.get(i);
+   		if (paramType.isTypeParameter()) {
+   			binding.put((TypeParameter) paramType, argType);
+   		} else if (paramType.isDataType() && argType.isDataType()) {
+   			DataTypeType paramdt = (DataTypeType) paramType;
+   			DataTypeType argdt = (DataTypeType) argType;
+   			if (paramdt.numTypeArgs() == argdt.numTypeArgs()) {
+   				addTypeParamBinding(binding, paramdt.getTypeArgs(), argdt.getTypeArgs());
+   			}
+   		}
+   	}
+   }
 }

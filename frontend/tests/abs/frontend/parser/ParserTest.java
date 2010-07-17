@@ -86,7 +86,7 @@ public class ParserTest {
 		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
   		assertParseOk("{ Fut<I> x ; J z ; }") ;	//need trailing semicolon here. 
-		assertParseOk(StandardLib.STDLIB_STRING+" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }") ;	
+		assertParseOk(StandardLib.STDLIB_DATATYPES_STRING+" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }") ;	
 		assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable decls with/without initializers
 		//
 }
