@@ -16,12 +16,12 @@ public class ExamplesTypeChecking extends FrontendTest {
         assertTypeCheckTestFileOk("pingpong.abs");
     }
 
-    @Test // not working yet
+    @Test 
     public void peerToPeer() {
         assertTypeCheckTestFileOk("PeerToPeer.abs");
     }
     
-    // not working yet
+    @Test
     public void boundedBuffer() {
         assertTypeCheckTestFileOk("boundedbuffer.abs");
     }
