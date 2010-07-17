@@ -74,9 +74,9 @@ aspect TypeChecker {
    	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
    		  String name = m.getMethodSig().getName();
-   		  if (!sigs.containsKey(name)) {
-   		     e.add(new TypeError(m, ErrorMessage.NO_METHOD_IMPL, name));   		      
-   		  } else {
+   		  if (sigs.containsKey(name)) {
+//   		     e.add(new TypeError(m, ErrorMessage.NO_METHOD_IMPL, name));   		      
+//   		  } else {
    		      MethodSig s = sigs.get(name);
    		      MethodSig ms = m.getMethodSig();
    		      InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
@@ -306,12 +306,11 @@ aspect TypeChecker {
     }
     
     public void Call.typeCheck(SemanticErrorList e) {
-        Type t = getCallee().getType();
-        MethodSig s = t.lookupMethod(getMethod());
-        if (s == null) {
+        Type t = getType();
+        if (t.isUnknownType()) {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
-            TypeCheckerHelper.typeCheckEqualParams(e,this,s.getParams(),getParams());
+            TypeCheckerHelper.typeCheckEqualParams(e,this,getMethodSig().getParams(),getParams());
         }
     }
     

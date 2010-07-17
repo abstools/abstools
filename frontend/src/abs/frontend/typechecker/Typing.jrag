@@ -81,20 +81,34 @@ aspect Typing {
     
     syn lazy Type Exp.getType();
     eq AsyncCall.getType() {  
-        Type t = getCallee().getType();
-        MethodSig s = t.lookupMethod(getMethod());
-        if (s == null)
-            return UnknownType.INSTANCE;
-        return getFutType(s.getReturnType().getType());
+        return getFutType(getCallType());
     }
 
-    eq SyncCall.getType() { 
-        Type t = getCallee().getType();
-        MethodSig s = t.lookupMethod(getMethod());
-        if (s == null)
-            return UnknownType.INSTANCE;
-        return s.getReturnType().getType();
+    eq SyncCall.getType() {  
+       return getCallType();
+   }
+    
+    syn lazy Type Call.getCallType() {
+   	 MethodSig s = getMethodSig();
+   	 if (s == null)
+   		 return UnknownType.INSTANCE;
+   	 return s.getReturnType().getType();
     }
+    
+    syn lazy MethodSig Call.getMethodSig() {
+  	  if (getCallee() instanceof ThisExp) {
+		  ClassDecl decl = (ClassDecl) getContextDecl();
+		  MethodImpl i = decl.lookupMethod(getMethod());
+		  if (i == null)
+			  return null;
+		  return i.getMethodSig();
+	  } else {
+		  Type t = getCallee().getType();
+		  MethodSig s = t.lookupMethod(getMethod());
+		  return s;
+	  }
+    }
+    
     eq GetExp.getType() { 
    	 Type t = getPureExp().getType();
    	 if (! (t instanceof DataTypeType))

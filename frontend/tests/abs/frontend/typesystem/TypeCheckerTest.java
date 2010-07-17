@@ -143,6 +143,11 @@ public class TypeCheckerTest extends FrontendTest {
     public void syncCallMethodIntf() {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i.m(); }");
     }
+
+    @Test
+    public void syncCallThis() {
+        assertNoTypeErrors("class C { Unit m() { this.m(); } }");
+    }
     
     @Test
     public void asyncCallMethodIntf() {
@@ -273,11 +278,6 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void interfaceDupParams() {
         assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
-    }
-
-    @Test
-    public void classMethodOverride() {
-        assertTypeErrors("interface I { } class C implements I { Unit m() { } }"); 
     }
 
     @Test

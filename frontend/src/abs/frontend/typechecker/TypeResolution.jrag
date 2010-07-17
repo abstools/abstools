@@ -125,6 +125,14 @@ aspect TypeResolution {
     inh MethodImpl Stmt.getContextMethod();
     
     
+    syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
+   	 for (MethodImpl m : getMethods()) {
+   		 if (m.getMethodSig().getName().equals(name))
+   			 return m;
+   	 }
+   	 return null;
+    }
+    
     syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {
         for (MethodSig d : getBodys()) {
             if (d.getName().equals(name))
