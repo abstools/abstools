@@ -8,6 +8,6 @@
 
 2. Use the ABS frontend with
 
-   java -jar dist/absfrontend.jar [options] <absfiles>
+   bin/bash/parseABS [options] <absfiles>
 
 
