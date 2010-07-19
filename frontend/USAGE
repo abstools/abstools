@@ -10,4 +10,21 @@
 
    bin/bash/parseABS [options] <absfiles>
 
+3. Compile to Maude with
 
+   bin/bash/generateMaude <absfile>
+
+   To run the model, start Maude (download it from
+   http://maude.cs.uiuc.edu/download/) and load the compiled model.
+   Maude must be able to find ../interpreter/abs-interpreter.maude -
+   either set the MAUDE_LIB environment variable or copy/symlink
+   abs-interpreter.maude into the directory where the compiled model
+   resides.
+
+   After loading the model into Maude, start it with the command
+
+   rew start .
+
+   (This assumes that the model terminates - if it does not, you can
+   restrict the number of rewrite steps via the usual options to the
+   rewrite command.)
