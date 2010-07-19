@@ -97,6 +97,13 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void methodInSuperType() {
+        assertNoTypeErrors("interface I { Bool m(Bool b);} interface J extends I { }" +
+        "class C implements J { Bool m(Bool b) { J j; j = this; return j.m(True); } }");
+        
+    }
+    
+    @Test
 	 public void testIfOk() {
 		 assertNoTypeErrors("{ if (True) { } else { } }"); 
 	 }

@@ -138,6 +138,14 @@ aspect TypeResolution {
             if (d.getName().equals(name))
                 return d;
         }
+        
+        for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+            InterfaceDecl id = (InterfaceDecl) u.getDecl();
+            MethodSig s = id.lookupMethod(name);
+            if (s != null)
+                return s;
+        }
+        
         return null;
     }
 }
