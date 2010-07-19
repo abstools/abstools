@@ -2,11 +2,11 @@
 # Arild Torjusen April 2010
 # $Id: parseABS 4147 2010-04-27 07:01:36Z atorjusen $ 
 
-BASEDIR="@BASEDIR@" 
+BASEDIR="/home/jan/svn/hats/Tools/ABS/trunk/frontend" 
 
 function usage
 {
-    echo 'Usage: parseABS [-v] absfiles'
+    echo 'Usage: parseABS [-v] [-t] absfiles'
     echo
 }
 
@@ -18,15 +18,17 @@ function help
     echo 'Legal options: '
     echo '-h : Display help'
     echo '-v : Verbose'
+    echo '-t : Type check'
     exit 0
 }
 echo
 
-while getopts ":ho:v" Option
+while getopts ":ho:v:t" Option
 do
   case $Option in
     h ) help;; 
     v ) verbose="-v";;
+    t ) typecheck="-t";;
     o ) outfile=$OPTARG;;
     * ) echo "Illegal option: $1";usage;exit 1;;      
   esac
@@ -34,10 +36,10 @@ done
 shift $(($OPTIND - 1))
 
 if [ -n "$1" ] ; then 
-    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $@
+    eval java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $typecheck $@
 else
     echo 'No files specified, trying to parse default test suite.'
-    eval java -cp $BASEDIR/lib/beaver-rt.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $@
+    eval java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $typecheck $@
 fi
 exit 0
 
