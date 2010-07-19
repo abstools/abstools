@@ -2,7 +2,7 @@
 # Arild Torjusen April 2010
 # $Id: parseABS 4147 2010-04-27 07:01:36Z atorjusen $ 
 
-BASEDIR="/home/jan/svn/hats/Tools/ABS/trunk/frontend" 
+BASEDIR="@BASEDIR@" 
 
 function usage
 {
