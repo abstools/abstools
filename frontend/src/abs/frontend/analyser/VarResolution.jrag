@@ -40,8 +40,12 @@ aspect VarResolution {
                 result.add((VarOrFieldDecl)param.copy());
         return result;
     }
+    eq Block.getVar().functionParameters() = new List<VarOrFieldDecl>();
+    eq ClassDecl.getField().functionParameters() = new List<VarOrFieldDecl>();
     inh List<VarOrFieldDecl> Stmt.functionParameters();
     inh List<VarOrFieldDecl> Exp.functionParameters();
+    inh List<VarOrFieldDecl> VarDecl.functionParameters();
+    inh List<VarOrFieldDecl> FieldDecl.functionParameters();
 
     syn boolean VarOrFieldUse.isFunctionParameter();
     eq VarOrFieldUse.isFunctionParameter() {
