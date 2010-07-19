@@ -13,6 +13,7 @@ public enum ErrorMessage {
     , VAR_INIT_REQUIRED("A variable must be initialized if it is not of a reference type.")
     , FIELD_INIT_REQUIRED("A field must be initialized if it is not of a reference type.")
     , EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead.")
+    , EXPECTED_ADDABLE_TYPE("Expected numeric or string type for operator '+', but found type %s instead.")
     , TYPE_NOT_RESOLVABLE("Type %s cannot be resolved.")
     , CONSTRUCTOR_NOT_RESOLVABLE("Constructor %s cannot be resolved.")
     , FUNCTION_NOT_RESOLVABLE("Function %s cannot be resolved.")

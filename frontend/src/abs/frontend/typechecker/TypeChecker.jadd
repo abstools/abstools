@@ -337,6 +337,17 @@ aspect TypeChecker {
    	 }
    	 getPureExp().typeCheck(e);
     }
+    public void AddAddExp.typeCheck(SemanticErrorList e) {
+        // Special case: can also "add" strings.
+        if (!getLeft().getType().isStringType() && !getLeft().getType().isIntType()) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, getLeft().getType()));
+        }
+        if (!getRight().getType().isStringType() && !getRight().getType().isIntType()) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, getRight().getType()));
+        }
+        getLeft().typeCheck(e);
+        getRight().typeCheck(e);
+    }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
    	 TypeCheckerHelper.assertHasType(e,getLeft(),getIntType());
    	 TypeCheckerHelper.assertHasType(e,getRight(),getIntType());

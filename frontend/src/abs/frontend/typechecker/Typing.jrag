@@ -142,7 +142,7 @@ aspect Typing {
         
         return new DataTypeType((ParametricDataTypeDecl)d,getParams());
     }
-    
+    eq AddAddExp.getType() = getLeft().getType();  // Int or String
     eq ArithmeticExp.getType() = getIntType();
     eq BoolExp.getType() = getBoolType();
     eq RelationalExpr.getType() = getBoolType();
