@@ -161,6 +161,8 @@ public class ParserTest {
     	assertParseOk("[Test: Nil] def A constant<A>(A a) = a;");
     	assertParseOk("interface A { [Pre : x > 5] [Post : x > 0] Int method(Int x); }");
     	assertParseOk("class A { [Method : Testable] Int method(Int x) { return x; } }");
+    	assertParseOk("class A { Int method(Int x) { [Value: Good] return x; } }");
+    	assertParseOk("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
     }
 
 	@Test 

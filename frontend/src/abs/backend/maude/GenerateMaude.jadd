@@ -324,7 +324,7 @@ aspect GenerateMaude {
         } else {
             // minimal init method - this block is not connected to the
             // AST so we pass in the field list in all cases.
-            new InitBlock(new List<VarDecl>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
+            new InitBlock(new List<Annotation>(), new List<VarDecl>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
         }
         for (MethodImpl method : getMethods()) {
             stream.print(",\n    ");

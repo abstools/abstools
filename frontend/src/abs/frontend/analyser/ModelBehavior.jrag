@@ -6,7 +6,8 @@ aspect ModelBehavior {
             					 new List<ParamDecl>(),
                                  new List<InterfaceTypeUse>(), 
                                  new Opt<InitBlock>(
-                                                    new InitBlock(getBlock().getVars().copy(),
+                                                    new InitBlock(new List<Annotation>(),
+                                                                  getBlock().getVars().copy(),
                                                                   getBlock().getStmts().copy())),
                                  new List<FieldDecl>(), new List<MethodImpl>());
         } else {

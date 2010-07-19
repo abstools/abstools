@@ -62,7 +62,7 @@ DataConstructor : Constructor ::= ConstructorArg:DataTypeUse* ;
 
 Annotation      ::= <Name> Value:PureExp;
 
-abstract Stmt; 
+abstract Stmt   ::= Annotation* ; 
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
 AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
