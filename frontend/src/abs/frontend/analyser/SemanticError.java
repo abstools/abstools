@@ -22,6 +22,10 @@ public class SemanticError {
         return Symbol.getColumn(node.getStart());
     }
     
+    public String getMsg() {
+    	return msg.withArgs(args);
+    }
+    
     public String getMsgString() {
         return getLine() + ":" + 
             getColumn() + ": " + 

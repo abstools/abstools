@@ -3,6 +3,8 @@ package abs.backend.maude;
 import java.io.FileReader;
 import java.io.Reader;
 
+import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
@@ -29,7 +31,14 @@ public class MaudeCompiler {
 				e.printStackTrace(System.err);
                 return;
             }
-            if (m != null) m.generateMaude(System.out);
+            SemanticErrorList l = m.typeCheck();
+            if (!l.isEmpty()) {
+                for (SemanticError e : l) {
+                	System.err.println(arg + ":" + e.getLine() + ": " + e.getMsg());
+                }
+            }
+            if (m != null && l.isEmpty()) m.generateMaude(System.out);
+            else System.exit(1);
         }
 	}
 
