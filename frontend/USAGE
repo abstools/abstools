@@ -6,7 +6,7 @@
    ant dist
 
 
-2. Use the ABS parser with
+2. Use the ABS frontend with
 
    java -jar dist/absfrontend.jar [options] <absfiles>
 
