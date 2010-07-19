@@ -218,10 +218,6 @@ aspect GenerateMaude {
         stream.print("@@ \"" + getName() + "\" ");
 	}
 
-    public void FunVar.generateMaude(java.io.PrintStream stream) {
-        stream.print(getName() + ":Data ");
-    }
-
     public void FnApp.generateMaude(java.io.PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getName() + "\"( ");

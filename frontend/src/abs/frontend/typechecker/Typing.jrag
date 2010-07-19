@@ -187,7 +187,6 @@ aspect Typing {
    	 }
    	 
     }
-    eq FunVar.getType() { throw new NotImplementedYetException("Type Checker",this); }
     eq LetExp.getType() = getExp().getType();
     eq IntLiteral.getType() = getIntType();
     eq StringLiteral.getType() =  getStringType();

@@ -321,10 +321,6 @@ aspect GenerateJava {
         }
     }
 
-    public void FunVar.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
-    }
-    
     public void LetExp.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);
     }
