@@ -435,7 +435,7 @@ aspect GenerateMaude {
     }
 
     public void SuspendStmt.generateMaude(java.io.PrintStream stream) {
-        stream.print("release ");
+        stream.print("suspend ");
     }
 
     public void AwaitStmt.generateMaude(java.io.PrintStream stream) {
