@@ -248,8 +248,9 @@ aspect GenerateMaude {
 	
 	public void CaseBranch.generateMaude(java.io.PrintStream stream) {
 		getLeft().generateMaude(stream);
-        stream.print("=> ");
+        stream.print("=> ( ");
         getRight().generateMaude(stream);
+        stream.print(") ");
 	}
 	
 	abstract public void Pattern.generateMaude(java.io.PrintStream stream);

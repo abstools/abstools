@@ -102,7 +102,7 @@ fmod ABS-EXPRESSION is
   *** pattern: literals and variable references.  We should introduce a sort
   *** `Pattern' and use it.  For now, we rely on the compiler to only produce
   *** valid pattern expressions.
-  op _=>_ : Expr Expr -> CaseBranch [prec 39] .
+  op _=>_ : Expr Expr -> CaseBranch [ctor prec 39] .
   op _;_ : CaseBranchList CaseBranchList -> CaseBranchList
     [ctor assoc id: noBranch format (d b os d)] .
   op noBranch : -> CaseBranch .
