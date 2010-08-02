@@ -46,17 +46,10 @@ interface Producer {
 class BoundedBuffer implements Buffer {
     
     //A bounded buffer
-    DataList buffer; 
-    Int max ;
-    Int n ;
+    DataList buffer = DataNil; 
+    Int max = 10;
+    Int n = 0;
 
-    //init
-    {
-        buffer = DataNil;
-        max = 10 ;
-        n = 0 ;
-    }
-    
     Unit append(Data d){
 	await (n < max) ; 
 	buffer = appendData(d,buffer);
