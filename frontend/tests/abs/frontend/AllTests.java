@@ -1,6 +1,7 @@
 
 package abs.frontend;
 
+import abs.frontend.analyser.DuplicateCheckTest;
 import abs.frontend.analyser.InterfaceDeclarationTest;
 import abs.frontend.analyser.VarResolutionTest;
 import abs.frontend.parser.*;
@@ -15,6 +16,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
 		//        ScannerTest.class, 
 		ParserTest.class
+		, DuplicateCheckTest.class
 		, InterfaceDeclarationTest.class
 		, ParseSamplesTest.class
 		, VarResolutionTest.class

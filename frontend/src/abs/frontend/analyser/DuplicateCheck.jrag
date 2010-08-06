@@ -1,44 +1,42 @@
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.Collections;
+import abs.frontend.analyser.DuplicateChecks;
 
 aspect DuplicateCheck {
-	// ***API***
-	
-	// *duplicateDeclaration* - true if there is more than one interface declared with the same name
-	// TODO: generalise to other kinds of declarations: ADTs, classes, functions
+	// duplicateTypeDecls() - list of duplicate type decl, i.e., type decls
+	// declared with the same name
 	syn lazy Set<String> Model.duplicateTypeDecls();
-		
-
-	// ***Implementation***
 	
-	// TODO: refactor into a method for to check dupes for any kind of decl
+	// duplicateBehviorDecls() - list of duplicate behavior decl, i.e., behavior decls
+	// declared with the same name
+	syn lazy Set<String> Model.duplicateBehaviorDecls();
+
+	
+	// Equations for above attributes
+	
 	eq Model.duplicateTypeDecls() {
 		// Note: must use fully qualified name to avoid conflicts with ast.List
 		java.util.List<String> typeNames = new ArrayList<String>();
-		Set<String> duplicateNames = new HashSet<String>();
-		String previousName = "";
 
-		// TODO: simplify this:
-		// Add the TypeDeclNames to a (Hash)Set and compare the size of the set to
-		// the number of names
-		
 		for (Decl decl : getDecls()) {
 			if (decl instanceof TypeDecl)
 				typeNames.add(decl.getName());
 		}
 		
-		Collections.sort(typeNames);
-		for (String currentName : typeNames) {
-			if (previousName.equals(currentName)) {
-				duplicateNames.add(currentName);
-			}
-			previousName = currentName;				
+		return DuplicateChecks.findDuplicates(typeNames);
+	}
+
+	eq Model.duplicateBehaviorDecls() {
+		// Note: must use fully qualified name to avoid conflicts with ast.List
+		java.util.List<String> behaviorNames = new ArrayList<String>();
+
+		for (Decl decl : getDecls()) {
+			if (decl instanceof BehaviorDecl)
+				behaviorNames.add(decl.getName());
 		}
 		
-		return duplicateNames;
-		//return new HashSet(typeDeclNames); // TODO: test hack
-		
+		return DuplicateChecks.findDuplicates(behaviorNames);
 	}
 
 }
