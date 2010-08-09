@@ -145,6 +145,12 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("interface I { Bool m(); } " +
                 "class C implements I { Bool m() { Bool b = True; b = this.m(); return b; } }");
     }
+
+    @Test
+    public void syncCallMethodThisInitBlock() {
+        assertNoTypeErrors("interface I { Bool m(); } " +
+                "class C implements I { { Bool b = True; b = this.m(); } Bool m() { return True; } }");
+    }
     
     @Test
     public void syncCallMethodIntf() {
