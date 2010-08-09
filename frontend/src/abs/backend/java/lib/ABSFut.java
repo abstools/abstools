@@ -27,4 +27,7 @@ public class ABSFut implements ABSDataType {
    	}
    }
 
+   public synchronized Object get() {
+   	return value;
+   }
 }
