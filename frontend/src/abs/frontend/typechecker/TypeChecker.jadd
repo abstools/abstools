@@ -31,7 +31,7 @@ aspect TypeChecker {
     // DECLS
     public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
-            TypeDecl d = u.getDecl();
+            Decl d = u.getDecl();
             if (d.isInterface()) {
                 InterfaceDecl id = (InterfaceDecl) d;
                 id.addAllMethodSigs(sigs);
@@ -45,7 +45,7 @@ aspect TypeChecker {
     
     public void ClassDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
         for (InterfaceTypeUse u : getImplementedInterfaceUses()) {
-            TypeDecl d = u.getDecl();
+            Decl d = u.getDecl();
             if (d.isInterface()) {
                 InterfaceDecl id = (InterfaceDecl) d;
                 id.addAllMethodSigs(sigs);
@@ -126,7 +126,7 @@ aspect TypeChecker {
         }
         
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
-            TypeDecl d = u.getDecl();
+            Decl d = u.getDecl();
             if (!d.isInterface()) {
                 e.add(new TypeError(u, ErrorMessage.ONLY_INTERFACE_EXTEND, d.getName()));
             } else {
@@ -320,6 +320,11 @@ aspect TypeChecker {
    		 e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
    	 }
     }
+
+    public void UnresolvedTypeUse.typeCheck(SemanticErrorList e) {
+        e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+    }
+    
     
     public void Call.typeCheck(SemanticErrorList e) {
         Type t = getType();

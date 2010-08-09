@@ -235,6 +235,11 @@ public class TypeCheckerTest extends FrontendTest {
     public void testClassError() {
         assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }"); 
     }
+
+    @Test
+    public void testClassTypeUseError() {
+        assertTypeErrors("class C {} { C c; c = new C(); }"); 
+    }
     
     @Test
     public void functionDuplicateParams() {

@@ -17,7 +17,7 @@ aspect TypeAnalysis {
 		boolean cycleFound = false;
 
 		for (InterfaceTypeUse ref : refs) {
-			TypeDecl decl = ref.getDecl(); // Note decl var. distinct from decl() method
+			Decl decl = ref.getDecl(); // Note decl var. distinct from decl() method
 			if (decl instanceof InterfaceDecl) {
 				cycleFound = cycleFound || ((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain();
 			} else { // Semantic errors in input program can cause dell==null or dell to have other wild values
