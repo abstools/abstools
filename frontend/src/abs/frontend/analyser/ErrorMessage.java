@@ -30,6 +30,7 @@ public enum ErrorMessage {
     , ONLY_INTERFACE_EXTEND("Interfaces can only extend other interfaces, but %s is not an interface.")
     , NO_METHOD_OVERRIDE("Method %s overrides an existing method of interface %s.")
     , NO_METHOD_IMPL("Method %s does not exist in any implemented interface.")
+    , METHOD_NOT_IMPLEMENTED("Method %s, declared in interface %s is not implemented by class %s.")
     , METHOD_IMPL_WRONG_NUM_PARAMS("Method %s does not have the same number of parameters as defined in interface %s. Expected %s, but found %s.")
     , METHOD_IMPL_WRONG_PARAM_TYPE("Parameter %s of method %s has a different type as defined in interface %s. Expected %s, but found %s.")
     , TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface.")

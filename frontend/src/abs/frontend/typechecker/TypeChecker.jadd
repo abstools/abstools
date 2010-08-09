@@ -79,12 +79,13 @@ aspect TypeChecker {
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
       addAllMethodSigs(sigs);  
       
+      HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
+      
    	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
    		  String name = m.getMethodSig().getName();
+          methodImpls.put(name,m);
    		  if (sigs.containsKey(name)) {
-//   		     e.add(new TypeError(m, ErrorMessage.NO_METHOD_IMPL, name));   		      
-//   		  } else {
    		      MethodSig s = sigs.get(name);
    		      MethodSig ms = m.getMethodSig();
    		      InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
@@ -102,6 +103,13 @@ aspect TypeChecker {
    		          }
    		      }
    		  }
+   	  }
+   	  
+   	  for (MethodSig s : sigs.values()) {
+   	      if (!methodImpls.containsKey(s.getName())) {
+             InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));              
+   	      }
    	  }
    	  
     }
