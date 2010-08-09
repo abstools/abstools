@@ -437,6 +437,11 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void methodReturnNotLastStmt() {
+        assertTypeErrors("class C { Bool m() { if (True) return True; else return False; return True;} }");
+    }
+    
+    @Test
     public void syncCallWrongTarget() {
         assertTypeErrors("class C { Unit m(Bool b) { b.m();  } }");
     }

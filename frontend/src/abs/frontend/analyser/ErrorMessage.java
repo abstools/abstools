@@ -35,6 +35,7 @@ public enum ErrorMessage {
     , TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface.")
     , METHOD_NOT_FOUND("Method %s could not be found")
     , NO_CLASS_DECL("Class %s could not be found")
+    , RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method.")
     ;
 
         

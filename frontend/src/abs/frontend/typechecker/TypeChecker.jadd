@@ -257,7 +257,12 @@ aspect TypeChecker {
 			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
 		 }
    		 
-   	 getRetExp().typeCheck(e); 
+   	 getRetExp().typeCheck(e);
+   	 
+   	 Stmt lastStmt = m.getBlock().getStmt(m.getBlock().getNumStmt()-1);
+   	 if (lastStmt != this) {
+   	     e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
+   	 }
     }
     
     public void AwaitStmt.typeCheck(SemanticErrorList e) {
