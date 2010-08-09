@@ -308,6 +308,12 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void classInitializerBlockError() {
+        assertTypeErrors("class C { { X f; } }"); 
+    }
+   
+    
+    @Test
     public void negTestError() {
         Model m = assertParseOkStdLib(" { Bool b = ~5; }");
         assertEquals(ErrorMessage.EXPECTED_TYPE,m.typeCheck().getFirst().msg);

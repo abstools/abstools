@@ -67,7 +67,11 @@ aspect TypeChecker {
               fields.put(f.getName(),f);
           }
    	  }
-   	  
+
+      if (hasInitBlock()) {
+          getInitBlock().typeCheck(e);
+      }
+      
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
       addAllMethodSigs(sigs);  
       
@@ -95,7 +99,6 @@ aspect TypeChecker {
    		      }
    		  }
    	  }
-   	  
    	  
     }
     
