@@ -210,6 +210,11 @@ public class TypeCheckerTest extends FrontendTest {
    	 
     }
     
+    @Test
+    public void newExp() {
+        assertNoTypeErrors("class C(Bool b) { } { new C(True); }"); 
+    }
+    
     
 
     // NEGATIVE TESTS
@@ -311,6 +316,12 @@ public class TypeCheckerTest extends FrontendTest {
     public void classInitializerBlockError() {
         assertTypeErrors("class C { { X f; } }"); 
     }
+    
+    @Test
+    public void classParamsError() {
+        assertTypeErrors("class C(I i) { }"); 
+    }
+    
    
     
     @Test
@@ -344,6 +355,16 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("interface I { } { I i; i = new I(); }"); 
     }
 
+    @Test
+    public void newError2() {
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(); }"); 
+    }
+
+    @Test
+    public void newError3() {
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(5); }"); 
+    }
+    
     @Test
 	 public void letError() {
 		 assertTypeErrors("{ Bool b = let (Bool x) = 5 in x; }"); 

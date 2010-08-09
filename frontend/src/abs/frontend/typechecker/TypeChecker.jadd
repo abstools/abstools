@@ -72,6 +72,10 @@ aspect TypeChecker {
           getInitBlock().typeCheck(e);
       }
       
+      for (ParamDecl d : getParams()) {
+          d.typeCheck(e);
+      }
+      
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
       addAllMethodSigs(sigs);  
       
@@ -330,6 +334,9 @@ aspect TypeChecker {
         Decl d = lookup(getClassRef());
         if (d == null || !d.isClass()) {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassRef()));
+        } else {
+            ClassDecl cd = (ClassDecl) d;
+            TypeCheckerHelper.typeCheckEqualParams(e,this,cd.getParams(),getParams());
         }
     }
     
