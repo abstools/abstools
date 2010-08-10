@@ -50,7 +50,7 @@ Model goal =
   ;
 
 Model model = 
-	decl_list.l? block?	{: return new Model(l, block); :}
+	decl_list.l? mainblock?	{: return new Model(l, mainblock); :}
   ;
 
 List decl_list =
@@ -71,9 +71,14 @@ Decl decl =
 // 	| ...
 // 	;
 
+// Main model block
+// Same as other blocks, but a different class for code-generation purposes.
+MainBlock mainblock =
+    annotation_list.al? LBRACE var_decls.l? stmt_list.s? RBRACE     {: return new MainBlock(al, l, s); :}
+    ;    
 
 //Program block
-//used in program, init blocks and method body
+//used in init blocks and method body
 Block block	=
 	annotation_list.al? LBRACE var_decls.l? stmt_list.s?  RBRACE	{: return new Block(al, l,s) ; :}
     ;
