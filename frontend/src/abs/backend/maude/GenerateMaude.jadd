@@ -1,11 +1,12 @@
 // -*- mode: java; tab-width: 4; -*-
+import java.io.PrintStream;
 
 aspect GenerateMaude {
 
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
-    public void Model.generateMaude(java.io.PrintStream stream) {
+    public void Model.generateMaude(PrintStream stream) {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR-RL .\n");
         for (Decl decl : getDecls()) {
@@ -20,7 +21,7 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
-        getInitialClass().generateMaude(stream);
+        getBlock().generateMaude(stream);
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
         stream.println("op start : -> State .");
@@ -28,26 +29,26 @@ aspect GenerateMaude {
         stream.println("\nendm");
     }
 
-	abstract public void Decl.generateMaude(java.io.PrintStream stream);
+	abstract public void Decl.generateMaude(PrintStream stream);
 
-	public void InterfaceDecl.generateMaude(java.io.PrintStream stream) {
+	public void InterfaceDecl.generateMaude(PrintStream stream) {
 		stream.println("*** Interface code ...");
 	}
 
-	public void DataTypeDecl.generateMaude(java.io.PrintStream stream) {
+	public void DataTypeDecl.generateMaude(PrintStream stream) {
 		stream.println("*** Datatype " + getName());
 	}
 
-    public void TypeParameterDecl.generateMaude(java.io.PrintStream stream) {
+    public void TypeParameterDecl.generateMaude(PrintStream stream) {
         stream.println("*** Type parameter " + getName());
     }
 
-	public void TypeSynDecl.generateMaude(java.io.PrintStream stream) {
+	public void TypeSynDecl.generateMaude(PrintStream stream) {
 		stream.println("*** Type synonym: Datatype " + getName());
 	}
 
 	
-	public void FunctionDecl.generateMaude(java.io.PrintStream stream) {
+	public void FunctionDecl.generateMaude(PrintStream stream) {
 		boolean inList = false;
 		stream.print("eq \"" + getName() + "\"(");
 		for (VarOrFieldDecl param : getParams()) {
@@ -59,22 +60,22 @@ aspect GenerateMaude {
         stream.println(".");
 	}
 
-    abstract public void Exp.generateMaude(java.io.PrintStream stream);
+    abstract public void Exp.generateMaude(PrintStream stream);
 
-    public void Access.generateMaude(java.io.PrintStream stream) {
+    public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
 
-    abstract public void Exp.generateMaudeAsStatement(java.io.PrintStream stream, String var);
-    public void PureExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
+    abstract public void Exp.generateMaudeAsStatement(PrintStream stream, String var);
+    public void PureExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         stream.print("noStmt");
     }
 
-    public void EffExp.generateMaude(java.io.PrintStream stream) {
+    public void EffExp.generateMaude(PrintStream stream) {
         stream.println("--- Hey, you used a side-effecting expression as a normal one! " + getClass().toString());
     }
-    public void AsyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
+    public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
         stream.print("call(@ \"" + var + "\" ; ");
@@ -93,7 +94,7 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    public void SyncCall.generateMaudeAsStatement(java.io.PrintStream stream, String var)
+    public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
         stream.print("call(@ \".staticfuture\" ; ");
@@ -113,14 +114,14 @@ aspect GenerateMaude {
         stream.print("; $free(@ \".staticfuture\") ");
     }
 
-    public void GetExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
+    public void GetExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         stream.print("get(");
         getPureExp().generateMaude(stream);
         stream.print(" ; @ \"" + var + "\") ");        
     }
 
-    public void NewExp.generateMaudeAsStatement(java.io.PrintStream stream, String var)
+    public void NewExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
         stream.print("new(@ \"" + var + "\" ; \"" + getClassRef() + "\" ; ");
@@ -137,20 +138,20 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    abstract public void LiteralExp.generateMaude(java.io.PrintStream stream);
+    abstract public void LiteralExp.generateMaude(PrintStream stream);
 
-    public void StringLiteral.generateMaude(java.io.PrintStream stream) {
+    public void StringLiteral.generateMaude(PrintStream stream) {
         stream.print("\"str\"[\"" + getContent() + "\"] ");
     }
 
-    public void IntLiteral.generateMaude(java.io.PrintStream stream) {
+    public void IntLiteral.generateMaude(PrintStream stream) {
         stream.print("\"int\"[" + getContent() + "] ");
     }
 
     syn String Unary.maudePrefixOperator();
     eq MinusExp.maudePrefixOperator() = "-";
     eq NegExp.maudePrefixOperator() = "~";
-    public void Unary.generateMaude(java.io.PrintStream stream) {
+    public void Unary.generateMaude(PrintStream stream) {
         stream.print("\"" + maudePrefixOperator() + "\"( ");
         getOperand().generateMaude(stream);
         stream.print(") ");
@@ -170,7 +171,7 @@ aspect GenerateMaude {
     eq MultMultExp.maudeInfixOperator() = "*";
     eq DivMultExp.maudeInfixOperator() = "/";
     eq ModMultExp.maudeInfixOperator() = "%";
-    public void Binary.generateMaude(java.io.PrintStream stream) {
+    public void Binary.generateMaude(PrintStream stream) {
         stream.print("\"" + maudeInfixOperator() + "\"( ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
@@ -178,15 +179,15 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    public void ThisExp.generateMaude(java.io.PrintStream stream) {
+    public void ThisExp.generateMaude(PrintStream stream) {
         stream.print("@ \"this\" ");
     }
 
-    public void NullExp.generateMaude(java.io.PrintStream stream) {
+    public void NullExp.generateMaude(PrintStream stream) {
         stream.print("null ");
     }
 
-    public void DataConstructorExp.generateMaude(java.io.PrintStream stream) {
+    public void DataConstructorExp.generateMaude(PrintStream stream) {
        boolean inlist = false;
        stream.print("\"" + getConstructor() + "\"[ ");
        if (getNumParam() == 0) {
@@ -200,11 +201,11 @@ aspect GenerateMaude {
        stream.print("] ");
     }
 
-    public void VarOrFieldUse.generateMaude(java.io.PrintStream stream) {
+    public void VarOrFieldUse.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
 
-	public void VarUse.generateMaude(java.io.PrintStream stream) {
+	public void VarUse.generateMaude(PrintStream stream) {
 	    if (isFunctionParameter()) {
 	        stream.print(getName() + ":Data ");
 	    } else {
@@ -212,11 +213,11 @@ aspect GenerateMaude {
 	    }
 	}
 
-	public void FieldUse.generateMaude(java.io.PrintStream stream) {
+	public void FieldUse.generateMaude(PrintStream stream) {
         stream.print("@@ \"" + getName() + "\" ");
 	}
 
-    public void FnApp.generateMaude(java.io.PrintStream stream) {
+    public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getName() + "\"( ");
         for (PureExp param : getParams()) {
@@ -226,7 +227,7 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    public void LetExp.generateMaude(java.io.PrintStream stream) {
+    public void LetExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
         stream.print("let @ \"" + getVar().getName() + "\" = ");
         getVal().generateMaude(stream);
@@ -234,7 +235,7 @@ aspect GenerateMaude {
         getExp().generateMaude(stream);
     }
 
-	public void CaseExp.generateMaude(java.io.PrintStream stream) {
+	public void CaseExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
 		stream.print("case " );
 		getExpr().generateMaude(stream);
@@ -246,32 +247,32 @@ aspect GenerateMaude {
 		stream.print("} ");
 	}
 	
-	public void CaseBranch.generateMaude(java.io.PrintStream stream) {
+	public void CaseBranch.generateMaude(PrintStream stream) {
 		getLeft().generateMaude(stream);
         stream.print("=> ( ");
         getRight().generateMaude(stream);
         stream.print(") ");
 	}
 	
-	abstract public void Pattern.generateMaude(java.io.PrintStream stream);
+	abstract public void Pattern.generateMaude(PrintStream stream);
 
-    public void UnderscorePattern.generateMaude(java.io.PrintStream stream) {
+    public void UnderscorePattern.generateMaude(PrintStream stream) {
         stream.print("@ \"_\" ");
     }
 
-    public void PatternVar.generateMaude(java.io.PrintStream stream) {
+    public void PatternVar.generateMaude(PrintStream stream) {
         getVar().generateMaude(stream);
     }
     
-    public void PatternVarDecl.generateMaude(java.io.PrintStream stream) {
+    public void PatternVarDecl.generateMaude(PrintStream stream) {
         stream.print("@ \"" + getName() + "\" ");
     }
 
-    public void LiteralPattern.generateMaude(java.io.PrintStream stream) {
+    public void LiteralPattern.generateMaude(PrintStream stream) {
         getLiteral().generateMaude(stream);
     }
 
-    public void ConstructorPattern.generateMaude(java.io.PrintStream stream) {
+    public void ConstructorPattern.generateMaude(PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getConstructor() + "\"[ ");
         if (getNumParam() == 0) {
@@ -285,11 +286,11 @@ aspect GenerateMaude {
         stream.print("] ");
     }
 
-	public void UnknownDecl.generateMaude(java.io.PrintStream stream) {
+	public void UnknownDecl.generateMaude(PrintStream stream) {
 		stream.println("--- Unknown declaration " + getName());
 	}
 
-    public void ClassDecl.generateMaude(java.io.PrintStream stream) {
+    public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
 		stream.println("\n\n< \"" + getName() + "\" : Class |");
         stream.print("  Param: ");
@@ -328,7 +329,7 @@ aspect GenerateMaude {
         stream.print(",\n  Ocnt: 0 > ");
 	}
 	
-    public void MethodImpl.generateMaude(java.io.PrintStream stream) {
+    public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
         boolean amRunMethod = sig.getName().equals("run");
@@ -386,13 +387,13 @@ aspect GenerateMaude {
         stream.print("> ");
     }
 
-    abstract public void Stmt.generateMaude(java.io.PrintStream stream);
+    abstract public void Stmt.generateMaude(PrintStream stream);
 
-    public void SkipStmt.generateMaude(java.io.PrintStream stream) {
+    public void SkipStmt.generateMaude(PrintStream stream) {
         stream.print("skip ");
     }
 
-    public void AssignStmt.generateMaude(java.io.PrintStream stream) {
+    public void AssignStmt.generateMaude(PrintStream stream) {
         if (getValue() instanceof PureExp) {
             stream.print("assign( ");
             getVar().generateMaude(stream);
@@ -404,7 +405,7 @@ aspect GenerateMaude {
         }
     }
 
-    public void ReturnStmt.generateMaude(java.io.PrintStream stream) {
+    public void ReturnStmt.generateMaude(PrintStream stream) {
         if (getRetExp() instanceof PureExp) {
             stream.print("return( ");
             getRetExp().generateMaude(stream);
@@ -415,15 +416,15 @@ aspect GenerateMaude {
         }
     }
 
-    abstract public void Guard.generateMaude(java.io.PrintStream stream);
+    abstract public void Guard.generateMaude(PrintStream stream);
 
-    public void ClaimGuard.generateMaude(java.io.PrintStream stream) {
+    public void ClaimGuard.generateMaude(PrintStream stream) {
         stream.print("?(");
         getVar().generateMaude(stream);
         stream.print(") ");
     }
 
-    public void AndGuard.generateMaude(java.io.PrintStream stream) {
+    public void AndGuard.generateMaude(PrintStream stream) {
         stream.print("\"&&\"(");
         getLeft().generateMaude(stream);
         stream.print(":: ");
@@ -431,20 +432,20 @@ aspect GenerateMaude {
         stream.print(") ");
     }
 
-    public void ExpGuard.generateMaude(java.io.PrintStream stream) {
+    public void ExpGuard.generateMaude(PrintStream stream) {
         getPureExp().generateMaude(stream);
     }
 
-    public void SuspendStmt.generateMaude(java.io.PrintStream stream) {
+    public void SuspendStmt.generateMaude(PrintStream stream) {
         stream.print("suspend ");
     }
 
-    public void AwaitStmt.generateMaude(java.io.PrintStream stream) {
+    public void AwaitStmt.generateMaude(PrintStream stream) {
         stream.print("await ");
         getGuard().generateMaude(stream);
     }
 
-    public void IfStmt.generateMaude(java.io.PrintStream stream) {
+    public void IfStmt.generateMaude(PrintStream stream) {
         stream.print("if ");
         getCondition().generateMaude(stream);
         stream.print("th ");
@@ -458,11 +459,11 @@ aspect GenerateMaude {
         stream.print("fi ");
     }
 
-    public void ExpressionStmt.generateMaude(java.io.PrintStream stream) {
+    public void ExpressionStmt.generateMaude(PrintStream stream) {
         getExp().generateMaudeAsStatement(stream, "_");
     }
 
-    public void WhileStmt.generateMaude(java.io.PrintStream stream) {
+    public void WhileStmt.generateMaude(PrintStream stream) {
         stream.print("while ");
         getCondition().generateMaude(stream);
         stream.print("do ");
@@ -470,12 +471,12 @@ aspect GenerateMaude {
         stream.print("od ");
     }
 
-    public void AssertStmt.generateMaude(java.io.PrintStream stream) {
+    public void AssertStmt.generateMaude(PrintStream stream) {
         stream.print("assert ");
         getCondition().generateMaude(stream);
     }
 
-	public void Block.generateMaude(java.io.PrintStream stream) {
+	public void Block.generateMaude(PrintStream stream) {
         boolean inlist = false;
         if (getNumVar() > 0) {
             stream.print("$push ( ");
@@ -508,7 +509,7 @@ aspect GenerateMaude {
         }
 	}
 	
-    public void InitBlock.generateMaude(java.io.PrintStream stream,
+    public void InitBlock.generateMaude(PrintStream stream,
                                         List<FieldDecl> fields,
                                         boolean isActiveClass) {
         boolean inlist = false;
