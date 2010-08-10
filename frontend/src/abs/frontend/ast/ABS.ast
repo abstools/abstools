@@ -2,7 +2,7 @@
 //
  
 
-Model                         ::= Decl* [Block];
+Model                         ::= Decl* [Block:MainBlock];
 
 // (see below for Blocks)
 
@@ -80,6 +80,7 @@ WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
 Block: Stmt				::= Var:VarDecl*  Stmt:Stmt*;
 InitBlock: Block;		// Initializer block in a class - can be handled specially during code generation
+MainBlock: Block;             // Active behavior of the model
 
 
 abstract Guard;

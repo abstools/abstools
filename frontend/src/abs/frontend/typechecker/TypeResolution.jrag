@@ -122,6 +122,7 @@ aspect TypeResolution {
     inh Decl MethodImpl.getContextDecl();
     
     eq MethodImpl.getBlock().getContextMethod() = this;
+    eq ClassDecl.getInitBlock().getContextMethod() = null;
     eq Model.getBlock().getContextMethod() = null;
     inh MethodImpl Stmt.getContextMethod();
     

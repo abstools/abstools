@@ -10,6 +10,7 @@ aspect NullObjects {
 //  eq Model.getPredefinedType().unknownDecl() = unknownDecl();
   
   inh UnknownDecl Exp.unknownDecl();
+  eq Model.getDecl().unknownDecl() = unknownDecl();
   eq Model.getBlock().unknownDecl() = unknownDecl();
 
 }
