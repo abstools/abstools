@@ -50,6 +50,8 @@ class BoundedBuffer implements Buffer {
     Int max = 10;
     Int n = 0;
 
+   Unit init() { }
+
     Unit append(Data d){
 	await (n < max) ; 
 	buffer = appendData(d,buffer);
