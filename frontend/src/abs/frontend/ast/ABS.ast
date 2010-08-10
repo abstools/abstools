@@ -23,7 +23,7 @@ TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ;
 
 abstract	VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
-VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:PureExp];
+VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:Exp];
 FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp];
 ParamDecl:	TypedVarOrFieldDecl;
 PatternVarDecl: VarOrFieldDecl;

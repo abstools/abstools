@@ -88,7 +88,7 @@ InitBlock init_block =
 	;
 
 VarDecl var_decl = 
-    type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new VarDecl(i,t, new Opt(e)); :}
+    type_exp.t IDENTIFIER.i ASSIGN exp.e  {: return new VarDecl(i,t, new Opt(e)); :}
     | type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t, new Opt()); :}
     ;
 
@@ -378,6 +378,8 @@ GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
     ;
 
+Exp exp = data_exp | eff_exp ; 
+
 Exp eff_exp = 
     new_exp 
 	| async_call 
@@ -421,8 +423,7 @@ Stmt stmt =
 
 
 Stmt return_stmt = 
-	annotation_list.al? RETURN eff_exp.e SEMICOLON        {: return new ReturnStmt(al,e) ; :}
-	|  annotation_list.al? RETURN data_exp.e SEMICOLON    {: return new ReturnStmt(al,e) ; :}
+	annotation_list.al? RETURN exp.e SEMICOLON        {: return new ReturnStmt(al,e) ; :}
 	;
 
 Guard guard = 	
@@ -442,8 +443,7 @@ WhileStmt while_stmt =
 	;
 
 AssignStmt assign_stmt =  
-	annotation_list.al? var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(al,r,e) ; :} 
-	|	annotation_list.al? var_ref.r ASSIGN data_exp.e SEMICOLON   {: return new AssignStmt(al,r,e) ; :}
+	annotation_list.al? var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(al,r,e) ; :} 
 	;	
 
 List stmt_list =
