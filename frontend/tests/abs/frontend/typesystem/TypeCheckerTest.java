@@ -191,6 +191,13 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void fnAppTypeArgs5() {
+        assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+                "def List<B> shuffle<B>(List<B> list) = list;"+
+                "def C chose<C>(List<C> list) = head(shuffle(list));");
+    }
+    
+    @Test
     public void constructorTypeArgs() {
         assertNoTypeErrors("{ Opt<Bool> o = Some(True); }");
     }

@@ -32,7 +32,7 @@ public class DataTypeType extends Type {
 
     public DataTypeType(DataTypeDecl decl, List<Type> typeArgs) {
        this.decl = decl;
-       typeArgs.addAll(typeArgs);
+       this.typeArgs.addAll(typeArgs);
    }
     
     public List<Type> getTypeArgs() {
