@@ -476,6 +476,45 @@ aspect GenerateMaude {
         getCondition().generateMaude(stream);
     }
 
+    public void MainBlock.generateMaude(PrintStream stream) {
+        boolean inlist = false;
+        stream.println("\n\n< \".Start\" : Class |");
+        stream.println("  Param: noVid,");
+        stream.print("  Att: ");
+        if (getNumVar() == 0) {
+            stream.print("noSubst");
+        } else {
+            inlist = false;
+            for (VarDecl var : getVars()) {
+                if (inlist) stream.print(", "); else inlist = true;
+                stream.print("@ \"" + var.getName() + "\" |-> null ");
+            }
+        }
+        stream.print(",\n  Mtds: ");
+        stream.print("< \".init\" : Method | Param: noVid, ");
+        stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
+        stream.print("@ \".staticfuture\" |-> null");
+        stream.print(",\n      Code: ");
+        inlist = false;
+        for (VarDecl var : getVars()) {
+            if (var.hasInitExp()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stream.print("assign( @@ \"" + var.getName() + "\" ; ");
+                var.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            }
+        }
+        if (!inlist && getNumStmt() == 0) {
+            stream.print("noStmt ");
+        } else {
+            for (Stmt stmt : getStmts()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stmt.generateMaude(stream);
+            }
+        }
+        stream.print(">,\n  Ocnt: 0 > ");
+    }
+
 	public void Block.generateMaude(PrintStream stream) {
         boolean inlist = false;
         if (getNumVar() > 0) {
@@ -547,7 +586,7 @@ aspect GenerateMaude {
                 stream.print(") ");
             }
         }
-        if (!inlist) {
+        if (!inlist && getNumStmt() == 0) {
             // didn't emit anything until now - completely empty method
             stream.print("noStmt ");
         } else {
