@@ -50,7 +50,7 @@ Model goal =
   ;
 
 Model model = 
-	decl_list.l? mainblock?	{: return new Model(l, mainblock); :}
+	decl_list.l? main_block.b?	{: return new Model(l, b); :}
   ;
 
 List decl_list =
@@ -73,29 +73,19 @@ Decl decl =
 
 // Main model block
 // Same as other blocks, but a different class for code-generation purposes.
-MainBlock mainblock =
-    annotation_list.al? LBRACE var_decls.l? stmt_list.s? RBRACE     {: return new MainBlock(al, l, s); :}
+MainBlock main_block =
+    annotation_list.al? LBRACE stmt_list.s? RBRACE     {: return new MainBlock(al, s); :}
     ;    
 
 //Program block
 //used in init blocks and method body
 Block block	=
-	annotation_list.al? LBRACE var_decls.l? stmt_list.s?  RBRACE	{: return new Block(al, l,s) ; :}
+	annotation_list.al? LBRACE stmt_list.s?  RBRACE	{: return new Block(al, s) ; :}
     ;
 
 InitBlock init_block =
-	block	{: return new InitBlock(block.getAnnotationsNoTransform(), block.getVarsNoTransform(), block.getStmtsNoTransform()); :}
+	block	{: return new InitBlock(block.getAnnotationsNoTransform(), block.getStmtsNoTransform()); :}
 	;
-
-List var_decls = 
-	var_decl_list.l SEMICOLON {: return l ; :} 
-	; 
-
-
-List var_decl_list =
-      var_decl.i                                  {: return new List().add(i); :}
-    | var_decl_list.l SEMICOLON var_decl.i        {: return l.add(i); :}
-    ;
 
 VarDecl var_decl = 
     type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new VarDecl(i,t, new Opt(e)); :}
@@ -423,6 +413,7 @@ Stmt stmt =
 	|  annotation_list.al? eff_exp.e SEMICOLON    {: return new ExpressionStmt(al, e) ; :}	
 	|  if_then_else_stmt 
 	|  while_stmt 
+	|  annotation_list.al? var_decl.vd SEMICOLON  {: return new VarDeclStmt(al,vd) ; :}
 	|  block
 	|  annotation_list.al? SEMICOLON                    {: return new SkipStmt(al) ; :}
     |  annotation_list.al? ASSERT data_exp.e SEMICOLON  {: return new AssertStmt(al, e) ; :}
@@ -449,7 +440,6 @@ IfStmt if_then_else_stmt =
 WhileStmt while_stmt = 
 	annotation_list.al? WHILE LPAREN data_exp.e1 RPAREN stmt.s1  {: return new WhileStmt(al,e1,s1) ; :} 
 	;
-
 
 AssignStmt assign_stmt =  
 	annotation_list.al? var_ref.r ASSIGN eff_exp.e SEMICOLON        {: return new AssignStmt(al,r,e) ; :} 

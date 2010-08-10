@@ -56,8 +56,6 @@ aspect TypeChecker {
     public abstract void Decl.typeCheck(SemanticErrorList e);  
     
     public void ClassDecl.typeCheck(SemanticErrorList e) {
-   	 // TODO: check that class implements an interface
-
       HashMap<String, FieldDecl> fields = new HashMap<String, FieldDecl>();
       for (FieldDecl f : getFields()) {
    		  f.typeCheck(e);
@@ -243,8 +241,13 @@ aspect TypeChecker {
     
     public abstract void Stmt.typeCheck(SemanticErrorList e);
     public void ExpressionStmt.typeCheck(SemanticErrorList e) {
-   	 getExp().typeCheck(e);
+   	   getExp().typeCheck(e);
     }
+    
+    public void VarDeclStmt.typeCheck(SemanticErrorList e) {
+       getVarDecl().typeCheck(e); 
+    }
+    
     public void AssignStmt.typeCheck(SemanticErrorList e) {
    	 Type rht = getValue().getType();
    	 Type lht = getVar().getType();

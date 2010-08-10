@@ -135,10 +135,6 @@ aspect GenerateJava {
     public void Block.generateJava(String indent, PrintStream stream, boolean addReturn) {
         stream.println(" {");
         String newIndent = incIndent(indent);
-        for (VarDecl varDecl : getVars()) {
-            varDecl.generateJava(newIndent,stream);
-        }
-        
         for (Stmt stmt : getStmts()) {
             stmt.generateJava(newIndent,stream);
         }
@@ -160,6 +156,10 @@ aspect GenerateJava {
      */
     
     public abstract void Stmt.generateJava(String indent, PrintStream stream);
+    
+    public void VarDeclStmt.generateJava(String indent, PrintStream stream) {
+        getVarDecl().generateJava(indent,stream);
+    }
     
     public void AssignStmt.generateJava(String indent, PrintStream stream) {
         stream.print(indent);

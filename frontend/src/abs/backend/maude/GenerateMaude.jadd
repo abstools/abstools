@@ -320,7 +320,7 @@ aspect GenerateMaude {
         } else {
             // minimal init method - this block is not connected to the
             // AST so we pass in the field list in all cases.
-            new InitBlock(new List<Annotation>(), new List<VarDecl>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
+            new InitBlock(new List<Annotation>(), new List<Stmt>()).generateMaude(stream, getFields(), isActiveClass());
         }
         for (MethodImpl method : getMethods()) {
             stream.print(",\n    ");
@@ -353,14 +353,6 @@ aspect GenerateMaude {
         }
         stream.print(",\n      Code: ");
         inlist = false;    // value valid for statement emission as well
-        for (VarDecl var : getBlock().getVars()) {
-            if (var.hasInitExp()) {
-                if (inlist) stream.print("; "); else inlist = true;
-                stream.print("assign( @ \"" + var.getName() + "\" ; ");
-                var.getInitExp().generateMaude(stream);
-                stream.print(") ");
-            }
-        }
         if (getBlock().getNumStmt() == 0) {
             if (inlist) stream.print("; ");
             stream.print("return( null ) ");
@@ -389,6 +381,22 @@ aspect GenerateMaude {
 
     abstract public void Stmt.generateMaude(PrintStream stream);
 
+    public void VarDeclStmt.generateMaude(PrintStream stream) {
+        boolean inMainBlock = getParent().getParent() instanceof MainBlock;
+        
+        VarDecl var = getVarDecl();
+        if (var.hasInitExp()) {
+            stream.print("; "); // we know there's a $push stmt before
+            stream.print("assign( ");
+            if (inMainBlock)
+                stream.print("@");
+            stream.print("@ \"" + var.getName() + "\" ; ");
+            var.getInitExp().generateMaude(stream);
+            stream.print(") ");
+        }
+        
+    }
+    
     public void SkipStmt.generateMaude(PrintStream stream) {
         stream.print("skip ");
     }
@@ -496,14 +504,6 @@ aspect GenerateMaude {
         stream.print("@ \".staticfuture\" |-> null");
         stream.print(",\n      Code: ");
         inlist = false;
-        for (VarDecl var : getVars()) {
-            if (var.hasInitExp()) {
-                if (inlist) stream.print("; "); else inlist = true;
-                stream.print("assign( @@ \"" + var.getName() + "\" ; ");
-                var.getInitExp().generateMaude(stream);
-                stream.print(") ");
-            }
-        }
         if (!inlist && getNumStmt() == 0) {
             stream.print("noStmt ");
         } else {
@@ -526,14 +526,6 @@ aspect GenerateMaude {
             }
             stream.print(") ");
             inlist = true;      // set up for rest of the statements
-        }
-        for (VarDecl var : getVars()) {
-            if (var.hasInitExp()) {
-                stream.print("; "); // we know there's a $push stmt before
-                stream.print("assign( @ \"" + var.getName() + "\" ; ");
-                var.getInitExp().generateMaude(stream);
-                stream.print(") ");
-            }
         }
         if (getNumStmt() == 0 && getNumVar() == 0) {
             stream.print("noStmt ");

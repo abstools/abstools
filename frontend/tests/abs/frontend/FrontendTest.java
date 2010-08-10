@@ -19,6 +19,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
+import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.Main;
@@ -93,13 +94,22 @@ public class FrontendTest {
         return getFirstExp(m);
     }
 
-
+    protected Exp getSecondExp(Model m) {
+        return getExp(m,1);
+    }
+    
 	protected Exp getFirstExp(Model m) {
-	    Stmt s = m.getBlock().getStmt(0);
+	    return getExp(m,0);
+	}
+	
+    protected Exp getExp(Model m, int i) {
+	    Stmt s = m.getBlock().getStmt(i);
 	    if (s instanceof AssignStmt)
 	        return ((AssignStmt) s).getValue();
 	    if (s instanceof ExpressionStmt) 
 	        return ((ExpressionStmt) s).getExp();
+	    if (s instanceof VarDeclStmt) 
+	        return ((VarDeclStmt) s).getVarDecl().getInitExp();
 	    throw new IllegalArgumentException();
    }
 
@@ -150,8 +160,19 @@ public class FrontendTest {
 
 
     protected Type getTypeOfFirstAssignment(Model m) {
-        AssignStmt s = (AssignStmt) m.getBlock().getStmts().getChild(0);
-        return s.getValue().getType();
+        for (Stmt s : m.getBlock().getStmts()) {
+            if (s instanceof AssignStmt) {
+                AssignStmt as = (AssignStmt) s;
+                return as.getValue().getType();
+            } else
+                if (s instanceof VarDeclStmt) {
+                    VarDeclStmt vd = (VarDeclStmt) s;
+                    if (vd.getVarDecl().hasInitExp()) {
+                        return vd.getVarDecl().getInitExp().getType();
+                    }
+                }
+        }
+        return null;
     }
     
     

@@ -40,7 +40,6 @@ aspect VarResolution {
                 result.add((VarOrFieldDecl)param.copy());
         return result;
     }
-    eq Block.getVar().functionParameters() = new List<VarOrFieldDecl>();
     eq ClassDecl.getField().functionParameters() = new List<VarOrFieldDecl>();
     inh List<VarOrFieldDecl> Stmt.functionParameters();
     inh List<VarOrFieldDecl> Exp.functionParameters();
@@ -59,6 +58,17 @@ aspect VarResolution {
     eq VarUse.getDecl() = lookupVarName(getName());
     eq FieldUse.getDecl() = lookupVarName(getName());
 
+    syn lazy int Block.getNumVar() = getVars().size();
+    
+    syn lazy Collection<VarDecl> Block.getVars() {
+        ArrayList<VarDecl> res = new ArrayList<VarDecl>();
+        for (Stmt stmt : getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                res.add(((VarDeclStmt) stmt).getVarDecl());
+            }
+        }
+        return res;
+    }
 
     syn lazy VarOrFieldDecl Block.localLookupVarName(String name);
     eq Block.localLookupVarName(String name) {

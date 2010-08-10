@@ -40,26 +40,26 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void testInterfaceType() {
-        Model m = assertParseOk("interface I { } { I i; i = i; }");
+        Model m = assertParseOk("interface I { } { I i = i; }");
         assertEquals(m.localLookup("I").getType(),getTypeOfFirstAssignment(m));
         
     }
     
     @Test
     public void testDataTypeBoolLit() {
-        Model m = assertParseOkStdLib("{ Bool i; i = True; }");
+        Model m = assertParseOkStdLib("{ Bool i = True; }");
         assertEquals(m.getBoolType(),getTypeOfFirstAssignment(m));
     }
     
     @Test
     public void testDataTypeIntLit() {
-        Model m = assertParseOkStdLib("{ Int i; i = 5; }");
+        Model m = assertParseOkStdLib("{ Int i = 5; }");
         assertEquals(m.getIntType(),getTypeOfFirstAssignment(m));
     }
 
     @Test
     public void testDataTypeStringLit() {
-        Model m = assertParseOkStdLib("{ String i; i = \"5\"; }");
+        Model m = assertParseOkStdLib("{ String i = \"5\"; }");
         assertEquals(m.getStringType(),getTypeOfFirstAssignment(m));
     }
     
@@ -91,7 +91,7 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testNew() {
         Model m = assertParseOk("interface I {} class C implements I {} { I i; i = new C(); }");
-        assertEquals(m.localLookup("I").getType(),((UnionType)getFirstExp(m).getType()).getType(0));
+        assertEquals(m.localLookup("I").getType(),((UnionType)getTypeOfFirstAssignment(m)).getType(0));
     }
     
     @Test
@@ -106,13 +106,13 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testSyncCall() {
         Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i.m(); }");
-        assertEquals(m.getBoolType(), getFirstExp(m).getType());
+        assertEquals(m.getBoolType(), getSecondExp(m).getType());
     }
     
     @Test
     public void testAsyncCall() {
         Model m = assertParseOkStdLib(" interface I { Bool m(); } { I i; i!m(); }");
-        assertEquals(m.getFutType(m.getBoolType()), getFirstExp(m).getType());
+        assertEquals(m.getFutType(m.getBoolType()), getSecondExp(m).getType());
     }
 
     @Test

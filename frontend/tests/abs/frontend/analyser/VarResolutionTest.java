@@ -28,7 +28,7 @@ import abs.frontend.ast.VarUse;
 public class VarResolutionTest extends FrontendTest {
     @Test
     public void testLocalVar() {
-        Exp e = getFirstExp("interface I { } { I i; i = i; }");
+        Exp e = getFirstExp("interface I { } { I i = i; }");
         VarUse u = (VarUse) e;
         VarDecl decl = (VarDecl) u.getDecl();
         assertEquals("i",decl.getName());

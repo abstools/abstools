@@ -72,13 +72,14 @@ SuspendStmt: Stmt;
 ReturnStmt: Stmt		::= RetExp:Exp; 
 ExpressionStmt: Stmt	::= Exp:Exp;
 AssertStmt: Stmt        ::= Condition:PureExp;
+VarDeclStmt: Stmt ::= VarDecl:VarDecl;
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
 // A Block is the body of programs and methods and is also used for initblocks
 // It contains a list of zero or more ast.VarOrFieldDecl 
 // and zero or more ast.Stmt, these are named Fields and Stmts resp.  
-Block: Stmt				::= Var:VarDecl*  Stmt:Stmt*;
+Block: Stmt				::= Stmt:Stmt*;
 InitBlock: Block;		// Initializer block in a class - can be handled specially during code generation
 MainBlock: Block;             // Active behavior of the model
 
