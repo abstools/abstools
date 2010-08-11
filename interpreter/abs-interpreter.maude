@@ -617,8 +617,9 @@ fmod ABS-STATEMENT is
 
   op $cont_ : Label -> Stmt [ctor format (r o d)] .
 
-  op $push_ : SSubst -> Stmt [ctor format (r o d)] .
-  op $pop : -> Stmt [ctor format(r o)] .
+  op $beginscope : -> Stmt [ctor format (r o)] .
+  op $vardecl(_;_) : Vid Expr -> Stmt [ctor format (r d o c o c o) ] .
+  op $endscope : -> Stmt [ctor format(r o)] .
 
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It 
@@ -1085,16 +1086,24 @@ mod ABS-MACHINE-BASICS is
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
   eq
-    < O : C | Att: S, Pr: { L | $push S2 ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L :: S2 | SL }, PrQ: W, Lcnt: F >
-    [label $push] .
+    < O : C | Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
+    [label $beginscope] .
 
+  --- Introduce a new variable into the local scope.
   eq
-    < O : C | Att: S, Pr: { L :: S2 | $pop ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none), L) | SL }, PrQ: W, Lcnt: F >
+    [label $vardecl] .
+
+  *** TODO: release labels that are going out of scope here.
+  eq
+    < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label $pop] .
+    [label $endscope] .
 
 
   --- assert
@@ -1538,7 +1547,7 @@ mod ABS-STMT-RETURN-RL is
    =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
-    *** `release' or `$pop' statements after this, so we must rely on the
+    *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
@@ -1559,7 +1568,7 @@ fmod ABS-STMT-RETURN-EQ is
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
-    *** `release' or `$pop' statements after this, so we must rely on the
+    *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 

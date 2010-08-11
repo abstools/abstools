@@ -381,21 +381,26 @@ aspect GenerateMaude {
     abstract public void Stmt.generateMaude(PrintStream stream);
 
     public void VarDeclStmt.generateMaude(PrintStream stream) {
+        // HACK FIXME: this should be an attribute
         boolean inMainBlock = getParent().getParent() instanceof MainBlock;
-        
+
         VarDecl var = getVarDecl();
-        if (var.hasInitExp()) {
-            //stream.print("; "); // we know there's a $push stmt before
-            stream.print("assign( ");
-            if (inMainBlock)
-                stream.print("@");
-            stream.print("@ \"" + var.getName() + "\" ; ");
+        if (inMainBlock && var.hasInitExp()) {
+            // if there is no initial expression, nothing to do in this
+            // case, since the variable has been converted into an
+            // object attribute.
+            stream.print("assign( @@ \"" + var.getName() + "\" ; ");
             var.getInitExp().generateMaude(stream);
             stream.print(") ");
         } else {
-            stream.print("noStmt ");
+            stream.print("$vardecl( @ \"" + var.getName() + "\" ; ");
+            if (var.hasInitExp()) {
+                var.getInitExp().generateMaude(stream);
+            } else {
+                stream.print("null ");
+            }
+            stream.print(") ");
         }
-        
     }
     
     public void SkipStmt.generateMaude(PrintStream stream) {
@@ -519,26 +524,13 @@ aspect GenerateMaude {
 	public void Block.generateMaude(PrintStream stream) {
         boolean inlist = false;
         if (getNumVar() > 0) {
-            stream.print("$push ( ");
-            inlist = false;
-            for (VarDecl var : getVars()) {
-                if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + var.getName() + "\" |-> null ");
-            }
-            stream.print(") ");
-            inlist = true;      // set up for rest of the statements
+            stream.print("$beginscope ");
         }
-        if (getNumStmt() == 0 && getNumVar() == 0) {
-            stream.print("noStmt ");
-        } else {
-            for (Stmt stmt : getStmts()) {
-                if (inlist) stream.print("; "); else inlist = true;
-                stmt.generateMaude(stream);
-            }
+        for (Stmt stmt : getStmts()) {
+            stream.print("; ");
+            stmt.generateMaude(stream);
         }
-        if (getNumVar() > 0) {
-            stream.print("; $pop ");
-        }
+        stream.print("; $endscope ");
 	}
 	
     public void InitBlock.generateMaude(PrintStream stream,
