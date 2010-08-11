@@ -352,11 +352,10 @@ aspect GenerateMaude {
             stream.print(", @ \"" + var.getName() + "\" |-> null ");
         }
         stream.print(",\n      Code: ");
-        inlist = false;    // value valid for statement emission as well
         if (getBlock().getNumStmt() == 0) {
-            if (inlist) stream.print("; ");
             stream.print("return( null ) ");
         } else {
+            inlist = false;    // value valid for statement emission as well
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
@@ -393,6 +392,8 @@ aspect GenerateMaude {
             stream.print("@ \"" + var.getName() + "\" ; ");
             var.getInitExp().generateMaude(stream);
             stream.print(") ");
+        } else {
+            stream.print("noStmt ");
         }
         
     }
@@ -569,14 +570,6 @@ aspect GenerateMaude {
             }
             stream.print(") ");
             inlist = true;      // set up for rest of the statements
-        }
-        for (VarDecl var : getVars()) {
-            if (var.hasInitExp()) {
-                stream.print("; "); // we know there's a $push stmt before
-                stream.print("assign( @ \"" + var.getName() + "\" ; ");
-                var.getInitExp().generateMaude(stream);
-                stream.print(") ");
-            }
         }
         if (!inlist && getNumStmt() == 0) {
             // didn't emit anything until now - completely empty method

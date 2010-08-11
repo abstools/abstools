@@ -45,7 +45,7 @@ public class MaudeTests extends ABSTest {
 
     @Test
     public void oneVarDeclInitBlock() {
-        assertEqualMaude("interface I {} class C { { I i = new C(); } } {}", "");
+        assertEqualMaude("interface I {} class C { { I i; } } {}", "");
     }
     
     void assertEqualMaude(String absCode, String maudeCode) {
