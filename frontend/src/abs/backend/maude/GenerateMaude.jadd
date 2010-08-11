@@ -547,19 +547,6 @@ aspect GenerateMaude {
                 stream.print(") ");
             }
         }
-        // Process local variable initializers now, since they might use
-        // field values
-        if (getNumVar() > 0) {
-            if (inlist) stream.print("; "); // emitted field init already
-            stream.print("$push ( ");
-            inlist = false;
-            for (VarDecl var : getVars()) {
-                if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + var.getName() + "\" |-> null ");
-            }
-            stream.print(") ");
-            inlist = true;      // set up for rest of the statements
-        }
         if (!inlist && getNumStmt() == 0) {
             // didn't emit anything until now - completely empty method
             stream.print("noStmt ");
@@ -568,9 +555,6 @@ aspect GenerateMaude {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-        }
-        if (getNumVar() > 0) {
-            stream.print("; $pop ");
         }
         if (isActiveClass) stream.print("; selftailcall (\"run\" ; emp) ");
         stream.print("> ");
