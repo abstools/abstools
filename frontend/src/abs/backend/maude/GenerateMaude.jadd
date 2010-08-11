@@ -522,10 +522,7 @@ aspect GenerateMaude {
     }
 
 	public void Block.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-        if (getNumVar() > 0) {
-            stream.print("$beginscope ");
-        }
+        stream.print("$beginscope ");
         for (Stmt stmt : getStmts()) {
             stream.print("; ");
             stmt.generateMaude(stream);
