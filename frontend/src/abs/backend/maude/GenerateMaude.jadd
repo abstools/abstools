@@ -386,7 +386,7 @@ aspect GenerateMaude {
         
         VarDecl var = getVarDecl();
         if (var.hasInitExp()) {
-            stream.print("; "); // we know there's a $push stmt before
+            //stream.print("; "); // we know there's a $push stmt before
             stream.print("assign( ");
             if (inMainBlock)
                 stream.print("@");

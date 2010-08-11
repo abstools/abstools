@@ -11,11 +11,12 @@ import java.io.PrintWriter;
 
 import junit.framework.Assert;
 
+import abs.ABSTest;
 import abs.common.StandardLib;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
-public class JavaBackendTest {
+public class JavaBackendTest extends ABSTest {
     
     void assertEqual(String absCode, String javaCode) {
         assertEqual(absCode, javaCode,null);
@@ -87,10 +88,6 @@ public class JavaBackendTest {
         }
     }
 
-    private InputStream getInputStream(String absCode) {
-        return new ByteArrayInputStream(absCode.getBytes());
-    }
-    
     private static File getTempFile(String testCode) throws IOException {
         File tmpFile = File.createTempFile("abs", "test");
         PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));

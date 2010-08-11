@@ -37,7 +37,7 @@ public class TypeCheckerTest extends FrontendTest {
      public void testClass2() {
          assertNoTypeErrors("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }"); 
      }
-     
+
     @Test
     public void negTestOk() {
         assertNoTypeErrors("{ Bool b = ~True; }");

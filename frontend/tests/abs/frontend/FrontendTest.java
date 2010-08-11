@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 import java.io.Reader;
 import java.io.StringReader;
 
+import abs.ABSTest;
 import abs.common.StandardLib;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -25,7 +26,7 @@ import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
 
-public class FrontendTest {
+public class FrontendTest extends ABSTest {
 
     protected Model assertParseOkStdLib(String s) {
         return assertParseOk(StandardLib.STDLIB_DATATYPES_STRING+s);
@@ -68,26 +69,6 @@ public class FrontendTest {
     }
     
     
-    protected Model assertParseOk(String s) {
-        Model p = null;
-        try {
-            p = parse(s);
-        } catch (Throwable t) {
-            fail("Failed to parse: "+ s+"\n"+t.getMessage());
-        }
-        return p;
-  }
-    
-    
-    protected Model parse(String s) throws Throwable {
-        ABSParser parser = new ABSParser();
-        Reader reader = new StringReader(s);
-        //      ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
-        ABSScanner scanner = new ABSScanner(reader);
-        Model p = (Model)parser.parse(scanner);
-        reader.close();
-        return p;
-    }
     
     protected Exp getFirstExp(String absCode) {
         Model m = assertParseOk(absCode);

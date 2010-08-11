@@ -1,0 +1,6 @@
+aspect EffectAnalysis {
+    
+    syn lazy boolean Exp.hasSideEffects();
+    eq Exp.hasSideEffects() = true;
+    eq PureExp.hasSideEffects() = false;
+}
