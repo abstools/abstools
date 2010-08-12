@@ -9,10 +9,6 @@ interface RandomBool {
 class CRandomBool implements RandomBool {
    Bool value = True;
    
-   {
-      this.changeValue();
-   }
-
    Unit setValue(Bool b) {
       value = b;
    }
