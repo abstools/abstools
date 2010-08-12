@@ -843,6 +843,7 @@ fmod ABS-EVAL is
   var AL : VidList .
   vars Q C : String .
   vars S S' : Subst .
+  var R : MatchResult .
   var SS : SSubst .
   vars ST ST' : Stmt . 
   vars SL SL1 SL2 : StmtList .
@@ -890,31 +891,35 @@ fmod ABS-EVAL is
   sort MatchResult .
   subsort Subst < MatchResult .
   op noMatch : -> MatchResult [ctor] .
-  op match : Data Expr -> MatchResult .
-  eq match(D, E) = $match(D, E, noSubst) .
-  op $match : Data Expr MatchResult -> MatchResult .
-  eq $match(Q[emp], Q[emp], S) = S . *** base case
-  eq $match(D, D, S) = S .           *** matching two literals
-  eq $match(D, @ "_", S) = S .       *** "Don't care" placeholder
-  eq $match(D, A, S) =               *** Create / check variable binding
-    if S[A] == undefined
-    then insert(A, D, S)             *** Generate new binding
-    else                             *** Match against existing binding
-      if S[A] == D then S else noMatch fi
+  op match : Data Expr Subst -> MatchResult .
+  eq match(D, E, S) = $match(D, E, S, noSubst) .
+  op $match : Data Expr Subst MatchResult -> MatchResult .
+  eq $match(Q[emp], Q[emp], S, R) = R . *** base case
+  eq $match(D, D, S, R) = R .           *** matching two literals
+  eq $match(D, @ "_", S, R) = R .       *** "Don't care" placeholder
+  eq $match(D, A, S, R) =               *** Create / check variable binding
+    if hasMapping(S, A)
+    then
+      $match(D, S[A], S, R)
+    else
+      if hasMapping(R, A)
+      then $match(D, R[A], S, R)       *** Match against existing binding
+      else insert(A, D, R)             *** Generate new binding
+      fi
     fi .
-  eq $match(Q[D :: DL], Q[E :: EL], S) = *** Destructure constructor pattern
-    $match(Q[DL], Q[EL], $match(D, E, S)) .
-  eq $match(D, E, noMatch) = noMatch .
-  eq $match(D, E, S) = noMatch [owise] .
+  eq $match(Q[D :: DL], Q[E :: EL], S, R) = *** Destructure constructor pattern
+    $match(Q[DL], Q[EL], S, $match(D, E, S, R)) .
+  eq $match(D, E, S, noMatch) = noMatch .
+  eq $match(D, E, S, R) = noMatch [owise] .
 
   *** internal operator $case avoids endless loop between "case D of" and
   *** "case E of" when first case branch doesn't match
   op $case : Data CaseBranchList -> Expr .
   ceq eval($case(D, (E => E') ; CBL), S, CN) = 
-    if M:MatchResult == noMatch
+    if R == noMatch
     then eval($case(D, CBL), S, CN)
-    else eval(E', S :: M:MatchResult, CN) fi
-  if M:MatchResult := match(D, E) .
+    else eval(E', S :: R, CN) fi
+  if R := match(D, E, S) .
 
   eq eval(case E of { CBL }, S, CN) = 
     eval($case(eval(E, S, CN), CBL), S, CN) .
@@ -979,7 +984,7 @@ fmod ABS-EVAL-TIMED is
     if M:MatchResult == noMatch
     then eval($case(D, CBL), S, CN, N)
     else eval(E', S :: M:MatchResult, CN, N) fi
-  if M:MatchResult := match(D, E) .
+  if M:MatchResult := match(D, E, S) .
 
   eq eval(case E of { CBL }, S, CN, N) = 
     eval($case(eval(E, S, CN), CBL), S, CN, N) .
