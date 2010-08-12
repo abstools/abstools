@@ -1,0 +1,32 @@
+data Fut<A>;
+data Unit = Unit;
+data Bool = True | False;
+
+interface RandomBool {
+   Bool getNextBool();
+}
+
+class CRandomBool implements RandomBool {
+   Bool value = True;
+   
+   {
+      this.changeValue();
+   }
+
+   Unit setValue(Bool b) {
+      value = b;
+   }
+   
+   Unit changeValue() {
+      Fut<Unit> fut1;
+      Fut<Unit> fut2;
+      fut1 = this!setValue(True);
+      fut2 = this!setValue(False);
+      await fut1? & fut2?;
+   }
+
+   Bool getNextBool() {
+      this.changeValue();
+      return this.value;
+   }   
+}

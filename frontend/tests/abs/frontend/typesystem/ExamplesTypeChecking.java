@@ -26,6 +26,11 @@ public class ExamplesTypeChecking extends FrontendTest {
         assertTypeCheckTestFileOk("boundedbuffer.abs");
     }
 
+    @Test
+    public void randomBool() {
+        assertTypeCheckTestFileOk("RandomBool.abs");
+    }
+    
     private void assertTypeCheckTestFileOk(String fileName) {
         String dir="tests/abssamples/";
         assertTypeCheckFileOk(dir + fileName);
