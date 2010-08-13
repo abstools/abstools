@@ -110,7 +110,7 @@ fmod ABS-EXPRESSION is
   *** function application
   op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
   op _(_) : String DataList -> Data [ctor prec 12 format (! o d d d)] .
-  op $delay : Expr -> Expr . *** Protect against premature function evaluation
+  op $call : String ExprList -> Expr . *** Protect against premature function evaluation
   *** constructor terms
   op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
   op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
@@ -122,6 +122,8 @@ fmod ABS-EXPRESSION is
   op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
   *** guard expression
   op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
+  *** Error terms
+  op $error : String -> Expr [ctor] .
 
 endfm
 
@@ -875,8 +877,7 @@ fmod ABS-EVAL is
   *** Function expansions are expressions, subject to further evaluation.
   *** They are not evaluated in the current environment but in the environment
   *** in which they are defined (which is currently always empty).
-  eq eval(Q (EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), noSubst, CN) .
-  eq eval($delay(E), S, CN) = eval(E, S, CN) .
+  eq eval($call(Q, EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), noSubst, CN) .
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
   eq eval(?(@ Q), S, CN) = completed(S[@ Q], CN) asAbsBool .
   eq eval(?(@@ Q), (SS :: S), CN) = completed(SS[@ Q], CN) asAbsBool .
@@ -898,7 +899,7 @@ fmod ABS-EVAL is
   op match : Data Expr Subst -> MatchResult .
   eq match(D, E, S) = $match(D, E, S, noSubst) .
   op $match : Data Expr Subst MatchResult -> MatchResult .
-  eq $match(Q[emp], Q[emp], S, R) = R . *** base case
+  eq $match(D, E, S, noMatch) = noMatch .
   eq $match(D, D, S, R) = R .           *** matching two literals
   eq $match(D, @ "_", S, R) = R .       *** "Don't care" placeholder
   eq $match(D, A, S, R) =               *** Create / check variable binding
@@ -913,7 +914,6 @@ fmod ABS-EVAL is
     fi .
   eq $match(Q[D :: DL], Q[E :: EL], S, R) = *** Destructure constructor pattern
     $match(Q[DL], Q[EL], S, $match(D, E, S, R)) .
-  eq $match(D, E, S, noMatch) = noMatch .
   eq $match(D, E, S, R) = noMatch [owise] .
 
   *** internal operator $case avoids endless loop between "case D of" and
@@ -924,6 +924,7 @@ fmod ABS-EVAL is
     then eval($case(D, CBL), S, CN)
     else eval(E', S :: R, CN) fi
   if R := match(D, E, S) .
+  *** eq eval($case(D, noBranch), S, CN) = $error("No match in case expression") .
 
   eq eval(case E of { CBL }, S, CN) = 
     eval($case(eval(E, S, CN), CBL), S, CN) .

@@ -172,7 +172,7 @@ aspect GenerateMaude {
     eq DivMultExp.maudeInfixOperator() = "/";
     eq ModMultExp.maudeInfixOperator() = "%";
     public void Binary.generateMaude(PrintStream stream) {
-        stream.print("\"" + maudeInfixOperator() + "\"( ");
+        stream.print("$call(\"" + maudeInfixOperator() + "\", ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
         getRight().generateMaude(stream);
@@ -219,12 +219,12 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("$delay(\"" + getName() + "\"( ");
+        stream.print("$call(\"" + getName() + "\", ");
         for (PureExp param : getParams()) {
             if (inlist) stream.print(":: "); else inlist = true;
             param.generateMaude(stream);
         }
-        stream.print(")) ");
+        stream.print(") ");
     }
 
     public void LetExp.generateMaude(PrintStream stream) {
@@ -443,7 +443,7 @@ aspect GenerateMaude {
     }
 
     public void AndGuard.generateMaude(PrintStream stream) {
-        stream.print("\"&&\"(");
+        stream.print("$call(\"&&\", ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
         getRight().generateMaude(stream);
