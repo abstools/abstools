@@ -1,64 +1,145 @@
-data Bool = True | False;
+//data type declarations 
+data Unit = Unit;               // builtin  
+data String;                    // builtin  
+data Int;                       // builtin
+data Bool = True | False;       // builtin
+data Fut<A>;                    // builtin
 
-data Int ;
+def Bool and(Bool a, Bool b) = case a { True => b; _ => False; };
+def Bool not(Bool a) = case a { True => False; False => True; };
 
-data Unit = Unit ;
+data Maybe<A> = Nothing | Just(A);
 
-data String ;
+def A fromJust<A>(Maybe<A> a) = case a { Just(j) => j; };
+def Bool isJust<A>(Maybe<A> a) = case a { Just(j) => True; Nothing => False; };
 
-data Fut<A> ;
+data Either<A, B> = Left(A) | Right(B);
 
-data Opt<A> = None | Some(A) ;
+def A left<A,B>(Either<A, B> val) = case val { Left(x) => x; };
+def B right<A,B>(Either<A, B> val) = case val { Right(x) => x; };
+def Bool isLeft<A,B>(Either<A, B> val) = case val { Left(x) => True; _ => False; };
+def Bool isRight<A,B>(Either<A, B> val) = ~isLeft(val);
 
-def Bool isSome<A>(Opt<A> val) =
-  case val {
-    None => False ;
-    Some(x) => True ;
-  } ;
+data Pair<A, B> = Pair(A, B); // pair
 
-def A fromSome<A>(Opt<A> val) =
-  case val {
-    Some(x) => x ;
-  } ;
+def A fst<A, B>(Pair<A, B> p) = case p { Pair(s, f) => s; };
+def B snd<A, B>(Pair<A, B> p) = case p { Pair(s, f) => f; };
 
-data Either<A,B> = Left(A) | Right(B) ;
+data Triple<A, B, C> = Triple(A, B, C); // triple
 
-def A left<A,B>(Either<A,B> e) =
-  case e {
-     Left(x) => x;
-  } ;
+def A fstT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => s; };
+def B sndT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => f; };
+def C trd<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => g; };
 
-def B right<A,B>(Either<A,B> e) =
-  case e {
-     Right(x) => x;
-  } ;
-  
-data List<A> = Nil | Cons(A, List<A>);
-def List<A> list<A>(List<A> l) = l; // constructor helper
+data Set<A> = EmptySet | Insert(A, Set<A>);
 
-def Bool isEmpty<A>(List<A> list) = list == Nil;
-
-def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
-
-def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
-
-def Int length<A>(List<A> list) =
-  case list {
-    Nil => 0 ;
-    Cons(p, l) => 1 + length(l) ;
-  }; 
-
-def B nth<B>(List<B> list, Int n) =
-  case n {   
-    0 => head(list) ;
-    _ => nth(tail(list), n-1) ;
+// set constructor helper
+def Set<A> set<A>(List<A> l) = case l { Nil => EmptySet; Cons(x,xs) => Insert(x,set(xs)); };
+	
+def Bool contains<A>(Set<A> ss, A e) = // True if set contains e, False otherwise
+  case ss {
+    EmptySet => False ;
+    Insert(x, xs) => 
+    	case x == e {
+    		True => True;
+    		False => contains(xs, e);
+    	};
   };
+  
+def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet); 
+
+// the size of a set 
+def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size(ss); };
+  
+def Set<A> remove<A>(Set<A> xs, A e) = 
+  case xs {
+    EmptySet => EmptySet ;
+    Insert(s, ss) => 
+    	case (s == e) {
+    		True => ss;
+    		False => Insert(s,remove(ss,e));
+    	};
+  };
+
+// checks whether the input set has more elements to be iterated.
+def Bool hasNext<A>(Set<A> s) = ~ emptySet(s); 
+
+// Partial function to iterate over a set.
+def Pair<Set<A>,A> next<A>(Set<A> s) =  case s { Insert(e, set2) => Pair(set2,e); };
+
+data List<A> = Nil | Cons(A, List<A>);
+
+def List<A> list<A>(List<A> l) = l; // list constructor helper
+def Int length<A>(List<A> list) = case list { Nil => 0 ; Cons(p, l) => 1 + length(l) ; };
+def Bool isEmpty<A>(List<A> list) = list == Nil;
+def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+def A nth<A>(List<A> list, Int n) = 
+  case n == 0 { True => head(list) ; False => nth(tail(list), n-1); };
 
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
-  case list1 {
-    Nil => list2 ;
-    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
+  case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
+  
+def List<A> appendright<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));
+
+def List<A> reverse<A>(List<A> list) =
+  case list { Cons(hd, tl) => appendright(reverse(tl), hd); Nil => Nil; };
+
+// n copies of p
+def List<A> copy<A>(A p, Int n) = case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
+
+data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
+ 
+// map constructor helper (does not preserve injectivity)
+def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
+  case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
+
+def Set<A> keys<A, B>(Map<A, B> map) =
+  case map { EmptyMap => EmptySet ; InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)); };
+
+def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  case ms {
+  	InsertAssoc(Pair(x, y), tm) => 
+  		case (x == k) {
+  			True => y;
+  			False => lookup(tm, k);
+  		};
+  };
+  
+def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
+  case ms {
+  	EmptyMap => d;
+  	InsertAssoc(Pair(x, y), tm) => 
+  		case (x == k) {
+  			True => y;
+  			False => lookupDefault(tm, k, d);
+  		};
   };
 
-def List<A> append<A>(List<A> list, A p) = 
-  concatenate(list, Cons(p, Nil));
+// insert a key-value pair to a map (does not preserve injectivity)
+def Map insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
+  
+def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) = // update a record in the map
+  case ms {
+    EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
+    InsertAssoc(Pair(x,y),ts) => 
+    	case x == k {
+    		True => InsertAssoc(Pair(k,v), ts);
+    		False => InsertAssoc(Pair(x,y),put(ts,k,v));
+    	}; 
+  };
+
+def String intToString(Int n) =
+  case n < 0 {
+    True => "-" + intToStringPos(-n);
+    False => intToStringPos(n);
+  };
+
+def String intToStringPos(Int n) =
+  let (Int div) = (n / 10) in
+  let (Int res) = (n % 10) in
+  case n {
+    0 => "0"; 1 => "1"; 2 => "2"; 3 => "3"; 4 => "4";
+    5 => "5"; 6 => "6"; 7 => "7"; 8 => "8"; 9 => "9";
+    _ => intToStringPos(div) + intToStringPos(res);
+  };
