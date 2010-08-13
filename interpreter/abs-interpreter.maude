@@ -110,6 +110,7 @@ fmod ABS-EXPRESSION is
   *** function application
   op _(_) : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
   op _(_) : String DataList -> Data [ctor prec 12 format (! o d d d)] .
+  op $delay : Expr -> Expr . *** Protect against premature function evaluation
   *** constructor terms
   op _[_] : String ExprList -> Expr [ctor prec 12 format (! o d d d)] .
   op _[_] : String DataList -> Data [ctor prec 12 format (! o d d d)] .
@@ -871,8 +872,11 @@ fmod ABS-EVAL is
   *** Instance variable lookup.  The distinction between @@ and @ needs to be
   *** made in all lookup operations.
   eq eval(@@ Q, (SS :: S), CN) =  SS [@ Q] .
-  *** Function expansions are expressions, subject to further evaluation
-  eq eval(Q (EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), S, CN) .
+  *** Function expansions are expressions, subject to further evaluation.
+  *** They are not evaluated in the current environment but in the environment
+  *** in which they are defined (which is currently always empty).
+  eq eval(Q (EL), S, CN) = eval(Q ( evalList(EL, S, CN) ), noSubst, CN) .
+  eq eval($delay(E), S, CN) = eval(E, S, CN) .
   eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
   eq eval(?(@ Q), S, CN) = completed(S[@ Q], CN) asAbsBool .
   eq eval(?(@@ Q), (SS :: S), CN) = completed(SS[@ Q], CN) asAbsBool .

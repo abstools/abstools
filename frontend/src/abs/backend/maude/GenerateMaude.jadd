@@ -219,12 +219,12 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("\"" + getName() + "\"( ");
+        stream.print("$delay(\"" + getName() + "\"( ");
         for (PureExp param : getParams()) {
             if (inlist) stream.print(":: "); else inlist = true;
             param.generateMaude(stream);
         }
-        stream.print(") ");
+        stream.print(")) ");
     }
 
     public void LetExp.generateMaude(PrintStream stream) {
