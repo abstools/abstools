@@ -50,14 +50,20 @@ aspect GenerateMaude {
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
 		boolean inList = false;
-		stream.print("eq \"" + getName() + "\"(");
-		for (VarOrFieldDecl param : getParams()) {
-			if (inList == false) inList = true; else stream.print(" :: ");
-			stream.print(param.getName() + ":Data");
-		}
-		stream.print(") =\n   ") ;
+        stream.print("eq fparams(\"" + getName() + "\") = ");
+        if (getNumParam() == 0) {
+            stream.println("noVid .");
+        } else {
+            for (VarOrFieldDecl param : getParams()) {
+                if (inList == false) inList = true; else stream.print(", ");
+                stream.print("@ \"" + param.getName() + "\" ");
+            }
+            stream.print(".\n");
+        }
+		stream.print("eq fdefn(\"" + getName() + "\") = ");
 		getFunDef().generateMaude(stream);
         stream.println(".");
+        stream.println();
 	}
 
     abstract public void Exp.generateMaude(PrintStream stream);
@@ -149,7 +155,7 @@ aspect GenerateMaude {
     }
 
     syn String Unary.maudePrefixOperator();
-    eq MinusExp.maudePrefixOperator() = "-";
+    eq MinusExp.maudePrefixOperator() = "--";
     eq NegExp.maudePrefixOperator() = "~";
     public void Unary.generateMaude(PrintStream stream) {
         stream.print("\"" + maudePrefixOperator() + "\"( ");
@@ -158,7 +164,7 @@ aspect GenerateMaude {
     }
 
     syn String Binary.maudeInfixOperator();
-    eq EqExp.maudeInfixOperator() = "=";
+    eq EqExp.maudeInfixOperator() = "==";
     eq NotEqExp.maudeInfixOperator() = "/=";
     eq AndBoolExp.maudeInfixOperator() = "&&";
     eq OrBoolExp.maudeInfixOperator() = "||";
@@ -172,7 +178,7 @@ aspect GenerateMaude {
     eq DivMultExp.maudeInfixOperator() = "/";
     eq ModMultExp.maudeInfixOperator() = "%";
     public void Binary.generateMaude(PrintStream stream) {
-        stream.print("$call(\"" + maudeInfixOperator() + "\", ");
+        stream.print("\"" + maudeInfixOperator() + "\"( ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
         getRight().generateMaude(stream);
@@ -206,11 +212,7 @@ aspect GenerateMaude {
     }
 
 	public void VarUse.generateMaude(PrintStream stream) {
-	    if (isFunctionParameter()) {
-	        stream.print(getName() + ":Data ");
-	    } else {
-	        stream.print("@ \"" + getName() + "\" ");
-	    }
+        stream.print("@ \"" + getName() + "\" ");
 	}
 
 	public void FieldUse.generateMaude(PrintStream stream) {
@@ -219,7 +221,7 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("$call(\"" + getName() + "\", ");
+        stream.print("\"" + getName() + "\"( ");
         for (PureExp param : getParams()) {
             if (inlist) stream.print(":: "); else inlist = true;
             param.generateMaude(stream);
@@ -265,11 +267,7 @@ aspect GenerateMaude {
     }
     
     public void PatternVarDecl.generateMaude(PrintStream stream) {
-	    if (isFunctionParameter()) {
-	        stream.print(getName() + ":Data ");
-	    } else {
-	        stream.print("@ \"" + getName() + "\" ");
-	    }
+        stream.print("@ \"" + getName() + "\" ");
     }
 
     public void LiteralPattern.generateMaude(PrintStream stream) {
@@ -443,7 +441,7 @@ aspect GenerateMaude {
     }
 
     public void AndGuard.generateMaude(PrintStream stream) {
-        stream.print("$call(\"&&\", ");
+        stream.print("\"&&\"( ");
         getLeft().generateMaude(stream);
         stream.print(":: ");
         getRight().generateMaude(stream);
