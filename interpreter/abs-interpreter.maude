@@ -1029,7 +1029,8 @@ mod ABS-MACHINE-BASICS is
   eq
     < O : C | Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { noSubst | SL }, PrQ: W, Lcnt: F >
+    *** Shouldn't happen, but can't harm
+    < O : C | Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
     [label $endscope-2] .
 
 
