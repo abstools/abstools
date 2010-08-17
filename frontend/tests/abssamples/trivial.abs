@@ -1,6 +1,6 @@
 //$Id: trivial.abs 509 2009-10-20 13:27:47Z atorjusen $
 
-data Bool { True; False; } // builtin
+data Bool = True | False;  // builtin
 
 
 //Case 1 
@@ -17,11 +17,11 @@ interface Foo {
     //methSign*
 
     //methSign 
-    Bool isOK ()
-    Bool isNotOK ()
+    Bool isOK ();
+    Bool isNotOK ();
 	
     //methSign 
-    MyIf getIf (Bool aVar, MyIF bVar)
+    MyIf getIf (Bool aVar, MyIF bVar);
 
 }
 

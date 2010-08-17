@@ -1,13 +1,13 @@
-data Bool { True; False; } // builtin
+data Bool = True | False; // builtin
 
 def Int length(File file) =  
   case file {
     NilPacket => 0 ; 
     ConsPacket(p, list) => 1 + length(list) ;
-  } 
+  } ;
 
-def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x) 
-def TPair revPair(TPair p) = let(T x) = 10 + 20  in pair(snd(p),x) 
+def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x) ;
+def TPair revPair(TPair p) = let(T x) = 10 + 20  in pair(snd(p),x) ;
 
 
 //MAIN

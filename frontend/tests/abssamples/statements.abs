@@ -1,6 +1,6 @@
 //$Id$
 
-data Bool { True; False; } // builtin
+data Bool = True | False; // builtin
 
 
 class Foo {}

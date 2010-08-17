@@ -1,6 +1,6 @@
 //$Id: skeleton.abs 1007 2010-01-19 10:33:57Z atorjusen $
 
-data Bool { True; False; } // builtin
+data Bool = True | False;  // builtin
 
 //Interface declarations, extends is optional 
 interface Foo1 {} 
@@ -24,9 +24,9 @@ interface Bar { }
 
 interface Buffer {
 
-    Unit init(Foo f, Bar b)
-    Unit append(Int i)
-    Data remove()
+    Unit init(Foo f, Bar b);
+    Unit append(Int i);
+    Data remove();
 
 }
 

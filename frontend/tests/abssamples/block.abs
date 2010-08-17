@@ -1,4 +1,4 @@
-data Bool { True; False; } 
+data Bool = True | False;  
 
 { 
   if (x) y = True ; 
@@ -6,7 +6,8 @@ data Bool { True; False; }
   if (x)  y = True ;   else y = False ;   
   return o!init(y) ; 
   if (x) { y = True ; z = False ; } else y = False ;   
-  return null ; }
+  return null ; 
+}
 
 
 // 	 "if x then y = True else y = False",
