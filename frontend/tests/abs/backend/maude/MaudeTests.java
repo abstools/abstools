@@ -2,6 +2,7 @@ package abs.backend.maude;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -60,10 +61,13 @@ public class MaudeTests extends ABSTest {
             expectedMaudeCode.append(FINAL_COMMENT);
             
             String generatedMaudeCode = getMaudeCode(absCode);
-            if (!expectedMaudeCode.toString().equals(generatedMaudeCode))
-                System.out.println(generatedMaudeCode);
+            String maudeOutput = getMaudeOutput(generatedMaudeCode);
+            if (!expectedMaudeCode.toString().equals(maudeOutput)) {
+            	System.out.println(generatedMaudeCode);
+                System.out.println(maudeOutput);
+            }
                 
-            Assert.assertEquals(expectedMaudeCode.toString(), generatedMaudeCode);
+            Assert.assertEquals(expectedMaudeCode.toString(), maudeOutput);
            
             
         } catch (Exception e) {
@@ -90,9 +94,9 @@ public class MaudeTests extends ABSTest {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             model.generateMaude(new PrintStream(out));
             String res = out.toString();
-            res = res.replace('\n', ' ');
-            res = res.replaceAll("[ ]+", " ");
-            res = res.trim();
+            //res = res.replace('\n', ' ');
+            //res = res.replaceAll("[ ]+", " ");
+            //res = res.trim();
             return res;
         } catch (NumberFormatException e) {
             Assert.fail(e.getMessage());
@@ -100,20 +104,34 @@ public class MaudeTests extends ABSTest {
         }
     }
 
-    protected String getMaudeOutput(String maudeCode) throws IOException {
+    protected String getMaudeOutput(String maudeCode) throws IOException, InterruptedException {
     	StringBuffer result = new StringBuffer();
-    	String s = null;
-    	String path = System.getenv("PATH");
+    	// Assuming `maude' is in $PATH here.
     	String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch"};
     	// FIXME: find path to interpreter relative to running program
-    	String[] env = {"PATH", path, "MAUDE_LIB", "/Users/rudi/Source/hats/Tools/ABS/trunk/interpreter/"}; 
-    	Process p = Runtime.getRuntime().exec(cmd, env);
+    	Process p = Runtime.getRuntime().exec(cmd, null, new File("/Users/rudi/Source/hats/Tools/ABS/trunk/interpreter/"));
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
-    	out.print(maudeCode);
-    	while ((s = in.readLine()) != null) {
-    		result.append(s);
+        while (in.ready()) {
+        	result.append(in.readLine());
+        }
+    	out.println(maudeCode);
+    	out.flush();
+    	while (in.ready()) {
+    		result.append(in.readLine());
     	}
+    	out.println("rew start .");
+    	out.flush();
+    	while (in.ready()) {
+    		result.append(in.readLine() + "\n");
+    	}
+    	out.println("quit");
+    	out.flush();
+    	p.waitFor();
+    	while (in.ready()) {
+    		result.append(in.readLine() + "\n");
+    	}
+    	System.out.println("[getMaudeOutput: " + result.toString() + " ]");
     	return result.toString();
     }
 }
