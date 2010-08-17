@@ -443,6 +443,7 @@ fmod ABS-SUBST is
 
   *** Lazy composition operator for substitutions
   *** FIXME: make this operator have less precedence than |->
+
   op _::_ : Subst Subst -> Subst [assoc] .
   eq (S1 :: S2)[A] = if $hasMapping(S2, A) then S2[A] else S1[A] fi .
 
@@ -1024,7 +1025,12 @@ mod ABS-MACHINE-BASICS is
     < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-    [label $endscope] .
+    [label $endscope-1] .
+  eq
+    < O : C | Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { noSubst | SL }, PrQ: W, Lcnt: F >
+    [label $endscope-2] .
 
 
   --- assert

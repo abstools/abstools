@@ -350,9 +350,7 @@ aspect GenerateMaude {
         inlist = false;
         stream.print("@ \".method\" |-> \"str\"[\"" + sig.getName() + "\"], ");
         stream.print("@ \".staticfuture\" |-> null");
-        for (VarDecl var : getBlock().getVars()) {
-            stream.print(", @ \"" + var.getName() + "\" |-> null ");
-        }
+        // All other variables get introduced via $vardecl as they are defined.
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
             stream.print("return( null ) ");
@@ -387,13 +385,16 @@ aspect GenerateMaude {
         boolean inMainBlock = getParent().getParent() instanceof MainBlock;
 
         VarDecl var = getVarDecl();
-        if (inMainBlock && var.hasInitExp()) {
-            // if there is no initial expression, nothing to do in this
-            // case, since the variable has been converted into an
-            // object attribute.
-            stream.print("assign( @@ \"" + var.getName() + "\" ; ");
-            var.getInitExp().generateMaude(stream);
-            stream.print(") ");
+        if (inMainBlock) {
+            if (var.hasInitExp()) {
+                stream.print("assign( @@ \"" + var.getName() + "\" ; ");
+                var.getInitExp().generateMaude(stream);
+                stream.print(") ");
+            } else {
+                // nothing to do in this case, since the variable has
+                // been converted into an object attribute.
+                stream.print("noStmt ");
+            }
         } else {
             stream.print("$vardecl( @ \"" + var.getName() + "\" ; ");
             if (var.hasInitExp()) {
