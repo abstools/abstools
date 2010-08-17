@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
@@ -19,63 +21,31 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class MaudeTests extends ABSTest {
-    private static String STANDARD_HEADER = 
-        "in abs-interpreter mod MODEL is " +
-        "protecting ABS-SIMULATOR-RL . " +
-        "op classes : -> Configuration . " +
-        "eq classes = < \".Start\" : Class | Param: noVid, Att: noSubst, Mtds: < \".init\" : Method | Param: noVid, Att: @ \".method\" |-> \"str\"[\".init\"], @ \".staticfuture\" |-> null, Code: noStmt >, Ocnt: 0 > . ";
-    
-    private static String FINAL_COMMENT = "--- Start the model with 'rew start .' op start : -> State . eq start = main(classes, \".Start\", emp) . endm";
-
 
     @Test
-    public void classDecl() {
-        assertEqualMaude("class C {} {}", "");
+    public void minimalMainBlock() {
+    	assertTrueMaude(" data Bool = True | False; { Bool testresult = True; }");
     }
 
-    @Test
-    public void interfaceDecl() {
-        assertEqualMaude("interface I {} {}", "");    
-    }
-    
-    @Test
-    public void emptyMainBlock() {
-        assertEqualMaude("{}", "");
-    }
-
-    @Test
-    public void oneVarDeclMainBlock() {
-        assertEqualMaude("interface I {} { I i; }", "");
-    }
-
-    @Test
-    public void oneVarDeclInitBlock() {
-        assertEqualMaude("interface I {} class C { { I i; } } {}", "");
+    void assertTrueMaude(String absCode) {
+    	try {
+        	String generatedMaudeCode = getMaudeCode(absCode);
+			String maudeOutput = getMaudeOutput(generatedMaudeCode);
+			Pattern pattern = Pattern.compile(".*@ \"testresult\" \\|-> \"(\\w+)\"\\[emp\\].*");
+			Matcher matcher = pattern.matcher(maudeOutput);
+			if (matcher.find()) {
+				String boolValue = matcher.group(1);
+				Assert.assertEquals(boolValue, "True");
+			} else {
+				Assert.fail("Did not find Maude \"testresult\" variable.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}     	
     }
     
-    void assertEqualMaude(String absCode, String maudeCode) {
-        try {
-            StringBuffer expectedMaudeCode = new StringBuffer();
-            expectedMaudeCode.append(STANDARD_HEADER);
-            expectedMaudeCode.append(maudeCode);
-            expectedMaudeCode.append(FINAL_COMMENT);
-            
-            String generatedMaudeCode = getMaudeCode(absCode);
-            String maudeOutput = getMaudeOutput(generatedMaudeCode);
-            if (!expectedMaudeCode.toString().equals(maudeOutput)) {
-            	System.out.println(generatedMaudeCode);
-                System.out.println(maudeOutput);
-            }
-                
-            Assert.assertEquals(expectedMaudeCode.toString(), maudeOutput);
-           
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-    }
-    
+   
     protected String getMaudeCode(String absCode) {
         try {
             InputStream in = getInputStream(absCode);
@@ -94,9 +64,6 @@ public class MaudeTests extends ABSTest {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             model.generateMaude(new PrintStream(out));
             String res = out.toString();
-            //res = res.replace('\n', ' ');
-            //res = res.replaceAll("[ ]+", " ");
-            //res = res.trim();
             return res;
         } catch (NumberFormatException e) {
             Assert.fail(e.getMessage());
@@ -131,7 +98,6 @@ public class MaudeTests extends ABSTest {
     	while (in.ready()) {
     		result.append(in.readLine() + "\n");
     	}
-    	System.out.println("[getMaudeOutput: " + result.toString() + " ]");
     	return result.toString();
     }
 }
