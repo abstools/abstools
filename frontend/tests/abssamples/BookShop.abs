@@ -1,0 +1,419 @@
+//sltarifa UIO
+//Book shop example
+
+//Data Type declarations
+ 
+data Unit = Unit; // builtin  
+data String; // builtin  
+data Int; // builtin
+data Bool = True | False; // builtin
+//data Fut<A> ;
+
+//type synonyms  
+type Key = String ;
+type Bookname = Key ; 
+type Bookquantity = Int ;
+type Bookweight = Int ;
+type Bookbackordertime = Int ;
+
+type Countryname = Key ;  
+type Countryshiptime = Int ;
+type Countryshipcost = Int ;
+
+type Shippingcost = Int ;
+type Shippingtime = Int ;
+
+
+//Data Type declarations
+
+//List
+data List<A> = Nil | Cons(A, List<A>);
+data Pair<A,B> = Pair(A,B);
+data Map<Key,A> = EmptyMap | Insert(Pair<Key,A>, Map<Key,A>);
+data Set<A> = EmptySet | InsertSet(A, Set<A>);
+
+data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | Empty ;
+data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | Empty ;
+
+
+data OrderResult = OrderFail | Result(List<Bookname>, Shippingcost, Shippingtime) ;
+data DatabaseInfo = InfoFail | Info(Map<Bookname,Bookinfo>, Pair<Countryname,Countryinfo>) ;
+
+
+//****************************************************************************************
+//***************************************function definitions******************************
+//****************************************************************************************
+
+//List
+def A head<A>(List<A> list) = 
+  case list { Cons(p,l) => p ; }; // the head of a non-empty list
+
+def List<A> tail<A>(List<A> list) = 
+  case list { Cons(p,l) => l ; }; // the tail of a non-empty list
+def Bool isEmpty<A>(List<A> list) = 
+  list == Nil;             // test for empty list
+
+def Int length<A>(List<A> list) =     // the length of a list
+  case list {
+    Nil => 0 ;
+    Cons(p, l) => 1 + length(l) ;
+  }; 
+
+def A nth<A>(List<A> list, Int n) =
+  case n {   
+    0 => head(list) ;
+    _ => nth(tail(list), n-1) ;
+  };
+
+def List<A> concatenate<A>(List<A> list1, List<A> list2) =
+  case list1 {
+    Nil => list2 ;
+    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
+  };
+
+def List<A> appendright<A>(List<A> list, A p) = 
+  concatenate(list, Cons(p, Nil));
+
+def List<A> shuffle<A>(List<A> list) =
+   case list {
+    Nil => Nil ;
+    Cons(head, tail) =>   concatenate(tail, Cons(head, Nil)) ;
+  };
+
+def A chose<A>(List<A> list) = head( list);  // chose the head of a non-empty list
+
+
+def List<A> choseN<A>(List<A> list, Int n) =
+case n > 0 {
+True => case list { Nil => Nil ; Cons(head,tail) => Cons(head,choseN(tail,n-1)) ; } ;
+False => Nil ;
+};
+
+//Set functions 
+def Bool contains<A>(Set<A> set, A e) =
+  case set {
+    EmptySet => False ;
+    InsertSet(e1, set2) => case e1 == e { True => True ; False => contains(set2, e); } ;
+//    InsertSet(_, set2) => contains(set2, e);
+  };
+
+
+//Pair
+def Key key<Key,A>(Pair<Key,A> p) =
+  case p {Pair(k,i) => k;};
+
+def A info<Key,A>(Pair<Key,A> p) =
+  case p {Pair(k,i) => i;};
+
+//Map
+def Set<Key> domain(Map<Key,A> map) =
+case map {
+   EmptyMap => EmptySet;
+   Insert(Pair(b,_), tail) => InsertSet(b,domain(tail)) ; 
+} ;
+
+
+def List<Key> list(Map<Key,A> map) =
+  case map {
+    EmptyMap => Nil ;
+    Insert(Pair(b,_), tail) => Cons(b, list(tail)) ;
+  };
+
+
+def Pair<Key,A> lookup<Key,A>(Map<Key,A> map, Key key) =
+  case map {
+    EmptyMap => Pair(key, Empty) ;
+    Insert(Pair(key2,info), tail) => case (key2 == key) {True => Pair(key, info) ; False => lookup(tail, key) ;};
+//    Insert(_, tail) => lookup(tail, key) ;
+
+  };
+
+def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
+  case map1 {
+    EmptyMap => map2 ;
+    Insert(head, tail) =>  
+     case head {
+         Pair("", Empty) => concatMap(tail, map2);
+         Pair(k,i) => Insert(Pair(k, i), concatMap(tail, map2)) ;
+     };
+  };
+
+//Bookinfo
+def Bookquantity bookquantity(Bookinfo book ) = 
+  case book {
+    ConsBookinfo(q,_ ,_ ) => q ;
+  };
+
+def Bookweight bookweight(Bookinfo book) = 
+  case book {
+    ConsBookinfo( _, w,_ ) => w ;
+  };
+    
+def Bookbackordertime bookbackordertime (Bookinfo book) = 
+  case book {
+    ConsBookinfo(_, _ ,t ) => t ;
+  };
+
+//Countryinfo
+def Countryshiptime countryshiptime(Countryinfo country) = 
+  case country {
+    ConsCountryinfo(t, _)=> t ;
+  };
+
+def Countryshipcost countryshipcost(Countryinfo country) = 
+  case country {
+    ConsCountryinfo(_, c) => c ;
+  };
+
+// DatabaseInfo
+
+def  Map<Bookname,Bookinfo> getBookMap(DatabaseInfo db) =
+   case db {
+     InfoFail => EmptyMap ;
+     Info(bm, _) => bm ;
+  };
+
+def Pair<Countryname,Countryinfo> getCountryinfo (DatabaseInfo db) =
+   case db {
+     InfoFail => Pair("",ConsCountryinfo(0,0)) ;
+     Info(_, c) => c ;
+  };
+
+//Int
+def Int max(Int a, Int b) =
+case (a > b) { True => a ; False => b ; };
+
+//****************************************************************************************
+//******************************************** bookshop model******************************
+//****************************************************************************************
+
+//session
+
+def Int calculateweight(Map<Bookname,Bookinfo> books) =
+    case books {
+      Insert(Pair(_,ConsBookinfo(_, w, _)), tail) => w + calculateweight(tail) ;
+      EmptyMap => 0 ;
+    };
+
+def Int calculatecost(Int w, Int c) = w*c;
+
+
+def Int calculatetime(Map<Bookname,Bookinfo> books, Int time) =
+    case books {
+      Insert(Pair(_, ConsBookinfo(0, _, t)), tail) => calculatetime(tail, max(time,t));
+      Insert(Pair(_, ConsBookinfo(q, _,t)), tail)=> calculatetime(tail, time);
+      EmptyMap => time ;
+    };
+
+// Database
+
+def Map<Bookname,Bookinfo> getBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname> books )  = 
+  case books {
+    Nil => EmptyMap;
+    Cons(head, tail) => case (contains(domain(booksDB),head)) { 
+                         False => getBooks(booksDB,tail) ;
+                         True => Insert(lookup(booksDB, head),getBooks(booksDB, tail)); } ;
+//concatMap(Insert(lookup(booksDB, head),EmptyMap),getBooks(booksDB, tail));
+  };
+
+def Map<Bookname,Bookinfo> updateBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname> books )  = 
+  case books {
+    Nil => booksDB;
+    Cons(head, tail) =>  updateBooks(updateBook(booksDB,head,EmptyMap),tail);
+  };
+
+def Map<Bookname,Bookinfo> updateBook(Map<Bookname,Bookinfo> booksDB,Bookname book,Map<Bookname,Bookinfo> bookDB2)  =  
+   case booksDB {
+      EmptyMap => bookDB2;
+      Insert(Pair(book,ConsBookinfo(0,w,t)),tail) => concatMap(bookDB2, Insert(Pair(book,ConsBookinfo(0,w,t)),tail));
+      Insert(Pair(book,ConsBookinfo(q,w,t)),tail) => concatMap(bookDB2, Insert(Pair(book,ConsBookinfo(q-1,w,t)),tail));
+      Insert(head,tail) =>  updateBook(tail, book,concatMap(bookDB2, Insert(head,EmptyMap)));      
+   };
+
+
+//***************************************************************************************************
+//*************************************************classes*******************************************
+//***************************************************************************************************
+
+interface Client {
+
+}
+
+interface Shop {
+   Session getsession();
+   Unit free(Session session);
+}
+
+interface Session {
+   OrderResult order(List<Bookname> books, Countryname country);
+}
+
+interface Database {
+   DatabaseInfo getInfo(List<Bookname> books, Countryname country);
+   Bool confirmOrder(List<Bookname> books);
+}
+
+//shop
+
+class ShopImp(Database db) implements Shop {
+ 
+  List<Session> sessions = Nil;
+
+  Unit free(Session session) {
+    sessions = appendright(sessions, session);
+  }
+
+  Session getsession() {
+    Session session; 
+    if (isEmpty(sessions)) {
+       session = new SessionImp(this,db);  } 
+    else {
+       session = head(sessions);
+       sessions = tail(sessions); } 
+    return session;}
+}
+
+// session
+
+class SessionImp(Shop agent, Database db) implements Session {
+    DatabaseInfo preresult = InfoFail ;
+    Shippingcost shippingcost = 0;
+    Shippingtime shippingtime = 0;
+    OrderResult result = OrderFail;
+    Bool updatedb = False;
+
+    OrderResult order(List<Bookname> books, Countryname country) {
+    
+
+        preresult = db.getInfo(books,country);
+        if (preresult != InfoFail) {
+	    shippingcost = calculatecost(calculateweight(getBookMap(preresult)),countryshipcost(info(getCountryinfo(preresult))));
+            shippingtime = calculatetime(getBookMap(preresult), countryshipcost(info(getCountryinfo(preresult))));
+            updatedb = db.confirmOrder(list(getBookMap(preresult)));
+            if (updatedb){result = Result(list(getBookMap(preresult)), shippingcost, shippingtime);}
+            else {result = OrderFail;};         
+         }
+        else {result = OrderFail;};
+        return result;
+    }
+}
+
+// Database;
+
+class  DatabaseImp(Map<Bookname,Bookinfo> bDB, Map<Countryname,Countryinfo> cDB) implements Database {
+   
+   Map<Bookname,Bookinfo> booksDB = bDB;
+     DatabaseInfo r = InfoFail;
+Map<Bookname,Bookinfo> myorder = EmptyMap ;
+    List<Bookname> mybooks = Nil;
+
+   DatabaseInfo getInfo(List<Bookname> books, Countryname country){
+      mybooks = books ;
+      myorder = getBooks(booksDB, books) ;
+      r = Info(myorder, lookup(cDB, country));
+      return r;
+   }
+
+   Bool confirmOrder(List<Bookname> books){
+      booksDB = updateBooks(booksDB, books);
+      return True;
+   }
+}
+
+//client
+
+class  SyncClient(Shop agent, List<Bookname> books, List<Countryname> countries) implements Client {
+
+    List<Bookname> b = books;
+    List<Countryname> c = countries;
+    OrderResult result = OrderFail ;
+    List<Bookname> chosenBooks = Nil;
+    Countryname chosenCountry = "";
+
+    Unit run () {
+        
+        Session session ;
+       // c = shuffle(c);
+       // b = shuffle(b);
+        chosenCountry = chose(c);
+        chosenBooks = choseN(b,4);
+        session = agent.getsession();
+        result = session.order(chosenBooks,chosenCountry);
+       // this.run();
+       }
+}
+
+
+//***************************************************************
+//************************ test********************************
+//***************************************************************
+
+class  SimpleClient() implements Client {
+
+
+
+
+    Map<Bookname,Bookinfo> bDB = Insert(Pair("book1",ConsBookinfo(4, 2, 10)), Insert(Pair("book2",ConsBookinfo(5, 1, 7)), Insert(Pair("book3",ConsBookinfo(2, 3, 1)),EmptyMap)));
+    Map<Countryname,Countryinfo> cDB = Insert(Pair("Norway",ConsCountryinfo(2,50)),Insert(Pair("Peru",ConsCountryinfo(15,150)),EmptyMap));
+    DatabaseInfo r = Info(bDB,Pair("Norway",ConsCountryinfo(2,50))) ;
+    Map<Bookname,Bookinfo> bm = EmptyMap;
+    Pair<Countryname,Countryinfo> c = Pair("",ConsCountryinfo(0,0));
+    Int sc = 0;
+    Int st = 0;
+
+    Unit run () {
+      bm = getBookMap(r);
+      c = getCountryinfo(r);
+      sc = calculatecost(calculateweight(getBookMap(r)),countryshipcost(info(getCountryinfo(r))));
+      st = calculatetime(getBookMap(r), countryshipcost(info(getCountryinfo(r))));
+       }
+}
+
+//***************************************************************
+//****************************main******************************
+//***************************************************************
+
+{
+
+/*
+Name    q  w  bo
+----------------
+book1   0  2  60
+book2   5  2   7
+book3   2  3   1
+
+Name     st  scXw
+-----------------
+Norway   2    50
+Peru    15   150
+*/
+
+    Map<Bookname,Bookinfo> bDB = Insert(Pair("book1",ConsBookinfo(0, 2, 60)), Insert(Pair("book2",ConsBookinfo(5, 1, 7)), Insert(Pair("book3",ConsBookinfo(2, 3, 1)),EmptyMap)));
+    Map<Countryname,Countryinfo> cDB = Insert(Pair("Norway",ConsCountryinfo(2,50)),Insert(Pair("Peru",ConsCountryinfo(15,150)),EmptyMap));
+    List<Bookname> lb = Cons("Book",Cons("book1", Cons("book2",Cons("other",Cons("book3",Nil)))));
+    List<Bookname> lb2 = Cons("book2", Nil);
+    Map<Bookname,Bookinfo> myB = EmptyMap ;
+    Shop agent;
+    Client c;
+    Database db;
+    db = new  DatabaseImp(bDB, cDB);
+    agent = new ShopImp(db);
+    c = new SyncClient(agent,lb, list(cDB));
+    List<Bookname> mylist = choseN(Cons("Book0",list(bDB)), 3) ;
+Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
+
+
+
+
+     mP = lookup(bDB,"book2");
+    myB = getBooks(bDB, lb2);
+Bool check = contains(domain(bDB),"book1") ;
+
+Set<Key> myDomain = domain(bDB) ;
+   // Client test;
+   //  test = new SimpleClient();
+}
+
+
+
+

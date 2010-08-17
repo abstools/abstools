@@ -1,4 +1,4 @@
-//$Id$ 
+//$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $ 
 
 //data type declarations 
 data Unit = Unit; // builtin  
