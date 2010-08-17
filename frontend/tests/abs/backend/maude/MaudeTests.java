@@ -1,8 +1,12 @@
 package abs.backend.maude;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 
 import junit.framework.Assert;
 
@@ -94,6 +98,22 @@ public class MaudeTests extends ABSTest {
             Assert.fail(e.getMessage());
             return null;
         }
-        
+    }
+
+    protected String getMaudeOutput(String maudeCode) throws IOException {
+    	StringBuffer result = new StringBuffer();
+    	String s = null;
+    	String path = System.getenv("PATH");
+    	String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch"};
+    	// FIXME: find path to interpreter relative to running program
+    	String[] env = {"PATH", path, "MAUDE_LIB", "/Users/rudi/Source/hats/Tools/ABS/trunk/interpreter/"}; 
+    	Process p = Runtime.getRuntime().exec(cmd, env);
+        BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        PrintWriter out = new PrintWriter(p.getOutputStream());
+    	out.print(maudeCode);
+    	while ((s = in.readLine()) != null) {
+    		result.append(s);
+    	}
+    	return result.toString();
     }
 }
