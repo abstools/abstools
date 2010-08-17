@@ -45,6 +45,13 @@ data DatabaseInfo = InfoFail | Info(Map<Bookname,Bookinfo>, Pair<Countryname,Cou
 //****************************************************************************************
 
 //List
+def List<A> list<A>(List<A> l) = l; // constructor helper
+def Map<A, B> map<A, B>(List<Pair<A, B>> l) = // constructor helper
+	case l {
+		Nil => EmptyMap;
+		Cons(hd, tl) => Insert(hd, map(tl));	
+	};
+
 def A head<A>(List<A> list) = 
   case list { Cons(p,l) => p ; }; // the head of a non-empty list
 
@@ -93,8 +100,8 @@ False => Nil ;
 def Bool contains<A>(Set<A> set, A e) =
   case set {
     EmptySet => False ;
-    InsertSet(e1, set2) => case e1 == e { True => True ; False => contains(set2, e); } ;
-//    InsertSet(_, set2) => contains(set2, e);
+    InsertSet(e, set2) => True ;
+    InsertSet(_, set2) => contains(set2, e);
   };
 
 
@@ -113,19 +120,18 @@ case map {
 } ;
 
 
-def List<Key> list(Map<Key,A> map) =
+def List<Key> map2list(Map<Key,A> map) =
   case map {
     EmptyMap => Nil ;
-    Insert(Pair(b,_), tail) => Cons(b, list(tail)) ;
+    Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
   };
 
 
 def Pair<Key,A> lookup<Key,A>(Map<Key,A> map, Key key) =
   case map {
     EmptyMap => Pair(key, Empty) ;
-    Insert(Pair(key2,info), tail) => case (key2 == key) {True => Pair(key, info) ; False => lookup(tail, key) ;};
-//    Insert(_, tail) => lookup(tail, key) ;
-
+    Insert(Pair(key,info), tail) => Pair(key, info);
+    Insert(_, tail) => lookup(tail, key) ;
   };
 
 def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
@@ -289,8 +295,8 @@ class SessionImp(Shop agent, Database db) implements Session {
         if (preresult != InfoFail) {
 	    shippingcost = calculatecost(calculateweight(getBookMap(preresult)),countryshipcost(info(getCountryinfo(preresult))));
             shippingtime = calculatetime(getBookMap(preresult), countryshipcost(info(getCountryinfo(preresult))));
-            updatedb = db.confirmOrder(list(getBookMap(preresult)));
-            if (updatedb){result = Result(list(getBookMap(preresult)), shippingcost, shippingtime);}
+            updatedb = db.confirmOrder(map2list(getBookMap(preresult)));
+            if (updatedb){result = Result(map2list(getBookMap(preresult)), shippingcost, shippingtime);}
             else {result = OrderFail;};         
          }
         else {result = OrderFail;};
@@ -389,24 +395,29 @@ Peru    15   150
 */
 
     Map<Bookname,Bookinfo> bDB = Insert(Pair("book1",ConsBookinfo(0, 2, 60)), Insert(Pair("book2",ConsBookinfo(5, 1, 7)), Insert(Pair("book3",ConsBookinfo(2, 3, 1)),EmptyMap)));
+    Map<Bookname,Bookinfo> newbDB = map[Pair("book1",ConsBookinfo(0, 2, 60)),
+                                        Pair("book2",ConsBookinfo(5, 1, 7)), 
+                                        Pair("book3",ConsBookinfo(2, 3, 1))];
+
     Map<Countryname,Countryinfo> cDB = Insert(Pair("Norway",ConsCountryinfo(2,50)),Insert(Pair("Peru",ConsCountryinfo(15,150)),EmptyMap));
     List<Bookname> lb = Cons("Book",Cons("book1", Cons("book2",Cons("other",Cons("book3",Nil)))));
     List<Bookname> lb2 = Cons("book2", Nil);
+ List<Bookname> lb3 = list["book2"] ;
     Map<Bookname,Bookinfo> myB = EmptyMap ;
     Shop agent;
     Client c;
     Database db;
-    db = new  DatabaseImp(bDB, cDB);
+    db = new  DatabaseImp(newbDB, cDB);
     agent = new ShopImp(db);
-    c = new SyncClient(agent,lb, list(cDB));
-    List<Bookname> mylist = choseN(Cons("Book0",list(bDB)), 3) ;
+    c = new SyncClient(agent,lb, map2list(cDB));
+    List<Bookname> mylist = choseN(Cons("Book0",map2list(bDB)), 3) ;
 Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
 
 
 
 
      mP = lookup(bDB,"book2");
-    myB = getBooks(bDB, lb2);
+    myB = getBooks(bDB, lb);
 Bool check = contains(domain(bDB),"book1") ;
 
 Set<Key> myDomain = domain(bDB) ;
