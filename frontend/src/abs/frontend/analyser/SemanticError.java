@@ -2,6 +2,7 @@ package abs.frontend.analyser;
 
 import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.CompilationUnit;
 
 public class SemanticError {
     public final ErrorMessage msg;
@@ -12,6 +13,15 @@ public class SemanticError {
         this.node = node;
         this.msg = msg;
         this.args = args;
+    }
+    
+    public String fileName() {
+        ASTNode<?> parent = node;
+        while (! (parent instanceof CompilationUnit) ) {
+            parent = parent.getParent();
+        }
+        CompilationUnit u = (CompilationUnit) parent; 
+        return "<unkown>";
     }
     
     public int getLine() {

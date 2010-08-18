@@ -10,9 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
@@ -40,53 +43,61 @@ public class Main {
 		    numoptions++;
 		}
 
+		List<CompilationUnit> units = new List<CompilationUnit>();
 		for (int i = numoptions; i < args.length; i++){
 		    String arg = args[i];
-	        Model m = null;
 
 			try{
-				m = parse(arg);
+				CompilationUnit u = parseUnit(arg);
+				units.add(u);
 				
-				if (typecheck) {
-				    SemanticErrorList typeerrors = m.typeCheck();
-				    for (SemanticError se : typeerrors) {
-				        System.err.println(arg+ ":" + se.getMsgString());
-				    }
-				}
 			} catch (FileNotFoundException e1) {
 				System.err.println("File not found: " + arg);
+                System.exit(1);
 			} catch (SyntaxError pex) {
 				// Exc. thrown by the parser
 				System.err.println(arg + ":" + pex.getMessage());
-				System.err.flush();
+                System.exit(1);
 			} catch (Exception e1) {
 				// Catch-all
 				System.err.println("Compilation of " + arg +  " failed with Exception");
 				System.err.println(e1);
-//				e1.printStackTrace(System.err);
-				System.err.flush();
-			}
-			// Dump tree for debug
-			if (verbose){ 
-				System.out.println("Result:");
-				if (m!=null){
-					System.out.println(m);
-					m.dumpTree("  ", System.out);
-				} else {
-					System.out.println("(No result)");
-				}
-			}
-			if (m != null) {
-				int numSemErrs = m.getErrors().size();
-				
-				if (numSemErrs > 0) {
-					System.out.println("Semantic errors: " + numSemErrs);
-					for (SemanticError error : m.getErrors())
-						System.err.println(arg + ":" + error.getMsgString());
-					System.err.flush();
-				}
+				System.exit(1);
 			}
 		}
+		
+		if (units.getNumChild() == 0) {
+		    System.err.println("Please provide at least one input file.");
+		    System.exit(1);
+		}
+		
+        Model m = new Model(units);
+		
+        if (typecheck) {
+            SemanticErrorList typeerrors = m.typeCheck();
+            for (SemanticError se : typeerrors) {
+                System.err.println(se.getMsgString());
+            }
+        }
+        
+        // Dump tree for debug
+        if (verbose){ 
+            System.out.println("Result:");
+            System.out.println(m);
+            m.dumpTree("  ", System.out);
+        }
+
+        int numSemErrs = m.getErrors().size();
+            
+        if (numSemErrs > 0) {
+            System.out.println("Semantic errors: " + numSemErrs);
+            for (SemanticError error : m.getErrors()) {
+                System.err.println(error.getMsgString());
+                System.err.flush();
+            }
+        }
+        
+		
 	}
 
 
@@ -105,7 +116,7 @@ public class Main {
 
 
 
-    public static Model parse(String file) throws Exception {
+    public static CompilationUnit parseUnit(String file) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
@@ -127,18 +138,35 @@ public class Main {
 			}
 		}
 
-		return parse(reader); 
+		return parseUnit(file, reader); 
 	}
+    
+    public static Model parse(String fileName) throws Exception {
+        return new Model(new List<CompilationUnit>().add(parseUnit(fileName)));
+    }
 	
-	public static Model parse(InputStream stream) throws Exception {
-	    return parse(new BufferedReader(new InputStreamReader(stream)));
+	public static Model parse(String fileName, InputStream stream) throws Exception {
+	    return parse(fileName, new BufferedReader(new InputStreamReader(stream)));
 	}
 	    
-    public static Model parse(Reader reader) throws Exception {
-        ABSParser parser = new ABSParser();
-        ABSScanner scanner = new ABSScanner(reader);
-        Model m = (Model)parser.parse(scanner);
-        reader.close();
-	    return m;
+	public static Model parse(String fileName, Reader reader) throws Exception {
+	    return new Model(new List<CompilationUnit>().add(parseUnit(fileName, reader)));
 	}
+	
+    public static CompilationUnit parseUnit(String fileName, Reader reader) throws Exception {
+        try {
+            ABSParser parser = new ABSParser();
+            ABSScanner scanner = new ABSScanner(reader);
+            CompilationUnit u = (CompilationUnit)parser.parse(scanner);
+            return u;
+        } finally {
+            reader.close();
+        }
+	}
+
+
+    public static Model parseString(String s) throws Exception {
+        return parse("<unkown>", new StringReader(s));
+    }
+
 }

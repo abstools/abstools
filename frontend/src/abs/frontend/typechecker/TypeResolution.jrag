@@ -20,6 +20,27 @@ aspect TypeResolution {
   
     // Declaration of *decl*
 
+    syn lazy Collection<Decl> Model.getDecls() {
+        ArrayList<Decl> res = new ArrayList<Decl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (Decl d : u.getDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+    
+    syn lazy Block Model.getMainBlock() {
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasBlock()) {
+                return u.getBlock();
+            }
+        }
+        return null;
+    }
+    
+    syn lazy boolean Model.hasMainBlock() = getMainBlock() != null;
+    
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
     syn lazy Decl TypeUse.getDecl();  
@@ -31,16 +52,16 @@ aspect TypeResolution {
     // Finds a declaration (TypeDecl) based on a name, or attribute
     // UnknownDecl if not found
     //   Definitions of *lookup*
-    eq Model.getDecl().lookup(String name) = localLookup(name);
-    eq Model.getBlock().lookup(String name) = localLookup(name); // Model's main block
+    eq Model.getCompilationUnit().lookup(String name) = localLookup(name);
     eq ParametricDataTypeDecl.getDataConstructor().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getFunDef().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(String name) = localLookup(name);
-
+    
     // ***Implementation***
     
     // Expose *lookup* at various places in the AST
+    inh Decl CompilationUnit.lookup(String name);
     inh Decl Exp.lookup(String name);
     inh Decl ParametricDataTypeDecl.lookup(String name);
     inh Decl ParametricFunctionDecl.lookup(String name);
@@ -102,9 +123,12 @@ aspect TypeResolution {
     
     syn lazy DataConstructor Model.lookupDataConstructor(String name);
     eq Model.lookupDataConstructor(String name) = localLookupDataConstructor(name);
-    eq Model.getDecl().lookupDataConstructor(String name) = localLookupDataConstructor(name);
-    eq Model.getBlock().lookupDataConstructor(String name) = localLookupDataConstructor(name);
+    //eq Model.getDecl().lookupDataConstructor(String name) = localLookupDataConstructor(name);
+    //eq Model.getBlock().lookupDataConstructor(String name) = localLookupDataConstructor(name);
     
+    inh DataConstructor CompilationUnit.lookupDataConstructor(String name);
+    eq Model.getCompilationUnit().lookupDataConstructor(String name) = localLookupDataConstructor(name);
+
     inh DataConstructor DataConstructorExp.lookupDataConstructor(String name);
     inh DataConstructor Pattern.lookupDataConstructor(String name);
     
@@ -114,7 +138,7 @@ aspect TypeResolution {
     
     syn lazy Decl Decl.getContextDecl() = this;
     eq MethodImpl.getBlock().getContextDecl() = getContextDecl();
-    eq Model.getBlock().getContextDecl() = unknownDecl();
+    eq CompilationUnit.getBlock().getContextDecl() = unknownDecl();
     eq ClassDecl.getInitBlock().getContextDecl() = getContextDecl();
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
     inh Decl Stmt.getContextDecl();
@@ -123,7 +147,7 @@ aspect TypeResolution {
     
     eq MethodImpl.getBlock().getContextMethod() = this;
     eq ClassDecl.getInitBlock().getContextMethod() = null;
-    eq Model.getBlock().getContextMethod() = null;
+    eq CompilationUnit.getBlock().getContextMethod() = null;
     inh MethodImpl Stmt.getContextMethod();
     
     

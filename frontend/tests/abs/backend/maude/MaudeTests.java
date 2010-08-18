@@ -48,10 +48,9 @@ public class MaudeTests extends ABSTest {
    
     protected String getMaudeCode(String absCode) {
         try {
-            InputStream in = getInputStream(absCode);
             Model model = null;
             try {
-                model = Main.parse(in);
+                model = Main.parseString(absCode);
             } catch (Exception e) {
                 Assert.fail(e.getMessage());
                 return null;
@@ -76,7 +75,7 @@ public class MaudeTests extends ABSTest {
     	// Assuming `maude' is in $PATH here.
     	String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch"};
     	// FIXME: find path to interpreter relative to running program
-    	Process p = Runtime.getRuntime().exec(cmd, null, new File("/Users/rudi/Source/hats/Tools/ABS/trunk/interpreter/"));
+    	Process p = Runtime.getRuntime().exec(cmd, null, new File("../interpreter/"));
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
         while (in.ready()) {

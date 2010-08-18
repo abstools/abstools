@@ -2,7 +2,9 @@
 //
  
 
-Model                         ::= Decl* [Block:MainBlock];
+Model                         ::= CompilationUnit*;
+ 
+CompilationUnit ::= <Name> Decl* [Block:MainBlock];
 
 // (see below for Blocks)
 

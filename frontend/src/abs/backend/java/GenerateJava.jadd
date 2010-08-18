@@ -13,8 +13,8 @@ aspect GenerateJava {
         }
         
         stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
-        if (hasBlock()) {
-            Block block = getBlock();
+        if (hasMainBlock()) {
+            Block block = getMainBlock();
             stream.println("public class Main {");
             stream.print("   public static void main(String[] args) ");
             block.generateJava("   ",stream);

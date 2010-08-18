@@ -72,7 +72,7 @@ class BoundedBuffer implements Buffer {
 	   with side effects.
 	 */
 	x = new FooClass() ;
-	y = new cog FooClass() ;
+	//y = new cog FooClass() ; FIXME: support cog in Eclipse Plugin parser
 	x = o!init();
 	x = o!init(y);
 	x = o!init(y,z);

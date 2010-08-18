@@ -18,6 +18,12 @@ aspect TypeChecker {
     }
     
     public void Model.typeCheck(SemanticErrorList e) {
+        for (CompilationUnit u : getCompilationUnits()) {
+            u.typeCheck(e);
+        }
+    }
+    
+    public void CompilationUnit.typeCheck(SemanticErrorList e) {
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }

@@ -1,0 +1,8 @@
+// requires the standard ABS lib
+
+
+def Bool invert(Bool b) = 
+    case b {
+       True => 6;
+       False => 5; 
+    };

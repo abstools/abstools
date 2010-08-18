@@ -11,28 +11,35 @@ aspect Typing {
     syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup("String"));
     syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup("Fut"), typeArg);
 
-    eq Model.getBlock().getUnitType() = getUnitType();
-    eq Model.getBlock().getIntType() = getIntType();
-    eq Model.getBlock().getBoolType() = getBoolType();
-    eq Model.getBlock().getStringType() = getStringType();
-    eq Model.getBlock().getFutType(Type typeArg) = getFutType(typeArg);
+    eq Model.getCompilationUnit().getUnitType() = getUnitType();
+    eq Model.getCompilationUnit().getIntType() = getIntType();
+    eq Model.getCompilationUnit().getBoolType() = getBoolType();
+    eq Model.getCompilationUnit().getStringType() = getStringType();
+    eq Model.getCompilationUnit().getFutType(Type typeArg) = getFutType(typeArg);
 
     inh Type Exp.getUnitType();
     inh Type Exp.getIntType();
     inh Type Exp.getBoolType();
     inh Type Exp.getStringType();
     inh Type Exp.getFutType(Type typeArg);
+
+    inh Type CompilationUnit.getUnitType();
+    inh Type CompilationUnit.getIntType();
+    inh Type CompilationUnit.getBoolType();
+    inh Type CompilationUnit.getStringType();
+    inh Type CompilationUnit.getFutType(Type typeArg);
+    
     
     inh Type Stmt.getUnitType();
     inh Type Stmt.getBoolType();
 
     inh Type Guard.getBoolType();
     
-    eq Model.getDecl().getUnitType() = getUnitType();
-    eq Model.getDecl().getIntType() = getIntType();
-    eq Model.getDecl().getBoolType() = getBoolType();
-    eq Model.getDecl().getStringType() = getStringType();
-    eq Model.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
+    eq CompilationUnit.getDecl().getUnitType() = getUnitType();
+    eq CompilationUnit.getDecl().getIntType() = getIntType();
+    eq CompilationUnit.getDecl().getBoolType() = getBoolType();
+    eq CompilationUnit.getDecl().getStringType() = getStringType();
+    eq CompilationUnit.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
 
     inh Type Decl.getUnitType();
     inh Type Decl.getIntType();

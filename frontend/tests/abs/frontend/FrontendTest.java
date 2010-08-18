@@ -84,7 +84,7 @@ public class FrontendTest extends ABSTest {
 	}
 	
     protected Exp getExp(Model m, int i) {
-	    Stmt s = m.getBlock().getStmt(i);
+	    Stmt s = m.getMainBlock().getStmt(i);
 	    if (s instanceof AssignStmt)
 	        return ((AssignStmt) s).getValue();
 	    if (s instanceof ExpressionStmt) 
@@ -141,7 +141,7 @@ public class FrontendTest extends ABSTest {
 
 
     protected Type getTypeOfFirstAssignment(Model m) {
-        for (Stmt s : m.getBlock().getStmts()) {
+        for (Stmt s : m.getMainBlock().getStmts()) {
             if (s instanceof AssignStmt) {
                 AssignStmt as = (AssignStmt) s;
                 return as.getValue().getType();

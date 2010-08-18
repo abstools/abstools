@@ -43,10 +43,9 @@ public class JavaBackendTest extends ABSTest {
     
     String getJavaCode(String absCode) {
         try {
-        InputStream in = getInputStream(absCode);
         Model model = null;
         try {
-            model = Main.parse(in);
+            model = Main.parseString(absCode);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
             return null;

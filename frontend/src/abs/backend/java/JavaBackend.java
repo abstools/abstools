@@ -58,9 +58,9 @@ public class JavaBackend {
         testCompile(testCode());
     }
 
-    public static void testCompile(String javaCode) throws Exception {
-        InputStream in = new ByteArrayInputStream(javaCode.getBytes());
-        Model model = Main.parse(in);
+    public static void testCompile(String absCode) throws Exception {
+        InputStream in = new ByteArrayInputStream(absCode.getBytes());
+        Model model = Main.parseString(absCode);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String code = out.toString();
@@ -89,11 +89,10 @@ public class JavaBackend {
 
         
         final Model model = 
-            Main.parse(new ByteArrayInputStream(testCode().getBytes()));
+            Main.parseString(testCode());
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(os));
-        String s = os.toString();
         
         InputStream is = new ByteArrayInputStream(os.toByteArray());
         CompilationUnit unit = parser.parse(is, "TestClass.java");

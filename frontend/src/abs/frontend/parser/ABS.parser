@@ -14,6 +14,7 @@ import abs.frontend.ast.*;
 %embed {:
 	ArrayList<ParserError> errors = new ArrayList<ParserError>();
     boolean raiseExceptions = true;
+    String fileName;
 
 	class Events extends Parser.Events {
 		public void syntaxError(Symbol token) {
@@ -41,16 +42,20 @@ import abs.frontend.ast.*;
 	}
 
 	public ArrayList<ParserError> getErrors() { return errors; }
+	public CompilationUnit parse(String fileName, Scanner scanner) throws java.lang.Exception {
+	   this.fileName = fileName;
+	   return (CompilationUnit) parse(scanner);
+	}
 :};
 
 
 
-Model goal =
-    model.m		{: return m ; :}
+CompilationUnit goal =
+    compilation_unit.cu		{: return cu ; :}
   ;
 
-Model model = 
-	decl_list.l? main_block.b?	{: return new Model(l, b); :}
+CompilationUnit compilation_unit = 
+	decl_list.l? main_block.b?	{: return new CompilationUnit(fileName,l, b); :}
   ;
 
 List decl_list =
