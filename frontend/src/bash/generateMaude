@@ -6,7 +6,7 @@ BASEDIR="$(dirname $0)/../.."
 
 function usage
 {
-    echo "Usage: `basename $0` absfile"
+    echo "Usage: `basename $0` file1.abs file2.abs ... [-o outfile.maude]"
     echo
 }
 
@@ -15,6 +15,8 @@ function help
     echo `basename $0`
     echo
     echo "A preliminary version of an ABS compiler."
+    echo "All given source files will be compiled into one model."
+    echo "'abslang.abs' is included by default."
     usage;
     echo 'Legal options: '
     echo '-h : Display help'
@@ -22,22 +24,33 @@ function help
 }
 echo
 
-while getopts ":ho:v" Option
+declare -a infiles
+
+while [ $# -gt 0 ]
 do
-  case $Option in
-    h ) help;; 
-    o ) outfile=$OPTARG;;
-    * ) echo "Illegal option: $1";usage;exit 1;;      
-  esac
+    while getopts "ho:" Option
+    do
+        case $Option in
+            h ) help;exit 1;; 
+            o ) outfile=$OPTARG;;
+            * ) echo "Illegal option: $1";usage;exit 1;;      
+        esac
+    done
+    shift $(($OPTIND - 1))
+    if [ $# -gt 0 ] ; then
+        infiles[${#infiles[@]}]=$1
+        shift $(($OPTIND))
+    fi
 done
-shift $(($OPTIND - 1))
+
+infiles[${#infiles[@]}]="$BASEDIR/src/abs/lang/abslang.abs"
 
 if [ "$outfile" == "" ] ; then
-    outfile=${1%.*}.maude
+    outfile=${infiles[0]%.*}.maude
 fi
 
-if [ -n "$1" ] ; then 
-    java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.backend.maude.MaudeCompiler $1 > $outfile
+if [ ${#infiles[@]} -gt 0 ] ; then 
+    java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.backend.maude.MaudeCompiler "${infiles[@]}" > $outfile
     if [ $? -ne 0 ] ; then
         rm -f $outfile
         exit 1
