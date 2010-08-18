@@ -1,46 +1,70 @@
 #!/bin/bash
-# Arild Torjusen April 2010
-# $Id: parseABS 4147 2010-04-27 07:01:36Z atorjusen $ 
+# Arild Torjusen, April 2010, then hacked by others too...
 
-BASEDIR="@BASEDIR@" 
+
+# Note on below line: The Ant target "genshell" substitutes
+# "@-BASEDIR-@" (without the "-"'s) with the value of Ant variable
+# BASEDIR, see build.xml.
+BASEDIR="@BASEDIR@"
+
+# Pick out the last part of the path to the script's name
+progname=${0##*/}
 
 function usage
 {
-    echo 'Usage: parseABS [-v] [-t] absfiles'
+    echo "Usage: "$progname" [-v] [-t] <ABS files>"
     echo
+}
+
+function identify
+{
+    echo $0":"	# Use full program path here in case of src-bin confusion
 }
 
 function help
 {
-    echo 'parseABS.sh'
+    identify;
     usage;
-    echo 
-    echo 'Legal options: '
-    echo '-h : Display help'
-    echo '-v : Verbose'
-    echo '-t : Type check'
+    echo "Legal options: "
+    echo "-h : Display help"
+    echo "-v : Verbose"
+    echo "-t : Type check"
     exit 0
 }
-echo
 
-while getopts ":ho:v:t" Option
+while getopts "h v t" Option
+#while getopts "h o: v t" Option	# Note: "o:" means "-o" takes an arg.
 do
   case $Option in
     h ) help;; 
     v ) verbose="-v";;
     t ) typecheck="-t";;
-    o ) outfile=$OPTARG;;
-    * ) echo "Illegal option: $1";usage;exit 1;;      
+#    o ) outfile=$OPTARG;;
+    * ) usage; exit 1;;
   esac
 done
 shift $(($OPTIND - 1))
 
-if [ -n "$1" ] ; then 
-    eval java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $typecheck $@
-else
-    echo 'No files specified, trying to parse default test suite.'
-    eval java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin abs.frontend.parser.Main $verbose $typecheck $@
+# Note the convoluted writing of string constant in the conditional.  
+# We do not want Ant do the subsitution here
+if [ $BASEDIR = '@'"BASEDIR"'@' ] ; then 
+    identify;
+    echo "ERROR: You're running the source version of the script."
+    echo "Instead, run Ant with target genshell (or gen),"
+    echo "and then run the generated script from the bin/bash directory."
+    exit 1
 fi
-exit 0
 
+if [ -z $BASEDIR  ] ; then 
+    identify;
+    echo "ERROR: BASEDIR not set or empty.  This should not happen..."
+    echo "Please read the script source to understand why."
+    exit 1
+fi
 
+if [ -n "$1" ] ; then
+    java -cp $BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/bin \
+        abs.frontend.parser.Main $verbose $typecheck $@
+else
+    echo $progname: "No ABS files specified"
+fi
