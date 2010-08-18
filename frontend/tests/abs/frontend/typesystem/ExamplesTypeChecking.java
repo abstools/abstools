@@ -8,7 +8,7 @@ public class ExamplesTypeChecking extends FrontendTest {
     
     @Test
     public void abslang() {
-        assertTypeCheckFileOk("src/abs/lang/abslang.abs");
+        assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
     }
 
     @Test
@@ -33,7 +33,7 @@ public class ExamplesTypeChecking extends FrontendTest {
     
     private void assertTypeCheckTestFileOk(String fileName) {
         String dir="tests/abssamples/";
-        assertTypeCheckFileOk(dir + fileName);
+        assertTypeCheckFileOk(dir + fileName, true);
     }
     
 

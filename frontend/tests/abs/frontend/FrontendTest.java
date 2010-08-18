@@ -6,7 +6,6 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import abs.ABSTest;
-import abs.common.StandardLib;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
@@ -29,21 +28,21 @@ import abs.frontend.typechecker.Type;
 public class FrontendTest extends ABSTest {
 
     protected Model assertParseOkStdLib(String s) {
-        return assertParseOk(StandardLib.STDLIB_DATATYPES_STRING+s);
+        return assertParseOk(s, true);
     }
     
-    protected static void assertParseFileOk(String fileName) {
-        assertParseFileOk(fileName, false);
+    protected void assertParseFileOk(String fileName, boolean withStdLib) {
+        assertParseFileOk(fileName, false, true);
     }
 
-    protected static void assertTypeCheckFileOk(String fileName) {
-        assertParseFileOk(fileName, true);
+    protected void assertTypeCheckFileOk(String fileName, boolean withStdLib) {
+        assertParseFileOk(fileName, true, withStdLib);
     }
     
-    protected static void assertParseFileOk(String fileName, boolean typeCheck) {
+    protected void assertParseFileOk(String fileName, boolean typeCheck, boolean withStdLib) {
         Model m = null;
         try {
-            m = Main.parse(fileName);
+            m = Main.parse(fileName, withStdLib);
         } catch (Throwable e) {
             fail("Failed to parse: "+ fileName +"\n"+e.getMessage());
             e.printStackTrace();
@@ -64,11 +63,22 @@ public class FrontendTest extends ABSTest {
                     
                 }
             }
-            
         }
     }
     
-    
+    protected void assertParseError(String absCode, boolean typeCheck, boolean withStdLib) {
+        try {
+            Model m = Main.parseString(absCode,withStdLib);
+            if (!m.getErrors().isEmpty())
+                return;
+                
+            if (typeCheck && !m.typeCheck().isEmpty())
+                return;
+            
+            fail("Expected to find parse error");        
+        } catch (Exception e) {
+        }
+    }
     
     protected Exp getFirstExp(String absCode) {
         Model m = assertParseOk(absCode);

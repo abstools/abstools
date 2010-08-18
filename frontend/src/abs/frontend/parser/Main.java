@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -23,8 +24,10 @@ import abs.frontend.parser.SyntaxError;
 
 public class Main {
 
-	static boolean verbose = false ;
+	private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    static boolean verbose = false ;
 	static boolean typecheck = false;
+	static boolean stdlib = true;
 
 	public static void main(final String[] args) throws Exception {
 		int numoptions = 0;
@@ -34,6 +37,8 @@ public class Main {
 		        verbose = true;
 		    else if (arg.equals("-t")) 
 		        typecheck = true;
+            else if (arg.equals("-nostdlib")) 
+                stdlib = false;
 		    else if (arg.equals("-h")) {
 		        printUsage();
 		        System.exit(1);
@@ -44,6 +49,11 @@ public class Main {
 		}
 
 		List<CompilationUnit> units = new List<CompilationUnit>();
+		
+		if (stdlib) {
+		    units.add(getStdLib());
+		}
+		
 		for (int i = numoptions; i < args.length; i++){
 		    String arg = args[i];
 
@@ -102,13 +112,26 @@ public class Main {
 
 	
 	
+    private static CompilationUnit getStdLib() throws Exception {
+        URL url = Main.class.getClassLoader().getResource(ABS_STD_LIB);
+        if (url == null) {
+            System.err.println("Could not found ABS Standard Library");
+            System.exit(1);
+        }
+        return parseUnit(ABS_STD_LIB,new InputStreamReader(url.openStream()));
+    }
+
+
+
+
     private static void printUsage() {
         System.out.println("Usage: java "+Main.class.getName()+" [options] <absfiles>\n" +
         		"  <absfiles>   ABS files to parse\n" +
         		"Options:\n"+
-        		"  -v   verbose output\n" +
-        		"  -t   enable typechecking\n" +
-        		"  -h   print this message\n");
+        		"  -v         verbose output\n" +
+        		"  -t         enable typechecking\n" +
+                "  -nostdlib  do not include the standard lib \n" +
+        		"  -h         print this message\n");
         
     }
 
@@ -140,16 +163,24 @@ public class Main {
 		return parseUnit(file, reader); 
 	}
     
-    public static Model parse(String fileName) throws Exception {
-        return new Model(new List<CompilationUnit>().add(parseUnit(fileName)));
+    public static Model parse(String fileName, boolean withStdLib) throws Exception {
+        List<CompilationUnit> units = new List<CompilationUnit>();
+        if (withStdLib)
+            units.add(getStdLib());
+        units.add(parseUnit(fileName));
+        return new Model(units);
     }
 	
-	public static Model parse(String fileName, InputStream stream) throws Exception {
-	    return parse(fileName, new BufferedReader(new InputStreamReader(stream)));
+	public static Model parse(String fileName, InputStream stream, boolean withStdLib) throws Exception {
+	    return parse(fileName, new BufferedReader(new InputStreamReader(stream)), withStdLib);
 	}
 	    
-	public static Model parse(String fileName, Reader reader) throws Exception {
-	    return new Model(new List<CompilationUnit>().add(parseUnit(fileName, reader)));
+	public static Model parse(String fileName, Reader reader, boolean withStdLib) throws Exception {
+        List<CompilationUnit> units = new List<CompilationUnit>();
+        if (withStdLib)
+            units.add(getStdLib());
+        units.add(parseUnit(fileName, reader));
+        return new Model(units);
 	}
 	
     public static CompilationUnit parseUnit(String fileName, Reader reader) throws Exception {
@@ -164,8 +195,8 @@ public class Main {
 	}
 
 
-    public static Model parseString(String s) throws Exception {
-        return parse("<unkown>", new StringReader(s));
+    public static Model parseString(String s, boolean withStdLib) throws Exception {
+        return parse("<unkown>", new StringReader(s), withStdLib);
     }
 
 }

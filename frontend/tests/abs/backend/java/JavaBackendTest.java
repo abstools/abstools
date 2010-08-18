@@ -12,7 +12,6 @@ import java.io.PrintWriter;
 import junit.framework.Assert;
 
 import abs.ABSTest;
-import abs.common.StandardLib;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -23,11 +22,11 @@ public class JavaBackendTest extends ABSTest {
     }
     
     void assertValidStdLib(String absCode) {
-        assertValidJava(getJavaCode(StandardLib.STDLIB_DATATYPES_STRING+" "+absCode));
+        assertValidJava(getJavaCode(absCode, true));
     }
     
     void assertValid(String absCode) {
-        assertValidJava(getJavaCode(absCode));
+        assertValidJava(getJavaCode(absCode, false));
     }
     
     void assertValidJava(String javaCode) {
@@ -41,11 +40,11 @@ public class JavaBackendTest extends ABSTest {
         }
     }
     
-    String getJavaCode(String absCode) {
+    String getJavaCode(String absCode, boolean withStdLib) {
         try {
         Model model = null;
         try {
-            model = Main.parseString(absCode);
+            model = Main.parseString(absCode, withStdLib);
         } catch (Exception e) {
             Assert.fail(e.getMessage());
             return null;
@@ -77,7 +76,7 @@ public class JavaBackendTest extends ABSTest {
             
             expectedJavaCode.append(JavaBackendConstants.LIB_IMPORT_STATEMENT+" ");
             expectedJavaCode.append(javaCode);
-            String generatedJavaCode = getJavaCode(absCode);
+            String generatedJavaCode = getJavaCode(absCode, false);
             Assert.assertEquals(expectedJavaCode.toString(), generatedJavaCode);
             
             assertValidJava(generatedJavaCode);

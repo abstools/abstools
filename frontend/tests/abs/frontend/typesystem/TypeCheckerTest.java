@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import abs.common.StandardLib;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -13,10 +12,6 @@ import abs.frontend.ast.Model;
 public class TypeCheckerTest extends FrontendTest {
 
 	 // POSITIVE TESTS
-   @Test
-   public void stdLibFunctions() {
-       assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING);
-   }
 	
 	 @Test
 	 public void testVarDecl() {
@@ -174,32 +169,31 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void fnAppTypeArgs2() {
-   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
-   			 "def B optValue<B>(Opt<B> val) = fromSome(val);");
+   	 assertNoTypeErrors("def B optValue<B>(Maybe<B> val) = fromJust(val);");
     }
     
     @Test
     public void fnAppTypeArgs3() {
-   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+   	 assertNoTypeErrors(
    			 "def List<B> tail2<B>(List<B> list) = tail(list) ; ");
     }
 
     @Test
     public void fnAppTypeArgs4() {
-   	 assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+   	 assertNoTypeErrors(
    			 "def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
     }
     
     @Test
     public void fnAppTypeArgs5() {
-        assertNoTypeErrors(StandardLib.STDLIB_FUNCTIONS_STRING+
+        assertNoTypeErrors(
                 "def List<B> shuffle<B>(List<B> list) = list;"+
                 "def C chose<C>(List<C> list) = head(shuffle(list));");
     }
     
     @Test
     public void constructorTypeArgs() {
-        assertNoTypeErrors("{ Opt<Bool> o = Some(True); }");
+        assertNoTypeErrors("{ Maybe<Bool> o = Just(True); }");
     }
     
     @Test
@@ -522,6 +516,7 @@ public class TypeCheckerTest extends FrontendTest {
     private void assertNoTypeErrors(String absCode) {
    	 assertTypeErrors(absCode, false);
     }
+    
 
     private void assertTypeErrors(String absCode) {
    	 assertTypeErrors(absCode, true);

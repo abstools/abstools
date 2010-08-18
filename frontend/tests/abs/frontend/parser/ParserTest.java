@@ -9,9 +9,10 @@ import java.io.StringReader;
 import org.junit.Before;
 import org.junit.Test;
 
-import abs.common.StandardLib;
+import abs.frontend.FrontendTest;
 
-public class ParserTest {
+
+public class ParserTest extends FrontendTest {
 
 
 //	private String emptyblock ; 	
@@ -86,7 +87,7 @@ public class ParserTest {
 		assertParseOk("{  ; ; ; ;  ; return x.get ;   }") ;
 		assertParseOk("{   ; skip  ; return x.get ;  }") ;
   		assertParseOk("{ Fut<I> x ; J z ; }") ;	//need trailing semicolon here. 
-		assertParseOk(StandardLib.STDLIB_DATATYPES_STRING+" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }") ;	
+		assertParseOk(" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }") ;	
 		assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable decls with/without initializers
 		//
 }
@@ -265,34 +266,8 @@ public class ParserTest {
 				
 	}
 
-	protected static void assertParseOk(String s) {
-		try {
-			if (verbose) 
-				System.out.println("Assert OK: "+s);
-			parse(s);
-		} catch (Throwable t) {
-			//fail("something failed");
-			fail("Failed to parse: "+ s+"\n"+t.getMessage());
-		}
-  }
-	
-	protected static void assertParseError(String s) {
-		try {
-			if (verbose) 
-				System.out.println("Assert Error: "+s);
-			parse(s);
-		} catch (Throwable t) {
-			return;
-		}
-		fail("Expected to find parse error in " + s);
+	protected void assertParseError(String s) {
+	    assertParseError(s,false,false);
 	}
 	
-	protected static void parse(String s) throws Throwable {
-		ABSParser parser = new ABSParser();
-		Reader reader = new StringReader(s);
-		//		ABSScanner scanner = new ABSScanner(new BufferedReader(reader));
-		ABSScanner scanner = new ABSScanner(reader);
-		parser.parse(scanner);
-		reader.close();
-	}
 }

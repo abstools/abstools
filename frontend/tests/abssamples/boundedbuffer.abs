@@ -5,18 +5,12 @@
  *
  */
 
-data Unit = Unit; // builtin  
-data String; // builtin  
-data Int; // builtin
-data Bool = True | False; // builtin
-data Fut<A> ;
-
 type Data = Int ;
 //type Buffer = DataList
 data DataList = DataNil | ConsData(Data, DataList) ;
 
-def Data head(DataList dl) = case dl { ConsData(d,l) => d ; };  
-def DataList tail(DataList dl) = case dl { ConsData(d,l) => l ; }; 
+def Data dataHead(DataList dl) = case dl { ConsData(d,l) => d ; };  
+def DataList dataTail(DataList dl) = case dl { ConsData(d,l) => l ; }; 
 
 def DataList appendData(Data d, DataList list) = concat(list, ConsData(d,DataNil));
 
@@ -61,8 +55,8 @@ class BoundedBuffer implements Buffer {
     Data remove() {
         Data d = 0;
         await n > 0 ; 
-        d = head(buffer);
-        buffer = tail(buffer);
+        d = dataHead(buffer);
+        buffer = dataTail(buffer);
         n = n - 1 ; 
 	     return d ; 
     }

@@ -79,8 +79,7 @@
 		</delete>
 	</target>
 
-
-	<target name="gen" depends="genshell, genparser, genast">
+	<target name="gen" depends="genshell, genparser, genast, genlang">
 	</target>
 
 	<target name="rebuild" depends="clean, compile">
@@ -100,7 +99,13 @@
 		</jastadd>
 	</target>
 
-
+   <target name="genlang">
+      <mkdir dir="${build.dir}/abs/lang" />
+      <copy todir="${build.dir}/abs/lang" >
+         <filelist dir="${src.dir}/abs/lang" files="abslang.abs" />
+      </copy>
+   </target>
+      
 	<target name="genshell">
 		<copy todir="${bash.build.dir}">
 			<filelist id="shellfiles" dir="${bash.dir}" files="parseABS,parseAll,generateMaude" />

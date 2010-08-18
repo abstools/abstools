@@ -6,11 +6,6 @@
  *
  */
 
-data Unit = Unit ;
-data String;
-data Fut<A>;
-data Bool = True | False;
-
 data Msg = NoMsg 
          | HelloPing 
          | HelloPong

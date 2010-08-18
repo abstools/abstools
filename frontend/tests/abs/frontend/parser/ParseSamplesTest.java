@@ -15,7 +15,7 @@ public class ParseSamplesTest extends FrontendTest {
 		String[] files = {"PeerToPeer.abs", "pingpong.abs", "boundedbuffer.abs"};
 		for (int i = 0 ; i < files.length; i++){
 //			System.out.println("parsing " + files[i]);
-			assertParseFileOk(dir + files[i]);
+			assertParseFileOk(dir + files[i], true);
 		}	
 	}
 	

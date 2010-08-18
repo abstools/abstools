@@ -30,10 +30,7 @@ import abs.frontend.parser.Main;
 
 public class JavaBackend {
     private static String testCode() {
-        return "data Bool = True | False;\n " +
-        		   "data Int ;\n" +
-        		   "data Unit = Unit ;" +
-               "interface A { Unit m(Bool b, Int i); } \n" + 
+        return "interface A { Unit m(Bool b, Int i); } \n" + 
                "class B implements A { \n" +
                "  Unit m(Bool b, Int i) { \n" +
                "    A a; \n" +
@@ -60,7 +57,7 @@ public class JavaBackend {
 
     public static void testCompile(String absCode) throws Exception {
         InputStream in = new ByteArrayInputStream(absCode.getBytes());
-        Model model = Main.parseString(absCode);
+        Model model = Main.parseString(absCode, true);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String code = out.toString();
@@ -89,7 +86,7 @@ public class JavaBackend {
 
         
         final Model model = 
-            Main.parseString(testCode());
+            Main.parseString(testCode(), true);
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(os));

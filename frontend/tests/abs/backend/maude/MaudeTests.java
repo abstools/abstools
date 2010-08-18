@@ -50,7 +50,7 @@ public class MaudeTests extends ABSTest {
         try {
             Model model = null;
             try {
-                model = Main.parseString(absCode);
+                model = Main.parseString(absCode, false);
             } catch (Exception e) {
                 Assert.fail(e.getMessage());
                 return null;
