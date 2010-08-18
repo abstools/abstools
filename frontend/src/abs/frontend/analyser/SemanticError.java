@@ -15,13 +15,18 @@ public class SemanticError {
         this.args = args;
     }
     
-    public String fileName() {
+    public String getFileName() {
         ASTNode<?> parent = node;
         while (! (parent instanceof CompilationUnit) ) {
             parent = parent.getParent();
+            if (parent == null)
+                return "<could not find filename>";
         }
-        CompilationUnit u = (CompilationUnit) parent; 
-        return "<unkown>";
+        CompilationUnit u = (CompilationUnit) parent;
+        String name = u.getName();
+        if (name == null)
+            return "<unkown>";
+        return name;
     }
     
     public int getLine() {
@@ -37,7 +42,7 @@ public class SemanticError {
     }
     
     public String getMsgString() {
-        return getLine() + ":" + 
+        return getFileName() + ":" + getLine() + ":" + 
             getColumn() + ": " + 
             msg.withArgs(args);
     }

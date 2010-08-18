@@ -48,8 +48,7 @@ public class Main {
 		    String arg = args[i];
 
 			try{
-				CompilationUnit u = parseUnit(arg);
-				units.add(u);
+				units.add(parseUnit(arg));
 				
 			} catch (FileNotFoundException e1) {
 				System.err.println("File not found: " + arg);
@@ -157,8 +156,8 @@ public class Main {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
-            CompilationUnit u = (CompilationUnit)parser.parse(scanner);
-            return u;
+            
+            return parser.parse(fileName,scanner);
         } finally {
             reader.close();
         }
