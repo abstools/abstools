@@ -1,4 +1,4 @@
-//working file (not completed)
+//Working File (not completed)
 // by Lizeth Tapia (sltarifa) UIO
 //Book shop example
 
@@ -283,15 +283,14 @@ class AgentImp(Database db) implements Agent {
 // session
 
 class SessionImp(Agent agent, Database db) implements Session {
-    DatabaseInfo preresult = InfoFail ;
+
     Shippingcost shippingcost = 0;
     Shippingtime shippingtime = 0;
     OrderResult result = OrderFail;
     Bool updatedb = False;
 
     OrderResult order(List<Bookname> books, Countryname country) {
-    
-
+        DatabaseInfo preresult = InfoFail ;
         preresult = db.getInfo(books,country);
         if (preresult != InfoFail) {
 	    shippingcost = calculatecost(calculateweight(getBookMap(preresult)),countryshipcost(info(getCountryinfo(preresult))));
@@ -301,7 +300,9 @@ class SessionImp(Agent agent, Database db) implements Session {
             else {result = OrderFail;};         
          }
         else {result = OrderFail;};
+        agent.free(this);
         return result;
+        
     }
 }
 
@@ -309,16 +310,17 @@ class SessionImp(Agent agent, Database db) implements Session {
 
 class  DatabaseImp(Map<Bookname,Bookinfo> bDB, Map<Countryname,Countryinfo> cDB) implements Database {
    
-   Map<Bookname,Bookinfo> booksDB = bDB;
-     DatabaseInfo r = InfoFail;
-Map<Bookname,Bookinfo> myorder = EmptyMap ;
-    List<Bookname> mybooks = Nil;
+    Map<Bookname,Bookinfo> booksDB = bDB;
+
 
    DatabaseInfo getInfo(List<Bookname> books, Countryname country){
+      DatabaseInfo result = InfoFail;
+      Map<Bookname,Bookinfo> myorder = EmptyMap ;
+      List<Bookname> mybooks = Nil;
       mybooks = books ;
       myorder = getBooks(booksDB, books) ;
-      r = Info(myorder, lookup(cDB, country));
-      return r;
+      result = Info(myorder, lookup(cDB, country));
+      return result;
    }
 
    Bool confirmOrder(List<Bookname> books){
@@ -334,14 +336,13 @@ class  SyncClient(Agent agent, List<Bookname> books, List<Countryname> countries
     List<Bookname> b = books;
     List<Countryname> c = countries;
     OrderResult result = OrderFail ;
-    List<Bookname> chosenBooks = Nil;
-    Countryname chosenCountry = "";
 
     Unit run () {
-        
+        List<Bookname> chosenBooks = Nil;
+        Countryname chosenCountry = "";
         Session session ;
-       // c = shuffle(c);
-       // b = shuffle(b);
+        c = shuffle(c);
+        b = shuffle(b);
         chosenCountry = chose(c);
         chosenBooks = choseN(b,4);
         session = agent.getsession();
@@ -352,10 +353,49 @@ class  SyncClient(Agent agent, List<Bookname> books, List<Countryname> countries
 
 
 //***************************************************************
+//****************************main******************************
+//***************************************************************
+
+{
+
+/*
+Name    q  w  bo
+----------------
+book1   0  2  60
+book2   5  2   7
+book3   2  3   1
+
+Name     st  scXw
+-----------------
+Peru    15   150
+Norway   2    50
+Spain   10   100
+*/
+
+    Map<Bookname,Bookinfo> bDB = map[Pair("book1",ConsBookinfo(0, 2, 60)),
+                                     Pair("book2",ConsBookinfo(5, 1, 7)), 
+                                     Pair("book3",ConsBookinfo(2, 3, 1))];
+
+    Map<Countryname,Countryinfo> cDB = map[Pair("Peru",ConsCountryinfo(15, 150)),
+                                           Pair("Norway",ConsCountryinfo(2, 50)), 
+                                           Pair("Spain",ConsCountryinfo(10, 100))];
+
+    List<Bookname> lb = list["book3", "book", "book1", "book2", "other"] ;
+    Agent agent;
+    Client c;
+    Database db;
+    db = new  DatabaseImp(bDB, cDB);
+    agent = new AgentImp(db);
+    c = new SyncClient(agent,lb, map2list(cDB));
+}
+
+
+//***************************************************************
 //************************ test********************************
 //***************************************************************
 
-class  SimpleClient() implements Client {
+
+/*class  SimpleClient() implements Client {
 
 
 
@@ -376,56 +416,18 @@ class  SimpleClient() implements Client {
        }
 }
 
-//***************************************************************
-//****************************main******************************
-//***************************************************************
-
-{
-
-/*
-Name    q  w  bo
-----------------
-book1   0  2  60
-book2   5  2   7
-book3   2  3   1
-
-Name     st  scXw
------------------
-Norway   2    50
-Peru    15   150
 */
 
-    Map<Bookname,Bookinfo> bDB = Insert(Pair("book1",ConsBookinfo(0, 2, 60)), Insert(Pair("book2",ConsBookinfo(5, 1, 7)), Insert(Pair("book3",ConsBookinfo(2, 3, 1)),EmptyMap)));
-    Map<Bookname,Bookinfo> newbDB = map[Pair("book1",ConsBookinfo(0, 2, 60)),
-                                        Pair("book2",ConsBookinfo(5, 1, 7)), 
-                                        Pair("book3",ConsBookinfo(2, 3, 1))];
-
-    Map<Countryname,Countryinfo> cDB = Insert(Pair("Norway",ConsCountryinfo(2,50)),Insert(Pair("Peru",ConsCountryinfo(15,150)),EmptyMap));
-    List<Bookname> lb = Cons("Book",Cons("book1", Cons("book2",Cons("other",Cons("book3",Nil)))));
-    List<Bookname> lb2 = Cons("book2", Nil);
- List<Bookname> lb3 = list["book2"] ;
-    Map<Bookname,Bookinfo> myB = EmptyMap ;
-    Agent agent;
-    Client c;
-    Database db;
-    db = new  DatabaseImp(newbDB, cDB);
-    agent = new AgentImp(db);
-    c = new SyncClient(agent,lb, map2list(cDB));
-    List<Bookname> mylist = choseN(Cons("Book0",map2list(bDB)), 3) ;
-Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
+   //List<Bookname> mylist = choseN(Cons("Book0",map2list(bDB)), 3) ;
+//Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
 
 
 
 
-     mP = lookup(bDB,"book2");
+  /*   mP = lookup(bDB,"book2");
     myB = getBooks(bDB, lb);
 Bool check = contains(domain(bDB),"book1") ;
 
 Set<Key> myDomain = domain(bDB) ;
    // Client test;
-   //  test = new SimpleClient();
-}
-
-
-
-
+   //  test = new SimpleClient();*/
