@@ -1,7 +1,11 @@
 package abs.backend.maude;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.PrintStream;
 import java.io.Reader;
+import java.util.ArrayList;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -9,30 +13,36 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
+import abs.frontend.parser.Main;
 
 public class MaudeCompiler {
 
 	/**
 	 * @param args
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) {
-		Model m = new Model();
+	public static void main(String[] args) throws Exception {
+		ArrayList<String> files = new ArrayList<String>();
 		boolean hasErrors = false;
-        for (String arg : args) {
-            try {
-            	m.addCompilationUnit(parse(arg));
-            } catch (Error err) {
-				System.err.println("Parsing of " + arg + " failed with Error");
-				System.err.println(err);
-				err.printStackTrace(System.err);
-                System.exit(1);
-            } catch (Exception e) {
-				System.err.println("Parsing of " + arg +  " failed with Exception");
-				System.err.println(e);
-				e.printStackTrace(System.err);
-                System.exit(1);
-            }
-        }
+		boolean stdlib = true;
+		boolean expectOutputFile = false;
+		File outputfile = null;
+		for (String arg : args) {
+			if (expectOutputFile) {
+				expectOutputFile = false;
+				outputfile = new File(arg);
+			} else if (arg.equals("-nostdlib")) 
+                stdlib = false;
+		    else if (arg.equals("-h")) {
+		        printUsage();
+		        System.exit(1);
+		    } else if (arg.equals("-o")) {
+		    	expectOutputFile = true;
+		    } else {
+		    	files.add(arg);
+		    }
+		}
+		Model m = abs.frontend.parser.Main.parse(files, stdlib);
         SemanticErrorList l = m.typeCheck();
         if (!l.isEmpty()) {
         	hasErrors = true;
@@ -41,21 +51,25 @@ public class MaudeCompiler {
             }
         }
         if (!hasErrors) {
-        	m.generateMaude(System.out);
+        	PrintStream stream = System.out;
+        	if (outputfile != null) {
+        		stream = new PrintStream(outputfile);
+        	}
+        	m.generateMaude(stream);
         	System.exit(0);
         } else System.exit(1);
 	}
 
-	protected static CompilationUnit parse(String file) throws Exception {
-		Reader reader = new FileReader(file);
-		try {
-			ABSParser parser = new ABSParser();
-			ABSScanner scanner = new ABSScanner(reader);
-			return parser.parse(file, scanner);
-		} finally {
-			reader.close();
-		}
-	}
+    private static void printUsage() {
+        System.out.println("Usage: java "+MaudeCompiler.class.getName()+" [options] <absfiles>\n" +
+        		"  <absfiles>   ABS files to parse\n" +
+        		"Options:\n"+
+        		"  -o <file>  write output to <file> instead of standard output\n" +
+                "  -nostdlib  do not include the standard lib\n" +
+        		"  -h         print this message\n");
+        
+    }
+
 }
 
 // Local Variables:

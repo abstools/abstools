@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.ArrayList;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -169,6 +170,15 @@ public class Main {
             units.add(getStdLib());
         units.add(parseUnit(fileName));
         return new Model(units);
+    }
+    
+    public static Model parse(ArrayList<String> fileNames, boolean withStdLib) throws Exception {
+    	List<CompilationUnit> units = new List<CompilationUnit>();
+    	if (withStdLib) units.add(getStdLib());
+    	for (String filename : fileNames) {
+    		units.add(parseUnit(filename));
+    	}
+    	return new Model(units);
     }
 	
 	public static Model parse(String fileName, InputStream stream, boolean withStdLib) throws Exception {
