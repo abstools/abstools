@@ -246,7 +246,7 @@ interface Client {
 
 }
 
-interface Shop {
+interface Agent {
    Session getsession();
    Unit free(Session session);
 }
@@ -260,9 +260,9 @@ interface Database {
    Bool confirmOrder(List<Bookname> books);
 }
 
-//shop
+// agent
 
-class ShopImp(Database db) implements Shop {
+class AgentImp(Database db) implements Agent {
  
   List<Session> sessions = Nil;
 
@@ -282,7 +282,7 @@ class ShopImp(Database db) implements Shop {
 
 // session
 
-class SessionImp(Shop agent, Database db) implements Session {
+class SessionImp(Agent agent, Database db) implements Session {
     DatabaseInfo preresult = InfoFail ;
     Shippingcost shippingcost = 0;
     Shippingtime shippingtime = 0;
@@ -329,7 +329,7 @@ Map<Bookname,Bookinfo> myorder = EmptyMap ;
 
 //client
 
-class  SyncClient(Shop agent, List<Bookname> books, List<Countryname> countries) implements Client {
+class  SyncClient(Agent agent, List<Bookname> books, List<Countryname> countries) implements Client {
 
     List<Bookname> b = books;
     List<Countryname> c = countries;
@@ -405,11 +405,11 @@ Peru    15   150
     List<Bookname> lb2 = Cons("book2", Nil);
  List<Bookname> lb3 = list["book2"] ;
     Map<Bookname,Bookinfo> myB = EmptyMap ;
-    Shop agent;
+    Agent agent;
     Client c;
     Database db;
     db = new  DatabaseImp(newbDB, cDB);
-    agent = new ShopImp(db);
+    agent = new AgentImp(db);
     c = new SyncClient(agent,lb, map2list(cDB));
     List<Bookname> mylist = choseN(Cons("Book0",map2list(bDB)), 3) ;
 Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
