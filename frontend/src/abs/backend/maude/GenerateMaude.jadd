@@ -21,7 +21,7 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
-        getMainBlock().generateMaude(stream);
+        if (hasMainBlock()) getMainBlock().generateMaude(stream);
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
         stream.println("op start : -> State .");
