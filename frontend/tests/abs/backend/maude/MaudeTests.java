@@ -24,10 +24,66 @@ public class MaudeTests extends ABSTest {
 
     @Test
     public void minimalMainBlock() {
-    	assertTrueMaude(" data Bool = True | False; { Bool testresult = True; }");
+    	assertTrueMaude("{ Bool testresult = True; }");
+    }
+    
+    @Test
+    public void listNth() {
+    	assertTrueMaude("{ List<Int> list = list[1, 2, 3]; Bool testresult = nth(list, 2) == 3; }");
+    }
+    
+    @Test
+    public void setContains1() {
+    	assertTrueMaude("{ Set<Int> s = set[1, 2, 3]; Bool testresult = contains(s, 3); }");
+    }
+    
+    @Test
+    public void setContains2() {
+    	assertFalseMaude("{ Set<Int> s = set[1, 2, 3]; Bool testresult = contains(s, 4); }");
+    }
+    
+    @Test
+    public void setRemove() {
+    	assertFalseMaude("{ Set<Int> set = set[1, 2, 3]; Bool testresult = contains(remove(set, 3), 3); }");
+    }
+    
+    @Test
+    public void mapLookup() {
+    	assertTrueMaude("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == 300; }");
+    }
+    
+    @Test
+    public void mapLookupDefault1() {
+    	assertTrueMaude("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupDefault(map, 3, -1) == 300; }");
     }
 
+    @Test
+    public void mapLookupDefault2() {
+    	assertTrueMaude("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupDefault(map, 5, -1) == -1; }");
+    }
+
+    @Test
+    public void mapPut1() {
+    	assertTrueMaude("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = put(map, 2, -1) == map[Pair(1, 100), Pair(2, -1), Pair(3, 300)]; }");
+    }
+    
+    @Test
+    public void mapPut2() {
+    	assertTrueMaude("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = put(map, 4, 400) == map[Pair(1, 100), Pair(2, 200), Pair(3, 300), Pair(4, 400)]; }");
+    }
+    
+
+    
+    
     void assertTrueMaude(String absCode) {
+    	assertMaudeResult(absCode, "True");
+    }
+    
+    void assertFalseMaude(String absCode) {
+    	assertMaudeResult(absCode, "False");
+    }
+    
+    void assertMaudeResult(String absCode, String expectedResult) {
     	try {
         	String generatedMaudeCode = getMaudeCode(absCode);
 			String maudeOutput = getMaudeOutput(generatedMaudeCode);
@@ -35,7 +91,7 @@ public class MaudeTests extends ABSTest {
 			Matcher matcher = pattern.matcher(maudeOutput);
 			if (matcher.find()) {
 				String boolValue = matcher.group(1);
-				Assert.assertEquals(boolValue, "True");
+				Assert.assertEquals(boolValue, expectedResult);
 			} else {
 				Assert.fail("Did not find Maude \"testresult\" variable.");
 			}
@@ -50,7 +106,7 @@ public class MaudeTests extends ABSTest {
         try {
             Model model = null;
             try {
-                model = Main.parseString(absCode, false);
+                model = Main.parseString(absCode, true);
             } catch (Exception e) {
                 Assert.fail(e.getMessage());
                 return null;

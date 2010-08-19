@@ -39,11 +39,8 @@ def Set<A> set<A>(List<A> l) = case l { Nil => EmptySet; Cons(x,xs) => Insert(x,
 def Bool contains<A>(Set<A> ss, A e) = // True if set contains e, False otherwise
   case ss {
     EmptySet => False ;
-    Insert(x, xs) => 
-    	case x == e {
-    		True => True;
-    		False => contains(xs, e);
-    	};
+    Insert(e, _) => True;
+    Insert(_, xs) => contains(xs, e);
   };
   
 def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet); 
@@ -54,11 +51,8 @@ def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size
 def Set<A> remove<A>(Set<A> xs, A e) = 
   case xs {
     EmptySet => EmptySet ;
-    Insert(s, ss) => 
-    	case (s == e) {
-    		True => ss;
-    		False => Insert(s,remove(ss,e));
-    	};
+    Insert(e, ss) => ss;
+    Insert(s, ss) => Insert(s,remove(ss,e));
   };
 
 // checks whether the input set has more elements to be iterated.
@@ -75,7 +69,7 @@ def Bool isEmpty<A>(List<A> list) = list == Nil;
 def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
 def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
 def A nth<A>(List<A> list, Int n) = 
-  case n == 0 { True => head(list) ; False => nth(tail(list), n-1); };
+  case n { 0 => head(list) ; _ => nth(tail(list), n-1); };
 
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
   case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
@@ -99,21 +93,15 @@ def Set<A> keys<A, B>(Map<A, B> map) =
 
 def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
-  	InsertAssoc(Pair(x, y), tm) => 
-  		case (x == k) {
-  			True => y;
-  			False => lookup(tm, k);
-  		};
+  	InsertAssoc(Pair(k, y), _) => y;
+        InsertAssoc(_, tm) => lookup(tm, k);
   };
   
 def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
   case ms {
+        InsertAssoc(Pair(k, y), _) => y;
+        InsertAssoc(_, tm) => lookupDefault(tm, k, d);
   	EmptyMap => d;
-  	InsertAssoc(Pair(x, y), tm) => 
-  		case (x == k) {
-  			True => y;
-  			False => lookupDefault(tm, k, d);
-  		};
   };
 
 // insert a key-value pair to a map (does not preserve injectivity)
@@ -122,11 +110,8 @@ def Map insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
 def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) = // update a record in the map
   case ms {
     EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
-    InsertAssoc(Pair(x,y),ts) => 
-    	case x == k {
-    		True => InsertAssoc(Pair(k,v), ts);
-    		False => InsertAssoc(Pair(x,y),put(ts,k,v));
-    	}; 
+    InsertAssoc(Pair(k, _), ts) => InsertAssoc(Pair(k, v), ts);
+    InsertAssoc(p, ts) => InsertAssoc(p, put(ts, k, v));
   };
 
 def String intToString(Int n) =
