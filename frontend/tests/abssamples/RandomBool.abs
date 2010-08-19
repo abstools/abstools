@@ -1,6 +1,3 @@
-data Fut<A>;
-data Unit = Unit;
-data Bool = True | False;
 
 interface RandomBool {
    Bool getNextBool();
