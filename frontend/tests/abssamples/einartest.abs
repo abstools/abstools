@@ -1,20 +1,5 @@
 // test file by Einar Broch Johnsen
 
-//type synonyms  
-
-type Filename = String ;
-type Filenames = Set<String> ;
-type Packet = String ;
-type File = List<Packet> ;
-type Catalog = List<Pair<Server, Filenames> > ;
-
- 
- 
-// Application functions
-def Server findServer(Filename file, Catalog catalog) =
-  case catalog {
-    Nil => null;
-    Cons(Pair(server, files), rest) =>
-      case contains(files, file) { True => server;
-                                   False => findServer(file, rest); };
-  };
+interface Test {
+   Int method();
+ }
