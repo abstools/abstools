@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import junit.framework.Assert;
 
 import abs.ABSTest;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -44,7 +45,19 @@ public class JavaBackendTest extends ABSTest {
         try {
         Model model = null;
         try {
-            model = Main.parseString(absCode, withStdLib);
+            String code = absCode;
+            if (withStdLib) 
+                code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
+            model = Main.parseString(code, false);
+            if (model.hasErrors()) {
+                Assert.fail(model.getErrors().get(0).getMsgString());
+            } else {
+                SemanticErrorList el = model.typeCheck();
+                if (!el.isEmpty()) {
+                    Assert.fail(el.get(0).getMsg());
+                }
+            }
+            
         } catch (Exception e) {
             Assert.fail(e.getMessage());
             return null;

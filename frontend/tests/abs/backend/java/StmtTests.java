@@ -31,7 +31,7 @@ public class StmtTests extends JavaBackendTest {
     
     @Test
     public void ifConditionStmt() {
-        assertValid("{ if (5 == 6) { } }");
+        assertValidStdLib("{ if (5 == 6) { } }");
     }
 
     @Test
@@ -61,7 +61,7 @@ public class StmtTests extends JavaBackendTest {
 
     @Test
     public void awaitStmtExpGuardField() {
-        assertValidStdLib("class C { Bool f; Unit m() { await f; } }");
+        assertValidStdLib("class C { Bool f = True; Unit m() { await f; } }");
     }
     
     @Test
