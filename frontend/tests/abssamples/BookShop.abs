@@ -61,35 +61,36 @@ def Key key<Key,A>(Pair<Key,A> p) =
 def A info<Key,A>(Pair<Key,A> p) =
   case p {Pair(k,i) => i;};
 
+
 //Map
 def Set<Key> domain(Map<Key,A> map) =
 case map {
    EmptyMap => EmptySet;
-   Insert(Pair(b,_), tail) => InsertSet(b,domain(tail)) ; 
+   InsertAssoc(Pair(b,_), tail) => Insert(b,domain(tail)) ; 
 } ;
 
 
 def List<Key> map2list(Map<Key,A> map) =
   case map {
     EmptyMap => Nil ;
-    Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
+    InsertAssoc(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
   };
 
 
 def Pair<Key,A> lookupPair<Key,A>(Map<Key,A> map, Key key) =
   case map {
     EmptyMap => Pair(key, Empty) ;
-    Insert(Pair(key,info), tail) => Pair(key, info);
-    Insert(_, tail) => lookupPair(tail, key) ;
+    InsertAssoc(Pair(key,info), tail) => Pair(key, info);
+    InsertAssoc(_, tail) => lookupPair(tail, key) ;
   };
 
 def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
   case map1 {
     EmptyMap => map2 ;
-    Insert(head, tail) =>  
+    InsertAssoc(head, tail) =>  
      case head {
          Pair("", Empty) => concatMap(tail, map2);
-         Pair(k,i) => Insert(Pair(k, i), concatMap(tail, map2)) ;
+         Pair(k,i) => InsertAssoc(Pair(k, i), concatMap(tail, map2)) ;
      };
   };
 
@@ -336,6 +337,7 @@ Spain   10   100
     agent = new AgentImp(db);
     c = new SyncClient(agent,lb, map2list(cDB));
 }
+
 
 //***************************************************************
 //************************ test********************************

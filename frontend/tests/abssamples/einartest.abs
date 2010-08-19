@@ -1,5 +1,90 @@
 // test file by Einar Broch Johnsen
 
-interface Test {
-   Int method();
- }
+//Data Type declarations
+
+//type synonyms  
+type Key = String ;
+type Bookname = Key ; 
+type Bookquantity = Int ;
+type Bookweight = Int ;
+type Bookbackordertime = Int ;
+
+
+type Countryname = Key ;  
+type Countryshiptime = Int ;
+type Countryshipcost = Int ;
+
+type Shippingcost = Int ;
+type Shippingtime = Int ;
+
+
+//Data Type declarations
+
+//List
+data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | Empty ;
+data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | Empty ;
+
+
+data OrderResult = OrderFail | Result(List<Bookname>, Shippingcost, Shippingtime) ;
+data DatabaseInfo = InfoFail | Info(Map<Bookname,Bookinfo>, Pair<Countryname,Countryinfo>) ;
+
+
+//****************************************************************************************
+//***************************************function definitions******************************
+//****************************************************************************************
+
+//List
+
+def List<A> shuffle<A>(List<A> list) =
+   case list {
+    Nil => Nil ;
+    Cons(head, tail) =>   concatenate(tail, Cons(head, Nil)) ;
+  };
+
+def A chose<A>(List<A> list) = head( list);  // chose the head of a non-empty list
+
+
+def List<A> choseN<A>(List<A> list, Int n) =
+case n > 0 {
+True => case list { Nil => Nil ; Cons(head,tail) => Cons(head,choseN(tail,n-1)) ; } ;
+False => Nil ;
+};
+
+
+
+//Pair
+def Key key<Key,A>(Pair<Key,A> p) =
+  case p {Pair(k,i) => k;};
+
+def A info<Key,A>(Pair<Key,A> p) =
+  case p {Pair(k,i) => i;};
+
+//Map
+def Set<Key> domain(Map<Key,A> map) =
+case map {
+   EmptyMap => EmptySet;
+   InsertAssoc(Pair(b,_), tail) => Insert(b,domain(tail)) ; 
+} ;
+
+def List<Key> map2list(Map<Key,A> map) =
+  case map {
+    EmptyMap => Nil ;
+    InsertAssoc(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
+  };
+
+def Pair<Key,A> lookupPair<Key,A>(Map<Key,A> map, Key key) =
+  case map {
+    EmptyMap => Pair(key, Empty) ;
+    InsertAssoc(Pair(key,info), tail) => Pair(key, info);
+    InsertAssoc(_, tail) => lookupPair(tail, key) ;
+  };
+
+def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
+  case map1 {
+    EmptyMap => map2 ;
+    InsertAssoc(head, tail) =>  
+     case head {
+         Pair("", Empty) => concatMap(tail, map2);
+         Pair(k,i) => InsertAssoc(Pair(k, i), concatMap(tail, map2)) ;
+     };
+  };
