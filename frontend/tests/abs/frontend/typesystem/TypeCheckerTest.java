@@ -433,6 +433,14 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("def Bool f(Bool b) = f(5); "); 
     }
     
+    @Test public void functionTypecheckNoCrash() {
+    	assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" +
+    			"case map {" +
+    			"EmptyMap => Nil ;" +
+    			"Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;" +
+    	"};");
+    }
+    
     @Test
     public void methodReturnError() {
         assertTypeErrors("class C { Unit m() { return True; } }");
