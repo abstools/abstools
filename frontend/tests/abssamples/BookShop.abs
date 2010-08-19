@@ -4,20 +4,14 @@
 
 //Data Type declarations
 
-//data Unit = Unit; // builtin  
-//data String; // builtin  
-//data Int; // builtin
-//data Bool = True | False; // builtin
-//data Fut<A> ;
-
 //type synonyms  
-//type Key = String ;
-//type Bookname = Key ; 
-//type Bookquantity = Int ;
-//type Bookweight = Int ;
-//type Bookbackordertime = Int ;
+type Key = String ;
+type Bookname = Key ; 
+type Bookquantity = Int ;
+type Bookweight = Int ;
+type Bookbackordertime = Int ;
 
-/*
+
 type Countryname = Key ;  
 type Countryshiptime = Int ;
 type Countryshipcost = Int ;
@@ -29,11 +23,6 @@ type Shippingtime = Int ;
 //Data Type declarations
 
 //List
-data List<A> = Nil | Cons(A, List<A>);
-data Pair<A,B> = Pair(A,B);
-data Map<Key,A> = EmptyMap | Insert(Pair<Key,A>, Map<Key,A>);
-data Set<A> = EmptySet | InsertSet(A, Set<A>);
-
 data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | Empty ;
 data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | Empty ;
 
@@ -47,41 +36,6 @@ data DatabaseInfo = InfoFail | Info(Map<Bookname,Bookinfo>, Pair<Countryname,Cou
 //****************************************************************************************
 
 //List
-def List<A> list<A>(List<A> l) = l; // constructor helper
-def Map<A, B> map<A, B>(List<Pair<A, B>> l) = // constructor helper
-	case l {
-		Nil => EmptyMap;
-		Cons(hd, tl) => Insert(hd, map(tl));	
-	};
-
-def A head<A>(List<A> list) = 
-  case list { Cons(p,l) => p ; }; // the head of a non-empty list
-
-def List<A> tail<A>(List<A> list) = 
-  case list { Cons(p,l) => l ; }; // the tail of a non-empty list
-def Bool isEmpty<A>(List<A> list) = 
-  list == Nil;             // test for empty list
-
-def Int length<A>(List<A> list) =     // the length of a list
-  case list {
-    Nil => 0 ;
-    Cons(p, l) => 1 + length(l) ;
-  }; 
-
-def A nth<A>(List<A> list, Int n) =
-  case n {   
-    0 => head(list) ;
-    _ => nth(tail(list), n-1) ;
-  };
-
-def List<A> concatenate<A>(List<A> list1, List<A> list2) =
-  case list1 {
-    Nil => list2 ;
-    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)) ;
-  };
-
-def List<A> appendright<A>(List<A> list, A p) = 
-  concatenate(list, Cons(p, Nil));
 
 def List<A> shuffle<A>(List<A> list) =
    case list {
@@ -98,13 +52,6 @@ True => case list { Nil => Nil ; Cons(head,tail) => Cons(head,choseN(tail,n-1)) 
 False => Nil ;
 };
 
-//Set functions 
-def Bool contains<A>(Set<A> set, A e) =
-  case set {
-    EmptySet => False ;
-    InsertSet(e, set2) => True ;
-    InsertSet(_, set2) => contains(set2, e);
-  };
 
 
 //Pair
@@ -129,11 +76,11 @@ def List<Key> map2list(Map<Key,A> map) =
   };
 
 
-def Pair<Key,A> lookup<Key,A>(Map<Key,A> map, Key key) =
+def Pair<Key,A> lookupPair<Key,A>(Map<Key,A> map, Key key) =
   case map {
     EmptyMap => Pair(key, Empty) ;
     Insert(Pair(key,info), tail) => Pair(key, info);
-    Insert(_, tail) => lookup(tail, key) ;
+    Insert(_, tail) => lookupPair(tail, key) ;
   };
 
 def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
@@ -220,8 +167,8 @@ def Map<Bookname,Bookinfo> getBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname
     Nil => EmptyMap;
     Cons(head, tail) => case (contains(domain(booksDB),head)) { 
                          False => getBooks(booksDB,tail) ;
-                         True => Insert(lookup(booksDB, head),getBooks(booksDB, tail)); } ;
-//concatMap(Insert(lookup(booksDB, head),EmptyMap),getBooks(booksDB, tail));
+                         True => Insert(lookupPair(booksDB, head),getBooks(booksDB, tail)); } ;
+//concatMap(Insert(lookupPair(booksDB, head),EmptyMap),getBooks(booksDB, tail));
   };
 
 def Map<Bookname,Bookinfo> updateBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname> books )  = 
@@ -320,7 +267,7 @@ class  DatabaseImp(Map<Bookname,Bookinfo> bDB, Map<Countryname,Countryinfo> cDB)
       List<Bookname> mybooks = Nil;
       mybooks = books ;
       myorder = getBooks(booksDB, books) ;
-      result = Info(myorder, lookup(cDB, country));
+      result = Info(myorder, lookupPair(cDB, country));
       return result;
    }
 
@@ -390,8 +337,6 @@ Spain   10   100
     c = new SyncClient(agent,lb, map2list(cDB));
 }
 
-*/ end coment einar
-
 //***************************************************************
 //************************ test********************************
 //***************************************************************
@@ -426,7 +371,7 @@ Spain   10   100
 
 
 
-  /*   mP = lookup(bDB,"book2");
+  /*   mP = lookupPair(bDB,"book2");
     myB = getBooks(bDB, lb);
 Bool check = contains(domain(bDB),"book1") ;
 
