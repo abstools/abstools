@@ -101,7 +101,10 @@ public class DataTypeType extends Type {
    		 for (Type t : typeArgs) {
    			 if (!first)
    				 buf.append(',');
-   			 buf.append(t.toString());
+   			 if (t != null)
+   			     buf.append(t.toString());
+   			 else
+   			     buf.append("<unknown>");
    			 first = false;
    		 }
    		 buf.append('>');

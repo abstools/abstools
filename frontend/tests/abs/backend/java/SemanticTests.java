@@ -10,12 +10,34 @@ public class SemanticTests extends JavaBackendTest {
     }
 
     @Test
-    public void boolTestAnd() {
+    public void boolAnd() {
        assertEvalTrue("{ Bool testresult = False; testresult = True && True;  }"); 
     }
 
     @Test
-    public void boolTestOr() {
+    public void boolOr() {
        assertEvalTrue("{ Bool testresult = True || False;  }"); 
     }
+
+    @Test
+    public void boolIfThen() {
+       assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }"); 
+    }
+
+    @Test
+    public void boolIfFalse() {
+       assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }"); 
+    }
+
+    @Test
+    public void classDecl() {
+       assertEvalTrue("class C { } { Bool testresult = True; }"); 
+    }
+
+    @Test
+    public void intfClassDecl() {
+       assertEvalTrue("interface I { } class C implements I { } { Bool testresult = True; I i; }"); 
+    }
+
+    
 }

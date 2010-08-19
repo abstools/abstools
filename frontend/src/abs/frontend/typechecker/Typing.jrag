@@ -165,6 +165,8 @@ aspect Typing {
    			 } 
    		 }
    	 }
+   	 if (mostGeneralType == null)
+   	     return UnknownType.INSTANCE;
    	 return mostGeneralType;
     }
     eq FnApp.getType() {
@@ -219,14 +221,14 @@ aspect Typing {
     }
     eq ConstructorPattern.getParam(int i).getInhType() {
         DataConstructor d = lookupDataConstructor(this.getConstructor());
-        if (d == null) return null;
+        if (d == null) return UnknownType.INSTANCE;
         if (i >= d.getNumConstructorArg()) 
             return UnknownType.INSTANCE;
 
         Type declaredType = d.getConstructorArg(i).getType(); 
         
         Type dataType = getType();
-        if (!dataType.isDataType())
+        if (dataType == null || !dataType.isDataType())
             return UnknownType.INSTANCE;
 
         DataTypeType dt = (DataTypeType) dataType;

@@ -433,7 +433,8 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("def Bool f(Bool b) = f(5); "); 
     }
     
-    @Test public void functionTypecheckNoCrash() {
+    @Test 
+    public void fnTypecheckNoCrash() {
     	assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" +
     			"case map {" +
     			"EmptyMap => Nil ;" +
