@@ -1,11 +1,13 @@
 package abs.backend.java;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
@@ -38,6 +40,32 @@ public class JavaBackendTest extends ABSTest {
         } catch (Exception e) {
            System.out.println(javaCode);
             Assert.fail(e.getMessage());
+        }
+    }
+    
+    boolean runJava(String javaCode) {
+        String realCode = "package unittest;"+javaCode;
+        File tmpFile;
+        try {
+            
+            tmpFile = getTempFile(realCode);
+            JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", "bin:gen/test", "unittest.Main");
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String result = null;
+            while (true) {
+                String s = r.readLine();
+                if (s == null)
+                    break;
+                result = s;
+            }
+            return Boolean.valueOf(result);
+        } catch (Exception e) {
+           System.out.println(javaCode);
+            Assert.fail(e.getMessage());
+            return false;
         }
     }
     
@@ -107,6 +135,11 @@ public class JavaBackendTest extends ABSTest {
         tmpFile.deleteOnExit();
         
         return tmpFile;
+    }
+    
+    void assertEvalTrue(String absCode) {
+        boolean res = runJava(getJavaCode(absCode, true));
+        Assert.assertTrue("result was false", res);
     }
     
 }

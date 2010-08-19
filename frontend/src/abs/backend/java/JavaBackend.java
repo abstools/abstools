@@ -23,6 +23,7 @@ import abs.backend.java.lib.ABSBool;
 import abs.backend.java.lib.ABSFut;
 import abs.backend.java.lib.ABSInteger;
 import abs.backend.java.lib.ABSString;
+import abs.backend.java.lib.ABSUnit;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
@@ -30,7 +31,8 @@ import abs.frontend.parser.Main;
 
 public class JavaBackend {
     private static String testCode() {
-        return "interface A { Unit m(Bool b, Int i); } \n" + 
+        return "data Unit = Unit; data Bool = True | False; data Int;" + 
+        	   "interface A { Unit m(Bool b, Int i); } \n" + 
                "class B implements A { \n" +
                "  Unit m(Bool b, Int i) { \n" +
                "    A a; \n" +
@@ -39,7 +41,11 @@ public class JavaBackend {
                "} \n" + 
                "def A f() = null; \n" +
                "{ " +
-               "  A a; Int i; Bool b; a = null; " +
+               "  Bool testresult = False;" +
+               "  A a; " +
+               "  Int i = 5; " +
+               "  Bool b = True; " +
+               "  a = null; " +
                "  i = 5;" +
                "  i = i + 4;" +
                "  a.m(True, 5);" +
@@ -57,7 +63,7 @@ public class JavaBackend {
 
     public static void testCompile(String absCode) throws Exception {
         InputStream in = new ByteArrayInputStream(absCode.getBytes());
-        Model model = Main.parseString(absCode, true);
+        Model model = Main.parseString(absCode, false);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String code = out.toString();
@@ -121,6 +127,7 @@ public class JavaBackend {
         res.put("Bool",ABSBool.class.getName());
         res.put("String",ABSString.class.getName());
         res.put("Fut",ABSFut.class.getName());
+        res.put("Unit",ABSUnit.class.getName());
         return res;
     }
 

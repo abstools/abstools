@@ -16,7 +16,7 @@ aspect GenerateJava {
         if (hasMainBlock()) {
             Block block = getMainBlock();
             stream.println("public class Main {");
-            stream.print("   public static void main(String[] args) ");
+            stream.print("   public static void main(java.lang.String[] args) ");
             block.generateJava("   ",stream);
             stream.println("}");
         }
@@ -138,16 +138,32 @@ aspect GenerateJava {
         for (Stmt stmt : getStmts()) {
             stmt.generateJava(newIndent,stream);
         }
-
+        
+        if (this instanceof MainBlock) {
+            for (VarDecl v : getVars()) {
+                if (v.getName().equals("testresult")) {
+                    stream.println(indent+"System.out.println(testresult.toBoolean());");
+                }
+            }
+        }
+        
         if (addReturn) 
-       	    stream.println(indent+"return null;"); // TODO: Fix Unit return
+       	    stream.println(indent+"return ABSUnit.UNIT;"); // TODO: Fix Unit return
         stream.println(indent+"}");
     }
     
     public void VarDecl.generateJava(String indent, PrintStream stream) {
         stream.print(indent);
         getAccess().generateJava(stream);
-        stream.print(" "+getName()+" = null;");
+        stream.print(" "+getName()+" = ");
+        
+        if (hasInitExp()) {
+            getInitExp().generateJava(stream);
+        } else {
+            stream.print("null");
+        }
+        stream.print(";");
+        
     }
     
     
