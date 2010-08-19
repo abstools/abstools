@@ -3,20 +3,21 @@
 //Book shop example
 
 //Data Type declarations
- 
-data Unit = Unit; // builtin  
-data String; // builtin  
-data Int; // builtin
-data Bool = True | False; // builtin
+
+//data Unit = Unit; // builtin  
+//data String; // builtin  
+//data Int; // builtin
+//data Bool = True | False; // builtin
 //data Fut<A> ;
 
 //type synonyms  
-type Key = String ;
-type Bookname = Key ; 
-type Bookquantity = Int ;
-type Bookweight = Int ;
-type Bookbackordertime = Int ;
+//type Key = String ;
+//type Bookname = Key ; 
+//type Bookquantity = Int ;
+//type Bookweight = Int ;
+//type Bookbackordertime = Int ;
 
+/*
 type Countryname = Key ;  
 type Countryshiptime = Int ;
 type Countryshipcost = Int ;
@@ -389,6 +390,7 @@ Spain   10   100
     c = new SyncClient(agent,lb, map2list(cDB));
 }
 
+*/ end coment einar
 
 //***************************************************************
 //************************ test********************************
