@@ -88,3 +88,62 @@ def Map<Key,A> concatMap<Key,A>(Map<Key,A> map1, Map<Key,A> map2) =
          Pair(k,i) => InsertAssoc(Pair(k, i), concatMap(tail, map2)) ;
      };
   };
+
+//Bookinfo
+def Bookquantity bookquantity(Bookinfo book ) = 
+  case book {
+    ConsBookinfo(q,_ ,_ ) => q ;
+  };
+
+def Bookweight bookweight(Bookinfo book) = 
+  case book {
+    ConsBookinfo( _, w,_ ) => w ;
+  };
+    
+def Bookbackordertime bookbackordertime (Bookinfo book) = 
+  case book {
+    ConsBookinfo(_, _ ,t ) => t ;
+  };
+
+//Countryinfo
+def Countryshiptime countryshiptime(Countryinfo country) = 
+  case country {
+    ConsCountryinfo(t, _)=> t ;
+  };
+
+def Countryshipcost countryshipcost(Countryinfo country) = 
+  case country {
+    ConsCountryinfo(_, c) => c ;
+  };
+
+// DatabaseInfo
+
+def  Map<Bookname,Bookinfo> getBookMap(DatabaseInfo db) =
+   case db {
+     InfoFail => EmptyMap ;
+     Info(bm, _) => bm ;
+  };
+
+def Pair<Countryname,Countryinfo> getCountryinfo (DatabaseInfo db) =
+   case db {
+     InfoFail => Pair("",ConsCountryinfo(0,0)) ;
+     Info(_, c) => c ;
+  };
+
+//Int
+def Int max(Int a, Int b) =
+case (a > b) { True => a ; False => b ; };
+
+//****************************************************************************************
+//******************************************** bookshop model******************************
+//****************************************************************************************
+
+//session
+
+def Int calculateweight(Map<Bookname,Bookinfo> books) =
+    case books {
+      InsertAssoc(Pair(_,ConsBookinfo(_, w, _)), tail) => w + calculateweight(tail) ;
+      EmptyMap => 0 ;
+    };
+
+def Int calculatecost(Int w, Int c) = w*c;

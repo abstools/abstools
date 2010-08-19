@@ -147,7 +147,7 @@ case (a > b) { True => a ; False => b ; };
 
 def Int calculateweight(Map<Bookname,Bookinfo> books) =
     case books {
-      Insert(Pair(_,ConsBookinfo(_, w, _)), tail) => w + calculateweight(tail) ;
+      InsertAssoc(Pair(_,ConsBookinfo(_, w, _)), tail) => w + calculateweight(tail) ;
       EmptyMap => 0 ;
     };
 
@@ -156,8 +156,8 @@ def Int calculatecost(Int w, Int c) = w*c;
 
 def Int calculatetime(Map<Bookname,Bookinfo> books, Int time) =
     case books {
-      Insert(Pair(_, ConsBookinfo(0, _, t)), tail) => calculatetime(tail, max(time,t));
-      Insert(Pair(_, ConsBookinfo(q, _,t)), tail)=> calculatetime(tail, time);
+      InsertAssoc(Pair(_, ConsBookinfo(0, _, t)), tail) => calculatetime(tail, max(time,t));
+      InsertAssoc(Pair(_, ConsBookinfo(q, _,t)), tail)=> calculatetime(tail, time);
       EmptyMap => time ;
     };
 
@@ -168,8 +168,8 @@ def Map<Bookname,Bookinfo> getBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname
     Nil => EmptyMap;
     Cons(head, tail) => case (contains(domain(booksDB),head)) { 
                          False => getBooks(booksDB,tail) ;
-                         True => Insert(lookupPair(booksDB, head),getBooks(booksDB, tail)); } ;
-//concatMap(Insert(lookupPair(booksDB, head),EmptyMap),getBooks(booksDB, tail));
+                         True => InsertAssoc(lookupPair(booksDB, head),getBooks(booksDB, tail)); } ;
+//concatMap(InsertAssoc(lookupPair(booksDB, head),EmptyMap),getBooks(booksDB, tail));
   };
 
 def Map<Bookname,Bookinfo> updateBooks(Map<Bookname,Bookinfo> booksDB,List<Bookname> books )  = 
@@ -181,9 +181,9 @@ def Map<Bookname,Bookinfo> updateBooks(Map<Bookname,Bookinfo> booksDB,List<Bookn
 def Map<Bookname,Bookinfo> updateBook(Map<Bookname,Bookinfo> booksDB,Bookname book,Map<Bookname,Bookinfo> bookDB2)  =  
    case booksDB {
       EmptyMap => bookDB2;
-      Insert(Pair(book,ConsBookinfo(0,w,t)),tail) => concatMap(bookDB2, Insert(Pair(book,ConsBookinfo(0,w,t)),tail));
-      Insert(Pair(book,ConsBookinfo(q,w,t)),tail) => concatMap(bookDB2, Insert(Pair(book,ConsBookinfo(q-1,w,t)),tail));
-      Insert(head,tail) =>  updateBook(tail, book,concatMap(bookDB2, Insert(head,EmptyMap)));      
+      InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail) => concatMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(0,w,t)),tail));
+      InsertAssoc(Pair(book,ConsBookinfo(q,w,t)),tail) => concatMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(q-1,w,t)),tail));
+      InsertAssoc(head,tail) =>  updateBook(tail, book,concatMap(bookDB2, InsertAssoc(head,EmptyMap)));      
    };
 
 
