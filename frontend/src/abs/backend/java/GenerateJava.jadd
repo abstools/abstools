@@ -87,6 +87,9 @@ aspect GenerateJava {
         for (ParamDecl p : getParams()) {
             stream.println("      this."+p.getName()+" = "+p.getName()+";");
         }
+        if (hasInitBlock()) {
+            getInitBlock().generateJava("      ",stream);
+        }
         stream.println("   }");
 
         

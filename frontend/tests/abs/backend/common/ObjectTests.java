@@ -59,5 +59,12 @@ public class ObjectTests extends SemanticTests {
     public void fieldAssign() {
        assertEvalTrue(CLASS_WITH_ASSIGN+CALL_M); 
     }
+
+    private static String CLASS_WITH_INITBLOCK = INTERFACE_I+"class C(Bool f) implements I { Bool x = False; { x = True; } Bool m() { return this.x; } }" ;
+    
+    @Test
+    public void initBlock() {
+       assertEvalTrue(CLASS_WITH_INITBLOCK+CALL_M); 
+    }
     
 }
