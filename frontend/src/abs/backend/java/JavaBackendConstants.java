@@ -1,10 +1,10 @@
 package abs.backend.java;
 
-import abs.backend.java.lib.ABSAndGuard;
-import abs.backend.java.lib.ABSExpGuard;
-import abs.backend.java.lib.ABSFutureGuard;
-import abs.backend.java.lib.ABSRuntime;
-import abs.backend.java.lib.ABSType;
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.types.ABSAndGuard;
+import abs.backend.java.lib.types.ABSExpGuard;
+import abs.backend.java.lib.types.ABSFutureGuard;
+import abs.backend.java.lib.types.ABSType;
 
 public class JavaBackendConstants {
     public static String LIB_PACKAGE = ABSType.class.getPackage().getName();

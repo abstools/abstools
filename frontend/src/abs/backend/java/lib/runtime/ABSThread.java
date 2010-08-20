@@ -1,4 +1,4 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.runtime;
 
 public class ABSThread extends Thread {
 	private COG cog;

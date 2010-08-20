@@ -1,0 +1,38 @@
+package abs.backend.common;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import abs.backend.BackendTestDriver;
+
+@RunWith(Parameterized.class)
+public class StmtTests extends SemanticTests {
+
+    public StmtTests(BackendTestDriver d) {
+        super(d);
+    }
+
+    @Test
+    public void ifThen() {
+       assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }"); 
+    }
+
+    @Test
+    public void ifFalse() {
+       assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }"); 
+    }
+
+    @Test
+    public void whileFalse() {
+       assertEvalTrue("{ Bool testresult = False; while (False) { }; testresult = True;  }"); 
+    }
+
+    
+    
+    @Test
+    public void assignStmt() {
+       assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }"); 
+    }
+    
+}

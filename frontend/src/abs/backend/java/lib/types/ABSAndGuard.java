@@ -1,4 +1,4 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.types;
 
 public class ABSAndGuard extends ABSGuard {
 	public final ABSGuard left;

@@ -14,48 +14,6 @@ import abs.backend.maude.MaudeTestDriver;
 
 @RunWith(Parameterized.class)
 public class SemanticTests {
-    
-    @Test
-    public void boolTest() {
-       assertEvalTrue("{ Bool testresult = True;  }"); 
-    }
-
-    @Test
-    public void boolAnd() {
-       assertEvalTrue("{ Bool testresult = False; testresult = True && True;  }"); 
-    }
-
-    @Test
-    public void boolOr() {
-       assertEvalTrue("{ Bool testresult = True || False;  }"); 
-    }
-
-    @Test
-    public void boolIfThen() {
-       assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }"); 
-    }
-
-    @Test
-    public void boolIfFalse() {
-       assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }"); 
-    }
-
-    @Test
-    public void classDecl() {
-       assertEvalTrue("class C { } { Bool testresult = True; }"); 
-    }
-
-    @Test
-    public void intfClassDecl() {
-       assertEvalTrue("interface I { } class C implements I { } { Bool testresult = True; I i; }"); 
-    }
-    
-    
-    private void assertEvalTrue(String absCode) {
-        driver.assertEvalTrue(absCode);
-    }
-
-
     private BackendTestDriver driver;
 
     public SemanticTests(BackendTestDriver d) {
@@ -67,5 +25,10 @@ public class SemanticTests {
       Object[][] data = new Object[][] { { new JavaTestDriver() }, { new MaudeTestDriver() } };
       return Arrays.asList(data);
     }
+    
+    public void assertEvalTrue(String absCode) {
+        driver.assertEvalTrue(absCode);
+    }
 
+    
 }

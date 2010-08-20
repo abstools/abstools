@@ -1,4 +1,6 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.runtime;
+
+import abs.backend.java.lib.types.ABSGuard;
 
 public class ABSRuntime {
 

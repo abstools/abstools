@@ -1,4 +1,6 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.types;
+
+import abs.backend.java.lib.runtime.ABSRuntime;
 
 public abstract class ABSExpGuard extends ABSGuard {
 

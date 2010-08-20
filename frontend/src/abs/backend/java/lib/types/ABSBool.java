@@ -1,4 +1,5 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.types;
+
 
 public class ABSBool implements ABSDataType {
     public static ABSBool TRUE = new ABSBool(true);

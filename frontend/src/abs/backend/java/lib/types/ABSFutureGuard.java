@@ -1,4 +1,5 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.types;
+
 
 public class ABSFutureGuard extends ABSGuard {
 	public final ABSFut fut;

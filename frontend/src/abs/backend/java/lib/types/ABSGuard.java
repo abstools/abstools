@@ -1,4 +1,4 @@
-package abs.backend.java.lib;
+package abs.backend.java.lib.types;
 
 public abstract class ABSGuard {
 	public abstract boolean isTrue();

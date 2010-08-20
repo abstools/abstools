@@ -3,6 +3,8 @@
 import java.io.*;
 import abs.backend.java.*;
 import abs.backend.java.lib.*;
+import abs.backend.java.lib.runtime.*;
+import abs.backend.java.lib.types.*;
 import abs.frontend.ast.*;
 
 aspect GenerateJava {
@@ -50,15 +52,8 @@ aspect GenerateJava {
     public void MethodSig.generateJava(String indent, PrintStream stream) {
    	  stream.print(indent+"public ");
    	  getReturnType().generateJava(stream);
-   	  stream.print(" "+getName()+"(");
-   	  boolean first = true;
-   	  for (ParamDecl d : getParams()) {
-   		  if (!first)
-   			  stream.print(", ");
-   		  d.generateJava(stream);
-   		  first = false;
-   	  }
-   	  stream.print(")");
+   	  stream.print(" "+getName());
+   	  JavaGeneratorHelper.generateParams(stream, getParams());
     }
     
     public void ParamDecl.generateJava(PrintStream stream) {
@@ -67,16 +62,34 @@ aspect GenerateJava {
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
-        stream.print("class "+getName()+" implements ABSClassType");
+        stream.print("class "+getName()+" extends "+ABSObject.class.getName()+" implements "+ABSClassType.class.getName());
         for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
             stream.print(", "+use.getName());
         }
         
         ClassDecl d = null;
         stream.println(" {");
-        for (FieldDecl f : getFields()) {
-      	  f.generateJava("   ", stream);
+        
+        for (ParamDecl p : getParams()) {
+            stream.print("   private final ");
+            p.generateJava(stream);
+            stream.println(";");
         }
+        
+        for (FieldDecl f : getFields()) {
+      	  f.generateJava("   private ", stream);
+        }
+        
+        // constructor
+        stream.print("   public "+getName());
+        JavaGeneratorHelper.generateParams(stream, getParams());
+        stream.println(" {");
+        for (ParamDecl p : getParams()) {
+            stream.println("      this."+p.getName()+" = "+p.getName()+";");
+        }
+        stream.println("   }");
+
+        
         for (MethodImpl m : getMethods()) {
       	  m.generateJava("   ", stream);
         }
@@ -230,7 +243,7 @@ aspect GenerateJava {
     }
     
     public void AssertStmt.generateJava(String indent, PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        //throw new NotImplementedYetException(this);
     }
     
     /*
@@ -271,16 +284,8 @@ aspect GenerateJava {
     
     public void SyncCall.generateJava(PrintStream stream) {
         getCallee().generateJava(stream);
-        stream.print("."+getMethod()+"(");
-        boolean first = true;
-        for (PureExp e : getParams()) {
-      	  if (!first) 
-      		  stream.print(", ");
-
-      	   e.generateJava(stream);
-   		  first = false;
-        }
-        stream.print(")");
+        stream.print("."+getMethod());
+        JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
     public void GetExp.generateJava(PrintStream stream) {
@@ -288,7 +293,8 @@ aspect GenerateJava {
     }
 
     public void NewExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("new "+getClassRef());
+        JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
     public void DataTypeUse.generateJava(PrintStream stream) {
@@ -308,7 +314,7 @@ aspect GenerateJava {
     }
 
     public void FieldUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("this."+getName());
     }
 
     public void VarUse.generateJava(PrintStream stream) {
