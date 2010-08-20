@@ -169,13 +169,13 @@
 	<!-- suite file -->
 	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
    <property name="test.backend.suite.name" value="abs.backend.AllTests" />
-   <property name="test.backend.maude.suite.name" value="abs.backend.maude.MaudeTests" />
+   <property name="test.backend.semantic.suite.name" value="abs.backend.common.SemanticTests" />
 
    <target name="tests-all" depends="tests-frontend, tests-backend" />
 
-   <target name="tests-maude-backend" depends="compile">
+   <target name="tests-backend-semantic" depends="compile">
       <junit fork="yes" haltonfailure="yes">
-          <test name="${test.backend.maude.suite.name}" />
+          <test name="${test.backend.semantic.suite.name}" />
           <formatter type="plain" usefile="false" />
           <classpath refid="test.classpath" />
       </junit>

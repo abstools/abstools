@@ -75,11 +75,11 @@ public class MaudeTests extends ABSTest {
 
     
     
-    void assertTrueMaude(String absCode) {
+    public void assertTrueMaude(String absCode) {
     	assertMaudeResult(absCode, "True");
     }
     
-    void assertFalseMaude(String absCode) {
+    public void assertFalseMaude(String absCode) {
     	assertMaudeResult(absCode, "False");
     }
     
