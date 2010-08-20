@@ -269,7 +269,9 @@ fmod ABS-DATA-STRING is
   eq "#" ("str"[S]) = "int"[length(S)] .
   eq "ascii" ("str"[S]) = "int"[ascii(S)] .
   eq "char" ("int"[N]) = "str"[char(N)] .
-  eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
+  eq fparams("substr") = @ "S", @ "L", @ "R" .
+  eq fdefn("substr") = $builtin("substr") .
+  *** eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
   eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
   eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
@@ -849,7 +851,8 @@ fmod ABS-EVAL is
   
   *** ABS-DATA-INT
   eq eval($builtin("--"), S, CN) = "int"[-(S[@ "I"]) asInt] .
-  eq eval($builtin("+"), S, CN) = "int"[(S[@ "I1"]) asInt + (S[@ "I2"]) asInt] .
+  ceq eval($builtin("+"), S, CN) = "int"[I1:Int + I2:Int]
+  if "int"[I1:Int] := S[@ "I1"] /\ "int"[I2:Int] := S[@ "I2"] .
   eq eval($builtin("-"), S, CN) = "int"[(S[@ "I1"]) asInt - (S[@ "I2"]) asInt] .
   eq eval($builtin("*"), S, CN) = "int"[(S[@ "I1"]) asInt * (S[@ "I2"]) asInt] .
   eq eval($builtin("/"), S, CN) = "int"[(S[@ "I1"]) asInt quo (S[@ "I2"]) asInt] .
@@ -858,7 +861,11 @@ fmod ABS-EVAL is
   eq eval($builtin("<="), S, CN) = ((S[@ "I1"]) asInt <= (S[@ "I2"]) asInt) asAbsBool .
   eq eval($builtin(">"), S, CN) = ((S[@ "I1"]) asInt > (S[@ "I2"]) asInt) asAbsBool .
   eq eval($builtin(">="), S, CN) = ((S[@ "I1"]) asInt >= (S[@ "I2"]) asInt) asAbsBool .
-  
+  *** ABS-DATA-STRING
+  ceq eval($builtin("+"), S, CN) = "str"[I1:String + I2:String]
+  if "str"[I1:String] := S[@ "I1"] /\ "str"[I2:String] := S[@ "I2"] .
+  eq eval($builtin("substr"), S, CN) =
+    "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
 endfm
 
 
