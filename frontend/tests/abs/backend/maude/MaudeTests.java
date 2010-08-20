@@ -93,6 +93,7 @@ public class MaudeTests extends ABSTest {
 				String boolValue = matcher.group(1);
 				Assert.assertEquals(boolValue, expectedResult);
 			} else {
+			    System.out.println(maudeOutput);
 				Assert.fail("Did not find Maude \"testresult\" variable.");
 			}
 		} catch (Exception e) {
@@ -129,9 +130,20 @@ public class MaudeTests extends ABSTest {
     protected String getMaudeOutput(String maudeCode) throws IOException, InterruptedException {
     	StringBuffer result = new StringBuffer();
     	// Assuming `maude' is in $PATH here.
-    	String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch"};
-    	// FIXME: find path to interpreter relative to running program
-    	Process p = Runtime.getRuntime().exec(cmd, null, new File("../interpreter/"));
+    	
+    	ProcessBuilder pb = new ProcessBuilder();
+
+    	File interpreter = new File(new File(System.getProperty("user.dir")).getParentFile(),"interpreter/abs-interpreter.maude");
+        String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch", interpreter.getAbsolutePath()};
+        pb.command(cmd);
+    	
+    	if (!interpreter.exists()) {
+    	    Assert.fail(interpreter.getAbsolutePath()+" does not exist!");
+    	}
+    	//pb.directory(workingDir);
+    	pb.redirectErrorStream(true);
+    	Process p = pb.start();
+
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
         while (in.ready()) {

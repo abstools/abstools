@@ -169,8 +169,18 @@
 	<!-- suite file -->
 	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
    <property name="test.backend.suite.name" value="abs.backend.AllTests" />
+   <property name="test.backend.maude.suite.name" value="abs.backend.maude.MaudeTests" />
 
    <target name="tests-all" depends="tests-frontend, tests-backend" />
+
+   <target name="tests-maude-backend" depends="compile">
+      <junit fork="yes" haltonfailure="yes">
+          <test name="${test.backend.maude.suite.name}" />
+          <formatter type="plain" usefile="false" />
+          <classpath refid="test.classpath" />
+      </junit>
+   </target>
+   
    
    <target name="tests-backend" depends="compile">
       <junit fork="yes" haltonfailure="yes">
