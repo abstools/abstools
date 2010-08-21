@@ -28,6 +28,9 @@ import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
 import abs.frontend.parser.Main;
+import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.InterfaceType;
+import abs.frontend.typechecker.Type;
 
 public class JavaBackend {
     private static String testCode() {
@@ -141,5 +144,22 @@ public class JavaBackend {
         }
         return absType.getName();
     }
+    
+    public static String getQualifiedString(Type absType) {
+   	 String res = null;
+   	 if (absType.isDataType()) {
+   		 DataTypeType dt = (DataTypeType) absType;
+      	 res = dataTypeMap.get(dt.getDecl().getName());
+   		 if (res != null)
+   			 return res;
+   		 return dt.getDecl().getName();
+   	 } else if (absType.isInterfaceType()) {
+   		 InterfaceType it = (InterfaceType) absType;
+   		 return it.getDecl().getName();
+   	 }
+
+   	 throw new RuntimeException("Type "+absType.getClass().getName()+" not yet supported by Java backend");
+    }
+    
     
 }

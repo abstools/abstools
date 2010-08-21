@@ -2,7 +2,7 @@ package abs.backend.java;
 
 import org.junit.Test;
 
-public class PrimitiveTests extends JavaBackendTest {
+public class JavaPrimitiveTests extends JavaBackendTest {
     @Test
     public void testNullLit() {
         assertValid("interface I { } { I i; i = null; }");

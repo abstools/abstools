@@ -124,10 +124,15 @@ aspect GenerateJava {
     }
     
     public void FunctionDecl.generateJava(PrintStream stream) {
-        String typeArg = getTypeUse().getName();
-        stream.println("class "+getName()+" implements ABSFunction<"+typeArg+"> {");
-        stream.println("   public "+typeArg+" apply() {");
-        stream.println("      return null;");
+        stream.println("class ABSFunction__"+getName()+" implements ABSFunction {");
+        stream.print("   public static ");
+        getTypeUse().generateJava(stream);
+        stream.print(" apply");
+        JavaGeneratorHelper.generateParams(stream,getParams());
+        stream.println(" {");
+        stream.print("      return ");
+        getFunDef().generateJava(stream);
+        stream.println(";");
         stream.println("   }");
         stream.println("}");
     }
@@ -329,7 +334,9 @@ aspect GenerateJava {
     }
 
     public void FnApp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+   	 stream.print("ABSFunction__"+getName()+".apply");
+   	 JavaGeneratorHelper.generateArgs(stream,getParams());
+   	 
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
@@ -347,7 +354,19 @@ aspect GenerateJava {
     }
 
     public void LetExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print("new Let<");
+        String varType = JavaBackend.getQualifiedString(getType());
+        stream.print(varType);
+        stream.print(',');
+        String expType = JavaBackend.getQualifiedString(getExp().getType());
+        stream.print(expType+">() { public "+expType);
+        stream.print(" in(final "+varType+" "+getVar().getName()+") { ");
+        stream.print("return ");
+        getExp().generateJava(stream);
+        stream.print("; }}.in(");
+        getVal().generateJava(stream);
+        stream.print(")");
+        
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {

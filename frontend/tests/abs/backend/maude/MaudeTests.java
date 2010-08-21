@@ -133,9 +133,11 @@ public class MaudeTests extends ABSTest {
     	
     	ProcessBuilder pb = new ProcessBuilder();
 
-    	File interpreter = new File(new File(System.getProperty("user.dir")).getParentFile(),"interpreter/abs-interpreter.maude");
+    	File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(),"interpreter");
+    	File interpreter = new File(interpreterDir,"abs-interpreter.maude");
         String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch", interpreter.getAbsolutePath()};
         pb.command(cmd);
+        pb.directory(interpreterDir);
     	
     	if (!interpreter.exists()) {
     	    Assert.fail(interpreter.getAbsolutePath()+" does not exist!");

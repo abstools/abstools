@@ -169,7 +169,7 @@
 	<!-- suite file -->
 	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
    <property name="test.backend.suite.name" value="abs.backend.AllTests" />
-   <property name="test.backend.semantic.suite.name" value="abs.backend.common.SemanticTests" />
+   <property name="test.backend.semantic.suite.name" value="abs.backend.common.AllSemanticTests" />
 
    <target name="tests-all" depends="tests-frontend, tests-backend" />
 

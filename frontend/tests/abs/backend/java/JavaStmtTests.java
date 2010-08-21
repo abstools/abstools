@@ -2,7 +2,7 @@ package abs.backend.java;
 
 import org.junit.Test;
 
-public class StmtTests extends JavaBackendTest {
+public class JavaStmtTests extends JavaBackendTest {
     
     @Test
     public void emptyBlock() {
