@@ -27,6 +27,17 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataType() {
+       assertEvalTrue("data Foo = Bar; { Bool testresult = True; Foo f = Bar(); }");
+    }
+
+    @Test
+    public void dataTypeArgs() {
+       assertEvalTrue("data Foo = Bar(Bool); { Bool testresult = True; Foo f = Bar(True); }");
+    }
+    
+    
+    @Test
     public void letExp() {
        assertEvalTrue("def Bool f() = let (Bool x) = True in x;" + CALL_F); 
     }
@@ -39,6 +50,11 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void letExpNested2() {
        assertEvalTrue("def Bool f() = let (Bool x) = True in let (Bool y) = False in x;" + CALL_F); 
+    }
+
+    @Test
+    public void letExpNested3() {
+       assertEvalTrue("def Bool f() = let (Bool x) = False in let (Bool x) = True in x;" + CALL_F); 
     }
     
 }

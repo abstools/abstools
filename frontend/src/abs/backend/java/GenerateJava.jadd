@@ -119,8 +119,49 @@ aspect GenerateJava {
     
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
-        stream.println("class "+getName()+" implements ABSDataType {");
+        stream.println("abstract class "+getName()+" implements ABSDataType {");
         stream.println("}");
+        
+        
+        for (DataConstructor c : getDataConstructors()) {
+      	  stream.println("class ABSConstructor__"+c.getName()+" extends "+getName()+" {");
+      	  int i = 0;
+      	  for (DataTypeUse u : c.getConstructorArgs()) {
+      		  stream.print("   public final ");
+      		  stream.println(JavaBackend.getJavaType(u)+" arg"+i+";");
+      		  i++;
+      	  }
+      	  
+      	  stream.print("   public ABSConstructor__"+c.getName()+"(");
+           boolean first = true;
+      	  i = 0;
+      	  for (DataTypeUse u : c.getConstructorArgs()) {
+      		  if (first)
+      			  first = false;
+      		  else 
+      			  stream.print(",");
+      		  stream.print("   final ");
+      		  stream.print(JavaBackend.getJavaType(u)+" arg"+i);
+      		  i++;
+      	  }
+           stream.println(") {");
+      	  i = 0;
+      	  for (DataTypeUse u : c.getConstructorArgs()) {
+      		  stream.println("this.arg"+i+" = arg"+i+";");
+      		  i++;
+      	  }
+           stream.println("   }");
+           
+           /*
+           stream.println("   public ABSBool eq("+getName()+" other) {");
+           stream.println("      ")
+           */
+           
+           stream.println("}");
+      	  
+        }
+        
+        
     }
     
     public void FunctionDecl.generateJava(PrintStream stream) {
@@ -342,14 +383,15 @@ aspect GenerateJava {
     public void DataConstructorExp.generateJava(PrintStream stream) {
         DataConstructor c = lookupDataConstructor(this.getConstructor());
         DataTypeDecl decl = c.getDecl();
-        
-        if (decl.getName().equals("Bool")) {
+        String name = decl.getName();
+        if (name.equals("Bool")) {
             stream.print(ABSBool.class.getName());
             stream.print(".fromBoolean(");
             stream.print(getConstructor().toLowerCase());
             stream.print(")");
         } else {
-            throw new NotImplementedYetException(this);
+      	  stream.print("new ABSConstructor__"+getConstructor());
+      	  JavaGeneratorHelper.generateArgs(stream,getParams());
         }
     }
 
