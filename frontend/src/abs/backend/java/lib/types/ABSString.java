@@ -1,7 +1,7 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSString implements ABSDataType {
+public class ABSString extends ABSDataType {
     public static final ABSString EMPTY = new ABSString("");
     
     private final String value;
@@ -14,16 +14,13 @@ public class ABSString implements ABSDataType {
         return fromString(value + s.value);
     }
     
-    public ABSBool eq(ABSString s) {
-        if (s == null)
+    public ABSBool eq(ABSDataType o) {
+        if (!super.eq(o).toBoolean())
             return ABSBool.FALSE;
+        ABSString s = (ABSString) o;
         return ABSBool.fromBoolean(this.value.equals(s.value));
     }
 
-    public ABSBool notEq(ABSString s) {
-        return eq(s).negate();
-    }
-    
     public static ABSString fromString(String s) {
         if (s.isEmpty())
             return EMPTY;

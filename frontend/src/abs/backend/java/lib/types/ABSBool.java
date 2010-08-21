@@ -1,7 +1,7 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSBool implements ABSDataType {
+public class ABSBool extends ABSDataType {
     public static ABSBool TRUE = new ABSBool(true);
     public static ABSBool FALSE = new ABSBool(false);
     
@@ -10,7 +10,7 @@ public class ABSBool implements ABSDataType {
         this.value = v;
     }
     
-    public ABSBool eq(ABSBool o) {
+    public ABSBool eq(ABSDataType o) {
         return ABSBool.fromBoolean(o == this);
     }
     

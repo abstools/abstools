@@ -1,7 +1,7 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSFut implements ABSDataType {
+public class ABSFut extends ABSDataType {
 	private Object value;
 	private boolean isResolved;
 	
@@ -30,6 +30,12 @@ public class ABSFut implements ABSDataType {
 
    public synchronized Object get() {
    	return value;
+   }
+
+
+   @Override
+   public ABSBool eq(ABSDataType other) {
+	   return ABSBool.fromBoolean(other == this);
    }
    
 }

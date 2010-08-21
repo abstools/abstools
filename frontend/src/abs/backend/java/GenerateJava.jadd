@@ -119,7 +119,7 @@ aspect GenerateJava {
     
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
-        stream.println("abstract class "+getName()+" implements ABSDataType {");
+        stream.println("abstract class "+getName()+" extends ABSDataType {");
         stream.println("}");
         
         
@@ -132,7 +132,8 @@ aspect GenerateJava {
       		  i++;
       	  }
       	  
-      	  stream.print("   public ABSConstructor__"+c.getName()+"(");
+      	  String constructorClassName = "ABSConstructor__"+c.getName();
+      	  stream.print("   public "+constructorClassName+"(");
            boolean first = true;
       	  i = 0;
       	  for (DataTypeUse u : c.getConstructorArgs()) {
@@ -152,10 +153,18 @@ aspect GenerateJava {
       	  }
            stream.println("   }");
            
-           /*
-           stream.println("   public ABSBool eq("+getName()+" other) {");
-           stream.println("      ")
-           */
+           stream.println("   public ABSBool eq("+getName()+" o) {");
+           stream.println("      if (! (o instanceof "+constructorClassName+")) return ABSBool.FALSE;");
+           stream.println("      "+constructorClassName+" other = ("+constructorClassName+") o;");
+           
+      	  i = 0;
+      	  for (DataTypeUse u : c.getConstructorArgs()) {
+      		  stream.println("if (!this.arg"+i+".eq(other.arg"+i+").toBoolean()) return ABSBool.FALSE;");
+      		  i++;
+      	  }
+           
+           stream.println("      return ABSBool.TRUE;");
+           stream.println("   }");
            
            stream.println("}");
       	  
@@ -371,7 +380,21 @@ aspect GenerateJava {
     }
     
     public void CaseExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+       stream.print("new Case<");
+       String varType = JavaBackend.getQualifiedString(getExpr().getType());
+       stream.print(varType);
+       stream.print(',');
+       String expType = JavaBackend.getQualifiedString(getType());
+       stream.print(expType+">() { public "+expType);
+       stream.println(" of(final "+varType+" "+getVar().getName()+") { ");
+       stream.println("    "+expType+" __ABS_result = null;");
+       for (CaseBranch b : getBranches()) {
+      	  
+       }
+       stream.println("return __ABS_result;");
+       stream.print("}}.in(");
+       getVal().generateJava(stream);
+       stream.print(")");
     }
 
     public void FnApp.generateJava(PrintStream stream) {
@@ -397,7 +420,7 @@ aspect GenerateJava {
 
     public void LetExp.generateJava(PrintStream stream) {
         stream.print("new Let<");
-        String varType = JavaBackend.getQualifiedString(getType());
+        String varType = JavaBackend.getQualifiedString(getVar().getType());
         stream.print(varType);
         stream.print(',');
         String expType = JavaBackend.getQualifiedString(getExp().getType());

@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * @author Jan Schäfer
  *
  */
-public class ABSInteger implements ABSDataType {
+public class ABSInteger extends ABSDataType {
     public static final ABSInteger ZERO = new ABSInteger(0);
     public static final ABSInteger ONE = new ABSInteger(1);
 
@@ -48,16 +48,13 @@ public class ABSInteger implements ABSDataType {
         return fromBigInt(this.value.negate());
     }
 
-    public ABSBool eq(ABSInteger o) {
-        if (o == null)
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(o.value.compareTo(this.value) == 0);
+    public ABSBool eq(ABSDataType o) {
+   	  if (!super.eq(o).toBoolean())
+   		  return ABSBool.FALSE;
+   	  ABSInteger oi = (ABSInteger) o;
+        return ABSBool.fromBoolean(oi.value.compareTo(this.value) == 0);
     }
 
-    public ABSBool notEq(ABSInteger o) {
-        return eq(o).negate();
-    }
-    
     public ABSBool gt(ABSInteger i) {
         if (i == null)
             return ABSBool.FALSE;
