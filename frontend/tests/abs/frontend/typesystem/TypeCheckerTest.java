@@ -397,6 +397,15 @@ public class TypeCheckerTest extends FrontendTest {
 	 public void caseErrorNoDataType() {
 		 assertTypeErrors("interface I { } { I i; Bool b = case i { True => False; False => 5; }; }"); 
 	 }
+    
+    @Test
+    public void caseBoundVarWrongType() {
+       assertTypeErrors("def Bool f(Bool x) = let (Int y) = 5 in case x { y => True; };");
+       
+    }
+    
+    
+    
 
     @Test
 	 public void caseErrorConstructorNotResolvable() {

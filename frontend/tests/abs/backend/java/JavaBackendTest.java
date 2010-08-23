@@ -145,7 +145,7 @@ public class JavaBackendTest extends ABSTest {
     public void assertEvalEquals(String absCode, boolean value) {
         String javaCode = getJavaCode(absCode, true);
         boolean res = runJava(javaCode);
-        System.out.println(javaCode);
+        //System.out.println(javaCode);
         Assert.assertEquals(value,res);
     }
     

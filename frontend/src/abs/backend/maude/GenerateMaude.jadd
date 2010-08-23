@@ -265,6 +265,10 @@ aspect GenerateMaude {
     public void PatternVar.generateMaude(PrintStream stream) {
         getVar().generateMaude(stream);
     }
+
+    public void PatternVarUse.generateMaude(PrintStream stream) {
+        stream.print("@ \"" + getName() + "\" ");
+    }
     
     public void PatternVarDecl.generateMaude(PrintStream stream) {
         stream.print("@ \"" + getName() + "\" ");

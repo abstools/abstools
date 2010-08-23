@@ -211,6 +211,7 @@ aspect Typing {
     
     syn lazy Type Pattern.getType();
     eq ConstructorPattern.getType() = getInhType();
+    eq PatternVarUse.getType() = getInhType();
     eq PatternVar.getType() = getInhType();  
     eq UnderscorePattern.getType() = AnyType.INSTANCE;
     eq LiteralPattern.getType() = getLiteral().getType();

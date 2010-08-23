@@ -2,7 +2,6 @@
 
 import java.io.*;
 import abs.backend.java.*;
-import abs.backend.java.lib.*;
 import abs.backend.java.lib.runtime.*;
 import abs.backend.java.lib.expr.*;
 import abs.backend.java.lib.types.*;
@@ -461,6 +460,11 @@ aspect GenerateJava {
     
     public void UnderscorePattern.generateJava(PrintStream stream) {
         stream.print("new "+AnyPattern.class.getName()+"()");
+    }
+    
+    public void PatternVarUse.generateJava(PrintStream stream) {
+        stream.print("new "+PatternValue.class.getName()+"("+getName()+")");
+        
     }
  
     public void FnApp.generateJava(PrintStream stream) {

@@ -11,6 +11,7 @@ aspect FreePatternVars {
         return res;
     }
     
+    eq PatternVarUse.getFreeVars() = new ArrayList<PatternVar>(0);
     eq LiteralPattern.getFreeVars() = new ArrayList<PatternVar>(0);
     eq UnderscorePattern.getFreeVars() = new ArrayList<PatternVar>(0);
     eq ConstructorPattern.getFreeVars() {

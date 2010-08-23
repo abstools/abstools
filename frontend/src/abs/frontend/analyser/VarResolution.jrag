@@ -27,6 +27,7 @@ aspect VarResolution {
     
     syn lazy PatternVarDecl Pattern.localLookupVarName(String name);
     eq Pattern.localLookupVarName(String name) = null;
+    eq PatternVarUse.localLookupVarName(String name) = null;
     eq PatternVar.localLookupVarName(String name) {
         if (getVar().getName().equals(name))
             return getVar();
@@ -130,6 +131,14 @@ aspect VarResolution {
     inh VarOrFieldDecl Exp.lookupVarName(String name);
     inh VarOrFieldDecl Stmt.lookupVarName(String name);
     inh VarOrFieldDecl MethodSig.lookupVarName(String name);
+    
+    inh VarOrFieldDecl PatternVarUse.lookupVarName(String name);
+    
+    // replace unbound pattern variables with var decls
+    rewrite PatternVarUse {
+        when (lookupVarName(getName()) == null)
+            to PatternVar new PatternVar(new PatternVarDecl(getName()));
+    }
     
 }
 
