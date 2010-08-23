@@ -23,4 +23,8 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
         }
     }
 
+    @Override
+   public boolean isBuiltIn() {
+      return true;
+   }
 }

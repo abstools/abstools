@@ -34,7 +34,7 @@ public class DataTypeType extends Type {
        this.decl = decl;
        this.typeArgs.addAll(typeArgs);
    }
-    
+
     public List<Type> getTypeArgs() {
         return Collections.unmodifiableList(typeArgs);
     }

@@ -66,6 +66,36 @@ public abstract class Type {
     
     public boolean isSubtypeOf(Type t) {
    	 // default implementation 
+   	 if (t.isAnyType())
+   		 return true;
+   	 
+ 	   if (t.isBoundedType()) {
+  		 BoundedType bt = (BoundedType) t;
+  		 if (bt.hasBoundType())
+  			 return this.isSubtypeOf(bt.getBoundType());
+  		 bt.bindTo(this);
+  		 return true;
+ 	   }
    	 return equals(t);
     }
+
+	public boolean isBoundedType() {
+	   return false;
+   }
+
+	public boolean assignable(Type t) {
+		if (this.equals(t))
+			return true;
+		
+		if (t.isBoundedType()) {
+  		 	BoundedType bt = (BoundedType) t;
+	   	if (bt.hasBoundType())
+	   		return this.assignable(bt.getBoundType());
+	      bt.bindTo(this);
+	   	return true;
+	   	
+	 	}
+
+	   return false;
+   }
 }

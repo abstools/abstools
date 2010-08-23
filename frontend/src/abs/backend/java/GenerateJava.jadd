@@ -119,13 +119,31 @@ aspect GenerateJava {
     
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
-        stream.println("abstract class "+getName()+" extends ABSDataType {");
+        stream.print("abstract class "+getName());
+        if (this instanceof ParametricDataTypeDecl) {
+      	  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
+      	  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
+        }
+        
+        stream.println(" extends ABSDataType {");
         stream.println("}");
         
         
         for (DataConstructor c : getDataConstructors()) {
           String constructorClassName = "ABSConstructor__"+c.getName();
-      	  stream.println("class "+constructorClassName+" extends "+getName()+" {");
+      	  stream.print("class "+constructorClassName);
+      	  if (this instanceof ParametricDataTypeDecl) {
+      		  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
+      		  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
+      	  }
+      	  
+      	  stream.print(" extends "+getName());
+      	  if (this instanceof ParametricDataTypeDecl) {
+      		  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
+      		  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), false);
+      	  }
+      	  stream.println(" {");
+
       	  int i = 0;
       	  for (DataTypeUse u : c.getConstructorArgs()) {
       		  stream.print("   public final ");
@@ -187,9 +205,16 @@ aspect GenerateJava {
     }
     
     public void FunctionDecl.generateJava(PrintStream stream) {
-        stream.println("final class ABSFunction__"+getName()+" implements ABSFunction {");
-        stream.println("   private ABSFunction__"+getName()+"() { }");
+   	  String className = "ABSFunction__"+getName();
+        stream.print("final class "+className);
+        stream.println(" implements ABSFunction {");
+        stream.println("   private "+className+"() { }");
         stream.print("   public static ");
+        if (this instanceof ParametricFunctionDecl) {
+      	  ParametricFunctionDecl pfd = (ParametricFunctionDecl) this;
+      	  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
+        }
+        
         getTypeUse().generateJava(stream);
         stream.print(" apply");
         JavaGeneratorHelper.generateParams(stream,getParams());
@@ -206,6 +231,11 @@ aspect GenerateJava {
     public void ExpFunctionDef.generateJava(PrintStream stream) {
         getRhs().generateJava(stream);
     }
+    
+    public void BuiltinFunctionDef.generateJava(PrintStream stream) {
+   	  stream.print("null");
+    }
+    
 
 
     public void TypeParameterDecl.generateJava(PrintStream stream) {
@@ -368,7 +398,8 @@ aspect GenerateJava {
     }
 
     public void GetExp.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+   	  getPureExp().generateJava(stream);
+        stream.print(".get()");
     }
 
     public void NewExp.generateJava(PrintStream stream) {
@@ -385,7 +416,7 @@ aspect GenerateJava {
     }
 
     public void TypeParameterUse.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(getName());
     }
     
     public void UnresolvedTypeUse.generateJava(PrintStream stream) {
@@ -423,7 +454,7 @@ aspect GenerateJava {
           for (PatternVar var : freeVars) {
               if (first) first = false;
               else stream.print(",");
-              stream.print(JavaBackend.getQualifiedString(var.getType()));
+              stream.print("final "+JavaBackend.getQualifiedString(var.getType()));
               stream.print(" "+var.getVar().getName());
           }
           stream.print(") { return ");
@@ -448,9 +479,7 @@ aspect GenerateJava {
        stream.print(")");
     }
        
-    public void Pattern.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
-    }
+    public abstract void Pattern.generateJava(PrintStream stream);
     
     public void ConstructorPattern.generateJava(PrintStream stream) {
         stream.print("new "+PatternConstructor.class.getName()+"(\""+getConstructor()+"\"");
@@ -471,7 +500,12 @@ aspect GenerateJava {
     
     public void PatternVarUse.generateJava(PrintStream stream) {
         stream.print("new "+PatternValue.class.getName()+"("+getName()+")");
-        
+    }
+    
+    public void LiteralPattern.generateJava(PrintStream stream) {
+   	  stream.print("new "+PatternValue.class.getName()+"(");
+   	  getLiteral().generateJava(stream);
+   	  stream.print(")");
     }
  
     public void FnApp.generateJava(PrintStream stream) {
@@ -491,6 +525,21 @@ aspect GenerateJava {
             stream.print(")");
         } else {
       	  stream.print("new ABSConstructor__"+getConstructor());
+      	  if (decl instanceof ParametricDataTypeDecl) {
+      		  DataTypeType type = (DataTypeType) this.getType();
+      		  if (type.hasTypeArgs()) {
+      			  /*
+      			  stream.print("<");
+      			  boolean first = true;
+      			  for (Type typeArg : type.getTypeArgs()) {
+      				  if (first) first = false;
+      				  else stream.print(",");
+      				  JavaBackend.getQualifiedString(typeArg);
+      			  }
+      			  stream.print(">");
+      			  */
+      		  }
+      	  }
       	  JavaGeneratorHelper.generateArgs(stream,getParams());
         }
     }

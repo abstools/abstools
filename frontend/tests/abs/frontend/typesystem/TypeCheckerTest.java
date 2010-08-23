@@ -210,6 +210,14 @@ public class TypeCheckerTest extends FrontendTest {
     public void constructorTypeArgs4() {
         assertNoTypeErrors("{ Either<A,B> o = Left(5); }");
     }
+    
+    @Test
+    public void testMaybeDataType() {
+   	 assertNoTypeErrors("data MaybeTest<A> = NothingTest | JustTest(A);" +
+   	 		"def B fromJustTest<B>(MaybeTest<B> a) = case a { JustTest(j) => j; }; " +
+   	 		"{ Bool testresult = fromJustTest(JustTest(True)); }");
+    }
+    
 
     @Test
     public void classParams() {

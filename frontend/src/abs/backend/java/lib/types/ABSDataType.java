@@ -17,4 +17,7 @@ public abstract class ABSDataType implements ABSType {
 
    public abstract boolean match(PatternConstructor p, PatternBinding b);
 
+   public boolean isBuiltIn() {
+   	return false;
+   }
 }

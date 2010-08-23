@@ -75,9 +75,9 @@ public class JavaBackendTest extends ABSTest {
         String code = null;
         try {
             code = absCode;
-            if (withStdLib) 
-                code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
-            model = Main.parseString(code, false);
+//            if (withStdLib) 
+//                code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
+            model = Main.parseString(code, withStdLib);
             if (model.hasErrors()) {
                 Assert.fail(model.getErrors().get(0).getMsgString());
             } else {

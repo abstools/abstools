@@ -59,7 +59,7 @@ aspect Typing {
         return new DataTypeType(this);
     }
     eq ParametricDataTypeDecl.getType() { 
-   	 return new DataTypeType(this); 
+   	 return new DataTypeType(this, TypeCheckerHelper.getTypesFromTypeParamDecls(getTypeParameters())); 
     }
     eq InterfaceDecl.getType() { 
         return new InterfaceType(this);
@@ -188,7 +188,7 @@ aspect Typing {
 
    	 DataTypeDecl dataDecl = d.getDecl();
    	 Type declaredResultType = dataDecl.getType();
-   	 if (declaredResultType.isTypeParameter() && dataDecl instanceof ParametricDataTypeDecl) {
+   	 if (dataDecl instanceof ParametricDataTypeDecl) {
    		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromDataTypeUse(d.getConstructorArgs(),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
    	 } else {

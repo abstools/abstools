@@ -27,6 +27,11 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void funParamteric() {
+       assertEvalTrue("def A f<A>(A a) = a;" + CALL_F_TRUE); 
+    }
+    
+    @Test
     public void dataType() {
        assertEvalTrue("data Foo = Bar; { Bool testresult = True; Foo f = Bar(); }");
     }
@@ -50,6 +55,19 @@ public class FunctionalTests extends SemanticTests {
     public void dataTypeEq3() {
        assertEvalTrue("data Foo = Bar(Bool); { Bool testresult = Bar(True) != Bar(False); }");
     }
+
+    @Test
+    public void parametericDataType() {
+       assertEvalTrue("data Foo<A> = Bar(A); { Bool testresult = True; Foo f = Bar(True); }");
+    }
+    
+    @Test
+    public void testMaybeDataType() {
+   	 assertEvalTrue("data MaybeTest<A> = NothingTest | JustTest(A);" +
+   	 		"def B fromJustTest<B>(MaybeTest<B> a) = case a { JustTest(j) => j; }; " +
+   	 		"{ Bool testresult = fromJustTest(JustTest(True)); }");
+    }
+    
     
     @Test
     public void letExp() {
@@ -95,5 +113,20 @@ public class FunctionalTests extends SemanticTests {
     public void casePatternBoundVar() {
         assertEvalTrue("def Bool f(Bool x) = let (Bool y) = True in case x { y => True; };" + CALL_F_TRUE);
     }
+
+    @Test
+    public void casePatternBoundVar2() {
+        assertEvalTrue("def Bool f(Bool x) = let (Bool y) = False in case x { y => False; z => True; };" + CALL_F_TRUE);
+    }
     
+    @Test
+    public void casePatternStringLiteral() {
+        assertEvalTrue("def Bool f() = let (String s) = \"foo\" in case s { \"bar\" => False; \"foo\" => True; };" + CALL_F);
+    }
+
+    @Test
+    public void casePatternIntLiteral() {
+        assertEvalTrue("def Bool f() = let (Int i) = 4 in case i { 2 => False; 4 => True; };" + CALL_F);
+    }
+
 }

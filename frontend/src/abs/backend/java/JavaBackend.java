@@ -28,9 +28,11 @@ import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
 import abs.frontend.parser.Main;
+import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeParameter;
 
 public class JavaBackend {
     private static String testCode() {
@@ -152,10 +154,32 @@ public class JavaBackend {
       	 res = dataTypeMap.get(dt.getDecl().getName());
    		 if (res != null)
    			 return res;
-   		 return dt.getDecl().getName();
+   		 StringBuffer sb = new StringBuffer(dt.getDecl().getName());
+   		 if (dt.hasTypeArgs()) {
+   			 sb.append("<");
+   			 boolean first = true;
+   			 for (Type t : dt.getTypeArgs()) {
+   				 if (first) first = false;
+   				 else sb.append(',');
+   				 sb.append(getQualifiedString(t));
+   			 }
+   			 sb.append(">");
+   		 }
+   		 
+   		 return sb.toString();
    	 } else if (absType.isInterfaceType()) {
    		 InterfaceType it = (InterfaceType) absType;
    		 return it.getDecl().getName();
+   	 } else if (absType.isTypeParameter()) {
+   		 TypeParameter tp = (TypeParameter) absType;
+   		 return tp.getDecl().getName();
+   	 } else if (absType.isBoundedType()) {
+   		 BoundedType bt = (BoundedType) absType;
+   		 if (bt.hasBoundType())
+   			 return getQualifiedString(bt.getBoundType());
+   		 return "?";
+   	 } else if (absType.isAnyType()) {
+   		 return "?";
    	 }
 
    	 throw new RuntimeException("Type "+absType.getClass().getName()+" not yet supported by Java backend");

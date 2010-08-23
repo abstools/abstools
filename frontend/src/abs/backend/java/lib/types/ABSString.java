@@ -28,4 +28,7 @@ public class ABSString extends ABSBuiltInDataType {
         return new ABSString(s);
     }
 
+    public String getString() {
+   	 return value;
+    }
 }

@@ -17,16 +17,13 @@ import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.TypeParameterDecl;
 
 public class TypeCheckerHelper {
-	public static void assertEqualTypes(SemanticErrorList l, ASTNode<?> n, Type expectedType, Type t) {
-		if (!expectedType.equals(t))
-         l.add(new TypeError(n,ErrorMessage.EXPECTED_TYPE,expectedType,t));
-	}
-
 	public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
-		if (!e.getType().equals(t))
+		if (!e.getType().assignable(t)) {
          l.add(new TypeError(e,ErrorMessage.EXPECTED_TYPE,t,e.getType()));
+		}
 	}
 
 	public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type t, Exp e) {
@@ -86,7 +83,7 @@ public class TypeCheckerHelper {
       	 if (t.isTypeParameter()) {
       		 Type res = binding.get((TypeParameter)t);
       		 if (res == null)
-      			 return t;
+      			 return new BoundedType();
       		 else
       			 return res;
       	 } else if (t.isDataType()) {
@@ -134,6 +131,15 @@ public class TypeCheckerHelper {
         return res;
     }
 
+    public static java.util.List<Type> getTypesFromTypeParamDecls(List<TypeParameterDecl> params) {
+       ArrayList<Type> res = new ArrayList<Type>();
+       for (TypeParameterDecl u : params) {
+           res.add(u.getType());
+       }
+       return res;
+    }
+    
+    
     private static java.util.List<Type> getTypes(List<ParamDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (ParamDecl d : params) {
