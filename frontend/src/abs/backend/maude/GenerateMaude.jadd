@@ -50,6 +50,7 @@ aspect GenerateMaude {
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
 		boolean inList = false;
+        if (getFunctionDef() instanceof BuiltinFunctionDef) return;
         stream.print("eq fparams(\"" + getName() + "\") = ");
         if (getNumParam() == 0) {
             stream.println("noVid .");
@@ -61,10 +62,18 @@ aspect GenerateMaude {
             stream.print(".\n");
         }
 		stream.print("eq fdefn(\"" + getName() + "\") = ");
-		getFunDef().generateMaude(stream);
+		getFunctionDef().generateMaude(stream);
         stream.println(".");
         stream.println();
 	}
+
+    abstract public void FunctionDef.generateMaude(PrintStream stream);
+    public void ExpFunctionDef.generateMaude(PrintStream stream) {
+        getRhs().generateMaude(stream);
+    }
+    public void BuiltinFunctionDef.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+    }
 
     abstract public void Exp.generateMaude(PrintStream stream);
 

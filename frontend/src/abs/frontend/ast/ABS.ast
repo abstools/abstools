@@ -14,7 +14,7 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:	TypeDecl;		// Unknown declarations
 ClassDecl:		BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunDef:PureExp ;
+FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
@@ -30,6 +30,9 @@ FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp];
 ParamDecl:	TypedVarOrFieldDecl;
 PatternVarDecl: VarOrFieldDecl;
 
+abstract FunctionDef;
+BuiltinFunctionDef: FunctionDef;
+ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
 MethodSig	::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
 MethodImpl  ::= MethodSig Block;

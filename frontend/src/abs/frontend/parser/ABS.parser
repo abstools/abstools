@@ -108,8 +108,10 @@ TypeSynDecl  typesyn_decl =
 
 
 FunctionDecl  function_decl = 
-	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, ef, al, p); :}
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, al, t, l, ef); :}
+	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new BuiltinFunctionDef(), al, p); :}
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new ExpFunctionDef(ef), al, p); :}
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new FunctionDecl(fn, al, t, l, new BuiltinFunctionDef()); :}
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(ef)); :}
 	; 
 
 InterfaceDecl interface_decl =

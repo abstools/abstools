@@ -13,6 +13,7 @@ import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
+import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
@@ -146,7 +147,7 @@ public class FrontendTest extends ABSTest {
 
 	
 	protected Exp getFirstFunctionExpr(Model m) {
-	    return getLastFunctionDecl(m).getFunDef();
+	    return ((ExpFunctionDef)getLastFunctionDecl(m).getFunctionDef()).getRhs();
     }
 
 

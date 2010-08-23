@@ -70,5 +70,9 @@ public class PrimitiveTypes extends SemanticTests {
        assertEvalTrue("{ Bool testresult = \"x\" + \"x\" == \"xx\";  }"); 
     }
 
+    @Test
+    public void stringSubstr() {
+    	assertEvalTrue("{ Bool testresult = substr(\"foobar\", 1, 3) == \"oob\"; }");
+    }
     
 }

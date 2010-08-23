@@ -54,7 +54,7 @@ aspect TypeResolution {
     //   Definitions of *lookup*
     eq Model.getCompilationUnit().lookup(String name) = localLookup(name);
     eq ParametricDataTypeDecl.getDataConstructor().lookup(String name) = localLookup(name);
-    eq ParametricFunctionDecl.getFunDef().lookup(String name) = localLookup(name);
+    eq ParametricFunctionDecl.getFunctionDef().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(String name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(String name) = localLookup(name);
     

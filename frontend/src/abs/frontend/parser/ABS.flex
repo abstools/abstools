@@ -87,6 +87,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "cog"         { return sym(Terminals.COG); }
  "type"        { return sym(Terminals.TYPE); }
  "assert"      { return sym(Terminals.ASSERT); }
+ "builtin"     { return sym(Terminals.BUILTIN); }
 }
 
 //Separators

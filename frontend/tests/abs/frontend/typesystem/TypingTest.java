@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricFunctionDecl;
@@ -116,7 +117,7 @@ public class TypingTest extends FrontendTest {
     public void functionTypeParams() {
         Model m = assertParseOkStdLib(" def A f<A>(A a) = a ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
-        assertEquals(d.getTypeParameter(0), ((TypeParameter)d.getFunDef().getType()).getDecl());
+        assertEquals(d.getTypeParameter(0), ((TypeParameter)((ExpFunctionDef)d.getFunctionDef()).getRhs().getType()).getDecl());
     }
 
     @Test
@@ -132,7 +133,7 @@ public class TypingTest extends FrontendTest {
     public void functionTypeArgs2() {
         Model m = assertParseOkStdLib(" def Maybe<A> f<A>(Maybe<A> o) = o ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
-        assertEquals(d.getTypeUse().getType(), d.getFunDef().getType());
+        assertEquals(d.getTypeUse().getType(), ((ExpFunctionDef)d.getFunctionDef()).getRhs().getType());
     }
 
     @Test
@@ -140,7 +141,7 @@ public class TypingTest extends FrontendTest {
         Model m = assertParseOkStdLib(" def A f<A>(Maybe<A> o) = case o { Just(a) => a; } ;");
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
         TypeParameterDecl typeParameter = d.getTypeParameter(0);
-        TypeParameter type = (TypeParameter)d.getFunDef().getType();
+        TypeParameter type = (TypeParameter)((ExpFunctionDef)d.getFunctionDef()).getRhs().getType();
         TypeParameterDecl decl = type.getDecl();
         assertEquals(typeParameter, decl);
     }
@@ -151,7 +152,7 @@ public class TypingTest extends FrontendTest {
         		"def Bool f<A>(Foo<A> o) = case o { Bar(a,b) => b; } ;");
         
         ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
-        Type type = d.getFunDef().getType();
+        Type type = ((ExpFunctionDef)d.getFunctionDef()).getRhs().getType();
         assertEquals(m.getBoolType(), type);
     }
     
@@ -161,7 +162,7 @@ public class TypingTest extends FrontendTest {
    	 			"def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");   	 
        ParametricFunctionDecl d = getLastParametricFunctionDecl(m);
        TypeParameterDecl typeParameter = d.getTypeParameter(0);
-       TypeParameter type = (TypeParameter) d.getFunDef().getType();
+       TypeParameter type = (TypeParameter)((ExpFunctionDef)d.getFunctionDef()).getRhs().getType();
        assertEquals(typeParameter.getName(), type.getDecl().getName());
     }
 }

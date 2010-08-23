@@ -195,11 +195,18 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParams(stream,getParams());
         stream.println(" {");
         stream.print("      return ");
-        getFunDef().generateJava(stream);
+        getFunctionDef().generateJava(stream);
         stream.println(";");
         stream.println("   }");
         stream.println("}");
     }
+
+    public void FunctionDef.generateJava(PrintStream stream) { }
+
+    public void ExpFunctionDef.generateJava(PrintStream stream) {
+        getRhs().generateJava(stream);
+    }
+
 
     public void TypeParameterDecl.generateJava(PrintStream stream) {
         throw new NotImplementedYetException(this);

@@ -121,9 +121,12 @@ aspect TypeChecker {
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.typeCheckParamList(e,getParams());
         getTypeUse().typeCheck(e);
-        getFunDef().typeCheck(e);
-        
-        TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), getFunDef());
+        if (getFunctionDef() instanceof ExpFunctionDef) {
+            // built-in functions are assumed type-correct.
+            ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
+            def.getRhs().typeCheck(e);
+            TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
+        }
     }
     
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
