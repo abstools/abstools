@@ -458,6 +458,10 @@ aspect GenerateJava {
     public void PatternVar.generateJava(PrintStream stream) {
         stream.print("new "+PatternVariable.class.getName()+"(\""+getVar().getName()+"\")");
     }
+    
+    public void UnderscorePattern.generateJava(PrintStream stream) {
+        stream.print("new "+AnyPattern.class.getName()+"()");
+    }
  
     public void FnApp.generateJava(PrintStream stream) {
    	 stream.print("ABSFunction__"+getName()+".apply");

@@ -86,6 +86,10 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("data Foo = Bar(Bool); def Bool f(Foo x) = case x { Bar(y) => y; }; { Bool testresult = f(Bar(True)); }");
     }
 
+    @Test
+    public void casePatternUnderscore() {
+        assertEvalTrue("def Bool f(Bool x) = case x { _ => True; };" + CALL_F_TRUE);
+    }
     
     
 }
