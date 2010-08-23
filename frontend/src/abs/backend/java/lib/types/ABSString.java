@@ -1,12 +1,13 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSString extends ABSDataType {
+public class ABSString extends ABSBuiltInDataType {
     public static final ABSString EMPTY = new ABSString("");
     
     private final String value;
     
     private ABSString(String s) {
+        super("");
         this.value = s;
     }
     

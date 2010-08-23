@@ -5,7 +5,7 @@ import abs.backend.java.lib.types.ABSDataType;
 public class AnyPattern extends Pattern {
 
 	@Override
-   public boolean matches(ABSDataType dt) {
+   public boolean match(ABSDataType dt, PatternBinding binding) {
 	   return true;
    }
 	

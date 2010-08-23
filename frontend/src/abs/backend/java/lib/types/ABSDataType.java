@@ -1,7 +1,7 @@
 package abs.backend.java.lib.types;
 
-import abs.backend.java.lib.expr.Pattern;
 import abs.backend.java.lib.expr.PatternBinding;
+import abs.backend.java.lib.expr.PatternConstructor;
 
 
 public abstract class ABSDataType implements ABSType {
@@ -15,17 +15,6 @@ public abstract class ABSDataType implements ABSType {
    	return this.eq(other).negate();   	
    }
 
-   public PatternBinding match(Pattern p) {
-   	PatternBinding b = new PatternBinding();
-   	boolean matched = match(p,b);
-   	if (matched)
-   		return b;
-   	else
-   		return null;
-   }
-
-	public boolean match(Pattern p, PatternBinding b) {
-		return true;
-	}
+   public abstract boolean match(PatternConstructor p, PatternBinding b);
 
 }

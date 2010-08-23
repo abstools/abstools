@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * @author Jan Schäfer
  *
  */
-public class ABSInteger extends ABSDataType {
+public class ABSInteger extends ABSBuiltInDataType {
     public static final ABSInteger ZERO = new ABSInteger(0);
     public static final ABSInteger ONE = new ABSInteger(1);
 
@@ -20,7 +20,8 @@ public class ABSInteger extends ABSDataType {
         this(BigInteger.valueOf(i));
     }
 
-    private ABSInteger(BigInteger i) { 
+    private ABSInteger(BigInteger i) {
+        super("");
         this.value = i;
     }
     

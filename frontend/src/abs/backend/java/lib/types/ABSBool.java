@@ -1,12 +1,13 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSBool extends ABSDataType {
-    public static ABSBool TRUE = new ABSBool(true);
-    public static ABSBool FALSE = new ABSBool(false);
+public class ABSBool extends ABSBuiltInDataType {
+    public static ABSBool TRUE = new ABSBool("True",true);
+    public static ABSBool FALSE = new ABSBool("False",false);
     
     private boolean value;
-    private ABSBool(boolean v) {
+    private ABSBool(String constr, boolean v) {
+        super(constr);
         this.value = v;
     }
     

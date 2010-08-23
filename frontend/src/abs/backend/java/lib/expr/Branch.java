@@ -1,7 +1,6 @@
 package abs.backend.java.lib.expr;
 
 import abs.backend.java.lib.types.ABSBool;
-import abs.backend.java.lib.types.ABSInteger;
 
 public abstract class Branch<R> {
 	Pattern pattern;
@@ -32,6 +31,5 @@ class Test {
 	
 	void m() {
 		ABSBool b = ABSBool.TRUE;
-		new Case<ABSBool, ABSInteger>() { }.of(b);
 	}
 }

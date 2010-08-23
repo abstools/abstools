@@ -1,8 +1,19 @@
 package abs.backend.java.lib.types;
 
 
-public class ABSFut extends ABSDataType {
-	private Object value;
+public class ABSFut extends ABSBuiltInDataType {
+    
+    
+    public ABSFut() {
+        this("Fut");
+    }
+    
+	protected ABSFut(String constructorName) {
+        super(constructorName);
+    }
+
+
+    private Object value;
 	private boolean isResolved;
 	
 	public synchronized void resolve(Object o) {

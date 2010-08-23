@@ -72,8 +72,9 @@ public class JavaBackendTest extends ABSTest {
     String getJavaCode(String absCode, boolean withStdLib) {
         try {
         Model model = null;
+        String code = null;
         try {
-            String code = absCode;
+            code = absCode;
             if (withStdLib) 
                 code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
             model = Main.parseString(code, false);
@@ -98,8 +99,8 @@ public class JavaBackendTest extends ABSTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String res = out.toString();
-        res = res.replace('\n', ' ');
-        res = res.replaceAll("[ ]+", " ");
+        //res = res.replace('\n', ' ');
+        //res = res.replaceAll("[ ]+", " ");
         res = res.trim();
         return res;
         } catch (NumberFormatException e) {
@@ -142,7 +143,9 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalEquals(String absCode, boolean value) {
-        boolean res = runJava(getJavaCode(absCode, true));
+        String javaCode = getJavaCode(absCode, true);
+        boolean res = runJava(javaCode);
+        System.out.println(javaCode);
         Assert.assertEquals(value,res);
     }
     
