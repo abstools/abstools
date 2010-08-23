@@ -222,9 +222,13 @@ aspect GenerateMaude {
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
         stream.print("\"" + getName() + "\"( ");
-        for (PureExp param : getParams()) {
-            if (inlist) stream.print(":: "); else inlist = true;
-            param.generateMaude(stream);
+        if (getNumParam() == 0) {
+            stream.print("emp ");
+        } else {
+            for (PureExp param : getParams()) {
+                if (inlist) stream.print(":: "); else inlist = true;
+                param.generateMaude(stream);
+            }
         }
         stream.print(") ");
     }
