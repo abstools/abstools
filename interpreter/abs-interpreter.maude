@@ -271,7 +271,8 @@ fmod ABS-DATA-STRING is
   eq "char" ("int"[N]) = "str"[char(N)] .
   eq fparams("substr") = @ "S", @ "L", @ "R" .
   eq fdefn("substr") = $builtin("substr") .
-  *** eq "substr" ("str"[S] :: "int"[M] :: "int"[N]) = "str"[substr(S, M, N)] .
+  eq fparams("strlen") = @ "S" .
+  eq fdefn("strlen") = $builtin("strlen") .
   eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
   eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
@@ -866,6 +867,8 @@ fmod ABS-EVAL is
   if "str"[I1:String] := S[@ "I1"] /\ "str"[I2:String] := S[@ "I2"] .
   eq eval($builtin("substr"), S, CN) =
     "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
+  eq eval($builtin("strlen"), S, CN) =
+    "int"[length((S[@ "S"]) asString)] .
 endfm
 
 

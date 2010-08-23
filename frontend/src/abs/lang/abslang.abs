@@ -130,3 +130,4 @@ def String intToStringPos(Int n) =
   };
 
 def String substr(String str, Int start, Int length) = builtin;
+def Int strlen(String str) = builtin;
