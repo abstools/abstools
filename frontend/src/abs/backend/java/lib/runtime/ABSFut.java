@@ -1,4 +1,8 @@
-package abs.backend.java.lib.types;
+package abs.backend.java.lib.runtime;
+
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSBuiltInDataType;
+import abs.backend.java.lib.types.ABSDataType;
 
 
 public class ABSFut extends ABSBuiltInDataType {
@@ -11,7 +15,6 @@ public class ABSFut extends ABSBuiltInDataType {
 	protected ABSFut(String constructorName) {
         super(constructorName);
     }
-
 
     private Object value;
 	private boolean isResolved;

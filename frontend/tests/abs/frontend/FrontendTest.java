@@ -1,10 +1,6 @@
 package abs.frontend;
 
 import static org.junit.Assert.fail;
-
-import java.io.Reader;
-import java.io.StringReader;
-
 import abs.ABSTest;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -21,8 +17,6 @@ import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.parser.ABSParser;
-import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
 

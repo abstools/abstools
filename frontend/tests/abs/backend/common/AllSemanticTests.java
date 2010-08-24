@@ -3,13 +3,10 @@ package abs.backend.common;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import abs.backend.java.JavaPrimitiveTests;
-import abs.backend.java.JavaStmtTests;
-
 @RunWith(Suite.class)
 @Suite.SuiteClasses( {
-        JavaPrimitiveTests.class,
-        JavaStmtTests.class,
+        PrimitiveTypes.class,
+        StmtTests.class,
         ObjectTests.class,
         FunctionalTests.class}
         )

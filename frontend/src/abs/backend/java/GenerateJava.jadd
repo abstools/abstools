@@ -17,10 +17,19 @@ aspect GenerateJava {
         stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
         if (hasMainBlock()) {
             Block block = getMainBlock();
-            stream.println("public class Main {");
-            stream.print("   public static void main(java.lang.String[] args) ");
+            stream.println("public class Main implements Runnable {");
+            stream.println("   public static void main(java.lang.String[] args) {");
+            stream.println("       "+COG.class.getName()+" cog = new "+COG.class.getName()+"(Main.class);");
+            stream.println("       "+ABSThread.class.getName()+" mainThread = new "+ABSThread.class.getName()+"(new Main());");
+            stream.println("       mainThread.setCOG(new "+COG.class.getName()+"(Main.class));");
+            stream.println("       mainThread.start();");
+            stream.println("   }");
+
+            stream.print("   public void run() ");
             block.generateJava("   ",stream);
             stream.println("}");
+            
+            
         }
         
         for (Decl decl : getDecls()) {
@@ -108,7 +117,9 @@ aspect GenerateJava {
    			 addReturn = true;
    		 }
    	 }
+   	 stream.println("{ __ABS_checkSameCOG(); ");
    	 getBlock().generateJava(indent, stream, addReturn);
+     stream.print("}");
     }
     
     public void FieldDecl.generateJava(String indent, PrintStream stream) {
@@ -388,7 +399,44 @@ aspect GenerateJava {
     public abstract void Exp.generateJava(PrintStream stream);
 
     public void AsyncCall.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        stream.print(ABSRuntime.class.getName()+".asyncCall(");
+        String targetType = JavaBackend.getQualifiedString(getCallee().getType());
+        stream.print("new "+Task.class.getName()+"<"+targetType+">(");
+        getCallee().generateJava(stream);
+        stream.println(") {");
+        int i = 0;
+        for (PureExp e : getParams()) {
+            stream.println(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
+            i++;
+        }
+        
+        stream.println("    public "+Task.class.getName()+"<?> init(");
+        i = 0;
+        for (PureExp e : getParams()) {
+            if (i > 0) stream.print(",");
+            stream.print(JavaBackend.getQualifiedString(e.getType())+" _arg"+i);
+            i++;
+        }
+        stream.print(") {");
+        for (i = 0; i < getNumParam(); i++) {
+            if (i > 0) stream.print(",");
+            stream.println("arg"+i+" = _arg"+i+";");
+        }
+        stream.print("   return this; }"); 
+        
+        stream.println(" public java.lang.String methodName() { return \""+getMethod()+"\"; }");
+        
+        stream.println("    public Object execute() {");
+        stream.print("        return target."+getMethod()+"(");
+        for (i = 0; i < getNumParam(); i++) {
+            if (i > 0) stream.print(",");
+            stream.print("arg"+i);
+        }
+        stream.print(");");
+        stream.println("    }");
+        stream.print("}.init");
+        JavaGeneratorHelper.generateArgs(stream,getParams());
+        stream.print(")");
     }
     
     public void SyncCall.generateJava(PrintStream stream) {
