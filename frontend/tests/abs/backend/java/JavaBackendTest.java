@@ -43,11 +43,12 @@ public class JavaBackendTest extends ABSTest {
         }
     }
     
-    static class NoTestResultFoundException extends RuntimeException { }
+    static class NoTestResultFoundException extends RuntimeException { NoTestResultFoundException() { super("No test result was found!"); }}
     
-    boolean runJava(String javaCode) {
+    boolean runJava(String javaCode, boolean expectFail) {
         String realCode = "package unittest;"+javaCode;
         File tmpFile;
+        StringBuffer output = new StringBuffer();
         try {
             
             tmpFile = getTempFile(realCode);
@@ -61,6 +62,7 @@ public class JavaBackendTest extends ABSTest {
                 String s = r.readLine();
                 if (s == null)
                     break;
+                output.append(s+"\n");
                 if (s.startsWith("__ABS_TESTRESULT=")) {
                     result = s.split("=")[1];
                 }
@@ -70,8 +72,16 @@ public class JavaBackendTest extends ABSTest {
             
             return Boolean.valueOf(result);
         } catch (NoTestResultFoundException e) {
-            throw e;
+            if (expectFail) {
+                throw e;
+            } else {
+                System.out.println(output.toString());
+                System.out.println(javaCode);
+                Assert.fail(e.getMessage());
+                return false;
+            }
         } catch (Exception e) {
+            System.out.println(output.toString());
            System.out.println(javaCode);
             Assert.fail(e.getMessage());
             return false;
@@ -97,7 +107,7 @@ public class JavaBackendTest extends ABSTest {
             }
             
         } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            Assert.fail(e.getClass().getSimpleName()+":"+e.getMessage());
             return null;
         }
         
@@ -153,7 +163,7 @@ public class JavaBackendTest extends ABSTest {
 
     public void assertEvalEquals(String absCode, boolean value) {
         String javaCode = getJavaCode(absCode, true);
-        boolean res = runJava(javaCode);
+        boolean res = runJava(javaCode, false);
         if (value != res)
             System.out.println(javaCode);
         Assert.assertEquals(value,res);
@@ -162,7 +172,7 @@ public class JavaBackendTest extends ABSTest {
     public void assertEvalFails(String absCode) {
         String javaCode = getJavaCode(absCode, true);
         try {
-            runJava(javaCode);
+            runJava(javaCode, true);
             System.out.println(javaCode);
             Assert.fail("Expected that Java run failed, but did not.");
         } catch (NoTestResultFoundException e) {

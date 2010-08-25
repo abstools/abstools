@@ -31,4 +31,12 @@ public class ABSString extends ABSBuiltInDataType {
     public String getString() {
    	 return value;
     }
+
+    public ABSInteger strlen() {
+        return ABSInteger.fromInt(value.length());
+    }
+
+    public ABSString substr(ABSInteger from, ABSInteger length) {
+        return fromString(value.substring(from.toInt(),from.toInt()+length.toInt()));
+    }
 }

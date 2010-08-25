@@ -36,5 +36,4 @@ public class BoundedType extends Type {
 	   return "Unbound Type";
    }
 	
-
 }

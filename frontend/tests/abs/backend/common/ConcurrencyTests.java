@@ -30,11 +30,18 @@ public class ConcurrencyTests extends SemanticTests {
     // ERROR Tests
     
     static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
+
     @Test
     public void futGetDeadlock() {
         // Fails because a deadlock occurs 
        assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET_DEADLOCK); 
     }
     
+    @Test
+    public void illegalSyncCall() {
+        // Fails because a synchrous call to an object of a different COG is not allowed
+       assertEvalFails(INTERFACE_I+CLASS_C+"{ Bool testresult = False; I i; i = new cog C(); testresult = i.m(); }"); 
+    }
 
+    
 }

@@ -2,7 +2,10 @@ package abs.backend.java;
 
 import java.io.PrintStream;
 
+import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.types.ABSDataType;
+import abs.frontend.ast.FnApp;
+import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
@@ -64,6 +67,12 @@ public class JavaGeneratorHelper {
 		  }  
 		  stream.print(">");
 	  }	
-   	 
+    }
+    
+    public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
+        FunctionDecl d = (FunctionDecl) app.getDecl();
+        String name = d.getName();
+        stream.print(ABSBuiltInFunctions.class.getName()+"."+name);
+        generateArgs(stream, app.getParams());
     }
 }

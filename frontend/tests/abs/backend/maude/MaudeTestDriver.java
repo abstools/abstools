@@ -16,7 +16,7 @@ public class MaudeTestDriver extends BackendTestDriver {
 
     @Override
     public void assertEvalFails(String absCode) {
-        // TODO: implement
+        maude.assertFails(absCode);
     }
 
 }

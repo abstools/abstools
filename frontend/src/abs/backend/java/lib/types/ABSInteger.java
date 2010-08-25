@@ -97,5 +97,9 @@ public class ABSInteger extends ABSBuiltInDataType {
         default: return fromBigInt(BigInteger.valueOf(i));
         }
     }
+
+    public int toInt() {
+        return value.intValue();
+    }
     
 }

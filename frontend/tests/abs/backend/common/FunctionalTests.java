@@ -129,4 +129,5 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("def Bool f() = let (Int i) = 4 in case i { 2 => False; 4 => True; };" + CALL_F);
     }
 
+    
 }

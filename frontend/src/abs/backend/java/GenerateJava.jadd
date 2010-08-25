@@ -32,7 +32,7 @@ aspect GenerateJava {
             stream.println("   }");
 
             // main block
-            stream.println("  public void start() ");
+            stream.print("   public void start() ");
             block.generateJava("   ",stream);
             stream.println("}");
             
@@ -241,6 +241,9 @@ aspect GenerateJava {
     }
     
     public void FunctionDecl.generateJava(PrintStream stream) {
+       if (getFunctionDef() instanceof BuiltinFunctionDef) 
+           return;
+        
    	  String className = "ABSFunction__"+getName();
         stream.print("final class "+className);
         stream.println(" implements ABSFunction {");
@@ -333,6 +336,7 @@ aspect GenerateJava {
     
     public void VarDeclStmt.generateJava(String indent, PrintStream stream) {
         getVarDecl().generateJava(indent,stream);
+        stream.println();
     }
     
     public void AssignStmt.generateJava(String indent, PrintStream stream) {
@@ -594,7 +598,37 @@ aspect GenerateJava {
     }
  
     public void FnApp.generateJava(PrintStream stream) {
-   	 stream.print("ABSFunction__"+getName()+".apply");
+   	 
+   	 // Have to explicitly type the call due to a bug in the JastAdd Java
+   	 // compiler that generates wrong code otherwise.
+   	 FunctionDecl d = (FunctionDecl)getDecl();
+     
+     if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
+         JavaGeneratorHelper.generateBuiltInFnApp(stream,this);
+         return;
+     }
+     
+     stream.print("ABSFunction__"+getName()+".");
+     Type declaredResultType = d.getTypeUse().getType();
+     if (d instanceof ParametricFunctionDecl) {
+         ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
+         Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
+         
+         stream.print("<");
+         boolean first = true;
+         for (TypeParameterDecl tp : funDecl.getTypeParameters()) {
+             Type t = typeBinding.get((TypeParameter)tp.getType());
+             if (first) first = false;
+             else stream.print(",");
+             if (t == null)
+                 stream.print("Object");
+             else
+                 stream.print(JavaBackend.getQualifiedString(t));
+         }
+         stream.print(">");
+     } 
+     
+   	 stream.print("apply");
    	 JavaGeneratorHelper.generateArgs(stream,getParams());
    	 
     }

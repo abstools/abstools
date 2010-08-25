@@ -178,7 +178,15 @@ public class TypeCheckerHelper {
    	for (int i = 0; i < params.size(); i++) {
    		Type paramType = params.get(i);
    		Type argType = args.get(i);
-   		if (paramType.isTypeParameter()) {
+   		if (argType.isBoundedType()) {
+   		    BoundedType bt = (BoundedType) argType;
+   		    if (bt.hasBoundType())
+   		        argType = bt.getBoundType();
+   		}
+   		    
+   		
+
+        if (paramType.isTypeParameter()) {
    			binding.put((TypeParameter) paramType, argType);
    		} else if (paramType.isDataType() && argType.isDataType()) {
    			DataTypeType paramdt = (DataTypeType) paramType;
