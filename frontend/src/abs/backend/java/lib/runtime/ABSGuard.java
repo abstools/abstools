@@ -1,6 +1,5 @@
-package abs.backend.java.lib.types;
+package abs.backend.java.lib.runtime;
 
 public abstract class ABSGuard {
 	public abstract boolean isTrue();
-	public abstract void await();
 }

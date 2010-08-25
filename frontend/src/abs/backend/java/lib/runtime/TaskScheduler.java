@@ -7,7 +7,7 @@ import java.util.logging.Logger;
 class TaskScheduler {
     private static final Logger log = Logging.getLogger(TaskScheduler.class.getName());
     
-    private final List<Task<?>> taskq = new LinkedList<Task<?>>();
+    private final List<Task<?>> newTasks = new LinkedList<Task<?>>();
     private final List<SchedulerThread> suspendedTasks = new LinkedList<SchedulerThread>();
     private Task<?> activeTask;
     private SchedulerThread thread;
@@ -17,19 +17,13 @@ class TaskScheduler {
         this.cog = cog;
     }
     
-	public synchronized void suspend() {
-		if (thread != null) {
-		    thread.suspendTask();
-		}
-	}
-
     public synchronized void addTask(Task<?> task) {
-        taskq.add(task);
+        newTasks.add(task);
         if (thread == null) {
             thread = new SchedulerThread();
             thread.start();
         } else {
-            notify();
+            notifyAll();
         }
     }
     
@@ -47,12 +41,13 @@ class TaskScheduler {
             while (true) {
                 synchronized (TaskScheduler.this) {
                     activeTask = null;
-                    if (taskq.isEmpty()) {
-                        TaskScheduler.this.thread = null;
+                    if (newTasks.isEmpty()) {
+                        thread = null;
+                        TaskScheduler.this.notifyAll();
                         return;
                     }
                     
-                    activeTask = taskq.remove(0);
+                    activeTask = newTasks.remove(0);
                     runningTask = activeTask;
                 }
                 log.finest("Running task "+runningTask.methodName()+" of COG "+cog.getID());
@@ -61,8 +56,24 @@ class TaskScheduler {
         }
 
         // assume called in synchronized block 
-        public void suspendTask() {
-            // TODO: implement suspend
+        public void suspendTask(ABSGuard g) {
+            activeTask = null; 
+            thread = null;
+            suspendedTasks.add(this);
+            TaskScheduler.this.notifyAll();
+            while (!g.isTrue()) {
+               try {
+                   wait();
+               } catch (InterruptedException e) {
+                   e.printStackTrace();
+               }
+            }
+            thread = this;
+            activeTask = runningTask;
         }
+    }
+
+    public synchronized void await(ABSGuard g) {
+        thread.suspendTask(g);
     }
 }

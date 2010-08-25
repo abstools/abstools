@@ -1,10 +1,10 @@
 package abs.backend.java;
 
 import abs.backend.java.lib.expr.Let;
+import abs.backend.java.lib.runtime.ABSAndGuard;
+import abs.backend.java.lib.runtime.ABSExpGuard;
+import abs.backend.java.lib.runtime.ABSFutureGuard;
 import abs.backend.java.lib.runtime.ABSRuntime;
-import abs.backend.java.lib.types.ABSAndGuard;
-import abs.backend.java.lib.types.ABSExpGuard;
-import abs.backend.java.lib.types.ABSFutureGuard;
 import abs.backend.java.lib.types.ABSType;
 
 public class JavaBackendConstants {

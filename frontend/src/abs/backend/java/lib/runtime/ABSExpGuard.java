@@ -1,18 +1,11 @@
-package abs.backend.java.lib.types;
+package abs.backend.java.lib.runtime;
 
-import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.types.ABSBool;
 
 public abstract class ABSExpGuard extends ABSGuard {
 
 	public abstract ABSBool evaluateExp();
 	
-	
-	@Override
-	public void await() {
-		while (!isTrue()) {
-			ABSRuntime.suspend();
-		}
-	}
 	
 	@Override
 	public boolean isTrue() {

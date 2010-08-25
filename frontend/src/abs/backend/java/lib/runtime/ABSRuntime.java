@@ -1,17 +1,10 @@
 package abs.backend.java.lib.runtime;
 
-import abs.backend.java.lib.types.ABSGuard;
 
 public class ABSRuntime {
 
     public static void await(ABSGuard g) {
-		while (!g.isTrue()) {
-			g.await();
-		}
-	}
-
-	public static void suspend() {
-		getCurrentCOG().getScheduler().suspend();
+        getCurrentCOG().getScheduler().await(g);
 	}
 
 	public static COG getCurrentCOG() {

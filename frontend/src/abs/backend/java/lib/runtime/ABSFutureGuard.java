@@ -1,6 +1,5 @@
-package abs.backend.java.lib.types;
+package abs.backend.java.lib.runtime;
 
-import abs.backend.java.lib.runtime.ABSFut;
 
 
 public class ABSFutureGuard extends ABSGuard {
@@ -11,7 +10,6 @@ public class ABSFutureGuard extends ABSGuard {
 	
 	public void await() {
 		fut.await();
-		
 	}
 	
 	@Override

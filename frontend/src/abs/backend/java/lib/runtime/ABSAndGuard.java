@@ -1,4 +1,4 @@
-package abs.backend.java.lib.types;
+package abs.backend.java.lib.runtime;
 
 public class ABSAndGuard extends ABSGuard {
 	public final ABSGuard left;
@@ -13,11 +13,4 @@ public class ABSAndGuard extends ABSGuard {
 	   return left.isTrue() && right.isTrue();
    }
 
-	@Override
-   public void await() {
-	   left.await(); 
-	   right.await();
-   }
-	
-	
 }
