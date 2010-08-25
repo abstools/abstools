@@ -24,18 +24,18 @@ public class ConcurrencyTests extends SemanticTests {
     static String CALL_M_ASYNC_GET = "{ Bool testresult = False; I i; i = new cog C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
     @Test
     public void futGet() {
-       assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET); 
+       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET); 
     }
 
     static String CALL_M_ASYNC_AWAIT_GET = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); await fut?; testresult = fut.get; }";
     @Test
     public void futAwaitAndGet() {
-       assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_AWAIT_GET); 
+       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC_AWAIT_GET); 
     }
     
     @Test
     public void booleanGuard() {
-       assertEvalFails(INTERFACE_I+"class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"+
+       assertEvalTrue(INTERFACE_I+"class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"+
                "{ I i; i = new cog C(); Fut<Bool> f; f = i!m(); i!n(); Bool testresult = False; testresult = f.get; } ");;  
     }
 

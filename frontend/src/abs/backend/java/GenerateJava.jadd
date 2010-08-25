@@ -117,13 +117,12 @@ aspect GenerateJava {
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
         stream.println("       __ABS_thread.setCOG(__ABS_cog);");
         stream.println("       try { ");
-        stream.print("          final "+getName()+" __ABS_result = new "+getName());
+        stream.print("          return new "+getName());
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("       } finally {");
         stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
         stream.println("       }");
-        stream.println("       return null;");
         stream.println("   }");
         
         // methods
@@ -150,7 +149,12 @@ aspect GenerateJava {
     public void FieldDecl.generateJava(String indent, PrintStream stream) {
    	 stream.print(indent);
    	 getAccess().generateJava(stream);
-   	 stream.print(" "+getName()+";");
+   	 stream.print(" "+getName());
+   	 if (hasInitExp()) {
+   	     stream.print(" = ");
+   	     getInitExp().generateJava(stream);
+   	 }
+   	 stream.print(";");
     }
     
 

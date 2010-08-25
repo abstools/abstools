@@ -57,19 +57,29 @@ class TaskScheduler {
 
         // assume called in synchronized block 
         public void suspendTask(ABSGuard g) {
+            log.finest("Suspending Task on Guard "+g.getClass().getSimpleName());
             activeTask = null; 
             thread = null;
+            if (!newTasks.isEmpty()) {
+                thread = new SchedulerThread();
+                thread.start();
+            } else {
+                TaskScheduler.this.notifyAll();
+            }
             suspendedTasks.add(this);
-            TaskScheduler.this.notifyAll();
-            while (!g.isTrue()) {
+            while (!g.isTrue() || thread != null) {
                try {
-                   wait();
+                   TaskScheduler.this.wait();
+                   log.finest("Suspended Task woke up...");
                } catch (InterruptedException e) {
                    e.printStackTrace();
                }
+               if (thread == null) {
+                   thread = this;
+                   activeTask = runningTask;
+                   break;
+               }
             }
-            thread = this;
-            activeTask = runningTask;
         }
     }
 

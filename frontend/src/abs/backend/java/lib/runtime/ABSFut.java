@@ -48,7 +48,7 @@ public class ABSFut<V> extends ABSBuiltInDataType {
    }
 
    public synchronized V get() {
-       if (resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
+       if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
            throw new ABSDeadlockException();
        
        await();

@@ -121,7 +121,7 @@ public class MaudeTests extends ABSTest {
     }
 
     public void assertFails(String absCode) {
-        // TODO implement
-        
+        // TODO: implement
+        Assert.fail("Not implemented in Maude Test Backend yet");
     }
 }

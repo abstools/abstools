@@ -8,7 +8,9 @@ import org.junit.runners.Suite;
         PrimitiveTypes.class,
         StmtTests.class,
         ObjectTests.class,
-        FunctionalTests.class}
+        FunctionalTests.class,
+        ConcurrencyTests.class,
+        StdLibTests.class}
         )
 public class AllSemanticTests {
 

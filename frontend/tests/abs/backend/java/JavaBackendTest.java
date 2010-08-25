@@ -20,6 +20,8 @@ import abs.frontend.parser.Main;
 
 public class JavaBackendTest extends ABSTest {
     
+    private static final boolean DEBUG = false;
+
     void assertEqual(String absCode, String javaCode) {
         assertEqual(absCode, javaCode,null);
     }
@@ -163,6 +165,8 @@ public class JavaBackendTest extends ABSTest {
 
     public void assertEvalEquals(String absCode, boolean value) {
         String javaCode = getJavaCode(absCode, true);
+        if (DEBUG)
+            System.out.println(javaCode);
         boolean res = runJava(javaCode, false);
         if (value != res)
             System.out.println(javaCode);
