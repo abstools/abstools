@@ -30,5 +30,8 @@ public class SemanticTests {
         driver.assertEvalTrue(absCode);
     }
 
+    public void assertEvalFails(String absCode) {
+        driver.assertEvalFails(absCode);
+    }
     
 }

@@ -10,5 +10,10 @@ public class JavaTestDriver extends BackendTestDriver {
     public void assertEvalEquals(String absCode, boolean value) {
         javaTest.assertEvalEquals(absCode, value);
     }
+
+    @Override
+    public void assertEvalFails(String absCode) {
+        javaTest.assertEvalFails(absCode);
+    }
     
 }

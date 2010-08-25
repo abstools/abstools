@@ -2,11 +2,14 @@ package abs.backend.java.lib.runtime;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 
 class TaskScheduler {
-    private final List<Task> taskq = new LinkedList<Task>();
+    private static final Logger log = Logging.getLogger(TaskScheduler.class.getName());
+    
+    private final List<Task<?>> taskq = new LinkedList<Task<?>>();
     private final List<SchedulerThread> suspendedTasks = new LinkedList<SchedulerThread>();
-    private Task activeTask;
+    private Task<?> activeTask;
     private SchedulerThread thread;
     private final COG cog;
     
@@ -20,7 +23,7 @@ class TaskScheduler {
 		}
 	}
 
-    public synchronized void addTask(Task task) {
+    public synchronized void addTask(Task<?> task) {
         taskq.add(task);
         if (thread == null) {
             thread = new SchedulerThread();
@@ -31,7 +34,7 @@ class TaskScheduler {
     }
     
     class SchedulerThread extends ABSThread {
-        private Task runningTask;
+        private Task<?> runningTask;
 
         public SchedulerThread() {
             setName("ABS Task Thread of COG "+cog.getID());
@@ -52,7 +55,7 @@ class TaskScheduler {
                     activeTask = taskq.remove(0);
                     runningTask = activeTask;
                 }
-                
+                log.finest("Running task "+runningTask.methodName()+" of COG "+cog.getID());
                 runningTask.run();
             }
         }

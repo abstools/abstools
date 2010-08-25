@@ -6,11 +6,15 @@ public abstract class Task<T> {
     
     public Task(T target) {
         this.target = target;
-        future = new ABSFut();
+        future = new ABSFut(this);
+    }
+    
+    public COG getCOG() {
+        return ((ABSObject)target).getCOG();        
     }
     
     public void schedule() {
-        ((ABSObject)target).getCOG().addTask(this);
+        getCOG().addTask(this);
     }
     
     public ABSFut getFut() {

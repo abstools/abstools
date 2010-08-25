@@ -11,7 +11,11 @@ public class ABSObject {
         cog = getCurrentCOG();
     }
     
-    public COG getCOG() {
+    protected ABSObject(COG cog) {
+        this.cog = cog;
+    }
+    
+    public final COG getCOG() {
         return cog;
     }
 

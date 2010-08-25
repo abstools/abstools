@@ -5,26 +5,31 @@ import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSDataType;
 
 
-public class ABSFut extends ABSBuiltInDataType {
+public class ABSFut<V> extends ABSBuiltInDataType {
+    private final Task<V> resolvingTask;
+    private V value;
+    private boolean isResolved;
     
-    
-    public ABSFut() {
-        this("Fut");
+    public ABSFut(Task<V> task) {
+        this("Fut", task);
     }
     
-	protected ABSFut(String constructorName) {
+	protected ABSFut(String constructorName, Task<V> task) {
         super(constructorName);
+        resolvingTask = task;
     }
 
-    private Object value;
-	private boolean isResolved;
 	
-	public synchronized void resolve(Object o) {
+	public synchronized void resolve(V o) {
+	    if (isResolved)
+	        throw new IllegalStateException("Future is already resolved");
+	    
 		value = o;
 		isResolved = true;
+		notifyAll();
 	}
 	
-	public synchronized Object getValue() {
+	public synchronized V getValue() {
 		return value;
 	}
 	
@@ -42,8 +47,12 @@ public class ABSFut extends ABSBuiltInDataType {
    	}
    }
 
-   public synchronized Object get() {
-   	return value;
+   public synchronized V get() {
+       if (resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
+           throw new ABSDeadlockException();
+       
+       await();
+   	   return value;
    }
 
 

@@ -12,14 +12,29 @@ public class ConcurrencyTests extends SemanticTests {
         super(d);
     }
     
-    static String INTERFACE_I = "interface I { Bool m(); Unit n(); }";
-    static String CALL_M = "{ Bool testresult = False; I i; i = new C(); testresult = i.m(); }";
+    static String INTERFACE_I = "interface I { Bool m(); Unit n(); } ";
+    static String CLASS_C = "class C implements I { Unit n() { } Bool m() { return True; } } ";
+    static String CALL_M_ASYNC = "{ Bool testresult = True; I i; i = new C(); i!m(); }";
+    static String CALL_M_ASYNC_GET = "{ Bool testresult = False; I i; i = new cog C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
     
     @Test
     public void asyncCall() {
-       assertEvalTrue(INTERFACE_I+" class C implements I { Unit n() { } Bool m() { I i; i = this; i!n(); return True; } } "+CALL_M); 
+       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC); 
     }
     
+    @Test
+    public void futGet() {
+       assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET); 
+    }
+    
+    // ERROR Tests
+    
+    static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
+    @Test
+    public void futGetDeadlock() {
+        // Fails because a deadlock occurs 
+       assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET_DEADLOCK); 
+    }
     
 
 }

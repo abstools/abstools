@@ -23,6 +23,18 @@ public class JavaGeneratorHelper {
         stream.print(")");
         
     }
+
+    public static void generateParamArgs(PrintStream stream, List<ParamDecl> params) {
+        stream.print("(");
+        boolean first = true;
+        for (ParamDecl d : params) {
+            if (!first)
+                stream.print(", ");
+            stream.print(d.getName());
+            first = false;
+        }
+        stream.print(")");
+    }
     
     public static void generateParams(PrintStream stream, List<ParamDecl> params) {
         stream.print("(");

@@ -14,4 +14,9 @@ public class MaudeTestDriver extends BackendTestDriver {
             maude.assertFalseMaude(absCode);
     }
 
+    @Override
+    public void assertEvalFails(String absCode) {
+        // TODO: implement
+    }
+
 }
