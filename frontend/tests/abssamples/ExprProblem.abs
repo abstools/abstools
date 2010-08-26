@@ -56,13 +56,10 @@ delta DAddPrint {
     }
 
     modifies class Test {
-
-        adds Exp e;
-
         modifies Unit run() {
             original();
-            e = new Add(a, a);
-            String result = e.print();
+            a = new Add(a, a);
+            String result = a.print();
             output = output + " " + result;
         }
     }
@@ -101,13 +98,10 @@ delta DNegPrint {
     }
 
     modifies class Test {
-
-        adds Exp f;
-
         modifies Unit run() {
             original();
-            f = new Neg(a);
-            String result = f.print();
+            a = new Neg(a);
+            String result = a.print();
             output = output + " " + result;
         }
     }
