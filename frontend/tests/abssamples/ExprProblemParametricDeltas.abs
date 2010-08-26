@@ -63,7 +63,7 @@ delta DAddPrint {
         modifies Unit run() {
             original();
             a = new Add(a, a);
-            String result = a.print();
+            String result = ""; result = a.print();
             output = output + " " + result;
         }
     }
@@ -87,7 +87,7 @@ delta DNegPrint {
     adds class Neg(Exp expr) implements Exp {
 
         String print() {
-            String result = expr.print();
+            String result = ""; result = expr.print();
             return " -(" + result + ") ";
         }
     }
@@ -96,7 +96,7 @@ delta DNegPrint {
         modifies Unit run() {
             original();
             a = new Neg(a);
-            String result = a.print();
+            String result = ""; result = a.print();
             output = output + " " + result;
         }
     }
@@ -109,7 +109,7 @@ delta DNegEval {
     modifies class Neg {
    
         adds Int eval() {
-            Int result = expr.eval();
+            Int result = 0; result = expr.eval();
             return -1 * result;
         }
     }
