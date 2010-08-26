@@ -4,6 +4,8 @@ import java.io.PrintStream;
 
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSType;
+import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
@@ -63,7 +65,7 @@ public class JavaGeneratorHelper {
 				  stream.print(",");
 			  stream.print(d.getName());
 			  if (plusExtends)
-				  stream.print(" extends "+ABSDataType.class.getName());
+				  stream.print(" extends "+ABSValue.class.getName());
 		  }  
 		  stream.print(">");
 	  }	

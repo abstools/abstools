@@ -1,6 +1,7 @@
 package abs.backend.java.lib.expr;
 
 import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSValue;
 
 public class PatternConstructor extends Pattern {
     public final Pattern[] subpattern;
@@ -11,8 +12,12 @@ public class PatternConstructor extends Pattern {
     }
     
     @Override
-    public boolean match(ABSDataType dt, PatternBinding b) {
-        return dt.match(this, b);
+    public boolean match(ABSValue dt, PatternBinding b) {
+        if (dt instanceof ABSDataType) {
+            return ((ABSDataType)dt).match(this, b);
+        } else {
+            return false;
+        }
     }
 
 }

@@ -23,6 +23,10 @@ import abs.frontend.parser.Main;
 public class MaudeTests extends ABSTest {
 
 
+    @Test
+    public void simpleBlock() {
+        assertTrueMaude("{ Bool testresult = True;}");
+    }
     
     
     public void assertTrueMaude(String absCode) {

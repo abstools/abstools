@@ -11,11 +11,13 @@ public class ABSBool extends ABSBuiltInDataType {
         this.value = v;
     }
     
-    public ABSBool eq(ABSDataType o) {
+    @Override
+    public ABSBool eq(ABSValue o) {
         return ABSBool.fromBoolean(o == this);
     }
     
-    public ABSBool notEq(ABSBool o) {
+    @Override
+    public ABSBool notEq(ABSValue o) {
         return ABSBool.fromBoolean(o != this);
     }
     

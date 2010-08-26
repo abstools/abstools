@@ -58,7 +58,7 @@ public class FunctionalTests extends SemanticTests {
 
     @Test
     public void parametericDataType() {
-       assertEvalTrue("data Foo<A> = Bar(A); { Bool testresult = True; Foo f = Bar(True); }");
+       assertEvalTrue("data Foo<A> = Bar(A); { Bool testresult = True; Foo<Bool> f = Bar(True); }");
     }
     
     @Test
@@ -127,6 +127,11 @@ public class FunctionalTests extends SemanticTests {
     @Test
     public void casePatternIntLiteral() {
         assertEvalTrue("def Bool f() = let (Int i) = 4 in case i { 2 => False; 4 => True; };" + CALL_F);
+    }
+
+    @Test
+    public void typeSynonyms() {
+        assertEvalTrue("type Data = Int; { Int i = 5; Data d = 5; Bool testresult = d == i; }");
     }
 
     

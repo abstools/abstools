@@ -1,9 +1,9 @@
 package abs.backend.java.lib.expr;
 
-import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSValue;
 
 public abstract class Pattern {
-	public PatternBinding match(ABSDataType dt) {
+	public PatternBinding match(ABSValue dt) {
 	    PatternBinding b = new PatternBinding();
 	    if (match(dt,b))
 	        return b;
@@ -11,6 +11,6 @@ public abstract class Pattern {
 	        return null;
 	}
 
-    public abstract boolean match(ABSDataType dt, PatternBinding binding);
+    public abstract boolean match(ABSValue dt, PatternBinding binding);
 
 }

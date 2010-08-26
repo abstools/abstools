@@ -1,19 +1,17 @@
 package abs.backend.java.lib.expr;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSValue;
 
 public class PatternBinding {
-	ArrayList<ABSDataType> binding = new ArrayList<ABSDataType>();
+	ArrayList<ABSValue> binding = new ArrayList<ABSValue>();
 	
-	public void addBinding(ABSDataType d) {
-	    binding.add(d);
+	public void addBinding(ABSValue dt) {
+	    binding.add(dt);
 	}
 	
-	public ABSDataType getBinding(int i) {
+	public ABSValue getBinding(int i) {
 	    return binding.get(i);
 	}
 }

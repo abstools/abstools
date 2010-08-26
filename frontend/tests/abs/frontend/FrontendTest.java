@@ -2,8 +2,6 @@ package abs.frontend;
 
 import static org.junit.Assert.fail;
 import abs.ABSTest;
-import abs.frontend.analyser.SemanticError;
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -32,33 +30,6 @@ public class FrontendTest extends ABSTest {
 
     protected void assertTypeCheckFileOk(String fileName, boolean withStdLib) {
         assertParseFileOk(fileName, true, withStdLib);
-    }
-    
-    protected void assertParseFileOk(String fileName, boolean typeCheck, boolean withStdLib) {
-        Model m = null;
-        try {
-            m = Main.parse(fileName, withStdLib);
-        } catch (Throwable e) {
-            fail("Failed to parse: "+ fileName +"\n"+e.getMessage());
-            e.printStackTrace();
-        }
-        if (m != null) {
-            int numSemErrs = m.getErrors().size();
-            StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
-            if (numSemErrs > 0){
-                for (SemanticError error : m.getErrors())
-                    errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
-                fail("Failed to parse: "+fileName+"\n"+errs.toString());
-            } else if (typeCheck) {
-                SemanticErrorList l = m.typeCheck();
-                if (!l.isEmpty()) {
-                    for (SemanticError error : l)
-                        errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
-                    fail("Failed to typecheck: "+fileName+"\n"+errs.toString());
-                    
-                }
-            }
-        }
     }
     
     protected void assertParseError(String absCode, boolean typeCheck, boolean withStdLib) {

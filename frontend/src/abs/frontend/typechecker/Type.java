@@ -98,4 +98,8 @@ public abstract class Type {
 
 	   return false;
    }
+
+    public boolean isUnionType() {
+        return false;
+    }
 }

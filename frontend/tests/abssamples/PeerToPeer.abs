@@ -31,7 +31,7 @@ interface Peer extends Client, Server {
 }
 
 interface Network {
-  List<Server> getNeighbors(Peer caller);
+  List<Peer> getNeighbors(Peer caller);
 }
 
 interface DataBase {
@@ -155,8 +155,8 @@ class Node(DataBase db, Filename file) implements Peer {
 class OurTopology(Peer node0,   Peer node1,   Peer node2,   Peer node3)
 implements Network
 {
-  List<Server> getNeighbors(Peer caller) {
-    List<Server> res = Nil;
+  List<Peer> getNeighbors(Peer caller) {
+    List<Peer> res = Nil;
     if (caller == node0) { res = list[node1, node2]; }
     if (caller == node1) { res = list[node3]; }
     if (caller == node2) { res = list[node0, node1, node3]; }

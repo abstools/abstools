@@ -4,14 +4,16 @@ import abs.backend.java.lib.expr.PatternBinding;
 import abs.backend.java.lib.expr.PatternConstructor;
 
 
-public abstract class ABSDataType implements ABSType {
-   public ABSBool eq(ABSDataType other) {
+public abstract class ABSDataType implements ABSValue {
+    @Override
+   public ABSBool eq(ABSValue other) {
    	if (other == null || other.getClass() != this.getClass())
    		return ABSBool.FALSE;
    	return ABSBool.TRUE;
    }
 
-   public ABSBool notEq(ABSDataType other) {
+    @Override
+   public ABSBool notEq(ABSValue other) {
    	return this.eq(other).negate();   	
    }
 

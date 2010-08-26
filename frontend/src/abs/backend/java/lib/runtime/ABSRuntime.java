@@ -3,6 +3,10 @@ package abs.backend.java.lib.runtime;
 
 public class ABSRuntime {
 
+    public static void suspend() {
+        await(new ABSTrueGuard());
+    }
+    
     public static void await(ABSGuard g) {
         getCurrentCOG().getScheduler().await(g);
 	}

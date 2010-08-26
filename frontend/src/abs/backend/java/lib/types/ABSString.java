@@ -15,7 +15,8 @@ public class ABSString extends ABSBuiltInDataType {
         return fromString(value + s.value);
     }
     
-    public ABSBool eq(ABSDataType o) {
+    @Override
+    public ABSBool eq(ABSValue o) {
         if (!super.eq(o).toBoolean())
             return ABSBool.FALSE;
         ABSString s = (ABSString) o;

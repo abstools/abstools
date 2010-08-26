@@ -52,7 +52,7 @@ aspect Typing {
 
     syn lazy Type Decl.getType();
     
-    eq ClassDecl.getType() = new UnionType(getImplementedInterfaceUses());
+    eq ClassDecl.getType() = new UnionType(getName(), getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
 
     eq DataTypeDecl.getType() {

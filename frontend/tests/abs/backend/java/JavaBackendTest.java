@@ -34,6 +34,12 @@ public class JavaBackendTest extends ABSTest {
         assertValidJava(getJavaCode(absCode, false));
     }
     
+    protected void assertValidJavaFile(String absFile, boolean useStdLib) {
+       Model m = assertParseFileOk(absFile, true, true);
+       String javaCode = getJavaCode(m);
+       assertValidJava(javaCode);
+    }
+    
     void assertValidJava(String javaCode) {
         File tmpFile;
         try {
@@ -117,6 +123,14 @@ public class JavaBackendTest extends ABSTest {
             Assert.fail(model.getErrors().getFirst().getMsgString());
             return null;
         }
+        return getJavaCode(model);
+        } catch (NumberFormatException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
+    private String getJavaCode(Model model) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         model.generateJava(new PrintStream(out));
         String res = out.toString();
@@ -124,10 +138,6 @@ public class JavaBackendTest extends ABSTest {
         //res = res.replaceAll("[ ]+", " ");
         res = res.trim();
         return res;
-        } catch (NumberFormatException e) {
-            Assert.fail(e.getMessage());
-            return null;
-        }
     }
     
     void assertEqual(String absCode, String javaCode, String pkg) {

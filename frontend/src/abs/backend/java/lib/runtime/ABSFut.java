@@ -3,6 +3,8 @@ package abs.backend.java.lib.runtime;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSType;
+import abs.backend.java.lib.types.ABSValue;
 
 
 public class ABSFut<V> extends ABSBuiltInDataType {
@@ -57,7 +59,7 @@ public class ABSFut<V> extends ABSBuiltInDataType {
 
 
    @Override
-   public ABSBool eq(ABSDataType other) {
+   public ABSBool eq(ABSValue other) {
 	   return ABSBool.fromBoolean(other == this);
    }
    

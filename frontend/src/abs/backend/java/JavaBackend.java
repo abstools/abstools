@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -33,6 +34,7 @@ import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeParameter;
+import abs.frontend.typechecker.UnionType;
 
 public class JavaBackend {
     private static String testCode() {
@@ -138,13 +140,7 @@ public class JavaBackend {
 
 
     public static String getJavaType(DataTypeUse absType) {
-        String res = dataTypeMap.get(absType.getName());
-        if (res != null)
-            return res;
-        if (absType.getType().isFutureType()) {
-            // FIXME: implement future type
-        }
-        return absType.getName();
+        return getQualifiedString(absType.getType());
     }
     
     public static String getQualifiedString(Type absType) {
@@ -155,7 +151,8 @@ public class JavaBackend {
    		 if (res != null)
    			 return res;
    		 StringBuffer sb = new StringBuffer(dt.getDecl().getName());
-   		 if (dt.hasTypeArgs()) {
+   		 if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs())) {
+   		     
    			 sb.append("<");
    			 boolean first = true;
    			 for (Type t : dt.getTypeArgs()) {
@@ -180,9 +177,22 @@ public class JavaBackend {
    		 return "?";
    	 } else if (absType.isAnyType()) {
    		 return "?";
+   	 } else if (absType.isUnionType()) {
+   	     return ((UnionType) absType).getOriginatingClassName();
    	 }
 
    	 throw new RuntimeException("Type "+absType.getClass().getName()+" not yet supported by Java backend");
+    }
+
+
+    private static boolean containsUnboundedType(List<Type> typeArgs) {
+        for (Type t : typeArgs) {
+            if (t.isBoundedType()) {
+                if (!((BoundedType)t).hasBoundType())
+                    return true;
+            }
+        }
+        return false;
     }
     
     

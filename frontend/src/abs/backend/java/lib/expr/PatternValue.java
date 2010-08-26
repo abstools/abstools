@@ -1,16 +1,16 @@
 package abs.backend.java.lib.expr;
 
-import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSValue;
 
 public class PatternValue extends Pattern {
 
-    private final ABSDataType value;
-    public PatternValue(ABSDataType value) {
+    private final ABSValue value;
+    public PatternValue(ABSValue value) {
         this.value = value;
     }
     
     @Override
-    public boolean match(ABSDataType dt, PatternBinding binding) {
+    public boolean match(ABSValue dt, PatternBinding binding) {
         return value.eq(dt).toBoolean();
     }
     

@@ -10,17 +10,24 @@ import abs.frontend.ast.MethodSig;
 
 public class UnionType extends ReferenceType {
 	private final java.util.List<InterfaceType> types;
+	private final String originatingClass;
 	
-	public UnionType(List<InterfaceTypeUse> types) {
+	public UnionType(String className, List<InterfaceTypeUse> types) {
 		this.types = new ArrayList<InterfaceType>();
 		for (InterfaceTypeUse t : types) {
 			this.types.add((InterfaceType)t.getType());
 		}
+		originatingClass = className;
 	}
 
-	public UnionType(InterfaceType... types) {
+	public UnionType(String className, InterfaceType... types) {
 		this.types = new ArrayList<InterfaceType>();
 		this.types.addAll(Arrays.asList(types));
+        originatingClass = className;
+	}
+
+	public String getOriginatingClassName() {
+	    return originatingClass;
 	}
 	
 	public java.util.List<InterfaceType> getTypes() {
@@ -78,5 +85,10 @@ public class UnionType extends ReferenceType {
 	    }
 	    buf.append(" }");
 	    return buf.toString();
+	}
+	
+	@Override
+	public boolean isUnionType() {
+	    return true;
 	}
 }

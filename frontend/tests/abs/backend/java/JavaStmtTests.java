@@ -73,5 +73,23 @@ public class JavaStmtTests extends JavaBackendTest {
     public void methodCallWithArgs() {
        assertValidStdLib("interface I { Unit m(Bool b, Int i); } { I i; i.m(True, 5); }");
     }
+    
+    @Test
+    public void typeSynonyms() {
+        assertValidStdLib("type X = I; interface I { } { I i; X x; i = x; x = i; }");
+    }
+
+    @Test
+    public void typeSynonyms2() {
+        assertValidStdLib("type Data = Int; { Int i = 5; Data d = 6; i = d; d = i; }");
+    }
+
+    @Test
+    public void typeSynonyms3() {
+        assertValidStdLib("type Data = Int; data DataList = DataNil | ConsData(Data, DataList); " +
+        		"{ DataList l = ConsData(5,DataNil); Bool testresult = case l { ConsData(x,y) => x == 5;}; }");
+    }
 
 }
+
+

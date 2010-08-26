@@ -87,7 +87,7 @@ aspect GenerateJava {
         stream.println(" {");
         
         for (ParamDecl p : getParams()) {
-            stream.print("   private final ");
+            stream.print("   private ");
             p.generateJava(stream);
             stream.println(";");
         }
@@ -212,7 +212,7 @@ aspect GenerateJava {
            stream.println("   }");
            
            // eq method
-           stream.println("   public ABSBool eq(ABSDataType o) {");
+           stream.println("   public ABSBool eq(ABSValue o) {");
            stream.println("      if (! (o instanceof "+constructorClassName+")) return ABSBool.FALSE;");
            stream.println("      "+constructorClassName+" other = ("+constructorClassName+") o;");
            
@@ -279,18 +279,16 @@ aspect GenerateJava {
    	  stream.print("null");
     }
     
-
-
     public void TypeParameterDecl.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        // is never called
     }
 
     public void UnknownDecl.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        // is never called for type-correct programs
     }
 
     public void TypeSynDecl.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this);
+        // generate nothing as type synonyms do not appear in the Java outout
     }
     
     public void Block.generateJava(String indent, PrintStream stream) {
@@ -452,7 +450,6 @@ aspect GenerateJava {
         }
         stream.print(") {");
         for (i = 0; i < getNumParam(); i++) {
-            if (i > 0) stream.print(",");
             stream.println("arg"+i+" = _arg"+i+";");
         }
         stream.print("   return this; }"); 
