@@ -42,6 +42,10 @@ public class MaudeCompiler {
 		    	files.add(arg);
 		    }
 		}
+		if (files.isEmpty()) {
+			System.err.println("No input files specified.");
+			System.exit(2);
+		}
 		Model m = abs.frontend.parser.Main.parse(files, stdlib);
         SemanticErrorList l = m.typeCheck();
         if (!l.isEmpty()) {
