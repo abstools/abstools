@@ -1,16 +1,21 @@
 package abs.backend.java;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.sound.midi.SysexMessage;
 
 import org.junit.Test;
 
@@ -64,9 +69,56 @@ public class JavaBackend {
     }
     
     
-    public static void main(String[] args) throws Exception {
-        testCompile(testCode());
+    public static void main(final String[] args)  {
+        try {
+            compile(args);
+        } catch(Exception e) {
+            System.err.println("An error occurred during compilation: "+e.getMessage());
+            
+            if (Arrays.asList(args).contains("-debug")) {
+                e.printStackTrace();
+            }
+            
+            System.exit(1);
+        }
     }
+    
+    private static void compile(String[] args) throws Exception {
+        final Model model = Main.parse(args);
+        File destDir = new File(".");
+        
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-d")) {
+                i++;
+                if (i == args.length) {
+                    System.err.println("Please provide a destination directory");
+                    System.exit(1);
+                } else {
+                    destDir = new File(args[i]);
+                }
+            }
+        }
+
+        if (!destDir.exists()) {
+            System.err.println("Destination directory "+destDir.getAbsolutePath()+" does not exist!");
+            System.exit(1);
+        } 
+
+        if (!destDir.canWrite()) {
+            System.err.println("Destination directory "+destDir.getAbsolutePath()+" cannot be written to!");
+            System.exit(1);
+        } 
+    
+        compile(model,destDir);
+        
+    }
+
+    private static void compile(Model m, File destDir) throws IOException {
+        File tmpFile = generateJavaToTmpFile(m);
+        JavaCompiler.compile("-classpath","bin", "-d", destDir.getAbsolutePath(), tmpFile.getAbsolutePath());
+    }
+
 
     public static void testCompile(String absCode) throws Exception {
         InputStream in = new ByteArrayInputStream(absCode.getBytes());
@@ -114,6 +166,16 @@ public class JavaBackend {
         unit.transformation();
         unit.generateClassfile();
 
+    }
+
+    private static File generateJavaToTmpFile(Model model) throws IOException {
+        File tmpFile = File.createTempFile("abs", "javabackend");
+        PrintStream s = new PrintStream(new BufferedOutputStream(new FileOutputStream(tmpFile)));
+        model.generateJava(s);
+        s.close();
+        //tmpFile.deleteOnExit();
+        
+        return tmpFile;
     }
 
     private static File getTempFile(String testCode) throws IOException {

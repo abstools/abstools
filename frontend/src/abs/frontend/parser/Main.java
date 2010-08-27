@@ -31,6 +31,10 @@ public class Main {
 	static boolean stdlib = true;
 
 	public static void main(final String[] args) throws Exception {
+	    parse(args);
+	}
+
+	public static Model parse(final String[] args) throws Exception {
 		int numoptions = 0;
 		
 		for (String arg : args) {
@@ -107,7 +111,7 @@ public class Main {
             }
         }
         
-		
+		return m;
 	}
 
 

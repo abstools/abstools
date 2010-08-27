@@ -14,5 +14,9 @@ public class JavaExprTests extends JavaBackendTest {
         assertValidStdLib("data Foo = Bar(Bool); def Bool f(Foo x) = case x { Bar(y) => y; }; ");
     }
 
+    @Test
+    public void appendright() {
+        assertValidStdLib("def List<A> appendrightTest<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));");
+    }
     
 }

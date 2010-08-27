@@ -150,6 +150,7 @@
             <zipfileset src="${ext.dir}/jastadd2.jar" />
             <zipfileset src="${ext.dir}/beaver-rt-src.jar" />
             <zipfileset src="${ext.dir}/JFlex.jar" />
+            <zipfileset src="${ext.dir}/Java1.5Compiler.jar" />
 
             <manifest>
                 <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
