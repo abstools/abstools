@@ -161,11 +161,6 @@ fmod ABS-DATA-BOOL is
   eq fparams("||") = @ "D1", @ "D2" .
   eq fdefn("||") = $builtin("||") .
   
-  *** eq "=>"("True"[ emp ] :: E) = E .
-  *** eq "=>"("False"[ emp ] :: E) = "True"[ emp ] .
-  *** eq "^"(D :: D') = ((D asBool) xor (D' asBool)) asAbsBool .
-  *** eq "<=>"(D :: D') = ((D asBool) == (D' asBool)) asAbsBool .
-
 endfm
 
 
@@ -348,16 +343,15 @@ endfm
 
 *** The sort of a class identifier.
 ***
-fmod ABS-CID is
+mod ABS-CID is
+  protecting CONFIGURATION .
   protecting STRING .
-  sort Cid .
-
   subsort String < Cid .
 
   op Class : -> Cid [ctor] .
   op Start : -> Cid [ctor] .
   op None : -> Cid [ctor] .
-endfm
+endm
 
 view Cid from TRIV to ABS-CID is
   sort Elt to Cid .
@@ -366,12 +360,11 @@ endv
 
 *** The sort of an object identifier.
 ***
-fmod ABS-OID is
+mod ABS-OID is
+  protecting ABS-CID .
   protecting NAT .
-  protecting STRING .
   protecting CONVERSION .
   extending ABS-DATA-SIG .
-  sort Oid .
 
   subsort Oid < Data .
 
@@ -385,7 +378,7 @@ fmod ABS-OID is
   op newId : String Nat -> Oid .
   eq newId(B, F)  = ob(B + "-" + string(F,10)) .
 
-endfm
+endm
 
 view Oid from TRIV to ABS-OID is
   sort Elt to Oid .
@@ -394,7 +387,7 @@ endv
 *** The interpreter could extend this module with his own definition
 *** of label values.  For example, the model checker uses his own version
 *** of labels.  This definition is the one used in the interpreter.
-fmod ABS-DATA-LABEL is
+mod ABS-DATA-LABEL is
 
   extending ABS-DATA-SIG .
   protecting ABS-OID .
@@ -403,7 +396,7 @@ fmod ABS-DATA-LABEL is
   subsort Label < Data .
 
   op label : Oid Nat -> Label [ctor format (o o)] .
-endfm
+endm
 
 view Label from TRIV to ABS-DATA-LABEL is
   sort Elt to Label .
@@ -411,7 +404,7 @@ endv
 
 
 *** The DATATYPES module collects all predefined data types into one module.
-fmod ABS-DATATYPES is
+mod ABS-DATATYPES is
     extending ABS-DATA-SIG .
     extending ABS-EXPRESSION .
     extending ABS-DATA-BOOL .
@@ -420,7 +413,7 @@ fmod ABS-DATATYPES is
     extending ABS-DATA-INT .
     extending ABS-DATA-STRING .
     extending ABS-DATA-TIME .
-endfm
+endm
 
 
 ***
@@ -428,7 +421,7 @@ endfm
 ***
 *** Uses MAP from prelude.
 ***
-fmod ABS-SUBST is
+mod ABS-SUBST is
   protecting ABS-DATATYPES .
   extending MAP{Vid, Data} * (sort Map{Vid,Data} to SSubst,
                               sort Entry{Vid,Data} to Binding,
@@ -472,7 +465,7 @@ fmod ABS-SUBST is
   eq $createSubst(S2, noVid, emp) = S2 .
   eq $createSubst(S2, (A, AL), (D :: DL)) = 
     $createSubst($insert(A, D, S2), AL, DL) .
-endfm
+endm
 
 
 
@@ -486,7 +479,7 @@ endfm
 *** red.  It may indicate a problem if a red term appears in a
 *** configuration.
 
-fmod ABS-STATEMENT is
+mod ABS-STATEMENT is
 
   protecting ABS-DATA-VIDLIST .
   protecting ABS-EXPRESSION .
@@ -522,7 +515,7 @@ fmod ABS-STATEMENT is
   --- stops evaluation of the executing object at that point.
   op failure_ : Expr -> [Stmt] [ctor format (r! o d)] .
 
-endfm
+endm
 
 view Stmt from TRIV to ABS-STATEMENT is
   sort Elt to Stmt .
@@ -532,7 +525,7 @@ endv
 
 *** Specification of compound statements.
 ***
-fmod ABS-STM-LIST is
+mod ABS-STM-LIST is
   protecting ABS-STATEMENT .                
   protecting LIST{Stmt} * (sort List{Stmt} to StmtList,
                            sort NeList{Stmt} to NeStmtList,
@@ -545,10 +538,10 @@ fmod ABS-STM-LIST is
   var SL : StmtList .
   var E : Expr .
 
-endfm
+endm
 
 
-fmod ABS-PROCESS is
+mod ABS-PROCESS is
 
   protecting ABS-STM-LIST .
 
@@ -562,7 +555,7 @@ fmod ABS-PROCESS is
   eq { L | noStmt } = idle . --- if ".label" is needed this is dangerous!
   eq idle = { noSubst | noStmt } [nonexec metadata "Causes infinite loops."] .
 
-endfm
+endm
 
 view Process from TRIV to ABS-PROCESS is
   sort Elt to Process .
@@ -571,7 +564,7 @@ endv
 
 *** Specifies a process pool, here a multiset of Processes
 ***
-fmod ABS-PROCESS-POOL is
+mod ABS-PROCESS-POOL is
   protecting ABS-PROCESS .
 
   sort MProc .
@@ -580,12 +573,12 @@ fmod ABS-PROCESS-POOL is
   op _,_ : MProc MProc -> MProc
     [ctor assoc comm id: noProc prec 41 format (d r os d)] .
 
-endfm
+endm
 
 
 *** A method declaration
 ***
-fmod ABS-METHOD is
+mod ABS-METHOD is
   protecting ABS-STM-LIST .
 
   sort Method .
@@ -594,7 +587,7 @@ fmod ABS-METHOD is
     String VidList Subst StmtList -> Method
     [ctor format (c ! oc o d sc o d sc o d sc o c o)] .
 
-endfm
+endm
 
 view Method from TRIV to ABS-METHOD is
   sort Elt to Method .
@@ -605,10 +598,9 @@ endv
 ***
 *** Modeled after the CONFIGURATION module in "prelude.maude"
 ***
-fmod ABS-CONFIGURATION is
+mod ABS-CONFIGURATION is
   protecting ABS-DATA-LABEL .
   protecting ABS-PROCESS-POOL .
-  protecting ABS-CID .
   protecting ABS-OID .
   protecting SET{Method} * (sort Set{Method} to MMtd,
                             op empty : -> Set{Method} to noMethod) .
@@ -616,9 +608,8 @@ fmod ABS-CONFIGURATION is
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Msg Class Future Object Configuration .
-  subsorts Msg Class Future Object < Configuration .
-
+  sorts Future Class  .
+  subsorts  Class Future < Configuration .
   vars B M : String .
   var C : Cid .
   vars O O' : Oid .
@@ -686,11 +677,6 @@ fmod ABS-CONFIGURATION is
     Cid VidList Subst MMtd Nat -> Class 
     [ctor format (ng ! og o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
 
-  --- Define a configuration
-  op none : -> Configuration [ctor] .
-  op __ : Configuration Configuration -> Configuration
-    [ctor assoc comm id: none] .
-
   *** Useful for real-time maude and some other tricks.
   *** We should not provide sort State, since this is used in LOOP-MODE.
   *** For now, we do.
@@ -719,12 +705,12 @@ fmod ABS-CONFIGURATION is
   eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
     none .
 
-endfm
+endm
 
 
 *** Definition of the family of evaluation functions.
 ***
-fmod ABS-EVAL is
+mod ABS-EVAL is
   protecting ABS-CONFIGURATION .
   protecting ABS-DATA-VID .
 
@@ -869,10 +855,10 @@ fmod ABS-EVAL is
     "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
   eq eval($builtin("strlen"), S, CN) =
     "int"[length((S[@ "S"]) asString)] .
-endfm
+endm
 
 
-fmod ABS-EVAL-TIMED is
+mod ABS-EVAL-TIMED is
   protecting ABS-EVAL .
 
   var D : Data .
@@ -935,7 +921,7 @@ fmod ABS-EVAL-TIMED is
 
   *** Delegate the builtins to the untimed version.
   eq eval($builtin(Q), S, CN, N) = eval($builtin(Q), S, CN) .
-endfm
+endm
 
 
 
@@ -1072,7 +1058,7 @@ mod ABS-STMT-SKIP-RL is
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
 endm
-fmod ABS-STMT-SKIP-EQ is
+mod ABS-STMT-SKIP-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
@@ -1083,7 +1069,7 @@ fmod ABS-STMT-SKIP-EQ is
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
-endfm
+endm
 
 *** The Assign statement.
   
@@ -1117,7 +1103,7 @@ mod ABS-STMT-ASSIGN-RL is
   if D := eval(E, (S :: L), none)
     [label field-assignment] .
 endm
-fmod ABS-STMT-ASSIGN-EQ is
+mod ABS-STMT-ASSIGN-EQ is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
@@ -1142,7 +1128,7 @@ fmod ABS-STMT-ASSIGN-EQ is
     < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none)
     [label field-assignment] .
-endfm
+endm
 
 *** The conditional (if_then_else) statement.
 mod ABS-STMT-COND-RL is
@@ -1162,7 +1148,7 @@ mod ABS-STMT-COND-RL is
     fi
     [label if-then-else] .
 endm
-fmod ABS-STMT-COND-EQ is
+mod ABS-STMT-COND-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .                 var C : Cid .    vars S L : Subst .
@@ -1178,7 +1164,7 @@ fmod ABS-STMT-COND-EQ is
       < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
     fi
     [label if-then-else] .
-endfm
+endm
 
 *** The looping (while) statement.
 mod ABS-STMT-WHILE-RL is
@@ -1195,7 +1181,7 @@ mod ABS-STMT-WHILE-RL is
               PrQ: W, Lcnt: F >
     [label while] .
 endm
-fmod ABS-STMT-WHILE-EQ is
+mod ABS-STMT-WHILE-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
@@ -1209,7 +1195,7 @@ fmod ABS-STMT-WHILE-EQ is
               Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
               PrQ: W, Lcnt: F >
     [label while] .
-endfm
+endm
 
 *** The Suspend statement.
 ***
@@ -1226,7 +1212,7 @@ mod ABS-STMT-SUSPEND-RL is
     < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
 endm
-fmod ABS-STMT-SUSPEND-EQ is
+mod ABS-STMT-SUSPEND-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
@@ -1237,7 +1223,7 @@ fmod ABS-STMT-SUSPEND-EQ is
   =
     < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
-endfm
+endm
 
 *** The Await statement.
   
@@ -1270,7 +1256,7 @@ mod ABS-STMT-AWAIT-RL is
     fi
       [label await] .
 endm
-fmod ABS-STMT-AWAIT-EQ is
+mod ABS-STMT-AWAIT-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
@@ -1295,7 +1281,7 @@ fmod ABS-STMT-AWAIT-EQ is
       { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
     fi
       [label await] .
-endfm
+endm
 
 *** METHOD CALLS
 mod ABS-CALLSTMTS-RL is
@@ -1361,7 +1347,7 @@ mod ABS-CALLSTMTS-RL is
   [label selftailcall] .
 
 endm  
-fmod ABS-CALLSTMTS-EQ is
+mod ABS-CALLSTMTS-EQ is
   protecting ABS-EVAL .
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
@@ -1421,7 +1407,7 @@ fmod ABS-CALLSTMTS-EQ is
     < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
-endfm
+endm
 
 
 *** OBJECT CREATION
@@ -1448,7 +1434,7 @@ mod ABS-NEW-RL is
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 endm
-fmod ABS-NEW-EQ is
+mod ABS-NEW-EQ is
   protecting ABS-EVAL .
 
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
@@ -1468,7 +1454,7 @@ fmod ABS-NEW-EQ is
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
-endfm
+endm
 
 
 *** The Return statement.
@@ -1493,7 +1479,7 @@ mod ABS-STMT-RETURN-RL is
   if N == L[@ ".label"]
       [label return] .
 endm
-fmod ABS-STMT-RETURN-EQ is
+mod ABS-STMT-RETURN-EQ is
   protecting ABS-EVAL .
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
@@ -1513,7 +1499,7 @@ fmod ABS-STMT-RETURN-EQ is
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
   if N == L[@ ".label"]
       [label return] .
-endfm
+endm
 
 
 *** Receiving results from Futures.
