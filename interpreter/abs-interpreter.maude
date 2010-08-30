@@ -297,40 +297,10 @@ fmod ABS-DATA-TIME is
   extending ABS-DATA-SIG .
   extending ABS-DATA-INT .
 
-  *** The central problem is to evaluate this "expression", since the clock is
+  *** The central problem is to evaluate this function, since the clock is
   *** floating around in the global state.
-  op now : -> Expr [ctor] .
-
-  vars T T' D D' S : Int .
-  var I : Int .
-
-  op _asTime : Data -> Int .
-  eq "time"[I] asTime = I .
-  op _asDuration : Data -> Int .
-  eq "duration"[I] asDuration = I .
-
-
-  *** Define the usual predicates on time.
-  eq "<" ( "time"[T] :: "time"[T'] ) = (T < T') asAbsBool .
-  eq "<=" ( "time"[T] :: "time"[T'] ) = (T <= T') asAbsBool .
-  eq ">" ( "time"[T] :: "time"[T'] ) = (T > T') asAbsBool .
-  eq ">=" ( "time"[T] :: "time"[T'] ) = (T >= T') asAbsBool .
-
-  eq "+" ( "time"[T] :: "duration"[D] ) = "time"[T + D] .
-  eq "-" ( "time"[T] :: "duration"[D] ) = "time"[_-_(T, D)] .
-  eq "+" ( "duration"[D] :: "duration"[D'] ) = "duration"[D * D'] .
-  eq "-" ( "duration"[D] :: "duration"[D'] ) = "duration"[_-_(D, D')] .
-  eq "*" ( "duration"[D] :: "int"[S]) = "duration"[D * S] .
-  eq "*" ( "int"[S] :: "duration"[D] ) = "duration"[S * D] .
-  eq "/" ( "duration"[D] :: "int"[S]) = "duration"[S / D] .
-  eq "<" ( "duration"[D] :: "duration"[D'] ) = (D < D') asAbsBool .
-  eq "<=" ( "duration"[D] :: "duration"[D'] ) = (D <= D') asAbsBool .
-  eq ">" ( "duration"[D] :: "duration"[D'] ) = (D > D') asAbsBool .
-  eq ">=" ( "duration"[D] :: "duration"[D'] ) = (D >= D') asAbsBool .
-
-  --- Arithmetic on time
-  eq "-" ( "time"[T] :: "time"[T'] ) = "duration"[_-_(T, T')] .
-
+  eq fparams("now") = emp .
+  eq fdefn("now") = $builtin("now") .
 endfm
 
 
@@ -762,7 +732,8 @@ mod ABS-EVAL is
   eq eval(?(@ Q), S, CN) = completed(S[@ Q], CN) asAbsBool .
   eq eval(?(@@ Q), (SS :: S), CN) = completed(SS[@ Q], CN) asAbsBool .
   eq eval(?(L), S, CN) = completed(L, CN) asAbsBool .
-  eq eval(now, S, CN) = "time"[0] . *** time is constant in the untimed version
+  *** We are untimed and eternal:
+  eq eval($builtin("now"), S, CN) = "Time"["int"[0]] .
   eq eval(if E th E' el E'' fi, S, CN) =
     if eval(E, S, CN) asBool
     then eval(E', S, CN)
@@ -881,7 +852,8 @@ mod ABS-EVAL-TIMED is
   op enabled : StmtList Subst Configuration Nat -> Bool .
   op ready : StmtList Subst Configuration Nat -> Bool .
 
-  eq eval(now, S, CN, N) = "time"[N] .
+  *** This is the only place where we actually use the clock.
+  eq eval($builtin("now"), S, CN, N) = "Time"["int"[N]] .
   eq eval(Q (EL), S, CN, N) = Q ( evalList(EL, S, CN, N) ) .
   eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
   eq eval(if E th E' el E'' fi, S, CN, N) =

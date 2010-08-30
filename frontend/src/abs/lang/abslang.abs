@@ -8,6 +8,9 @@ data Fut<A>;                    // builtin
 def Bool and(Bool a, Bool b) = case a { True => b; _ => False; };
 def Bool not(Bool a) = case a { True => False; False => True; };
 
+def Int max(Int a, Int b) = case a > b { True => a; False => b; };
+def Int abs(Int x) = case x > 0 { True => x; False => -x; };
+
 data Maybe<A> = Nothing | Just(A);
 
 def A fromJust<A>(Maybe<A> a) = case a { Just(j) => j; };
@@ -208,3 +211,13 @@ def String substr(String str, Int start, Int length) = builtin;
  * Returns the length of the given string
  */
 def Int strlen(String str) = builtin;
+
+
+// A Time datatype.
+data Time = Time(Int);
+def Time now() = builtin;
+def Int timeval(Time t) = case t { Time(v) => v; };
+// use this like so:
+//   Time t = now(); await timeDifference(now(), t) > 5;
+def Int timeDifference(Time t1, Time t2) =
+  abs(timeval(t2) - timeval(t1));
