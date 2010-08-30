@@ -66,6 +66,8 @@ aspect GenerateJava {
     }
     
     public void MethodSig.generateJava(String indent, PrintStream stream) {
+        JavaGeneratorHelper.generateHelpLine(this,stream);
+        
    	  stream.print(indent+"public ");
    	  getReturnType().generateJava(stream);
    	  stream.print(" "+getName());
@@ -78,6 +80,8 @@ aspect GenerateJava {
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
+        JavaGeneratorHelper.generateHelpLine(this,stream);
+        
         stream.print("class "+getName()+" extends "+ABSObject.class.getName()+" implements "+ABSClassType.class.getName());
         for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
             stream.print(", "+use.getName());
@@ -147,6 +151,7 @@ aspect GenerateJava {
     }
     
     public void FieldDecl.generateJava(String indent, PrintStream stream) {
+        JavaGeneratorHelper.generateHelpLine(this,stream);
    	 stream.print(indent);
    	 getAccess().generateJava(stream);
    	 stream.print(" "+getName());
@@ -154,7 +159,7 @@ aspect GenerateJava {
    	     stream.print(" = ");
    	     getInitExp().generateJava(stream);
    	 }
-   	 stream.print(";");
+   	 stream.println(";");
     }
     
 

@@ -360,22 +360,9 @@ aspect TypeChecker {
         DataTypeType type = (DataTypeType) getType();
         if (type.getDecl() instanceof ParametricDataTypeDecl) {
             int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
-            if (expected != 0) {
-                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,expected,0));
+            if (expected != type.numTypeArgs()) {
+                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,"0"));
             }
-        }
-    }
-    
-    public void ParametricDataTypeUse.typeCheck(SemanticErrorList e) {
-        if (getType().isUnknownType()) {
-            e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
-            return;
-        }
-        
-        DataTypeType type = (DataTypeType) getType();
-        int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
-        if ( expected != getNumParam()) {
-            e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,expected,getNumParam()));
         }
     }
 

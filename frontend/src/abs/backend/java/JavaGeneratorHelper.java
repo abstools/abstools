@@ -6,6 +6,8 @@ import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
+import abs.common.Position;
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
@@ -15,6 +17,11 @@ import abs.frontend.ast.TypeParameterDecl;
 
 public class JavaGeneratorHelper {
 
+    public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
+        Position pos = new Position(node);
+        stream.println("// "+pos.getPositionString());
+    }
+    
     public static void generateArgs(PrintStream stream, List<PureExp> args) {
         stream.print("(");
         boolean first = true;

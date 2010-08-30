@@ -27,7 +27,7 @@ public class Main {
 
 	private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     protected boolean verbose = false ;
-	protected boolean typecheck = false;
+	protected boolean typecheck = true;
 	protected boolean stdlib = true;
 
 	public static void main(final String[] args) throws Exception {
@@ -40,8 +40,8 @@ public class Main {
         for (String arg : args) {
             if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-t")) 
-                typecheck = true;
+            else if (arg.equals("-notypecheck")) 
+                typecheck = false;
             else if (arg.equals("-nostdlib")) 
                 stdlib = false;
             else if (arg.equals("-h")) {
@@ -145,10 +145,10 @@ public class Main {
         System.out.println("Usage: java "+Main.class.getName()+" [options] <absfiles>\n" +
         		"  <absfiles>   ABS files to parse\n" +
         		"Options:\n"+
-        		"  -v         verbose output\n" +
-        		"  -t         enable typechecking\n" +
-                "  -nostdlib  do not include the standard lib \n" +
-        		"  -h         print this message\n");
+        		"  -v            verbose output\n" +
+        		"  -notypecheck  disable typechecking\n" +
+                "  -nostdlib     do not include the standard lib \n" +
+        		"  -h            print this message\n");
         
     }
 

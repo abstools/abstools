@@ -257,15 +257,25 @@ public class TypeCheckerTest extends FrontendTest {
 	 }
 
      @Test
-     public void testParametericDataTypesIllegalAssignment() {
+     public void parametericDataTypesIllegalAssignment() {
          assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }"); 
      }
 	 
      @Test
-     public void testParametericDataTypeNoTypeArgs() {
+     public void parametericDataTypeNoTypeArgs() {
          assertTypeErrors("data Foo<A> = Bar(A) | Nil; { Foo f = Nil; }"); 
      }
      
+     @Test
+     public void parametericDataTypeNoTypeArgs2() {
+         assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }"); 
+     }
+
+     @Test
+     public void parametericDataTypeNoTypeArgs3() {
+         assertNoTypeErrors("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;" +
+         		"def Money createMoney(Euro e, Cent c) = Pair(e,c); "); 
+     }
      
     
     @Test
@@ -439,8 +449,6 @@ public class TypeCheckerTest extends FrontendTest {
        assertTypeErrors("def Bool f(Bool x) = let (Int y) = 5 in case x { y => True; };");
        
     }
-    
-    
     
 
     @Test

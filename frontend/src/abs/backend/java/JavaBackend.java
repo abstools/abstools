@@ -69,6 +69,12 @@ public class JavaBackend extends Main {
         return remaindingArgs;
     }
     
+    protected void printUsage() {
+        super.printUsage();
+        System.out.println("Java Backend:");
+        System.out.println("  -d <dir>  generate files to <dir>");
+    }
+    
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
         
