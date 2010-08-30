@@ -105,7 +105,7 @@ def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
   };
 
 // insert a key-value pair to a map (does not preserve injectivity)
-def Map insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
+def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
   
 def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) = // update a record in the map
   case ms {

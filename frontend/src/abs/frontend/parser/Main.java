@@ -26,55 +26,67 @@ import abs.frontend.parser.SyntaxError;
 public class Main {
 
 	private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
-    static boolean verbose = false ;
-	static boolean typecheck = false;
-	static boolean stdlib = true;
+    protected boolean verbose = false ;
+	protected boolean typecheck = false;
+	protected boolean stdlib = true;
 
 	public static void main(final String[] args) throws Exception {
-	    parse(args);
+	    new Main().parse(args);
 	}
 
-	public static Model parse(final String[] args) throws Exception {
-		int numoptions = 0;
-		
-		for (String arg : args) {
-		    if (arg.equals("-v"))
-		        verbose = true;
-		    else if (arg.equals("-t")) 
-		        typecheck = true;
+	public java.util.List<String> parseArgs(String[] args) throws Exception {
+	    ArrayList<String> remaindingArgs = new ArrayList<String>();
+	    
+        for (String arg : args) {
+            if (arg.equals("-v"))
+                verbose = true;
+            else if (arg.equals("-t")) 
+                typecheck = true;
             else if (arg.equals("-nostdlib")) 
                 stdlib = false;
-		    else if (arg.equals("-h")) {
-		        printUsage();
-		        System.exit(1);
-		    } else
-		        break;
-		    
-		    numoptions++;
-		}
+            else if (arg.equals("-h")) {
+                printUsage();
+                System.exit(1);
+            } else
+                remaindingArgs.add(arg);
+            
+        }
+        
+        return remaindingArgs;
+	    
+	}
+	
+	public Model parse(final String[] args) throws Exception {
 
+	    java.util.List<String> files = parseArgs(args);
+	    
+	    
 		List<CompilationUnit> units = new List<CompilationUnit>();
 		
 		if (stdlib) {
 		    units.add(getStdLib());
 		}
 		
-		for (int i = numoptions; i < args.length; i++){
-		    String arg = args[i];
+		for (String file : files){
+		    if (file.startsWith("-")) {
+		        System.err.println("Illegal option "+file);
+		        printUsage();
+		        System.exit(1);
+		    }
 
 			try{
-				units.add(parseUnit(arg));
+				units.add(parseUnit(file));
 				
 			} catch (FileNotFoundException e1) {
-				System.err.println("File not found: " + arg);
+				System.err.println("File not found: " + file);
                 System.exit(1);
 			} catch (SyntaxError pex) {
 				// Exc. thrown by the parser
-				System.err.println(arg + ":" + pex.getMessage());
+				System.err.println(file + ":" + pex.getMessage());
                 System.exit(1);
 			} catch (Exception e1) {
 				// Catch-all
-				System.err.println("Compilation of " + arg +  " failed with Exception");
+				System.err.println("Compilation of " + file +  " failed with Exception");
 				System.err.println(e1);
 				System.exit(1);
 			}
@@ -129,7 +141,7 @@ public class Main {
 
 
 
-    private static void printUsage() {
+    protected void printUsage() {
         System.out.println("Usage: java "+Main.class.getName()+" [options] <absfiles>\n" +
         		"  <absfiles>   ABS files to parse\n" +
         		"Options:\n"+
@@ -147,7 +159,7 @@ public class Main {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
-		boolean dumpinput = verbose;
+		boolean dumpinput = false;
 		if (dumpinput){
 			try {
 				rd = new BufferedReader(new FileReader(file));

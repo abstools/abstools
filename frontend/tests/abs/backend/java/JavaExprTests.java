@@ -18,5 +18,11 @@ public class JavaExprTests extends JavaBackendTest {
     public void appendright() {
         assertValidStdLib("def List<A> appendrightTest<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));");
     }
+
+    @Test
+    public void getExpr() {
+        assertValidStdLib("{ Fut<String> fu; fu.get; }");
+    }
+
     
 }

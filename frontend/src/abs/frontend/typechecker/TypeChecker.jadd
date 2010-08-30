@@ -208,7 +208,7 @@ aspect TypeChecker {
    		 lastType = b.getStmt(b.getNumStmt()-1).getType();
    	 }
    	 
-   	 if (!lastType.isSubtypeOf(sig.getReturnType().getType())) {
+   	 if (!lastType.isAssignable(sig.getReturnType().getType())) {
    		 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,lastType,sig.getReturnType().getType()));
    	 }
    	 
@@ -263,7 +263,7 @@ aspect TypeChecker {
     public void AssignStmt.typeCheck(SemanticErrorList e) {
    	 Type rht = getValue().getType();
    	 Type lht = getVar().getType();
-		 if (!rht.isSubtypeOf(lht)) {
+		 if (!rht.isAssignable(lht)) {
 			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
 		 }
 		 getValue().typeCheck(e);
@@ -276,7 +276,7 @@ aspect TypeChecker {
    	 
    	 Type rht = getRetExp().getType();
    	 Type lht = m.getMethodSig().getReturnType().getType();
-		 if (!rht.isSubtypeOf(lht)) {
+		 if (!rht.isAssignable(lht)) {
 			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
 		 }
    		 
@@ -349,6 +349,36 @@ aspect TypeChecker {
    	 }
     }
 
+    public void DataTypeUse.typeCheck(SemanticErrorList e) {
+        if (getType().isUnknownType()) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+            return;
+        }
+
+        if (! (getType() instanceof DataTypeType))
+            return;
+        DataTypeType type = (DataTypeType) getType();
+        if (type.getDecl() instanceof ParametricDataTypeDecl) {
+            int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
+            if (expected != 0) {
+                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,expected,0));
+            }
+        }
+    }
+    
+    public void ParametricDataTypeUse.typeCheck(SemanticErrorList e) {
+        if (getType().isUnknownType()) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+            return;
+        }
+        
+        DataTypeType type = (DataTypeType) getType();
+        int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
+        if ( expected != getNumParam()) {
+            e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,expected,getNumParam()));
+        }
+    }
+
     public void UnresolvedTypeUse.typeCheck(SemanticErrorList e) {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
@@ -415,7 +445,7 @@ aspect TypeChecker {
    	 getRight().typeCheck(e);
          Type tl = getLeft().getType();
          Type tr = getRight().getType();
-         if (!tl.isSubtypeOf(tr) && !tr.isSubtypeOf(tl)) {
+         if (!tl.isAssignable(tr) && !tr.isAssignable(tl)) {
              e.add(new TypeError(this, ErrorMessage.EQUALITY_INCOMPARABLE_TYPE, tl, tr));
          }
     }
@@ -434,10 +464,10 @@ aspect TypeChecker {
    			 t = b.getType();
    		 } else {
    			 Type t2 = b.getType();
-   			 if (!t.isSubtypeOf(t2) && !t2.isSubtypeOf(t)) {
+   			 if (!t.isAssignable(t2) && !t2.isAssignable(t)) {
    				 e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
    			 } else {
-   				 if (t.isSubtypeOf(t2))
+   				 if (t.isAssignable(t2))
    					 t = t2;
    			 }
    		 }
@@ -497,27 +527,41 @@ aspect TypeChecker {
     
     // PATTERNS
     
-    public void Pattern.typeCheck(SemanticErrorList e, DataTypeType t) {  }
-    public void ConstructorPattern.typeCheck(SemanticErrorList e, DataTypeType t) { 
+    public void Pattern.typeCheck(SemanticErrorList e, Type t) {  }
+    public void LiteralPattern.typeCheck(SemanticErrorList e, Type t) {
+        if (!getType().equals(t)) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
+        }
+    }
+    
+    public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
    	 DataConstructor c = lookupDataConstructor(getConstructor());
    	 if (c == null) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    		 return;
    	 }
-   	 if (c.getNumConstructorArg() != this.getNumParam()) {
+  	 if (c.getNumConstructorArg() != this.getNumParam()) {
    		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
    		 return;
    	 }
-   	 for (int i = 0; i < getNumParam(); i++) {
-   		 Type argType = c.getConstructorArg(i).getType();
-   		 Pattern p = getParam(i);
-   		 if (argType instanceof DataTypeType) {
-   			 p.typeCheck(e,(DataTypeType) argType);
-   			 if (!p.getType().isSubtypeOf(argType)) {
-   				 e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,argType,p.getType()));
-   			 }
-   		 }
-   	 }
+
+     DataTypeType myType = (DataTypeType) getType();
+     
+     if (myType == null)
+         return;
+     
+  	 if (! (t instanceof DataTypeType)) {
+         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myType,t));
+         return;
+     }
+  	 
+  	 DataTypeType otherType = (DataTypeType) t;
+  	 if (!myType.getDecl().equals(otherType.getDecl())) {
+         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myType,t));
+         return;
+  	 }
+     
+  	 TypeCheckerHelper.typeCheckMatchingParamsPattern(e,this,c,getParams());
     }
     
     

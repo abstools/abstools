@@ -11,7 +11,7 @@ public final class UnknownType extends Type {
     }
     
     @Override
-    public boolean isSubtypeOf(Type t) {
+    public boolean isAssignable(Type t) {
         return false;
     }
     

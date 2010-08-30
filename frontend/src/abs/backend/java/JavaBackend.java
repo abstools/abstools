@@ -1,30 +1,17 @@
 package abs.backend.java;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.sound.midi.SysexMessage;
-
-import org.junit.Test;
-
-import junit.framework.Assert;
-
-import AST.BytecodeParser;
-import AST.CompilationUnit;
-import AST.JavaParser;
-import AST.Program;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
@@ -32,7 +19,6 @@ import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.PureExp;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -41,37 +27,12 @@ import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.UnionType;
 
-public class JavaBackend {
-    private static String testCode() {
-        return "data Unit = Unit; data Bool = True | False; data Int;" + 
-        	   "interface A { Unit m(Bool b, Int i); } \n" + 
-               "class B implements A { \n" +
-               "  Unit m(Bool b, Int i) { \n" +
-               "    A a; \n" +
-               "    a.m(True, 5);\n" +
-               "  }\n" +
-               "} \n" + 
-               "def A f() = null; \n" +
-               "{ " +
-               "  Bool testresult = False;" +
-               "  A a; " +
-               "  Int i = 5; " +
-               "  Bool b = True; " +
-               "  a = null; " +
-               "  i = 5;" +
-               "  i = i + 4;" +
-               "  a.m(True, 5);" +
-               "  b = True; " +
-               "  if (b) { " +
-               "  } else {" +
-               "  }"+
-               "}";
-    }
-    
+public class JavaBackend extends Main {
     
     public static void main(final String[] args)  {
+        
         try {
-            compile(args);
+            new JavaBackend().compile(args);
         } catch(Exception e) {
             System.err.println("An error occurred during compilation: "+e.getMessage());
             
@@ -83,23 +44,34 @@ public class JavaBackend {
         }
     }
     
-    private static void compile(String[] args) throws Exception {
-        final Model model = Main.parse(args);
-        File destDir = new File(".");
+    private File destDir = new File(".");
+    
+    @Override
+    public List<String> parseArgs(String[] args) throws Exception {
+        List<String> restArgs = super.parseArgs(args);
+        List<String> remaindingArgs = new ArrayList<String>();
         
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
+        for (int i = 0; i < restArgs.size(); i++) {
+            String arg = restArgs.get(i);
             if (arg.equals("-d")) {
                 i++;
-                if (i == args.length) {
+                if (i == restArgs.size()) {
                     System.err.println("Please provide a destination directory");
                     System.exit(1);
                 } else {
                     destDir = new File(args[i]);
                 }
+            } else {
+                remaindingArgs.add(arg);
             }
         }
 
+        return remaindingArgs;
+    }
+    
+    private void compile(String[] args) throws Exception {
+        final Model model = parse(args);
+        
         if (!destDir.exists()) {
             System.err.println("Destination directory "+destDir.getAbsolutePath()+" does not exist!");
             System.exit(1);
@@ -116,57 +88,9 @@ public class JavaBackend {
 
     private static void compile(Model m, File destDir) throws IOException {
         File tmpFile = generateJavaToTmpFile(m);
-        JavaCompiler.compile("-classpath","bin", "-d", destDir.getAbsolutePath(), tmpFile.getAbsolutePath());
+        JavaCompiler.compile("-classpath",System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath(), tmpFile.getAbsolutePath());
     }
 
-
-    public static void testCompile(String absCode) throws Exception {
-        InputStream in = new ByteArrayInputStream(absCode.getBytes());
-        Model model = Main.parseString(absCode, false);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.generateJava(new PrintStream(out));
-        String code = out.toString();
-        System.out.println(code);
-        File tmpFile = getTempFile(code);
-        JavaCompiler.compile("-classpath","bin","-verbose", "-d", "gen/test", tmpFile.getAbsolutePath());
-    }
-
-    public static void test() throws Exception {
-        final parser.JavaParser javaParser = new parser.JavaParser();
-        Program.initOptions();
-        Program.setValueForOption("test", "-d");
-        //Program.setOption("-verbose");
-         
-        Program p = new Program();
-        BytecodeParser b = new BytecodeParser();
-        p.initBytecodeReader(b);
-         
-        JavaParser parser = new JavaParser() {
-             public CompilationUnit parse(java.io.InputStream is, String fileName) throws java.io.IOException, beaver.Parser.Exception {
-                 return javaParser.parse(is, fileName);
-             }
-        };
-
-        p.initJavaParser(parser);
-
-        
-        final Model model = 
-            Main.parseString(testCode(), true);
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        model.generateJava(new PrintStream(os));
-        
-        InputStream is = new ByteArrayInputStream(os.toByteArray());
-        CompilationUnit unit = parser.parse(is, "TestClass.java");
-         
-        
-        p.addCompilationUnit(unit);
-
-        unit.setFromSource(true);
-        unit.transformation();
-        unit.generateClassfile();
-
-    }
 
     private static File generateJavaToTmpFile(Model model) throws IOException {
         File tmpFile = File.createTempFile("abs", "javabackend");
@@ -178,16 +102,6 @@ public class JavaBackend {
         return tmpFile;
     }
 
-    private static File getTempFile(String testCode) throws IOException {
-        File tmpFile = File.createTempFile("abs", "test");
-        PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));
-        p.print(testCode);
-        p.close();
-        tmpFile.deleteOnExit();
-        
-        return tmpFile;
-    }
-    
     private static final Map<String, String> dataTypeMap = initDataTypeMap();
     
     private static Map<String, String> initDataTypeMap() {
@@ -238,7 +152,7 @@ public class JavaBackend {
    			 return getQualifiedString(bt.getBoundType());
    		 return "?";
    	 } else if (absType.isAnyType()) {
-   		 return "?";
+   		 return "Object";
    	 } else if (absType.isUnionType()) {
    	     return ((UnionType) absType).getOriginatingClassName();
    	 }

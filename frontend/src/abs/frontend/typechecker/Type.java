@@ -59,47 +59,44 @@ public abstract class Type {
  	
     public boolean equals(Object o) {
         if (o == null) return false;
-        if (o.getClass() != this.getClass())
-            return false;
+        if (! (o instanceof Type)) return false;
         return true;
     }
     
-    public boolean isSubtypeOf(Type t) {
-   	 // default implementation 
-   	 if (t.isAnyType())
-   		 return true;
-   	 
- 	   if (t.isBoundedType()) {
-  		 BoundedType bt = (BoundedType) t;
-  		 if (bt.hasBoundType())
-  			 return this.isSubtypeOf(bt.getBoundType());
-  		 bt.bindTo(this);
-  		 return true;
- 	   }
-   	 return equals(t);
-    }
-
 	public boolean isBoundedType() {
 	   return false;
    }
+	
+	public boolean isAssignable(Type t, boolean considerSubtyping) {
+	    return isAssignable(t);
+	}
 
-	public boolean assignable(Type t) {
-		if (this.equals(t))
-			return true;
-		
+	public boolean isAssignable(Type t) {
+	    if (t == null)
+	        throw new IllegalArgumentException("t is null");
+	    
+         if (t.isAnyType())
+	         return true;
+
+         if (this.equals(t))
+	         return true;
+	       
 		if (t.isBoundedType()) {
   		 	BoundedType bt = (BoundedType) t;
-	   	if (bt.hasBoundType())
-	   		return this.assignable(bt.getBoundType());
-	      bt.bindTo(this);
-	   	return true;
-	   	
+  		 	if (bt.hasBoundType())
+  		 	    return this.isAssignable(bt.getBoundType());
+  		 	bt.bindTo(this);
+  		 	return true;
 	 	}
-
+		
 	   return false;
    }
 
     public boolean isUnionType() {
+        return false;
+    }
+
+    public boolean canBeBoundTo(Type t) {
         return false;
     }
 }

@@ -13,9 +13,11 @@ public final class NullType extends ReferenceType {
     }
     
     @Override
-   public boolean isSubtypeOf(Type t) {
-      return t instanceof ReferenceType;
-   }
+    public boolean isAssignable(Type t) {
+        if (super.isAssignable(t))
+            return true;
+        return t instanceof ReferenceType;
+    }
     
     @Override
     public String toString() {

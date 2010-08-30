@@ -5,7 +5,7 @@ public class AnyType extends Type {
 	private AnyType() { }
 	
 	@Override
-	public boolean isSubtypeOf(Type t) {
+	public boolean isAssignable(Type t) {
 		return true;
 	}
 

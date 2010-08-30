@@ -3,6 +3,10 @@ package abs.frontend.typechecker;
 public class BoundedType extends Type {
 	private Type boundType;
 	
+	public BoundedType() {
+	    
+	}
+	
 	public void bindTo(Type t) {
 		boundType = t;
 	}
@@ -12,11 +16,26 @@ public class BoundedType extends Type {
 	}
 	
 	@Override
-	public boolean isSubtypeOf(Type t) {
+	public boolean isAssignable(Type t) {
 		if (hasBoundType())
-			return boundType.isSubtypeOf(t);
+			return boundType.isAssignable(t);
 		boundType = t;
 	   return true;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+	    if (! (o instanceof Type))
+	        return false;
+	    
+	    if (this == o)
+	        return true;
+	    
+	    if (hasBoundType())
+	        return boundType.equals(o);
+	    
+	    
+	    return true;
 	}
 	
 	@Override
@@ -35,5 +54,14 @@ public class BoundedType extends Type {
 		}
 	   return "Unbound Type";
    }
+	
+	@Override
+	public boolean canBeBoundTo(Type t) {
+	    if (!hasBoundType()) {
+	        boundType = t;
+	        return true;
+	    }
+	    return false;
+	}
 	
 }

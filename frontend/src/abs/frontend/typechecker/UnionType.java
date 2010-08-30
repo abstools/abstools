@@ -43,6 +43,8 @@ public class UnionType extends ReferenceType {
 	public boolean equals(Object o) {
 		if (!super.equals(o))
 			return false;
+		if (! (o instanceof UnionType))
+		    return false;
 		UnionType t = (UnionType) o;
 		return t.types.equals(this.types);
 	}
@@ -53,12 +55,15 @@ public class UnionType extends ReferenceType {
 	}
 	
 	@Override
-	public boolean isSubtypeOf(Type t) {
+	public boolean isAssignable(Type t) {
+	    if (super.isAssignable(t))
+	        return true;
+	    
 	    for (InterfaceType it : types) {
-	        if (it.isSubtypeOf(t))
+	        if (it.isAssignable(t))
 	            return true;
 	    }
-	    return super.isSubtypeOf(t);
+	    return false;
 	}
 	
 	@Override

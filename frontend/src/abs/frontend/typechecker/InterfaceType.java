@@ -24,6 +24,8 @@ public class InterfaceType extends ReferenceType {
     public boolean equals(Object o) {
         if (!super.equals(o))
             return false;
+        if (! (o instanceof InterfaceType))
+            return false;
         InterfaceType t = (InterfaceType) o;
         return t.decl.equals(this.decl);
     }
@@ -34,24 +36,22 @@ public class InterfaceType extends ReferenceType {
     }
     
     @Override
-    public boolean isSubtypeOf(Type t) {
-   	 if (this.equals(t))
-   		 return true;
-   	 
- 	   if (t.isBoundedType()) {
-    		 BoundedType bt = (BoundedType) t;
-    		 if (bt.hasBoundType())
-    			 return this.isSubtypeOf(bt.getBoundType());
-    		 bt.bindTo(this);
-    		 return true;
-    	 }
+    public boolean isAssignable(Type t, boolean considerSubtyping) {
+        if (super.isAssignable(t))
+            return true;
 
- 		 for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
- 			 if (i.getType().isSubtypeOf(t))
- 				 return true;
-   	 }
-   	 
-   	 return false;
+        if (considerSubtyping) {
+            for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
+                if (i.getType().isAssignable(t))
+                    return true;
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean isAssignable(Type t) {
+        return this.isAssignable(t, true);
     }
     
     @Override

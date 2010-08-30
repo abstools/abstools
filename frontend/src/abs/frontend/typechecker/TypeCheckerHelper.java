@@ -16,19 +16,20 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
+import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypeParameterDecl;
 
 public class TypeCheckerHelper {
 	public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
-		if (!e.getType().assignable(t)) {
+		if (!e.getType().isAssignable(t)) {
          l.add(new TypeError(e,ErrorMessage.EXPECTED_TYPE,t,e.getType()));
 		}
 	}
 
 	public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type t, Exp e) {
 		 Type te = e.getType();
-		 if (!te.isSubtypeOf(t)) {
+		 if (!te.isAssignable(t)) {
 			 l.add(new TypeError(n,ErrorMessage.CANNOT_ASSIGN,te,t));
 		 }
 		
@@ -52,6 +53,7 @@ public class TypeCheckerHelper {
 	    typeCheckEqual(l,n,getTypes(params),args);
 	}
 
+
 	public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, 
 	        DataConstructor decl, List<PureExp> args) 
 	{
@@ -60,6 +62,15 @@ public class TypeCheckerHelper {
 		typeCheckEqual(l,n,types,args);
 	}
 
+    public static void typeCheckMatchingParamsPattern(SemanticErrorList l, ASTNode<?> n, 
+            DataConstructor decl, List<Pattern> args) 
+    {
+        java.util.List<Type> patternTypes = getTypesFromPattern(args);
+        Map<TypeParameter, Type> binding = getTypeParamBinding(getTypesFromDataTypeUse(decl.getConstructorArgs()), patternTypes);
+        java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(decl.getConstructorArgs()));
+        typeCheckEqualPattern(l,n,types,args);
+    }
+	
 	public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, 
 	        ParametricFunctionDecl decl, List<PureExp> args) 
 	{
@@ -114,15 +125,29 @@ public class TypeCheckerHelper {
                 Type argType = params.get(i);
                 PureExp exp = args.getChild(i);
                 exp.typeCheck(l);
-                if (!exp.getType().isSubtypeOf(argType)) {
+                Type expType = exp.getType();
+                if (!expType.isAssignable(argType)) {
                     l.add(new TypeError(n,ErrorMessage.TYPE_MISMATCH,exp.getType(),argType));
                 }
             }
         }
-	    
-	    
 	}
 
+    public static void typeCheckEqualPattern(SemanticErrorList l, ASTNode<?> n, 
+            java.util.List<Type> params, List<Pattern> args) 
+       {
+           if (params.size() != args.getNumChild()) {
+               l.add(new TypeError(n,ErrorMessage.WRONG_NUMBER_OF_ARGS,params.size(),args.getNumChild()));
+           } else {
+               for (int i = 0; i < params.size(); i++) {
+                   Type argType = params.get(i);
+                   Pattern exp = args.getChild(i);
+                   exp.typeCheck(l,argType);
+               }
+           }
+       }
+    
+    
     public static java.util.List<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
@@ -139,6 +164,14 @@ public class TypeCheckerHelper {
        return res;
     }
     
+    public static java.util.List<Type> getUnboundTypes(List<TypeParameterDecl> params) {
+        ArrayList<Type> res = new ArrayList<Type>();
+        for (TypeParameterDecl u : params) {
+            res.add(new BoundedType());
+        }
+        return res;
+     }
+
     
     private static java.util.List<Type> getTypes(List<ParamDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
@@ -155,6 +188,14 @@ public class TypeCheckerHelper {
        }
        return res;
    }
+
+    private static java.util.List<Type> getTypesFromPattern(List<Pattern> args) {
+        ArrayList<Type> res = new ArrayList<Type>();
+        for (Pattern p : args) {
+            res.add(p.getType());
+        }
+        return res;
+    }
     
     public static Map<TypeParameter, Type> getTypeParamBindingFromDataTypeUse(List<DataTypeUse> params, List<PureExp> args) {
    	 return getTypeParamBinding(getTypesFromDataTypeUse(params),args);
@@ -178,6 +219,8 @@ public class TypeCheckerHelper {
    	for (int i = 0; i < params.size(); i++) {
    		Type paramType = params.get(i);
    		Type argType = args.get(i);
+   		if (argType == null)
+   		    return;
    		if (argType.isBoundedType()) {
    		    BoundedType bt = (BoundedType) argType;
    		    if (bt.hasBoundType())

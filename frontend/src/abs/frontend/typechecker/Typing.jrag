@@ -160,7 +160,7 @@ aspect Typing {
    			 mostGeneralType = b.getType();
    		 } else {
    			 Type t2 = b.getType();
-   			 if (mostGeneralType.isSubtypeOf(t2)) {
+   			 if (mostGeneralType.isAssignable(t2)) {
    				 mostGeneralType = t2;
    			 } 
    		 }

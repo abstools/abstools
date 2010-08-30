@@ -441,14 +441,14 @@ aspect GenerateJava {
             i++;
         }
         
-        stream.println("    public "+Task.class.getName()+"<?> init(");
+        stream.print("    public "+Task.class.getName()+"<?> init(");
         i = 0;
         for (PureExp e : getParams()) {
             if (i > 0) stream.print(",");
             stream.print(JavaBackend.getQualifiedString(e.getType())+" _arg"+i);
             i++;
         }
-        stream.print(") {");
+        stream.println(") {");
         for (i = 0; i < getNumParam(); i++) {
             stream.println("arg"+i+" = _arg"+i+";");
         }
@@ -482,8 +482,9 @@ aspect GenerateJava {
             return;
         
         Type typeArg = t.getTypeArg(0);
-        
-        stream.print("("+JavaBackend.getQualifiedString(typeArg)+")");
+        if (!(getParent() instanceof ExpressionStmt)) {
+            stream.print("("+JavaBackend.getQualifiedString(typeArg)+")");
+        }
    	  getPureExp().generateJava(stream);
         stream.print(".get()");
     }
@@ -614,19 +615,29 @@ aspect GenerateJava {
      if (d instanceof ParametricFunctionDecl) {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
          Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
-         
-         stream.print("<");
+
+         StringBuffer buf = new StringBuffer();
+         buf.append("<");
          boolean first = true;
          for (TypeParameterDecl tp : funDecl.getTypeParameters()) {
              Type t = typeBinding.get((TypeParameter)tp.getType());
              if (first) first = false;
-             else stream.print(",");
-             if (t == null)
-                 stream.print("Object");
-             else
-                 stream.print(JavaBackend.getQualifiedString(t));
+             else buf.append(",");
+             if (t == null) {
+                 buf = null;
+                 break;
+             } else if (t.isBoundedType() && !((BoundedType)t).hasBoundType()) {
+                 buf = null;
+                 break;
+             } else {
+                 buf.append(JavaBackend.getQualifiedString(t));
+             }
          }
-         stream.print(">");
+         
+         if (buf != null) {
+             stream.print(buf.toString());
+             stream.print(">");
+         }
      } 
      
    	 stream.print("apply");

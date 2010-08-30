@@ -15,22 +15,22 @@ public class TypeCheckerTest extends FrontendTest {
 	
 	 @Test
 	 public void testVarDecl() {
-		 assertNoTypeErrors("{ Bool b = True; }"); 
+		 assertNoTypeErrorsNoLib("data Bool = True | False; { Bool b = True; }"); 
 	 }
 
 	 @Test
 	 public void testVarDeclInit() {
-		 assertNoTypeErrors("interface I {} interface J extends I {} { J j; I i = j; }"); 
+		 assertNoTypeErrorsNoLib("interface I {} interface J extends I {} { J j; I i = j; }"); 
 	 }
 
      @Test
      public void testClass() {
-         assertNoTypeErrors("interface I {} class C implements I {} { I i; i = new C(); }"); 
+         assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new C(); }"); 
      }
 
      @Test
      public void testClass2() {
-         assertNoTypeErrors("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }"); 
+         assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }"); 
      }
 
     @Test
@@ -198,17 +198,24 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
     public void constructorTypeArgs2() {
-        assertNoTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,True); }");
+        assertNoTypeErrors("data Foo<A> = Bar(A,A); { Foo<Bool> o = Bar(True,True); }");
     }
     
     @Test
     public void constructorTypeArgs3() {
-        assertNoTypeErrors("data Foo<A,B> = Bar(A,B); { Foo<A,B> o = Bar(True,5); }");
+        assertNoTypeErrors("data Foo<A,B> = Bar(A,B); { Foo<Bool,Int> o = Bar(True,5); }");
     }
 
     @Test
     public void constructorTypeArgs4() {
-        assertNoTypeErrors("{ Either<A,B> o = Left(5); }");
+        assertNoTypeErrors("{ Either<Int,Bool> o = Left(5); }");
+    }
+    
+    @Test
+    public void testListArgs() {
+        assertNoTypeErrors(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
+                + "{ Database db; db = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
+        
     }
     
     @Test
@@ -217,6 +224,16 @@ public class TypeCheckerTest extends FrontendTest {
    	 		"def B fromJustTest<B>(MaybeTest<B> a) = case a { JustTest(j) => j; }; " +
    	 		"{ Bool testresult = fromJustTest(JustTest(True)); }");
     }
+    
+    @Test
+    public void patternMatching() {
+        assertNoTypeErrorsNoLib("data List<A> = Nil | Cons(A, List<A>); " +
+        		"data Pair<A,B> = Pair(A,B); data Server = SomeServer; def Server findServer(Server name, List<Pair<Server, Server>> list) ="+
+             "case list { "+
+                "Nil => SomeServer;"+
+                "Cons(Pair(server, set), rest) => server; };"); 
+    }
+
     
 
     @Test
@@ -239,6 +256,17 @@ public class TypeCheckerTest extends FrontendTest {
 		 assertTypeErrors("{ I i; }"); 
 	 }
 
+     @Test
+     public void testParametericDataTypesIllegalAssignment() {
+         assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }"); 
+     }
+	 
+     @Test
+     public void testParametericDataTypeNoTypeArgs() {
+         assertTypeErrors("data Foo<A> = Bar(A) | Nil; { Foo f = Nil; }"); 
+     }
+     
+     
     
     @Test
     public void testClassError() {
@@ -539,17 +567,21 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,5); }");
     }
     
+    private void assertNoTypeErrorsNoLib(String absCode) {
+        assertTypeErrors(absCode, false, false);
+    }
+
     private void assertNoTypeErrors(String absCode) {
-   	 assertTypeErrors(absCode, false);
+   	 assertTypeErrors(absCode, false, true);
     }
     
 
     private void assertTypeErrors(String absCode) {
-   	 assertTypeErrors(absCode, true);
+   	 assertTypeErrors(absCode, true, true);
     }
 
-    private void assertTypeErrors(String absCode, boolean expectErrors) {
-       Model m = assertParseOkStdLib(absCode);
+    private void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib) {
+       Model m = assertParseOk(absCode, withStdLib);
        String msg = "";
        SemanticErrorList l = m.typeCheck();
        if (!l.isEmpty()) {

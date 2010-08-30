@@ -15,10 +15,17 @@ public class TypeParameter extends Type {
 
     @Override
     public boolean equals(Object o) {
-        if (!super.equals(o))
+        if (! (o instanceof Type))
             return false;
-        TypeParameter t = (TypeParameter) o;
-        return t.decl.equals(this.decl);
+        Type t = (Type) o;
+        if (t.canBeBoundTo(this))
+            return true;
+        
+        if (! (t instanceof TypeParameter))
+            return false;
+        
+        TypeParameter tp = (TypeParameter) t;
+        return tp.decl.equals(this.decl);
     }
     
     @Override

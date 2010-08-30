@@ -6,12 +6,12 @@ type Filename = String ;
 type Filenames = Set<String> ;
 type Packet = String ;
 type File = List<Packet> ;
-type Catalog = List<Pair<Server, Filenames> > ;
+type Catalog = List<Pair<Peer, Filenames> > ;
 
  
  
 // Application functions
-def Server findServer(Filename file, Catalog catalog) =
+def Peer findServer(Filename file, Catalog catalog) =
   case catalog {
     Nil => null;
     Cons(Pair(server, files), rest) =>
@@ -65,12 +65,12 @@ class DataBaseImpl(Map<Filename, File> db) implements DataBase {
 
 class Node(DataBase db, Filename file) implements Peer {
   Catalog catalog = Nil;
-  List<Server> myNeighbors = Nil;
+  List<Peer> myNeighbors = Nil;
   Network admin = null;
 
   Unit run() {
     Fut<Catalog> c ; 
-    Fut<List<Server>> f;
+    Fut<List<Peer>> f;
     Server server ; 
 
     await admin != null;
@@ -113,7 +113,7 @@ class Node(DataBase db, Filename file) implements Peer {
     return nth(f, pNbr);
   }
 
-  Catalog availFiles (List<Server> sList) {
+  Catalog availFiles (List<Peer> sList) {
     Catalog cat = Nil;
     Filenames fNames = EmptySet; 
     Fut<Filenames> fN;

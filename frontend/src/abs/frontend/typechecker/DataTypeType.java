@@ -60,8 +60,41 @@ public class DataTypeType extends Type {
     public boolean equals(Object o) {
         if (!super.equals(o))
             return false;
+        
+        if (! (o instanceof DataTypeType))
+            return false;
+
         DataTypeType t = (DataTypeType) o;
-        return t.decl.equals(this.decl);
+        if (!t.decl.equals(this.decl))
+            return false;
+        for (int i = 0; i < numTypeArgs(); i++) {
+            if (!getTypeArg(i).equals(t.getTypeArg(i)))
+                return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean isAssignable(Type t) {
+        return this.isAssignable(t, true);
+    }
+    
+    @Override
+    public boolean isAssignable(Type t, boolean considerSubtyping) {
+        if (super.isAssignable(t))
+            return true;
+        
+        if (! (t instanceof DataTypeType))
+            return false;
+        
+        DataTypeType dt = (DataTypeType) t;
+        if (!dt.decl.equals(this.decl))
+            return false;
+        for (int i = 0; i < numTypeArgs(); i++) {
+            if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), false))
+                return false;
+        }
+        return true;
     }
     
     @Override
