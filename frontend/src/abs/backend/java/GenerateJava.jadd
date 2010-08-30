@@ -216,6 +216,10 @@ aspect GenerateJava {
       	  }
            stream.println("   }");
            
+
+           
+           stream.println("   public java.lang.String getConstructorName() { return \""+c.getName()+"\" ;} ");
+           
            // eq method
            stream.println("   public ABSBool eq(ABSValue o) {");
            stream.println("      if (! (o instanceof "+constructorClassName+")) return ABSBool.FALSE;");
@@ -439,10 +443,10 @@ aspect GenerateJava {
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());
         stream.print("new "+Task.class.getName()+"<"+targetType+">(");
         getCallee().generateJava(stream);
-        stream.println(") {");
+        stream.print(") {");
         int i = 0;
         for (PureExp e : getParams()) {
-            stream.println(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
+            stream.print(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
             i++;
         }
         
@@ -453,23 +457,23 @@ aspect GenerateJava {
             stream.print(JavaBackend.getQualifiedString(e.getType())+" _arg"+i);
             i++;
         }
-        stream.println(") {");
+        stream.print(") {");
         for (i = 0; i < getNumParam(); i++) {
-            stream.println("arg"+i+" = _arg"+i+";");
+            stream.print("arg"+i+" = _arg"+i+";");
         }
-        stream.print("   return this; }"); 
+        stream.print(" return this; }"); 
         
-        stream.println(" public java.lang.String methodName() { return \""+getMethod()+"\"; }");
+        stream.print(" public java.lang.String methodName() { return \""+getMethod()+"\"; }");
         
-        stream.println("    public Object execute() {");
-        stream.print("        return target."+getMethod()+"(");
+        stream.print(" public Object execute() {");
+        stream.print(" return target."+getMethod()+"(");
         for (i = 0; i < getNumParam(); i++) {
             if (i > 0) stream.print(",");
             stream.print("arg"+i);
         }
         stream.print(");");
-        stream.println("    }");
-        stream.print("}.init");
+        stream.println(" }}");
+        stream.print("     .init");
         JavaGeneratorHelper.generateArgs(stream,getParams());
         stream.print(")");
     }

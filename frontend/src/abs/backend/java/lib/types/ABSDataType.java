@@ -5,14 +5,13 @@ import abs.backend.java.lib.expr.PatternConstructor;
 
 
 public abstract class ABSDataType implements ABSValue {
-    @Override
-   public ABSBool eq(ABSValue other) {
+
+    public ABSBool eq(ABSValue other) {
    	if (other == null || other.getClass() != this.getClass())
    		return ABSBool.FALSE;
    	return ABSBool.TRUE;
    }
 
-    @Override
    public ABSBool notEq(ABSValue other) {
    	return this.eq(other).negate();   	
    }
@@ -22,4 +21,13 @@ public abstract class ABSDataType implements ABSValue {
    public boolean isBuiltIn() {
    	return false;
    }
+   
+   public String getConstructorName() {
+       return this.getClass().getSimpleName();
+   }
+   
+   public String toString() {
+       return getConstructorName();
+   }
+   
 }

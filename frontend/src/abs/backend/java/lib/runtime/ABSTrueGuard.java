@@ -7,4 +7,8 @@ public class ABSTrueGuard extends ABSGuard {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "TrueGuard";
+    }
 }

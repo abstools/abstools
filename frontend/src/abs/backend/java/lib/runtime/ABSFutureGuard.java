@@ -16,4 +16,9 @@ public class ABSFutureGuard extends ABSGuard {
 	public boolean isTrue() {
 	   return fut.isResolved();
 	}
+	
+	@Override
+	public String toString() {
+	    return "Future Guard on "+fut;
+	}
 }

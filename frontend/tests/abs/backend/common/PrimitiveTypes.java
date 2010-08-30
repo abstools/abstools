@@ -54,7 +54,39 @@ public class PrimitiveTypes extends SemanticTests {
     public void intMod() {
        assertEvalTrue("{ Bool testresult = 10 % 3 == 1;  }"); 
     }
+
+    @Test
+    public void intGt() {
+       assertEvalTrue("{ Bool testresult = 10 > 5;  }"); 
+    }
+
+    @Test
+    public void intLt() {
+       assertEvalTrue("{ Bool testresult = 5 < 10;  }"); 
+    }
+
+    @Test
+    public void intLtEq() {
+       assertEvalTrue("{ Bool testresult = 5 <= 10;  }"); 
+    }
+
+    @Test
+    public void intLtEq2() {
+       assertEvalTrue("{ Bool testresult = 5 <= 5;  }"); 
+    }
     
+
+    @Test
+    public void intGtEq() {
+       assertEvalTrue("{ Bool testresult = 10 >= 5;  }"); 
+    }
+
+    @Test
+    public void intGtEq2() {
+       assertEvalTrue("{ Bool testresult = 5 >= 5;  }"); 
+    }
+    
+
     @Test
     public void stringEq() {
        assertEvalTrue("{ Bool testresult = \"xx\" == \"xx\";  }"); 

@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 class TaskScheduler {
-    private static final Logger log = Logging.getLogger(TaskScheduler.class.getName());
+    private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
     
     private final List<Task<?>> newTasks = new LinkedList<Task<?>>();
     private final List<SchedulerThread> suspendedTasks = new LinkedList<SchedulerThread>();
     private Task<?> activeTask;
-    private SchedulerThread thread;
+    private volatile SchedulerThread thread;
     private final COG cog;
     
     public TaskScheduler(COG cog) {
@@ -31,7 +31,7 @@ class TaskScheduler {
         private Task<?> runningTask;
 
         public SchedulerThread() {
-            setName("ABS Task Thread of COG "+cog.getID());
+            setName("ABS Scheduler Thread of "+cog.toString());
             setCOG(cog);
         }
         
@@ -49,41 +49,55 @@ class TaskScheduler {
                     
                     activeTask = newTasks.remove(0);
                     runningTask = activeTask;
+                    setName("ABS Scheduler Thread executing "+activeTask.toString());
+                    
                 }
-                log.finest("Running task "+runningTask.methodName()+" of COG "+cog.getID());
-                runningTask.run();
+                log.finest("Executing "+runningTask);
+                try {
+                    runningTask.run();
+                    log.finest("Task "+runningTask+" FINISHED");
+                } catch(Exception e) {
+                    log.finest("EXCEPTION in Task "+runningTask);
+                    e.printStackTrace();
+                }
             }
         }
 
         // assume called in synchronized block 
         public void suspendTask(ABSGuard g) {
-            log.finest("Suspending Task on Guard "+g.getClass().getSimpleName());
-            activeTask = null; 
-            thread = null;
-            if (!newTasks.isEmpty()) {
-                thread = new SchedulerThread();
-                thread.start();
-            } else {
-                TaskScheduler.this.notifyAll();
+            synchronized (TaskScheduler.this) {
+                activeTask = null; 
+                thread = null;
+                if (!newTasks.isEmpty()) {
+                    thread = new SchedulerThread();
+                    thread.start();
+                } else {
+                    TaskScheduler.this.notifyAll();
+                }
+                log.finest(runningTask+" on "+g+" SUSPENDING");
+                suspendedTasks.add(this);
             }
-            suspendedTasks.add(this);
-            while (!g.isTrue() || thread != null) {
-               try {
-                   TaskScheduler.this.wait();
-                   log.finest("Suspended Task woke up...");
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
-               if (thread == null) {
-                   thread = this;
-                   activeTask = runningTask;
-                   break;
-               }
+            
+            log.finest(runningTask+" AWAITING "+g);
+            g.await();
+            log.finest(runningTask+" "+g+" READY");
+            
+            synchronized (TaskScheduler.this) {
+                while (! (g.isTrue() && thread == null)) {
+                    try {
+                        TaskScheduler.this.wait();
+                        log.finest(runningTask+" WOKE UP...");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                thread = this;
+                activeTask = runningTask;
             }
         }
     }
 
-    public synchronized void await(ABSGuard g) {
+    public void await(ABSGuard g) {
         thread.suspendTask(g);
     }
 }

@@ -31,4 +31,8 @@ public class COG {
     public int getID() {
         return id;
     }
+    
+    public String toString() {
+        return "COG ["+initialClass.getSimpleName()+"] ("+getID()+")";
+    }
 }

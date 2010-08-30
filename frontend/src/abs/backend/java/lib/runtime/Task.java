@@ -1,8 +1,12 @@
 package abs.backend.java.lib.runtime;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class Task<T> {
+    private static AtomicInteger counter = new AtomicInteger();
     private final ABSFut future;
     protected final T target;
+    private final int id = counter.incrementAndGet();
     
     public Task(T target) {
         this.target = target;
@@ -29,4 +33,8 @@ public abstract class Task<T> {
     public abstract Object execute();
     
     public abstract String methodName();
+    
+    public String toString() {
+        return "Task ("+id+") ["+getCOG()+", Method: "+target.getClass().getSimpleName()+"."+methodName()+"]";
+    }
 }

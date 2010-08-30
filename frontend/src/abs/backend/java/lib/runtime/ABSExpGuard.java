@@ -11,4 +11,9 @@ public abstract class ABSExpGuard extends ABSGuard {
 	public boolean isTrue() {
 	   return evaluateExp().toBoolean();
 	}
+	
+	@Override
+	public String toString() {
+	    return "ExpressionGuard ("+isTrue()+")";
+	}
 }

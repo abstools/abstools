@@ -40,4 +40,9 @@ public class ABSString extends ABSBuiltInDataType {
     public ABSString substr(ABSInteger from, ABSInteger length) {
         return fromString(value.substring(from.toInt(),from.toInt()+length.toInt()));
     }
+    
+    @Override
+    public String toString() {
+        return value;
+    }
 }

@@ -1,13 +1,14 @@
 package abs.backend.java.lib.runtime;
 
+import java.util.logging.Logger;
+
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSBuiltInDataType;
-import abs.backend.java.lib.types.ABSDataType;
-import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
 
 
 public class ABSFut<V> extends ABSBuiltInDataType {
+    private static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
     private final Task<V> resolvingTask;
     private V value;
     private boolean isResolved;
@@ -25,6 +26,8 @@ public class ABSFut<V> extends ABSBuiltInDataType {
 	public synchronized void resolve(V o) {
 	    if (isResolved)
 	        throw new IllegalStateException("Future is already resolved");
+	    
+	    log.finest(this+" is resolved to "+o);
 	    
 		value = o;
 		isResolved = true;
@@ -61,6 +64,10 @@ public class ABSFut<V> extends ABSBuiltInDataType {
    @Override
    public ABSBool eq(ABSValue other) {
 	   return ABSBool.fromBoolean(other == this);
+   }
+   
+   public synchronized String toString() {
+       return "Future of "+resolvingTask+" ("+(isResolved ? value : "unresolved")+")";
    }
    
 }

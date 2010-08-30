@@ -147,6 +147,7 @@
    <target name="dist" depends="compile" description="create distribution files">
          <jar jarfile="${dist.dir}/absfrontend.jar">
              <fileset dir="${build.dir}" includes="abs/**" />
+            <fileset dir="${src.dir}" includes="abs/**" />
             <zipfileset src="${ext.dir}/jastadd2.jar" />
             <zipfileset src="${ext.dir}/beaver-rt-src.jar" />
             <zipfileset src="${ext.dir}/JFlex.jar" />

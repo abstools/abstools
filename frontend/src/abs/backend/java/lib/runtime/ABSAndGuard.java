@@ -12,5 +12,9 @@ public class ABSAndGuard extends ABSGuard {
    public boolean isTrue() {
 	   return left.isTrue() && right.isTrue();
    }
+	
+	public String toString() {
+	    return "ANDGuard "+left+" AND "+right;
+	}
 
 }

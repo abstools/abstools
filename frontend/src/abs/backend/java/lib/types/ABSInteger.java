@@ -66,7 +66,7 @@ public class ABSInteger extends ABSBuiltInDataType {
     public ABSBool lt(ABSInteger i) {
         if (i == null)
             return ABSBool.FALSE;
-        return ABSBool.fromBoolean(this.value.compareTo(i.value) == 0);
+        return ABSBool.fromBoolean(this.value.compareTo(i.value) == -1);
     }
     
     public ABSBool gtEq(ABSInteger i) {
@@ -101,6 +101,11 @@ public class ABSInteger extends ABSBuiltInDataType {
 
     public int toInt() {
         return value.intValue();
+    }
+    
+    @Override
+    public String toString() {
+        return value.toString();
     }
     
 }

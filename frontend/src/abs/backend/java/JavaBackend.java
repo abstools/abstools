@@ -45,6 +45,7 @@ public class JavaBackend extends Main {
     }
     
     private File destDir = new File(".");
+    private boolean sourceOnly = false;
     
     @Override
     public List<String> parseArgs(String[] args) throws Exception {
@@ -61,6 +62,8 @@ public class JavaBackend extends Main {
                 } else {
                     destDir = new File(args[i]);
                 }
+            } else if (arg.equals("-sourceonly")) {
+                this.sourceOnly  = true;
             } else {
                 remaindingArgs.add(arg);
             }
@@ -72,7 +75,8 @@ public class JavaBackend extends Main {
     protected void printUsage() {
         super.printUsage();
         System.out.println("Java Backend:");
-        System.out.println("  -d <dir>  generate files to <dir>");
+        System.out.println("  -d <dir>     generate files to <dir>");
+        System.out.println("  -sourceonly  do not generate class files");
     }
     
     private void compile(String[] args) throws Exception {
@@ -92,20 +96,20 @@ public class JavaBackend extends Main {
         
     }
 
-    private static void compile(Model m, File destDir) throws IOException {
-        File tmpFile = generateJavaToTmpFile(m);
-        JavaCompiler.compile("-classpath",System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath(), tmpFile.getAbsolutePath());
+    private void compile(Model m, File destDir) throws IOException {
+        File file = generateJavaToFile(m, new File(destDir, "Main.java"));
+        if (!sourceOnly) {
+            JavaCompiler.compile("-classpath",System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath(), file.getAbsolutePath());
+        }
     }
 
 
-    private static File generateJavaToTmpFile(Model model) throws IOException {
-        File tmpFile = File.createTempFile("abs", "javabackend");
-        PrintStream s = new PrintStream(new BufferedOutputStream(new FileOutputStream(tmpFile)));
+    private static File generateJavaToFile(Model model, File file) throws IOException {
+        PrintStream s = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
         model.generateJava(s);
         s.close();
-        //tmpFile.deleteOnExit();
         
-        return tmpFile;
+        return file;
     }
 
     private static final Map<String, String> dataTypeMap = initDataTypeMap();
