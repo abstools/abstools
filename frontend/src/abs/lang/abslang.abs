@@ -31,23 +31,46 @@ def A fstT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => s; };
 def B sndT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => f; };
 def C trd<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => g; };
 
+
+// Sets
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
 // set constructor helper
 def Set<A> set<A>(List<A> l) = case l { Nil => EmptySet; Cons(x,xs) => Insert(x,set(xs)); };
-	
-def Bool contains<A>(Set<A> ss, A e) = // True if set contains e, False otherwise
+
+/**
+ * Returns True if set 'ss' contains element 'e', False otherwise.
+ */
+def Bool contains<A>(Set<A> ss, A e) =
   case ss {
     EmptySet => False ;
     Insert(e, _) => True;
     Insert(_, xs) => contains(xs, e);
   };
   
+/**
+ * Returns True if set 'xs' is empty, False  otherwise.
+ */
 def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet); 
 
-// the size of a set 
+/**
+ * Returns the size of set 'xs'.
+ */
 def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size(ss); };
-  
+
+/**
+ * Returns a set with all elements of set 'xs' plus element 'e'.
+ * Returns 'xs' if 'xs' already containts 'e'.
+ */
+def Set<A> insert<A>(Set<A> xs, A e) =
+  case contains(xs, e) {
+    True => xs;
+    False => Insert(e, xs);
+  };
+
+/**
+ * Returns a set with all elements of set 'xs' except element 'e'.
+ */
 def Set<A> remove<A>(Set<A> xs, A e) = 
   case xs {
     EmptySet => EmptySet ;
@@ -61,59 +84,101 @@ def Bool hasNext<A>(Set<A> s) = ~ emptySet(s);
 // Partial function to iterate over a set.
 def Pair<Set<A>,A> next<A>(Set<A> s) =  case s { Insert(e, set2) => Pair(set2,e); };
 
-data List<A> = Nil | Cons(A, List<A>);
 
+// Lists
+data List<A> = Nil | Cons(A, List<A>);
 def List<A> list<A>(List<A> l) = l; // list constructor helper
+
+/**
+ * Returns the length of list 'list'.
+ */
 def Int length<A>(List<A> list) = case list { Nil => 0 ; Cons(p, l) => 1 + length(l) ; };
+/**
+ * Returns True if list 'list' is empty, False otherwise.
+ */
 def Bool isEmpty<A>(List<A> list) = list == Nil;
+/**
+ * Returns the first element of list 'list'.
+ */
 def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+/**
+ * Returns a (possibly empty) list containing all elements of 'list'
+ * except the first one.
+ */
 def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+/**
+ * Returns element 'n' of list 'list'.
+ */
 def A nth<A>(List<A> list, Int n) = 
   case n { 0 => head(list) ; _ => nth(tail(list), n-1); };
-
+/**
+ * Returns a list containing all elements of list 'list1'
+ * followed by all elements of list 'list2'.
+ */
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
   case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
-  
+/**
+ * Returns a list containing all elements of list 'list' followed by 'p'.
+ */
 def List<A> appendright<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));
-
+/**
+ * Returns a list containing all elements of 'list' in reverse order.
+ */
 def List<A> reverse<A>(List<A> list) =
   case list { Cons(hd, tl) => appendright(reverse(tl), hd); Nil => Nil; };
-
-// n copies of p
+/**
+ * Returns a list of length 'n' containing 'p' n times.
+ */
 def List<A> copy<A>(A p, Int n) = case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
 
+
+// Maps
 data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
- 
-// map constructor helper (does not preserve injectivity)
+ // map constructor helper (does not preserve injectivity)
 def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
   case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
-
+/**
+ * Returns a set containing all keys of map 'map'.
+ */
 def Set<A> keys<A, B>(Map<A, B> map) =
   case map { EmptyMap => EmptySet ; InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)); };
-
+/**
+ * Returns the value associated with key 'k' in map 'ms'.
+ */
 def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
   	InsertAssoc(Pair(k, y), _) => y;
         InsertAssoc(_, tm) => lookup(tm, k);
   };
-  
+/**
+ * Returns the value associated with key 'k' in map 'ms', or the value 'd'
+ * if 'k' has no entry in 'ms'.
+ */
 def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
   case ms {
         InsertAssoc(Pair(k, y), _) => y;
         InsertAssoc(_, tm) => lookupDefault(tm, k, d);
   	EmptyMap => d;
   };
-
-// insert a key-value pair to a map (does not preserve injectivity)
+/**
+ * Returns a map with all entries of 'map' plus an entry 'p',
+ * which might override but not remove another entry with the same key.
+ */
 def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
-  
-def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) = // update a record in the map
+/**
+ * Returns a map with all entries of 'ms' plus an entry mapping 'k' to 'v',
+ * minus the first entry already mapping 'k' to a value.
+ */  
+def Map<A, B> put<A, B>(Map<A, B> ms, A k, B v) =
   case ms {
     EmptyMap => InsertAssoc(Pair(k, v),EmptyMap);
     InsertAssoc(Pair(k, _), ts) => InsertAssoc(Pair(k, v), ts);
     InsertAssoc(p, ts) => InsertAssoc(p, put(ts, k, v));
   };
 
+/**
+ * Returns a string with the base-10 textual representation of 'n'.
+ */
 def String intToString(Int n) =
   case n < 0 {
     True => "-" + intToStringPos(-n);
