@@ -99,6 +99,11 @@ public class ABSInteger extends ABSBuiltInDataType {
         }
     }
 
+    public static ABSInteger fromLong(long currentTimeMillis) {
+        return fromBigInt(BigInteger.valueOf(currentTimeMillis));
+    }
+    
+    
     public int toInt() {
         return value.intValue();
     }
@@ -107,5 +112,5 @@ public class ABSInteger extends ABSBuiltInDataType {
     public String toString() {
         return value.toString();
     }
-    
+
 }

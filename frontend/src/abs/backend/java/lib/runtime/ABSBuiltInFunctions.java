@@ -1,6 +1,5 @@
 package abs.backend.java.lib.runtime;
 
-import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
@@ -19,7 +18,7 @@ public class ABSBuiltInFunctions {
         return ABSUnit.UNIT;
     }
     
-    public static ABSDataType now() {
-        return null;
+    public static ABSInteger currentms() {
+        return ABSInteger.fromLong(System.currentTimeMillis());
     }
 }
