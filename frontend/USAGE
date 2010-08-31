@@ -5,12 +5,13 @@
 
    ant dist
 
-
 2. Use the ABS frontend with
 
    bin/bash/parseABS [options] <absfiles>
 
-3. Compile to Maude with
+3. Compile to Maude or Java
+
+a) Compile to Maude with
 
    bin/bash/generateMaude <absfile>
 
@@ -28,3 +29,15 @@
    (This assumes that the model terminates - if it does not, you can
    restrict the number of rewrite steps via the usual options to the
    rewrite command.)
+
+b) Compile to Java with
+
+   bin/bash/generateJava [options] [-d <dir>] <absfiles>
+
+   This will generate a Java file Main.java into <dir>.
+   
+   This file contains a standard "main" method, so after compiling
+   this file with a standard Java compiler it can be executed with
+
+   java -cp dist/absfrontend.jar:dir Main
+   

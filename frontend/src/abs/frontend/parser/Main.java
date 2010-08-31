@@ -142,8 +142,12 @@ public class Main {
 
 
     protected void printUsage() {
-        System.out.println("Usage: java "+Main.class.getName()+" [options] <absfiles>\n" +
-        		"  <absfiles>   ABS files to parse\n" +
+        System.out.println(
+                "*******************************\n"+
+                "*        ABS TOOL SUITE       *\n"+
+                "*******************************\n"+
+                "Usage: java "+this.getClass().getName()+" [options] <absfiles>\n\n" +
+        		"  <absfiles>    ABS files to parse\n\n" +
         		"Options:\n"+
         		"  -v            verbose output\n" +
         		"  -notypecheck  disable typechecking\n" +

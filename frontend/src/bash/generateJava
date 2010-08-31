@@ -1,0 +1,7 @@
+#!/bin/bash
+
+BASEDIR="$(dirname $0)/../.."
+
+java -cp $BASEDIR/dist/absfrontend.jar abs.backend.java.JavaBackend "$@"
+
+

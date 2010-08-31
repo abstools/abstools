@@ -108,13 +108,13 @@
       
 	<target name="genshell">
 		<copy todir="${bash.build.dir}">
-			<filelist id="shellfiles" dir="${bash.dir}" files="parseABS,parseAll,generateMaude" />
+			<filelist id="shellfiles" dir="${bash.dir}" files="parseABS,parseAll,generateMaude,generateJava" />
 			<filterset>
 				<filter token="BASEDIR" value="${basedir}" />
 			</filterset>
 		</copy>
 		<chmod perm="ugo+x">
-			<filelist dir="${bash.build.dir}" files="parseABS,parseAll,generateMaude" />
+			<filelist dir="${bash.build.dir}" files="parseABS,parseAll,generateMaude,generateJava" />
 		</chmod>
 	</target>
 

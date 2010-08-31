@@ -76,7 +76,7 @@ public class JavaBackend extends Main {
         super.printUsage();
         System.out.println("Java Backend:");
         System.out.println("  -d <dir>     generate files to <dir>");
-        System.out.println("  -sourceonly  do not generate class files");
+        System.out.println("  -sourceonly  do not generate class files\n");
     }
     
     private void compile(String[] args) throws Exception {
