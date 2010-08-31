@@ -65,7 +65,7 @@ def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size
  * Returns a set with all elements of set 'xs' plus element 'e'.
  * Returns 'xs' if 'xs' already containts 'e'.
  */
-def Set<A> insert<A>(Set<A> xs, A e) =
+def Set<A> insertElement<A>(Set<A> xs, A e) =
   case contains(xs, e) {
     True => xs;
     False => Insert(e, xs);
@@ -215,7 +215,8 @@ def Int strlen(String str) = builtin;
 
 // A Time datatype.
 data Time = Time(Int);
-def Time now() = builtin;
+def Int currentms() = builtin;
+def Time now() = Time(currentms());
 def Int timeval(Time t) = case t { Time(v) => v; };
 // use this like so:
 //   Time t = now(); await timeDifference(now(), t) > 5;
