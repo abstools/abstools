@@ -30,4 +30,14 @@ public abstract class ABSDataType implements ABSValue {
        return getConstructorName();
    }
    
+   @Override
+   public boolean isDataType() {
+      return true;
+   }
+   
+   @Override
+   public boolean isReference() {
+       return false;
+   }
+   
 }

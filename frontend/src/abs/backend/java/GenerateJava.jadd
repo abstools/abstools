@@ -51,7 +51,7 @@ aspect GenerateJava {
     abstract void Decl.generateJava(PrintStream stream);
 
     public void InterfaceDecl.generateJava(PrintStream stream) {
-        stream.print("interface "+getName()+" extends ABSInterfaceType");
+        stream.print("interface "+getName()+" extends "+ABSInterface.class.getName());
         for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
             stream.print(", "+use.getName());
         }
@@ -82,7 +82,7 @@ aspect GenerateJava {
     public void ClassDecl.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateHelpLine(this,stream);
         
-        stream.print("class "+getName()+" extends "+ABSObject.class.getName()+" implements "+ABSClassType.class.getName());
+        stream.print("class "+getName()+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
         for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
             stream.print(", "+use.getName());
         }

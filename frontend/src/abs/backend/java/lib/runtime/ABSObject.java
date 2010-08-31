@@ -2,12 +2,13 @@ package abs.backend.java.lib.runtime;
 
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
-import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.observing.ObjectObs;
 import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
 public class ABSObject implements ABSRef {
     private final COG cog;
+    private ObjectObs observer;
     
     public ABSObject() {
         cog = getCurrentCOG();
@@ -37,4 +38,13 @@ public class ABSObject implements ABSRef {
         return eq(o).negate();
     }
 
+    @Override
+    public boolean isDataType() {
+        return false;
+    }
+    
+    @Override
+    public boolean isReference() {
+        return true;
+    }
 }
