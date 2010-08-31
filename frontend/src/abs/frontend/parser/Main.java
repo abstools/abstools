@@ -45,8 +45,7 @@ public class Main {
             else if (arg.equals("-nostdlib")) 
                 stdlib = false;
             else if (arg.equals("-h")) {
-                printUsage();
-                System.exit(1);
+                printUsageAndExit();
             } else
                 remaindingArgs.add(arg);
             
@@ -60,6 +59,9 @@ public class Main {
 
 	    java.util.List<String> files = parseArgs(args);
 	    
+	    if (files.isEmpty()) {
+	        printErrorAndExit("Please provide at least on intput file");
+	    }
 	    
 		List<CompilationUnit> units = new List<CompilationUnit>();
 		
@@ -69,32 +71,23 @@ public class Main {
 		
 		for (String file : files){
 		    if (file.startsWith("-")) {
-		        System.err.println("Illegal option "+file);
-		        printUsage();
-		        System.exit(1);
+		        printErrorAndExit("Illegal option "+file);
 		    }
 
 			try{
 				units.add(parseUnit(file));
 				
 			} catch (FileNotFoundException e1) {
-				System.err.println("File not found: " + file);
-                System.exit(1);
+				printErrorAndExit("File not found: " + file);
 			} catch (SyntaxError pex) {
 				// Exc. thrown by the parser
-				System.err.println(file + ":" + pex.getMessage());
-                System.exit(1);
+				printErrorAndExit(file + ":" + pex.getMessage());
 			} catch (Exception e1) {
 				// Catch-all
 				System.err.println("Compilation of " + file +  " failed with Exception");
 				System.err.println(e1);
 				System.exit(1);
 			}
-		}
-		
-		if (units.getNumChild() == 0) {
-		    System.err.println("Please provide at least one input file.");
-		    System.exit(1);
 		}
 		
         Model m = new Model(units);
@@ -125,6 +118,18 @@ public class Main {
         
 		return m;
 	}
+
+    private void printErrorAndExit(String error) {
+        System.err.println("\nCompilation failed:\n");
+        System.err.println("  "+error);
+        System.err.println();
+        printUsageAndExit();
+    }
+
+    private void printUsageAndExit() {
+        printUsage();
+        System.exit(1);
+    }
 
 
 	
