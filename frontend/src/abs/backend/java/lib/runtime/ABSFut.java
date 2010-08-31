@@ -27,7 +27,7 @@ public class ABSFut<V> extends ABSBuiltInDataType {
 	    if (isResolved)
 	        throw new IllegalStateException("Future is already resolved");
 	    
-	    log.finest(this+" is resolved to "+o);
+	    if (Logging.DEBUG) log.finest(this+" is resolved to "+o);
 	    
 		value = o;
 		isResolved = true;

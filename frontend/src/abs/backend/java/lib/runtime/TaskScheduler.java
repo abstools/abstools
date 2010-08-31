@@ -52,12 +52,12 @@ class TaskScheduler {
                     setName("ABS Scheduler Thread executing "+activeTask.toString());
                     
                 }
-                log.finest("Executing "+runningTask);
+                if (Logging.DEBUG) log.finest("Executing "+runningTask);
                 try {
                     runningTask.run();
-                    log.finest("Task "+runningTask+" FINISHED");
+                    if (Logging.DEBUG) log.finest("Task "+runningTask+" FINISHED");
                 } catch(Exception e) {
-                    log.finest("EXCEPTION in Task "+runningTask);
+                    if (Logging.DEBUG) log.finest("EXCEPTION in Task "+runningTask);
                     e.printStackTrace();
                 }
             }
@@ -74,19 +74,20 @@ class TaskScheduler {
                 } else {
                     TaskScheduler.this.notifyAll();
                 }
-                log.finest(runningTask+" on "+g+" SUSPENDING");
+                if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
                 suspendedTasks.add(this);
             }
             
-            log.finest(runningTask+" AWAITING "+g);
+            if (Logging.DEBUG) log.finest(runningTask+" AWAITING "+g);
             g.await();
-            log.finest(runningTask+" "+g+" READY");
+            if (Logging.DEBUG) log.finest(runningTask+" "+g+" READY");
             
             synchronized (TaskScheduler.this) {
                 while (! (g.isTrue() && thread == null)) {
                     try {
                         TaskScheduler.this.wait();
-                        log.finest(runningTask+" WOKE UP...");
+                        if (Logging.DEBUG)
+                            log.finest(runningTask+" WOKE UP...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

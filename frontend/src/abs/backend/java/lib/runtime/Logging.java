@@ -6,12 +6,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Logging {
+    public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("abs.debug", "false"));
 
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
         Handler h = new ConsoleHandler();
-        h.setLevel(Level.ALL);
-        logger.setLevel(Level.ALL);
+        Level level = Level.WARNING;
+        if (DEBUG) {
+            level = Level.ALL;
+        }
+        
+        h.setLevel(level);
+        logger.setLevel(level);
         logger.addHandler(h);
         return logger;
     }
