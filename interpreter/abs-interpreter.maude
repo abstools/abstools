@@ -711,35 +711,35 @@ mod ABS-EVAL is
   eq completed(L, < L : Future | Name: Q, Completed: B, References: N, Value: D > CN) = B .
   eq completed(L, CN) = false [owise] .
 
-  op eval : Expr Subst Configuration -> Data .
-  op evalList : ExprList Subst Configuration -> DataList [strat (1 0 0 0)] .
-  op enabled : StmtList Subst Configuration -> Bool .
-  op ready : StmtList Subst Configuration -> Bool .
+  *** evaluate `Expr' with variable bindings `Subst', configuration
+  *** `Configuration' and time `Nat' (constant 0 in the untimed case).
+  op eval : Expr Subst Configuration Nat -> Data .
+  op evalList : ExprList Subst Configuration Nat -> DataList [strat (1 0 0 0)] .
+  op enabled : StmtList Subst Configuration Nat -> Bool .
+  op ready : StmtList Subst Configuration Nat -> Bool .
 
-  eq eval(D, S, CN) = D .
+  eq eval(D, S, CN, N) = D .
 
   *** Normal variable lookup.  Can be either instance or local variable.
-  eq eval(@ Q, S, CN) =  S [@ Q] .
+  eq eval(@ Q, S, CN, N) =  S [@ Q] .
   *** Instance variable lookup.  The distinction between @@ and @ needs to be
   *** made in all lookup operations.
-  eq eval(@@ Q, (SS :: S), CN) =  SS [@ Q] .
+  eq eval(@@ Q, (SS :: S), CN, N) =  SS [@ Q] .
   *** Function expansions are expressions, subject to further evaluation.
   *** They are not evaluated in the current environment but in the environment
   *** in which they are defined (which is currently always empty).
-  eq eval(Q(EL), S, CN) = eval(fdefn(Q), 
-      createSubst(fparams(Q), evalList(EL, S, CN)), CN) .
-  eq eval(Q [EL], S, CN) = Q [ evalList(EL, S, CN) ] .
-  eq eval(?(@ Q), S, CN) = completed(S[@ Q], CN) asAbsBool .
-  eq eval(?(@@ Q), (SS :: S), CN) = completed(SS[@ Q], CN) asAbsBool .
-  eq eval(?(L), S, CN) = completed(L, CN) asAbsBool .
-  *** We are untimed and eternal:
-  eq eval($builtin("currentms"), S, CN) = "int"[0] .
-  eq eval(if E th E' el E'' fi, S, CN) =
-    if eval(E, S, CN) asBool
-    then eval(E', S, CN)
-    else eval(E'', S, CN) fi .
-  eq eval(let AL = EL in E, S, CN) = 
-    eval(E, S :: createSubst(AL, evalList(EL, S, CN)), CN) .
+  eq eval(Q(EL), S, CN, N) = eval(fdefn(Q), 
+      createSubst(fparams(Q), evalList(EL, S, CN, N)), CN, N) .
+  eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
+  eq eval(?(@ Q), S, CN, N) = completed(S[@ Q], CN) asAbsBool .
+  eq eval(?(@@ Q), (SS :: S), CN, N) = completed(SS[@ Q], CN) asAbsBool .
+  eq eval(?(L), S, CN, N) = completed(L, CN) asAbsBool .
+  eq eval(if E th E' el E'' fi, S, CN, N) =
+    if eval(E, S, CN, N) asBool
+    then eval(E', S, CN, N)
+    else eval(E'', S, CN, N) fi .
+  eq eval(let AL = EL in E, S, CN, N) = 
+    eval(E, S :: createSubst(AL, evalList(EL, S, CN, N)), CN, N) .
 
   *** evaluate a case statement.  If the pattern matches, augment environment
   *** with the resulting bindings.
@@ -769,110 +769,15 @@ mod ABS-EVAL is
   *** internal operator $case avoids endless loop between "case D of" and
   *** "case E of" when first case branch doesn't match
   op $case : Data CaseBranchList -> Expr .
-  ceq eval($case(D, (E => E') ; CBL), S, CN) = 
+  ceq eval($case(D, (E => E') ; CBL), S, CN, N) = 
     if R == noMatch
-    then eval($case(D, CBL), S, CN)
-    else eval(E', S :: R, CN) fi
+    then eval($case(D, CBL), S, CN, N)
+    else eval(E', S :: R, CN, N) fi
   if R := match(D, E, S) .
   *** eq eval($case(D, noBranch), S, CN) = $error("No match in case expression") .
 
-  eq eval(case E of { CBL }, S, CN) = 
-    eval($case(eval(E, S, CN), CBL), S, CN) .
-
-
-  --- Evaluate lists of expressions.
-  eq evalList(emp, S, CN) = emp .
-  eq evalList(DL, S, CN) = DL .
-  eq evalList(E, S, CN) = eval(E, S, CN) .
-  eq evalList(E :: NeEL, S, CN) =
-    eval(E, S, CN) :: evalList(NeEL, S, CN) .
-
-  --- Enabledness
-  eq enabled(await E ; SL, S, CN) = eval(E, S, CN) asBool .
-  eq enabled(SL, S, CN) = true [owise] .
-
-  --- The ready predicate holds, if a statement is ready for execution,
-  --- i.e., the corresponding process may be waken up.
-  eq ready(get(@ Q ; A') ; SL , S, CN) = completed(S[@ Q], CN) . 
-  eq ready(get(@@ Q ; A') ; SL , (SS :: S), CN) = completed(SS[@ Q], CN) . 
-  eq ready(get(L ; A') ; SL , S, CN) = completed(L, CN) . 
-  eq ready(SL, S, CN) = enabled(SL, S, CN) [owise] .
-
-  *** Evaluate various builtin functions.
-
-  *** ABS-DATA-BOOL
-  eq eval($builtin("=="), S, CN) = (S[@ "D1"] == S[@ "D2"]) asAbsBool .
-  eq eval($builtin("/="), S, CN) = (S[@ "D1"] =/= S[@ "D2"]) asAbsBool .
-  eq eval($builtin("~"), S, CN) = (not ((S[@ "D"]) asBool)) asAbsBool .
-  eq eval($builtin("&&"), S, CN) = ((S[@ "D1"]) asBool and (S[@ "D2"]) asBool) asAbsBool .
-  eq eval($builtin("||"), S, CN) = ((S[@ "D1"]) asBool or (S[@ "D2"]) asBool) asAbsBool .
-  
-  *** ABS-DATA-INT
-  eq eval($builtin("--"), S, CN) = "int"[-(S[@ "I"]) asInt] .
-  ceq eval($builtin("+"), S, CN) = "int"[I1:Int + I2:Int]
-  if "int"[I1:Int] := S[@ "I1"] /\ "int"[I2:Int] := S[@ "I2"] .
-  eq eval($builtin("-"), S, CN) = "int"[(S[@ "I1"]) asInt - (S[@ "I2"]) asInt] .
-  eq eval($builtin("*"), S, CN) = "int"[(S[@ "I1"]) asInt * (S[@ "I2"]) asInt] .
-  eq eval($builtin("/"), S, CN) = "int"[(S[@ "I1"]) asInt quo (S[@ "I2"]) asInt] .
-  eq eval($builtin("%"), S, CN) = "int"[(S[@ "I1"]) asInt rem (S[@ "I2"]) asInt] .
-  eq eval($builtin("<"), S, CN) = ((S[@ "I1"]) asInt < (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin("<="), S, CN) = ((S[@ "I1"]) asInt <= (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin(">"), S, CN) = ((S[@ "I1"]) asInt > (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin(">="), S, CN) = ((S[@ "I1"]) asInt >= (S[@ "I2"]) asInt) asAbsBool .
-  *** ABS-DATA-STRING
-  ceq eval($builtin("+"), S, CN) = "str"[I1:String + I2:String]
-  if "str"[I1:String] := S[@ "I1"] /\ "str"[I2:String] := S[@ "I2"] .
-  eq eval($builtin("substr"), S, CN) =
-    "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
-  eq eval($builtin("strlen"), S, CN) =
-    "int"[length((S[@ "S"]) asString)] .
-endm
-
-
-mod ABS-EVAL-TIMED is
-  protecting ABS-EVAL .
-
-  var D : Data .
-  var DL : DataList .
-  vars E E' E'' : Expr .
-  var EL : ExprList .
-  var NeEL : NeExprList .
-  vars A A' : Vid .
-  var AL : VidList .
-  vars SL SL1 SL2 : StmtList .
-  var L : Label .
-  var S : Subst .
-  var CN : Configuration .
-  var N : Nat .
-  var Q : String .
-  var CBL : CaseBranchList .
-
-  op eval : Expr Subst Configuration Nat -> Data .
-  op evalList : ExprList Subst Configuration Nat -> DataList [strat (1 0 0 0)] .
-  op enabled : StmtList Subst Configuration Nat -> Bool .
-  op ready : StmtList Subst Configuration Nat -> Bool .
-
-  *** This is the only place where we actually use the clock.
-  eq eval($builtin("currentms"), S, CN, N) = "int"[N] .
-  eq eval(Q (EL), S, CN, N) = Q ( evalList(EL, S, CN, N) ) .
-  eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
-  eq eval(if E th E' el E'' fi, S, CN, N) =
-    if eval(E, S, CN, N) asBool
-    then eval(E', S, CN, N)
-    else eval(E'', S, CN, N) fi .
-  eq eval(let AL = EL in E, S, CN, N) = 
-    eval(E, S :: createSubst(AL, evalList(EL, S, CN, N)), CN, N) .
-
-  ceq eval($case(D, (E => E') ; CBL), S, CN, N) = 
-    if M:MatchResult == noMatch
-    then eval($case(D, CBL), S, CN, N)
-    else eval(E', S :: M:MatchResult, CN, N) fi
-  if M:MatchResult := match(D, E, S) .
-
   eq eval(case E of { CBL }, S, CN, N) = 
-    eval($case(eval(E, S, CN), CBL), S, CN, N) .
-
-  eq eval(E, S, CN, N) = eval(E, S, CN) [owise] . *** Defer to untimed eval
+    eval($case(eval(E, S, CN, N), CBL), S, CN, N) .
 
   --- Evaluate lists of expressions.
   eq evalList(emp, S, CN, N) = emp .
@@ -880,21 +785,51 @@ mod ABS-EVAL-TIMED is
   eq evalList(E, S, CN, N) = eval(E, S, CN, N) .
   eq evalList(E :: NeEL, S, CN, N) =
     eval(E, S, CN, N) :: evalList(NeEL, S, CN, N) .
-  
+
   --- Enabledness
   eq enabled(await E ; SL, S, CN, N) = eval(E, S, CN, N) asBool .
   eq enabled(SL, S, CN, N) = true [owise] .
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(A ; A') ; SL , S, CN, N) = completed(S[A], CN) . 
+  eq ready(get(@ Q ; A') ; SL , S, CN, N) = completed(S[@ Q], CN) . 
+  eq ready(get(@@ Q ; A') ; SL , (SS :: S), CN, N) = completed(SS[@ Q], CN) . 
   eq ready(get(L ; A') ; SL , S, CN, N) = completed(L, CN) . 
   eq ready(SL, S, CN, N) = enabled(SL, S, CN, N) [owise] .
 
-  *** Delegate the builtins to the untimed version.
-  eq eval($builtin(Q), S, CN, N) = eval($builtin(Q), S, CN) .
-endm
+  *** Evaluate various builtin functions.
 
+  *** ABS-DATA-BOOL
+  eq eval($builtin("=="), S, CN, N) = (S[@ "D1"] == S[@ "D2"]) asAbsBool .
+  eq eval($builtin("/="), S, CN, N) = (S[@ "D1"] =/= S[@ "D2"]) asAbsBool .
+  eq eval($builtin("~"), S, CN, N) = (not ((S[@ "D"]) asBool)) asAbsBool .
+  eq eval($builtin("&&"), S, CN, N) = ((S[@ "D1"]) asBool and (S[@ "D2"]) asBool) asAbsBool .
+  eq eval($builtin("||"), S, CN, N) = ((S[@ "D1"]) asBool or (S[@ "D2"]) asBool) asAbsBool .
+  
+  *** ABS-DATA-INT
+  eq eval($builtin("--"), S, CN, N) = "int"[-(S[@ "I"]) asInt] .
+  ceq eval($builtin("+"), S, CN, N) = "int"[I1:Int + I2:Int]
+  if "int"[I1:Int] := S[@ "I1"] /\ "int"[I2:Int] := S[@ "I2"] .
+  eq eval($builtin("-"), S, CN, N) = "int"[(S[@ "I1"]) asInt - (S[@ "I2"]) asInt] .
+  eq eval($builtin("*"), S, CN, N) = "int"[(S[@ "I1"]) asInt * (S[@ "I2"]) asInt] .
+  eq eval($builtin("/"), S, CN, N) = "int"[(S[@ "I1"]) asInt quo (S[@ "I2"]) asInt] .
+  eq eval($builtin("%"), S, CN, N) = "int"[(S[@ "I1"]) asInt rem (S[@ "I2"]) asInt] .
+  eq eval($builtin("<"), S, CN, N) = ((S[@ "I1"]) asInt < (S[@ "I2"]) asInt) asAbsBool .
+  eq eval($builtin("<="), S, CN, N) = ((S[@ "I1"]) asInt <= (S[@ "I2"]) asInt) asAbsBool .
+  eq eval($builtin(">"), S, CN, N) = ((S[@ "I1"]) asInt > (S[@ "I2"]) asInt) asAbsBool .
+  eq eval($builtin(">="), S, CN, N) = ((S[@ "I1"]) asInt >= (S[@ "I2"]) asInt) asAbsBool .
+  *** ABS-DATA-STRING
+  ceq eval($builtin("+"), S, CN, N) = "str"[I1:String + I2:String]
+  if "str"[I1:String] := S[@ "I1"] /\ "str"[I2:String] := S[@ "I2"] .
+  eq eval($builtin("substr"), S, CN, N) =
+    "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
+  eq eval($builtin("strlen"), S, CN, N) =
+    "int"[length((S[@ "S"]) asString)] .
+  *** ABS-DATA-TIME
+  --- N will be 0 in the untimed case.
+  eq eval($builtin("currentms"), S, CN, N) = "int"[N] .
+
+endm
 
 
 *** The machine.
@@ -925,7 +860,7 @@ mod ABS-MACHINE-BASICS is
     { < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
   =>
     { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
-  if ready(SL, (S :: L), CN)
+  if ready(SL, (S :: L), CN, 0)
       [label PrQ-ready] .
 
   --- transport
@@ -985,7 +920,7 @@ mod ABS-MACHINE-BASICS is
   eq
     < O : C | Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none, 0), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
   *** TODO: release labels that are going out of scope here.
@@ -1007,7 +942,7 @@ mod ABS-MACHINE-BASICS is
   eq
     { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
   =
-    { if eval(E, (S :: L), CN) asBool then
+    { if eval(E, (S :: L), CN, 0) asBool then
         < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
         < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
@@ -1064,7 +999,7 @@ mod ABS-STMT-ASSIGN-RL is
     else
       < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
-    if D := eval(E, (S :: L), none)
+    if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment
@@ -1072,7 +1007,7 @@ mod ABS-STMT-ASSIGN-RL is
     < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none)
+  if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
 mod ABS-STMT-ASSIGN-EQ is
@@ -1090,7 +1025,7 @@ mod ABS-STMT-ASSIGN-EQ is
     else
       < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
-    if D := eval(E, (S :: L), none)
+    if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment.
@@ -1098,7 +1033,7 @@ mod ABS-STMT-ASSIGN-EQ is
     < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none)
+  if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
 
@@ -1113,7 +1048,7 @@ mod ABS-STMT-COND-RL is
   rl
     < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =>
-    if eval(E, (S :: L), none) asBool then
+    if eval(E, (S :: L), none, 0) asBool then
       < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -1130,7 +1065,7 @@ mod ABS-STMT-COND-EQ is
   eq
     < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =
-    if eval(E, (S :: L), none) asBool then
+    if eval(E, (S :: L), none, 0) asBool then
       < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -1221,7 +1156,7 @@ mod ABS-STMT-AWAIT-RL is
   rl
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =>
-    if enabled(await E, (S :: L), CN) then
+    if enabled(await E, (S :: L), CN, 0) then
       { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
     else
       { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
@@ -1247,7 +1182,7 @@ mod ABS-STMT-AWAIT-EQ is
   eq
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =
-    if enabled(await E, (S :: L), CN) then
+    if enabled(await E, (S :: L), CN, 0) then
       { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
     else
       { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
@@ -1272,8 +1207,8 @@ mod ABS-CALLSTMTS-RL is
   =>
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
-  if DL :=  evalList(EL, (S :: L), none)
-      /\ O1 := eval(E, (S :: L), none)
+  if DL :=  evalList(EL, (S :: L), none, 0)
+      /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       /\ O =/= O1
       [label remote-async-call] .
@@ -1284,10 +1219,10 @@ mod ABS-CALLSTMTS-RL is
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-  if N := label(O, F) /\ O = eval(E, (S :: L), none)
+  if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
       [label remote-async-self-call] .
 
   --- TAIL CALLS
@@ -1302,7 +1237,7 @@ mod ABS-CALLSTMTS-RL is
     < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
-    invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
+    invoc(O, eval(E, (S :: L), none, 0), L[@ ".label"], Q, evalList(EL, (S :: L), none, 0))
     [label tailcall] .
 
   --- STATIC TAIL CALLS
@@ -1314,7 +1249,7 @@ mod ABS-CALLSTMTS-RL is
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 
@@ -1335,8 +1270,8 @@ mod ABS-CALLSTMTS-EQ is
   =
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
-  if DL :=  evalList(EL, (S :: L), none)
-      /\ O1 := eval(E, (S :: L), none)
+  if DL :=  evalList(EL, (S :: L), none, 0)
+      /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       /\ O =/= O1
       [label remote-async-call] .
@@ -1347,10 +1282,10 @@ mod ABS-CALLSTMTS-EQ is
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none))), Lcnt: (s F) > 
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-  if N := label(O, F) /\ O = eval(E, (S :: L), none)
+  if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
       [label remote-async-self-call] .
 
   --- TAIL CALLS
@@ -1365,7 +1300,7 @@ mod ABS-CALLSTMTS-EQ is
     < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
     < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
-    invoc(O, eval(E, (S :: L), none), L[@ ".label"], Q, evalList(EL, (S :: L), none))
+    invoc(O, eval(E, (S :: L), none, 0), L[@ ".label"], Q, evalList(EL, (S :: L), none, 0))
     [label tailcall] .
 
   --- STATIC TAIL CALLS
@@ -1376,7 +1311,7 @@ mod ABS-CALLSTMTS-EQ is
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
-    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none)), PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
@@ -1401,7 +1336,7 @@ mod ABS-NEW-RL is
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
-                               createSubst(AL, evalList(EL, S :: L, none))),
+                               createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -1422,7 +1357,7 @@ mod ABS-NEW-EQ is
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
-                               createSubst(AL, evalList(EL, S :: L, none))),
+                               createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -1447,7 +1382,7 @@ mod ABS-STMT-RETURN-RL is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
   if N == L[@ ".label"]
       [label return] .
 endm
@@ -1468,7 +1403,7 @@ mod ABS-STMT-RETURN-EQ is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none) >
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
   if N == L[@ ".label"]
       [label return] .
 endm
