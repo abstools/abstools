@@ -101,5 +101,10 @@ public class PrimitiveTypes extends SemanticTests {
     public void stringConcat() {
        assertEvalTrue("{ Bool testresult = \"x\" + \"x\" == \"xx\";  }"); 
     }
-
+    
+    @Test
+    public void stringNotEq() {
+    	assertEvalTrue("{ Bool testresult = \"\" != \" \"; }");
+    }
+    
 }

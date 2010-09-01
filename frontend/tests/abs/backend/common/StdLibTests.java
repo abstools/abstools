@@ -75,4 +75,5 @@ public class StdLibTests extends SemanticTests {
     public void stringLength1WS() {
     	assertEvalTrue("{ Bool testresult = strlen(\" \") == 1; }");
     }
+
 }

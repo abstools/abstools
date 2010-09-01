@@ -129,17 +129,16 @@ IntLiteral = 0 | [1-9][0-9]*
  "_"          { return sym(Terminals.USCORE); }
 }
 
-{Comment}     { /* discard token */ }
-{WhiteSpace}  { /* discard token */ }
-
 <YYINITIAL> {
     {TypeIdentifier}  { return sym(Terminals.TYPEIDENTIFIER); }	
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
+	{Comment}     { /* discard token */ }
+	{WhiteSpace}  { /* discard token */ }
 }
 
 //Literals
 <YYINITIAL> {
- \"            { string.setLength(0); yybegin(STRING); }
+ \"            { yybegin(STRING); string.setLength(0);  }
  {IntLiteral}  { return sym(Terminals.INTLITERAL); }
 }
 
