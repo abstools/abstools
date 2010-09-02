@@ -46,7 +46,7 @@ public class COG {
         return "COG ["+initialClass.getSimpleName()+"] ("+getID()+")";
     }
 
-    void objectCreated(ABSObject absObject) {
+    public void objectCreated(ABSObject absObject) {
         if (view != null)
             view.objectCreated(absObject);
     }

@@ -112,7 +112,21 @@ aspect GenerateJava {
         if (hasInitBlock()) {
             getInitBlock().generateJava("      ",stream);
         }
+        
+        stream.println("       getCOG().objectCreated(this);");
         stream.println("   }");
+
+	    stream.println("   protected ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
+        for (ParamDecl p : getParams()) {
+            stream.println("   if (\""+p.getName()+"\".equals(__ABS_fieldName)) return "+p.getName()+";");
+        }
+        
+        for (FieldDecl f : getFields()) {
+            stream.println("   if (\""+f.getName()+"\".equals(__ABS_fieldName)) return "+f.getName()+";");
+        }
+        stream.println("       return super.getFieldValue(__ABS_fieldName);");
+	    	    	
+	    stream.println("   }");  
 
 		stream.println("   public java.lang.String getClassName() { return \""+getName()+"\"; }");
 

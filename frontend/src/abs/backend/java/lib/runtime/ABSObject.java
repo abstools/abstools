@@ -1,5 +1,7 @@
 package abs.backend.java.lib.runtime;
 
+import java.lang.reflect.Field;
+
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
@@ -14,14 +16,12 @@ public abstract class ABSObject implements ABSRef {
     
     public ABSObject() {
         cog = getCurrentCOG();
-        cog.objectCreated(this);
     }
     
     public abstract String getClassName();
 
     protected ABSObject(COG cog) {
         this.cog = cog;
-        cog.objectCreated(this);
     }
     
     public final COG getCOG() {
@@ -63,17 +63,8 @@ public abstract class ABSObject implements ABSRef {
         return view;
     }
     
-    private ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
-            try {
-                return (ABSValue) getClass().getField(fieldName).get(this);
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } 
-            return null;
+    protected ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException(fieldName); 
     }
     
     private class View implements ObjectView {
