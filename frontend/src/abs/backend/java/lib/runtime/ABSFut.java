@@ -5,19 +5,22 @@ import java.util.logging.Logger;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.observing.FutObserver;
+import abs.backend.java.observing.FutView;
+import abs.backend.java.observing.TaskView;
 
 
-public class ABSFut<V> extends ABSBuiltInDataType {
+public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     private static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
-    private final Task<V> resolvingTask;
+    private final Task<?> resolvingTask;
     private V value;
     private boolean isResolved;
     
-    public ABSFut(Task<V> task) {
+    public ABSFut(Task<?> task) {
         this("Fut", task);
     }
     
-	protected ABSFut(String constructorName, Task<V> task) {
+	protected ABSFut(String constructorName, Task<?> task) {
         super(constructorName);
         resolvingTask = task;
     }
@@ -68,6 +71,38 @@ public class ABSFut<V> extends ABSBuiltInDataType {
    
    public synchronized String toString() {
        return "Future of "+resolvingTask+" ("+(isResolved ? value : "unresolved")+")";
+   }
+
+   private FutView view;
+   public synchronized FutView getView() {
+       if (view == null) {
+           view = new View();
+       }
+       return view;
+   }
+   
+   private class View implements FutView {
+
+    @Override
+    public TaskView getResolvingTask() {
+        return resolvingTask.getView();
+    }
+
+    @Override
+    public boolean isResolved() {
+        return ABSFut.this.isResolved();
+    }
+
+    @Override
+    public ABSValue getValue() {
+        return ABSFut.this.getValue();
+    }
+
+    @Override
+    public void registerFutObserver(FutObserver obs) {
+        
+    }
+       
    }
    
 }

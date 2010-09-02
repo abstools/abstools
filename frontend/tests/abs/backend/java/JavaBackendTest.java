@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import junit.framework.Assert;
 
@@ -53,28 +55,49 @@ public class JavaBackendTest extends ABSTest {
     
     static class NoTestResultFoundException extends RuntimeException { NoTestResultFoundException() { super("No test result was found!"); }}
     
-    boolean runJava(String javaCode, boolean expectFail) {
+    
+    
+    StringBuffer runJava(String javaCode, String... jvmargs) {
         String realCode = "package unittest;"+javaCode;
         File tmpFile;
         StringBuffer output = new StringBuffer();
+
         try {
-            
             tmpFile = getTempFile(realCode);
             JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
-            ProcessBuilder pb = new ProcessBuilder("java", "-cp", "bin:gen/test", "unittest.Main");
+            ArrayList<String> args = new ArrayList<String>();
+            args.add("java");
+            args.addAll(Arrays.asList(jvmargs));
+            args.addAll(Arrays.asList("-cp", "bin:gen/test", "unittest.Main"));
+            ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);
             Process p = pb.start();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String result = null;
             while (true) {
-                String s = r.readLine();
+                String s;
+                s = r.readLine();
                 if (s == null)
                     break;
                 output.append(s+"\n");
-                if (s.startsWith("__ABS_TESTRESULT=")) {
-                    result = s.split("=")[1];
-                }
             }
+            return output;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+    
+    boolean runJavaAndTestResult(String javaCode, boolean expectFail) {
+        StringBuffer output = null; 
+        try {
+            output = runJava(javaCode);
+            String s = output.toString().trim();
+            String result = null;
+            if (s.startsWith("__ABS_TESTRESULT=")) {
+                result = s.split("=")[1];
+            }
+            
             if (result == null)
                 throw new NoTestResultFoundException();
             
@@ -177,7 +200,7 @@ public class JavaBackendTest extends ABSTest {
         String javaCode = getJavaCode(absCode, true);
         if (DEBUG)
             System.out.println(javaCode);
-        boolean res = runJava(javaCode, false);
+        boolean res = runJavaAndTestResult(javaCode, false);
         if (value != res)
             System.out.println(javaCode);
         Assert.assertEquals(value,res);
@@ -186,7 +209,7 @@ public class JavaBackendTest extends ABSTest {
     public void assertEvalFails(String absCode) {
         String javaCode = getJavaCode(absCode, true);
         try {
-            runJava(javaCode, true);
+            runJavaAndTestResult(javaCode, true);
             System.out.println(javaCode);
             Assert.fail("Expected that Java run failed, but did not.");
         } catch (NoTestResultFoundException e) {

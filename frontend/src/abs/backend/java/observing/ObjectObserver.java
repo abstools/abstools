@@ -4,7 +4,7 @@ import java.util.List;
 
 import abs.backend.java.lib.types.ABSValue;
 
-public interface ObjectListener {
+public interface ObjectObserver {
 
     void methodCalled(String method, List<ABSValue> args);
     void fieldRead(String field, ABSValue value);

@@ -3,19 +3,25 @@ package abs.backend.java.lib.runtime;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
-import abs.backend.java.observing.ObjectObs;
+import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.ClassView;
+import abs.backend.java.observing.ObjectObserver;
+import abs.backend.java.observing.ObjectView;
 import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
-public class ABSObject implements ABSRef {
+public abstract class ABSObject implements ABSRef {
     private final COG cog;
-    private ObjectObs observer;
     
     public ABSObject() {
         cog = getCurrentCOG();
+        cog.objectCreated(this);
     }
     
+    public abstract String getClassName();
+
     protected ABSObject(COG cog) {
         this.cog = cog;
+        cog.objectCreated(this);
     }
     
     public final COG getCOG() {
@@ -46,5 +52,57 @@ public class ABSObject implements ABSRef {
     @Override
     public boolean isReference() {
         return true;
+    }
+    
+    
+    private ObjectView view;
+    public synchronized ObjectView getView() {
+        if (view == null) {
+            view = new View();
+        }
+        return view;
+    }
+    
+    private ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+            try {
+                return (ABSValue) getClass().getField(fieldName).get(this);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } 
+            return null;
+    }
+    
+    private class View implements ObjectView {
+
+        @Override
+        public COGView getCOG() {
+            return cog.getView();
+        }
+
+        @Override
+        public ClassView getClassView() {
+            return null;
+        }
+
+        @Override
+        public String getClassName() {
+            return ABSObject.this.getClassName();
+        }
+
+        @Override
+        public ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+            return ABSObject.this.getFieldValue(fieldName);
+        }
+
+        @Override
+        public void registerObjectObserver(ObjectObserver l) {
+            // TODO Auto-generated method stub
+            
+        }
+        
     }
 }

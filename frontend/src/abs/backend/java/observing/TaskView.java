@@ -4,10 +4,12 @@ import java.util.List;
 
 import abs.backend.java.lib.types.ABSValue;
 
-public interface TaskObs {
-    ObjectObs getTarget();
-    COGObs getCOG();
+public interface TaskView {
+    ObjectView getTarget();
+    COGView getCOG();
     String getMethodName();
     List<ABSValue> getArgs();
-    FutObs getFuture();
+    FutView getFuture();
+    
+    void registerTaskListener(TaskListener listener);
 }

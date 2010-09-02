@@ -2,8 +2,10 @@ package abs.backend.java.observing;
 
 import abs.backend.java.lib.types.ABSValue;
 
-public interface FutObs {
-    TaskObs getResolvingTask();
+public interface FutView {
+    TaskView getResolvingTask();
     boolean isResolved();
     ABSValue getValue();
+    
+    void registerFutObserver(FutObserver obs);
 }

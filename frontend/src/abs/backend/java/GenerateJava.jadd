@@ -23,6 +23,7 @@ aspect GenerateJava {
             stream.println("       "+ABSRuntime.class.getName()+".asyncCall(new MainTask(new Main(cog)));");
             stream.println("   }");
 
+            stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public Main("+COG.class.getName()+" cog) { super(cog); }");
             
             stream.println("   static class MainTask extends "+Task.class.getName()+"<Main> {");
@@ -32,8 +33,9 @@ aspect GenerateJava {
             stream.println("   }");
 
             // main block
-            stream.print("   public void start() ");
+            stream.print("   public void start() { "+ABSRuntime.class.getName()+".systemStarted();");
             block.generateJava("   ",stream);
+            stream.print("}");
             stream.println("}");
             
             
@@ -111,6 +113,8 @@ aspect GenerateJava {
             getInitBlock().generateJava("      ",stream);
         }
         stream.println("   }");
+
+		stream.println("   public java.lang.String getClassName() { return \""+getName()+"\"; }");
 
         // static constructor method for new cog C
         stream.print("   public static "+getName()+" __ABS_createNewCOG");
