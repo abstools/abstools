@@ -43,6 +43,6 @@ public class ABSString extends ABSBuiltInDataType {
     
     @Override
     public String toString() {
-        return value;
+        return "\""+value+"\"";
     }
 }
