@@ -26,4 +26,6 @@ public interface TaskView {
     FutView getFuture();
     
     void registerTaskListener(TaskListener listener);
+
+    int getID();
 }

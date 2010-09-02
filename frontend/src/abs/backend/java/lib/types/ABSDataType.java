@@ -18,6 +18,11 @@ public abstract class ABSDataType implements ABSValue {
 
    public abstract boolean match(PatternConstructor p, PatternBinding b);
 
+   private static final ABSValue[] NO_ARGS = new ABSValue[0];
+   protected ABSValue[] getArgs() {
+       return NO_ARGS;
+   }
+   
    public boolean isBuiltIn() {
    	return false;
    }
@@ -27,10 +32,28 @@ public abstract class ABSDataType implements ABSValue {
    }
    
    public String toString() {
-       return getConstructorName();
+       StringBuilder sb = new StringBuilder();
+       toStringBuilder(sb);
+       return sb.toString();
    }
    
-   @Override
+   private void toStringBuilder(StringBuilder sb) {
+       sb.append(getConstructorName());
+       ABSValue[] args = getArgs();
+       if (args.length > 0) {
+           sb.append('(');
+           int i = 0;
+           for (ABSValue v : args) {
+               if (i > 0)
+                   sb.append(',');
+               sb.append(v.toString());
+               i++;
+           }
+           sb.append(')');
+       }
+   }
+
+@Override
    public boolean isDataType() {
       return true;
    }

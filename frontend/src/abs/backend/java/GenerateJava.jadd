@@ -238,7 +238,15 @@ aspect GenerateJava {
       	  }
            stream.println("   }");
            
-
+		   stream.print("   protected ABSValue[] getArgs() { return new ABSValue[] {");
+		   i=0;
+      	   for (DataTypeUse u : c.getConstructorArgs()) {
+      	      if (i > 0)
+      	      	stream.print(",");
+      		  stream.print("this.arg"+i);
+      		  i++;
+      	   }
+		   stream.println("};}");
            
            stream.println("   public java.lang.String getConstructorName() { return \""+c.getName()+"\" ;} ");
            

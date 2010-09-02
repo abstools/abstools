@@ -131,6 +131,11 @@ public abstract class Task<T extends ABSRef> {
         public FutView getFuture() {
             return future.getView();
         }
+        
+        @Override
+        public int getID() {
+            return id;
+        }
 
         @Override
         public synchronized void registerTaskListener(TaskListener listener) {
