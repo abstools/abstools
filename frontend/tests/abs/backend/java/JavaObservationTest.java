@@ -31,8 +31,8 @@ public class JavaObservationTest extends JavaBackendTest {
         assertOutputContains("class FieldClass(String field) { } { new FieldClass(\"HELLO WORLD\"); }", "FIELD VALUE=HELLO WORLD");
     }
 
-    static final String I_AND_C = "interface I { Unit m(); Unit n(String s); Unit k(Maybe<String> m);}" +
-    		" class C implements I { Unit m() { } Unit n(String s) { } Unit k(Maybe<String> m) { }}";
+    static final String I_AND_C = "interface I { Unit m(); Unit n(String s); Unit k(Foo m);}" +
+    		" class C implements I { Unit m() { } Unit n(String s) { } Unit k(Foo m) { }}";
     
     
     @Test
@@ -49,11 +49,11 @@ public class JavaObservationTest extends JavaBackendTest {
 
     @Test
     public void taskCreation3() {
-        assertOutputContains(I_AND_C+" { I i; i = new C(); i!m(); i!k(Just(\"HALLO\")); }", 
+        assertOutputContains(I_AND_C+"  { I i; i = new C(); i!m(); i!k(Bar(\"HALLO\",\"Welt\")); }", 
                 "TASK CREATED");
     }
     
-    static final String STDDATA = "data Unit; data Fut<A>; data String; data Maybe<A> = Just(A) | Nothing;"; 
+    static final String STDDATA = "data Unit; data Fut<A>; data String; data Maybe<A> = Just(A) | Nothing; data Foo = Bar(String,String);"; 
     
     private void assertOutputContains(String absCode, String expectedOutput) {
         String java = getJavaCode(STDDATA+absCode, false);

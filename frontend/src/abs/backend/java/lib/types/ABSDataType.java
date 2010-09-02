@@ -44,8 +44,10 @@ public abstract class ABSDataType implements ABSValue {
            sb.append('(');
            int i = 0;
            for (ABSValue v : args) {
-               if (i > 0)
+               if (i > 0) {
                    sb.append(',');
+               }
+               
                sb.append(v.toString());
                i++;
            }
