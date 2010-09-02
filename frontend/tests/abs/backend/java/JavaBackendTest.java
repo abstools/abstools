@@ -138,6 +138,7 @@ public class JavaBackendTest extends ABSTest {
             }
             
         } catch (Exception e) {
+            e.printStackTrace();
             Assert.fail(e.getClass().getSimpleName()+":"+e.getMessage());
             return null;
         }

@@ -2,6 +2,7 @@ package abs.backend.java.lib.runtime;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -108,7 +109,7 @@ public abstract class Task<T extends ABSRef> {
 
         @Override
         public List<ABSValue> getArgs() {
-            return Task.this.getArgs();
+            return Arrays.asList(Task.this.getArgs());
         }
 
         @Override
@@ -123,18 +124,7 @@ public abstract class Task<T extends ABSRef> {
         
     }
 
-    private List<ABSValue> getArgs() {
-        List<ABSValue> result = new ArrayList<ABSValue>();
-        for (Field f : getClass().getDeclaredFields()) {
-            try {
-                ABSValue v = (ABSValue) f.get(this);
-                result.add(v);
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
+    protected ABSValue[] getArgs() {
+        return new ABSValue[0];
     }
 }

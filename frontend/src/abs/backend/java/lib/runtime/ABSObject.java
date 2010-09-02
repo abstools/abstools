@@ -55,7 +55,7 @@ public abstract class ABSObject implements ABSRef {
     }
     
     
-    private ObjectView view;
+    protected volatile ObjectView view;
     public synchronized ObjectView getView() {
         if (view == null) {
             view = new View();

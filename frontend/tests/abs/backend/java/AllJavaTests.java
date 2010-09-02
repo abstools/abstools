@@ -11,7 +11,8 @@ import abs.backend.maude.MaudeTests;
     JavaPrimitiveTests.class,
         JavaStmtTests.class,
         JavaExprTests.class,
-        JavaExamplesTests.class
+        JavaExamplesTests.class,
+        JavaObservationTest.class
      }
         )
 public class AllJavaTests {

@@ -3,6 +3,7 @@ package abs.backend.java;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.EmptyTaskListener;
 import abs.backend.java.observing.GuardObs;
 import abs.backend.java.observing.ObjectCreationListener;
 import abs.backend.java.observing.ObjectView;
@@ -15,26 +16,21 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationListene
     @Override
     public void systemStarted(TaskView mainTask, COGView mainCOG) {
         mainCOG.registerObjectCreationListener(this);
-        mainTask.registerTaskListener(new TaskListener() {
-
+        mainCOG.getScheduler().registerTaskActionListener(new EmptyTaskListener() {
             @Override
             public void taskCreated(TaskView task) {
-                // TODO Auto-generated method stub
-                
+                System.out.print("TASK CREATED: "+task.getTarget().getClassName()+"."+task.getMethodName()+"(");
+                int i = 0;
+                for (ABSValue v : task.getArgs()) {
+                    if (i > 0) System.out.print(", ");
+                    System.out.print(v);
+                    i++;
+                }
+                System.out.println(")");
             }
-
-            @Override
-            public void taskSuspended(TaskView task, GuardObs guard) {
-                // TODO Auto-generated method stub
-                
-            }
-
-            @Override
-            public void taskStarted(TaskView task) {
-                // TODO Auto-generated method stub
-                
-            }
-
+        });
+        
+        mainTask.registerTaskListener(new EmptyTaskListener() {
             @Override
             public void taskFinished(TaskView task) {
                 System.out.println("SYSTEM TERMINATED");

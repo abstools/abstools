@@ -468,6 +468,15 @@ aspect GenerateJava {
             i++;
         }
         
+        stream.print(" protected ABSValue[] getArgs() { return new ABSValue[] { ");
+        i = 0;
+        for (PureExp e : getParams()) {
+            if (i > 0) stream.print(",");
+            stream.print("arg"+i);
+            i++;
+        }
+        stream.print(" }; } ");
+        
         stream.print("    public "+Task.class.getName()+"<?> init(");
         i = 0;
         for (PureExp e : getParams()) {
