@@ -30,7 +30,10 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationListene
             public void taskCreated(TaskView task) {
                 if (mainTask == null)
                     mainTask = task;
-                System.out.print("TASK CREATED: "+task.getTarget().getClassName()+"."+task.getMethodName()+"(");
+                String sourceClass = "INIT";
+                if (task.getSource() != null)
+                    sourceClass = task.getSource().getClassName();
+                System.out.print("TASK CREATED: "+sourceClass+" --> "+task.getTarget().getClassName()+"."+task.getMethodName()+"(");
                 int i = 0;
                 for (ABSValue v : task.getArgs()) {
                     if (i > 0) System.out.print(", ");

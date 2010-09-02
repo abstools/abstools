@@ -19,9 +19,13 @@ public abstract class Task<T extends ABSRef> {
     private static AtomicInteger counter = new AtomicInteger();
     private final ABSFut<? super ABSValue> future;
     protected final T target;
+    protected final ABSObject source;
+    protected final Task<?> sender;
     private final int id = counter.incrementAndGet();
     
-    public Task(T target) {
+    public Task(ABSObject source, T target) {
+        this.sender = ABSRuntime.getCurrentTask();
+        this.source = source;
         this.target = target;
         future = new ABSFut(this);
     }
@@ -73,6 +77,17 @@ public abstract class Task<T extends ABSRef> {
     private class View implements TaskView {
         private List<TaskListener> taskListener;
 
+        @Override
+        public TaskView getSender() {
+            if (sender == null) return null;
+            return sender.getView();
+        }
+
+        @Override
+        public ObjectView getSource() {
+            if (source == null) return null;
+            return source.getView();
+        }
         
         @Override
         public ObjectView getTarget() {

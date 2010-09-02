@@ -38,8 +38,12 @@ public class ABSRuntime {
         }
     }
     
-    private static Task getCurrentTask() {
-        return getCurrentCOG().getScheduler().getActiveTask();
+    static Task getCurrentTask() {
+        if (getCurrentCOG() != null) {
+            return getCurrentCOG().getScheduler().getActiveTask();
+        } else {
+            return null;
+        }
     }
 
     public static void suspend() {
@@ -51,11 +55,19 @@ public class ABSRuntime {
 	}
 
 	public static COG getCurrentCOG() {
-	   return getCurrentThread().getCOG();
+	   final ABSThread thread = getCurrentThread();
+	   if (thread != null)
+	       return thread.getCOG();
+	   else
+	       return null;
    }
 	
 	public static ABSThread getCurrentThread() {
-		return (ABSThread) Thread.currentThread();
+	    Thread currentThread = Thread.currentThread();
+	    if (currentThread instanceof ABSThread)
+	        return (ABSThread) currentThread;
+	    else
+	        return null;
 	}
 	
 	public static ABSFut asyncCall(Task<?> task) {

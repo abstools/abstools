@@ -30,7 +30,7 @@ aspect GenerateJava {
             stream.println("   public Main("+COG.class.getName()+" cog) { super(cog); }");
             
             stream.println("   static class MainTask extends "+Task.class.getName()+"<Main> {");
-            stream.println("      public MainTask(Main target) { super(target); }");
+            stream.println("      public MainTask(Main target) { super(null,target); }");
             stream.println("      public Object execute() { target.start(); return null;}");
             stream.println("      public java.lang.String methodName() { return \"start\"; }");
             stream.println("   }");
@@ -463,7 +463,7 @@ aspect GenerateJava {
     public void AsyncCall.generateJava(PrintStream stream) {
         stream.print(ABSRuntime.class.getName()+".asyncCall(");
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());
-        stream.print("new "+Task.class.getName()+"<"+targetType+">(");
+        stream.print("new "+Task.class.getName()+"<"+targetType+">(this,");
         getCallee().generateJava(stream);
         stream.print(") {");
         int i = 0;
