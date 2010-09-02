@@ -4,11 +4,19 @@ import abs.backend.java.observing.SystemObserver;
 
 
 public class ABSRuntime {
-    private static SystemObserver systemObserver = null;
+    private static volatile SystemObserver systemObserver = null;
     
     public static void setSystemObserver(SystemObserver s) {
         systemObserver = s;
     }
+    
+    
+    public static void cogCreated(ABSObject o) {
+        if (systemObserver != null) {
+            systemObserver.newCOGCreated(o.getCOG().getView(), o.getView());
+        }
+    }
+    
     
     public static void systemStarted() {
         String s = System.getProperty("abs.systemobserver");
@@ -26,7 +34,7 @@ public class ABSRuntime {
         }
         
         if (systemObserver != null) {
-            systemObserver.systemStarted(getCurrentTask().getView(), getCurrentCOG().getView());
+            systemObserver.systemStarted();
         }
     }
     

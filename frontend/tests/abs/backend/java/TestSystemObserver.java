@@ -14,11 +14,22 @@ import abs.backend.java.observing.TaskView;
 public class TestSystemObserver implements SystemObserver, ObjectCreationListener {
 
     @Override
-    public void systemStarted(TaskView mainTask, COGView mainCOG) {
+    public void systemStarted() {
+        System.out.println("SYSTEM STARTED");
+    }
+    
+    
+    @Override
+    public void newCOGCreated(COGView cog, ObjectView initialObject) {
+        System.out.println("NEW COG CREATED");
+        COGView mainCOG = cog;
         mainCOG.registerObjectCreationListener(this);
         mainCOG.getScheduler().registerTaskActionListener(new EmptyTaskListener() {
+            TaskView mainTask;
             @Override
             public void taskCreated(TaskView task) {
+                if (mainTask == null)
+                    mainTask = task;
                 System.out.print("TASK CREATED: "+task.getTarget().getClassName()+"."+task.getMethodName()+"(");
                 int i = 0;
                 for (ABSValue v : task.getArgs()) {
@@ -28,17 +39,14 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationListene
                 }
                 System.out.println(")");
             }
-        });
-        
-        mainTask.registerTaskListener(new EmptyTaskListener() {
+            
             @Override
             public void taskFinished(TaskView task) {
-                System.out.println("SYSTEM TERMINATED");
+                if (task == mainTask)
+                    System.out.println("SYSTEM TERMINATED");
             }
-            
         });
         
-        System.out.println("SYSTEM STARTED");
     }
 
     @Override
@@ -54,7 +62,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationListene
             }
         }
     }
-    
+
     
 
 }

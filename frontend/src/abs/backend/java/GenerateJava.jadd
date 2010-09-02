@@ -19,8 +19,11 @@ aspect GenerateJava {
             Block block = getMainBlock();
             stream.println("public class Main extends "+ABSObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) {");
+		    stream.println("       "+ABSRuntime.class.getName()+".systemStarted();");            
             stream.println("       "+COG.class.getName()+" cog = new "+COG.class.getName()+"(Main.class);");
-            stream.println("       "+ABSRuntime.class.getName()+".asyncCall(new MainTask(new Main(cog)));");
+            stream.println("       Main main = new Main(cog);");
+            stream.println("       "+ABSRuntime.class.getName()+".cogCreated(main);");
+            stream.println("       "+ABSRuntime.class.getName()+".asyncCall(new MainTask(main));");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
@@ -33,9 +36,8 @@ aspect GenerateJava {
             stream.println("   }");
 
             // main block
-            stream.print("   public void start() { "+ABSRuntime.class.getName()+".systemStarted();");
+            stream.print("   public void start() ");
             block.generateJava("   ",stream);
-            stream.print("}");
             stream.println("}");
             
             
@@ -139,9 +141,11 @@ aspect GenerateJava {
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
         stream.println("       __ABS_thread.setCOG(__ABS_cog);");
         stream.println("       try { ");
-        stream.print("          return new "+getName());
+        stream.print("            "+getName()+" __ABS_result = new "+getName());
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
+        stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
+        stream.println("          return __ABS_result;");
         stream.println("       } finally {");
         stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
         stream.println("       }");

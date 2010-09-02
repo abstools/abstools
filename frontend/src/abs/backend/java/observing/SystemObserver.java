@@ -1,5 +1,6 @@
 package abs.backend.java.observing;
 
 public interface SystemObserver {
-    void systemStarted(TaskView mainTask, COGView mainCOG);
+    void systemStarted();
+    void newCOGCreated(COGView cog, ObjectView initialObject);
 }
