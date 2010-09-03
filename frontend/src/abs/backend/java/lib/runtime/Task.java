@@ -10,9 +10,9 @@ import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
-import abs.backend.java.observing.ObjectCreationListener;
+import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.ObjectView;
-import abs.backend.java.observing.TaskListener;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 public abstract class Task<T extends ABSRef> {
@@ -40,6 +40,12 @@ public abstract class Task<T extends ABSRef> {
     
     public ABSFut<?> getFut() {
         return future;
+    }
+    
+    // only for observing
+    void calledGetOnFut(ABSFut<?> someFut) {
+        if (view != null)
+            view.calledGetOnFut(someFut);
     }
     
     public void run() {
@@ -75,12 +81,18 @@ public abstract class Task<T extends ABSRef> {
     }
     
     private class View implements TaskView {
-        private List<TaskListener> taskListener;
+        private List<TaskObserver> taskListener;
 
         @Override
         public TaskView getSender() {
             if (sender == null) return null;
             return sender.getView();
+        }
+
+        public synchronized void calledGetOnFut(ABSFut<?> someFut) {
+            for (TaskObserver l : getObservers()) {
+                l.taskBlockedOnFuture(this, someFut.getView());
+            }
         }
 
         @Override
@@ -94,20 +106,20 @@ public abstract class Task<T extends ABSRef> {
             return ((ABSObject)target).getView();
         }
 
-        private synchronized List<TaskListener> getListener() {
+        private synchronized List<TaskObserver> getObservers() {
             if (taskListener == null) 
-                taskListener = new ArrayList<TaskListener>(1);
+                taskListener = new ArrayList<TaskObserver>(1);
             return taskListener;
         }
         
         public synchronized void taskStarted() {
-            for (TaskListener l : getListener()) {
+            for (TaskObserver l : getObservers()) {
                 l.taskStarted(this);
             }
         }
 
         public synchronized void taskFinished() {
-            for (TaskListener l : getListener()) {
+            for (TaskObserver l : getObservers()) {
                 l.taskFinished(this);
             }
         }
@@ -138,8 +150,8 @@ public abstract class Task<T extends ABSRef> {
         }
 
         @Override
-        public synchronized void registerTaskListener(TaskListener listener) {
-            getListener().add(listener);
+        public synchronized void registerTaskListener(TaskObserver listener) {
+            getObservers().add(listener);
         }
         
     }

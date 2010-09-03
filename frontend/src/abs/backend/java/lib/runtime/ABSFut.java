@@ -1,5 +1,7 @@
 package abs.backend.java.lib.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.types.ABSBool;
@@ -7,6 +9,7 @@ import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.FutObserver;
 import abs.backend.java.observing.FutView;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 
@@ -31,6 +34,8 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 	        throw new IllegalStateException("Future is already resolved");
 	    
 	    if (Logging.DEBUG) log.finest(this+" is resolved to "+o);
+	    if (view != null)
+	        view.onResolved(o);
 	    
 		value = o;
 		isResolved = true;
@@ -55,10 +60,12 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    	}
    }
 
+   @SuppressWarnings("unchecked")
    public synchronized V get() {
        if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
            throw new ABSDeadlockException();
        
+       ABSRuntime.getCurrentTask().calledGetOnFut(this);
        await();
    	   return value;
    }
@@ -73,7 +80,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        return "Future of "+resolvingTask+" ("+(isResolved ? value : "unresolved")+")";
    }
 
-   private FutView view;
+   private View view;
    public synchronized FutView getView() {
        if (view == null) {
            view = new View();
@@ -83,6 +90,20 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    
    private class View implements FutView {
 
+       private List<FutObserver> futObserver;
+
+       private synchronized List<FutObserver> getObservers() {
+           if (futObserver == null) 
+               futObserver = new ArrayList<FutObserver>(1);
+           return futObserver;
+       }
+       
+       synchronized void onResolved(ABSValue v) {
+           for (FutObserver f : getObservers()) {
+               f.onResolved(this, v);
+           }
+       }
+       
     @Override
     public TaskView getResolvingTask() {
         return resolvingTask.getView();
@@ -100,7 +121,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 
     @Override
     public void registerFutObserver(FutObserver obs) {
-        
+        getObservers().add(obs);
     }
        
    }

@@ -25,7 +25,7 @@ public interface TaskView {
     List<ABSValue> getArgs();
     FutView getFuture();
     
-    void registerTaskListener(TaskListener listener);
+    void registerTaskListener(TaskObserver listener);
 
     int getID();
 }

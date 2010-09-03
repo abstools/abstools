@@ -1,5 +1,5 @@
 package abs.backend.java.observing;
 
-public interface COGListener {
+public interface COGObserver {
     void objectCreated(ObjectView obs);
 }

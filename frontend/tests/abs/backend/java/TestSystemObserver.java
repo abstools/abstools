@@ -3,15 +3,15 @@ package abs.backend.java;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
-import abs.backend.java.observing.EmptyTaskListener;
-import abs.backend.java.observing.GuardObs;
-import abs.backend.java.observing.ObjectCreationListener;
+import abs.backend.java.observing.EmptyTaskObserver;
+import abs.backend.java.observing.GuardView;
+import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
-import abs.backend.java.observing.TaskListener;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
-public class TestSystemObserver implements SystemObserver, ObjectCreationListener {
+public class TestSystemObserver implements SystemObserver, ObjectCreationObserver {
 
     @Override
     public void systemStarted() {
@@ -24,7 +24,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationListene
         System.out.println("NEW COG CREATED");
         COGView mainCOG = cog;
         mainCOG.registerObjectCreationListener(this);
-        mainCOG.getScheduler().registerTaskActionListener(new EmptyTaskListener() {
+        mainCOG.getScheduler().registerTaskObserver(new EmptyTaskObserver() {
             TaskView mainTask;
             @Override
             public void taskCreated(TaskView task) {

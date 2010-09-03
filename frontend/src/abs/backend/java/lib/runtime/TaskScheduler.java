@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import abs.backend.java.observing.SchedulerView;
-import abs.backend.java.observing.TaskListener;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 class TaskScheduler {
@@ -90,6 +90,8 @@ class TaskScheduler {
                 }
                 if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
                 suspendedTasks.add(this);
+                if (view != null)
+                    view.taskSuspended(runningTask.getView(), g);
             }
             
             if (Logging.DEBUG) log.finest(runningTask+" AWAITING "+g);
@@ -130,37 +132,41 @@ class TaskScheduler {
     }
     
     private class View implements SchedulerView {
-        private List<TaskListener> listeners;
+        private List<TaskObserver> observers;
 
         @Override
-        public synchronized void registerTaskActionListener(TaskListener listener) {
-            if (listeners == null) {
-                listeners = new ArrayList<TaskListener>(1);
+        public synchronized void registerTaskObserver(TaskObserver listener) {
+            getObservers().add(listener);
+        }
+
+        synchronized List<TaskObserver> getObservers() {
+            if (observers == null) {
+                observers = new ArrayList<TaskObserver>(1);
             }
-            listeners.add(listener);
+            return observers;
+        }
+        
+        public synchronized void taskSuspended(TaskView runningTask, ABSGuard g) {
+            for (TaskObserver l : getObservers()) {
+                l.taskSuspended(runningTask, g.getView());
+            }
         }
 
         public void taskStarted(TaskView view) {
-            if (listeners != null) {
-                for (TaskListener l : listeners) {
-                    l.taskStarted(view);
-                }
+            for (TaskObserver l : getObservers()) {
+                l.taskStarted(view);
             }
         }
 
         public synchronized void taskFinished(TaskView view) {
-            if (listeners != null) {
-                for (TaskListener l : listeners) {
-                    l.taskFinished(view);
-                }
+            for (TaskObserver l : getObservers()) {
+                l.taskFinished(view);
             }
         }
 
         public synchronized void taskAdded(TaskView view) {
-            if (listeners != null) {
-                for (TaskListener l : listeners) {
-                    l.taskCreated(view);
-                }
+            for (TaskObserver l : getObservers()) {
+                l.taskCreated(view);
             }
         }
 

@@ -7,5 +7,5 @@ public interface SchedulerView {
     List<TaskView> getSuspendedTasks();
     TaskView getActiveTask();
     
-    void registerTaskActionListener(TaskListener listener);
+    void registerTaskObserver(TaskObserver listener);
 }

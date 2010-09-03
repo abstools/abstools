@@ -1,5 +1,5 @@
 package abs.backend.java.observing;
 
-public interface ObjectCreationListener {
+public interface ObjectCreationObserver {
     void objectCreated(ObjectView o, boolean newCOG);
 }

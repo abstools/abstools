@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.observing.COGView;
-import abs.backend.java.observing.ObjectCreationListener;
+import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.SchedulerView;
-import abs.backend.java.observing.TaskListener;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 public class COG {
@@ -60,21 +60,21 @@ public class COG {
     }
     
     private class View implements COGView {
-        private List<ObjectCreationListener> creationListeners;
-        private Map<String, List<ObjectCreationListener>> creationClassListeners;
+        private List<ObjectCreationObserver> creationListeners;
+        private Map<String, List<ObjectCreationObserver>> creationClassListeners;
         
         
         synchronized void objectCreated(ABSObject absObject) {
             if (creationListeners != null) {
-                for (ObjectCreationListener l : creationListeners) {
+                for (ObjectCreationObserver l : creationListeners) {
                     l.objectCreated(absObject.getView(), false);
                 }
             }
             
             if (creationClassListeners != null) {
-                List<ObjectCreationListener> list = creationClassListeners.get(absObject.getClassName());
+                List<ObjectCreationObserver> list = creationClassListeners.get(absObject.getClassName());
                 if (list != null) {
-                    for (ObjectCreationListener l : list) {
+                    for (ObjectCreationObserver l : list) {
                         l.objectCreated(absObject.getView(), false);
                     }
                 }
@@ -83,23 +83,23 @@ public class COG {
 
         @Override
         public synchronized void registerObjectCreationListener(
-                ObjectCreationListener listener) {
+                ObjectCreationObserver listener) {
             if (creationListeners == null) {
-                creationListeners = new ArrayList<ObjectCreationListener>(1);
+                creationListeners = new ArrayList<ObjectCreationObserver>(1);
             }
             creationListeners.add(listener);
         }
 
         @Override
         public synchronized void registerObjectCreationListener(String className,
-                ObjectCreationListener e) {
+                ObjectCreationObserver e) {
             if (creationClassListeners == null) {
-                creationClassListeners = new HashMap<String, List<ObjectCreationListener>>();
+                creationClassListeners = new HashMap<String, List<ObjectCreationObserver>>();
             }
             
-            List<ObjectCreationListener> list = creationClassListeners.get(className);
+            List<ObjectCreationObserver> list = creationClassListeners.get(className);
             if (list == null) {
-                list = new ArrayList<ObjectCreationListener>(1);
+                list = new ArrayList<ObjectCreationObserver>(1);
                 creationClassListeners.put(className,list);
             }
             list.add(e);

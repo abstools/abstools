@@ -1,8 +1,9 @@
 package abs.backend.java.observing;
 
-public interface TaskListener {
+public interface TaskObserver {
     void taskCreated(TaskView task);
-    void taskSuspended(TaskView task, GuardObs guard);
+    void taskSuspended(TaskView task, GuardView guard);
     void taskStarted(TaskView task);
     void taskFinished(TaskView task);
+    void taskBlockedOnFuture(TaskView task, FutView fut);
 }

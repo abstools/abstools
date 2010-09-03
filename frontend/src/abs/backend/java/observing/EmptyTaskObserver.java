@@ -1,13 +1,13 @@
 package abs.backend.java.observing;
 
-public class EmptyTaskListener implements TaskListener {
+public class EmptyTaskObserver implements TaskObserver {
 
     @Override
     public void taskCreated(TaskView task) {
     }
 
     @Override
-    public void taskSuspended(TaskView task, GuardObs guard) {
+    public void taskSuspended(TaskView task, GuardView guard) {
     }
 
     @Override
@@ -16,6 +16,10 @@ public class EmptyTaskListener implements TaskListener {
 
     @Override
     public void taskFinished(TaskView task) {
+    }
+
+    @Override
+    public void taskBlockedOnFuture(TaskView task, FutView fut) {
     }
 
 }
