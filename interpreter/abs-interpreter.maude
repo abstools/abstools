@@ -299,7 +299,7 @@ fmod ABS-DATA-TIME is
 
   *** The central problem is to evaluate this function, since the clock is
   *** floating around in the global state.
-  eq fparams("currentms") = emp .
+  eq fparams("currentms") = noVid .
   eq fdefn("currentms") = $builtin("currentms") .
 endfm
 
@@ -578,8 +578,8 @@ mod ABS-CONFIGURATION is
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Future Class  .
-  subsorts  Class Future < Configuration .
+  sorts Future Class Clock .
+  subsorts Class Future Clock < Configuration .
   vars B M : String .
   var C : Cid .
   vars O O' : Oid .
@@ -594,6 +594,7 @@ mod ABS-CONFIGURATION is
   var DL : DataList .
   var N : Label .
   vars F F' : Nat .
+  var CN : Configuration .
 
   --- Invocation message.
   ---
@@ -647,33 +648,15 @@ mod ABS-CONFIGURATION is
     Cid VidList Subst MMtd Nat -> Class 
     [ctor format (ng ! og o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
 
+  op <_: Clock | Limit:_> : Nat Nat -> Clock
+    [ctor format(nb m! ob b b b m! b n)] .
+
   *** Useful for real-time maude and some other tricks.
   *** We should not provide sort State, since this is used in LOOP-MODE.
   *** For now, we do.
   sort State .
 
   op {_} : Configuration -> State [ctor] .
-
-  var CN : Configuration .
-
-  --- Insert a warning into the current state.
-  op warn : State String -> State .
-  eq warn({ CN }, M) = { warning(M) CN } .
-
-  --- System initialisation with arbitrary class.  In Abs, the compiler will
-  --- generate an operator "start" in the generated module that reduces to
-  --- this, with an instantiation of the anonymous class implementing the
-  --- block.  Still, this operator is useful by itself to create any active
-  --- object by itself.
-  op main : Configuration String DataList -> State .
-  eq main(CN, B, DL) =
-    { CN < ob("main") : Start | Att: noSubst, 
-      Pr: { @ "var" |-> null | new(@ "var" ; B ; DL) },
-      PrQ: noProc, Lcnt: 0 > } .
-
-  --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
-    none .
 
 endm
 
@@ -949,6 +932,168 @@ mod ABS-MACHINE-BASICS is
       fi CN  }
     [label assert] .
 endm
+mod ABS-MACHINE-BASICS-TIMED is
+  protecting ABS-EVAL .
+
+  vars O O1 : Oid .         var C : Cid .        vars S S1 S2 L : Subst .
+  var SL : StmtList .       var W : MProc .      vars F G : Nat .
+  var CN : Configuration .  var P : Process .    var A : Vid .
+  var E : Expr .            var AL : VidList .   var N : Label .
+  var Q : String .          var MS : MMtd .      var CO : Bool .
+  var D : Data .            var DL : DataList .
+  vars T LIM : Nat .
+
+  --- Schedule a new process for execution, if it is ready.
+  ---
+  --- Must be a rule to preserve confluence.
+  ---
+  --- We capture the entire state here since the condition E can depend on the
+  --- state of Futures contained in CN.
+  crl
+    { < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+      < T : Clock | Limit: LIM >
+      CN  }
+  =>
+    { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      < T : Clock | Limit: LIM >
+      CN  }
+  if ready(SL, (S :: L), CN, T)
+      [label PrQ-ready] .
+
+  --- transport
+  ---
+  --- Receive an invocation message to bind the method body.  We never make
+  --- this a rule -- scheduling is done elsewhere.
+  ---
+  eq
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    invoc(O1, O, N, Q, DL)
+  =
+    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
+    [label transport-imsg] .
+
+  --- mark
+  ---
+  --- Mark a label in use.  We don't bother to make this a rule until we need
+  --- it.
+  ceq
+    < O : C | Att: S, Pr: { L | $mark(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
+  if N = (S :: L)[A]
+      [label mark] .
+
+  --- free
+  ---
+  --- Free a label.  Make sure that the use of labels is linear.  We don't
+  --- bother to make this a rule until we need it.
+  ---
+  --- sd(G,1) works, because G is always positive. Maude does not have a
+  --- nice decrement operator.
+  ceq
+    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+  =
+    < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
+  if N = (S :: L)[A]
+      [label free] .
+
+
+  --- Create a new environment.  This is for supporting local declarations in
+  --- blocks etc.
+  eq
+    < O : C | Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
+    [label $beginscope] .
+
+  --- Introduce a new variable into the local scope.
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none, T), L) | SL }, PrQ: W, Lcnt: F >
+    [label $vardecl] .
+
+  *** TODO: release labels that are going out of scope here.
+  eq
+    < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label $endscope-1] .
+  eq
+    < O : C | Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    *** Shouldn't happen, but can't harm
+    < O : C | Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
+    [label $endscope-2] .
+
+
+  --- assert
+  ---
+  eq
+    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F >
+      < T : Clock | Limit: LIM >
+      CN  }
+  =
+    { if eval(E, (S :: L), CN, T) asBool then
+        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      else
+        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
+      fi
+      < T : Clock | Limit: LIM >
+      CN  }
+    [label assert] .
+
+  *** Clock advancement.
+
+  op noneready : MProc Subst Configuration Nat -> Bool .
+  eq noneready((W, { L | SL }), S, CN, T) =
+    not ready(SL, (S :: L), CN, T) and noneready(W, S, CN, T) .
+  eq noneready(noProc, S, CN, T) = true .
+
+  op canAdvance : Configuration Nat -> Bool .
+  *** Block clock if a method invocation is on its way.
+  eq canAdvance (m:Msg CN, T) = false .
+  *** Block clock if object is idle but has processes that can be scheduled.
+  eq canAdvance (
+      < O : C | Att: S, Pr: idle, PrQ: W, Lcnt: F > 
+      CN, T) =
+    noneready(W, S, CN, T) and canAdvance (CN, T) .
+  *** Do not block clock if object is waiting for a result that has not
+  *** arrived yet.
+  eq canAdvance (
+      < O : C | Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W, Lcnt: F >
+      < N : Future | Name: Q, Completed: false, References: G, Value: DL >
+      CN, T) =
+    canAdvance(< N : Future | Name: Q, Completed: false, References: G, Value: DL >
+      CN, T) .
+  *** Block clock if process is executing.
+  eq canAdvance (
+      < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      CN, T)
+  =
+    not(enabled(SL, (S :: L), CN, T)) and canAdvance(CN, T) .
+  eq canAdvance(CN, T) = true [owise] .
+
+
+  *** Now advance the clock.
+  crl
+    { CN < T : Clock | Limit: LIM > }
+  =>
+    { CN
+      < T + 1 : Clock | Limit: LIM >  }
+  if canAdvance (CN, T) and T < LIM
+      [label tick] .
+
+endm
 
 
 
@@ -1036,6 +1181,37 @@ mod ABS-STMT-ASSIGN-EQ is
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
+mod ABS-STMT-ASSIGN-EQ-TIMED is
+  protecting ABS-EVAL .
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .       var D : Data .   var Q : String .
+  vars T LIM : Nat .
+
+  *** Variable or field assignment.
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+  =
+    < T : Clock | Limit: LIM >
+    if hasMapping(L, @ Q) then
+      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    fi
+    if D := eval(E, (S :: L), none, T)
+    [label assignment] .
+
+  *** Field assignment.
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none, T)
+    [label field-assignment] .
+endm
 
 *** The conditional (if_then_else) statement.
 mod ABS-STMT-COND-RL is
@@ -1066,6 +1242,25 @@ mod ABS-STMT-COND-EQ is
     < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =
     if eval(E, (S :: L), none, 0) asBool then
+      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+    else
+      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+    fi
+    [label if-then-else] .
+endm
+mod ABS-STMT-COND-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  var O : Oid .                 var C : Cid .    vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .                vars T LIM : Nat .
+
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+  =
+    < T : Clock | Limit: LIM >
+    if eval(E, (S :: L), none, T) asBool then
       < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -1186,6 +1381,39 @@ mod ABS-STMT-AWAIT-EQ is
       { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
     else
       { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+    fi
+      [label await] .
+endm
+mod ABS-STMT-AWAIT-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  var O : Oid .             var C : Cid .    vars S L : Subst .
+  var SL : StmtList .       var W : MProc .  var F : Nat .
+  var CN : Configuration .  var E : Expr .   var Q : String .
+  vars T LIM : Nat .
+
+  --- OPTIMISATION: Optimize label access in await statements.  We cannot do
+  --- this for instance variables because another process might change the
+  --- binding.
+  ceq
+    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
+  if hasMapping(L, @ Q) .
+
+  eq
+    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
+      < T : Clock | Limit: LIM >
+      CN  }
+  =
+    if enabled(await E, (S :: L), CN, T) then
+      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        < T : Clock | Limit: LIM >
+        CN  }
+    else
+      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
+        < T : Clock | Limit: LIM >
+        CN  }
     fi
       [label await] .
 endm
@@ -1315,6 +1543,76 @@ mod ABS-CALLSTMTS-EQ is
     < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
+mod ABS-CALLSTMTS-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
+  var SL : StmtList .       var W : MProc .      vars F G : Nat .
+  var CN : Configuration .  var E : Expr .       var Q : String .
+  var A : Vid .             var EL : ExprList .  var AL : VidList .
+  var N : Label .           var DL : DataList .  var MS : MMtd .
+  vars T LIM : Nat .
+
+  --- remote-async-call
+  ---
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    invoc(O, O1, N, Q , DL)
+  if DL :=  evalList(EL, (S :: L), none, T)
+      /\ O1 := eval(E, (S :: L), none, T)
+      /\ N := label(O, F)
+      /\ O =/= O1
+      [label remote-async-call] .
+
+  --- remote-async-self-call
+  ---
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, T))), Lcnt: (s F) > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
+  if N := label(O, F) /\ O = eval(E, (S :: L), none, T)
+      [label remote-async-self-call] .
+
+  --- TAIL CALLS
+  ---
+  --- "pass on" our return label to the new process.
+  ---
+  ---  FIXME (rs 2010-06-15): `invoc' creates a new Future - this is not what
+  --- we want in this case.  Not so urgent since the `tailcall' statement is
+  --- not emitted in the code generator currently.
+  ---
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
+    invoc(O, eval(E, (S :: L), none, T), L[@ ".label"], Q, evalList(EL, (S :: L), none, T))
+    [label tailcall] .
+
+  --- STATIC TAIL CALLS
+  ---
+  --- Currently block if the `selftailcall' statement is followed by any more
+  --- statements.
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
+    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+  [label selftailcall] .
+endm
 
 
 *** OBJECT CREATION
@@ -1362,6 +1660,30 @@ mod ABS-NEW-EQ is
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 endm
+mod ABS-NEW-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var E : Expr .       var A : Vid .     var EL : ExprList .
+  var AL : VidList .   var MS : MMtd .
+  vars T LIM : Nat .
+
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
+                               createSubst(AL, evalList(EL, S :: L, none, T))),
+                         Pr: makeProcess(".init", MS, label(O, F), emp), 
+                         PrQ: noProc, Lcnt: 0 >
+    [label new-object] .
+endm
 
 
 *** The Return statement.
@@ -1404,6 +1726,30 @@ mod ABS-STMT-RETURN-EQ is
     *** return statement in each code branch.
     < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
+  if N == L[@ ".label"]
+      [label return] .
+endm
+mod ABS-STMT-RETURN-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  vars O : Oid .        var C : Cid .    vars S L : Subst .
+  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
+  var Q : String .      var N : Label .  var E : Expr .
+  vars T LIM : Nat .
+
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: false, References: G, Value: null >
+   =
+    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
+    *** the process.  We cannot return immediately since there might be
+    *** `release' or `$endscope' statements after this, so we must rely on the
+    *** compiler / type-checker to ascertain that there's one and only one
+    *** return statement in each code branch.
+    < T : Clock | Limit: LIM >
+    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, T) >
   if N == L[@ ".label"]
       [label return] .
 endm
@@ -1499,6 +1845,21 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-RECEIVE-RESULT .
+
+  --- System initialisation with arbitrary class.  In Abs, the compiler will
+  --- generate an operator "start" in the generated module that reduces to
+  --- this, with an instantiation of the anonymous class implementing the
+  --- block.  Still, this operator is useful by itself to create any active
+  --- object by itself.
+  op main : Configuration String DataList -> State .
+  eq main(CN:Configuration, B:String, DL:DataList) =
+    { CN:Configuration < ob("main") : Start | Att: noSubst, 
+      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+      PrQ: noProc, Lcnt: 0 > } .
+
+  --- The initial object commits suicide after it did its job.
+  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+    none .
 endm
 
 mod ABS-SIMULATOR-EQ is
@@ -1514,6 +1875,54 @@ mod ABS-SIMULATOR-EQ is
   protecting ABS-NEW-EQ .
   protecting ABS-STMT-RETURN-EQ .
   protecting ABS-RECEIVE-RESULT .
+
+  --- System initialisation with arbitrary class.  In Abs, the compiler will
+  --- generate an operator "start" in the generated module that reduces to
+  --- this, with an instantiation of the anonymous class implementing the
+  --- block.  Still, this operator is useful by itself to create any active
+  --- object by itself.
+  op main : Configuration String DataList -> State .
+  eq main(CN:Configuration, B:String, DL:DataList) =
+    { CN:Configuration < ob("main") : Start | Att: noSubst, 
+      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+      PrQ: noProc, Lcnt: 0 > } .
+
+  --- The initial object commits suicide after it did its job.
+  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+    none .
+endm
+
+mod ABS-SIMULATOR-EQ-TIMED is
+  --- A machine using equations, with an auto-advancing clock.
+  protecting ABS-MACHINE-BASICS-TIMED .
+  protecting ABS-STMT-SKIP-EQ .
+  protecting ABS-STMT-ASSIGN-EQ-TIMED .
+  protecting ABS-STMT-COND-EQ-TIMED .
+  protecting ABS-STMT-WHILE-EQ .
+  protecting ABS-STMT-SUSPEND-EQ .
+  protecting ABS-STMT-AWAIT-EQ-TIMED .
+  protecting ABS-CALLSTMTS-EQ-TIMED .
+  protecting ABS-NEW-EQ-TIMED .
+  protecting ABS-STMT-RETURN-EQ-TIMED .
+  protecting ABS-RECEIVE-RESULT .
+
+  --- System initialisation with arbitrary class.  In Abs, the compiler will
+  --- generate an operator "start" in the generated module that reduces to
+  --- this, with an instantiation of the anonymous class implementing the
+  --- block.  Still, this operator is useful by itself to create any active
+  --- object by itself.  This version also creates the global clock, with a
+  --- limit arbitrarily chosen to be 100.
+  op main : Configuration String DataList -> State .
+  eq main(CN:Configuration, B:String, DL:DataList) =
+    { CN:Configuration
+      < 0 : Clock | Limit: 100 >
+      < ob("main") : Start | Att: noSubst, 
+      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+      PrQ: noProc, Lcnt: 0 > } .
+
+  --- The initial object commits suicide after it did its job.
+  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+    none .
 endm
 
 eof
