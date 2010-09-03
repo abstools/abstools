@@ -64,7 +64,12 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                }
            }
        }
-       ABSRuntime.getCurrentTask().futureReady(this);
+       
+       
+       Task<?> t = ABSRuntime.getCurrentTask();
+       if (t != null) {
+           t.futureReady(this);           
+       }
    	    
    }
 
@@ -75,7 +80,10 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                throw new ABSDeadlockException();
        }
        
-       ABSRuntime.getCurrentTask().calledGetOnFut(this);
+       Task<?> t = ABSRuntime.getCurrentTask();
+       if (t != null) {
+           t.calledGetOnFut(this);
+       }
        synchronized (this) {
            await();
            return value;
