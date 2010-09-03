@@ -57,17 +57,20 @@ class TaskScheduler {
                     activeTask = newTasks.remove(0);
                     runningTask = activeTask;
                     setName("ABS Scheduler Thread executing "+activeTask.toString());
-                    if (view != null)
-                        view.taskStarted(runningTask.getView());
-                    
                 }
+                
+                View v = view;
+                if (v != null)
+                    v.taskStarted(runningTask.getView());
+                
+
                 if (Logging.DEBUG) log.finest("Executing "+runningTask);
                 try {
                     runningTask.run();
-                    synchronized (TaskScheduler.this) {
-                        if (view != null)
-                            view.taskFinished(runningTask.getView());
-                    }
+                    v = view;
+                    if (v != null)
+                        v.taskFinished(runningTask.getView());
+                    
                     
                     if (Logging.DEBUG) log.finest("Task "+runningTask+" FINISHED");
                 } catch(Exception e) {
@@ -90,8 +93,11 @@ class TaskScheduler {
                 }
                 if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
                 suspendedTasks.add(this);
-                if (view != null)
-                    view.taskSuspended(runningTask.getView(), g);
+            }
+            
+            View v = view;
+            if (v != null) {
+                v.taskSuspended(runningTask.getView(), g);
             }
             
             if (Logging.DEBUG) log.finest(runningTask+" AWAITING "+g);
@@ -122,7 +128,7 @@ class TaskScheduler {
         return activeTask;
     }
 
-    private View view;
+    private volatile View view;
     
     public synchronized SchedulerView getView() {
         if (view == null) {
