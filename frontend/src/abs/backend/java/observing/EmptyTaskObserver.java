@@ -22,4 +22,8 @@ public class EmptyTaskObserver implements TaskObserver {
     public void taskBlockedOnFuture(TaskView task, FutView fut) {
     }
 
+    @Override
+    public void taskRunningAfterWaiting(TaskView view, FutView fut) {
+    }
+
 }

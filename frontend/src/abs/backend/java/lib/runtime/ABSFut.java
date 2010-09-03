@@ -29,17 +29,21 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     }
 
 	
-	public synchronized void resolve(V o) {
-	    if (isResolved)
-	        throw new IllegalStateException("Future is already resolved");
+	public void resolve(final V o) {
+	    synchronized (this) {
+	        if (isResolved)
+	            throw new IllegalStateException("Future is already resolved");
 	    
-	    if (Logging.DEBUG) log.finest(this+" is resolved to "+o);
-	    if (view != null)
-	        view.onResolved(o);
+	        if (Logging.DEBUG) log.finest(this+" is resolved to "+o);
 	    
-		value = o;
-		isResolved = true;
-		notifyAll();
+		    value = o;
+		    isResolved = true;
+	        notifyAll();
+	    }
+	    
+	    View v = view;
+        if (v != null)
+            v.onResolved(o);
 	}
 	
 	public synchronized V getValue() {
@@ -51,23 +55,31 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    }
 
    public synchronized void await() {
-   	while (!isResolved) {
-   		try {
-	         wait();
-         } catch (InterruptedException e) {
-	         e.printStackTrace();
-         }
-   	}
+       synchronized (this) {
+           while (!isResolved) {
+               try {
+                   wait();
+               } catch (InterruptedException e) {
+                   e.printStackTrace();
+               }
+           }
+       }
+       ABSRuntime.getCurrentTask().futureReady(this);
+   	    
    }
 
    @SuppressWarnings("unchecked")
-   public synchronized V get() {
-       if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
-           throw new ABSDeadlockException();
+   public V get() {
+       synchronized (this) {
+           if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
+               throw new ABSDeadlockException();
+       }
        
        ABSRuntime.getCurrentTask().calledGetOnFut(this);
-       await();
-   	   return value;
+       synchronized (this) {
+           await();
+           return value;
+       }
    }
 
 
@@ -80,7 +92,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        return "Future of "+resolvingTask+" ("+(isResolved ? value : "unresolved")+")";
    }
 
-   private View view;
+   private volatile View view;
    public synchronized FutView getView() {
        if (view == null) {
            view = new View();

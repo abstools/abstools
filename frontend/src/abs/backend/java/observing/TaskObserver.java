@@ -6,4 +6,5 @@ public interface TaskObserver {
     void taskStarted(TaskView task);
     void taskFinished(TaskView task);
     void taskBlockedOnFuture(TaskView task, FutView fut);
+    void taskRunningAfterWaiting(TaskView view, FutView fut);
 }

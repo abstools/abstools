@@ -44,8 +44,16 @@ public abstract class Task<T extends ABSRef> {
     
     // only for observing
     void calledGetOnFut(ABSFut<?> someFut) {
-        if (view != null)
-            view.calledGetOnFut(someFut);
+        View v = view;
+        if (v != null)
+            v.calledGetOnFut(someFut);
+    }
+
+    // only for observing
+    void futureReady(ABSFut<?> someFut) {
+        View v = view;
+        if (v != null)
+            v.futureReady(someFut);
     }
     
     public void run() {
@@ -72,7 +80,7 @@ public abstract class Task<T extends ABSRef> {
         return "Task ("+id+") ["+getCOG()+", Method: "+target.getClass().getSimpleName()+"."+methodName()+"]";
     }
 
-    private View view;
+    private volatile View view;
     public synchronized TaskView getView() {
         if (view == null) { 
             view = new View();
@@ -87,6 +95,12 @@ public abstract class Task<T extends ABSRef> {
         public TaskView getSender() {
             if (sender == null) return null;
             return sender.getView();
+        }
+
+        public synchronized void futureReady(ABSFut<?> someFut) {
+            for (TaskObserver l : getObservers()) {
+                l.taskRunningAfterWaiting(this, someFut.getView());
+            }
         }
 
         public synchronized void calledGetOnFut(ABSFut<?> someFut) {
