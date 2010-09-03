@@ -2,6 +2,7 @@ package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.types.ABSBool;
@@ -15,12 +16,18 @@ import abs.backend.java.observing.TaskView;
 
 public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     private static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
+    private static final AtomicInteger counter = new AtomicInteger();
     private final Task<?> resolvingTask;
     private V value;
     private boolean isResolved;
+    private final int id = counter.incrementAndGet();
     
     public ABSFut(Task<?> task) {
         this("Fut", task);
+    }
+    
+    public int getID() {
+        return id;
     }
     
 	protected ABSFut(String constructorName, Task<?> task) {
@@ -64,13 +71,6 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                }
            }
        }
-       
-       
-       Task<?> t = ABSRuntime.getCurrentTask();
-       if (t != null) {
-           t.futureReady(this);           
-       }
-   	    
    }
 
    @SuppressWarnings("unchecked")
@@ -86,8 +86,13 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        }
        synchronized (this) {
            await();
-           return value;
        }
+
+       if (t != null) {
+           t.futureReady(this);           
+       }
+       
+       return value;
    }
 
 
@@ -134,6 +139,11 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         return ABSFut.this.isResolved();
     }
 
+    @Override
+    public int getID() {
+        return ABSFut.this.getID();
+    }
+    
     @Override
     public ABSValue getValue() {
         return ABSFut.this.getValue();

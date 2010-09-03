@@ -26,4 +26,7 @@ public class EmptyTaskObserver implements TaskObserver {
     public void taskRunningAfterWaiting(TaskView view, FutView fut) {
     }
 
+    @Override
+    public void taskResumed(TaskView view, GuardView guard) {
+    }
 }

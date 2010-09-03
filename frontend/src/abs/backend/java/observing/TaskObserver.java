@@ -7,4 +7,5 @@ public interface TaskObserver {
     void taskFinished(TaskView task);
     void taskBlockedOnFuture(TaskView task, FutView fut);
     void taskRunningAfterWaiting(TaskView view, FutView fut);
+    void taskResumed(TaskView runningTask, GuardView view);
 }

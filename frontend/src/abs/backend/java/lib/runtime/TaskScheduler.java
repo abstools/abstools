@@ -117,6 +117,10 @@ class TaskScheduler {
                 thread = this;
                 activeTask = runningTask;
             }
+            
+            if (v != null)
+                v.taskResumed(runningTask.getView(), g);
+            
         }
     }
 
@@ -143,6 +147,12 @@ class TaskScheduler {
         @Override
         public synchronized void registerTaskObserver(TaskObserver listener) {
             getObservers().add(listener);
+        }
+
+        synchronized void taskResumed(TaskView runningTask, ABSGuard g) {
+            for (TaskObserver l : getObservers()) {
+                l.taskResumed(runningTask, g.getView());
+            }
         }
 
         synchronized List<TaskObserver> getObservers() {

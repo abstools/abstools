@@ -8,4 +8,5 @@ public interface FutView {
     ABSValue getValue();
     
     void registerFutObserver(FutObserver obs);
+    int getID();
 }
