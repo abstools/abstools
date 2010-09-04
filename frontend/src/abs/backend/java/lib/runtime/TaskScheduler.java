@@ -26,6 +26,8 @@ class TaskScheduler {
         newTasks.add(task);
         if (view != null)
             view.taskAdded(task.getView());
+        log.finest(task+" ADDED TO QUEUE");
+        
         if (thread == null) {
             thread = new SchedulerThread();
             thread.start();
@@ -82,10 +84,13 @@ class TaskScheduler {
 
         // assume called in synchronized block 
         public void suspendTask(ABSGuard g) {
+            if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
             synchronized (TaskScheduler.this) {
                 activeTask = null; 
                 thread = null;
                 if (!newTasks.isEmpty()) {
+                   log.finest(runningTask+" on "+g+" Starting new Scheduler Thread");
+               	 
                     thread = new SchedulerThread();
                     thread.start();
                 } else {
@@ -107,6 +112,7 @@ class TaskScheduler {
             synchronized (TaskScheduler.this) {
                 while (! (g.isTrue() && thread == null)) {
                     try {
+                       log.finest(runningTask+" "+g+" WAITING FOR WAKE UP");
                         TaskScheduler.this.wait();
                         if (Logging.DEBUG)
                             log.finest(runningTask+" WOKE UP...");
@@ -116,11 +122,13 @@ class TaskScheduler {
                 }
                 thread = this;
                 activeTask = runningTask;
+                suspendedTasks.remove(this);
             }
             
             if (v != null)
                 v.taskResumed(runningTask.getView(), g);
             
+            if (Logging.DEBUG) log.finest(runningTask+" "+g+" ACTIVE");
         }
     }
 
