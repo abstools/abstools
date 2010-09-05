@@ -81,7 +81,8 @@ public class Main {
 				printErrorAndExit("File not found: " + file);
 			} catch (SyntaxError pex) {
 				// Exc. thrown by the parser
-				printErrorAndExit(file + ":" + pex.getMessage());
+				System.err.println(file + ":" + pex.getMessage());
+				System.exit(1);
 			} catch (Exception e1) {
 				// Catch-all
 				System.err.println("Compilation of " + file +  " failed with Exception");

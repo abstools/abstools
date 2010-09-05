@@ -8,75 +8,56 @@
 
 data Msg = NoMsg 
          | HelloPing 
-         | HelloPong
+         | HelloPong(Ping)
          | ThanksPong
          | ThanksPing
-         | WhoAreYou 
+         | HowAreYou
+         | Fine
+         | Bye 
          ;
 
 
 interface Ping {
-
-    Unit init(Pong p)  ;
-    Msg m(Msg m);
+    Unit m(Msg m);
     Unit run()	;
 }
 
 interface Pong {
-
-    Unit init(Ping p) ;
-    Msg m(Msg m);
-    Unit run()	;
-
+    Unit hello(Ping ping);
+    Unit m(Msg m);
 }
 
-class PingImpl implements Ping {
-    Pong pong ;
-
-    Unit init(Pong p) {
-	   pong = p ; 
-    }
-
+class PingImpl(Pong pong) implements Ping {
 
     Unit run(){
-      Fut<Msg> reply;
-      reply = pong!m(HelloPong); 
-      await reply? ; 
-      this!run();
-   }
+      pong!hello(this); 
+    }
 
-    Msg m(Msg msg){
-      Msg reply = NoMsg;
-   	if (msg == HelloPing) 
-	      reply = ThanksPong ;
-	   else
-	      reply = WhoAreYou ;
-      return reply;
+    Unit m(Msg msg){
+      Msg reply = case msg {
+         HelloPing => HowAreYou;
+         Fine => Bye; 
+         Bye => NoMsg;
+      };
+      
+      if (reply != NoMsg)
+         pong!m(reply);
      }
 } 
 
 class PongImpl implements Pong {
+    Ping ping;
 
-    Ping ping ;
-
-    Unit init(Ping p){
-   	ping = p ; 
+    Unit hello(Ping ping) {
+       this.ping = ping;
+       ping!m(HelloPing);
     }
 
-    Unit run(){
-      Fut<Msg> reply;
-      reply = ping!m(HelloPing); 
-      await reply? ; 
-      this!run();
-   }
-
-    Msg m(Msg msg){
-	    Msg reply = NoMsg;
-	if (msg == HelloPong)  
-	  reply = ThanksPing ;
-	else
-	   reply = WhoAreYou ;
-	   return reply;
+    Unit m(Msg msg){
+       if (msg == HowAreYou)
+           ping!m(Fine);
+       else
+           ping!m(Bye);
     } 
 
 }
@@ -85,12 +66,8 @@ class PongImpl implements Pong {
     Ping ping;
     Pong pong;
      
-    ping = new cog PingImpl(); 
     pong = new cog PongImpl(); 
+    ping = new cog PingImpl(pong); 
 
-	Fut<Unit> fu;
-    fu = ping!init(pong); fu.get; 
-    fu = pong!init(ping); fu.get;
     ping!run(); 
-    pong!run(); 
 }
