@@ -85,11 +85,12 @@ class PongImpl implements Pong {
     Ping ping;
     Pong pong;
      
-    ping = new PingImpl(); 
-    pong = new PongImpl(); 
+    ping = new cog PingImpl(); 
+    pong = new cog PongImpl(); 
 
-    ping.init(pong); 
-    pong.init(ping); 
+	Fut<Unit> fu;
+    fu = ping!init(pong); fu.get; 
+    fu = pong!init(ping); fu.get;
     ping!run(); 
     pong!run(); 
 }
