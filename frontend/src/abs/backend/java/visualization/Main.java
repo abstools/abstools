@@ -163,7 +163,7 @@ public class Main implements SystemObserver, TaskObserver {
     			}
     			String futTaskName = getActorName(task.getTarget())+"[" + "FutTask"+futTask.getID()+"]"; 
     			out.print(futTaskName);
-    			out.println(".future resolved\\:"+fut.getValue());
+    			out.println(".future resolved\\:"+shorten(fut.getValue().toString()));
     			out.println(futTaskName+":stop");
     			out.println("("+fut.getID()+") "+getActorName(task.getTarget()));
     		}
@@ -227,16 +227,23 @@ public class Main implements SystemObserver, TaskObserver {
                 else argString.append(", ");
                 argString.append(v.toString().replaceAll("\\:", "\\\\:"));
             }
-            if (argString.length() > MAX_ARG_LENGTH) {
-            	int halfLength = MAX_ARG_LENGTH / 2;
-            	String rest = argString.substring(argString.length()-halfLength);
-            	argString.setLength(halfLength);
-            	argString.append(" .. ");
-            	argString.append(rest);
-            }
-            out.print(argString.toString());
+            
+            out.print(shorten(argString.toString()));
             out.println(")");
         }
+    }
+
+    private String shorten(String arg) {
+        if (arg.length() > MAX_ARG_LENGTH) {
+            StringBuffer sb = new StringBuffer(arg);
+        	int halfLength = MAX_ARG_LENGTH / 2;
+        	String rest = arg.substring(arg.length()-halfLength);
+        	sb.setLength(halfLength);
+        	sb.append(" .. ");
+        	sb.append(rest);
+        	return sb.toString();
+        }
+        return arg;
     }
 
 	protected boolean isSystemClass(String source) {
@@ -254,6 +261,7 @@ public class Main implements SystemObserver, TaskObserver {
 				taskName += "[" + "Task" + task.getID() + "]";
             out.println(taskName+":"); // do something to avoid empty tasks
             out.println(taskName+":stop");
+            resolvedFutures.add(task.getFuture());
         }
     }
 
@@ -325,7 +333,7 @@ public class Main implements SystemObserver, TaskObserver {
 		        out.print(getActorName(task.getTarget()));
                 out.print("[" + "Taskx" + resolvingTask.getID() + "]");
 		        out.print(".resolved\\: ");		        
-		        out.print(fut.getValue());
+		        out.print(shorten(fut.getValue().toString()));
 		        out.println();
 		        out.print(getActorName(resolvingTask.getTarget()));
 		        out.print("[" + "Task" + resolvingTask.getID() + "]");
