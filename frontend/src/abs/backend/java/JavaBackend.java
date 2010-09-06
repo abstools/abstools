@@ -81,6 +81,9 @@ public class JavaBackend extends Main {
     
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
+        if (model.hasErrors() || model.hasTypeErrors())
+            return;
+        
         
         if (!destDir.exists()) {
             System.err.println("Destination directory "+destDir.getAbsolutePath()+" does not exist!");

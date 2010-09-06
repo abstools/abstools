@@ -17,37 +17,30 @@ public abstract class ABSGuard {
     
     private class View implements GuardView {
 
-        @Override
         public boolean isTrue() {
             return ABSGuard.this.isTrue();
         }
 
-        @Override
         public boolean isExpressionGuard() {
             return ABSGuard.this instanceof ABSExpGuard;
         }
 
-        @Override
         public boolean isFutureGuard() {
             return ABSGuard.this instanceof ABSFutureGuard;
         }
 
-        @Override
         public boolean isAndGuard() {
             return ABSGuard.this instanceof ABSAndGuard;
         }
 
-        @Override
         public GuardView getLeftGuard() {
             return ((ABSAndGuard)ABSGuard.this).getLeftGuard().getView();
         }
 
-        @Override
         public GuardView getRightGuard() {
             return ((ABSAndGuard)ABSGuard.this).getRightGuard().getView();
         }
 
-        @Override
         public FutView getFuture() {
             return ((ABSFutureGuard)ABSGuard.this).fut.getView();
         }

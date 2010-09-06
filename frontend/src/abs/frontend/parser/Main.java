@@ -93,13 +93,6 @@ public class Main {
 		
         Model m = new Model(units);
 		
-        if (typecheck) {
-            SemanticErrorList typeerrors = m.typeCheck();
-            for (SemanticError se : typeerrors) {
-                System.err.println(se.getMsgString());
-            }
-        }
-        
         // Dump tree for debug
         if (verbose){ 
             System.out.println("Result:");
@@ -114,6 +107,13 @@ public class Main {
             for (SemanticError error : m.getErrors()) {
                 System.err.println(error.getMsgString());
                 System.err.flush();
+            }
+        } else {
+            if (typecheck) {
+                SemanticErrorList typeerrors = m.typeCheck();
+                for (SemanticError se : typeerrors) {
+                    System.err.println(se.getMsgString());
+                }
             }
         }
         
