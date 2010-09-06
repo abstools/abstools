@@ -5,7 +5,12 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
@@ -20,11 +25,15 @@ import abs.backend.java.observing.TaskView;
 public class Main implements SystemObserver, TaskObserver {
     private static final int MAX_ARG_LENGTH = 30;
     
-    List<FutView> waitingFutures = new ArrayList<FutView>();
+    Set<FutView> waitingFutures = new HashSet<FutView>();
+    Set<FutView> resolvedFutures = new HashSet<FutView>();
     
 	final List<String> createdCOGClasses = new ArrayList<String>();
 	
+    final Map<ObjectView, Integer> objectIds = new HashMap<ObjectView,Integer>();
+    final Map<String, AtomicInteger> idCounters = new HashMap<String, AtomicInteger>();
     
+	
     PrintWriter out;
     GUI gui;
     
@@ -47,12 +56,26 @@ public class Main implements SystemObserver, TaskObserver {
         if (isObservedClass(className)) {
             cog.getScheduler().registerTaskObserver(this);
             if (!staticActors) {
-           		out.println(className+":"+className+"[a]");
+           		out.println(getActorName(initialObject)+":"+className+"[a]");
             }
         }
         
     }
 
+    protected synchronized Integer getID(ObjectView v) {
+        Integer id = objectIds.get(v);
+        if (id == null) {
+            AtomicInteger counter = idCounters.get(v.getClassName());
+            if (counter == null) {
+                counter = new AtomicInteger();
+                idCounters.put(v.getClassName(),counter);
+            }
+            id = counter.incrementAndGet();
+            objectIds.put(v,id);
+        }
+        return id;
+    }
+    
     public boolean isObservedClass(String className) {
 		return getObservedClasses().contains(className);
 	}
@@ -83,6 +106,16 @@ public class Main implements SystemObserver, TaskObserver {
     		out.println("ENVIRONMENT:ENVIRONMENT[ap]");
 	}
 
+    public String getActorName(ObjectView v) {
+        if (abstractEnvironment &&
+                getEnvironmentClasses().contains(v.getClassName())) {
+                    return "ENVIRONMENT";
+            } 
+
+        Integer id = getID(v);
+        return v.getClassName()+"_"+id.intValue();
+    }
+    
 	public String getActorName(String className) {
     	if (abstractEnvironment &&
     		getEnvironmentClasses().contains(className)) {
@@ -99,10 +132,12 @@ public class Main implements SystemObserver, TaskObserver {
     		synchronized (Main.this) {
     			if (!isObserved(task))
     				return;
-    			out.println("*"+fut.getID()+" "+task.getTarget().getClassName());
+    			waitingFutures.add(fut);
+    			String actorName = getActorName(task.getTarget());
+                out.println("*"+fut.getID()+" "+actorName);
     			out.println("future get");
     			out.println("*"+fut.getID());
-    			out.println("("+fut.getID()+") "+task.getTarget().getClassName());
+    			out.println("("+fut.getID()+") "+actorName);
     		}
     	}
 
@@ -112,21 +147,25 @@ public class Main implements SystemObserver, TaskObserver {
     			if (!isObserved(task))
     				return;
     			
+    			if (resolvedFutures.contains(fut))
+    			    return;
+    			resolvedFutures.add(fut);
+    			
     			TaskView futTask = fut.getResolvingTask();
-    			String sourceName = futTask.getTarget().getClassName();
-    			out.print(getActorName(sourceName));
-    			if (getSystemClasses().contains(sourceName)) {
+    			String sourceClass = futTask.getTarget().getClassName();
+    			out.print(getActorName(futTask.getTarget()));
+    			if (isSystemClass(sourceClass)) {
     				if (futTask.getID() != 1) // no main task
     					out.print("[" + "Task" + futTask.getID() + "]");
         			out.print(":>");
     			} else {
         			out.print(":");
     			}
-    			String futTaskName = task.getTarget().getClassName()+"[" + "FutTask"+futTask.getID()+"]"; 
+    			String futTaskName = getActorName(task.getTarget())+"[" + "FutTask"+futTask.getID()+"]"; 
     			out.print(futTaskName);
     			out.println(".future resolved\\:"+fut.getValue());
     			out.println(futTaskName+":stop");
-    			out.println("("+fut.getID()+") "+task.getTarget().getClassName());
+    			out.println("("+fut.getID()+") "+getActorName(task.getTarget()));
     		}
     	}
 
@@ -150,14 +189,14 @@ public class Main implements SystemObserver, TaskObserver {
          	if (isEnvironmentClass(sourceClass) || isEnvironmentClass(targetClass))
        			msgAction = ":";
 
-            String source = getActorName(sourceClass);
+            String source = getActorName(task.getSource());
          	if (isSystemClass(sourceClass)) 
             	source = source+"[" + "Task" + task.getSender().getID() + "]";
 
          if (firstMessage) {
            	out.println();
            	if (showStartMsg)
-           		out.println("HiddenEnv:Main[Task1].start()");
+           		out.println("HiddenEnv:Main_1[Task1].start()");
            	firstMessage = false;
            }
 
@@ -173,7 +212,7 @@ public class Main implements SystemObserver, TaskObserver {
             /*if (systemClasses.contains(task.getSource().getClassName())) {
                 out.print(":>");
             }*/
-            out.print(getActorName(targetClass));
+            out.print(getActorName(task.getTarget()));
             if (isSystemClass(targetClass)) {
 				if (task.getID() != 1) // no main task
 					out.print("[" + "Task" + task.getID() + "]");
@@ -208,10 +247,9 @@ public class Main implements SystemObserver, TaskObserver {
     public synchronized void taskFinished(TaskView task) {
     	if (!isObserved(task))
     		return;
-        String target = task.getTarget().getClassName();
         //out.println("Future " + task.getFuture().getID() + " resolved\\: " + task.getFuture().getValue());
         if (!waitingFutures.contains(task.getFuture())) {
-        	String taskName = target;
+        	String taskName = getActorName(task.getTarget());
 			if (task.getID() != 1) // no main task
 				taskName += "[" + "Task" + task.getID() + "]";
             out.println(taskName+":"); // do something to avoid empty tasks
@@ -237,7 +275,8 @@ public class Main implements SystemObserver, TaskObserver {
     		FutView fut = guard.getFuture();
     		if (isObserved(fut.getResolvingTask())) {
     		    waitingFutures.add(fut);
-    		    out.println("*" + fut.getID() + " " + task.getTarget().getClassName());
+    		    String actorName = getActorName(task.getTarget());
+                out.println("*" + fut.getID() + " " + actorName);
     	        //out.print("[" + "Task" + task.getID() + "]");
     	        //out.print(":");
     	        if (guard.isTrue()) {
@@ -248,9 +287,9 @@ public class Main implements SystemObserver, TaskObserver {
     		    //out.print(" on future "+fut.getID());
     		    out.println();
     		    out.println("*" + fut.getID());
-    		    out.println("(" + fut.getID() + ") " + task.getTarget().getClassName());
+    		    out.println("(" + fut.getID() + ") " + actorName);
     		}
-    	}
+    	} 
     }
 
 	public boolean isObserved(TaskView task) {
@@ -271,25 +310,32 @@ public class Main implements SystemObserver, TaskObserver {
 			return;
 		if (guard.isFutureGuard()) {
 		    FutView fut = guard.getFuture();
+		    
+		    
 		    TaskView resolvingTask = fut.getResolvingTask();
 		    if (isObserved(resolvingTask)) {
-		        out.print(resolvingTask.getTarget().getClassName());
+
+                if (resolvedFutures.contains(fut))
+                    return;
+                resolvedFutures.add(fut);
+		        
+		        out.print(getActorName(resolvingTask.getTarget()));
 		        out.print("[" + "Task" + resolvingTask.getID() + "]");
 		        out.print(":>");
-		        out.print(task.getTarget().getClassName());
+		        out.print(getActorName(task.getTarget()));
                 out.print("[" + "Taskx" + resolvingTask.getID() + "]");
 		        out.print(".resolved\\: ");		        
 		        out.print(fut.getValue());
 		        out.println();
-		        out.print(resolvingTask.getTarget().getClassName());
+		        out.print(getActorName(resolvingTask.getTarget()));
 		        out.print("[" + "Task" + resolvingTask.getID() + "]");
                 out.print(":stop");
                 out.println();
-		        out.print(task.getTarget().getClassName());
+		        out.print(getActorName(task.getTarget()));
                 out.print("[" + "Taskx" + resolvingTask.getID() + "]");
                 out.print(":stop");
                 out.println();
-                out.println("(" + fut.getID() + ") " + task.getTarget().getClassName());
+                out.println("(" + fut.getID() + ") " + getActorName(task.getTarget()));
 		    }
 		}
 	}

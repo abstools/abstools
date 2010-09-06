@@ -702,6 +702,8 @@ aspect GenerateJava {
             stream.print(".fromBoolean(");
             stream.print(getConstructor().toLowerCase());
             stream.print(")");
+        } else if (name.equals("Unit")) {
+            stream.print("ABSUnit.UNIT");
         } else {
       	  stream.print("new ABSConstructor__"+getConstructor());
       	  if (decl instanceof ParametricDataTypeDecl) {

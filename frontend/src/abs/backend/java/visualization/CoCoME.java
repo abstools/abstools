@@ -55,10 +55,10 @@ public class CoCoME extends Main {
 
         for (String s : getObservedClasses()) {
             if (!abstractEnvironment && getEnvironmentClasses().contains(s)) {
-           		out.println(s+":"+s+"[ap]");
+           		out.println(s+"_1:"+s+"[ap]");
             }
             if (getSystemClasses().contains(s)) {
-           		out.println(s+":"+s+"[a]");
+           		out.println(s+"_1:"+s+"[a]");
             }
         }
 
