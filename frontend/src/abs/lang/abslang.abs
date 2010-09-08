@@ -5,8 +5,8 @@ data Int;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 
-def Bool and(Bool a, Bool b) = a && b;
-def Bool not(Bool a) = ~a;
+def Bool and(Bool a, Bool b) = case a { True => b; _ => False; };
+def Bool not(Bool a) = case a { True => False; False => True; };
 
 def Int max(Int a, Int b) = case a > b { True => a; False => b; };
 def Int abs(Int x) = case x > 0 { True => x; False => -x; };

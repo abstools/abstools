@@ -271,6 +271,8 @@ aspect GenerateMaude {
 	
 	abstract public void Pattern.generateMaude(PrintStream stream);
 
+    public void UnresolvedPattern.generateMaude(PrintStream stream) { }
+
     public void UnderscorePattern.generateMaude(PrintStream stream) {
         stream.print("@ \"_\" ");
     }

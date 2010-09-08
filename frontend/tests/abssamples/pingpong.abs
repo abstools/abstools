@@ -1,21 +1,15 @@
-
 /*
  * PingPong.abs -- PingPong example
- *
- * An  ABS program. To test core parser.  
  *
  */
 
 data Msg = NoMsg 
          | HelloPing 
-         | HelloPong(Ping)
-         | ThanksPong
-         | ThanksPing
+         | Hello(Ping p)
          | HowAreYou
          | Fine
          | Bye 
          ;
-
 
 interface Ping {
     Unit m(Msg m);
@@ -40,8 +34,13 @@ class PingImpl(Pong pong) implements Ping {
          Bye => NoMsg;
       };
       
-      if (reply != NoMsg)
-         pong!m(reply);
+      Fut<Unit> fu;
+	  Unit u = Unit;
+      if (reply != NoMsg) {
+         fu = pong!m(reply);
+      	 await fu?;
+      	 fu.get;
+      }
      }
 } 
 

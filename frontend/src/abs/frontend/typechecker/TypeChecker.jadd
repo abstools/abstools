@@ -22,14 +22,20 @@ aspect TypeChecker {
             u.typeCheck(e);
         }
     }
-    
-    public void CompilationUnit.typeCheck(SemanticErrorList e) {
+
+    public void ModuleDecl.typeCheck(SemanticErrorList e) {
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }
         
         if (hasBlock()) {
             getBlock().typeCheck(e);
+        }
+    }
+    
+    public void CompilationUnit.typeCheck(SemanticErrorList e) {
+        for (ModuleDecl d : getDecls()) {
+            d.typeCheck(e);
         }
     }
     

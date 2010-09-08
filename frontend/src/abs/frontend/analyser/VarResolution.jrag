@@ -113,8 +113,8 @@ aspect VarResolution {
         return localLookupVarName(name);
     }
     
-    eq CompilationUnit.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
-    eq CompilationUnit.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
+    eq ModuleDecl.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
+    eq ModuleDecl.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
     eq CaseExp.getBranch(int i).lookupVarName(String name) {
    	 VarOrFieldDecl d = getBranch(i).getLeft().localLookupVarName(name);
    	 if (d != null)

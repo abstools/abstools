@@ -5,11 +5,11 @@ import java.util.Map;
 
 aspect Typing {
     
-    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup("Unit"));
-    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup("Int"));
-    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup("Bool"));
-    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup("String"));
-    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup("Fut"), typeArg);
+    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Unit")));
+    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Int")));
+    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Bool")));
+    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("String")));
+    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Fut")), typeArg);
 
     eq Model.getCompilationUnit().getUnitType() = getUnitType();
     eq Model.getCompilationUnit().getIntType() = getIntType();
@@ -28,18 +28,23 @@ aspect Typing {
     inh Type CompilationUnit.getBoolType();
     inh Type CompilationUnit.getStringType();
     inh Type CompilationUnit.getFutType(Type typeArg);
-    
+
+    inh Type ModuleDecl.getUnitType();
+    inh Type ModuleDecl.getIntType();
+    inh Type ModuleDecl.getBoolType();
+    inh Type ModuleDecl.getStringType();
+    inh Type ModuleDecl.getFutType(Type typeArg);
     
     inh Type Stmt.getUnitType();
     inh Type Stmt.getBoolType();
 
     inh Type Guard.getBoolType();
     
-    eq CompilationUnit.getDecl().getUnitType() = getUnitType();
-    eq CompilationUnit.getDecl().getIntType() = getIntType();
-    eq CompilationUnit.getDecl().getBoolType() = getBoolType();
-    eq CompilationUnit.getDecl().getStringType() = getStringType();
-    eq CompilationUnit.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
+    eq ModuleDecl.getDecl().getUnitType() = getUnitType();
+    eq ModuleDecl.getDecl().getIntType() = getIntType();
+    eq ModuleDecl.getDecl().getBoolType() = getBoolType();
+    eq ModuleDecl.getDecl().getStringType() = getStringType();
+    eq ModuleDecl.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
 
     inh Type Decl.getUnitType();
     inh Type Decl.getIntType();
@@ -126,11 +131,12 @@ aspect Typing {
    	 return dt.getTypeArg(0);
     }
     eq NewExp.getType() {
-        Decl d = lookup(getClassRef());
+        Decl d = lookup(getClassName());
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
     }
-    
+
+	syn Type VarOrFieldUse.getType();    
     eq FieldUse.getType() { 
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;
@@ -215,6 +221,7 @@ aspect Typing {
     eq PatternVar.getType() = getInhType();  
     eq UnderscorePattern.getType() = AnyType.INSTANCE;
     eq LiteralPattern.getType() = getLiteral().getType();
+    eq UnresolvedPattern.getType() = UnknownType.INSTANCE;
     
     inh Type Pattern.getInhType();
     eq CaseBranch.getLeft().getInhType() {

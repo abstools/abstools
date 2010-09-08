@@ -646,6 +646,8 @@ aspect GenerateJava {
    	  getLiteral().generateJava(stream);
    	  stream.print(")");
     }
+    
+    public void UnresolvedPattern.generateJava(PrintStream stream) { }
  
     public void FnApp.generateJava(PrintStream stream) {
    	 
@@ -700,7 +702,7 @@ aspect GenerateJava {
         if (name.equals("Bool")) {
             stream.print(ABSBool.class.getName());
             stream.print(".fromBoolean(");
-            stream.print(getConstructor().toLowerCase());
+            stream.print(getConstructor().getLastName());
             stream.print(")");
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");

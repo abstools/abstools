@@ -7,6 +7,7 @@
 
 package abs.frontend.parser;
 import abs.frontend.ast.*;
+import abs.common.*;
 
 
 :};
@@ -55,8 +56,58 @@ CompilationUnit goal =
   ;
 
 CompilationUnit compilation_unit = 
-	decl_list.l? main_block.b?	{: return new CompilationUnit(fileName,l, b); :}
+	module_decl_list.m? {: return new CompilationUnit(fileName,m); :}
   ;
+
+ModuleDecl module_decl = 
+	 module_name.n export_list.el? import_list.il? decl_list.dl? main_block.b? 
+	 {: return new ModuleDecl(n,el,il,dl,b); :} 	
+  ;
+
+List module_decl_list =
+	module_decl.t			{: return new List().add(t); :}
+  | module_decl_list.l module_decl.t	{: return l.add(t); :}
+  ;
+
+  
+QualifiedName module_name =
+    MODULE qual_name.n SEMI {: return n; :}
+  ; 
+
+QualifiedName qual_name =
+     dotted_name_list.l {: return new QualifiedName(l); :}
+  ;
+  
+List dotted_name_list =
+    IDENTIFIER.id {: return new List().add(new Name(id)); :}
+  | dotted_name_list.n DOT IDENTIFIER.id {: return n.add(new Name(id)); :} 
+  ;
+
+Export export =
+  EXPORT qual_name_list.l SEMI {: return new NamedExport(l); :}
+  | EXPORT MULT SEMI {: return new StarExport(); :}
+;
+
+Import import =
+  IMPORT qual_name_list.l SEMI {: return new NamedImport(l); :}
+  | IMPORT MULT SEMI {: return new StarImport(); :}
+;
+
+List export_list =
+	export.t			{: return new List().add(t); :}
+  | export_list.l export.t	{: return l.add(t); :}
+;
+
+List import_list =
+	import.t			{: return new List().add(t); :}
+  | import_list.l import.t	{: return l.add(t); :}
+;
+
+List qual_name_list =
+    qual_name.n {: return new List().add(n); :}
+  | qual_name_list.l COMMA qual_name.n {: return l.add(n); :}
+;
+
 
 List decl_list =
 	decl.t			{: return new List().add(t); :}
@@ -98,12 +149,12 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	annotation_list.al? DATA TYPEIDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, l, al, p); :}
-   | annotation_list.al? DATA TYPEIDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(TYPEIDENTIFIER, new List<DataConstructor>(), al, p); :}
+	annotation_list.al? DATA IDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(IDENTIFIER, l, al, p); :}
+   | annotation_list.al? DATA IDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(IDENTIFIER, new List<DataConstructor>(), al, p); :}
   ;
 
 TypeSynDecl  typesyn_decl = 
-	annotation_list.al? TYPE TYPEIDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
+	annotation_list.al? TYPE IDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
 
@@ -115,12 +166,12 @@ FunctionDecl  function_decl =
 	; 
 
 InterfaceDecl interface_decl =
-  annotation_list.al? INTERFACE TYPEIDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(TYPEIDENTIFIER, al, i, l); :}
+  annotation_list.al? INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, al, i, l); :}
   ;
 
 
 ClassDecl class_decl =
-	annotation_list.annotations? CLASS TYPEIDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(TYPEIDENTIFIER, annotations, params,  i, init_block, fields, methods); :}
+	annotation_list.annotations? CLASS IDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(IDENTIFIER, annotations, params,  i, init_block, fields, methods); :}
   ;
 
 List data_constructor_list =
@@ -129,7 +180,7 @@ List data_constructor_list =
   ;
 
 DataConstructor data_constructor = 
-	TYPEIDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
+	IDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -152,25 +203,25 @@ List annotation_list =
      ;
 
 Annotation annotation =
-    LBRACKET TYPEIDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
+    LBRACKET IDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
     ;
 
 InterfaceTypeUse ifname =
-    TYPEIDENTIFIER {: return new InterfaceTypeUse(TYPEIDENTIFIER) ; :}
+    qual_name.n {: return new InterfaceTypeUse(n) ; :}
     ;
 
 DataTypeUse datatypeuse =
-	TYPEIDENTIFIER LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(TYPEIDENTIFIER, p); :}
-    | TYPEIDENTIFIER {: return new DataTypeUse(TYPEIDENTIFIER) ; :}
+	qual_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
+    | qual_name.n {: return new DataTypeUse(n) ; :}
     ;
 
 TypeParameterDecl datatypeparam =
-    TYPEIDENTIFIER {: return new TypeParameterDecl(TYPEIDENTIFIER); :}
+    IDENTIFIER {: return new TypeParameterDecl(IDENTIFIER); :}
     ;
 
 Access type_exp =
-	  TYPEIDENTIFIER.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
-	| TYPEIDENTIFIER.id 		{: return new UnresolvedTypeUse(id); :}
+	  qual_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
+	| qual_name.id 		{: return new UnresolvedTypeUse(id); :}
 	;	
 
 //fix class_var --> field
@@ -242,15 +293,23 @@ MethodSig methodsig =
 PureExp pure_exp =
 	  var_ref
     | NULL                 {: return new NullExp() ; :}
-	| data_constructor_exp
 	| let_exp
-	| IDENTIFIER.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
-    | IDENTIFIER.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
-	| CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
+	| fnapp_exp
+    | fnapp_list_exp
+    | case_exp
     ;
 
+FnApp fnapp_list_exp = 
+    qual_name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
+    ;
 
+FnApp fnapp_exp =
+	qual_name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+    ;
 
+CaseExp case_exp = 
+	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
+;
 
 //built_in or pure , since built_in_data -> int_exp -> mult_exp -> factor -> pure 
 List data_exp_list = 
@@ -263,15 +322,15 @@ List data_exp_list =
 // to chains of constructors.
 PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
  {: { 
-        DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
+        DataConstructorExp result = new DataConstructorExp(QualifiedNameUtil.create("Cons"), new List<PureExp>());
         DataConstructorExp current = result;
         for (Object e : l) {
-            DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
+            DataConstructorExp next = new DataConstructorExp(QualifiedNameUtil.create("Cons"), new List<PureExp>());
             current.addParamNoTransform((PureExp)e);
             current.addParamNoTransform(next);
             current = next;
         }
-        current.setConstructor("Nil");
+        current.setConstructor(QualifiedNameUtil.create("Nil"));
         return result ; }
  :}
  ;
@@ -352,33 +411,22 @@ CaseBranch case_branch =
 	; 
 
 Pattern pattern = 
-	  IDENTIFIER.v  {: return new PatternVarUse(v) ; :}
-	| constructor_pattern 
+	  qual_name.v  {: return new UnresolvedPattern(v) ; :}
+	| qual_name.co LPAREN pattern_list.l? RPAREN     {: return new ConstructorPattern(co,l); :}
 	| literal.l  	{: return new LiteralPattern(l) ; :}
 //  | LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
 	| USCORE {: return new UnderscorePattern() ; :}
 	;
 
-Pattern constructor_pattern = 
-	TYPEIDENTIFIER.co  pattern_params.p? {: return new ConstructorPattern(co,p) ; :} 
-	;
-
-List pattern_params = 
-	LPAREN pattern_list.l? RPAREN     {: return l; :}
-	;
 List pattern_list =
     pattern.i                              {: return new List().add(i); :}
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
 
-PureExp data_constructor_exp =
-	TYPEIDENTIFIER.co data_exp_params.l? {: return new DataConstructorExp(co,l) ; :}
-	;
-
 VarOrFieldUse var_ref =
-    IDENTIFIER            {: return new VarUse(IDENTIFIER) ; :}
-    | THIS                {: return new ThisExp() ; :}
-	| THIS DOT IDENTIFIER   {: return new FieldUse(IDENTIFIER) ; :}
+//    IDENTIFIER            {: return new VarUse(IDENTIFIER) ; :}
+      THIS                {: return new ThisExp() ; :}
+	| THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
 	;
 
 GetExp get_exp =
@@ -394,12 +442,9 @@ Exp eff_exp =
     | get_exp
 	; 
 
-NewExp  new_exp = 
-	NEW COG.c? TYPEIDENTIFIER.i data_exp_params.p?   {: return new NewExp(i,p,c) ; :} 
-	;
-
-List data_exp_params = 
-	LPAREN data_exp_list.l? RPAREN {: return l ; :} 
+NewExp new_exp = 
+	  NEW qual_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
+	| NEW COG.c qual_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
 	;
 
 AsyncCall async_call = 
