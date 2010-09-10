@@ -8,6 +8,7 @@
 package abs.frontend.parser;
 import abs.frontend.ast.*;
 import abs.common.*;
+import java.io.File;
 
 
 :};
@@ -15,24 +16,33 @@ import abs.common.*;
 %embed {:
 	ArrayList<ParserError> errors = new ArrayList<ParserError>();
     boolean raiseExceptions = true;
-    String fileName;
+    File file;
+    String sourceCode; // only set if not read from file
+
+	public void setSourceCode(String sourceCode) {
+	   this.sourceCode = sourceCode;
+	}
+
+	public void setFile(File file) {
+	   this.file = file;
+	}
 
 	class Events extends Parser.Events {
 		public void syntaxError(Symbol token) {
-			StringBuffer s = new StringBuffer();
-			s.append(Symbol.getLine(token.getStart()) + ":" + Symbol.getColumn(token.getStart()) + ": ");
-			s.append("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()]);
-			SyntaxError e = new SyntaxError(s.toString(), Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
+			SyntaxError e = new SyntaxError("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()], Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
+			e.setFile(file);
+			e.setSourceCode(sourceCode);
 			errors.add(e);
-			if (raiseExceptions) throw e;
+			if (raiseExceptions) 
+				throw new ParseException(e);
 		}
 		public void scannerError(Scanner.Exception e) {
-			StringBuffer s = new StringBuffer();
-			s.append(e.line + ", " + e.column + "\n");
-			s.append("Lexical error: " + e.getMessage());
-			LexicalError err = new LexicalError(s.toString(), e.line, e.column);
+			LexicalError err = new LexicalError("Lexical error: " + e.getMessage(), e.line, e.column);
+			err.setFile(file);
+			err.setSourceCode(sourceCode);
 			errors.add(err);
-			if (raiseExceptions) throw err;
+			if (raiseExceptions) 
+				throw new ParseException(err);
 		}
 	}
 
@@ -43,9 +53,11 @@ import abs.common.*;
 	}
 
 	public ArrayList<ParserError> getErrors() { return errors; }
-	public CompilationUnit parse(String fileName, Scanner scanner) throws java.lang.Exception {
-	   this.fileName = fileName;
-	   return (CompilationUnit) parse(scanner);
+	
+	public String getFileName() {
+		if (file != null)
+		    return file.getAbsolutePath();
+		return "<unknown>";
 	}
 :};
 
@@ -56,12 +68,12 @@ CompilationUnit goal =
   ;
 
 CompilationUnit compilation_unit = 
-	module_decl_list.m? {: return new CompilationUnit(fileName,m); :}
+	module_decl_list.m? {: return new CompilationUnit(getFileName(),m); :}
   ;
 
 ModuleDecl module_decl = 
-	 module_name.n export_list.el? import_list.il? decl_list.dl? main_block.b? 
-	 {: return new ModuleDecl(n,el,il,dl,b); :} 	
+	  module_name.n export_list.el? import_list.il? decl_list.dl? main_block.b?
+	  {: return new ModuleDecl(n,el,il,dl,b); :} 	
   ;
 
 List module_decl_list =
@@ -70,27 +82,30 @@ List module_decl_list =
   ;
 
   
-QualifiedName module_name =
-    MODULE qual_name.n SEMI {: return n; :}
+Name module_name =
+    MODULE name.n SEMICOLON {: return n; :}
   ; 
 
-QualifiedName qual_name =
-     dotted_name_list.l {: return new QualifiedName(l); :}
+
+Name name =
+    IDENTIFIER.id {: return new SimpleName(id); :}
+    | name.qn COLON IDENTIFIER.n {: 
+    	if (qn instanceof SimpleName) {
+    		return new QualifiedName(new List().add((SimpleName)qn).add(new SimpleName(n)));
+    	} else {
+      		return new QualifiedName(((QualifiedName)qn).getSimpleNames().add(new SimpleName(n)));
+        } 
+      :}
   ;
   
-List dotted_name_list =
-    IDENTIFIER.id {: return new List().add(new Name(id)); :}
-  | dotted_name_list.n DOT IDENTIFIER.id {: return n.add(new Name(id)); :} 
-  ;
-
 Export export =
-  EXPORT qual_name_list.l SEMI {: return new NamedExport(l); :}
-  | EXPORT MULT SEMI {: return new StarExport(); :}
+  EXPORT name_list.l SEMICOLON {: return new NamedExport(l); :}
+  | EXPORT MULT SEMICOLON {: return new StarExport(); :}
 ;
 
 Import import =
-  IMPORT qual_name_list.l SEMI {: return new NamedImport(l); :}
-  | IMPORT MULT SEMI {: return new StarImport(); :}
+  IMPORT name_list.l SEMICOLON {: return new NamedImport(l); :}
+  | IMPORT MULT SEMICOLON {: return new StarImport(); :}
 ;
 
 List export_list =
@@ -103,9 +118,9 @@ List import_list =
   | import_list.l import.t	{: return l.add(t); :}
 ;
 
-List qual_name_list =
-    qual_name.n {: return new List().add(n); :}
-  | qual_name_list.l COMMA qual_name.n {: return l.add(n); :}
+List name_list =
+    name.n {: return new List().add(n); :}
+  | name_list.l COMMA name.n {: return l.add(n); :}
 ;
 
 
@@ -207,12 +222,12 @@ Annotation annotation =
     ;
 
 InterfaceTypeUse ifname =
-    qual_name.n {: return new InterfaceTypeUse(n) ; :}
+    name.n {: return new InterfaceTypeUse(n) ; :}
     ;
 
 DataTypeUse datatypeuse =
-	qual_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
-    | qual_name.n {: return new DataTypeUse(n) ; :}
+	  name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
+	| name.n {: return new DataTypeUse(n); :}
     ;
 
 TypeParameterDecl datatypeparam =
@@ -220,8 +235,8 @@ TypeParameterDecl datatypeparam =
     ;
 
 Access type_exp =
-	  qual_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
-	| qual_name.id 		{: return new UnresolvedTypeUse(id); :}
+	  name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
+	| name.id 		{: return new UnresolvedTypeUse(id); :}
 	;	
 
 //fix class_var --> field
@@ -292,6 +307,7 @@ MethodSig methodsig =
 
 PureExp pure_exp =
 	  var_ref
+//	| qual_name.n {: return new UnresolvedExp(n); :} // data constructor exp
     | NULL                 {: return new NullExp() ; :}
 	| let_exp
 	| fnapp_exp
@@ -300,13 +316,12 @@ PureExp pure_exp =
     ;
 
 FnApp fnapp_list_exp = 
-    qual_name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
+    name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
     ;
 
 FnApp fnapp_exp =
-	qual_name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+	name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
     ;
-
 CaseExp case_exp = 
 	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
 ;
@@ -316,6 +331,7 @@ List data_exp_list =
 	  data_exp.i                            {: return new List().add(i); :}
 	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
 	;
+
 
 // The List literal.  Special syntax, but allows us to construct
 // arbitrary n-ary data structures (set, map, array ...) without resorting
@@ -411,8 +427,8 @@ CaseBranch case_branch =
 	; 
 
 Pattern pattern = 
-	  qual_name.v  {: return new UnresolvedPattern(v) ; :}
-	| qual_name.co LPAREN pattern_list.l? RPAREN     {: return new ConstructorPattern(co,l); :}
+	  name.v  {: return new UnresolvedPattern(v) ; :}
+	| name.co LPAREN pattern_list.l? RPAREN     {: return new ConstructorPattern(co,l); :}
 	| literal.l  	{: return new LiteralPattern(l) ; :}
 //  | LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
 	| USCORE {: return new UnderscorePattern() ; :}
@@ -423,17 +439,20 @@ List pattern_list =
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
 
-VarOrFieldUse var_ref =
-//    IDENTIFIER            {: return new VarUse(IDENTIFIER) ; :}
+PureExp var_ref =
       THIS                {: return new ThisExp() ; :}
 	| THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
+    | name.n {: return new UnresolvedExp(n); :}
+	;
+
+Exp exp = 
+	  eff_exp 
+	| data_exp
 	;
 
 GetExp get_exp =
     pure_exp.p DOT GET             {: return new GetExp(p) ; :}
     ;
-
-Exp exp = data_exp | eff_exp ; 
 
 Exp eff_exp = 
     new_exp 
@@ -443,8 +462,8 @@ Exp eff_exp =
 	; 
 
 NewExp new_exp = 
-	  NEW qual_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
-	| NEW COG.c qual_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
+	  NEW name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
+	| NEW COG.c name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
 	;
 
 AsyncCall async_call = 

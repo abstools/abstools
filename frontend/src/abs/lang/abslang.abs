@@ -1,4 +1,6 @@
 //data type declarations 
+module abs.lang;
+
 data Unit = Unit;               // builtin  
 data String;                    // builtin  
 data Int;                       // builtin

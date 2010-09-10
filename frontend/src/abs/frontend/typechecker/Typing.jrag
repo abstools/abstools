@@ -92,6 +92,9 @@ aspect Typing {
     /* EXPRESSIONS */
     
     syn lazy Type Exp.getType();
+    
+    eq UnresolvedExp.getType() = UnknownType.INSTANCE;
+    
     eq AsyncCall.getType() {  
         return getFutType(getCallType());
     }

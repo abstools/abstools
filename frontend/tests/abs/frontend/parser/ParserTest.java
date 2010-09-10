@@ -78,9 +78,18 @@ public class ParserTest extends FrontendTest {
    	}
 		
 	@Test
-		public void testBlock() {
-		assertParseOk(" "); 		//NO decls no block 
-		assertParseOk("{ }"); //No decls. 
+		public void testNothing() {
+		assertParseOk(" "); 		//NO decls no block
+	}
+	
+	@Test
+	public void testEmptyBlock() {
+		assertParseOk("{ }"); //No decls.
+	}
+	
+	@Test
+	public void testStmts() {
+		assertParseOk("{ return x; }");  
 		assertParseOk("{   return x.get ;   }"); //one statement
 		assertParseOk("{   skip ; return x.get ;    }") ;  //n statements
 		assertParseOk("{ Int x ; Int y ;  skip ; return x.get ;   }"); //Variable decls
@@ -165,11 +174,6 @@ public class ParserTest extends FrontendTest {
     	assertParseOk("class A { Int method(Int x) { [Value: Good] return x; } }");
     	assertParseOk("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
     }
-
-	@Test 
-		public void testPureExp(){ 
-		//i.e. test pure_exp 
-	}
 
 	@Test
 	public void testNAryConstructors() {

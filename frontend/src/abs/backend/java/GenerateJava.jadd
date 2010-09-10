@@ -468,6 +468,8 @@ aspect GenerateJava {
 
     public abstract void Exp.generateJava(PrintStream stream);
 
+	public void UnresolvedExp.generateJava(PrintStream stream) { throw new UnsupportedOperationException(); }
+
     public void AsyncCall.generateJava(PrintStream stream) {
         stream.print(ABSRuntime.class.getName()+".asyncCall(");
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());
@@ -539,9 +541,9 @@ aspect GenerateJava {
 
     public void NewExp.generateJava(PrintStream stream) {
         if (getCog().equals("cog")) {
-            stream.print(getClassRef()+".__ABS_createNewCOG");
+            stream.print(JavaBackend.getQualifiedString(getClassName())+".__ABS_createNewCOG");
         } else {
-            stream.print("new "+getClassRef());
+            stream.print("new "+JavaBackend.getQualifiedString(getClassName()));
         }
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }

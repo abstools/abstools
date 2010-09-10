@@ -52,7 +52,7 @@ aspect DumpTree {
 
 
 	public void AssignStmt.dumpTree(String indent, java.io.PrintStream pStream) {
-	   	pStream.println(indent + this.toString() + "\t\t" +  this.getVar().getName() + "=");
+	   	pStream.println(indent + this.toString() + "\t\t" +  ((VarOrFieldUse)this.getVar()).getName() + "=");
 		this.getValue().dumpTree("",pStream);
 		pStream.println();
 	}

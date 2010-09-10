@@ -3,6 +3,7 @@ package abs.frontend.analyser;
 import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.Name;
 import abs.frontend.ast.QualifiedName;
 
 public class SemanticError {
@@ -16,7 +17,7 @@ public class SemanticError {
         this.args = args;
     }
     
-    public SemanticError(ASTNode<?> node, ErrorMessage msg, QualifiedName... args) {
+    public SemanticError(ASTNode<?> node, ErrorMessage msg, Name... args) {
         this.node = node;
         this.msg = msg;
         

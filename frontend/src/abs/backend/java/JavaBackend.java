@@ -19,6 +19,8 @@ import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Name;
+import abs.frontend.ast.QualifiedName;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -132,6 +134,10 @@ public class JavaBackend extends Main {
         return getQualifiedString(absType.getType());
     }
     
+    public static String getQualifiedString(Name name) {
+    	return name.getString();
+    }
+    
     public static String getQualifiedString(Type absType) {
    	 String res = null;
    	 if (absType.isDataType()) {
@@ -183,6 +189,8 @@ public class JavaBackend extends Main {
         }
         return false;
     }
+    
+    
     
     
 }

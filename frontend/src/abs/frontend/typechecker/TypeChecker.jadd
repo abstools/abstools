@@ -34,7 +34,7 @@ aspect TypeChecker {
     }
     
     public void CompilationUnit.typeCheck(SemanticErrorList e) {
-        for (ModuleDecl d : getDecls()) {
+        for (ModuleDecl d : getModuleDecls()) {
             d.typeCheck(e);
         }
     }
@@ -387,9 +387,9 @@ aspect TypeChecker {
     }
     
     public void NewExp.typeCheck(SemanticErrorList e) {
-        Decl d = lookup(getClassRef());
+        Decl d = lookup(getClassName());
         if (d == null || !d.isClass()) {
-            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassRef()));
+            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName().getString()));
         } else {
             ClassDecl cd = (ClassDecl) d;
             TypeCheckerHelper.typeCheckEqualParams(e,this,cd.getParams(),getParams());

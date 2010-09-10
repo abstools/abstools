@@ -1,6 +1,9 @@
 package abs;
 
 import static org.junit.Assert.fail;
+
+import java.io.File;
+
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
@@ -9,10 +12,13 @@ import abs.frontend.parser.Main;
 public class ABSTest {
 
     protected Model assertParseOk(String s, boolean withStdLib) {
+    	s = "module unittest; "+s;
         Model p = null;
         try {
             p = Main.parseString(s, withStdLib);
-        } catch (Throwable t) {
+        } catch (Exception t) {
+        	System.out.println(t.getClass().getName());
+            t.printStackTrace();
             fail("Failed to parse: "+ s+"\n"+t.getMessage());
         }
         return p;
@@ -25,10 +31,10 @@ public class ABSTest {
     protected Model assertParseFileOk(String fileName, boolean typeCheck, boolean withStdLib) {
         Model m = null;
         try {
-            m = Main.parse(fileName, withStdLib);
+            m = Main.parse(new File(fileName), withStdLib);
         } catch (Throwable e) {
-            fail("Failed to parse: "+ fileName +"\n"+e.getMessage());
             e.printStackTrace();
+            fail("Failed to parse: "+ fileName +"\n"+e.getMessage());
         }
         if (m != null) {
             int numSemErrs = m.getErrors().size();
