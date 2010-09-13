@@ -1067,15 +1067,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       < O : C | Att: S, Pr: idle, PrQ: W, Lcnt: F > 
       CN, T) =
     noneready(W, S, CN, T) and canAdvance (CN, T) .
-  *** Do not block clock if object is waiting for a result that has not
-  *** arrived yet.
-  eq canAdvance (
-      < O : C | Att: S, Pr: { L | get(N ; AL) ; SL }, PrQ: W, Lcnt: F >
-      < N : Future | Name: Q, Completed: false, References: G, Value: DL >
-      CN, T) =
-    canAdvance(< N : Future | Name: Q, Completed: false, References: G, Value: DL >
-      CN, T) .
-  *** Block clock if process is executing.
+  *** Block clock if process is executing and can execute.
   eq canAdvance (
       < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       CN, T)
