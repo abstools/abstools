@@ -118,10 +118,13 @@ public class ParserTest extends FrontendTest {
 		assertParseOk("class FooClass  {} {}"); 
 		assertParseOk("class FooClass  implements Foo {} {}");
 		assertParseOk("class FooClass  implements Foo {}"); //optional main body 
+		assertParseOk("class FooClass  implements Foo.Bar {}"); // qualified Name 
 		assertParseOk("class FooClass(T x , T y)  implements Foo {}"); //class params 
 		assertParseOk("class FooClass(T x)  implements Foo {}"); //class params 
+		assertParseOk("class FooClass(Foo.T x)  implements Foo {}"); //class params qualified name
 		assertParseOk("class FooClass()  implements Foo {}"); //class params 
 		assertParseOk("class FooClass  implements Foo { T x ; }"); //field
+		assertParseOk("class FooClass  implements Foo { Foo.T x ; }"); //field qualified
 		assertParseOk("class FooClass  implements Foo { T x ; { x = a ; }  }"); //init block
 		assertParseOk("class FooClass  implements Foo { T x = a ; }"); //field with initializer
 		assertParseOk("class FooClass  implements Foo { {} } {} "); //empty init block
@@ -135,6 +138,7 @@ public class ParserTest extends FrontendTest {
 		public void testDatatypeDecl() {
 		assertParseOk("data Foo = XCons | YCons ; "); 
 		assertParseOk("data IntList = IntNil | Cons(Int, IntList) ; ");
+		assertParseOk("data IntList = IntNil | Cons(Prelude.Int, IntList) ; ");
 	}
 	
 	@Test
@@ -150,6 +154,7 @@ public class ParserTest extends FrontendTest {
 		assertParseOk("def Int inc(Int x) = plus(x,one());"); //fun_exp = Term(co,l)
 		assertParseOk("def Datatype fn(Int x , Int y) = x;"); 
 		assertParseOk("def TPair revPair(TPair p) = pair(snd(p),fst(p));");
+		assertParseOk("def TPair revPair(TPair p) = Prelude.pair(Prelude.snd(p),fst(p));");
 		//using let
 		assertParseOk("def TPair revPair(TPair p) = let(T x) = fst(p) in pair(snd(p),x);");
 		//using nested let
@@ -279,6 +284,42 @@ public class ParserTest extends FrontendTest {
 	public void importQual() {
 		assertParseOk("import ABS.Test;");
 	}
+
+	@Test
+	public void importFrom() {
+		assertParseOk("import Test from ABS;");
+	}
+
+	@Test
+	public void importFromList() {
+		assertParseOk("import Test, Test2, fun from ABS;");
+	}
+	
+	@Test
+	public void importStarFrom() {
+		assertParseOk("import * from ABS;");
+	}
+	
+	@Test
+	public void exportQual() {
+		assertParseOk("export ABS.Test;");
+	}
+
+	@Test
+	public void exportSimple() {
+		assertParseOk("export Test;");
+	}
+
+	@Test
+	public void exportList() {
+		assertParseOk("export Test, fun;");
+	}
+	
+	@Test
+	public void exportStar() {
+		assertParseOk("export *;");
+	}
+	
 	
 	
 	protected void assertParseError(String s) {

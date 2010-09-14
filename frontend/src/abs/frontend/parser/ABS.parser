@@ -72,7 +72,7 @@ CompilationUnit compilation_unit =
   ;
 
 ModuleDecl module_decl = 
-	  module_name.n export_list.el? import_list.il? decl_list.dl? main_block.b?
+	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? main_block.b?
 	  {: return new ModuleDecl(n,el,il,dl,b); :} 	
   ;
 
@@ -82,16 +82,22 @@ List module_decl_list =
   ;
 
   
-Name module_name =
-    MODULE type_name.n SEMICOLON {: return n; :}
+Name module_name_decl =
+    MODULE module_name.n SEMICOLON {: return n; :}
   ; 
 
-Name simple_type_name =
+Name module_name = type_name ;
+
+SimpleName simple_type_name =
   TYPE_IDENTIFIER.id      {: return new SimpleName(id); :}
 ;
         
+SimpleName simple_name =
+    IDENTIFIER.id  {: return new SimpleName(id); :}  
+;
+        
 Name name =
-	IDENTIFIER.id      {: return new SimpleName(id); :}
+	simple_name     
   | qualified_name
 ;
 
@@ -132,8 +138,9 @@ Export export =
 ;
 
 Import import =
-  IMPORT any_name_list.l SEMICOLON {: return new NamedImport(l); :}
-  | IMPORT MULT SEMICOLON {: return new StarImport(); :}
+    IMPORT MULT FROM module_name.m SEMICOLON {: return new StarImport(m); :}
+  | IMPORT any_name_list.l FROM module_name.m SEMICOLON {: return new FromImport(l,m); :}
+  | IMPORT any_name_list.l SEMICOLON {: return new NamedImport(l); :}
 ;
 
 List export_list =
@@ -148,9 +155,8 @@ List import_list =
 
 List any_name_list =
     any_name.n {: return new List().add(n); :}
-  | any_name_list.l COMMA name.n {: return l.add(n); :}
+  | any_name_list.l COMMA any_name.n {: return l.add(n); :}
 ;
-
 
 List decl_list =
 	decl.t			{: return new List().add(t); :}

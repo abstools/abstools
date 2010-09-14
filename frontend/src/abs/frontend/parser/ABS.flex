@@ -66,6 +66,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "module"       { return sym(Terminals.MODULE); }
  "import"       { return sym(Terminals.IMPORT); }
  "export"       { return sym(Terminals.EXPORT); }
+ "from"         { return sym(Terminals.FROM); }
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"     { return sym(Terminals.EXTENDS); }
