@@ -46,7 +46,8 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
 //Identifiers defined using character classes 
-Identifier  = [:letter:] ([:letter:] | [:digit:] | "_")*																 
+Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
+TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*																 
 
 IntLiteral = 0 | [1-9][0-9]*
 
@@ -132,6 +133,7 @@ IntLiteral = 0 | [1-9][0-9]*
 
 <YYINITIAL> {
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
+    {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
 	{Comment}     { /* discard token */ }
 	{WhiteSpace}  { /* discard token */ }
 }

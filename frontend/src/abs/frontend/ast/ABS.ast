@@ -8,7 +8,7 @@ CompilationUnit ::= <Name> ModuleDecl* ;
 ModuleDecl ::= Name:Name Export* Import* Decl* [Block:MainBlock] ;
 
 abstract Import;
-NamedImport ::= Name* ;
+NamedImport : Import ::= Name* ;
 StarImport : Import;
 
 abstract Export;

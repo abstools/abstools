@@ -83,13 +83,41 @@ List module_decl_list =
 
   
 Name module_name =
-    MODULE name.n SEMICOLON {: return n; :}
+    MODULE type_name.n SEMICOLON {: return n; :}
   ; 
 
-
+Name simple_type_name =
+  TYPE_IDENTIFIER.id      {: return new SimpleName(id); :}
+;
+        
 Name name =
-    IDENTIFIER.id {: return new SimpleName(id); :}
-    | name.qn COLON IDENTIFIER.n {: 
+	IDENTIFIER.id      {: return new SimpleName(id); :}
+  | qualified_name
+;
+
+Name type_name =
+    simple_type_name
+  | qualified_type_name 
+;
+
+Name any_name = 
+    name 
+  | type_name
+;
+
+
+Name qualified_name =
+    type_name.qn DOT IDENTIFIER.n {: 
+    	if (qn instanceof SimpleName) {
+    		return new QualifiedName(new List().add((SimpleName)qn).add(new SimpleName(n)));
+    	} else {
+      		return new QualifiedName(((QualifiedName)qn).getSimpleNames().add(new SimpleName(n)));
+        } 
+      :}
+  ;
+
+Name qualified_type_name =
+    type_name.qn DOT TYPE_IDENTIFIER.n {: 
     	if (qn instanceof SimpleName) {
     		return new QualifiedName(new List().add((SimpleName)qn).add(new SimpleName(n)));
     	} else {
@@ -99,12 +127,12 @@ Name name =
   ;
   
 Export export =
-  EXPORT name_list.l SEMICOLON {: return new NamedExport(l); :}
+  EXPORT any_name_list.l SEMICOLON {: return new NamedExport(l); :}
   | EXPORT MULT SEMICOLON {: return new StarExport(); :}
 ;
 
 Import import =
-  IMPORT name_list.l SEMICOLON {: return new NamedImport(l); :}
+  IMPORT any_name_list.l SEMICOLON {: return new NamedImport(l); :}
   | IMPORT MULT SEMICOLON {: return new StarImport(); :}
 ;
 
@@ -118,9 +146,9 @@ List import_list =
   | import_list.l import.t	{: return l.add(t); :}
 ;
 
-List name_list =
-    name.n {: return new List().add(n); :}
-  | name_list.l COMMA name.n {: return l.add(n); :}
+List any_name_list =
+    any_name.n {: return new List().add(n); :}
+  | any_name_list.l COMMA name.n {: return l.add(n); :}
 ;
 
 
@@ -136,19 +164,12 @@ Decl decl =
 	|	interface_decl
 	|	class_decl
 	;
-// The above is equivalent to the more explicit:  
-// Decl decl =
-// 		class_decl.i		{: return i; :}
-// 	| ...
-// 	;
 
-// Main model block
 // Same as other blocks, but a different class for code-generation purposes.
 MainBlock main_block =
     annotation_list.al? LBRACE stmt_list.s? RBRACE     {: return new MainBlock(al, s); :}
     ;    
 
-//Program block
 //used in init blocks and method body
 Block block	=
 	annotation_list.al? LBRACE stmt_list.s?  RBRACE	{: return new Block(al, s) ; :}
@@ -164,12 +185,14 @@ VarDecl var_decl =
     ;
 
 DataTypeDecl  datatype_decl = 
-	annotation_list.al? DATA IDENTIFIER datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON {: return new ParametricDataTypeDecl(IDENTIFIER, l, al, p); :}
-   | annotation_list.al? DATA IDENTIFIER datatypeparam_list_decl.p? SEMICOLON {: return new ParametricDataTypeDecl(IDENTIFIER, new List<DataConstructor>(), al, p); :}
+	annotation_list.al? DATA TYPE_IDENTIFIER.id datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON 
+	{: return new ParametricDataTypeDecl(id, l, al, p); :}
+   | annotation_list.al? DATA TYPE_IDENTIFIER.id datatypeparam_list_decl.p? SEMICOLON 
+    {: return new ParametricDataTypeDecl(id, new List<DataConstructor>(), al, p); :}
   ;
 
 TypeSynDecl  typesyn_decl = 
-	annotation_list.al? TYPE IDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
+	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
 
@@ -181,12 +204,14 @@ FunctionDecl  function_decl =
 	; 
 
 InterfaceDecl interface_decl =
-  annotation_list.al? INTERFACE IDENTIFIER extends_interfaces.i? LBRACE methodsig_list.l? RBRACE {: return new InterfaceDecl(IDENTIFIER, al, i, l); :}
+  annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE 
+  {: return new InterfaceDecl(id, al, i, l); :}
   ;
 
 
 ClassDecl class_decl =
-	annotation_list.annotations? CLASS IDENTIFIER param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE {: return new ClassDecl(IDENTIFIER, annotations, params,  i, init_block, fields, methods); :}
+	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE 
+	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
   ;
 
 List data_constructor_list =
@@ -195,7 +220,7 @@ List data_constructor_list =
   ;
 
 DataConstructor data_constructor = 
-	IDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
+	TYPE_IDENTIFIER.co  data_constructor_params.p? {: return new DataConstructor(co,p) ; :} 
 	;
 
 List data_constructor_params = 
@@ -218,25 +243,25 @@ List annotation_list =
      ;
 
 Annotation annotation =
-    LBRACKET IDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
+    LBRACKET TYPE_IDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
     ;
 
 InterfaceTypeUse ifname =
-    name.n {: return new InterfaceTypeUse(n) ; :}
+    type_name.n {: return new InterfaceTypeUse(n) ; :}
     ;
 
 DataTypeUse datatypeuse =
-	  name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
-	| name.n {: return new DataTypeUse(n); :}
+	  type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
+	| type_name.n {: return new DataTypeUse(n); :}
     ;
 
 TypeParameterDecl datatypeparam =
-    IDENTIFIER {: return new TypeParameterDecl(IDENTIFIER); :}
+    TYPE_IDENTIFIER.id {: return new TypeParameterDecl(id); :}
     ;
 
 Access type_exp =
-	  name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
-	| name.id 		{: return new UnresolvedTypeUse(id); :}
+	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
+	| type_name.id 		{: return new UnresolvedTypeUse(id); :}
 	;	
 
 //fix class_var --> field
@@ -301,19 +326,25 @@ MethodImpl method =
     ;
 
 MethodSig methodsig =
-	annotation_list.al? type_exp.returntype IDENTIFIER LPAREN  param_decl_list.params? RPAREN       {: return new MethodSig(IDENTIFIER, al, returntype,params); :}
+	annotation_list.al? type_exp.returntype IDENTIFIER.id LPAREN  param_decl_list.params? RPAREN       
+	{: return new MethodSig(id, al, returntype,params); :}
     ;
 
-
 PureExp pure_exp =
-	  var_ref
-//	| qual_name.n {: return new UnresolvedExp(n); :} // data constructor exp
+	  var_or_field_ref   
     | NULL                 {: return new NullExp() ; :}
-	| let_exp
+	| let_exp  
+	| constructor_exp
 	| fnapp_exp
     | fnapp_list_exp
     | case_exp
     ;
+
+PureExp var_or_field_ref =
+      THIS                {: return new ThisExp() ; :}
+	| THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
+    | IDENTIFIER.n {: return new VarUse(n); :} 
+	;
 
 FnApp fnapp_list_exp = 
     name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
@@ -322,6 +353,13 @@ FnApp fnapp_list_exp =
 FnApp fnapp_exp =
 	name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
     ;
+
+DataConstructorExp constructor_exp =
+	  type_name.f LPAREN data_exp_list.l? RPAREN {: return new DataConstructorExp(f, l) ; :}
+	| type_name.f {: return new DataConstructorExp(f, new List()) ; :}
+    ;
+
+    
 CaseExp case_exp = 
 	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
 ;
@@ -426,12 +464,20 @@ CaseBranch case_branch =
 	pattern.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
 	; 
 
-Pattern pattern = 
-	  name.v  {: return new UnresolvedPattern(v) ; :}
-	| name.co LPAREN pattern_list.l? RPAREN     {: return new ConstructorPattern(co,l); :}
+Pattern pattern =
+ 	  IDENTIFIER.v  {: return new PatternVarUse(v) ; :}
+	| constructor_pattern 
 	| literal.l  	{: return new LiteralPattern(l) ; :}
 //  | LPAREN pattern.left COMMA pattern.right RPAREN  {: return new PatternPair(left,right) ; :}
 	| USCORE {: return new UnderscorePattern() ; :}
+	;
+
+Pattern constructor_pattern = 
+	type_name.co pattern_params.p? {: return new ConstructorPattern(co,p) ; :} 
+	;
+
+List pattern_params = 
+	LPAREN pattern_list.l? RPAREN     {: return l; :}
 	;
 
 List pattern_list =
@@ -439,31 +485,21 @@ List pattern_list =
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
 
-PureExp var_ref =
-      THIS                {: return new ThisExp() ; :}
-	| THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
-    | name.n {: return new UnresolvedExp(n); :}
-	;
-
 Exp exp = 
-	  eff_exp 
-	| data_exp
+	  eff_exp.e   {: return e; :}
+	| data_exp.e  {: return e; :}
 	;
-
-GetExp get_exp =
-    pure_exp.p DOT GET             {: return new GetExp(p) ; :}
-    ;
 
 Exp eff_exp = 
-    new_exp 
+    pure_exp.p DOT GET    {: return new GetExp(p) ; :}
+    | new_exp 
 	| async_call 
 	| sync_call
-    | get_exp
 	; 
 
 NewExp new_exp = 
-	  NEW name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
-	| NEW COG.c name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
+	  NEW type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
+	| NEW COG.c type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
 	;
 
 AsyncCall async_call = 
@@ -498,7 +534,7 @@ Stmt return_stmt =
 	;
 
 Guard guard = 	
-	  var_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
+	  var_or_field_ref.r QMARK        {: return new ClaimGuard(r) ; :} 
 	| data_exp.e    {: return new ExpGuard(e) ; :} 
 	| guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :} 
 	;
@@ -514,7 +550,7 @@ WhileStmt while_stmt =
 	;
 
 AssignStmt assign_stmt =  
-	annotation_list.al? var_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(al,r,e) ; :} 
+	annotation_list.al? var_or_field_ref.r ASSIGN exp.e SEMICOLON        {: return new AssignStmt(al,r,e) ; :} 
 	;	
 
 List stmt_list =

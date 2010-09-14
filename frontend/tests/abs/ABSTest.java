@@ -12,7 +12,7 @@ import abs.frontend.parser.Main;
 public class ABSTest {
 
     protected Model assertParseOk(String s, boolean withStdLib) {
-    	s = "module unittest; "+s;
+    	s = "module UnitTest; "+s;
         Model p = null;
         try {
             p = Main.parseString(s, withStdLib);

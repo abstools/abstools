@@ -269,7 +269,18 @@ public class ParserTest extends FrontendTest {
 				assertParseOk("{ x = null; x = y.get ; x = y ; } ");
 				
 	}
+	
+	@Test
+	public void moduleDeclQualName() {
+		assertParseOk("module ABS.Lang;");
+	}
 
+	@Test
+	public void importQual() {
+		assertParseOk("import ABS.Test;");
+	}
+	
+	
 	protected void assertParseError(String s) {
 	    assertParseError(s,false,false);
 	}
