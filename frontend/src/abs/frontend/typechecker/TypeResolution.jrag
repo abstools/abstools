@@ -7,6 +7,7 @@ aspect TypeResolution {
     syn boolean Decl.isFunction() = false;
     syn boolean Decl.isClass() = false;
     syn boolean Decl.isDataType() = false;
+    syn boolean Decl.isDataConstructor() = false;
     syn boolean Decl.isInterface() = false;
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
@@ -15,8 +16,23 @@ aspect TypeResolution {
     eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
     eq DataTypeDecl.isDataType() = true;
+    eq DataConstructor.isDataConstructor() = true;
     eq TypeSynDecl.isTypeSyn() = true;
     eq TypeParameterDecl.isTypeParameter() = true;
+  
+    syn List Name.toNameList();
+    eq SimpleName.toNameList() = new List().add(new SimpleName(this.getName()));
+    eq QualifiedName.toNameList() {
+       List res = new List();
+       for (SimpleName n : getSimpleNames()) {
+           res.add(new SimpleName(n.getName()));
+       }
+       return res;
+    }
+  
+    syn Boolean Name.isSimple();
+    eq SimpleName.isSimple() = true;
+    eq QualifiedName.isSimple() = false;
   
     syn lazy String Name.getString();
     
@@ -32,13 +48,39 @@ aspect TypeResolution {
     }
   
     syn String Name.toString() = getString();
-    syn String Name.getLastName();
-    syn String SimpleName.getLastName() = getName();
-    syn String QualifiedName.getLastName() {
-    	return getSimpleName(getNumSimpleName()-1).getName();
+    syn SimpleName Name.getLastName();
+    syn SimpleName SimpleName.getLastName() = this;
+    syn SimpleName QualifiedName.getLastName() {
+    	return getSimpleName(getNumSimpleName()-1);
+    }
+    syn Name QualifiedName.getModuleName() {
+    	ArrayList<String> res = new ArrayList<String>();
+        for (int i=0; i < getNumSimpleName()-1; i++) {
+            SimpleName n = getSimpleName(i);
+        	res.add(n.getName());
+        }
+		return QualifiedNameUtil.create(res);
     }
   
     // Declaration of *decl*
+
+
+	syn lazy Collection<QualifiedName> ModuleDecl.getExportedNames() {
+	   ArrayList<QualifiedName> res = new ArrayList<QualifiedName>();
+	   for (Export e : this.getExports()) {
+		   if (e instanceof StarExport) {
+			   for (Decl d : this.getDeclList()) {
+				   res.add(QualifiedNameUtil.create(this.getName(), d.getName()));
+			   }
+		   } else if (e instanceof NamedExport) {
+			   NamedExport ne = (NamedExport) e;
+			   for (Name n : ne.getNames()) {
+				   res.add(TypeCheckerHelper.getImportedName(this,n));
+			   }
+		   }
+	   }
+	   return res;
+	}
 
     syn lazy Collection<Decl> Model.getDecls() {
         ArrayList<Decl> res = new ArrayList<Decl>();
@@ -78,32 +120,95 @@ aspect TypeResolution {
     //   Definitions of *decl*
     eq TypeUse.getDecl() = lookup(getName());
     
+    syn lazy ModuleDecl Model.lookupModule(Name name) {
+    	for (CompilationUnit u : getCompilationUnits()) {
+			for (ModuleDecl d : u.getModuleDecls()) {
+				if (d.getName().equals(name)) {
+					return d;
+				}
+			}    			
+    	}
+    	return null;
+    }
+    
+    inh ModuleDecl CompilationUnit.lookupModule(Name name);
+    inh ModuleDecl ModuleDecl.lookupModule(Name name);
+    eq CompilationUnit.getModuleDecl().lookupModule(Name name) = lookupModule(name);
+    eq Model.getCompilationUnit().lookupModule(Name name) = lookupModule(name);
+    
+    
     syn lazy Decl Model.lookup(Name name) = localLookup(name);
-    // Declaration of *lookup*
-    // Finds a declaration (TypeDecl) based on a name, or attribute
+
     // UnknownDecl if not found
-    //   Definitions of *lookup*
     eq Model.getCompilationUnit().lookup(Name name) = localLookup(name);
     eq ParametricDataTypeDecl.getDataConstructor().lookup(Name name) = localLookup(name);
     eq ParametricFunctionDecl.getFunctionDef().lookup(Name name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(Name name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(Name name) = localLookup(name);
     
-    // ***Implementation***
-    
     // Expose *lookup* at various places in the AST
     inh Decl CompilationUnit.lookup(Name name);
+    inh Decl ModuleDecl.lookup(Name name);
     inh Decl Exp.lookup(Name name);
+    inh Decl Pattern.lookup(Name name);
     inh Decl ParametricDataTypeDecl.lookup(Name name);
     inh Decl ParametricFunctionDecl.lookup(Name name);
+
+	eq CompilationUnit.getModuleDecl(int i).lookup(Name name) {
+		ModuleDecl mod = getModuleDecl(i);
+		Decl d = mod.localLookup(name);
+		if (d != unknownDecl())
+			return d;
+			
+		Name qualName = TypeCheckerHelper.getImportedName(mod,name);
+		if (qualName != null) {			
+	    	lookup(qualName);
+	    } else {	
+	   		return unknownDecl();
+	    } 			
+	}	    
+    
+    
+    syn lazy Decl ModuleDecl.localLookup(Name name) {
+       SimpleName simpleName = null; 
+       if (!name.isSimple()) {
+          Name moduleName = ((QualifiedName)name).getModuleName();
+          if (moduleName.toString().equals(getName().toString())) {
+          	 simpleName = name.getLastName();
+          }
+       } else {
+         simpleName = (SimpleName) name;
+       }
+       
+       if (simpleName != null) {
+          for (Decl d : getDecls()) {
+            if (d.getName().equals(simpleName.getName()))
+		        return d;       
+		        
+            if (d instanceof DataTypeDecl) {
+                DataTypeDecl dataDecl = (DataTypeDecl)d;
+                for (DataConstructor c : dataDecl.getDataConstructors()) {
+                    if (c.getName().equals(simpleName.getName())) {
+                        return c;
+                    }
+                }
+            }
+		        
+		  }
+       }
+       return unknownDecl();
+    }
     
     // *localLookup* - look through the global declarations in the model
     syn lazy Decl Model.localLookup(Name name) {
-        for (Decl d : getDecls())
-            if (d.getName().equals(name))
-                return d;
-        return unknownDecl();
+    	if (name.isSimple())
+    	    return unknownDecl();
+    	QualifiedName qn = (QualifiedName) name;
+    	ModuleDecl md = lookupModule(qn.getModuleName());
+    	return md.localLookup(name);
     }
+    
+    
     // look through local declarations in parametric datatype, or defer
     // to model
     syn lazy Decl ParametricDataTypeDecl.localLookup(Name name) {
@@ -135,36 +240,12 @@ aspect TypeResolution {
     
     syn lazy Decl FnApp.getDecl() = lookup(getName());
     
-    inh lazy DataTypeDecl DataConstructor.getDecl();
-    eq DataTypeDecl.getDataConstructor().getDecl() = this;
+    inh lazy DataTypeDecl DataConstructor.getDataTypeDecl();
+    eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
+    eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
     
-    syn lazy DataConstructor Model.localLookupDataConstructor(Name name) {
-        for (Decl d : getDecls()) {
-            if (d instanceof DataTypeDecl) {
-                DataTypeDecl dataDecl = (DataTypeDecl)d;
-                for (DataConstructor c : dataDecl.getDataConstructors()) {
-                    if (c.getName().equals(name)) {
-                        return c;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    
-    syn lazy DataConstructor Model.lookupDataConstructor(Name name);
-    eq Model.lookupDataConstructor(Name name) = localLookupDataConstructor(name);
-    //eq Model.getDecl().lookupDataConstructor(Name name) = localLookupDataConstructor(name);
-    //eq Model.getBlock().lookupDataConstructor(Name name) = localLookupDataConstructor(name);
-    
-    inh DataConstructor CompilationUnit.lookupDataConstructor(Name name);
-    eq Model.getCompilationUnit().lookupDataConstructor(Name name) = localLookupDataConstructor(name);
-
-    inh DataConstructor DataConstructorExp.lookupDataConstructor(Name name);
-    inh DataConstructor Pattern.lookupDataConstructor(Name name);
-    
-    syn lazy DataConstructor DataConstructorExp.getDecl() {
-        return lookupDataConstructor(this.getConstructor());
+    syn lazy Decl DataConstructorExp.getDecl() {
+        return lookup(this.getConstructor());
     }
     
     syn lazy Decl Decl.getContextDecl() = this;

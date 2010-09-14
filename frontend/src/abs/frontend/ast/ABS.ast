@@ -24,6 +24,7 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 UnknownDecl:	TypeDecl;		// Unknown declarations
 ClassDecl:		BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
+DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
@@ -73,9 +74,6 @@ Constructors occur as
 - patterns as in Co(_p_)
 - Don't know yet how to organise these.   
 */
-
-abstract Constructor ::= <Name>; 
-DataConstructor : Constructor ::= ConstructorArg:DataTypeUse* ;
 
 Annotation      ::= <Name> Value:PureExp;
 

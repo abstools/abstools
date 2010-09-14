@@ -15,6 +15,7 @@ import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.LetExp;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.NegExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PatternVar;
@@ -126,10 +127,14 @@ public class VarResolutionTest extends FrontendTest {
     @Test
     public void testFieldUse() {
         Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
-        ClassDecl d = (ClassDecl) m.localLookup(QualifiedNameUtil.create("C"));
+        ClassDecl d = (ClassDecl) getTestModule(m).localLookup(QualifiedNameUtil.create("C"));
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(f, ((FieldUse)s.getRetExp()).getDecl());
     }
+
+	private ModuleDecl getTestModule(Model m) {
+		return m.getCompilationUnit(1).getModuleDecl(0);
+	}
     
 }

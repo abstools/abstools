@@ -31,6 +31,8 @@ aspect GenerateMaude {
 
 	abstract public void Decl.generateMaude(PrintStream stream);
 
+    public void DataConstructor.generateMaude(PrintStream stream) { }
+
 	public void InterfaceDecl.generateMaude(PrintStream stream) {
 		stream.println("*** Interface code ...");
 	}

@@ -486,11 +486,12 @@ aspect TypeChecker {
     }
     
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
-   	 DataConstructor c = getDecl();
-   	 if (c == null) {
+   	 Decl decl = getDecl();
+   	 if (decl == null || !(decl instanceof DataConstructor)) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    	 } else {
-    	   if (c.getDecl() instanceof ParametricDataTypeDecl) {
+   	 	DataConstructor c = (DataConstructor) decl;
+    	   if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
    	   	TypeCheckerHelper.typeCheckMatchingParams(e,this,c,getParams());
    	   } else {
     	     TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
@@ -528,15 +529,17 @@ aspect TypeChecker {
     }
     
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
-   	 DataConstructor c = lookupDataConstructor(getConstructor());
-   	 if (c == null) {
+   	 Decl decl = lookup(getConstructor());
+   	 if (decl == null || !(decl instanceof DataConstructor)) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    		 return;
    	 }
+	DataConstructor c = (DataConstructor) decl;
   	 if (c.getNumConstructorArg() != this.getNumParam()) {
    		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
    		 return;
    	 }
+
 
      DataTypeType myType = (DataTypeType) getType();
      

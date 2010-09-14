@@ -1,23 +1,35 @@
 package abs.frontend.typechecker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import abs.common.QualifiedNameUtil;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeUse;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
+import abs.frontend.ast.Export;
+import abs.frontend.ast.Import;
 import abs.frontend.ast.List;
+import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.Name;
+import abs.frontend.ast.NamedExport;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.QualifiedName;
+import abs.frontend.ast.SimpleName;
+import abs.frontend.ast.StarExport;
+import abs.frontend.ast.StarImport;
 import abs.frontend.ast.TypeParameterDecl;
 
 public class TypeCheckerHelper {
@@ -239,5 +251,22 @@ public class TypeCheckerHelper {
    			}
    		}
    	}
+   }
+
+   public static QualifiedName getImportedName(ModuleDecl mod, Name name) {
+	   for (Import i : mod.getImports()) {
+		   if (name.isSimple()) {
+			   SimpleName simpleName = (SimpleName) name;
+			   if (i instanceof StarImport) {
+				   StarImport si = (StarImport) i;
+				   ModuleDecl md = mod.lookupModule(si.getModuleName());
+				   QualifiedName qn = QualifiedNameUtil.create(md.getName(), simpleName);
+				   if (md.getExportedNames().contains(qn)) {
+					   return qn;
+				   }
+			   }
+		   }
+	   }
+	   return null;
    }
 }

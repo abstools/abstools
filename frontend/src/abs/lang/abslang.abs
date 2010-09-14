@@ -1,5 +1,5 @@
 //data type declarations 
-module abs.lang;
+module ABS.StdLib;
 
 data Unit = Unit;               // builtin  
 data String;                    // builtin  

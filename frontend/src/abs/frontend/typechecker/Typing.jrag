@@ -59,6 +59,7 @@ aspect Typing {
     
     eq ClassDecl.getType() = new UnionType(getName(), getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
+    eq DataConstructor.getType() = getDataTypeDecl().getType();
 
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);
@@ -192,10 +193,11 @@ aspect Typing {
    	 }
     }
     eq DataConstructorExp.getType() {
-   	 DataConstructor d = lookupDataConstructor(this.getConstructor());
-   	 if (d == null) return UnknownType.INSTANCE;
+   	 Decl decl = lookup(this.getConstructor());
+   	 if (decl == null || !(decl instanceof DataConstructor)) return UnknownType.INSTANCE;
 
-   	 DataTypeDecl dataDecl = d.getDecl();
+	 DataConstructor d = (DataConstructor) decl;
+   	 DataTypeDecl dataDecl = d.getDataTypeDecl();
    	 Type declaredResultType = dataDecl.getType();
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
    		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromDataTypeUse(d.getConstructorArgs(),getParams());
@@ -231,8 +233,9 @@ aspect Typing {
         return getPatternExpType();
     }
     eq ConstructorPattern.getParam(int i).getInhType() {
-        DataConstructor d = lookupDataConstructor(this.getConstructor());
-        if (d == null) return UnknownType.INSTANCE;
+        Decl decl = lookup(this.getConstructor());
+        if (decl == null || !(decl instanceof DataConstructor)) return UnknownType.INSTANCE;
+        DataConstructor d = (DataConstructor) decl;
         if (i >= d.getNumConstructorArg()) 
             return UnknownType.INSTANCE;
 

@@ -54,6 +54,8 @@ aspect GenerateJava {
     
     abstract void Decl.generateJava(PrintStream stream);
 
+    public void DataConstructor.generateJava(PrintStream stream) { }
+
     public void InterfaceDecl.generateJava(PrintStream stream) {
         stream.print("interface "+getName()+" extends "+ABSInterface.class.getName());
         for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
@@ -698,8 +700,8 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        DataConstructor c = lookupDataConstructor(this.getConstructor());
-        DataTypeDecl decl = c.getDecl();
+        DataConstructor c = (DataConstructor) lookup(this.getConstructor());
+        DataTypeDecl decl = c.getDataTypeDecl();
         String name = decl.getName();
         if (name.equals("Bool")) {
             stream.print(ABSBool.class.getName());
