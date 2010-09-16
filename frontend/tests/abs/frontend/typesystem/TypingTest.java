@@ -96,7 +96,7 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testFieldUse() {
         Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
-        ClassDecl d = (ClassDecl) m.localLookup(QualifiedNameUtil.create("C"));
+        ClassDecl d = (ClassDecl) m.localLookup(QualifiedNameUtil.createFromDottedString("UnitTest.C"));
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(f.getType(), s.getRetExp().getType());

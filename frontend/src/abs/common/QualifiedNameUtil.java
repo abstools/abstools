@@ -20,6 +20,10 @@ public class QualifiedNameUtil {
         return new QualifiedName(names);
     }
 
+    public static Name createFromDottedString(String s) {
+    	return create(s.split("\\.")); 
+    }
+    
     public static Name create(Collection<String> name) {
     	return create(name.toArray(new String[0]));
     }

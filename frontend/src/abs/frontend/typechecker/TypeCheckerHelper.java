@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import abs.common.Constants;
 import abs.common.QualifiedNameUtil;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -253,8 +254,19 @@ public class TypeCheckerHelper {
    	}
    }
 
+   public static <A extends ASTNode<?>> Collection<A> prepend(A a, List<A> list) {
+	   ArrayList<A> res = new ArrayList<A>();
+	   res.add(a);
+	   for (A x : list) {
+		   res.add(x);
+	   }
+	   return res;
+   }
+   
+   static final StarImport STDLIB_IMPORT = new StarImport(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME));
+   
    public static QualifiedName getImportedName(ModuleDecl mod, Name name) {
-	   for (Import i : mod.getImports()) {
+	   for (Import i : prepend(STDLIB_IMPORT,mod.getImports())) {
 		   if (name.isSimple()) {
 			   SimpleName simpleName = (SimpleName) name;
 			   if (i instanceof StarImport) {

@@ -1,16 +1,18 @@
 //$Id$ 
 //
  
+// needed for lists of strings
+Name ::= <Name>;
 
 Model                         ::= CompilationUnit*;
  
 CompilationUnit ::= <Name> ModuleDecl* ;
-ModuleDecl ::= Name:Name Export* Import* Decl* [Block:MainBlock] ;
+ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock] ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
-StarImport : Import ::= ModuleName:Name;
-FromImport : Import ::= SimpleName* ModuleName:Name;
+StarImport : Import ::= <ModuleName>;
+FromImport : Import ::= Name* <ModuleName>;
 
 abstract Export;
 NamedExport: Export ::= Name* ;
@@ -32,9 +34,6 @@ TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
 
-abstract Name;
-QualifiedName : Name ::= SimpleName*;
-SimpleName : Name ::= <Name>;
 
 abstract	VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
@@ -53,11 +52,11 @@ MethodImpl  ::= MethodSig Block;
 
 // Uses of various identifiers
 abstract Access:		PureExp;
-abstract IdUse:			Access	::= Name:Name;
+abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
-ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; // FIXME: should be TypeParameterUse - fix in ABS.parser as well
+ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; 
 TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: Access ::= <Name>;
 VarUse:					VarOrFieldUse;
@@ -123,27 +122,27 @@ abstract LiteralExp: PureExp;
 StringLiteral: LiteralExp  ::= <Content> ;
 IntLiteral: LiteralExp ::= <Content>;        
 
-DataConstructorExp : PureExp  ::= Constructor:Name Param:PureExp* ;
+DataConstructorExp : PureExp  ::= <Constructor> Param:PureExp* ;
 LetExp  : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ; 
-FnApp  : PureExp ::= Name:Name Param:PureExp* ;
+FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
-UnresolvedExp : PureExp ::= Name:Name;
+UnresolvedExp : PureExp ::= <Name>;
 
 //Patterns 
 abstract Pattern ; 
 
 PatternVarUse:    Pattern ::= <Name>;
 PatternVar:			Pattern ::= Var:PatternVarDecl; 
-ConstructorPattern: Pattern ::= Constructor:Name Param:Pattern*;
+ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
 LiteralPattern:		Pattern ::= Literal:LiteralExp;
 //PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
 UnderscorePattern:	Pattern; 
-UnresolvedPattern:  Pattern ::= Name;
+UnresolvedPattern:  Pattern ::= <Name>;
 
 
 // Expressions with side effects. 
-NewExp: EffExp			::= ClassName:Name Param:PureExp* <Cog> ; //todo, optional cog 
+NewExp: EffExp			::= <ClassName> Param:PureExp* <Cog> ; //todo, optional cog 
 abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;

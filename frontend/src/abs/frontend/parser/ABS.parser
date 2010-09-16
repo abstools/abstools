@@ -82,18 +82,18 @@ List module_decl_list =
   ;
 
   
-Name module_name_decl =
+String module_name_decl =
     MODULE module_name.n SEMICOLON {: return n; :}
   ; 
 
-Name module_name = type_name ;
+String module_name = type_name ;
 
-SimpleName simple_type_name =
-  TYPE_IDENTIFIER.id      {: return new SimpleName(id); :}
+String simple_type_name =
+  TYPE_IDENTIFIER.id      {: return id; :}
 ;
         
-SimpleName simple_name =
-    IDENTIFIER.id  {: return new SimpleName(id); :}  
+String simple_name =
+    IDENTIFIER.id  {: return id; :}  
 ;
         
 Name name =
@@ -113,23 +113,11 @@ Name any_name =
 
 
 Name qualified_name =
-    type_name.qn DOT IDENTIFIER.n {: 
-    	if (qn instanceof SimpleName) {
-    		return new QualifiedName(new List().add((SimpleName)qn).add(new SimpleName(n)));
-    	} else {
-      		return new QualifiedName(((QualifiedName)qn).getSimpleNames().add(new SimpleName(n)));
-        } 
-      :}
+    type_name.qn DOT IDENTIFIER.n {: return qn + "." + n; :}
   ;
 
 Name qualified_type_name =
-    type_name.qn DOT TYPE_IDENTIFIER.n {: 
-    	if (qn instanceof SimpleName) {
-    		return new QualifiedName(new List().add((SimpleName)qn).add(new SimpleName(n)));
-    	} else {
-      		return new QualifiedName(((QualifiedName)qn).getSimpleNames().add(new SimpleName(n)));
-        } 
-      :}
+    type_name.qn DOT TYPE_IDENTIFIER.n {: return qn + "." + n; :} 
   ;
   
 Export export =
@@ -155,7 +143,7 @@ List import_list =
 
 List any_name_list =
     any_name.n {: return new List().add(n); :}
-  | any_name_list.l COMMA any_name.n {: return l.add(n); :}
+  | any_name_list.l COMMA any_name.n {: return l.add(new Name(n)); :}
 ;
 
 List decl_list =
@@ -267,7 +255,7 @@ TypeParameterDecl datatypeparam =
 
 Access type_exp =
 	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
-	| type_name.id 		{: return new UnresolvedTypeUse(id); :}
+	| type_name.id 		{: return new DataTypeUse(id); :}
 	;	
 
 //fix class_var --> field

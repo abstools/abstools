@@ -5,11 +5,11 @@ import java.util.Map;
 
 aspect Typing {
     
-    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Unit")));
-    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Int")));
-    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Bool")));
-    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("String")));
-    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.create("Fut")), typeArg);
+    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Unit")));
+    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Int")));
+    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Bool")));
+    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".String")));
+    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Fut")));
 
     eq Model.getCompilationUnit().getUnitType() = getUnitType();
     eq Model.getCompilationUnit().getIntType() = getIntType();
