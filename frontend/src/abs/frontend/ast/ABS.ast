@@ -127,7 +127,6 @@ LetExp  : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
 FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
-UnresolvedExp : PureExp ::= <Name>;
 
 //Patterns 
 abstract Pattern ; 
@@ -138,7 +137,6 @@ ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
 LiteralPattern:		Pattern ::= Literal:LiteralExp;
 //PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
 UnderscorePattern:	Pattern; 
-UnresolvedPattern:  Pattern ::= <Name>;
 
 
 // Expressions with side effects. 

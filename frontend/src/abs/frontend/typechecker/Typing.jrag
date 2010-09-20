@@ -1,15 +1,20 @@
 import abs.common.*;
 
 import abs.frontend.typechecker.*;
+import abs.frontend.typechecker.KindedName.Kind;
 import java.util.Map;
 
 aspect Typing {
     
-    syn Type Model.getUnitType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Unit")));
-    syn Type Model.getIntType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Int")));
-    syn Type Model.getBoolType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Bool")));
-    syn Type Model.getStringType() = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".String")));
-    syn lazy Type Model.getFutType(Type typeArg) = new DataTypeType((DataTypeDecl)lookup(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME+".Fut")));
+    syn Type Model.getStdDataType(String n) =
+    	new DataTypeType((DataTypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n)));
+    
+    
+    syn Type Model.getUnitType() = getStdDataType("Unit");
+    syn Type Model.getIntType() = getStdDataType("Int");
+    syn Type Model.getBoolType() = getStdDataType("Bool");
+    syn Type Model.getStringType() = getStdDataType("String");
+    syn lazy Type Model.getFutType(Type typeArg) = getStdDataType("Fut");
 
     eq Model.getCompilationUnit().getUnitType() = getUnitType();
     eq Model.getCompilationUnit().getIntType() = getIntType();
@@ -94,8 +99,6 @@ aspect Typing {
     
     syn lazy Type Exp.getType();
     
-    eq UnresolvedExp.getType() = UnknownType.INSTANCE;
-    
     eq AsyncCall.getType() {  
         return getFutType(getCallType());
     }
@@ -135,7 +138,7 @@ aspect Typing {
    	 return dt.getTypeArg(0);
     }
     eq NewExp.getType() {
-        Decl d = lookup(getClassName());
+        Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
     }
@@ -180,7 +183,7 @@ aspect Typing {
    	 return mostGeneralType;
     }
     eq FnApp.getType() {
-       Decl d = lookup(getName());
+       Decl d = lookup(new KindedName(Kind.FUN,getName()));
        if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
    	 
    	 Type declaredResultType = ((FunctionDecl)d).getTypeUse().getType();
@@ -193,10 +196,8 @@ aspect Typing {
    	 }
     }
     eq DataConstructorExp.getType() {
-   	 Decl decl = lookup(this.getConstructor());
-   	 if (decl == null || !(decl instanceof DataConstructor)) return UnknownType.INSTANCE;
 
-	 DataConstructor d = (DataConstructor) decl;
+	 DataConstructor d = getDataConstructor();
    	 DataTypeDecl dataDecl = d.getDataTypeDecl();
    	 Type declaredResultType = dataDecl.getType();
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
@@ -226,14 +227,13 @@ aspect Typing {
     eq PatternVar.getType() = getInhType();  
     eq UnderscorePattern.getType() = AnyType.INSTANCE;
     eq LiteralPattern.getType() = getLiteral().getType();
-    eq UnresolvedPattern.getType() = UnknownType.INSTANCE;
     
     inh Type Pattern.getInhType();
     eq CaseBranch.getLeft().getInhType() {
         return getPatternExpType();
     }
     eq ConstructorPattern.getParam(int i).getInhType() {
-        Decl decl = lookup(this.getConstructor());
+        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,this.getConstructor()));
         if (decl == null || !(decl instanceof DataConstructor)) return UnknownType.INSTANCE;
         DataConstructor d = (DataConstructor) decl;
         if (i >= d.getNumConstructorArg()) 

@@ -1,6 +1,7 @@
 package abs.frontend.typechecker;
 
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.typechecker.KindedName.Kind;
 
 public class ResolvedModuleName extends ResolvedName {
 	private ModuleDecl decl;
@@ -10,8 +11,13 @@ public class ResolvedModuleName extends ResolvedName {
 	}
 
 	@Override
-	public String getQualifiedString() {
-		return decl.getName().getString();
+	public KindedName getQualifiedName() {
+		return new KindedName(getKind(),decl.getName());
+	}
+	
+	@Override
+	public Kind getKind() {
+		return Kind.MODULE;
 	}
 
 	@Override

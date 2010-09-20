@@ -73,7 +73,7 @@ CompilationUnit compilation_unit =
 
 ModuleDecl module_decl = 
 	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? main_block.b?
-	  {: return new ModuleDecl(n,el,il,dl,b); :} 	
+	  {: return new ModuleDecl(n.getName(),el,il,dl,b); :} 	
   ;
 
 List module_decl_list =
@@ -82,18 +82,18 @@ List module_decl_list =
   ;
 
   
-String module_name_decl =
+Name module_name_decl =
     MODULE module_name.n SEMICOLON {: return n; :}
   ; 
 
-String module_name = type_name ;
+Name module_name = type_name ;
 
-String simple_type_name =
-  TYPE_IDENTIFIER.id      {: return id; :}
+Name simple_type_name =
+  TYPE_IDENTIFIER.id      {: return new Name(id); :}
 ;
         
-String simple_name =
-    IDENTIFIER.id  {: return id; :}  
+Name simple_name =
+    IDENTIFIER.id  {: return new Name(id); :}  
 ;
         
 Name name =
@@ -113,11 +113,11 @@ Name any_name =
 
 
 Name qualified_name =
-    type_name.qn DOT IDENTIFIER.n {: return qn + "." + n; :}
+    type_name.qn DOT IDENTIFIER.n {: return new Name(qn.getName() + "." + n); :}
   ;
 
 Name qualified_type_name =
-    type_name.qn DOT TYPE_IDENTIFIER.n {: return qn + "." + n; :} 
+    type_name.qn DOT TYPE_IDENTIFIER.n {: return new Name(qn.getName() + "." + n); :} 
   ;
   
 Export export =
@@ -126,8 +126,8 @@ Export export =
 ;
 
 Import import =
-    IMPORT MULT FROM module_name.m SEMICOLON {: return new StarImport(m); :}
-  | IMPORT any_name_list.l FROM module_name.m SEMICOLON {: return new FromImport(l,m); :}
+    IMPORT MULT FROM module_name.m SEMICOLON {: return new StarImport(m.getName()); :}
+  | IMPORT any_name_list.l FROM module_name.m SEMICOLON {: return new FromImport(l,m.getName()); :}
   | IMPORT any_name_list.l SEMICOLON {: return new NamedImport(l); :}
 ;
 
@@ -143,7 +143,7 @@ List import_list =
 
 List any_name_list =
     any_name.n {: return new List().add(n); :}
-  | any_name_list.l COMMA any_name.n {: return l.add(new Name(n)); :}
+  | any_name_list.l COMMA any_name.n {: return l.add(n); :}
 ;
 
 List decl_list =
@@ -241,12 +241,12 @@ Annotation annotation =
     ;
 
 InterfaceTypeUse ifname =
-    type_name.n {: return new InterfaceTypeUse(n) ; :}
+    type_name.n {: return new InterfaceTypeUse(n.getName()) ; :}
     ;
 
 DataTypeUse datatypeuse =
-	  type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n, p); :}
-	| type_name.n {: return new DataTypeUse(n); :}
+	  type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n.getName(), p); :}
+	| type_name.n {: return new DataTypeUse(n.getName()); :}
     ;
 
 TypeParameterDecl datatypeparam =
@@ -254,8 +254,8 @@ TypeParameterDecl datatypeparam =
     ;
 
 Access type_exp =
-	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id, p); :}
-	| type_name.id 		{: return new DataTypeUse(id); :}
+	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id.getName(), p); :}
+	| type_name.id 		{: return new DataTypeUse(id.getName()); :}
 	;	
 
 //fix class_var --> field
@@ -341,16 +341,16 @@ PureExp var_or_field_ref =
 	;
 
 FnApp fnapp_list_exp = 
-    name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f, llist) ; } :}
+    name.f list_literal_exp.l {: List<PureExp> llist = new List<PureExp>(); llist.add(l); {return new FnApp(f.getName(), llist) ; } :}
     ;
 
 FnApp fnapp_exp =
-	name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f, l) ; :}
+	name.f LPAREN data_exp_list.l? RPAREN {: return new FnApp(f.getName(), l) ; :}
     ;
 
 DataConstructorExp constructor_exp =
-	  type_name.f LPAREN data_exp_list.l? RPAREN {: return new DataConstructorExp(f, l) ; :}
-	| type_name.f {: return new DataConstructorExp(f, new List()) ; :}
+	  type_name.f LPAREN data_exp_list.l? RPAREN {: return new DataConstructorExp(f.getName(), l) ; :}
+	| type_name.f {: return new DataConstructorExp(f.getName(), new List()) ; :}
     ;
 
     
@@ -370,15 +370,15 @@ List data_exp_list =
 // to chains of constructors.
 PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
  {: { 
-        DataConstructorExp result = new DataConstructorExp(QualifiedNameUtil.create("Cons"), new List<PureExp>());
+        DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
         DataConstructorExp current = result;
         for (Object e : l) {
-            DataConstructorExp next = new DataConstructorExp(QualifiedNameUtil.create("Cons"), new List<PureExp>());
+            DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
             current.addParamNoTransform((PureExp)e);
             current.addParamNoTransform(next);
             current = next;
         }
-        current.setConstructor(QualifiedNameUtil.create("Nil"));
+        current.setConstructor("Nil");
         return result ; }
  :}
  ;
@@ -467,7 +467,7 @@ Pattern pattern =
 	;
 
 Pattern constructor_pattern = 
-	type_name.co pattern_params.p? {: return new ConstructorPattern(co,p) ; :} 
+	type_name.co pattern_params.p? {: return new ConstructorPattern(co.getName(),p) ; :} 
 	;
 
 List pattern_params = 
@@ -492,8 +492,8 @@ Exp eff_exp =
 	; 
 
 NewExp new_exp = 
-	  NEW type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,"") ; :} 
-	| NEW COG.c type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i,l,c) ; :} 
+	  NEW type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,"") ; :} 
+	| NEW COG.c type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,c) ; :} 
 	;
 
 AsyncCall async_call = 

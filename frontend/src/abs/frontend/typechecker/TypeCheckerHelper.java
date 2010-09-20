@@ -7,31 +7,31 @@ import java.util.HashSet;
 import java.util.Map;
 
 import abs.common.Constants;
-import abs.common.QualifiedNameUtil;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.Export;
+import abs.frontend.ast.FromImport;
 import abs.frontend.ast.Import;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NamedExport;
+import abs.frontend.ast.NamedImport;
 import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PureExp;
-import abs.frontend.ast.QualifiedName;
-import abs.frontend.ast.SimpleName;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
 	public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
@@ -263,22 +263,87 @@ public class TypeCheckerHelper {
 	   return res;
    }
    
-   static final StarImport STDLIB_IMPORT = new StarImport(QualifiedNameUtil.createFromDottedString(Constants.STDLIB_NAME));
+   static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
    
-   public static QualifiedName getImportedName(ModuleDecl mod, Name name) {
-	   for (Import i : prepend(STDLIB_IMPORT,mod.getImports())) {
-		   if (name.isSimple()) {
-			   SimpleName simpleName = (SimpleName) name;
-			   if (i instanceof StarImport) {
-				   StarImport si = (StarImport) i;
-				   ModuleDecl md = mod.lookupModule(si.getModuleName());
-				   QualifiedName qn = QualifiedNameUtil.create(md.getName(), simpleName);
-				   if (md.getExportedNames().contains(qn)) {
-					   return qn;
-				   }
+   public static ResolvedName resolveName(ModuleDecl mod, KindedName name) {
+	   return mod.getVisibleNames().get(name);
+   }
+   
+   public static Map<KindedName,ResolvedName> getVisibleNames(ModuleDecl mod) {
+	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
+	   ResolvedModuleName moduleName = new ResolvedModuleName(mod);
+	   
+	   for (Decl d : mod.getDeclList()) {
+		   ResolvedDeclName rn = new ResolvedDeclName(moduleName,d);
+		   res.put(rn.getSimpleName(), rn);
+		   res.put(rn.getQualifiedName(), rn);
+		   
+           if (d instanceof DataTypeDecl) {
+               DataTypeDecl dataDecl = (DataTypeDecl)d;
+               for (DataConstructor c : dataDecl.getDataConstructors()) {
+        		   rn = new ResolvedDeclName(moduleName,c);
+        		   res.put(rn.getSimpleName(), rn);
+        		   res.put(rn.getQualifiedName(), rn);
+               }
+           }
+		   
+	   }
+
+	   for (Import i : mod.getImports()) {
+		   if (i instanceof StarImport) {
+			   StarImport si = (StarImport) i;
+			   ModuleDecl md = mod.lookupModule(si.getModuleName());
+			   if (md == null) {
+				   if (!si.getModuleName().equals(Constants.STDLIB_NAME))
+						throw new TypeCheckerException(new TypeError(si,ErrorMessage.MODULE_NOT_RESOLVABLE, si.getModuleName()));
+			   } else {
+				   res.putAll(md.getExportedNames());
 			   }
+   		   } else if (i instanceof NamedImport) {
+   			   NamedImport ni = (NamedImport) i;
+   			   for (Name n : ni.getNames()) {
+   				   ModuleDecl md = mod.lookupModule(n.getModuleName());
+   				   ResolvedName rn = md.getExportedNames().get(n.getSimpleName());
+   				   res.put(rn.getSimpleName(), rn);
+   				   res.put(rn.getQualifiedName(), rn);
+   			   }
+   		   } else if (i instanceof FromImport) {
+   			   FromImport fi = (FromImport) i;
+			   ModuleDecl md = mod.lookupModule(fi.getModuleName());
+			   Map<KindedName,ResolvedName> en = md.getExportedNames();
+   			   for (Name n : fi.getNames()) {
+   				   putKindedNames(n.getString(),en,res);
+   			   }
+   		   }
+	   }
+	   return res;
+   }
+   
+   public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap, Map<KindedName, ResolvedName> targetMap) {
+	   for (Kind k : Kind.values()) {
+		   KindedName kn = new KindedName(k, name);
+		   ResolvedName rn = sourceMap.get(kn);
+		   if (rn != null) {
+			   targetMap.put(kn,rn);
 		   }
 	   }
-	   return null;
+		   
+   }
+
+   public static Map<KindedName, ResolvedName> getExportedNames(ModuleDecl mod) {
+	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
+	   for (Export e : mod.getExports()) {
+		   if (e instanceof StarExport) {
+			   res.putAll(getVisibleNames(mod));
+			   return res;
+		   } else if (e instanceof NamedExport) {
+			   NamedExport ne = (NamedExport) e;
+			   for (Name n : ne.getNames()) {
+   				   putKindedNames(n.getString(),mod.getVisibleNames(),res);
+			   }
+		   }
+		   
+	   }
+	   return res;
    }
 }

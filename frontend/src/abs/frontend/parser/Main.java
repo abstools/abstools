@@ -15,11 +15,14 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 
+import abs.common.Constants;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.StarImport;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
@@ -76,7 +79,7 @@ public class Main {
 		    }
 
 			try{
-				units.add(parseUnit(new File(file)));
+				units.add(parseUnit(new File(file), stdlib));
 				
 			} catch (FileNotFoundException e1) {
 				printErrorAndExit("File not found: " + file);
@@ -141,7 +144,7 @@ public class Main {
             System.err.println("Could not found ABS Standard Library");
             System.exit(1);
         }
-        return parseUnit(new File(url.toURI()),null,new InputStreamReader(url.openStream()));
+        return parseUnit(new File(url.toURI()),null,new InputStreamReader(url.openStream()), false);
     }
 
 
@@ -165,7 +168,7 @@ public class Main {
 
 
 
-    public static CompilationUnit parseUnit(File file) throws Exception {
+    public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
@@ -187,14 +190,14 @@ public class Main {
 			}
 		}
 
-		return parseUnit(file, null, reader); 
+		return parseUnit(file, null, reader, withStdLib); 
 	}
     
     public static Model parse(File file, boolean withStdLib) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file));
+        units.add(parseUnit(file,withStdLib));
         return new Model(units);
     }
     
@@ -202,7 +205,7 @@ public class Main {
     	List<CompilationUnit> units = new List<CompilationUnit>();
     	if (withStdLib) units.add(getStdLib());
     	for (String filename : fileNames) {
-    		units.add(parseUnit(new File(filename)));
+    		units.add(parseUnit(new File(filename), withStdLib));
     	}
     	return new Model(units);
     }
@@ -215,18 +218,24 @@ public class Main {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader));
+        units.add(parseUnit(file, sourceCode, reader,true));
         return new Model(units);
 	}
 	
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader) throws Exception {
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib) throws Exception {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
             parser.setSourceCode(sourceCode);
             parser.setFile(file);
             
-            return (CompilationUnit) parser.parse(scanner);
+            CompilationUnit u = (CompilationUnit) parser.parse(scanner);
+            if (importStdLib) {
+            	for (ModuleDecl d : u.getModuleDecls()) {
+            		d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+            	}
+            }
+            return u;
         } finally {
             reader.close();
         }

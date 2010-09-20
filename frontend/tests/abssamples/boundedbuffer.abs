@@ -4,6 +4,7 @@
  * A first non-functioning ABS program. To test core parser.  
  *
  */
+module BoundedBuffer;
 
 type Data = Int ;
 //type Buffer = DataList

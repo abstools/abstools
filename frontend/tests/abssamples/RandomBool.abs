@@ -1,3 +1,5 @@
+module Random;
+export *;
 
 interface RandomBool {
    Bool getNextBool();

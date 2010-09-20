@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import abs.common.QualifiedNameUtil;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseExp;
@@ -24,6 +23,8 @@ import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
 
 
 
@@ -127,7 +128,7 @@ public class VarResolutionTest extends FrontendTest {
     @Test
     public void testFieldUse() {
         Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
-        ClassDecl d = (ClassDecl) getTestModule(m).localLookup(QualifiedNameUtil.create("C"));
+        ClassDecl d = (ClassDecl) getTestModule(m).lookup(new KindedName(Kind.CLASS,"UnitTest.C"));
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(f, ((FieldUse)s.getRetExp()).getDecl());

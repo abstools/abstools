@@ -13,7 +13,11 @@ aspect TypeChecker {
     
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
-        typeCheck(res);
+        try {
+        	typeCheck(res);
+        } catch (TypeCheckerException e) {
+        	res.add(e.getTypeError());
+        }
         return res;
     }
     
@@ -387,9 +391,9 @@ aspect TypeChecker {
     }
     
     public void NewExp.typeCheck(SemanticErrorList e) {
-        Decl d = lookup(getClassName());
+        Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
         if (d == null || !d.isClass()) {
-            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName().getString()));
+            e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
         } else {
             ClassDecl cd = (ClassDecl) d;
             TypeCheckerHelper.typeCheckEqualParams(e,this,cd.getParams(),getParams());
@@ -529,7 +533,7 @@ aspect TypeChecker {
     }
     
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
-   	 Decl decl = lookup(getConstructor());
+   	 Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
    	 if (decl == null || !(decl instanceof DataConstructor)) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    		 return;
@@ -541,19 +545,20 @@ aspect TypeChecker {
    	 }
 
 
-     DataTypeType myType = (DataTypeType) getType();
+     Type myType = getType();
      
-     if (myType == null)
+     if (myType == null || !(myType instanceof DataTypeType))
          return;
-     
+         
   	 if (! (t instanceof DataTypeType)) {
          e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myType,t));
          return;
      }
   	 
+	 DataTypeType myDType = (DataTypeType) myType;          
   	 DataTypeType otherType = (DataTypeType) t;
-  	 if (!myType.getDecl().equals(otherType.getDecl())) {
-         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myType,t));
+  	 if (!myDType.getDecl().equals(otherType.getDecl())) {
+         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myDType,t));
          return;
   	 }
      

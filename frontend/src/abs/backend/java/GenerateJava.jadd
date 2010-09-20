@@ -470,8 +470,6 @@ aspect GenerateJava {
 
     public abstract void Exp.generateJava(PrintStream stream);
 
-	public void UnresolvedExp.generateJava(PrintStream stream) { throw new UnsupportedOperationException(); }
-
     public void AsyncCall.generateJava(PrintStream stream) {
         stream.print(ABSRuntime.class.getName()+".asyncCall(");
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());
@@ -651,8 +649,6 @@ aspect GenerateJava {
    	  stream.print(")");
     }
     
-    public void UnresolvedPattern.generateJava(PrintStream stream) { }
- 
     public void FnApp.generateJava(PrintStream stream) {
    	 
    	 // Have to explicitly type the call due to a bug in the JastAdd Java
@@ -700,13 +696,13 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        DataConstructor c = (DataConstructor) lookup(this.getConstructor());
+        DataConstructor c = getDataConstructor();
         DataTypeDecl decl = c.getDataTypeDecl();
         String name = decl.getName();
         if (name.equals("Bool")) {
             stream.print(ABSBool.class.getName());
             stream.print(".fromBoolean(");
-            stream.print(getConstructor().getLastName());
+            stream.print(c.getName().toLowerCase());
             stream.print(")");
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");

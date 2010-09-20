@@ -8,19 +8,19 @@ import abs.frontend.ast.Decl;
  * @author jan
  *
  */
-public class ResolvedEntityName extends ResolvedName {
+public class ResolvedDeclName extends ResolvedName {
 
 	private Decl decl;
 	private ResolvedModuleName moduleName;
 
-	public ResolvedEntityName(ResolvedModuleName moduleName, Decl decl) {
+	public ResolvedDeclName(ResolvedModuleName moduleName, Decl decl) {
 		this.decl = decl;
 		this.moduleName = moduleName;
 	}
 	
 	@Override
-	public String getQualifiedString() {
-		return moduleName.getQualifiedString()+"."+decl.getName();
+	public KindedName getQualifiedName() {
+		return new KindedName(getKind(),moduleName.getQualifiedString()+"."+decl.getName());
 	}
 
 	@Override
@@ -28,6 +28,7 @@ public class ResolvedEntityName extends ResolvedName {
 		return moduleName;
 	}
 
+	@Override
 	public Decl getDecl() {
 		return decl;
 	}

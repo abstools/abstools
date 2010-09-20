@@ -2,10 +2,11 @@
  * PingPong.abs -- PingPong example
  *
  */
+module PingPong;
 
 data Msg = NoMsg 
          | HelloPing 
-         | Hello(Ping p)
+         | Hello(Ping)
          | HowAreYou
          | Fine
          | Bye 

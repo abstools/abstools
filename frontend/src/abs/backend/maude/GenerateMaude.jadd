@@ -78,7 +78,6 @@ aspect GenerateMaude {
     }
 
     abstract public void Exp.generateMaude(PrintStream stream);
-	public void UnresolvedExp.generateMaude(PrintStream stream) { throw new UnsupportedOperationException(); }
 
     public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
@@ -143,7 +142,7 @@ aspect GenerateMaude {
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("new(@ \"" + var + "\" ; \"" + getClassName().getString() + "\" ; ");
+        stream.print("new(@ \"" + var + "\" ; \"" + getClassName() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
@@ -274,8 +273,6 @@ aspect GenerateMaude {
 	}
 	
 	abstract public void Pattern.generateMaude(PrintStream stream);
-
-    public void UnresolvedPattern.generateMaude(PrintStream stream) { }
 
     public void UnderscorePattern.generateMaude(PrintStream stream) {
         stream.print("@ \"_\" ");

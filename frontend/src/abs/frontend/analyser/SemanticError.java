@@ -4,7 +4,6 @@ import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Name;
-import abs.frontend.ast.QualifiedName;
 
 public class SemanticError {
     public final ErrorMessage msg;

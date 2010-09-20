@@ -21,7 +21,6 @@ aspect FreePatternVars {
         }
         return res;
     }
-    eq UnresolvedPattern.getFreeVars() = null;
     
     
 }

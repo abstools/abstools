@@ -2,7 +2,6 @@ package abs.frontend.analyser;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Name;
-import abs.frontend.ast.QualifiedName;
 import abs.frontend.typechecker.Type;
 
 public class TypeError extends SemanticError {

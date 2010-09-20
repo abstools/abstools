@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import abs.common.QualifiedNameUtil;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ExpFunctionDef;
@@ -14,9 +13,11 @@ import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.UnionType;
+import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypingTest extends FrontendTest {
 
@@ -40,7 +41,7 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testInterfaceType() {
         Model m = assertParseOk("interface I { } { I i = i; }");
-        assertEquals(m.localLookup(QualifiedNameUtil.create("I")).getType(),getTypeOfFirstAssignment(m));
+        assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(),getTypeOfFirstAssignment(m));
         
     }
     
@@ -90,13 +91,13 @@ public class TypingTest extends FrontendTest {
     @Test
     public void testNew() {
         Model m = assertParseOk("interface I {} class C implements I {} { I i; i = new C(); }");
-        assertEquals(m.localLookup(QualifiedNameUtil.create("I")).getType(),((UnionType)getTypeOfFirstAssignment(m)).getType(0));
+        assertEquals(m.lookup(new KindedName(Kind.TYPE_DECL,"UnitTest.I")).getType(),((UnionType)getTypeOfFirstAssignment(m)).getType(0));
     }
     
     @Test
     public void testFieldUse() {
         Model m = assertParseOkStdLib(" class C { Bool f; Bool m() { return this.f; } }");
-        ClassDecl d = (ClassDecl) m.localLookup(QualifiedNameUtil.createFromDottedString("UnitTest.C"));
+        ClassDecl d = (ClassDecl) m.lookup(new KindedName(Kind.CLASS,"UnitTest.C"));
         FieldDecl f = d.getField(0);
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(f.getType(), s.getRetExp().getType());

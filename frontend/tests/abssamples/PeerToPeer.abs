@@ -1,5 +1,7 @@
 //$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $ 
 
+module PeerToPeer;
+
 //type synonyms  
 
 type Filename = String ;
