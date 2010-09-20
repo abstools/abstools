@@ -33,4 +33,9 @@ public class KindedName {
 	public int hashCode() {
 		return name.hashCode()*kind.hashCode();
 	}
+	
+	@Override
+	public String toString() {
+		return name+"["+kind.name()+"]";
+	}
 }

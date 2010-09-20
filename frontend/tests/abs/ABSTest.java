@@ -12,10 +12,15 @@ import abs.frontend.parser.Main;
 public class ABSTest {
 
     protected Model assertParseOk(String s, boolean withStdLib) {
+    	return assertParseOk(s, withStdLib, true);
+    }
+
+    	protected Model assertParseOk(String s, boolean withStdLib, boolean addModuleName) {
     	String preamble = "module UnitTest; export *; ";
     	if (withStdLib)
     		preamble = preamble+" import * from ABS.StdLib;";
-    	s = preamble+s;
+    	if (addModuleName)
+    		s = preamble+s;
         Model p = null;
         try {
             p = Main.parseString(s, withStdLib);

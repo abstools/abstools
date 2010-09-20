@@ -40,6 +40,7 @@ public enum ErrorMessage {
     , NO_CLASS_DECL("Class %s could not be found")
     , RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method.")
     , VAR_INIT_WITH_SIDE_EFFECTS("Variable initializer expressions are currently not allowed to have side-effects.")
+    , NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s.")
     ;
 
         

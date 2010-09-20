@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
@@ -303,9 +304,14 @@ public class TypeCheckerHelper {
    			   NamedImport ni = (NamedImport) i;
    			   for (Name n : ni.getNames()) {
    				   ModuleDecl md = mod.lookupModule(n.getModuleName());
-   				   ResolvedName rn = md.getExportedNames().get(n.getSimpleName());
-   				   res.put(rn.getSimpleName(), rn);
-   				   res.put(rn.getQualifiedName(), rn);
+   				   Map<KindedName, ResolvedName> allNames = getAllNames(n.getSimpleName(),md.getExportedNames());
+   				   if (!allNames.isEmpty()) {
+   					   for (Entry<KindedName, ResolvedName> e : allNames.entrySet()) {
+   						   res.put(new KindedName(e.getKey().getKind(),n.getModuleName()+"."+e.getKey().getName()), e.getValue());
+   					   }
+   				   } else {
+						throw new TypeCheckerException(new TypeError(n,ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, n.getSimpleName(), n.getModuleName()));
+   				   }
    			   }
    		   } else if (i instanceof FromImport) {
    			   FromImport fi = (FromImport) i;
@@ -319,16 +325,22 @@ public class TypeCheckerHelper {
 	   return res;
    }
    
-   public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap, Map<KindedName, ResolvedName> targetMap) {
+   public static Map<KindedName, ResolvedName> getAllNames(String name, Map<KindedName, ResolvedName> sourceMap) {
+	   HashMap<KindedName, ResolvedName> map = new HashMap<KindedName, ResolvedName>();
 	   for (Kind k : Kind.values()) {
 		   KindedName kn = new KindedName(k, name);
 		   ResolvedName rn = sourceMap.get(kn);
 		   if (rn != null) {
-			   targetMap.put(kn,rn);
+			   map.put(kn,rn);
 		   }
 	   }
-		   
+	   return map;
    }
+   
+   public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap, Map<KindedName, ResolvedName> targetMap) {
+	   targetMap.putAll(getAllNames(name,sourceMap));
+   }
+   
 
    public static Map<KindedName, ResolvedName> getExportedNames(ModuleDecl mod) {
 	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
