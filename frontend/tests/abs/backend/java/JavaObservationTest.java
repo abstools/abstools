@@ -53,10 +53,10 @@ public class JavaObservationTest extends JavaBackendTest {
                 "TASK CREATED");
     }
     
-    static final String STDDATA = "data Unit; data Fut<A>; data String; data Maybe<A> = Just(A) | Nothing; data Foo = Bar(String,String);"; 
+    static final String STDDATA = "data Foo = Bar(String,String);"; 
     
     private void assertOutputContains(String absCode, String expectedOutput) {
-        String java = getJavaCode(STDDATA+absCode, false);
+        String java = getJavaCode("module JavaTest;"+STDDATA+absCode, true);
         //System.out.println(java);
         String output = runJava(java, "-Dabs.systemobserver="+TestSystemObserver.class.getName()).toString().trim();
         if (output.contains(expectedOutput))
