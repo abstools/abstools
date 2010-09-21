@@ -15,6 +15,7 @@ public enum ErrorMessage {
     , FIELD_INIT_REQUIRED("A field must be initialized if it is not of a reference type.")
     , EXPECTED_FUT_TYPE("Expected a future type, but found type %s instead.")
     , EXPECTED_ADDABLE_TYPE("Expected numeric or string type for operator '+', but found type %s instead.")
+    , NAME_NOT_RESOLVABLE("Name %s cannot be resolved.")
     , TYPE_NOT_RESOLVABLE("Type %s cannot be resolved.")
     , CONSTRUCTOR_NOT_RESOLVABLE("Data constructor %s cannot be resolved.")
     , FUNCTION_NOT_RESOLVABLE("Function %s cannot be resolved.")
@@ -41,6 +42,8 @@ public enum ErrorMessage {
     , RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method.")
     , VAR_INIT_WITH_SIDE_EFFECTS("Variable initializer expressions are currently not allowed to have side-effects.")
     , NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s.")
+    , ONLY_UNQUALIFIED_NAMES_ALLOWED("Only unqualfied names are allowed when import names from modules, but name %s is qualified.")
+    , ONLY_QUALIFIED_NAMES_ALLOWED("Only qualfied names are allowed when directly importing names, but name %s is unqualified.")
     ;
 
         

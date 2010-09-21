@@ -28,6 +28,14 @@ aspect TypeChecker {
     }
 
     public void ModuleDecl.typeCheck(SemanticErrorList e) {
+    	for (Import i : getImports()) {
+    	   i.typeCheck(e);
+    	}
+
+        for (Export ex : getExports()) {
+    	  ex.typeCheck(e);
+    	}
+    
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }
@@ -43,6 +51,73 @@ aspect TypeChecker {
         }
     }
     
+    
+    public abstract void Import.typeCheck(SemanticErrorList e);
+
+    public void NamedImport.typeCheck(SemanticErrorList e) {
+    	
+    	for (Name name : getNames()) {
+    		if (name.isSimple()) {
+    			e.add(new TypeError(this, ErrorMessage.ONLY_QUALIFIED_NAMES_ALLOWED, name.getName()));
+    			continue;
+    		}
+
+	    	ModuleDecl d = lookupModule(name.getModuleName());
+    		if (d == null) {
+    			e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, name.getModuleName()));
+    			continue;
+    		}
+    		
+   			if (!d.exportsName(name.getSimpleName())) {
+   				e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getSimpleName(), name.getModuleName()));
+   			}
+    	}
+    }
+    
+    public void StarImport.typeCheck(SemanticErrorList e) {
+    	ModuleDecl d = lookupModule(getModuleName());
+    	if (d == null) {
+    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+    	}
+    }
+
+    public void FromImport.typeCheck(SemanticErrorList e) {
+    	ModuleDecl d = lookupModule(getModuleName());
+    	if (d == null) {
+    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+    		return;
+    	}
+    	
+    	for (Name name : getNames()) {
+    		if (!name.isSimple()) {
+    			e.add(new TypeError(this, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED, name.getName()));
+    		} else {
+    			if (!d.exportsName(name.getName())) {
+    				e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getName(), getModuleName()));
+    			}
+    		}
+    	}
+    }
+
+    public abstract void Export.typeCheck(SemanticErrorList e);
+
+    public void NamedExport.typeCheck(SemanticErrorList e) {
+    	for (Name name: getNames()) {
+    		String s = name.getName();
+    		ModuleDecl mod = getModuleDecl();
+    		if (!mod.isVisible(s)) {
+    			e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+    		}
+    	}
+    }
+
+    public void FromExport.typeCheck(SemanticErrorList e) {
+    	// FIXME: implement
+    }
+
+    public void StarExport.typeCheck(SemanticErrorList e) {
+    	// FIXME: implement
+    }
     
     // DECLS
     public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {

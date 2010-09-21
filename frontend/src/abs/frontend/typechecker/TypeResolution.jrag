@@ -45,6 +45,22 @@ aspect TypeResolution {
 		return TypeCheckerHelper.getExportedNames(this);
 	}
 
+	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getImportedNames() {
+		return TypeCheckerHelper.getImportedNames(this);
+	}
+
+	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getDefinedNames() {
+		return TypeCheckerHelper.getDefinedNames(this);
+	}
+	
+	syn boolean ModuleDecl.exportsName(String name) {
+		return ! TypeCheckerHelper.getAllNames(name, this.getExportedNames()).isEmpty();
+	}
+
+	syn boolean ModuleDecl.isVisible(String name) {
+		return ! TypeCheckerHelper.getAllNames(name, this.getVisibleNames()).isEmpty();
+	}
+
     syn lazy Collection<Decl> Model.getDecls() {
         ArrayList<Decl> res = new ArrayList<Decl>();
         for (CompilationUnit u : getCompilationUnits()) {
@@ -92,6 +108,11 @@ aspect TypeResolution {
     	return null;
     }
     
+    inh ModuleDecl Export.getModuleDecl();
+    eq ModuleDecl.getExport().getModuleDecl() = this;
+    
+    inh ModuleDecl Import.lookupModule(String name);
+    inh ModuleDecl Export.lookupModule(String name);
     inh ModuleDecl CompilationUnit.lookupModule(String name);
     inh ModuleDecl ModuleDecl.lookupModule(String name);
     eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);

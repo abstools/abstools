@@ -218,7 +218,7 @@ public class Main {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader,true));
+        units.add(parseUnit(file, sourceCode, reader,withStdLib));
         return new Model(units);
 	}
 	

@@ -18,6 +18,7 @@ import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.Export;
+import abs.frontend.ast.FromExport;
 import abs.frontend.ast.FromImport;
 import abs.frontend.ast.Import;
 import abs.frontend.ast.List;
@@ -270,7 +271,7 @@ public class TypeCheckerHelper {
 	   return mod.getVisibleNames().get(name);
    }
    
-   public static Map<KindedName,ResolvedName> getVisibleNames(ModuleDecl mod) {
+   public static Map<KindedName,ResolvedName> getDefinedNames(ModuleDecl mod) {
 	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
 	   ResolvedModuleName moduleName = new ResolvedModuleName(mod);
 	   
@@ -289,6 +290,12 @@ public class TypeCheckerHelper {
            }
 		   
 	   }
+
+	   return res;
+   }
+   
+   public static Map<KindedName,ResolvedName> getImportedNames(ModuleDecl mod) {
+	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
 
 	   for (Import i : mod.getImports()) {
 		   if (i instanceof StarImport) {
@@ -319,9 +326,17 @@ public class TypeCheckerHelper {
 			   Map<KindedName,ResolvedName> en = md.getExportedNames();
    			   for (Name n : fi.getNames()) {
    				   putKindedNames(n.getString(),en,res);
+   				   putKindedNames(fi.getModuleName()+"."+n.getString(),en,res);
    			   }
    		   }
 	   }
+	   return res;
+   }
+   
+   public static Map<KindedName,ResolvedName> getVisibleNames(ModuleDecl mod) {
+	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
+	   res.putAll(mod.getDefinedNames());
+	   res.putAll(mod.getImportedNames());
 	   return res;
    }
    
@@ -340,22 +355,71 @@ public class TypeCheckerHelper {
    public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap, Map<KindedName, ResolvedName> targetMap) {
 	   targetMap.putAll(getAllNames(name,sourceMap));
    }
-   
 
+   public static boolean isQualified(String name) {
+	   return name.contains(".");
+   }
+   
+   public static String getModuleName(String qualifiedName) {
+       return qualifiedName.substring(0,qualifiedName.lastIndexOf('.'));
+
+   }
+
+   public static String getSimpleName(String name) {
+	   if (isQualified(name)) {
+		   return name.substring(name.lastIndexOf('.')+1,name.length());
+	   } else {
+		   return name;
+	   }
+
+   }
+   
    public static Map<KindedName, ResolvedName> getExportedNames(ModuleDecl mod) {
 	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
 	   for (Export e : mod.getExports()) {
 		   if (e instanceof StarExport) {
-			   res.putAll(getVisibleNames(mod));
+			   StarExport se = (StarExport) e;
+			   if (!se.hasModuleName()) {
+				   res.putAll(mod.getDefinedNames());
+			   } else {
+				   String moduleName = se.getModuleName().getName();
+				   
+				   putNamesOfModule(mod, res, moduleName, null);
+			   }
 			   return res;
+		   } else if (e instanceof FromExport) {
+			   FromExport fe = (FromExport) e;
+			   String moduleName = fe.getModuleName();
+			   for (Name n : fe.getNames()) {
+				   String simpleName = n.getSimpleName();
+				   putNamesOfModule(mod,res,moduleName,simpleName);
+			   }
 		   } else if (e instanceof NamedExport) {
 			   NamedExport ne = (NamedExport) e;
 			   for (Name n : ne.getNames()) {
-   				   putKindedNames(n.getString(),mod.getVisibleNames(),res);
+				   String simpleName = getSimpleName(n.getString());
+   				   putKindedNames(simpleName,mod.getVisibleNames(),res);
+   				   putKindedNames(mod.getName()+"."+simpleName,mod.getVisibleNames(),res);
 			   }
 		   }
 		   
 	   }
 	   return res;
    }
+
+   private static void putNamesOfModule(ModuleDecl mod,
+		HashMap<KindedName, ResolvedName> res, String moduleName, String simpleNamePattern) {
+	for (Entry<KindedName, ResolvedName> entry : mod.getVisibleNames().entrySet()) {
+		   KindedName kn = entry.getKey();
+		   if (isQualified(kn.getName())) {
+			   if (getModuleName(kn.getName()).equals(moduleName)) {
+				   String simpleName = getSimpleName(kn.getName());
+				   if (simpleNamePattern == null || simpleNamePattern.equals(simpleName)) {
+					   res.put(new KindedName(kn.getKind(),mod.getName()+"."+simpleName), entry.getValue());
+					   res.put(new KindedName(kn.getKind(),simpleName), entry.getValue());
+				   }
+			   }
+		   }
+	   }
+}
 }

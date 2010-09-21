@@ -123,6 +123,8 @@ Name qualified_type_name =
 Export export =
   EXPORT any_name_list.l SEMICOLON {: return new NamedExport(l); :}
   | EXPORT MULT SEMICOLON {: return new StarExport(); :}
+  | EXPORT MULT FROM module_name.m SEMICOLON {: return new StarExport(new Opt(m)); :}
+  | EXPORT any_name_list.l FROM module_name.m SEMICOLON {: return new FromExport(l,m.getName()); :}
 ;
 
 Import import =

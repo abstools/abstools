@@ -16,7 +16,8 @@ FromImport : Import ::= Name* <ModuleName>;
 
 abstract Export;
 NamedExport: Export ::= Name* ;
-StarExport: Export;
+StarExport: Export ::= [ModuleName:Name];
+FromExport: Export ::= Name* <ModuleName>;
 // (see below for Blocks)
 
 abstract 				Decl ::= <Name>;
