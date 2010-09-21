@@ -102,9 +102,9 @@ aspect TypeChecker {
     public abstract void Export.typeCheck(SemanticErrorList e);
 
     public void NamedExport.typeCheck(SemanticErrorList e) {
+   		ModuleDecl mod = getModuleDecl();
     	for (Name name: getNames()) {
     		String s = name.getName();
-    		ModuleDecl mod = getModuleDecl();
     		if (!mod.isVisible(s)) {
     			e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
     		}
@@ -112,11 +112,29 @@ aspect TypeChecker {
     }
 
     public void FromExport.typeCheck(SemanticErrorList e) {
-    	// FIXME: implement
+    	ModuleDecl d = lookupModule(getModuleName());
+    	if (d == null) {
+    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+    		return;
+    	}
+
+   		ModuleDecl mod = getModuleDecl();
+    	for (Name name: getNames()) {
+    		String s = d.getName()+"."+name.getName();
+    		if (!mod.isVisible(s)) {
+    			e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+    		}
+    	}
     }
 
     public void StarExport.typeCheck(SemanticErrorList e) {
-    	// FIXME: implement
+    	if (hasModuleName()) {
+    		ModuleDecl d = lookupModule(getModuleName().getName());
+    		if (d == null) {
+    			e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName().getName()));
+    			return;
+    		}
+    	}
     }
     
     // DECLS

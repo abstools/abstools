@@ -57,6 +57,19 @@ public class ModuleSystemTests extends FrontendTest {
 	}
 	
 	@Test
+	public void exportImportedName() {
+		assertNoTypeErrors("module A; export X; data X; module B; export X from A; import * from A;  ");
+	}
+	
+	@Test
+	public void exportImportedName2() {
+		assertNoTypeErrors("module A; export X; data X; module B; export X from A; import X from A;  ");
+	}
+	
+	
+	// NEGATIVE TESTS
+	
+	@Test
 	public void unqualifiedImport() {
 		assertTypeErrors("module A; data X; module B; import X; ");
 	}
@@ -92,6 +105,11 @@ public class ModuleSystemTests extends FrontendTest {
 	}
 
 	@Test
+	public void qualifiedImportUnqualifiedUse() {
+		assertTypeErrors("module A; export X; data X; module B; import A.X; type Y = X; ");
+	}
+
+	@Test
 	public void qualifiedFromImport() {
 		assertTypeErrors("module A; export X; data X; module B; import A.X from A; ");
 	}
@@ -99,6 +117,21 @@ public class ModuleSystemTests extends FrontendTest {
 	@Test
 	public void invisibleExport() {
 		assertTypeErrors("module A; export X; ");
+	}
+
+	@Test
+	public void exportFromNotExistingModule() {
+		assertTypeErrors("module A; export X from B; ");
+	}
+	
+	@Test
+	public void exportNotImportedName() {
+		assertTypeErrors("module A; export X; data X; data Y; module B; export Y from A; import * from A;  ");
+	}
+
+	@Test
+	public void invisibleExportFrom() {
+		assertTypeErrors("module A; export X from B; ");
 	}
 	
 	protected void assertNoTypeErrors(String absCode) {
