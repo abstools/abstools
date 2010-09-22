@@ -47,8 +47,7 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 //Identifiers defined using character classes 
 Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
-TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")* 																 
-
+TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*																 
 
 IntLiteral = 0 | [1-9][0-9]*
 
@@ -64,6 +63,10 @@ IntLiteral = 0 | [1-9][0-9]*
 %% // Rules
 //Keywords 
 <YYINITIAL> {
+ "module"       { return sym(Terminals.MODULE); }
+ "import"       { return sym(Terminals.IMPORT); }
+ "export"       { return sym(Terminals.EXPORT); }
+ "from"         { return sym(Terminals.FROM); }
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"     { return sym(Terminals.EXTENDS); }
@@ -130,8 +133,8 @@ IntLiteral = 0 | [1-9][0-9]*
 }
 
 <YYINITIAL> {
-    {TypeIdentifier}  { return sym(Terminals.TYPEIDENTIFIER); }	
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
+    {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
 	{Comment}     { /* discard token */ }
 	{WhiteSpace}  { /* discard token */ }
 }
@@ -157,5 +160,5 @@ IntLiteral = 0 | [1-9][0-9]*
 }
 
 
-.|\n          { throw new SyntaxError("Illegal character \""+yytext()+ "\" at line "+yyline+", column "+yycolumn); }
+.|\n          { throw new ParseException(new LexicalError("Illegal character \""+yytext()+"\"",yyline,yycolumn)); }
 <<EOF>>       { return sym(Terminals.EOF); }

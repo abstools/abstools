@@ -54,6 +54,8 @@ aspect GenerateJava {
     
     abstract void Decl.generateJava(PrintStream stream);
 
+    public void DataConstructor.generateJava(PrintStream stream) { }
+
     public void InterfaceDecl.generateJava(PrintStream stream) {
         stream.print("interface "+getName()+" extends "+ABSInterface.class.getName());
         for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
@@ -539,9 +541,9 @@ aspect GenerateJava {
 
     public void NewExp.generateJava(PrintStream stream) {
         if (getCog().equals("cog")) {
-            stream.print(getClassRef()+".__ABS_createNewCOG");
+            stream.print(JavaBackend.getQualifiedString(getClassName())+".__ABS_createNewCOG");
         } else {
-            stream.print("new "+getClassRef());
+            stream.print("new "+JavaBackend.getQualifiedString(getClassName()));
         }
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }
@@ -646,7 +648,7 @@ aspect GenerateJava {
    	  getLiteral().generateJava(stream);
    	  stream.print(")");
     }
- 
+    
     public void FnApp.generateJava(PrintStream stream) {
    	 
    	 // Have to explicitly type the call due to a bug in the JastAdd Java
@@ -694,13 +696,13 @@ aspect GenerateJava {
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
-        DataConstructor c = lookupDataConstructor(this.getConstructor());
-        DataTypeDecl decl = c.getDecl();
+        DataConstructor c = getDataConstructor();
+        DataTypeDecl decl = c.getDataTypeDecl();
         String name = decl.getName();
         if (name.equals("Bool")) {
             stream.print(ABSBool.class.getName());
             stream.print(".fromBoolean(");
-            stream.print(getConstructor().toLowerCase());
+            stream.print(c.getName().toLowerCase());
             stream.print(")");
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");

@@ -1,29 +1,17 @@
 package abs.frontend.parser;
 
-// Note: this must be an unchecked exception,
-// since otherwise we the Java stub class Event (defined in ABS.parser)
-// cannot override method Parser.Events.syntaxError
-public class SyntaxError extends RuntimeException implements ParserError {
+import abs.common.CompilerError;
+
+public class SyntaxError extends ParserError  {
 
 	private static final long serialVersionUID = 1L;
-	public int lineNumber = -1;
-	public int columnNumber = -1;
 
 	public SyntaxError(final String message) {
-		super(message);
+		this(message,0,0);
 	}
 
 	public SyntaxError(final String message, int lineNumber, int columnNumber) {
-		super(message);
-		this.lineNumber = lineNumber;
-		this.columnNumber = columnNumber;
+		super(message,lineNumber,columnNumber);
 	}
 
-	public int getLine() {
-		return lineNumber;
-	}
-
-	public int getColumn() {
-		return columnNumber;
-	}	
 }

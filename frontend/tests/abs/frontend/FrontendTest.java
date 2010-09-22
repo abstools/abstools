@@ -1,7 +1,9 @@
 package abs.frontend;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import abs.ABSTest;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -131,6 +133,35 @@ public class FrontendTest extends ABSTest {
         }
         return null;
     }
+    
+    
+    protected void assertNoTypeErrorsNoLib(String absCode) {
+        assertTypeErrors(absCode, false, false);
+    }
+
+    protected void assertNoTypeErrors(String absCode) {
+      	 assertTypeErrors(absCode, false, true);
+       }
+       
+
+       protected void assertTypeErrors(String absCode) {
+      	 assertTypeErrors(absCode, true, true);
+       }
+
+   protected void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib) {
+	   assertTypeErrors(absCode,expectErrors,withStdLib,true);
+   }
+
+   protected void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib, boolean addModuleName) {
+        Model m = assertParseOk(absCode, withStdLib, addModuleName);
+        String msg = "";
+        SemanticErrorList l = m.typeCheck();
+        if (!l.isEmpty()) {
+            msg = l.getFirst().getMsgWithHint(absCode);
+        }
+        assertEquals(msg,expectErrors, !l.isEmpty());
+    }
+    
     
     
 }

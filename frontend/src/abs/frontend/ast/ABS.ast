@@ -1,11 +1,23 @@
 //$Id$ 
 //
  
+// needed for lists of strings
+Name ::= <Name>;
 
 Model                         ::= CompilationUnit*;
  
-CompilationUnit ::= <Name> Decl* [Block:MainBlock];
+CompilationUnit ::= <Name> ModuleDecl* ;
+ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock] ;
 
+abstract Import;
+NamedImport : Import ::= Name* ;
+StarImport : Import ::= <ModuleName>;
+FromImport : Import ::= Name* <ModuleName>;
+
+abstract Export;
+NamedExport: Export ::= Name* ;
+StarExport: Export ::= [ModuleName:Name];
+FromExport: Export ::= Name* <ModuleName>;
 // (see below for Blocks)
 
 abstract 				Decl ::= <Name>;
@@ -15,6 +27,7 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 UnknownDecl:	TypeDecl;		// Unknown declarations
 ClassDecl:		BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
+DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
@@ -44,9 +57,9 @@ abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse;
-ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; // FIXME: should be TypeParameterUse - fix in ABS.parser as well
+ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; 
 TypeParameterUse:		TypeUse;
-abstract VarOrFieldUse: IdUse;
+abstract VarOrFieldUse: Access ::= <Name>;
 VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f
 
@@ -62,15 +75,12 @@ Constructors occur as
 - Don't know yet how to organise these.   
 */
 
-abstract Constructor ::= <Name>; 
-DataConstructor : Constructor ::= ConstructorArg:DataTypeUse* ;
-
 Annotation      ::= <Name> Value:PureExp;
 
 abstract Stmt   ::= Annotation* ; 
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
-AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
+AssignStmt: Stmt		::= Var:PureExp Value:Exp;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
@@ -90,7 +100,7 @@ MainBlock: Block;             // Active behavior of the model
 
 
 abstract Guard;
-ClaimGuard: Guard		::= Var:VarOrFieldUse;
+ClaimGuard: Guard		::= Var:PureExp;
 AndGuard: Guard			::= Left:Guard Right:Guard;
 //For boolean guards   
 ExpGuard: Guard			::= PureExp ; 
@@ -119,7 +129,6 @@ FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
 CaseBranch ::= Left:Pattern Right:PureExp ; 
 
-
 //Patterns 
 abstract Pattern ; 
 
@@ -131,9 +140,8 @@ LiteralPattern:		Pattern ::= Literal:LiteralExp;
 UnderscorePattern:	Pattern; 
 
 
-
 // Expressions with side effects. 
-NewExp: EffExp			::= <ClassRef> Param:PureExp* <Cog> ; //todo, optional cog 
+NewExp: EffExp			::= <ClassName> Param:PureExp* <Cog> ; //todo, optional cog 
 abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;

@@ -1,6 +1,7 @@
 //Working File (not completed)
 // by Lizeth Tapia (sltarifa) UIO
 //Book shop example
+module BookShop;
 
 //NOTE: THIS EXAMPLE USES THE DATA TYPE LIBRARY LOCATED IN:
 //.../frontend/src/abs/lang/abslang.abs

@@ -29,11 +29,11 @@ public class JavaBackendTest extends ABSTest {
     }
     
     void assertValidStdLib(String absCode) {
-        assertValidJava(getJavaCode(absCode, true));
+        assertValidJava(getJavaCode("module JavaUnitTest; "+absCode, true));
     }
     
     void assertValid(String absCode) {
-        assertValidJava(getJavaCode(absCode, false));
+        assertValidJava(getJavaCode("module JavaUnitTest; "+absCode, false));
     }
     
     protected void assertValidJavaFile(String absFile, boolean useStdLib) {

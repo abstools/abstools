@@ -4,6 +4,7 @@ package abs.frontend.parser;
 
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,11 +15,14 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 
+import abs.common.Constants;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.StarImport;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
@@ -75,13 +79,12 @@ public class Main {
 		    }
 
 			try{
-				units.add(parseUnit(file));
+				units.add(parseUnit(new File(file), stdlib));
 				
 			} catch (FileNotFoundException e1) {
 				printErrorAndExit("File not found: " + file);
-			} catch (SyntaxError pex) {
-				// Exc. thrown by the parser
-				System.err.println(file + ":" + pex.getMessage());
+			} catch (ParseException pex) {
+				System.err.println(file + ":" + pex.getError().getHelpMessage());
 				System.exit(1);
 			} catch (Exception e1) {
 				// Catch-all
@@ -141,7 +144,7 @@ public class Main {
             System.err.println("Could not found ABS Standard Library");
             System.exit(1);
         }
-        return parseUnit(ABS_STD_LIB,new InputStreamReader(url.openStream()));
+        return parseUnit(new File(url.toURI()),null,new InputStreamReader(url.openStream()), false);
     }
 
 
@@ -165,7 +168,7 @@ public class Main {
 
 
 
-    public static CompilationUnit parseUnit(String file) throws Exception {
+    public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
 		Reader reader = new FileReader(file);
 		BufferedReader rd = null;
 		//Set to true to print source before parsing 
@@ -187,14 +190,14 @@ public class Main {
 			}
 		}
 
-		return parseUnit(file, reader); 
+		return parseUnit(file, null, reader, withStdLib); 
 	}
     
-    public static Model parse(String fileName, boolean withStdLib) throws Exception {
+    public static Model parse(File file, boolean withStdLib) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(fileName));
+        units.add(parseUnit(file,withStdLib));
         return new Model(units);
     }
     
@@ -202,29 +205,37 @@ public class Main {
     	List<CompilationUnit> units = new List<CompilationUnit>();
     	if (withStdLib) units.add(getStdLib());
     	for (String filename : fileNames) {
-    		units.add(parseUnit(filename));
+    		units.add(parseUnit(new File(filename), withStdLib));
     	}
     	return new Model(units);
     }
 	
-	public static Model parse(String fileName, InputStream stream, boolean withStdLib) throws Exception {
-	    return parse(fileName, new BufferedReader(new InputStreamReader(stream)), withStdLib);
+	public static Model parse(File file, String sourceCode, InputStream stream, boolean withStdLib) throws Exception {
+	    return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)), withStdLib);
 	}
 	    
-	public static Model parse(String fileName, Reader reader, boolean withStdLib) throws Exception {
+	public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(fileName, reader));
+        units.add(parseUnit(file, sourceCode, reader,withStdLib));
         return new Model(units);
 	}
 	
-    public static CompilationUnit parseUnit(String fileName, Reader reader) throws Exception {
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib) throws Exception {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
+            parser.setSourceCode(sourceCode);
+            parser.setFile(file);
             
-            return parser.parse(fileName,scanner);
+            CompilationUnit u = (CompilationUnit) parser.parse(scanner);
+            if (importStdLib) {
+            	for (ModuleDecl d : u.getModuleDecls()) {
+            		d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+            	}
+            }
+            return u;
         } finally {
             reader.close();
         }
@@ -232,7 +243,7 @@ public class Main {
 
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
-        return parse("<unkown>", new StringReader(s), withStdLib);
+        return parse(null,s, new StringReader(s), withStdLib);
     }
 
 }

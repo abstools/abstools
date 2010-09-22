@@ -3,6 +3,7 @@ package abs.frontend.analyser;
 import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.Name;
 
 public class SemanticError {
     public final ErrorMessage msg;
@@ -15,6 +16,16 @@ public class SemanticError {
         this.args = args;
     }
     
+    public SemanticError(ASTNode<?> node, ErrorMessage msg, Name... args) {
+        this.node = node;
+        this.msg = msg;
+        
+        this.args = new String[args.length];
+        for (int i=0; i<args.length; i++) {
+            this.args[i] = args[i].getString();
+        }
+    }
+
     public String getFileName() {
         ASTNode<?> parent = node;
         while (! (parent instanceof CompilationUnit) ) {

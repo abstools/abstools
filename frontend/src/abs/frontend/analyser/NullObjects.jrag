@@ -11,10 +11,11 @@ aspect NullObjects {
   
   inh UnknownDecl Exp.unknownDecl();
   inh UnknownDecl CompilationUnit.unknownDecl();
+  inh UnknownDecl ModuleDecl.unknownDecl();
   
   eq Model.getCompilationUnit(int i).unknownDecl() = unknownDecl();
-  eq CompilationUnit.getDecl().unknownDecl() = unknownDecl();
-  eq CompilationUnit.getBlock().unknownDecl() = unknownDecl();
+  eq ModuleDecl.getDecl().unknownDecl() = unknownDecl();
+  eq ModuleDecl.getBlock().unknownDecl() = unknownDecl();
 
 }
 

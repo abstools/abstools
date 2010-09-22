@@ -1,5 +1,7 @@
 //$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $ 
 
+module PeerToPeer;
+
 //type synonyms  
 
 type Filename = String ;
@@ -28,6 +30,7 @@ interface Server {
 
 interface Peer extends Client, Server { 
    Unit setAdmin(Network admin);
+   Unit run();
 }
 
 interface Network {
@@ -175,16 +178,21 @@ implements Network
   DataBase db2;
   Network admin;
   // Map<Filename, File>
-  db0 = new DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
-  db1 = new DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
-  db2 = new DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
-  node0 = new Node(db0, "file2");
-  node1 = new Node(db1, "file2");
-  node2 = new Node(db2, "file1");
-  node3 = new Node(db2, "file0");
-  admin = new OurTopology(node0, node1, node2, node3);
-  node0.setAdmin(admin);
-  node1.setAdmin(admin);
-  node2.setAdmin(admin);
-  node3.setAdmin(admin);
+  db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
+  db1 = new cog DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
+  db2 = new cog DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
+  node0 = new cog Node(db0, "file2");
+  node1 = new cog Node(db1, "file2");
+  node2 = new cog Node(db2, "file1");
+  node3 = new cog Node(db2, "file0");
+  admin = new cog OurTopology(node0, node1, node2, node3);
+  node0!setAdmin(admin);
+  node1!setAdmin(admin);
+  node2!setAdmin(admin);
+  node3!setAdmin(admin);
+  
+  node0!run();
+  node1!run();
+  node2!run();
+  node3!run();
 }

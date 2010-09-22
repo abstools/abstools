@@ -574,29 +574,4 @@ public class TypeCheckerTest extends FrontendTest {
     public void constructorTypeArgsError() {
         assertTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,5); }");
     }
-    
-    private void assertNoTypeErrorsNoLib(String absCode) {
-        assertTypeErrors(absCode, false, false);
-    }
-
-    private void assertNoTypeErrors(String absCode) {
-   	 assertTypeErrors(absCode, false, true);
-    }
-    
-
-    private void assertTypeErrors(String absCode) {
-   	 assertTypeErrors(absCode, true, true);
-    }
-
-    private void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib) {
-       Model m = assertParseOk(absCode, withStdLib);
-       String msg = "";
-       SemanticErrorList l = m.typeCheck();
-       if (!l.isEmpty()) {
-           msg = l.getFirst().getMsgWithHint(absCode);
-       }
-       assertEquals(msg,expectErrors, !l.isEmpty());
-   }
-
-
 }

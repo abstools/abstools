@@ -27,11 +27,11 @@ public class SemanticTests {
     }
     
     public void assertEvalTrue(String absCode) {
-        driver.assertEvalTrue(absCode);
+        driver.assertEvalTrue("module BackendTest; "+absCode);
     }
 
     public void assertEvalFails(String absCode) {
-        driver.assertEvalFails(absCode);
+        driver.assertEvalFails("module BackendTest; "+absCode);
     }
     
 }
