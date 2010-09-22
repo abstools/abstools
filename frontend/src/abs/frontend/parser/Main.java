@@ -139,12 +139,12 @@ public class Main {
 	
 	
     private static CompilationUnit getStdLib() throws Exception {
-        URL url = Main.class.getClassLoader().getResource(ABS_STD_LIB);
-        if (url == null) {
+        InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
+        if (stream == null) {
             System.err.println("Could not found ABS Standard Library");
             System.exit(1);
-        }
-        return parseUnit(new File(url.toURI()),null,new InputStreamReader(url.openStream()), false);
+        } 
+        return parseUnit(new File(ABS_STD_LIB),null,new InputStreamReader(stream), false);
     }
 
 
