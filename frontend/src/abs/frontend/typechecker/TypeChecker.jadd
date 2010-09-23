@@ -619,6 +619,13 @@ aspect TypeChecker {
     // PATTERNS
     
     public void Pattern.typeCheck(SemanticErrorList e, Type t) {  }
+    
+    public void PatternVarUse.typeCheck(SemanticErrorList e, Type t) {
+        if (!getType().equals(t)) {
+            e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
+        }
+    }
+    
     public void LiteralPattern.typeCheck(SemanticErrorList e, Type t) {
         if (!getType().equals(t)) {
             e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
