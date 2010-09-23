@@ -20,6 +20,11 @@ public class JavaStmtTests extends JavaBackendTest {
     }
     
     @Test
+    public void assertStmt() {
+        assertValidStdLib("{ assert True; }");
+    }
+
+    @Test
     public void ifStmt() {
         assertValidStdLib("{ if (True) { } }");
     }

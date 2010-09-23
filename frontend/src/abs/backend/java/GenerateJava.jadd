@@ -437,7 +437,7 @@ aspect GenerateJava {
     public void AssertStmt.generateJava(String indent, PrintStream stream) {
     	stream.print(indent+"if (");
     	getCondition().generateJava(stream);
-    	stream.println(") throw new "+ABSAssertException.class.getName()+"(\"Assertion failed\");"); 
+    	stream.println(".toBoolean()) throw new "+ABSAssertException.class.getName()+"(\"Assertion failed\");"); 
     }
     
     /*

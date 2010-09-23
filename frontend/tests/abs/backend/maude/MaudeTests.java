@@ -25,7 +25,7 @@ public class MaudeTests extends ABSTest {
 
     @Test
     public void simpleBlock() {
-        assertTrueMaude("{ Bool testresult = True;}");
+        assertTrueMaude("module Test; { Bool testresult = True;}");
     }
     
     
