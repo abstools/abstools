@@ -1,31 +1,31 @@
 aspect VarUsage {
 
 
-	syn lazy Collection<String> Exp.getFreeVars();
+	syn lazy Set<String> Exp.getFreeVars();
 	
-	eq Exp.getFreeVars() = new ArrayList<String>(0); 
+	eq Exp.getFreeVars() = new HashSet<String>(0); 
 	
 	eq VarUse.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>(1);
+		HashSet<String> res = new HashSet<String>(1);
 		res.add(getName());
 		return res;
 	}
 	
 	eq Binary.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getLeft().getFreeVars());
 		res.addAll(getRight().getFreeVars());
 		return res;
 	}
 
 	eq Unary.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getOperand().getFreeVars());
 		return res;
 	}
 	
 	eq LetExp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getExp().getFreeVars());
 		res.remove(getVar().getName());
 		res.addAll(getVal().getFreeVars());
@@ -33,7 +33,7 @@ aspect VarUsage {
 	}
 	
 	eq CaseExp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getExpr().getFreeVars());
 		for (CaseBranch b : getBranchs()) {
 		   res.addAll(b.getFreeVars());
@@ -42,7 +42,7 @@ aspect VarUsage {
 	}
 	
 	eq FnApp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		for (PureExp e : getParams()) {
 		   res.addAll(e.getFreeVars());
 		}
@@ -50,7 +50,7 @@ aspect VarUsage {
 	}
 
 	eq DataConstructorExp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		for (PureExp e : getParams()) {
 		   res.addAll(e.getFreeVars());
 		}
@@ -58,7 +58,7 @@ aspect VarUsage {
 	}
 
 	eq Call.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getCallee().getFreeVars());
 		for (PureExp e : getParams()) {
 		   res.addAll(e.getFreeVars());
@@ -67,7 +67,7 @@ aspect VarUsage {
 	}
 
 	eq NewExp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		for (PureExp e : getParams()) {
 		   res.addAll(e.getFreeVars());
 		}
@@ -75,13 +75,13 @@ aspect VarUsage {
 	}
 
 	eq GetExp.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
         res.addAll(getPureExp().getFreeVars());
 		return res;
 	}
 
 	syn lazy Collection<String> CaseBranch.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>();
+		HashSet<String> res = new HashSet<String>();
 		res.addAll(getLeft().getFreeVars());
 		res.addAll(getRight().getFreeVars());
 		return res;
@@ -89,16 +89,16 @@ aspect VarUsage {
 
 	syn lazy Collection<String> Pattern.getFreeVars();
 	
-	eq Pattern.getFreeVars() = new ArrayList<String>(0);
+	eq Pattern.getFreeVars() = new HashSet<String>(0);
 	
 	eq PatternVarUse.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>(1);
+		HashSet<String> res = new HashSet<String>(1);
 		res.add(getName());
 		return res;		
 	}
 	
 	eq ConstructorPattern.getFreeVars() {
-		ArrayList<String> res = new ArrayList<String>(1);
+		HashSet<String> res = new HashSet<String>(1);
 		for (Pattern p : getParams()) {
 			res.addAll(p.getFreeVars());
 		}

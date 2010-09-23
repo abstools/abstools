@@ -730,16 +730,34 @@ aspect GenerateJava {
     }
 
     public void LetExp.generateJava(PrintStream stream) {
-        stream.print("new Let<");
+        stream.print("new Let");
         String varType = JavaBackend.getQualifiedString(getVar().getType());
-        stream.print(varType);
-        stream.print(',');
         String expType = JavaBackend.getQualifiedString(getExp().getType());
-        stream.print(expType+">() { public "+expType);
-        stream.print(" in(final "+varType+" "+JavaBackend.getVariableName(getVar().getName())+") { ");
+        stream.print("() { public "+expType);
+        stream.print(" in(");
+        for (String freeVarName : getExp().getFreeVars()) {
+        	if (freeVarName.equals(getVar().getName()))
+        		continue;
+        	VarOrFieldDecl decl = getExp().lookupVarName(freeVarName);
+        	if (decl == null) {
+        		throw new IllegalArgumentException("Variable "+freeVarName+" cannot be resolved");
+        	}
+        	String freeVarType = JavaBackend.getQualifiedString(decl.getType());
+        	stream.print("final "+freeVarType+" "+JavaBackend.getVariableName(freeVarName));
+	       	stream.print(", ");
+        }
+        
+        stream.print("final "+varType+" "+JavaBackend.getVariableName(getVar().getName()));
+		stream.print(") { ");
         stream.print("return ");
         getExp().generateJava(stream);
         stream.print("; }}.in(");
+        for (String freeVarName : getExp().getFreeVars()) {
+        	if (freeVarName.equals(getVar().getName()))
+        		continue;
+        	stream.print(freeVarName);
+        	stream.print(", ");
+        }
         getVal().generateJava(stream);
         stream.print(")");
         

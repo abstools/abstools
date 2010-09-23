@@ -2,8 +2,12 @@ package abs.frontend.analyser;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
@@ -66,6 +70,12 @@ public class FreeVarTest extends FrontendTest {
     }
 
     @Test
+    public void binaryExp3() {
+        Exp e = getSecondExp("{ Bool b = True; Bool c = b == b; }");
+        assertEquals(e.getFreeVars(),"b");
+    }
+    
+    @Test
     public void callExp() {
         Exp e = getExp("interface I { Unit m(Bool b); } { Bool b = True; I i; Bool c = i.m(b); }",2);
         assertEquals(e.getFreeVars(),"i","b");
@@ -107,8 +117,8 @@ public class FreeVarTest extends FrontendTest {
         assertEquals(e.getFreeVars(),"b");
     }
     
-    public void assertEquals(Collection<String> actual, String... expected) {
-        assertArrayEquals(expected,actual.toArray());
+    public void assertEquals(Set<String> actual, String... expected) {
+        Assert.assertEquals(new HashSet<String>(Arrays.asList(expected)),actual);
         
     }
     

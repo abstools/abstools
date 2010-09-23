@@ -55,8 +55,13 @@ public class JavaExprTests extends JavaBackendTest {
     }
     
     @Test
-    public void useOfVariablesInsideExpr() {
-        assertEvalTrue("{ Bool b = True; Bool c = case b { _ => b; }; }");
+    public void useOfVariablesInsideCase() {
+        assertValidStdLib("{ Bool b = True; Bool c = case b { _ => b; }; }");
+    }
+
+    @Test
+    public void useOfVariablesInsideLet() {
+        assertValidStdLib("{ Bool b = True; Bool c = let (Bool x) = True in b; }");
     }
     
 }
