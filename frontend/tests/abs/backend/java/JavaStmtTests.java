@@ -94,6 +94,8 @@ public class JavaStmtTests extends JavaBackendTest {
         assertValidStdLib("type Data = Int; data DataList = DataNil | ConsData(Data, DataList); " +
         		"{ DataList l = ConsData(5,DataNil); Bool testresult = case l { ConsData(x,y) => x == 5;}; }");
     }
+    
+    
 
 }
 

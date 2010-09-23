@@ -35,4 +35,11 @@ public class StmtTests extends SemanticTests {
        assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }"); 
     }
     
+    @Test
+    public void useOfVariablesInsideExpr() {
+        assertEvalTrue("{ Bool testresult = False; Bool b = True; testresult = case b { _ => b; }; }");
+    }
+    
+    
+    
 }

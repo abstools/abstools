@@ -53,4 +53,10 @@ public class JavaExprTests extends JavaBackendTest {
     public void useofJavaKeywordsPattern() {
         assertValidStdLib("def Bool continue(Bool break) = case break { false => break; };");
     }
+    
+    @Test
+    public void useOfVariablesInsideExpr() {
+        assertEvalTrue("{ Bool b = True; Bool c = case b { _ => b; }; }");
+    }
+    
 }

@@ -53,6 +53,14 @@ public class FrontendTest extends ABSTest {
         return getFirstExp(m);
     }
 
+    protected Exp getSecondExp(String absCode) {
+        return getSecondExp(assertParseOk(absCode));
+    }
+
+    protected Exp getExp(String absCode, int i) {
+        return getExp(assertParseOk(absCode),i);
+    }
+    
     protected Exp getSecondExp(Model m) {
         return getExp(m,1);
     }
