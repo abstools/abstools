@@ -52,6 +52,12 @@ public class FreeVarTest extends FrontendTest {
     }
 
     @Test
+    public void caseExp() {
+        Exp e = getSecondExp("{ Bool b = True; Bool c = case True { y => y; }; }");
+        assertTrue(e.getFreeVars().isEmpty());
+    }
+    
+    @Test
     public void unaryExp() {
         Exp e = getSecondExp("{ Bool b = True; Bool c = ~b; }");
         assertEquals(e.getFreeVars(),"b");

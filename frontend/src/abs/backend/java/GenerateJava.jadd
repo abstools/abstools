@@ -575,13 +575,24 @@ aspect GenerateJava {
     }
     
     public void CaseExp.generateJava(PrintStream stream) {
-       stream.print("new Case<");
+       stream.print("new Case");
        String varType = JavaBackend.getQualifiedString(getExpr().getType());
+       String expType = JavaBackend.getQualifiedString(getType());
+/*
        stream.print(varType);
        stream.print(',');
-       String expType = JavaBackend.getQualifiedString(getType());
-       stream.println(expType+">() {");
-       stream.println("      public "+expType+" of(final "+varType+" __ABS_value) { ");
+       stream.println(expType+">");
+*/       
+       stream.println("() {");
+       stream.print("      public "+expType+" of(");
+       for (String freeVarName : getFreeVars()) {
+        	VarOrFieldDecl decl = lookupVarName(freeVarName);
+        	String freeVarType = JavaBackend.getQualifiedString(decl.getType());
+        	stream.print("final "+freeVarType+" "+JavaBackend.getVariableName(freeVarName));
+	       	stream.print(", ");
+        }
+       
+       stream.println("final "+varType+" __ABS_value) { ");
        int i = 0;
        for (CaseBranch b : getBranchs()) {
            String bindingName = "__ABS_binding"+i;
@@ -618,6 +629,11 @@ aspect GenerateJava {
        }
        stream.println("throw new "+UnmatchedCaseException.class.getName()+"();"); 
        stream.print("}}.of(");
+       for (String freeVarName : getFreeVars()) {
+        	stream.print(JavaBackend.getVariableName(freeVarName));
+	       	stream.print(", ");
+        }
+       
        getExpr().generateJava(stream);
        stream.print(")");
     }

@@ -83,7 +83,11 @@ aspect VarUsage {
 	syn lazy Collection<String> CaseBranch.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getLeft().getFreeVars());
+		
 		res.addAll(getRight().getFreeVars());
+		for (PatternVar v : getLeft().getFreePatternVars()) {
+			res.remove(v.getVar().getName());
+		}
 		return res;
 	}
 
