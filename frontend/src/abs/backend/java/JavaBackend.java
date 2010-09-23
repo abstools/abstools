@@ -8,9 +8,11 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.types.ABSBool;
@@ -194,6 +196,47 @@ public class JavaBackend extends Main {
     }
     
     
+    private static final String[] JAVA_RESERVED_WORDS_ARRAY = { 
+        "abstract","do","import","public","throws",
+        "boolean","double","instanceof","return","transient",
+        "break","else","int","short","try","byte","extends",
+        "interface","static","void","case","final","long",
+        "strictfp","volatile","catch","finally","native","super",
+        "while","char","float","new","switch","class","for",
+        "package","synchronized","continue","if","private","this",
+        "default","implements","protected","throw","const","goto",
+        "null","true","false"};
+    private static final Set<String> JAVA_RESERVED_WORDS = new HashSet<String>();
+    
+    static {
+        for (String s : JAVA_RESERVED_WORDS_ARRAY) {
+            JAVA_RESERVED_WORDS.add(s);
+        }
+    }
+    
+    public static String getConstructorName(String name) {
+        return name+"__Constructor";
+    }
+    
+    public static String getFunctionName(String name) {
+        return name+"__Function";
+    }
+
+    public static String getMethodName(String name) {
+        return escapeReservedWords(name);
+    }
+        
+    public static String getVariableName(String name) {
+        return escapeReservedWords(name);
+    }
+    
+    private static String escapeReservedWords(String name) {
+        if (JAVA_RESERVED_WORDS.contains(name)) {
+            return name+"__";
+        } else {
+            return name;
+        }
+    }
     
     
 }

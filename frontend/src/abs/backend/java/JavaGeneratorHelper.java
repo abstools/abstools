@@ -42,7 +42,7 @@ public class JavaGeneratorHelper {
         for (ParamDecl d : params) {
             if (!first)
                 stream.print(", ");
-            stream.print(d.getName());
+            stream.print(JavaBackend.getVariableName(d.getName()));
             first = false;
         }
         stream.print(")");

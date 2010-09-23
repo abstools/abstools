@@ -76,13 +76,13 @@ aspect GenerateJava {
         
    	  stream.print(indent+"public ");
    	  getReturnType().generateJava(stream);
-   	  stream.print(" "+getName());
+   	  stream.print(" "+JavaBackend.getMethodName(getName()));
    	  JavaGeneratorHelper.generateParams(stream, getParams());
     }
     
     public void ParamDecl.generateJava(PrintStream stream) {
    	 getAccess().generateJava(stream);
-   	 stream.print(" "+getName());
+   	 stream.print(" "+JavaBackend.getVariableName(getName()));
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
@@ -111,7 +111,7 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParams(stream, getParams());
         stream.println(" {");
         for (ParamDecl p : getParams()) {
-            stream.println("      this."+p.getName()+" = "+p.getName()+";");
+            stream.println("      this."+JavaBackend.getVariableName(p.getName())+" = "+JavaBackend.getVariableName(p.getName())+";");
         }
         if (hasInitBlock()) {
             getInitBlock().generateJava("      ",stream);
@@ -122,11 +122,11 @@ aspect GenerateJava {
 
 	    stream.println("   protected ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : getParams()) {
-            stream.println("   if (\""+p.getName()+"\".equals(__ABS_fieldName)) return "+p.getName()+";");
+            stream.println("   if (\""+p.getName()+"\".equals(__ABS_fieldName)) return "+JavaBackend.getVariableName(p.getName())+";");
         }
         
         for (FieldDecl f : getFields()) {
-            stream.println("   if (\""+f.getName()+"\".equals(__ABS_fieldName)) return "+f.getName()+";");
+            stream.println("   if (\""+f.getName()+"\".equals(__ABS_fieldName)) return "+JavaBackend.getVariableName(f.getName())+";");
         }
         stream.println("       return super.getFieldValue(__ABS_fieldName);");
 	    	    	
@@ -178,7 +178,7 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateHelpLine(this,stream);
    	 stream.print(indent);
    	 getAccess().generateJava(stream);
-   	 stream.print(" "+getName());
+   	 stream.print(" "+JavaBackend.getVariableName(getName()));
    	 if (hasInitExp()) {
    	     stream.print(" = ");
    	     getInitExp().generateJava(stream);
@@ -199,7 +199,7 @@ aspect GenerateJava {
         
         
         for (DataConstructor c : getDataConstructors()) {
-          String constructorClassName = "ABSConstructor__"+c.getName();
+          String constructorClassName = JavaBackend.getConstructorName(c.getName());
       	  stream.print("class "+constructorClassName);
       	  if (this instanceof ParametricDataTypeDecl) {
       		  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
@@ -289,7 +289,7 @@ aspect GenerateJava {
        if (getFunctionDef() instanceof BuiltinFunctionDef) 
            return;
         
-   	  String className = "ABSFunction__"+getName();
+   	  String className = JavaBackend.getFunctionName(getName());
         stream.print("final class "+className);
         stream.println(" implements ABSFunction {");
         stream.println("   private "+className+"() { }");
@@ -359,7 +359,7 @@ aspect GenerateJava {
     public void VarDecl.generateJava(String indent, PrintStream stream) {
         stream.print(indent);
         getAccess().generateJava(stream);
-        stream.print(" "+getName()+" = ");
+        stream.print(" "+JavaBackend.getVariableName(getName())+" = ");
         
         if (hasInitExp()) {
             getInitExp().generateJava(stream);
@@ -435,7 +435,9 @@ aspect GenerateJava {
     }
     
     public void AssertStmt.generateJava(String indent, PrintStream stream) {
-        //throw new NotImplementedYetException(this);
+    	stream.print(indent+"if (");
+    	getCondition().generateJava(stream);
+    	stream.println(") throw new "+ABSAssertException.class.getName()+"(\"Assertion failed\");"); 
     }
     
     /*
@@ -507,7 +509,7 @@ aspect GenerateJava {
         stream.print(" public java.lang.String methodName() { return \""+getMethod()+"\"; }");
         
         stream.print(" public Object execute() {");
-        stream.print(" return target."+getMethod()+"(");
+        stream.print(" return target."+JavaBackend.getMethodName(getMethod())+"(");
         for (i = 0; i < getNumParam(); i++) {
             if (i > 0) stream.print(",");
             stream.print("arg"+i);
@@ -521,7 +523,7 @@ aspect GenerateJava {
     
     public void SyncCall.generateJava(PrintStream stream) {
         getCallee().generateJava(stream);
-        stream.print("."+getMethod());
+        stream.print("."+JavaBackend.getMethodName(getMethod()));
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
@@ -565,11 +567,11 @@ aspect GenerateJava {
     }
 
     public void FieldUse.generateJava(PrintStream stream) {
-        stream.print("this."+getName());
+        stream.print("this."+JavaBackend.getVariableName(getName()));
     }
 
     public void VarUse.generateJava(PrintStream stream) {
-        stream.print(getName());
+        stream.print(JavaBackend.getVariableName(getName()));
     }
     
     public void CaseExp.generateJava(PrintStream stream) {
@@ -596,7 +598,7 @@ aspect GenerateJava {
               if (first) first = false;
               else stream.print(",");
               stream.print("final "+JavaBackend.getQualifiedString(var.getType()));
-              stream.print(" "+var.getVar().getName());
+              stream.print(" "+JavaBackend.getVariableName(var.getVar().getName()));
           }
           stream.print(") { return ");
           b.getRight().generateJava(stream);
@@ -614,7 +616,7 @@ aspect GenerateJava {
       	  stream.println(");");
       	  i++;
        }
-       stream.println("throw new "+UnmatchedCaseException.class.getName()+"();"); // TODO: throw UnmatchedCaseException
+       stream.println("throw new "+UnmatchedCaseException.class.getName()+"();"); 
        stream.print("}}.of(");
        getExpr().generateJava(stream);
        stream.print(")");
@@ -632,7 +634,7 @@ aspect GenerateJava {
     }
     
     public void PatternVar.generateJava(PrintStream stream) {
-        stream.print("new "+PatternVariable.class.getName()+"(\""+getVar().getName()+"\")");
+        stream.print("new "+PatternVariable.class.getName()+"(\""+JavaBackend.getVariableName(getVar().getName())+"\")");
     }
     
     public void UnderscorePattern.generateJava(PrintStream stream) {
@@ -640,7 +642,7 @@ aspect GenerateJava {
     }
     
     public void PatternVarUse.generateJava(PrintStream stream) {
-        stream.print("new "+PatternValue.class.getName()+"("+getName()+")");
+        stream.print("new "+PatternValue.class.getName()+"("+JavaBackend.getVariableName(getName())+")");
     }
     
     public void LiteralPattern.generateJava(PrintStream stream) {
@@ -660,7 +662,7 @@ aspect GenerateJava {
          return;
      }
      
-     stream.print("ABSFunction__"+getName()+".");
+     stream.print(JavaBackend.getFunctionName(getName())+".");
      Type declaredResultType = d.getTypeUse().getType();
      if (d instanceof ParametricFunctionDecl) {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
@@ -707,7 +709,7 @@ aspect GenerateJava {
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");
         } else {
-      	  stream.print("new ABSConstructor__"+getConstructor());
+      	  stream.print("new "+JavaBackend.getConstructorName(getConstructor()));
       	  if (decl instanceof ParametricDataTypeDecl) {
       		  DataTypeType type = (DataTypeType) this.getType();
       		  if (type.hasTypeArgs()) {
@@ -734,7 +736,7 @@ aspect GenerateJava {
         stream.print(',');
         String expType = JavaBackend.getQualifiedString(getExp().getType());
         stream.print(expType+">() { public "+expType);
-        stream.print(" in(final "+varType+" "+getVar().getName()+") { ");
+        stream.print(" in(final "+varType+" "+JavaBackend.getVariableName(getVar().getName())+") { ");
         stream.print("return ");
         getExp().generateJava(stream);
         stream.print("; }}.in(");
