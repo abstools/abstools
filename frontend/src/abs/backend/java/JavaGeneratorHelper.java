@@ -54,7 +54,7 @@ public class JavaGeneratorHelper {
         for (ParamDecl d : params) {
             if (!first)
                 stream.print(", ");
-            stream.print("final ");
+            //stream.print("final ");
             d.generateJava(stream);
             first = false;
         }
