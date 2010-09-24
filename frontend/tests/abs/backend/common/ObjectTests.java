@@ -66,5 +66,10 @@ public class ObjectTests extends SemanticTests {
     public void initBlock() {
        assertEvalTrue(CLASS_WITH_INITBLOCK+CALL_M); 
     }
-    
+
+    @Test
+    public void classParamReadInFieldAssign() {
+       assertEvalTrue(INTERFACE_I+" class C(Bool f) implements I { Bool x = f; Bool m() { return this.x; } }"+CALL_M); 
+    }
+
 }

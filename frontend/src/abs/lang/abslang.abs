@@ -147,7 +147,11 @@ def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
  * Returns a set containing all keys of map 'map'.
  */
 def Set<A> keys<A, B>(Map<A, B> map) =
-  case map { EmptyMap => EmptySet ; InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)); };
+  case map { 
+    EmptyMap => EmptySet ;
+    InsertAssoc(Pair(a, _), tail) => Insert(a, keys(tail)); 
+  };
+    
 /**
  * Returns the value associated with key 'k' in map 'ms'.
  */

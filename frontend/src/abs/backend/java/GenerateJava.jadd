@@ -113,6 +113,18 @@ aspect GenerateJava {
         for (ParamDecl p : getParams()) {
             stream.println("      this."+JavaBackend.getVariableName(p.getName())+" = "+JavaBackend.getVariableName(p.getName())+";");
         }
+        
+        for (FieldDecl f : getFields()) {
+		  if (f.hasInitExp()) {
+		  	 stream.print("this.");
+		  	 stream.print(JavaBackend.getVariableName(f.getName()));
+   		     stream.print(" = ");
+   	    	 f.getInitExp().generateJava(stream);
+   	    	 stream.print(";");
+   		  }
+        }
+        
+        
         if (hasInitBlock()) {
             getInitBlock().generateJava("      ",stream);
         }
@@ -179,10 +191,6 @@ aspect GenerateJava {
    	 stream.print(indent);
    	 getAccess().generateJava(stream);
    	 stream.print(" "+JavaBackend.getVariableName(getName()));
-   	 if (hasInitExp()) {
-   	     stream.print(" = ");
-   	     getInitExp().generateJava(stream);
-   	 }
    	 stream.println(";");
     }
     
@@ -627,7 +635,9 @@ aspect GenerateJava {
       	  stream.println(");");
       	  i++;
        }
-       stream.println("throw new "+UnmatchedCaseException.class.getName()+"();"); 
+       Position pos = new Position(this);
+       stream.print("throw new "+UnmatchedCaseException.class.getName()+"(\"");
+       stream.println(pos.getPositionString()+" value \"+__ABS_value+\" did not match any pattern.\");");
        stream.print("}}.of(");
        for (String freeVarName : getFreeVars()) {
         	stream.print(JavaBackend.getVariableName(freeVarName));
