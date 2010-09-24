@@ -1,5 +1,7 @@
-aspect VarUsage {
+import java.util.Set;
 
+aspect VarUsage {
+	
 
 	syn lazy Set<String> Exp.getFreeVars();
 	

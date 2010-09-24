@@ -36,6 +36,8 @@ aspect TypeChecker {
     	  ex.typeCheck(e);
     	}
     
+	    TypeCheckerHelper.checkForDuplicateDecls(this,e);
+    
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }

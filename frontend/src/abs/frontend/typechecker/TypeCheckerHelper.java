@@ -270,13 +270,35 @@ public class TypeCheckerHelper {
    public static ResolvedName resolveName(ModuleDecl mod, KindedName name) {
 	   return mod.getVisibleNames().get(name);
    }
-   
+
+   public static void checkForDuplicateDecls(ModuleDecl mod, SemanticErrorList errors) {
+       ArrayList<KindedName> duplicateNames = new ArrayList<KindedName>();
+       Map<KindedName, ResolvedName> names = getDefinedNames(mod, duplicateNames);
+       for (KindedName n : duplicateNames) {
+           ResolvedName rn = names.get(n);
+           ErrorMessage msg = null;
+           switch (n.getKind()) {
+           case CLASS: msg = ErrorMessage.DUPLICATE_CLASS_NAME; break;
+           case FUN: msg = ErrorMessage.DUPLICATE_FUN_NAME; break;
+           case DATA_CONSTRUCTOR: msg = ErrorMessage.DUPLICATE_CONSTRUCTOR; break;
+           case TYPE_DECL: msg = ErrorMessage.DUPLICATE_TYPE_DECL; break;
+           }
+           errors.add(new TypeError(rn.getDecl(),msg,n.getName()));
+       }
+   }
+
    public static Map<KindedName,ResolvedName> getDefinedNames(ModuleDecl mod) {
+       return getDefinedNames(mod, new ArrayList<KindedName>());
+   }
+   
+   public static Map<KindedName,ResolvedName> getDefinedNames(ModuleDecl mod, java.util.List<KindedName> foundDuplicates) {
 	   HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
 	   ResolvedModuleName moduleName = new ResolvedModuleName(mod);
 	   
 	   for (Decl d : mod.getDeclList()) {
 		   ResolvedDeclName rn = new ResolvedDeclName(moduleName,d);
+		   if (res.containsKey(rn.getSimpleName()))
+		       foundDuplicates.add(rn.getSimpleName());
 		   res.put(rn.getSimpleName(), rn);
 		   res.put(rn.getQualifiedName(), rn);
 		   
@@ -284,6 +306,8 @@ public class TypeCheckerHelper {
                DataTypeDecl dataDecl = (DataTypeDecl)d;
                for (DataConstructor c : dataDecl.getDataConstructors()) {
         		   rn = new ResolvedDeclName(moduleName,c);
+                   if (res.containsKey(rn.getSimpleName()))
+                       foundDuplicates.add(rn.getSimpleName());
         		   res.put(rn.getSimpleName(), rn);
         		   res.put(rn.getQualifiedName(), rn);
                }

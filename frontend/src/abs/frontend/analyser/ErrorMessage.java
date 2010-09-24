@@ -27,6 +27,8 @@ public enum ErrorMessage {
     , WRONG_NUMBER_OF_TYPE_ARGS("Wrong number of type arguments for parametric type %s. Expected %s, but found %s.")
     , TYPE_MISMATCH("Type %s does not match declared type %s.")
     , DUPLICATE_CONSTRUCTOR("Constructor %s is already defined.")
+    , DUPLICATE_CLASS_NAME("Class %s is already defined.")
+    , DUPLICATE_FUN_NAME("Function %s is already defined.")
     , DUPLICATE_METHOD_NAME("Method %s is already defined.")
     , DUPLICATE_PARAM_NAME("Parameter %s is already defined.")
     , DUPLICATE_FIELD_NAME("Field %s is already defined.")

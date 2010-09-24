@@ -1,6 +1,7 @@
 import java.util.Collection;
 import java.util.ArrayList;
 import abs.frontend.analyser.*;
+import abs.frontend.typechecker.*;
 
 aspect ErrorCheck {
     
@@ -49,21 +50,6 @@ aspect ErrorCheck {
         c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATATYPE,getName()));
   }
 
-  // add error for duplicate type or behavior declarations
-  public void Model.collectErrors(SemanticErrorList c) {
-    super.collectErrors(c);
-    if(duplicateTypeDecls().size() > 0) {
-    	for (String name : duplicateTypeDecls()) {
-            c.add(new SemanticError(this,ErrorMessage.DUPLICATE_TYPE_DECL,name));
-    	}
-    }
-    if(duplicateBehaviorDecls().size() > 0) {
-    	for (String name : duplicateBehaviorDecls()) {
-            c.add(new SemanticError(this,ErrorMessage.DUPLICATE_BEHAVIOR_DECL,name));
-    	}
-    }
-  }
-  
   public void DataConstructorExp.collectErrors(SemanticErrorList c) {
       super.collectErrors(c);
       if (getDecl() == null) {
