@@ -134,5 +134,13 @@ public class FunctionalTests extends SemanticTests {
         assertEvalTrue("type Data = Int; { Int i = 5; Data d = 5; Bool testresult = d == i; }");
     }
 
+    @Test
+    public void assertStmt() {
+        assertEvalTrue("{ assert True; Bool testresult = True; }");
+    }
     
+    @Test
+    public void assertStmtFails() {
+        assertEvalFails("{ assert False; Bool testresult = True; }");
+    }
 }
