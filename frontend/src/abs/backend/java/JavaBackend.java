@@ -151,6 +151,7 @@ public class JavaBackend extends Main {
    		 if (res != null)
    			 return res;
    		 StringBuffer sb = new StringBuffer(dt.getDecl().getName());
+/*   		 
    		 if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs())) {
    		     
    			 sb.append("<");
@@ -162,6 +163,7 @@ public class JavaBackend extends Main {
    			 }
    			 sb.append(">");
    		 }
+*/   		 
    		 
    		 return sb.toString();
    	 } else if (absType.isInterfaceType()) {
