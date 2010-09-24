@@ -19,6 +19,7 @@ import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
+import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Name;
@@ -207,7 +208,7 @@ public class JavaBackend extends Main {
         "while","char","float","new","switch","class","for",
         "package","synchronized","continue","if","private","this",
         "default","implements","protected","throw","const","goto",
-        "null","true","false"};
+        "null","true","false","abs"};
     private static final Set<String> JAVA_RESERVED_WORDS = new HashSet<String>();
     
     static {
@@ -216,12 +217,12 @@ public class JavaBackend extends Main {
         }
     }
     
-    public static String getConstructorName(String name) {
-        return name+"__Constructor";
+    public static String getConstructorName(DataTypeDecl dataType,String name) {
+        return dataType.getName()+"_"+name;
     }
     
     public static String getFunctionName(String name) {
-        return name+"__Function";
+        return escapeReservedWords(name);
     }
 
     public static String getMethodName(String name) {

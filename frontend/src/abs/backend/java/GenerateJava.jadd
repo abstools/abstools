@@ -196,6 +196,8 @@ aspect GenerateJava {
     
 
     public void DataTypeDecl.generateJava(PrintStream stream) {
+        JavaGeneratorHelper.generateHelpLine(this,stream);
+    
         stream.print("abstract class "+getName());
         if (this instanceof ParametricDataTypeDecl) {
       	  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
@@ -207,7 +209,9 @@ aspect GenerateJava {
         
         
         for (DataConstructor c : getDataConstructors()) {
-          String constructorClassName = JavaBackend.getConstructorName(c.getName());
+          String constructorClassName = JavaBackend.getConstructorName(this,c.getName());
+         JavaGeneratorHelper.generateHelpLine(this,stream);
+          
       	  stream.print("class "+constructorClassName);
       	  if (this instanceof ParametricDataTypeDecl) {
       		  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
@@ -296,6 +300,8 @@ aspect GenerateJava {
     public void FunctionDecl.generateJava(PrintStream stream) {
        if (getFunctionDef() instanceof BuiltinFunctionDef) 
            return;
+        
+        JavaGeneratorHelper.generateHelpLine(this,stream);
         
    	  String className = JavaBackend.getFunctionName(getName());
         stream.print("final class "+className);
@@ -735,7 +741,7 @@ aspect GenerateJava {
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");
         } else {
-      	  stream.print("new "+JavaBackend.getConstructorName(getConstructor()));
+      	  stream.print("new "+JavaBackend.getConstructorName(decl,getConstructor()));
       	  if (decl instanceof ParametricDataTypeDecl) {
       		  DataTypeType type = (DataTypeType) this.getType();
       		  if (type.hasTypeArgs()) {

@@ -43,7 +43,17 @@ public class Position {
     }
 
     private String getFileName() {
-        return fileName;
+        return cutOffPath(fileName);
+    }
+    
+    private static String cutOffPath(String name) {
+        if (name.contains("/")) {
+            return name.substring(name.lastIndexOf('/')+1);
+        }
+        if (name.contains("\\")) {
+            return name.substring(name.lastIndexOf('\\')+1);
+        }
+        return name;
     }
     
 }
