@@ -167,22 +167,27 @@ aspect TypeChecker {
     public abstract void Decl.typeCheck(SemanticErrorList e);  
     
     public void ClassDecl.typeCheck(SemanticErrorList e) {
-      HashMap<String, FieldDecl> fields = new HashMap<String, FieldDecl>();
+      Set<String> fields = new HashSet<String>();
+      for (ParamDecl d : getParams()) {
+          d.typeCheck(e);
+          if (fields.contains(d.getName())) {
+              e.add(new TypeError(d, ErrorMessage.DUPLICATE_FIELD_NAME, d.getName()));
+		  } else { 
+		  	  fields.add(d.getName());
+		  }          
+      }
+      
       for (FieldDecl f : getFields()) {
    		  f.typeCheck(e);
-   		  if (fields.containsKey(f.getName())) {
+   		  if (fields.contains(f.getName())) {
               e.add(new TypeError(f, ErrorMessage.DUPLICATE_FIELD_NAME, f.getName()));
           } else {
-              fields.put(f.getName(),f);
+              fields.add(f.getName());
           }
    	  }
 
       if (hasInitBlock()) {
           getInitBlock().typeCheck(e);
-      }
-      
-      for (ParamDecl d : getParams()) {
-          d.typeCheck(e);
       }
       
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
@@ -193,7 +198,11 @@ aspect TypeChecker {
    	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
    		  String name = m.getMethodSig().getName();
-          methodImpls.put(name,m);
+   		  if (methodImpls.containsKey(name)) {
+              e.add(new TypeError(m, ErrorMessage.DUPLICATE_METHOD_NAME, name));
+   		  } else {
+          	methodImpls.put(name,m);
+          }
    		  if (sigs.containsKey(name)) {
    		      MethodSig s = sigs.get(name);
    		      MethodSig ms = m.getMethodSig();

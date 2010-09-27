@@ -287,6 +287,21 @@ public class TypeCheckerTest extends FrontendTest {
     public void testClassTypeUseError() {
         assertTypeErrors("class C {} { C c; c = new C(); }"); 
     }
+
+    @Test
+    public void testClassDuplicateFields() {
+        assertTypeErrors("class C { Bool b = True; Int b = 5; } "); 
+    }
+
+    @Test
+    public void testClassDuplicateFields2() {
+        assertTypeErrors("class C(Int b) { Bool b = True; } "); 
+    }
+
+    @Test
+    public void testClassDuplicateMethods() {
+        assertTypeErrors("class C { Unit m() {} Bool m() { return True;} } "); 
+    }
     
     @Test
     public void functionDuplicateParams() {
