@@ -56,9 +56,9 @@ public class JavaObservationTest extends JavaBackendTest {
     static final String STDDATA = "data Foo = Bar(String,String);"; 
     
     private void assertOutputContains(String absCode, String expectedOutput) {
-        String java = getJavaCode("module JavaTest;"+STDDATA+absCode, true);
+        JavaCode code = getJavaCode("module JavaTest;"+STDDATA+absCode, true);
         //System.out.println(java);
-        String output = runJava(java, "-Dabs.systemobserver="+TestSystemObserver.class.getName()).toString().trim();
+        String output = runJava(code, "-Dabs.systemobserver="+TestSystemObserver.class.getName()).toString().trim();
         if (output.contains(expectedOutput))
             Assert.assertTrue(true);
         else

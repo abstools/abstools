@@ -4,32 +4,29 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodSig;
 
 public class UnionType extends ReferenceType {
 	private final java.util.List<InterfaceType> types;
-	private final String originatingClass;
+	private final ClassDecl originatingClass;
 	
-	public UnionType(String className, List<InterfaceTypeUse> types) {
+	public UnionType(ClassDecl classDecl, List<InterfaceTypeUse> types) {
 		this.types = new ArrayList<InterfaceType>();
 		for (InterfaceTypeUse t : types) {
 			this.types.add((InterfaceType)t.getType());
 		}
-		originatingClass = className;
+		originatingClass = classDecl;
 	}
 
-	public UnionType(String className, InterfaceType... types) {
+	public UnionType(ClassDecl classDecl, InterfaceType... types) {
 		this.types = new ArrayList<InterfaceType>();
 		this.types.addAll(Arrays.asList(types));
-        originatingClass = className;
+        originatingClass = classDecl;
 	}
 
-	public String getOriginatingClassName() {
-	    return originatingClass;
-	}
-	
 	public java.util.List<InterfaceType> getTypes() {
 		return Collections.unmodifiableList(types);
 	}
@@ -96,4 +93,8 @@ public class UnionType extends ReferenceType {
 	public boolean isUnionType() {
 	    return true;
 	}
+
+    public ClassDecl getOriginatingClass() {
+        return originatingClass;
+    }
 }

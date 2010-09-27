@@ -9,14 +9,30 @@ import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
-    public void Model.generateJava(String packageName, PrintStream stream) {
-        if (packageName != null) {
-            stream.println("package "+packageName+";");
+    public void Model.generateJavaCode(JavaCode code) throws IOException {
+    	for (ModuleDecl decl : getModuleDecls()) {
+    		decl.generateJavaCode(code);
+    	}
+    }
+    
+    public void ModuleDecl.generateJavaCode(JavaCode code) throws IOException {
+    	String packageName = getName();
+    	JavaCode.Package p = code.createPackage(packageName);
+        for (Decl decl : getDecls()) {
+            decl.generateJavaCode(p);
         }
-        
-        stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
-        if (hasMainBlock()) {
-            Block block = getMainBlock();
+
+
+        if (hasBlock()) {
+        	p.addMainClass("Main");
+			File file = p.createJavaFile("Main");
+			PrintStream stream = null;
+			try {
+			stream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+			stream.println("package "+p.packageName+";");
+        	stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
+			
+            Block block = getBlock();
             stream.println("public class Main extends "+ABSObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) {");
 		    stream.println("       "+ABSRuntime.class.getName()+".systemStarted();");            
@@ -39,25 +55,41 @@ aspect GenerateJava {
             stream.print("   public void start() ");
             block.generateJava("   ",stream);
             stream.println("}");
-            
+    		} finally {
+    			if (stream != null)
+    				stream.close();
+    		}         
             
         }
         
-        for (Decl decl : getDecls()) {
-            decl.generateJava(stream);
-        }
+        
     }
 
-    public void Model.generateJava(PrintStream stream) {
-        generateJava(null,stream);
-    }
+	void Decl.generateJavaCode(JavaCode.Package pkg) throws IOException {
+		PrintStream s = null;
+		try {
+			String name = JavaBackend.getJavaName(this);
+			File file = pkg.createJavaFile(name);
+			s = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+			s.println("package "+pkg.packageName+";");
+        	s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
+			generateJava(s);
+	    } catch (IOException e) {
+	    	e.printStackTrace();
+	    } finally {
+	    	if (s != null)
+	    		s.close();
+	    }
+			
+	}
     
     abstract void Decl.generateJava(PrintStream stream);
 
     public void DataConstructor.generateJava(PrintStream stream) { }
 
     public void InterfaceDecl.generateJava(PrintStream stream) {
-        stream.print("interface "+getName()+" extends "+ABSInterface.class.getName());
+        JavaGeneratorHelper.generateHelpLine(this,stream);
+        stream.print("public interface "+getName()+" extends "+ABSInterface.class.getName());
         for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
             stream.print(", "+use.getName());
         }
@@ -87,8 +119,8 @@ aspect GenerateJava {
 
     public void ClassDecl.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateHelpLine(this,stream);
-        
-        stream.print("class "+getName()+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
+        String className = JavaBackend.getClassName(getName());
+        stream.print("public class "+className+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
         for (InterfaceTypeUse use : getImplementedInterfaceUses()) {
             stream.print(", "+use.getName());
         }
@@ -107,7 +139,7 @@ aspect GenerateJava {
         }
         
         // constructor
-        stream.print("   public "+getName());
+        stream.print("   public "+className);
         JavaGeneratorHelper.generateParams(stream, getParams());
         stream.println(" {");
         for (ParamDecl p : getParams()) {
@@ -147,15 +179,15 @@ aspect GenerateJava {
 		stream.println("   public java.lang.String getClassName() { return \""+getName()+"\"; }");
 
         // static constructor method for new cog C
-        stream.print("   public static "+getName()+" __ABS_createNewCOG");
+        stream.print("   public static "+className+" __ABS_createNewCOG");
         JavaGeneratorHelper.generateParams(stream, getParams());
         stream.println(" {");
-        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"("+getName()+".class);");
+        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"("+className+".class);");
         stream.println("       final "+ABSThread.class.getName()+" __ABS_thread = "+ABSRuntime.class.getName()+".getCurrentThread();");
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
         stream.println("       __ABS_thread.setCOG(__ABS_cog);");
         stream.println("       try { ");
-        stream.print("            "+getName()+" __ABS_result = new "+getName());
+        stream.print("            "+className+" __ABS_result = new "+className);
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
@@ -198,7 +230,7 @@ aspect GenerateJava {
     public void DataTypeDecl.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateHelpLine(this,stream);
     
-        stream.print("abstract class "+getName());
+        stream.print("public abstract class "+getName());
         if (this instanceof ParametricDataTypeDecl) {
       	  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
       	  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
@@ -212,7 +244,7 @@ aspect GenerateJava {
           String constructorClassName = JavaBackend.getConstructorName(this,c.getName());
          JavaGeneratorHelper.generateHelpLine(this,stream);
           
-      	  stream.print("class "+constructorClassName);
+      	  stream.print("public final class "+constructorClassName);
       	  if (this instanceof ParametricDataTypeDecl) {
       		  ParametricDataTypeDecl pfd = (ParametricDataTypeDecl) this;
       		  JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
@@ -304,7 +336,7 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateHelpLine(this,stream);
         
    	  String className = JavaBackend.getFunctionName(getName());
-        stream.print("final class "+className);
+        stream.print("public final class "+className);
         stream.println(" implements ABSFunction {");
         stream.println("   private "+className+"() { }");
         stream.print("   public static ");
@@ -558,10 +590,11 @@ aspect GenerateJava {
     }
 
     public void NewExp.generateJava(PrintStream stream) {
+    	String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
         if (getCog().equals("cog")) {
-            stream.print(JavaBackend.getQualifiedString(getClassName())+".__ABS_createNewCOG");
+            stream.print(className+".__ABS_createNewCOG");
         } else {
-            stream.print("new "+JavaBackend.getQualifiedString(getClassName()));
+            stream.print("new "+className);
         }
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }
@@ -571,7 +604,7 @@ aspect GenerateJava {
     }
 
     public void InterfaceTypeUse.generateJava(PrintStream stream) {
-        stream.print(getName());
+        stream.print(JavaBackend.getJavaType(this));
     }
 
     public void TypeParameterUse.generateJava(PrintStream stream) {
@@ -696,7 +729,7 @@ aspect GenerateJava {
          return;
      }
      
-     stream.print(JavaBackend.getFunctionName(getName())+".");
+     stream.print(JavaBackend.getQualifiedString(d)+".");
      Type declaredResultType = d.getTypeUse().getType();
      if (d instanceof ParametricFunctionDecl) {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
@@ -743,7 +776,7 @@ aspect GenerateJava {
         } else if (name.equals("Unit")) {
             stream.print("ABSUnit.UNIT");
         } else {
-      	  stream.print("new "+JavaBackend.getConstructorName(decl,getConstructor()));
+      	  stream.print("new "+JavaBackend.getQualifiedString(c));
       	  if (decl instanceof ParametricDataTypeDecl) {
       		  DataTypeType type = (DataTypeType) this.getType();
       		  if (type.hasTypeArgs()) {

@@ -21,6 +21,11 @@ public class ModuleSystemTests extends FrontendTest {
 		assertNoTypeErrors("module A; data X; module B;");
 	}
 
+    @Test
+    public void qualifiedImport() {
+        assertNoTypeErrors("module A; export Foo, Bar; data Foo = Bar; module B; import A.Foo; import A.Bar; { A.Foo f = A.Bar; } "); 
+    }
+	
 	@Test
 	public void starImport() {
 		assertNoTypeErrors("module A; export X; data X; module B; import * from A; type Y = X;");

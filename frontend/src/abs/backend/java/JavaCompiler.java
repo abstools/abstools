@@ -18,6 +18,10 @@ class JavaCompiler extends Frontend {
     if(!compile(args))
       System.exit(1);
   }
+
+  public static boolean compile(JavaCode code) {
+      return compile(code.getFileNames());
+  }
   
   public static boolean compile(String... args) {
       JavaCompiler compiler = new JavaCompiler();

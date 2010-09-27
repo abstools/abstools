@@ -19,10 +19,15 @@ import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
+import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
+import abs.frontend.ast.Decl;
+import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Name;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
@@ -104,20 +109,13 @@ public class JavaBackend extends Main {
     }
 
     private void compile(Model m, File destDir) throws IOException {
-        File file = generateJavaToFile(m, new File(destDir, "Main.java"));
+        JavaCode javaCode = new JavaCode(destDir);
+        m.generateJavaCode(javaCode);
         if (!sourceOnly) {
-            JavaCompiler.compile("-classpath",System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath(), file.getAbsolutePath());
+            javaCode.compile();
         }
     }
 
-
-    private static File generateJavaToFile(Model model, File file) throws IOException {
-        PrintStream s = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
-        model.generateJava(s);
-        s.close();
-        
-        return file;
-    }
 
     private static final Map<String, String> dataTypeMap = initDataTypeMap();
     
@@ -132,7 +130,7 @@ public class JavaBackend extends Main {
     }
 
 
-    public static String getJavaType(DataTypeUse absType) {
+    public static String getJavaType(TypeUse absType) {
         return getQualifiedString(absType.getType());
     }
     
@@ -151,7 +149,8 @@ public class JavaBackend extends Main {
       	 res = dataTypeMap.get(dt.getDecl().getName());
    		 if (res != null)
    			 return res;
-   		 StringBuffer sb = new StringBuffer(dt.getDecl().getName());
+   		 
+   		 return getQualifiedString(dt.getDecl());
 /*   		 
    		 if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs())) {
    		     
@@ -165,11 +164,9 @@ public class JavaBackend extends Main {
    			 sb.append(">");
    		 }
 */   		 
-   		 
-   		 return sb.toString();
    	 } else if (absType.isInterfaceType()) {
    		 InterfaceType it = (InterfaceType) absType;
-   		 return it.getDecl().getName();
+   		 return getQualifiedString(it.getDecl());
    	 } else if (absType.isTypeParameter()) {
    		 TypeParameter tp = (TypeParameter) absType;
    		 return tp.getDecl().getName();
@@ -179,26 +176,19 @@ public class JavaBackend extends Main {
    			 return getQualifiedString(bt.getBoundType());
    		 return "?";
    	 } else if (absType.isAnyType()) {
-   		 return "Object";
+   		 return "java.lang.Object";
    	 } else if (absType.isUnionType()) {
-   	     return ((UnionType) absType).getOriginatingClassName();
+   	     return getQualifiedString(((UnionType) absType).getOriginatingClass());
    	 }
 
    	 throw new RuntimeException("Type "+absType.getClass().getName()+" not yet supported by Java backend");
     }
 
 
-    private static boolean containsUnboundedType(List<Type> typeArgs) {
-        for (Type t : typeArgs) {
-            if (t.isBoundedType()) {
-                if (!((BoundedType)t).hasBoundType())
-                    return true;
-            }
-        }
-        return false;
+    public static String getQualifiedString(Decl decl) {
+        return decl.getModuleDecl().getName()+"."+getJavaName(decl);
     }
-    
-    
+
     private static final String[] JAVA_RESERVED_WORDS_ARRAY = { 
         "abstract","do","import","public","throws",
         "boolean","double","instanceof","return","transient",
@@ -221,6 +211,14 @@ public class JavaBackend extends Main {
         return dataType.getName()+"_"+name;
     }
     
+    private static String getConstructorName(DataConstructor decl) {
+        return getConstructorName(((DataTypeType)decl.getType()).getDecl(),decl.getName());
+    }
+
+    public static String getClassName(String name) {
+        return name+"_Class";
+    }
+    
     public static String getFunctionName(String name) {
         return escapeReservedWords(name);
     }
@@ -241,5 +239,16 @@ public class JavaBackend extends Main {
         }
     }
     
-    
+    public static String getJavaName(Decl decl) {
+        if (decl instanceof FunctionDecl) {
+            return getFunctionName(decl.getName());
+        } else if (decl instanceof DataConstructor) {
+            return getConstructorName((DataConstructor)decl);
+        } else if (decl instanceof ClassDecl) {
+            return getClassName(decl.getName());
+        }
+
+        return decl.getName();
+    }
+
 }

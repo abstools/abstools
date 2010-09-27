@@ -61,14 +61,22 @@ aspect TypeResolution {
 		return ! TypeCheckerHelper.getAllNames(name, this.getVisibleNames()).isEmpty();
 	}
 
-    syn lazy Collection<Decl> Model.getDecls() {
-        ArrayList<Decl> res = new ArrayList<Decl>();
+    syn lazy Collection<ModuleDecl> Model.getModuleDecls() {
+        ArrayList<ModuleDecl> res = new ArrayList<ModuleDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
         	for (ModuleDecl mdecl : u.getModuleDecls()) {
-            	for (Decl d : mdecl.getDecls()) {
-                	res.add(d);
-            	}
+               	res.add(mdecl);
             }
+        }
+        return res;
+    }
+
+    syn lazy Collection<Decl> Model.getDecls() {
+        ArrayList<Decl> res = new ArrayList<Decl>();
+       	for (ModuleDecl mdecl : getModuleDecls()) {
+           	for (Decl d : mdecl.getDecls()) {
+               	res.add(d);
+           	}
         }
         return res;
     }
@@ -107,6 +115,9 @@ aspect TypeResolution {
     	}
     	return null;
     }
+    
+    inh ModuleDecl Decl.getModuleDecl();
+    eq ModuleDecl.getDecl().getModuleDecl() = this;
     
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;

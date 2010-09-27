@@ -10,7 +10,8 @@ import org.junit.runners.Suite;
         ObjectTests.class,
         FunctionalTests.class,
         ConcurrencyTests.class,
-        StdLibTests.class}
+        StdLibTests.class,
+        ModuleSystemTests.class}
         )
 public class AllSemanticTests {
 

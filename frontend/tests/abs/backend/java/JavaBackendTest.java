@@ -24,10 +24,6 @@ public class JavaBackendTest extends ABSTest {
     
     private static final boolean DEBUG = false;
 
-    void assertEqual(String absCode, String javaCode) {
-        assertEqual(absCode, javaCode,null);
-    }
-    
     void assertValidStdLib(String absCode) {
         assertValidJava(getJavaCode("module JavaUnitTest; "+absCode, true));
     }
@@ -38,18 +34,22 @@ public class JavaBackendTest extends ABSTest {
     
     protected void assertValidJavaFile(String absFile, boolean useStdLib) {
        Model m = assertParseFileOk(absFile, true, true);
-       String javaCode = getJavaCode(m);
-       assertValidJava(javaCode);
+    try {
+        assertValidJava(getJavaCode(m));
+    } catch (IOException e) {
+        e.printStackTrace();
+        Assert.fail(e.getMessage());
+    }
     }
     
-    void assertValidJava(String javaCode) {
-        File tmpFile;
+    void assertValidJava(JavaCode javaCode) {
         try {
-            tmpFile = getTempFile(javaCode);
-            JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
+            javaCode.compile("-classpath","bin", "-d", "gen/test");
         } catch (Exception e) {
            System.out.println(javaCode);
-            Assert.fail(e.getMessage());
+           Assert.fail(e.getMessage());
+        } finally {
+            javaCode.deleteCode();
         }
     }
     
@@ -57,18 +57,16 @@ public class JavaBackendTest extends ABSTest {
     
     
     
-    StringBuffer runJava(String javaCode, String... jvmargs) {
-        String realCode = "package unittest;"+javaCode;
-        File tmpFile;
+    StringBuffer runJava(JavaCode javaCode, String... jvmargs) {
         StringBuffer output = new StringBuffer();
 
         try {
-            tmpFile = getTempFile(realCode);
-            JavaCompiler.compile("-classpath","bin", "-d", "gen/test", tmpFile.getAbsolutePath());
+            javaCode.compile("-classpath","bin", "-d", "gen/test");
+
             ArrayList<String> args = new ArrayList<String>();
             args.add("java");
             args.addAll(Arrays.asList(jvmargs));
-            args.addAll(Arrays.asList("-cp", "bin:gen/test", "unittest.Main"));
+            args.addAll(Arrays.asList("-cp", "bin:gen/test", javaCode.getFirstMainClass()));
             ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);
             Process p = pb.start();
@@ -88,7 +86,7 @@ public class JavaBackendTest extends ABSTest {
 
     }
     
-    boolean runJavaAndTestResult(String javaCode, boolean expectFail) {
+    boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) {
         StringBuffer output = null; 
         try {
             output = runJava(javaCode);
@@ -119,7 +117,7 @@ public class JavaBackendTest extends ABSTest {
         }
     }
     
-    String getJavaCode(String absCode, boolean withStdLib) {
+    protected JavaCode getJavaCode(String absCode, boolean withStdLib) {
         try {
         Model model = null;
         String code = null;
@@ -151,38 +149,19 @@ public class JavaBackendTest extends ABSTest {
         } catch (NumberFormatException e) {
             Assert.fail(e.getMessage());
             return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+            return null;
         }
     }
 
-    private String getJavaCode(Model model) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.generateJava(new PrintStream(out));
-        String res = out.toString();
-        //res = res.replace('\n', ' ');
-        //res = res.replaceAll("[ ]+", " ");
-        res = res.trim();
-        return res;
+    private JavaCode getJavaCode(Model model) throws IOException {
+        JavaCode code = new JavaCode();
+        model.generateJavaCode(code);
+        return code;
     }
     
-    void assertEqual(String absCode, String javaCode, String pkg) {
-        try {
-            StringBuffer expectedJavaCode = new StringBuffer();
-            if (pkg != null) {
-                expectedJavaCode.append("package "+pkg+"; ");
-            }
-            
-            expectedJavaCode.append(JavaBackendConstants.LIB_IMPORT_STATEMENT+" ");
-            expectedJavaCode.append(javaCode);
-            String generatedJavaCode = getJavaCode(absCode, false);
-            Assert.assertEquals(expectedJavaCode.toString(), generatedJavaCode);
-            
-            assertValidJava(generatedJavaCode);
-            
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
-    }
-
     private static File getTempFile(String testCode) throws IOException {
         File tmpFile = File.createTempFile("abs", "test");
         PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));
@@ -198,7 +177,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalEquals(String absCode, boolean value) {
-        String javaCode = getJavaCode(absCode, true);
+        JavaCode javaCode = getJavaCode(absCode, true);
         if (DEBUG)
             System.out.println(javaCode);
         boolean res = runJavaAndTestResult(javaCode, false);
@@ -208,7 +187,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     public void assertEvalFails(String absCode) {
-        String javaCode = getJavaCode(absCode, true);
+        JavaCode javaCode = getJavaCode(absCode, true);
         try {
             runJavaAndTestResult(javaCode, true);
             System.out.println(javaCode);
