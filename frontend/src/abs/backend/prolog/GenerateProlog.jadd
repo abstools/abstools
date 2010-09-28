@@ -1,0 +1,340 @@
+// -*- mode: java; tab-width: 4; -*-
+
+import java.io.*;
+import abs.backend.prolog.*;
+import abs.frontend.ast.*;
+
+aspect GenerateProlog {
+
+    public void ASTNode.generateProlog(PrintStream s){
+    	if (children != null)
+    		for (ASTNode<?> child : children) 
+    			if (child != null) child.generateProlog(s);
+    }
+    
+    
+    // data (Data type declarations)
+    /*   E.g., for a data type "data List = Nil | Cons(Int,List) ;"
+     *   we generate the Prolog term 
+     *   "data('List',['Nil','Cons'('Int','List')])"
+     */   
+    public void ParametricDataTypeDecl.generateProlog(PrintStream s){
+    	System.out.print("data(" + quote(getName()) + ",[");
+    	List<?> cs = (List<?>) getChild(0);
+    	int n = cs.getNumChild();
+    	for (int i = 0; i < n; i++){
+    		cs.getChild(i).generateProlog(s); // cons here is a DataConstructor
+    		if (i != n-1) System.out.print(",");
+    	}
+    	// child(1) and child(2) are resp. annotations and type parameters. By now, I ignore them.
+    	System.out.println("]).");
+    }
+
+    public void DataConstructor.generateProlog(PrintStream s){
+    	System.out.print(quote(getName()));
+    	List<?> uses = (List<?>) getChild(0); // ? = DataTypeUse
+    	int n = uses.getNumChild();
+    	if (n == 0) return;
+    	else {
+    		System.out.print("(");
+    		for (int i = 0; i < n; i++){
+    			uses.getChild(i).generateProlog(s);
+    			if (i != n-1) System.out.print(",");
+    		}
+    		System.out.print(")");
+    	}
+    }
+
+
+    public void DataTypeUse.generateProlog(PrintStream s){
+    	System.out.print(quote(getName()));
+    }
+
+
+    // type (Type synonyms declarations)
+    /* E.g., for a declaration "type Data = Int ;"
+     *   we generate the Prolog term 
+     *   "type('Data','Int')"
+     */   
+    public void TypeSynDecl.generateProlog(PrintStream s){
+    	System.out.print("type(" + quote(getName()) + ",");
+    	getChild(1).generateProlog(s);
+    	System.out.println(").");
+    	// child(0) is a list of annotations and is ignored
+    }
+
+
+    // def (Function declarations)
+    /*   E.g., for a function "def ..."
+     *   we generate the Prolog terms 
+     *   "def(...)"
+     *   ...
+     */
+    public void FunctionDecl.generateProlog(PrintStream s){
+    	System.out.print("def(" + quote(getName()) + ",");
+    	// child(0) is a list of annotations and is ignored
+    	getChild(1).generateProlog(s);
+    	List<?> params = (List<?>) getChild(2);
+    	int n = params.getNumChild();
+    	System.out.print(",[");
+    	for (int i = 0; i < n; i++){
+    		params.getChild(i).generateProlog(s);
+    		if (i != n-1) System.out.print(",");
+    	}
+    	System.out.print("],");
+    	getChild(3).generateProlog(s);
+    	System.out.println(").");
+    }
+
+    public void ParametricFunctionDecl.generateProlog(PrintStream s){
+    	System.out.print("def(" + quote(getName()) + ",");
+    	getChild(0).generateProlog(s);
+    	List<?> params = (List<?>) getChild(1);
+    	int n = params.getNumChild();
+    	System.out.print(",[");
+    	for (int i = 0; i < n; i++){
+    		params.getChild(i).generateProlog(s);
+    		if (i != n-1) System.out.print(",");
+    	}
+    	System.out.print("],");
+    	getChild(2).generateProlog(s);
+    }
+
+
+    public void ParamDecl.generateProlog(PrintStream s){
+    	System.out.print("(");
+    	getChild(0).generateProlog(s);
+    	System.out.print("," + getName() + ")");
+    }
+
+    public void ExpFunctionDef.generateProlog(PrintStream s){
+    	// child(0) is a PureExp, i.e., a CaseExp, LetExp, FnApp, DataConstructoreExp, etc (see ABS.ast)
+    	((PureExp) getChild(0)).generateProlog(s);
+    }
+
+
+    // Pure expressions
+
+    public void PureExp.generateProlog(PrintStream s){
+    	// This method will be overwritten by all PureExp concrete subclasses
+    	// Therefore this is run only when a PureExp is not supported
+    	System.out.println("PureExp not supported by PrologBackend (" + this + ")");
+    }
+
+    public void VarUse.generateProlog(PrintStream s){
+    	System.out.print(getName());
+    }
+
+    public void AndBoolExp.generateProlog(PrintStream s){
+    	System.out.print("and(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void OrBoolExp.generateProlog(PrintStream s){
+    	System.out.print("or(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void NegExp.generateProlog(PrintStream s){
+    	System.out.print("neg(");
+		getChild(0).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void EqExp.generateProlog(PrintStream s){
+    	System.out.print("eq(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void GTExp.generateProlog(PrintStream s){
+    	System.out.print("gt(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void GTEQExp.generateProlog(PrintStream s){
+    	System.out.print("gteq(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void LTExp.generateProlog(PrintStream s){
+    	System.out.print("lt(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void LTEQExp.generateProlog(PrintStream s){
+    	System.out.print("lteq(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void MinusExp.generateProlog(PrintStream s){
+    	System.out.print("minus(");
+		getChild(0).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void AddAddExp.generateProlog(PrintStream s){
+    	System.out.print("add(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void SubAddExp.generateProlog(PrintStream s){
+    	System.out.print("sub(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void MultMultExp.generateProlog(PrintStream s){
+    	System.out.print("mult(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void DivMultExp.generateProlog(PrintStream s){
+    	System.out.print("div(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void ModMultExp.generateProlog(PrintStream s){
+    	System.out.print("mod(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void StringLiteral.generateProlog(PrintStream s){
+    	System.out.print(getContent());
+    }
+
+    public void IntLiteral.generateProlog(PrintStream s){
+    	System.out.print(getContent());
+    }
+
+    public void DataConstructorExp.generateProlog(PrintStream s){
+    	System.out.print(quote(getConstructor()));
+    	List<?> subExps = (List<?>) getChild(0); // ? = PureExp
+    	int n = subExps.getNumChild();
+    	if (n == 0) return;
+    	else {
+    		System.out.print("(");
+    		for (int i = 0; i < n; i++){
+    			subExps.getChild(i).generateProlog(s);
+    			if (i != n-1) System.out.print(",");
+    		}
+    		System.out.print(")");
+    	}
+    }
+
+    public void FnApp.generateProlog(PrintStream s){
+    	System.out.print(quote(getName()));
+    	List<?> args = (List<?>) getChild(0); // ? = PureExp
+    	int n = args.getNumChild();
+    	if (n == 0) return;
+    	else {
+    		System.out.print("(");
+    		for (int i = 0; i < n; i++){
+    			args.getChild(i).generateProlog(s);
+    			if (i != n-1) System.out.print(",");
+    		}
+    		System.out.print(")");
+    	}
+    }
+
+    public void LetExp.generateProlog(PrintStream s){
+    	System.out.print("let(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(",");
+    	getChild(2).generateProlog(s);
+    	System.out.print(").");    	
+    }
+
+
+    // Case expressions
+
+    public void CaseExp.generateProlog(PrintStream s){
+    	System.out.print("case(");
+    	getChild(0).generateProlog(s);
+    	System.out.print(",");
+    	getChild(1).generateProlog(s);
+    	System.out.print(")");
+    }
+
+    public void CaseBranch.generateProlog(PrintStream s){
+    	System.out.print("casebranch(");
+    	getChild(0).generateProlog(s); // child(0) is a Pattern
+    	System.out.print(",");
+        getChild(1).generateProlog(s); // child(1) is a PureExp
+    	System.out.print(")"); // This closes the "casebranch" term
+    }
+
+
+    // Patterns
+
+    public void PatternVarDecl.generateProlog(PrintStream s){
+    	System.out.print(getName());
+    }
+
+    public void PatternVarUse.generateProlog(PrintStream s){
+    	System.out.print(getName());
+    }
+
+    public void ConstructorPattern.generateProlog(PrintStream s){
+    	System.out.print(quote(getConstructor()));
+    	List<?> subterms = (List<?>) getChild(0); // ? = Pattern
+    	int n = subterms.getNumChild();
+    	if (n == 0) return;
+    	else {
+    		System.out.print("(");
+    		for (int i = 0; i < n; i++){
+    			subterms.getChild(i).generateProlog(s);
+    			if (i != n-1) System.out.print(",");
+    		}
+    		System.out.print(")");
+    	}
+    }
+
+    public void UnderscorePattern.generateProlog(PrintStream s){
+    	System.out.print("_");
+    }
+
+
+    // Auxiliary methods
+
+    protected static String ASTNode.quote(String s){
+    	return "'" + s + "'";
+    }
+
+}
