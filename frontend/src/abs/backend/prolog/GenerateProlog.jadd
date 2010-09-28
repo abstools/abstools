@@ -98,6 +98,7 @@ aspect GenerateProlog {
     	}
     	System.out.print("],");
     	getChild(2).generateProlog(s);
+    	System.out.println(").");
     }
 
 
@@ -110,6 +111,12 @@ aspect GenerateProlog {
     public void ExpFunctionDef.generateProlog(PrintStream s){
     	// child(0) is a PureExp, i.e., a CaseExp, LetExp, FnApp, DataConstructoreExp, etc (see ABS.ast)
     	((PureExp) getChild(0)).generateProlog(s);
+    }
+    
+    public void BuiltinFunctionDef.generateProlog(PrintStream s){
+    	// child(0) is a PureExp (I guess it can be used for its interpretation afterwards)
+    	// But it has no content after parsing (I think ...)
+    	System.out.print("builtin");
     }
 
 
@@ -278,7 +285,7 @@ aspect GenerateProlog {
     	getChild(1).generateProlog(s);
     	System.out.print(",");
     	getChild(2).generateProlog(s);
-    	System.out.print(").");    	
+    	System.out.print(")");    	
     }
 
 
@@ -288,12 +295,18 @@ aspect GenerateProlog {
     	System.out.print("case(");
     	getChild(0).generateProlog(s);
     	System.out.print(",");
-    	getChild(1).generateProlog(s);
-    	System.out.print(")");
+    	List<?> branches = (List<?>) getChild(1); // ? = CaseBranch
+    	int n = branches.getNumChild();
+    	System.out.print("[");
+    	for (int i = 0; i < n; i++){
+    		branches.getChild(i).generateProlog(s);
+    		if (i != n-1) System.out.print(",");
+    	}
+    	System.out.print("])");
     }
 
     public void CaseBranch.generateProlog(PrintStream s){
-    	System.out.print("casebranch(");
+    	System.out.print("branch(");
     	getChild(0).generateProlog(s); // child(0) is a Pattern
     	System.out.print(",");
         getChild(1).generateProlog(s); // child(1) is a PureExp
@@ -330,7 +343,24 @@ aspect GenerateProlog {
     	System.out.print("_");
     }
 
+    public void NullExp.generateProlog(PrintStream s){
+    	System.out.print("null");
+    }
+    
+    
+    // Class and Interface declarations (Not yet supported)
+    
+    public void ClassDecl.generateProlog(PrintStream s){
+    }
 
+    public void InterfaceDecl.generateProlog(PrintStream s){
+    }
+    
+    
+    // Main block (This is like the main in Pascal, I think ...)
+    public void MainBlock.generateProlog(PrintStream s){
+    }
+    
     // Auxiliary methods
 
     protected static String ASTNode.quote(String s){
