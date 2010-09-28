@@ -25,8 +25,8 @@ type Shippingtime = Int ;
 
 //Data Type declarations
 
-data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | Empty ;
-data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | Empty ;
+data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | NoBook ;
+data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | NoCountry ;
 
 
 data OrderResult = OrderFail | Result(List<Bookname>, Shippingcost, Shippingtime) ;
@@ -80,7 +80,7 @@ def Map<A,B> concatMap<A,B>(Map<A,B> map1, Map<A,B> map2) =
     EmptyMap => map2 ;
     InsertAssoc(head, tail) =>  
      case head {
-         Pair("", Empty) => concatMap(tail, map2);
+         Pair("",NoBook) => concatMap(tail, map2);
          Pair(k,i) => InsertAssoc(Pair(k, i), concatMap(tail, map2)) ;
      };
   };
