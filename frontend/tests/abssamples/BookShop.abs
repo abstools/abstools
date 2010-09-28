@@ -63,13 +63,13 @@ def A info<Key,A>(Pair<Key,A> p) =
 
 
 //Map
-def Set<A> domain<A>(Map<A,B> map) =
+def Set<A> domain<A,B>(Map<A,B> map) =
 case map {
    EmptyMap => EmptySet;
    InsertAssoc(Pair(b,_), tail) => Insert(b,domain(tail)) ; 
 } ;
 
-def List<A> map2list<A>(Map<A,B> map) =
+def List<A> map2list<A,B>(Map<A,B> map) =
   case map {
     EmptyMap => Nil ;
     InsertAssoc(Pair(b,_), tail) => Cons(b, map2list(tail)) ;
