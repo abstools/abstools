@@ -211,7 +211,7 @@ public class JavaBackend extends Main {
         return dataType.getName()+"_"+name;
     }
     
-    private static String getConstructorName(DataConstructor decl) {
+    public static String getConstructorName(DataConstructor decl) {
         return getConstructorName(((DataTypeType)decl.getType()).getDecl(),decl.getName());
     }
 

@@ -299,6 +299,11 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void testClassFieldAccessWithoutThis() {
+        assertNoTypeErrors("class C(Int b) { Int c = b; } "); 
+    }
+    
+    @Test
     public void testClassDuplicateMethods() {
         assertTypeErrors("class C { Unit m() {} Bool m() { return True;} } "); 
     }
