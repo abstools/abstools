@@ -1,8 +1,9 @@
 package abs.backend.prolog;
 
-import java.io.BufferedOutputStream;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
@@ -11,11 +12,15 @@ import abs.frontend.parser.Main;
 public class PrologBackend extends Main {
 
 	private File destDir = new File(".");
-	public static int numCaseIds = 0;
+	protected File outFile;
+	protected PrintStream outStream;
+	private String outFilename = "abs.pl";
 	
 	public static void main(final String[] args)  {
+		PrologBackend prologBE = new PrologBackend();
 		try {
-			new PrologBackend().absToPrologTerms(args);
+			prologBE.absToPrologTerms(args);
+			System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
 		} catch(Exception e) {
 			System.err.println("An error occurred during compilation: "+e.getMessage());
 
@@ -23,6 +28,8 @@ public class PrologBackend extends Main {
 				e.printStackTrace();
 			}
 			System.exit(1);
+		} finally {
+			prologBE.outStream.close();
 		}
 	}
 	
@@ -30,8 +37,39 @@ public class PrologBackend extends Main {
         super.printUsage();
         System.out.println("Prolog Backend:");
         System.out.println("  -d <dir>     generate files to <dir>");
+        System.out.println("  -fn <dir>    output file name");
     }
     
+    public List<String> parseArgs(String[] args) throws Exception{
+    	List<String> restArgs = super.parseArgs(args);
+        List<String> remainingArgs = new ArrayList<String>();
+        
+        for (int i = 0; i < restArgs.size(); i++) {
+            String arg = restArgs.get(i);
+            if (arg.equals("-d")) {
+                i++;
+                if (i == restArgs.size()) {
+                    System.err.println("Please provide a destination directory");
+                    System.exit(1);
+                } else {
+                    destDir = new File(args[i]);
+                }
+            }
+            else if (arg.equals("-fn")) {
+            	i++;
+            	if (i == restArgs.size()) {
+            		System.err.println("Please provide a file name");
+            		System.exit(1);
+            	} else {
+            		outFilename = args[i];
+            	}
+            } else {
+                remainingArgs.add(arg);
+            }
+        }
+        return remainingArgs;
+    }	
+    	
     private void absToPrologTerms(String[] args) throws Exception {
         final Model model = parse(args); // This parses the ABS producing an AST
         if (model.hasErrors() || model.hasTypeErrors())
@@ -47,9 +85,10 @@ public class PrologBackend extends Main {
             System.exit(1);
         } 
         //printAST(model,0);
-        PrintStream s = new PrintStream(new BufferedOutputStream(
-        		new FileOutputStream(new File(destDir, "abs.pl"))));
-        model.generateProlog(s);
+        outFile = new File(destDir,outFilename);
+        outStream = new PrintStream(new BufferedOutputStream(
+        		new FileOutputStream(outFile)));
+        model.generateProlog(outStream);
     }
 
     private void printAST(ASTNode<?> ast,int level){
