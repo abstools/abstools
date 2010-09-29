@@ -26,10 +26,19 @@ public class JavaExamplesTests extends JavaBackendTest {
     public void randomBool() {
         assertValidJavaFile("RandomBool.abs");
     }
+
+    @Test
+    public void lizeth() {
+        assertValidExample("lizeth.abs",false);
+    }
     
     private void assertValidJavaFile(String fileName) {
+        assertValidExample(fileName, true);
+    }
+    
+    private void assertValidExample(String fileName, boolean withStdLib) {
         String dir="tests/abssamples/";
-        assertValidJavaFile(dir + fileName, true);
+        assertValidJavaFile(dir + fileName, withStdLib);
     }
     
 }

@@ -30,8 +30,17 @@ public class ExamplesTypeChecking extends FrontendTest {
     public void randomBool() {
         assertTypeCheckTestFileOk("RandomBool.abs");
     }
+
+    @Test
+    public void lizeth() {
+        assertTypeCheckTestFileOk("lizeth.abs",false);
+    }
     
     private void assertTypeCheckTestFileOk(String fileName) {
+        assertTypeCheckTestFileOk(fileName, true);
+    }
+
+    private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) {
         String dir="tests/abssamples/";
         assertTypeCheckFileOk(dir + fileName, true);
     }

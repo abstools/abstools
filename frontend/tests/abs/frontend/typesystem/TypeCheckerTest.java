@@ -589,4 +589,9 @@ public class TypeCheckerTest extends FrontendTest {
     public void constructorTypeArgsError() {
         assertTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,5); }");
     }
+    
+    @Test
+    public void missingTypArg() {
+        assertTypeErrors("def List<A> map2list<A>(Map<A,B> map) = Nil;");
+    }
 }

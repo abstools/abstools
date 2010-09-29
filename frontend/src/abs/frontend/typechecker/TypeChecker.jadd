@@ -360,7 +360,7 @@ aspect TypeChecker {
     }
     
     public void ParamDecl.typeCheck(SemanticErrorList e) {
-   	 getAccess().typeCheck(e);
+   	 	getAccess().typeCheck(e);
     }
     
     // STMTS
@@ -476,6 +476,12 @@ aspect TypeChecker {
             int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
             if (expected != type.numTypeArgs()) {
                 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,"0"));
+            } else {
+            	if (this instanceof ParametricDataTypeUse) {
+            		for (DataTypeUse du : ((ParametricDataTypeUse)this).getParams()) {
+            			du.typeCheck(e);
+            		}
+            	} 
             }
         }
     }
