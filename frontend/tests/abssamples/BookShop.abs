@@ -1,12 +1,95 @@
 //Working File (not completed)
 // by Lizeth Tapia (sltarifa) UIO
-//Book shop example
-module BookShop;
+
 
 //NOTE: THIS EXAMPLE USES THE DATA TYPE LIBRARY LOCATED IN:
 //.../frontend/src/abs/lang/abslang.abs
 
-//Data Type declarations
+// We want to not use the ABS DATA TYPE LIBRARY,
+// but instead make the functiuons we need explicit in this file
+// To avoid loading the library, the abs compiler needs to be called with the flag -nostdlib
+// ~/hats/Tools/ABS/trunk/frontend/src/bash/generateMaude BookShop.abs -o BookShop.maude -nostdlib
+
+// Library module (replaces standard library)
+module ABS.StdLib;
+export *;
+data Unit = Unit;               // builtin  
+data Int;                       // builtin
+data Bool = True | False;       // builtin
+data String;                    // builtin  
+
+// The following comes from the library:
+
+data Pair<A, B> = Pair(A, B); // pair
+
+// Sets
+data Set<A> = EmptySet | Insert(A, Set<A>);
+
+// set constructor helper
+def Set<A> set<A>(List<A> l) = case l { Nil => EmptySet; Cons(x,xs) => Insert(x,set(xs)); };
+
+/**
+ * Returns True if set 'ss' contains element 'e', False otherwise.
+ */
+def Bool contains<A>(Set<A> ss, A e) =
+  case ss {
+    EmptySet => False ;
+    Insert(e, _) => True;
+    Insert(_, xs) => contains(xs, e);
+  };
+
+/**
+ * Returns the value associated with key 'k' in map 'ms'.
+ */
+def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  case ms {
+  	InsertAssoc(Pair(k, y), _) => y;
+        InsertAssoc(_, tm) => lookup(tm, k);
+  };
+
+
+// Lists 
+data List<A> = Nil | Cons(A, List<A>);
+def List<A> list<A>(List<A> l) = l; // list constructor helper
+/**
+ * Returns the first element of list 'list'.
+ */
+def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+/**
+ * Returns a (possibly empty) list containing all elements of 'list'
+ * except the first one.
+ */
+def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+/**
+ * Returns a list containing all elements of list 'list1'
+ * followed by all elements of list 'list2'.
+ */
+def List<A> concatenate<A>(List<A> list1, List<A> list2) =
+  case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
+
+/**
+ * Returns a list containing all elements of list 'list' followed by 'p'.
+ */
+def List<A> appendright<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));
+/**
+ * Returns True if list 'list' is empty, False otherwise.
+ */
+def Bool isEmpty<A>(List<A> list) = list == Nil;
+
+
+ 
+// Maps
+data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
+ // map constructor helper (does not preserve injectivity)
+def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
+  case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
+
+// This is the end of the code from the library 
+
+
+//Book shop module
+module BookShop;
+import * from ABS.StdLib;
 
 //type synonyms  
 type Key = String ;
@@ -22,16 +105,13 @@ type Countryshipcost = Int ;
 type Shippingcost = Int ;
 type Shippingtime = Int ;
 
-
 //Data Type declarations
 
 data Bookinfo = ConsBookinfo(Bookquantity, Bookweight, Bookbackordertime) | NoBook ;
 data Countryinfo = ConsCountryinfo(Countryshiptime, Countryshipcost) | NoCountry ;
 
-
 data OrderResult = OrderFail | Result(List<Bookname>, Shippingcost, Shippingtime) ;
 data DatabaseInfo = InfoFail | Info(Map<Bookname,Bookinfo>, Pair<Countryname,Countryinfo>) ;
-
 
 //****************************************************************************************
 //***************************************function definitions******************************
@@ -86,20 +166,11 @@ def Map<A,B> concatMap<A,B>(Map<A,B> map1, Map<A,B> map2) =
   };
 
 //Bookinfo
-//def Bookquantity bookquantity(Bookinfo book ) = 
-//  case book {
-//    ConsBookinfo(q,_ ,_ ) => q ;
-//  };
 
 def Bookweight bookweight(Bookinfo book) = 
   case book {
     ConsBookinfo( _, w,_ ) => w ;
   };
-    
-//def Bookbackordertime bookbackordertime (Bookinfo book) = 
-//  case book {
-//    ConsBookinfo(_, _ ,t ) => t ;
-//  };
 
 //Countryinfo
 def Countryshiptime countryshiptime(Countryinfo country) = 
@@ -125,10 +196,6 @@ def Pair<Countryname,Countryinfo> getCountryinfo (DatabaseInfo db) =
      InfoFail => Pair("",ConsCountryinfo(0,0)) ;
      Info(_, c) => c ;
   };
-
-//Int
-//def Int max(Int a, Int b) =
-//case (a > b) { True => a ; False => b ; };
 
 //****************************************************************************************
 //******************************************** bookshop model******************************
@@ -175,7 +242,6 @@ def Map<Bookname,Bookinfo> updateBook(Map<Bookname,Bookinfo> booksDB,Bookname bo
       InsertAssoc(Pair(book,ConsBookinfo(q,w,t)),tail) => concatMap(bookDB2, InsertAssoc(Pair(book,ConsBookinfo(q-1,w,t)),tail));
       InsertAssoc(head,tail) =>  updateBook(tail, book,concatMap(bookDB2, InsertAssoc(head,EmptyMap)));      
    };
-
 
 //***************************************************************************************************
 //*************************************************classes*******************************************
@@ -290,7 +356,6 @@ class  SyncClient(Agent agent, List<Bookname> books, List<Countryname> countries
        }
 }
 
-
 //***************************************************************
 //****************************main******************************
 //***************************************************************
@@ -351,55 +416,3 @@ book3   1  3   1
 
 }
 
-
-//***************************************************************
-//************************ Test********************************
-//***************************************************************
-
-
-/*Class  SimpleClient() implements Client {
-
-
-
-
-    Map<Bookname,Bookinfo> bDB = InsertAssoc(Pair("book1",ConsBookinfo(4, 2, 10)), InsertAssoc(Pair("book2",ConsBookinfo(5, 1, 7)), InsertAssoc(Pair("book3",ConsBookinfo(2, 3, 1)),EmptyMap)));
-    Map<Countryname,Countryinfo> cDB = InsertAssoc(Pair("Norway",ConsCountryinfo(2,50)),InsertAssoc(Pair("Peru",ConsCountryinfo(15,150)),EmptyMap));
-    DatabaseInfo r = Info(bDB,Pair("Norway",ConsCountryinfo(2,50))) ;
-    Map<Bookname,Bookinfo> bm = EmptyMap;
-    Pair<Countryname,Countryinfo> c = Pair("",ConsCountryinfo(0,0));
-    Int sc = 0;
-    Int st = 0;
-
-    Unit run () {
-      bm = getBookMap(r);
-      c = getCountryinfo(r);
-      sc = calculatecost(calculateweight(getBookMap(r)),countryshipcost(info(getCountryinfo(r))));
-      st = calculatetime(getBookMap(r), countryshipcost(info(getCountryinfo(r))));
-       }
-}
-
-*/
-
-   //List<Bookname> mylist = choseN(Cons("Book0",map2list(bDB)), 3) ;
-//Pair<Bookname,Bookinfo> mP = Pair("",Empty); 
-
-
-
-
-  /*   mP = lookup(bDB,"book2");
-    myB = getBooks(bDB, lb);
-Bool check = contains(domain(bDB),"book1") ;
-
-Set<Key> myDomain = domain(bDB) ;
-   // Client test;
-   //  test = new SimpleClient();*/
-
-
-
- /*   Map<Bookname,Bookinfo> newbDB = map[Pair("book1",ConsBookinfo(0, 2, 60)),
-                                     Pair("book2",ConsBookinfo(5, 1, 7))];
-
-
-    Int weight = calculateweight(newbDB);
-    Int time = calculatetime(newbDB, 2);
-*/
