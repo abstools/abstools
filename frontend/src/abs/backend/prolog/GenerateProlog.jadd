@@ -264,7 +264,7 @@ aspect GenerateProlog {
     }
 
     public void FnApp.generateProlog(PrintStream s){
-    	s.print(quote(getName()));
+    	s.print("apply(" + quote(getName()));
     	List<?> args = (List<?>) getChild(0); // ? = PureExp
     	int n = args.getNumChild();
     	if (n == 0) return;
@@ -274,7 +274,7 @@ aspect GenerateProlog {
     			args.getChild(i).generateProlog(s);
     			if (i != n-1) s.print(",");
     		}
-    		s.print(")");
+    		s.print("))");
     	}
     }
 
