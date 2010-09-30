@@ -84,7 +84,7 @@ public class PrologBackend extends Main {
             System.err.println("Destination directory "+destDir.getAbsolutePath()+" cannot be written to!");
             System.exit(1);
         } 
-        //printAST(model,0);
+        if (verbose) printAST(model,0);
         outFile = new File(destDir,outFilename);
         outStream = new PrintStream(new BufferedOutputStream(
         		new FileOutputStream(outFile)));
