@@ -876,7 +876,7 @@ mod ABS-MACHINE-BASICS is
 
   --- free
   ---
-  --- Free a Future.  sd(G,1) works, because G is always positive.
+  --- Free a Future.
   ---
   --- Also insert a dummy binding in the local scope, to make sure that a
   --- freed future cannot be further accessed.
@@ -885,7 +885,9 @@ mod ABS-MACHINE-BASICS is
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =
     < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
+    < N : Future | Name: Q, Completed: CO, 
+                   References: if G == 0 then 0 else sd(G, 1) fi,
+                   Value: D >
   if N = (S :: L)[A]
       [label free] .
 
@@ -914,7 +916,6 @@ mod ABS-MACHINE-BASICS is
     < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none, 0), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
-  *** TODO: release labels that are going out of scope here.
   eq
     < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =

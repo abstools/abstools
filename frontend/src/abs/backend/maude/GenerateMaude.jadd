@@ -96,6 +96,7 @@ aspect GenerateMaude {
     public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
+        stream.print("$free(@ \"" + var + "\"); ");
         stream.print("call(@ \"" + var + "\" ; ");
         getCallee().generateMaude(stream);
         stream.print(" ; \"" + getMethod() + "\" ; ");
@@ -110,11 +111,16 @@ aspect GenerateMaude {
             stream.print(")");
         }
         stream.print(") ");
+        if (var.equals(".staticfuture")) {
+            // Return value will be discarded; free the future.
+            stream.print("; $free(@ \".staticfuture\") ");
+        }
     }
 
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
+        stream.print("$free(@ \".staticfuture\"); ");
         stream.print("call(@ \".staticfuture\" ; ");
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
@@ -369,7 +375,7 @@ aspect GenerateMaude {
         stream.print(", Att: ");
         inlist = false;
         stream.print("@ \".method\" |-> \"str\"[\"" + sig.getName() + "\"], ");
-        stream.print("@ \".staticfuture\" |-> null");
+        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
         // All other variables get introduced via $vardecl as they are defined.
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
@@ -379,6 +385,19 @@ aspect GenerateMaude {
             for (Stmt stmt : getBlock().getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
+            }
+            // Now release all labels
+            for (Stmt stmt : getBlock().getStmts()) {
+                if (stmt instanceof VarDeclStmt) {
+                    VarDeclStmt vardecl = (VarDeclStmt)stmt;
+                    Type t = vardecl.getVarDecl().getAccess().getType();
+                    if (t.isFutureType()) {
+                        if (inlist) stream.print("; "); else inlist = true;
+                        stream.print("$free(@ \"" 
+                                     + vardecl.getVarDecl().getName()
+                                     + "\") ");
+                    }
+                }
             }
             // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for
             // now, since we don't have an empty `return' statement
@@ -432,11 +451,23 @@ aspect GenerateMaude {
 
     public void AssignStmt.generateMaude(PrintStream stream) {
         if (getValue() instanceof PureExp) {
+            Type t = getValue().getType();
+            if (t.isFutureType()) {
+                // Assigning one future to another.
+                stream.print("$free( ");
+                getVar().generateMaude(stream);
+                stream.print("); ");
+            }
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
             getValue().generateMaude(stream);
             stream.print(") ");
+            if (t.isFutureType()) {
+                stream.print("$mark( ");
+                getVar().generateMaude(stream);
+                stream.print("); ");
+            }
         } else {
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName());
         }
@@ -497,7 +528,7 @@ aspect GenerateMaude {
     }
 
     public void ExpressionStmt.generateMaude(PrintStream stream) {
-        getExp().generateMaudeAsStatement(stream, "_");
+        getExp().generateMaudeAsStatement(stream, ".staticfuture");
     }
 
     public void WhileStmt.generateMaude(PrintStream stream) {
@@ -530,7 +561,7 @@ aspect GenerateMaude {
         stream.print(",\n  Mtds: ");
         stream.print("< \".init\" : Method | Param: noVid, ");
         stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
-        stream.print("@ \".staticfuture\" |-> null");
+        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
         stream.print(",\n      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
@@ -550,6 +581,17 @@ aspect GenerateMaude {
             stream.print("; ");
             stmt.generateMaude(stream);
         }
+        // Now release all labels
+        for (Stmt stmt : getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                VarDeclStmt vardecl = (VarDeclStmt)stmt;
+                Type t = vardecl.getVarDecl().getAccess().getType();
+                if (t.isFutureType()) {
+                    stream.print("; $free(@ \"" + vardecl.getVarDecl().getName()
+                                 + "\") ");
+                }
+            }
+        }
         stream.print("; $endscope ");
 	}
 	
@@ -559,7 +601,7 @@ aspect GenerateMaude {
         boolean inlist = false;
         stream.print("< \".init\" : Method | Param: noVid, ");
         stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
-        stream.print("@ \".staticfuture\" |-> null");
+        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
         stream.print(",\n      Code: ");
         // Process field initializers here
         for (FieldDecl field : fields) {
