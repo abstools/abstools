@@ -876,11 +876,10 @@ mod ABS-MACHINE-BASICS is
 
   --- free
   ---
-  --- Free a label.  Make sure that the use of labels is linear.  We don't
-  --- bother to make this a rule until we need it.
+  --- Free a Future.  sd(G,1) works, because G is always positive.
   ---
-  --- sd(G,1) works, because G is always positive. Maude does not have a
-  --- nice decrement operator.
+  --- Also insert a dummy binding in the local scope, to make sure that a
+  --- freed future cannot be further accessed.
   ceq
     < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
@@ -889,6 +888,15 @@ mod ABS-MACHINE-BASICS is
     < N : Future | Name: Q, Completed: CO, References: sd(G, 1), Value: D >
   if N = (S :: L)[A]
       [label free] .
+
+  --- Skip the $free instruction if the variable is uninitialized.  This helps
+  --- the code generator.
+  ceq
+    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Att: S, Pr: { insert(A, null, L) | SL }, PrQ: W, Lcnt: F >
+  if null = (S :: L)[A]
+      [label free-uninitialized] .
 
 
   --- Create a new environment.  This is for supporting local declarations in
