@@ -267,15 +267,15 @@ aspect GenerateProlog {
     	s.print("apply(" + quote(getName()));
     	List<?> args = (List<?>) getChild(0); // ? = PureExp
     	int n = args.getNumChild();
-    	if (n == 0) return;
-    	else {
+    	if (n > 0){
     		s.print("(");
     		for (int i = 0; i < n; i++){
     			args.getChild(i).generateProlog(s);
     			if (i != n-1) s.print(",");
     		}
-    		s.print("))");
+    		s.print(")");
     	}
+    	s.print(")");
     }
 
     public void LetExp.generateProlog(PrintStream s){
