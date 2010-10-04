@@ -241,7 +241,7 @@ aspect GenerateProlog {
     }
 
     public void StringLiteral.generateProlog(PrintStream s){
-    	s.print(getContent());
+    	s.print(quote(getContent()));
     }
 
     public void IntLiteral.generateProlog(PrintStream s){
