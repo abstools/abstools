@@ -105,7 +105,7 @@ aspect GenerateProlog {
     public void ParamDecl.generateProlog(PrintStream s){
     	s.print("(");
     	getChild(0).generateProlog(s);
-    	s.print("," + getName() + ")");
+    	s.print("," + initialToUpperCase(getName()) + ")");
     }
 
     public void ExpFunctionDef.generateProlog(PrintStream s){
@@ -129,7 +129,7 @@ aspect GenerateProlog {
     }
 
     public void VarUse.generateProlog(PrintStream s){
-    	s.print(getName());
+    	s.print(initialToUpperCase(getName()));
     }
 
     public void AndBoolExp.generateProlog(PrintStream s){
@@ -249,11 +249,10 @@ aspect GenerateProlog {
     }
 
     public void DataConstructorExp.generateProlog(PrintStream s){
-    	s.print(quote(getConstructor()));
+    	s.print("cons(" + quote(getConstructor()));
     	List<?> subExps = (List<?>) getChild(0); // ? = PureExp
     	int n = subExps.getNumChild();
-    	if (n == 0) return;
-    	else {
+    	if (n > 0) {
     		s.print("(");
     		for (int i = 0; i < n; i++){
     			subExps.getChild(i).generateProlog(s);
@@ -261,6 +260,7 @@ aspect GenerateProlog {
     		}
     		s.print(")");
     	}
+    	s.print(")");
     }
 
     public void FnApp.generateProlog(PrintStream s){
@@ -317,11 +317,11 @@ aspect GenerateProlog {
     // Patterns
 
     public void PatternVarDecl.generateProlog(PrintStream s){
-    	s.print(getName());
+    	s.print(initialToUpperCase(getName()));
     }
 
     public void PatternVarUse.generateProlog(PrintStream s){
-    	s.print(getName());
+    	s.print(initialToUpperCase(getName()));
     }
 
     public void ConstructorPattern.generateProlog(PrintStream s){
@@ -363,6 +363,12 @@ aspect GenerateProlog {
     
     // Auxiliary methods
 
+    protected static String ASTNode.initialToUpperCase(String s){
+    	char[] cs = s.toCharArray();
+    	cs[0] = Character.toUpperCase(cs[0]);
+    	return new String(cs);
+    }
+    
     protected static String ASTNode.quote(String s){
     	return "'" + s + "'";
     }
