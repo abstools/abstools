@@ -96,30 +96,47 @@ aspect GenerateMaude {
     public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        if (!var.equals(".staticfuture")) {
+        String effvar = var;
+        if (!var.equals("_")) {
             // Invariant of asynchronous calls in an assignment:
             // (potentially null) futures are freed before overwriting
             // the variable's binding.
             stream.print("$free(@ \"" + var + "\"); ");
-        }
-        stream.print("call(@ \"" + var + "\" ; ");
-        getCallee().generateMaude(stream);
-        stream.print(" ; \"" + getMethod() + "\" ; ");
-        if (getNumParam() == 0) {
-            stream.print("emp");
-        } else {
-            stream.print("(");
-            for (PureExp param : getParams()) {
-                if (inlist) stream.print(":: "); else inlist = true;
-                param.generateMaude(stream);
+            stream.print("call(@ \"" + var + "\" ; ");
+            getCallee().generateMaude(stream);
+            stream.print(" ; \"" + getMethod() + "\" ; ");
+            if (getNumParam() == 0) {
+                stream.print("emp");
+            } else {
+                stream.print("(");
+                for (PureExp param : getParams()) {
+                    if (inlist) stream.print(":: "); else inlist = true;
+                    param.generateMaude(stream);
+                }
+                stream.print(")");
             }
-            stream.print(")");
-        }
-        stream.print(") ");
-        if (var.equals(".staticfuture")) {
+            stream.print(") ");
+        } else {
             // Invariant of assignment-less async calls (and synchronous
             // calls): .staticfuture is freed after calling
-            // (resp. receiving the value)
+            // (resp. receiving the value).  Some code duplication here,
+            // but it's easier to read than setting up complicated
+            // schemes about which variable to call to resp. free before
+            // / after the call statement etc.
+            stream.print("call(@ \".staticfuture\" ; ");
+            getCallee().generateMaude(stream);
+            stream.print(" ; \"" + getMethod() + "\" ; ");
+            if (getNumParam() == 0) {
+                stream.print("emp");
+            } else {
+                stream.print("(");
+                for (PureExp param : getParams()) {
+                    if (inlist) stream.print(":: "); else inlist = true;
+                    param.generateMaude(stream);
+                }
+                stream.print(")");
+            }
+            stream.print(") ");
             stream.print("; $free(@ \".staticfuture\") ");
         }
     }
@@ -534,7 +551,7 @@ aspect GenerateMaude {
     }
 
     public void ExpressionStmt.generateMaude(PrintStream stream) {
-        getExp().generateMaudeAsStatement(stream, ".staticfuture");
+        getExp().generateMaudeAsStatement(stream, "_");
     }
 
     public void WhileStmt.generateMaude(PrintStream stream) {
