@@ -96,7 +96,12 @@ aspect GenerateMaude {
     public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("$free(@ \"" + var + "\"); ");
+        if (!var.equals(".staticfuture")) {
+            // Invariant of asynchronous calls in an assignment:
+            // (potentially null) futures are freed before overwriting
+            // the variable's binding.
+            stream.print("$free(@ \"" + var + "\"); ");
+        }
         stream.print("call(@ \"" + var + "\" ; ");
         getCallee().generateMaude(stream);
         stream.print(" ; \"" + getMethod() + "\" ; ");
@@ -112,7 +117,9 @@ aspect GenerateMaude {
         }
         stream.print(") ");
         if (var.equals(".staticfuture")) {
-            // Return value will be discarded; free the future.
+            // Invariant of assignment-less async calls (and synchronous
+            // calls): .staticfuture is freed after calling
+            // (resp. receiving the value)
             stream.print("; $free(@ \".staticfuture\") ");
         }
     }
@@ -120,7 +127,6 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("$free(@ \".staticfuture\"); ");
         stream.print("call(@ \".staticfuture\" ; ");
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
