@@ -217,7 +217,7 @@ aspect GenerateProlog {
     }
 
     public void MultMultExp.generateProlog(PrintStream s){
-    	s.print("mult(");
+    	s.print("mul(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
