@@ -384,6 +384,7 @@ aspect GenerateJava {
     
     public void Block.generateJava(String indent, PrintStream stream, boolean addReturn) {
         stream.println(" {");
+    	super.generateJava(indent,stream);
         String newIndent = incIndent(indent);
         for (Stmt stmt : getStmts()) {
             stmt.generateJava(newIndent,stream);
@@ -421,14 +422,19 @@ aspect GenerateJava {
      * STATEMENTS
      */
     
-    public abstract void Stmt.generateJava(String indent, PrintStream stream);
+    public void Stmt.generateJava(String indent, PrintStream stream) {
+    	stream.print(indent+"if ("+JavaBackendConstants.ABSRUNTIME+".DEBUGGING)"+
+    		JavaGeneratorHelper.getDebugString(this));
+    }
     
     public void VarDeclStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
         getVarDecl().generateJava(indent,stream);
         stream.println();
     }
     
     public void AssignStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
         stream.print(indent);
         getVar().generateJava(stream);
         stream.print(" = ");
@@ -437,43 +443,52 @@ aspect GenerateJava {
     }
 
     public void AwaitStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
    	 stream.print(indent+JavaBackendConstants.ABSRUNTIME+".await(");
    	 getGuard().generateJava(stream);
    	 stream.println(");");
     }
 
     public void ExpressionStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
    	  stream.print(indent);
    	  getExp().generateJava(stream);
    	  stream.println(";");
     }
 
     public void IfStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
         stream.print(indent+"if (");
         getCondition().generateJava(stream);
-        stream.print(".toBoolean())");
-        getThen().generateJava(indent,stream);
+        stream.println(".toBoolean()) {");
+        getThen().generateJava(indent+"  ",stream);
+        stream.println(indent+"}");
         if (hasElse()) {
-            stream.print(indent+"else");
-            getElse().generateJava(indent,stream);
+            stream.println(indent+"else {");
+            getElse().generateJava(indent+"  ",stream);
+            stream.println(indent+"}");
         }
     }
 
     public void ReturnStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
         stream.print(indent+"return ");
         getRetExp().generateJava(stream);
         stream.println(";");
     }
 
     public void SkipStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
    	 stream.println(indent+";");
     }
 
     public void SuspendStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
    	 stream.println(indent+JavaBackendConstants.ABSRUNTIME+".suspend();");
     }
 
     public void WhileStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
         stream.print(indent+"while (");
         getCondition().generateJava(stream);
         stream.print(".toBoolean())");
@@ -481,6 +496,7 @@ aspect GenerateJava {
     }
     
     public void AssertStmt.generateJava(String indent, PrintStream stream) {
+    	super.generateJava(indent,stream);
     	stream.print(indent+"if (!");
     	getCondition().generateJava(stream);
     	stream.print(".toBoolean()) throw new "+ABSAssertException.class.getName()+"(\"");

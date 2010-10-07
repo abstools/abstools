@@ -2,6 +2,9 @@ package abs.backend.java;
 
 import java.io.PrintStream;
 
+import beaver.Symbol;
+
+import abs.backend.java.debugging.DebugPosition;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSType;
@@ -13,6 +16,7 @@ import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeParameterDecl;
 
 public class JavaGeneratorHelper {
@@ -84,4 +88,11 @@ public class JavaGeneratorHelper {
         stream.print(ABSBuiltInFunctions.class.getName()+"."+name);
         generateArgs(stream, app.getParams());
     }
+    
+    public static String getDebugString(Stmt stmt) {
+        int line = Symbol.getLine(stmt.getStart());
+        String fileName = stmt.getFileName();
+        return JavaBackendConstants.ABSRUNTIME+".nextStep(\""+fileName+"\","+line+");";
+    }
+
 }

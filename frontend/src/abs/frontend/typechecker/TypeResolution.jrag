@@ -252,7 +252,17 @@ aspect TypeResolution {
         
         return null;
     }
+ 
+ 
+    syn lazy String CompilationUnit.getFileName() = getName();
     
+    inh String Exp.getFileName();
+    inh String Stmt.getFileName();
+  	inh String ModuleDecl.getFileName();
+
+	eq ModuleDecl.getDecl().getFileName() = getFileName();
+    eq ModuleDecl.getBlock().getFileName() = getFileName();
+    eq CompilationUnit.getModuleDecl().getFileName() = getFileName();
 }
 
 // Local Variables:
