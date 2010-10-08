@@ -8,4 +8,16 @@ public interface TaskObserver {
     void taskBlockedOnFuture(TaskView task, FutView fut);
     void taskRunningAfterWaiting(TaskView view, FutView fut);
     void taskResumed(TaskView runningTask, GuardView view);
+    
+    /**
+     * Is called when the given task does an execution step.
+     * 
+     * <b>Important:</b> This method is only called if debugging is turned on, 
+     * i.e., if the program has been started with <code>-Dabs.debug=true</code>
+     * 
+     * @param task the task that executes the step
+     * @param fileName the absolute file name of the executed abs statement
+     * @param line the line of the executed statement
+     */
+    void taskStep(TaskView task, String fileName, int line);
 }

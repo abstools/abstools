@@ -371,4 +371,10 @@ public class Main implements SystemObserver, TaskObserver {
 			return true;
 		return getEnvironmentClasses().contains(s);
 	}
+
+    @Override
+    public void taskStep(TaskView task, String fileName, int line) {
+        // TODO Auto-generated method stub
+        
+    }
 }

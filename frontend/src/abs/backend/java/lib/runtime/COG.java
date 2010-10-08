@@ -109,6 +109,11 @@ public class COG {
         public SchedulerView getScheduler() {
             return scheduler.getView();
         }
+        
+        @Override
+        public int getID() {
+            return id;
+        }
 
         
         

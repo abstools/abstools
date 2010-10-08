@@ -5,4 +5,6 @@ public interface COGView {
     
     void registerObjectCreationListener(ObjectCreationObserver listener);
     void registerObjectCreationListener(String className, ObjectCreationObserver e);
+
+    int getID();
 }

@@ -88,6 +88,16 @@ public abstract class Task<T extends ABSRef> {
         return view;
     }
     
+    protected ABSValue[] getArgs() {
+        return new ABSValue[0];
+    }
+
+    public synchronized void nextStep(String fileName, int line) {
+        if (view != null)
+            view.nextStep(fileName, line);
+    }
+    
+    
     private class View implements TaskView {
         private List<TaskObserver> taskListener;
 
@@ -95,6 +105,12 @@ public abstract class Task<T extends ABSRef> {
         public TaskView getSender() {
             if (sender == null) return null;
             return sender.getView();
+        }
+
+        public synchronized void nextStep(String fileName, int line) {
+            for (TaskObserver l : getObservers()) {
+                l.taskStep(this,fileName,line);
+            }
         }
 
         public synchronized void futureReady(ABSFut<?> someFut) {
@@ -170,7 +186,4 @@ public abstract class Task<T extends ABSRef> {
         
     }
 
-    protected ABSValue[] getArgs() {
-        return new ABSValue[0];
-    }
 }

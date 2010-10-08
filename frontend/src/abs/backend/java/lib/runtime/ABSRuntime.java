@@ -6,13 +6,11 @@ import abs.backend.java.observing.SystemObserver;
 
 public class ABSRuntime {
     private static final SystemObserver systemObserver = (SystemObserver) loadClassByProperty("abs.systemobserver");
-    private static final Debugger debugger = (Debugger) loadClassByProperty("abs.debugger");;
-    public static final boolean DEBUGGING = debugger != null;
+    public static final boolean DEBUGGING = System.getProperty("abs.debug","false").equals("true");
     
     public static void nextStep(String fileName, int line) {
-        Debugger d = debugger;
-        if (d != null) {
-            d.nextStep(getCurrentTask().getView(), fileName, line);
+        if (DEBUGGING) {
+            getCurrentTask().nextStep(fileName,line);
         }
     }
     

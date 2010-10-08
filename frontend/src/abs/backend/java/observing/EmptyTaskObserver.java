@@ -29,4 +29,8 @@ public class EmptyTaskObserver implements TaskObserver {
     @Override
     public void taskResumed(TaskView view, GuardView guard) {
     }
+
+    @Override
+    public void taskStep(TaskView task, String fileName, int line) {
+    }
 }
