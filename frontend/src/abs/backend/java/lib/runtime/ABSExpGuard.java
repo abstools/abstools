@@ -6,6 +6,10 @@ public abstract class ABSExpGuard extends ABSGuard {
 
 	public abstract ABSBool evaluateExp();
 	
+	@Override
+	public boolean await() {
+	    return true;
+	}
 	
 	@Override
 	public boolean isTrue() {

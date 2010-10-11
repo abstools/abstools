@@ -11,15 +11,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -29,6 +37,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CellEditorListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -36,6 +45,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
 
+import abs.backend.java.debugging.TaskControls.StepBtnCellEditor;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
@@ -101,6 +111,7 @@ class DebugModel implements TaskObserver {
     final Map<TaskView, TaskInfo> taskToLineMap = new HashMap<TaskView, TaskInfo>();
     final Map<COGView, COGInfo> cogInfo = new HashMap<COGView, COGInfo>();
     final ArrayList<DebugModelListener> listener = new ArrayList<DebugModelListener>();
+    final Set<TaskView> steppingTasks = new HashSet<TaskView>();
 
     public COGInfo getCOGInfo(COGView view) {
         return cogInfo.get(view);
@@ -108,6 +119,14 @@ class DebugModel implements TaskObserver {
     
     public TaskInfo getTaskInfo(TaskView task) {
         return taskToLineMap.get(task);
+    }
+    
+    public synchronized Semaphore getSema(TaskView info) {
+        return taskToLineMap.get(info).stepSema;
+    }
+    
+    public void stepTask(TaskView task) {
+        getSema(task).release();
     }
     
     public void cogCreated(COGView cog, ObjectView initialObject) {
@@ -158,6 +177,7 @@ class DebugModel implements TaskObserver {
     
     @Override
     public synchronized void taskCreated(TaskView task) {
+        steppingTasks.add(task);
         
         task.registerTaskListener(this);
         TaskInfo info = addInfoLine(task);
@@ -178,58 +198,98 @@ class DebugModel implements TaskObserver {
 
     @Override
     public synchronized void taskSuspended(TaskView task, GuardView guard) {
-        TaskInfo info = getTaskInfo(task);
-        info.state = TaskState.SUSPENDED;
-        updateInfoLine(task, info);
-        
+        FutView fut = null;
+        if (guard.isFutureGuard()) {
+            fut = guard.getFuture();
+        }
+        updateTaskState(task,TaskState.SUSPENDED, fut);
     }
 
 
     @Override
-    public void taskStarted(TaskView task) {
-        // TODO Auto-generated method stub
-        
+    public synchronized void taskStarted(TaskView task) {
+        updateTaskState(task,TaskState.RUNNING,null);
     }
 
 
     @Override
     public synchronized void taskFinished(TaskView task) {
-        TaskInfo info = getTaskInfo(task);
-        info.state = TaskState.FINISHED;
-        updateInfoLine(task,info);
+        updateTaskState(task,TaskState.FINISHED,null);
     }
 
 
     @Override
-    public void taskBlockedOnFuture(TaskView task, FutView fut) {
-        // TODO Auto-generated method stub
-        
+    public synchronized void taskBlockedOnFuture(TaskView task, FutView fut) {
+        updateTaskState(task,TaskState.BLOCKED,fut);
     }
 
 
     @Override
-    public void taskRunningAfterWaiting(TaskView view, FutView fut) {
-        // TODO Auto-generated method stub
-        
+    public void taskRunningAfterWaiting(TaskView task, FutView fut) {
+        updateTaskState(task,TaskState.RUNNING,null);
     }
 
 
     @Override
-    public void taskResumed(TaskView runningTask, GuardView view) {
-        // TODO Auto-generated method stub
-        
-    }
-
-
-    @Override
-    public synchronized void taskStep(TaskView task, String fileName, int line) {
-        TaskInfo info = getTaskInfo(task);
-        info.updateLine(line);
-        info.updateFile(fileName);
-        info.state = TaskState.RUNNING;
-        updateInfoLine(task,info);
+    public void taskResumed(TaskView task, GuardView view) {
+        updateTaskState(task,TaskState.RUNNING,null);
     }
     
+    @Override
+    public void taskReady(TaskView task) {
+        updateTaskState(task,TaskState.READY,null);
+    }
+    
+    
+
+    private void updateTaskState(TaskView task, TaskState state, FutView fut) {
+        synchronized (this) {
+            TaskInfo info = getTaskInfo(task);
+            if (state == TaskState.RUNNING) {
+                if (info.isStepping) {
+                    steppingTasks.add(task);
+                }
+            } else {
+                steppingTasks.remove(task);
+            }
+            info.state = state;
+            info.waitingOnFuture = fut;
+            updateInfoLine(task,info);
+        }
+    }
+
+    private void waitForClick(TaskView task) {
+        try {
+            System.out.println("Task "+task.getID()+" waiting for click...");
+            if (getTaskInfo(task).isStepping)
+                getSema(task).acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void taskStep(TaskView task, String fileName, int line) {
+        synchronized (this) {
+            TaskInfo info = getTaskInfo(task);
+            info.updateLine(line);
+            info.updateFile(fileName);
+            info.state = TaskState.RUNNING;
+            updateInfoLine(task,info);
+        }
+        waitForClick(task);
+    }
+
+    public synchronized void stepRandom() {
+        stepTask(steppingTasks.iterator().next());
+    }
+
+    public synchronized void runTask(TaskView task) {
+        steppingTasks.remove(task);
+        getTaskInfo(task).isStepping = false;
+        getSema(task).release();
+    }
+
 }
 
 class Line {
@@ -239,7 +299,15 @@ class Line {
 
 
 enum TaskState {
-    CREATED, SUSPENDED, RUNNING, FINISHED;
+    READY(Color.YELLOW), 
+    SUSPENDED(Color.ORANGE), 
+    RUNNING(Color.GREEN), 
+    FINISHED(Color.GRAY), 
+    BLOCKED(Color.RED);
+    public final Color color;
+    TaskState(Color c) {
+        this.color = c;
+    }
 }
 
 class TaskInfo {
@@ -248,7 +316,11 @@ class TaskInfo {
     int previousLine;
     String previousFile;
     String currentFile;
-    TaskState state = TaskState.CREATED;
+    TaskState state = TaskState.READY;
+    FutView waitingOnFuture;
+    Semaphore stepSema = new Semaphore(0);
+    boolean isStepping = true;
+    
     public TaskInfo(TaskView task) {
         this.task = task;
     }
@@ -389,13 +461,15 @@ class SourceView extends JPanel implements DebugModelListener {
             textArea.select(0, 0);
             return;
         }
-        
-        if (!taskLineInfo.get(infoLine.currentLine-1).contains(infoLine)){
-            taskLineInfo.get(infoLine.currentLine-1).add(infoLine);
+
+        if (infoLine.currentLine > 0) {
+            if (!taskLineInfo.get(infoLine.currentLine-1).contains(infoLine)){
+                taskLineInfo.get(infoLine.currentLine-1).add(infoLine);
+            }
+            updateTaskLine(infoLine.currentLine);
+            highlightLine(infoLine);
         }
 
-        updateTaskLine(infoLine.currentLine);
-        highlightLine(infoLine);
     }
 
     @Override
@@ -417,9 +491,43 @@ class SourceView extends JPanel implements DebugModelListener {
     }
 }
 
+class SwingWrapperProxy implements InvocationHandler {
+    final Object target;
+    public SwingWrapperProxy(Object target) {
+        this.target = target;
+    }
+    
+    @Override
+    public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
+            throws Throwable {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    method.invoke(target, args);
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }});
+        
+        return null;
+    }
+    
+    public static <V> V newInstance(V target, Class<?> interfce) {
+        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target));
+    }
+}
+
+
 class TaskControls extends JPanel  {
     private static final long serialVersionUID = 1L;
-
+    private static final int STEP_COLUMN = 5;
+    private static int[] INITIAL_COLUMN_WIDTHS = { 15,50,50,10,70,10 }; 
+    
     final JTable table;
     final TableModel tableModel;
     final DebugModel debugModel;
@@ -427,22 +535,27 @@ class TaskControls extends JPanel  {
     private JScrollPane scrollPane;
     
     TaskControls(DebugModel debugModel) {
-        tableModel = new TableModel();
+        this.tableModel = new TableModel();
         this.debugModel = debugModel;
+        
         setLayout(new BorderLayout());
+        
         table = new JTable(tableModel);
         
         for (int c = 0; c < tableModel.getColumnCount()-1; c++) {
             table.getColumnModel().getColumn(c).setCellRenderer(new StringRenderer());
+            table.getColumnModel().getColumn(c).setPreferredWidth(INITIAL_COLUMN_WIDTHS[c]);
         }
-        table.getColumnModel().getColumn(3).setCellEditor(new StepBtnCellEditor());
-        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer());
+        StepBtnCellEditor e = new StepBtnCellEditor();
+        table.getColumnModel().getColumn(STEP_COLUMN).setCellEditor(e);
+        table.getColumnModel().getColumn(STEP_COLUMN).setCellRenderer(e);
         
         scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Tasks"));
         setPreferredSize(new Dimension(200,Integer.MAX_VALUE));
-        debugModel.registerListener(tableModel);
+
+        debugModel.registerListener(SwingWrapperProxy.newInstance(tableModel, DebugModelListener.class));
     }
     
     class StringRenderer extends JLabel implements TableCellRenderer {
@@ -458,43 +571,82 @@ class TaskControls extends JPanel  {
                 int row, int column) {
             TaskInfo info = tableModel.rows.get(row);
             
-            if (info.state == TaskState.FINISHED) {
-                setBackground(Color.gray);
-            } else if (info.state == TaskState.RUNNING){
-                setBackground(Color.GREEN);
-            } else {
-                setBackground(Color.YELLOW);
-            }
+            setBackground(info.state.color);
             setText((String)value);
             return this;
         }
     }
 
-    class StepBtnCellEditor extends AbstractCellEditor implements TableCellEditor, ActionListener {
+    class StepBtnCellEditor extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
         
-        public StepBtnCellEditor() {
-        }
-        
-        
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-            System.out.println("Hello World");
-        }
+        class BtnPanel extends JPanel {
+            JButton stepBtn;
+            JButton runBtn;
+            
+            BtnPanel(final TaskInfo task) {
+                stepBtn = new JButton("step");
+                stepBtn.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent arg0) {
+                        System.out.println("Clicked Step Task "+task.task.getID());
+                        stopCellEditing();
+                        debugModel.stepTask(task.task);
+                    }
+                });
 
+                runBtn = new JButton("run");
+                runBtn.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent arg0) {
+                        System.out.println("Clicked Run Task "+task.task.getID());
+                        stopCellEditing();
+                        debugModel.runTask(task.task);
+                    }
+                });
+                
+                setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+                add(runBtn);
+                add(stepBtn);
+            }
+            
+            @Override
+            public void setEnabled(boolean enabled) {
+                super.setEnabled(enabled);
+                runBtn.setEnabled(enabled);
+                stepBtn.setEnabled(enabled);
+            }
+        }
+        
+        private List<BtnPanel> btns = new ArrayList<BtnPanel>();
+        
+        private BtnPanel getBtns(final int row) {
+            final TaskInfo task = tableModel.rows.get(row);
+            
+            if (row >= btns.size()) {
+                BtnPanel pnl = new BtnPanel(task);
+                btns.add(pnl);
+            }
+            
+            BtnPanel pnl = btns.get(row);
+            pnl.setEnabled(task.state == TaskState.RUNNING);
+            return pnl;
+        }
+        
         @Override
         public Object getCellEditorValue() {
-            return "TRUE";
+            return "NOTHING";
         }
         
         @Override
         public Component getTableCellEditorComponent(JTable table,
                 Object value, boolean isSelected, int row, int column) {
-            JButton btn = new JButton("step");
-            btn.addActionListener(this);
-            btn.setVisible(true);
-            TaskInfo task = tableModel.rows.get(row);
-            btn.setEnabled(task.state == TaskState.RUNNING); 
-            return btn;
+            return getBtns(row);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable arg0,
+                Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            return getBtns(row);
         }
 
     }
@@ -503,8 +655,16 @@ class TaskControls extends JPanel  {
         private static final long serialVersionUID = 1L;
         
         final List<TaskInfo> rows = new ArrayList<TaskInfo>();
-        protected final String[] columnNames = new String[]{ "Task ID", "State", "COG", "Action"};
-        protected final Class<?>[] columnClasses = new Class<?>[]{ String.class, String.class, String.class, String.class };
+        protected final String[] columnNames = new String[]{ "Task ID", "State", "Condition", "COG", "Future", "Action"};
+        protected final Class<?>[] columnClasses = new Class<?>[]{ String.class, String.class, String.class, String.class, String.class, String.class };
+        
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            if (columnIndex != STEP_COLUMN)
+                return false;
+            TaskInfo info = rows.get(rowIndex);
+            return info.state == TaskState.RUNNING;
+        }
         
         @Override
         public String getColumnName(int column) {
@@ -532,8 +692,22 @@ class TaskControls extends JPanel  {
             switch (col) {
             case 0: return ""+line.task.getID();
             case 1: return line.state.toString();
-            case 2: return ""+line.task.getCOG().getID();
-            case 3: return "";
+            case 2:
+                if (line.state == TaskState.SUSPENDED) {
+                    if (line.waitingOnFuture != null) {
+                        return "Fut "+line.waitingOnFuture.getID()+"?";
+                    }
+                }
+                return "";
+            case 3: return ""+line.task.getCOG().getID();
+            case 4: {
+                FutView fut = line.task.getFuture();
+                if (fut.isResolved())
+                    return ""+fut.getValue();
+                else
+                    return "<unresolved>";
+            }
+            case 5: return "NOTHING";
             }
             return "ERROR";
         }
@@ -543,12 +717,10 @@ class TaskControls extends JPanel  {
         @Override
         public void taskInfoChanged(TaskInfo task) {
             int row = rows.indexOf(task);
-            System.out.println("changed");
-            
             
             fireTableRowsUpdated(row, row);
             fireTableDataChanged();
-            repaint();
+            
         }
 
         @Override
@@ -591,7 +763,7 @@ class COGTable extends JPanel  {
         scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Concurrent Object Groups (COGs)"));
-        setPreferredSize(new Dimension(300,400));
+        setPreferredSize(new Dimension(500,400));
         
         model.registerListener(tableModel);
         
@@ -675,14 +847,13 @@ class DebugWindow implements DebugModelListener  {
     final JFrame frame;
     final JTabbedPane tabs;
     final JButton nextStepBtn;
-    final Semaphore sema = new Semaphore(1);
     final TaskControls controls;
     final DebugModel model;
     
     final Map<String, SourceView> windows = new HashMap<String, SourceView>();
     private COGTable cogTable;
     
-    DebugWindow(DebugModel model) {
+    DebugWindow(final DebugModel model) {
         this.model = model;
         frame = new JFrame("ABS Graphical Debugger");
         frame.setLayout(new BorderLayout());
@@ -690,15 +861,17 @@ class DebugWindow implements DebugModelListener  {
         tabs = new JTabbedPane();
         frame.add(tabs, BorderLayout.CENTER);
         
-        nextStepBtn = new JButton("Next Step");
+        nextStepBtn = new JButton("Step Arbitrary Task");
+        
         nextStepBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                sema.release();
+                model.stepRandom();
             }
         });
         
         frame.add(nextStepBtn,BorderLayout.NORTH);
+        
         
         JPanel leftSide = new JPanel();
         leftSide.setLayout(new BorderLayout());
@@ -710,17 +883,9 @@ class DebugWindow implements DebugModelListener  {
         controls = new TaskControls(model);
         leftSide.add(controls,BorderLayout.CENTER);
         
-        frame.setBounds(400,100,800,800);
+        frame.setBounds(400,100,1000,800);
         frame.setVisible(true);
         model.registerListener(this);
-    }
-
-    private void waitForClick() {
-        try {
-            sema.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private SourceView getSourceView(String fileName) {
@@ -735,9 +900,10 @@ class DebugWindow implements DebugModelListener  {
 
     @Override
     public void taskInfoChanged(TaskInfo line) {
-        waitForClick();
-        SourceView view = getSourceView(line.currentFile);
-        tabs.setSelectedComponent(view);
+        if (line.currentFile != null) {
+            SourceView view = getSourceView(line.currentFile);
+            tabs.setSelectedComponent(view);
+        }
     }
 
     @Override

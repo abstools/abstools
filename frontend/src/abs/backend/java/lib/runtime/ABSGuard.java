@@ -6,7 +6,11 @@ import abs.backend.java.observing.GuardView;
 public abstract class ABSGuard {
 	public abstract boolean isTrue();
 
-    public void await() { }
+	/**
+	 * 
+	 * @return whether this guard could become false again in the future
+	 */
+    public boolean await() { return false; }
 
     private GuardView view;
     public GuardView getView() {

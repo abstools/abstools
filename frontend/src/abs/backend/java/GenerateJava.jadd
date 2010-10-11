@@ -398,8 +398,11 @@ aspect GenerateJava {
             }
         }
         
-        if (addReturn) 
-       	    stream.println(indent+"return ABSUnit.UNIT;"); // TODO: Fix Unit return
+        if (addReturn) {
+    		stream.println(indent+JavaGeneratorHelper.getDebugString(this, this.getEnd()));
+        
+       	    stream.println(indent+"return ABSUnit.UNIT;"); 
+       	}
         stream.println(indent+"}");
     }
     
@@ -423,8 +426,7 @@ aspect GenerateJava {
      */
     
     public void Stmt.generateJava(String indent, PrintStream stream) {
-    	stream.print(indent+"if ("+JavaBackendConstants.ABSRUNTIME+".DEBUGGING)"+
-    		JavaGeneratorHelper.getDebugString(this));
+    	stream.println(indent+JavaGeneratorHelper.getDebugString(this));
     }
     
     public void VarDeclStmt.generateJava(String indent, PrintStream stream) {

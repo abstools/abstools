@@ -33,4 +33,8 @@ public class EmptyTaskObserver implements TaskObserver {
     @Override
     public void taskStep(TaskView task, String fileName, int line) {
     }
+
+    @Override
+    public void taskReady(TaskView view) {
+    }
 }

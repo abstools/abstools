@@ -11,6 +11,13 @@ public class ABSAndGuard extends ABSGuard {
 	}
 
 	@Override
+	public boolean await() {
+	    boolean b = left.await() ;
+	    boolean b2 = right.await();
+	    return b || b2;
+	}
+	
+	@Override
    public boolean isTrue() {
 	   return left.isTrue() && right.isTrue();
    }

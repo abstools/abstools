@@ -106,8 +106,13 @@ class TaskScheduler {
             }
             
             if (Logging.DEBUG) log.finest(runningTask+" AWAITING "+g);
-            g.await();
-            if (Logging.DEBUG) log.finest(runningTask+" "+g+" READY");
+            boolean couldBecomeFalse = g.await();
+            
+            if (!couldBecomeFalse) {
+                if (Logging.DEBUG) log.finest(runningTask+" "+g+" READY");
+                if (v != null)
+                    v.taskReady(runningTask.getView());
+            }
             
             synchronized (TaskScheduler.this) {
                 while (! (g.isTrue() && thread == null)) {
@@ -155,6 +160,12 @@ class TaskScheduler {
         @Override
         public synchronized void registerTaskObserver(TaskObserver listener) {
             getObservers().add(listener);
+        }
+
+        public void taskReady(TaskView view) {
+            for (TaskObserver l : getObservers()) {
+                l.taskReady(view);
+            }
         }
 
         synchronized void taskResumed(TaskView runningTask, ABSGuard g) {

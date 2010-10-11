@@ -8,8 +8,9 @@ public class ABSFutureGuard extends ABSGuard {
 		this.fut = f;
 	}
 	
-	public void await() {
+	public boolean await() {
 		fut.await();
+		return false;
 	}
 	
 	@Override

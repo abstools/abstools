@@ -90,9 +90,13 @@ public class JavaGeneratorHelper {
     }
     
     public static String getDebugString(Stmt stmt) {
-        int line = Symbol.getLine(stmt.getStart());
+        return getDebugString(stmt, stmt.getStart());
+    }
+        
+    public static String getDebugString(Stmt stmt, int pos) {
+        int line = Symbol.getLine(pos);
         String fileName = stmt.getFileName();
-        return JavaBackendConstants.ABSRUNTIME+".nextStep(\""+fileName+"\","+line+");";
+        return "if ("+JavaBackendConstants.ABSRUNTIME+".DEBUGGING) "+JavaBackendConstants.ABSRUNTIME+".nextStep(\""+fileName+"\","+line+");";
     }
 
 }

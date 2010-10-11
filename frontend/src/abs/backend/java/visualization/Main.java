@@ -377,4 +377,10 @@ public class Main implements SystemObserver, TaskObserver {
         // TODO Auto-generated method stub
         
     }
+
+    @Override
+    public void taskReady(TaskView view) {
+        // TODO Auto-generated method stub
+        
+    }
 }

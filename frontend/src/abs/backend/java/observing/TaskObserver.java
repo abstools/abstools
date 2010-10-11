@@ -20,4 +20,10 @@ public interface TaskObserver {
      * @param line the line of the executed statement
      */
     void taskStep(TaskView task, String fileName, int line);
+    
+    /**
+     * Called when the task is ready to be scheduled again
+     * @param view
+     */
+    void taskReady(TaskView view);
 }
