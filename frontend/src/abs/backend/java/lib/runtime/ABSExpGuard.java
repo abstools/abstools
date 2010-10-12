@@ -7,8 +7,8 @@ public abstract class ABSExpGuard extends ABSGuard {
 	public abstract ABSBool evaluateExp();
 	
 	@Override
-	public boolean await() {
-	    return true;
+	public boolean staysTrue() {
+	    return false;
 	}
 	
 	@Override

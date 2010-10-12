@@ -1,6 +1,5 @@
 package abs.backend.java.lib.runtime;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +9,6 @@ import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
-import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
@@ -29,6 +27,11 @@ public abstract class Task<T extends ABSRef> {
         this.target = target;
         future = new ABSFut(this);
     }
+    
+    public int getID() {
+        return id;
+    }
+
     
     public COG getCOG() {
         return ((ABSObject)target).getCOG();        
@@ -185,5 +188,6 @@ public abstract class Task<T extends ABSRef> {
         }
         
     }
+
 
 }

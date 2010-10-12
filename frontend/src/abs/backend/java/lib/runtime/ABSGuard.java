@@ -10,13 +10,17 @@ public abstract class ABSGuard {
 	 * 
 	 * @return whether this guard could become false again in the future
 	 */
-    public boolean await() { return false; }
+    public boolean await() { return !staysTrue(); }
 
     private GuardView view;
     public GuardView getView() {
         if (view == null)
             view = new View();
         return view;
+    }
+    
+    public boolean staysTrue() {
+        return true;
     }
     
     private class View implements GuardView {
@@ -50,4 +54,5 @@ public abstract class ABSGuard {
         }
         
     }
+
 }

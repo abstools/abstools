@@ -12,6 +12,10 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import sun.misc.Regexp;
 
 import junit.framework.Assert;
 
@@ -90,10 +94,12 @@ public class JavaBackendTest extends ABSTest {
         StringBuffer output = null; 
         try {
             output = runJava(javaCode);
-            String s = output.toString().trim();
+            String s = output.toString()+"\n";
             String result = null;
-            if (s.startsWith("__ABS_TESTRESULT=")) {
-                result = s.split("=")[1];
+            Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);
+            Matcher m = p.matcher(s);
+            if (m.matches()) {
+                result = m.group(1);
             }
             
             if (result == null)

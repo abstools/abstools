@@ -8,12 +8,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectCreationObserver;
-import abs.backend.java.observing.SchedulerView;
+import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 public class COG {
-	private TaskScheduler scheduler = new TaskScheduler(this);
+    private static final TaskSchedulerFactory schedulerFactory = getSchedulerFactory();
+	private TaskScheduler scheduler = schedulerFactory.createTaskScheduler(this);
+//    private TaskScheduler scheduler = new DefaultTaskScheduler(this); 
 	private Class<?> initialClass;
 	private static AtomicInteger counter = new AtomicInteger();
 	private final int id = counter.incrementAndGet();
@@ -22,7 +24,22 @@ public class COG {
 	    initialClass = clazz;
 	}
 	
-	public TaskScheduler getScheduler() {
+	public Class<?> getInitialClass() {
+	    return initialClass;
+	}
+	
+	private static TaskSchedulerFactory getSchedulerFactory() {
+	    String schedulerName = System.getProperty("abs.taskscheduler","default");
+	    System.out.println("Scheduler: "+schedulerName);
+	    if (schedulerName.equals("default"))
+            return SimpleTaskScheduler.getFactory();
+	    else if (schedulerName.equals("fast"))
+            return DefaultTaskScheduler.getFactory();
+	    System.err.println("The task scheduler "+schedulerName+" does not exist, falling back to the default task scheduler.");
+        return DefaultTaskScheduler.getFactory();
+    }
+
+    public TaskScheduler getScheduler() {
 	   return scheduler;
     }
 
@@ -34,7 +51,7 @@ public class COG {
 		
 	}
 	
-	public void addTask(Task task) {
+	public void addTask(Task<?> task) {
 	    scheduler.addTask(task);
 	}
 
@@ -106,7 +123,7 @@ public class COG {
         }
 
         @Override
-        public SchedulerView getScheduler() {
+        public TaskSchedulerView getScheduler() {
             return scheduler.getView();
         }
         

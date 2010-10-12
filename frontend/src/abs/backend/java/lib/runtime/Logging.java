@@ -9,11 +9,12 @@ import java.util.logging.Logger;
 
 public class Logging {
     public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty("abs.debug", "false"));
+    public static final Level LOGLEVEL = Level.parse(System.getProperty("abs.loglevel", "warning").toUpperCase());
 
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
         Handler h = new ConsoleHandler();
-        Level level = Level.WARNING;
+        Level level = LOGLEVEL;
         if (DEBUG) {
             level = Level.ALL;
         }

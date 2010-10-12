@@ -2,7 +2,7 @@ package abs.backend.java.observing;
 
 import java.util.List;
 
-public interface SchedulerView {
+public interface TaskSchedulerView {
     List<TaskView> getNewTasks();
     List<TaskView> getSuspendedTasks();
     TaskView getActiveTask();

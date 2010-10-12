@@ -1,0 +1,18 @@
+module SchedulingTest;
+
+interface I {
+   Unit m(); 
+}
+
+class A implements I {
+	Unit m() {
+	}
+}
+
+{
+   I a;
+   a = new cog A();
+   a!m();
+   a!m();
+   a!m();
+}
