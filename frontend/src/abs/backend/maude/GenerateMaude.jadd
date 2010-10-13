@@ -99,45 +99,59 @@ aspect GenerateMaude {
         boolean inlist = false;
         String effvar = var;
         if (!var.equals("_")) {
-            // Invariant of asynchronous calls in an assignment:
-            // (potentially null) futures are freed before overwriting
-            // the variable's binding.
-            stream.print("$free(@ \"" + var + "\"); ");
-            stream.print("call(@ \"" + var + "\" ; ");
-            getCallee().generateMaude(stream);
-            stream.print(" ; \"" + getMethod() + "\" ; ");
-            if (getNumParam() == 0) {
-                stream.print("emp");
-            } else {
-                stream.print("(");
-                for (PureExp param : getParams()) {
-                    if (inlist) stream.print(":: "); else inlist = true;
-                    param.generateMaude(stream);
+            // Invariant of asynchronous calls as right-hand side of an
+            // assignment: futures are freed before overwriting the
+            // variable's binding with the new future.
+            stream.print("$free(@ \"" + var + "\" ) ; ");
+        }
+        // All parameters of type Future get their reference count
+        // incremented here, and decremented at the end of the
+        // called method.
+        if (getNumParam() > 0) {
+            MethodSig sig = null;
+            Type calleetype = getCallee().getType();
+            if (calleetype instanceof UnionType) {
+                UnionType ut = (UnionType)calleetype;
+                sig = ut.lookupMethod(getMethod());
+                if (sig == null) {
+                    // It's a private method
+                    sig = ut.getOriginatingClass().lookupMethod(getMethod()).getMethodSig();
                 }
-                stream.print(")");
+            } else if (calleetype instanceof InterfaceType) {
+                InterfaceType it = (InterfaceType)calleetype;
+                sig = it.lookupMethod(getMethod());
             }
-            stream.print(") ");
+            for (int i = 0; i < getNumParam(); i++) {
+                if (sig.getParam(i).getType().isFutureType()) {
+                    stream.print("$mark( ");
+                    getParam(i).generateMaude(stream);
+                    stream.print(") ; ");
+                }
+            }
+        }
+        stream.print("call(@ \""
+                     + (var.equals("_") ? ".staticfuture" : var)
+                     + "\" ; ");
+        getCallee().generateMaude(stream);
+        stream.print(" ; \"" + getMethod() + "\" ; ");
+        if (getNumParam() == 0) {
+            stream.print("emp");
         } else {
-            // Invariant of assignment-less async calls (and synchronous
-            // calls): .staticfuture is freed after calling
-            // (resp. receiving the value).  Some code duplication here,
-            // but it's easier to read than setting up complicated
-            // schemes about which variable to call to resp. free before
-            // / after the call statement etc.
-            stream.print("call(@ \".staticfuture\" ; ");
-            getCallee().generateMaude(stream);
-            stream.print(" ; \"" + getMethod() + "\" ; ");
-            if (getNumParam() == 0) {
-                stream.print("emp");
-            } else {
-                stream.print("(");
-                for (PureExp param : getParams()) {
-                    if (inlist) stream.print(":: "); else inlist = true;
-                    param.generateMaude(stream);
-                }
-                stream.print(")");
+            stream.print("(");
+            for (PureExp param : getParams()) {
+                if (inlist) stream.print(":: "); else inlist = true;
+                param.generateMaude(stream);
             }
-            stream.print(") ");
+            stream.print(")");
+        }
+        stream.print(") ");
+        if (var.equals("_")) {
+            // Invariant of async calls as statements (i.e. not as rhs
+            // of an assignment): .staticfuture is freed immediately
+            // after the call.  .staticfuture is shared with synchronous
+            // calls, which have the same behavior (except that
+            // synchronous calls synchronize and read the value of
+            // .staticfuture before freeing it).
             stream.print("; $free(@ \".staticfuture\") ");
         }
     }
@@ -421,6 +435,12 @@ aspect GenerateMaude {
                                      + vardecl.getVarDecl().getName()
                                      + "\") ");
                     }
+                }
+            }
+            // ... and all parameters
+            for (ParamDecl param : sig.getParams()) {
+                if (param.getType().isFutureType()) {
+                    stream.print("; $free(@ \"" + param.getName() + "\") ");
                 }
             }
             // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for

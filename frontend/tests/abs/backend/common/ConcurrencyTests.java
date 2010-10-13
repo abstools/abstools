@@ -43,16 +43,25 @@ public class ConcurrencyTests extends SemanticTests {
     static String INTERFACE_IF = "interface I {Fut<Bool> m();}";
     static String CLASS_CF = "class C implements I {Bool n() {return True;} Fut<Bool> m() {Fut<Bool> p; p = this!n(); return p;}}";
     static String CLASS_CF2 = "class C implements I {Bool n() {return True;} Fut<Bool> m() { return this!n();}}";
+    static String CLASS_CF3 = "class C implements I {Bool n() {return True;} Fut<Bool> inm(Fut<Bool> p) {suspend; return p;} Fut<Bool> m() {Fut<Fut<Bool>> result; {Fut<Bool> p; p = this!n(); result = this!inm(p);} await result?; return result.get;}}";
     static String CALL_M_FUTURE = "{Bool testresult = False; I i; i = new C(); Fut<Bool> p; p = i.m(); await p?; testresult = p.get;}";
 
     @Test
     public void futureReturnValue() {
+    	// Return a future variable
     	assertEvalTrue(INTERFACE_IF + CLASS_CF + CALL_M_FUTURE);
     }
     
     @Test
     public void futureReturnCallResult() {
+    	// Return the result of an asynchronous call
     	assertEvalTrue(INTERFACE_IF + CLASS_CF2 + CALL_M_FUTURE);
+    }
+    
+    @Test
+    public void futureAsParameter() {
+    	// Use a future after variable bindings at the call's location have gone out of scope
+    	assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
     }
     
     // ERROR Tests
