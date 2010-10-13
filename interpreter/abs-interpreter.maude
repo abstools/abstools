@@ -469,8 +469,8 @@ mod ABS-STATEMENT is
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
   op return(_) : Expr -> Stmt [ctor format (c d o c o)] .
-  op $mark(_) : Vid -> Stmt [ctor format (c d o c o)] .
-  op $free(_) : Vid -> Stmt [ctor format (c d o c o)] .
+  op $mark(_) : Expr -> Stmt [ctor format (c d o c o)] .
+  op $free(_) : Expr -> Stmt [ctor format (c d o c o)] .
   op tailcall(_;_;_) : Expr String ExprList -> Stmt [ctor format (c d o c o c o c o)] .
   op selftailcall(_;_) : String ExprList -> Stmt [ctor format (c d o c o c o)] .
 
@@ -866,29 +866,27 @@ mod ABS-MACHINE-BASICS is
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Att: S, Pr: { L | $mark(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
-  if N = (S :: L)[A]
+  if N := eval(E, (S :: L), none, 0)
       [label mark] .
 
   --- free
   ---
   --- Free a Future.
   ---
-  --- Also insert a dummy binding in the local scope, to make sure that a
-  --- freed future cannot be further accessed.
   ceq
-    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, 
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
-  if N = (S :: L)[A]
+  if N := eval(E, (S :: L), none, 0)
       [label free] .
 
   --- Skip the $free instruction if the variable is uninitialized.  This helps
@@ -989,29 +987,31 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Att: S, Pr: { L | $mark(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+    < T : Clock | Limit: LIM >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
-  if N = (S :: L)[A]
+    < T : Clock | Limit: LIM >
+  if N := eval(E, (S :: L), none, T)
       [label mark] .
 
   --- free
   ---
   --- Free a Future.
   ---
-  --- Also insert a dummy binding in the local scope, to make sure that a
-  --- freed future cannot be further accessed.
   ceq
-    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
+    < T : Clock | Limit: LIM >
   =
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, 
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
-  if N = (S :: L)[A]
+    < T : Clock | Limit: LIM >
+  if N := eval(E, (S :: L), none, T)
       [label free] .
 
   --- Skip the $free instruction if the variable is uninitialized.  This helps
