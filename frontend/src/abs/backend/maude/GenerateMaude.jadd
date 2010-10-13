@@ -508,8 +508,12 @@ aspect GenerateMaude {
             getRetExp().generateMaude(stream);
             stream.print(") ");
         } else {
-            getRetExp().generateMaudeAsStatement(stream, "_");
-            stream.print("; return(@ \"_\") " );
+            String var = "_";
+            // AsyncCall discards its Future immediately if result
+            // assigned to dummy variable _
+            if (getRetExp() instanceof AsyncCall) var = ".staticfuture";
+            getRetExp().generateMaudeAsStatement(stream, var);
+            stream.print("; return(@ \"" + var + "\") " );
         }
     }
 

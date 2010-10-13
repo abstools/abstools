@@ -42,9 +42,17 @@ public class ConcurrencyTests extends SemanticTests {
     // Future passing tests
     static String INTERFACE_IF = "interface I {Fut<Bool> m();}";
     static String CLASS_CF = "class C implements I {Bool n() {return True;} Fut<Bool> m() {Fut<Bool> p; p = this!n(); return p;}}";
+    static String CLASS_CF2 = "class C implements I {Bool n() {return True;} Fut<Bool> m() { return this!n();}}";
+    static String CALL_M_FUTURE = "{Bool testresult = False; I i; i = new C(); Fut<Bool> p; p = i.m(); await p?; testresult = p.get;}";
+
     @Test
     public void futureReturnValue() {
-    	assertEvalTrue(INTERFACE_IF + CLASS_CF + "{Bool testresult = False; I i; i = new C(); Fut<Bool> p; p = i.m(); await p?; testresult = p.get;} ");
+    	assertEvalTrue(INTERFACE_IF + CLASS_CF + CALL_M_FUTURE);
+    }
+    
+    @Test
+    public void futureReturnCallResult() {
+    	assertEvalTrue(INTERFACE_IF + CLASS_CF2 + CALL_M_FUTURE);
     }
     
     // ERROR Tests
