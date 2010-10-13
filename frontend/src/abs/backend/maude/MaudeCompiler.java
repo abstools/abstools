@@ -27,13 +27,16 @@ public class MaudeCompiler {
 		boolean stdlib = true;
 		boolean expectOutputFile = false;
 		File outputfile = null;
+        String module = "ABS-SIMULATOR-RL";
 		for (String arg : args) {
 			if (expectOutputFile) {
 				expectOutputFile = false;
 				outputfile = new File(arg);
-			} else if (arg.equals("-nostdlib")) 
+			} else if (arg.equals("-nostdlib"))  {
                 stdlib = false;
-		    else if (arg.equals("-h")) {
+            } else if (arg.equals("-timed")) {
+                module = "ABS-SIMULATOR-EQ-TIMED";
+            } else if (arg.equals("-h")) {
 		        printUsage();
 		        System.exit(1);
 		    } else if (arg.equals("-o")) {
@@ -59,18 +62,19 @@ public class MaudeCompiler {
         	if (outputfile != null) {
         		stream = new PrintStream(outputfile);
         	}
-        	m.generateMaude(stream);
+        	m.generateMaude(stream, module);
         	System.exit(0);
         } else System.exit(1);
 	}
 
     private static void printUsage() {
         System.out.println("Usage: java "+MaudeCompiler.class.getName()+" [options] <absfiles>\n" +
-        		"  <absfiles>   ABS files to parse\n" +
-        		"Options:\n"+
-        		"  -o <file>  write output to <file> instead of standard output\n" +
-                "  -nostdlib  do not include the standard lib\n" +
-        		"  -h         print this message\n");
+                           "  <absfiles>   ABS files to parse\n" +
+                           "Options:\n"+
+                           "  -o <file>  write output to <file> instead of standard output\n" +
+                           "  -nostdlib  do not include the standard lib\n" +
+                           "  -timed     generate code for timed interpreter\n" +
+                           "  -h         print this message\n");
         
     }
 

@@ -6,9 +6,10 @@ aspect GenerateMaude {
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
-    public void Model.generateMaude(PrintStream stream) {
+    public void Model.generateMaude(PrintStream stream, String module) {
         boolean hasClasses = false;
-        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting ABS-SIMULATOR-RL .\n");
+        stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
+                       + module + " .\n");
         for (Decl decl : getDecls()) {
             if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);

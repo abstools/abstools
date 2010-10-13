@@ -39,7 +39,8 @@ public class MaudeTests extends ABSTest {
     
     void assertMaudeResult(String absCode, String expectedResult) {
     	try {
-        	String generatedMaudeCode = getMaudeCode(absCode);
+            // TODO: test with other simulators (equational, timed) here as well
+            String generatedMaudeCode = getMaudeCode(absCode, "ABS-SIMULATOR-RL");
 			String maudeOutput = getMaudeOutput(generatedMaudeCode);
 			Pattern pattern = Pattern.compile(".*@ \"testresult\" \\|-> \"(\\w+)\"\\[emp\\].*");
 			Matcher matcher = pattern.matcher(maudeOutput);
@@ -57,7 +58,7 @@ public class MaudeTests extends ABSTest {
     }
     
    
-    protected String getMaudeCode(String absCode) {
+    protected String getMaudeCode(String absCode, String module) {
         try {
             Model model = null;
             try {
@@ -72,7 +73,7 @@ public class MaudeTests extends ABSTest {
                 return null;
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            model.generateMaude(new PrintStream(out));
+            model.generateMaude(new PrintStream(out), module);
             String res = out.toString();
             return res;
         } catch (NumberFormatException e) {
