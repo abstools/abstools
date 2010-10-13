@@ -498,6 +498,11 @@ aspect GenerateMaude {
 
     public void ReturnStmt.generateMaude(PrintStream stream) {
         if (getRetExp() instanceof PureExp) {
+            if (getRetExp().getType().isFutureType()) {
+                stream.print("$mark( ");
+                getRetExp().generateMaude(stream);
+                stream.print(") ; ");
+            }
             stream.print("return( ");
             getRetExp().generateMaude(stream);
             stream.print(") ");
