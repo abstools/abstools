@@ -1349,15 +1349,6 @@ mod ABS-STMT-AWAIT-RL is
   var SL : StmtList .       var W : MProc .  var F : Nat .
   var CN : Configuration .  var E : Expr .   var Q : String .
 
-  --- OPTIMISATION: Optimize label access in await statements.  We cannot do
-  --- this for instance variables because another process might change the
-  --- binding.
-  ceq
-    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
-  if hasMapping(L, @ Q) .
-
   rl
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =>
@@ -1374,15 +1365,6 @@ mod ABS-STMT-AWAIT-EQ is
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
   var CN : Configuration .  var E : Expr .   var Q : String .
-
-  --- OPTIMISATION: Optimize label access in await statements.  We cannot do
-  --- this for instance variables because another process might change the
-  --- binding.
-  ceq
-    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
-  if hasMapping(L, @ Q) .
 
   eq
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
@@ -1401,15 +1383,6 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
   var SL : StmtList .       var W : MProc .  var F : Nat .
   var CN : Configuration .  var E : Expr .   var Q : String .
   vars T LIM : Nat .
-
-  --- OPTIMISATION: Optimize label access in await statements.  We cannot do
-  --- this for instance variables because another process might change the
-  --- binding.
-  ceq
-    < O : C | Att: S, Pr: { L | await ?(@ Q) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | await ?(L[@ Q]) ; SL }, PrQ: W, Lcnt: F >
-  if hasMapping(L, @ Q) .
 
   eq
     { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
@@ -1777,14 +1750,6 @@ mod ABS-RECEIVE-RESULT is
   vars SL SL1 : StmtList .  var W : MProc .    vars F G : Nat .
   var Q : String .          vars A A' : Vid .  var N : Label .
   var D : Data .
-
-  --- OPTIMISATION: Reduce the value of a label in a process to avoid constant
-  --- re-evaluation.  Cannot be done for instance variables because another
-  --- process might change the binding.
-  ceq < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Att: S, Pr: { L | get(L[A] ; A') ; SL }, PrQ: W, Lcnt: F >
-  if hasMapping(L, A) .
 
   --- receive-comp
   ---
