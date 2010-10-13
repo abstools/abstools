@@ -13,15 +13,12 @@ public class Logging {
 
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
-        Handler h = new ConsoleHandler();
         Level level = LOGLEVEL;
         if (DEBUG) {
             level = Level.ALL;
         }
         
-        h.setLevel(level);
         logger.setLevel(level);
-        logger.addHandler(h);
         return logger;
     }
     

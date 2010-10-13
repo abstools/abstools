@@ -1,4 +1,4 @@
-package abs.backend.java.lib.runtime;
+package abs.backend.java.scheduling;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,6 +7,12 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSGuard;
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.ABSThread;
+import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.TaskSchedulerView;
 
 /**
@@ -95,6 +101,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     protected synchronized void taskFinished() {
         activeTask = null;
         schedule();
+        ABSRuntime.doNextStep();
     }
     
     @Override
@@ -136,14 +143,30 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
     
     private synchronized void schedule() {
-        ABSRuntime.scheduleTask(cog);
-        
+        if (ABSRuntime.GLOBAL_SCHEDULING) {
+            if (suspendedTasks.isEmpty() && readyTasks.isEmpty())
+                return;
+            
+            ABSRuntime.addScheduleAction(new ScheduleTask(cog) {
+                @Override
+                public synchronized void execute() {
+                    doSchedule();
+                }
+            });
+        } else {
+            doSchedule();
+        }
+    }
+    
+    private synchronized void doSchedule() {
         List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
         List<TaskInfo> choices = new ArrayList<TaskInfo>(readyTasks);
         choices.addAll(suspendedTasksWithSatisfiedGuards);
 
-        if (choices.isEmpty())
+        if (choices.isEmpty()) {
+            ABSRuntime.doNextStep();
             return;
+        }
         
         TaskInfo nextTask = schedule(choices);
         
@@ -160,6 +183,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             activeTask.thread = new SimpleSchedulerThread(activeTask);
             activeTask.thread.start();
         }
+        
     }
     
     private synchronized List<TaskInfo> unsuspendTasks() {
@@ -210,7 +234,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             activeTask = null;
             
             schedule();
-            
+            ABSRuntime.doNextStep();
             newTask = activeTask;
         }
         

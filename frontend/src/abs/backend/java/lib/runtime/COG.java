@@ -11,6 +11,10 @@ import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
+import abs.backend.java.scheduling.DefaultTaskScheduler;
+import abs.backend.java.scheduling.SimpleTaskScheduler;
+import abs.backend.java.scheduling.TaskScheduler;
+import abs.backend.java.scheduling.TaskSchedulerFactory;
 
 public class COG {
     private static final TaskSchedulerFactory schedulerFactory = getSchedulerFactory();

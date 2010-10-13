@@ -40,6 +40,7 @@ aspect GenerateJava {
             stream.println("       Main main = new Main(cog);");
             stream.println("       "+ABSRuntime.class.getName()+".cogCreated(main);");
             stream.println("       "+ABSRuntime.class.getName()+".asyncCall(new MainTask(main));");
+            stream.println("       "+ABSRuntime.class.getName()+".doNextStep();");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");

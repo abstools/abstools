@@ -11,8 +11,11 @@ class A implements I {
 
 {
    I a;
+   I a2;
    a = new cog A();
+   a2 = new cog A();
    a!m();
+   a2!m();
    a!m();
    a!m();
 }

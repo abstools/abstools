@@ -1,10 +1,11 @@
-package abs.backend.java.lib.runtime;
+package abs.backend.java.scheduling;
 
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import abs.backend.java.lib.runtime.SimpleTaskScheduler.TaskInfo;
+import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 /**
  * A scheduling strategy that randomly chooses the next task
@@ -30,7 +31,7 @@ public class RandomTaskSchedulingStrategy implements SchedulingStrategy {
         else
             seed = Long.parseLong(seedString);
         
-        logger.info("Random Task Scheduler Seed="+seed);
+        logger.info("Random Task Scheduler Seed="+seed+(seedString != null ? " (as specified)" : ""));
         random = new Random(seed);
     }
     

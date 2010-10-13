@@ -31,4 +31,5 @@ public abstract class ScheduleAction {
 
     public abstract String shortString();
     
+    
 }

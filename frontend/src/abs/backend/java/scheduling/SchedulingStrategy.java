@@ -1,8 +1,8 @@
-package abs.backend.java.lib.runtime;
+package abs.backend.java.scheduling;
 
 import java.util.List;
 
-import abs.backend.java.lib.runtime.SimpleTaskScheduler.TaskInfo;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 public interface SchedulingStrategy {
     TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> scheduableTasks);

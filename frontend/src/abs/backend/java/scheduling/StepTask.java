@@ -23,4 +23,11 @@ public class StepTask extends ScheduleAction {
         return "T"+task.getCOG().getID()+"."+task.getID();
     }
     
+    public boolean equals(Object o) {
+        if (! (o instanceof StepTask))
+            return false;
+        StepTask t = (StepTask) o;
+        return t.task.equals(this.task);
+    }
+    
 }

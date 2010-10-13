@@ -18,4 +18,11 @@ public class ScheduleTask extends ScheduleAction {
     public String shortString() {
         return "C"+getCOG().getID();
     }
+    
+    public boolean equals(Object o) {
+        if (! (o instanceof ScheduleTask))
+            return false;
+        return this.getCOG() == ((ScheduleTask)o).getCOG();
+    }
+    
 }

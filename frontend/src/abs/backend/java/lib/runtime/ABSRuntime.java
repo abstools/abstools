@@ -2,9 +2,12 @@ package abs.backend.java.lib.runtime;
 
 import abs.backend.java.debugging.Debugger;
 import abs.backend.java.observing.SystemObserver;
+import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
 import abs.backend.java.scheduling.RandomGlobalSchedulingStrategy;
+import abs.backend.java.scheduling.ScheduleAction;
 import abs.backend.java.scheduling.ScheduleOptions;
+import abs.backend.java.scheduling.ScheduleTask;
 
 
 public class ABSRuntime {
@@ -28,10 +31,12 @@ public class ABSRuntime {
 
     static final ScheduleOptions scheduleOptions = SCHEDULING ? new ScheduleOptions() : null;  
     
-    public static void scheduleTask(COG cog) {
+    public static void scheduleTaskDone() {
         if (GLOBAL_SCHEDULING)
-            globalScheduler.scheduleTask(cog);
+            globalScheduler.doNextScheduleStep();
     }
+
+    
     
     public static void nextStep(String fileName, int line) {
         if (GLOBAL_SCHEDULING) {
@@ -42,6 +47,21 @@ public class ABSRuntime {
             getCurrentTask().nextStep(fileName,line);
         } 
     }
+    
+    public static void addScheduleAction(ScheduleAction action) {
+        if (GLOBAL_SCHEDULING) {
+            globalScheduler.addAction(action);
+        }
+    }
+
+    public static void doNextStep() {
+        if (GLOBAL_SCHEDULING) {
+            globalScheduler.doNextScheduleStep();
+        }
+    }
+
+    
+    
     
     public static void cogCreated(ABSObject o) {
         if (systemObserver != null) {

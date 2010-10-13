@@ -1,14 +1,14 @@
-package abs.backend.java.lib.runtime;
+package abs.backend.java.scheduling;
 
 import java.util.List;
 
-import abs.backend.java.lib.runtime.SimpleTaskScheduler.TaskInfo;
 import abs.backend.java.observing.TaskSchedulerView;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 public class RecordingSchedulerStrategy implements SchedulingStrategy {
 
     private final SchedulingStrategy schedulingStrat;
-
+    
     public RecordingSchedulerStrategy(SchedulingStrategy s) {
         this.schedulingStrat = s;
     }
@@ -19,7 +19,9 @@ public class RecordingSchedulerStrategy implements SchedulingStrategy {
         
         TaskInfo choosenTask = schedulingStrat.schedule(scheduler, scheduableTasks);
         long taskId = choosenTask.id;
-        System.out.println("scheduled in COG "+cogId+" ("+scheduler.getCOG().getInitialClass().getName()+") task "+taskId+" from {"+tasksToStringList(cogId,scheduableTasks)+"}");
+        String suff = scheduableTasks.size() == 1 ? " (NO CHOICE)" : "";
+
+        System.out.println("COG "+cogId+" ("+scheduler.getCOG().getInitialClass().getName()+"): Scheduled task "+taskId+" from {"+tasksToStringList(cogId,scheduableTasks)+"}"+suff);
         return choosenTask;
     }
 

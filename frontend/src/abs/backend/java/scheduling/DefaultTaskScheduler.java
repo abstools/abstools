@@ -1,15 +1,21 @@
-package abs.backend.java.lib.runtime;
+package abs.backend.java.scheduling;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSGuard;
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.ABSThread;
+import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
-class DefaultTaskScheduler implements TaskScheduler {
+public class DefaultTaskScheduler implements TaskScheduler {
     private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
     
     private final List<Task<?>> newTasks = new LinkedList<Task<?>>();

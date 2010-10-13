@@ -13,7 +13,8 @@ public class ScheduleOptions implements Iterable<ScheduleAction> {
     }
     
     public void addOption(ScheduleAction a) {
-        actions.add(a);
+        if (!actions.contains(a))
+            actions.add(a);
     }
     
     @Override
@@ -27,6 +28,10 @@ public class ScheduleOptions implements Iterable<ScheduleAction> {
 
     public void removeOption(ScheduleAction next) {
         actions.remove(next);
+    }
+
+    public boolean isEmpty() {
+        return actions.isEmpty();
     }
     
     
