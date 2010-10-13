@@ -1781,11 +1781,11 @@ mod ABS-RECEIVE-RESULT is
   --- the process that is waited for, and afterwards manually scheduling the
   --- waiting process again (see `continue' rule below).
   crl
-    < O : C | Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
+    < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
   =>
     < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
-              PrQ: W , { L | get(N ; A) ; SL }, Lcnt: F >
-  if L1[@ ".label"] == N
+              PrQ: W , { L | get(A ; A') ; SL }, Lcnt: F >
+  if N := L[A] /\ L1[@ ".label"] == N
       [label local-reply] .
 
 
@@ -1798,12 +1798,13 @@ mod ABS-RECEIVE-RESULT is
   --- If we support shared futures, this must be a rule in the model
   --- checker, because there might be two processes in PrQ which await a
   --- reply to the label.
-  rl
-    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(N ; A) ; SL1},
+  crl
+    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1},
               Lcnt: F >
   =>
-    < O : C | Att: S, Pr: { L1 | get(N ; A) ; SL1 }, PrQ: W,
+    < O : C | Att: S, Pr: { L1 | get(A ; A') ; SL1 }, PrQ: W,
               Lcnt: F >
+  if N == L1[A]
     [label continue] .
 endm
 
