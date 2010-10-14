@@ -931,15 +931,17 @@ aspect GenerateJava {
     }
     
     public void EqExp.generateJava(PrintStream stream) {
+    	stream.print(BinOp.class.getName()+".eq(");
         getLeft().generateJava(stream);
-        stream.print(".eq(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }
     
     public void NotEqExp.generateJava(PrintStream stream) {
+    	stream.print(BinOp.class.getName()+".notEq(");
         getLeft().generateJava(stream);
-        stream.print(".notEq(");
+        stream.print(",");
         getRight().generateJava(stream);
         stream.print(")");
     }

@@ -14,6 +14,12 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void nullCompare() {
+       assertEvalTrue("interface I {} { Bool testresult = False; I i; i = null; if (i == null) testresult = True; }"); 
+    }
+
+    
+    @Test
     public void classDecl() {
        assertEvalTrue("class C { } { Bool testresult = True; }"); 
     }
