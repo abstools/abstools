@@ -826,12 +826,12 @@ endm
 mod ABS-MACHINE-BASICS is
   protecting ABS-EVAL .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 S2 L : Subst .
+  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
   var CN : Configuration .  var P : Process .    var A : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
   var Q : String .          var MS : MMtd .      var CO : Bool .
-  var D : Data .            var DL : DataList .
+  var D : Data .            var DL : DataList .  var S2 : SSubst .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -942,12 +942,12 @@ endm
 mod ABS-MACHINE-BASICS-TIMED is
   protecting ABS-EVAL .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 S2 L : Subst .
+  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
   var CN : Configuration .  var P : Process .    var A : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
   var Q : String .          var MS : MMtd .      var CO : Bool .
-  var D : Data .            var DL : DataList .
+  var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .
 
   --- Schedule a new process for execution, if it is ready.
@@ -1289,7 +1289,7 @@ mod ABS-STMT-WHILE-RL is
     < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Att: S,
-              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
+              Pr: { L | if E th (SL1 ; while E do SL1 od) el noStmt fi ; SL },
               PrQ: W, Lcnt: F >
     [label while] .
 endm
