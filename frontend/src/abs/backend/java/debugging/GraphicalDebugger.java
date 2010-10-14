@@ -655,7 +655,7 @@ class TaskControls extends JPanel  {
         public Object getValueAt(int row, int col) {
             TaskInfo line = rows.get(row);
             switch (col) {
-            case 0: return ""+line.task.getID();
+            case 0: return ""+line.task.getID()+" ("+line.task.getMethodName()+")";
             case 1: return line.state.toString();
             case 2:
                 if (line.state == TaskState.SUSPENDED) {

@@ -431,7 +431,9 @@ aspect GenerateJava {
     }
     
     public void VarDeclStmt.generateJava(String indent, PrintStream stream) {
-    	super.generateJava(indent,stream);
+    	if (getVarDecl().hasInitExp()) {
+    		super.generateJava(indent,stream);
+        }
         getVarDecl().generateJava(indent,stream);
         stream.println();
     }

@@ -103,7 +103,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     protected synchronized void taskFinished() {
         activeTask = null;
-        schedule();
+        if (suspendedTasks.size()+readyTasks.size()>0)
+            schedule();
         ABSRuntime.doNextStep();
     }
     
@@ -121,6 +122,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     class SimpleSchedulerThread extends ABSThread {
 
         private final TaskInfo executingTask;
+        private boolean active;
 
         public SimpleSchedulerThread(TaskInfo activeTask) {
             this.executingTask = activeTask;
@@ -133,20 +135,52 @@ public class SimpleTaskScheduler implements TaskScheduler {
             View v = view;
             if (v != null)
                 v.taskStarted(executingTask.task.getView());
-            
+            active = true;
             executingTask.task.run();
             taskFinished();
         }
 
-        public synchronized void await() {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        public void await(ABSGuard g) {
+            boolean scheduled = false;
+            synchronized (this) {
+                active = false;
+            }
+            
+            if (!g.await()) {
+                synchronized (SimpleTaskScheduler.this) {
+                    suspendedTasks.remove(executingTask);
+                    readyTasks.add(executingTask);
+                    executingTask.makeReady();
+                    if (view != null)
+                        view.taskReady(executingTask.task.getView());
+                    if (activeTask == null) {
+                        schedule();
+                        scheduled = true;
+                    }
+                }
+
+            }
+            
+            
+            if (scheduled)
+                ABSRuntime.doNextStep();
+            
+            synchronized (this) {
+                try {
+                    System.out.println("Task "+executingTask+" waiting to be resumed");
+                    while (!active) {
+                        wait();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("Task "+executingTask+" resumed");
+                active = true;
             }
         }
 
         public synchronized void awake() {
+            active = true;
             notify();
         }
         
@@ -159,7 +193,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
             
             ABSRuntime.addScheduleAction(new ScheduleTask(cog) {
                 @Override
-                public synchronized void execute() {
+                public void execute() {
+                    System.out.println("Calling doSchedule...");
                     doSchedule();
                 }
             });
@@ -168,30 +203,41 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
     }
     
-    private synchronized void doSchedule() {
-        List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
-        List<TaskInfo> choices = new ArrayList<TaskInfo>(readyTasks);
-        choices.addAll(suspendedTasksWithSatisfiedGuards);
-
+    private void doSchedule() {
+        List<TaskInfo> choices;
+        synchronized (this) {
+            System.out.println("Executing doSchedule...");
+        
+            List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
+            choices = new ArrayList<TaskInfo>(readyTasks);
+            choices.addAll(suspendedTasksWithSatisfiedGuards);
+            logger.info("COG "+cog.getID()+" scheduling choices: "+choices);
+        
+        }
+        
         if (choices.isEmpty()) {
+            logger.info("Choices are empty!");
             ABSRuntime.doNextStep();
             return;
         }
-        
-        TaskInfo nextTask = schedule(choices);
-        
-        if (nextTask.isSuspended()) {
-            suspendedTasks.remove(nextTask);
-            nextTask.makeReady();
-        } else {
-            readyTasks.remove(nextTask);
-        }
-        activeTask = nextTask;
-        if (activeTask.thread != null) {
-            activeTask.thread.awake();
-        } else {
-            activeTask.thread = new SimpleSchedulerThread(activeTask);
-            activeTask.thread.start();
+
+        synchronized (this) {
+            TaskInfo nextTask = schedule(choices);
+
+            if (nextTask.isSuspended()) {
+                suspendedTasks.remove(nextTask);
+                nextTask.makeReady();
+            } else {
+                readyTasks.remove(nextTask);
+            }
+            activeTask = nextTask;
+            if (activeTask.thread != null) {
+                logger.info("COG "+cog.getID()+" awaking "+activeTask);
+                activeTask.thread.awake();
+            } else {
+                activeTask.thread = new SimpleSchedulerThread(activeTask);
+                activeTask.thread.start();
+            }
         }
         
     }
@@ -245,15 +291,26 @@ public class SimpleTaskScheduler implements TaskScheduler {
             currentTask.suspend(g);
             suspendedTasks.add(currentTask);
             activeTask = null;
+            if (view != null)
+                view.taskSuspended(currentTask.task.getView(), g);
             
-            schedule();
-            ABSRuntime.doNextStep();
+            if (g.isTrue() || (suspendedTasks.size()+readyTasks.size()) > 1) {
+                schedule();
+            }
+        }
+
+        ABSRuntime.doNextStep();
+        synchronized (this) {
             newTask = activeTask;
         }
-        
+
         if (newTask != currentTask) {
-            thread.await();
+            thread.await(g);
         }
+        
+        if (view != null)
+            view.taskResumed(currentTask.task.getView(), g);
+        
     }
 
     

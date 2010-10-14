@@ -11,11 +11,9 @@ class A implements I {
 
 {
    I a;
-   I a2;
+   Fut<Unit> fut;
    a = new cog A();
-   a2 = new cog A();
-   a!m();
-   a2!m();
-   a!m();
-   a!m();
+   fut = a!m();
+   await fut?;
+   fut.get;
 }

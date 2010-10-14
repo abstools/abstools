@@ -33,6 +33,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 
 public class InteractiveScheduler implements TotalSchedulingStrategy {
+    private final boolean DEBUG = false;
     private SchedulerGUI gui;
     private SchedulerGUISwing guiSwingWrapper;
     
@@ -50,8 +51,10 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
         return awaitGUIAction();
     }
 
+    
     private void debug(String string) {
-        System.out.println("InteractiveScheduler: "+string);
+        if (DEBUG)
+            System.out.println("InteractiveScheduler: "+string);
     }
 
     private ScheduleAction nextAction;
@@ -65,6 +68,7 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
             }
         }
         ScheduleAction res = nextAction;
+        System.out.println("Chosen action "+nextAction);
         nextAction = null;
         return res;
     }
@@ -168,6 +172,7 @@ class SchedulerGUI implements SchedulerGUISwing {
                 GridBagConstraints c = new GridBagConstraints();
                 c.anchor = GridBagConstraints.WEST;
                 c.insets = new Insets(5,5,5,5);
+                c.gridx = 0;
                 
                 //btn.setVisible(false);
                 for (TaskInfo i : scheduableTasks) {
@@ -187,7 +192,7 @@ class SchedulerGUI implements SchedulerGUISwing {
             public ChooseTaskBtn(TaskInfo i) {
                 this.info = i;
                 this.addActionListener(this);
-                setText("Activate Task "+i.task.getID());
+                setText("Activate Task "+i.task.getID()+" ("+i.task.methodName()+")");
             }
 
             @Override
@@ -205,7 +210,7 @@ class SchedulerGUI implements SchedulerGUISwing {
     
     @Override
     public void showOptions(ScheduleOptions options) {
-        System.out.println("SchedulerGUI: showing options...");
+        //System.out.println("SchedulerGUI: showing options...");
         int i = 0;
 
         for (ScheduleAction a : options) {
@@ -220,7 +225,7 @@ class SchedulerGUI implements SchedulerGUISwing {
             }
         }
         
-        System.out.println("SchedulerGUI: "+i+" options showed");
+       /// System.out.println("SchedulerGUI: "+i+" options showed");
         frame.pack();
     }
 
@@ -249,7 +254,7 @@ class SchedulerGUI implements SchedulerGUISwing {
             String text = "Schedule Next Task";
             if (a instanceof StepTask) {
                 StepTask st = (StepTask) a;
-                text = "Step Task " + st.getTask().getID();
+                text = "Step Task " + st.getTask().getID() + " ("+st.getTask().methodName()+")";
             } 
             setText(text);
             setEnabled(true);
@@ -259,6 +264,7 @@ class SchedulerGUI implements SchedulerGUISwing {
         public void actionPerformed(ActionEvent arg0) {
             setEnabled(false);
             setText(" - - - - ");
+            System.out.println("Pressed Button with action "+action);
             chooseBtnPressed(action);
         }
     }
