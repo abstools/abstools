@@ -16,7 +16,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
  * @author Jan Schäfer
  *
  */
-public class RandomTaskSchedulingStrategy implements SchedulingStrategy {
+public class RandomTaskSchedulingStrategy implements TaskSchedulingStrategy {
     private final static Logger logger = Logging.getLogger(RandomTaskSchedulingStrategy.class.getName());
 
     private final Random random;
@@ -24,7 +24,7 @@ public class RandomTaskSchedulingStrategy implements SchedulingStrategy {
     
     public static final RandomTaskSchedulingStrategy INSTANCE = new RandomTaskSchedulingStrategy(); 
 
-    RandomTaskSchedulingStrategy() {
+    public RandomTaskSchedulingStrategy() {
         String seedString = System.getProperty("abs.schedulerseed");
         if (seedString == null)
             seed = System.nanoTime();

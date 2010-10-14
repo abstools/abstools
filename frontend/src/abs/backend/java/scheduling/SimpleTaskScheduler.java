@@ -13,7 +13,10 @@ import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
+import abs.backend.java.observing.SystemObserver;
+import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerView;
+import abs.backend.java.observing.TaskView;
 
 /**
  * A very simple scheduler that is not the most efficient one, but
@@ -62,7 +65,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
     }
     
-    protected final SchedulingStrategy schedulingStrategy;
+    protected final TaskSchedulingStrategy schedulingStrategy;
     
     /**
      * Holds a list of all ready tasks.
@@ -93,7 +96,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
     
     
-    public SimpleTaskScheduler(COG cog, SchedulingStrategy strat) {
+    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat) {
         this.cog = cog;
         this.schedulingStrategy = strat; 
     }
@@ -107,6 +110,9 @@ public class SimpleTaskScheduler implements TaskScheduler {
     @Override
     public synchronized void addTask(Task<?> task) {
         readyTasks.add(new TaskInfo(task));
+        if (view != null)
+            view.taskAdded(task.getView());
+        
         if (activeTask == null) {
             schedule();
         }
@@ -124,6 +130,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
         
         @Override
         public void run() {
+            View v = view;
+            if (v != null)
+                v.taskStarted(executingTask.task.getView());
+            
             executingTask.task.run();
             taskFinished();
         }
@@ -209,10 +219,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
         return schedulingStrategy.schedule(this, scheduableTasks);
     }
 
+    private volatile View view;
+    
     @Override
-    public TaskSchedulerView getView() {
-        // TODO Auto-generated method stub
-        return null;
+    public synchronized TaskSchedulerView getView() {
+        if (view == null)
+            view = new View();
+        return view;
     }
 
     @Override
@@ -244,33 +257,11 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     
-    static final SchedulingStrategy defaultStrategy;
-    static {
-        String s = System.getProperty("abs.schedulingstrategy","default");
-        SchedulingStrategy strat = null;
-        if (s.equals("default") || s.equals("random")) {
-            strat = new RandomTaskSchedulingStrategy();
-        } else {
-            logger.warning("Scheduling strategy "+s+" does not exist, falling back to default strategy");
-            strat = new RandomTaskSchedulingStrategy();
-        }
-        
-        logger.info("Using scheduling strategy '"+s+"'");
-        
-        boolean recording = Boolean.parseBoolean(System.getProperty("abs.recordscheduling","false"));
-        if (recording) {
-            strat = new RecordingSchedulerStrategy(strat);
-            logger.info("Recording schedule");
-        }
-        
-        defaultStrategy = strat;
-    }
-    
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
             public TaskScheduler createTaskScheduler(COG cog) {
-                return new SimpleTaskScheduler(cog,defaultStrategy);
+                return new SimpleTaskScheduler(cog,ABSRuntime.taskSchedulingStrategy);
             }
         };
     }
@@ -279,5 +270,24 @@ public class SimpleTaskScheduler implements TaskScheduler {
     @Override
     public COG getCOG() {
         return cog;
+    }
+    
+    private class View extends  AbstractTaskSchedulerView {
+
+        @Override
+        public List<TaskView> getNewTasks() {
+            return null;
+        }
+
+        @Override
+        public List<TaskView> getSuspendedTasks() {
+            return null;
+        }
+
+        @Override
+        public TaskView getActiveTask() {
+            return SimpleTaskScheduler.this.getActiveTask().getView();
+        }
+
     }
 }

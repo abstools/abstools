@@ -5,11 +5,11 @@ import java.util.List;
 import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
-public class RecordingSchedulerStrategy implements SchedulingStrategy {
+public class RecordingSchedulerStrategy implements TaskSchedulingStrategy {
 
-    private final SchedulingStrategy schedulingStrat;
+    private final TaskSchedulingStrategy schedulingStrat;
     
-    public RecordingSchedulerStrategy(SchedulingStrategy s) {
+    public RecordingSchedulerStrategy(TaskSchedulingStrategy s) {
         this.schedulingStrat = s;
     }
     

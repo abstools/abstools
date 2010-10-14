@@ -16,12 +16,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
@@ -29,7 +27,6 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -38,14 +35,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
-import javax.swing.event.CellEditorListener;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
 
-import abs.backend.java.debugging.TaskControls.StepBtnCellEditor;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
@@ -277,7 +271,7 @@ class DebugModel implements TaskObserver {
             info.state = TaskState.RUNNING;
             updateInfoLine(task,info);
         }
-        waitForClick(task);
+        //waitForClick(task);
     }
 
     public synchronized void stepRandom() {
@@ -491,37 +485,6 @@ class SourceView extends JPanel implements DebugModelListener {
     }
 }
 
-class SwingWrapperProxy implements InvocationHandler {
-    final Object target;
-    public SwingWrapperProxy(Object target) {
-        this.target = target;
-    }
-    
-    @Override
-    public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
-            throws Throwable {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    method.invoke(target, args);
-                } catch (IllegalArgumentException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-            }});
-        
-        return null;
-    }
-    
-    public static <V> V newInstance(V target, Class<?> interfce) {
-        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target));
-    }
-}
-
 
 class TaskControls extends JPanel  {
     private static final long serialVersionUID = 1L;
@@ -542,13 +505,15 @@ class TaskControls extends JPanel  {
         
         table = new JTable(tableModel);
         
-        for (int c = 0; c < tableModel.getColumnCount()-1; c++) {
+        for (int c = 0; c < tableModel.getColumnCount(); c++) {
             table.getColumnModel().getColumn(c).setCellRenderer(new StringRenderer());
             table.getColumnModel().getColumn(c).setPreferredWidth(INITIAL_COLUMN_WIDTHS[c]);
         }
+        /*
         StepBtnCellEditor e = new StepBtnCellEditor();
         table.getColumnModel().getColumn(STEP_COLUMN).setCellEditor(e);
         table.getColumnModel().getColumn(STEP_COLUMN).setCellRenderer(e);
+        */
         
         scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
@@ -655,8 +620,8 @@ class TaskControls extends JPanel  {
         private static final long serialVersionUID = 1L;
         
         final List<TaskInfo> rows = new ArrayList<TaskInfo>();
-        protected final String[] columnNames = new String[]{ "Task ID", "State", "Condition", "COG", "Future", "Action"};
-        protected final Class<?>[] columnClasses = new Class<?>[]{ String.class, String.class, String.class, String.class, String.class, String.class };
+        protected final String[] columnNames = new String[]{ "Task ID", "State", "Condition", "COG", "Future"};
+        protected final Class<?>[] columnClasses = new Class<?>[]{ String.class, String.class, String.class, String.class, String.class};
         
         @Override
         public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -673,7 +638,7 @@ class TaskControls extends JPanel  {
         
         @Override
         public int getColumnCount() {
-            return columnNames.length;
+            return columnNames.length; 
         }
 
         @Override
@@ -846,7 +811,7 @@ class COGTable extends JPanel  {
 class DebugWindow implements DebugModelListener  {
     final JFrame frame;
     final JTabbedPane tabs;
-    final JButton nextStepBtn;
+    //final JButton nextStepBtn;
     final TaskControls controls;
     final DebugModel model;
     
@@ -861,7 +826,7 @@ class DebugWindow implements DebugModelListener  {
         tabs = new JTabbedPane();
         frame.add(tabs, BorderLayout.CENTER);
         
-        nextStepBtn = new JButton("Step Arbitrary Task");
+        /*nextStepBtn = new JButton("Step Arbitrary Task");
         
         nextStepBtn.addActionListener(new ActionListener() {
             @Override
@@ -871,7 +836,7 @@ class DebugWindow implements DebugModelListener  {
         });
         
         frame.add(nextStepBtn,BorderLayout.NORTH);
-        
+        */
         
         JPanel leftSide = new JPanel();
         leftSide.setLayout(new BorderLayout());
@@ -920,5 +885,36 @@ class DebugWindow implements DebugModelListener  {
 
     @Override
     public void cogChanged(COGInfo info) {
+    }
+}
+
+class SwingWrapperProxy implements InvocationHandler {
+    final Object target;
+    public SwingWrapperProxy(Object target) {
+        this.target = target;
+    }
+    
+    @Override
+    public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
+            throws Throwable {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    method.invoke(target, args);
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            }});
+        
+        return null;
+    }
+    
+    public static <V> V newInstance(V target, Class<?> interfce) {
+        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target));
     }
 }

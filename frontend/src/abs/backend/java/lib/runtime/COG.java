@@ -9,16 +9,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.TaskSchedulerView;
-import abs.backend.java.observing.TaskObserver;
-import abs.backend.java.observing.TaskView;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
-import abs.backend.java.scheduling.TaskSchedulerFactory;
 
 public class COG {
-    private static final TaskSchedulerFactory schedulerFactory = getSchedulerFactory();
-	private TaskScheduler scheduler = schedulerFactory.createTaskScheduler(this);
+	private TaskScheduler scheduler = ABSRuntime.taskSchedulerFactory.createTaskScheduler(this);
 //    private TaskScheduler scheduler = new DefaultTaskScheduler(this); 
 	private Class<?> initialClass;
 	private static AtomicInteger counter = new AtomicInteger();
@@ -32,17 +28,6 @@ public class COG {
 	    return initialClass;
 	}
 	
-	private static TaskSchedulerFactory getSchedulerFactory() {
-	    String schedulerName = System.getProperty("abs.taskscheduler","default");
-	    System.out.println("Scheduler: "+schedulerName);
-	    if (schedulerName.equals("default"))
-            return SimpleTaskScheduler.getFactory();
-	    else if (schedulerName.equals("fast"))
-            return DefaultTaskScheduler.getFactory();
-	    System.err.println("The task scheduler "+schedulerName+" does not exist, falling back to the default task scheduler.");
-        return DefaultTaskScheduler.getFactory();
-    }
-
     public TaskScheduler getScheduler() {
 	   return scheduler;
     }

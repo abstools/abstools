@@ -160,57 +160,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
         return view;
     }
     
-    private class View implements TaskSchedulerView {
-        private List<TaskObserver> observers;
-
-        @Override
-        public synchronized void registerTaskObserver(TaskObserver listener) {
-            getObservers().add(listener);
-        }
-
-        public void taskReady(TaskView view) {
-            for (TaskObserver l : getObservers()) {
-                l.taskReady(view);
-            }
-        }
-
-        synchronized void taskResumed(TaskView runningTask, ABSGuard g) {
-            for (TaskObserver l : getObservers()) {
-                l.taskResumed(runningTask, g.getView());
-            }
-        }
-
-        synchronized List<TaskObserver> getObservers() {
-            if (observers == null) {
-                observers = new ArrayList<TaskObserver>(1);
-            }
-            return observers;
-        }
-        
-        public synchronized void taskSuspended(TaskView runningTask, ABSGuard g) {
-            for (TaskObserver l : getObservers()) {
-                l.taskSuspended(runningTask, g.getView());
-            }
-        }
-
-        public void taskStarted(TaskView view) {
-            for (TaskObserver l : getObservers()) {
-                l.taskStarted(view);
-            }
-        }
-
-        public synchronized void taskFinished(TaskView view) {
-            for (TaskObserver l : getObservers()) {
-                l.taskFinished(view);
-            }
-        }
-
-        public synchronized void taskAdded(TaskView view) {
-            for (TaskObserver l : getObservers()) {
-                l.taskCreated(view);
-            }
-        }
-
+    private class View extends  AbstractTaskSchedulerView {
         @Override
         public List<TaskView> getNewTasks() {
             // TODO Auto-generated method stub
