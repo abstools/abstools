@@ -11,12 +11,12 @@ public class ScheduleTask extends ScheduleAction {
     
     @Override
     public String toString() {
-        return "Schedule task in "+getCOG();
+        return "Schedule task in COG "+getCOG().getID();
     }
     
     @Override
     public String shortString() {
-        return "C"+getCOG().getID();
+        return getCOG().getID()+",S,";
     }
     
     public boolean equals(Object o) {

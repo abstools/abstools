@@ -11,6 +11,7 @@ import abs.backend.java.lib.runtime.ABSGuard;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.SystemObserver;
@@ -62,6 +63,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         public void suspend(ABSGuard g) {
             guard = g;
+        }
+        
+        public String toString() {
+      	  return "Task "+task.getID();
         }
     }
     
@@ -146,6 +151,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 active = false;
             }
             
+            System.out.println("Task "+executingTask+" waiting for guard");
             if (!g.await()) {
                 synchronized (SimpleTaskScheduler.this) {
                     suspendedTasks.remove(executingTask);
@@ -162,9 +168,12 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
             
             
-            if (scheduled)
-                ABSRuntime.doNextStep();
+            if (scheduled) {
+               System.out.println("Task "+executingTask+" guard ready doing next step");
+//                ABSRuntime.doNextStep();
+            }
             
+            System.out.println("Task "+executingTask+" next step done going into monitor");
             synchronized (this) {
                 try {
                     System.out.println("Task "+executingTask+" waiting to be resumed");
@@ -182,12 +191,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public synchronized void awake() {
             active = true;
             notify();
+            logger.fine(executingTask.toString()+" awaked");
         }
         
     }
     
     private synchronized void schedule() {
-        if (ABSRuntime.GLOBAL_SCHEDULING) {
+        if (Config.GLOBAL_SCHEDULING) {
             if (suspendedTasks.isEmpty() && readyTasks.isEmpty())
                 return;
             
@@ -284,7 +294,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         SimpleSchedulerThread thread = null;
         TaskInfo newTask = null;
         TaskInfo currentTask = null;
-        
+
         synchronized (this) {
             currentTask = activeTask;
             thread = currentTask.thread;
@@ -295,11 +305,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 view.taskSuspended(currentTask.task.getView(), g);
             
             if (g.isTrue() || (suspendedTasks.size()+readyTasks.size()) > 1) {
+            	logger.fine("issuing a schedule");
                 schedule();
             }
         }
 
         ABSRuntime.doNextStep();
+        
         synchronized (this) {
             newTask = activeTask;
         }

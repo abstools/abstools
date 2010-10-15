@@ -15,12 +15,12 @@ public class StepTask extends ScheduleAction {
     }
     
     public String toString() {
-        return "Step task "+task;
+        return "Step Task "+task.getID();
     }
     
     @Override
     public String shortString() {
-        return "T"+task.getCOG().getID()+"."+task.getID();
+        return getCOG().getID()+",E,"+task.getID();
     }
     
     public boolean equals(Object o) {

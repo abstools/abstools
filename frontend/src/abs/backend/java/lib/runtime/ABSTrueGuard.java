@@ -11,4 +11,9 @@ public class ABSTrueGuard extends ABSGuard {
     public String toString() {
         return "TrueGuard";
     }
+    
+    @Override
+   public String toABSString() {
+      return "True";
+   }
 }

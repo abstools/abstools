@@ -20,4 +20,9 @@ public abstract class ABSExpGuard extends ABSGuard {
 	public String toString() {
 	    return "ExpressionGuard ("+isTrue()+")";
 	}
+
+	@Override
+	public String toABSString() {
+		return "<exp>";
+	}
 }

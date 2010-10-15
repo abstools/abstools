@@ -22,4 +22,10 @@ public class ABSFutureGuard extends ABSGuard {
 	public String toString() {
 	    return "Future Guard on "+fut;
 	}
+
+
+	@Override
+   public String toABSString() {
+	   return "Fut "+ fut.getID()+"?";
+   }
 }

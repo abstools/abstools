@@ -1,8 +1,12 @@
 package abs.backend.java.scheduling;
 
+import java.util.logging.Logger;
+
+import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
 
 public class GlobalScheduler {
+	 private static Logger logger = Logging.getLogger(GlobalScheduler.class.getName());
     private final ScheduleOptions options = new ScheduleOptions();
     private final GlobalSchedulingStrategy strategy;
     
@@ -25,10 +29,13 @@ public class GlobalScheduler {
             
             totalNumChoices += options.numOptions()-1;
                 
+            logger.finest("Choose next action...");
             ScheduleAction next = strategy.choose(options);
+            logger.finest("Action "+next+" choosen");
             options.removeOption(next);
-            System.out.println("Executing "+next);
+            logger.finest("Executing Action "+next);
             next.execute();
+            logger.finest("Action "+next+" was executed.");
         }
     }
     

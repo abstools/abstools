@@ -15,8 +15,6 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import sun.misc.Regexp;
-
 import junit.framework.Assert;
 
 import abs.ABSTest;

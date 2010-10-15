@@ -6,6 +6,7 @@ import beaver.Symbol;
 
 import abs.backend.java.debugging.DebugPosition;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
+import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
@@ -96,7 +97,7 @@ public class JavaGeneratorHelper {
     public static String getDebugString(Stmt stmt, int pos) {
         int line = Symbol.getLine(pos);
         String fileName = stmt.getFileName();
-        return "if ("+JavaBackendConstants.ABSRUNTIME+".DEBUGGING) "+JavaBackendConstants.ABSRUNTIME+".nextStep(\""+fileName+"\","+line+");";
+        return "if ("+Config.class.getName()+".DEBUGGING) "+JavaBackendConstants.ABSRUNTIME+".nextStep(\""+fileName+"\","+line+");";
     }
 
 }

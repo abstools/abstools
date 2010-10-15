@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class ScheduleOptions implements Iterable<ScheduleAction> {
+public class ScheduleOptions {
     private List<ScheduleAction> actions = new ArrayList<ScheduleAction>();
     
     public int numOptions() {
@@ -15,11 +15,6 @@ public class ScheduleOptions implements Iterable<ScheduleAction> {
     public void addOption(ScheduleAction a) {
         if (!actions.contains(a))
             actions.add(a);
-    }
-    
-    @Override
-    public Iterator<ScheduleAction> iterator() {
-        return actions.iterator();
     }
     
     public List<ScheduleAction> allOptions() {

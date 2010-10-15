@@ -33,4 +33,10 @@ public class ABSAndGuard extends ABSGuard {
     public ABSGuard getRightGuard() {
         return right;
     }
+
+
+    @Override
+   public String toABSString() {
+	   return left.toABSString()+" & "+right.toABSString();
+   }
 }

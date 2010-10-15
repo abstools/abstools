@@ -52,7 +52,15 @@ public abstract class ABSGuard {
         public FutView getFuture() {
             return ((ABSFutureGuard)ABSGuard.this).fut.getView();
         }
+
+	
+        @Override
+        public String toABSString() {
+	        return ABSGuard.this.toABSString();
+       }
         
     }
+
+	public abstract String toABSString();
 
 }

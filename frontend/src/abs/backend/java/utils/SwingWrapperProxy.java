@@ -1,4 +1,4 @@
-package abs.backend.java.swingutils;
+package abs.backend.java.utils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;

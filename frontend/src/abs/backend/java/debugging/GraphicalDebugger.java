@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -16,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,11 +36,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
@@ -47,6 +58,8 @@ import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
+import abs.backend.java.utils.ColorUtils;
+import abs.backend.java.utils.StringUtil;
 
 public class GraphicalDebugger implements SystemObserver {
     final DebugWindow window;
@@ -192,51 +205,47 @@ class DebugModel implements TaskObserver {
 
     @Override
     public synchronized void taskSuspended(TaskView task, GuardView guard) {
-        FutView fut = null;
-        if (guard.isFutureGuard()) {
-            fut = guard.getFuture();
-        }
-        updateTaskState(task,TaskState.SUSPENDED, fut);
+        updateTaskState(task,TaskState.SUSPENDED, guard,null);
     }
 
 
     @Override
     public synchronized void taskStarted(TaskView task) {
-        updateTaskState(task,TaskState.RUNNING,null);
+        updateTaskState(task,TaskState.RUNNING,null,null);
     }
 
 
     @Override
     public synchronized void taskFinished(TaskView task) {
-        updateTaskState(task,TaskState.FINISHED,null);
+        updateTaskState(task,TaskState.FINISHED,null,null);
     }
 
 
     @Override
     public synchronized void taskBlockedOnFuture(TaskView task, FutView fut) {
-        updateTaskState(task,TaskState.BLOCKED,fut);
+        updateTaskState(task,TaskState.BLOCKED,null,fut);
     }
 
 
     @Override
     public void taskRunningAfterWaiting(TaskView task, FutView fut) {
-        updateTaskState(task,TaskState.RUNNING,null);
+        updateTaskState(task,TaskState.RUNNING,null,null);
     }
 
 
     @Override
     public void taskResumed(TaskView task, GuardView view) {
-        updateTaskState(task,TaskState.RUNNING,null);
+        updateTaskState(task,TaskState.RUNNING,null,null);
     }
     
     @Override
     public void taskReady(TaskView task) {
-        updateTaskState(task,TaskState.READY,null);
+        updateTaskState(task,TaskState.READY,null,null);
     }
     
     
 
-    private void updateTaskState(TaskView task, TaskState state, FutView fut) {
+    private void updateTaskState(TaskView task, TaskState state, GuardView guard, FutView fut) {
         synchronized (this) {
             TaskInfo info = getTaskInfo(task);
             if (state == TaskState.RUNNING) {
@@ -247,7 +256,8 @@ class DebugModel implements TaskObserver {
                 steppingTasks.remove(task);
             }
             info.state = state;
-            info.waitingOnFuture = fut;
+            info.waitingOnFuture = guard;
+            info.blockedOnFuture = fut;
             updateInfoLine(task,info);
         }
     }
@@ -293,11 +303,11 @@ class Line {
 
 
 enum TaskState {
-    READY(Color.YELLOW), 
-    SUSPENDED(Color.ORANGE), 
-    RUNNING(Color.GREEN), 
-    FINISHED(Color.GRAY), 
-    BLOCKED(Color.RED);
+    READY(ColorUtils.setSaturation(Color.YELLOW,0.5f)), 
+    SUSPENDED(ColorUtils.setSaturation(Color.ORANGE,0.5f)), 
+    RUNNING(ColorUtils.setSaturation(Color.GREEN,0.5f)), 
+    FINISHED(Color.LIGHT_GRAY), 
+    BLOCKED(ColorUtils.setSaturation(Color.RED,0.5f));
     public final Color color;
     TaskState(Color c) {
         this.color = c;
@@ -305,13 +315,14 @@ enum TaskState {
 }
 
 class TaskInfo {
-    TaskView task;
+    public FutView blockedOnFuture;
+	TaskView task;
     int currentLine;
     int previousLine;
     String previousFile;
     String currentFile;
     TaskState state = TaskState.READY;
-    FutView waitingOnFuture;
+    GuardView waitingOnFuture;
     Semaphore stepSema = new Semaphore(0);
     boolean isStepping = true;
     
@@ -342,6 +353,9 @@ class TaskInfo {
 class SourceView extends JPanel implements DebugModelListener {
     private static final long serialVersionUID = 1L;
     private final DebugModel model;
+    final Highlighter highlighter;
+    final Highlighter.HighlightPainter highlightPainter;
+
     
     JTextArea textArea;
     JTextArea lineArea;
@@ -369,6 +383,10 @@ class SourceView extends JPanel implements DebugModelListener {
         taskArea.setBorder(BorderFactory.createLineBorder(Color.gray));
         textArea.setSelectionColor(Color.LIGHT_GRAY);
         
+        highlighter = new DefaultHighlighter();
+        highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(ColorUtils.setSatAndBright(Color.BLUE,0.5f,1f));
+        textArea.setHighlighter(highlighter);
+
         
         content.add(textArea,BorderLayout.CENTER);
         leftContent.add(lineArea,BorderLayout.EAST);
@@ -408,6 +426,7 @@ class SourceView extends JPanel implements DebugModelListener {
     List<List<TaskInfo>> taskLineInfo = new ArrayList<List<TaskInfo>>();
     
     public void updateTaskLine(int line) {
+       highlighter.removeAllHighlights();
         String string = "";
         boolean first = true;
         List<TaskInfo> tasks = taskLineInfo.get(line-1);
@@ -427,7 +446,8 @@ class SourceView extends JPanel implements DebugModelListener {
         try {
             int start = textArea.getLineStartOffset(line.currentLine-1);
             int end = textArea.getLineEndOffset(line.currentLine-1);
-            textArea.select(start,end);
+            highlighter.addHighlight(start, end, highlightPainter);
+            textArea.setCaretPosition(end);
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
@@ -488,8 +508,8 @@ class SourceView extends JPanel implements DebugModelListener {
 
 class TaskControls extends JPanel  {
     private static final long serialVersionUID = 1L;
-    private static final int STEP_COLUMN = 5;
-    private static int[] INITIAL_COLUMN_WIDTHS = { 15,50,50,10,70,10 }; 
+    private static final int STEP_COLUMN = 9;
+    private static int[] INITIAL_COLUMN_WIDTHS = { 15,50,50,50,50,50,10,70,10 }; 
     
     final JTable table;
     final TableModel tableModel;
@@ -518,7 +538,7 @@ class TaskControls extends JPanel  {
         scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Tasks"));
-        setPreferredSize(new Dimension(200,Integer.MAX_VALUE));
+        setPreferredSize(new Dimension(200,300));
 
         debugModel.registerListener(SwingWrapperProxy.newInstance(tableModel, DebugModelListener.class));
     }
@@ -527,6 +547,8 @@ class TaskControls extends JPanel  {
         
         public StringRenderer() {
             setOpaque(true);
+            setFont(getFont().deriveFont(Font.PLAIN));
+            
         }
         
         @Override
@@ -620,8 +642,7 @@ class TaskControls extends JPanel  {
         private static final long serialVersionUID = 1L;
         
         final List<TaskInfo> rows = new ArrayList<TaskInfo>();
-        protected final String[] columnNames = new String[]{ "Task ID", "State", "Condition", "COG", "Future"};
-        protected final Class<?>[] columnClasses = new Class<?>[]{ String.class, String.class, String.class, String.class, String.class};
+        protected final String[] columnNames = new String[]{ "Task ID", "Source", "Target", "Method", "State", "Condition", "COG", "Future"};
         
         @Override
         public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -648,31 +669,50 @@ class TaskControls extends JPanel  {
 
         @Override
         public Class<?> getColumnClass(int columnIndex) {
-            return columnClasses[columnIndex];
+            return String.class;
         }
         
         @Override
         public Object getValueAt(int row, int col) {
             TaskInfo line = rows.get(row);
             switch (col) {
-            case 0: return ""+line.task.getID()+" ("+line.task.getMethodName()+")";
-            case 1: return line.state.toString();
-            case 2:
+            case 0: {
+            	return ""+line.task.getID();
+            }
+            case 1: {
+   				ObjectView source = line.task.getSource();
+   				if (source != null) {
+   					return source.getClassName();
+   				}
+   				return "";
+            	
+            }
+            case 2: return line.task.getTarget().getClassName();
+            case 3: {
+   				StringBuilder sb = new StringBuilder();
+   				sb.append(line.task.getMethodName());
+   				sb.append("(");
+   				sb.append(StringUtil.iterableToString(line.task.getArgs(),", "));
+   				sb.append(")");
+   				return sb.toString();
+            }
+            case 4: return line.state.toString();
+            case 5:
                 if (line.state == TaskState.SUSPENDED) {
                     if (line.waitingOnFuture != null) {
-                        return "Fut "+line.waitingOnFuture.getID()+"?";
+                        return line.waitingOnFuture.toABSString();
                     }
                 }
                 return "";
-            case 3: return ""+line.task.getCOG().getID();
-            case 4: {
+            case 6: return ""+line.task.getCOG().getID();
+            case 7: {
                 FutView fut = line.task.getFuture();
                 if (fut.isResolved())
                     return ""+fut.getValue();
                 else
                     return "<unresolved>";
             }
-            case 5: return "NOTHING";
+            case 8: return "NOTHING";
             }
             return "ERROR";
         }
@@ -712,6 +752,103 @@ class TaskControls extends JPanel  {
         }
         
     }
+}
+
+class COGTree extends JPanel {
+	private final JTree tree;
+	private final DebugModel debugModel;
+	private final DefaultTreeModel treeModel;
+	private final RootNode rootNode;
+	
+	COGTree(DebugModel model) {
+		this.debugModel = model;
+		this.rootNode = new RootNode();
+		this.treeModel = new DefaultTreeModel(rootNode);
+		
+		setLayout(new BorderLayout());
+		tree = new JTree(treeModel);
+		tree.setCellRenderer(new COGNodeRenderer());
+		tree.setRootVisible(false);
+		tree.setShowsRootHandles(true);
+		
+      JScrollPane scrollPane = new JScrollPane(tree);
+      add(scrollPane, BorderLayout.CENTER);
+      setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Concurrent Object Groups (COGs)"));
+      setPreferredSize(new Dimension(400,Integer.MAX_VALUE));
+      model.registerListener(SwingWrapperProxy.newInstance(rootNode, DebugModelListener.class));
+		
+		
+	}
+
+	class COGNodeRenderer implements TreeCellRenderer {
+
+		@Override
+      public Component getTreeCellRendererComponent(JTree tree, Object node,
+            boolean selected, boolean expanded, boolean leaf, int row,
+            boolean hasFocus) {
+			
+			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) node;
+			Object value = treeNode.getUserObject();
+			JLabel lbl;
+			if (value instanceof COGInfo) {
+				COGInfo cogInfo = (COGInfo) value;
+				lbl = new JLabel("COG "+cogInfo.cog.getID()+" ["+cogInfo.initialObject.getClassName()+"]");
+			} else if (value instanceof TaskInfo) {
+				TaskInfo taskInfo = (TaskInfo) value;
+				lbl = new JLabel("Task "+taskInfo.task.getID()+" ("+taskInfo.task.getTarget().getClassName()+"."+taskInfo.task.getMethodName()+")");
+				
+				lbl.setBackground(taskInfo.state.color);
+				lbl.setOpaque(true);
+				
+			} else {
+				lbl = new JLabel("COGs");
+			}
+			lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
+			return lbl;
+		}
+		
+	}
+	
+	
+	class RootNode extends DefaultMutableTreeNode implements DebugModelListener {
+		Map<COGInfo,DefaultMutableTreeNode> cogs = new HashMap<COGInfo, DefaultMutableTreeNode>();
+		Map<TaskInfo,DefaultMutableTreeNode> tasks = new HashMap<TaskInfo, DefaultMutableTreeNode>();
+		
+		@Override
+		public void taskInfoChanged(TaskInfo line) {
+			TreeNode node = tasks.get(line);
+			treeModel.nodeChanged(node);
+		}
+
+		@Override
+		public void taskInfoAdded(TaskInfo line) {
+			DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(line);
+			tasks.put(line,newNode);
+			DefaultMutableTreeNode cogNode = cogs.get(debugModel.getCOGInfo(line.task.getCOG()));
+			treeModel.insertNodeInto(newNode, cogNode, cogNode.getChildCount());
+         tree.scrollPathToVisible(new TreePath(newNode.getPath()));
+
+		}
+
+		@Override
+		public void taskInfoRemoved(TaskInfo line) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void cogCreated(COGInfo info) {
+			DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(info);
+			cogs.put(info,newNode);
+			this.add(newNode);
+			treeModel.nodesWereInserted(this, new int[] {this.getChildCount()-1});
+		}
+
+		@Override
+		public void cogChanged(COGInfo info) {
+		}
+
+	}
 }
 
 class COGTable extends JPanel  {
@@ -813,10 +950,11 @@ class DebugWindow implements DebugModelListener  {
     final JTabbedPane tabs;
     //final JButton nextStepBtn;
     final TaskControls controls;
+    final COGTree cogTree;
     final DebugModel model;
     
     final Map<String, SourceView> windows = new HashMap<String, SourceView>();
-    private COGTable cogTable;
+    //private COGTable cogTable;
     
     DebugWindow(final DebugModel model) {
         this.model = model;
@@ -839,14 +977,20 @@ class DebugWindow implements DebugModelListener  {
         */
         
         JPanel leftSide = new JPanel();
-        leftSide.setLayout(new BorderLayout());
+        leftSide.setLayout(new BoxLayout(leftSide,BoxLayout.PAGE_AXIS));
         frame.add(leftSide, BorderLayout.WEST);
         
+        /*
         cogTable = new COGTable(model);
         leftSide.add(cogTable,BorderLayout.NORTH);
+	*/
+        cogTree = new COGTree(model);
+        leftSide.add(cogTree); //,BorderLayout.NORTH);
 
         controls = new TaskControls(model);
-        leftSide.add(controls,BorderLayout.CENTER);
+        frame.add(controls,BorderLayout.SOUTH);//,BorderLayout.CENTER);
+        
+        
         
         frame.setBounds(400,100,1000,800);
         frame.setVisible(true);

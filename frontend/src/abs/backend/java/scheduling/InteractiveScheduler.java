@@ -1,6 +1,7 @@
 package abs.backend.java.scheduling;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -9,6 +10,13 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,16 +26,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.scheduling.SchedulerGUI.ChooseBtn;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 
@@ -36,6 +51,7 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
     private final boolean DEBUG = false;
     private SchedulerGUI gui;
     private SchedulerGUISwing guiSwingWrapper;
+    private List<HistoryItem> history = new ArrayList<HistoryItem>(0);
     
     
     public InteractiveScheduler() {
@@ -43,16 +59,45 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
         guiSwingWrapper = SwingWrapperProxy.newInstance(gui, SchedulerGUISwing.class);
     }
     
+    ScheduleOptions options;
     @Override
     public ScheduleAction choose(ScheduleOptions options) {
         debug("showing options...");
+        synchronized (this) {
+      	  this.options = options;
+      	  if (!history.isEmpty()) {
+      		  ScheduleAction a = getOptionByHistory();
+      		  if (a == null) {
+      			  guiSwingWrapper.illegalHistory();
+      			  return null;
+      		  } else {
+      			  guiSwingWrapper.choosedAction(a);
+      			  return a;
+      		  }
+      	  }
+        }
         guiSwingWrapper.showOptions(options);
         debug("awaiting GUI action...");
-        return awaitGUIAction();
+        ScheduleAction a  = awaitGUIAction();
+		  guiSwingWrapper.choosedAction(a);
+		  return a;
     }
 
     
-    private void debug(String string) {
+    
+    private synchronized ScheduleAction getOptionByHistory() {
+   	 HistoryItem item = history.remove(0);
+   	 for (ScheduleAction a : options.allOptions()) {
+   		 if (item.matches(a)) {
+   			 return a;
+   		 }
+   	 }
+	   return null;
+   }
+
+
+
+	private void debug(String string) {
         if (DEBUG)
             System.out.println("InteractiveScheduler: "+string);
     }
@@ -82,15 +127,36 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
     public TaskInfo schedule(TaskScheduler scheduler,
             List<TaskInfo> scheduableTasks) {
         System.out.println("Scheduling TASKS");
+        if (!history.isEmpty()) {
+      	  try {
+      		  HistoryItem at = history.remove(0);
+      		  for (TaskInfo i : scheduableTasks) {
+      			  if (i.task.getID() == at.taskid &&
+      					 i.task.getCOG().getID() == at.cogId) {
+      		        guiSwingWrapper.activatedTask(i);
+      				  return i;
+      			  }
+      		  }
+      		  throw new IllegalStateException();
+      	  } catch (Exception e) {
+      		  guiSwingWrapper.illegalHistory();
+      	  }
+        }
+        
+        TaskInfo task = null;
         if (scheduableTasks.size() == 1) {
-            return scheduableTasks.get(0);
+            task = scheduableTasks.get(0);
         } else {
             guiSwingWrapper.chooseTask(scheduler,scheduableTasks);
-            return awaitGUITaskChoose();
+            task = awaitGUITaskChoose();
         }
+        guiSwingWrapper.activatedTask(task);
+        return task;
     }
 
     public synchronized void setNextTask(TaskInfo i) {
+   	  if (i == null)
+   		  throw new IllegalArgumentException("i is null");
         choosenTask = i;
         notify();
     }
@@ -108,6 +174,12 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
         choosenTask = null;
         return t;
     }
+
+	public synchronized void playHistory(List<HistoryItem> historyItems) {
+		history = historyItems;
+		nextAction = getOptionByHistory();
+		notify();
+	}
     
 }
 
@@ -116,14 +188,70 @@ interface SchedulerGUISwing {
 
     void showOptions(ScheduleOptions options);
 
-    void chooseTask(TaskScheduler scheduler, List<TaskInfo> scheduableTasks);
+    void choosedAction(ScheduleAction a);
+
+	void illegalHistory();
+
+	void activatedTask(TaskInfo task);
+
+	void chooseTask(TaskScheduler scheduler, List<TaskInfo> scheduableTasks);
     
 }
+
+enum HistoryAction {
+	 SCHEDULE, EXECUTE, ACTIVATE;
+}
+
+class HistoryItem {
+	  int cogId;
+	  int taskid;
+	  HistoryAction action;
+
+	  HistoryItem(String s) {
+		  String[] strings = s.trim().split(",");
+		  cogId = Integer.parseInt(strings[0]);
+		  String a = strings[1];
+		  if (a.equals("S"))
+			  action = HistoryAction.SCHEDULE;
+		  else if (a.equals("E"))
+			  action = HistoryAction.EXECUTE;
+		  else if (a.equals("A"))
+			  action = HistoryAction.ACTIVATE;
+		  
+		  if (action != HistoryAction.SCHEDULE) {
+			  taskid = Integer.parseInt(strings[2]);
+		  }
+	  }
+	  
+	  boolean matches(ScheduleAction a) {
+		  boolean res = false;
+		  if (cogId != a.getCOG().getID())
+			  return false;
+		  if ( (a instanceof StepTask && action != HistoryAction.EXECUTE) ||
+				 (a instanceof ScheduleTask && action != HistoryAction.SCHEDULE) ||
+				 (a instanceof ActivateTask && action != HistoryAction.ACTIVATE))
+			  return false;
+
+		  if (action != HistoryAction.SCHEDULE)
+			  return a.getTask().getID() == taskid;
+		  else 	
+			  return true;
+	  }
+	  
+	  
+	  
+}
+
 
 class SchedulerGUI implements SchedulerGUISwing {
     final JFrame frame;
     final InteractiveScheduler scheduler;
     JPanel btnPnl;
+    JPanel historyPnl;
+    JTextArea historyArea;
+    List<ScheduleAction> history = new ArrayList<ScheduleAction>();
+    JButton saveHistory;
+    JButton loadHistory;
     
     SchedulerGUI(InteractiveScheduler s) {
         scheduler = s;
@@ -131,19 +259,113 @@ class SchedulerGUI implements SchedulerGUISwing {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
         createBtnPnl();
+        createHistoryPnl();
         frame.setBounds(50, 100, 100, 50);
         frame.setVisible(true);
         frame.pack();
     }
 
-    class BtnLine {
+    private void createHistoryPnl() {
+   	 historyPnl = new JPanel();
+   	 historyPnl.setLayout(new BorderLayout());
+   	 historyArea = new JTextArea();
+   	 historyPnl.add(new JScrollPane(historyArea), BorderLayout.CENTER);
+   	 historyPnl.setPreferredSize(new Dimension(300,400));
+       historyPnl.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Scheduling History"));
+   
+       Box btnBox = new Box(BoxLayout.LINE_AXIS);
+   	 historyPnl.add(btnBox, BorderLayout.SOUTH);
+
+   	 loadHistory = new JButton("Load History");
+   	 loadHistory.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+         	loadHistoryBtnPressed();
+         }});
+   	 btnBox.add(loadHistory);
+   	 btnBox.add(Box.createHorizontalGlue());
+   	 saveHistory = new JButton("Save History");
+   	 saveHistory.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+         	saveHistoryBtnPressed();
+         }});
+   	 btnBox.add(saveHistory);
+       
+   	 frame.add(historyPnl, BorderLayout.SOUTH);
+    }
+    
+
+	 private void loadHistoryBtnPressed() {
+   	 final JFileChooser fc = new JFileChooser(new File(System.getProperty("user.dir")));
+   	 if (fc.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+   		 File f = fc.getSelectedFile();
+  			 loadHistory(f);
+   	 }
+   	 
+	 }       
+    
+	 
+   private void loadHistory(File f) {
+   	try {
+	      BufferedReader reader = new BufferedReader(new FileReader(f));
+	      List<HistoryItem> historyItems = new ArrayList<HistoryItem>();
+	         while (reader.ready()) {
+	         	String s = reader.readLine();
+	         	if (s == null)
+	         		break;
+
+	         	historyItems.add(new HistoryItem(s));
+	         }
+	      
+	      ChooseBtn btn = btnLines.values().iterator().next().btn;
+	      btn.updateAction(null);
+	      scheduler.playHistory(historyItems);
+      } catch (FileNotFoundException e) {
+			 JOptionPane.showMessageDialog(frame, "File "+f+" does not exist");
+      } catch (Exception e) {
+      	JOptionPane.showMessageDialog(frame, "Error while reading history: "+ e.getMessage());
+      }
+   
+   }
+
+	private void saveHistoryBtnPressed() {
+   	 final JFileChooser fc = new JFileChooser(new File(System.getProperty("user.dir")));
+   	 int returnVal = fc.showSaveDialog(frame);
+   	 if (returnVal == JFileChooser.APPROVE_OPTION) {
+   		 File f = fc.getSelectedFile();
+   		 if (f.exists()) {
+   			 int ans = JOptionPane.showConfirmDialog(frame, "File '"+f.getName()+"' already exists, do you want to override it?");
+   			 if (ans != JOptionPane.YES_OPTION) {
+   				 return;
+   			 }
+   		 }
+			 saveHistory(f);
+   	 }
+
+    }
+
+	private void saveHistory(File f) {
+		try {
+	      PrintWriter p = new PrintWriter(new FileOutputStream(f));
+	      for (ScheduleAction a : history) {
+	      	p.append(a.shortString());
+	      	p.append("\n");
+	      }
+	      p.close();
+	      JOptionPane.showMessageDialog(frame, "History saved");
+      } catch (FileNotFoundException e) {
+      	JOptionPane.showMessageDialog(frame, "Could not save history: "+e.getMessage());
+      }
+	}
+
+	class BtnLine {
         final COG cog;
         final JLabel label;
         final ChooseBtn btn;
+        boolean isEnabled = true;
         private JDialog taskBtnFrame;
         BtnLine(ScheduleAction a) {
             cog = a.getCOG();
-            label = new JLabel("COG "+cog.getID()+" ["+cog.getInitialClass().getSimpleName()+"]");
+            label = new JLabel("COG "+cog.getID()+" ("+cog.getInitialClass().getSimpleName()+")");
             btn = new ChooseBtn(a);
             GridBagConstraints c = new GridBagConstraints();
             c.gridx = 0;
@@ -158,14 +380,15 @@ class SchedulerGUI implements SchedulerGUISwing {
         
         
         public void setScheduleTaskBtns(List<TaskInfo> scheduableTasks) {
-            taskBtnFrame = new TaskBtnDialog(scheduableTasks);
+      	   enableBtns(false);
+      	   taskBtnFrame = new TaskBtnDialog(scheduableTasks);
             taskBtnFrame.setVisible(true);
         }
         
         class TaskBtnDialog extends JDialog {
             
             public TaskBtnDialog(List<TaskInfo> scheduableTasks) {
-                super(frame,"Schedule Task of COG "+cog.getID(),true);
+                super(frame,"Schedule Task of COG "+cog.getID(),false);
                 setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                 GridBagLayout layout = new GridBagLayout();
                 setLayout(layout);
@@ -199,6 +422,8 @@ class SchedulerGUI implements SchedulerGUISwing {
             public void actionPerformed(ActionEvent arg0) {
                 taskBtnFrame.dispose();
                 scheduler.setNextTask(info);
+           	    enableBtns(true);
+
             }
             
         }
@@ -209,11 +434,11 @@ class SchedulerGUI implements SchedulerGUISwing {
     private GridBagLayout btnPnlLayout;
     
     @Override
-    public void showOptions(ScheduleOptions options) {
+    public synchronized void showOptions(ScheduleOptions options) {
         //System.out.println("SchedulerGUI: showing options...");
         int i = 0;
 
-        for (ScheduleAction a : options) {
+        for (ScheduleAction a : options.allOptions()) {
             i++;
             COG c = a.getCOG();
             BtnLine line = btnLines.get(c);
@@ -233,7 +458,15 @@ class SchedulerGUI implements SchedulerGUISwing {
         btnPnl = new JPanel();
         btnPnlLayout = new GridBagLayout();
         btnPnl.setLayout(btnPnlLayout);
+        btnPnl.setBorder(BorderFactory.createTitledBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), BorderFactory.createEmptyBorder(5, 5, 5, 5)), "Scheduling Options"));
+        
         frame.add(btnPnl, BorderLayout.CENTER);
+    }
+    
+    void enableBtns(boolean b) {
+   	 for (BtnLine line : btnLines.values()) {
+  			 line.btn.setEnabled(b && line.btn.action != null);
+   	 }
     }
     
     void chooseBtnPressed(ScheduleAction a) {
@@ -251,21 +484,31 @@ class SchedulerGUI implements SchedulerGUISwing {
         
         public void updateAction(ScheduleAction a) {
             action = a;
-            String text = "Schedule Next Task";
-            if (a instanceof StepTask) {
-                StepTask st = (StepTask) a;
-                text = "Step Task " + st.getTask().getID() + " ("+st.getTask().methodName()+")";
-            } 
-            setText(text);
-            setEnabled(true);
+            updateBtn();
+        }
+        
+        public void updateBtn() {
+            if (action == null) {
+               setEnabled(false);
+               setText(" - - - - ");
+            } else {
+               String text = "Schedule Next Task";
+            	if (action instanceof StepTask) {
+            		StepTask st = (StepTask) action;
+            		text = "Step Task " + st.getTask().getID() + " ("+st.getTask().methodName()+")";
+            	}	 
+            	setText(text);
+            	setEnabled(true);
+            }
         }
 
         @Override
         public void actionPerformed(ActionEvent arg0) {
-            setEnabled(false);
-            setText(" - - - - ");
-            System.out.println("Pressed Button with action "+action);
-            chooseBtnPressed(action);
+            ScheduleAction a = action;
+            action = null;
+            updateBtn();
+            System.out.println("Pressed Button with action "+a);
+            chooseBtnPressed(a);
         }
     }
 
@@ -274,6 +517,23 @@ class SchedulerGUI implements SchedulerGUISwing {
         BtnLine l = btnLines.get(scheduler.getCOG());
         l.setScheduleTaskBtns(scheduableTasks);
     }
+
+	@Override
+   public void activatedTask(TaskInfo task) {
+		historyArea.append("Activate Task "+task.task.getID()+"\n");
+		history.add(new ActivateTask(task.task.getCOG(),task.task));
+	}
+
+	@Override
+   public void choosedAction(ScheduleAction a) {
+		historyArea.append(a.toString()+"\n");
+      history.add(a);
+   }
+
+	@Override
+   public void illegalHistory() {
+		JOptionPane.showMessageDialog(frame, "Illegal History!");
+	}
 }
 
 //needed to allow for access to package members
@@ -286,7 +546,7 @@ class SwingWrapperProxy implements InvocationHandler {
     @Override
     public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
             throws Throwable {
-        SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
                 try {

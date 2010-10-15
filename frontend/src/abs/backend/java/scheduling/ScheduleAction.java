@@ -1,6 +1,7 @@
 package abs.backend.java.scheduling;
 
 import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Task;
 
 public abstract class ScheduleAction {
     private final COG cog;
@@ -12,6 +13,10 @@ public abstract class ScheduleAction {
     
     public COG getCOG() {
         return cog;
+    }
+    
+    public Task<?> getTask() {
+   	 return null;
     }
     
     public synchronized void execute() {

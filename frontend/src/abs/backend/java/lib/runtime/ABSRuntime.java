@@ -20,112 +20,41 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
 
 public class ABSRuntime {
-    private static final Logger logger = Logging.getLogger("runtime");
-    private static final SystemObserver systemObserver = (SystemObserver) loadClassByProperty("abs.systemobserver");
-    public static final boolean DEBUGGING = System.getProperty("abs.debug","false").equals("true");
+    private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
+    private static final SystemObserver systemObserver = Config.systemObserver;
     
-    public static final TotalSchedulingStrategy totalSchedulingStrategy;
-    public static final GlobalScheduler globalScheduler;
-    public static final TaskSchedulingStrategy taskSchedulingStrategy;
-    public static final TaskSchedulerFactory taskSchedulerFactory;
-
-    private static boolean configuredTaskScheduling = false;
-    
-    static {
-        TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty("abs.totalscheduler");
-        if (strat != null) {
-            logger.info("Using total scheduling strategy defined by class "+strat.getClass().getName());
-            configuredTaskScheduling = true;
-        } 
-        totalSchedulingStrategy = strat;
-    }
-
-    static {
-        TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByProperty("abs.taskschedulerstrategy");
-        if (strat == null)
-            strat = totalSchedulingStrategy;
-        else
-            configuredTaskScheduling = true;
-        
-        if (strat == null) {
-            strat = new RandomTaskSchedulingStrategy();
-        }
-        
-        logger.info("Using task scheduling strategy defined by class "+strat.getClass().getName());
-        
-        boolean recording = Boolean.parseBoolean(System.getProperty("abs.recordscheduling","false"));
-        if (recording) {
-            strat = new RecordingSchedulerStrategy(strat);
-            logger.info("Recording schedule");
-        }
-
-        taskSchedulingStrategy = strat;
-    }
-    
-    static {
-        GlobalSchedulingStrategy globalSchedulerStrat = (GlobalSchedulingStrategy) loadClassByProperty("abs.globalscheduler");
-        if (globalSchedulerStrat == null) 
-            globalSchedulerStrat = totalSchedulingStrategy;
-        
-        if (globalSchedulerStrat != null) {
-            logger.info("Using global scheduling strategy defined by class "+globalSchedulerStrat.getClass().getName());
-            globalScheduler = new GlobalScheduler(globalSchedulerStrat);
-        } else {
-            globalScheduler = null;
-        }
-    }
-    
-    static {
-        taskSchedulerFactory = getSchedulerFactory();
-    }
-    private static TaskSchedulerFactory getSchedulerFactory() {
-        // only the SimpleTaskScheduler supports configuring
-        if (configuredTaskScheduling) {
-            logger.info("Using simple task scheduler, because task scheduling is specified");
-            return SimpleTaskScheduler.getFactory();
-        }
-        
-        String schedulerName = System.getProperty("abs.taskscheduler","default");
-        System.out.println("Scheduler: "+schedulerName);
-        if (schedulerName.equals("default"))
-            return DefaultTaskScheduler.getFactory();
-        else if (schedulerName.equals("simple"))
-            return SimpleTaskScheduler.getFactory();
-        System.err.println("The task scheduler "+schedulerName+" does not exist, falling back to the default task scheduler.");
-        return DefaultTaskScheduler.getFactory();
-    }
-
+    public static final TotalSchedulingStrategy totalSchedulingStrategy = Config.totalSchedulingStrategy;
+    public static final GlobalScheduler globalScheduler = Config.globalScheduler;
+    public static final TaskSchedulingStrategy taskSchedulingStrategy = Config.taskSchedulingStrategy;
+    public static final TaskSchedulerFactory taskSchedulerFactory = Config.taskSchedulerFactory;
     
     
-
-    public static final boolean GLOBAL_SCHEDULING = globalScheduler != null;
-
     public static void scheduleTaskDone() {
-        if (GLOBAL_SCHEDULING)
+        if (Config.GLOBAL_SCHEDULING)
             globalScheduler.doNextScheduleStep();
     }
 
     
-    
-    public static void nextStep(String fileName, int line) {
-        if (DEBUGGING) {
+
+	public static void nextStep(String fileName, int line) {
+        if (Config.DEBUGGING) {
             getCurrentTask().nextStep(fileName,line);
         } 
 
-        if (GLOBAL_SCHEDULING) {
+        if (Config.GLOBAL_SCHEDULING) {
             globalScheduler.stepTask(getCurrentTask());
         }
         
     }
     
     public static void addScheduleAction(ScheduleAction action) {
-        if (GLOBAL_SCHEDULING) {
+        if (Config.GLOBAL_SCHEDULING) {
             globalScheduler.addAction(action);
         }
     }
 
     public static void doNextStep() {
-        if (GLOBAL_SCHEDULING) {
+        if (Config.GLOBAL_SCHEDULING) {
             globalScheduler.doNextScheduleStep();
         }
     }
@@ -146,22 +75,6 @@ public class ABSRuntime {
         }
     }
 
-    public static Object loadClassByProperty(String property) {
-        try {
-            String s = System.getProperty(property);
-            if (s != null) {
-                Class<?> clazz = ABSRuntime.class.getClassLoader().loadClass(s);
-                return clazz.newInstance();
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
     
     static Task<?> getCurrentTask() {
         if (getCurrentCOG() != null) {
