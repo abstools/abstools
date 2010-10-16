@@ -34,6 +34,15 @@ public class ConcurrencyTests extends SemanticTests {
     }
     
     @Test
+    public void twoFutureGuard() {
+   	 assertEvalTrue(INTERFACE_I+CLASS_C+
+   			 "{ Bool testresult = True; I i; i = new C(); " +
+   			 "  Fut<Bool> f1; Fut<Bool> f2;" +
+   			 "  f1 = i!m(); f2 = i!m();" +
+   			 "  await f1? & f2?; }");
+    }
+    
+    @Test
     public void booleanGuard() {
        assertEvalTrue(INTERFACE_I+"class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"+
                "{ I i; i = new cog C(); Fut<Bool> f; f = i!m(); i!n(); Bool testresult = False; testresult = f.get; } ");

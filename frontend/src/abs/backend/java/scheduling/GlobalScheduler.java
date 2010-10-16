@@ -18,6 +18,7 @@ public class GlobalScheduler {
     
     public void doNextScheduleStep() {
         synchronized (this) {
+      	   
             if (options.isEmpty()) {
                 System.out.println("No steps left. Program finished");
                 System.out.println("Total number of global choices: "+totalNumChoices);
@@ -50,7 +51,7 @@ public class GlobalScheduler {
         a.await();
     }
 
-    public void addAction(ScheduleAction action) {
+    public synchronized void addAction(ScheduleAction action) {
         options.addOption(action);
     }
     

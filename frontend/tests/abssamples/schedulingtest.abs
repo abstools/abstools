@@ -11,9 +11,13 @@ class A implements I {
 
 {
    I a;
-   Fut<Unit> fut;
+   Fut<Unit> fut1;
+   Fut<Unit> fut2;
    a = new cog A();
-   fut = a!m();
-   await fut?;
-   fut.get;
+   fut1 = a!m();
+   await fut1?;
+   fut1 = a!m();
+   fut2 = a!m();
+   await fut1? & fut2?;
+   fut1.get;
 }

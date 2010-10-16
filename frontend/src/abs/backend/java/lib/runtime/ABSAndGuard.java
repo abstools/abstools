@@ -12,9 +12,7 @@ public class ABSAndGuard extends ABSGuard {
 
 	@Override
 	public boolean staysTrue() {
-	    boolean b = left.await() ;
-	    boolean b2 = right.await();
-	    return b && b2;
+		return left.staysTrue() && right.staysTrue();
 	}
 	
 	@Override
@@ -34,7 +32,13 @@ public class ABSAndGuard extends ABSGuard {
         return right;
     }
 
-
+   public boolean await() {
+	    boolean b = left.await() ;
+	    boolean b2 = right.await();
+	    return b || b2;
+   	
+   }
+    
     @Override
    public String toABSString() {
 	   return left.toABSString()+" & "+right.toABSString();

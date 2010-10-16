@@ -21,4 +21,8 @@ public class ABSThread extends Thread {
 		cog = c;
 		
 	}
+
+
+	public void checkGuard() {
+   }
 }

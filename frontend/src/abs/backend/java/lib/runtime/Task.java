@@ -20,6 +20,7 @@ public abstract class Task<T extends ABSRef> {
     protected final ABSObject source;
     protected final Task<?> sender;
     private final int id = counter.incrementAndGet();
+    private Thread executingThread;
     
     public Task(ABSObject source, T target) {
         this.sender = ABSRuntime.getCurrentTask();
@@ -63,6 +64,7 @@ public abstract class Task<T extends ABSRef> {
         synchronized (this) {
             if (view != null)
                 view.taskStarted();
+            executingThread = Thread.currentThread();
         }
         
         ABSValue res = (ABSValue) execute();
@@ -188,6 +190,11 @@ public abstract class Task<T extends ABSRef> {
         }
         
     }
+
+
+	public synchronized Thread getExecutingThread() {
+	   return executingThread;
+   }
 
 
 }

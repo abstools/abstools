@@ -7,6 +7,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSAndGuard;
+import abs.backend.java.lib.runtime.ABSFutureGuard;
 import abs.backend.java.lib.runtime.ABSGuard;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
@@ -106,11 +108,23 @@ public class SimpleTaskScheduler implements TaskScheduler {
         this.schedulingStrategy = strat; 
     }
 
-    protected synchronized void taskFinished() {
-        activeTask = null;
-        if (suspendedTasks.size()+readyTasks.size()>0)
-            schedule();
+    protected void taskFinished() {
+   	 logger.finest("Task finished getting monitor...");
+   	  synchronized (this) {
+   	   	 logger.finest("got monitor");
+   		  activeTask = null;
+   		  if (suspendedTasks.size()+readyTasks.size()>0) {
+    	   	 logger.finest("calling schedule...");
+   			  schedule();
+     	   	 logger.finest("schedule called");
+   		  }
+   	  }
+	   	 logger.finest("do next step");
+	     // we now have to wait for all tasks that waited for the future
+	     // of this task to give them the opportunitiy to add a schedule action
+	     // to the global scheduler, before we do this step
         ABSRuntime.doNextStep();
+	   	 logger.finest("next step done");
     }
     
     @Override
@@ -129,6 +143,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
         private final TaskInfo executingTask;
         private boolean active;
 
+        private ABSGuard guard;
+
         public SimpleSchedulerThread(TaskInfo activeTask) {
             this.executingTask = activeTask;
             setName("ABS Scheduler Thread of "+cog.toString());
@@ -142,53 +158,66 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 v.taskStarted(executingTask.task.getView());
             active = true;
             executingTask.task.run();
+            
             taskFinished();
         }
 
-        public void await(ABSGuard g) {
-            boolean scheduled = false;
+        public synchronized void checkGuard() {
+           logger.finest(executingTask+" checking guard");
+      	  if (guard.isTrue() && guard.staysTrue()) {
+              synchronized (SimpleTaskScheduler.this) {
+                 logger.finest(executingTask+" got monitor");
+                  suspendedTasks.remove(executingTask);
+                  readyTasks.add(executingTask);
+                  executingTask.makeReady();
+                  if (view != null)
+                      view.taskReady(executingTask.task.getView());
+                  if (activeTask == null) {
+                      logger.finest(executingTask+" scheduling myself");
+                      schedule();
+                  }
+              }
+      	  }
+        }
+        
+		public void await(ABSGuard g) {
+         logger.finest(executingTask+" awaiting "+g);
             synchronized (this) {
                 active = false;
+                this.guard = g;
             }
             
-            System.out.println("Task "+executingTask+" waiting for guard");
-            if (!g.await()) {
-                synchronized (SimpleTaskScheduler.this) {
-                    suspendedTasks.remove(executingTask);
-                    readyTasks.add(executingTask);
-                    executingTask.makeReady();
-                    if (view != null)
-                        view.taskReady(executingTask.task.getView());
-                    if (activeTask == null) {
-                        schedule();
-                        scheduled = true;
-                    }
-                }
-
-            }
+            logger.finest(executingTask+" registering at threads...");
+            registerAtThreads(g);
             
-            
-            if (scheduled) {
-               System.out.println("Task "+executingTask+" guard ready doing next step");
-//                ABSRuntime.doNextStep();
-            }
-            
-            System.out.println("Task "+executingTask+" next step done going into monitor");
+            logger.finest(executingTask+" next step done going into monitor");
             synchronized (this) {
                 try {
-                    System.out.println("Task "+executingTask+" waiting to be resumed");
+                    logger.finest(executingTask+" waiting to be resumed");
                     while (!active) {
                         wait();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.out.println("Task "+executingTask+" resumed");
+                logger.finest(executingTask+" resumed");
                 active = true;
             }
         }
 
-        public synchronized void awake() {
+        private void registerAtThreads(ABSGuard g) {
+      	  if (g instanceof ABSFutureGuard) {
+      		   ABSFutureGuard fg = (ABSFutureGuard) g;
+      		   fg.fut.addWaitingThread(this);
+               logger.finest(executingTask+" added to "+fg.fut);
+      	  } else if (g instanceof ABSAndGuard) {
+      		  ABSAndGuard ag = (ABSAndGuard) g;
+      		  registerAtThreads(ag.getLeftGuard());
+      		  registerAtThreads(ag.getRightGuard());
+      	  }
+      }
+
+		public synchronized void awake() {
             active = true;
             notify();
             logger.fine(executingTask.toString()+" awaked");
@@ -200,7 +229,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         if (Config.GLOBAL_SCHEDULING) {
             if (suspendedTasks.isEmpty() && readyTasks.isEmpty())
                 return;
-            
+            logger.finest("Adding scheduling action...");
             ABSRuntime.addScheduleAction(new ScheduleTask(cog) {
                 @Override
                 public void execute() {
@@ -208,6 +237,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                     doSchedule();
                 }
             });
+            logger.finest("Done");
         } else {
             doSchedule();
         }

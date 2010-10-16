@@ -47,11 +47,24 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 		    isResolved = true;
 	        notifyAll();
 	    }
+
+	    informWaitingThreads();
 	    
 	    View v = view;
         if (v != null)
             v.onResolved(o);
 	}
+	
+   
+   private synchronized void informWaitingThreads() {
+   	if (waitingThreads == null)
+   		return;
+ 	  for (ABSThread s : waitingThreads) {
+ 		  s.checkGuard();
+ 	  }
+ 	  waitingThreads.clear();
+ }
+
 	
 	public synchronized V getValue() {
 		return value;
@@ -62,15 +75,13 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    }
 
    public synchronized void await() {
-       synchronized (this) {
-           while (!isResolved) {
-               try {
-                   wait();
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
-           }
-       }
+   	while (!isResolved) {
+   		try {
+   			wait();
+   		} catch (InterruptedException e) {
+   			e.printStackTrace();
+   		}
+   	}
    }
 
    @SuppressWarnings("unchecked")
@@ -154,6 +165,18 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         getObservers().add(obs);
     }
        
+   }
+
+
+   public synchronized Task<?> getResolvingTask() {
+   	return resolvingTask;
+   }
+
+   private List<ABSThread> waitingThreads;
+	public synchronized void addWaitingThread(ABSThread thread) {
+		if (waitingThreads == null)
+			waitingThreads = new ArrayList<ABSThread>(1);
+		waitingThreads.add(thread);
    }
    
 }
