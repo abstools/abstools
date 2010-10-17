@@ -25,10 +25,10 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
     
     
     @Override
-    public ScheduleAction choose(ScheduleOptions options) {
+    public synchronized ScheduleAction choose(ScheduleOptions options) {
         ScheduleAction a = options.allOptions().get(random.nextInt(options.numOptions()));
         String suff = options.numOptions() == 1 ? " (NO CHOICE)" : "";
-        System.out.println("Choosing "+a.shortString()+" from "+shortStringList(options.allOptions())+suff);
+        logger.finest("Choosing "+a.shortString()+" from "+shortStringList(options.allOptions())+suff);
         return a;
     }
 
@@ -44,5 +44,17 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
         res.append("}");
         return res.toString();
     }
+
+
+
+    public synchronized long getSeed() {
+	   return seed;
+   }
+
+
+	public synchronized void setSeed(long newSeed) {
+		seed = newSeed;
+		random.setSeed(seed);
+   }
 
 }
