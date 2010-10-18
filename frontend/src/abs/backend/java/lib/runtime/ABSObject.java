@@ -1,6 +1,7 @@
 package abs.backend.java.lib.runtime;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicLong;
 
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
@@ -13,15 +14,21 @@ import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
 public abstract class ABSObject implements ABSRef {
     private final COG cog;
+    protected final long id; 
     
-    public ABSObject() {
-        cog = getCurrentCOG();
+    public ABSObject(long id) {
+        this(getCurrentCOG(),id);
+    }
+    
+    public String toString() {
+        return getClassName()+" "+id;
     }
     
     public abstract String getClassName();
 
-    protected ABSObject(COG cog) {
+    protected ABSObject(COG cog, long id) {
         this.cog = cog;
+        this.id = id;
     }
     
     public final COG getCOG() {
@@ -93,6 +100,11 @@ public abstract class ABSObject implements ABSRef {
         public void registerObjectObserver(ObjectObserver l) {
             // TODO Auto-generated method stub
             
+        }
+        
+        @Override
+        public String toString() {
+            return ABSObject.this.toString();
         }
         
     }

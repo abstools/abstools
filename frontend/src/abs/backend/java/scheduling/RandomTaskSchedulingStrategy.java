@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
@@ -20,19 +22,9 @@ public class RandomTaskSchedulingStrategy implements TaskSchedulingStrategy {
     private final static Logger logger = Logging.getLogger(RandomTaskSchedulingStrategy.class.getName());
 
     private final Random random;
-    private final long seed;
     
-    public static final RandomTaskSchedulingStrategy INSTANCE = new RandomTaskSchedulingStrategy(); 
-
-    public RandomTaskSchedulingStrategy() {
-        String seedString = System.getProperty("abs.schedulerseed");
-        if (seedString == null)
-            seed = System.nanoTime();
-        else
-            seed = Long.parseLong(seedString);
-        
-        logger.info("Random Task Scheduler Seed="+seed+(seedString != null ? " (as specified)" : ""));
-        random = new Random(seed);
+    public RandomTaskSchedulingStrategy(Random r) {
+        random = r;
     }
     
     @Override

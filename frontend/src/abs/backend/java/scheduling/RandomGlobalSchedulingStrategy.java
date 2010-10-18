@@ -4,26 +4,19 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
 
 public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy {
     private final static Logger logger = Logging.getLogger(RandomGlobalSchedulingStrategy.class.getName());
+
+    private final Random random;
     
-    Random random = new Random();
-    private long seed;
-    
-    public RandomGlobalSchedulingStrategy() {
-        String seedString = System.getProperty("abs.globalschedulerseed");
-        if (seedString == null)
-            seed = System.nanoTime();
-        else
-            seed = Long.parseLong(seedString);
-        
-        logger.info("Global Scheduler Seed="+seed+(seedString != null ? " (as specified)" : ""));
-        random = new Random(seed);
+    public RandomGlobalSchedulingStrategy(Random r) {
+        random = r;
     }
-    
-    
+
     @Override
     public synchronized ScheduleAction choose(ScheduleOptions options) {
         ScheduleAction a = options.allOptions().get(random.nextInt(options.numOptions()));
@@ -44,17 +37,5 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
         res.append("}");
         return res.toString();
     }
-
-
-
-    public synchronized long getSeed() {
-	   return seed;
-   }
-
-
-	public synchronized void setSeed(long newSeed) {
-		seed = newSeed;
-		random.setSeed(seed);
-   }
 
 }

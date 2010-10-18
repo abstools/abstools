@@ -43,7 +43,9 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter;
 import javax.swing.text.Highlighter;
+import javax.swing.text.Highlighter.HighlightPainter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
@@ -355,6 +357,7 @@ class SourceView extends JPanel implements DebugModelListener {
     private final DebugModel model;
     final Highlighter highlighter;
     final Highlighter.HighlightPainter highlightPainter;
+    final Highlighter taskHighlighter;
 
     
     JTextArea textArea;
@@ -362,6 +365,11 @@ class SourceView extends JPanel implements DebugModelListener {
     JTextArea taskArea;
     
     File file;
+    
+    private final DefaultHighlightPainter suspendHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.SUSPENDED.color);
+    private final DefaultHighlightPainter readyHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.READY.color);
+    private final DefaultHighlightPainter runHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.RUNNING.color);
+    private final DefaultHighlightPainter blockedHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.BLOCKED.color);
     
     SourceView(DebugModel model, File file) {
         this.model = model;
@@ -387,7 +395,9 @@ class SourceView extends JPanel implements DebugModelListener {
         highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(ColorUtils.setSatAndBright(Color.BLUE,0.5f,1f));
         textArea.setHighlighter(highlighter);
 
-        
+        taskHighlighter = new DefaultHighlighter();
+        taskArea.setHighlighter(taskHighlighter);
+
         content.add(textArea,BorderLayout.CENTER);
         leftContent.add(lineArea,BorderLayout.EAST);
         leftContent.add(taskArea,BorderLayout.WEST);
@@ -424,24 +434,70 @@ class SourceView extends JPanel implements DebugModelListener {
     }
 
     List<List<TaskInfo>> taskLineInfo = new ArrayList<List<TaskInfo>>();
+    Map<TaskInfo,Object> highlightTags = new HashMap<TaskInfo, Object>();
     
-    public void updateTaskLine(int line) {
-       highlighter.removeAllHighlights();
-        String string = "";
-        boolean first = true;
-        List<TaskInfo> tasks = taskLineInfo.get(line-1);
-        for (TaskInfo info : tasks) {
-            if (first) first = false;
-            else string+=", ";
-            string+= info.toString();
-        }
-        if (tasks.isEmpty())
-            string = "        ";
-        else
-            string += " ->";
-        setTaskLine(string,line);
+    class Highlight {
+        TaskInfo info;
+        int start;
+        int end;
     }
     
+    public void updateTaskLine(int line) {
+        highlighter.removeAllHighlights();
+        taskHighlighter.removeAllHighlights();
+        String string = "";
+        boolean first = true;
+        List<TaskInfo> tasks = taskLineInfo.get(line - 1);
+        List<Highlight> highlights = new ArrayList<Highlight>();
+        try {
+            int start = taskArea.getLineStartOffset(line - 1);
+            for (TaskInfo info : tasks) {
+                Object tag = highlightTags.remove(info);
+                if (tag != null)
+                    taskHighlighter.removeHighlight(tag);
+
+                Highlight highlight = new Highlight();
+                highlight.info = info;
+                highlight.start = start;
+                
+                if (first)
+                    first = false;
+                else {
+                    string += ", ";
+                    highlight.start += 2;
+                }
+                String taskString = "T" + info.task.getID();
+                string += taskString;
+                highlight.end = highlight.start + taskString.length();
+                highlights.add(highlight);
+                start = highlight.end+1;
+            }
+
+            if (tasks.isEmpty())
+                string = "        ";
+            else
+                string += " ->";
+            setTaskLine(string, line);
+
+            for (Highlight h : highlights) {
+                highlightTags.put(h.info,taskHighlighter.addHighlight(h.start, h.end, getHighlighterPainter(h.info)));
+            }
+
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private HighlightPainter getHighlighterPainter(TaskInfo info) {
+        switch (info.state) {
+        case BLOCKED: return blockedHighlightPainter;
+        case READY: return readyHighlightPainter;
+        case RUNNING: return runHighlightPainter;
+        case SUSPENDED: return suspendHighlightPainter;
+        }
+        return highlightPainter;
+    }
+
     private void highlightLine(TaskInfo line) {
         try {
             int start = textArea.getLineStartOffset(line.currentLine-1);
@@ -506,7 +562,7 @@ class SourceView extends JPanel implements DebugModelListener {
 }
 
 
-class TaskControls extends JPanel  {
+class TaskTable extends JPanel  {
     private static final long serialVersionUID = 1L;
     private static final int STEP_COLUMN = 9;
     private static int[] INITIAL_COLUMN_WIDTHS = { 15,50,50,50,50,50,10,70,10 }; 
@@ -517,7 +573,7 @@ class TaskControls extends JPanel  {
 
     private JScrollPane scrollPane;
     
-    TaskControls(DebugModel debugModel) {
+    TaskTable(DebugModel debugModel) {
         this.tableModel = new TableModel();
         this.debugModel = debugModel;
         
@@ -682,12 +738,12 @@ class TaskControls extends JPanel  {
             case 1: {
    				ObjectView source = line.task.getSource();
    				if (source != null) {
-   					return source.getClassName();
+   					return source.toString();
    				}
    				return "";
             	
             }
-            case 2: return line.task.getTarget().getClassName();
+            case 2: return line.task.getTarget().toString();
             case 3: {
    				StringBuilder sb = new StringBuilder();
    				sb.append(line.task.getMethodName());
@@ -792,10 +848,10 @@ class COGTree extends JPanel {
 			JLabel lbl;
 			if (value instanceof COGInfo) {
 				COGInfo cogInfo = (COGInfo) value;
-				lbl = new JLabel("COG "+cogInfo.cog.getID()+" ["+cogInfo.initialObject.getClassName()+"]");
+				lbl = new JLabel("COG "+cogInfo.cog.getID()+" ["+cogInfo.initialObject+"]");
 			} else if (value instanceof TaskInfo) {
 				TaskInfo taskInfo = (TaskInfo) value;
-				lbl = new JLabel("Task "+taskInfo.task.getID()+" ("+taskInfo.task.getTarget().getClassName()+"."+taskInfo.task.getMethodName()+")");
+				lbl = new JLabel("Task "+taskInfo.task.getID()+" ("+taskInfo.task.getTarget()+"."+taskInfo.task.getMethodName()+")");
 				
 				lbl.setBackground(taskInfo.state.color);
 				lbl.setOpaque(true);
@@ -949,7 +1005,7 @@ class DebugWindow implements DebugModelListener  {
     final JFrame frame;
     final JTabbedPane tabs;
     //final JButton nextStepBtn;
-    final TaskControls controls;
+    final TaskTable controls;
     final COGTree cogTree;
     final DebugModel model;
     
@@ -987,7 +1043,7 @@ class DebugWindow implements DebugModelListener  {
         cogTree = new COGTree(model);
         leftSide.add(cogTree); //,BorderLayout.NORTH);
 
-        controls = new TaskControls(model);
+        controls = new TaskTable(model);
         frame.add(controls,BorderLayout.SOUTH);//,BorderLayout.CENTER);
         
         

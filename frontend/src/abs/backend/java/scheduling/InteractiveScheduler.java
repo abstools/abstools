@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -51,7 +52,9 @@ import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.backend.java.utils.ColorUtils;
 
@@ -628,11 +631,13 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing {
 }
 
 class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
-	JButton nextStepBtn;
-	JButton nextNStepBtn;
-	JButton runBtn;
-	RandomGlobalSchedulingStrategy strat = new RandomGlobalSchedulingStrategy();
-	RandomTaskSchedulingStrategy taskStrat = new RandomTaskSchedulingStrategy();
+    private final JButton nextStepBtn;
+	private final JButton nextNStepBtn;
+	private final JButton runBtn;
+	private long seed = System.nanoTime();
+	private final Random r = new Random(seed);
+	private final RandomGlobalSchedulingStrategy strat = new RandomGlobalSchedulingStrategy(r);
+	private final RandomTaskSchedulingStrategy taskStrat = new RandomTaskSchedulingStrategy(r);
 	private final InteractiveScheduler scheduler;
 	private TaskInfo nextTask;
 	private GridBagLayout gridBagLayout;
@@ -665,7 +670,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
       c.fill = GridBagConstraints.HORIZONTAL;
       gridBagLayout.setConstraints(seedField,c);
       seedField.setPreferredSize(new Dimension(150,seedField.getPreferredSize().height));
-		seedField.setText(""+strat.getSeed());
+		seedField.setText(""+seed);
 		
 		nextStepBtn = new JButton("Single Random Step");
 		nextStepBtn.addActionListener(new ActionListener() {
@@ -707,7 +712,8 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
 	private void seedChanged() {
 		try {
 			long s = Long.parseLong(seedField.getText());
-			strat.setSeed(s);
+			seed = s;
+			r.setSeed(seed);
 			System.out.println("Seed Changed to "+seedField.getText());
 			seedField.setBackground(Color.WHITE);
 		} catch (Exception e) {

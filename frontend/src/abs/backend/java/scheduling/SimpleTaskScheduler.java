@@ -98,11 +98,6 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     protected final COG cog;
     
-    public SimpleTaskScheduler(COG cog) {
-        this(cog, RandomTaskSchedulingStrategy.INSTANCE);
-    }
-    
-    
     public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat) {
         this.cog = cog;
         this.schedulingStrategy = strat; 

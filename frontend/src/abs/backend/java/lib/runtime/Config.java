@@ -2,6 +2,7 @@ package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 import abs.backend.java.observing.SystemObserver;
@@ -22,7 +23,7 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
  *
  */
 public class Config {
-	static enum OptionType { BOOLEAN, STRING, CLASS }
+	static enum OptionType { BOOLEAN, STRING, CLASS , LONG}
 	
    static class ConfigOption {
    	 String propertyName;
@@ -45,7 +46,8 @@ public class Config {
    public static final ConfigOption TASK_SCHEDULER_STRATEGY_OPTION = newOption("abs.taskschedulerstrategy","sets a task scheduler strategy class",OptionType.CLASS);
    public static final ConfigOption TASK_SCHEDULER_OPTION = newOption("abs.taskscheduler","sets the task scheduler to be used",OptionType.STRING);
    public static final ConfigOption RECORD_TASK_SCHEDULER_OPTION = newOption("abs.recordtaskscheduler","enables recording of task scheduling",OptionType.BOOLEAN);
-   
+   public static final ConfigOption RANDOM_SEED_OPTION = newOption("abs.randomseed", "set the random seed used by schedulers",OptionType.LONG);
+
    private static ConfigOption newOption(String name, String desc, OptionType type) {
    	ConfigOption o = new ConfigOption(name,desc,type);
    	options.add(o);
@@ -54,6 +56,9 @@ public class Config {
    
    private static final Logger logger = Logging.getLogger(Config.class.getName());
 	
+   public static final long RANDOM_SEED;
+   public static final Random RANDOM = new Random(Config.RANDOM_SEED);
+
    public static final SystemObserver systemObserver = (SystemObserver) loadClassByProperty(SYSTEM_OBSERVER_OPTION.propertyName);
    public static final boolean DEBUGGING = System.getProperty(DEBUG_OPTION.propertyName,"false").equals("true");
    
@@ -61,6 +66,7 @@ public class Config {
    public static final GlobalScheduler globalScheduler;
    public static final TaskSchedulingStrategy taskSchedulingStrategy;
    public static final TaskSchedulerFactory taskSchedulerFactory;
+   
 
    private static boolean configuredTaskScheduling = false;
    
@@ -74,6 +80,31 @@ public class Config {
       	System.exit(1);
    	}
    }
+   
+   static {
+       String seedString = System.getProperty("abs.randomseed");
+       if (seedString == null) {
+           RANDOM_SEED = System.nanoTime();
+       } else {
+           long seed = 0;
+           try {
+               seed = Long.parseLong(seedString);
+           } catch (Exception e) {
+               System.err.println("Illegal random seed "+seedString);
+               System.exit(1);
+           } 
+           RANDOM_SEED = seed;
+       }
+       
+       logger.config("Random Seed: "+RANDOM_SEED);
+   }
+   
+   public static long getSeed() {
+       return RANDOM_SEED;
+   }
+
+   
+
    
    static {
        TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty(TOTAL_SCHEDULER_OPTION.propertyName);
@@ -92,7 +123,7 @@ public class Config {
            configuredTaskScheduling = true;
        
        if (strat == null) {
-           strat = new RandomTaskSchedulingStrategy();
+           strat = new RandomTaskSchedulingStrategy(RANDOM);
        }
        
        logger.config("Using task scheduling strategy defined by class "+strat.getClass().getName());
