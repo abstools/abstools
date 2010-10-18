@@ -2,6 +2,6 @@
 
 BASEDIR="$(dirname $0)/../.."
 
-java -cp $BASEDIR/dist/absfrontend.jar abs.backend.java.JavaBackend "$@"
+java -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/Java1.5Compiler.jar abs.backend.java.JavaBackend "$@"
 
 
