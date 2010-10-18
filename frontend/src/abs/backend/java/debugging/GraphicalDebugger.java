@@ -33,6 +33,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -53,9 +54,12 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
+import abs.backend.java.observing.ObjectCreationObserver;
+import abs.backend.java.observing.ObjectObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
@@ -470,7 +474,7 @@ class SourceView extends JPanel implements DebugModelListener {
                 string += taskString;
                 highlight.end = highlight.start + taskString.length();
                 highlights.add(highlight);
-                start = highlight.end+1;
+                start = highlight.end;
             }
 
             if (tasks.isEmpty())
@@ -594,7 +598,7 @@ class TaskTable extends JPanel  {
         scrollPane = new JScrollPane(table);
         add(scrollPane, BorderLayout.CENTER);
         setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Tasks"));
-        setPreferredSize(new Dimension(200,300));
+        setPreferredSize(new Dimension(200,200));
 
         debugModel.registerListener(SwingWrapperProxy.newInstance(tableModel, DebugModelListener.class));
     }
@@ -830,14 +834,18 @@ class COGTree extends JPanel {
       JScrollPane scrollPane = new JScrollPane(tree);
       add(scrollPane, BorderLayout.CENTER);
       setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), "Concurrent Object Groups (COGs)"));
-      setPreferredSize(new Dimension(400,Integer.MAX_VALUE));
+      setPreferredSize(new Dimension(400,500));
       model.registerListener(SwingWrapperProxy.newInstance(rootNode, DebugModelListener.class));
 		
 		
 	}
 
+	private static final String OBJECTS = "Objects";
+    private static final String TASKS = "Tasks";
+    private static final String COGS = "COGs";
+	
 	class COGNodeRenderer implements TreeCellRenderer {
-
+	    
 		@Override
       public Component getTreeCellRendererComponent(JTree tree, Object node,
             boolean selected, boolean expanded, boolean leaf, int row,
@@ -856,8 +864,24 @@ class COGTree extends JPanel {
 				lbl.setBackground(taskInfo.state.color);
 				lbl.setOpaque(true);
 				
+			} else if (value == OBJECTS || value == TASKS || value == COGS) {
+			    lbl = new JLabel(value+" ("+treeNode.getChildCount()+")");
+			} else if (value instanceof ObjectView) {
+			    ObjectView ov = (ObjectView) value;
+			    lbl = new JLabel(ov.toString());
+			} else if (value instanceof String) {
+			    String fieldName = (String) value;
+			    DefaultMutableTreeNode objNode = (DefaultMutableTreeNode) treeNode.getParent();
+			    ObjectView v = (ObjectView) objNode.getUserObject();
+			    String fieldValue;
+                try {
+                    fieldValue = ""+v.getFieldValue(fieldName);
+                } catch (NoSuchFieldException e) {
+                    fieldValue = "ERROR";
+                }
+			    lbl = new JLabel(fieldName+":"+fieldValue);
 			} else {
-				lbl = new JLabel("COGs");
+			    lbl = new JLabel("???");
 			}
 			lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN));
 			return lbl;
@@ -866,22 +890,32 @@ class COGTree extends JPanel {
 	}
 	
 	
-	class RootNode extends DefaultMutableTreeNode implements DebugModelListener {
-		Map<COGInfo,DefaultMutableTreeNode> cogs = new HashMap<COGInfo, DefaultMutableTreeNode>();
+	class RootNode extends DefaultMutableTreeNode implements DebugModelListener, ObjectCreationObserver {
+		Map<COGView,DefaultMutableTreeNode> cogs = new HashMap<COGView, DefaultMutableTreeNode>();
 		Map<TaskInfo,DefaultMutableTreeNode> tasks = new HashMap<TaskInfo, DefaultMutableTreeNode>();
+        Map<ObjectView,DefaultMutableTreeNode> objects = new HashMap<ObjectView, DefaultMutableTreeNode>();
 		
 		@Override
 		public void taskInfoChanged(TaskInfo line) {
 			TreeNode node = tasks.get(line);
 			treeModel.nodeChanged(node);
+			
+			DefaultMutableTreeNode cogNode = cogs.get(line.task.getCOG());
+			TreeNode objectsNode = cogNode.getChildAt(0);
+			for (int i = 0; i<objectsNode.getChildCount(); i++) {
+			    TreeNode objectNode = objectsNode.getChildAt(i);
+			    for (int j = 0; j < objectNode.getChildCount(); j++) {
+			        treeModel.nodeChanged(objectNode.getChildAt(j));
+			    }
+			}
 		}
 
 		@Override
 		public void taskInfoAdded(TaskInfo line) {
 			DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(line);
 			tasks.put(line,newNode);
-			DefaultMutableTreeNode cogNode = cogs.get(debugModel.getCOGInfo(line.task.getCOG()));
-			treeModel.insertNodeInto(newNode, cogNode, cogNode.getChildCount());
+			DefaultMutableTreeNode tasksNode = (DefaultMutableTreeNode) cogs.get(debugModel.getCOGInfo(line.task.getCOG()).cog).getChildAt(1);
+			treeModel.insertNodeInto(newNode, tasksNode, tasksNode.getChildCount());
          tree.scrollPathToVisible(new TreePath(newNode.getPath()));
 
 		}
@@ -895,14 +929,44 @@ class COGTree extends JPanel {
 		@Override
 		public void cogCreated(COGInfo info) {
 			DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(info);
-			cogs.put(info,newNode);
+			cogs.put(info.cog,newNode);
 			this.add(newNode);
 			treeModel.nodesWereInserted(this, new int[] {this.getChildCount()-1});
+
+			treeModel.insertNodeInto(new DefaultMutableTreeNode(OBJECTS), newNode, 0);
+            treeModel.insertNodeInto(new DefaultMutableTreeNode(TASKS), newNode, 1);
+            addObjectNode(info.initialObject);
+            
+            info.cog.registerObjectCreationListener(SwingWrapperProxy.newInstance(this, ObjectCreationObserver.class));
+            
+			
 		}
 
 		@Override
 		public void cogChanged(COGInfo info) {
 		}
+
+        @Override
+        public void objectCreated(ObjectView o, boolean newCOG) {
+            addObjectNode(o);
+        }
+        
+        private void addObjectNode(ObjectView o) {
+            DefaultMutableTreeNode objectsNode = (DefaultMutableTreeNode) cogs.get(o.getCOG()).getChildAt(0);
+            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(o);
+            treeModel.insertNodeInto(newNode,objectsNode,objectsNode.getChildCount());
+            
+            createFieldNodes(o,newNode);
+        }
+        
+        private void createFieldNodes(ObjectView o, DefaultMutableTreeNode objectNode) {
+            for (String fieldName : o.getFieldNames()) {
+                DefaultMutableTreeNode fieldNode = new DefaultMutableTreeNode(fieldName);
+                treeModel.insertNodeInto(fieldNode,objectNode,objectNode.getChildCount());
+                
+            }
+            
+        }
 
 	}
 }
@@ -1018,7 +1082,10 @@ class DebugWindow implements DebugModelListener  {
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         tabs = new JTabbedPane();
-        frame.add(tabs, BorderLayout.CENTER);
+        
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        frame.add(splitPane, BorderLayout.CENTER);
+        splitPane.setRightComponent(tabs);
         
         /*nextStepBtn = new JButton("Step Arbitrary Task");
         
@@ -1032,19 +1099,18 @@ class DebugWindow implements DebugModelListener  {
         frame.add(nextStepBtn,BorderLayout.NORTH);
         */
         
-        JPanel leftSide = new JPanel();
-        leftSide.setLayout(new BoxLayout(leftSide,BoxLayout.PAGE_AXIS));
-        frame.add(leftSide, BorderLayout.WEST);
         
         /*
         cogTable = new COGTable(model);
         leftSide.add(cogTable,BorderLayout.NORTH);
 	*/
         cogTree = new COGTree(model);
-        leftSide.add(cogTree); //,BorderLayout.NORTH);
+        splitPane.setLeftComponent(cogTree);
 
         controls = new TaskTable(model);
-        frame.add(controls,BorderLayout.SOUTH);//,BorderLayout.CENTER);
+        
+        frame.add(new JSplitPane(JSplitPane.VERTICAL_SPLIT,splitPane,controls));
+        splitPane.setSize(new Dimension(1000,600));
         
         
         

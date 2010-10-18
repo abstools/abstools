@@ -1,5 +1,7 @@
 package abs.backend.java.observing;
 
+import java.util.List;
+
 import abs.backend.java.lib.types.ABSValue;
 
 public interface ObjectView {
@@ -9,4 +11,5 @@ public interface ObjectView {
     ABSValue getFieldValue(String fieldName) throws NoSuchFieldException;
     
     void registerObjectObserver(ObjectObserver l);
+    List<String> getFieldNames();
 }

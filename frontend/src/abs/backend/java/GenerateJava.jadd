@@ -44,6 +44,7 @@ aspect GenerateJava {
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
+            stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
             stream.println("   public Main("+COG.class.getName()+" cog) { super(cog,1); }");
             
             stream.println("   static class MainTask extends "+Task.class.getName()+"<Main> {");
@@ -221,6 +222,27 @@ aspect GenerateJava {
         
         stream.println("    private static java.util.concurrent.atomic.AtomicLong __idCounter = new java.util.concurrent.atomic.AtomicLong();");
         
+        java.util.List<String> fieldNames = new ArrayList<String>();
+        for (ParamDecl p : getParams()) {
+        	fieldNames.add(p.getName());
+        }
+        
+        for (FieldDecl f : getFields()) {
+        	fieldNames.add(f.getName());
+        }
+        
+        
+        stream.print("    private static final java.lang.String[] __fieldNames = new java.lang.String[] {");
+        
+        boolean first = true;
+        for (String fieldName : fieldNames) {
+        	if (first) first = false;
+        	else stream.print(",");
+        	stream.print("\""+fieldName+"\""); 
+        }
+        stream.println("};");
+        
+        stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Arrays.asList(__fieldNames); }");
         
         for (ParamDecl p : getParams()) {
             stream.print("   private ");

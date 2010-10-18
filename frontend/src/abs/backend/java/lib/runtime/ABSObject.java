@@ -1,6 +1,7 @@
 package abs.backend.java.lib.runtime;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import abs.backend.java.lib.types.ABSBool;
@@ -107,5 +108,11 @@ public abstract class ABSObject implements ABSRef {
             return ABSObject.this.toString();
         }
         
+        public List<String> getFieldNames() {
+            return ABSObject.this.getFieldNames(); 
+        }
+        
     }
+
+    public abstract List<String> getFieldNames();
 }

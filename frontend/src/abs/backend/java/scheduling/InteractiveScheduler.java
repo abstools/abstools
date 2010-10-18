@@ -724,7 +724,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
 	long remaindingSteps = 0;
 	private ScheduleOptions options;
 	private void nextNStepClicked() {
-		String steps = JOptionPane.showInputDialog("Number of steps");
+		String steps = JOptionPane.showInputDialog(this,"Number of steps");
 		try {
 			remaindingSteps = Long.parseLong(steps);
 			nextStepClicked();
