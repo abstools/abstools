@@ -358,7 +358,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-		stream.println("\n\n< \"" + getName() + "\" : Class |");
+		stream.println("\n\n< \"" + getName() + "\" : Class | Deltas: noDelta,");
         stream.print("  Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -599,7 +599,7 @@ aspect GenerateMaude {
 
     public void MainBlock.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.println("\n\n< \".Start\" : Class |");
+        stream.println("\n\n< \".Start\" : Class | Deltas: noDelta,");
         stream.println("  Param: noVid,");
         stream.print("  Att: ");
         if (getNumVar() == 0) {

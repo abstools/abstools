@@ -354,6 +354,16 @@ view Oid from TRIV to ABS-OID is
   sort Elt to Oid .
 endv
 
+mod ABS-DID is
+  protecting STRING .
+  sort Did .
+  subsort String < Did .
+endm
+
+view Did from TRIV to ABS-DID is
+  sort Elt to Did .
+endv
+
 *** The interpreter could extend this module with his own definition
 *** of label values.  For example, the model checker uses his own version
 *** of labels.  This definition is the one used in the interpreter.
@@ -383,6 +393,7 @@ mod ABS-DATATYPES is
     extending ABS-DATA-INT .
     extending ABS-DATA-STRING .
     extending ABS-DATA-TIME .
+  *** extending ABS-OID . --- XXX
 endm
 
 
@@ -552,7 +563,7 @@ mod ABS-METHOD is
   protecting ABS-STM-LIST .
 
   sort Method .
-
+  *** XXX eliminate "Att:" and generate it in createProcess
   op <_: Method | Param:_, Att:_, Code:_> : 
     String VidList Subst StmtList -> Method
     [ctor format (c ! oc o d sc o d sc o d sc o c o)] .
@@ -572,14 +583,18 @@ mod ABS-CONFIGURATION is
   protecting ABS-DATA-LABEL .
   protecting ABS-PROCESS-POOL .
   protecting ABS-OID .
+  protecting ABS-DID .
   protecting SET{Method} * (sort Set{Method} to MMtd,
                             op empty : -> Set{Method} to noMethod) .
+  protecting SET{String} * (sort Set{String} to StringSet) .
+  protecting LIST{Did} * (sort List{Did} to DeltaList,
+                         op nil : -> List{Did} to noDelta) .
  
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Future Class Clock .
-  subsorts Class Future Clock < Configuration .
+  sorts Future Class Clock Delta .
+  subsorts Class Future Clock Delta < Configuration .
   vars B M : String .
   var C : Cid .
   vars O O' : Oid .
@@ -644,12 +659,17 @@ mod ABS-CONFIGURATION is
   --- Define Classes.
   --- Class declaration.
   ---
-  op <_: Class | Param:_, Att:_, Mtds:_, Ocnt:_> : 
-    Cid VidList Subst MMtd Nat -> Class 
-    [ctor format (ng ! og o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
+  op <_: Class | Deltas:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
+    Cid DeltaList VidList Subst MMtd Nat -> Class 
+    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
 
   op <_: Clock | Limit:_> : Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
+
+  *** Define Deltas.
+
+  op <_: Delta | AddedM:_, RemovedM:_ > : Did MMtd StringSet -> Delta
+    [ctor] .
 
   *** Useful for real-time maude and some other tricks.
   *** We should not provide sort State, since this is used in LOOP-MODE.
@@ -832,6 +852,7 @@ mod ABS-MACHINE-BASICS is
   var E : Expr .            var AL : VidList .   var N : Label .
   var Q : String .          var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
+  var DeL : DeltaList .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -853,11 +874,11 @@ mod ABS-MACHINE-BASICS is
   ---
   eq
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     invoc(O1, O, N, Q, DL)
   =
     < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
     [label transport-imsg] .
 
@@ -948,7 +969,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var E : Expr .            var AL : VidList .   var N : Label .
   var Q : String .          var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
-  vars T LIM : Nat .
+  vars T LIM : Nat .        var DeL : DeltaList .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -974,11 +995,11 @@ mod ABS-MACHINE-BASICS-TIMED is
   ---
   eq
     < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     invoc(O1, O, N, Q, DL)
   =
     < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
     [label transport-imsg] .
 
@@ -1410,6 +1431,7 @@ mod ABS-CALLSTMTS-RL is
   var CN : Configuration .  var E : Expr .       var Q : String .
   var A : Vid .             var EL : ExprList .  var AL : VidList .
   var N : Label .           var DL : DataList .  var MS : MMtd .
+  var DeL : DeltaList .
 
   --- remote-async-call
   ---
@@ -1428,10 +1450,10 @@ mod ABS-CALLSTMTS-RL is
   ---
   crl
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
       [label remote-async-self-call] .
@@ -1458,10 +1480,10 @@ mod ABS-CALLSTMTS-RL is
   --- the end of the current process.
   rl
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
     < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 
 endm  
@@ -1473,6 +1495,7 @@ mod ABS-CALLSTMTS-EQ is
   var CN : Configuration .  var E : Expr .       var Q : String .
   var A : Vid .             var EL : ExprList .  var AL : VidList .
   var N : Label .           var DL : DataList .  var MS : MMtd .
+  var DeL : DeltaList .
 
   --- remote-async-call
   ---
@@ -1491,10 +1514,10 @@ mod ABS-CALLSTMTS-EQ is
   ---
   ceq
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
       [label remote-async-self-call] .
@@ -1520,21 +1543,21 @@ mod ABS-CALLSTMTS-EQ is
   --- statements.
   eq
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
-  var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var E : Expr .       var Q : String .
-  var A : Vid .             var EL : ExprList .  var AL : VidList .
-  var N : Label .           var DL : DataList .  var MS : MMtd .
-  vars T LIM : Nat .
+  vars O O1 : Oid .         var C : Cid .         vars S S1 L : Subst .
+  var SL : StmtList .       var W : MProc .       vars F G : Nat .
+  var CN : Configuration .  var E : Expr .        var Q : String .
+  var A : Vid .             var EL : ExprList .   var AL : VidList .
+  var N : Label .           var DL : DataList .   var MS : MMtd .
+  vars T LIM : Nat .        var DeL : DeltaList .
 
   --- remote-async-call
   ---
@@ -1556,11 +1579,11 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   ceq
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, T))), Lcnt: (s F) > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
     < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if N := label(O, F) /\ O = eval(E, (S :: L), none, T)
       [label remote-async-self-call] .
@@ -1589,11 +1612,11 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   eq
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
 
@@ -1607,15 +1630,15 @@ mod ABS-NEW-RL is
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .
+  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
 
   rl
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
     < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
               Lcnt: (s F) >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
@@ -1628,15 +1651,15 @@ mod ABS-NEW-EQ is
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .
+  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
 
   eq
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
               Lcnt: (s F) >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
@@ -1649,18 +1672,18 @@ mod ABS-NEW-EQ-TIMED is
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .
+  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
   vars T LIM : Nat .
 
   eq
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
     < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
               Lcnt: (s F) >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
                          Pr: makeProcess(".init", MS, label(O, F), emp), 
