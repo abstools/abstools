@@ -393,7 +393,7 @@ mod ABS-DATATYPES is
     extending ABS-DATA-INT .
     extending ABS-DATA-STRING .
     extending ABS-DATA-TIME .
-  *** extending ABS-OID . --- XXX
+    extending ABS-OID .
 endm
 
 
