@@ -643,7 +643,7 @@ mod ABS-CONFIGURATION is
   ---
   op <_: Class | Deltas:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
     Cid DeltaList VidList Subst MMtd Nat -> Class 
-    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
+    [ctor format (ng ! og o d  sg m d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
 
   op <_: Clock | Limit:_> : Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .

@@ -22,6 +22,12 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
+        for (Decl decl : getDecls()) {
+            if (decl instanceof DeltaDecl) {
+                hasClasses = true;
+                decl.generateMaude(stream);
+            }
+        }
         if (hasMainBlock()) getMainBlock().generateMaude(stream);
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
@@ -394,7 +400,45 @@ aspect GenerateMaude {
         }
         stream.print(",\n  Ocnt: 0 > ");
 	}
-	
+
+    public void DeltaDecl.generateMaude(PrintStream stream) {
+        boolean found = false;
+        boolean inlist = false;
+        stream.print("\n\n< \"" + getName() + "\" : Delta | AddedM: ");
+        for (DeltaModifier d : getModifiers()) {
+            for (ModifierFragment f : d.getModifierFragments()) {
+                if (f instanceof AddMethodModifier) {
+                    AddMethodModifier af = (AddMethodModifier)f;
+                    found = true;
+                    if (inlist) stream.print(", "); else inlist = true;
+                    af.getMethodImpl().generateMaude(stream);
+                }
+                else if (f instanceof ModifyMethodModifier) {
+                    ModifyMethodModifier mf = (ModifyMethodModifier)f;
+                    found = true;
+                    if (inlist) stream.print(", "); else inlist = true;
+                    mf.getMethodImpl().generateMaude(stream);
+                }
+            }
+        }
+        if (!found) stream.print("noMethod ");
+        found = false;
+        inlist = false;
+        stream.print(",\n  RemovedM: ");
+        for (DeltaModifier d : getModifiers()) {
+            for (ModifierFragment f : d.getModifierFragments()) {
+                if (f instanceof RemoveMethodModifier) {
+                    RemoveMethodModifier rf = (RemoveMethodModifier)f;
+                    found = true;
+                    if (inlist) stream.print(", "); else inlist = true;
+                    stream.print("\"" + rf.getMethodSig().getName() + "\" ");
+                }
+            }
+        }
+        if (!found) stream.print("empty ");
+        stream.print(">\n");
+    }
+
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();

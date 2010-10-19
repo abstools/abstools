@@ -321,7 +321,11 @@ aspect GenerateJava {
         }
         stream.println("}");
     }
-    
+
+    public void DeltaDecl.generateJava(PrintStream stream) {
+        // TODO: Java generation here
+    }
+
     public void MethodImpl.generateJava(String indent, PrintStream stream) {
    	 getMethodSig().generateJava(indent,stream);
    	 boolean addReturn = false;

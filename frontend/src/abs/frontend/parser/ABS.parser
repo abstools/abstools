@@ -159,6 +159,7 @@ Decl decl =
 	|	function_decl
 	|	interface_decl
 	|	class_decl
+    |   delta_decl
 	;
 
 // Same as other blocks, but a different class for code-generation purposes.
@@ -208,6 +209,28 @@ InterfaceDecl interface_decl =
 ClassDecl class_decl =
 	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE 
 	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
+  ;
+
+DeltaDecl delta_decl =
+    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id LBRACE delta_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, modifiers); :} ;
+
+List delta_modifier_list =
+    delta_modifier.m {: return new List().add(m); :}
+  | delta_modifier_list.l delta_modifier.m {: return l.add(m); :}
+  ;
+
+DeltaModifier delta_modifier =
+    MODIFIES TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new DeltaModifier(id, fragments); :} ;
+
+List modifier_fragment_list =
+    modifier_fragment.f {: return new List().add(f); :}
+  | modifier_fragment_list.l modifier_fragment.f {: return l.add(f); :}
+  ;
+
+ModifierFragment modifier_fragment =
+    ADDS method.m {: return new AddMethodModifier(m); :}
+  | MODIFIES method.m {: return new ModifyMethodModifier(m); :}
+  | REMOVES methodsig.ms SEMICOLON {: return new RemoveMethodModifier(ms); :}
   ;
 
 List data_constructor_list =

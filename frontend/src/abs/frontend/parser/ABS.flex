@@ -63,16 +63,20 @@ IntLiteral = 0 | [1-9][0-9]*
 %% // Rules
 //Keywords 
 <YYINITIAL> {
- "module"       { return sym(Terminals.MODULE); }
- "import"       { return sym(Terminals.IMPORT); }
- "export"       { return sym(Terminals.EXPORT); }
- "from"         { return sym(Terminals.FROM); }
+ "module"      { return sym(Terminals.MODULE); }
+ "import"      { return sym(Terminals.IMPORT); }
+ "export"      { return sym(Terminals.EXPORT); }
+ "from"        { return sym(Terminals.FROM); }
  "class"       { return sym(Terminals.CLASS); }
  "interface"   { return sym(Terminals.INTERFACE); }
  "extends"     { return sym(Terminals.EXTENDS); }
  "data"        { return sym(Terminals.DATA); }
  "def"         { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
+ "delta"       { return sym(Terminals.DELTA); }
+ "adds"        { return sym(Terminals.ADDS); }
+ "modifies"    { return sym(Terminals.MODIFIES); }
+ "removes"     { return sym(Terminals.REMOVES); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
  "skip"        { return sym(Terminals.SKIP); }

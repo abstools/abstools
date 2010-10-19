@@ -65,6 +65,7 @@ aspect Typing {
     eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
     eq DataConstructor.getType() = getDataTypeDecl().getType();
+    eq DeltaDecl.getType() = getUnitType();
 
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);

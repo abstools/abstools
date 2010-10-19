@@ -1,9 +1,5 @@
 aspect ActiveClasses {
 
-    // Calculate whether a method is inside an active class
-    eq ClassDecl.getMethod(int index).inActiveClass() = isActiveClass();
-    inh boolean MethodImpl.inActiveClass();
-
     syn boolean ClassDecl.isActiveClass();
     eq ClassDecl.isActiveClass() {
         for (MethodImpl method : getMethods()) {

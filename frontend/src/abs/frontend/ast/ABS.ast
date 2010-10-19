@@ -24,8 +24,9 @@ abstract 				Decl ::= <Name>;
 abstract BehaviorDecl:	Decl ::= ; // Entities used in behavior expressions
 abstract TypeDecl:		Decl; // Entities used in type expressions
 
-UnknownDecl:	TypeDecl;		// Unknown declarations
-ClassDecl:		BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
+UnknownDecl:    TypeDecl;		// Unknown declarations
+ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
+DeltaDecl:      Decl    ::= Annotation* Modifier:DeltaModifier*;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
@@ -34,6 +35,15 @@ DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
 TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
+
+
+DeltaModifier  ::= <Name> ModifierFragment* ;
+
+abstract ModifierFragment ;
+
+AddMethodModifier : ModifierFragment ::= MethodImpl;
+ModifyMethodModifier : ModifierFragment ::= MethodImpl;
+RemoveMethodModifier : ModifierFragment ::= MethodSig;
 
 
 abstract	VarOrFieldDecl  ::= <Name>;

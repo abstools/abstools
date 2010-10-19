@@ -231,7 +231,11 @@ aspect TypeChecker {
    	  }
    	  
     }
-    
+
+    public void DeltaDecl.typeCheck(SemanticErrorList e) {
+        // TODO type-checking goes here
+    }
+
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.typeCheckParamList(e,getParams());
         getTypeUse().typeCheck(e);
