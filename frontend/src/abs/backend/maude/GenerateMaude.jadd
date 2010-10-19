@@ -410,11 +410,6 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
-        stream.print(", Att: ");
-        inlist = false;
-        stream.print("@ \".method\" |-> \"str\"[\"" + sig.getName() + "\"], ");
-        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
-        // All other variables get introduced via $vardecl as they are defined.
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
             stream.print("return( null ) ");
@@ -612,10 +607,8 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
-        stream.print("< \".init\" : Method | Param: noVid, ");
-        stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
-        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
-        stream.print(",\n      Code: ");
+        stream.print("< \".init\" : Method | Param: noVid,\n");
+        stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
             stream.print("noStmt ");
@@ -652,10 +645,8 @@ aspect GenerateMaude {
                                         List<FieldDecl> fields,
                                         boolean isActiveClass) {
         boolean inlist = false;
-        stream.print("< \".init\" : Method | Param: noVid, ");
-        stream.print("Att: @ \".method\" |-> \"str\"[\".init\"], ");
-        stream.print("@ \".staticfuture\" |-> null, @ \"_\" |-> null");
-        stream.print(",\n      Code: ");
+        stream.print("< \".init\" : Method | Param: noVid,\n");
+        stream.print("      Code: ");
         // Process field initializers here
         for (FieldDecl field : fields) {
             if (field.hasInitExp()) {

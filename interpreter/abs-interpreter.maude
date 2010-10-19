@@ -563,10 +563,9 @@ mod ABS-METHOD is
   protecting ABS-STM-LIST .
 
   sort Method .
-  *** XXX eliminate "Att:" and generate it in createProcess
-  op <_: Method | Param:_, Att:_, Code:_> : 
-    String VidList Subst StmtList -> Method
-    [ctor format (c ! oc o d sc o d sc o d sc o c o)] .
+  op <_: Method | Param:_, Code:_> : 
+    String VidList StmtList -> Method
+    [ctor format (nic ! oc o d sc o d sc o c o)] .
 
 endm
 
@@ -644,7 +643,7 @@ mod ABS-CONFIGURATION is
   ---
   op <_: Class | Deltas:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
     Cid DeltaList VidList Subst MMtd Nat -> Class 
-    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ oni o  gni o-- g on)] .
+    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
 
   op <_: Clock | Limit:_> : Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
@@ -652,7 +651,7 @@ mod ABS-CONFIGURATION is
   *** Define Deltas.
 
   op <_: Delta | AddedM:_, RemovedM:_ > : Did MMtd StringSet -> Delta
-    [ctor] .
+    [ctor format (nm ! om o d  sm++ o n  sm o-- m  on)] .
 
   *** Useful for real-time maude and some other tricks.
   *** We should not provide sort State, since this is used in LOOP-MODE.
@@ -834,21 +833,21 @@ mod ABS-MSG-TRANSPORT is
   eq
     findMethod(M, C, noDelta, N, O, DL)
     < C : Class | Deltas: DeL, Param: AL', Att: S1 , 
-                  Mtds: (MIS, < M : Method | Param: AL, Att: S, Code: SL >),
+                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G >
   =
-    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
+    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
     < C : Class | Deltas: DeL, Param: AL', Att: S1, 
-                  Mtds: (MIS, < M : Method | Param: AL, Att: S, Code: SL >),
+                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G > .
 
   eq
     findMethod(M, C, (DeL D), N, O, DL)
-    < D : Delta | AddedM: (MIS, < M : Method | Param: AL, Att: S, Code: SL >), 
+    < D : Delta | AddedM: (MIS, < M : Method | Param: AL, Code: SL >), 
                   RemovedM: MS >
   =
-    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
-    < D : Delta | AddedM: < M : Method | Param: AL, Att: S, Code: SL >, 
+    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
+    < D : Delta | AddedM: < M : Method | Param: AL, Code: SL >, 
                   RemovedM: MS > .
 
   eq
@@ -884,17 +883,16 @@ mod ABS-MSG-TRANSPORT is
 
   eq
     < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F >
-    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
+    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
   =
-    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Att: S, Code: SL >, N, DL)), Lcnt: F >
+    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL)), Lcnt: F >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg-2] .
 
   op makeProcess : Method Label DataList -> Process .
-  eq makeProcess(< M : Method | Param: AL, Att: S, Code: SL >,
-    N, DL)
+  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL)
   =
-    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
+    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL } .
 
 
   --- Fetch pair { code |  vars } to bind call to process.
@@ -906,8 +904,8 @@ mod ABS-MSG-TRANSPORT is
   --- DL  represents the list of actual arguments.
   op makeProcessOLD : String MMtd Label DataList -> Process .
 
-  eq makeProcessOLD(M, (MIS, < M : Method | Param: AL, Att: S, Code: SL >), N, DL) =
-    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
+  eq makeProcessOLD(M, (MIS, < M : Method | Param: AL, Code: SL >), N, DL) =
+    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL } .
   eq makeProcessOLD(M, MIS, N, DL) = notFound [owise] .
 endm
 
