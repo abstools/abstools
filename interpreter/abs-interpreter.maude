@@ -627,19 +627,6 @@ mod ABS-CONFIGURATION is
   --- op error(_) : String -> [Msg] [ctor format (nnr r o! or onn)] .
   op warning(_) : String -> [Msg] [ctor format (nnr! r! r! or onn)] .
 
-  --- Fetch pair { code |  vars } to bind call to process.
-  ---
-  --- M   represents the name of the method.
-  --- MS  represents the methods we search through.
-  --- N   represents the label used to return the value computed by the
-  ---     method.
-  --- DL  represents the list of actual arguments.
-  op makeProcess : String MMtd Label DataList -> Process .
-
-  eq makeProcess(M, (MS, < M : Method | Param: AL, Att: S, Code: SL >), N, DL) =
-    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
-  eq makeProcess(M, MS, N, DL) = notFound [owise] .
-
   --- Terms of sort Object represent objects in the run-time configuration.
   ---
   op <_:_ | Att:_, Pr:_, PrQ:_, Lcnt:_> : 
@@ -651,10 +638,6 @@ mod ABS-CONFIGURATION is
   op <_: Future | Name:_, Completed:_, References:_, Value:_> :
     Label String Bool Nat Data -> Future
     [ctor format (nr d d g ++r ir o  r i o  r i o  r i o--  r on)] .
-
-  --- Completed futures without references can be removed.
-  ---
-  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
 
   --- Define Classes.
   --- Class declaration.
@@ -834,6 +817,100 @@ mod ABS-EVAL is
 
 endm
 
+mod ABS-MSG-TRANSPORT is
+  protecting ABS-CONFIGURATION .
+
+  var M : String .      var MIS : MMtd .     vars AL AL' : VidList .
+  vars S S1 : Subst .   var SL : StmtList .  var N : Label .
+  var DL : DataList .   var C : Cid .        var DeL : DeltaList .
+  vars F G : Nat .      vars O O1 : Oid .    var P : Process .
+  var W : MProc .       var MI : Method .    var D : Did .
+  var MS : StringSet .
+
+
+  op findMethod : String Cid DeltaList Label Oid DataList -> Msg .
+  op foundMethod : Method Label Oid DataList -> Msg .
+
+  eq
+    findMethod(M, C, noDelta, N, O, DL)
+    < C : Class | Deltas: DeL, Param: AL', Att: S1 , 
+                  Mtds: (MIS, < M : Method | Param: AL, Att: S, Code: SL >),
+                  Ocnt: G >
+  =
+    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
+    < C : Class | Deltas: DeL, Param: AL', Att: S1, 
+                  Mtds: (MIS, < M : Method | Param: AL, Att: S, Code: SL >),
+                  Ocnt: G > .
+
+  eq
+    findMethod(M, C, (DeL D), N, O, DL)
+    < D : Delta | AddedM: (MIS, < M : Method | Param: AL, Att: S, Code: SL >), 
+                  RemovedM: MS >
+  =
+    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
+    < D : Delta | AddedM: < M : Method | Param: AL, Att: S, Code: SL >, 
+                  RemovedM: MS > .
+
+  eq
+    findMethod(M, C, (DeL D), N, O, DL)
+    < D : Delta | AddedM: MIS, RemovedM: (MS, M) >
+  =
+    foundMethod(noMethod, N, O, DL)
+    < D : Delta | AddedM: MIS, RemovedM: (MS, M) > .
+
+  eq
+    findMethod(M, C, (DeL D), N, O, DL)
+    < D : Delta | AddedM: MIS, RemovedM: MS >
+  =
+    findMethod(M, C, DeL, N, O, DL)
+    < D : Delta | AddedM: MIS, RemovedM: MS > [owise] . 
+
+
+
+  --- transport
+  ---
+  --- Receive an invocation message to bind the method body.  We never make
+  --- this a rule -- scheduling is done elsewhere.
+  ---
+  eq
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
+    invoc(O1, O, N, M, DL)
+  =
+    findMethod(M, C, DeL, N, O, DL)
+    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
+    [label transport-imsg] .
+
+  eq
+    < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F >
+    foundMethod(< M : Method | Param: AL, Att: S, Code: SL >, N, O, DL)
+  =
+    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Att: S, Code: SL >, N, DL)), Lcnt: F >
+    < N : Future | Name: M, Completed: false, References: 1, Value: null >
+    [label transport-imsg-2] .
+
+  op makeProcess : Method Label DataList -> Process .
+  eq makeProcess(< M : Method | Param: AL, Att: S, Code: SL >,
+    N, DL)
+  =
+    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
+
+
+  --- Fetch pair { code |  vars } to bind call to process.
+  ---
+  --- M   represents the name of the method.
+  --- MIS  represents the methods we search through.
+  --- N   represents the label used to return the value computed by the
+  ---     method.
+  --- DL  represents the list of actual arguments.
+  op makeProcessOLD : String MMtd Label DataList -> Process .
+
+  eq makeProcessOLD(M, (MIS, < M : Method | Param: AL, Att: S, Code: SL >), N, DL) =
+    { @ ".label" |-> N, S, createSubst(AL, DL) | SL } .
+  eq makeProcessOLD(M, MIS, N, DL) = notFound [owise] .
+endm
+
 
 *** The machine.
 ***
@@ -845,6 +922,7 @@ endm
 *** equations, etc.
 mod ABS-MACHINE-BASICS is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
@@ -866,21 +944,6 @@ mod ABS-MACHINE-BASICS is
     { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
   if ready(SL, (S :: L), CN, 0)
       [label PrQ-ready] .
-
-  --- transport
-  ---
-  --- Receive an invocation message to bind the method body.  We never make
-  --- this a rule -- scheduling is done elsewhere.
-  ---
-  eq
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    invoc(O1, O, N, Q, DL)
-  =
-    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-    [label transport-imsg] .
 
   --- mark
   ---
@@ -919,6 +982,9 @@ mod ABS-MACHINE-BASICS is
   if null = (S :: L)[A]
       [label free-uninitialized] .
 
+  --- Completed futures without references can be removed.
+  ---
+  eq < N : Future | Name: Q, Completed: true, References: 0, Value: D > = none .
 
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
@@ -962,6 +1028,7 @@ mod ABS-MACHINE-BASICS is
 endm
 mod ABS-MACHINE-BASICS-TIMED is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
@@ -987,21 +1054,6 @@ mod ABS-MACHINE-BASICS-TIMED is
       CN  }
   if ready(SL, (S :: L), CN, T)
       [label PrQ-ready] .
-
-  --- transport
-  ---
-  --- Receive an invocation message to bind the method body.  We never make
-  --- this a rule -- scheduling is done elsewhere.
-  ---
-  eq
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    invoc(O1, O, N, Q, DL)
-  =
-    < O : C | Att: S, Pr: P, PrQ: (W, makeProcess(Q, MS, N, DL)), Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-    [label transport-imsg] .
 
   --- mark
   ---
@@ -1043,6 +1095,10 @@ mod ABS-MACHINE-BASICS-TIMED is
     < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
   if null = (S :: L)[A]
       [label free-uninitialized] .
+
+  --- Completed futures without references can be removed.
+  ---
+  eq < N : Future | Name: Q, Completed: true, References: 0, Value: D > = none .
 
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
@@ -1425,6 +1481,7 @@ endm
 *** METHOD CALLS
 mod ABS-CALLSTMTS-RL is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
@@ -1443,20 +1500,7 @@ mod ABS-CALLSTMTS-RL is
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
-      /\ O =/= O1
       [label remote-async-call] .
-
-  --- remote-async-self-call
-  ---
-  crl
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =>
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-  if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
-      [label remote-async-self-call] .
 
   --- TAIL CALLS
   ---
@@ -1482,13 +1526,14 @@ mod ABS-CALLSTMTS-RL is
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 
 endm  
 mod ABS-CALLSTMTS-EQ is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
@@ -1507,20 +1552,7 @@ mod ABS-CALLSTMTS-EQ is
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
-      /\ O =/= O1
       [label remote-async-call] .
-
-  --- remote-async-self-call
-  ---
-  ceq
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, 0))), Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-  if N := label(O, F) /\ O = eval(E, (S :: L), none, 0)
-      [label remote-async-self-call] .
 
   --- TAIL CALLS
   ---
@@ -1545,12 +1577,13 @@ mod ABS-CALLSTMTS-EQ is
     < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
-    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   vars O O1 : Oid .         var C : Cid .         vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .       vars F G : Nat .
@@ -1571,22 +1604,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   if DL :=  evalList(EL, (S :: L), none, T)
       /\ O1 := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
-      /\ O =/= O1
       [label remote-async-call] .
-
-  --- remote-async-self-call
-  ---
-  ceq
-    < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =
-    < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: (W, makeProcess(Q, MS, N, evalList(EL, (S :: L), none, T))), Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
-  if N := label(O, F) /\ O = eval(E, (S :: L), none, T)
-      [label remote-async-self-call] .
 
   --- TAIL CALLS
   ---
@@ -1615,7 +1633,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: makeProcess(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
+    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
@@ -1626,6 +1644,7 @@ endm
 *** Also start the ".init" method.
 mod ABS-NEW-RL is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
@@ -1641,12 +1660,13 @@ mod ABS-NEW-RL is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcess(".init", MS, label(O, F), emp), 
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 endm
 mod ABS-NEW-EQ is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
@@ -1662,12 +1682,13 @@ mod ABS-NEW-EQ is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcess(".init", MS, label(O, F), emp), 
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 endm
 mod ABS-NEW-EQ-TIMED is
   protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
 
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
@@ -1686,7 +1707,7 @@ mod ABS-NEW-EQ-TIMED is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
-                         Pr: makeProcess(".init", MS, label(O, F), emp), 
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 endm
