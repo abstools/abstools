@@ -383,4 +383,10 @@ public class Main implements SystemObserver, TaskObserver {
         // TODO Auto-generated method stub
         
     }
+
+    @Override
+    public void taskDeadlocked(TaskView task) {
+        // TODO Auto-generated method stub
+        
+    }
 }

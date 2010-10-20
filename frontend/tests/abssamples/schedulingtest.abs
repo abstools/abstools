@@ -30,6 +30,30 @@ class A implements I {
 	}
 }
 
+interface J {
+   Unit m(J j);
+   Unit n(J j);
+   Unit k();
+}
+
+class C implements J {
+   Unit m(J j) {
+   	  Fut<Unit> f;
+   	  f = j!n(this);
+   	  f.get;
+   	  
+   }
+   
+   Unit n(J j) {
+      Fut<Unit> f;
+      f = j!k();
+      f.get;
+   }
+   
+   Unit k() {
+   }
+}
+
 {
    I a;
    I b;
@@ -41,6 +65,12 @@ class A implements I {
    b ! n();
    fut1 = a!m();
    fut2 = a!n();
+   J j1;
+   J j2;
+   j1 = new cog C();
+   j2 = new cog C();
+   j1!m(j2);
+
    await fut1? & fut2?;
    fut1.get;
 }

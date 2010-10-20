@@ -95,9 +95,16 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        if (t != null) {
            t.calledGetOnFut(this);
        }
-       synchronized (this) {
-           await();
+       
+       if (Config.GLOBAL_SCHEDULING) {
+           // note that this code does only work in the presence of global scheduling,
+           // otherwise it would not be thread-safe
+           if (!isResolved()) {
+               ABSRuntime.doNextStep();
+           }
        }
+       
+       await();
 
        if (t != null) {
            t.futureReady(this);           

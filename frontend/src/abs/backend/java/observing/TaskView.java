@@ -30,5 +30,7 @@ public interface TaskView {
 
     int getID();
 
-    ABSException getException();
+    boolean isDeadlocked();
+
+    boolean hasFailedAssertion();
 }

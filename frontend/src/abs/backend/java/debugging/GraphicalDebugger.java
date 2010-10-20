@@ -223,16 +223,17 @@ class DebugModel implements TaskObserver {
 
 
     @Override
+    public synchronized void taskDeadlocked(TaskView task) {
+        updateTaskState(task,TaskState.DEADLOCKED,null,null);
+    }
+    
+    @Override
     public synchronized void taskFinished(TaskView task) {
-        ABSException e = task.getException();
-        if (e == null) {
-            updateTaskState(task,TaskState.FINISHED,null,null);
-        } else {
-            if (e.isAssertion()) 
-                updateTaskState(task,TaskState.ASSERTION_FAILED,null,null);
-            else
-                updateTaskState(task,TaskState.DEADLOCKED,null,null);
-        }
+       if (task.hasFailedAssertion()) { 
+           updateTaskState(task,TaskState.ASSERTION_FAILED,null,null);
+       } else {
+           updateTaskState(task,TaskState.FINISHED,null,null);
+       }
     }
 
 
@@ -463,7 +464,7 @@ class SourceView extends JPanel implements DebugModelListener {
     
     public void updateTaskLine(int line) {
         highlighter.removeAllHighlights();
-        taskHighlighter.removeAllHighlights();
+//        taskHighlighter.removeAllHighlights();
         String string = "";
         boolean first = true;
         List<TaskInfo> tasks = taskLineInfo.get(line - 1);

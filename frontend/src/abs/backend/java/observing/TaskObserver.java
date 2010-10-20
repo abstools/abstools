@@ -26,4 +26,11 @@ public interface TaskObserver {
      * @param view
      */
     void taskReady(TaskView view);
+    
+    /**
+     * Called when a deadlock has been detected in a task.
+     * Note that if a task deadlocked the taskFinished method will *not* be called!
+     * @param task
+     */
+    void taskDeadlocked(TaskView task);
 }

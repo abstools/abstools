@@ -30,6 +30,15 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
         }
     }
 
+    protected synchronized void taskDeadlocked(TaskView task) {
+        for (TaskObserver l : getObservers()) {
+            l.taskDeadlocked(task);
+        }
+        
+    }
+
+
+    
     synchronized void taskResumed(TaskView runningTask, ABSGuard g) {
         for (TaskObserver l : getObservers()) {
             l.taskResumed(runningTask, g.getView());

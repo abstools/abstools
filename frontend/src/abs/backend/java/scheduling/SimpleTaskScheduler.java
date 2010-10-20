@@ -95,7 +95,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
      * Holds the currently active task or is null if there is no active task
      */
     protected TaskInfo activeTask;
-
+    
     protected final COG cog;
     
     public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat) {
@@ -103,6 +103,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
         this.schedulingStrategy = strat; 
     }
 
+    protected void taskDeadlocked() {
+        logger.finest("Task deadlocked");
+        if (view != null) {
+            view.taskDeadlocked(activeTask.task.getView());
+        }
+        ABSRuntime.doNextStep();
+        
+    }
+    
     protected void taskFinished() {
    	 logger.finest("Task finished getting monitor...");
    	  synchronized (this) {
@@ -153,8 +162,11 @@ public class SimpleTaskScheduler implements TaskScheduler {
                 v.taskStarted(executingTask.task.getView());
             active = true;
             executingTask.task.run();
+            if (executingTask.task.isDeadlocked())
+                taskDeadlocked();
+            else 
+                taskFinished();
             
-            taskFinished();
         }
 
         public synchronized void checkGuard() {

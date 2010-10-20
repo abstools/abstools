@@ -34,6 +34,13 @@ public abstract class Task<T extends ABSRef> {
         return id;
     }
 
+    public boolean isDeadlocked() {
+        return exception != null && exception.isDeadlock();
+    }
+
+    public boolean hasFailedAssertion() {
+        return exception != null && exception.isAssertion();
+    }
     
     public ABSException getException() {
         return exception;
@@ -193,10 +200,15 @@ public abstract class Task<T extends ABSRef> {
         public int getID() {
             return id;
         }
-
+        
         @Override
-        public ABSException getException() {
-            return Task.this.getException();
+        public boolean isDeadlocked() {
+            return Task.this.isDeadlocked();
+        }
+        
+        @Override
+        public boolean hasFailedAssertion() {
+            return Task.this.hasFailedAssertion();
         }
         
         @Override

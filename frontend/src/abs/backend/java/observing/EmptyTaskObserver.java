@@ -37,4 +37,10 @@ public class EmptyTaskObserver implements TaskObserver {
     @Override
     public void taskReady(TaskView view) {
     }
+
+    @Override
+    public void taskDeadlocked(TaskView task) {
+        // TODO Auto-generated method stub
+        
+    }
 }
