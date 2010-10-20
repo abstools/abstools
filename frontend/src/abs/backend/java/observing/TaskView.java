@@ -2,6 +2,7 @@ package abs.backend.java.observing;
 
 import java.util.List;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSValue;
 
 public interface TaskView {
@@ -28,4 +29,6 @@ public interface TaskView {
     void registerTaskListener(TaskObserver listener);
 
     int getID();
+
+    ABSException getException();
 }

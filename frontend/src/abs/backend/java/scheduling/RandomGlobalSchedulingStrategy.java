@@ -13,6 +13,10 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
 
     private final Random random;
     
+    public RandomGlobalSchedulingStrategy() {
+        random = Config.RANDOM;
+    }
+    
     public RandomGlobalSchedulingStrategy(Random r) {
         random = r;
     }

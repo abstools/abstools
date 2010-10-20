@@ -2,22 +2,45 @@ module SchedulingTest;
 
 interface I {
    Unit m(); 
+   Unit n();
+}
+
+class B implements I {
+   // simulate failed assertion
+   Unit m() {
+   	  assert False;
+   }
+   
+   // simulate deadlock
+   Unit n() {
+      Fut<Unit> f;
+      f = this ! n();
+      f.get; 
+   }
 }
 
 class A implements I {
+	Bool mcalled = False;
 	Unit m() {
+		mcalled = True;
+	}
+	
+	Unit n() {
+		assert mcalled;
 	}
 }
 
 {
    I a;
+   I b;
    Fut<Unit> fut1;
    Fut<Unit> fut2;
    a = new cog A();
+   b = new cog B();
+   b ! m();
+   b ! n();
    fut1 = a!m();
-   await fut1?;
-   fut1 = a!m();
-   fut2 = a!m();
+   fut2 = a!n();
    await fut1? & fut2?;
    fut1.get;
 }

@@ -3,6 +3,8 @@ package abs.backend.java.utils;
 import java.awt.Color;
 
 public class ColorUtils {
+    public static final Color PSYCHEDELIC_PURPLE = new Color(221, 0, 255);
+    
 	public static Color setSaturation(Color color, float saturation) {
 		 float[] hsb = toHSB(color);
 		 return new Color(Color.HSBtoRGB(hsb[0], saturation, hsb[2]));

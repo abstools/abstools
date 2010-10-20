@@ -54,6 +54,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
@@ -223,7 +224,15 @@ class DebugModel implements TaskObserver {
 
     @Override
     public synchronized void taskFinished(TaskView task) {
-        updateTaskState(task,TaskState.FINISHED,null,null);
+        ABSException e = task.getException();
+        if (e == null) {
+            updateTaskState(task,TaskState.FINISHED,null,null);
+        } else {
+            if (e.isAssertion()) 
+                updateTaskState(task,TaskState.ASSERTION_FAILED,null,null);
+            else
+                updateTaskState(task,TaskState.DEADLOCKED,null,null);
+        }
     }
 
 
@@ -308,11 +317,14 @@ class Line {
 }
 
 
+
 enum TaskState {
     READY(ColorUtils.setSaturation(Color.YELLOW,0.5f)), 
     SUSPENDED(ColorUtils.setSaturation(Color.ORANGE,0.5f)), 
     RUNNING(ColorUtils.setSaturation(Color.GREEN,0.5f)), 
-    FINISHED(Color.LIGHT_GRAY), 
+    FINISHED(Color.LIGHT_GRAY),
+    DEADLOCKED(Color.red),
+    ASSERTION_FAILED(ColorUtils.PSYCHEDELIC_PURPLE),
     BLOCKED(ColorUtils.setSaturation(Color.RED,0.5f));
     public final Color color;
     TaskState(Color c) {
@@ -337,11 +349,7 @@ class TaskInfo {
     }
     
     public String toString() {
-        String res = "Task "+task.getID();
-        if (state == TaskState.SUSPENDED) {
-            res = "("+res+")";
-        }
-        return res;
+        return "Task "+task.getID();
     }
     
     public void updateLine(int newLine) {
@@ -370,10 +378,7 @@ class SourceView extends JPanel implements DebugModelListener {
     
     File file;
     
-    private final DefaultHighlightPainter suspendHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.SUSPENDED.color);
-    private final DefaultHighlightPainter readyHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.READY.color);
-    private final DefaultHighlightPainter runHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.RUNNING.color);
-    private final DefaultHighlightPainter blockedHighlightPainter = new DefaultHighlighter.DefaultHighlightPainter(TaskState.BLOCKED.color);
+    private final Map<TaskState, DefaultHighlightPainter> highlightPainters = new HashMap<TaskState, DefaultHighlightPainter>();
     
     SourceView(DebugModel model, File file) {
         this.model = model;
@@ -386,7 +391,9 @@ class SourceView extends JPanel implements DebugModelListener {
         JPanel leftContent = new JPanel();
         leftContent.setLayout(new BorderLayout());
         content.add(leftContent,BorderLayout.WEST);
-        
+
+        createHighlightPainters();
+       
         textArea = new JTextArea();
         lineArea = new JTextArea();
         taskArea = new JTextArea();
@@ -394,6 +401,7 @@ class SourceView extends JPanel implements DebugModelListener {
         textArea.setBorder(BorderFactory.createLineBorder(Color.gray));
         taskArea.setBorder(BorderFactory.createLineBorder(Color.gray));
         textArea.setSelectionColor(Color.LIGHT_GRAY);
+
         
         highlighter = new DefaultHighlighter();
         highlightPainter = new DefaultHighlighter.DefaultHighlightPainter(ColorUtils.setSatAndBright(Color.BLUE,0.5f,1f));
@@ -402,6 +410,7 @@ class SourceView extends JPanel implements DebugModelListener {
         taskHighlighter = new DefaultHighlighter();
         taskArea.setHighlighter(taskHighlighter);
 
+        
         content.add(textArea,BorderLayout.CENTER);
         leftContent.add(lineArea,BorderLayout.EAST);
         leftContent.add(taskArea,BorderLayout.WEST);
@@ -412,6 +421,12 @@ class SourceView extends JPanel implements DebugModelListener {
         model.registerListener(this);
     }
     
+    private void createHighlightPainters() {
+        for (TaskState s : TaskState.values()) {
+            highlightPainters.put(s, new DefaultHighlightPainter(s.color));
+        }
+    }
+
     private void fillArea() {
         try {
             int lineNo = 1;
@@ -493,13 +508,7 @@ class SourceView extends JPanel implements DebugModelListener {
     }
     
     private HighlightPainter getHighlighterPainter(TaskInfo info) {
-        switch (info.state) {
-        case BLOCKED: return blockedHighlightPainter;
-        case READY: return readyHighlightPainter;
-        case RUNNING: return runHighlightPainter;
-        case SUSPENDED: return suspendHighlightPainter;
-        }
-        return highlightPainter;
+        return highlightPainters.get(info.state);
     }
 
     private void highlightLine(TaskInfo line) {

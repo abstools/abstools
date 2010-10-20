@@ -12,5 +12,8 @@ public class ABSException extends RuntimeException {
         res += "\nRandom seed: "+Config.RANDOM_SEED;
         return res;
     }
+    
+    public boolean isDeadlock() { return false; }
+    public boolean isAssertion() { return false; }
 
 }

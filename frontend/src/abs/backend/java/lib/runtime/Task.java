@@ -21,6 +21,7 @@ public abstract class Task<T extends ABSRef> {
     protected final Task<?> sender;
     private final int id = counter.incrementAndGet();
     private Thread executingThread;
+    private ABSException exception;
     
     public Task(ABSObject source, T target) {
         this.sender = ABSRuntime.getCurrentTask();
@@ -33,6 +34,11 @@ public abstract class Task<T extends ABSRef> {
         return id;
     }
 
+    
+    public ABSException getException() {
+        return exception;
+    }
+    
     
     public COG getCOG() {
         return ((ABSObject)target).getCOG();        
@@ -67,8 +73,12 @@ public abstract class Task<T extends ABSRef> {
             executingThread = Thread.currentThread();
         }
         
-        ABSValue res = (ABSValue) execute();
-        future.resolve(res);
+        try {
+            ABSValue res = (ABSValue) execute();
+            future.resolve(res);
+        } catch (ABSException e) {
+            this.exception = e;
+        }
         
         synchronized (this) {
             if (view != null)
@@ -184,6 +194,11 @@ public abstract class Task<T extends ABSRef> {
             return id;
         }
 
+        @Override
+        public ABSException getException() {
+            return Task.this.getException();
+        }
+        
         @Override
         public synchronized void registerTaskListener(TaskObserver listener) {
             getObservers().add(listener);
