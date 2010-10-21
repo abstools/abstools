@@ -854,7 +854,7 @@ mod ABS-MSG-TRANSPORT is
 
 
   op findMethod : String Cid DeltaList Label Oid DataList -> Msg .
-  op foundMethod : Method Label Oid DataList -> Msg .
+  op foundMethod : Method Did Label Oid DataList -> Msg .
   
   eq
     findMethod(M, C, noDelta, N, O, DL)
@@ -862,7 +862,7 @@ mod ABS-MSG-TRANSPORT is
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G >
   =
-    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
+    foundMethod(< M : Method | Param: AL, Code: SL >, "", N, O, DL)
     < C : Class | Deltas: DeL, Param: AL', Att: S1, 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G > .
@@ -871,14 +871,14 @@ mod ABS-MSG-TRANSPORT is
     findMethod(M, C, (DeL D), N, O, DL)
     < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS >
   =
-    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
+    foundMethod(< M : Method | Param: AL, Code: SL >, D, N, O, DL)
     < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS > .
 
   eq
     findMethod(M, C, (DeL D), N, O, DL)
     < D : Delta | removeM(C, M), CMS >
   =
-    foundMethod(noMethod, N, O, DL)
+    foundMethod(noMethod, D, N, O, DL)
     < D : Delta | removeM(C, M), CMS > .
 
   eq
@@ -907,16 +907,16 @@ mod ABS-MSG-TRANSPORT is
 
   eq
     < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F >
-    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
+    foundMethod(< M : Method | Param: AL, Code: SL >, D, N, O, DL)
   =
-    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL)), Lcnt: F >
+    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL)), Lcnt: F >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg-2] .
 
-  op makeProcess : Method Label DataList -> Process .
-  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL)
+  op makeProcess : Method Did Label DataList -> Process .
+  eq makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL)
   =
-    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL } .
+    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".delta" |-> "str"[D], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL } .
 
 
   --- Fetch pair { code |  vars } to bind call to process.
