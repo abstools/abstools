@@ -354,6 +354,8 @@ view Oid from TRIV to ABS-OID is
   sort Elt to Oid .
 endv
 
+*** The sort of a delta identifier.
+***
 mod ABS-DID is
   protecting STRING .
   sort Did .
@@ -363,6 +365,8 @@ endm
 view Did from TRIV to ABS-DID is
   sort Elt to Did .
 endv
+
+
 
 *** The interpreter could extend this module with his own definition
 *** of label values.  For example, the model checker uses his own version
@@ -573,6 +577,27 @@ view Method from TRIV to ABS-METHOD is
   sort Elt to Method .
 endv
 
+*** The sort of a Class Modifier
+***
+mod ABS-CLASSMODIFIER is
+  protecting ABS-CID .
+  protecting ABS-METHOD .
+  protecting STRING .
+
+  sort ClassModifier .
+
+  --- Constructors
+  op addM : Cid Method -> ClassModifier 
+  [ctor format (n o)] .
+  op removeM : Cid String -> ClassModifier
+  [ctor format (n o)] .
+endm
+
+view ClassModifier from TRIV to ABS-CLASSMODIFIER is
+  sort Elt to ClassModifier .
+endv
+
+
 
 *** Abs's state configuration.
 ***
@@ -586,6 +611,8 @@ mod ABS-CONFIGURATION is
   protecting SET{Method} * (sort Set{Method} to MMtd,
                             op empty : -> Set{Method} to noMethod) .
   protecting SET{String} * (sort Set{String} to StringSet) .
+  protecting SET{ClassModifier} * (sort Set{ClassModifier} to ClassModifierSet,
+                                   op empty : -> Set{ClassModifier} to noModifier) .
   protecting LIST{Did} * (sort List{Did} to DeltaList,
                          op nil : -> List{Did} to noDelta) .
  
@@ -648,10 +675,9 @@ mod ABS-CONFIGURATION is
   op <_: Clock | Limit:_> : Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
 
-  *** Define Deltas.
-
-  op <_: Delta | AddedM:_, RemovedM:_ > : Did MMtd StringSet -> Delta
-    [ctor format (nm ! om o d  sm++ o n  sm o-- m  on)] .
+  *** Define Deltas
+  op <_: Delta | _ > : Did ClassModifierSet -> Delta
+    [ctor format (nm ! om o d  sm++ o on)] .
 
   *** Useful for real-time maude and some other tricks.
   *** We should not provide sort State, since this is used in LOOP-MODE.
@@ -819,17 +845,17 @@ endm
 mod ABS-MSG-TRANSPORT is
   protecting ABS-CONFIGURATION .
 
-  var M : String .      var MIS : MMtd .     vars AL AL' : VidList .
-  vars S S1 : Subst .   var SL : StmtList .  var N : Label .
-  var DL : DataList .   var C : Cid .        var DeL : DeltaList .
-  vars F G : Nat .      vars O O1 : Oid .    var P : Process .
-  var W : MProc .       var MI : Method .    var D : Did .
-  var MS : StringSet .
+  var M : String .      var MIS : MMtd .             vars AL AL' : VidList .
+  vars S S1 : Subst .   var SL : StmtList .          var N : Label .
+  var DL : DataList .   var C : Cid .                var DeL : DeltaList .
+  vars F G : Nat .      vars O O1 : Oid .            var P : Process .
+  var W : MProc .       var MI : Method .            var D : Did .
+  var MS : StringSet .  var CMS : ClassModifierSet .
 
 
   op findMethod : String Cid DeltaList Label Oid DataList -> Msg .
   op foundMethod : Method Label Oid DataList -> Msg .
-
+  
   eq
     findMethod(M, C, noDelta, N, O, DL)
     < C : Class | Deltas: DeL, Param: AL', Att: S1 , 
@@ -843,26 +869,24 @@ mod ABS-MSG-TRANSPORT is
 
   eq
     findMethod(M, C, (DeL D), N, O, DL)
-    < D : Delta | AddedM: (MIS, < M : Method | Param: AL, Code: SL >), 
-                  RemovedM: MS >
+    < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS >
   =
     foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL)
-    < D : Delta | AddedM: < M : Method | Param: AL, Code: SL >, 
-                  RemovedM: MS > .
+    < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS > .
 
   eq
     findMethod(M, C, (DeL D), N, O, DL)
-    < D : Delta | AddedM: MIS, RemovedM: (MS, M) >
+    < D : Delta | removeM(C, M), CMS >
   =
     foundMethod(noMethod, N, O, DL)
-    < D : Delta | AddedM: MIS, RemovedM: (MS, M) > .
+    < D : Delta | removeM(C, M), CMS > .
 
   eq
     findMethod(M, C, (DeL D), N, O, DL)
-    < D : Delta | AddedM: MIS, RemovedM: MS >
+    < D : Delta | CMS >
   =
     findMethod(M, C, DeL, N, O, DL)
-    < D : Delta | AddedM: MIS, RemovedM: MS > [owise] . 
+    < D : Delta | CMS > [owise] . 
 
 
 

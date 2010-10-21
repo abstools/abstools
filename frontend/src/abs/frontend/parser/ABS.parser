@@ -212,15 +212,15 @@ ClassDecl class_decl =
   ;
 
 DeltaDecl delta_decl =
-    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id LBRACE delta_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, modifiers); :} ;
+    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id LBRACE class_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, modifiers); :} ;
 
-List delta_modifier_list =
-    delta_modifier.m {: return new List().add(m); :}
-  | delta_modifier_list.l delta_modifier.m {: return l.add(m); :}
+List class_modifier_list =
+    class_modifier.m {: return new List().add(m); :}
+  | class_modifier_list.l class_modifier.m {: return l.add(m); :}
   ;
 
-DeltaModifier delta_modifier =
-    MODIFIES TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new DeltaModifier(id, fragments); :} ;
+ClassModifier class_modifier =
+    MODIFIES TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new ClassModifier(id, fragments); :} ;
 
 List modifier_fragment_list =
     modifier_fragment.f {: return new List().add(f); :}

@@ -404,34 +404,31 @@ aspect GenerateMaude {
     public void DeltaDecl.generateMaude(PrintStream stream) {
         boolean found = false;
         boolean inlist = false;
-        stream.print("\n\n< \"" + getName() + "\" : Delta | AddedM: ");
-        for (DeltaModifier d : getModifiers()) {
+        stream.println("\n\n< \"" + getName() + "\" : Delta | ");
+        for (ClassModifier d : getModifiers()) {
             for (ModifierFragment f : d.getModifierFragments()) {
                 if (f instanceof AddMethodModifier) {
                     AddMethodModifier af = (AddMethodModifier)f;
                     found = true;
                     if (inlist) stream.print(", "); else inlist = true;
+					stream.print("addM(\"" + d.getName() + "\", ");
                     af.getMethodImpl().generateMaude(stream);
+					stream.println(") ");
                 }
                 else if (f instanceof ModifyMethodModifier) {
                     ModifyMethodModifier mf = (ModifyMethodModifier)f;
                     found = true;
                     if (inlist) stream.print(", "); else inlist = true;
+					stream.print("addM(\"" + d.getName() + "\", ");
                     mf.getMethodImpl().generateMaude(stream);
+					stream.println(") ");
                 }
-            }
-        }
-        if (!found) stream.print("noMethod ");
-        found = false;
-        inlist = false;
-        stream.print(",\n  RemovedM: ");
-        for (DeltaModifier d : getModifiers()) {
-            for (ModifierFragment f : d.getModifierFragments()) {
                 if (f instanceof RemoveMethodModifier) {
                     RemoveMethodModifier rf = (RemoveMethodModifier)f;
                     found = true;
                     if (inlist) stream.print(", "); else inlist = true;
-                    stream.print("\"" + rf.getMethodSig().getName() + "\" ");
+					stream.print("removeM(\"" + d.getName() + "\", ");
+                    stream.println("\"" + rf.getMethodSig().getName() + "\") ");
                 }
             }
         }
