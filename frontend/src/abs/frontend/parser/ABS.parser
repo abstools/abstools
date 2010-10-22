@@ -72,8 +72,8 @@ CompilationUnit compilation_unit =
   ;
 
 ModuleDecl module_decl = 
-	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? main_block.b?
-	  {: return new ModuleDecl(n.getName(),el,il,dl,pr,b); :} 	
+	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? product_list.pl? main_block.b?
+	  {: return new ModuleDecl(n.getName(),el,il,dl,pr,pl,b); :} 	
   ;
 
 List module_decl_list =
@@ -617,6 +617,14 @@ List when_condition = WHEN application_condition.dl {: return dl; :};
 List application_condition = feature.f {: return new List().add(f); :}
     | application_condition.l ANDAND feature.f {: return l.add(f); :}
     ;
+
+List product_list = product.p {: return new List().add(p); :}
+    | product_list.l product.p {: return l.add(p); :}
+    ;
+
+Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l RPAREN main_block.b
+    {: return new Product(id, l, b); :} ;
+        
 
 // Local Variables:
 // tab-width: 4

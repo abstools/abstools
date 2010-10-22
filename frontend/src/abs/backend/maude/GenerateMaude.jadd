@@ -14,8 +14,9 @@ aspect GenerateMaude {
             if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);
         }
-        stream.println("op classes : -> Configuration .");
-        stream.print("eq classes =");
+        stream.println("var DeL : DeltaList .");
+        stream.println("op classes : DeltaList -> Configuration .");
+        stream.print("eq classes(DeL) =");
         for (Decl decl : getDecls()) {
             if (decl instanceof ClassDecl) {
                 hasClasses = true;
@@ -32,7 +33,9 @@ aspect GenerateMaude {
         stream.println(".");
         stream.println("\n--- Start the model with 'rew start .'");
         stream.println("op start : -> State .");
-        stream.println("eq start = main(classes, \".Start\", emp) .");
+        stream.println("eq start = main(classes(noDelta), \".Start\", emp) .");
+        stream.println("op start : DeltaList -> State .");
+        stream.println("eq start(DeL) = main(classes(DeL), \".Start\", emp) .");
         stream.println("\nendm");
     }
 
@@ -364,7 +367,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-		stream.println("\n\n< \"" + getName() + "\" : Class | Deltas: noDelta,");
+		stream.println("\n\n< \"" + getName() + "\" : Class | Deltas: DeL,");
         stream.print("  Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -635,7 +638,7 @@ aspect GenerateMaude {
 
     public void MainBlock.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.println("\n\n< \".Start\" : Class | Deltas: noDelta,");
+        stream.println("\n\n< \".Start\" : Class | Deltas: DeL,");
         stream.println("  Param: noVid,");
         stream.print("  Att: ");
         if (getNumVar() == 0) {

@@ -7,7 +7,8 @@ Name ::= <Name>;
 Model                         ::= CompilationUnit*;
  
 CompilationUnit ::= <Name> ModuleDecl* ;
-ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] [Block:MainBlock] ;
+ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] Product*
+    [Block:MainBlock] ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -208,3 +209,5 @@ Deltacondition ::=
 Feature ::= <Name> ;
 
 Delta ::= <Name> ;
+
+Product ::= <Name> Feature* InitBlock:MainBlock ;

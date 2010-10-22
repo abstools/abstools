@@ -82,6 +82,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "core"        { return sym(Terminals.COREFEATURES); }
  "after"       { return sym(Terminals.AFTER); }
  "when"        { return sym(Terminals.WHEN); }
+ "product"     { return sym(Terminals.PRODUCT); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
  "skip"        { return sym(Terminals.SKIP); }
