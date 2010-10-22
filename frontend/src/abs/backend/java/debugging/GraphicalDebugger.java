@@ -272,7 +272,7 @@ class DebugModel implements TaskObserver {
                 steppingTasks.remove(task);
             }
             info.state = state;
-            info.waitingOnFuture = guard;
+            info.waitingOnGuard = guard;
             info.blockedOnFuture = fut;
             updateInfoLine(task,info);
         }
@@ -341,7 +341,7 @@ class TaskInfo {
     String previousFile;
     String currentFile;
     TaskState state = TaskState.READY;
-    GuardView waitingOnFuture;
+    GuardView waitingOnGuard;
     Semaphore stepSema = new Semaphore(0);
     boolean isStepping = true;
     
@@ -769,9 +769,12 @@ class TaskTable extends JPanel  {
             case 4: return line.state.toString();
             case 5:
                 if (line.state == TaskState.SUSPENDED) {
-                    if (line.waitingOnFuture != null) {
-                        return line.waitingOnFuture.toABSString();
+                    if (line.waitingOnGuard != null) {
+                        return line.waitingOnGuard.toABSString();
                     }
+                } else if (line.blockedOnFuture != null) {
+                    return "Fut "+line.blockedOnFuture.getID()+"?";
+                    
                 }
                 return "";
             case 6: return ""+line.task.getCOG().getID();

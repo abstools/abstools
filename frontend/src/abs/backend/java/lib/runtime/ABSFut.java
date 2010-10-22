@@ -12,6 +12,9 @@ import abs.backend.java.observing.FutObserver;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
+import abs.backend.java.scheduling.GuardWaiter;
+import abs.backend.java.scheduling.ScheduleTask;
+import abs.backend.java.scheduling.StepTask;
 
 
 public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
@@ -59,7 +62,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    private synchronized void informWaitingThreads() {
    	if (waitingThreads == null)
    		return;
- 	  for (ABSThread s : waitingThreads) {
+ 	  for (GuardWaiter s : waitingThreads) {
  		  s.checkGuard();
  	  }
  	  waitingThreads.clear();
@@ -84,6 +87,45 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    	}
    }
 
+   class Waker implements GuardWaiter {
+       final Task<?> task;
+       public Waker(Task<?> t) {
+           task = t;
+       }
+       
+       boolean awaked;
+       public synchronized void awake() {
+           awaked = true;
+           notify();
+       }
+       
+       public synchronized void await() {
+           while (!awaked) {
+               try {
+                wait();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+           }
+       }
+       
+       @Override
+       public void checkGuard() {
+           if (task != null) {
+               task.futureReady(ABSFut.this);           
+           }
+           
+           ABSRuntime.addScheduleAction(new StepTask(task) {
+               @Override
+               public void execute() {
+                   awake();
+               }
+           });
+       }
+    }
+      
+   
    @SuppressWarnings("unchecked")
    public V get() {
        synchronized (this) {
@@ -91,17 +133,25 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                throw new ABSDeadlockException();
        }
        
-       Task<?> t = ABSRuntime.getCurrentTask();
+       final Task<?> t = ABSRuntime.getCurrentTask();
        if (t != null) {
            t.calledGetOnFut(this);
        }
        
+       System.out.println("GET CALLED");
        if (Config.GLOBAL_SCHEDULING) {
+           System.out.println("Global scheduling");
            // note that this code does only work in the presence of global scheduling,
            // otherwise it would not be thread-safe
            if (!isResolved()) {
+               System.out.println("Not resolved");
+               Waker w = new Waker(t);
+               this.addWaitingThread(w);
                ABSRuntime.doNextStep();
+               System.out.println("future waiting");
+               w.await();
            }
+           System.out.println("future resolved");
        }
        
        await();
@@ -179,10 +229,10 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    	return resolvingTask;
    }
 
-   private List<ABSThread> waitingThreads;
-	public synchronized void addWaitingThread(ABSThread thread) {
+   private List<GuardWaiter> waitingThreads;
+	public synchronized void addWaitingThread(GuardWaiter thread) {
 		if (waitingThreads == null)
-			waitingThreads = new ArrayList<ABSThread>(1);
+			waitingThreads = new ArrayList<GuardWaiter>(1);
 		waitingThreads.add(thread);
    }
    

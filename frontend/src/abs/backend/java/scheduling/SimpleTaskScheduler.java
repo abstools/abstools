@@ -142,7 +142,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
     }
 
-    class SimpleSchedulerThread extends ABSThread {
+    class SimpleSchedulerThread extends ABSThread implements GuardWaiter {
 
         private final TaskInfo executingTask;
         private boolean active;

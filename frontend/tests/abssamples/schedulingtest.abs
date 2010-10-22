@@ -26,7 +26,6 @@ class A implements I {
 	}
 	
 	Unit n() {
-		assert mcalled;
 	}
 }
 
@@ -71,6 +70,6 @@ class C implements J {
    j2 = new cog C();
    j1!m(j2);
 
-   await fut1? & fut2?;
    fut1.get;
+   await fut1? & fut2?;
 }

@@ -17,8 +17,8 @@ public class GlobalScheduler {
     private long totalNumChoices = 0;
     
     public void doNextScheduleStep() {
+        ScheduleAction next = null;
         synchronized (this) {
-      	   
             if (options.isEmpty()) {
                 System.out.println("No steps left. Program finished");
                 System.out.println("Total number of global choices: "+totalNumChoices);
@@ -31,13 +31,14 @@ public class GlobalScheduler {
             totalNumChoices += options.numOptions()-1;
                 
             logger.finest("Choose next action...");
-            ScheduleAction next = strategy.choose(options);
+            next = strategy.choose(options);
             logger.finest("Action "+next+" choosen");
             options.removeOption(next);
             logger.finest("Executing Action "+next);
-            next.execute();
-            logger.finest("Action "+next+" was executed.");
+        
         }
+        next.execute();
+        logger.finest("Action "+next+" was executed.");
     }
     
     public void stepTask(Task<?> task) {
