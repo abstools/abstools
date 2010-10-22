@@ -77,6 +77,11 @@ IntLiteral = 0 | [1-9][0-9]*
  "adds"        { return sym(Terminals.ADDS); }
  "modifies"    { return sym(Terminals.MODIFIES); }
  "removes"     { return sym(Terminals.REMOVES); }
+ "productline" { return sym(Terminals.PRODUCTLINE); }
+ "features"    { return sym(Terminals.OPTFEATURES); }
+ "core"        { return sym(Terminals.COREFEATURES); }
+ "after"       { return sym(Terminals.AFTER); }
+ "when"        { return sym(Terminals.WHEN); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
  "skip"        { return sym(Terminals.SKIP); }

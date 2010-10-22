@@ -72,8 +72,8 @@ CompilationUnit compilation_unit =
   ;
 
 ModuleDecl module_decl = 
-	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? main_block.b?
-	  {: return new ModuleDecl(n.getName(),el,il,dl,b); :} 	
+	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? main_block.b?
+	  {: return new ModuleDecl(n.getName(),el,il,dl,pr,b); :} 	
   ;
 
 List module_decl_list =
@@ -576,6 +576,47 @@ List stmt_list =
     stmt.i                              {: return new List().add(i); :}
     | stmt_list.l  stmt.i        {: return l.add(i); :}
 	;
+
+
+
+
+ProductLine product_line =
+    PRODUCTLINE TYPE_IDENTIFIER.id LBRACE
+    optfeature_list.o
+    corefeature_list.c
+    deltacondition_list.d
+    RBRACE
+    {: return new ProductLine(id, o, c, d); :}
+    ;
+
+List optfeature_list = {: return new List(); :}
+    | OPTFEATURES feature_list.l SEMICOLON {: return l; :}
+    ;
+
+List corefeature_list = {: return new List(); :}
+    | COREFEATURES feature_list.l SEMICOLON {: return l; :}
+    ;
+
+List feature_list = feature.f {: return new List().add(f); :}
+    | feature_list.l COMMA feature.f {: return l.add(f); :}
+    ;
+
+Feature feature = TYPE_IDENTIFIER.id {: return new Feature(id); :} ;
+
+
+List deltacondition_list = {: return new List(); :}
+    | deltacondition_list.l DELTA delta.d after_condition.a? when_condition.w?
+      SEMICOLON {: return l.add(new Deltacondition(d, a, w)); :};
+
+Delta after_condition = AFTER delta.d {: return d; :} ;
+
+Delta delta = TYPE_IDENTIFIER.id {: return new Delta(id); :} ;
+
+List when_condition = WHEN application_condition.dl {: return dl; :};
+
+List application_condition = feature.f {: return new List().add(f); :}
+    | application_condition.l ANDAND feature.f {: return l.add(f); :}
+    ;
 
 // Local Variables:
 // tab-width: 4

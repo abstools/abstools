@@ -7,7 +7,7 @@ Name ::= <Name>;
 Model                         ::= CompilationUnit*;
  
 CompilationUnit ::= <Name> ModuleDecl* ;
-ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock] ;
+ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] [Block:MainBlock] ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -196,9 +196,15 @@ EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
 
 
-/*
-// Created by NTA equations
-InterfaceRef:	TypeAccess;
-PrimitiveTypeRef: TypeAccess;	// e.g. bool
-UnknownDecl:	TypeAccess;
-*/
+ProductLine ::=
+  <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondition* ;
+
+// The third argument (Feature*) is meant to be a conjunction of
+// features that have to be present for the delta to be applied.  It will
+// be replaced by a more expressive expression language later.
+Deltacondition ::=
+  Delta [RequiredDelta:Delta] Feature* ;
+
+Feature ::= <Name> ;
+
+Delta ::= <Name> ;
