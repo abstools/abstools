@@ -66,9 +66,8 @@ aspect GenerateProlog {
 
     // def (Function declarations)
     /*   E.g., for a function "def ..."
-     *   we generate the Prolog terms 
+     *   we generate the Prolog term 
      *   "def(...)"
-     *   ...
      */
     public void FunctionDecl.generateProlog(PrintStream s){
     	s.print("def(" + quote(getName()) + ",");
