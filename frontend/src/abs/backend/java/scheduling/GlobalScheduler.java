@@ -2,6 +2,7 @@ package abs.backend.java.scheduling;
 
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
 
@@ -19,6 +20,12 @@ public class GlobalScheduler {
     public void doNextScheduleStep() {
         ScheduleAction next = null;
         synchronized (this) {
+            if (ignoreNextStep) {
+                ignoreNextStep = false;
+                logger.finest("Ignored step");
+                notify();
+                return;
+            }
             if (options.isEmpty()) {
                 System.out.println("No steps left. Program finished");
                 System.out.println("Total number of global choices: "+totalNumChoices);
@@ -55,6 +62,24 @@ public class GlobalScheduler {
     public synchronized void addAction(ScheduleAction action) {
         options.addOption(action);
     }
+    
+    private boolean ignoreNextStep;
+    public synchronized void ignoreNextStep() {
+        ignoreNextStep = true;
+    }
+
+
+    public synchronized void awaitNextStep() {
+        while(ignoreNextStep) {
+            try {
+                ABSRuntime.class.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    
     
     
 }

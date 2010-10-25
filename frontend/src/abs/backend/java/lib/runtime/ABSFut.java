@@ -88,11 +88,6 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    }
 
    class Waker implements GuardWaiter {
-       final Task<?> task;
-       public Waker(Task<?> t) {
-           task = t;
-       }
-       
        boolean awaked;
        public synchronized void awake() {
            awaked = true;
@@ -112,16 +107,17 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        
        @Override
        public void checkGuard() {
-           if (task != null) {
-               task.futureReady(ABSFut.this);           
-           }
-           
+           ABSRuntime.getGlobalScheduler().ignoreNextStep();
+           awake();
+           ABSRuntime.getGlobalScheduler().awaitNextStep();
+/*           
            ABSRuntime.addScheduleAction(new StepTask(task) {
                @Override
                public void execute() {
                    awake();
                }
            });
+*/           
        }
     }
       
@@ -145,7 +141,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
            // otherwise it would not be thread-safe
            if (!isResolved()) {
                System.out.println("Not resolved");
-               Waker w = new Waker(t);
+               Waker w = new Waker();
                this.addWaitingThread(w);
                ABSRuntime.doNextStep();
                System.out.println("future waiting");

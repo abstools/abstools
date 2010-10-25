@@ -115,4 +115,10 @@ public class ABSRuntime {
 	}
 
 
+	public static synchronized GlobalScheduler getGlobalScheduler() {
+	    return globalScheduler;
+	}
+	
+
+
 }
