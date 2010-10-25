@@ -59,13 +59,20 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
 	}
 	
    
-   private synchronized void informWaitingThreads() {
-   	if (waitingThreads == null)
-   		return;
- 	  for (GuardWaiter s : waitingThreads) {
+   private void informWaitingThreads() {
+       if (Logging.DEBUG) log.finest(this+" inform awaiting threads...");
+
+   	  ArrayList<GuardWaiter> copy = null;
+   	  synchronized (this) {
+          if (waitingThreads == null)
+              return;
+   	      copy = new ArrayList<GuardWaiter>(waitingThreads);
+   	      waitingThreads.clear();
+   	  }
+   	
+ 	  for (GuardWaiter s : copy) {
  		  s.checkGuard();
  	  }
- 	  waitingThreads.clear();
  }
 
 	
@@ -78,6 +85,8 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    }
 
    public synchronized void await() {
+       if (Logging.DEBUG) log.finest("awaiting future");
+       
    	while (!isResolved) {
    		try {
    			wait();
@@ -85,43 +94,9 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
    			e.printStackTrace();
    		}
    	}
+    if (Logging.DEBUG) log.finest("future ready");
    }
 
-   class Waker implements GuardWaiter {
-       boolean awaked;
-       public synchronized void awake() {
-           awaked = true;
-           notify();
-       }
-       
-       public synchronized void await() {
-           while (!awaked) {
-               try {
-                wait();
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-           }
-       }
-       
-       @Override
-       public void checkGuard() {
-           ABSRuntime.getGlobalScheduler().ignoreNextStep();
-           awake();
-           ABSRuntime.getGlobalScheduler().awaitNextStep();
-/*           
-           ABSRuntime.addScheduleAction(new StepTask(task) {
-               @Override
-               public void execute() {
-                   awake();
-               }
-           });
-*/           
-       }
-    }
-      
-   
    @SuppressWarnings("unchecked")
    public V get() {
        synchronized (this) {
@@ -136,25 +111,17 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
        
        System.out.println("GET CALLED");
        if (Config.GLOBAL_SCHEDULING) {
-           System.out.println("Global scheduling");
-           // note that this code does only work in the presence of global scheduling,
-           // otherwise it would not be thread-safe
-           if (!isResolved()) {
-               System.out.println("Not resolved");
-               Waker w = new Waker();
-               this.addWaitingThread(w);
-               ABSRuntime.doNextStep();
-               System.out.println("future waiting");
-               w.await();
-           }
-           System.out.println("future resolved");
+           ABSRuntime.getGlobalScheduler().handleGet(this);
        }
        
        await();
+       if (Logging.DEBUG) log.finest("future awaited");
 
        if (t != null) {
            t.futureReady(this);           
        }
+       
+       if (Logging.DEBUG) log.finest("continue after get");
        
        return value;
    }

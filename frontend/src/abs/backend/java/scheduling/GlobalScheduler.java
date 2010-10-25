@@ -2,6 +2,7 @@ package abs.backend.java.scheduling;
 
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
@@ -18,6 +19,7 @@ public class GlobalScheduler {
     private long totalNumChoices = 0;
     
     public void doNextScheduleStep() {
+        logger.finest("Do next step...");
         ScheduleAction next = null;
         synchronized (this) {
             if (ignoreNextStep) {
@@ -72,12 +74,58 @@ public class GlobalScheduler {
     public synchronized void awaitNextStep() {
         while(ignoreNextStep) {
             try {
-                ABSRuntime.class.wait();
+                logger.finest("Awaiting next step...");
+                wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
+        logger.finest("Next step done");
     }
+    
+    public void handleGet(ABSFut<?> fut) {
+        // note that this code does only work in the presence of global scheduling,
+        // otherwise it would not be thread-safe
+        if (fut.isResolved()) {
+            return;
+        }
+        
+        Waker w = new Waker();
+        fut.addWaitingThread(w);
+        ABSRuntime.doNextStep();
+        System.out.println("future waiting");
+        w.await();
+        
+    }
+    
+    static class Waker implements GuardWaiter {
+        boolean awaked;
+        public synchronized void awake() {
+            awaked = true;
+            notify();
+        }
+        
+        public synchronized void await() {
+            while (!awaked) {
+             try {
+                 wait();
+              } catch (InterruptedException e) { }
+
+            }
+            if (Logging.DEBUG) logger.finest("task awaked");
+        }
+        
+        @Override
+        public void checkGuard() {
+            if (Logging.DEBUG) logger.finest("checking guard...");
+            
+            ABSRuntime.getGlobalScheduler().ignoreNextStep();
+            awake();
+            if (Logging.DEBUG) logger.finest("await next step");
+            ABSRuntime.getGlobalScheduler().awaitNextStep();
+        }
+     }
+       
     
     
     
