@@ -778,7 +778,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
         }
 	}
 
-    private ScheduleAction nextAction() {
+    private synchronized ScheduleAction nextAction() {
         if (remaindingSteps > 0)
             remaindingSteps--;
 		if (!options.isEmpty()) {
@@ -788,7 +788,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
 	@Override
-   public void showOptions(ScheduleOptions options) {
+   public synchronized void showOptions(ScheduleOptions options) {
 		this.options = options;
 		if (isRunning || remaindingSteps > 0) {
 		    nextStepClicked();
@@ -800,7 +800,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
    }
 
 	@Override
-   public void chooseTask(TaskScheduler s,
+   public synchronized void chooseTask(TaskScheduler s,
          List<TaskInfo> scheduableTasks) {
 	   nextTask = taskStrat.schedule(s, scheduableTasks);
 		scheduler.setNextTask(nextTask);
@@ -818,7 +818,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     }
 
     @Override
-    public TaskInfo schedule(TaskScheduler scheduler,
+    public synchronized TaskInfo schedule(TaskScheduler scheduler,
             List<TaskInfo> scheduableTasks) {
         return taskStrat.schedule(scheduler, scheduableTasks);
     }
