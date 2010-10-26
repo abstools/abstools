@@ -64,23 +64,53 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
     private final boolean DEBUG = true;
     private final SchedulerGUI gui;
     private final SchedulerGUISwing guiSwingWrapper;
+    private final SchedulingObserver obs;
+    
+    // synchronized by this
+    private TotalSchedulingStrategy directScheduler;
     
     
     public InteractiveScheduler() {
         gui = new SchedulerGUI(this);
-        guiSwingWrapper = SwingWrapperProxy.newInstance(gui, SchedulerGUISwing.class);
+        guiSwingWrapper = SwingWrapperProxy.newBlockingInstance(gui, SchedulerGUISwing.class);
+        obs = SwingWrapperProxy.newAsyncInstance(gui, SchedulingObserver.class);
     }
+    
+    public synchronized void setDirectScheduler(TotalSchedulingStrategy s) {
+        System.out.println("SETTING DIRECT SCHEDULER");
+        directScheduler = s;
+    }
+    
+    public synchronized TotalSchedulingStrategy getDirectScheduler() {
+        return directScheduler;
+    }
+    
+    
+    private volatile ScheduleOptions lastOptions;
     
     @Override
     public ScheduleAction choose(ScheduleOptions options) {
         debug("showing options...");
-        guiSwingWrapper.showOptions(options);
-        debug("awaiting GUI action...");
-        ScheduleAction a  = awaitGUIAction();
-		  guiSwingWrapper.choosedAction(a);
-		  return a;
+        ScheduleAction a = null;
+        lastOptions = options;
+        TotalSchedulingStrategy ds = getDirectScheduler();
+        if (ds != null) {
+            a = ds.choose(options);
+        } else {
+            System.out.println("Using GUI WRAPPER");
+            guiSwingWrapper.showOptions(options);
+            debug("awaiting GUI action...");
+            a  = awaitGUIAction();
+        }
+	    
+        obs.choosedAction(a);
+		return a;
     }
 
+    public ScheduleOptions getLastOptions() {
+        return lastOptions;
+    }
+    
 	private void debug(String string) {
         if (DEBUG)
             System.out.println("InteractiveScheduler: "+string);
@@ -112,10 +142,17 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
             List<TaskInfo> scheduableTasks) {
         System.out.println("Scheduling TASKS");
         
+        TotalSchedulingStrategy ds = getDirectScheduler();
         TaskInfo task = null;
-        guiSwingWrapper.chooseTask(scheduler,scheduableTasks);
-        task = awaitGUITaskChoose();
-        guiSwingWrapper.activatedTask(task);
+
+        if (ds != null) {
+            task = ds.schedule(scheduler, scheduableTasks);
+        } else {
+            System.out.println("Using GUI WRAPPER for TASKS");
+            guiSwingWrapper.chooseTask(scheduler,scheduableTasks);
+            task = awaitGUITaskChoose();
+        }
+        obs.activatedTask(task);
         return task;
     }
 
@@ -146,11 +183,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
 interface SchedulerGUISwing {
 
     void showOptions(ScheduleOptions options);
-
-    void choosedAction(ScheduleAction a);
-
-	void activatedTask(TaskInfo task);
-
 	void chooseTask(TaskScheduler scheduler, List<TaskInfo> scheduableTasks);
     
 }
@@ -375,15 +407,6 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
 	  	}
   }
 
-  @Override
-  public void choosedAction(ScheduleAction a) {
-  }
-
-  @Override
-  public void activatedTask(TaskInfo task) {
-  }
-
-	
 }
 
 
@@ -509,7 +532,13 @@ class HistoryPnl extends JPanel {
 	
 }
 
-class ReplayOptionPnl extends JPanel implements SchedulerGUISwing {
+interface SchedulingObserver {
+    void choosedAction(ScheduleAction a);
+    void activatedTask(TaskInfo task);
+
+}
+
+class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalSchedulingStrategy {
    JButton loadHistoryBtn;
 	private InteractiveScheduler scheduler;
    private List<HistoryItem> history = new ArrayList<HistoryItem>(0);
@@ -549,7 +578,7 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing {
   	         	history.add(new HistoryItem(s));
   	         }
 
-  	         running = true;
+  	         scheduler.setDirectScheduler(this);
   	         scheduler.setNextAction(getOptionByHistory());
 
         } catch (FileNotFoundException e) {
@@ -561,27 +590,14 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing {
      }
 
 
-   private boolean running;
-     
 	@Override
-   public void showOptions(ScheduleOptions options) {
+   public synchronized void showOptions(ScheduleOptions options) {
 		System.out.println("Replay: showOptions");
-   	  this.options = options;
-		  if (options.isEmpty() || history.isEmpty()) {
-			  running = false;
-		  }
-		  
-   	  if (running) {
-   		   ScheduleAction a = getOptionByHistory();
-   			System.out.println("Set next action "+a);
- 	         scheduler.setNextAction(a);
-   	  }
+    	this.options = options;
    }
 
 	private ScheduleAction getOptionByHistory() {
 		HistoryItem item = history.remove(0);
-		System.out.println("Item : "+item.toString());
-		System.out.println("Options: "+options.allOptions());
 		for (ScheduleAction a : options.allOptions()) {
 			if (item.matches(a)) {
 				return a;
@@ -592,45 +608,60 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing {
 	}
 
 	@Override
-   public void choosedAction(ScheduleAction a) {
-	   // TODO Auto-generated method stub
-	   
-   }
-
-	@Override
-   public void activatedTask(TaskInfo task) {
-	   // TODO Auto-generated method stub
-	   
-   }
-
-	@Override
    public void chooseTask(TaskScheduler s,
          List<TaskInfo> scheduableTasks) {
-      if (!history.isEmpty()) {
-     	  try {
-     		  HistoryItem at = history.remove(0);
-     		  if (at.action != HistoryAction.ACTIVATE)
-     			  throw new IllegalStateException("Task action action expected!");
-     		  
-     		  for (TaskInfo i : scheduableTasks) {
-     			  if (i.task.getID() == at.taskid &&
-     					  i.task.getCOG().getID() == at.cogId) {
-     				  scheduler.setNextTask(i);
-     				  return;
-     			  }
-     		  }
-     		  throw new IllegalStateException("Task "+at.taskid+" cannot be scheduled.");
-     	  } catch (Exception e) {
-     		  e.printStackTrace();
-      	  JOptionPane.showMessageDialog(this, "Illegal History! "+e.getMessage());
-     	  }
-       }
+	     TaskInfo i = getNextTask(scheduableTasks);
+	     if (i != null)
+	         scheduler.setNextTask(i);
    }
+
+    private TaskInfo getNextTask(List<TaskInfo> scheduableTasks) {
+        if (!history.isEmpty()) {
+         	  try {
+         		  HistoryItem at = history.remove(0);
+         		  if (at.action != HistoryAction.ACTIVATE)
+         			  throw new IllegalStateException("Task action action expected!");
+         		  
+         		  for (TaskInfo i : scheduableTasks) {
+         			  if (i.task.getID() == at.taskid &&
+         					  i.task.getCOG().getID() == at.cogId) {
+         				  
+         				  return i;
+         			  }
+         		  }
+         		  throw new IllegalStateException("Task "+at.taskid+" cannot be scheduled.");
+         	  } catch (Exception e) {
+         		  e.printStackTrace();
+          	  JOptionPane.showMessageDialog(this, "Illegal History! "+e.getMessage());
+         	  }
+           }
+        return null;
+    }
+
+    @Override
+    public ScheduleAction choose(ScheduleOptions options) {
+        ScheduleAction a = getOptionByHistory();
+        if (history.isEmpty()) {
+            scheduler.setDirectScheduler(null);
+        }
+        return a;
+    }
+
+    @Override
+    public TaskInfo schedule(TaskScheduler taskScheduler,
+            List<TaskInfo> scheduableTasks) {
+        
+        TaskInfo i = getNextTask(scheduableTasks);
+        if (history.isEmpty()) {
+            scheduler.setDirectScheduler(null);
+        }
+        return i;
+    }
 	
 	
 }
 
-class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
+class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalSchedulingStrategy {
     private final JButton nextStepBtn;
 	private final JButton nextNStepBtn;
 	private final JButton runBtn;
@@ -734,23 +765,33 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
 	}
 		
 	private void nextStepClicked() {
-		if (remaindingSteps > 0)
-			remaindingSteps--;
 		
 		nextNStepBtn.setEnabled(false);
 		nextStepBtn.setEnabled(false);
 		runBtn.setEnabled(false);
-		if (!options.isEmpty()) {
-			ScheduleAction a = strat.choose(options);
-			scheduler.setNextAction(a);
-		}
+		
+        ScheduleAction a = nextAction();
+        if (a != null) {
+            System.out.println("Random scheduler SET DIRECT SCHEDULER");
+            scheduler.setDirectScheduler(this);
+            scheduler.setNextAction(a);
+        }
 	}
+
+    private ScheduleAction nextAction() {
+        if (remaindingSteps > 0)
+            remaindingSteps--;
+		if (!options.isEmpty()) {
+			return strat.choose(options);
+		}
+		return null;
+    }
 
 	@Override
    public void showOptions(ScheduleOptions options) {
 		this.options = options;
 		if (isRunning || remaindingSteps > 0) {
-   		nextStepClicked();
+		    nextStepClicked();
 		} else {
 			nextStepBtn.setEnabled(true);
 			nextNStepBtn.setEnabled(true);
@@ -759,22 +800,31 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing {
    }
 
 	@Override
-   public void choosedAction(ScheduleAction a) {
-   }
-
-	@Override
-   public void activatedTask(TaskInfo task) {
-   }
-
-	@Override
    public void chooseTask(TaskScheduler s,
          List<TaskInfo> scheduableTasks) {
 	   nextTask = taskStrat.schedule(s, scheduableTasks);
 		scheduler.setNextTask(nextTask);
    }
+
+    @Override
+    public synchronized ScheduleAction choose(ScheduleOptions options) {
+        ScheduleAction a = nextAction();
+        if (remaindingSteps == 0 && !isRunning) {
+            System.out.println("Random scheduler RESET DIRECT SCHEDULER");
+            scheduler.setDirectScheduler(null);
+        }
+        
+        return a;
+    }
+
+    @Override
+    public TaskInfo schedule(TaskScheduler scheduler,
+            List<TaskInfo> scheduableTasks) {
+        return taskStrat.schedule(scheduler, scheduableTasks);
+    }
 }
 
-class SchedulerGUI implements SchedulerGUISwing {
+class SchedulerGUI implements SchedulerGUISwing, SchedulingObserver {
     final JFrame frame;
     final InteractiveScheduler scheduler;
     JPanel btnPnl;
@@ -786,7 +836,6 @@ class SchedulerGUI implements SchedulerGUISwing {
     SchedulerChoosePnl schedulerChoosePnl;
 	private CardLayout cardLayout;
 	private RandomOptionPnl randomOptionPnl;
-	private ScheduleOptions lastOptions;
 	private ReplayOptionPnl replayOptionPnl;
     
     SchedulerGUI(InteractiveScheduler s) {
@@ -831,9 +880,10 @@ class SchedulerGUI implements SchedulerGUISwing {
 		setScheduler(randomOptionPnl, SchedulerChoosePnl.RANDOM);
 	}
 
-	private void setScheduler(SchedulerGUISwing scheduler, String name) {
+	private void setScheduler(SchedulerGUISwing swingScheduler, String name) {
 		cardLayout.show(optionsPnl, name);
-		currentScheduler = scheduler;
+		currentScheduler = swingScheduler;
+		ScheduleOptions lastOptions = scheduler.getLastOptions();
 		if (lastOptions != null)
 			currentScheduler.showOptions(lastOptions);
 		frame.pack();
@@ -860,7 +910,6 @@ class SchedulerGUI implements SchedulerGUISwing {
 
 	@Override
    public void showOptions(ScheduleOptions options) {
-		this.lastOptions = options;
 		currentScheduler.showOptions(options);
       frame.pack();
 	}
@@ -876,27 +925,44 @@ class SchedulerGUI implements SchedulerGUISwing {
 //needed to allow for access to package members
 class SwingWrapperProxy implements InvocationHandler {
     final Object target;
-    public SwingWrapperProxy(Object target) {
+    volatile Object result;
+    private boolean block;
+    public SwingWrapperProxy(Object target, boolean block) {
         this.target = target;
+        this.block = block;
     }
     
     @Override
     public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
             throws Throwable {
-        SwingUtilities.invokeAndWait(new Runnable() {
+        Runnable r = new Runnable() {
             @Override
             public void run() {
                 try {
-                    method.invoke(target, args);
+                    result = method.invoke(target, args);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } 
-            }});
-        return null;
+            }};
+        if (block) {
+            SwingUtilities.invokeAndWait(r);
+            return result;
+        } else {
+            SwingUtilities.invokeLater(r);
+            return null;
+        }
     }
     
-    public static <V> V newInstance(V target, Class<?> interfce) {
-        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target));
+    public static <V> V newInstance(V target, Class<?> interfce, boolean block) {
+        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target,block));
+    }
+
+    public static <V> V newBlockingInstance(V target, Class<?> interfce) {
+        return newInstance(target,interfce,true);
+    }
+
+    public static <V> V newAsyncInstance(V target, Class<?> interfce) {
+        return newInstance(target,interfce,false);
     }
 }
 
