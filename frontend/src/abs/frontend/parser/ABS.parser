@@ -29,7 +29,7 @@ import java.io.File;
 
 	class Events extends Parser.Events {
 		public void syntaxError(Symbol token) {
-			SyntaxError e = new SyntaxError("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()], Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()));
+			SyntaxError e = new SyntaxError("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()], Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()), token);
 			e.setFile(file);
 			e.setSourceCode(sourceCode);
 			errors.add(e);
