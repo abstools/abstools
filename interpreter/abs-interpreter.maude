@@ -856,7 +856,7 @@ mod ABS-MSG-TRANSPORT is
   var DL : DataList .   var C : Cid .                var DeL : DeltaList .
   vars F G : Nat .      vars O O1 : Oid .            var P : Process .
   var W : MProc .       var MI : Method .            var D : Did .
-  var MS : StringSet .  var CMS : ClassModifierSet .
+  var MS : StringSet .  var CMS : ClassModifierSet . var CG : String .
 
 
   op findMethod : String Cid DeltaList Label Oid DataList -> Msg .
