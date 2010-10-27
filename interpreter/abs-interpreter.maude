@@ -345,8 +345,8 @@ mod ABS-OID is
   var F : Nat .
 
   --- Create a new fresh name for an object
-  op newId : String Nat -> Oid .
-  eq newId(B, F)  = ob(B + "-" + string(F,10)) .
+  op newId : String Nat -> String .
+  eq newId(B, F)  = B + "-" + string(F,10) .
 
 endm
 
@@ -479,6 +479,7 @@ mod ABS-STATEMENT is
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
+  op newcog(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
@@ -681,9 +682,9 @@ mod ABS-CONFIGURATION is
 
   *** Cogs.  The second argument is of type Data since it can be an Oid (the
   *** currently active object) or null.  The first argument is a unique
-  *** identifier - we use the Oid of the first object contained inside the
-  *** cog (to evade the need for a global counter term).
-  op <_: Cog | Object:_ > : Oid Data -> Cog
+  *** identifier - we use the string content of the Oid of the first object
+  *** contained inside the cog (to evade the need for a global counter term).
+  op <_: Cog | Object:_ > : String Data -> Cog
     [ctor format (cn o! o c d d o! c on ) ] .
 
   *** Useful for real-time maude, and in general for accessing the whole
@@ -1684,14 +1685,28 @@ mod ABS-NEW-RL is
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
+
+  rl
+    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =>
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                         PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+    [label new-object-with-cog] .
 endm
 mod ABS-NEW-EQ is
   protecting ABS-EVAL .
@@ -1706,14 +1721,28 @@ mod ABS-NEW-EQ is
     < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
+
+  eq
+    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                         PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+    [label new-object-with-cog] .
 endm
 mod ABS-NEW-EQ-TIMED is
   protecting ABS-EVAL .
@@ -1731,14 +1760,30 @@ mod ABS-NEW-EQ-TIMED is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(A ; newId(B, G)); SL }, PrQ: W,
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < newId(B, G) :  B | Att: (@ "this" |-> newId(B, G), S1,
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
                          Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
+
+  eq
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+              Lcnt: (s F) >
+    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+                               createSubst(AL, evalList(EL, S :: L, none, T))),
+                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                         PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+    [label new-object-with-cog] .
 endm
 
 
@@ -1903,7 +1948,7 @@ mod ABS-SIMULATOR-RL is
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
-      < ob("main") : Cog | Object: ob("main") >
+      < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
@@ -1935,7 +1980,7 @@ mod ABS-SIMULATOR-EQ is
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
-      < ob("main") : Cog | Object: ob("main") >
+      < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
@@ -1969,7 +2014,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
-      < ob("main") : Cog | Object: ob("main") >
+      < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .

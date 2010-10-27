@@ -195,7 +195,12 @@ aspect GenerateMaude {
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("new(@ \"" + var + "\" ; \"" + getClassName() + "\" ; ");
+        if (getCog().equals("")) {
+            stream.print("new(");
+        } else {
+            stream.print("newcog(");
+        }
+        stream.print("@ \"" + var + "\" ; \"" + getClassName() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
