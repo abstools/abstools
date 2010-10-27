@@ -619,8 +619,8 @@ mod ABS-CONFIGURATION is
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Future Class Clock Delta .
-  subsorts Class Future Clock Delta < Configuration .
+  sorts Future Class Clock Delta Cog .
+  subsorts Class Future Clock Delta Cog < Configuration .
   vars B M : String .
   var C : Cid .
   vars O O' : Oid .
@@ -679,9 +679,16 @@ mod ABS-CONFIGURATION is
   op <_: Delta | _ > : Did ClassModifierSet -> Delta
     [ctor format (nm ! om o d  sm++ o on)] .
 
-  *** Useful for real-time maude and some other tricks.
-  *** We should not provide sort State, since this is used in LOOP-MODE.
-  *** For now, we do.
+  *** Cogs.  The second argument is of type Data since it can be an Oid (the
+  *** currently active object) or null.  The first argument is a unique
+  *** identifier - we use the Oid of the first object contained inside the
+  *** cog (to evade the need for a global counter term).
+  op <_: Cog | Object:_ > : Oid Data -> Cog
+    [ctor format (n ! o d d d ! d on ) ] .
+
+  *** Useful for real-time maude, and in general for accessing the whole
+  *** configuration.  FIXME: We should use another name, since State is used
+  *** in LOOP-MODE.
   sort State .
 
   op {_} : Configuration -> State [ctor] .
@@ -1895,9 +1902,11 @@ mod ABS-SIMULATOR-RL is
   --- object by itself.
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
-    { CN:Configuration < ob("main") : Start | Att: noSubst, 
-      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
-      PrQ: noProc, Lcnt: 0 > } .
+    { CN:Configuration
+      < ob("main") : Cog | Object: ob("main") >
+      < ob("main") : Start | Att: noSubst, 
+        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
   eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
@@ -1925,9 +1934,11 @@ mod ABS-SIMULATOR-EQ is
   --- object by itself.
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
-    { CN:Configuration < ob("main") : Start | Att: noSubst, 
-      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
-      PrQ: noProc, Lcnt: 0 > } .
+    { CN:Configuration
+      < ob("main") : Cog | Object: ob("main") >
+      < ob("main") : Start | Att: noSubst, 
+        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
   eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
@@ -1958,9 +1969,10 @@ mod ABS-SIMULATOR-EQ-TIMED is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
+      < ob("main") : Cog | Object: ob("main") >
       < ob("main") : Start | Att: noSubst, 
-      Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
-      PrQ: noProc, Lcnt: 0 > } .
+        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
   eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
