@@ -220,7 +220,7 @@ public class JavaBackend extends Main {
     }
     
     public static String getFunctionName(String name) {
-        return escapeReservedWords(name);
+        return escapeReservedWords(name)+"_f";
     }
 
     public static String getMethodName(String name) {
