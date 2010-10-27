@@ -138,7 +138,7 @@ aspect GenerateMaude {
                 }
             }
         }
-        stream.print("call(@ \""
+        stream.print("asynccall(@ \""
                      + (var.equals("_") ? ".staticfuture" : var)
                      + "\" ; ");
         getCallee().generateMaude(stream);
@@ -657,12 +657,13 @@ aspect GenerateMaude {
         stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
-            stream.print("noStmt ");
+            stream.print("return(null) ");
         } else {
             for (Stmt stmt : getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
+            stream.print("; return(null) ");
         }
         stream.print(">,\n  Ocnt: 0 > ");
     }
@@ -702,17 +703,14 @@ aspect GenerateMaude {
                 stream.print(") ");
             }
         }
-        if (!inlist && getNumStmt() == 0) {
-            // didn't emit anything until now - completely empty method
-            stream.print("noStmt ");
-        } else {
-            for (Stmt stmt : getStmts()) {
-                if (inlist) stream.print("; "); else inlist = true;
-                stmt.generateMaude(stream);
-            }
+        for (Stmt stmt : getStmts()) {
+            if (inlist) stream.print("; "); else inlist = true;
+            stmt.generateMaude(stream);
         }
+        if (inlist) stream.print("; "); else inlist = true;
+        stream.print("return(null) ");
         if (isActiveClass) {
-            stream.print("; call(@ \".staticfuture\" ; @ \"this\" ; \"run\" ; emp) ");
+            stream.print("; asynccall(@ \".staticfuture\" ; @ \"this\" ; \"run\" ; emp) ");
             stream.print("; $free(@ \".staticfuture\") ");
         }
         stream.print("> ");

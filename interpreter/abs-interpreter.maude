@@ -479,8 +479,9 @@ mod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op newcog(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
-  op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
+  op asynccall(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
   op synccall(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
+  op $call(_;_;_;_;_) : Label Oid String DataList Bool -> Stmt [ctor format (r d o r o r o r o r o r o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -534,10 +535,6 @@ mod ABS-PROCESS is
   op idle : -> Process [ctor format (!b o)] .  
   op notFound : -> Process [ctor format (!b o)] .  
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] . 
-
-  var L : Subst .
-  eq { L | noStmt } = idle . --- if ".label" is needed this is dangerous!
-  eq idle = { noSubst | noStmt } [nonexec metadata "Causes infinite loops."] .
 
 endm
 
@@ -861,13 +858,22 @@ endm
 mod ABS-MSG-TRANSPORT is
   protecting ABS-CONFIGURATION .
 
-  vars M CG : String .  var MIS : MMtd .              vars AL AL' : VidList .
-  vars S S1 : Subst .   var SL : StmtList .           var N : Label .
-  var DL : DataList .   var C : Cid .                 var DeL : DeltaList .
-  vars F G : Nat .      vars O O1 : Oid .             var P : Process .
-  var W : MProc .       var MI : Method .             var D : Did .
-  var MS : StringSet .  var CMS : ClassModifierSet .  var B : Bool .
+  vars M CG : String .   var MIS : MMtd .              vars AL AL' : VidList .
+  vars S S1 L : Subst .  var SL : StmtList .           var N : Label .
+  var DL : DataList .    var C : Cid .                 var DeL : DeltaList .
+  vars F G : Nat .       vars O O1 : Oid .             var P : Process .
+  var W : MProc .        var MI : Method .             var D : Did .
+  var MS : StringSet .   var CMS : ClassModifierSet .  var B : Bool .
 
+
+  --- message generation
+  eq
+    < O1 : C | Cog: CG, Att: S, Pr: { L | $call(N ; O ; M ; DL ; B) ; SL }, PrQ: W, Lcnt: F > 
+  =
+    < O1 : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: (s F) >
+    invoc(O, N, M, DL, B)
+      [label call-internal] .
+  
 
   --- transport
   ---
@@ -931,19 +937,6 @@ mod ABS-MSG-TRANSPORT is
   =
     { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".delta" |-> "str"[D], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
-
-  --- Fetch pair { code |  vars } to bind call to process.
-  ---
-  --- M   represents the name of the method.
-  --- MIS  represents the methods we search through.
-  --- N   represents the label used to return the value computed by the
-  ---     method.
-  --- DL  represents the list of actual arguments.
-  op makeProcessOLD : String MMtd Label DataList -> Process .
-
-  eq makeProcessOLD(M, (MIS, < M : Method | Param: AL, Code: SL >), N, DL) =
-    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL } .
-  eq makeProcessOLD(M, MIS, N, DL) = notFound [owise] .
 endm
 
 
@@ -959,9 +952,9 @@ mod ABS-MACHINE-BASICS is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
-  var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var P : Process .    var A : Vid .
+  vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
+  vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
+  var CN : Configuration .  var P : Process .    vars A A' : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
@@ -974,11 +967,44 @@ mod ABS-MACHINE-BASICS is
   --- We capture the entire state here since the condition E can depend on the
   --- state of Futures contained in CN.
   crl
-    { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
+    { < CG : Cog | Object: null >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
   =>
-    { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
   if ready(SL, (S :: L), CN, 0)
       [label PrQ-ready] .
+
+  --- Processes that end release the Cog.
+  eq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { L | noStmt }, PrQ: W, Lcnt: F >
+  =
+    < CG : Cog | Object: null >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+    [label Process-terminate] .
+
+  *** Handle synchronous calls within cogs.
+  ceq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
+  =
+    < CG : Cog | Object: O1 >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
+    *** L[A] because synchronous calls are always handled via ".staticfuture"
+  if  L[A] == L1[@ ".label"]
+    [label schedule-cog] .
+
+  *** Handle synchronous self-calls
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    *** L[A] because synchronous calls are always handled via ".staticfuture"
+  if  L[A] == L1[@ ".label"]
+    [label schedule-self] .
 
   --- mark
   ---
@@ -1080,15 +1106,26 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- We capture the entire state here since the condition E can depend on the
   --- state of Futures contained in CN.
   crl
-    { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    { < CG : Cog | Object: null >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   =>
-    { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   if ready(SL, (S :: L), CN, T)
       [label PrQ-ready] .
+
+  --- Processes that end release the Cog.
+  eq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { L | noStmt }, PrQ: W, Lcnt: F >
+  =
+    < CG : Cog | Object: null >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+    [label Process-terminate] .
 
   --- mark
   ---
@@ -1434,8 +1471,10 @@ mod ABS-STMT-SUSPEND-RL is
   var CG : String .
 
   rl
+    < CG : Cog | Object: O >
     < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
   =>
+    < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
 endm
@@ -1447,8 +1486,10 @@ mod ABS-STMT-SUSPEND-EQ is
   var CG : String .
 
   eq
+    < CG : Cog | Object: O >
     < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
   =
+    < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
 endm
@@ -1466,12 +1507,18 @@ mod ABS-STMT-AWAIT-RL is
   var CN : Configuration .  var E : Expr .   vars Q CG : String .
 
   rl
-    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
+      CN  }
   =>
     if enabled(await E, (S :: L), CN, 0) then
-      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+      { < CG : Cog | Object: O >
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        CN  }
     else
-      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+      { < CG : Cog | Object: null >
+        < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
+        CN  }
     fi
       [label await] .
 endm
@@ -1483,12 +1530,18 @@ mod ABS-STMT-AWAIT-EQ is
   var CN : Configuration .  var E : Expr .   vars Q CG : String .
 
   eq
-    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
+      CN  }
   =
     if enabled(await E, (S :: L), CN, 0) then
-      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+      { < CG : Cog | Object: O >
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        CN  }
     else
-      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+      { < CG : Cog | Object: null >
+        < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
+        CN  }
     fi
       [label await] .
 endm
@@ -1501,16 +1554,19 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
   vars T LIM : Nat .
 
   eq
-    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   =
     if enabled(await E, (S :: L), CN, T) then
-      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      { < CG : Cog | Object: O >
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         < T : Clock | Limit: LIM >
         CN  }
     else
-      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
+      { < CG : Cog | Object: null >
+        < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
         < T : Clock | Limit: LIM >
         CN  }
     fi
@@ -1532,10 +1588,9 @@ mod ABS-CALLSTMTS-RL is
   --- async-call
   ---
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
@@ -1543,11 +1598,11 @@ mod ABS-CALLSTMTS-RL is
 
   --- sync-call
   ---
+  --- TODO: check whether target is in the same cog
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
@@ -1567,10 +1622,9 @@ mod ABS-CALLSTMTS-EQ is
   --- async-call
   ---
   ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL) ; $call(N ; O1 ; Q ; DL ; false); SL }, PrQ: W, Lcnt: F > 
   =
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
@@ -1578,11 +1632,11 @@ mod ABS-CALLSTMTS-EQ is
 
   --- sync-call
   ---
+  --- TODO: check whether target is in the same cog
   ceq
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
@@ -1603,11 +1657,10 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   ---
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, T)
       /\ O1 := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
@@ -1615,13 +1668,13 @@ mod ABS-CALLSTMTS-EQ-TIMED is
 
   --- sync-call
   ---
+  --- TODO: check whether target is in the same cog
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O1, N, Q , DL, false)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, T)
       /\ O1 := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
@@ -1646,28 +1699,29 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
-              Lcnt: (s F) >
+    *** Here we get to write the whole synchronous invocation /
+    *** synchronization protocol by hand (normally it is generated by the code
+    *** generator)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+              Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
-              Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
+              Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G), 
                              Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                             PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
 endm
 mod ABS-NEW-EQ is
@@ -1684,28 +1738,29 @@ mod ABS-NEW-EQ is
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
-              Lcnt: (s F) >
+    *** Here we get to write the whole synchronous invocation /
+    *** synchronization protocol by hand (normally it is generated by the code
+    *** generator)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+              Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                             PrQ: noProc, Lcnt: 0 >
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
                              Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                             PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
 endm
 mod ABS-NEW-EQ-TIMED is
@@ -1723,14 +1778,16 @@ mod ABS-NEW-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
+    *** Here we get to write the whole synchronous invocation /
+    *** synchronization protocol by hand (normally it is generated by the code
+    *** generator)
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
-              Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+              Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, T))),
-                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                             PrQ: noProc, Lcnt: 0 >
+                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   eq
@@ -1739,15 +1796,14 @@ mod ABS-NEW-EQ-TIMED is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
                              Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
-                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                             PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: ob(newId(B, G)) >
+                             Pr: idle, PrQ: noProc, Lcnt: 0 >
+    < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
 endm
 
@@ -1829,9 +1885,9 @@ endm
 mod ABS-RECEIVE-RESULT is
   protecting ABS-EVAL .
 
-  vars O : Oid .            var C : Cid .      vars S L L1 : Subst .
-  vars SL SL1 : StmtList .  var W : MProc .    vars F G : Nat .
-  vars Q CG : String .      vars A A' : Vid .  var N : Label .
+  vars O O1 : Oid .            vars B C : Cid .     vars S S1 L L1 : Subst .
+  vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
+  vars Q CG : String .      vars A A' : Vid .    var N : Label .
   var D : Data .
 
   --- receive-comp
@@ -1839,15 +1895,6 @@ mod ABS-RECEIVE-RESULT is
   --- Must be a rule even in the model checker, because there might be
   --- multiple completion messages with the same label but different return
   --- values in the queue.
-  ---
-  rl
-    < O : C | Cog: CG, Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-  =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
-    < N : Future | Name: Q, Completed: true, References: G, Value: D >
-    [label receive-comp-label] .
-
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: true, References: G, Value: D >
@@ -1858,25 +1905,10 @@ mod ABS-RECEIVE-RESULT is
     [label receive-comp-var] .
 
 
-  --- local-reply
-  ---
-  --- This avoids deadlocks from synchronous self-calls by manually scheduling
-  --- the process that is waited for, and afterwards manually scheduling the
-  --- waiting process again (see `continue' rule below).
-  crl
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
-  =>
-    < O : C | Cog: CG, Att: S, Pr:  { L1 | SL1 ; $cont N },
-              PrQ: W , { L | get(A ; A') ; SL }, Lcnt: F >
-  if N := L[A] /\ L1[@ ".label"] == N
-      [label local-reply] .
-
-
   --- continue
   ---
   --- Continue after executing the code of a local reply.  This is always a
-  --- rule.  We want it to be a rule in the interpreter.  (RS 2010-07-12:
-  --- why?)
+  --- rule.  We want it to be a rule in the interpreter.
   --- 
   --- If we support shared futures, this must be a rule in the model
   --- checker, because there might be two processes in PrQ which await a
@@ -1888,7 +1920,20 @@ mod ABS-RECEIVE-RESULT is
     < O : C | Cog: CG, Att: S, Pr: { L1 | get(A ; A') ; SL1 }, PrQ: W,
               Lcnt: F >
   if N == L1[A]
-    [label continue] .
+    [label continue-self] .
+
+  crl
+    < O : C | Cog: CG, Att: S, Pr: { L | $cont label( O1 , X) }, PrQ: W, Lcnt: F >
+    < CG : Cog | Object: O >
+    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | get(A ; A') ; SL1},
+               Lcnt: G >
+  =>
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+    < CG : Cog | Object: O1 >
+    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | get(A ; A') ; SL1}, PrQ: W1 , Lcnt: G >
+    *** not (S1 :: L1)[A] since synchronous calls always use .staticfuture to store the label.
+  if label( O1 , X) == L1[A]
+    [label continue-cog] .
 endm
 
 mod ABS-SIMULATOR-RL is
@@ -1915,11 +1960,11 @@ mod ABS-SIMULATOR-RL is
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -1947,11 +1992,11 @@ mod ABS-SIMULATOR-EQ is
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -1981,11 +2026,11 @@ mod ABS-SIMULATOR-EQ-TIMED is
       < 0 : Clock | Limit: 100 >
       < "main" : Cog | Object: ob("main") >
       < ob("main") : Start | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
