@@ -168,7 +168,7 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("call(@ \".staticfuture\" ; ");
+        stream.print("synccall(@ \".staticfuture\" ; ");
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
