@@ -367,10 +367,6 @@ view Did from TRIV to ABS-DID is
 endv
 
 
-
-*** The interpreter could extend this module with his own definition
-*** of label values.  For example, the model checker uses his own version
-*** of labels.  This definition is the one used in the interpreter.
 mod ABS-DATA-LABEL is
 
   extending ABS-DATA-SIG .
@@ -379,6 +375,9 @@ mod ABS-DATA-LABEL is
   sort Label .
   subsort Label < Data .
 
+  --- A label consists of the id of the sending object plus a unique number.
+  --- This is used in the $cont statement to find the object which should
+  --- continue execution after a synchronously-called process terminates.
   op label : Oid Nat -> Label [ctor format (o o)] .
 endm
 
@@ -480,7 +479,7 @@ mod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op newcog(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
-  op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] . 
+  op call(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -638,14 +637,13 @@ mod ABS-CONFIGURATION is
 
   --- Invocation message.
   ---
-  --- invoc(S,R,N,M,DL)
-  --- S: The sender.
+  --- invoc(R,N,M,DL)
   --- R: The receiver.
   --- N: The label.
   --- M: The called method.
   --- DL: The actual arguments.
-  op invoc(_,_,_,_,_) : Oid Oid Label String DataList -> Msg
-    [ctor format (b d o  b so  b so  b so  b so b on)] .
+  op invoc(_,_,_,_) : Oid Label String DataList -> Msg
+    [ctor format (b d o  b so  b so  b so b on)] .
 
   --- Error and warning messages are intended to stop the machine.
   --- For now, nothing is emitting these.
@@ -856,7 +854,7 @@ mod ABS-MSG-TRANSPORT is
   var DL : DataList .   var C : Cid .                var DeL : DeltaList .
   vars F G : Nat .      vars O O1 : Oid .            var P : Process .
   var W : MProc .       var MI : Method .            var D : Did .
-  var MS : StringSet .  var CMS : ClassModifierSet . var CG : String .
+  var MS : StringSet .  var CMS : ClassModifierSet .
 
 
   op findMethod : String Cid DeltaList Label Oid DataList -> Msg .
@@ -904,7 +902,7 @@ mod ABS-MSG-TRANSPORT is
   eq
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
-    invoc(O1, O, N, M, DL)
+    invoc(O, N, M, DL)
   =
     findMethod(M, C, DeL, N, O, DL)
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
@@ -1522,18 +1520,17 @@ mod ABS-CALLSTMTS-RL is
   var N : Label .           var DL : DataList .  var MS : MMtd .
   var DeL : DeltaList .
 
-  --- remote-async-call
+  --- async-call
   ---
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O, O1, N, Q , DL)
+    invoc(O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
-      [label remote-async-call] .
-
+      [label async-call] .
 endm  
 mod ABS-CALLSTMTS-EQ is
   protecting ABS-EVAL .
@@ -1546,17 +1543,17 @@ mod ABS-CALLSTMTS-EQ is
   var N : Label .           var DL : DataList .  var MS : MMtd .
   var DeL : DeltaList .
 
-  --- remote-async-call
+  --- async-call
   ---
   ceq
     < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O, O1, N, Q , DL)
+    invoc(O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
-      [label remote-async-call] .
+      [label async-call] .
 endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
@@ -1569,7 +1566,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   var N : Label .           var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .        var DeL : DeltaList .
 
-  --- remote-async-call
+  --- async-call
   ---
   ceq
     < T : Clock | Limit: LIM >
@@ -1577,11 +1574,11 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   =
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-    invoc(O, O1, N, Q , DL)
+    invoc(O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, T)
       /\ O1 := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
-      [label remote-async-call] .
+      [label async-call] .
 endm
 
 
