@@ -487,7 +487,6 @@ mod ABS-STATEMENT is
   op return(_) : Expr -> Stmt [ctor format (c d o b o)] .
   op $mark(_) : Expr -> Stmt [ctor format (r d o r o)] .
   op $free(_) : Expr -> Stmt [ctor format (r d o r o)] .
-  op selftailcall(_;_) : String ExprList -> Stmt [ctor format (c d o c o c o)] .
 
   op $cont_ : Label -> Stmt [ctor format (r o d)] .
 
@@ -1535,19 +1534,6 @@ mod ABS-CALLSTMTS-RL is
       /\ N := label(O, F)
       [label remote-async-call] .
 
-  --- STATIC TAIL CALLS
-  ---
-  --- Block if the `selftailcall' statement is followed by any more
-  --- statements.  If necessary, this could be replaced by putting `$cont' at
-  --- the end of the current process.
-  rl
-    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =>
-    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  [label selftailcall] .
-
 endm  
 mod ABS-CALLSTMTS-EQ is
   protecting ABS-EVAL .
@@ -1571,18 +1557,6 @@ mod ABS-CALLSTMTS-EQ is
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       [label remote-async-call] .
-
-  --- STATIC TAIL CALLS
-  ---
-  --- Currently block if the `selftailcall' statement is followed by any more
-  --- statements.
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =
-    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  [label selftailcall] .
 endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
@@ -1608,20 +1582,6 @@ mod ABS-CALLSTMTS-EQ-TIMED is
       /\ O1 := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
       [label remote-async-call] .
-
-  --- STATIC TAIL CALLS
-  ---
-  --- Currently block if the `selftailcall' statement is followed by any more
-  --- statements.
-  eq
-    < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  =
-    < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
-  [label selftailcall] .
 endm
 
 

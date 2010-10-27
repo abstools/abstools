@@ -189,7 +189,7 @@ aspect GenerateMaude {
     {
         stream.print("get(");
         getPureExp().generateMaude(stream);
-        stream.print(" ; @ \"" + var + "\") ");        
+        stream.print(" ; @ \"" + var + "\") ");
     }
 
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var)
@@ -447,7 +447,6 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        boolean amRunMethod = sig.getName().equals("run");
         stream.print("< \"" + sig.getName() + "\" : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");
@@ -495,9 +494,7 @@ aspect GenerateMaude {
             // otherwise.
             Access returnType = sig.getReturnType();
             if (returnType instanceof IdUse
-                && ((IdUse)returnType).getName().equals("Unit")
-                // the run method has no place to return anything to
-                && !amRunMethod)
+                && ((IdUse)returnType).getName().equals("Unit"))
             {
                 stream.print("; return( null ) ");
             }
@@ -714,7 +711,10 @@ aspect GenerateMaude {
                 stmt.generateMaude(stream);
             }
         }
-        if (isActiveClass) stream.print("; selftailcall (\"run\" ; emp) ");
+        if (isActiveClass) {
+            stream.print("; call(@ \".staticfuture\" ; @ \"this\" ; \"run\" ; emp) ");
+            stream.print("; $free(@ \".staticfuture\") ");
+        }
         stream.print("> ");
     }
 }
