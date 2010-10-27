@@ -656,9 +656,9 @@ mod ABS-CONFIGURATION is
 
   --- Terms of sort Object represent objects in the run-time configuration.
   ---
-  op <_:_ | Att:_, Pr:_, PrQ:_, Lcnt:_> : 
-    Oid Cid Subst Process MProc Nat -> Object 
-    [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o--  r on)] .
+  op <_:_ | Cog:_, Att:_, Pr:_, PrQ:_, Lcnt:_> : 
+    Oid Cid String Subst Process MProc Nat -> Object 
+    [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o  r ni o--  r on)] .
 
   --- Terms that represent futures.
   ---
@@ -853,7 +853,7 @@ endm
 mod ABS-MSG-TRANSPORT is
   protecting ABS-CONFIGURATION .
 
-  var M : String .      var MIS : MMtd .             vars AL AL' : VidList .
+  vars M CG : String .  var MIS : MMtd .             vars AL AL' : VidList .
   vars S S1 : Subst .   var SL : StmtList .          var N : Label .
   var DL : DataList .   var C : Cid .                var DeL : DeltaList .
   vars F G : Nat .      vars O O1 : Oid .            var P : Process .
@@ -904,20 +904,20 @@ mod ABS-MSG-TRANSPORT is
   --- this a rule -- scheduling is done elsewhere.
   ---
   eq
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
     invoc(O1, O, N, M, DL)
   =
     findMethod(M, C, DeL, N, O, DL)
-    < O : C | Att: S, Pr: P, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
     [label transport-imsg] .
 
   eq
-    < O : C | Att: S1, Pr: P, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: W, Lcnt: F >
     foundMethod(< M : Method | Param: AL, Code: SL >, D, N, O, DL)
   =
-    < O : C | Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL)), Lcnt: F >
+    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL)), Lcnt: F >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg-2] .
 
@@ -958,7 +958,7 @@ mod ABS-MACHINE-BASICS is
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
   var CN : Configuration .  var P : Process .    var A : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
-  var Q : String .          var MS : MMtd .      var CO : Bool .
+  vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var DeL : DeltaList .
 
@@ -969,9 +969,9 @@ mod ABS-MACHINE-BASICS is
   --- We capture the entire state here since the condition E can depend on the
   --- state of Futures contained in CN.
   crl
-    { < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
+    { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
   =>
-    { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+    { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
   if ready(SL, (S :: L), CN, 0)
       [label PrQ-ready] .
 
@@ -980,10 +980,10 @@ mod ABS-MACHINE-BASICS is
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
   if N := eval(E, (S :: L), none, 0)
       [label mark] .
@@ -993,10 +993,10 @@ mod ABS-MACHINE-BASICS is
   --- Free a Future.
   ---
   ceq
-    < O : C | Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, 
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
@@ -1006,9 +1006,9 @@ mod ABS-MACHINE-BASICS is
   --- Skip the $free instruction if the variable is uninitialized.  This helps
   --- the code generator.
   ceq
-    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
   if null = (S :: L)[A]
       [label free-uninitialized] .
 
@@ -1019,40 +1019,40 @@ mod ABS-MACHINE-BASICS is
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
   eq
-    < O : C | Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
     [label $beginscope] .
 
   --- Introduce a new variable into the local scope.
   eq
-    < O : C | Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none, 0), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, 0), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
   eq
-    < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label $endscope-1] .
   eq
-    < O : C | Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
     *** Shouldn't happen, but can't harm
-    < O : C | Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
     [label $endscope-2] .
 
 
   --- assert
   ---
   eq
-    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
+    { < O : C | Cog: CG, Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
   =
     { if eval(E, (S :: L), CN, 0) asBool then
-        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
-        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
+        < O : C | Cog: CG, Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
       fi CN  }
     [label assert] .
 endm
@@ -1064,7 +1064,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
   var CN : Configuration .  var P : Process .    var A : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
-  var Q : String .          var MS : MMtd .      var CO : Bool .
+  vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .        var DeL : DeltaList .
 
@@ -1075,11 +1075,11 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- We capture the entire state here since the condition E can depend on the
   --- state of Futures contained in CN.
   crl
-    { < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   =>
-    { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   if ready(SL, (S :: L), CN, T)
@@ -1090,11 +1090,11 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Mark a label in use.  We don't bother to make this a rule until we need
   --- it.
   ceq
-    < O : C | Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
     < T : Clock | Limit: LIM >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
     < T : Clock | Limit: LIM >
   if N := eval(E, (S :: L), none, T)
@@ -1105,11 +1105,11 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Free a Future.
   ---
   ceq
-    < O : C | Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $free(E) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G, Value: D >
     < T : Clock | Limit: LIM >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, 
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
@@ -1120,9 +1120,9 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Skip the $free instruction if the variable is uninitialized.  This helps
   --- the code generator.
   ceq
-    < O : C | Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $free(A) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
   if null = (S :: L)[A]
       [label free-uninitialized] .
 
@@ -1133,45 +1133,45 @@ mod ABS-MACHINE-BASICS-TIMED is
   --- Create a new environment.  This is for supporting local declarations in
   --- blocks etc.
   eq
-    < O : C | Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
     [label $beginscope] .
 
   --- Introduce a new variable into the local scope.
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { insert(A, eval(E, (S :: L), none, T), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, T), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
   *** TODO: release labels that are going out of scope here.
   eq
-    < O : C | Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label $endscope-1] .
   eq
-    < O : C | Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
   =
     *** Shouldn't happen, but can't harm
-    < O : C | Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
     [label $endscope-2] .
 
 
   --- assert
   ---
   eq
-    { < O : C | Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F >
+    { < O : C | Cog: CG, Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   =
     { if eval(E, (S :: L), CN, T) asBool then
-        < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
-        < O : C | Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
+        < O : C | Cog: CG, Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
       fi
       < T : Clock | Limit: LIM >
       CN  }
@@ -1189,12 +1189,12 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq canAdvance (m:Msg CN, T) = false .
   *** Block clock if object is idle but has processes that can be scheduled.
   eq canAdvance (
-      < O : C | Att: S, Pr: idle, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > 
       CN, T) =
     noneready(W, S, CN, T) and canAdvance (CN, T) .
   *** Block clock if process is executing and can execute.
   eq canAdvance (
-      < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       CN, T)
   =
     not(enabled(SL, (S :: L), CN, T)) and canAdvance(CN, T) .
@@ -1220,11 +1220,12 @@ mod ABS-STMT-SKIP-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
 
   rl
-    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
 endm
 mod ABS-STMT-SKIP-EQ is
@@ -1232,11 +1233,12 @@ mod ABS-STMT-SKIP-EQ is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
 
   eq
-    < O : C | Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
 endm
 
@@ -1250,25 +1252,25 @@ mod ABS-STMT-ASSIGN-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var Q : String .
+  var E : Expr .       var D : Data .   vars Q CG : String .
 
   *** Variable or field assignment
   crl
-    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =>
     if hasMapping(L, @ Q) then
-      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment
   crl
-    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
@@ -1276,25 +1278,25 @@ mod ABS-STMT-ASSIGN-EQ is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var Q : String .
+  var E : Expr .       var D : Data .   vars Q CG : String .
 
   *** Variable or field assignment.
   ceq
-    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =
     if hasMapping(L, @ Q) then
-      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment.
   ceq
-    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
@@ -1302,19 +1304,19 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var Q : String .
+  var E : Expr .       var D : Data .   vars Q CG : String .
   vars T LIM : Nat .
 
   *** Variable or field assignment.
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
     if hasMapping(L, @ Q) then
-      < O : C | Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, T)
     [label assignment] .
@@ -1322,10 +1324,10 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   *** Field assignment.
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, T)
     [label field-assignment] .
 endm
@@ -1334,53 +1336,53 @@ endm
 mod ABS-STMT-COND-RL is
   protecting ABS-EVAL .
 
-  var O : Oid .                 var C : Cid .    vars S L : Subst .
-  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
+  var O : Oid .                 var C : Cid .      vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .    var F : Nat .
+  var E : Expr .                var CG : String .
 
   rl
-    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =>
     if eval(E, (S :: L), none, 0) asBool then
-      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
     fi
     [label if-then-else] .
 endm
 mod ABS-STMT-COND-EQ is
   protecting ABS-EVAL .
 
-  var O : Oid .                 var C : Cid .    vars S L : Subst .
-  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
+  var O : Oid .                 var C : Cid .      vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .    var F : Nat .
+  var E : Expr .                var CG : String .
 
   eq
-    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =
     if eval(E, (S :: L), none, 0) asBool then
-      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
     fi
     [label if-then-else] .
 endm
 mod ABS-STMT-COND-EQ-TIMED is
   protecting ABS-EVAL .
 
-  var O : Oid .                 var C : Cid .    vars S L : Subst .
-  vars SL SL1 SL2 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .                vars T LIM : Nat .
+  var O : Oid .                 var C : Cid .       vars S L : Subst .
+  vars SL SL1 SL2 : StmtList .  var W : MProc .     var F : Nat .
+  var E : Expr .                vars T LIM : Nat .  var CG : String .
 
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
     if eval(E, (S :: L), none, T) asBool then
-      < O : C | Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
     fi
     [label if-then-else] .
 endm
@@ -1388,14 +1390,14 @@ endm
 *** The looping (while) statement.
 mod ABS-STMT-WHILE-RL is
   protecting ABS-EVAL .
-  var O : Oid .             var C : Cid .    vars S L : Subst .
-  vars SL SL1 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
+  var O : Oid .             var C : Cid .      vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
+  var E : Expr .            var CG : String .
 
   rl
-    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Att: S,
+    < O : C | Cog: CG, Att: S,
               Pr: { L | if E th (SL1 ; while E do SL1 od) el noStmt fi ; SL },
               PrQ: W, Lcnt: F >
     [label while] .
@@ -1403,14 +1405,14 @@ endm
 mod ABS-STMT-WHILE-EQ is
   protecting ABS-EVAL .
 
-  var O : Oid .             var C : Cid .    vars S L : Subst .
-  vars SL SL1 : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .
+  var O : Oid .             var C : Cid .      vars S L : Subst .
+  vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
+  var E : Expr .            var CG : String .
 
   eq
-    < O : C | Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S,
+    < O : C | Cog: CG, Att: S,
               Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
               PrQ: W, Lcnt: F >
     [label while] .
@@ -1424,11 +1426,12 @@ mod ABS-STMT-SUSPEND-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
 
   rl
-    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
 endm
 mod ABS-STMT-SUSPEND-EQ is
@@ -1436,11 +1439,12 @@ mod ABS-STMT-SUSPEND-EQ is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
 
   eq
-    < O : C | Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
 endm
 
@@ -1454,15 +1458,15 @@ mod ABS-STMT-AWAIT-RL is
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   var Q : String .
+  var CN : Configuration .  var E : Expr .   vars Q CG : String .
 
   rl
-    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =>
     if enabled(await E, (S :: L), CN, 0) then
-      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
     else
-      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
     fi
       [label await] .
 endm
@@ -1471,15 +1475,15 @@ mod ABS-STMT-AWAIT-EQ is
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   var Q : String .
+  var CN : Configuration .  var E : Expr .   vars Q CG : String .
 
   eq
-    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
+    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F > CN  }
   =
     if enabled(await E, (S :: L), CN, 0) then
-      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
+      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
     else
-      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
+      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > CN  }
     fi
       [label await] .
 endm
@@ -1488,20 +1492,20 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   var Q : String .
+  var CN : Configuration .  var E : Expr .   vars Q CG : String .
   vars T LIM : Nat .
 
   eq
-    { < O : C | Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
+    { < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
   =
     if enabled(await E, (S :: L), CN, T) then
-      { < O : C | Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      { < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         < T : Clock | Limit: LIM >
         CN  }
     else
-      { < O : C | Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
+      { < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
         < T : Clock | Limit: LIM >
         CN  }
     fi
@@ -1515,7 +1519,7 @@ mod ABS-CALLSTMTS-RL is
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var E : Expr .       var Q : String .
+  var CN : Configuration .  var E : Expr .       vars Q CG : String .
   var A : Vid .             var EL : ExprList .  var AL : VidList .
   var N : Label .           var DL : DataList .  var MS : MMtd .
   var DeL : DeltaList .
@@ -1523,9 +1527,9 @@ mod ABS-CALLSTMTS-RL is
   --- remote-async-call
   ---
   crl
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
@@ -1541,9 +1545,9 @@ mod ABS-CALLSTMTS-RL is
   --- not emitted in the code generator currently.
   ---
   rl
-    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
     invoc(O, eval(E, (S :: L), none, 0), L[@ ".label"], Q, evalList(EL, (S :: L), none, 0))
     [label tailcall] .
 
@@ -1553,10 +1557,10 @@ mod ABS-CALLSTMTS-RL is
   --- statements.  If necessary, this could be replaced by putting `$cont' at
   --- the end of the current process.
   rl
-    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =>
-    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 
@@ -1567,7 +1571,7 @@ mod ABS-CALLSTMTS-EQ is
 
   vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var E : Expr .       var Q : String .
+  var CN : Configuration .  var E : Expr .       vars Q CG : String .
   var A : Vid .             var EL : ExprList .  var AL : VidList .
   var N : Label .           var DL : DataList .  var MS : MMtd .
   var DeL : DeltaList .
@@ -1575,9 +1579,9 @@ mod ABS-CALLSTMTS-EQ is
   --- remote-async-call
   ---
   ceq
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
@@ -1593,9 +1597,9 @@ mod ABS-CALLSTMTS-EQ is
   --- not emitted in the code generator currently.
   ---
   eq
-    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
-    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
     invoc(O, eval(E, (S :: L), none, 0), L[@ ".label"], Q, evalList(EL, (S :: L), none, 0))
     [label tailcall] .
 
@@ -1604,10 +1608,10 @@ mod ABS-CALLSTMTS-EQ is
   --- Currently block if the `selftailcall' statement is followed by any more
   --- statements.
   eq
-    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
-    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, 0)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
@@ -1617,7 +1621,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
 
   vars O O1 : Oid .         var C : Cid .         vars S S1 L : Subst .
   var SL : StmtList .       var W : MProc .       vars F G : Nat .
-  var CN : Configuration .  var E : Expr .        var Q : String .
+  var CN : Configuration .  var E : Expr .        vars Q CG : String .
   var A : Vid .             var EL : ExprList .   var AL : VidList .
   var N : Label .           var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .        var DeL : DeltaList .
@@ -1626,10 +1630,10 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   ---
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | call(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
     invoc(O, O1, N, Q , DL)
   if DL :=  evalList(EL, (S :: L), none, T)
       /\ O1 := eval(E, (S :: L), none, T)
@@ -1646,10 +1650,10 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   ---
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | tailcall(E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { update(@ ".label", null, L) | SL }, PrQ: W, Lcnt: F >
     invoc(O, eval(E, (S :: L), none, T), L[@ ".label"], Q, evalList(EL, (S :: L), none, T))
     [label tailcall] .
 
@@ -1659,11 +1663,11 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   --- statements.
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | selftailcall(Q ; EL) }, PrQ: W, Lcnt: F > 
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: makeProcessOLD(Q, MS, L[@ ".label"], evalList(EL, (S :: L), none, T)), PrQ: W, Lcnt: F >
     < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MS , Ocnt: G >
   [label selftailcall] .
 endm
@@ -1680,31 +1684,33 @@ mod ABS-NEW-RL is
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
   var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
+  var CG : String .
 
   rl
-    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                          Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
                          PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   rl
-    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: newId(B, G), 
+                             Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                             PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: ob(newId(B, G)) >
     [label new-object-with-cog] .
 endm
@@ -1716,31 +1722,33 @@ mod ABS-NEW-EQ is
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
   var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
+  var CG : String .
 
   eq
-    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                             PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   eq
-    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: newId(B, G),
+                             Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                             PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: ob(newId(B, G)) >
     [label new-object-with-cog] .
 endm
@@ -1748,40 +1756,41 @@ mod ABS-NEW-EQ-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
-  vars T LIM : Nat .
+  var O : Oid .        vars B C : Cid .   vars S S1 L : Subst .
+  var SL : StmtList .  var W : MProc .    vars F G : Nat .
+  var E : Expr .       var A : Vid .      var EL : ExprList .
+  var AL : VidList .   var MS : MMtd .    var DeL : DeltaList .
+  vars T LIM : Nat .   var CG : String .
 
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                             PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
   eq
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: newId(B, G),
+                             Att: (@ "this" |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
-                         Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
-                         PrQ: noProc, Lcnt: 0 >
+                             Pr: makeProcessOLD(".init", MS, label(O, F), emp), 
+                             PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: ob(newId(B, G)) >
     [label new-object-with-cog] .
 endm
@@ -1793,10 +1802,10 @@ mod ABS-STMT-RETURN-RL is
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  var Q : String .      var N : Label .  var E : Expr .
+  vars Q CG : String .  var N : Label .  var E : Expr .
 
   crl
-    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: false, References: G, Value: null >
    =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
@@ -1804,7 +1813,7 @@ mod ABS-STMT-RETURN-RL is
     *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
-    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
   if N == L[@ ".label"]
       [label return] .
@@ -1814,10 +1823,10 @@ mod ABS-STMT-RETURN-EQ is
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  var Q : String .      var N : Label .  var E : Expr .
+  vars Q CG : String .  var N : Label .  var E : Expr .
 
   ceq
-    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: false, References: G, Value: null >
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
@@ -1825,7 +1834,7 @@ mod ABS-STMT-RETURN-EQ is
     *** `release' or `$endscope' statements after this, so we must rely on the
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
-    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
   if N == L[@ ".label"]
       [label return] .
@@ -1835,12 +1844,12 @@ mod ABS-STMT-RETURN-EQ-TIMED is
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  var Q : String .      var N : Label .  var E : Expr .
+  vars Q CG : String .  var N : Label .  var E : Expr .
   vars T LIM : Nat .
 
   ceq
     < T : Clock | Limit: LIM >
-    < O : C |  Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: false, References: G, Value: null >
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
@@ -1849,7 +1858,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < T : Clock | Limit: LIM >
-    < O : C |  Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, T) >
   if N == L[@ ".label"]
       [label return] .
@@ -1866,7 +1875,7 @@ mod ABS-RECEIVE-RESULT is
 
   vars O : Oid .            var C : Cid .      vars S L L1 : Subst .
   vars SL SL1 : StmtList .  var W : MProc .    vars F G : Nat .
-  var Q : String .          vars A A' : Vid .  var N : Label .
+  vars Q CG : String .      vars A A' : Vid .  var N : Label .
   var D : Data .
 
   --- receive-comp
@@ -1876,18 +1885,18 @@ mod ABS-RECEIVE-RESULT is
   --- values in the queue.
   ---
   rl
-    < O : C |  Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | get(N ; A) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: true, References: G, Value: D >
   =>
-    < O : C |  Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; D) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: true, References: G, Value: D >
     [label receive-comp-label] .
 
   crl
-    < O : C |  Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: true, References: G, Value: D >
   =>
-    < O : C |  Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: true, References: G, Value: D >
   if N = (S :: L)[A]
     [label receive-comp-var] .
@@ -1899,9 +1908,9 @@ mod ABS-RECEIVE-RESULT is
   --- the process that is waited for, and afterwards manually scheduling the
   --- waiting process again (see `continue' rule below).
   crl
-    < O : C | Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W , { L1 | SL1 }, Lcnt: F >
   =>
-    < O : C | Att: S, Pr:  { L1 | SL1 ; $cont N },
+    < O : C | Cog: CG, Att: S, Pr:  { L1 | SL1 ; $cont N },
               PrQ: W , { L | get(A ; A') ; SL }, Lcnt: F >
   if N := L[A] /\ L1[@ ".label"] == N
       [label local-reply] .
@@ -1917,10 +1926,10 @@ mod ABS-RECEIVE-RESULT is
   --- checker, because there might be two processes in PrQ which await a
   --- reply to the label.
   crl
-    < O : C | Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1},
+    < O : C | Cog: CG, Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1},
               Lcnt: F >
   =>
-    < O : C | Att: S, Pr: { L1 | get(A ; A') ; SL1 }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L1 | get(A ; A') ; SL1 }, PrQ: W,
               Lcnt: F >
   if N == L1[A]
     [label continue] .
@@ -1949,12 +1958,12 @@ mod ABS-SIMULATOR-RL is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Att: noSubst, 
+      < ob("main") : Start | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
     none .
 endm
 
@@ -1981,12 +1990,12 @@ mod ABS-SIMULATOR-EQ is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Att: noSubst, 
+      < ob("main") : Start | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
     none .
 endm
 
@@ -2015,12 +2024,12 @@ mod ABS-SIMULATOR-EQ-TIMED is
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Att: noSubst, 
+      < ob("main") : Start | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
+  eq < ob("main") : Start | Cog: "main", Att: noSubst, Pr: idle, PrQ: noProc, Lcnt: 1 > =
     none .
 endm
 
