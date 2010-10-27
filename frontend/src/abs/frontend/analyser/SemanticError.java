@@ -48,6 +48,10 @@ public class SemanticError {
         return Symbol.getColumn(node.getStart());
     }
     
+    public ASTNode<?> getNode(){
+    	return node;
+    }
+    
     public String getMsg() {
     	return msg.withArgs(args);
     }
