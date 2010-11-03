@@ -569,7 +569,7 @@ aspect GenerateProlog {
     }
     public void AssertStmt.generateProlog(PrintStream s) {
         s.print("assertStmt(");
-        getCondition().generateMaude(s);
+        getCondition().generateProlog(s);
         s.print(")");
     }
     public void ReturnStmt.generateProlog(PrintStream s) {
@@ -598,7 +598,7 @@ aspect GenerateProlog {
         s.print("whileStmt(");
         getCondition().generateProlog(s);
         s.print(",");
-        getBody().generateMaude(s);
+        getBody().generateProlog(s);
         s.print(")");
     }
     //guards
