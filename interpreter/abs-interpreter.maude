@@ -319,7 +319,6 @@ mod ABS-CID is
   subsort String < Cid .
 
   op Class : -> Cid [ctor] .
-  op Start : -> Cid [ctor] .
   op None : -> Cid [ctor] .
 endm
 
@@ -1959,12 +1958,12 @@ mod ABS-SIMULATOR-RL is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Cog: "main", Att: noSubst, 
+      < ob("main") : "..." | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob("main") : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -1991,12 +1990,12 @@ mod ABS-SIMULATOR-EQ is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Cog: "main", Att: noSubst, 
+      < ob("main") : "..." | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob("main") : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -2025,12 +2024,12 @@ mod ABS-SIMULATOR-EQ-TIMED is
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
       < "main" : Cog | Object: ob("main") >
-      < ob("main") : Start | Cog: "main", Att: noSubst, 
+      < ob("main") : "..." | Cog: "main", Att: noSubst, 
         Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main") : Start | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob("main") : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
