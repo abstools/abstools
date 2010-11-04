@@ -601,6 +601,51 @@ aspect GenerateProlog {
         getBody().generateProlog(s);
         s.print(")");
     }
+    //side effect statements
+    
+        public void GetExp.generateProlog(PrintStream s) {
+        //generates "getExp(Expression)"
+    	s.print("getExp(");
+    	this.getPureExp().generateProlog(s);
+    	s.print(")");
+      }
+
+    public void Call.generateProlog(PrintStream s) {
+    	//generates "syncCall(Callee,MethodName,ArgumentsList)"
+    	// or "asyncCall(Callee,MethodName,ArgumentsList)"
+    	
+    	if(this instanceof SyncCall)
+    		s.print("syncCall(");
+    	else
+    		s.print("asyncCall(");
+    	this.getCallee().generateProlog(s);
+    	s.print(","+quote(this.getMethod())+",[");
+    	List<?> arguments = (List<?>) getChild(1);
+    	int n = arguments.getNumChild();
+    	for (int i = 0; i < n; i++){
+    		arguments.getChild(i).generateProlog(s);
+    		if (i != n-1) s.print(",");
+    	}
+    	s.print("])");
+    	
+    	
+    }
+
+     public void NewExp.generateProlog(PrintStream s) {
+     //generates "new(ClassName,parametersList,cog)"
+     //or "new(ClassName,parametersList,'noCog') if cog==""
+    		s.print("new("+quote(getClassName())+",[");
+    	List<?> params = (List<?>) getChild(0);
+    	int n = params.getNumChild();
+    	for (int i = 0; i < n; i++){
+    		params.getChild(i).generateProlog(s);
+    		if (i != n-1) s.print(",");
+    	}
+    	if(getCog().length()==0)
+    		s.print("],'noCog')");
+    	else
+    		s.print("],"+quote(getCog())+")");
+    }
     //guards
     public void AndGuard.generateProlog(PrintStream s) {
         s.print("andGuard(");
@@ -619,6 +664,44 @@ aspect GenerateProlog {
         getPureExp().generateProlog(s);
         s.print(")");
     }
+    //modules, imports, exports
+    
+    public void ModuleDecl.generateProlog(PrintStream s){
+    	//generates "methodImpl(name,className,block)."
+    	s.println("module("+quote(getName())+").");
+    	//exports
+    	List<Export> exports = this.getExportList();
+    	int n = exports.getNumChild();
+    	for (int i = 0; i < n; i++){
+    		exports.getChild(i).generateProlog(s);
+    	}
+    	//imports
+    	List<Import> imports = this.getImportList();
+    	 n = imports.getNumChild();
+    	for (int i = 0; i < n; i++){
+    		imports.getChild(i).generateProlog(s);
+    	}
+    	//declarations
+    	List<Decl> declarations = this.getDeclList();
+   	 	n = declarations.getNumChild();
+   	 	for (int i = 0; i < n; i++){
+   	 		declarations.getChild(i).generateProlog(s);
+   	 	}
+   	 	//productLine
+   	 	Opt<ProductLine> productLine=this.getProductLineOpt();
+   	 	if(productLine.getNumChild()>0)
+   	 		productLine.getChild(0).generateProlog(s);
+    	//products
+    	List<Product> products = this.getProductList();
+   	 	n = products.getNumChild();
+   	 	for (int i = 0; i < n; i++){
+   	 		products.getChild(i).generateProlog(s);
+   	 	}
+   	 	Opt<MainBlock> mainBlock=this.getBlockOpt();
+    	if(mainBlock.getNumChild()>0)
+    		mainBlock.getChild(0).generateProlog(s);
+    	
+	}
     // Auxiliary methods
 
     protected static String ASTNode.initialToUpperCase(String s){
