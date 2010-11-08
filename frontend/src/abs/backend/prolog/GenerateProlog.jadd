@@ -19,6 +19,11 @@ aspect GenerateProlog {
      *   we generate the Prolog term 
      *   "data('List',['Nil','Cons'('Int','List')])"
      */   
+    public void DataTypeDecl.generateProlog(PrintStream s){
+      //the standard behavior should work
+    	super.generateProlog(s);
+    }
+    
     public void ParametricDataTypeDecl.generateProlog(PrintStream s){
     	s.print("data(" + quote(getName()) + ",[");
     	List<?> cs = (List<?>) getChild(0);
@@ -667,7 +672,6 @@ aspect GenerateProlog {
     //modules, imports, exports
     
     public void ModuleDecl.generateProlog(PrintStream s){
-    	//generates "methodImpl(name,className,block)."
     	s.println("module("+quote(getName())+").");
     	//exports
     	List<Export> exports = this.getExportList();
@@ -702,6 +706,74 @@ aspect GenerateProlog {
     		mainBlock.getChild(0).generateProlog(s);
     	
 	}
+	public void Export.generateProlog(PrintStream s){
+       throw new PrologBackendException("Export should never be called but its subclasses");
+   	}
+    public void FromExport.generateProlog(PrintStream s){
+       //generates "fromExport(moduleName,ExportedDeclarationsList)."
+    	s.print("fromExport("+quote(this.getModuleName())+",");
+        List<Name> exportedDecl = this.getNameList();
+   	 	int n = exportedDecl.getNumChild();
+   	 	for (int i = 0; i < n; i++){
+   	 		exportedDecl.getChild(i).generateProlog(s);
+   	 		if (i != n-1) s.print(",");
+   	 	}
+   	 	s.println(").");
+    	}
+     public void NamedExport.generateProlog(PrintStream s){
+        //generates "namedExport(ExportedDeclarationsList)."
+     	s.print("namedExport(");
+         List<Name> exportedDecl = this.getNameList();
+    	 	int n = exportedDecl.getNumChild();
+    	 	for (int i = 0; i < n; i++){
+    	 		exportedDecl.getChild(i).generateProlog(s);
+    	 		if (i != n-1) s.print(",");
+    	 	}
+    	 	s.println(").");
+     	}
+     public void StarExport.generateProlog(PrintStream s){
+        //generates "starExport(moduleName)." if there is a module name
+    	if(this.getModuleNameOpt().hasChildren()){
+    		s.print("starExport(");
+    		this.getModuleName().generateProlog(s);
+    		s.println(").");
+    	}
+     	}
+     	
+    public void Import.generateProlog(PrintStream s){
+       throw new PrologBackendException("Import should never be called but its subclasses");
+   	}
+    public void FromImport.generateProlog(PrintStream s){
+       //generates "fromImport(moduleName,ImportedDeclarationsList)."
+    	s.print("fromImport("+quote(this.getModuleName())+",");
+        List<Name> importedDecl = this.getNameList();
+   	 	int n = importedDecl.getNumChild();
+   	 	for (int i = 0; i < n; i++){
+   	 		importedDecl.getChild(i).generateProlog(s);
+   	 		if (i != n-1) s.print(",");
+   	 	}
+   	 	s.println(").");
+    	}
+     public void NamedImport.generateProlog(PrintStream s){
+        //generates "namedImport(ImportedDeclarationsList)."
+     	s.print("namedImport(");
+         List<Name> importedDecl = this.getNameList();
+    	 	int n = importedDecl.getNumChild();
+    	 	for (int i = 0; i < n; i++){
+    	 		importedDecl.getChild(i).generateProlog(s);
+    	 		if (i != n-1) s.print(",");
+    	 	}
+    	 	s.println(").");
+     	}
+     public void StarImport.generateProlog(PrintStream s){
+        //generates "starImport(moduleName)."
+		s.println("starImport("+quote(this.getModuleName())+").");
+ 
+     	}
+   
+    public void Name.generateProlog(PrintStream s){
+   	s.print(quote(getName()));
+   }
     // Auxiliary methods
 
     protected static String ASTNode.initialToUpperCase(String s){
