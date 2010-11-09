@@ -15,8 +15,13 @@ public class ABSTest {
     	return assertParseOk(s, withStdLib, true);
     }
 
-    	protected Model assertParseOk(String s, boolean withStdLib, boolean addModuleName) {
-    	String preamble = "module UnitTest; export *; ";
+    protected Model assertParseOk(String s, boolean withStdLib, boolean addModuleName) {
+        return assertParse(s,withStdLib,addModuleName,false);
+    }
+        
+    protected Model assertParse(String s, boolean withStdLib, boolean addModuleName, boolean expectError) {
+    
+        String preamble = "module UnitTest; export *; ";
     	if (withStdLib)
     		preamble = preamble+" import * from ABS.StdLib;";
     	if (addModuleName)
@@ -24,10 +29,16 @@ public class ABSTest {
         Model p = null;
         try {
             p = Main.parseString(s, withStdLib);
+            
+            if (expectError) {
+                fail("Expected to find parse error");        
+            }
         } catch (Exception t) {
-        	System.out.println(t.getClass().getName());
-            t.printStackTrace();
-            fail("Failed to parse: "+ s+"\n"+t.getMessage());
+            if (!expectError) {
+                System.out.println(t.getClass().getName());
+                t.printStackTrace();
+                fail("Failed to parse: "+ s+"\n"+t.getMessage());
+            }
         }
         return p;
     }
@@ -35,6 +46,12 @@ public class ABSTest {
     protected Model assertParseOk(String s) {
         return assertParseOk(s, false);
   }
+    
+    protected void assertParseError(String absCode, boolean withStdLib, boolean addModuleName) {
+        assertParse(absCode,withStdLib,addModuleName,true);
+    }
+    
+    
 
     protected Model assertParseFileOk(String fileName, boolean typeCheck, boolean withStdLib) {
         Model m = null;

@@ -351,6 +351,7 @@ MethodSig methodsig =
 
 PureExp pure_exp =
 	  var_or_field_ref   
+    | THIS                {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
 	| let_exp  
 	| constructor_exp
@@ -360,8 +361,7 @@ PureExp pure_exp =
     ;
 
 PureExp var_or_field_ref =
-      THIS                {: return new ThisExp() ; :}
-	| THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
+	  THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
     | IDENTIFIER.n {: return new VarUse(n); :} 
 	;
 

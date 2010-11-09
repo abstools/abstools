@@ -34,20 +34,6 @@ public class FrontendTest extends ABSTest {
         assertParseFileOk(fileName, true, withStdLib);
     }
     
-    protected void assertParseError(String absCode, boolean typeCheck, boolean withStdLib) {
-        try {
-            Model m = Main.parseString(absCode,withStdLib);
-            if (!m.getErrors().isEmpty())
-                return;
-                
-            if (typeCheck && !m.typeCheck().isEmpty())
-                return;
-            
-            fail("Expected to find parse error");        
-        } catch (Exception e) {
-        }
-    }
-    
     protected Exp getFirstExp(String absCode) {
         Model m = assertParseOk(absCode);
         return getFirstExp(m);

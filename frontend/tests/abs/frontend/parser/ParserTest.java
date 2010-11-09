@@ -111,7 +111,6 @@ public class ParserTest extends FrontendTest {
 	}
 
 
-
 	// Class declarations
 	@Test
 		public void testClassDecl() {
@@ -216,6 +215,9 @@ public class ParserTest extends FrontendTest {
 			assertParseOk("{ v = " + e + ";}");
 			assertParseOk("{ this.f = " + e + ";}");
 		}
+		
+        assertParseError("class A { A m() { this = null; return null;} }");
+		
 	}
 
 	@Test
@@ -323,7 +325,7 @@ public class ParserTest extends FrontendTest {
 	
 	
 	protected void assertParseError(String s) {
-	    assertParseError(s,false,false);
+	    assertParseError(s,false,true);
 	}
 	
 }
