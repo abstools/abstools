@@ -15,6 +15,8 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 
+import beaver.Parser;
+
 import abs.common.Constants;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -229,12 +231,19 @@ public class Main {
             parser.setSourceCode(sourceCode);
             parser.setFile(file);
             
-            CompilationUnit u = (CompilationUnit) parser.parse(scanner);
+            CompilationUnit u = null;
+            try {
+                u = (CompilationUnit) parser.parse(scanner);
+            } catch (Parser.Exception e) {
+                u = new CompilationUnit(parser.getFileName(),new List());
+                u.setParserErrors(parser.getErrors());
+            }
             if (importStdLib) {
             	for (ModuleDecl d : u.getModuleDecls()) {
             		d.getImports().add(new StarImport(Constants.STDLIB_NAME));
             	}
             }
+            
             return u;
         } finally {
             reader.close();

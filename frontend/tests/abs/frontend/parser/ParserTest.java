@@ -323,9 +323,4 @@ public class ParserTest extends FrontendTest {
 	}
 	
 	
-	
-	protected void assertParseError(String s) {
-	    assertParseError(s,false,true);
-	}
-	
 }

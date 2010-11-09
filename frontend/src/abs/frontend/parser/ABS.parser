@@ -9,13 +9,13 @@ package abs.frontend.parser;
 import abs.frontend.ast.*;
 import abs.common.*;
 import java.io.File;
-
+import java.io.IOException;
 
 :};
 
 %embed {:
 	ArrayList<ParserError> errors = new ArrayList<ParserError>();
-    boolean raiseExceptions = true;
+    boolean raiseExceptions = false;
     File file;
     String sourceCode; // only set if not read from file
 
@@ -44,15 +44,36 @@ import java.io.File;
 			if (raiseExceptions) 
 				throw new ParseException(err);
 		}
+		public void unexpectedTokenRemoved(Symbol token) {
+			// do nothing
+		}
+		
+		public void missingTokenInserted(Symbol token) {
+			// do nothing
+		}
+		
+		public void misspelledTokenReplaced(Symbol token) {
+			// do nothing
+		}
+
+		public void errorPhraseRemoved(Symbol error) {
+			// do nothing
+		}
+		
+		
+		
 	}
 
 	{ report = new Events(); } // Use error handler in parser
-  
-	public void doRaiseExceptions(boolean raiseExceptions) {
+
+
+	public void setRaiseExceptions(boolean raiseExceptions) {
 		this.raiseExceptions = raiseExceptions;
 	}
 
-	public ArrayList<ParserError> getErrors() { return errors; }
+	public ArrayList<ParserError> getErrors() { 
+		return errors; 
+	}
 	
 	public String getFileName() {
 		if (file != null)
@@ -65,10 +86,19 @@ import java.io.File;
 
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
+  | error {: 
+		CompilationUnit u = new CompilationUnit(getFileName(),new List()); 
+		u.setParserErrors(getErrors());
+		return u;
+	:}
   ;
 
 CompilationUnit compilation_unit = 
-	module_decl_list.m? {: return new CompilationUnit(getFileName(),m); :}
+	module_decl_list.m? {: 
+		CompilationUnit u = new CompilationUnit(getFileName(),m); 
+		u.setParserErrors(getErrors());
+		return u;
+		:}
   ;
 
 ModuleDecl module_decl = 
@@ -149,8 +179,16 @@ List any_name_list =
 ;
 
 List decl_list =
-	decl.t			{: return new List().add(t); :}
-  | decl_list.l decl.t	{: return l.add(t); :}
+	decl.t			{:
+		if (t == null) 
+			return new List(); 
+		return new List().add(t); 
+	:}
+  | decl_list.l decl.t	{:
+  		if (t == null)
+  			return l; 
+  		return l.add(t); 
+  :}
   ;
 
 Decl decl =
@@ -160,6 +198,7 @@ Decl decl =
 	|	interface_decl
 	|	class_decl
     |   delta_decl
+    |	error
 	;
 
 // Same as other blocks, but a different class for code-generation purposes.
@@ -201,8 +240,13 @@ FunctionDecl  function_decl =
 	; 
 
 InterfaceDecl interface_decl =
-  annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE 
-  {: return new InterfaceDecl(id, al, i, l); :}
+    annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE 
+    {: return new InterfaceDecl(id, al, i, l); :}
+/*  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? error 
+    {: return new InterfaceDecl(id, al, i, new List()); :}
+  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id error 
+    {: return new InterfaceDecl(id, al, new List(), new List()); :}
+*/    
   ;
 
 

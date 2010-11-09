@@ -30,15 +30,17 @@ public class ABSTest {
         try {
             p = Main.parseString(s, withStdLib);
             
+            
             if (expectError) {
-                fail("Expected to find parse error");        
+                if (!p.hasParserErrors())
+                    fail("Expected to find parse error");        
+            } else {
+                if (p.hasParserErrors()) {
+                    fail("Failed to parse: "+ s+"\n"+p.getParserErrors().get(0).getMessage());
+                }
             }
         } catch (Exception t) {
-            if (!expectError) {
-                System.out.println(t.getClass().getName());
-                t.printStackTrace();
-                fail("Failed to parse: "+ s+"\n"+t.getMessage());
-            }
+            throw new RuntimeException(t);
         }
         return p;
     }
@@ -46,9 +48,13 @@ public class ABSTest {
     protected Model assertParseOk(String s) {
         return assertParseOk(s, false);
   }
+
+    protected Model assertParseError(String absCode) {
+        return assertParseError(absCode,false,true);
+    }
     
-    protected void assertParseError(String absCode, boolean withStdLib, boolean addModuleName) {
-        assertParse(absCode,withStdLib,addModuleName,true);
+    protected Model assertParseError(String absCode, boolean withStdLib, boolean addModuleName) {
+        return assertParse(absCode,withStdLib,addModuleName,true);
     }
     
     

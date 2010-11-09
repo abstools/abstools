@@ -16,6 +16,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
 		//        ScannerTest.class, 
 		ParserTest.class
+		, RecoverTest.class
 		, DuplicateCheckTest.class
 		, InterfaceDeclarationTest.class
 		, ParseSamplesTest.class
