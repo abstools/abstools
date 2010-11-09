@@ -72,7 +72,7 @@ public class PrologBackend extends Main {
     	
     private void absToPrologTerms(String[] args) throws Exception {
         final Model model = parse(args); // This parses the ABS producing an AST
-        if (model.hasErrors() || model.hasTypeErrors())
+        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
                 
         if (!destDir.exists()) {

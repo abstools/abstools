@@ -14,6 +14,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.Main;
+import abs.frontend.parser.ParserError;
 
 public class MaudeCompiler {
 
@@ -50,13 +51,23 @@ public class MaudeCompiler {
 			System.exit(2);
 		}
 		Model m = abs.frontend.parser.Main.parse(files, stdlib);
+		if (m.hasParserErrors()) {
+			 hasErrors = true;
+          for (ParserError e : m.getParserErrors()) {
+          	System.err.println(e.getHelpMessage());
+          }
+		}
+		
+		if (!hasErrors) {
         SemanticErrorList l = m.typeCheck();
         if (!l.isEmpty()) {
         	hasErrors = true;
             for (SemanticError e : l) {
-            	System.err.println(e.getFileName() + ":" + e.getLine() + ": " + e.getMsg());
+            	System.err.println(e.getHelpMessage());
             }
         }
+		}
+		
         if (!hasErrors) {
         	PrintStream stream = System.out;
         	if (outputfile != null) {
@@ -64,7 +75,8 @@ public class MaudeCompiler {
         	}
         	m.generateMaude(stream, module);
         	System.exit(0);
-        } else System.exit(1);
+        } 
+           else System.exit(1);
 	}
 
     private static void printUsage() {
