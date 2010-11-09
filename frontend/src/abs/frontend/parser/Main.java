@@ -105,21 +105,29 @@ public class Main {
             m.dumpTree("  ", System.out);
         }
 
-        int numSemErrs = m.getErrors().size();
-            
-        if (numSemErrs > 0) {
-            System.out.println("Semantic errors: " + numSemErrs);
-            for (SemanticError error : m.getErrors()) {
-                System.err.println(error.getHelpMessage());
-                System.err.flush();
-            }
+        if (m.hasParserErrors()) {
+      	  System.err.println("Syntactic errors: " + m.getParserErrors().size());
+      	  for (ParserError e : m.getParserErrors()) {
+      		   System.err.println(e.getHelpMessage());
+      		   System.err.flush();
+      	  }
         } else {
-            if (typecheck) {
-                SemanticErrorList typeerrors = m.typeCheck();
-                for (SemanticError se : typeerrors) {
+      	  int numSemErrs = m.getErrors().size();
+            
+      	  if (numSemErrs > 0) {
+      		  System.err.println("Semantic errors: " + numSemErrs);
+      		  for (SemanticError error : m.getErrors()) {
+      			  System.err.println(error.getHelpMessage());
+      			  System.err.flush();
+      		  }
+      	  } else {
+      		  if (typecheck) {
+      			  SemanticErrorList typeerrors = m.typeCheck();
+      			  for (SemanticError se : typeerrors) {
                     System.err.println(se.getHelpMessage());
-                }
-            }
+      			  }
+      		  }
+      	  }
         }
         
 		return m;
