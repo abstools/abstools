@@ -76,7 +76,7 @@ aspect GenerateProlog {
      *   "def(...)"
      */
     public void FunctionDecl.generateProlog(PrintStream s){
-    	s.print("def(" + quote(getName()) + ",");
+    	s.print("def(" + quote(getName()) + "," + "This,");
     	// child(0) is a list of annotations and is ignored
     	getChild(1).generateProlog(s);
     	List<?> params = (List<?>) getChild(2);
@@ -92,7 +92,7 @@ aspect GenerateProlog {
     }
 
     public void ParametricFunctionDecl.generateProlog(PrintStream s){
-    	s.print("def(" + quote(getName()) + ",");
+    	s.print("def(" + quote(getName()) + "," + "This,");
     	getChild(0).generateProlog(s);
     	List<?> params = (List<?>) getChild(1);
     	int n = params.getNumChild();
@@ -363,7 +363,7 @@ aspect GenerateProlog {
     	s.print("null");
     }
     public void ThisExp.generateProlog(PrintStream s) {
-        s.print("this");
+        s.print("This");
     }
     
     // Class and Interface declarations
@@ -500,6 +500,7 @@ aspect GenerateProlog {
     	s.print("methodImpl(");
     	getChild(0).generateProlog(s);
     	s.print(","+quotedClass+",");
+    	s.print("This,");
     	getChild(1).generateProlog(s);
     	s.println(").");
     	
