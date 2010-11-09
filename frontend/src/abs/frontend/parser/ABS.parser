@@ -404,7 +404,7 @@ PureExp pure_exp =
     | case_exp
     ;
 
-PureExp var_or_field_ref =
+VarOrFieldUse var_or_field_ref =
 	  THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
     | IDENTIFIER.n {: return new VarUse(n); :} 
 	;

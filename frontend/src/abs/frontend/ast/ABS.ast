@@ -91,7 +91,7 @@ Annotation      ::= <Name> Value:PureExp;
 abstract Stmt   ::= Annotation* ; 
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
-AssignStmt: Stmt		::= Var:PureExp Value:Exp;
+AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
