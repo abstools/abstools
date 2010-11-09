@@ -10,7 +10,7 @@ import java.io.StringReader;
 
 public abstract class CompilerError {
     
-	private File file;
+	protected File file;
 	private String sourceCode; 
 	
 	public void setSourceLine(String line) {
@@ -38,7 +38,7 @@ public abstract class CompilerError {
 		return helpMessage.toString();
 	}
 
-	private String getFileName() {
+	public String getFileName() {
 		if (file != null)
 			return file.getName();
 		return null;

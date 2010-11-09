@@ -1,5 +1,7 @@
 package abs.frontend.analyser;
 
+import java.io.File;
+
 import beaver.Symbol;
 import abs.common.CompilerError;
 import abs.frontend.ast.ASTNode;
@@ -27,18 +29,22 @@ public class SemanticError extends CompilerError {
         }
     }
 
+    @Override
     public String getFileName() {
-        ASTNode<?> parent = node;
-        while (! (parent instanceof CompilationUnit) ) {
-            parent = parent.getParent();
-            if (parent == null)
-                return "<could not find filename>";
-        }
-        CompilationUnit u = (CompilationUnit) parent;
-        String name = u.getName();
-        if (name == null)
-            return "<unkown>";
-        return name;
+   	  if (file == null) {
+   		  ASTNode<?> parent = node;
+   		  while (! (parent instanceof CompilationUnit) ) {
+   			  parent = parent.getParent();
+   			  if (parent == null)
+   				  return "<could not find filename>";
+   		  }
+   		  CompilationUnit u = (CompilationUnit) parent;
+   		  String name = u.getName();
+   		  if (name == null)
+   			  return "<unkown>";
+   		  file = new File(name);
+       }
+ 		 return super.getFileName();
     }
     
     @Override
