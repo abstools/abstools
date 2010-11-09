@@ -84,7 +84,7 @@ public class Main {
 			} catch (FileNotFoundException e1) {
 				printErrorAndExit("File not found: " + file);
 			} catch (ParseException pex) {
-				System.err.println(file + ":" + pex.getError().getHelpMessage());
+				System.err.println(pex.getError().getHelpMessage());
 				System.exit(1);
 			} catch (Exception e1) {
 				// Catch-all
@@ -108,14 +108,14 @@ public class Main {
         if (numSemErrs > 0) {
             System.out.println("Semantic errors: " + numSemErrs);
             for (SemanticError error : m.getErrors()) {
-                System.err.println(error.getMsgString());
+                System.err.println(error.getHelpMessage());
                 System.err.flush();
             }
         } else {
             if (typecheck) {
                 SemanticErrorList typeerrors = m.typeCheck();
                 for (SemanticError se : typeerrors) {
-                    System.err.println(se.getMsgString());
+                    System.err.println(se.getHelpMessage());
                 }
             }
         }

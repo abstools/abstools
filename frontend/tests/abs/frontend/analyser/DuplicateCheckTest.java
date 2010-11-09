@@ -48,7 +48,7 @@ public class DuplicateCheckTest extends FrontendTest {
 	}
 	
     private void assertEndsWith(SemanticError expected, String actual) {
-        assertTrue("Expected that "+expected.getMsgString()+" ends with "+actual,expected.getMsgString().endsWith(actual));
+        assertTrue("Expected that "+expected.getHelpMessage()+" ends with "+actual,expected.getHelpMessage().endsWith(actual));
     }
 
 }

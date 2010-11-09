@@ -66,13 +66,13 @@ public class ABSTest {
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
             if (numSemErrs > 0){
                 for (SemanticError error : m.getErrors())
-                    errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
+                    errs = errs.append(error.getHelpMessage() + "\n");  
                 fail("Failed to parse: "+fileName+"\n"+errs.toString());
             } else if (typeCheck) {
                 SemanticErrorList l = m.typeCheck();
                 if (!l.isEmpty()) {
                     for (SemanticError error : l)
-                        errs = errs.append(fileName + ":" + error.getMsgString() + "\n");  
+                        errs = errs.append(error.getHelpMessage() + "\n");  
                     fail("Failed to typecheck: "+fileName+"\n"+errs.toString());
                     
                 }

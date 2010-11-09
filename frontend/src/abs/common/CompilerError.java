@@ -9,40 +9,12 @@ import java.io.Reader;
 import java.io.StringReader;
 
 public abstract class CompilerError {
-	private final int line;
-	private final int column;
-	private final String message;
-	// source line containing the error
-	private String sourceLine;
+    
 	private File file;
 	private String sourceCode; 
 	
-	public CompilerError(String msg, int line, int column) {
-		this.line = line;
-		this.column = column;
-		this.message = msg;
-	}
-		
-	public String getMessage() {
-		return message;
-	}
-	
 	public void setSourceLine(String line) {
 		sourceLine = line;
-	}
-	
-	/**
-	 * @return the line number of the error, or -1 if unavailable.
-	 */
-	public int getLine() {
-		return line;
-	}
-	
-	/**
-	 * @return the column number of the error, or -1 if unavailable.
-	 */
-	public int getColumn() {
-		return column;
 	}
 	
 	public String getHelpMessage() {
@@ -72,6 +44,9 @@ public abstract class CompilerError {
 		return null;
 	}
 
+	
+    // source line containing the error, for caching reasons, derived from sourceCode
+    private String sourceLine; 
 	private String getSourceLine() {
 		if (sourceLine != null)
 			return sourceLine;
@@ -126,4 +101,8 @@ public abstract class CompilerError {
 	public void setSourceCode(String sourceCode) {
 		this.sourceCode = sourceCode;
 	}
+
+    public abstract String getMessage();
+    public abstract int getColumn();
+    public abstract int getLine();
 }

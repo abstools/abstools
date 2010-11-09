@@ -69,7 +69,7 @@ public class MaudeTests extends ABSTest {
             }
 
             if (model.hasErrors()) {
-                Assert.fail(model.getErrors().getFirst().getMsgString());
+                Assert.fail(model.getErrors().getFirst().getHelpMessage());
                 return null;
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();

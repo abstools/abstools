@@ -1,11 +1,12 @@
 package abs.frontend.analyser;
 
 import beaver.Symbol;
+import abs.common.CompilerError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Name;
 
-public class SemanticError {
+public class SemanticError extends CompilerError {
     public final ErrorMessage msg;
     public final String[] args;
     public final ASTNode<?> node;
@@ -40,10 +41,12 @@ public class SemanticError {
         return name;
     }
     
+    @Override
     public int getLine() {
         return Symbol.getLine(node.getStart());
     }
     
+    @Override
     public int getColumn() {
         return Symbol.getColumn(node.getStart());
     }
@@ -52,18 +55,17 @@ public class SemanticError {
     	return node;
     }
     
-    public String getMsg() {
-    	return msg.withArgs(args);
+    @Override
+    public String getMessage() {
+    	return getMsg();
     }
     
-    public String getMsgString() {
-        return getFileName() + ":" + getLine() + ":" + 
-            getColumn() + ": " + 
-            msg.withArgs(args);
+    public String getMsg() {
+        return msg.withArgs(args);
     }
     
     public String getMsgWithHint(String absCode) {
-        return getMsgString()+"\n"+getHint(absCode);
+        return getHelpMessage()+"\n"+getHint(absCode);
     }
 
     public String getHint(String absCode) {
@@ -85,5 +87,14 @@ public class SemanticError {
         }
         lineHint.append('^');
         return line+"\n"+lineHint;
+    }
+
+    /**
+     * Deprecated. Use getHelpMessage() instead
+     * @return
+     */
+    @Deprecated
+    public String getMsgString() {
+        return getHelpMessage();
     }
 }

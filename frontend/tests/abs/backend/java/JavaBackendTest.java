@@ -131,7 +131,7 @@ public class JavaBackendTest extends ABSTest {
 //                code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
             model = Main.parseString(code, withStdLib);
             if (model.hasErrors()) {
-                Assert.fail(model.getErrors().get(0).getMsgString());
+                Assert.fail(model.getErrors().get(0).getHelpMessage());
             } else {
                 SemanticErrorList el = model.typeCheck();
                 if (!el.isEmpty()) {
@@ -146,7 +146,7 @@ public class JavaBackendTest extends ABSTest {
         }
         
         if (model.hasErrors()) {
-            Assert.fail(model.getErrors().getFirst().getMsgString());
+            Assert.fail(model.getErrors().getFirst().getHelpMessage());
             return null;
         }
         return getJavaCode(model);

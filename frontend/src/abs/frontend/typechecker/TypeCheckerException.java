@@ -9,7 +9,7 @@ public class TypeCheckerException extends RuntimeException {
 	private final TypeError typeError;
 	
 	public TypeCheckerException(TypeError error) {
-		super(error.getMsgString());
+		super(error.getHelpMessage());
 		this.typeError = error;
 	}
 	
