@@ -44,6 +44,7 @@ import java.io.IOException;
 			if (raiseExceptions) 
 				throw new ParseException(err);
 		}
+/*		
 		public void unexpectedTokenRemoved(Symbol token) {
 			// do nothing
 		}
@@ -59,7 +60,7 @@ import java.io.IOException;
 		public void errorPhraseRemoved(Symbol error) {
 			// do nothing
 		}
-		
+*/		
 		
 		
 	}
@@ -198,7 +199,7 @@ Decl decl =
 	|	interface_decl
 	|	class_decl
     |   delta_decl
-    |	error
+    |   error
 	;
 
 // Same as other blocks, but a different class for code-generation purposes.
@@ -242,17 +243,22 @@ FunctionDecl  function_decl =
 InterfaceDecl interface_decl =
     annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE 
     {: return new InterfaceDecl(id, al, i, l); :}
-/*  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? error 
+  // error recovery :
+  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? error 
     {: return new InterfaceDecl(id, al, i, new List()); :}
   | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id error 
     {: return new InterfaceDecl(id, al, new List(), new List()); :}
-*/    
+  | annotation_list.al? INTERFACE error 
+    {: return new InterfaceDecl("<unknown>",al, new List(), new List()); :}
   ;
 
 
 ClassDecl class_decl =
 	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE 
 	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
+	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE error  
+	{: return new ClassDecl(id, annotations, params,  i, new Opt(), new List(), new List()); :}
+
   ;
 
 DeltaDecl delta_decl =
@@ -386,6 +392,7 @@ List datatypeparam_list =
 
 MethodImpl method = 
 	  methodsig.ms block.b {: return new MethodImpl(ms, b); :}
+	  methodsig.ms error {: return new MethodImpl(ms, new Block(new List(), new List())); :}
     ;
 
 MethodSig methodsig =
