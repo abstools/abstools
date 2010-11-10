@@ -369,7 +369,7 @@ aspect GenerateProlog {
     // Class and Interface declarations
     
     public void ClassDecl.generateProlog(PrintStream s){
-    //generates class(name,parametersList,implementedInterfaces,opt(initBlock),fieldsList).
+    //generates class(name,parametersList,implementedInterfaces,fieldsList).
     //and call the generator for each method in the class
     	s.print("class(" + quote(getName()) + ",[");
     	List<?> parameterList = (List<?>) getChild(1);
@@ -490,13 +490,13 @@ aspect GenerateProlog {
     	int n = stmts.getNumChild();
     	for (int i = 0; i < n; i++){
     		stmts.getChild(i).generateProlog(s);
-    		if (i != n-1 && !(stmts.getChild(i) instanceof VarDeclStmt)) s.print(",");
+    		if (i != n-1) s.print(",");
     	}
     	s.print("])");
 	}
 	
 	public void MethodImpl.generateProlog(PrintStream s,String quotedClass){
-    	//generates "methodImpl(name,className,block)."
+    	//generates "methodImpl(methodSig,className,block)."
     	s.print("methodImpl(");
     	getChild(0).generateProlog(s);
     	s.print(","+quotedClass+",");
@@ -510,7 +510,7 @@ aspect GenerateProlog {
 	//the initialization block it taken as an initialization method
 	//it generates "methodImpl(init,className,Block)."
     	s.print("methodImpl(");
-    	s.print("init");
+    	s.print("methodSig(init,none,[])");
     	s.print(","+quotedClass+",");
     	this.generateProlog(s);
     	s.println(").");
@@ -536,7 +536,7 @@ aspect GenerateProlog {
     	int n = stmts.getNumChild();
     	for (int i = 0; i < n; i++){
     		stmts.getChild(i).generateProlog(s);
-    		if (i != n-1 && !(stmts.getChild(i) instanceof VarDeclStmt)) s.print(",");
+    		if (i != n-1) s.print(",");
     	}
     	s.println("]).");
     }
