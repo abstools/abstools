@@ -256,6 +256,16 @@ public class TypeCheckerTest extends FrontendTest {
 		 assertTypeErrors("{ I i; }"); 
 	 }
 
+	 @Test
+     public void testUnresolvableType2() {
+         assertTypeErrors("class C implements I { }"); 
+     }
+
+     @Test
+     public void testUnresolvableType3() {
+         assertTypeErrors("interface J extends I { }"); 
+     }
+	 
      @Test
      public void parametericDataTypesIllegalAssignment() {
          assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }"); 

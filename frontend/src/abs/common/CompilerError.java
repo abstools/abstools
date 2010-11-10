@@ -51,7 +51,7 @@ public abstract class CompilerError {
 		if (sourceLine != null)
 			return sourceLine;
 		
-		if (file != null) {
+		if (file != null && file.canRead()) {
 			return readLineFromFile();
 		}
 		

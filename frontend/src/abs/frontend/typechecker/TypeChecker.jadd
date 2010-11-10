@@ -177,6 +177,10 @@ aspect TypeChecker {
 		  }          
       }
       
+      for (InterfaceTypeUse i : getImplementedInterfaceUses()) {
+      	 i.typeCheck(e);
+      }
+      
       for (FieldDecl f : getFields()) {
    		  f.typeCheck(e);
    		  if (fields.contains(f.getName())) {
