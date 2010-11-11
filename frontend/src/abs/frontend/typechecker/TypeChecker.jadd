@@ -385,11 +385,17 @@ aspect TypeChecker {
     public void AssignStmt.typeCheck(SemanticErrorList e) {
    	 Type rht = getValue().getType();
    	 Type lht = getVar().getType();
-		 if (!rht.isAssignable(lht)) {
-			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
-		 }
-		 getValue().typeCheck(e);
-		 getVar().typeCheck(e);
+   	 	
+     int nerrors = e.size();   	 	
+	 getValue().typeCheck(e);
+	 getVar().typeCheck(e);
+
+     if (e.size() > nerrors)
+     	return;
+
+	 if (!rht.isAssignable(lht)) {
+		 e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
+	 }
     }
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
@@ -498,6 +504,12 @@ aspect TypeChecker {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
     
+    public void VarUse.typeCheck(SemanticErrorList e) {
+    	if (getType().isUnknownType()) {
+	        e.add(new TypeError(this,ErrorMessage.NAME_NOT_RESOLVABLE,getName()));
+    	}
+    	
+    }
     
     public void Call.typeCheck(SemanticErrorList e) {
         Type t = getType();
