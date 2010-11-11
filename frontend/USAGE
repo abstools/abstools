@@ -38,16 +38,17 @@ b) Compile to Java with
 
       java -cp dist/absfrontend.jar abs.backend.java.JavaBackend [-d <dir>] <absfiles>
 
-   This will generate a Java file Main.java and corresponding .class files into <dir>.
+   This will generate Java source files and corresponding .class files into <dir>, where
+   additional subdirectories are created for each module.
    
-   It is also possible to only generate the Main.java file and not the .class files by using
-   the -sourceonly option. In that case the resulting Java file has to be compiled
+   It is also possible to only generate the Java source files and not the .class files by using
+   the -sourceonly option. In that case the resulting Java files have to be compiled
    by a standard Java compiler. For example,
    
-      javac -classpath dist/absfrontend.jar <dir>/Main.java 
+      find <dir> -name '*.java'|xargs javac -classpath dist/absfrontend.jar 
 
-   The generated files contain a class Main with a standard "main" method, which can
-   be executed like a standard Java program, e.g.:
+   For each module that has a Main block, the generated files contain a class <ModuleName>.Main 
+   with a standard "main" method, which can be executed like a standard Java program, e.g.:
 
-      java -cp dist/absfrontend.jar:<dir> Main
+      java -cp dist/absfrontend.jar:<dir> MyModule.Main
    
