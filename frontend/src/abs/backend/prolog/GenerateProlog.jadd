@@ -333,11 +333,11 @@ aspect GenerateProlog {
     // Patterns
 
     public void PatternVarDecl.generateProlog(PrintStream s){
-    	s.print(initialToUpperCase(getName()));
+    	s.print(varTransform(getName()));
     }
 
     public void PatternVarUse.generateProlog(PrintStream s){
-    	s.print(initialToUpperCase(getName()));
+    	s.print(varTransform(getName()));
     }
 
     public void ConstructorPattern.generateProlog(PrintStream s){
