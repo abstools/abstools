@@ -256,7 +256,7 @@ InterfaceDecl interface_decl =
 ClassDecl class_decl =
 	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE 
 	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
-	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE error  
+  | annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE error  
 	{: return new ClassDecl(id, annotations, params,  i, new Opt(), new List(), new List()); :}
 
   ;
@@ -392,7 +392,7 @@ List datatypeparam_list =
 
 MethodImpl method = 
 	  methodsig.ms block.b {: return new MethodImpl(ms, b); :}
-	  methodsig.ms error {: return new MethodImpl(ms, new Block(new List(), new List())); :}
+	| methodsig.ms error {: return new MethodImpl(ms, new Block(new List(), new List())); :}
     ;
 
 MethodSig methodsig =
