@@ -134,12 +134,14 @@ aspect GenerateProlog {
     }
 
     public void VarUse.generateProlog(PrintStream s){
-    	s.print(varTransform(getName()));
+      	if(this.getDecl_value instanceof FieldDecl)
+    		s.print("field('"+getName()+"')");
+    	else
+    		s.print(varTransform(getName()));
     }
 
 	public void FieldUse.generateProlog(PrintStream s){
-		//TODO check if this is correct or it should be initialToUpperCase
-    	s.print(quote("this."+getName()));
+		s.print("field('"+getName()+"')");
     }
     public void AndBoolExp.generateProlog(PrintStream s){
     	s.print("and(");
@@ -363,7 +365,7 @@ aspect GenerateProlog {
     	s.print("null");
     }
     public void ThisExp.generateProlog(PrintStream s) {
-        s.print("this");
+        s.print("var(this)");
     }
     
     // Class and Interface declarations
