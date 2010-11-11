@@ -334,8 +334,12 @@ public class TypeCheckerHelper {
    		   } else if (i instanceof NamedImport) {
    			   NamedImport ni = (NamedImport) i;
    			   for (Name n : ni.getNames()) {
-   				   ModuleDecl md = mod.lookupModule(n.getModuleName());
-   				   Map<KindedName, ResolvedName> allNames = getAllNames(n.getSimpleName(),md.getExportedNames());
+   			       ModuleDecl md = mod.lookupModule(n.getModuleName());
+   			       if (md == null) {
+   			           if (!n.getModuleName().equals(Constants.STDLIB_NAME))
+   			               throw new TypeCheckerException(new TypeError(n,ErrorMessage.MODULE_NOT_RESOLVABLE, n.getModuleName()));
+   			       }
+   			       Map<KindedName, ResolvedName> allNames = getAllNames(n.getSimpleName(),md.getExportedNames());
    				   if (!allNames.isEmpty()) {
    					   for (Entry<KindedName, ResolvedName> e : allNames.entrySet()) {
    						   res.put(new KindedName(e.getKey().getKind(),n.getModuleName()+"."+e.getKey().getName()), e.getValue());
