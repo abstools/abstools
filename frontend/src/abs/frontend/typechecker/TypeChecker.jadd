@@ -324,17 +324,30 @@ aspect TypeChecker {
     public void MethodImpl.typeCheck(SemanticErrorList e) {
    	 Block b = getBlock();
    	 MethodSig sig = getMethodSig();
+   	 int nerrors = e.size();
    	 sig.typeCheck(e);
+   	 b.typeCheck(e);
+
+     // skip other checks if already errors have occurred
+	 //if (e.size() > nerrors)
+	 	//return;
+	 	
    	 Type lastType = getUnitType();
+   	 ASTNode<?> errorNode = this;
    	 if (b.getNumStmt() > 0) {
-   		 lastType = b.getStmt(b.getNumStmt()-1).getType();
+   	 	 Stmt lastStmt = b.getStmt(b.getNumStmt()-1); 
+   		 lastType = lastStmt.getType();
+   		 
+   		 // otherwise check is already done in ReturnStmt
+   		 if (lastStmt instanceof ReturnStmt)
+   		 	return;
+   		 errorNode = lastStmt;
    	 }
    	 
    	 if (!lastType.isAssignable(sig.getReturnType().getType())) {
-   		 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,lastType,sig.getReturnType().getType()));
+   		 e.add(new TypeError(errorNode,ErrorMessage.CANNOT_ASSIGN,lastType,sig.getReturnType().getType()));
    	 }
    	 
-   	 b.typeCheck(e);
     }
 
     public void FieldDecl.typeCheck(SemanticErrorList e) { 
@@ -405,7 +418,7 @@ aspect TypeChecker {
    	 Type rht = getRetExp().getType();
    	 Type lht = m.getMethodSig().getReturnType().getType();
 		 if (!rht.isAssignable(lht)) {
-			 e.add(new TypeError(this,ErrorMessage.NO_SUBTYPE,rht,lht));
+			 e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
 		 }
    		 
    	 getRetExp().typeCheck(e);
