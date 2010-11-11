@@ -27,10 +27,19 @@ public abstract class CompilerError {
 		
 		final String sourceLine = getSourceLine();
 		if (sourceLine != null) {
-			helpMessage.append("\n"+sourceLine+"\n");
+		    
+		    final String lineWithoutTabs = replaceTabs(sourceLine);
+			helpMessage.append("\n"+lineWithoutTabs+"\n");
+			
 	        for (int c = 0; c < getColumn()-1; c++) {
 	            helpMessage.append('-');
 	        }
+	        
+            int ntabs = countTabs(sourceLine, getColumn());
+            for (int i=0; i < ntabs; i++) {
+                helpMessage.append("---");
+            }
+            
 	        helpMessage.append('^');
 			
 		}
@@ -38,7 +47,18 @@ public abstract class CompilerError {
 		return helpMessage.toString();
 	}
 
-	public String getFileName() {
+	private int countTabs(String string, int upToChar) {
+	    int ntabs = 0;
+	    for (int i=0; i<string.length(); i++) {
+	        if (i > upToChar)
+	            return ntabs;
+	        if (string.charAt(i) == '\t')
+	            ntabs++;
+	    }
+        return 0;
+    }
+
+    public String getFileName() {
 		if (file != null)
 			return file.getName();
 		return null;
@@ -48,19 +68,22 @@ public abstract class CompilerError {
     // source line containing the error, for caching reasons, derived from sourceCode
     private String sourceLine; 
 	private String getSourceLine() {
-		if (sourceLine != null)
-			return sourceLine;
+		if (sourceLine == null) {
+		    if (file != null && file.canRead()) {
+		        sourceLine = readLineFromFile();
+		    } 
 		
-		if (file != null && file.canRead()) {
-			return readLineFromFile();
+		    if (sourceCode != null) {
+		        sourceLine = readLineFromSource();
+		    } 
 		}
 		
-		if (sourceCode != null) {
-			return readLineFromSource();
-		}
-		
-		return null;
+		return sourceLine;
 	}
+
+    private String replaceTabs(String string) {
+        return string.replaceAll("\\t", "    ");
+    }
 
 	private String readLineFromSource() {
 		return readLineFromReader(new StringReader(sourceCode));
