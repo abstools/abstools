@@ -543,7 +543,7 @@ aspect GenerateProlog {
     
    public void VarDecl.generateProlog(PrintStream s){
     	//generates varDecl(name,type,initialization)"
-    	s.print("varDecl("+quote(getName())+",");
+    	s.print("varDecl("+varTransform(getName())+",");
     	this.getAccess().generateProlog(s);
     	s.print(",");
     	this.getInitExpOpt().generateProlog(s);
