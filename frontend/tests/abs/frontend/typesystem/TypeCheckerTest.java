@@ -267,6 +267,11 @@ public class TypeCheckerTest extends FrontendTest {
      }
 	 
      @Test
+     public void missingInterface() {
+         assertTypeErrors("class C implements I { } { I i; i = new C(); }"); 
+     }
+
+     @Test
      public void parametericDataTypesIllegalAssignment() {
          assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }"); 
      }

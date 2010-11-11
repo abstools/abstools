@@ -16,7 +16,8 @@ public class UnionType extends ReferenceType {
 	public UnionType(ClassDecl classDecl, List<InterfaceTypeUse> types) {
 		this.types = new ArrayList<InterfaceType>();
 		for (InterfaceTypeUse t : types) {
-			this.types.add((InterfaceType)t.getType());
+		    if (t.getType() instanceof InterfaceType) // maybe UnkownType
+		        this.types.add((InterfaceType)t.getType());
 		}
 		originatingClass = classDecl;
 	}
