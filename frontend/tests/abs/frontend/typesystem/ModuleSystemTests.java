@@ -66,11 +66,20 @@ public class ModuleSystemTests extends FrontendTest {
 		assertNoTypeErrors("module A; export X; data X; module B; export X from A; import * from A;  ");
 	}
 	
-	@Test
-	public void exportImportedName2() {
-		assertNoTypeErrors("module A; export X; data X; module B; export X from A; import X from A;  ");
-	}
-	
+    @Test
+    public void exportImportedName2() {
+        assertNoTypeErrors("module A; export X; data X; module B; export X from A; import X from A;  ");
+    }
+
+    @Test
+    public void starExportImportedNames() {
+        assertNoTypeErrors("module A; export *; data X; module B; export * from A; import * from A; module C; import * from B; type Y = X; ");
+    }
+    
+    @Test
+    public void starExportImportedNames2() {
+        assertNoTypeErrors("module A; export *; data X; module E; export *; data Z; module B; export * from E; export * from A; import * from A; import * from E; module C; import * from B; type Y = X; ");
+    }
 	
 	// NEGATIVE TESTS
 	

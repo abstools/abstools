@@ -410,7 +410,6 @@ public class TypeCheckerHelper {
 				   
 				   putNamesOfModule(mod, res, moduleName, null);
 			   }
-			   return res;
 		   } else if (e instanceof FromExport) {
 			   FromExport fe = (FromExport) e;
 			   String moduleName = fe.getModuleName();
