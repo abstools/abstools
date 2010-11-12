@@ -28,8 +28,18 @@ public class JavaGeneratorHelper {
     }
     
     public static void generateArgs(PrintStream stream, List<PureExp> args) {
+        generateArgs(stream,null,args);
+    }
+
+    public static void generateArgs(PrintStream stream, String firstArg, List<PureExp> args) {
         stream.print("(");
         boolean first = true;
+        
+        if (firstArg != null) {
+            stream.print(firstArg);
+            first = false;
+        }
+        
         for (PureExp e : args) {
           if (!first) 
               stream.print(", ");
@@ -54,8 +64,18 @@ public class JavaGeneratorHelper {
     }
     
     public static void generateParams(PrintStream stream, List<ParamDecl> params) {
+        generateParams(stream,null, params);
+    }
+
+    public static void generateParams(PrintStream stream, String firstArg, List<ParamDecl> params) {
         stream.print("(");
+        
         boolean first = true;
+        if (firstArg != null) {
+            stream.print(firstArg);
+            first = false;
+        }
+        
         for (ParamDecl d : params) {
             if (!first)
                 stream.print(", ");

@@ -15,6 +15,7 @@ public class ConcurrencyTests extends SemanticTests {
     static String INTERFACE_I = "interface I { Bool m(); Unit n(); } ";
     static String CLASS_C = "class C implements I { Unit n() { } Bool m() { return True; } } ";
     static String CALL_M_ASYNC = "{ Bool testresult = True; I i; i = new C(); i!m(); }";
+    static String COG_CALL_M_ASYNC = "{ Bool testresult = True; Fut<Bool> f; I i; i = new cog C(); f = i!m(); testresult = f.get; }";
     
     @Test
     public void asyncCall() {
@@ -71,6 +72,11 @@ public class ConcurrencyTests extends SemanticTests {
     public void futureAsParameter() {
     	// Use a future after variable bindings at the call's location have gone out of scope
     	assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
+    }
+    
+    @Test
+    public void initBlockCOG() {
+        assertEvalTrue(INTERFACE_I+ "class C implements I { Bool b = False; { b = True; } Unit n() { } Bool m() { return b; }} "+COG_CALL_M_ASYNC);
     }
     
     // ERROR Tests

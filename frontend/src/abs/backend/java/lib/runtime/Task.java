@@ -24,7 +24,11 @@ public abstract class Task<T extends ABSRef> {
     private ABSException exception;
     
     public Task(ABSObject source, T target) {
-        this.sender = ABSRuntime.getCurrentTask();
+        this(ABSRuntime.getCurrentTask(),source,target);
+    }
+
+    public Task(Task<?> sender, ABSObject source, T target) {
+        this.sender = sender;
         this.source = source;
         this.target = target;
         future = new ABSFut(this);

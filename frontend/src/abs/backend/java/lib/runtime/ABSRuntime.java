@@ -77,7 +77,7 @@ public class ABSRuntime {
     }
 
     
-    static Task<?> getCurrentTask() {
+    public static Task<?> getCurrentTask() {
         if (getCurrentCOG() != null) {
             return getCurrentCOG().getScheduler().getActiveTask();
         } else {

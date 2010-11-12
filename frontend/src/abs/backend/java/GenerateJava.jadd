@@ -276,12 +276,16 @@ aspect GenerateJava {
         }
 
 
+        stream.println("       getCOG().objectCreated(this);");
+        stream.println("   }");
+
+
         if (hasInitBlock()) {
+			stream.print("   public void __ABS_init()");
             getInitBlock().generateJava("      ",stream);
         }
 
-        stream.println("       getCOG().objectCreated(this);");
-        stream.println("   }");
+
 
       stream.println("   protected ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
         for (ParamDecl p : getParams()) {
@@ -299,21 +303,34 @@ aspect GenerateJava {
 
         // static constructor method for new cog C
         stream.print("   public static "+className+" __ABS_createNewCOG");
-        JavaGeneratorHelper.generateParams(stream, getParams());
+        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",getParams());
         stream.println(" {");
         stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"("+className+".class);");
         stream.println("       final "+ABSThread.class.getName()+" __ABS_thread = "+ABSRuntime.class.getName()+".getCurrentThread();");
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
+        stream.println("       final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
         stream.println("       __ABS_thread.setCOG(__ABS_cog);");
         stream.println("       try { ");
         stream.print("            "+className+" __ABS_result = new "+className);
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
+        stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSInitObjectTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         stream.println("          return __ABS_result;");
         stream.println("       } finally {");
         stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
         stream.println("       }");
+        stream.println("   }");
+
+        // static constructor method for new cog C
+        stream.print("   public static "+className+" __ABS_createNewObject");
+        JavaGeneratorHelper.generateParams(stream, getParams());
+        stream.println(" {");
+        stream.print("            "+className+" __ABS_result = new "+className);
+        JavaGeneratorHelper.generateParamArgs(stream,getParams());
+        stream.println(";");
+        stream.println("          __ABS_result.__ABS_init();");
+        stream.println("          return __ABS_result;");
         stream.println("   }");
 
         // methods
@@ -646,10 +663,11 @@ aspect GenerateJava {
       String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
         if (getCog().equals("cog")) {
             stream.print(className+".__ABS_createNewCOG");
+	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
         } else {
-            stream.print("new "+className);
+            stream.print(className+".__ABS_createNewObject");
+	        JavaGeneratorHelper.generateArgs(stream,getParams());
         }
-        JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
     public void DataTypeUse.generateJava(PrintStream stream) {
