@@ -131,7 +131,7 @@ class DebugModel implements TaskObserver {
         return cogInfo.get(view);
     }
     
-    public TaskInfo getTaskInfo(TaskView task) {
+    public synchronized TaskInfo getTaskInfo(TaskView task) {
         return taskToLineMap.get(task);
     }
     
@@ -380,8 +380,11 @@ class SourceView extends JPanel implements DebugModelListener {
     File file;
     
     private final Map<TaskState, DefaultHighlightPainter> highlightPainters = new HashMap<TaskState, DefaultHighlightPainter>();
+    private final String fileName;
     
-    SourceView(DebugModel model, File file) {
+    SourceView(DebugModel model, String fileName) {
+        this.file = new File(fileName);
+        this.fileName = fileName;
         this.model = model;
         JPanel content = new JPanel();
         this.setLayout(new BorderLayout());
@@ -415,7 +418,6 @@ class SourceView extends JPanel implements DebugModelListener {
         content.add(textArea,BorderLayout.CENTER);
         leftContent.add(lineArea,BorderLayout.EAST);
         leftContent.add(taskArea,BorderLayout.WEST);
-        this.file = file;
         
         fillArea();
         
@@ -535,7 +537,7 @@ class SourceView extends JPanel implements DebugModelListener {
 
     @Override
     public void taskInfoChanged(TaskInfo infoLine) {
-        if (infoLine.previousLine > 0) {
+        if (infoLine.previousLine > 0 && infoLine.previousFile == fileName) {
             taskLineInfo.get(infoLine.previousLine-1).remove(infoLine);
             updateTaskLine(infoLine.previousLine);
         }
@@ -546,7 +548,7 @@ class SourceView extends JPanel implements DebugModelListener {
             return;
         }
 
-        if (infoLine.currentLine > 0) {
+        if (infoLine.currentLine > 0 && infoLine.currentFile == fileName) {
             if (!taskLineInfo.get(infoLine.currentLine-1).contains(infoLine)){
                 taskLineInfo.get(infoLine.currentLine-1).add(infoLine);
             }
@@ -562,8 +564,10 @@ class SourceView extends JPanel implements DebugModelListener {
 
     @Override
     public void taskInfoRemoved(TaskInfo line) {
-        taskLineInfo.get(line.currentLine-1).remove(line);
-        updateTaskLine(line.currentLine);
+        if (line.currentFile == fileName) {
+            taskLineInfo.get(line.currentLine-1).remove(line);
+            updateTaskLine(line.currentLine);
+        }
     }
 
     @Override
@@ -1135,7 +1139,7 @@ class DebugWindow implements DebugModelListener  {
     private SourceView getSourceView(String fileName) {
         SourceView c = windows.get(fileName);
         if (c == null) {
-            c = new SourceView(model,new File(fileName));
+            c = new SourceView(model,fileName);
             windows.put(fileName, c);
             tabs.addTab(new File(fileName).getName(), c);
         }
