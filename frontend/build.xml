@@ -144,7 +144,7 @@
 		<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
 	</target>
 
-   <target name="dist" depends="compile" description="create distribution files">
+   <target name="dist" depends="clean,compile" description="create distribution files">
          <jar jarfile="${dist.dir}/absfrontend.jar">
              <fileset dir="${build.dir}" includes="abs/**" />
             <fileset dir="${src.dir}" includes="abs/**" />
