@@ -44,6 +44,12 @@ public class BackPositionTest extends FrontendTest {
     public void test6() {
         assertNodeAtPos("module M; interface Intf { } class C { C m() { Intf someName; } } ",1,51,DataTypeUse.class);
     }
+
+    @Test
+    public void testMainBlock() {
+        assertNodeAtPos(
+"module M; interface I {} { I i; i = null;    }",1,45,Block.class);
+    }
     
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
         Model m = assertParseOk(absCode, false, false);

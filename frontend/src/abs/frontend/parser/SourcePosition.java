@@ -1,6 +1,7 @@
 package abs.frontend.parser;
 
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Opt;
 import beaver.Symbol;
 
 public class SourcePosition {
@@ -29,7 +30,6 @@ public class SourcePosition {
     }
 
     private static SourcePosition findPosition(ASTNode<?> node, int searchPos) {
-
         if (inNode(node,searchPos)) {
             ASTNode<?> foundNode = node;
             for (int i = 0; i < node.getNumChild(); i++) {
@@ -44,14 +44,22 @@ public class SourcePosition {
     }
     
     private static boolean inNode(ASTNode<?> node, int pos) {
-        int col = Symbol.getColumn(node.getStartPos());
-        int line = Symbol.getLine(node.getStartPos());
-        int endcol = Symbol.getColumn(node.getEndPos());
-        int endline = Symbol.getLine(node.getEndPos());
+        if (node instanceof Opt<?>) {
+            Opt<?> opt = (Opt<?>) node;
+            if (opt.hasChildren()) {
+                node = opt.getChild(0);
+            } else {
+                return false;
+            }
+        }
+        int col = Symbol.getColumn(node.getStart());
+        int line = Symbol.getLine(node.getStart());
+        int endcol = Symbol.getColumn(node.getEnd());
+        int endline = Symbol.getLine(node.getEnd());
         int posCol = Symbol.getColumn(pos);
         int posLine = Symbol.getLine(pos);
-        if (smaller(pos,node.getStartPos()) || 
-            larger(pos,node.getEndPos()))
+        if (smaller(pos,node.getStart()) || 
+            larger(pos,node.getEnd()))
             return false;
         return true;
     }
