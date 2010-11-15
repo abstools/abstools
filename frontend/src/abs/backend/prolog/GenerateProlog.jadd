@@ -365,7 +365,7 @@ aspect GenerateProlog {
     	s.print("null");
     }
     public void ThisExp.generateProlog(PrintStream s) {
-        s.print("var(this)");
+        s.print(varTransform("this"));
     }
     
     // Class and Interface declarations
@@ -785,7 +785,7 @@ aspect GenerateProlog {
     	return new String(cs);
     }
     protected static String ASTNode.varTransform(String s){
-    	   	return "var('"+s+"')";
+    	   	return "l('"+s+"')";
     }
     protected static String ASTNode.quote(String s){
     	return "'" + s + "'";
