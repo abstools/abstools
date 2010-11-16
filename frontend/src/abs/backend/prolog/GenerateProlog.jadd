@@ -173,7 +173,7 @@ aspect GenerateProlog {
     	s.print(")");
     }
     public void NotEqExp.generateProlog(PrintStream s){
-    	s.print("notEq(");
+    	s.print("neq(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -189,7 +189,7 @@ aspect GenerateProlog {
     }
 
     public void GTEQExp.generateProlog(PrintStream s){
-    	s.print("gteq(");
+    	s.print("geq(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -205,7 +205,7 @@ aspect GenerateProlog {
     }
 
     public void LTEQExp.generateProlog(PrintStream s){
-    	s.print("lteq(");
+    	s.print("leq(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
