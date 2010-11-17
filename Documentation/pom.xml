@@ -1,20 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>eu.hats-project.abs</groupId>
-  <artifactId>eu.hats-project.abs.frontend</artifactId>
-  <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
-  <name>ABS Tool Suite</name>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>tool-documentation</artifactId>
+  <version>1.0</version>
+  <name>ABS Documentation</name>
   <url>http://hats-project.eu</url>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 
   <build>
   <plugins>
@@ -39,14 +30,29 @@
           <format>
             <id>latex</id>
           </format>
-          <format>
-            <id>pdf</id>
-          </format>
         </formats>
       </book>
     </books>
   </configuration>
   </plugin>
+
+  <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>latex-maven-plugin</artifactId>
+    <version>1.0</version>
+    <configuration>
+      <docsRoot>target/generated-site/latex/</docsRoot>
+    </configuration>
+    <executions>
+    <execution>
+      <phase>site</phase>
+      <goals>
+	<goal>latex</goal>
+      </goals>
+    </execution>
+    </executions>
+  </plugin>
+
   </plugins>
   </build>
 </project>
