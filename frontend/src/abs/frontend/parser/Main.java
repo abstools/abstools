@@ -148,7 +148,7 @@ public class Main {
 
 	
 	
-    private static CompilationUnit getStdLib() throws Exception {
+    public static CompilationUnit getStdLib() throws Exception {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             System.err.println("Could not found ABS Standard Library");
