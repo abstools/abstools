@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+  <name>Maven Plugin for ABS</name>
+  <description></description>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>eu.hats-project.absm2plugin</artifactId>
+  <version>0.1</version>
+  <goalPrefix>eu.hats-project.absm2</goalPrefix>
+  <isolatedRealm>false</isolatedRealm>
+  <inheritedByDefault>true</inheritedByDefault>
+  <mojos>
+    <mojo>
+      <goal></goal>
+      <description>Says &quot;Hi&quot; to the user.</description>
+      <requiresDirectInvocation>false</requiresDirectInvocation>
+      <requiresProject>true</requiresProject>
+      <requiresReports>false</requiresReports>
+      <aggregator>false</aggregator>
+      <requiresOnline>false</requiresOnline>
+      <inheritedByDefault>true</inheritedByDefault>
+      <implementation>eu.hats_project.build.maven.plugin.ABSMojo</implementation>
+      <language>java</language>
+      <instantiationStrategy>per-lookup</instantiationStrategy>
+      <executionStrategy>once-per-session</executionStrategy>
+      <parameters>
+        <parameter>
+          <name>absJavaBackendTargetFolder</name>
+          <type>java.io.File</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>The ABS Java Backend target folder.</description>
+        </parameter>
+        <parameter>
+          <name>absSrcFolder</name>
+          <type>java.io.File</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description>The ABS source folder.</description>
+        </parameter>
+        <parameter>
+          <name>sourceOnly</name>
+          <type>boolean</type>
+          <required>false</required>
+          <editable>true</editable>
+          <description></description>
+        </parameter>
+      </parameters>
+      <configuration>
+        <sourceOnly implementation="boolean" default-value="false">${abs.javaBackend.sourceOnly}</sourceOnly>
+        <absSrcFolder implementation="java.io.File" default-value="src/main/abs">${abs.srcFolder}</absSrcFolder>
+        <absJavaBackendTargetFolder implementation="java.io.File" default-value="target/main/java">${abs.javaBackend.targetFolder}</absJavaBackendTargetFolder>
+      </configuration>
+    </mojo>
+  </mojos>
+  <dependencies>
+    <dependency>
+      <groupId>eu.hats-project</groupId>
+      <artifactId>absfrontend</artifactId>
+      <type>jar</type>
+      <version>1.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <type>jar</type>
+      <version>2.0</version>
+    </dependency>
+  </dependencies>
+</plugin>

@@ -7,6 +7,59 @@
   <name>ABS Documentation</name>
   <url>http://hats-project.eu</url>
 
+  <organization>
+    <name>The HATS Project</name>
+    <url>http://hats-project.eu</url>
+  </organization>
+
+<developers>
+    <developer>
+      <id>jschaefer</id>
+      <name>Jan</name>
+      <email>jschaefer at cs uni-kl de</email>
+      <url>http://softech.cs.uni-kl.de/~janschaefer</url>
+      <organization>Universtiy of Kaiserslautern, Software Technology Group</organization>
+      <organizationUrl>http://softech.cs.uni-kl.de</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>+1</timezone>
+      <properties>
+<picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
+      </properties>
+    </developer>
+  </developers>
+
+<issueManagement>
+    <system>Trac</system>
+    <url>https://trac.hats-project.eu/projects/ABSTools/</url>
+  </issueManagement>
+
+<mailingLists>
+    <mailingList>
+      <name>ABS User List</name>
+      <subscribe>https://lists.hats-project.eu/mailman/listinfo/hats-user</subscribe>
+      <unsubscribe>https://lists.hats-project.eu/mailman/listinfo/hats-user</unsubscribe>
+      <post>hats-user@lists.hats-project.eu</post>
+      <archive>https://lists.hats-project.eu/mailman/private/hats-user/</archive>
+    </mailingList>
+    <mailingList>
+      <name>ABS Tools List</name>
+      <subscribe>https://lists.hats-project.eu/mailman/listinfo/hats-tools</subscribe>
+      <unsubscribe>https://lists.hats-project.eu/mailman/listinfo/hats-tools</unsubscribe>
+      <post>hats-tools@lists.hats-project.eu</post>
+      <archive>https://lists.hats-project.eu/mailman/private/hats-tools/</archive>
+    </mailingList>
+  </mailingLists>
+
+<scm>
+    <developerConnection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS/</developerConnection>
+    <connection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS/</connection>
+    <tag>trunk</tag>
+    <url>http://127.0.0.1/websvn/my-project</url>
+  </scm>
+
+
   <build>
   <plugins>
   <plugin>

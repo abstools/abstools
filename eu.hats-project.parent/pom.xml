@@ -1,0 +1,11 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>eu.hats-project.parent</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>../eu.hats-project.repository</module>
+    <module>../eu.hats-project.absm2plugin</module>
+  </modules>
+</project>

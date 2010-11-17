@@ -1,0 +1,26 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>eu.hats-project</groupId>
+    <artifactId>eu.hats-project.parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../eu.hats-project.parent</relativePath>
+  </parent>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>eu.hats-project.repository</artifactId>
+  <version>0.1</version>
+  <dependencies>
+    <dependency>
+      <groupId>eu.hats-project</groupId>
+      <artifactId>absfrontend</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+  </dependencies>
+  <repositories>
+    <repository>
+      <id>local</id>
+      <url>file:${basedir}/src/repository</url>
+    </repository>
+  </repositories>
+
+</project>

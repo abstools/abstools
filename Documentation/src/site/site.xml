@@ -1,4 +1,10 @@
 <project name="ABS">
+  <bannerLeft>
+    <name>ABS Tools</name>
+    <alt>ABS Tools Logo</alt>
+    <src>images/ABSToolsLogo.jpg</src>
+    <href>index.html</href>
+  </bannerLeft>
   <body>
     <menu name="Overview">
       <item name="Introduction" href="introduction.html" />
@@ -27,6 +33,10 @@
 
     <menu name="Eclipse Integration">
       <item name="Introduction" href="eclipseplugin.html"/>
+    </menu>
+
+    <menu name="Project Information" href="project-info.html">
+      <item name="Project Information" href="project-info.html"/>
     </menu>
   </body>
 
