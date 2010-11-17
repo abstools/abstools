@@ -1,0 +1,33 @@
+<project name="ABS">
+  <body>
+    <menu name="Overview">
+      <item name="Introduction" href="introduction.html" />
+    </menu>
+
+    <menu name="The ABS Language">
+      <item name="Introduction" href="abslang.html" />
+    </menu>
+    <menu name="The Frontend">
+      <item name="Parser" href="parser.html" />
+      <item name="Type-Checker" href="typechecker.html" />
+    </menu>
+
+    <menu name="Maude Backend">
+      <item name="Introduction" href="maudebackend.html" />
+    </menu>
+
+    <menu name="Java Backend">
+      <item name="Introduction" href="javabackend.html" />
+<!--
+      <item name="Compilation" />
+      <item name="Simulation" />
+      <item name="UML Sequence Diagram Generation" />
+-->
+    </menu>
+
+    <menu name="Eclipse Integration">
+      <item name="Introduction" href="eclipseplugin.html"/>
+    </menu>
+  </body>
+
+</project>
