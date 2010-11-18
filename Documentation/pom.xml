@@ -12,6 +12,13 @@
     <url>http://hats-project.eu</url>
   </organization>
 
+ <distributionManagement>
+    <site>
+      <id>dijkstra</id>
+      <url>scp://dijkstra.cs.uni-kl.de/var/www/abstools/</url>
+    </site>
+  </distributionManagement>
+
 <developers>
     <developer>
       <id>jschaefer</id>
