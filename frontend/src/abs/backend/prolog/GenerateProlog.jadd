@@ -134,10 +134,19 @@ aspect GenerateProlog {
     }
 
     public void VarUse.generateProlog(PrintStream s){
-      	if(this.getDecl_value instanceof FieldDecl)
+      	if(this.getDecl_value instanceof FieldDecl){
     		s.print("field('"+getName()+"')");
-    	else
-    		s.print(varTransform(getName()));
+       	}else{
+      		VarOrFieldDecl decl=this.getDecl_value;
+    		if(decl instanceof ParamDecl){
+    			ParamDecl param=(ParamDecl)decl;
+    			if(param.getParent().getParent() instanceof ClassDecl)
+    				s.print("field('"+getName()+"')");
+    			else
+    				s.print(varTransform(getName()));
+    		}else
+    			s.print(varTransform(getName()));
+    	}
     }
 
 	public void FieldUse.generateProlog(PrintStream s){
