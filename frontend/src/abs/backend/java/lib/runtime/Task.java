@@ -38,15 +38,15 @@ public abstract class Task<T extends ABSRef> {
         return id;
     }
 
-    public boolean isDeadlocked() {
+    public synchronized boolean isDeadlocked() {
         return exception != null && exception.isDeadlock();
     }
 
-    public boolean hasFailedAssertion() {
-        return exception != null && exception.isAssertion();
+    public synchronized boolean hasException() {
+        return exception != null;
     }
     
-    public ABSException getException() {
+    public synchronized ABSException getException() {
         return exception;
     }
     
@@ -89,6 +89,9 @@ public abstract class Task<T extends ABSRef> {
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
+            System.err.println("Error in "+this+":\n"+e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         
         synchronized (this) {
@@ -211,13 +214,18 @@ public abstract class Task<T extends ABSRef> {
         }
         
         @Override
-        public boolean hasFailedAssertion() {
-            return Task.this.hasFailedAssertion();
-        }
-        
-        @Override
         public synchronized void registerTaskListener(TaskObserver listener) {
             getObservers().add(listener);
+        }
+
+        @Override
+        public boolean hasException() {
+            return Task.this.hasException();
+        }
+
+        @Override
+        public ABSException getException() {
+            return Task.this.getException();
         }
         
     }

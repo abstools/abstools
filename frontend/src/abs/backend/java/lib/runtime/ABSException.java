@@ -15,5 +15,6 @@ public class ABSException extends RuntimeException {
     
     public boolean isDeadlock() { return false; }
     public boolean isAssertion() { return false; }
+    public boolean isIllegalSynchronousCall() { return false;  }
 
 }

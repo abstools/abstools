@@ -229,11 +229,18 @@ class DebugModel implements TaskObserver {
     
     @Override
     public synchronized void taskFinished(TaskView task) {
-       if (task.hasFailedAssertion()) { 
-           updateTaskState(task,TaskState.ASSERTION_FAILED,null,null);
-       } else {
-           updateTaskState(task,TaskState.FINISHED,null,null);
-       }
+       TaskState newState = TaskState.FINISHED;
+
+       if (task.hasException()) {
+           ABSException e = task.getException();
+           if (e.isAssertion()) {
+               newState = TaskState.ASSERTION_FAILED;
+           } else if (e.isIllegalSynchronousCall()){
+               newState = TaskState.EXCEPTION;
+           }
+       } 
+
+       updateTaskState(task,newState,null,null);
     }
 
 
@@ -326,6 +333,7 @@ enum TaskState {
     FINISHED(Color.LIGHT_GRAY),
     DEADLOCKED(Color.red),
     ASSERTION_FAILED(ColorUtils.PSYCHEDELIC_PURPLE),
+    EXCEPTION(ColorUtils.PSYCHEDELIC_PURPLE),
     BLOCKED(ColorUtils.setSaturation(Color.RED,0.5f));
     public final Color color;
     TaskState(Color c) {
