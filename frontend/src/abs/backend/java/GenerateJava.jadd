@@ -280,10 +280,11 @@ aspect GenerateJava {
         stream.println("   }");
 
 
+
         if (hasInitBlock()) {
-			stream.print("   public void __ABS_init()");
+            stream.print("   public void __ABS_init()");
             getInitBlock().generateJava("      ",stream);
-        }
+        } 
 
 
 
@@ -315,7 +316,9 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
-        stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSInitObjectTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        if (hasInitBlock()) {
+            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSInitObjectTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        }
         stream.println("          return __ABS_result;");
         stream.println("       } finally {");
         stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
@@ -594,8 +597,9 @@ aspect GenerateJava {
         stream.print(ABSRuntime.class.getName()+".asyncCall(");
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());
         stream.print("new "+Task.class.getName()+"<"+targetType+">(this,");
+        stream.print(ABSRuntime.class.getName()+".checkForNull(");
         getCallee().generateJava(stream);
-        stream.print(") {");
+        stream.print(")) {");
         int i = 0;
         for (PureExp e : getParams()) {
             stream.print(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
@@ -640,7 +644,9 @@ aspect GenerateJava {
     }
 
     public void SyncCall.generateJava(PrintStream stream) {
+        stream.print(ABSRuntime.class.getName()+".checkForNull(");
         getCallee().generateJava(stream);
+        stream.print(")");
         stream.print("."+JavaBackend.getMethodName(getMethod()));
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }

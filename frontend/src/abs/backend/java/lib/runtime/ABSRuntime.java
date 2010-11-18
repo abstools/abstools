@@ -48,6 +48,13 @@ public class ABSRuntime {
         
     }
     
+	public static <O> O checkForNull(O o) {
+	    if (o == null) {
+	        throw new ABSNullPointerException();
+	    } 
+	    return o;
+	}
+	
     public static void addScheduleAction(ScheduleAction action) {
         if (Config.GLOBAL_SCHEDULING) {
             globalScheduler.addAction(action);

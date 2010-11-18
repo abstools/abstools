@@ -32,5 +32,6 @@ public interface TaskView {
 
     boolean isDeadlocked();
 
-    boolean hasFailedAssertion();
+    boolean hasException();
+    ABSException getException();
 }

@@ -235,7 +235,7 @@ class DebugModel implements TaskObserver {
            ABSException e = task.getException();
            if (e.isAssertion()) {
                newState = TaskState.ASSERTION_FAILED;
-           } else if (e.isIllegalSynchronousCall()){
+           } else {
                newState = TaskState.EXCEPTION;
            }
        } 
@@ -769,7 +769,9 @@ class TaskTable extends JPanel  {
    				return "";
             	
             }
-            case 2: return line.task.getTarget().toString();
+            case 2: { 
+                return line.task.getTarget().toString();
+            }
             case 3: {
    				StringBuilder sb = new StringBuilder();
    				sb.append(line.task.getMethodName());
@@ -778,7 +780,13 @@ class TaskTable extends JPanel  {
    				sb.append(")");
    				return sb.toString();
             }
-            case 4: return line.state.toString();
+            case 4: {
+                String res = line.state.toString();
+                if (line.state == TaskState.EXCEPTION) {
+                    res += " ("+line.task.getException().getName()+")";
+                }
+                return res;
+            }
             case 5:
                 if (line.state == TaskState.SUSPENDED) {
                     if (line.waitingOnGuard != null) {

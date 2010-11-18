@@ -10,4 +10,9 @@ public class ABSIllegalSynchronousCallException extends ABSException {
     public boolean isIllegalSynchronousCall() {
         return true;
     }
+
+    @Override
+    public String getName() {
+        return "Illegal Synchronous Call";
+    }
 }

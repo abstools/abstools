@@ -1,6 +1,6 @@
 package abs.backend.java.lib.runtime;
 
-public class ABSException extends RuntimeException {
+public abstract class ABSException extends RuntimeException {
 
     public ABSException(String string) {
         super(string);
@@ -16,5 +16,8 @@ public class ABSException extends RuntimeException {
     public boolean isDeadlock() { return false; }
     public boolean isAssertion() { return false; }
     public boolean isIllegalSynchronousCall() { return false;  }
+    public boolean isNullPointer() { return false;  }
+
+    public abstract String getName();
 
 }

@@ -11,4 +11,9 @@ public class ABSAssertException extends ABSException {
     public boolean isAssertion() {
         return true;
     }
+    
+    @Override
+    public String getName() {
+        return "Assertion Failed";
+    }
 }
