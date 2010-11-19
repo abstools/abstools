@@ -1,0 +1,12 @@
+module Test;
+
+interface I {
+}
+
+class C implements I {
+}
+
+{
+  I i;
+  i = new C();
+}
