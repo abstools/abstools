@@ -224,6 +224,15 @@ aspect TypeChecker {
    		              }
    		          }
    		      }
+   		      
+   		      Type expectedReturnType = s.getReturnType().getType();
+   		      Type actualReturnType = ms.getReturnType().getType(); 
+   		      if (!expectedReturnType.equals(actualReturnType)) {
+                  e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_RETURN_TYPE, 
+                          name, d.getName(),
+                          expectedReturnType.toString(), actualReturnType.toString()));
+   		          
+   		      }
    		  }
    	  }
    	  
