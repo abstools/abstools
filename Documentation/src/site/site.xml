@@ -7,7 +7,7 @@
   </bannerLeft>
   <body>
     <menu name="Overview">
-      <item name="Introduction" href="introduction.html" />
+      <item name="Introduction" href="overview.html" />
     </menu>
 
     <menu name="The ABS Language">
