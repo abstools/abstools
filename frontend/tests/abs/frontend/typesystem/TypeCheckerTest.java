@@ -392,6 +392,12 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void methodOverrideWrongReturnType() {
+        assertTypeErrors("interface I { Unit m(); }" +
+                "class C implements I { Bool m() { return True; } } "); 
+    }
+    
+    @Test
     public void classMethodWrongNumParams() {
         assertTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }"); 
     }
