@@ -35,6 +35,7 @@ public class Main {
     protected boolean verbose = false ;
 	protected boolean typecheck = true;
 	protected boolean stdlib = true;
+	protected boolean dump = false;
 
 	public static void main(final String... args) throws Exception {
 	    new Main().parse(args);
@@ -44,7 +45,9 @@ public class Main {
 	    ArrayList<String> remaindingArgs = new ArrayList<String>();
 	    
         for (String arg : args) {
-            if (arg.equals("-v"))
+        	if (arg.equals("-d"))
+        		dump = true;
+        	else if (arg.equals("-v"))
                 verbose = true;
             else if (arg.equals("-notypecheck")) 
                 typecheck = false;
@@ -56,9 +59,7 @@ public class Main {
                 remaindingArgs.add(arg);
             
         }
-        
         return remaindingArgs;
-	    
 	}
 	
 	public Model parse(final String[] args) throws Exception {
@@ -66,7 +67,7 @@ public class Main {
 	    java.util.List<String> files = parseArgs(args);
 	    
 	    if (files.isEmpty()) {
-	        printErrorAndExit("Please provide at least on intput file");
+	        printErrorAndExit("Please provide at least one intput file");
 	    }
 	    
 		List<CompilationUnit> units = new List<CompilationUnit>();
@@ -103,6 +104,11 @@ public class Main {
             System.out.println("Result:");
             System.out.println(m);
             m.dumpTree("  ", System.out);
+        }
+        
+        // Added by Lei Mou
+        if (dump) {
+        	m.dump();
         }
 
         if (m.hasParserErrors()) {
@@ -144,9 +150,6 @@ public class Main {
         printUsage();
         System.exit(1);
     }
-
-
-	
 	
     public static CompilationUnit getStdLib() throws IOException  {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
@@ -156,9 +159,6 @@ public class Main {
         } 
         return parseUnit(new File(ABS_STD_LIB),null,new InputStreamReader(stream), false);
     }
-
-
-
 
     protected void printUsage() {
         System.out.println(
@@ -171,12 +171,8 @@ public class Main {
         		"  -v            verbose output\n" +
         		"  -notypecheck  disable typechecking\n" +
                 "  -nostdlib     do not include the standard lib \n" +
-        		"  -h            print this message\n");
-        
+        		"  -h            print this message\n");        
     }
-
-
-
 
     public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
 		Reader reader = new FileReader(file);
