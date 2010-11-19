@@ -36,7 +36,7 @@ public class Main {
 	protected boolean typecheck = true;
 	protected boolean stdlib = true;
 
-	public static void main(final String[] args) throws Exception {
+	public static void main(final String... args) throws Exception {
 	    new Main().parse(args);
 	}
 
@@ -148,7 +148,7 @@ public class Main {
 
 	
 	
-    public static CompilationUnit getStdLib() throws Exception {
+    public static CompilationUnit getStdLib() throws IOException  {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             System.err.println("Could not found ABS Standard Library");
@@ -232,7 +232,7 @@ public class Main {
         return new Model(units);
 	}
 	
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib) throws Exception {
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib) throws IOException  {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
