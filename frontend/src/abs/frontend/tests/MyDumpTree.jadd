@@ -1,0 +1,153 @@
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+
+// Added by Lei Mou:
+// Using the same output format as the linux command "tree" to dump the ABS AST.
+
+aspect MyDumpTree 
+{
+	// ClassName without qualification @ Address
+	protected static java.util.regex.Pattern ASTNode.p =
+        java.util.regex.Pattern.compile("([A-Z][a-zA-Z]*)@([\\da-f]+)");
+
+	protected void ASTNode.printInfo() {}
+
+	public void ASTNode.dump() {
+		dump(0, 0, false);
+	}
+	
+	protected void ASTNode.dump(int pattern, int level, boolean last)
+	{
+		java.util.regex.Matcher m = p.matcher(this.toString());
+		String clsName = null;
+		String address = null;
+		
+		int flag = pattern;
+		int bit = 0;
+		
+		while (m.find()) {
+			clsName = m.group(1);
+			address = m.group(2);
+		}
+
+		// General idea:
+		// In the printed version of the AST, each line is composed of level(number) prefixes.
+		// I used the pth bit of integer pattern to record which prefix at position p should
+		// be printed. (p starts from 0). There are four cases:
+		//   a. "|   ": if the pth bit is one
+		//   b. "    ": if the pth bit is zero
+		//   c. "|-- ": if the current node is the not the last child of its parent.
+		//   d. "`-- ": if the current node is the last child of its parent.
+		
+		for (int i=0; i<level; i++) {
+			if (i == level - 1) {
+				if (!last) {
+					System.out.print("|-- ");
+				}
+				else {
+					System.out.print("`-- ");
+				}
+			}
+			else {
+				bit = flag & 0x00000001;
+				if (bit != 0)
+					System.out.print("|   ");
+				else
+					System.out.print("    ");
+				flag >>= 1;
+			}
+		}
+
+		// The node information followed by the prefixes.
+		System.out.print(clsName + ":[");		
+		printInfo();
+		System.out.println("]");		
+
+
+		// Update the pattern.
+		// If the current node is the last child of this level, then all its children
+		// should not print prefix "|   " on position level.
+		
+		flag = pattern;
+		flag = flag | (0x00000001 << level);
+		
+		for (int i=0; i<getNumChild(); i++) {
+			if (i == getNumChild() - 1) {
+				flag = pattern;
+                //				getChild(i).dump(flag, level+1, true);
+                getChildNoTransform(i).dump(flag, level+1, true);
+			}
+			else {
+                //				getChild(i).dump(flag, level+1, false);
+                getChildNoTransform(i).dump(flag, level+1, false);
+			}
+		}
+	}
+
+    protected void VarOrFieldDecl.printInfo() 
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void TypedVarOrFieldDecl.printInfo()
+    {
+        System.out.print(this.getName() + " : " + (this.getAccess()));
+    }
+
+    protected void IdUse.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void DataTypeUse.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void VarOrFieldUse.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void DataConstructorExp.printInfo()
+    {
+        System.out.print(this.getConstructor());
+    }
+    
+    protected void DataConstructor.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void AssignStmt.printInfo()
+    {
+        //    System.out.print(((VarOrFieldUse)this.getVar()).getName() + "=");
+        System.out.print((this.getVar()).getName());
+    }
+
+    protected void MethodSig.printInfo() 
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void InterfaceDecl.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+
+    protected void IntLiteral.printInfo()
+    {
+        System.out.print(this.getContent());
+    }
+
+    protected void StringLiteral.printInfo()
+    {
+        System.out.print(this.getContent());
+    }
+
+    protected void Decl.printInfo()
+    {
+        System.out.print(this.getName());
+    }
+}  
