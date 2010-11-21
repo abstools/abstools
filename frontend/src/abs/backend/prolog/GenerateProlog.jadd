@@ -222,13 +222,13 @@ aspect GenerateProlog {
     }
 
     public void MinusExp.generateProlog(PrintStream s){
-    	s.print("minus(");
+    	s.print("-(");
 		getChild(0).generateProlog(s);
     	s.print(")");
     }
 
     public void AddAddExp.generateProlog(PrintStream s){
-    	s.print("add(");
+    	s.print("+(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -236,7 +236,7 @@ aspect GenerateProlog {
     }
 
     public void SubAddExp.generateProlog(PrintStream s){
-    	s.print("sub(");
+    	s.print("-(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -244,7 +244,7 @@ aspect GenerateProlog {
     }
 
     public void MultMultExp.generateProlog(PrintStream s){
-    	s.print("mul(");
+    	s.print("*(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -252,7 +252,7 @@ aspect GenerateProlog {
     }
 
     public void DivMultExp.generateProlog(PrintStream s){
-    	s.print("div(");
+    	s.print("/(");
     	getChild(0).generateProlog(s);
     	s.print(",");
     	getChild(1).generateProlog(s);
@@ -268,7 +268,7 @@ aspect GenerateProlog {
     }
 
     public void StringLiteral.generateProlog(PrintStream s){
-    	s.print(quote(getContent()));
+    	s.print(strTransform(getContent()));
     }
 
     public void IntLiteral.generateProlog(PrintStream s){
@@ -367,7 +367,7 @@ aspect GenerateProlog {
     }
 
     public void UnderscorePattern.generateProlog(PrintStream s){
-    	s.print("_");
+    	s.print(quote("_"));
     }
 
     public void NullExp.generateProlog(PrintStream s){
@@ -933,9 +933,15 @@ public void InitBlock.generateProlog(PrintStream s, String quotedClass,List<Para
     	cs[0] = Character.toUpperCase(cs[0]);
     	return new String(cs);
     }
+
     protected static String ASTNode.varTransform(String s){
     	   	return "l('"+s+"')";
     }
+
+    protected static String ASTNode.strTransform(String s){
+    	   	return "str('"+s+"')";
+    }
+
     protected static String ASTNode.quote(String s){
     	return "'" + s + "'";
     }
