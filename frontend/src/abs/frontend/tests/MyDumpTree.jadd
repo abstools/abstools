@@ -150,4 +150,31 @@ aspect MyDumpTree
     {
         System.out.print(this.getName());
     }
+
+    protected void StarImport.printInfo()
+    {
+        System.out.print(this.getModuleName());
+    }
+
+    protected void FromImport.printInfo() 
+    {
+        System.out.print(this.getModuleName());
+    }
+
+    protected void StarExport.printInfo()
+    {
+        if (hasModuleName()) {
+            System.out.print(this.getModuleName().getName());
+        }
+    }
+
+    protected void FromExport.printInfo()
+    {
+        System.out.print(this.getModuleName());
+    }
+    
+    protected void Call.printInfo()
+    {
+    	System.out.print(this.getMethod());
+    }
 }  

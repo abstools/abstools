@@ -46,7 +46,6 @@ AddMethodModifier : ModifierFragment ::= MethodImpl;
 ModifyMethodModifier : ModifierFragment ::= MethodImpl;
 RemoveMethodModifier : ModifierFragment ::= MethodSig;
 
-
 abstract	VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
 VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:Exp];
@@ -157,7 +156,6 @@ abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;
 GetExp: EffExp			::= PureExp;
-
 
 abstract Unary : PureExp ::= Operand:PureExp;
 
