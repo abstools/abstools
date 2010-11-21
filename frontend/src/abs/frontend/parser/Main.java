@@ -99,13 +99,6 @@ public class Main {
 		
         Model m = new Model(units);
 		
-        // Dump tree for debug
-        if (verbose){ 
-            System.out.println("Result:");
-            System.out.println(m);
-            m.dumpTree("  ", System.out);
-        }
-        
         // Added by Lei Mou
         if (dump) {
         	m.dump();
