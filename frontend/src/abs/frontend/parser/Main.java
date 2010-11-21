@@ -45,11 +45,11 @@ public class Main {
 	    ArrayList<String> remaindingArgs = new ArrayList<String>();
 	    
         for (String arg : args) {
-        	if (arg.equals("-d"))
+        	if (arg.equals("-dump"))
         		dump = true;
         	else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-notypecheck")) 
+            	else if (arg.equals("-notypecheck")) 
                 typecheck = false;
             else if (arg.equals("-nostdlib")) 
                 stdlib = false;
@@ -170,7 +170,8 @@ public class Main {
         		"Options:\n"+
         		"  -v            verbose output\n" +
         		"  -notypecheck  disable typechecking\n" +
-                "  -nostdlib     do not include the standard lib \n" +
+            "  -nostdlib     do not include the standard lib \n" +
+            "  -dump         dump AST to standard output \n" +
         		"  -h            print this message\n");        
     }
 
