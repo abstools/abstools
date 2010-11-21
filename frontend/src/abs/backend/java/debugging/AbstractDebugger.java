@@ -13,17 +13,18 @@ import abs.backend.java.observing.TaskView;
 
 public abstract class AbstractDebugger implements Debugger {
     protected int step;
-    
-    protected final Map<String, FileContent> fileContent = new HashMap<String,FileContent>();
+
+    protected final Map<String, FileContent> fileContent = new HashMap<String, FileContent>();
 
     @Override
     public synchronized void nextStep(TaskView taskView, String fileName, int line) {
         step++;
     }
-    
+
     static class FileContent {
         File file;
         ArrayList<String> lines = new ArrayList<String>();
+
         FileContent(File file) {
             this.file = file;
             try {
@@ -40,15 +41,14 @@ public abstract class AbstractDebugger implements Debugger {
                 e.printStackTrace();
             }
         }
-        
+
         String getLine(int i) {
-            return lines.get(i-1);
+            return lines.get(i - 1);
         }
-        
+
         File getFile() {
             return file;
         }
     }
-    
-    
+
 }

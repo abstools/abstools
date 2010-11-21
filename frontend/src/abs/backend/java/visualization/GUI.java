@@ -12,21 +12,20 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class GUI extends JFrame implements ActionListener {
     JButton stepBtn;
-	private JButton runBtn;
-    
-	volatile boolean stepping = true;
+    private JButton runBtn;
+
+    volatile boolean stepping = true;
     Semaphore sema;
 
-    
     public GUI() {
         super("Trading System");
         sema = new Semaphore(1);
         try {
-			sema.acquire();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-        
+            sema.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         stepBtn = new JButton("Next Step");
         runBtn = new JButton("Run");
         JPanel panel = new JPanel();
@@ -41,7 +40,7 @@ public class GUI extends JFrame implements ActionListener {
         setSize(300, 300);
         pack();
         setVisible(true);
-        
+
     }
 
     @Override
@@ -49,21 +48,21 @@ public class GUI extends JFrame implements ActionListener {
         if (e.getSource() == stepBtn) {
             sema.release();
         } else if (e.getSource() == runBtn) {
-        	stepping = false;
-        	sema.release(Integer.MAX_VALUE);
+            stepping = false;
+            sema.release(Integer.MAX_VALUE);
         }
     }
-    
+
     public void waitForClick() {
         try {
-        	if (stepping)
-        		sema.acquire();
+            if (stepping)
+                sema.acquire();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String... args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -71,9 +70,6 @@ public class GUI extends JFrame implements ActionListener {
             }
         });
 
-        
     }
-
-
 
 }

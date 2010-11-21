@@ -4,79 +4,59 @@ import java.util.Arrays;
 import java.util.List;
 
 public class CoCoME extends Main {
-	private final List<String> environmentClasses = Arrays.asList(
-            "CashBoxEnvImpl",
-            "CardReaderEnvImpl",
-            "ScreenImpl",
-            "PrinterEnvImpl",
-            "InventoryImpl",
-            "BankImpl",
-            "BarCodeScannerEnvImpl"
-            );
-    private final List<String> systemClasses = Arrays.asList(
-            "CashBoxImpl",
-            "CashDeskPCImpl",
-            "CardReaderImpl",
-            "PrinterImpl",
-            "BarCodeScannerImpl",
-            "ExpressCoordinatorImpl"
-            );
-    private final List<String> observedClasses = Arrays.asList(
-            "CashBoxEnvImpl",
-            "CardReaderEnvImpl",
-            "InventoryImpl",
+    private final List<String> environmentClasses = Arrays.asList("CashBoxEnvImpl", "CardReaderEnvImpl", "ScreenImpl",
+            "PrinterEnvImpl", "InventoryImpl", "BankImpl", "BarCodeScannerEnvImpl");
+    private final List<String> systemClasses = Arrays.asList("CashBoxImpl", "CashDeskPCImpl", "CardReaderImpl",
+            "PrinterImpl", "BarCodeScannerImpl", "ExpressCoordinatorImpl");
+    private final List<String> observedClasses = Arrays.asList("CashBoxEnvImpl", "CardReaderEnvImpl", "InventoryImpl",
             "BarCodeScannerEnvImpl",
-            //"ExpressCoordinatorImpl",
+            // "ExpressCoordinatorImpl",
             "ScreenImpl",
-            //"PrinterEnvImpl",
-            "BankImpl",
-            "CashBoxImpl",
-            "CashDeskPCImpl",
-            "BarCodeScannerImpl",
-            "CardReaderImpl"
-            //"PrinterImpl"
+            // "PrinterEnvImpl",
+            "BankImpl", "CashBoxImpl", "CashDeskPCImpl", "BarCodeScannerImpl", "CardReaderImpl"
+    // "PrinterImpl"
             );
-    
+
     {
-   	 abstractEnvironment = true;
-   	 showStartMsg = false;
-   	 staticActors = true;
+        abstractEnvironment = true;
+        showStartMsg = false;
+        staticActors = true;
     }
 
     @Override
     protected String getName() {
-    	return "TradingSystem";
+        return "TradingSystem";
     }
-    
+
     @Override
     protected void initializeActors() {
-    	super.initializeActors();
-        //out.println("#![Process Sale]");
+        super.initializeActors();
+        // out.println("#![Process Sale]");
 
         for (String s : getObservedClasses()) {
             if (!abstractEnvironment && getEnvironmentClasses().contains(s)) {
-           		out.println(s+"_1:"+s+"[ap]");
+                out.println(s + "_1:" + s + "[ap]");
             }
             if (getSystemClasses().contains(s)) {
-           		out.println(s+"_1:"+s+"[a]");
+                out.println(s + "_1:" + s + "[a]");
             }
         }
 
         out.println();
     }
-    
+
     @Override
     List<String> getObservedClasses() {
-    	return observedClasses;
+        return observedClasses;
     }
 
     @Override
     List<String> getSystemClasses() {
-    	return systemClasses;
+        return systemClasses;
     }
 
     @Override
     List<String> getEnvironmentClasses() {
-    	return environmentClasses;
+        return environmentClasses;
     }
 }

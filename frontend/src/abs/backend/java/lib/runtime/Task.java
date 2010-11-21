@@ -22,9 +22,9 @@ public abstract class Task<T extends ABSRef> {
     private final int id = counter.incrementAndGet();
     private Thread executingThread;
     private ABSException exception;
-    
+
     public Task(ABSObject source, T target) {
-        this(ABSRuntime.getCurrentTask(),source,target);
+        this(ABSRuntime.getCurrentTask(), source, target);
     }
 
     public Task(Task<?> sender, ABSObject source, T target) {
@@ -33,7 +33,7 @@ public abstract class Task<T extends ABSRef> {
         this.target = target;
         future = new ABSFut(this);
     }
-    
+
     public int getID() {
         return id;
     }
@@ -45,24 +45,23 @@ public abstract class Task<T extends ABSRef> {
     public synchronized boolean hasException() {
         return exception != null;
     }
-    
+
     public synchronized ABSException getException() {
         return exception;
     }
-    
-    
+
     public COG getCOG() {
-        return ((ABSObject)target).getCOG();        
+        return ((ABSObject) target).getCOG();
     }
-    
+
     public void schedule() {
         getCOG().addTask(this);
     }
-    
+
     public ABSFut<?> getFut() {
         return future;
     }
-    
+
     // only for observing
     void calledGetOnFut(ABSFut<?> someFut) {
         View v = view;
@@ -76,47 +75,49 @@ public abstract class Task<T extends ABSRef> {
         if (v != null)
             v.futureReady(someFut);
     }
-    
+
     public void run() {
         synchronized (this) {
             if (view != null)
                 view.taskStarted();
             executingThread = Thread.currentThread();
         }
-        
+
         try {
             ABSValue res = (ABSValue) execute();
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
-            System.err.println("Error in "+this+":\n"+e.getMessage());
+            System.err.println("Error in " + this + ":\n" + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         synchronized (this) {
             if (view != null)
                 view.taskFinished();
         }
-        
+
     }
-    
+
     public abstract Object execute();
-    
+
     public abstract String methodName();
-    
+
     public String toString() {
-        return "Task ("+id+") ["+getCOG()+", Method: "+target.getClass().getSimpleName()+"."+methodName()+"]";
+        return "Task (" + id + ") [" + getCOG() + ", Method: " + target.getClass().getSimpleName() + "." + methodName()
+                + "]";
     }
 
     private volatile View view;
+
     public synchronized TaskView getView() {
-        if (view == null) { 
+        if (view == null) {
             view = new View();
         }
         return view;
     }
-    
+
     protected ABSValue[] getArgs() {
         return new ABSValue[0];
     }
@@ -125,20 +126,20 @@ public abstract class Task<T extends ABSRef> {
         if (view != null)
             view.nextStep(fileName, line);
     }
-    
-    
+
     private class View implements TaskView {
         private List<TaskObserver> taskListener;
 
         @Override
         public TaskView getSender() {
-            if (sender == null) return null;
+            if (sender == null)
+                return null;
             return sender.getView();
         }
 
         public synchronized void nextStep(String fileName, int line) {
             for (TaskObserver l : getObservers()) {
-                l.taskStep(this,fileName,line);
+                l.taskStep(this, fileName, line);
             }
         }
 
@@ -156,21 +157,22 @@ public abstract class Task<T extends ABSRef> {
 
         @Override
         public ObjectView getSource() {
-            if (source == null) return null;
+            if (source == null)
+                return null;
             return source.getView();
         }
-        
+
         @Override
         public ObjectView getTarget() {
-            return ((ABSObject)target).getView();
+            return ((ABSObject) target).getView();
         }
 
         private synchronized List<TaskObserver> getObservers() {
-            if (taskListener == null) 
+            if (taskListener == null)
                 taskListener = new ArrayList<TaskObserver>(1);
             return taskListener;
         }
-        
+
         public synchronized void taskStarted() {
             for (TaskObserver l : getObservers()) {
                 l.taskStarted(this);
@@ -202,17 +204,17 @@ public abstract class Task<T extends ABSRef> {
         public FutView getFuture() {
             return future.getView();
         }
-        
+
         @Override
         public int getID() {
             return id;
         }
-        
+
         @Override
         public boolean isDeadlocked() {
             return Task.this.isDeadlocked();
         }
-        
+
         @Override
         public synchronized void registerTaskListener(TaskObserver listener) {
             getObservers().add(listener);
@@ -227,13 +229,11 @@ public abstract class Task<T extends ABSRef> {
         public ABSException getException() {
             return Task.this.getException();
         }
-        
+
     }
 
-
-	public synchronized Thread getExecutingThread() {
-	   return executingThread;
-   }
-
+    public synchronized Thread getExecutingThread() {
+        return executingThread;
+    }
 
 }

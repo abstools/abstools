@@ -1,4 +1,3 @@
-
 package abs.frontend;
 
 import abs.frontend.analyser.DuplicateCheckTest;
@@ -14,18 +13,10 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-		//        ScannerTest.class, 
-		ParserTest.class
-		, RecoverTest.class
-		, DuplicateCheckTest.class
-		, InterfaceDeclarationTest.class
-		, ParseSamplesTest.class
-		, VarResolutionTest.class
-		, TypingTest.class
-		, TypeCheckerTest.class
-		, ExamplesTypeChecking.class
-        })
+        // ScannerTest.class,
+        ParserTest.class, RecoverTest.class, DuplicateCheckTest.class, InterfaceDeclarationTest.class,
+        ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
+        ExamplesTypeChecking.class })
 public class AllTests {
-	// TODO: document this
+    // TODO: document this
 }
-

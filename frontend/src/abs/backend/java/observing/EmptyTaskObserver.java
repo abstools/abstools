@@ -41,6 +41,6 @@ public class EmptyTaskObserver implements TaskObserver {
     @Override
     public void taskDeadlocked(TaskView task) {
         // TODO Auto-generated method stub
-        
+
     }
 }

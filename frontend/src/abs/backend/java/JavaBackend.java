@@ -37,30 +37,30 @@ import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.UnionType;
 
 public class JavaBackend extends Main {
-    
-    public static void main(final String... args)  {
-        
+
+    public static void main(final String... args) {
+
         try {
             new JavaBackend().compile(args);
-        } catch(Exception e) {
-            System.err.println("An error occurred during compilation: "+e.getMessage());
-            
+        } catch (Exception e) {
+            System.err.println("An error occurred during compilation: " + e.getMessage());
+
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();
             }
-            
+
             System.exit(1);
         }
     }
-    
+
     private File destDir = new File(".");
     private boolean sourceOnly = false;
-    
+
     @Override
     public List<String> parseArgs(String[] args) throws Exception {
         List<String> restArgs = super.parseArgs(args);
         List<String> remaindingArgs = new ArrayList<String>();
-        
+
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
             if (arg.equals("-d")) {
@@ -72,7 +72,7 @@ public class JavaBackend extends Main {
                     destDir = new File(args[i]);
                 }
             } else if (arg.equals("-sourceonly")) {
-                this.sourceOnly  = true;
+                this.sourceOnly = true;
             } else {
                 remaindingArgs.add(arg);
             }
@@ -80,32 +80,31 @@ public class JavaBackend extends Main {
 
         return remaindingArgs;
     }
-    
+
     protected void printUsage() {
         super.printUsage();
         System.out.println("Java Backend:");
         System.out.println("  -d <dir>     generate files to <dir>");
         System.out.println("  -sourceonly  do not generate class files\n");
     }
-    
+
     private void compile(String[] args) throws Exception {
         final Model model = parse(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
-        
-        
+
         if (!destDir.exists()) {
-            System.err.println("Destination directory "+destDir.getAbsolutePath()+" does not exist!");
+            System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
             System.exit(1);
-        } 
+        }
 
         if (!destDir.canWrite()) {
-            System.err.println("Destination directory "+destDir.getAbsolutePath()+" cannot be written to!");
+            System.err.println("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
             System.exit(1);
-        } 
-    
-        compile(model,destDir);
-        
+        }
+
+        compile(model, destDir);
+
     }
 
     private void compile(Model m, File destDir) throws IOException {
@@ -116,134 +115,123 @@ public class JavaBackend extends Main {
         }
     }
 
-
     private static final Map<String, String> dataTypeMap = initDataTypeMap();
-    
+
     private static Map<String, String> initDataTypeMap() {
-        final Map<String, String> res = new HashMap<String,String>();
-        res.put("Int",ABSInteger.class.getName());
-        res.put("Bool",ABSBool.class.getName());
-        res.put("String",ABSString.class.getName());
-        res.put("Fut",ABSFut.class.getName());
-        res.put("Unit",ABSUnit.class.getName());
+        final Map<String, String> res = new HashMap<String, String>();
+        res.put("Int", ABSInteger.class.getName());
+        res.put("Bool", ABSBool.class.getName());
+        res.put("String", ABSString.class.getName());
+        res.put("Fut", ABSFut.class.getName());
+        res.put("Unit", ABSUnit.class.getName());
         return res;
     }
-
 
     public static String getJavaType(TypeUse absType) {
         return getQualifiedString(absType.getType());
     }
-    
+
     public static String getQualifiedString(String s) {
-    	return s;
+        return s;
     }
 
     public static String getQualifiedString(Name name) {
-    	return getQualifiedString(name.getString());
+        return getQualifiedString(name.getString());
     }
-    
+
     public static String getQualifiedString(Type absType) {
-   	 String res = null;
-   	 if (absType.isDataType()) {
-   		 DataTypeType dt = (DataTypeType) absType;
-      	 res = dataTypeMap.get(dt.getDecl().getName());
-   		 if (res != null)
-   			 return res;
-   		 
-   		 return getQualifiedString(dt.getDecl());
-/*   		 
-   		 if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs())) {
-   		     
-   			 sb.append("<");
-   			 boolean first = true;
-   			 for (Type t : dt.getTypeArgs()) {
-   				 if (first) first = false;
-   				 else sb.append(',');
-   				 sb.append(getQualifiedString(t));
-   			 }
-   			 sb.append(">");
-   		 }
-*/   		 
-   	 } else if (absType.isInterfaceType()) {
-   		 InterfaceType it = (InterfaceType) absType;
-   		 return getQualifiedString(it.getDecl());
-   	 } else if (absType.isTypeParameter()) {
-   		 TypeParameter tp = (TypeParameter) absType;
-   		 return tp.getDecl().getName();
-   	 } else if (absType.isBoundedType()) {
-   		 BoundedType bt = (BoundedType) absType;
-   		 if (bt.hasBoundType())
-   			 return getQualifiedString(bt.getBoundType());
-   		 return "?";
-   	 } else if (absType.isAnyType()) {
-   		 return "java.lang.Object";
-   	 } else if (absType.isUnionType()) {
-   	     return getQualifiedString(((UnionType) absType).getOriginatingClass());
-   	 }
+        String res = null;
+        if (absType.isDataType()) {
+            DataTypeType dt = (DataTypeType) absType;
+            res = dataTypeMap.get(dt.getDecl().getName());
+            if (res != null)
+                return res;
 
-   	 throw new RuntimeException("Type "+absType.getClass().getName()+" not yet supported by Java backend");
+            return getQualifiedString(dt.getDecl());
+            /*
+             * if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs()))
+             * {
+             * 
+             * sb.append("<"); boolean first = true; for (Type t :
+             * dt.getTypeArgs()) { if (first) first = false; else
+             * sb.append(','); sb.append(getQualifiedString(t)); }
+             * sb.append(">"); }
+             */
+        } else if (absType.isInterfaceType()) {
+            InterfaceType it = (InterfaceType) absType;
+            return getQualifiedString(it.getDecl());
+        } else if (absType.isTypeParameter()) {
+            TypeParameter tp = (TypeParameter) absType;
+            return tp.getDecl().getName();
+        } else if (absType.isBoundedType()) {
+            BoundedType bt = (BoundedType) absType;
+            if (bt.hasBoundType())
+                return getQualifiedString(bt.getBoundType());
+            return "?";
+        } else if (absType.isAnyType()) {
+            return "java.lang.Object";
+        } else if (absType.isUnionType()) {
+            return getQualifiedString(((UnionType) absType).getOriginatingClass());
+        }
+
+        throw new RuntimeException("Type " + absType.getClass().getName() + " not yet supported by Java backend");
     }
-
 
     public static String getQualifiedString(Decl decl) {
-        return decl.getModuleDecl().getName()+"."+getJavaName(decl);
+        return decl.getModuleDecl().getName() + "." + getJavaName(decl);
     }
 
-    private static final String[] JAVA_RESERVED_WORDS_ARRAY = { 
-        "abstract","do","import","public","throws",
-        "boolean","double","instanceof","return","transient",
-        "break","else","int","short","try","byte","extends",
-        "interface","static","void","case","final","long",
-        "strictfp","volatile","catch","finally","native","super",
-        "while","char","float","new","switch","class","for",
-        "package","synchronized","continue","if","private","this",
-        "default","implements","protected","throw","const","goto",
-        "null","true","false","abs"};
+    private static final String[] JAVA_RESERVED_WORDS_ARRAY = { "abstract", "do", "import", "public", "throws",
+            "boolean", "double", "instanceof", "return", "transient", "break", "else", "int", "short", "try", "byte",
+            "extends", "interface", "static", "void", "case", "final", "long", "strictfp", "volatile", "catch",
+            "finally", "native", "super", "while", "char", "float", "new", "switch", "class", "for", "package",
+            "synchronized", "continue", "if", "private", "this", "default", "implements", "protected", "throw",
+            "const", "goto", "null", "true", "false", "abs" };
     private static final Set<String> JAVA_RESERVED_WORDS = new HashSet<String>();
-    
+
     static {
         for (String s : JAVA_RESERVED_WORDS_ARRAY) {
             JAVA_RESERVED_WORDS.add(s);
         }
     }
-    
-    public static String getConstructorName(DataTypeDecl dataType,String name) {
-        return dataType.getName()+"_"+name;
+
+    public static String getConstructorName(DataTypeDecl dataType, String name) {
+        return dataType.getName() + "_" + name;
     }
-    
+
     public static String getConstructorName(DataConstructor decl) {
-        return getConstructorName(((DataTypeType)decl.getType()).getDecl(),decl.getName());
+        return getConstructorName(((DataTypeType) decl.getType()).getDecl(), decl.getName());
     }
 
     public static String getClassName(String name) {
-        return name+"_Class";
+        return name + "_Class";
     }
-    
+
     public static String getFunctionName(String name) {
-        return escapeReservedWords(name)+"_f";
+        return escapeReservedWords(name) + "_f";
     }
 
     public static String getMethodName(String name) {
         return escapeReservedWords(name);
     }
-        
+
     public static String getVariableName(String name) {
         return escapeReservedWords(name);
     }
-    
+
     private static String escapeReservedWords(String name) {
         if (JAVA_RESERVED_WORDS.contains(name)) {
-            return name+"__";
+            return name + "__";
         } else {
             return name;
         }
     }
-    
+
     public static String getJavaName(Decl decl) {
         if (decl instanceof FunctionDecl) {
             return getFunctionName(decl.getName());
         } else if (decl instanceof DataConstructor) {
-            return getConstructorName((DataConstructor)decl);
+            return getConstructorName((DataConstructor) decl);
         } else if (decl instanceof ClassDecl) {
             return getClassName(decl.getName());
         }

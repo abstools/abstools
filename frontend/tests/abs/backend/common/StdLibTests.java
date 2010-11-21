@@ -11,32 +11,32 @@ public class StdLibTests extends SemanticTests {
     public StdLibTests(BackendTestDriver d) {
         super(d);
     }
-    
+
     @Test
     public void listNth() {
         assertEvalTrue("{ List<Int> list = list[1, 2, 3]; Bool testresult = nth(list,2) == 3; }");
     }
-    
+
     @Test
     public void setContains1() {
         assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = contains(s, 3); }");
     }
-    
+
     @Test
     public void setContains2() {
         assertEvalTrue("{ Set<Int> s = set[1, 2, 3]; Bool testresult = ~contains(s, 4); }");
     }
-    
+
     @Test
     public void setRemove() {
         assertEvalTrue("{ Set<Int> set = set[1, 2, 3]; Bool testresult = ~contains(remove(set, 3), 3); }");
     }
-    
+
     @Test
     public void mapLookup() {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == 300; }");
     }
-    
+
     @Test
     public void mapLookupDefault1() {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookupDefault(map, 3, -1) == 300; }");
@@ -51,29 +51,27 @@ public class StdLibTests extends SemanticTests {
     public void mapPut1() {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = put(map, 2, -1) == map[Pair(1, 100), Pair(2, -1), Pair(3, 300)]; }");
     }
-    
+
     @Test
     public void mapPut2() {
         assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = put(map, 4, 400) == map[Pair(1, 100), Pair(2, 200), Pair(3, 300), Pair(4, 400)]; }");
     }
-    
 
-    
     // BUILT-IN FUNCTIONS
-    
+
     @Test
     public void stringSubstr() {
         assertEvalTrue("{ Bool testresult = substr(\"foobar\", 1, 3) == \"oob\"; }");
     }
-    
+
     @Test
     public void stringLength() {
         assertEvalTrue("{ Bool testresult = strlen(\"foobar\") == 6; }");
     }
-    
+
     @Test
     public void stringLength1WS() {
-    	assertEvalTrue("{ Bool testresult = strlen(\" \") == 1; }");
+        assertEvalTrue("{ Bool testresult = strlen(\" \") == 1; }");
     }
 
 }

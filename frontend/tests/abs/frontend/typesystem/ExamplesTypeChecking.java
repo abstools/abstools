@@ -5,7 +5,7 @@ import org.junit.Test;
 import abs.frontend.FrontendTest;
 
 public class ExamplesTypeChecking extends FrontendTest {
-    
+
     @Test
     public void abslang() {
         assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
@@ -16,11 +16,11 @@ public class ExamplesTypeChecking extends FrontendTest {
         assertTypeCheckTestFileOk("pingpong.abs");
     }
 
-    @Test 
+    @Test
     public void peerToPeer() {
         assertTypeCheckTestFileOk("PeerToPeer.abs");
     }
-    
+
     @Test
     public void boundedBuffer() {
         assertTypeCheckTestFileOk("boundedbuffer.abs");
@@ -33,17 +33,16 @@ public class ExamplesTypeChecking extends FrontendTest {
 
     @Test
     public void lizeth() {
-        assertTypeCheckTestFileOk("lizeth.abs",false);
+        assertTypeCheckTestFileOk("lizeth.abs", false);
     }
-    
+
     private void assertTypeCheckTestFileOk(String fileName) {
         assertTypeCheckTestFileOk(fileName, true);
     }
 
     private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) {
-        String dir="tests/abssamples/";
+        String dir = "tests/abssamples/";
         assertTypeCheckFileOk(dir + fileName, true);
     }
-    
 
 }

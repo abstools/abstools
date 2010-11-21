@@ -17,8 +17,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
     public void systemStarted() {
         System.out.println("SYSTEM STARTED");
     }
-    
-    
+
     @Override
     public void newCOGCreated(COGView cog, ObjectView initialObject) {
         System.out.println("NEW COG CREATED");
@@ -26,6 +25,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
         mainCOG.registerObjectCreationListener(this);
         mainCOG.getScheduler().registerTaskObserver(new EmptyTaskObserver() {
             TaskView mainTask;
+
             @Override
             public void taskCreated(TaskView task) {
                 if (mainTask == null)
@@ -33,39 +33,39 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
                 String sourceClass = "INIT";
                 if (task.getSource() != null)
                     sourceClass = task.getSource().getClassName();
-                System.out.print("TASK CREATED: "+sourceClass+" --> "+task.getTarget().getClassName()+"."+task.getMethodName()+"(");
+                System.out.print("TASK CREATED: " + sourceClass + " --> " + task.getTarget().getClassName() + "."
+                        + task.getMethodName() + "(");
                 int i = 0;
                 for (ABSValue v : task.getArgs()) {
-                    if (i > 0) System.out.print(", ");
+                    if (i > 0)
+                        System.out.print(", ");
                     System.out.print(v);
                     i++;
                 }
                 System.out.println(")");
             }
-            
+
             @Override
             public void taskFinished(TaskView task) {
                 if (task == mainTask)
                     System.out.println("SYSTEM TERMINATED");
             }
         });
-        
+
     }
 
     @Override
     public void objectCreated(ObjectView o, boolean newCOG) {
-        System.out.println("OBJECT CREATED: "+o.getClassName());
-        
+        System.out.println("OBJECT CREATED: " + o.getClassName());
+
         if (o.getClassName().equals("FieldClass")) {
             try {
-                ABSString s =  (ABSString) o.getFieldValue("field");
-                System.out.println("FIELD VALUE="+s.getString());
+                ABSString s = (ABSString) o.getFieldValue("field");
+                System.out.println("FIELD VALUE=" + s.getString());
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             }
         }
     }
-
-    
 
 }

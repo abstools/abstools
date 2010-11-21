@@ -11,42 +11,42 @@ public class ConcurrencyTests extends SemanticTests {
     public ConcurrencyTests(BackendTestDriver d) {
         super(d);
     }
-    
+
     static String INTERFACE_I = "interface I { Bool m(); Unit n(); } ";
     static String CLASS_C = "class C implements I { Unit n() { } Bool m() { return True; } } ";
     static String CALL_M_ASYNC = "{ Bool testresult = True; I i; i = new C(); i!m(); }";
     static String COG_CALL_M_ASYNC = "{ Bool testresult = True; Fut<Bool> f; I i; i = new cog C(); f = i!m(); testresult = f.get; }";
-    
+
     @Test
     public void asyncCall() {
-       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC); 
+        assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC);
     }
-    
+
     static String CALL_M_ASYNC_GET = "{ Bool testresult = False; I i; i = new cog C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
+
     @Test
     public void futGet() {
-       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET); 
+        assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET);
     }
 
     static String CALL_M_ASYNC_AWAIT_GET = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); await fut?; testresult = fut.get; }";
+
     @Test
     public void futAwaitAndGet() {
-       assertEvalTrue(INTERFACE_I+CLASS_C+CALL_M_ASYNC_AWAIT_GET); 
+        assertEvalTrue(INTERFACE_I + CLASS_C + CALL_M_ASYNC_AWAIT_GET);
     }
-    
+
     @Test
     public void twoFutureGuard() {
-   	 assertEvalTrue(INTERFACE_I+CLASS_C+
-   			 "{ Bool testresult = True; I i; i = new C(); " +
-   			 "  Fut<Bool> f1; Fut<Bool> f2;" +
-   			 "  f1 = i!m(); f2 = i!m();" +
-   			 "  await f1? & f2?; }");
+        assertEvalTrue(INTERFACE_I + CLASS_C + "{ Bool testresult = True; I i; i = new C(); "
+                + "  Fut<Bool> f1; Fut<Bool> f2;" + "  f1 = i!m(); f2 = i!m();" + "  await f1? & f2?; }");
     }
-    
+
     @Test
     public void booleanGuard() {
-       assertEvalTrue(INTERFACE_I+"class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"+
-               "{ I i; i = new cog C(); Fut<Bool> f; f = i!m(); i!n(); Bool testresult = False; testresult = f.get; } ");
+        assertEvalTrue(INTERFACE_I
+                + "class C implements I { Bool b = False; Unit n() { b = True; } Bool m() { await b; return b; } }"
+                + "{ I i; i = new cog C(); Fut<Bool> f; f = i!m(); i!n(); Bool testresult = False; testresult = f.get; } ");
     }
 
     // Future passing tests
@@ -58,42 +58,46 @@ public class ConcurrencyTests extends SemanticTests {
 
     @Test
     public void futureReturnValue() {
-    	// Return a future variable
-    	assertEvalTrue(INTERFACE_IF + CLASS_CF + CALL_M_FUTURE);
+        // Return a future variable
+        assertEvalTrue(INTERFACE_IF + CLASS_CF + CALL_M_FUTURE);
     }
-    
+
     @Test
     public void futureReturnCallResult() {
-    	// Return the result of an asynchronous call
-    	assertEvalTrue(INTERFACE_IF + CLASS_CF2 + CALL_M_FUTURE);
+        // Return the result of an asynchronous call
+        assertEvalTrue(INTERFACE_IF + CLASS_CF2 + CALL_M_FUTURE);
     }
-    
+
     @Test
     public void futureAsParameter() {
-    	// Use a future after variable bindings at the call's location have gone out of scope
-    	assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
+        // Use a future after variable bindings at the call's location have gone
+        // out of scope
+        assertEvalTrue(INTERFACE_IF + CLASS_CF3 + CALL_M_FUTURE);
     }
-    
+
     @Test
     public void initBlockCOG() {
-        assertEvalTrue(INTERFACE_I+ "class C implements I { Bool b = False; { b = True; } Unit n() { } Bool m() { return b; }} "+COG_CALL_M_ASYNC);
+        assertEvalTrue(INTERFACE_I
+                + "class C implements I { Bool b = False; { b = True; } Unit n() { } Bool m() { return b; }} "
+                + COG_CALL_M_ASYNC);
     }
-    
+
     // ERROR Tests
-    
+
     static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
 
     @Test
     public void futGetDeadlock() {
-        // Fails because a deadlock occurs 
-       assertEvalFails(INTERFACE_I+CLASS_C+CALL_M_ASYNC_GET_DEADLOCK); 
-    }
-    
-    @Test
-    public void illegalSyncCall() {
-        // Fails because a synchrous call to an object of a different COG is not allowed
-       assertEvalFails(INTERFACE_I+CLASS_C+"{ Bool testresult = False; I i; i = new cog C(); testresult = i.m(); }"); 
+        // Fails because a deadlock occurs
+        assertEvalFails(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET_DEADLOCK);
     }
 
-    
+    @Test
+    public void illegalSyncCall() {
+        // Fails because a synchrous call to an object of a different COG is not
+        // allowed
+        assertEvalFails(INTERFACE_I + CLASS_C
+                + "{ Bool testresult = False; I i; i = new cog C(); testresult = i.m(); }");
+    }
+
 }

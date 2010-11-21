@@ -9,8 +9,8 @@ public class BinOp {
             return ABSBool.fromBoolean(v2 == null);
         return v.eq(v2);
     }
-    
+
     public static ABSBool notEq(ABSValue v, ABSValue v2) {
-        return eq(v,v2).negate();
+        return eq(v, v2).negate();
     }
 }

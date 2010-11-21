@@ -19,19 +19,19 @@ public class SemanticTests {
     public SemanticTests(BackendTestDriver d) {
         driver = d;
     }
-    
+
     @Parameters
     public static Collection<?> data() {
-      Object[][] data = new Object[][] { { new JavaTestDriver() }, { new MaudeTestDriver() } };
-      return Arrays.asList(data);
+        Object[][] data = new Object[][] { { new JavaTestDriver() }, { new MaudeTestDriver() } };
+        return Arrays.asList(data);
     }
-    
+
     public void assertEvalTrue(String absCode) {
-        driver.assertEvalTrue("module BackendTest; "+absCode);
+        driver.assertEvalTrue("module BackendTest; " + absCode);
     }
 
     public void assertEvalFails(String absCode) {
-        driver.assertEvalFails("module BackendTest; "+absCode);
+        driver.assertEvalFails("module BackendTest; " + absCode);
     }
-    
+
 }

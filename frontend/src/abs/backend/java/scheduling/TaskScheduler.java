@@ -6,14 +6,14 @@ import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.TaskSchedulerView;
 
 /**
- * A TaskScheduler is responsible for executing the tasks of a single COG
- * A task is executed by calling its <code>run</code> method. 
+ * A TaskScheduler is responsible for executing the tasks of a single COG A task
+ * is executed by calling its <code>run</code> method.
  * 
  * Note that the task schedule is in general accessed in a multi-threaded way,
  * so ensure that the implementation is thread-safe
  * 
  * @author Jan Schäfer
- *
+ * 
  */
 public interface TaskScheduler {
 
@@ -21,7 +21,6 @@ public interface TaskScheduler {
 
     TaskSchedulerView getView();
 
-    
     /**
      * Returns the currently executing task.
      * 
@@ -30,10 +29,11 @@ public interface TaskScheduler {
     Task<?> getActiveTask();
 
     /**
-     * Called by the thread that is executing the currently active task,
-     * when hitting an await statement with a guard.
+     * Called by the thread that is executing the currently active task, when
+     * hitting an await statement with a guard.
      * 
-     * @param g the guard
+     * @param g
+     *            the guard
      */
     void await(ABSGuard g);
 

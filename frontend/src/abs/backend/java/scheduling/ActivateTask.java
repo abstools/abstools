@@ -5,17 +5,16 @@ import abs.backend.java.lib.runtime.Task;
 
 public class ActivateTask extends ScheduleAction {
 
-	private Task<?> task;
+    private Task<?> task;
 
-	public ActivateTask(COG cog, Task<?> task) {
-	   super(cog);
-	   this.task = task;
-	}
+    public ActivateTask(COG cog, Task<?> task) {
+        super(cog);
+        this.task = task;
+    }
 
-	@Override
-   public String shortString() {
-	   return getCOG().getID()+",A,"+task.getID();
-   }
-	
+    @Override
+    public String shortString() {
+        return getCOG().getID() + ",A," + task.getID();
+    }
 
 }

@@ -24,7 +24,7 @@ public class TypeError extends SemanticError {
 
     private static String[] toString(Name[] args) {
         String[] res = new String[args.length];
-        for (int i=0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             res[i] = args[i].getString();
         }
         return res;
@@ -32,18 +32,18 @@ public class TypeError extends SemanticError {
 
     private static String[] toString(Type[] args) {
         String[] res = new String[args.length];
-        for (int i=0; i < args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             res[i] = args[i].toString();
         }
         return res;
     }
 
     private static String[] toString(Integer[] args) {
-       String[] res = new String[args.length];
-       for (int i=0; i < args.length; i++) {
-           res[i] = args[i].toString();
-       }
-       return res;
-   }
+        String[] res = new String[args.length];
+        for (int i = 0; i < args.length; i++) {
+            res[i] = args[i].toString();
+        }
+        return res;
+    }
 
 }

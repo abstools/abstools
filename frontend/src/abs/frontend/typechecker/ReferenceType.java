@@ -6,5 +6,5 @@ public abstract class ReferenceType extends Type {
     public boolean isReferenceType() {
         return true;
     }
-    
+
 }

@@ -4,15 +4,16 @@ import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSValue;
 
 public class PatternVariable extends Pattern {
-   private final String varName;
-   public PatternVariable(String name) {
-       this.varName = name;
-   }
-    
-	@Override
-   public boolean match(ABSValue dt, PatternBinding b) {
-	   b.addBinding(dt);
-	   return true;
-   }
-	
+    private final String varName;
+
+    public PatternVariable(String name) {
+        this.varName = name;
+    }
+
+    @Override
+    public boolean match(ABSValue dt, PatternBinding b) {
+        b.addBinding(dt);
+        return true;
+    }
+
 }

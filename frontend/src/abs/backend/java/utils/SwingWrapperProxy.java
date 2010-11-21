@@ -9,13 +9,13 @@ import javax.swing.SwingUtilities;
 
 public class SwingWrapperProxy implements InvocationHandler {
     final Object target;
+
     public SwingWrapperProxy(Object target) {
         this.target = target;
     }
-    
+
     @Override
-    public synchronized Object invoke(final Object proxy, final Method method, final Object[] args)
-            throws Throwable {
+    public synchronized Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -28,13 +28,14 @@ public class SwingWrapperProxy implements InvocationHandler {
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
                 }
-            }});
-        
+            }
+        });
+
         return null;
     }
-    
+
     public static <V> V newInstance(V target, Class<?> interfce) {
-        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce}, new SwingWrapperProxy(target));
+        return (V) Proxy.newProxyInstance(SwingWrapperProxy.class.getClassLoader(), new Class[] { interfce },
+                new SwingWrapperProxy(target));
     }
 }
-

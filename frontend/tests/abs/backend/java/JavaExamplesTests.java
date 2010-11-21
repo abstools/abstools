@@ -6,17 +6,17 @@ import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
 
 public class JavaExamplesTests extends JavaBackendTest {
-    
+
     @Test
     public void pingPong() {
         assertValidJavaFile("pingpong.abs");
     }
 
-    @Test 
+    @Test
     public void peerToPeer() {
         assertValidJavaFile("PeerToPeer.abs");
     }
-    
+
     @Test
     public void boundedBuffer() {
         assertValidJavaFile("boundedbuffer.abs");
@@ -29,16 +29,16 @@ public class JavaExamplesTests extends JavaBackendTest {
 
     @Test
     public void lizeth() {
-        assertValidExample("lizeth.abs",false);
+        assertValidExample("lizeth.abs", false);
     }
-    
+
     private void assertValidJavaFile(String fileName) {
         assertValidExample(fileName, true);
     }
-    
+
     private void assertValidExample(String fileName, boolean withStdLib) {
-        String dir="tests/abssamples/";
+        String dir = "tests/abssamples/";
         assertValidJavaFile(dir + fileName, withStdLib);
     }
-    
+
 }

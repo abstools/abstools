@@ -14,7 +14,7 @@ import abs.frontend.ast.TypeParameterDecl;
 public class DataTypeType extends Type {
     private final DataTypeDecl decl;
     private final List<Type> typeArgs = new ArrayList<Type>();
-    
+
     public DataTypeType(DataTypeDecl decl) {
         this(decl, new Type[0]);
     }
@@ -22,7 +22,7 @@ public class DataTypeType extends Type {
     public DataTypeType(DataTypeDecl decl, abs.frontend.ast.List<DataTypeUse> typeUses) {
         this(decl, TypeCheckerHelper.getTypesFromDataTypeUse(typeUses).toArray(new Type[0]));
     }
-    
+
     public DataTypeType(DataTypeDecl decl, Type... typeArgs) {
         this.decl = decl;
         for (Type t : typeArgs) {
@@ -31,37 +31,37 @@ public class DataTypeType extends Type {
     }
 
     public DataTypeType(DataTypeDecl decl, List<Type> typeArgs) {
-       this.decl = decl;
-       this.typeArgs.addAll(typeArgs);
-   }
+        this.decl = decl;
+        this.typeArgs.addAll(typeArgs);
+    }
 
     public List<Type> getTypeArgs() {
         return Collections.unmodifiableList(typeArgs);
     }
-    
+
     public int numTypeArgs() {
         return typeArgs.size();
     }
-    
+
     public Type getTypeArg(int i) {
         return typeArgs.get(i);
     }
-    
+
     public boolean hasTypeArgs() {
         return !typeArgs.isEmpty();
     }
-    
+
     @Override
     public boolean isDataType() {
         return true;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (!super.equals(o))
             return false;
-        
-        if (! (o instanceof DataTypeType))
+
+        if (!(o instanceof DataTypeType))
             return false;
 
         DataTypeType t = (DataTypeType) o;
@@ -73,20 +73,20 @@ public class DataTypeType extends Type {
         }
         return true;
     }
-    
+
     @Override
     public boolean isAssignable(Type t) {
         return this.isAssignable(t, true);
     }
-    
+
     @Override
     public boolean isAssignable(Type t, boolean considerSubtyping) {
         if (super.isAssignable(t))
             return true;
-        
-        if (! (t instanceof DataTypeType))
+
+        if (!(t instanceof DataTypeType))
             return false;
-        
+
         DataTypeType dt = (DataTypeType) t;
         if (!dt.decl.equals(this.decl))
             return false;
@@ -96,7 +96,7 @@ public class DataTypeType extends Type {
         }
         return true;
     }
-    
+
     @Override
     public int hashCode() {
         return decl.hashCode();
@@ -105,7 +105,7 @@ public class DataTypeType extends Type {
     public DataTypeDecl getDecl() {
         return decl;
     }
-    
+
     public boolean isFutureType() {
         return decl.getName().equals("Fut");
     }
@@ -125,48 +125,48 @@ public class DataTypeType extends Type {
     public boolean isStringType() {
         return decl.getName().equals("String");
     }
-    
+
     public String toString() {
-   	 StringBuffer buf = new StringBuffer(decl.getName());
-   	 if (hasTypeArgs()) {
-   		 buf.append('<');
-   		 boolean first = true;
-   		 for (Type t : typeArgs) {
-   			 if (!first)
-   				 buf.append(',');
-   			 if (t != null)
-   			     buf.append(t.toString());
-   			 else
-   			     buf.append("<unknown>");
-   			 first = false;
-   		 }
-   		 buf.append('>');
-   	 }
-   	 
-   	 return buf.toString();
+        StringBuffer buf = new StringBuffer(decl.getName());
+        if (hasTypeArgs()) {
+            buf.append('<');
+            boolean first = true;
+            for (Type t : typeArgs) {
+                if (!first)
+                    buf.append(',');
+                if (t != null)
+                    buf.append(t.toString());
+                else
+                    buf.append("<unknown>");
+                first = false;
+            }
+            buf.append('>');
+        }
+
+        return buf.toString();
     }
-    
+
     public Type substituteTypeParams(Type t) {
-        
+
         if (!hasTypeArgs())
             return t;
 
         if (!(t.isDataType() || t.isTypeParameter()))
             return t;
-        
-        Map<TypeParameterDecl,Type> substitution = getSubstitutionMap();
+
+        Map<TypeParameterDecl, Type> substitution = getSubstitutionMap();
 
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
             List<Type> substitutedArgs = new ArrayList<Type>();
             for (Type arg : dt.getTypeArgs()) {
-                if (!arg.isTypeParameter()) 
+                if (!arg.isTypeParameter())
                     substitutedArgs.add(arg);
-            
+
                 TypeParameter tp = (TypeParameter) arg;
                 substitutedArgs.add(substitution.get(tp.getDecl()));
             }
-            return new DataTypeType(dt.getDecl(),substitutedArgs.toArray(new Type[0]));
+            return new DataTypeType(dt.getDecl(), substitutedArgs.toArray(new Type[0]));
         } else {
             TypeParameter tp = (TypeParameter) t;
             return substitution.get(tp.getDecl());
@@ -179,9 +179,8 @@ public class DataTypeType extends Type {
         for (int i = 0; i < numTypeArgs(); i++) {
             substitution.put(pd.getTypeParameter(i), getTypeArg(i));
         }
-        
+
         return substitution;
     }
-    
 
 }

@@ -15,23 +15,23 @@ import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
 public abstract class ABSObject implements ABSRef {
     private final COG cog;
-    protected final long id; 
-    
+    protected final long id;
+
     public ABSObject(long id) {
-        this(getCurrentCOG(),id);
+        this(getCurrentCOG(), id);
     }
-    
+
     public String toString() {
-        return getClassName()+" "+id;
+        return getClassName() + " " + id;
     }
-    
+
     public abstract String getClassName();
 
     protected ABSObject(COG cog, long id) {
         this.cog = cog;
         this.id = id;
     }
-    
+
     public final COG getCOG() {
         return cog;
     }
@@ -40,15 +40,15 @@ public abstract class ABSObject implements ABSRef {
      * Represents the init block
      */
     public void __ABS_init() {
-        
+
     }
-    
+
     protected final void __ABS_checkSameCOG() {
         if (cog != getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
         }
     }
-    
+
     @Override
     public ABSBool eq(ABSValue o) {
         return ABSBool.fromBoolean(this == o);
@@ -63,25 +63,25 @@ public abstract class ABSObject implements ABSRef {
     public boolean isDataType() {
         return false;
     }
-    
+
     @Override
     public boolean isReference() {
         return true;
     }
-    
-    
+
     protected volatile ObjectView view;
+
     public synchronized ObjectView getView() {
         if (view == null) {
             view = new View();
         }
         return view;
     }
-    
+
     protected ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException(fieldName); 
+        throw new NoSuchFieldException(fieldName);
     }
-    
+
     private class View implements ObjectView {
 
         @Override
@@ -107,18 +107,18 @@ public abstract class ABSObject implements ABSRef {
         @Override
         public void registerObjectObserver(ObjectObserver l) {
             // TODO Auto-generated method stub
-            
+
         }
-        
+
         @Override
         public String toString() {
             return ABSObject.this.toString();
         }
-        
+
         public List<String> getFieldNames() {
-            return ABSObject.this.getFieldNames(); 
+            return ABSObject.this.getFieldNames();
         }
-        
+
     }
 
     public abstract List<String> getFieldNames();

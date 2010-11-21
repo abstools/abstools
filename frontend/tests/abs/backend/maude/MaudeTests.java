@@ -22,42 +22,39 @@ import abs.frontend.parser.Main;
 
 public class MaudeTests extends ABSTest {
 
-
     @Test
     public void simpleBlock() {
         assertTrueMaude("module Test; { Bool testresult = True;}");
     }
-    
-    
+
     public void assertTrueMaude(String absCode) {
-    	assertMaudeResult(absCode, "True");
+        assertMaudeResult(absCode, "True");
     }
-    
+
     public void assertFalseMaude(String absCode) {
-    	assertMaudeResult(absCode, "False");
+        assertMaudeResult(absCode, "False");
     }
-    
+
     void assertMaudeResult(String absCode, String expectedResult) {
-    	try {
+        try {
             // TODO: test with other simulators (equational, timed) here as well
             String generatedMaudeCode = getMaudeCode(absCode, "ABS-SIMULATOR-RL");
-			String maudeOutput = getMaudeOutput(generatedMaudeCode);
-			Pattern pattern = Pattern.compile(".*@ \"testresult\" \\|-> \"(\\w+)\"\\[emp\\].*");
-			Matcher matcher = pattern.matcher(maudeOutput);
-			if (matcher.find()) {
-				String boolValue = matcher.group(1);
-				Assert.assertEquals(boolValue, expectedResult);
-			} else {
-			    System.out.println(maudeOutput);
-				Assert.fail("Did not find Maude \"testresult\" variable.");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.fail(e.getMessage());
-		}     	
+            String maudeOutput = getMaudeOutput(generatedMaudeCode);
+            Pattern pattern = Pattern.compile(".*@ \"testresult\" \\|-> \"(\\w+)\"\\[emp\\].*");
+            Matcher matcher = pattern.matcher(maudeOutput);
+            if (matcher.find()) {
+                String boolValue = matcher.group(1);
+                Assert.assertEquals(boolValue, expectedResult);
+            } else {
+                System.out.println(maudeOutput);
+                Assert.fail("Did not find Maude \"testresult\" variable.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
     }
-    
-   
+
     protected String getMaudeCode(String absCode, String module) {
         try {
             Model model = null;
@@ -83,46 +80,46 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeOutput(String maudeCode) throws IOException, InterruptedException {
-    	StringBuffer result = new StringBuffer();
-    	// Assuming `maude' is in $PATH here.
-    	
-    	ProcessBuilder pb = new ProcessBuilder();
+        StringBuffer result = new StringBuffer();
+        // Assuming `maude' is in $PATH here.
 
-    	File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(),"interpreter");
-    	File interpreter = new File(interpreterDir,"abs-interpreter.maude");
-        String[] cmd = {"maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch", interpreter.getAbsolutePath()};
+        ProcessBuilder pb = new ProcessBuilder();
+
+        File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(), "interpreter");
+        File interpreter = new File(interpreterDir, "abs-interpreter.maude");
+        String[] cmd = { "maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch", interpreter.getAbsolutePath() };
         pb.command(cmd);
         pb.directory(interpreterDir);
-    	
-    	if (!interpreter.exists()) {
-    	    Assert.fail(interpreter.getAbsolutePath()+" does not exist!");
-    	}
-    	//pb.directory(workingDir);
-    	pb.redirectErrorStream(true);
-    	Process p = pb.start();
+
+        if (!interpreter.exists()) {
+            Assert.fail(interpreter.getAbsolutePath() + " does not exist!");
+        }
+        // pb.directory(workingDir);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
 
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
         while (in.ready()) {
-        	result.append(in.readLine());
+            result.append(in.readLine());
         }
-    	out.println(maudeCode);
-    	out.flush();
-    	while (in.ready()) {
-    		result.append(in.readLine());
-    	}
-    	out.println("rew start .");
-    	out.flush();
-    	while (in.ready()) {
-    		result.append(in.readLine() + "\n");
-    	}
-    	out.println("quit");
-    	out.flush();
-    	p.waitFor();
-    	while (in.ready()) {
-    		result.append(in.readLine() + "\n");
-    	}
-    	return result.toString();
+        out.println(maudeCode);
+        out.flush();
+        while (in.ready()) {
+            result.append(in.readLine());
+        }
+        out.println("rew start .");
+        out.flush();
+        while (in.ready()) {
+            result.append(in.readLine() + "\n");
+        }
+        out.println("quit");
+        out.flush();
+        p.waitFor();
+        while (in.ready()) {
+            result.append(in.readLine() + "\n");
+        }
+        return result.toString();
     }
 
     public void assertFails(String absCode) {

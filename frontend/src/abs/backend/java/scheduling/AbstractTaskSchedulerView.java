@@ -23,7 +23,7 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
         }
         return observers;
     }
-    
+
     public void taskReady(TaskView view) {
         for (TaskObserver l : getObservers()) {
             l.taskReady(view);
@@ -34,11 +34,9 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
         for (TaskObserver l : getObservers()) {
             l.taskDeadlocked(task);
         }
-        
+
     }
 
-
-    
     synchronized void taskResumed(TaskView runningTask, ABSGuard g) {
         for (TaskObserver l : getObservers()) {
             l.taskResumed(runningTask, g.getView());
@@ -68,8 +66,5 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
             l.taskCreated(view);
         }
     }
-
-    
-
 
 }

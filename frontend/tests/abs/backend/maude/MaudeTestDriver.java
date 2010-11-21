@@ -5,7 +5,7 @@ import abs.backend.BackendTestDriver;
 public class MaudeTestDriver extends BackendTestDriver {
 
     MaudeTests maude = new MaudeTests();
-    
+
     @Override
     public void assertEvalEquals(String absCode, boolean value) {
         if (value)

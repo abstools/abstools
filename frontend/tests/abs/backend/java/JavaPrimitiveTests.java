@@ -7,7 +7,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testNullLit() {
         assertValid("interface I { } { I i; i = null; }");
     }
-    
+
     @Test
     public void testBoolLit() {
         assertValidStdLib(" { Bool b = True; b = False; }");
@@ -17,7 +17,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testBoolNeg() {
         assertValidStdLib(" { Bool b = ~True; }");
     }
-    
+
     @Test
     public void testBoolAnd() {
         assertValidStdLib(" { Bool b = True && False; }");
@@ -37,8 +37,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testBoolNotEq() {
         assertValidStdLib(" { Bool b = True != False; }");
     }
-    
-    
+
     @Test
     public void testIntLit() {
         assertValidStdLib(" { Int i = 5; }");
@@ -53,12 +52,12 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testLongIntLit() {
         assertValidStdLib(" { Int i = 534023840238420394820394823094; }");
     }
-    
+
     @Test
     public void testIntAddOps() {
         assertValidStdLib(" { Int i = 5 + -7; }");
     }
-    
+
     @Test
     public void testIntSubtractOps() {
         assertValidStdLib(" { Int i = 7 - 5; }");
@@ -78,7 +77,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testIntModOps() {
         assertValidStdLib(" { Int i = 7 % 5; }");
     }
-    
+
     @Test
     public void testIntCompareOps() {
         assertValidStdLib("{ Bool b = 7 == 5; }");
@@ -88,12 +87,12 @@ public class JavaPrimitiveTests extends JavaBackendTest {
         assertValidStdLib("{ Bool b = 7 >= 5; }");
         assertValidStdLib("{ Bool b = 7 <= 5; }");
     }
-    
+
     @Test
     public void testStringLit() {
         assertValidStdLib("{ String s = \"Test\"; }");
     }
-    
+
     @Test
     public void testStringCompareOps() {
         assertValidStdLib("{ Bool b = \"Test\" == \"Test\"; }");

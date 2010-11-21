@@ -23,47 +23,49 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class JavaBackendTest extends ABSTest {
-    
+
     private static final boolean DEBUG = false;
 
     void assertValidStdLib(String absCode) {
-        assertValidJava(getJavaCode("module JavaUnitTest; "+absCode, true));
+        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, true));
     }
-    
+
     void assertValid(String absCode) {
-        assertValidJava(getJavaCode("module JavaUnitTest; "+absCode, false));
+        assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, false));
     }
-    
+
     protected void assertValidJavaFile(String absFile, boolean useStdLib) {
-       Model m = assertParseFileOk(absFile, true, true);
-    try {
-        assertValidJava(getJavaCode(m));
-    } catch (IOException e) {
-        e.printStackTrace();
-        Assert.fail(e.getMessage());
+        Model m = assertParseFileOk(absFile, true, true);
+        try {
+            assertValidJava(getJavaCode(m));
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
     }
-    }
-    
+
     void assertValidJava(JavaCode javaCode) {
         try {
-            javaCode.compile("-classpath","bin", "-d", "gen/test");
+            javaCode.compile("-classpath", "bin", "-d", "gen/test");
         } catch (Exception e) {
-           System.out.println(javaCode);
-           Assert.fail(e.getMessage());
+            System.out.println(javaCode);
+            Assert.fail(e.getMessage());
         } finally {
             javaCode.deleteCode();
         }
     }
-    
-    static class NoTestResultFoundException extends RuntimeException { NoTestResultFoundException() { super("No test result was found!"); }}
-    
-    
-    
+
+    static class NoTestResultFoundException extends RuntimeException {
+        NoTestResultFoundException() {
+            super("No test result was found!");
+        }
+    }
+
     StringBuffer runJava(JavaCode javaCode, String... jvmargs) {
         StringBuffer output = new StringBuffer();
 
         try {
-            javaCode.compile("-classpath","bin", "-d", "gen/test");
+            javaCode.compile("-classpath", "bin", "-d", "gen/test");
 
             ArrayList<String> args = new ArrayList<String>();
             args.add("java");
@@ -78,7 +80,7 @@ public class JavaBackendTest extends ABSTest {
                 s = r.readLine();
                 if (s == null)
                     break;
-                output.append(s+"\n");
+                output.append(s + "\n");
             }
             return output;
         } catch (IOException e) {
@@ -87,22 +89,22 @@ public class JavaBackendTest extends ABSTest {
         }
 
     }
-    
+
     boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) {
-        StringBuffer output = null; 
+        StringBuffer output = null;
         try {
             output = runJava(javaCode);
-            String s = output.toString()+"\n";
+            String s = output.toString() + "\n";
             String result = null;
             Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);
             Matcher m = p.matcher(s);
             if (m.matches()) {
                 result = m.group(1);
             }
-            
+
             if (result == null)
                 throw new NoTestResultFoundException();
-            
+
             return Boolean.valueOf(result);
         } catch (NoTestResultFoundException e) {
             if (expectFail) {
@@ -115,41 +117,43 @@ public class JavaBackendTest extends ABSTest {
             }
         } catch (Exception e) {
             System.out.println(output.toString());
-           System.out.println(javaCode);
+            System.out.println(javaCode);
             Assert.fail(e.getMessage());
             return false;
         }
     }
-    
+
     protected JavaCode getJavaCode(String absCode, boolean withStdLib) {
         try {
-        Model model = null;
-        String code = null;
-        try {
-            code = absCode;
-//            if (withStdLib) 
-//                code = "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; " + code; 
-            model = Main.parseString(code, withStdLib);
-            if (model.hasErrors()) {
-                Assert.fail(model.getErrors().get(0).getHelpMessage());
-            } else {
-                SemanticErrorList el = model.typeCheck();
-                if (!el.isEmpty()) {
-                    Assert.fail(el.get(0).getMsg());
+            Model model = null;
+            String code = null;
+            try {
+                code = absCode;
+                // if (withStdLib)
+                // code =
+                // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
+                // + code;
+                model = Main.parseString(code, withStdLib);
+                if (model.hasErrors()) {
+                    Assert.fail(model.getErrors().get(0).getHelpMessage());
+                } else {
+                    SemanticErrorList el = model.typeCheck();
+                    if (!el.isEmpty()) {
+                        Assert.fail(el.get(0).getMsg());
+                    }
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Assert.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
+                return null;
             }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getClass().getSimpleName()+":"+e.getMessage());
-            return null;
-        }
-        
-        if (model.hasErrors()) {
-            Assert.fail(model.getErrors().getFirst().getHelpMessage());
-            return null;
-        }
-        return getJavaCode(model);
+
+            if (model.hasErrors()) {
+                Assert.fail(model.getErrors().getFirst().getHelpMessage());
+                return null;
+            }
+            return getJavaCode(model);
         } catch (NumberFormatException e) {
             Assert.fail(e.getMessage());
             return null;
@@ -165,17 +169,17 @@ public class JavaBackendTest extends ABSTest {
         model.generateJavaCode(code);
         return code;
     }
-    
+
     private static File getTempFile(String testCode) throws IOException {
         File tmpFile = File.createTempFile("abs", "test");
         PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));
         p.print(testCode);
         p.close();
         tmpFile.deleteOnExit();
-        
+
         return tmpFile;
     }
-    
+
     void assertEvalTrue(String absCode) {
         assertEvalEquals(absCode, true);
     }
@@ -187,7 +191,7 @@ public class JavaBackendTest extends ABSTest {
         boolean res = runJavaAndTestResult(javaCode, false);
         if (value != res)
             System.out.println(javaCode);
-        Assert.assertEquals(value,res);
+        Assert.assertEquals(value, res);
     }
 
     public void assertEvalFails(String absCode) {
@@ -198,8 +202,8 @@ public class JavaBackendTest extends ABSTest {
             Assert.fail("Expected that Java run failed, but did not.");
         } catch (NoTestResultFoundException e) {
             // OK
-        } 
-        
+        }
+
     }
-    
+
 }

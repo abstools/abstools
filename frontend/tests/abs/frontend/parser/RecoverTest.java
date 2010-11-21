@@ -15,57 +15,57 @@ public class RecoverTest extends FrontendTest {
     @Test
     public void importTest() {
         Model m = assertParseError(" x class C { }");
-        assertContainsDeclWithName(m,"C");
+        assertContainsDeclWithName(m, "C");
     }
 
     @Test
     public void intfTest() {
         Model m = assertParseError(" interface I { class C { }");
-        assertContainsDeclWithName(m,"I");
+        assertContainsDeclWithName(m, "I");
     }
 
     @Test
     public void intfTest2() {
         Model m = assertParseError(" interface I class C { }");
-        assertContainsDeclWithName(m,"I");
+        assertContainsDeclWithName(m, "I");
     }
 
     @Test
     public void intfTest3() {
         Model m = assertParseError(" interface I extends J,K class C { }");
-        assertContainsDeclWithName(m,"I");
+        assertContainsDeclWithName(m, "I");
     }
 
     @Test
     public void intfTest4() {
         Model m = assertParseError(" interface I { I m() } class C { }");
-        assertContainsDeclWithName(m,"I");
+        assertContainsDeclWithName(m, "I");
     }
-    
+
     @Test
     public void classDeclTest() {
         Model m = assertParseError(" class C { class D { }");
-        assertContainsDeclWithName(m,"C");
+        assertContainsDeclWithName(m, "C");
     }
 
     @Test
     public void classDeclTest2() {
         Model m = assertParseError(" class C implements I { class D { }");
-        assertContainsDeclWithName(m,"C");
+        assertContainsDeclWithName(m, "C");
     }
-    
+
     @Test
     public void classDeclTest3() {
         Model m = assertParseError(" class C implements I { XXX asd statasd asdasd }");
-        assertContainsDeclWithName(m,"C");
+        assertContainsDeclWithName(m, "C");
     }
 
     @Test
     public void methodTest3() {
         Model m = assertParseError(" class C { Unit m() { asdasd } }");
-        assertContainsMethodWithName(m,"m");
+        assertContainsMethodWithName(m, "m");
     }
-    
+
     private void assertContainsMethodWithName(Model m, String name) {
         boolean found = false;
         for (MethodImpl mi : ((ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(0)).getMethods()) {
@@ -73,7 +73,7 @@ public class RecoverTest extends FrontendTest {
                 found = true;
             }
         }
-        assertTrue("Did not found method with name "+name,found);
+        assertTrue("Did not found method with name " + name, found);
     }
 
     private void assertContainsDeclWithName(Model m, String name) {
@@ -83,6 +83,6 @@ public class RecoverTest extends FrontendTest {
                 found = true;
             }
         }
-        assertTrue("Did not found decl with name "+name,found);
+        assertTrue("Did not found decl with name " + name, found);
     }
 }

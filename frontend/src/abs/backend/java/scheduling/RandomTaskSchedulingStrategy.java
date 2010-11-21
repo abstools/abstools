@@ -12,24 +12,23 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 /**
  * A scheduling strategy that randomly chooses the next task
  * 
- * It is possible to set the initial seed used for the random generator by 
+ * It is possible to set the initial seed used for the random generator by
  * setting the property abs.schedulerseed to some long value.
  * 
  * @author Jan Schäfer
- *
+ * 
  */
 public class RandomTaskSchedulingStrategy implements TaskSchedulingStrategy {
     private final static Logger logger = Logging.getLogger(RandomTaskSchedulingStrategy.class.getName());
 
     private final Random random;
-    
+
     public RandomTaskSchedulingStrategy(Random r) {
         random = r;
     }
-    
+
     @Override
-    public synchronized TaskInfo schedule(TaskScheduler scheduler,
-            List<TaskInfo> schedulableTasks) {
+    public synchronized TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> schedulableTasks) {
         return schedulableTasks.get(random.nextInt(schedulableTasks.size()));
     }
 

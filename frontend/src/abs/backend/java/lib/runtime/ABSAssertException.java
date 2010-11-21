@@ -6,12 +6,12 @@ public class ABSAssertException extends ABSException {
     public ABSAssertException(String string) {
         super(string);
     }
-    
+
     @Override
     public boolean isAssertion() {
         return true;
     }
-    
+
     @Override
     public String getName() {
         return "Assertion Failed";

@@ -14,8 +14,8 @@ public class ModuleSystemTests extends SemanticTests {
 
     @Test
     public void simpleModule() {
-        assertEvalTrue("module A; export Foo, Bar; data Foo = Bar; module Test; import A.Foo, A.Bar;" +
-        		" { A.Foo f = A.Bar; Bool testresult = True; } "); 
+        assertEvalTrue("module A; export Foo, Bar; data Foo = Bar; module Test; import A.Foo, A.Bar;"
+                + " { A.Foo f = A.Bar; Bool testresult = True; } ");
     }
 
     @Test

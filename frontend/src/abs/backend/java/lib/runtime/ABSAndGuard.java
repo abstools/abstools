@@ -3,26 +3,27 @@ package abs.backend.java.lib.runtime;
 import abs.backend.java.observing.GuardView;
 
 public class ABSAndGuard extends ABSGuard {
-	public final ABSGuard left;
-	public final ABSGuard right;
-	public ABSAndGuard(ABSGuard l, ABSGuard r) {
-		left = l;
-		right = r;
-	}
+    public final ABSGuard left;
+    public final ABSGuard right;
 
-	@Override
-	public boolean staysTrue() {
-		return left.staysTrue() && right.staysTrue();
-	}
-	
-	@Override
-   public boolean isTrue() {
-	   return left.isTrue() && right.isTrue();
-   }
-	
-	public String toString() {
-	    return "ANDGuard "+left+" AND "+right;
-	}
+    public ABSAndGuard(ABSGuard l, ABSGuard r) {
+        left = l;
+        right = r;
+    }
+
+    @Override
+    public boolean staysTrue() {
+        return left.staysTrue() && right.staysTrue();
+    }
+
+    @Override
+    public boolean isTrue() {
+        return left.isTrue() && right.isTrue();
+    }
+
+    public String toString() {
+        return "ANDGuard " + left + " AND " + right;
+    }
 
     public ABSGuard getLeftGuard() {
         return left;
@@ -32,15 +33,15 @@ public class ABSAndGuard extends ABSGuard {
         return right;
     }
 
-   public boolean await() {
-	    boolean b = left.await() ;
-	    boolean b2 = right.await();
-	    return b || b2;
-   	
-   }
-    
+    public boolean await() {
+        boolean b = left.await();
+        boolean b2 = right.await();
+        return b || b2;
+
+    }
+
     @Override
-   public String toABSString() {
-	   return left.toABSString()+" & "+right.toABSString();
-   }
+    public String toABSString() {
+        return left.toABSString() + " & " + right.toABSString();
+    }
 }

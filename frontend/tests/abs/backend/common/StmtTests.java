@@ -15,31 +15,27 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void ifThen() {
-       assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }"); 
+        assertEvalTrue("{ Bool testresult = False; if (True) testresult = True;  }");
     }
 
     @Test
     public void ifFalse() {
-       assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }"); 
+        assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }");
     }
 
     @Test
     public void whileFalse() {
-       assertEvalTrue("{ Bool testresult = False; while (False) { }; testresult = True;  }"); 
+        assertEvalTrue("{ Bool testresult = False; while (False) { }; testresult = True;  }");
     }
 
-    
-    
     @Test
     public void assignStmt() {
-       assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }"); 
+        assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }");
     }
-    
+
     @Test
     public void useOfVariablesInsideExpr() {
         assertEvalTrue("{ Bool testresult = False; Bool b = True; testresult = case b { _ => b; }; }");
     }
-    
-    
-    
+
 }

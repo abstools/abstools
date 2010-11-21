@@ -7,8 +7,9 @@ import abs.backend.java.lib.types.ABSValue;
 public interface ObjectObserver {
 
     void methodCalled(String method, List<ABSValue> args);
+
     void fieldRead(String field, ABSValue value);
+
     void fieldUpdated(String field, ABSValue oldValue, ABSValue newValue);
-    
+
 }
- 

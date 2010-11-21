@@ -24,15 +24,16 @@ public class OutputDebugger extends AbstractDebugger {
     }
 
     int step = 0;
+
     private String getLine(String fileName, int line) {
         FileContent c = fileContent.get(fileName);
         if (c == null) {
             c = new FileContent(new File(fileName));
-            fileContent.put(fileName,c);
+            fileContent.put(fileName, c);
         }
         String lineString = c.getLine(line);
         step++;
-        return "Step "+step+": "+c.getFile().getName()+":"+line+": "+lineString;
+        return "Step " + step + ": " + c.getFile().getName() + ":" + line + ": " + lineString;
     }
-    
+
 }

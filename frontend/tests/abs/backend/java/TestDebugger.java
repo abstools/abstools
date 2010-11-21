@@ -7,7 +7,7 @@ public class TestDebugger implements Debugger {
 
     @Override
     public void nextStep(TaskView taskView, String fileName, int line) {
-        System.out.println(taskView.getMethodName()+":"+fileName+":"+line);
+        System.out.println(taskView.getMethodName() + ":" + fileName + ":" + line);
     }
 
 }

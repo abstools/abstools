@@ -6,35 +6,35 @@ import abs.frontend.ast.MethodSig;
 
 public class InterfaceType extends ReferenceType {
     private final InterfaceDecl decl;
-    
+
     public InterfaceType(InterfaceDecl decl) {
         this.decl = decl;
     }
-    
+
     public InterfaceDecl getDecl() {
         return decl;
     }
-    
+
     @Override
     public boolean isInterfaceType() {
         return true;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (!super.equals(o))
             return false;
-        if (! (o instanceof InterfaceType))
+        if (!(o instanceof InterfaceType))
             return false;
         InterfaceType t = (InterfaceType) o;
         return t.decl.equals(this.decl);
     }
-    
+
     @Override
     public int hashCode() {
         return decl.hashCode();
     }
-    
+
     @Override
     public boolean isAssignable(Type t, boolean considerSubtyping) {
         if (super.isAssignable(t))
@@ -48,20 +48,20 @@ public class InterfaceType extends ReferenceType {
         }
         return false;
     }
-    
+
     @Override
     public boolean isAssignable(Type t) {
         return this.isAssignable(t, true);
     }
-    
+
     @Override
-   public String toString() {
-      return decl.getName();
-   }
-    
+    public String toString() {
+        return decl.getName();
+    }
+
     @Override
     public MethodSig lookupMethod(String name) {
         return decl.lookupMethod(name);
     }
-    
+
 }

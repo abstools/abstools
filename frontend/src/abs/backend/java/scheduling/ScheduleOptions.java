@@ -7,16 +7,16 @@ import java.util.List;
 
 public class ScheduleOptions {
     private List<ScheduleAction> actions = new ArrayList<ScheduleAction>();
-    
+
     public int numOptions() {
         return actions.size();
     }
-    
+
     public void addOption(ScheduleAction a) {
         if (!actions.contains(a))
             actions.add(a);
     }
-    
+
     public List<ScheduleAction> allOptions() {
         return Collections.unmodifiableList(actions);
     }
@@ -28,6 +28,5 @@ public class ScheduleOptions {
     public boolean isEmpty() {
         return actions.isEmpty();
     }
-    
-    
+
 }

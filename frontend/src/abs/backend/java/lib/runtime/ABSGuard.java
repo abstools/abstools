@@ -4,25 +4,28 @@ import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
 
 public abstract class ABSGuard {
-	public abstract boolean isTrue();
+    public abstract boolean isTrue();
 
-	/**
-	 * 
-	 * @return whether this guard could become false again in the future
-	 */
-    public boolean await() { return !staysTrue(); }
+    /**
+     * 
+     * @return whether this guard could become false again in the future
+     */
+    public boolean await() {
+        return !staysTrue();
+    }
 
     private GuardView view;
+
     public GuardView getView() {
         if (view == null)
             view = new View();
         return view;
     }
-    
+
     public boolean staysTrue() {
         return true;
     }
-    
+
     private class View implements GuardView {
 
         public boolean isTrue() {
@@ -42,25 +45,24 @@ public abstract class ABSGuard {
         }
 
         public GuardView getLeftGuard() {
-            return ((ABSAndGuard)ABSGuard.this).getLeftGuard().getView();
+            return ((ABSAndGuard) ABSGuard.this).getLeftGuard().getView();
         }
 
         public GuardView getRightGuard() {
-            return ((ABSAndGuard)ABSGuard.this).getRightGuard().getView();
+            return ((ABSAndGuard) ABSGuard.this).getRightGuard().getView();
         }
 
         public FutView getFuture() {
-            return ((ABSFutureGuard)ABSGuard.this).fut.getView();
+            return ((ABSFutureGuard) ABSGuard.this).fut.getView();
         }
 
-	
         @Override
         public String toABSString() {
-	        return ABSGuard.this.toABSString();
-       }
-        
+            return ABSGuard.this.toABSString();
+        }
+
     }
 
-	public abstract String toABSString();
+    public abstract String toABSString();
 
 }

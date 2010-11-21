@@ -8,16 +8,16 @@ import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
 
 public class GlobalScheduler {
-	 private static Logger logger = Logging.getLogger(GlobalScheduler.class.getName());
+    private static Logger logger = Logging.getLogger(GlobalScheduler.class.getName());
     private final ScheduleOptions options = new ScheduleOptions();
     private final GlobalSchedulingStrategy strategy;
-    
+
     public GlobalScheduler(GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
     }
-    
+
     private long totalNumChoices = 0;
-    
+
     public void doNextScheduleStep() {
         logger.finest("Do next step...");
         ScheduleAction next = null;
@@ -30,26 +30,26 @@ public class GlobalScheduler {
             }
             if (options.isEmpty()) {
                 System.out.println("No steps left. Program finished");
-                System.out.println("Total number of global choices: "+totalNumChoices);
+                System.out.println("Total number of global choices: " + totalNumChoices);
                 if (totalNumChoices == 0) {
                     System.out.println("Program is deterministic!");
                 }
                 return;
             }
-            
-            totalNumChoices += options.numOptions()-1;
-                
+
+            totalNumChoices += options.numOptions() - 1;
+
             logger.finest("Choose next action...");
             next = strategy.choose(options);
-            logger.finest("Action "+next+" choosen");
+            logger.finest("Action " + next + " choosen");
             options.removeOption(next);
-            logger.finest("Executing Action "+next);
-        
+            logger.finest("Executing Action " + next);
+
         }
         next.execute();
-        logger.finest("Action "+next+" was executed.");
+        logger.finest("Action " + next + " was executed.");
     }
-    
+
     public void stepTask(Task<?> task) {
         ScheduleAction a = new StepTask(task);
 
@@ -57,22 +57,22 @@ public class GlobalScheduler {
             options.addOption(a);
             doNextScheduleStep();
         }
-        
+
         a.await();
     }
 
     public synchronized void addAction(ScheduleAction action) {
         options.addOption(action);
     }
-    
+
     private boolean ignoreNextStep;
+
     public synchronized void ignoreNextStep() {
         ignoreNextStep = true;
     }
 
-
     public synchronized void awaitNextStep() {
-        while(ignoreNextStep) {
+        while (ignoreNextStep) {
             try {
                 logger.finest("Awaiting next step...");
                 wait();
@@ -82,52 +82,54 @@ public class GlobalScheduler {
         }
         logger.finest("Next step done");
     }
-    
+
     public void handleGet(ABSFut<?> fut) {
-        // note that this code does only work in the presence of global scheduling,
+        // note that this code does only work in the presence of global
+        // scheduling,
         // otherwise it would not be thread-safe
         if (fut.isResolved()) {
             return;
         }
-        
+
         Waker w = new Waker();
         fut.addWaitingThread(w);
         ABSRuntime.doNextStep();
         System.out.println("future waiting");
         w.await();
-        
+
     }
-    
+
     static class Waker implements GuardWaiter {
         boolean awaked;
+
         public synchronized void awake() {
             awaked = true;
             notify();
         }
-        
+
         public synchronized void await() {
             while (!awaked) {
-             try {
-                 wait();
-              } catch (InterruptedException e) { }
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                }
 
             }
-            if (Logging.DEBUG) logger.finest("task awaked");
+            if (Logging.DEBUG)
+                logger.finest("task awaked");
         }
-        
+
         @Override
         public void checkGuard() {
-            if (Logging.DEBUG) logger.finest("checking guard...");
-            
+            if (Logging.DEBUG)
+                logger.finest("checking guard...");
+
             ABSRuntime.getGlobalScheduler().ignoreNextStep();
             awake();
-            if (Logging.DEBUG) logger.finest("await next step");
+            if (Logging.DEBUG)
+                logger.finest("await next step");
             ABSRuntime.getGlobalScheduler().awaitNextStep();
         }
-     }
-       
-    
-    
-    
-    
+    }
+
 }

@@ -4,10 +4,9 @@ import abs.backend.java.lib.types.ABSValue;
 
 public class AnyPattern extends Pattern {
 
-	@Override
-   public boolean match(ABSValue dt, PatternBinding binding) {
-	   return true;
-   }
-	
+    @Override
+    public boolean match(ABSValue dt, PatternBinding binding) {
+        return true;
+    }
 
 }

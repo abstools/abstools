@@ -17,20 +17,20 @@ public class Logging {
         if (DEBUG) {
             level = Level.ALL;
         }
-        
+
         Handler h = new ConsoleHandler();
         h.setLevel(level);
         logger.addHandler(h);
         logger.setLevel(level);
         return logger;
     }
-    
+
     static class MyFormatter extends Formatter {
 
-		@Override
-      public String format(LogRecord record) {
-	      return record.getLoggerName()+" ["+record.getThreadID()+"]:"+record.getMessage();
-      }
-   	 
+        @Override
+        public String format(LogRecord record) {
+            return record.getLoggerName() + " [" + record.getThreadID() + "]:" + record.getMessage();
+        }
+
     }
 }

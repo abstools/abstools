@@ -10,14 +10,14 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSString substr(ABSString s, ABSInteger from, ABSInteger length) {
-        return s.substr(from,length);
+        return s.substr(from, length);
     }
 
     public static ABSUnit print(ABSString s) {
         System.out.println(s.getString());
         return ABSUnit.UNIT;
     }
-    
+
     public static ABSInteger currentms() {
         return ABSInteger.fromLong(System.currentTimeMillis());
     }

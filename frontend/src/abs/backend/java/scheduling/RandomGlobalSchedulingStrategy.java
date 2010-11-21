@@ -12,11 +12,11 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
     private final static Logger logger = Logging.getLogger(RandomGlobalSchedulingStrategy.class.getName());
 
     private final Random random;
-    
+
     public RandomGlobalSchedulingStrategy() {
         random = Config.RANDOM;
     }
-    
+
     public RandomGlobalSchedulingStrategy(Random r) {
         random = r;
     }
@@ -25,7 +25,7 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
     public synchronized ScheduleAction choose(ScheduleOptions options) {
         ScheduleAction a = options.allOptions().get(random.nextInt(options.numOptions()));
         String suff = options.numOptions() == 1 ? " (NO CHOICE)" : "";
-        logger.finest("Choosing "+a.shortString()+" from "+shortStringList(options.allOptions())+suff);
+        logger.finest("Choosing " + a.shortString() + " from " + shortStringList(options.allOptions()) + suff);
         return a;
     }
 
@@ -34,8 +34,10 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
         res.append("{");
         boolean first = true;
         for (ScheduleAction a : allOptions) {
-            if (first) first = false;
-            else res.append(", ");
+            if (first)
+                first = false;
+            else
+                res.append(", ");
             res.append(a.shortString());
         }
         res.append("}");

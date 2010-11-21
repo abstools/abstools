@@ -9,11 +9,11 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
     protected ABSBuiltInDataType(String constructorName) {
         this.constructorName = constructorName;
     }
-    
+
     public String getConstructorName() {
         return constructorName;
     }
-    
+
     @Override
     public boolean match(PatternConstructor p, PatternBinding b) {
         if (p.constructorName.equals(constructorName)) {
@@ -24,8 +24,8 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
     }
 
     @Override
-   public boolean isBuiltIn() {
-      return true;
-   }
-    
+    public boolean isBuiltIn() {
+        return true;
+    }
+
 }

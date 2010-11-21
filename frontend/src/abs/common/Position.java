@@ -8,16 +8,16 @@ public class Position {
     private final int col;
     private final int line;
     private final String fileName;
-    
+
     public Position(ASTNode<?> node) {
         line = Symbol.getLine(node.getStart());
         col = Symbol.getColumn(node.getStart());
         fileName = calcFileName(node);
     }
-    
+
     private String calcFileName(ASTNode<?> node) {
         ASTNode<?> parent = node;
-        while (! (parent instanceof CompilationUnit) ) {
+        while (!(parent instanceof CompilationUnit)) {
             parent = parent.getParent();
             if (parent == null)
                 return "<could not find filename>";
@@ -28,10 +28,9 @@ public class Position {
             return "<unkown>";
         return name;
     }
-    
+
     public String getPositionString() {
-        return getFileName() + ":" + getLine() + ":" + 
-            getColumn() + ": "; 
+        return getFileName() + ":" + getLine() + ":" + getColumn() + ": ";
     }
 
     public int getLine() {
@@ -45,15 +44,15 @@ public class Position {
     private String getFileName() {
         return cutOffPath(fileName);
     }
-    
+
     private static String cutOffPath(String name) {
         if (name.contains("/")) {
-            return name.substring(name.lastIndexOf('/')+1);
+            return name.substring(name.lastIndexOf('/') + 1);
         }
         if (name.contains("\\")) {
-            return name.substring(name.lastIndexOf('\\')+1);
+            return name.substring(name.lastIndexOf('\\') + 1);
         }
         return name;
     }
-    
+
 }

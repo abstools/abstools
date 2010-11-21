@@ -7,22 +7,21 @@ public class ScheduleTask extends ScheduleAction {
     public ScheduleTask(COG cog) {
         super(cog);
     }
- 
-    
+
     @Override
     public String toString() {
-        return "Schedule task in COG "+getCOG().getID();
+        return "Schedule task in COG " + getCOG().getID();
     }
-    
+
     @Override
     public String shortString() {
-        return getCOG().getID()+",S,";
+        return getCOG().getID() + ",S,";
     }
-    
+
     public boolean equals(Object o) {
-        if (! (o instanceof ScheduleTask))
+        if (!(o instanceof ScheduleTask))
             return false;
-        return this.getCOG() == ((ScheduleTask)o).getCOG();
+        return this.getCOG() == ((ScheduleTask) o).getCOG();
     }
-    
+
 }

@@ -17,23 +17,23 @@ import abs.backend.java.observing.TaskView;
 
 public class DefaultTaskScheduler implements TaskScheduler {
     private static final Logger log = Logging.getLogger(ABSRuntime.class.getName());
-    
+
     private final List<Task<?>> newTasks = new LinkedList<Task<?>>();
     private final List<SchedulerThread> suspendedTasks = new LinkedList<SchedulerThread>();
     private Task<?> activeTask;
     private volatile SchedulerThread thread;
     private final COG cog;
-    
+
     public DefaultTaskScheduler(COG cog) {
         this.cog = cog;
     }
-    
+
     public synchronized void addTask(Task<?> task) {
         newTasks.add(task);
         if (view != null)
             view.taskAdded(task.getView());
-        log.finest(task+" ADDED TO QUEUE");
-        
+        log.finest(task + " ADDED TO QUEUE");
+
         if (thread == null) {
             thread = new SchedulerThread();
             thread.start();
@@ -41,18 +41,18 @@ public class DefaultTaskScheduler implements TaskScheduler {
             notifyAll();
         }
     }
-    
+
     class SchedulerThread extends ABSThread {
         private Task<?> runningTask;
 
         public SchedulerThread() {
-            setName("ABS Scheduler Thread of "+cog.toString());
+            setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
         }
-        
+
         @Override
         public void run() {
-            
+
             while (true) {
                 synchronized (DefaultTaskScheduler.this) {
                     activeTask = null;
@@ -61,72 +61,77 @@ public class DefaultTaskScheduler implements TaskScheduler {
                         DefaultTaskScheduler.this.notifyAll();
                         return;
                     }
-                    
+
                     activeTask = newTasks.remove(0);
                     runningTask = activeTask;
-                    setName("ABS Scheduler Thread executing "+activeTask.toString());
+                    setName("ABS Scheduler Thread executing " + activeTask.toString());
                 }
-                
+
                 View v = view;
                 if (v != null)
                     v.taskStarted(runningTask.getView());
-                
 
-                if (Logging.DEBUG) log.finest("Executing "+runningTask);
+                if (Logging.DEBUG)
+                    log.finest("Executing " + runningTask);
                 try {
                     runningTask.run();
                     v = view;
                     if (v != null)
                         v.taskFinished(runningTask.getView());
-                    
-                    
-                    if (Logging.DEBUG) log.finest("Task "+runningTask+" FINISHED");
-                } catch(Exception e) {
-                    if (Logging.DEBUG) log.finest("EXCEPTION in Task "+runningTask);
+
+                    if (Logging.DEBUG)
+                        log.finest("Task " + runningTask + " FINISHED");
+                } catch (Exception e) {
+                    if (Logging.DEBUG)
+                        log.finest("EXCEPTION in Task " + runningTask);
                     e.printStackTrace();
                 }
             }
         }
 
-        // assume called in synchronized block 
+        // assume called in synchronized block
         public void suspendTask(ABSGuard g) {
-            if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
+            if (Logging.DEBUG)
+                log.finest(runningTask + " on " + g + " SUSPENDING");
             synchronized (DefaultTaskScheduler.this) {
-                activeTask = null; 
+                activeTask = null;
                 thread = null;
                 if (!newTasks.isEmpty()) {
-                   log.finest(runningTask+" on "+g+" Starting new Scheduler Thread");
-               	 
+                    log.finest(runningTask + " on " + g + " Starting new Scheduler Thread");
+
                     thread = new SchedulerThread();
                     thread.start();
                 } else {
                     DefaultTaskScheduler.this.notifyAll();
                 }
-                if (Logging.DEBUG) log.finest(runningTask+" on "+g+" SUSPENDING");
+                if (Logging.DEBUG)
+                    log.finest(runningTask + " on " + g + " SUSPENDING");
                 suspendedTasks.add(this);
             }
-            
+
             View v = view;
             if (v != null) {
                 v.taskSuspended(runningTask.getView(), g);
             }
-            
-            if (Logging.DEBUG) log.finest(runningTask+" AWAITING "+g);
+
+            if (Logging.DEBUG)
+                log.finest(runningTask + " AWAITING " + g);
             boolean couldBecomeFalse = g.await();
-            
+
             if (!couldBecomeFalse) {
-                if (Logging.DEBUG) log.finest(runningTask+" "+g+" READY");
+                if (Logging.DEBUG)
+                    log.finest(runningTask + " " + g + " READY");
                 if (v != null)
                     v.taskReady(runningTask.getView());
             }
-            
+
             synchronized (DefaultTaskScheduler.this) {
-                while (! (g.isTrue() && thread == null)) {
+                while (!(g.isTrue() && thread == null)) {
                     try {
-                       log.finest(runningTask+" "+g+" WAITING FOR WAKE UP");
+                        log.finest(runningTask + " " + g + " WAITING FOR WAKE UP");
                         DefaultTaskScheduler.this.wait();
                         if (Logging.DEBUG)
-                            log.finest(runningTask+" WOKE UP...");
+                            log.finest(runningTask + " WOKE UP...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -135,11 +140,12 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 activeTask = runningTask;
                 suspendedTasks.remove(this);
             }
-            
+
             if (v != null)
                 v.taskResumed(runningTask.getView(), g);
-            
-            if (Logging.DEBUG) log.finest(runningTask+" "+g+" ACTIVE");
+
+            if (Logging.DEBUG)
+                log.finest(runningTask + " " + g + " ACTIVE");
         }
     }
 
@@ -152,15 +158,15 @@ public class DefaultTaskScheduler implements TaskScheduler {
     }
 
     private volatile View view;
-    
+
     public synchronized TaskSchedulerView getView() {
         if (view == null) {
             view = new View();
         }
         return view;
     }
-    
-    private class View extends  AbstractTaskSchedulerView {
+
+    private class View extends AbstractTaskSchedulerView {
         @Override
         public List<TaskView> getNewTasks() {
             // TODO Auto-generated method stub
@@ -177,9 +183,9 @@ public class DefaultTaskScheduler implements TaskScheduler {
         public TaskView getActiveTask() {
             return DefaultTaskScheduler.this.getActiveTask().getView();
         }
-        
+
     }
-    
+
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
@@ -193,5 +199,5 @@ public class DefaultTaskScheduler implements TaskScheduler {
     public COG getCOG() {
         return cog;
     }
-    
+
 }

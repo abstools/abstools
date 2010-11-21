@@ -22,39 +22,39 @@ import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.observing.TaskView;
 
 /**
- * A very simple scheduler that is not the most efficient one, but
- * is easy to understand and also makes it easy to override the scheduling behavior
+ * A very simple scheduler that is not the most efficient one, but is easy to
+ * understand and also makes it easy to override the scheduling behavior
  * 
  * @author Jan Schäfer
- *
+ * 
  */
 public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
     static Logger logger = Logging.getLogger("scheduler");
-    
+
     public class TaskInfo {
         /**
          * A COG-wide unique id, that is increment for each new task.
          */
         public long id = idCounter.incrementAndGet();
-        
+
         public final Task<?> task;
-        
+
         /**
          * is null unless this task as a fixed assigned thread
          */
         public SimpleSchedulerThread thread;
-        
+
         /**
-         * is null unless this task is waiting on a guard
-         * suspended tasks are always waiting on a guard
+         * is null unless this task is waiting on a guard suspended tasks are
+         * always waiting on a guard
          */
         public ABSGuard guard;
-        
+
         public TaskInfo(Task<?> task) {
             this.task = task;
         }
-        
+
         public boolean isSuspended() {
             return guard != null;
         }
@@ -66,41 +66,40 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public void suspend(ABSGuard g) {
             guard = g;
         }
-        
+
         public String toString() {
-      	  return "Task "+task.getID();
+            return "Task " + task.getID();
         }
     }
-    
+
     protected final TaskSchedulingStrategy schedulingStrategy;
-    
+
     /**
-     * Holds a list of all ready tasks.
-     * Ready tasks are tasks that can definitely be scheduled.
-     * Note that this list does not include tasks that are suspended on an unstable guard,
-     * i.e., a guard that may become false after it was true. Such tasks are in the
-     * suspendedTasks list.
+     * Holds a list of all ready tasks. Ready tasks are tasks that can
+     * definitely be scheduled. Note that this list does not include tasks that
+     * are suspended on an unstable guard, i.e., a guard that may become false
+     * after it was true. Such tasks are in the suspendedTasks list.
      * 
      * Invariant: for all task in readyTasks: task.isSuspended() == false
      */
     protected final List<TaskInfo> readyTasks = new ArrayList<TaskInfo>();
-    
+
     /**
-     * Holds a list of all suspended tasks
-     * Invariant: for all task in suspendedTasks: task.isSuspended() == true
+     * Holds a list of all suspended tasks Invariant: for all task in
+     * suspendedTasks: task.isSuspended() == true
      */
     protected final List<TaskInfo> suspendedTasks = new ArrayList<TaskInfo>();
-    
+
     /**
      * Holds the currently active task or is null if there is no active task
      */
     protected TaskInfo activeTask;
-    
+
     protected final COG cog;
-    
+
     public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat) {
         this.cog = cog;
-        this.schedulingStrategy = strat; 
+        this.schedulingStrategy = strat;
     }
 
     protected void taskDeadlocked() {
@@ -109,34 +108,34 @@ public class SimpleTaskScheduler implements TaskScheduler {
             view.taskDeadlocked(activeTask.task.getView());
         }
         ABSRuntime.doNextStep();
-        
+
     }
-    
+
     protected void taskFinished() {
-   	 logger.finest("Task finished getting monitor...");
-   	  synchronized (this) {
-   	   	 logger.finest("got monitor");
-   		  activeTask = null;
-   		  if (suspendedTasks.size()+readyTasks.size()>0) {
-    	   	 logger.finest("calling schedule...");
-   			  schedule();
-     	   	 logger.finest("schedule called");
-   		  }
-   	  }
-	   	 logger.finest("do next step");
-	     // we now have to wait for all tasks that waited for the future
-	     // of this task to give them the opportunitiy to add a schedule action
-	     // to the global scheduler, before we do this step
+        logger.finest("Task finished getting monitor...");
+        synchronized (this) {
+            logger.finest("got monitor");
+            activeTask = null;
+            if (suspendedTasks.size() + readyTasks.size() > 0) {
+                logger.finest("calling schedule...");
+                schedule();
+                logger.finest("schedule called");
+            }
+        }
+        logger.finest("do next step");
+        // we now have to wait for all tasks that waited for the future
+        // of this task to give them the opportunitiy to add a schedule action
+        // to the global scheduler, before we do this step
         ABSRuntime.doNextStep();
-	   	 logger.finest("next step done");
+        logger.finest("next step done");
     }
-    
+
     @Override
     public synchronized void addTask(Task<?> task) {
         readyTasks.add(new TaskInfo(task));
         if (view != null)
             view.taskAdded(task.getView());
-        
+
         if (activeTask == null) {
             schedule();
         }
@@ -151,10 +150,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         public SimpleSchedulerThread(TaskInfo activeTask) {
             this.executingTask = activeTask;
-            setName("ABS Scheduler Thread of "+cog.toString());
+            setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
         }
-        
+
         @Override
         public void run() {
             View v = view;
@@ -164,74 +163,74 @@ public class SimpleTaskScheduler implements TaskScheduler {
             executingTask.task.run();
             if (executingTask.task.isDeadlocked())
                 taskDeadlocked();
-            else 
+            else
                 taskFinished();
-            
+
         }
 
         public synchronized void checkGuard() {
-           logger.finest(executingTask+" checking guard");
-      	  if (guard.isTrue() && guard.staysTrue()) {
-              synchronized (SimpleTaskScheduler.this) {
-                 logger.finest(executingTask+" got monitor");
-                  suspendedTasks.remove(executingTask);
-                  readyTasks.add(executingTask);
-                  executingTask.makeReady();
-                  if (view != null)
-                      view.taskReady(executingTask.task.getView());
-                  if (activeTask == null) {
-                      logger.finest(executingTask+" scheduling myself");
-                      schedule();
-                  }
-              }
-      	  }
+            logger.finest(executingTask + " checking guard");
+            if (guard.isTrue() && guard.staysTrue()) {
+                synchronized (SimpleTaskScheduler.this) {
+                    logger.finest(executingTask + " got monitor");
+                    suspendedTasks.remove(executingTask);
+                    readyTasks.add(executingTask);
+                    executingTask.makeReady();
+                    if (view != null)
+                        view.taskReady(executingTask.task.getView());
+                    if (activeTask == null) {
+                        logger.finest(executingTask + " scheduling myself");
+                        schedule();
+                    }
+                }
+            }
         }
-        
-		public void await(ABSGuard g) {
-         logger.finest(executingTask+" awaiting "+g);
+
+        public void await(ABSGuard g) {
+            logger.finest(executingTask + " awaiting " + g);
             synchronized (this) {
                 active = false;
                 this.guard = g;
             }
-            
-            logger.finest(executingTask+" registering at threads...");
+
+            logger.finest(executingTask + " registering at threads...");
             registerAtThreads(g);
-            
-            logger.finest(executingTask+" next step done going into monitor");
+
+            logger.finest(executingTask + " next step done going into monitor");
             synchronized (this) {
                 try {
-                    logger.finest(executingTask+" waiting to be resumed");
+                    logger.finest(executingTask + " waiting to be resumed");
                     while (!active) {
                         wait();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                logger.finest(executingTask+" resumed");
+                logger.finest(executingTask + " resumed");
                 active = true;
             }
         }
 
         private void registerAtThreads(ABSGuard g) {
-      	  if (g instanceof ABSFutureGuard) {
-      		   ABSFutureGuard fg = (ABSFutureGuard) g;
-      		   fg.fut.addWaitingThread(this);
-               logger.finest(executingTask+" added to "+fg.fut);
-      	  } else if (g instanceof ABSAndGuard) {
-      		  ABSAndGuard ag = (ABSAndGuard) g;
-      		  registerAtThreads(ag.getLeftGuard());
-      		  registerAtThreads(ag.getRightGuard());
-      	  }
-      }
+            if (g instanceof ABSFutureGuard) {
+                ABSFutureGuard fg = (ABSFutureGuard) g;
+                fg.fut.addWaitingThread(this);
+                logger.finest(executingTask + " added to " + fg.fut);
+            } else if (g instanceof ABSAndGuard) {
+                ABSAndGuard ag = (ABSAndGuard) g;
+                registerAtThreads(ag.getLeftGuard());
+                registerAtThreads(ag.getRightGuard());
+            }
+        }
 
-		public synchronized void awake() {
+        public synchronized void awake() {
             active = true;
             notify();
-            logger.fine(executingTask.toString()+" awaked");
+            logger.fine(executingTask.toString() + " awaked");
         }
-        
+
     }
-    
+
     private synchronized void schedule() {
         if (Config.GLOBAL_SCHEDULING) {
             if (suspendedTasks.isEmpty() && readyTasks.isEmpty())
@@ -249,19 +248,19 @@ public class SimpleTaskScheduler implements TaskScheduler {
             doSchedule();
         }
     }
-    
+
     private void doSchedule() {
         List<TaskInfo> choices;
         synchronized (this) {
             System.out.println("Executing doSchedule...");
-        
+
             List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
             choices = new ArrayList<TaskInfo>(readyTasks);
             choices.addAll(suspendedTasksWithSatisfiedGuards);
-            logger.info("COG "+cog.getID()+" scheduling choices: "+choices);
-        
+            logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
+
         }
-        
+
         if (choices.isEmpty()) {
             logger.info("Choices are empty!");
             ABSRuntime.doNextStep();
@@ -279,19 +278,19 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
             activeTask = nextTask;
             if (activeTask.thread != null) {
-                logger.info("COG "+cog.getID()+" awaking "+activeTask);
+                logger.info("COG " + cog.getID() + " awaking " + activeTask);
                 activeTask.thread.awake();
             } else {
                 activeTask.thread = new SimpleSchedulerThread(activeTask);
                 activeTask.thread.start();
             }
         }
-        
+
     }
-    
+
     private synchronized List<TaskInfo> unsuspendTasks() {
         List<TaskInfo> tasksWithSatisfiedGuards = new ArrayList<TaskInfo>(0);
-        
+
         Iterator<TaskInfo> it = suspendedTasks.iterator();
         while (it.hasNext()) {
             TaskInfo task = it.next();
@@ -313,7 +312,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     private volatile View view;
-    
+
     @Override
     public synchronized TaskSchedulerView getView() {
         if (view == null)
@@ -340,15 +339,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
             activeTask = null;
             if (view != null)
                 view.taskSuspended(currentTask.task.getView(), g);
-            
-            if (g.isTrue() || (suspendedTasks.size()+readyTasks.size()) > 1) {
-            	logger.fine("issuing a schedule");
+
+            if (g.isTrue() || (suspendedTasks.size() + readyTasks.size()) > 1) {
+                logger.fine("issuing a schedule");
                 schedule();
             }
         }
 
         ABSRuntime.doNextStep();
-        
+
         synchronized (this) {
             newTask = activeTask;
         }
@@ -356,29 +355,27 @@ public class SimpleTaskScheduler implements TaskScheduler {
         if (newTask != currentTask) {
             thread.await(g);
         }
-        
+
         if (view != null)
             view.taskResumed(currentTask.task.getView(), g);
-        
+
     }
 
-    
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
             public TaskScheduler createTaskScheduler(COG cog) {
-                return new SimpleTaskScheduler(cog,ABSRuntime.taskSchedulingStrategy);
+                return new SimpleTaskScheduler(cog, ABSRuntime.taskSchedulingStrategy);
             }
         };
     }
-
 
     @Override
     public COG getCOG() {
         return cog;
     }
-    
-    private class View extends  AbstractTaskSchedulerView {
+
+    private class View extends AbstractTaskSchedulerView {
 
         @Override
         public List<TaskView> getNewTasks() {

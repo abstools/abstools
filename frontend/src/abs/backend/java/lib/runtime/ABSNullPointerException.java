@@ -7,11 +7,13 @@ public class ABSNullPointerException extends ABSException {
         super("An access to null has been detected");
     }
 
-    public boolean isNullPointer() { return true;  }
+    public boolean isNullPointer() {
+        return true;
+    }
 
     @Override
     public String getName() {
         return "Null Access";
     }
-    
+
 }

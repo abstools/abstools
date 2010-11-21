@@ -19,7 +19,7 @@ public class JavaCode {
         srcDir.delete();
         srcDir.mkdir();
     }
-    
+
     public JavaCode(File srcDir) {
         this.srcDir = srcDir;
     }
@@ -27,50 +27,50 @@ public class JavaCode {
     public void addFile(File file) {
         files.add(file);
     }
-    
+
     public String[] getFileNames() {
         String[] res = new String[files.size()];
-        int i=0;
+        int i = 0;
         for (File f : files) {
             res[i++] = f.getAbsolutePath();
         }
         return res;
     }
-    
+
     public Package createPackage(String packageName) {
         return new Package(packageName);
     }
-    
+
     public class Package {
         public final String packageName;
         public final File packageDir;
 
         public Package(String packageName) {
             this.packageName = packageName;
-            this.packageDir = new File(srcDir,packageName.replace('.',File.separatorChar));
+            this.packageDir = new File(srcDir, packageName.replace('.', File.separatorChar));
             packageDir.mkdirs();
         }
-        
+
         public File createJavaFile(String name) throws IOException {
-            File file = new File(packageDir, name+".java");
+            File file = new File(packageDir, name + ".java");
             addFile(file);
             file.createNewFile();
             return file;
         }
-        
+
         public void addMainClass(String s) {
-            mainClasses.add(packageName+"."+s);
+            mainClasses.add(packageName + "." + s);
         }
     }
-    
+
     public File getSrcDir() {
         return srcDir;
     }
-    
+
     public void deleteCode() {
         deleteDir(srcDir);
     }
-    
+
     private void deleteDir(File dir) {
         for (File f : dir.listFiles()) {
             if (f.isDirectory()) {
@@ -85,43 +85,43 @@ public class JavaCode {
     public void compile() {
         compile(srcDir);
     }
-    
+
     public void compile(File destDir) {
-        compile("-classpath",System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath());
+        compile("-classpath", System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath());
     }
-    
+
     public void compile(String... args) {
         ArrayList<String> args2 = new ArrayList<String>();
         args2.addAll(Arrays.asList(args));
         args2.addAll(Arrays.asList(getFileNames()));
         JavaCompiler.compile(args2.toArray(new String[0]));
-        
+
     }
-    
+
     public String getFirstMainClass() {
         if (mainClasses.isEmpty())
             throw new IllegalStateException("There is no main class");
-        
+
         return mainClasses.get(0);
-        
+
     }
-    
+
     public String toString() {
         StringBuilder res = new StringBuilder();
-        
+
         for (File f : files) {
-            append(res,f);
+            append(res, f);
         }
-        
+
         return res.toString();
     }
 
-    private void append(StringBuilder res, File f)  {
+    private void append(StringBuilder res, File f) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(f));
             try {
                 while (reader.ready()) {
-                    res.append(reader.readLine()+"\n");
+                    res.append(reader.readLine() + "\n");
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -130,7 +130,5 @@ public class JavaCode {
             e.printStackTrace();
         }
     }
-    
-    
-    
+
 }

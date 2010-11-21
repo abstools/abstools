@@ -11,27 +11,27 @@ import abs.frontend.ast.Model;
 
 public class TypeCheckerTest extends FrontendTest {
 
-	 // POSITIVE TESTS
-	
-	 @Test
-	 public void testVarDecl() {
-		 assertNoTypeErrorsNoLib("data Bool = True | False; { Bool b = True; }"); 
-	 }
+    // POSITIVE TESTS
 
-	 @Test
-	 public void testVarDeclInit() {
-		 assertNoTypeErrorsNoLib("interface I {} interface J extends I {} { J j; I i = j; }"); 
-	 }
+    @Test
+    public void testVarDecl() {
+        assertNoTypeErrorsNoLib("data Bool = True | False; { Bool b = True; }");
+    }
 
-     @Test
-     public void testClass() {
-         assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new C(); }"); 
-     }
+    @Test
+    public void testVarDeclInit() {
+        assertNoTypeErrorsNoLib("interface I {} interface J extends I {} { J j; I i = j; }");
+    }
 
-     @Test
-     public void testClass2() {
-         assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }"); 
-     }
+    @Test
+    public void testClass() {
+        assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new C(); }");
+    }
+
+    @Test
+    public void testClass2() {
+        assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }");
+    }
 
     @Test
     public void negTestOk() {
@@ -47,34 +47,32 @@ public class TypeCheckerTest extends FrontendTest {
     public void plusOk() {
         assertNoTypeErrors("{ Int i = 4 + 5; }");
     }
-    
+
     @Test
     public void getOk() {
         assertNoTypeErrors("{ Fut<Bool> f; Bool b = True; b = f.get; }");
     }
 
     @Test
-	 public void letOk() {
-		 assertNoTypeErrors("{ Bool b = let (Bool x) = True in x; }"); 
-	 }
-    
-    @Test
-	 public void caseOk() {
-		 assertNoTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => True; }; }"); 
-	 }
+    public void letOk() {
+        assertNoTypeErrors("{ Bool b = let (Bool x) = True in x; }");
+    }
 
     @Test
-	 public void caseVarOk() {
-		 assertNoTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(True);" +
-		 		" Bool b = case x { Bar(y) => y; }; }"); 
-	 }
-    
-    
+    public void caseOk() {
+        assertNoTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => True; }; }");
+    }
+
+    @Test
+    public void caseVarOk() {
+        assertNoTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(True);" + " Bool b = case x { Bar(y) => y; }; }");
+    }
+
     @Test
     public void methodEmptyOk() {
         assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { } }");
     }
-    
+
     @Test
     public void methodNoReturnOk() {
         assertNoTypeErrors("interface I { Unit m(); } class C implements I { Unit m() { Bool b = True; b = False; } }");
@@ -87,66 +85,64 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void methodParameterOk() {
-        assertNoTypeErrors("interface I { Bool m(Bool b);} " +
-        		"class C implements I { Bool m(Bool b) { return b; } }");
+        assertNoTypeErrors("interface I { Bool m(Bool b);} " + "class C implements I { Bool m(Bool b) { return b; } }");
     }
-    
+
     @Test
     public void methodInSuperType() {
-        assertNoTypeErrors("interface I { Bool m(Bool b);} interface J extends I { }" +
-        "class C implements J { Bool m(Bool b) { J j; j = this; return j.m(True); } }");
-        
+        assertNoTypeErrors("interface I { Bool m(Bool b);} interface J extends I { }"
+                + "class C implements J { Bool m(Bool b) { J j; j = this; return j.m(True); } }");
+
     }
-    
+
     @Test
-	 public void testIfOk() {
-		 assertNoTypeErrors("{ if (True) { } else { } }"); 
-	 }
-    
+    public void testIfOk() {
+        assertNoTypeErrors("{ if (True) { } else { } }");
+    }
+
     @Test
-	 public void testWhileOk() {
-		 assertNoTypeErrors("{ while (True) { } }"); 
-	 }
-    
+    public void testWhileOk() {
+        assertNoTypeErrors("{ while (True) { } }");
+    }
+
     @Test
-	 public void testAwaitClaimOk() {
-		 assertNoTypeErrors("{ Fut<Bool> f; await f?; }"); 
-	 }
-    
+    public void testAwaitClaimOk() {
+        assertNoTypeErrors("{ Fut<Bool> f; await f?; }");
+    }
+
     @Test
-	 public void testAwaitBoolOk() {
-		 assertNoTypeErrors("{ Bool b = False; await b; }"); 
-	 }
-    
+    public void testAwaitBoolOk() {
+        assertNoTypeErrors("{ Bool b = False; await b; }");
+    }
+
     @Test
-	 public void testAwaitAndOk() {
-		 assertNoTypeErrors("{ await False && True; }"); 
-	 }
+    public void testAwaitAndOk() {
+        assertNoTypeErrors("{ await False && True; }");
+    }
 
     @Test
     public void syncCallMethodThis() {
-        assertNoTypeErrors("interface I { Unit m(); } " +
-        		"class C implements I { Unit m() { this.m(); } }");
+        assertNoTypeErrors("interface I { Unit m(); } " + "class C implements I { Unit m() { this.m(); } }");
     }
-    
+
     @Test
     public void syncCallMethodThis2() {
-        assertNoTypeErrors("interface I { Unit m(); } interface J {}" +
-                "class C implements J,I { Unit m() { this.m(); } }");
+        assertNoTypeErrors("interface I { Unit m(); } interface J {}"
+                + "class C implements J,I { Unit m() { this.m(); } }");
     }
-    
+
     @Test
     public void syncCallMethodThis3() {
-        assertNoTypeErrors("interface I { Bool m(); } " +
-                "class C implements I { Bool m() { Bool b = True; b = this.m(); return b; } }");
+        assertNoTypeErrors("interface I { Bool m(); } "
+                + "class C implements I { Bool m() { Bool b = True; b = this.m(); return b; } }");
     }
 
     @Test
     public void syncCallMethodThisInitBlock() {
-        assertNoTypeErrors("interface I { Bool m(); } " +
-                "class C implements I { { Bool b = True; b = this.m(); } Bool m() { return True; } }");
+        assertNoTypeErrors("interface I { Bool m(); } "
+                + "class C implements I { { Bool b = True; b = this.m(); } Bool m() { return True; } }");
     }
-    
+
     @Test
     public void syncCallMethodIntf() {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i.m(); }");
@@ -156,7 +152,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void syncCallThis() {
         assertNoTypeErrors("class C { Unit m() { this.m(); } }");
     }
-    
+
     @Test
     public void asyncCallMethodIntf() {
         assertNoTypeErrors("interface I { Unit m(); } {I i; i!m(); }");
@@ -169,38 +165,35 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void fnAppTypeArgs2() {
-   	 assertNoTypeErrors("def B optValue<B>(Maybe<B> val) = fromJust(val);");
+        assertNoTypeErrors("def B optValue<B>(Maybe<B> val) = fromJust(val);");
     }
-    
+
     @Test
     public void fnAppTypeArgs3() {
-   	 assertNoTypeErrors(
-   			 "def List<B> tail2<B>(List<B> list) = tail(list) ; ");
+        assertNoTypeErrors("def List<B> tail2<B>(List<B> list) = tail(list) ; ");
     }
 
     @Test
     public void fnAppTypeArgs4() {
-   	 assertNoTypeErrors(
-   			 "def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
+        assertNoTypeErrors("def B nth<B>(List<B> list, Int n) = nth(tail(list), n-1) ; ");
     }
-    
+
     @Test
     public void fnAppTypeArgs5() {
-        assertNoTypeErrors(
-                "def List<B> shuffle<B>(List<B> list) = list;"+
-                "def C chose<C>(List<C> list) = head(shuffle(list));");
+        assertNoTypeErrors("def List<B> shuffle<B>(List<B> list) = list;"
+                + "def C chose<C>(List<C> list) = head(shuffle(list));");
     }
-    
+
     @Test
     public void constructorTypeArgs() {
         assertNoTypeErrors("{ Maybe<Bool> o = Just(True); }");
     }
-    
+
     @Test
     public void constructorTypeArgs2() {
         assertNoTypeErrors("data Foo<A> = Bar(A,A); { Foo<Bool> o = Bar(True,True); }");
     }
-    
+
     @Test
     public void constructorTypeArgs3() {
         assertNoTypeErrors("data Foo<A,B> = Bar(A,B); { Foo<Bool,Int> o = Bar(True,5); }");
@@ -210,229 +203,218 @@ public class TypeCheckerTest extends FrontendTest {
     public void constructorTypeArgs4() {
         assertNoTypeErrors("{ Either<Int,Bool> o = Left(5); }");
     }
-    
+
     @Test
     public void testListArgs() {
         assertNoTypeErrors(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
                 + "{ Database db; db = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
-        
-    }
-    
-    @Test
-    public void testMaybeDataType() {
-   	 assertNoTypeErrors("data MaybeTest<A> = NothingTest | JustTest(A);" +
-   	 		"def B fromJustTest<B>(MaybeTest<B> a) = case a { JustTest(j) => j; }; " +
-   	 		"{ Bool testresult = fromJustTest(JustTest(True)); }");
-    }
-    
-    @Test
-    public void patternMatching() {
-        assertNoTypeErrorsNoLib("data List<A> = Nil | Cons(A, List<A>); " +
-        		"data Pair<A,B> = Pair(A,B); data Server = SomeServer; def Server findServer(Server name, List<Pair<Server, Server>> list) ="+
-             "case list { "+
-                "Nil => SomeServer;"+
-                "Cons(Pair(server, set), rest) => server; };"); 
+
     }
 
-    
+    @Test
+    public void testMaybeDataType() {
+        assertNoTypeErrors("data MaybeTest<A> = NothingTest | JustTest(A);"
+                + "def B fromJustTest<B>(MaybeTest<B> a) = case a { JustTest(j) => j; }; "
+                + "{ Bool testresult = fromJustTest(JustTest(True)); }");
+    }
+
+    @Test
+    public void patternMatching() {
+        assertNoTypeErrorsNoLib("data List<A> = Nil | Cons(A, List<A>); "
+                + "data Pair<A,B> = Pair(A,B); data Server = SomeServer; def Server findServer(Server name, List<Pair<Server, Server>> list) ="
+                + "case list { " + "Nil => SomeServer;" + "Cons(Pair(server, set), rest) => server; };");
+    }
 
     @Test
     public void classParams() {
-   	 assertNoTypeErrors("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
-   	 
+        assertNoTypeErrors("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
+
     }
-    
+
     @Test
     public void newExp() {
-        assertNoTypeErrors("class C(Bool b) { } { new C(True); }"); 
+        assertNoTypeErrors("class C(Bool b) { } { new C(True); }");
     }
-    
-    
 
     // NEGATIVE TESTS
-    
-	 @Test
-	 public void testUnresolvableType() {
-		 assertTypeErrors("{ I i; }"); 
-	 }
 
-	 @Test
-     public void testUnresolvableType2() {
-         assertTypeErrors("class C implements I { }"); 
-     }
+    @Test
+    public void testUnresolvableType() {
+        assertTypeErrors("{ I i; }");
+    }
 
-     @Test
-     public void testUnresolvableType3() {
-         assertTypeErrors("interface J extends I { }"); 
-     }
-	 
-     @Test
-     public void missingInterface() {
-         assertTypeErrors("class C implements I { } { I i; i = new C(); }"); 
-     }
+    @Test
+    public void testUnresolvableType2() {
+        assertTypeErrors("class C implements I { }");
+    }
 
-     @Test
-     public void parametericDataTypesIllegalAssignment() {
-         assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }"); 
-     }
-	 
-     @Test
-     public void parametericDataTypeNoTypeArgs() {
-         assertTypeErrors("data Foo<A> = Bar(A) | Nil; { Foo f = Nil; }"); 
-     }
-     
-     @Test
-     public void parametericDataTypeNoTypeArgs2() {
-         assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }"); 
-     }
+    @Test
+    public void testUnresolvableType3() {
+        assertTypeErrors("interface J extends I { }");
+    }
 
-     @Test
-     public void parametericDataTypeNoTypeArgs3() {
-         assertNoTypeErrors("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;" +
-         		"def Money createMoney(Euro e, Cent c) = Pair(e,c); "); 
-     }
-     
-    
+    @Test
+    public void missingInterface() {
+        assertTypeErrors("class C implements I { } { I i; i = new C(); }");
+    }
+
+    @Test
+    public void parametericDataTypesIllegalAssignment() {
+        assertTypeErrors("interface I {} interface J extends I {} data Foo<A> = Bar(A); { J j; Foo<I> f = Bar(j); }");
+    }
+
+    @Test
+    public void parametericDataTypeNoTypeArgs() {
+        assertTypeErrors("data Foo<A> = Bar(A) | Nil; { Foo f = Nil; }");
+    }
+
+    @Test
+    public void parametericDataTypeNoTypeArgs2() {
+        assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }");
+    }
+
+    @Test
+    public void parametericDataTypeNoTypeArgs3() {
+        assertNoTypeErrors("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
+                + "def Money createMoney(Euro e, Cent c) = Pair(e,c); ");
+    }
+
     @Test
     public void testClassError() {
-        assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }"); 
+        assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }");
     }
 
     @Test
     public void testClassTypeUseError() {
-        assertTypeErrors("class C {} { C c; c = new C(); }"); 
+        assertTypeErrors("class C {} { C c; c = new C(); }");
     }
 
     @Test
     public void testClassDuplicateFields() {
-        assertTypeErrors("class C { Bool b = True; Int b = 5; } "); 
+        assertTypeErrors("class C { Bool b = True; Int b = 5; } ");
     }
 
     @Test
     public void testClassDuplicateFields2() {
-        assertTypeErrors("class C(Int b) { Bool b = True; } "); 
+        assertTypeErrors("class C(Int b) { Bool b = True; } ");
     }
 
     @Test
     public void testClassFieldAccessWithoutThis() {
-        assertNoTypeErrors("class C(Int b) { Int c = b; } "); 
+        assertNoTypeErrors("class C(Int b) { Int c = b; } ");
     }
-    
+
     @Test
     public void testClassDuplicateMethods() {
-        assertTypeErrors("class C { Unit m() {} Bool m() { return True;} } "); 
+        assertTypeErrors("class C { Unit m() {} Bool m() { return True;} } ");
     }
-    
+
     @Test
     public void functionDuplicateParams() {
-        assertTypeErrors("def Bool f(Bool b, Int b) = True; "); 
+        assertTypeErrors("def Bool f(Bool b, Int b) = True; ");
     }
 
     @Test
     public void functionNestedErrors() {
-        assertTypeErrors("def X f(Bool b) = True; "); 
-        assertTypeErrors("def Bool f(X b) = True; "); 
-        assertTypeErrors("def Bool f(Bool b) = Foo(); "); 
+        assertTypeErrors("def X f(Bool b) = True; ");
+        assertTypeErrors("def Bool f(X b) = True; ");
+        assertTypeErrors("def Bool f(Bool b) = Foo(); ");
     }
 
     @Test
     public void functionWrongReturnType() {
-        assertTypeErrors("def Bool f() = 5; "); 
+        assertTypeErrors("def Bool f() = 5; ");
     }
-    
+
     @Test
     public void dataTypeDuplicateConstructors() {
-        assertTypeErrors("data Foo = Bar | Bar ;"); 
+        assertTypeErrors("data Foo = Bar | Bar ;");
     }
 
     @Test
     public void dataTypeNestedErrors() {
-        assertTypeErrors("data Foo = Bar(X) ;"); 
+        assertTypeErrors("data Foo = Bar(X) ;");
     }
 
     @Test
     public void interfaceDuplicateMethods() {
-        assertTypeErrors("interface I { Unit m(); Unit m(); }"); 
+        assertTypeErrors("interface I { Unit m(); Unit m(); }");
     }
 
     @Test
     public void methodDuplicateParams() {
-        assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
+        assertTypeErrors("interface I { Unit m(Bool b, Int b); }");
     }
-    
+
     @Test
     public void interfaceWrongExtend() {
-        assertTypeErrors("interface I extends Bool {} "); 
+        assertTypeErrors("interface I extends Bool {} ");
     }
 
     @Test
     public void interfaceMethodOverride() {
-        assertTypeErrors("interface I { Unit m(); } interface J extends I { Unit m(); }"); 
+        assertTypeErrors("interface I { Unit m(); } interface J extends I { Unit m(); }");
     }
 
     @Test
     public void interfaceNestedError() {
-        assertTypeErrors("interface I { X m(); }"); 
+        assertTypeErrors("interface I { X m(); }");
     }
 
     @Test
     public void interfaceNestedParamError() {
-        assertTypeErrors("interface I { Unit m(X x); }"); 
+        assertTypeErrors("interface I { Unit m(X x); }");
     }
-    
+
     @Test
     public void interfaceDupParams() {
-        assertTypeErrors("interface I { Unit m(Bool b, Int b); }"); 
+        assertTypeErrors("interface I { Unit m(Bool b, Int b); }");
     }
 
     @Test
     public void methodNotImplemented() {
-        assertTypeErrors("interface I { Unit m(); }" +
-                "class C implements I {  } "); 
+        assertTypeErrors("interface I { Unit m(); }" + "class C implements I {  } ");
     }
 
     @Test
     public void methodOverrideWrongReturnType() {
-        assertTypeErrors("interface I { Unit m(); }" +
-                "class C implements I { Bool m() { return True; } } "); 
+        assertTypeErrors("interface I { Unit m(); }" + "class C implements I { Bool m() { return True; } } ");
     }
-    
+
     @Test
     public void classMethodWrongNumParams() {
-        assertTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }"); 
+        assertTypeErrors("interface I { Unit m(); } class C implements I { Unit m(Bool b) { } }");
     }
 
     @Test
     public void classMethodWrongParamType() {
-        assertTypeErrors("interface I { Unit m(Bool b); } class C implements I { Unit m(Int i) { } }"); 
+        assertTypeErrors("interface I { Unit m(Bool b); } class C implements I { Unit m(Int i) { } }");
     }
-    
+
     @Test
     public void classDuplicateFields() {
-        assertTypeErrors("class C { Bool f; Int f;}"); 
+        assertTypeErrors("class C { Bool f; Int f;}");
     }
 
     @Test
     public void classFieldError() {
-        assertTypeErrors("class C { X f; }"); 
+        assertTypeErrors("class C { X f; }");
     }
-    
+
     @Test
     public void classInitializerBlockError() {
-        assertTypeErrors("class C { { X f; } }"); 
+        assertTypeErrors("class C { { X f; } }");
     }
-    
+
     @Test
     public void classParamsError() {
-        assertTypeErrors("class C(I i) { }"); 
+        assertTypeErrors("class C(I i) { }");
     }
-    
-   
-    
+
     @Test
     public void negTestError() {
         Model m = assertParseOkStdLib(" { Bool b = ~5; }");
-        assertEquals(ErrorMessage.EXPECTED_TYPE,m.typeCheck().getFirst().msg);
+        assertEquals(ErrorMessage.EXPECTED_TYPE, m.typeCheck().getFirst().msg);
     }
 
     @Test
@@ -444,103 +426,99 @@ public class TypeCheckerTest extends FrontendTest {
     public void getError() {
         assertTypeErrors("{ Bool f = True; f.get; }");
     }
-    
+
     @Test
     public void orError() {
         assertTypeErrors("{ Bool b = True || 5; }");
     }
-    
+
     @Test
     public void andError() {
         assertTypeErrors("{ Bool b = 5 && True; }");
     }
-    
+
     @Test
     public void newError() {
-        assertTypeErrors("interface I { } { I i; i = new I(); }"); 
+        assertTypeErrors("interface I { } { I i; i = new I(); }");
     }
 
     @Test
     public void newError2() {
-        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(); }"); 
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(); }");
     }
 
     @Test
     public void newError3() {
-        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(5); }"); 
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(5); }");
     }
-    
+
     @Test
-	 public void letError() {
-		 assertTypeErrors("{ Bool b = let (Bool x) = 5 in x; }"); 
-	 }
-    
+    public void letError() {
+        assertTypeErrors("{ Bool b = let (Bool x) = 5 in x; }");
+    }
+
     @Test
-	 public void caseError() {
-		 assertTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => 5; }; }"); 
-	 }
-    
+    public void caseError() {
+        assertTypeErrors("{ Bool x = True; Bool b = case x { True => False; False => 5; }; }");
+    }
+
     @Test
-	 public void caseErrorNoDataType() {
-		 assertTypeErrors("interface I { } { I i; Bool b = case i { True => False; False => 5; }; }"); 
-	 }
-    
+    public void caseErrorNoDataType() {
+        assertTypeErrors("interface I { } { I i; Bool b = case i { True => False; False => 5; }; }");
+    }
+
     @Test
     public void caseBoundVarWrongType() {
-       assertTypeErrors("def Bool f(Bool x) = let (Int y) = 5 in case x { y => True; };");
-       
+        assertTypeErrors("def Bool f(Bool x) = let (Int y) = 5 in case x { y => True; };");
+
     }
-    
 
     @Test
-	 public void caseErrorConstructorNotResolvable() {
-		 assertTypeErrors("{ Bool x = True; Bool b = case x { Foo => False; }; }"); 
-	 }
+    public void caseErrorConstructorNotResolvable() {
+        assertTypeErrors("{ Bool x = True; Bool b = case x { Foo => False; }; }");
+    }
 
     @Test
-	 public void caseErrorConstructorWrongArgNum() {
-		 assertTypeErrors("{ Bool x = True; Bool b = case x { True(5) => False; }; }"); 
-	 }
-    
+    public void caseErrorConstructorWrongArgNum() {
+        assertTypeErrors("{ Bool x = True; Bool b = case x { True(5) => False; }; }");
+    }
+
     @Test
-	 public void caseErrorConstructorWrongArgType() {
-		 assertTypeErrors("data Foo = Bar(Bool);  { Foo x = Bar(True); Bool b = case x { Bar(5) => False; }; }"); 
-	 }
-    
+    public void caseErrorConstructorWrongArgType() {
+        assertTypeErrors("data Foo = Bar(Bool);  { Foo x = Bar(True); Bool b = case x { Bar(5) => False; }; }");
+    }
+
     @Test
-	 public void caseErrorConstructorExpWrongArgType() {
-		 assertTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(5); }"); 
-	 }
-    
+    public void caseErrorConstructorExpWrongArgType() {
+        assertTypeErrors("data Foo = Bar(Bool); { Foo x = Bar(5); }");
+    }
+
     @Test
     public void fnAppMissingDef() {
-        assertTypeErrors("def Bool f() = x(); "); 
+        assertTypeErrors("def Bool f() = x(); ");
     }
-    
+
     @Test
     public void fnAppWrongArgNum() {
-        assertTypeErrors("def Bool f() = f(True); "); 
+        assertTypeErrors("def Bool f() = f(True); ");
     }
 
     @Test
     public void fnAppWrongArgType() {
-        assertTypeErrors("def Bool f(Bool b) = f(5); "); 
+        assertTypeErrors("def Bool f(Bool b) = f(5); ");
     }
-    
-    @Test 
+
+    @Test
     public void fnTypecheckNoCrash() {
-    	assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" +
-    			"case map {" +
-    			"EmptyMap => Nil ;" +
-    			"Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;" +
-    	"};");
+        assertTypeErrors("def List<String> map2list<A>(Map<String,A> map) =" + "case map {" + "EmptyMap => Nil ;"
+                + "Insert(Pair(b,_), tail) => Cons(b, map2list(tail)) ;" + "};");
     }
-    
+
     @Test
     public void methodReturnError() {
         assertTypeErrors("class C { Unit m() { return True; } }");
     }
-    
+
     @Test
     public void methodMissingReturn() {
         assertTypeErrors("class C { Bool m() {  } }");
@@ -550,7 +528,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void methodReturnNotLastStmt() {
         assertTypeErrors("class C { Bool m() { if (True) return True; else return False; return True;} }");
     }
-    
+
     @Test
     public void syncCallWrongTarget() {
         assertTypeErrors("class C { Unit m(Bool b) { b.m();  } }");
@@ -575,47 +553,47 @@ public class TypeCheckerTest extends FrontendTest {
     public void syncCallWrongArgType() {
         assertTypeErrors("interface I { Unit m(Int i); } { I i; i.m(True); }");
     }
-    
-    @Test
-	 public void testVarDeclInitNoSubtypeError() {
-		 assertTypeErrors("interface I {} interface J {} { J j; I i = j; }"); 
-	 }
 
     @Test
-	 public void testVarDeclInitMissingError() {
-		 assertTypeErrors("{ Bool b; }"); 
-	 }
-    
-    @Test
-	 public void testIfNoBool() {
-		 assertTypeErrors("{ if (5) { } else { } }"); 
-	 }
+    public void testVarDeclInitNoSubtypeError() {
+        assertTypeErrors("interface I {} interface J {} { J j; I i = j; }");
+    }
 
     @Test
-	 public void testWhileNoBool() {
-		 assertTypeErrors("{ while (5) { } }"); 
-	 }
-    
-    @Test
-	 public void testAwaitNoFut() {
-		 assertTypeErrors("{ Bool b = True; await b?; }"); 
-	 }
-    
-    @Test
-	 public void testAwaitNoBool() {
-		 assertTypeErrors("{ await 5; }"); 
-	 }
+    public void testVarDeclInitMissingError() {
+        assertTypeErrors("{ Bool b; }");
+    }
 
     @Test
-	 public void testAwaitAndError() {
-		 assertTypeErrors("{ await 5 && True; }"); 
-	 }
-    
+    public void testIfNoBool() {
+        assertTypeErrors("{ if (5) { } else { } }");
+    }
+
+    @Test
+    public void testWhileNoBool() {
+        assertTypeErrors("{ while (5) { } }");
+    }
+
+    @Test
+    public void testAwaitNoFut() {
+        assertTypeErrors("{ Bool b = True; await b?; }");
+    }
+
+    @Test
+    public void testAwaitNoBool() {
+        assertTypeErrors("{ await 5; }");
+    }
+
+    @Test
+    public void testAwaitAndError() {
+        assertTypeErrors("{ await 5 && True; }");
+    }
+
     @Test
     public void constructorTypeArgsError() {
         assertTypeErrors("data Foo<A> = Bar(A,A); { Foo<A> o = Bar(True,5); }");
     }
-    
+
     @Test
     public void missingTypArg() {
         assertTypeErrors("def List<A> map2list<A>(Map<A,B> map) = Nil;");

@@ -15,16 +15,15 @@ public class JavaDebuggingTest extends JavaBackendTest {
     public void simpleStep2() {
         assertOutputContains("{ \n ; }", ":2");
     }
-    
-    
+
     private void assertOutputContains(String absCode, String expectedOutput) {
-        JavaCode code = getJavaCode("module JavaTest;"+absCode, true);
-        //System.out.println(java);
-        String output = runJava(code, "-Dabs.debugger="+TestDebugger.class.getName()).toString().trim();
+        JavaCode code = getJavaCode("module JavaTest;" + absCode, true);
+        // System.out.println(java);
+        String output = runJava(code, "-Dabs.debugger=" + TestDebugger.class.getName()).toString().trim();
         if (output.contains(expectedOutput))
             Assert.assertTrue(true);
         else
-            Assert.assertTrue("Expected to find "+expectedOutput+", but output was:\n"+output, false);
+            Assert.assertTrue("Expected to find " + expectedOutput + ", but output was:\n" + output, false);
     }
-    
+
 }
