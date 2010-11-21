@@ -627,16 +627,21 @@ aspect GenerateProlog {
     	s.print(")");
       }
 
+
     public void Call.generateProlog(PrintStream s) {
-    	//generates "syncCall(Callee,MethodName,ArgumentsList)"
-    	// or "asyncCall(Callee,MethodName,ArgumentsList)"
+    	//generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
+    	// or "asyncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
     	
     	if(this instanceof SyncCall)
     		s.print("syncCall(");
     	else
     		s.print("asyncCall(");
+    	
     	this.getCallee().generateProlog(s);
-    	s.print(","+quote(this.getMethod())+",[");
+    	s.print(",[");
+    	//we need to know which are the interfaces to whom the called method belongs
+    	generateInterfacesList(s,this.getCallee().getType());
+    	s.print("],"+quote(this.getMethod())+",[");
     	List<?> arguments = (List<?>) getChild(1);
     	int n = arguments.getNumChild();
     	for (int i = 0; i < n; i++){
@@ -646,6 +651,22 @@ aspect GenerateProlog {
     	s.print("])");
     	
     	
+    }
+
+    private void Call.generateInterfacesList(PrintStream s,Type type) {
+    	if(type.isUnionType()){
+    	UnionType unionType=(UnionType)type;
+    	Iterator<InterfaceType> it=unionType.getTypes().iterator();
+    	while(it.hasNext()){
+    		generateInterfacesList(s,it.next());
+    		if(it.hasNext())
+    			s.print(",");
+    	}
+    	}else
+    		if(type.isInterfaceType()){
+    			s.print(quote(type.toString()));
+    		}else
+    			throw new PrologBackendException("the call "+this+" is done over the following illegal type "+type);
     }
 
      public void NewExp.generateProlog(PrintStream s) {
