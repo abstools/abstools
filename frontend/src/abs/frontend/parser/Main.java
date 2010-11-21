@@ -2,7 +2,6 @@
 
 package abs.frontend.parser;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,110 +30,109 @@ import abs.frontend.parser.SyntaxError;
 
 public class Main {
 
-	private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
-    protected boolean verbose = false ;
-	protected boolean typecheck = true;
-	protected boolean stdlib = true;
-	protected boolean dump = false;
+    private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    protected boolean verbose = false;
+    protected boolean typecheck = true;
+    protected boolean stdlib = true;
+    protected boolean dump = false;
 
-	public static void main(final String... args) throws Exception {
-	    new Main().parse(args);
-	}
+    public static void main(final String... args) throws Exception {
+        new Main().parse(args);
+    }
 
-	public java.util.List<String> parseArgs(String[] args) throws Exception {
-	    ArrayList<String> remaindingArgs = new ArrayList<String>();
-	    
+    public java.util.List<String> parseArgs(String[] args) throws Exception {
+        ArrayList<String> remaindingArgs = new ArrayList<String>();
+
         for (String arg : args) {
-        	if (arg.equals("-dump"))
-        		dump = true;
-        	else if (arg.equals("-v"))
+            if (arg.equals("-dump"))
+                dump = true;
+            else if (arg.equals("-v"))
                 verbose = true;
-            	else if (arg.equals("-notypecheck")) 
+            else if (arg.equals("-notypecheck"))
                 typecheck = false;
-            else if (arg.equals("-nostdlib")) 
+            else if (arg.equals("-nostdlib"))
                 stdlib = false;
             else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
                 remaindingArgs.add(arg);
-            
+
         }
         return remaindingArgs;
-	}
-	
-	public Model parse(final String[] args) throws Exception {
+    }
 
-	    java.util.List<String> files = parseArgs(args);
-	    
-	    if (files.isEmpty()) {
-	        printErrorAndExit("Please provide at least one intput file");
-	    }
-	    
-		List<CompilationUnit> units = new List<CompilationUnit>();
-		
-		if (stdlib) {
-		    units.add(getStdLib());
-		}
-		
-		for (String file : files){
-		    if (file.startsWith("-")) {
-		        printErrorAndExit("Illegal option "+file);
-		    }
+    public Model parse(final String[] args) throws Exception {
 
-			try{
-				units.add(parseUnit(new File(file), stdlib));
-				
-			} catch (FileNotFoundException e1) {
-				printErrorAndExit("File not found: " + file);
-			} catch (ParseException pex) {
-				System.err.println(pex.getError().getHelpMessage());
-				System.exit(1);
-			} catch (Exception e1) {
-				// Catch-all
-				System.err.println("Compilation of " + file +  " failed with Exception");
-				System.err.println(e1);
-				System.exit(1);
-			}
-		}
-		
+        java.util.List<String> files = parseArgs(args);
+
+        if (files.isEmpty()) {
+            printErrorAndExit("Please provide at least one intput file");
+        }
+
+        List<CompilationUnit> units = new List<CompilationUnit>();
+
+        if (stdlib) {
+            units.add(getStdLib());
+        }
+
+        for (String file : files) {
+            if (file.startsWith("-")) {
+                printErrorAndExit("Illegal option " + file);
+            }
+
+            try {
+                units.add(parseUnit(new File(file), stdlib));
+
+            } catch (FileNotFoundException e1) {
+                printErrorAndExit("File not found: " + file);
+            } catch (ParseException pex) {
+                System.err.println(pex.getError().getHelpMessage());
+                System.exit(1);
+            } catch (Exception e1) {
+                // Catch-all
+                System.err.println("Compilation of " + file + " failed with Exception");
+                System.err.println(e1);
+                System.exit(1);
+            }
+        }
+
         Model m = new Model(units);
-		
-        // Added by Lei Mou
+
         if (dump) {
-        	m.dump();
+            m.dump();
         }
 
         if (m.hasParserErrors()) {
-      	  System.err.println("Syntactic errors: " + m.getParserErrors().size());
-      	  for (ParserError e : m.getParserErrors()) {
-      		   System.err.println(e.getHelpMessage());
-      		   System.err.flush();
-      	  }
+            System.err.println("Syntactic errors: " + m.getParserErrors().size());
+            for (ParserError e : m.getParserErrors()) {
+                System.err.println(e.getHelpMessage());
+                System.err.flush();
+            }
         } else {
-      	  int numSemErrs = m.getErrors().size();
-            
-      	  if (numSemErrs > 0) {
-      		  System.err.println("Semantic errors: " + numSemErrs);
-      		  for (SemanticError error : m.getErrors()) {
-      			  System.err.println(error.getHelpMessage());
-      			  System.err.flush();
-      		  }
-      	  } else {
-      		  if (typecheck) {
-      			  SemanticErrorList typeerrors = m.typeCheck();
-      			  for (SemanticError se : typeerrors) {
-                    System.err.println(se.getHelpMessage());
-      			  }
-      		  }
-      	  }
+            int numSemErrs = m.getErrors().size();
+
+            if (numSemErrs > 0) {
+                System.err.println("Semantic errors: " + numSemErrs);
+                for (SemanticError error : m.getErrors()) {
+                    System.err.println(error.getHelpMessage());
+                    System.err.flush();
+                }
+            } else {
+                if (typecheck) {
+                    SemanticErrorList typeerrors = m.typeCheck();
+                    for (SemanticError se : typeerrors) {
+                        System.err.println(se.getHelpMessage());
+                    }
+                }
+            }
         }
-        
-		return m;
-	}
+
+        return m;
+    }
 
     private void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
-        System.err.println("  "+error);
+        System.err.println("  " + error);
         System.err.println();
         printUsageAndExit();
     }
@@ -143,114 +141,110 @@ public class Main {
         printUsage();
         System.exit(1);
     }
-	
-    public static CompilationUnit getStdLib() throws IOException  {
+
+    public static CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             System.err.println("Could not found ABS Standard Library");
             System.exit(1);
-        } 
-        return parseUnit(new File(ABS_STD_LIB),null,new InputStreamReader(stream), false);
+        }
+        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream), false);
     }
 
     protected void printUsage() {
-        System.out.println(
-                "*******************************\n"+
-                "*        ABS TOOL SUITE       *\n"+
-                "*******************************\n"+
-                "Usage: java "+this.getClass().getName()+" [options] <absfiles>\n\n" +
-        		"  <absfiles>    ABS files to parse\n\n" +
-        		"Options:\n"+
-        		"  -v            verbose output\n" +
-        		"  -notypecheck  disable typechecking\n" +
-            "  -nostdlib     do not include the standard lib \n" +
-            "  -dump         dump AST to standard output \n" +
-        		"  -h            print this message\n");        
+        System.out.println("*******************************\n" + "*        ABS TOOL SUITE       *\n"
+                + "*******************************\n" + "Usage: java " + this.getClass().getName()
+                + " [options] <absfiles>\n\n" + "  <absfiles>    ABS files to parse\n\n" + "Options:\n"
+                + "  -v            verbose output\n" + "  -notypecheck  disable typechecking\n"
+                + "  -nostdlib     do not include the standard lib \n"
+                + "  -dump         dump AST to standard output \n" + "  -h            print this message\n");
     }
 
     public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
-		Reader reader = new FileReader(file);
-		BufferedReader rd = null;
-		//Set to true to print source before parsing 
-		boolean dumpinput = false;
-		if (dumpinput){
-			try {
-				rd = new BufferedReader(new FileReader(file));
-				String line = null;
-				int i = 1 ; 
-				while ((line = rd.readLine()) != null) {
-					System.out.println(i++ + "\t" + line);
-				}
-			} catch (IOException x) {
-				System.out.flush();
-				System.err.println(x);
-				System.err.flush();
-			} finally {
-				if (rd != null) rd.close();
-			}
-		}
+        Reader reader = new FileReader(file);
+        BufferedReader rd = null;
+        // Set to true to print source before parsing
+        boolean dumpinput = false;
+        if (dumpinput) {
+            try {
+                rd = new BufferedReader(new FileReader(file));
+                String line = null;
+                int i = 1;
+                while ((line = rd.readLine()) != null) {
+                    System.out.println(i++ + "\t" + line);
+                }
+            } catch (IOException x) {
+                System.out.flush();
+                System.err.println(x);
+                System.err.flush();
+            } finally {
+                if (rd != null)
+                    rd.close();
+            }
+        }
 
-		return parseUnit(file, null, reader, withStdLib); 
-	}
-    
+        return parseUnit(file, null, reader, withStdLib);
+    }
+
     public static Model parse(File file, boolean withStdLib) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file,withStdLib));
+        units.add(parseUnit(file, withStdLib));
         return new Model(units);
     }
-    
+
     public static Model parse(ArrayList<String> fileNames, boolean withStdLib) throws Exception {
-    	List<CompilationUnit> units = new List<CompilationUnit>();
-    	if (withStdLib) units.add(getStdLib());
-    	for (String filename : fileNames) {
-    		units.add(parseUnit(new File(filename), withStdLib));
-    	}
-    	return new Model(units);
-    }
-	
-	public static Model parse(File file, String sourceCode, InputStream stream, boolean withStdLib) throws Exception {
-	    return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)), withStdLib);
-	}
-	    
-	public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader,withStdLib));
+        for (String filename : fileNames) {
+            units.add(parseUnit(new File(filename), withStdLib));
+        }
         return new Model(units);
-	}
-	
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib) throws IOException  {
+    }
+
+    public static Model parse(File file, String sourceCode, InputStream stream, boolean withStdLib) throws Exception {
+        return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)), withStdLib);
+    }
+
+    public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib) throws Exception {
+        List<CompilationUnit> units = new List<CompilationUnit>();
+        if (withStdLib)
+            units.add(getStdLib());
+        units.add(parseUnit(file, sourceCode, reader, withStdLib));
+        return new Model(units);
+    }
+
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib)
+            throws IOException {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
             parser.setSourceCode(sourceCode);
             parser.setFile(file);
-            
+
             CompilationUnit u = null;
             try {
                 u = (CompilationUnit) parser.parse(scanner);
             } catch (Parser.Exception e) {
-                u = new CompilationUnit(parser.getFileName(),new List());
+                u = new CompilationUnit(parser.getFileName(), new List());
                 u.setParserErrors(parser.getErrors());
             }
             if (importStdLib) {
-            	for (ModuleDecl d : u.getModuleDecls()) {
-            		d.getImports().add(new StarImport(Constants.STDLIB_NAME));
-            	}
+                for (ModuleDecl d : u.getModuleDecls()) {
+                    d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                }
             }
-            
+
             return u;
         } finally {
             reader.close();
         }
-	}
-
+    }
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
-        return parse(null,s, new StringReader(s), withStdLib);
+        return parse(null, s, new StringReader(s), withStdLib);
     }
 
 }
