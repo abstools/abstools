@@ -8,54 +8,54 @@ import java.util.Iterator;
 aspect GenerateProlog {
 
     public void ASTNode.generateProlog(PrintStream s){
-    	if (children != null)
-    		for (ASTNode<?> child : children) 
-    			if (child != null) child.generateProlog(s);
+        if (children != null)
+            for (ASTNode<?> child : children) 
+                if (child != null) child.generateProlog(s);
     }
-    
-    
+
+
     // data (Data type declarations)
     /*   E.g., for a data type "data List = Nil | Cons(Int,List) ;"
      *   we generate the Prolog term 
      *   "data('List',['Nil','Cons'('Int','List')])"
      */   
     public void DataTypeDecl.generateProlog(PrintStream s){
-      //the standard behavior should work
-    	super.generateProlog(s);
+        //the standard behavior should work
+        super.generateProlog(s);
     }
-    
+
     public void ParametricDataTypeDecl.generateProlog(PrintStream s){
-    	s.print("data(" + quote(getName()) + ",[");
-    	List<?> cs = (List<?>) getChild(0);
-    	int n = cs.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		cs.getChild(i).generateProlog(s); // cons here is a DataConstructor
-    		if (i != n-1) s.print(",");
-    	}
-    	// child(1) and child(2) are resp. annotations and type parameters. By now, I ignore them.
-    	s.println("]).");
+        s.print("data(" + quote(getName()) + ",[");
+        List<?> cs = (List<?>) getChild(0);
+        int n = cs.getNumChild();
+        for (int i = 0; i < n; i++){
+            cs.getChild(i).generateProlog(s); // cons here is a DataConstructor
+            if (i != n-1) s.print(",");
+        }
+        // child(1) and child(2) are resp. annotations and type parameters. By now, I ignore them.
+        s.println("]).");
     }
 
     public void DataConstructor.generateProlog(PrintStream s){
-    	s.print(quote(getName()));
-    	List<?> uses = (List<?>) getChild(0); // ? = DataTypeUse
-    	int n = uses.getNumChild();
-    	if (n == 0) return;
-    	else {
-    		s.print("(");
-    		for (int i = 0; i < n; i++){
-    			uses.getChild(i).generateProlog(s);
-    			if (i != n-1) s.print(",");
-    		}
-    		s.print(")");
-    	}
+        s.print(quote(getName()));
+        List<?> uses = (List<?>) getChild(0); // ? = DataTypeUse
+        int n = uses.getNumChild();
+        if (n == 0) return;
+        else {
+            s.print("(");
+            for (int i = 0; i < n; i++){
+                uses.getChild(i).generateProlog(s);
+                if (i != n-1) s.print(",");
+            }
+            s.print(")");
+        }
     }
 
-//this is later implemented in the super class TypeUse
-   // public void DataTypeUse.generateProlog(PrintStream s){
-   //	s.print(quote(getName()));
-   //}
-	
+    //this is later implemented in the super class TypeUse
+    // public void DataTypeUse.generateProlog(PrintStream s){
+    //    s.print(quote(getName()));
+    //}
+
 
     // type (Type synonyms declarations)
     /* E.g., for a declaration "type Data = Int ;"
@@ -63,10 +63,10 @@ aspect GenerateProlog {
      *   "type('Data','Int')"
      */   
     public void TypeSynDecl.generateProlog(PrintStream s){
-    	s.print("type(" + quote(getName()) + ",");
-    	getChild(1).generateProlog(s);
-    	s.println(").");
-    	// child(0) is a list of annotations and is ignored
+        s.print("type(" + quote(getName()) + ",");
+        getChild(1).generateProlog(s);
+        s.println(").");
+        // child(0) is a list of annotations and is ignored
     }
 
 
@@ -76,489 +76,571 @@ aspect GenerateProlog {
      *   "def(...)"
      */
     public void FunctionDecl.generateProlog(PrintStream s){
-    	s.print("def(" + quote(getName()) + ",");
-    	// child(0) is a list of annotations and is ignored
-    	getChild(1).generateProlog(s);
-    	List<?> params = (List<?>) getChild(2);
-    	int n = params.getNumChild();
-    	s.print(",[");
-    	for (int i = 0; i < n; i++){
-    		params.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("],");
-    	getChild(3).generateProlog(s);
-    	s.println(").");
+        s.print("def(" + quote(getName()) + ",");
+        // child(0) is a list of annotations and is ignored
+        getChild(1).generateProlog(s);
+        List<?> params = (List<?>) getChild(2);
+        int n = params.getNumChild();
+        s.print(",[");
+        for (int i = 0; i < n; i++){
+            params.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("],");
+        getChild(3).generateProlog(s);
+        s.println(").");
     }
 
     public void ParametricFunctionDecl.generateProlog(PrintStream s){
-    	s.print("def(" + quote(getName()) + ",");
-    	getChild(0).generateProlog(s);
-    	List<?> params = (List<?>) getChild(1);
-    	int n = params.getNumChild();
-    	s.print(",[");
-    	for (int i = 0; i < n; i++){
-    		params.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("],");
-    	getChild(2).generateProlog(s);
-    	s.println(").");
+        s.print("def(" + quote(getName()) + ",");
+        getChild(0).generateProlog(s);
+        List<?> params = (List<?>) getChild(1);
+        int n = params.getNumChild();
+        s.print(",[");
+        for (int i = 0; i < n; i++){
+            params.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("],");
+        getChild(2).generateProlog(s);
+        s.println(").");
     }
 
 
     public void ParamDecl.generateProlog(PrintStream s){
-    	s.print("(");
-    	getChild(0).generateProlog(s);
-    	s.print("," + varTransform(getName()) + ")");
+        s.print("(");
+        getChild(0).generateProlog(s);
+        s.print("," + varTransform(getName()) + ")");
     }
 
     public void ExpFunctionDef.generateProlog(PrintStream s){
-    	// child(0) is a PureExp, i.e., a CaseExp, LetExp, FnApp, DataConstructoreExp, etc (see ABS.ast)
-    	((PureExp) getChild(0)).generateProlog(s);
+        // child(0) is a PureExp, i.e., a CaseExp, LetExp, FnApp, DataConstructoreExp, etc (see ABS.ast)
+        ((PureExp) getChild(0)).generateProlog(s);
     }
-    
+
     public void BuiltinFunctionDef.generateProlog(PrintStream s){
-    	// child(0) is a PureExp (I guess it can be used for its interpretation afterwards)
-    	// But it has no content after parsing (I think ...)
-    	s.print("builtin");
+        // child(0) is a PureExp (I guess it can be used for its interpretation afterwards)
+        // But it has no content after parsing (I think ...)
+        s.print("builtin");
     }
 
 
     // Pure expressions
 
     public void PureExp.generateProlog(PrintStream s){
-    	// This method will be overwritten by all PureExp concrete subclasses
-    	// Therefore this is run only when a PureExp is not supported
-    	throw new PrologBackendException("PureExp not supported by PrologBackend (" + this + ")");
+        // This method will be overwritten by all PureExp concrete subclasses
+        // Therefore this is run only when a PureExp is not supported
+        throw new PrologBackendException("PureExp not supported by PrologBackend (" + this + ")");
     }
 
     public void VarUse.generateProlog(PrintStream s){
-      	if(this.getDecl_value instanceof FieldDecl){
-    		s.print("field('"+getName()+"')");
-       	}else{
-      		VarOrFieldDecl decl=this.getDecl_value;
-    		if(decl instanceof ParamDecl){
-    			ParamDecl param=(ParamDecl)decl;
-    			if(param.getParent().getParent() instanceof ClassDecl)
-    				s.print("field('"+getName()+"')");
-    			else
-    				s.print(varTransform(getName()));
-    		}else
-    			s.print(varTransform(getName()));
-    	}
+        if(this.isField())
+            s.print(fieldTransform(getName()));
+        else
+            s.print(varTransform(getName()));
     }
+    //Inferes if the used variable was declared as a field or as an argument of a class
+    public boolean VarUse.isField(){
+        if(this.getDecl_value instanceof FieldDecl)//field
+            return true;
 
-	public void FieldUse.generateProlog(PrintStream s){
-		s.print("field('"+getName()+"')");
+        if(this.getDecl_value instanceof ParamDecl){//it was declared as a parameter
+            ParamDecl param=(ParamDecl)this.getDecl_value;
+            //the parent is a list, but the its parent can be a class , a method ...
+            if(param.getParent().getParent() instanceof ClassDecl)
+                return true;
+        }
+        return false;     
+    }
+    public void FieldUse.generateProlog(PrintStream s){
+        s.print(fieldTransform(getName()));
     }
     public void AndBoolExp.generateProlog(PrintStream s){
-    	s.print("and(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("and(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void OrBoolExp.generateProlog(PrintStream s){
-    	s.print("or(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("or(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void NegExp.generateProlog(PrintStream s){
-    	s.print("neg(");
-		getChild(0).generateProlog(s);
-    	s.print(")");
+        s.print("neg(");
+        getChild(0).generateProlog(s);
+        s.print(")");
     }
 
     public void EqExp.generateProlog(PrintStream s){
-    	s.print("eq(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("eq(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
     public void NotEqExp.generateProlog(PrintStream s){
-    	s.print("neq(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("neq(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void GTExp.generateProlog(PrintStream s){
-    	s.print("gt(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("gt(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void GTEQExp.generateProlog(PrintStream s){
-    	s.print("geq(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("geq(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void LTExp.generateProlog(PrintStream s){
-    	s.print("lt(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("lt(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void LTEQExp.generateProlog(PrintStream s){
-    	s.print("leq(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("leq(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void MinusExp.generateProlog(PrintStream s){
-    	s.print("-(");
-		getChild(0).generateProlog(s);
-    	s.print(")");
+        s.print("-(");
+        getChild(0).generateProlog(s);
+        s.print(")");
     }
 
     public void AddAddExp.generateProlog(PrintStream s){
-    	s.print("+(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("+(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void SubAddExp.generateProlog(PrintStream s){
-    	s.print("-(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("-(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void MultMultExp.generateProlog(PrintStream s){
-    	s.print("*(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("*(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void DivMultExp.generateProlog(PrintStream s){
-    	s.print("/(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("/(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void ModMultExp.generateProlog(PrintStream s){
-    	s.print("mod(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
+        s.print("mod(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
     }
 
     public void StringLiteral.generateProlog(PrintStream s){
-    	s.print(strTransform(getContent()));
+        s.print(strTransform(getContent()));
     }
 
     public void IntLiteral.generateProlog(PrintStream s){
-    	s.print(getContent());
+        s.print(getContent());
     }
 
     public void DataConstructorExp.generateProlog(PrintStream s){
-    	s.print("cons(" + quote(getConstructor()));
-    	List<?> subExps = (List<?>) getChild(0); // ? = PureExp
-    	int n = subExps.getNumChild();
-    	if (n > 0) {
-    		s.print("(");
-    		for (int i = 0; i < n; i++){
-    			subExps.getChild(i).generateProlog(s);
-    			if (i != n-1) s.print(",");
-    		}
-    		s.print(")");
-    	}
-    	s.print(")");
+        s.print("cons(" + quote(getConstructor()));
+        List<?> subExps = (List<?>) getChild(0); // ? = PureExp
+        int n = subExps.getNumChild();
+        if (n > 0) {
+            s.print("(");
+            for (int i = 0; i < n; i++){
+                subExps.getChild(i).generateProlog(s);
+                if (i != n-1) s.print(",");
+            }
+            s.print(")");
+        }
+        s.print(")");
     }
 
     public void FnApp.generateProlog(PrintStream s){
-    	s.print("apply(" + quote(getName()));
-    	List<?> args = (List<?>) getChild(0); // ? = PureExp
-    	int n = args.getNumChild();
-    	if (n > 0){
-    		s.print("(");
-    		for (int i = 0; i < n; i++){
-    			args.getChild(i).generateProlog(s);
-    			if (i != n-1) s.print(",");
-    		}
-    		s.print(")");
-    	}
-    	s.print(")");
+        s.print("apply(" + quote(getName()));
+        List<?> args = (List<?>) getChild(0); // ? = PureExp
+        int n = args.getNumChild();
+        if (n > 0){
+            s.print("(");
+            for (int i = 0; i < n; i++){
+                args.getChild(i).generateProlog(s);
+                if (i != n-1) s.print(",");
+            }
+            s.print(")");
+        }
+        s.print(")");
     }
 
     public void LetExp.generateProlog(PrintStream s){
-    	s.print("let(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(",");
-    	getChild(2).generateProlog(s);
-    	s.print(")");    	
+        s.print("let(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(",");
+        getChild(2).generateProlog(s);
+        s.print(")");        
     }
 
 
     // Case expressions
 
     public void CaseExp.generateProlog(PrintStream s){
-    	s.print("case(");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	List<?> branches = (List<?>) getChild(1); // ? = CaseBranch
-    	int n = branches.getNumChild();
-    	s.print("[");
-    	for (int i = 0; i < n; i++){
-    		branches.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("])");
+        s.print("case(");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        List<?> branches = (List<?>) getChild(1); // ? = CaseBranch
+        int n = branches.getNumChild();
+        s.print("[");
+        for (int i = 0; i < n; i++){
+            branches.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
     }
 
     public void CaseBranch.generateProlog(PrintStream s){
-    	s.print("branch(");
-    	getChild(0).generateProlog(s); // child(0) is a Pattern
-    	s.print(",");
+        s.print("branch(");
+        getChild(0).generateProlog(s); // child(0) is a Pattern
+        s.print(",");
         getChild(1).generateProlog(s); // child(1) is a PureExp
-    	s.print(")"); // This closes the "casebranch" term
+        s.print(")"); // This closes the "casebranch" term
     }
 
 
     // Patterns
 
     public void PatternVarDecl.generateProlog(PrintStream s){
-    	s.print(varTransform(getName()));
+        s.print(varTransform(getName()));
     }
 
     public void PatternVarUse.generateProlog(PrintStream s){
-    	s.print(varTransform(getName()));
+        s.print(varTransform(getName()));
     }
 
     public void ConstructorPattern.generateProlog(PrintStream s){
-    	s.print(quote(getConstructor()));
-    	List<?> subterms = (List<?>) getChild(0); // ? = Pattern
-    	int n = subterms.getNumChild();
-    	if (n == 0) return;
-    	else {
-    		s.print("(");
-    		for (int i = 0; i < n; i++){
-    			subterms.getChild(i).generateProlog(s);
-    			if (i != n-1) s.print(",");
-    		}
-    		s.print(")");
-    	}
+        s.print(quote(getConstructor()));
+        List<?> subterms = (List<?>) getChild(0); // ? = Pattern
+        int n = subterms.getNumChild();
+        if (n == 0) return;
+        else {
+            s.print("(");
+            for (int i = 0; i < n; i++){
+                subterms.getChild(i).generateProlog(s);
+                if (i != n-1) s.print(",");
+            }
+            s.print(")");
+        }
     }
 
     public void UnderscorePattern.generateProlog(PrintStream s){
-    	s.print(quote("_"));
+        s.print(quote("_"));
     }
 
     public void NullExp.generateProlog(PrintStream s){
-    	s.print("null");
+        s.print("null");
     }
     public void ThisExp.generateProlog(PrintStream s) {
         s.print(varTransform("this"));
     }
-    
-    // Class and Interface declarations
-    
-    /*public void ClassDecl.generateProlog(PrintStream s){
-    //generates class(name,parametersList,implementedInterfaces,fieldsList).
-    //and call the generator for each method in the class
-    	s.print("class(" + quote(getName()) + ",[");
-    	List<?> parameterList = (List<?>) getChild(1);
-    	int n = parameterList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		parameterList.getChild(i).generateProlog(s); // cons here is a DataConstructor
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("],[");
-    	List<?> interfacesList = (List<?>) getChild(2);
-    	n = interfacesList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		interfacesList.getChild(i).generateProlog(s); // cons here is a DataConstructor
-    		if (i != n-1) s.print(",");
-    	}
-     	s.print("],[");
-     	List<?> fieldsList = (List<?>) getChild(4);
-    	n = fieldsList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		fieldsList.getChild(i).generateProlog(s); // cons here is a DataConstructor
-    		if (i != n-1) s.print(",");
-    	}
-    	s.println("]).");
-    	
-     	Opt<InitBlock> initBlockOpt=(Opt<InitBlock>) getChild(3);
-     	if(initBlockOpt.getNumChild()>0)
-     		initBlockOpt.getChild(0).generateProlog(s,quote(getName()));
-     	
-     	List<MethodImpl> methodsList = (List<MethodImpl>) getChild(5);
-    	n = methodsList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		methodsList.getChild(i).generateProlog(s,quote(getName())); // cons here is a DataConstructor
-    	}
-}
-*/
+
     public void InterfaceDecl.generateProlog(PrintStream s){
-    //generates "interface(name,extendedInterfacesList,methodsSignatureList)."
-        	s.print("interface(" + quote(getName()) + ",[");
-        	List<?> extendsList = (List<?>) getChild(1);
-        	int n = extendsList.getNumChild();
-        	for (int i = 0; i < n; i++){
-        		extendsList.getChild(i).generateProlog(s); 
-        		if (i != n-1) s.print(",");
-        	}
-        	s.print("],[");
-        	List<?> methodsList = (List<?>) getChild(2);
-        	n = methodsList.getNumChild();
-        	for (int i = 0; i < n; i++){
-        		methodsList.getChild(i).generateProlog(s); 
-        		if (i != n-1) s.print(",");
-        	}
-        	
-        	s.println("]).");
+        //generates "interface(name,extendedInterfacesList,methodsSignatureList)."
+        s.print("interface(" + quote(getName()) + ",[");
+        List<?> extendsList = (List<?>) getChild(1);
+        int n = extendsList.getNumChild();
+        for (int i = 0; i < n; i++){
+            extendsList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
+        s.print("],[");
+        List<?> methodsList = (List<?>) getChild(2);
+        n = methodsList.getNumChild();
+        for (int i = 0; i < n; i++){
+            methodsList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
+
+        s.println("]).");
     }
-    
-   	public void TypeUse.generateProlog(PrintStream s){
-   	//implementation for the subclasses DataTypeUse,InterfaceTypeUse,TypeParameterUse,UnresolvedTypeUse
-    	s.print(quote(getName()));
+
+    public void TypeUse.generateProlog(PrintStream s){
+        //implementation for the subclasses DataTypeUse,InterfaceTypeUse,TypeParameterUse,UnresolvedTypeUse
+        s.print(quote(getName()));
     }
     public void ParametricDataTypeUse.generateProlog(PrintStream s){
-    	//generates "parametricType(typeName,parametersList)"
-    	s.print("parametricType(" + quote(getName()) + ",[");
-    	List<?> parameterList = (List<?>) getChild(0);
-    	int n = parameterList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		parameterList.getChild(i).generateProlog(s); 
-    		if (i != n-1) s.print(",");
-    	}
-    	
-    	s.print("])");
-     	}
-    public void MethodSig.generateProlog(PrintStream s){
-    //generates "methodSig(name,returnType,argumentsList)"
-    	s.print("methodSig(" + quote(getName()) +",");
-    	this.getReturnType().generateProlog(s);
-    	s.print( ",[");
-    	List<?> argumentsList = (List<?>) getChild(2);
-    	int n = argumentsList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		argumentsList.getChild(i).generateProlog(s); 
-    		if (i != n-1) s.print(",");
-    	}
+        //generates "parametricType(typeName,parametersList)"
+        s.print("parametricType(" + quote(getName()) + ",[");
+        List<?> parameterList = (List<?>) getChild(0);
+        int n = parameterList.getNumChild();
+        for (int i = 0; i < n; i++){
+            parameterList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
 
-    	
-    	s.print("])");
-	}
-	 public void FieldDecl.generateProlog(PrintStream s){
-    	//generates field(name,type,opt(initializer)).
-    	s.print("field(" + quote(getName()) + ",");
-    	getChild(0).generateProlog(s);
-    	s.print(",");
-    	getChild(1).generateProlog(s);
-    	s.print(")");
-	}
-	    public void Opt.generateProlog(PrintStream s){
-	    //if it has a child , it is generated. Otherwise "none" is written
-    	if(this.getNumChild()>0)
-    		getChild(0).generateProlog(s);
-    	else
-    		s.print("none");
-    	
-	}
-	public void Block.generateProlog(PrintStream s){
-	//generates block(localVariablesDeclarationList,statementsList)
-	//note: the local variables declarations are also in statements but those are ignored right now
-    	Collection<VarDecl> vars =this.getVars();
-    	Iterator<VarDecl> it=vars.iterator();
-    	s.print("block([");
-    	if(it.hasNext()){
-    		it.next().generateProlog(s);
-    		while(it.hasNext()){
-    			s.print(",");
-    			it.next().generateProlog(s);
-    		}
-    	}
-    	s.print("],[");
-    	List<?> stmts = (List<?>) getChild(1);
-    	int n = stmts.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		stmts.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("])");
-	}
-	
-	public void MethodImpl.generateProlog(PrintStream s,String quotedClass){
-    	//generates "methodImpl(methodSig,className,block)."
-    	s.print("methodImpl(");
-    	getChild(0).generateProlog(s);
-    	s.print(","+quotedClass+",");
-    	//s.print("This,");
-    	getChild(1).generateProlog(s);
-    	s.println(").");
-    	
-	}
-	/*
-	public void InitBlock.generateProlog(PrintStream s,String quotedClass){
-	//the initialization block it taken as an initialization method
-	//it generates "methodImpl(init,className,Block)."
-    	s.print("methodImpl(");
-    	s.print("methodSig(init,none,[])");
-    	s.print(","+quotedClass+",");
-    	this.generateProlog(s);
-    	s.println(").");
-    	
-	}*/
+        s.print("])");
+    }
+    public void MethodSig.generateProlog(PrintStream s){
+        //generates "methodSig(name,returnType,argumentsList)"
+        s.print("methodSig(" + quote(getName()) +",");
+        this.getReturnType().generateProlog(s);
+        s.print( ",[");
+        List<?> argumentsList = (List<?>) getChild(2);
+        int n = argumentsList.getNumChild();
+        for (int i = 0; i < n; i++){
+            argumentsList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
+
+
+        s.print("])");
+    }
+    public void FieldDecl.generateProlog(PrintStream s){
+        //generates field(name,type,opt(initializer)).
+        s.print("field(" + quote(getName()) + ",");
+        getChild(0).generateProlog(s);
+        s.print(",");
+        getChild(1).generateProlog(s);
+        s.print(")");
+    }
+    public void Opt.generateProlog(PrintStream s){
+        //if it has a child , it is generated. Otherwise "none" is written
+        if(this.getNumChild()>0)
+            getChild(0).generateProlog(s);
+        else
+            s.print("none");
+
+    }
+    public void Name.generateProlog(PrintStream s){
+        s.print(quote(getName()));
+    }
+    public void ParamDecl.generatePrologField(PrintStream s){
+        s.print("field(" + quote(getName()) + ",");
+        getChild(0).generateProlog(s);
+        s.print(",none)");
+    }
+
+
+    public void ClassDecl.generateProlog(PrintStream s){
+        //generates class(name,implementedInterfaces,opt(initBlock),fieldsList).
+        //and call the generator for each method in the class
+        s.print("class(" + quote(getName()) + ",[");
+
+        List<ParamDecl> parameterList = this.getParamList();
+
+        // interfaces
+        List<?> interfacesList = (List<?>) getChild(2);
+        int n = interfacesList.getNumChild();
+        for (int i = 0; i < n; i++){
+            interfacesList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
+        s.print("],[");
+        //the fields for the prolog backend are the parameters and the actual fields
+        // parameters as fields
+        int numParameters = parameterList.getNumChild();
+        for (int i = 0; i < numParameters; i++){
+            parameterList.getChild(i).generatePrologField(s); 
+            if (i != numParameters-1) s.print(",");
+        }
+        
+        List<FieldDecl> fieldsList = this.getFieldList();
+        int numFields = fieldsList.getNumChild();
+        //if there are written elements and we are gonna write more we need an extra comma
+        if(numFields>0 && numParameters>0)
+            s.print(",");
+        for (int i = 0; i < numFields; i++){
+            fieldsList.getChild(i).generateProlog(s); // fields
+            if (i != numFields-1) s.print(",");
+        }
+        s.println("]).");
+        //once the header has been generated we have to generate the init method
+        Opt<InitBlock> initBlockOpt=(Opt<InitBlock>) getChild(3);
+        if(initBlockOpt.getNumChild()>0){
+            initBlockOpt.getChild(0).generateProlog(s,quote(getName()),parameterList,fieldsList);
+        }else{
+            //if there is no init block the easiest way is to create an empty one
+            InitBlock block=new InitBlock();
+            block.generateProlog(s,quote(getName()),parameterList,fieldsList);
+        }
+        //we generate the rest of the methods implemented by the class
+        List<MethodImpl> methodsList = (List<MethodImpl>) getChild(5);
+        n = methodsList.getNumChild();
+        for (int i = 0; i < n; i++){
+            methodsList.getChild(i).generateProlog(s,quote(getName())); // cons here is a DataConstructor
+        }
+    }
+
+
+
+    //this method creates an initBlock with the previously existing block and all the fields initializations
+    public void InitBlock.generateProlog(PrintStream s, String quotedClass,List<ParamDecl> parameterList, List<FieldDecl> fieldsList) {
+        s.print("methodImpl(");
+        s.print("methodSig(init,'Unit',[");
+        // parameters
+        int n = parameterList.getNumChild();
+        for (int i = 0; i < n; i++){
+            parameterList.getChild(i).generateProlog(s); 
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
+        //the class of the init method
+        s.print(","+quotedClass+",");
+
+        //like a normal block we have the vars declaration part first
+        Collection<VarDecl> vars =this.getVars();
+        Iterator<VarDecl> it=vars.iterator();
+        s.print("block([");
+        if(it.hasNext()){
+            it.next().generateProlog(s);
+            while(it.hasNext()){
+                s.print(",");
+                it.next().generateProlog(s);
+            }
+        }
+        s.print("],[");
+        //here it starts the code of the method
+        //field initializer and argument initializers
+        n = fieldsList.getNumChild();
+        FieldDecl field;
+        boolean one=false;
+        //field initializers
+        for (int i = 0; i < n; i++){
+            field=fieldsList.getChild(i); 
+            if (field.hasInitExp()){
+                if(one)
+                    s.print(",");
+                one=true;
+                s.print("assignStmt("+fieldTransform(field.getName())+",");
+                field.getInitExp().generateProlog(s);
+                s.print(")");
+            }
+        }
+        //arguments assignation
+        n = parameterList.getNumChild();
+        ParamDecl parameter;
+        for (int i = 0; i < n; i++){
+            parameter=parameterList.getChild(i); 
+            if(one)
+                s.print(",");
+            one=true;
+            s.print("assignStmt("+fieldTransform(parameter.getName())+","+varTransform(parameter.getName())+")");
+
+        }
+        //rest of the statements 
+        List<?> stmts = (List<?>) getChild(1);
+        n = stmts.getNumChild();
+        if(one && n>0)
+            s.print(",");
+        for (int i = 0; i < n; i++){
+            stmts.getChild(i).generateProlog(s);
+            if (i != n-1 && !(stmts.getChild(i) instanceof VarDeclStmt)) s.print(",");
+        }
+        s.print("])");
+        s.println(").");
+    }
+    public void Block.generateProlog(PrintStream s){
+        //generates block(localVariablesDeclarationList,statementsList)
+        //note: the local variables declarations are also in statements 
+        Collection<VarDecl> vars =this.getVars();
+        Iterator<VarDecl> it=vars.iterator();
+        s.print("block([");
+        if(it.hasNext()){
+            it.next().generateProlog(s);
+            while(it.hasNext()){
+                s.print(",");
+                it.next().generateProlog(s);
+            }
+        }
+        s.print("],[");
+        List<?> stmts = (List<?>) getChild(1);
+        int n = stmts.getNumChild();
+        for (int i = 0; i < n; i++){
+            stmts.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
+    }
+
+    public void MethodImpl.generateProlog(PrintStream s,String quotedClass){
+        //generates "methodImpl(methodSig,className,block)."
+        s.print("methodImpl(");
+        getChild(0).generateProlog(s);
+        s.print(","+quotedClass+",");
+        //s.print("This,");
+        getChild(1).generateProlog(s);
+        s.println(").");
+
+    }
+
     // Main block (This is like the main in Pascal, I think ...)
     public void MainBlock.generateProlog(PrintStream s){
-    //generates mainBlock(localVariablesDeclarationList,statementsList)
-	//note: the local variables declarations are also in statements but those are ignored right now
-	//it is like a normal block but with a different name and out of any class
-    	Collection<VarDecl> vars =this.getVars();
-    	Iterator<VarDecl> it=vars.iterator();
-    	s.print("mainBlock([");
-   	if(it.hasNext()){
-    		it.next().generateProlog(s);
-    		while(it.hasNext()){
-    			s.print(",");
-    			it.next().generateProlog(s);
-    		}
-    	}
-    	s.print("],[");
-    	List<?> stmts = (List<?>) getChild(1);
-    	int n = stmts.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		stmts.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.println("]).");
+        //generates mainBlock(localVariablesDeclarationList,statementsList)
+        //note: the local variables declarations are also in statements 
+        //it is like a normal block but with a different name and out of any class
+        Collection<VarDecl> vars =this.getVars();
+        Iterator<VarDecl> it=vars.iterator();
+        s.print("mainBlock([");
+        if(it.hasNext()){
+            it.next().generateProlog(s);
+            while(it.hasNext()){
+                s.print(",");
+                it.next().generateProlog(s);
+            }
+        }
+        s.print("],[");
+        List<?> stmts = (List<?>) getChild(1);
+        int n = stmts.getNumChild();
+        for (int i = 0; i < n; i++){
+            stmts.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.println("]).");
     }
-    
-   public void VarDecl.generateProlog(PrintStream s){
-    	//generates varDecl(name,type,initialization)"
-    	s.print("varDecl("+varTransform(getName())+",");
-    	this.getAccess().generateProlog(s);
-    	s.print(",");
-    	this.getInitExpOpt().generateProlog(s);
-    	s.print(")");
+
+    public void VarDecl.generateProlog(PrintStream s){
+        //generates varDecl(name,type,initialization)"
+        s.print("varDecl("+varTransform(getName())+",");
+        this.getAccess().generateProlog(s);
+        s.print(",");
+        this.getInitExpOpt().generateProlog(s);
+        s.print(")");
     }
     //statements
     public void AwaitStmt.generateProlog(PrintStream s) {
@@ -567,17 +649,17 @@ aspect GenerateProlog {
         s.print(")");
     }
     public void VarDeclStmt.generateProlog(PrintStream s){
-	s.print("varDeclStmt(");//we ignore them as they have already been included in the block definition
-	this.getVarDecl().generateProlog(s);
-	s.print(")");
+        s.print("varDeclStmt(");//we ignore them as they have already been included in the block definition
+        this.getVarDecl().generateProlog(s);
+        s.print(")");
     }
     public void ExpressionStmt.generateProlog(PrintStream s) {
-   	  s.print("expressionStmt(");
-   	  getExp().generateProlog(s);
-   	  s.print(")");
+        s.print("expressionStmt(");
+        getExp().generateProlog(s);
+        s.print(")");
     }
     public void AssignStmt.generateProlog(PrintStream s) {
-    	
+
         s.print("assignStmt(");
         getVar().generateProlog(s);
         s.print(",");
@@ -590,11 +672,11 @@ aspect GenerateProlog {
         s.print(")");
     }
     public void ReturnStmt.generateProlog(PrintStream s) {
-    	
-     	  s.print("returnStmt(");
-     	  this.getRetExp().generateProlog(s);
-     	  s.print(")");
-      }
+
+        s.print("returnStmt(");
+        this.getRetExp().generateProlog(s);
+        s.print(")");
+    }
     public void SkipStmt.generateProlog(PrintStream s) {
         s.print("skipStmt");
     }
@@ -602,16 +684,16 @@ aspect GenerateProlog {
         s.print("suspendStmt");
     }   
     public void IfStmt.generateProlog(PrintStream s){
-    	
-    	s.print("ifStmt(");
-    	this.getCondition().generateProlog(s);
-    	s.print(",");
-    	this.getThen().generateProlog(s);
-    	s.print(",");
-    	this.getElseOpt().generateProlog(s);
-    	s.print(")");
-	}
-	public void WhileStmt.generateProlog(PrintStream s) {
+
+        s.print("ifStmt(");
+        this.getCondition().generateProlog(s);
+        s.print(",");
+        this.getThen().generateProlog(s);
+        s.print(",");
+        this.getElseOpt().generateProlog(s);
+        s.print(")");
+    }
+    public void WhileStmt.generateProlog(PrintStream s) {
         s.print("whileStmt(");
         getCondition().generateProlog(s);
         s.print(",");
@@ -619,70 +701,71 @@ aspect GenerateProlog {
         s.print(")");
     }
     //side effect statements
-    
-        public void GetExp.generateProlog(PrintStream s) {
+
+    public void GetExp.generateProlog(PrintStream s) {
         //generates "getExp(Expression)"
-    	s.print("getExp(");
-    	this.getPureExp().generateProlog(s);
-    	s.print(")");
-      }
+        s.print("getExp(");
+        this.getPureExp().generateProlog(s);
+        s.print(")");
+    }
 
 
     public void Call.generateProlog(PrintStream s) {
-    	//generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
-    	// or "asyncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
-    	
-    	if(this instanceof SyncCall)
-    		s.print("syncCall(");
-    	else
-    		s.print("asyncCall(");
-    	
-    	this.getCallee().generateProlog(s);
-    	s.print(",[");
-    	//we need to know which are the interfaces to whom the called method belongs
-    	generateInterfacesList(s,this.getCallee().getType());
-    	s.print("],"+quote(this.getMethod())+",[");
-    	List<?> arguments = (List<?>) getChild(1);
-    	int n = arguments.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		arguments.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	s.print("])");
-    	
-    	
-    }
+        //generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
+        // or "asyncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
 
+        if(this instanceof SyncCall)
+            s.print("syncCall(");
+        else
+            s.print("asyncCall(");
+
+        this.getCallee().generateProlog(s);
+        s.print(",[");
+        //we need to know which are the interfaces to whom the called method belongs
+        generateInterfacesList(s,this.getCallee().getType());
+        s.print("],"+quote(this.getMethod())+",[");
+        List<?> arguments = (List<?>) getChild(1);
+        int n = arguments.getNumChild();
+        for (int i = 0; i < n; i++){
+            arguments.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
+
+
+    }
+    //this function prints the interfaces to whom the called method may belong
+    //it is a recursive method over the union predicates where the base case are the interface types
     private void Call.generateInterfacesList(PrintStream s,Type type) {
-    	if(type.isUnionType()){
-    	UnionType unionType=(UnionType)type;
-    	Iterator<InterfaceType> it=unionType.getTypes().iterator();
-    	while(it.hasNext()){
-    		generateInterfacesList(s,it.next());
-    		if(it.hasNext())
-    			s.print(",");
-    	}
-    	}else
-    		if(type.isInterfaceType()){
-    			s.print(quote(type.toString()));
-    		}else
-    			throw new PrologBackendException("the call "+this+" is done over the following illegal type "+type);
+        if(type.isUnionType()){
+            UnionType unionType=(UnionType)type;
+            Iterator<InterfaceType> it=unionType.getTypes().iterator();
+            while(it.hasNext()){
+                generateInterfacesList(s,it.next());
+                if(it.hasNext())
+                    s.print(",");
+            }
+        }else
+            if(type.isInterfaceType()){
+                s.print(quote(type.toString()));
+            }else
+                throw new PrologBackendException("the call "+this+" is done using the following illegal type "+type);
     }
 
-     public void NewExp.generateProlog(PrintStream s) {
-     //generates "new(ClassName,parametersList,cog)"
-     //or "new(ClassName,parametersList,'noCog') if cog==""
-    		s.print("new("+quote(getClassName())+",[");
-    	List<?> params = (List<?>) getChild(0);
-    	int n = params.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		params.getChild(i).generateProlog(s);
-    		if (i != n-1) s.print(",");
-    	}
-    	if(getCog().length()==0)
-    		s.print("],'noCog')");
-    	else
-    		s.print("],"+quote(getCog())+")");
+    public void NewExp.generateProlog(PrintStream s) {
+        //generates "new(ClassName,parametersList,cog)"
+        //or "new(ClassName,parametersList,'noCog') if cog==""
+        s.print("new("+quote(getClassName())+",[");
+        List<?> params = (List<?>) getChild(0);
+        int n = params.getNumChild();
+        for (int i = 0; i < n; i++){
+            params.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        if(getCog().length()==0)
+            s.print("],'noCog')");
+        else
+            s.print("],"+quote(getCog())+")");
     }
     //guards
     public void AndGuard.generateProlog(PrintStream s) {
@@ -698,252 +781,134 @@ aspect GenerateProlog {
         s.print(")");
     }
     public void ExpGuard.generateProlog(PrintStream s) {
-    	s.print("expGuard(");
+        s.print("expGuard(");
         getPureExp().generateProlog(s);
         s.print(")");
     }
     //modules, imports, exports
-    
+
     public void ModuleDecl.generateProlog(PrintStream s){
-    	s.println("module("+quote(getName())+").");
-    	//exports
-    	List<Export> exports = this.getExportList();
-    	int n = exports.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		exports.getChild(i).generateProlog(s);
-    	}
-    	//imports
-    	List<Import> imports = this.getImportList();
-    	 n = imports.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		imports.getChild(i).generateProlog(s);
-    	}
-    	//declarations
-    	List<Decl> declarations = this.getDeclList();
-   	 	n = declarations.getNumChild();
-   	 	for (int i = 0; i < n; i++){
-   	 		declarations.getChild(i).generateProlog(s);
-   	 	}
-   	 	//productLine
-   	 	Opt<ProductLine> productLine=this.getProductLineOpt();
-   	 	if(productLine.getNumChild()>0)
-   	 		productLine.getChild(0).generateProlog(s);
-    	//products
-    	List<Product> products = this.getProductList();
-   	 	n = products.getNumChild();
-   	 	for (int i = 0; i < n; i++){
-   	 		products.getChild(i).generateProlog(s);
-   	 	}
-   	 	Opt<MainBlock> mainBlock=this.getBlockOpt();
-    	if(mainBlock.getNumChild()>0)
-    		mainBlock.getChild(0).generateProlog(s);
-    	
-	}
-	public void Export.generateProlog(PrintStream s){
-       throw new PrologBackendException("Export should never be called but its subclasses");
-   	}
+        s.println("module("+quote(getName())+").");
+        //exports
+        List<Export> exports = this.getExportList();
+        int n = exports.getNumChild();
+        for (int i = 0; i < n; i++){
+            exports.getChild(i).generateProlog(s);
+        }
+        //imports
+        List<Import> imports = this.getImportList();
+        n = imports.getNumChild();
+        for (int i = 0; i < n; i++){
+            imports.getChild(i).generateProlog(s);
+        }
+        //declarations
+        List<Decl> declarations = this.getDeclList();
+        n = declarations.getNumChild();
+        for (int i = 0; i < n; i++){
+            declarations.getChild(i).generateProlog(s);
+        }
+        //productLine
+        Opt<ProductLine> productLine=this.getProductLineOpt();
+        if(productLine.getNumChild()>0)
+            productLine.getChild(0).generateProlog(s);
+        //products
+        List<Product> products = this.getProductList();
+        n = products.getNumChild();
+        for (int i = 0; i < n; i++){
+            products.getChild(i).generateProlog(s);
+        }
+        Opt<MainBlock> mainBlock=this.getBlockOpt();
+        if(mainBlock.getNumChild()>0)
+            mainBlock.getChild(0).generateProlog(s);
+
+    }
+    public void Export.generateProlog(PrintStream s){
+        throw new PrologBackendException("Export should never be called but its subclasses");
+    }
     public void FromExport.generateProlog(PrintStream s){
-       //generates "fromExport(moduleName,ExportedDeclarationsList)."
-    	s.print("fromExport("+quote(this.getModuleName())+",");
+        //generates "fromExport(moduleName,ExportedDeclarationsList)."
+        s.print("fromExport("+quote(this.getModuleName())+",");
         List<Name> exportedDecl = this.getNameList();
-   	 	int n = exportedDecl.getNumChild();
-   	 	for (int i = 0; i < n; i++){
-   	 		exportedDecl.getChild(i).generateProlog(s);
-   	 		if (i != n-1) s.print(",");
-   	 	}
-   	 	s.println(").");
-    	}
-     public void NamedExport.generateProlog(PrintStream s){
+        int n = exportedDecl.getNumChild();
+        for (int i = 0; i < n; i++){
+            exportedDecl.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.println(").");
+    }
+    public void NamedExport.generateProlog(PrintStream s){
         //generates "namedExport(ExportedDeclarationsList)."
-     	s.print("namedExport(");
-         List<Name> exportedDecl = this.getNameList();
-    	 	int n = exportedDecl.getNumChild();
-    	 	for (int i = 0; i < n; i++){
-    	 		exportedDecl.getChild(i).generateProlog(s);
-    	 		if (i != n-1) s.print(",");
-    	 	}
-    	 	s.println(").");
-     	}
-     public void StarExport.generateProlog(PrintStream s){
+        s.print("namedExport(");
+        List<Name> exportedDecl = this.getNameList();
+        int n = exportedDecl.getNumChild();
+        for (int i = 0; i < n; i++){
+            exportedDecl.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.println(").");
+    }
+    public void StarExport.generateProlog(PrintStream s){
         //generates "starExport(moduleName)." if there is a module name
-    	if(this.getModuleNameOpt().hasChildren()){
-    		s.print("starExport(");
-    		this.getModuleName().generateProlog(s);
-    		s.println(").");
-    	}
-     	}
-     	
+        if(this.getModuleNameOpt().hasChildren()){
+            s.print("starExport(");
+            this.getModuleName().generateProlog(s);
+            s.println(").");
+        }
+    }
+
     public void Import.generateProlog(PrintStream s){
-       throw new PrologBackendException("Import should never be called but its subclasses");
-   	}
+        throw new PrologBackendException("Import should never be called but its subclasses");
+    }
     public void FromImport.generateProlog(PrintStream s){
-       //generates "fromImport(moduleName,ImportedDeclarationsList)."
-    	s.print("fromImport("+quote(this.getModuleName())+",");
+        //generates "fromImport(moduleName,ImportedDeclarationsList)."
+        s.print("fromImport("+quote(this.getModuleName())+",");
         List<Name> importedDecl = this.getNameList();
-   	 	int n = importedDecl.getNumChild();
-   	 	for (int i = 0; i < n; i++){
-   	 		importedDecl.getChild(i).generateProlog(s);
-   	 		if (i != n-1) s.print(",");
-   	 	}
-   	 	s.println(").");
-    	}
-     public void NamedImport.generateProlog(PrintStream s){
+        int n = importedDecl.getNumChild();
+        for (int i = 0; i < n; i++){
+            importedDecl.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.println(").");
+    }
+    public void NamedImport.generateProlog(PrintStream s){
         //generates "namedImport(ImportedDeclarationsList)."
-     	s.print("namedImport(");
-         List<Name> importedDecl = this.getNameList();
-    	 	int n = importedDecl.getNumChild();
-    	 	for (int i = 0; i < n; i++){
-    	 		importedDecl.getChild(i).generateProlog(s);
-    	 		if (i != n-1) s.print(",");
-    	 	}
-    	 	s.println(").");
-     	}
-     public void StarImport.generateProlog(PrintStream s){
+        s.print("namedImport(");
+        List<Name> importedDecl = this.getNameList();
+        int n = importedDecl.getNumChild();
+        for (int i = 0; i < n; i++){
+            importedDecl.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.println(").");
+    }
+    public void StarImport.generateProlog(PrintStream s){
         //generates "starImport(moduleName)."
-		s.println("starImport("+quote(this.getModuleName())+").");
- 
-     	}
-   
-    public void Name.generateProlog(PrintStream s){
-   	s.print(quote(getName()));
-   }
-    public void ParamDecl.generatePrologField(PrintStream s){
-    	s.print("field(" + quote(getName()) + ",");
-    	getChild(0).generateProlog(s);
-    	s.print(",none)");
+        s.println("starImport("+quote(this.getModuleName())+").");
+
     }
 
 
- public void ClassDecl.generateProlog(PrintStream s){
-    //generates class(name,implementedInterfaces,opt(initBlock),fieldsList).
-    //and call the generator for each method in the class
-    	s.print("class(" + quote(getName()) + ",[");
-   
-    	List<ParamDecl> parameterList = this.getParamList();
-
-    
-    	List<?> interfacesList = (List<?>) getChild(2);
-    	int n = interfacesList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		interfacesList.getChild(i).generateProlog(s); // interfaces
-    		if (i != n-1) s.print(",");
-    	}
-     	s.print("],[");
-    	n = parameterList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		parameterList.getChild(i).generatePrologField(s); // parameters as fields
-    		if (i != n-1) s.print(",");
-    	}
-      	List<FieldDecl> fieldsList = this.getFieldList();
-    	n = fieldsList.getNumChild();
-    	if(n>0)
-    		s.print(",");
-    	for (int i = 0; i < n; i++){
-    		fieldsList.getChild(i).generateProlog(s); // fields
-    		if (i != n-1) s.print(",");
-    	}
-    	s.println("]).");
-    	
-     	Opt<InitBlock> initBlockOpt=(Opt<InitBlock>) getChild(3);
-     	if(initBlockOpt.getNumChild()>0){
-     		initBlockOpt.getChild(0).generateProlog(s,quote(getName()),parameterList,fieldsList);
-     	}else{
-     		InitBlock block=new InitBlock();
-     		block.generateProlog(s,quote(getName()),parameterList,fieldsList);
-     	}
-     	List<MethodImpl> methodsList = (List<MethodImpl>) getChild(5);
-    	n = methodsList.getNumChild();
-    	for (int i = 0; i < n; i++){
-    		methodsList.getChild(i).generateProlog(s,quote(getName())); // cons here is a DataConstructor
-    	}
-}
-
-
-
-
-public void InitBlock.generateProlog(PrintStream s, String quotedClass,List<ParamDecl> parameterList, List<FieldDecl> fieldsList) {
-		
-    	
-		s.print("methodImpl(");
-    	s.print("methodSig(init,'Unit',[");
-	      	int n = parameterList.getNumChild();
-	    	for (int i = 0; i < n; i++){
-	    		parameterList.getChild(i).generateProlog(s); // parameters
-	    		if (i != n-1) s.print(",");
-	    	}
-    	s.print("])");
-    	
-    	s.print(","+quotedClass+",");
-
-    	    	Collection<VarDecl> vars =this.getVars();
-    	    	Iterator<VarDecl> it=vars.iterator();
-    	    	s.print("block([");
-    	    	if(it.hasNext()){
-    	    		it.next().generateProlog(s);
-    	    		while(it.hasNext()){
-    	    			s.print(",");
-    	    			it.next().generateProlog(s);
-    	    		}
-    	    	}
-    	    	s.print("],[");
-    	      	//field initializer and argument initializers
-    	    	n = fieldsList.getNumChild();
-    	    	FieldDecl field;
-    	    	boolean one=false;
-    	    	//field initializers
-    	    	for (int i = 0; i < n; i++){
-    	    		field=fieldsList.getChild(i); 
-    	    		if (field.hasInitExp()){
-    	    			if(one)
-    	    				s.print(",");
-    	    			one=true;
-    	    			s.print("assignStmt(field('"+field.getName()+"'),");
-    	    			field.getInitExp().generateProlog(s);
-    	    			s.print(")");
-    	    		}
-    	    	}
-    	    	//arguments assignation
-    	    	n = parameterList.getNumChild();
-    	    	ParamDecl parameter;
-    	    	for (int i = 0; i < n; i++){
-    	    		parameter=parameterList.getChild(i); 
-    	    		if(one)
-    	    			s.print(",");
-    	    		one=true;
-    	    		s.print("assignStmt(field('"+parameter.getName()+"'),"+varTransform(parameter.getName())+")");
-    	    		
-    	    	}
-    	    	
-    	    	
-    	    	List<?> stmts = (List<?>) getChild(1);
-    	    	n = stmts.getNumChild();
-    	    	if(one && n>0)
-    	    		s.print(",");
-    	    	for (int i = 0; i < n; i++){
-    	    		stmts.getChild(i).generateProlog(s);
-    	    		if (i != n-1 && !(stmts.getChild(i) instanceof VarDeclStmt)) s.print(",");
-    	    	}
-    	    	s.print("])");
-    	s.println(").");
-	}
     // Auxiliary methods
 
     protected static String ASTNode.initialToUpperCase(String s){
-    	char[] cs = s.toCharArray();
-    	cs[0] = Character.toUpperCase(cs[0]);
-    	return new String(cs);
+        char[] cs = s.toCharArray();
+        cs[0] = Character.toUpperCase(cs[0]);
+        return new String(cs);
     }
 
     protected static String ASTNode.varTransform(String s){
-    	   	return "l('"+s+"')";
+        return "l('"+s+"')";
     }
 
+    protected static String ASTNode.fieldTransform(String s){
+        return "field('"+s+"')";
+    }
     protected static String ASTNode.strTransform(String s){
-    	   	return "str('"+s+"')";
+        return "str('"+s+"')";
     }
 
     protected static String ASTNode.quote(String s){
-    	return "'" + s + "'";
+        return "'" + s + "'";
     }
 
 }
