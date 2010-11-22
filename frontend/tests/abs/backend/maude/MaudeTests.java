@@ -85,7 +85,9 @@ public class MaudeTests extends ABSTest {
 
         ProcessBuilder pb = new ProcessBuilder();
 
-        File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(), "interpreter");
+        File interpreterDir = new File("src"+File.separator+"abs"+File.separator+"backend"+File.separator+"maude");
+        //File interpreterDir = new File(new File(System.getProperty("user.dir")).getParentFile(), "interpreter");
+        
         File interpreter = new File(interpreterDir, "abs-interpreter.maude");
         String[] cmd = { "maude", "-no-banner", "-no-ansi-color", "-no-wrap", "-batch", interpreter.getAbsolutePath() };
         pb.command(cmd);
