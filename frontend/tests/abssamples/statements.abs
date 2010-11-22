@@ -1,4 +1,5 @@
 //$Id$
+module Statements;
 
 data Bool = True | False; // builtin
 
