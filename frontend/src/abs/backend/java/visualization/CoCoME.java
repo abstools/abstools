@@ -3,7 +3,7 @@ package abs.backend.java.visualization;
 import java.util.Arrays;
 import java.util.List;
 
-public class CoCoME extends Main {
+public class CoCoME extends SequenceDiagramVisualization {
     private final List<String> environmentClasses = Arrays.asList("CashBoxEnvImpl", "CardReaderEnvImpl", "ScreenImpl",
             "PrinterEnvImpl", "InventoryImpl", "BankImpl", "BarCodeScannerEnvImpl");
     private final List<String> systemClasses = Arrays.asList("CashBoxImpl", "CashDeskPCImpl", "CardReaderImpl",

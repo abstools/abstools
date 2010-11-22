@@ -1,5 +1,6 @@
 package abs.backend.java.lib.runtime;
 
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -22,7 +23,7 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
 public class ABSRuntime {
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
 
-    private static final SystemObserver systemObserver = Config.systemObserver;
+    private static final List<SystemObserver> systemObserver = Config.systemObserver;
 
     public static final TotalSchedulingStrategy totalSchedulingStrategy = Config.totalSchedulingStrategy;
     public static final GlobalScheduler globalScheduler = Config.globalScheduler;
@@ -65,14 +66,18 @@ public class ABSRuntime {
     }
 
     public static void cogCreated(ABSObject o) {
-        if (systemObserver != null) {
-            systemObserver.newCOGCreated(o.getCOG().getView(), o.getView());
+        if (!systemObserver.isEmpty()) {
+            for (SystemObserver obs : systemObserver) {
+                obs.newCOGCreated(o.getCOG().getView(), o.getView());
+            }
         }
     }
 
     public static void systemStarted() {
-        if (systemObserver != null) {
-            systemObserver.systemStarted();
+        if (!systemObserver.isEmpty()) {
+            for (SystemObserver obs : systemObserver) {
+                obs.systemStarted();
+            }
         }
     }
 

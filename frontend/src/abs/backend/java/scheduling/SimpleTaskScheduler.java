@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import abs.backend.java.lib.runtime.ABSAndGuard;
 import abs.backend.java.lib.runtime.ABSFutureGuard;
 import abs.backend.java.lib.runtime.ABSGuard;
+import abs.backend.java.lib.runtime.ABSInitObjectTask;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
@@ -131,13 +132,27 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     @Override
-    public synchronized void addTask(Task<?> task) {
+    public synchronized void addTask(final Task<?> task) {
+        
         readyTasks.add(new TaskInfo(task));
         if (view != null)
             view.taskAdded(task.getView());
 
         if (activeTask == null) {
-            schedule();
+            if (Config.GLOBAL_SCHEDULING &&
+                (task instanceof ABSInitObjectTask)) {
+                    ABSRuntime.addScheduleAction(new ActivateTask(cog,task) {
+                        @Override
+                        public void execute() {
+                            synchronized (SimpleTaskScheduler.this) {
+                                TaskInfo ti = readyTasks.remove(0);
+                                activateTask(ti);
+                            }
+                        }
+                    });
+            } else {
+                schedule();
+            }
         }
     }
 
@@ -265,7 +280,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             logger.info("Choices are empty!");
             ABSRuntime.doNextStep();
             return;
-        }
+        } 
 
         synchronized (this) {
             TaskInfo nextTask = schedule(choices);
@@ -276,18 +291,23 @@ public class SimpleTaskScheduler implements TaskScheduler {
             } else {
                 readyTasks.remove(nextTask);
             }
-            activeTask = nextTask;
-            if (activeTask.thread != null) {
-                logger.info("COG " + cog.getID() + " awaking " + activeTask);
-                activeTask.thread.awake();
-            } else {
-                activeTask.thread = new SimpleSchedulerThread(activeTask);
-                activeTask.thread.start();
-            }
+            
+            activateTask(nextTask);
         }
 
     }
 
+    private synchronized void activateTask(TaskInfo nextTask) {
+        activeTask = nextTask;
+        if (activeTask.thread != null) {
+            logger.info("COG "+cog.getID()+" awaking "+activeTask);
+            activeTask.thread.awake();
+        } else {
+            activeTask.thread = new SimpleSchedulerThread(activeTask);
+            activeTask.thread.start();
+        }
+    }
+    
     private synchronized List<TaskInfo> unsuspendTasks() {
         List<TaskInfo> tasksWithSatisfiedGuards = new ArrayList<TaskInfo>(0);
 

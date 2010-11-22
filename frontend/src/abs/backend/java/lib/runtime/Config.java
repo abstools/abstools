@@ -39,6 +39,11 @@ public class Config {
         }
     }
 
+    public static final TotalSchedulingStrategy totalSchedulingStrategy;
+    public static final GlobalScheduler globalScheduler;
+    public static final TaskSchedulingStrategy taskSchedulingStrategy;
+    public static final TaskSchedulerFactory taskSchedulerFactory;
+
     private static final List<ConfigOption> options = new ArrayList<ConfigOption>();
 
     public static final ConfigOption LOGLEVEL_OPTION = newOption("abs.loglevel", "sets a logging level",
@@ -70,15 +75,31 @@ public class Config {
     public static final long RANDOM_SEED;
     public static final Random RANDOM = new Random(Config.RANDOM_SEED);
 
-    public static final SystemObserver systemObserver = (SystemObserver) loadClassByProperty(SYSTEM_OBSERVER_OPTION.propertyName);
+    private static boolean configuredTaskScheduling = false;
+
+    public static final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
+    static {
+        String observerString = System.getProperty(SYSTEM_OBSERVER_OPTION.propertyName);
+        if (observerString != null) {
+            String[] systemObservers = observerString.split(",");
+
+            for (String s : systemObservers) {
+                System.out.println(s);
+                systemObserver.add((SystemObserver) loadClassByName(s));
+            }
+        }
+
+    }
+
     public static final boolean DEBUGGING = System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true");
 
-    public static final TotalSchedulingStrategy totalSchedulingStrategy;
-    public static final GlobalScheduler globalScheduler;
-    public static final TaskSchedulingStrategy taskSchedulingStrategy;
-    public static final TaskSchedulerFactory taskSchedulerFactory;
-
-    private static boolean configuredTaskScheduling = false;
+    public static Object loadClassByProperty(String property) {
+        String s = System.getProperty(property);
+        if (s != null) {
+            return loadClassByName(s);
+        }
+        return null;
+    }
 
     static {
         if (Boolean.parseBoolean(System.getProperty("abs.help", "false"))) {
@@ -90,6 +111,20 @@ public class Config {
             }
             System.exit(1);
         }
+    }
+
+    private static Object loadClassByName(String s) {
+        try {
+            Class<?> clazz = Config.class.getClassLoader().loadClass(s);
+            return clazz.newInstance();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     static {
@@ -183,22 +218,5 @@ public class Config {
     }
 
     public static final boolean GLOBAL_SCHEDULING = globalScheduler != null;
-
-    public static Object loadClassByProperty(String property) {
-        try {
-            String s = System.getProperty(property);
-            if (s != null) {
-                Class<?> clazz = Config.class.getClassLoader().loadClass(s);
-                return clazz.newInstance();
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
 }
