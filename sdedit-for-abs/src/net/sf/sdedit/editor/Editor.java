@@ -45,7 +45,7 @@ import net.sf.sdedit.config.GlobalConfiguration;
 import net.sf.sdedit.diagram.Diagram;
 import net.sf.sdedit.drawable.Drawable;
 import net.sf.sdedit.drawable.Note;
-import net.sf.sdedit.editor.apple.AppInstaller;
+//import net.sf.sdedit.editor.apple.AppInstaller;
 import net.sf.sdedit.server.RealtimeServer;
 import net.sf.sdedit.text.TextHandler;
 import net.sf.sdedit.ui.ImagePaintDevice;
@@ -97,9 +97,9 @@ public final class Editor implements Constants, PanelPaintDeviceListener,
 
 	private Editor() {
 		ui = newUI();
-		if (OS.TYPE == OS.Type.MAC) {
-			AppInstaller.installApplication(this);
-		}
+//		if (OS.TYPE == OS.Type.MAC) {
+//			AppInstaller.installApplication(this);
+//		}
 		recentFiles = new LinkedList<String>();
 		recentFileActions = new LinkedList<Action>();
 		globalConfiguration = ConfigurationManager.getGlobalConfiguration();
@@ -109,35 +109,39 @@ public final class Editor implements Constants, PanelPaintDeviceListener,
 		readRecentFiles();
 		engine = new Engine(this);
 		if (globalConfiguration.isAutostartServer()) {
-			try {
-				startRealtimeServer(globalConfiguration.getRealtimeServerPort());
-				ui.message("Started real-time diagram server @localhost:"
-						+ server.getPort());
-			} catch (Exception e) {
-				ui
-						.errorMessage("The real-time diagram server could not be started due to\n"
-								+ "an exception of type "
-								+ e.getClass().getSimpleName()
-								+ "\n"
-								+ "with the message: " + e.getMessage());
-			}
+			startServer(globalConfiguration.getRealtimeServerPort());
 		}
 		setup = true;
-		if (OS.TYPE == OS.Type.MAC) {
-			File fileToLoad = AppInstaller.getFileToLoad();
-			if (fileToLoad != null) {
-				try {
-					loadCode(fileToLoad);
-				} catch (RuntimeException e) {
-					throw e;
-				} catch (Exception e) {
-					ui.errorMessage("Cannot load "
-							+ fileToLoad.getAbsolutePath() + "\n"
-							+ "due to an exception of type "
-							+ e.getClass().getSimpleName() + "\n"
+//		if (OS.TYPE == OS.Type.MAC) {
+//			File fileToLoad = AppInstaller.getFileToLoad();
+//			if (fileToLoad != null) {
+//				try {
+//					loadCode(fileToLoad);
+//				} catch (RuntimeException e) {
+//					throw e;
+//				} catch (Exception e) {
+//					ui.errorMessage("Cannot load "
+//							+ fileToLoad.getAbsolutePath() + "\n"
+//							+ "due to an exception of type "
+//							+ e.getClass().getSimpleName() + "\n"
+//							+ "with the message: " + e.getMessage());
+//				}
+//			}
+//		}
+	}
+
+	public void startServer(int port) {
+		try {
+			startRealtimeServer(port);
+			System.out.println("Started real-time diagram server @localhost:"	+ server.getPort());
+			//ui.message("Started real-time diagram server @localhost:"	+ server.getPort());
+		} catch (Exception e) {
+			ui
+					.errorMessage("The real-time diagram server could not be started due to\n"
+							+ "an exception of type "
+							+ e.getClass().getSimpleName()
+							+ "\n"
 							+ "with the message: " + e.getMessage());
-				}
-			}
 		}
 	}
 
@@ -251,7 +255,7 @@ public final class Editor implements Constants, PanelPaintDeviceListener,
 	}
 
 	private void setupUI() {
-		ui.setTitle("Quick Sequence Diagram Editor");
+		ui.setTitle("Quick Sequence Diagram Editor - ABS Version");
 		addActions();
 		ui.showUI();
 		ui.addToolbarSeparator();

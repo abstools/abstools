@@ -73,17 +73,19 @@ public class Main implements Constants {
 
 
 		CommandLineParser parser = new PosixParser();
-		CommandLine cmd = null;
-		Options options = createBasicOptions();
+		final Options options = createBasicOptions();
 		addPropertyOptions(options, ConfigurationManager
 				.getDefaultConfigurationBean());
 
+		CommandLine cmdTmp = null;
 		try {
-			cmd = parser.parse(options, argv);
+			cmdTmp = parser.parse(options, argv);
 		} catch (ParseException pe) {
 			printHelp(createBasicOptions());
 			return;
 		}
+		
+		final CommandLine cmd = cmdTmp;
 
 		if (cmd.hasOption('h')) {
 			printHelp(options);
@@ -106,45 +108,41 @@ public class Main implements Constants {
 						"true");
 			}
 			final String[] files = getInputFiles(cmd);
-			if (files.length > 0) {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
+						
 						Editor editor = Editor.getEditor();
+						
 						boolean loaded = false;
-						for (String file : files) {
-							File sdFile = new File(file);
-							if (sdFile.exists() && sdFile.canRead()
-									&& !sdFile.isDirectory()) {
-								loaded = true;
-								try {
-									editor.loadCode(sdFile);
-								} catch (Exception e) {
-									editor.error(e.getMessage());
+						if (files.length > 0) {
+
+							for (String file : files) {
+								File sdFile = new File(file);
+								if (sdFile.exists() && sdFile.canRead()
+										&& !sdFile.isDirectory()) {
+									loaded = true;
+									try {
+										editor.loadCode(sdFile);
+									} catch (Exception e) {
+										editor.error(e.getMessage());
+									}
+								} else {
+									System.err.println("Warning: ignoring file "
+											+ file);
 								}
-							} else {
-								System.err.println("Warning: ignoring file "
-										+ file);
 							}
 						}
 						if (!loaded) {
 							editor.getUI().addTab(
 									"untitled",
 									ConfigurationManager
-											.createNewDefaultConfiguration());
+									.createNewDefaultConfiguration());
+						}
+						if (cmd.hasOption('s')) {
+							editor.startServer(Integer.parseInt(options.getOption("s").getValue("60001")));
 						}
 					}
 				});
-			} else {
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						Editor editor = Editor.getEditor();
-						editor.getUI().addTab(
-								"untitled",
-								ConfigurationManager
-										.createNewDefaultConfiguration());
-					}
-				});
-			}
 		}
 	}
 
@@ -191,6 +189,9 @@ public class Main implements Constants {
 				"show long options (for diagram preferences)").create('h');
 		options.addOption(help);
 
+		options.addOption(OptionBuilder.hasOptionalArg().withType(Integer.class).withArgName("port").withDescription(
+			"start server").create('s'));
+		
 		return options;
 	}
 

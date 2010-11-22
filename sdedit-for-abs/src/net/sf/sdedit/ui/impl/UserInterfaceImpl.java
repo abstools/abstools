@@ -410,7 +410,7 @@ public final class UserInterfaceImpl extends JFrame implements Constants,
 	 */
 	public void stateChanged(ChangeEvent e) {
 		setTitle(tabbedPane.getCurrentTitle()
-				+ " - Quick Sequence Diagram Editor");
+				+ " - Quick Sequence Diagram Editor (ABS Version)");
 		Action closeAction = menuBar.getActionByName("[F12]&Close");
 		if (closeAction != null) {
 			closeAction.setEnabled(tabbedPane.getTabCount() > 1);
@@ -431,7 +431,7 @@ public final class UserInterfaceImpl extends JFrame implements Constants,
 
 	public void setTabTitle(String title) {
 		tabbedPane.setTabTitle(title);
-		setTitle(title + " - Quick Sequence Diagram Editor");
+		setTitle(title + " - Quick Sequence Diagram Editor (ABS Version)");
 	}
 
 	public String addTab(String tabTitle, Bean<Configuration> configuration) {
