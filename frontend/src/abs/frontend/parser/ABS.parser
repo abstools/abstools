@@ -311,6 +311,7 @@ List annotation_list =
 
 Annotation annotation =
     LBRACKET TYPE_IDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
+  | LBRACKET TYPE_IDENTIFIER.name RBRACKET {: return new Annotation(name, new NullExp()); :}
     ;
 
 InterfaceTypeUse ifname =
