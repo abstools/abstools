@@ -45,6 +45,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     protected boolean abstractEnvironment = false;
     boolean showStartMsg = true;
     boolean staticActors = false;
+    boolean withGUI = false;
 
     boolean firstMessage = true;
 
@@ -107,7 +108,9 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
             initializeActors();
 
-            gui = new GUI();
+            if (withGUI) {
+                gui = new GUI();
+            }
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -215,7 +218,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 firstMessage = false;
             }
 
-            gui.waitForClick();
+            if (withGUI)
+                gui.waitForClick();
 
             if (isObservedClass(targetClass))
                 task.registerTaskListener(TASK_BLOCKING_OBSERVER);
@@ -242,7 +246,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     first = false;
                 else
                     argString.append(", ");
-                argString.append(v.toString().replaceAll("\\:", "\\\\:"));
+                argString.append(v.toString());
             }
 
             out.print(shorten(argString.toString()));
@@ -250,21 +254,26 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         }
     }
 
+    private String escapeColons(String s) {
+        return s.replaceAll("\\:", "\\\\:");
+    }
+
     private String getClassName(ObjectView obj) {
         return createdCOGClasses.get(obj.getCOG());        
     }
 
     private String shorten(String arg) {
-        if (arg.length() > MAX_ARG_LENGTH) {
-            StringBuffer sb = new StringBuffer(arg);
+        String escapedArg = escapeColons(arg);
+        if (escapedArg.length() > MAX_ARG_LENGTH) {
+            StringBuffer sb = new StringBuffer(escapedArg);
             int halfLength = MAX_ARG_LENGTH / 2;
-            String rest = arg.substring(arg.length() - halfLength);
+            String rest = arg.substring(escapedArg.length() - halfLength);
             sb.setLength(halfLength);
             sb.append(" .. ");
             sb.append(rest);
             return sb.toString();
         }
-        return arg;
+        return escapedArg;
     }
 
     protected boolean isSystemClass(String source) {
