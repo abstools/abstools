@@ -1,7 +1,6 @@
 //$Id: skeleton.abs 1007 2010-01-19 10:33:57Z atorjusen $
 module Skeleton;
 
-data Bool = True | False;  // builtin
 
 //Interface declarations, extends is optional 
 interface Foo1 {} 
@@ -10,16 +9,17 @@ interface Foo extends Foo1, Foo2 {}
 
 // "implements" is optional
 class BazClass  {  }
-class BazClass implements Foo1, Foo2 {  }
+class BazClass2 implements Foo1, Foo2 {  }
 
 //Semicolon after variable or field declaration IFF there are declarations. 
 //I.e 
 //No semicolon if there are no declarations 
-class FooClass implements Foo {  }
+class FooClass implements Foo, Bar {  }
 
+data Data = SomeData;
 
 //Must have semicolon if there are declarations
-class BarClass implements Foo { Int n ; Field f ; }
+class BarClass implements Foo { Int n = 5 ; Foo1 f ; }
 
 interface Bar { } 
 
@@ -28,6 +28,7 @@ interface Buffer {
     Unit init(Foo f, Bar b);
     Unit append(Int i);
     Data remove();
+    Int m();
 
 }
 
@@ -36,64 +37,72 @@ interface Buffer {
 class BoundedBuffer implements Buffer {
     
     //var_or_field_decl_list
-    ListofInt buffer;
-    Int max ;
-    Int n ;
+    Int max = 5;
+    Int n = 4;
 
     //Method list 
   
+    Int m() { return n; }
     Unit init(Foo x, Bar y){
 		
-	Int x;  Int y ; 
+	Int x = 3;  
+	Int y = 2; 
 
 
 	return null ;
     
     }
 	
+	Data remove() { return SomeData; }
     Unit append(Int i){ skip; return null ; }
 
 }
 //MAIN
 {
     //var_or_field_decl_list
-        Int x ; 
-	Int y ; 
-	Bool z ; 	
-	Buffer o 	
+        Int x = 5; 
+	Int y = 5 ; 
+	Bool z = True; 	
+	Buffer o
 	;
+	
+	Fut<Int> f;
 	//Stmts 
 	//Assignments to pure expressions
 	x = y ; 
 	x = null ; 
-	x = y.get ;
-	x = True ;
-	x = False ; 
+	x = f.get ;
+	z = True ;
+	z = False ; 
 	/* Assignments to expressions 
 	   with side effects.
 	 */
-	x = new FooClass() ;
+	Foo1 foo;
+	foo = new BazClass2() ;
+	Bar b;
+	b = new FooClass();
+	Foo foo2;
+	foo2 = new FooClass();
 	//y = new cog FooClass() ; FIXME: support cog in Eclipse Plugin parser
-	x = o!init();
-	x = o!init(y);
-	x = o!init(y,z);
-	x = o.init(y,z,w);
-	x = init(y,z); 
+	f = o!m();
+	y = o.m();
+	
+	o!init(foo2,b);
 	//Await statements 
-	await y? ; 
-	await y? & z? ; 
-	await y? & z? & w?  ;
+	await f? ; 
+	await f? & f? ; 
+	await f? & f? & f?  ;
 	await True ; 
 	//skip, suspend, if_th_else
 	skip ; 
 	suspend ; 
-	if (x) y = True ; 
-	if (x) y = True ; else y = False ;
-	if (x) y = True ; else { y = False ; x = null ; } 
+	if (z) z = True ; 
+	if (z) z = True ; else z = False ;
+	if (z) z = True ; else { z = False ; x = null ; } 
 	
 
 	//Stmtblock
-	{ x = y ; skip ; await x? ; } 
+	{ x = y ; skip ; await f? ; } 
     skip ;
 	//Return  
     return null ;
