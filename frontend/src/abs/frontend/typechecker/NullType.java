@@ -13,6 +13,11 @@ public final class NullType extends ReferenceType {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o == INSTANCE;
+    }
+    
+    @Override
     public boolean isAssignable(Type t) {
         if (super.isAssignable(t))
             return true;
