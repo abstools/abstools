@@ -347,19 +347,27 @@ public final class Diagram implements Constants {
 	 */
 	private void readObjects() throws SyntaxError, SemanticError {
 		while (provider.advance()) {
-			Lifeline lifeline = provider.nextObject();
-			if (lifeline == null) {
-				return;
-			}
-			if (lifeline.isActiveObject() && !threaded) {
-				throw new SemanticError(provider,
-						"v flag for active object cannot be set when multithreading is disabled");
-			}
-			if (provider.getState() != null) {
-				drawableBijection.add(lifeline.getHead(), provider.getState());
-			}
-			addLifeline(lifeline);
+			addObject(provider.nextObject());
 		}
+		
+		for (Lifeline l : provider.getLaterObjects()) {
+			addObject(l);
+		}
+		
+	}
+
+	private void addObject(Lifeline lifeline) throws SemanticError {
+		if (lifeline == null) {
+			return;
+		}
+		if (lifeline.isActiveObject() && !threaded) {
+			throw new SemanticError(provider,
+					"v flag for active object cannot be set when multithreading is disabled");
+		}
+		if (provider.getState() != null) {
+			drawableBijection.add(lifeline.getHead(), provider.getState());
+		}
+		addLifeline(lifeline);
 	}
 
 	/**
@@ -384,72 +392,7 @@ public final class Diagram implements Constants {
 			}
 
 			if (!noteManager.step()) {
-				MessageData data = provider.nextMessage();
-				noteManager.closeNote(data.getCaller());
-				String[] callees = data.getCallees();
-				if (callees.length == 1) {
-					throw new SyntaxError(provider,
-							"A broadcast message must have at least two receivers");
-				}
-				if (callees.length >= 2) {
-					if (data.isSpawnMessage()) {
-						throw new SyntaxError(provider,
-								"Broadcast messages are spawning by default");
-					}
-					Set<String> calleeSet = new HashSet<String>();
-					Lifeline[] allButLast = new Lifeline[callees.length - 1];
-					for (int i = 0; i < callees.length; i++) {
-						String callee = callees[i];
-						if (callee.length() == 0) {
-							throw new SyntaxError (provider,
-									"Malformed broadcast message");
-						}
-						if (!calleeSet.add(callee)) {
-							throw new SyntaxError(provider,
-									"Duplicate receiver: " + callee);
-						}
-						if (callee.equals(data.getCaller())) {
-							throw new SyntaxError(provider, "The sender "
-									+ callee + " cannot be a "
-									+ "receiver of the broadcast message");
-						}
-						noteManager.closeNote(callee);
-						MessageData part = new MessageData();
-						// TODO mnemonics
-						part.setCaller(data.getCaller());
-						part.setCallee(callee);
-						part.setLevel(data.getLevel());
-						part.setThread(data.getThread());
-						if (getLifeline(data.getCaller()) != null) {
-							if (!getLifeline(data.getCaller()).isAlwaysActive()) {
-								part.setSpawnMessage(true);
-							}
-						}
-						part.setReturnsInstantly(data.returnsInstantly());
-						if (i == 0) {
-							part.setNoteNumber(data.getNoteNumber());
-							part.setMessage(data.getMessage());
-							part.setBroadcastType(BroadcastMessage.FIRST);
-						} else if (i == callees.length - 1) {
-							part.setBroadcastType(BroadcastMessage.LAST);
-						} else {
-							part.setBroadcastType(BroadcastMessage.OTHER);
-						}
-						BroadcastMessage msg = (BroadcastMessage) processor
-								.processMessage(part);
-						if (i < callees.length - 1) {
-							allButLast[i] = msg.getCallee();
-						} else {
-							msg.setOtherCallees(allButLast);
-						}
-						processor.execute(msg);
-					}
-				} else {
-					noteManager.closeNote(data.getCallee());
-					ForwardMessage msg = processor.processMessage(data);
-					processor.execute(msg);
-				}
-				fragmentManager.clearLabels();
+				readNextMessage();
 			}
 			fragmentManager.clearSectionLabel();
 
@@ -460,6 +403,75 @@ public final class Diagram implements Constants {
 				line.terminate();
 			}
 		}
+	}
+
+	private void readNextMessage() throws SyntaxError, SemanticError {
+		MessageData data = provider.nextMessage();
+		noteManager.closeNote(data.getCaller());
+		String[] callees = data.getCallees();
+		if (callees.length == 1) {
+			throw new SyntaxError(provider,
+					"A broadcast message must have at least two receivers");
+		}
+		if (callees.length >= 2) {
+			if (data.isSpawnMessage()) {
+				throw new SyntaxError(provider,
+						"Broadcast messages are spawning by default");
+			}
+			Set<String> calleeSet = new HashSet<String>();
+			Lifeline[] allButLast = new Lifeline[callees.length - 1];
+			for (int i = 0; i < callees.length; i++) {
+				String callee = callees[i];
+				if (callee.length() == 0) {
+					throw new SyntaxError (provider,
+							"Malformed broadcast message");
+				}
+				if (!calleeSet.add(callee)) {
+					throw new SyntaxError(provider,
+							"Duplicate receiver: " + callee);
+				}
+				if (callee.equals(data.getCaller())) {
+					throw new SyntaxError(provider, "The sender "
+							+ callee + " cannot be a "
+							+ "receiver of the broadcast message");
+				}
+				noteManager.closeNote(callee);
+				MessageData part = new MessageData();
+				// TODO mnemonics
+				part.setCaller(data.getCaller());
+				part.setCallee(callee);
+				part.setLevel(data.getLevel());
+				part.setThread(data.getThread());
+				if (getLifeline(data.getCaller()) != null) {
+					if (!getLifeline(data.getCaller()).isAlwaysActive()) {
+						part.setSpawnMessage(true);
+					}
+				}
+				part.setReturnsInstantly(data.returnsInstantly());
+				if (i == 0) {
+					part.setNoteNumber(data.getNoteNumber());
+					part.setMessage(data.getMessage());
+					part.setBroadcastType(BroadcastMessage.FIRST);
+				} else if (i == callees.length - 1) {
+					part.setBroadcastType(BroadcastMessage.LAST);
+				} else {
+					part.setBroadcastType(BroadcastMessage.OTHER);
+				}
+				BroadcastMessage msg = (BroadcastMessage) processor
+						.processMessage(part);
+				if (i < callees.length - 1) {
+					allButLast[i] = msg.getCallee();
+				} else {
+					msg.setOtherCallees(allButLast);
+				}
+				processor.execute(msg);
+			}
+		} else {
+			noteManager.closeNote(data.getCallee());
+			ForwardMessage msg = processor.processMessage(data);
+			processor.execute(msg);
+		}
+		fragmentManager.clearLabels();
 	}
 
 	public int getNextFreeNoteNumber() {

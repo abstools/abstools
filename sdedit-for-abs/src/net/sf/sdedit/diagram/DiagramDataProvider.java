@@ -24,6 +24,8 @@
 
 package net.sf.sdedit.diagram;
 
+import java.util.Collection;
+
 import net.sf.sdedit.drawable.Note;
 import net.sf.sdedit.error.SyntaxError;
 import net.sf.sdedit.util.Pair;
@@ -179,5 +181,7 @@ public interface DiagramDataProvider {
      * @return the title of a fragment section or <tt>null</tt>
      */
     public String getFragmentSeparator();
+
+	public Collection<Lifeline> getLaterObjects() throws SyntaxError;
 
 }

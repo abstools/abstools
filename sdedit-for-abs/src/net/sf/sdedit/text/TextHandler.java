@@ -24,9 +24,12 @@
 package net.sf.sdedit.text;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -323,6 +326,44 @@ public class TextHandler implements DiagramDataProvider {
 		return data;
 	}
 
+	public Collection<Lifeline> getLaterObjects() throws SyntaxError {
+		ArrayList<Lifeline> laterObjects = new ArrayList<Lifeline>();
+		if (!reader.markSupported()) {
+			System.out.println("WARNING: reader does not support marking");
+			return laterObjects;
+		}
+		
+		String oldCurrentLine = currentLine;
+		String oldRawLine = rawLine;
+		StringBuffer oldLines = new StringBuffer();
+		try {
+			String line;
+			do {
+				line = reader.readLine();
+				
+				if (line != null) {
+					if (line.startsWith("#newobj ")) {
+						currentLine = line.substring(8);
+						rawLine = currentLine;
+						laterObjects.add(nextObjectIntern());
+					}
+					oldLines.append(line);
+					oldLines.append('\n');
+				}
+			} while (line != null);
+
+			reader.close();
+			reader = new BufferedReader(new StringReader(oldLines.toString()));
+		} catch (IOException io) {
+			io.printStackTrace();
+		}
+		
+		currentLine = oldCurrentLine;
+		rawLine = oldRawLine;
+		
+		return laterObjects;
+	}
+	
 	/**
 	 * Returns the {@linkplain Lifeline} object made from the current line}.
 	 * 
@@ -336,6 +377,11 @@ public class TextHandler implements DiagramDataProvider {
 			throw new IllegalStateException(
 					"reading objects has already been finished");
 		}
+		
+		return nextObjectIntern();
+	}
+	
+	private Lifeline nextObjectIntern() throws SyntaxError {
 		if (currentLine == null) {
 			throw new IllegalStateException("nothing to read");
 		}
