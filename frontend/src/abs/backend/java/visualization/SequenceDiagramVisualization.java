@@ -58,6 +58,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (isObservedClass(className)) {
             cog.getScheduler().registerTaskObserver(this);
             if (!staticActors) {
+                if (!firstMessage) {
+                    // special support for adding nodes later to a diagram
+                    out.print("#newobj ");
+                }
                 out.println(getActorName(initialObject) + ":" + className + "[a]");
             }
         }
