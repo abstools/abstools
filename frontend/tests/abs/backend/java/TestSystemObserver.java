@@ -9,6 +9,7 @@ import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
+import abs.backend.java.observing.TaskSchedulerObserver;
 import abs.backend.java.observing.TaskView;
 
 public class TestSystemObserver implements SystemObserver, ObjectCreationObserver {
@@ -23,13 +24,21 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
         System.out.println("NEW COG CREATED");
         COGView mainCOG = cog;
         mainCOG.registerObjectCreationListener(this);
-        mainCOG.getScheduler().registerTaskObserver(new EmptyTaskObserver() {
+        mainCOG.getScheduler().registerTaskSchedulerObserver(new TaskSchedulerObserver() {
             TaskView mainTask;
 
             @Override
             public void taskCreated(TaskView task) {
-                if (mainTask == null)
+                if (mainTask == null) {
                     mainTask = task;
+                    mainTask.registerTaskListener(new EmptyTaskObserver() {
+                        @Override
+                        public void taskFinished(TaskView task) {
+                            if (task == mainTask)
+                                System.out.println("SYSTEM TERMINATED");
+                        }
+                    });
+                }
                 String sourceClass = "INIT";
                 if (task.getSource() != null)
                     sourceClass = task.getSource().getClassName();
@@ -43,12 +52,26 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
                     i++;
                 }
                 System.out.println(")");
+                
+                
             }
 
             @Override
-            public void taskFinished(TaskView task) {
-                if (task == mainTask)
-                    System.out.println("SYSTEM TERMINATED");
+            public void taskReady(TaskView view) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void taskResumed(TaskView runningTask, GuardView view) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public void taskSuspended(TaskView task, GuardView guard) {
+                // TODO Auto-generated method stub
+                
             }
         });
 
