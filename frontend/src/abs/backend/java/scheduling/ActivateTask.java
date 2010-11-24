@@ -9,7 +9,10 @@ public class ActivateTask extends ScheduleAction {
 
     public ActivateTask(COG cog, Task<?> task) {
         super(cog);
+        if (task == null)
+            throw new IllegalArgumentException("Task is null");
         this.task = task;
+         
     }
 
     @Override

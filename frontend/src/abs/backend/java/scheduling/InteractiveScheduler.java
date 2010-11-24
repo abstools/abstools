@@ -213,15 +213,21 @@ class HistoryItem {
         boolean res = false;
         if (cogId != a.getCOG().getID())
             return false;
+        
         if ((a instanceof StepTask && action != HistoryAction.EXECUTE)
                 || (a instanceof ScheduleTask && action != HistoryAction.SCHEDULE)
                 || (a instanceof ActivateTask && action != HistoryAction.ACTIVATE))
             return false;
 
-        if (action != HistoryAction.SCHEDULE)
+        if (action != HistoryAction.SCHEDULE) {
+            if (a.getTask() == null) {
+                System.out.println(a);
+                System.out.println(action);
+            }
             return a.getTask().getID() == taskid;
-        else
+        } else {
             return true;
+        }
     }
 
     @Override

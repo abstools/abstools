@@ -22,9 +22,10 @@ import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
+import abs.backend.java.observing.TaskSchedulerObserver;
 import abs.backend.java.observing.TaskView;
 
-public class SequenceDiagramVisualization implements SystemObserver, TaskObserver, ObjectCreationObserver {
+public class SequenceDiagramVisualization implements SystemObserver, TaskObserver, ObjectCreationObserver, TaskSchedulerObserver {
     private static final int MAX_ARG_LENGTH = 30;
 
     Set<FutView> waitingFutures = new HashSet<FutView>();
@@ -57,7 +58,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         String className = initialObject.getClassName();
         createdCOGClasses.put(cog,className);
         if (isObservedClass(className)) {
-            cog.getScheduler().registerTaskObserver(this);
+            cog.getScheduler().registerTaskSchedulerObserver(this);
             if (!staticActors) {
                 if (!firstMessage) {
                     // special support for adding nodes later to a diagram
@@ -186,6 +187,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 out.println(".future resolved\\:" + shorten(fut.getValue().toString()));
                 out.println(futTaskName + ":stop");
                 out.println("(" + fut.getID() + ") " + getActorName(task.getTarget()));
+                out.println(getActorName(futTask.getTarget())+ "[Task" + futTask.getID() + "]:stop");
             }
         }
 
@@ -197,6 +199,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (task.getSource() == null) {
             return;
         }
+        task.registerTaskListener(this);
+        
         String sourceClass = getClassName(task.getSource());
         String targetClass = getClassName(task.getTarget());
 
@@ -251,6 +255,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
             out.print(shorten(argString.toString()));
             out.println(")");
+            
         }
     }
 

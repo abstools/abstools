@@ -1,10 +1,6 @@
 package abs.backend.java.observing;
 
 public interface TaskObserver {
-    void taskCreated(TaskView task);
-
-    void taskSuspended(TaskView task, GuardView guard);
-
     void taskStarted(TaskView task);
 
     void taskFinished(TaskView task);
@@ -13,7 +9,6 @@ public interface TaskObserver {
 
     void taskRunningAfterWaiting(TaskView view, FutView fut);
 
-    void taskResumed(TaskView runningTask, GuardView view);
 
     /**
      * Is called when the given task does an execution step.
@@ -29,13 +24,6 @@ public interface TaskObserver {
      *            the line of the executed statement
      */
     void taskStep(TaskView task, String fileName, int line);
-
-    /**
-     * Called when the task is ready to be scheduled again
-     * 
-     * @param view
-     */
-    void taskReady(TaskView view);
 
     /**
      * Called when a deadlock has been detected in a task. Note that if a task

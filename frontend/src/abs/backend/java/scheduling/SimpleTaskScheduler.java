@@ -21,6 +21,7 @@ import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.observing.TaskView;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 /**
  * A very simple scheduler that is not the most efficient one, but is easy to
@@ -105,17 +106,16 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     protected void taskDeadlocked() {
         logger.finest("Task deadlocked");
-        if (view != null) {
-            view.taskDeadlocked(activeTask.task.getView());
-        }
         ABSRuntime.doNextStep();
 
     }
 
     protected void taskFinished() {
         logger.finest("Task finished getting monitor...");
+        TaskInfo finishedTask = null;
         synchronized (this) {
             logger.finest("got monitor");
+            finishedTask = activeTask;
             activeTask = null;
             if (suspendedTasks.size() + readyTasks.size() > 0) {
                 logger.finest("calling schedule...");
@@ -172,8 +172,6 @@ public class SimpleTaskScheduler implements TaskScheduler {
         @Override
         public void run() {
             View v = view;
-            if (v != null)
-                v.taskStarted(executingTask.task.getView());
             active = true;
             executingTask.task.run();
             if (executingTask.task.isDeadlocked())
@@ -257,6 +255,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                     System.out.println("Calling doSchedule...");
                     doSchedule();
                 }
+                
             });
             logger.finest("Done");
         } else {

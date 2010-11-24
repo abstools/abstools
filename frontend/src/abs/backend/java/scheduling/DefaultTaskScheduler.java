@@ -68,16 +68,12 @@ public class DefaultTaskScheduler implements TaskScheduler {
                 }
 
                 View v = view;
-                if (v != null)
-                    v.taskStarted(runningTask.getView());
 
                 if (Logging.DEBUG)
                     log.finest("Executing " + runningTask);
                 try {
                     runningTask.run();
                     v = view;
-                    if (v != null)
-                        v.taskFinished(runningTask.getView());
 
                     if (Logging.DEBUG)
                         log.finest("Task " + runningTask + " FINISHED");

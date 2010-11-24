@@ -64,6 +64,7 @@ import abs.backend.java.observing.ObjectObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
+import abs.backend.java.observing.TaskSchedulerObserver;
 import abs.backend.java.observing.TaskView;
 import abs.backend.java.utils.ColorUtils;
 import abs.backend.java.utils.StringUtil;
@@ -121,7 +122,7 @@ class COGInfo {
 
 }
 
-class DebugModel implements TaskObserver {
+class DebugModel implements TaskObserver, TaskSchedulerObserver {
     final Map<TaskView, TaskInfo> taskToLineMap = new HashMap<TaskView, TaskInfo>();
     final Map<COGView, COGInfo> cogInfo = new HashMap<COGView, COGInfo>();
     final ArrayList<DebugModelListener> listener = new ArrayList<DebugModelListener>();
@@ -144,7 +145,7 @@ class DebugModel implements TaskObserver {
     }
 
     public void cogCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskObserver(this);
+        cog.getScheduler().registerTaskSchedulerObserver(this);
         ArrayList<DebugModelListener> localList;
         COGInfo info = new COGInfo(cog, initialObject);
         synchronized (this) {

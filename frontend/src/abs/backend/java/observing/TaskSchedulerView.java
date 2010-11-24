@@ -9,5 +9,5 @@ public interface TaskSchedulerView {
 
     TaskView getActiveTask();
 
-    void registerTaskObserver(TaskObserver listener);
+    void registerTaskSchedulerObserver(TaskSchedulerObserver listener);
 }
