@@ -12,6 +12,13 @@
 
     <menu name="The ABS Language">
       <item name="Introduction" href="abslang.html" />
+      <item name="Standard Data Types" href="stdlib.html" />
+      <item name="Expressions" href="expressions.html" />
+      <item name="Statements" href="statements.html" />
+      <item name="Assertion Langauge" href="assertionlang.html" />
+      <item name="Concurrency Model" href="concurrencymodel.html" />
+      <item name="Module System" href="modulesystem.html" />
+
     </menu>
     <menu name="The Frontend">
       <item name="Parser" href="parser.html" />

@@ -1,3 +1,53 @@
 The ABS Language
 
-  ...
+  The Abstract Behavioral Specification Language (ABS) is a concurrent
+  object-oriented modeling language that features functional data-types.
+  
+* Key Elements
+
+  The key elements of ABS are the following
+
+** Classes
+
+   Classes define the imperative behavior of the model. 
+   Classes in ABS are similar to Java classes with the following differences:
+
+   * Classes are no types. This means that classes can be used in <<<new>>>    
+     expressions, they cannot be used as types for variables or fields, for 
+     example.
+
+   * Inheritance is not supported, but classes can implement an arbitrary
+     number of <Interfaces>
+
+   * Classes do not have type parameters
+
+   * Classes do not have constructors, instead classes can have
+     parameters like in Scala, and classes can have an <init block>.
+
+   * Method overloading is not supported.
+
+*** Example
+
+--------------
+class Car(Color color) implements Drivable {
+   Engine engine;
+  
+   // an init block
+   {
+      engine = new Engine();
+   }
+
+   Unit drive(Location to) {
+      // ...
+   }
+}
+--------------
+
+** Interfaces
+
+** Data Types
+
+** Functions
+
+** Type Synonyms
+
