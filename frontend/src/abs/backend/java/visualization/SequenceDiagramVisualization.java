@@ -100,19 +100,34 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         return getObservedClasses().contains(className);
     }
 
+    
     @Override
     public synchronized void systemStarted() {
         try {
-            Socket skt = new Socket("localhost", 60001);
-            out = new PrintWriter(skt.getOutputStream(), true);
-            out.println(getName());
+            long startms= System.currentTimeMillis();
+            while (true) {
+                try {
+                    
+                    Socket skt = new Socket("localhost", 60001);
 
-            initializeActors();
+                    out = new PrintWriter(skt.getOutputStream(), true);
+                    out.println(getName());
 
-            if (withGUI) {
-                gui = new GUI();
+                    initializeActors();
+
+                    if (withGUI) {
+                        gui = new GUI();
+                    }
+                    return;
+                } catch (java.net.SocketException e) {
+                    try {
+                        System.out.println("Waiting for sdedit server on localhost:60001 ... "+((System.currentTimeMillis()-startms) / 1000)+"s");
+                        Thread.sleep(250);
+                    } catch (InterruptedException e2) {
+                        e2.printStackTrace();
+                    }
+                }
             }
-
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
