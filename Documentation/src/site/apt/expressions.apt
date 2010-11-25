@@ -1,0 +1,9 @@
+Expressions
+
+  ABS provides a standard set of expressions, namely
+
+  * A <<<let>>>-expressions to bind variables.
+
+  * A <<<case>>>-expressions to do pattern matching on data types.
+
+  * Function calls.

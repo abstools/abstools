@@ -1,0 +1,5 @@
+Assertion Language
+
+  ABS provides a statement <<<assert <assertion> >>> to specify assertions.
+  
+  
