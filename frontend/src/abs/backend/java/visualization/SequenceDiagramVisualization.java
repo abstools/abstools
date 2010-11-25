@@ -122,7 +122,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 } catch (java.net.SocketException e) {
                     try {
                         System.out.println("Waiting for sdedit server on localhost:60001 ... "+((System.currentTimeMillis()-startms) / 1000)+"s");
-                        Thread.sleep(250);
+                        Thread.sleep(500);
                     } catch (InterruptedException e2) {
                         e2.printStackTrace();
                     }
@@ -210,11 +210,11 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     @Override
     public synchronized void taskCreated(TaskView task) {
+        task.registerTaskListener(this);
 
         if (task.getSource() == null) {
             return;
         }
-        task.registerTaskListener(this);
         
         String sourceClass = getClassName(task.getSource());
         String targetClass = getClassName(task.getTarget());
@@ -302,6 +302,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     @Override
     public synchronized void taskFinished(TaskView task) {
+        System.out.println("Task Finished: "+task.getID());
+        
         if (!isObserved(task))
             return;
         // out.println("Future " + task.getFuture().getID() + " resolved\\: " +
@@ -355,8 +357,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     public boolean isObserved(TaskView task) {
         String source = task.getSource().getClassName();
         String target = task.getTarget().getClassName();
-        return getObservedClasses().contains(source) && getObservedClasses().contains(target)
-                && getSystemClasses().contains(target);
+        return isObservedClass(source) && isObservedClass(target)
+                && isSystemClass(target);
     }
 
     @Override
