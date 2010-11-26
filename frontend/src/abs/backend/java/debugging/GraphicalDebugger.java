@@ -1128,7 +1128,7 @@ class DebugWindow implements DebugModelListener {
         frame.add(new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPane, controls));
         splitPane.setSize(new Dimension(1000, 600));
 
-        frame.setBounds(400, 100, 1000, 800);
+        frame.setBounds(350, 0, 930, 800);
         frame.setVisible(true);
         model.registerListener(this);
     }

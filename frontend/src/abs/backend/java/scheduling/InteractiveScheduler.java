@@ -875,7 +875,7 @@ class SchedulerGUI implements SchedulerGUISwing, SchedulingObserver {
         historyPnl = new HistoryPnl(this);
         frame.add(historyPnl, BorderLayout.SOUTH);
 
-        frame.setBounds(50, 100, 100, 50);
+        frame.setBounds(0, 0, 100, 50);
         frame.setVisible(true);
         frame.pack();
     }
