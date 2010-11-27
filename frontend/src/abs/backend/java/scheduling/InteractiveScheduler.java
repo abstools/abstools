@@ -210,7 +210,6 @@ class HistoryItem {
     }
 
     boolean matches(ScheduleAction a) {
-        boolean res = false;
         if (cogId != a.getCOG().getID())
             return false;
         
@@ -221,8 +220,9 @@ class HistoryItem {
 
         if (action != HistoryAction.SCHEDULE) {
             if (a.getTask() == null) {
-                System.out.println(a);
-                System.out.println(action);
+                System.err.println(a);
+                System.err.println(action);
+                System.err.println(a.getClass());
             }
             return a.getTask().getID() == taskid;
         } else {
