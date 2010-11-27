@@ -386,7 +386,13 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void returnInMainBlock() {
         assertTypeErrors("{ return Nil; }");
+        assertTypeErrors("{ return Unit; return Unit; }");
     }
-    
+
+    @Test
+    public void returnInInitBlock() {
+        assertTypeErrors("class C { { return Nil; } }");
+        assertTypeErrors("class C { { return Unit; return Unit; } }");
+    }
     
 }
