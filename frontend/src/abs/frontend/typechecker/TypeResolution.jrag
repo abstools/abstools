@@ -236,6 +236,11 @@ aspect TypeResolution {
     eq ClassDecl.getInitBlock().getContextMethod() = null;
     eq ModuleDecl.getBlock().getContextMethod() = null;
     inh MethodImpl Stmt.getContextMethod();
+
+    eq MethodImpl.getBlock().getContextBlock() = getBlock();
+    eq ClassDecl.getInitBlock().getContextBlock() = getInitBlock();
+    eq ModuleDecl.getBlock().getContextBlock() = getBlock();
+    inh Block Stmt.getContextBlock();
     
     
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {

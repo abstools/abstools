@@ -383,4 +383,10 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("def List<A> map2list<A>(Map<A,B> map) = Nil;");
     }
 
+    @Test
+    public void returnInMainBlock() {
+        assertTypeErrors("{ return Nil; }");
+    }
+    
+    
 }

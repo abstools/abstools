@@ -424,17 +424,22 @@ aspect TypeChecker {
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
    	 MethodImpl m = getContextMethod();
-   	 if (m == null) return;
+   	 Type lht = getUnitType();
+   	 Block block = getContextBlock();
+
+   	 if (m != null) {
+   	     lht = m.getMethodSig().getReturnType().getType();
+   	     block = m.getBlock();
+   	 }
    	 
-   	 Type rht = getRetExp().getType();
-   	 Type lht = m.getMethodSig().getReturnType().getType();
-		 if (!rht.isAssignable(lht)) {
-			 e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
-		 }
+         Type rht = getRetExp().getType();
+         if (!rht.isAssignable(lht)) {
+             e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
+         }
    		 
    	 getRetExp().typeCheck(e);
    	 
-   	 Stmt lastStmt = m.getBlock().getStmt(m.getBlock().getNumStmt()-1);
+   	 Stmt lastStmt = block.getStmt(block.getNumStmt()-1);
    	 if (lastStmt != this) {
    	     e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
    	 }
