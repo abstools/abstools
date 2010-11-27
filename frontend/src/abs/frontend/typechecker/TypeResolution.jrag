@@ -1,4 +1,8 @@
+import java.util.HashMap;
 import java.util.HashSet;
+
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.ResolvedName;
 
 aspect TypeResolution {
   
@@ -37,27 +41,31 @@ aspect TypeResolution {
        return getName().substring(0,getName().lastIndexOf('.'));
     }
     
-	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getVisibleNames() {
+        syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleNames() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getVisibleNames() {
 		return TypeCheckerHelper.getVisibleNames(this);
 	}
 
-	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getExportedNames() {
+        syn Map<KindedName,ResolvedName> ModuleDecl.getExportedNames() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getExportedNames() {
 		return TypeCheckerHelper.getExportedNames(this);
 	}
 
-	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getImportedNames() {
+        syn Map<KindedName,ResolvedName> ModuleDecl.getImportedNames() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getImportedNames() {
 		return TypeCheckerHelper.getImportedNames(this);
 	}
 
-	syn lazy Map<KindedName,ResolvedName> ModuleDecl.getDefinedNames() {
+        syn Map<KindedName,ResolvedName> ModuleDecl.getDefinedNames() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getDefinedNames() {
 		return TypeCheckerHelper.getDefinedNames(this);
 	}
 	
-	syn boolean ModuleDecl.exportsName(String name) {
+	syn lazy boolean ModuleDecl.exportsName(String name) {
 		return ! TypeCheckerHelper.getAllNames(name, this.getExportedNames()).isEmpty();
 	}
 
-	syn boolean ModuleDecl.isVisible(String name) {
+	syn lazy boolean ModuleDecl.isVisible(String name) {
 		return ! TypeCheckerHelper.getAllNames(name, this.getVisibleNames()).isEmpty();
 	}
 

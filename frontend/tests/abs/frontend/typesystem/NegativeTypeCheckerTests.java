@@ -181,6 +181,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void classFieldAccess() {
+        assertTypeErrors("class C { Bool f = True; Unit m(Int f) { this.f = 5; } }");
+    }
+    
+    @Test
     public void classInitializerBlockError() {
         assertTypeErrors("class C { { X f; } }");
     }

@@ -1,5 +1,7 @@
 import abs.common.*;
 
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.TypeError;
 import abs.frontend.typechecker.*;
 
 import abs.frontend.typechecker.TypeCheckerHelper;
@@ -106,10 +108,10 @@ aspect TypeChecker {
     public void NamedExport.typeCheck(SemanticErrorList e) {
    		ModuleDecl mod = getModuleDecl();
     	for (Name name: getNames()) {
-    		String s = name.getName();
-    		if (!mod.isVisible(s)) {
-    			e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
-    		}
+    	    String s = name.getName();
+  	    if (!mod.isVisible(s)) {
+    		e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+    	    }
     	}
     }
 

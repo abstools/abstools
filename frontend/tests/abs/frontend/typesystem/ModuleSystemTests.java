@@ -148,6 +148,11 @@ public class ModuleSystemTests extends FrontendTest {
         assertTypeErrors("module A; export X from B; ");
     }
 
+    @Test
+    public void circularDefinition() {
+        assertTypeErrors("module A; export X; import X from B; module B; export X; import X from A; ");
+    }
+    
     protected void assertNoTypeErrors(String absCode) {
         assertTypeErrors(absCode, false, false, false);
     }
