@@ -1,0 +1,8 @@
+aspect Annotations {
+
+    inh List<Annotation> VarDecl.getAnnotations();
+    eq VarDeclStmt.getVarDecl().getAnnotations() {
+        return getAnnotations();
+    }
+    
+}

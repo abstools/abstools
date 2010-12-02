@@ -171,6 +171,12 @@ public class ParserTest extends FrontendTest {
         assertParseOk("class A { Int method(Int x) { [Value: Good] return x; } }");
         assertParseOk("[Block: Init]{ Int x = 1; [Stmt: \"conditional\"] if (x == 1) [Branch: Then] x = 5; else [Branch: Else] x = -1; }");
         assertParseOk("[Test] class FooClass {} {}");
+        assertParseOk("[\"value\"] class FooClass {} {}");
+        assertParseOk("class FooClass([Test] T t) {}");
+        assertParseOk("class FooClass { [Test] T t; }");
+        assertParseOk("class FooClass { Unit m([Test] T t) { }}");
+        assertParseOk("class FooClass { Unit m() { [Test] T t; }}");
+        assertParseOk("class FooClass { [Test] Unit m() { }}");
     }
 
     @Test

@@ -310,8 +310,8 @@ List annotation_list =
      ;
 
 Annotation annotation =
-    LBRACKET TYPE_IDENTIFIER.name COLON data_exp.exp RBRACKET {: return new Annotation(name, exp); :}
-  | LBRACKET TYPE_IDENTIFIER.name RBRACKET {: return new Annotation(name, new NullExp()); :}
+    LBRACKET type_exp.type COLON data_exp.exp RBRACKET {: return new TypedAnnotation(exp,type); :}
+  | LBRACKET data_exp.exp RBRACKET {: return new Annotation(exp); :}
     ;
 
 InterfaceTypeUse ifname =
@@ -339,8 +339,8 @@ List field_decl_list =
 	; 
 
 FieldDecl field_decl = 
-    type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e)); :}
-    | type_exp.t IDENTIFIER.i  {: return new FieldDecl(i,t, new Opt()); :}
+      annotation_list.an? type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e),an); :}
+    | annotation_list.an? type_exp.t IDENTIFIER.i  {: return new FieldDecl(i,t, new Opt(),an); :}
     ;
 
 
@@ -355,7 +355,7 @@ List param_decl_list =
   ;
 
 ParamDecl param_decl = 
-    type_exp.t IDENTIFIER.i  {: return new ParamDecl(i,t); :}
+    annotation_list.an? type_exp.t IDENTIFIER.i  {: return new ParamDecl(i,t,an); :}
     ;
 
 List method_list =
