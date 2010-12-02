@@ -49,8 +49,8 @@ RemoveMethodModifier : ModifierFragment ::= MethodSig;
 abstract	VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
 VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:Exp];
-FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp];
-ParamDecl:	TypedVarOrFieldDecl;
+FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
+ParamDecl:	TypedVarOrFieldDecl ::= Annotation*;
 PatternVarDecl: VarOrFieldDecl;
 
 abstract FunctionDef;
@@ -85,7 +85,8 @@ Constructors occur as
 - Don't know yet how to organise these.   
 */
 
-Annotation      ::= <Name> Value:PureExp;
+Annotation      ::= Value:PureExp;
+TypedAnnotation : Annotation ::= Access;
 
 abstract Stmt   ::= Annotation* ; 
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block

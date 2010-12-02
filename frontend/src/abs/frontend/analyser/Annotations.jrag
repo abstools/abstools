@@ -1,8 +1,8 @@
 aspect Annotations {
 
+    public abstract List<Annotation> TypedVarOrFieldDecl.getAnnotations();
     inh List<Annotation> VarDecl.getAnnotations();
-    eq VarDeclStmt.getVarDecl().getAnnotations() {
-        return getAnnotations();
-    }
+    eq VarDeclStmt.getVarDecl().getAnnotations() = getAnnotations();
+    
     
 }

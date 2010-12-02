@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.ParametricDataTypeDecl;
@@ -106,6 +109,24 @@ public class DataTypeType extends Type {
         return decl;
     }
 
+    @Override
+    public boolean isAnnotationType() {
+        for (Annotation a :decl.getAnnotations()) {
+            Type t = a.getType();
+            if (t.isDataType()) {
+                DataTypeType dt = (DataTypeType) t;
+                if (dt.getDecl().getName().equals("Annotation")) {
+                    if (a.getValue() instanceof DataConstructorExp) {
+                        DataConstructorExp dexp = (DataConstructorExp) a.getValue();
+                        if (dexp.getDecl().getName().equals("TypeAnnotation"))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
     public boolean isFutureType() {
         return decl.getName().equals("Fut");
     }

@@ -86,11 +86,14 @@ aspect Typing {
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     
     syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
-    eq TypedVarOrFieldDecl.getType() = getAccess().getType();
+    eq TypedVarOrFieldDecl.getType() = getAccess().getType().withAnnotations(getAnnotations());
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
    	 return v.getType();
     }
+    
+    /* Annotations */
+    syn lazy Type Annotation.getType() = getValue().getType();
     
     /* STMTS */
     syn Type Stmt.getType() = getUnitType();

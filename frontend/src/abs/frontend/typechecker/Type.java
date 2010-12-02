@@ -1,10 +1,41 @@
 package abs.frontend.typechecker;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import abs.frontend.ast.Annotation;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
+    List<TypeAnnotation> annotations;
+    
     public abstract String toString();
 
+    public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
+        this.annotations = convertToTypeAnnotations(anns);
+        return this;
+    }
+    
+    private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
+        ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
+        for (Annotation a : anns) {
+            Type t = a.getType();
+            if (t.isAnnotationType()) {
+                res.add(new TypeAnnotation(a));
+            }
+        }
+        return res;
+    }
+    
+    /**
+     * A type is an annotation type if and only if it is a data type declaration
+     * and it has an annotation [TypeAnnotation]
+     * @return
+     */
+    public boolean isAnnotationType() {
+        return false;
+    }
+    
     public boolean isReferenceType() {
         return false;
     }
