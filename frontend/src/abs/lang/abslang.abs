@@ -229,3 +229,13 @@ def Int timeval(Time t) = case t { Time(v) => v; };
 //   Time t = now(); await timeDifference(now(), t) > 5;
 def Int timeDifference(Time t1, Time t2) =
   abs(timeval(t2) - timeval(t1));
+  
+  
+  
+/**
+ * Annotation data type to define the type of annotations
+ * currently only TypeAnnotation exists
+ */
+data Annotation = TypeAnnotation; 
+ 
+ 
