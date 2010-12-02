@@ -3,10 +3,9 @@ module LeaderElection;
 def Int numNodes() = 3;
 
 interface Node {
-	Unit setNextNode(Node n);
+   Unit setNextNode(Node n);
    Unit findLeader(Node currentLeader, Int leaderId);
    Unit electLeader();
-	
 }
 
 class NodeImpl(Int id) implements Node {
@@ -40,12 +39,7 @@ class NodeImpl(Int id) implements Node {
    }
 }
 
-interface Start {
-   Unit start();
-}
-
-class Start implements Start {
-   Unit start() {
+{
    List<Node> nodes = Nil;
    Int num = numNodes();
 
@@ -64,13 +58,7 @@ class Start implements Start {
       nodes = Cons(n,nodes);
       id = id +1;
    } 
+   assert first != null;
    first!setNextNode(n);
    first!electLeader();
-   }
-}
-
-{
-   Start m;
-   m = new Start();
-   m.start();
 }
