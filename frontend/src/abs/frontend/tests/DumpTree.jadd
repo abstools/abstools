@@ -1,8 +1,9 @@
 aspect DumpTree {
 
+    
 	//Added by ATO: 
 	public void ASTNode.dumpTree(String indent, java.io.PrintStream pStream) {
-		pStream.println(indent + this.toString());
+		pStream.println(indent + this.getClass().getName());
 		String childIndent = indent + "  ";
 		for(int i = 0; i < getNumChild(); i++)
 			getChildNoTransform(i).dumpTree(childIndent, pStream);

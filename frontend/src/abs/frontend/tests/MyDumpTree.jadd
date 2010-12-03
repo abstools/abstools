@@ -11,13 +11,13 @@ aspect MyDumpTree
 	protected static java.util.regex.Pattern ASTNode.p =
         java.util.regex.Pattern.compile("([A-Z][a-zA-Z]*)@([\\da-f]+)");
 
-	protected void ASTNode.printInfo() {}
+	protected void ASTNode.printInfo(PrintStream stream) {}
 
 	public void ASTNode.dump() {
-		dump(0, 0, false);
+		dump(System.out, 0, 0, false);
 	}
 	
-	protected void ASTNode.dump(int pattern, int level, boolean last)
+	protected void ASTNode.dump(PrintStream stream, int pattern, int level, boolean last)
 	{
 		java.util.regex.Matcher m = p.matcher(this.toString());
 		String clsName = null;
@@ -43,26 +43,26 @@ aspect MyDumpTree
 		for (int i=0; i<level; i++) {
 			if (i == level - 1) {
 				if (!last) {
-					System.out.print("|-- ");
+					stream.print("|-- ");
 				}
 				else {
-					System.out.print("`-- ");
+					stream.print("`-- ");
 				}
 			}
 			else {
 				bit = flag & 0x00000001;
 				if (bit != 0)
-					System.out.print("|   ");
+					stream.print("|   ");
 				else
-					System.out.print("    ");
+					stream.print("    ");
 				flag >>= 1;
 			}
 		}
 
 		// The node information followed by the prefixes.
-		System.out.print(clsName + ":[");		
-		printInfo();
-		System.out.println("]");		
+		stream.print(clsName + ":[");		
+		printInfo(stream);
+		stream.println("]");		
 
 
 		// Update the pattern.
@@ -76,105 +76,105 @@ aspect MyDumpTree
 			if (i == getNumChild() - 1) {
 				flag = pattern;
                 //				getChild(i).dump(flag, level+1, true);
-                getChildNoTransform(i).dump(flag, level+1, true);
+                getChildNoTransform(i).dump(stream, flag, level+1, true);
 			}
 			else {
                 //				getChild(i).dump(flag, level+1, false);
-                getChildNoTransform(i).dump(flag, level+1, false);
+                getChildNoTransform(i).dump(stream, flag, level+1, false);
 			}
 		}
 	}
 
-    protected void VarOrFieldDecl.printInfo() 
+    protected void VarOrFieldDecl.printInfo(PrintStream stream) 
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void TypedVarOrFieldDecl.printInfo()
+    protected void TypedVarOrFieldDecl.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName() + " : " + (this.getAccess()));
+        stream.print(this.getName() + " : " + (this.getAccess()));
     }
 
-    protected void IdUse.printInfo()
+    protected void IdUse.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void DataTypeUse.printInfo()
+    protected void DataTypeUse.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void VarOrFieldUse.printInfo()
+    protected void VarOrFieldUse.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void DataConstructorExp.printInfo()
+    protected void DataConstructorExp.printInfo(PrintStream stream)
     {
-        System.out.print(this.getConstructor());
+        stream.print(this.getConstructor());
     }
     
-    protected void DataConstructor.printInfo()
+    protected void DataConstructor.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void AssignStmt.printInfo()
+    protected void AssignStmt.printInfo(PrintStream stream)
     {
-        //    System.out.print(((VarOrFieldUse)this.getVar()).getName() + "=");
-        System.out.print((this.getVar()).getName());
+        //    stream.print(((VarOrFieldUse)this.getVar()).getName() + "=");
+        stream.print((this.getVar()).getName());
     }
 
-    protected void MethodSig.printInfo() 
+    protected void MethodSig.printInfo(PrintStream stream) 
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void InterfaceDecl.printInfo()
+    protected void InterfaceDecl.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void IntLiteral.printInfo()
+    protected void IntLiteral.printInfo(PrintStream stream)
     {
-        System.out.print(this.getContent());
+        stream.print(this.getContent());
     }
 
-    protected void StringLiteral.printInfo()
+    protected void StringLiteral.printInfo(PrintStream stream)
     {
-        System.out.print(this.getContent());
+        stream.print(this.getContent());
     }
 
-    protected void Decl.printInfo()
+    protected void Decl.printInfo(PrintStream stream)
     {
-        System.out.print(this.getName());
+        stream.print(this.getName());
     }
 
-    protected void StarImport.printInfo()
+    protected void StarImport.printInfo(PrintStream stream)
     {
-        System.out.print(this.getModuleName());
+        stream.print(this.getModuleName());
     }
 
-    protected void FromImport.printInfo() 
+    protected void FromImport.printInfo(PrintStream stream) 
     {
-        System.out.print(this.getModuleName());
+        stream.print(this.getModuleName());
     }
 
-    protected void StarExport.printInfo()
+    protected void StarExport.printInfo(PrintStream stream)
     {
         if (hasModuleName()) {
-            System.out.print(this.getModuleName().getName());
+            stream.print(this.getModuleName().getName());
         }
     }
 
-    protected void FromExport.printInfo()
+    protected void FromExport.printInfo(PrintStream stream)
     {
-        System.out.print(this.getModuleName());
+        stream.print(this.getModuleName());
     }
     
-    protected void Call.printInfo()
+    protected void Call.printInfo(PrintStream stream)
     {
-    	System.out.print(this.getMethod());
+    	stream.print(this.getMethod());
     }
 }  

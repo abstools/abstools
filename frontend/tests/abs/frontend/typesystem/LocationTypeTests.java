@@ -16,9 +16,10 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void fieldDecl() {
-        Model m = assertParseOk("class C { [Far] I i; }",true);
+        Model m = assertParseOk("interface I { } class C { [Far] I i; }",true);
         ClassDecl decl = getFirstClassDecl(m);
-        assertEquals(LocationType.FAR,LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType()));
+        LocationType ft = LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType());
+        assertEquals(LocationType.FAR,ft);
     }
 
     @Test
@@ -40,6 +41,11 @@ public class LocationTypeTests extends FrontendTest {
         assertTypeOk("{ [Near] I i; i = i.m(); }");
     }
 
+    @Test
+    public void nullLit() {
+        assertTypeOk("{ [Near] I i; i = null; [Far] I j; j = null; }");
+    }
+    
     @Test
     public void syncCallParam() {
         assertTypeOk("{ [Near] I i; [Far] I j; j = i.n(i); }");
@@ -65,7 +71,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void typeListError() {
-        assertTypeError("{ [Far] I i; Maybe<[Near] I> m = Just(i); }");
+        assertTypeErrorOnly("{ [Far] I i; Maybe<[Near] I> m = Just(i); }");
     }
     
     @Test
@@ -85,7 +91,11 @@ public class LocationTypeTests extends FrontendTest {
     
     
     private void assertTypeError(String code) {
-        Model m = assertParseOk(INT+code,true);
+        assertTypeErrorOnly(INT+code);
+    }
+    
+    private void assertTypeErrorOnly(String code) {
+        Model m = assertParseOk(code,true);
         m.setLocationTypingEnabled(true);
         SemanticErrorList e = m.typeCheck();
         assertFalse(e.isEmpty());
@@ -101,7 +111,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void multipleError() {
-        Model m = assertParseOk("class C { [Far] [Near] I i; }",true);
+        Model m = assertParseOk("interface I { } class C { [Far] [Near] I i; }",true);
         ClassDecl decl = getFirstClassDecl(m);
         try {
             LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType());

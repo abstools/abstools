@@ -22,7 +22,7 @@ aspect LocationTypeChecker {
         if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
             return;
         
-        LocationTypeCheckerHelper.checkAssignable(s,this,getValue().getType(),getVar().getType());
+        LocationTypeCheckerHelper.checkAssignable(s,this,getValue().getLocationType(),getVar().getLocationType());
         
     }
     
@@ -64,7 +64,7 @@ aspect LocationTypeChecker {
             return;
         }
 
-        LocationTypeCheckerHelper.checkAssignable(s,this,getRetExp().getType(),m.getMethodSig().getType());
+        LocationTypeCheckerHelper.checkAssignable(s,this,getRetExp().getLocationType(),LocationTypeCheckerHelper.getLocationType(m.getMethodSig().getType()));
         
     }
         
@@ -84,6 +84,10 @@ aspect LocationTypeChecker {
     
     eq ThisExp.getLocationType() {
         return LocationType.NEAR;
+    }
+    
+    eq NullExp.getLocationType() {
+        return LocationType.BOTTOM;
     }
     
     
