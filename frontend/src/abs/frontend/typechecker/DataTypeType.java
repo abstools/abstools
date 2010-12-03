@@ -18,6 +18,11 @@ public class DataTypeType extends Type {
     private final DataTypeDecl decl;
     private final List<Type> typeArgs = new ArrayList<Type>();
 
+    @Override
+    public Type copy() {
+        return new DataTypeType(decl,typeArgs);
+    }
+    
     public DataTypeType(DataTypeDecl decl) {
         this(decl, new Type[0]);
     }
@@ -112,16 +117,21 @@ public class DataTypeType extends Type {
     @Override
     public boolean isAnnotationType() {
         for (Annotation a :decl.getAnnotations()) {
-            Type t = a.getType();
-            if (t.isDataType()) {
-                DataTypeType dt = (DataTypeType) t;
-                if (dt.getDecl().getName().equals("Annotation")) {
-                    if (a.getValue() instanceof DataConstructorExp) {
-                        DataConstructorExp dexp = (DataConstructorExp) a.getValue();
-                        if (dexp.getDecl().getName().equals("TypeAnnotation"))
-                            return true;
+            try {
+                Type t = a.getType();
+                if (t.isDataType()) {
+                    DataTypeType dt = (DataTypeType) t;
+                    if (dt.getDecl().getName().equals("Annotation")) {
+                        if (a.getValue() instanceof DataConstructorExp) {
+                            DataConstructorExp dexp = (DataConstructorExp) a.getValue();
+                            if (dexp.getDecl().getName().equals("TypeAnnotation"))
+                                return true;
+                        }
                     }
                 }
+            } catch (TypeCheckerException e) {
+                // ignore illegally typed annotations (for now at least)
+                continue;
             }
         }
         return false;
@@ -166,6 +176,18 @@ public class DataTypeType extends Type {
 
         return buf.toString();
     }
+    
+    @Override
+    public String getModuleName() {
+        return decl.getModuleDecl().getName();
+    }
+
+    @Override
+    public String getSimpleName() {
+        return decl.getName();
+    }
+
+    
 
     public Type substituteTypeParams(Type t) {
 

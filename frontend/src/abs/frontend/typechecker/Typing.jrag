@@ -9,6 +9,19 @@ aspect Typing {
     syn Type Model.getStdDataType(String n) =
     	new DataTypeType((DataTypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n)));
     
+    syn Model Model.getModel() = this;
+    
+    
+    inh Model ModuleDecl.getModel();
+    inh Model Decl.getModel();
+
+    inh Model CompilationUnit.getModel();
+    eq Model.getCompilationUnit().getModel() = this;
+    
+    inh Model Stmt.getModel();
+    inh Model Exp.getModel();
+    
+    
     
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
@@ -111,11 +124,15 @@ aspect Typing {
        return getCallType();
    }
     
+    syn lazy Type MethodSig.getType() {
+        return getReturnType().getType().withAnnotations(getAnnotations());
+    }
+    
     syn lazy Type Call.getCallType() {
    	 MethodSig s = getMethodSig();
    	 if (s == null)
    		 return UnknownType.INSTANCE;
-   	 return s.getReturnType().getType().withAnnotations(s.getAnnotations());
+   	 return s.getType();
     }
     
     syn lazy MethodSig Call.getMethodSig() {
@@ -147,7 +164,7 @@ aspect Typing {
         return d.getType();
     }
 
-	syn Type VarOrFieldUse.getType();    
+	syn lazy Type VarOrFieldUse.getType();    
     eq FieldUse.getType() { 
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;
@@ -164,7 +181,7 @@ aspect Typing {
         if (d == null || !(d instanceof ParametricDataTypeDecl))
             return UnknownType.INSTANCE;
         
-        return new DataTypeType((ParametricDataTypeDecl)d,getParams());
+        return new DataTypeType((ParametricDataTypeDecl)d,getParams()).withAnnotations(getAnnotations());
     }
     eq AddAddExp.getType() = getLeft().getType();  // Int or String
     eq ArithmeticExp.getType() = getIntType();

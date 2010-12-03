@@ -71,4 +71,11 @@ public class BoundedType extends Type {
         return false;
     }
 
+    @Override
+    protected Type copy() {
+        BoundedType copy = new BoundedType();
+        copy.boundType = boundType;
+        return boundType;
+    }
+
 }

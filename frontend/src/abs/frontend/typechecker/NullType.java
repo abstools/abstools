@@ -14,7 +14,7 @@ public final class NullType extends ReferenceType {
 
     @Override
     public boolean equals(Object o) {
-        return o == INSTANCE;
+        return o instanceof NullType;
     }
     
     @Override
@@ -37,5 +37,10 @@ public final class NullType extends ReferenceType {
     @Override
     public String getSimpleName() {
         return null;
+    }
+
+    @Override
+    protected Type copy() {
+        return new NullType();
     }
 }

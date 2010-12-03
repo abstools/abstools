@@ -8,10 +8,28 @@ import abs.frontend.ast.Annotation;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
-    @SuppressWarnings("unchecked")
-    private static List<TypeAnnotation> EMPTY_LIST = Collections.EMPTY_LIST;
     
-    protected List<TypeAnnotation> annotations = EMPTY_LIST;
+    private List<TypeAnnotation> annotations = Collections.emptyList();
+    
+    public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
+        Type copy = this.copy();
+        copy.annotations = convertToTypeAnnotations(anns);
+        return copy;
+    }
+    
+    protected abstract Type copy();
+    
+    private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
+        ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
+        for (Annotation a : anns) {
+            Type t = a.getType();
+            if (t.isAnnotationType()) {
+                res.add(new TypeAnnotation(a));
+            }
+        }
+        return res;
+    }
+
     
     /**
      * A string representation of this type
@@ -51,23 +69,6 @@ public abstract class Type {
      */
     public abstract String getSimpleName();
 
-    
-    
-    public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
-        this.annotations = convertToTypeAnnotations(anns);
-        return this;
-    }
-    
-    private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
-        ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
-        for (Annotation a : anns) {
-            Type t = a.getType();
-            if (t.isAnnotationType()) {
-                res.add(new TypeAnnotation(a));
-            }
-        }
-        return res;
-    }
     
     /**
      * A type is an annotation type if and only if it is a data type declaration
@@ -176,6 +177,7 @@ public abstract class Type {
     }
 
     public List<TypeAnnotation> getTypeAnnotations() {
-        return Collections.unmodifiableList(annotations);
+        return Collections.unmodifiableList(this.annotations);
     }
+
 }

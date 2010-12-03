@@ -7,6 +7,11 @@ public final class UnknownType extends Type {
     }
 
     @Override
+    public boolean equals(Object o) {
+        return o instanceof UnknownType;
+    }
+    
+    @Override
     public boolean isUnknownType() {
         return true;
     }
@@ -26,5 +31,10 @@ public final class UnknownType extends Type {
     @Override
     public String getSimpleName() {
         return "<UNKNOWN>";
+    }
+
+    @Override
+    protected Type copy() {
+        return new UnknownType();
     }
 }

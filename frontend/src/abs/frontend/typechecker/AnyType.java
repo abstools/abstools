@@ -1,11 +1,21 @@
 package abs.frontend.typechecker;
 
-public class AnyType extends Type {
+public final class AnyType extends Type {
     public static final AnyType INSTANCE = new AnyType();
 
+    @Override
+    protected Type copy() {
+        return INSTANCE;
+    }
+    
     private AnyType() {
     }
 
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof AnyType;
+    }
+    
     @Override
     public boolean isAssignable(Type t) {
         return true;

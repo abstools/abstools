@@ -66,7 +66,7 @@ abstract Access:		PureExp;
 abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
-DataTypeUse:			TypeUse;
+DataTypeUse:			TypeUse ::= Annotation*;
 ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; 
 TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: Access ::= <Name>;

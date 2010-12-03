@@ -47,4 +47,9 @@ public class TypeParameter extends Type {
     public String getSimpleName() {
         return getDecl().getName();
     }
+
+    @Override
+    protected Type copy() {
+        return new TypeParameter(decl);
+    }
 }

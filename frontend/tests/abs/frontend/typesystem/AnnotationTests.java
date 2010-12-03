@@ -8,60 +8,53 @@ import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 
 public class AnnotationTests extends FrontendTest {
 
-    static final String TEST_ANN = "[TypeAnnotation] data Loc = Far | Near; interface I { [Far] I farM(); [Near] I localM(); } ";
+    static final String TEST_ANN = "interface I { [Far] I farM(); [Near] I localM(); } ";
     
     @Test
     public void testVarDecl() {
-        assertFirstAssignmentIsLocType("{ [Far] I i = i; }");
+        Model m = assertParseOkAnn("{ [Near] I i; }");
+        VarDeclStmt v = ((VarDeclStmt)m.getMainBlock().getStmt(0));
+        assertHasLocAnnotation(v.getVarDecl().getType(),"Near");
     }
-
-    @Test
-    public void testMethodCall() {
-        assertFirstAssignmentIsLocType("{ I i = i.farM(); }");
-    }
-
+    
     @Test
     public void testMethodParam() {
         Model m = assertParseOkAnn("class C { Unit m([Far] I i) { } }");
         ClassDecl decl = getFirstClassDecl(m);
-        assertHasLocAnnotation(decl.getMethod(0).getMethodSig().getParam(0).getType());
+        assertHasLocAnnotation(decl.getMethod(0).getMethodSig().getParam(0).getType(),"Far");
     }
 
     @Test
     public void testFieldDecl() {
         Model m = assertParseOkAnn("class C { [Far] I i; }");
         ClassDecl decl = getFirstClassDecl(m);
-        assertHasLocAnnotation(decl.getField(0).getType());
+        assertHasLocAnnotation(decl.getField(0).getType(),"Far");
     }
 
     @Test
     public void testClassParam() {
         Model m = assertParseOkAnn("class C([Far] I i) { }");
         ClassDecl decl = getFirstClassDecl(m);
-        assertHasLocAnnotation(decl.getParam(0).getType());
+        assertHasLocAnnotation(decl.getParam(0).getType(),"Far");
     }
     
-    private void assertFirstAssignmentIsLocType(String exampleCode) {
-        Model m = assertParseOkAnn(exampleCode);
-        Type t = getTypeOfFirstAssignment(m);
-
-        assertHasLocAnnotation(t);
-    }
-
     private Model assertParseOkAnn(String exampleCode) {
         return assertParseOk(TEST_ANN+exampleCode,true);
     }
 
-    private void assertHasLocAnnotation(Type t) {
+    private void assertHasLocAnnotation(Type t, String s) {
         List<TypeAnnotation> anns = t.getTypeAnnotations();
         TypeAnnotation a = anns.get(0);
-        assertEquals("Loc",a.getType().getSimpleName());
+        assertEquals("LocationType",a.getType().getSimpleName());
+        assertEquals(s, ((DataConstructorExp)a.getValue()).getDecl().getName());
     }
     
 

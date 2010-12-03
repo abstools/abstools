@@ -13,6 +13,7 @@ import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
@@ -92,7 +93,7 @@ public class FrontendTest extends ABSTest {
         CaseBranch b = ce.getBranch(0);
         return b.getLeft();
     }
-
+    
     protected Decl getLastDecl(Model m, Class<?> clazz) {
         Decl lastMatching = null;
         for (Decl d : m.getDecls()) {

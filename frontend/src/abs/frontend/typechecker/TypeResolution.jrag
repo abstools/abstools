@@ -157,6 +157,11 @@ aspect TypeResolution {
     // Expose *lookup* at various places in the AST
     inh Decl Exp.lookup(KindedName name);
     inh Decl Pattern.lookup(KindedName name);
+    inh Decl Annotation.lookup(KindedName name);
+    inh Decl DataTypeUse.lookup(KindedName name);
+    inh Decl TypedVarOrFieldDecl.lookup(KindedName name);
+    eq ParametricDataTypeUse.getParam().lookup(KindedName name) = lookup(name);
+    eq TypedVarOrFieldDecl.getAccess().lookup(KindedName name) = lookup(name);
 
     inh Decl ParametricDataTypeDecl.lookup(KindedName name);
     inh Decl ParametricFunctionDecl.lookup(KindedName name);
@@ -196,7 +201,7 @@ aspect TypeResolution {
         when (getDecl().isInterface())
             to InterfaceTypeUse new InterfaceTypeUse(getName());
         when (getDecl().isDataType()) 
-            to DataTypeUse new DataTypeUse(getName());
+            to DataTypeUse new DataTypeUse(getName(), new List());
         when (getDecl().isTypeSyn())
             to DataTypeUse ((TypeSynDecl)getDecl()).getValue().copy();
         when (getDecl().isTypeParameter())

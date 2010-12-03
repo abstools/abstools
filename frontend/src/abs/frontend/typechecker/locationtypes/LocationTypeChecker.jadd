@@ -1,0 +1,91 @@
+
+import abs.frontend.typechecker.locationtypes.*;
+
+/**
+ * Checks the Location Type System, e.g., the usage of
+ * Far, Near, and SomeWhere type annotations
+ */
+
+aspect LocationTypeChecker {
+
+    private boolean Model.locationTypingEnabled = false;
+
+    syn boolean Model.isLocationTypingEnabled() = locationTypingEnabled;
+    
+    public void Model.setLocationTypingEnabled(boolean b) {
+        locationTypingEnabled = b;
+    }
+    
+    
+    refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
+        TypeChecker.AssignStmt.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+            return;
+        
+        LocationTypeCheckerHelper.checkAssignable(s,this,getValue().getType(),getVar().getType());
+        
+    }
+    
+    refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
+        TypeChecker.Call.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+            return;
+
+        LocationType t = LocationTypeCheckerHelper.getLocationType(getCallee().getType());
+        
+        if (this instanceof SyncCall) {
+            if (t != LocationType.NEAR) {
+                s.add(new TypeError(this,ErrorMessage.LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR,new String[0]));
+            }
+        }
+        
+        LocationTypeCheckerHelper.checkAssignable(s,this,t,getMethodSig().getParams(),getParams());
+        
+    }
+    
+    refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        TypeChecker.NewExp.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+            return;
+        
+        ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
+        LocationTypeCheckerHelper.checkAssignable(s,this,getLocationType(),d.getParams(),getParams());
+
+    }
+
+    refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        TypeChecker.ReturnStmt.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+            return;
+        
+        MethodImpl m = getContextMethod();
+
+        if (m == null) {
+            return;
+        }
+
+        LocationTypeCheckerHelper.checkAssignable(s,this,getRetExp().getType(),m.getMethodSig().getType());
+        
+    }
+        
+    syn LocationType Exp.getLocationType() = LocationTypeCheckerHelper.getLocationType(getType());
+    
+    eq Call.getLocationType() {
+        return LocationTypeCheckerHelper.getLocationType(getType()).adaptTo(LocationTypeCheckerHelper.getLocationType(getCallee().getType()));
+    }
+    
+    eq NewExp.getLocationType() {
+        if (getCog().equals("cog")) {
+            return LocationType.FAR;
+        } else {
+            return LocationType.NEAR;
+        }
+    }
+    
+    eq ThisExp.getLocationType() {
+        return LocationType.NEAR;
+    }
+    
+    
+    
+}

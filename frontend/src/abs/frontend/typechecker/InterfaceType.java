@@ -74,4 +74,9 @@ public class InterfaceType extends ReferenceType {
         return decl.lookupMethod(name);
     }
 
+    @Override
+    protected Type copy() {
+        return new InterfaceType(decl);
+    }
+
 }

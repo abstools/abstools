@@ -319,8 +319,8 @@ InterfaceTypeUse ifname =
     ;
 
 DataTypeUse datatypeuse =
-	  type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n.getName(), p); :}
-	| type_name.n {: return new DataTypeUse(n.getName()); :}
+	  annotation_list.l? type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n.getName(),l, p); :}
+	| annotation_list.l? type_name.n {: return new DataTypeUse(n.getName(),l); :}
     ;
 
 TypeParameterDecl datatypeparam =
@@ -328,8 +328,8 @@ TypeParameterDecl datatypeparam =
     ;
 
 Access type_exp =
-	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id.getName(), p); :}
-	| type_name.id 		{: return new DataTypeUse(id.getName()); :}
+	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id.getName(), new List(), p); :}
+	| type_name.id 		{: return new DataTypeUse(id.getName(), new List()); :}
 	;	
 
 //fix class_var --> field

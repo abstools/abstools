@@ -105,4 +105,9 @@ public class UnionType extends ReferenceType {
     public String getSimpleName() {
         return "UnionType";
     }
+
+    @Override
+    protected Type copy() {
+        return new UnionType(originatingClass,types.toArray(new InterfaceType[0]));
+    }
 }
