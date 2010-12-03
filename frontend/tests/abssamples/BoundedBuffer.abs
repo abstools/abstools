@@ -1,6 +1,7 @@
 /*
  *
- * An adaptation on the example in the HATS Tools repository
+ * A working version of a program with two producers and 
+ * two consumers comunicating via a shared bounded-buffer
  *
  */
 module BoundedBuffer;
