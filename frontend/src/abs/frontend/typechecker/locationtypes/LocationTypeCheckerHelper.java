@@ -11,26 +11,30 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.ReferenceType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 import abs.frontend.typechecker.TypeCheckerHelper;
 
 public class LocationTypeCheckerHelper {
     
-    public static java.util.List<LocationType> getLocationTypes(java.util.List<Type> types) {
+    public static java.util.List<LocationType> getLocationTypes(java.util.List<Type> types, LocationType defaultType) {
         ArrayList<LocationType> res = new ArrayList<LocationType>();
         for (Type t : types) {
-            res.add(getLocationType(t));
+            res.add(getLocationType(t,defaultType));
         }
         return res;
     }
     
-    public static LocationType getLocationType(Type t) {
+    public static LocationType getLocationType(Type t, LocationType defaultType) {
+        if (t.isNullType())
+            return LocationType.BOTTOM;
+        
         LocationType result = LocationType.NOTYPE;
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
             if (dt.hasTypeArgs()) {
-                return new LocationType.Parametric(getLocationTypes(dt.getTypeArgs()));
+                return new LocationType.Parametric(getLocationTypes(dt.getTypeArgs(), defaultType));
             }
         } else if (t.isReferenceType()){
             boolean found = false;
@@ -43,6 +47,10 @@ public class LocationTypeCheckerHelper {
                     found = true;
                     result = lt;
                 }
+            }
+            
+            if (found == false) {
+                result = defaultType;
             }
         }
         return result;
@@ -57,10 +65,10 @@ public class LocationTypeCheckerHelper {
         return null;
     }
     
-    public static void checkAssignable(SemanticErrorList s, ASTNode<?> n, PureExp rhtExp, PureExp lhtExp) {
+    public static void checkAssignable(SemanticErrorList s, ASTNode<?> n, PureExp rhtExp, PureExp lhtExp, LocationType defaultType) {
         
-        LocationType lht = LocationTypeCheckerHelper.getLocationType(lhtExp.getType());
-        LocationType rht = LocationTypeCheckerHelper.getLocationType(rhtExp.getType());
+        LocationType lht = LocationTypeCheckerHelper.getLocationType(lhtExp.getType(),defaultType);
+        LocationType rht = LocationTypeCheckerHelper.getLocationType(rhtExp.getType(),defaultType);
         checkAssignable(s,n,rht,lht);
     }
         
@@ -70,12 +78,12 @@ public class LocationTypeCheckerHelper {
         }
     }
     
-    public static void checkAssignable(SemanticErrorList l, ASTNode<?> n, LocationType adaptTo, List<ParamDecl> params, List<PureExp> args) {
+    public static void checkAssignable(SemanticErrorList l, ASTNode<?> n, LocationType adaptTo, List<ParamDecl> params, List<PureExp> args, LocationType defaultType) {
         java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
             PureExp exp = args.getChild(i);
-            checkAssignable(l,n,exp.getLocationType(),getLocationType(argType).adaptTo(adaptTo));
+            checkAssignable(l,n,exp.getLocationType().adaptTo(adaptTo),getLocationType(argType,defaultType));
         }
         
     }

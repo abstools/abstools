@@ -40,6 +40,25 @@ public abstract class LocationType {
         }
         
         @Override
+        public boolean isSubtypeOf(LocationType t) {
+            if (super.isSubtypeOf(t))
+                return true;
+            
+            if (! (t instanceof Parametric))
+                return false;
+            
+            Parametric p = (Parametric) t;
+            if (p.typeParams.size() != this.typeParams.size())
+                return false;
+            
+            for (int i = 0; i < typeParams.size(); i++) {
+                if (!this.typeParams.get(i).isSubtypeOf(p.typeParams.get(i)))
+                    return false;
+            }
+            return true;
+        }
+        
+        @Override
         public String toString() {
             StringBuilder b = new StringBuilder();
             b.append("[");

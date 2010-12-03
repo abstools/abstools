@@ -27,6 +27,7 @@ import abs.frontend.ast.StarImport;
 import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
+import abs.frontend.typechecker.locationtypes.LocationType;
 
 public class Main {
 
@@ -35,6 +36,8 @@ public class Main {
     protected boolean typecheck = true;
     protected boolean stdlib = true;
     protected boolean dump = false;
+    protected boolean checkLocationTypes = false;
+    protected LocationType defaultLocationType = null;
 
     public static void main(final String... args) throws Exception {
         new Main().parse(args);
@@ -52,7 +55,12 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
-            else if (arg.equals("-h")) {
+            else if (arg.equals("-loctypes"))
+                checkLocationTypes = true;
+            else if (arg.startsWith("-locdefault=")) {
+                String def = arg.split("=")[1];
+                defaultLocationType = LocationType.createFromName(def);
+            } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
                 remaindingArgs.add(arg);
@@ -119,6 +127,12 @@ public class Main {
                 }
             } else {
                 if (typecheck) {
+                    if (checkLocationTypes) {
+                        m.setLocationTypingEnabled(true);
+                        if (defaultLocationType != null) {
+                            m.setDefaultLocationType(defaultLocationType);
+                        }
+                    }
                     SemanticErrorList typeerrors = m.typeCheck();
                     for (SemanticError se : typeerrors) {
                         System.err.println(se.getHelpMessage());
@@ -152,11 +166,19 @@ public class Main {
     }
 
     protected void printUsage() {
-        System.out.println("*******************************\n" + "*        ABS TOOL SUITE       *\n"
-                + "*******************************\n" + "Usage: java " + this.getClass().getName()
-                + " [options] <absfiles>\n\n" + "  <absfiles>    ABS files to parse\n\n" + "Options:\n"
-                + "  -v            verbose output\n" + "  -notypecheck  disable typechecking\n"
+        System.out.println(
+                  "*******************************\n" 
+                + "*        ABS TOOL SUITE       *\n"
+                + "*******************************\n" 
+                + "Usage: java " + this.getClass().getName()
+                + " [options] <absfiles>\n\n" 
+                + "  <absfiles>    ABS files to parse\n\n" + "Options:\n"
+                + "  -v            verbose output\n" 
+                + "  -notypecheck  disable typechecking\n"
                 + "  -nostdlib     do not include the standard lib \n"
+                + "  -loctypes     enable location type checking\n"
+                + "  -locdefault==<loctype> \n"
+                + "                sets the default location type to <loctype>\n"
                 + "  -dump         dump AST to standard output \n" + "  -h            print this message\n");
     }
 

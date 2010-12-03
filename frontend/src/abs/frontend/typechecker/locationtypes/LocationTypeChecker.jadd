@@ -9,11 +9,17 @@ import abs.frontend.typechecker.locationtypes.*;
 aspect LocationTypeChecker {
 
     private boolean Model.locationTypingEnabled = false;
+    private LocationType Model.defaultLocationType = LocationType.SOMEWHERE;
 
     syn boolean Model.isLocationTypingEnabled() = locationTypingEnabled;
+    syn LocationType Model.getDefaultLocationType() = defaultLocationType;
     
     public void Model.setLocationTypingEnabled(boolean b) {
         locationTypingEnabled = b;
+    }
+
+    public void Model.setDefaultLocationType(LocationType type) {
+        defaultLocationType = type;
     }
     
     
@@ -31,7 +37,7 @@ aspect LocationTypeChecker {
         if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
             return;
 
-        LocationType t = LocationTypeCheckerHelper.getLocationType(getCallee().getType());
+        LocationType t = LocationTypeCheckerHelper.getLocationType(getCallee().getType(),getModel().getDefaultLocationType());
         
         if (this instanceof SyncCall) {
             if (t != LocationType.NEAR) {
@@ -39,7 +45,7 @@ aspect LocationTypeChecker {
             }
         }
         
-        LocationTypeCheckerHelper.checkAssignable(s,this,t,getMethodSig().getParams(),getParams());
+        LocationTypeCheckerHelper.checkAssignable(s,this,t,getMethodSig().getParams(),getParams(),getModel().getDefaultLocationType());
         
     }
     
@@ -49,7 +55,7 @@ aspect LocationTypeChecker {
             return;
         
         ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
-        LocationTypeCheckerHelper.checkAssignable(s,this,getLocationType(),d.getParams(),getParams());
+        LocationTypeCheckerHelper.checkAssignable(s,this,getLocationType(),d.getParams(),getParams(),getModel().getDefaultLocationType());
 
     }
 
@@ -64,14 +70,15 @@ aspect LocationTypeChecker {
             return;
         }
 
-        LocationTypeCheckerHelper.checkAssignable(s,this,getRetExp().getLocationType(),LocationTypeCheckerHelper.getLocationType(m.getMethodSig().getType()));
+        LocationTypeCheckerHelper.checkAssignable(s,this,getRetExp().getLocationType(),
+                LocationTypeCheckerHelper.getLocationType(m.getMethodSig().getType(),getModel().getDefaultLocationType()));
         
     }
         
-    syn LocationType Exp.getLocationType() = LocationTypeCheckerHelper.getLocationType(getType());
+    syn LocationType Exp.getLocationType() = LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType());
     
     eq Call.getLocationType() {
-        return LocationTypeCheckerHelper.getLocationType(getType()).adaptTo(LocationTypeCheckerHelper.getLocationType(getCallee().getType()));
+        return LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType()).adaptTo(LocationTypeCheckerHelper.getLocationType(getCallee().getType(),getModel().getDefaultLocationType()));
     }
     
     eq NewExp.getLocationType() {

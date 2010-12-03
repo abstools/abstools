@@ -18,7 +18,7 @@ public class LocationTypeTests extends FrontendTest {
     public void fieldDecl() {
         Model m = assertParseOk("interface I { } class C { [Far] I i; }",true);
         ClassDecl decl = getFirstClassDecl(m);
-        LocationType ft = LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType());
+        LocationType ft = LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType(),m.getDefaultLocationType());
         assertEquals(LocationType.FAR,ft);
     }
 
@@ -26,14 +26,15 @@ public class LocationTypeTests extends FrontendTest {
     public void varDecl() {
         Model m = assertParseOk("interface I { } { [Somewhere] I i; [Near] I jloc; i = jloc; }",true);
         m.typeCheck();
-        assertEquals(LocationType.NEAR,LocationTypeCheckerHelper.getLocationType(getTypeOfFirstAssignment(m)));
+        assertEquals(LocationType.NEAR,LocationTypeCheckerHelper.getLocationType(getTypeOfFirstAssignment(m),m.getDefaultLocationType()));
     }
-    private static String INT = "interface I { [Near] I m(); [Far] I n([Near] I i); }" +
-    		" class C([Far] I f) implements I { " +
+    private static String INT = "interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
+    		" class C([Somewhere] I f) implements I { " +
     		"    [Far] I farField; " +
     		"    [Near] I nearField; " +
     		"    [Near] I m() { [Near] I i; i = this; return nearField; }  " +
-    		"    [Far] I n([Near] I i) { return farField; }}";
+    		"    [Far] I n([Near] I i) { return farField; }" +
+    		"    Unit farM([Far] I i) { }}";
 
     
     @Test
@@ -65,6 +66,11 @@ public class LocationTypeTests extends FrontendTest {
     public void typeList() {
         assertTypeOk("{ [Near] I i; Maybe<[Near] I> m = Just(i); }");
     }
+
+    @Test
+    public void defaultTyping() {
+        assertTypeOk("{ I i; [Far] I f; i = new C(f); }");
+    }
     
     // negative tests:
 
@@ -84,6 +90,11 @@ public class LocationTypeTests extends FrontendTest {
         assertTypeError("{ [Far] I i; i.m(); }");
     }
 
+    @Test
+    public void illegalAsyncSyncCall() {
+        assertTypeError("{ [Far] I i; i!farM(i); }");
+    }
+    
     @Test
     public void syncCallWrongParam() {
         assertTypeError("{ [Near] I i; [Far] I j; j = i.n(j); }");
@@ -114,7 +125,7 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParseOk("interface I { } class C { [Far] [Near] I i; }",true);
         ClassDecl decl = getFirstClassDecl(m);
         try {
-            LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType());
+            LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType(),m.getDefaultLocationType());
             fail("Expected exception");
         } catch(LocationTypeCheckerException e) {
             assertTrue(true);
