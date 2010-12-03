@@ -7,6 +7,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpFunctionDef;
@@ -66,6 +67,14 @@ public class FrontendTest extends ABSTest {
         throw new IllegalArgumentException();
     }
 
+    protected ClassDecl getFirstClassDecl(Model m) {
+        for (Decl d : m.getCompilationUnit(m.getNumCompilationUnit()-1).getModuleDecl(0).getDecls()) {
+            if (d instanceof ClassDecl) 
+                return (ClassDecl) d;
+        }
+        throw new IllegalArgumentException("No ClassDecl found");
+    }
+    
     protected Exp getFirstCaseExpr(Model m) {
         CaseExp ce = (CaseExp) getFirstFunctionExpr(m);
         CaseBranch b = ce.getBranch(0);

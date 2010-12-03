@@ -1,16 +1,58 @@
 package abs.frontend.typechecker;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
-    List<TypeAnnotation> annotations;
+    @SuppressWarnings("unchecked")
+    private static List<TypeAnnotation> EMPTY_LIST = Collections.EMPTY_LIST;
     
-    public abstract String toString();
+    protected List<TypeAnnotation> annotations = EMPTY_LIST;
+    
+    /**
+     * A string representation of this type
+     */
+    public String toString() {
+        return getQualifiedName();
+    }
 
+    /**
+     * Returns the full qualified name of this type.
+     * Returns in general getModuleName()+"."+getSimpleName(),
+     * if however getModuleName() == null it returns getSimpleName();
+     * @return the full qualified name of this type
+     */
+    public String getQualifiedName() {
+        String modulePart = getModuleName();
+        modulePart = modulePart == null ? "" : modulePart+".";
+        return modulePart+getSimpleName();
+    }
+    
+    /**
+     * The module name of this type.
+     * e.g., for type ABS.StdLib.List<Bool> returns ABS.StdLib
+     * This may return null for special built-in types that
+     * are not declared in a module
+     * @return the module name of this type
+     */
+    public String getModuleName() {
+        return null;
+    }
+
+    /**
+     * The simple name of this type without the module name.
+     * Does not include type arguments. 
+     * E.g. for type ABS.StdLib.List<Bool> returns List
+     * @return the simple name of this type without the module name
+     */
+    public abstract String getSimpleName();
+
+    
+    
     public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
         this.annotations = convertToTypeAnnotations(anns);
         return this;
@@ -131,5 +173,9 @@ public abstract class Type {
 
     public boolean canBeBoundTo(Type t) {
         return false;
+    }
+
+    public List<TypeAnnotation> getTypeAnnotations() {
+        return Collections.unmodifiableList(annotations);
     }
 }

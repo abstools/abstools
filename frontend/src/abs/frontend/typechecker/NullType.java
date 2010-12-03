@@ -28,4 +28,14 @@ public final class NullType extends ReferenceType {
     public String toString() {
         return "NullType";
     }
+
+    @Override
+    public String getModuleName() {
+        return null;
+    }
+
+    @Override
+    public String getSimpleName() {
+        return null;
+    }
 }

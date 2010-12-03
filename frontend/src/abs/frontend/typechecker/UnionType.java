@@ -97,4 +97,12 @@ public class UnionType extends ReferenceType {
     public ClassDecl getOriginatingClass() {
         return originatingClass;
     }
+
+    /**
+     * Returns "UnionType"
+     */
+    @Override
+    public String getSimpleName() {
+        return "UnionType";
+    }
 }

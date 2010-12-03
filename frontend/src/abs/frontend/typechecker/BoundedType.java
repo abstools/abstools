@@ -53,6 +53,14 @@ public class BoundedType extends Type {
         }
         return "Unbound Type";
     }
+    
+    @Override
+    public String getSimpleName() {
+        if (hasBoundType()) {
+            return boundType.getSimpleName();
+        }
+        return "Unbound Type";
+    }
 
     @Override
     public boolean canBeBoundTo(Type t) {

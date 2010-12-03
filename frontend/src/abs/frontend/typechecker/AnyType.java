@@ -16,8 +16,8 @@ public class AnyType extends Type {
     }
 
     @Override
-    public String toString() {
+    public String getSimpleName() {
         return "Any";
     }
-
+    
 }

@@ -115,7 +115,7 @@ aspect Typing {
    	 MethodSig s = getMethodSig();
    	 if (s == null)
    		 return UnknownType.INSTANCE;
-   	 return s.getReturnType().getType();
+   	 return s.getReturnType().getType().withAnnotations(s.getAnnotations());
     }
     
     syn lazy MethodSig Call.getMethodSig() {

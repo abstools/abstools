@@ -42,4 +42,9 @@ public class TypeParameter extends Type {
     public boolean isTypeParameter() {
         return true;
     }
+
+    @Override
+    public String getSimpleName() {
+        return getDecl().getName();
+    }
 }

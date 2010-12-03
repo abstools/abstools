@@ -58,6 +58,16 @@ public class InterfaceType extends ReferenceType {
     public String toString() {
         return decl.getName();
     }
+    
+    @Override
+    public String getModuleName() {
+        return decl.getModuleDecl().getName();
+    }
+    
+    @Override
+    public String getSimpleName() {
+        return decl.getName();
+    }
 
     @Override
     public MethodSig lookupMethod(String name) {

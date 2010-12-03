@@ -17,6 +17,14 @@ public final class UnknownType extends Type {
     }
 
     public String toString() {
+        return getSimpleName();
+    }
+
+    /**
+     * Returns "<UNKOWN>"
+     */
+    @Override
+    public String getSimpleName() {
         return "<UNKNOWN>";
     }
 }
