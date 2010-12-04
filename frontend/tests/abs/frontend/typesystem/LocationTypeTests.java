@@ -34,7 +34,8 @@ public class LocationTypeTests extends FrontendTest {
     		"    [Near] I nearField; " +
     		"    [Near] I m() { [Near] I i; i = this; return nearField; }  " +
     		"    [Far] I n([Near] I i) { return farField; }" +
-    		"    Unit farM([Far] I i) { }}";
+    		"    Unit farM([Far] I i) { }}" +
+    		" interface J { } class E implements J { }";
 
     
     @Test
@@ -64,7 +65,8 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void newObject() {
-        assertTypeOk("{ [Near] I i; [Far] I f; i = new C(f); }");
+        assertTypeOk("{ [Near] J i; i = new E(); }");
+        assertTypeOk("{ [Somewhere] J i; i = new E(); }");
     }
 
     @Test

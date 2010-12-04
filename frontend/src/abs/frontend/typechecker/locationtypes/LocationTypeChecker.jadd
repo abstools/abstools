@@ -24,8 +24,9 @@ aspect LocationTypeChecker {
     
     
     refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
         TypeChecker.AssignStmt.typeCheck(s);
-        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
             return;
         
         LocationTypeCheckerHelper.checkAssignable(s,this,getValue().getLocationType(),getVar().getLocationType());
@@ -33,8 +34,9 @@ aspect LocationTypeChecker {
     }
     
     refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
         TypeChecker.Call.typeCheck(s);
-        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
             return;
 
         LocationType t = getCallee().getLocationType();
@@ -50,8 +52,9 @@ aspect LocationTypeChecker {
     }
     
     refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
         TypeChecker.NewExp.typeCheck(s);
-        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
             return;
         
         ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
@@ -60,8 +63,9 @@ aspect LocationTypeChecker {
     }
 
     refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
         TypeChecker.ReturnStmt.typeCheck(s);
-        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
             return;
         
         MethodImpl m = getContextMethod();
@@ -76,8 +80,9 @@ aspect LocationTypeChecker {
     }
     
     refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
        TypeChecker.VarDecl.typeCheck(s);
-       if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+       if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
            return;
         
        if (hasInitExp()) {
@@ -88,8 +93,9 @@ aspect LocationTypeChecker {
     }
 
     refine TypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
         TypeChecker.FieldDecl.typeCheck(s);
-        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
             return;
          
         if (hasInitExp()) {
