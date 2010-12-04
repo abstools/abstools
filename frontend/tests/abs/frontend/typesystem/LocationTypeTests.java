@@ -43,6 +43,11 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     @Test
+    public void syncCallOnThis() {
+        assertTypeOk("class D { Unit m() { this.m(); } }");
+    }
+    
+    @Test
     public void nullLit() {
         assertTypeOk("{ [Near] I i; i = null; [Far] I j; j = null; }");
     }
@@ -81,6 +86,7 @@ public class LocationTypeTests extends FrontendTest {
     public void futureTyping() {
         assertTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new C(f); fut = i!m(); }");
     }
+    
     
     
     

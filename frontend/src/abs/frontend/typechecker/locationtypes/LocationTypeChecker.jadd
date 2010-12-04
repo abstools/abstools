@@ -37,7 +37,7 @@ aspect LocationTypeChecker {
         if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
             return;
 
-        LocationType t = LocationTypeCheckerHelper.getLocationType(getCallee().getType(),getModel().getDefaultLocationType());
+        LocationType t = getCallee().getLocationType();
         
         if (this instanceof SyncCall) {
             if (t != LocationType.NEAR) {
