@@ -19,7 +19,7 @@ public class JavaExamplesTests extends JavaBackendTest {
 
     @Test
     public void boundedBuffer() {
-        assertValidJavaFile("boundedbuffer.abs");
+        assertValidJavaFile("BoundedBuffer.abs");
     }
 
     @Test

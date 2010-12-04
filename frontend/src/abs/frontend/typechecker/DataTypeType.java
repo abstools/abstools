@@ -1,6 +1,7 @@
 package abs.frontend.typechecker;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,12 @@ public class DataTypeType extends Type {
 
     public Type getTypeArg(int i) {
         return typeArgs.get(i);
+    }
+    
+    public DataTypeType withTypeArgs(Type... typeArgs) {
+        DataTypeType copy = (DataTypeType) copy();
+        copy.typeArgs.addAll(Arrays.asList(typeArgs));
+        return copy;
     }
 
     public boolean hasTypeArgs() {

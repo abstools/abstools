@@ -23,7 +23,7 @@ public class ExamplesTypeChecking extends FrontendTest {
 
     @Test
     public void boundedBuffer() {
-        assertTypeCheckTestFileOk("boundedbuffer.abs");
+        assertTypeCheckTestFileOk("BoundedBuffer.abs");
     }
 
     @Test

@@ -71,6 +71,13 @@ public class LocationTypeTests extends FrontendTest {
     public void defaultTyping() {
         assertTypeOk("{ I i; [Far] I f; i = new C(f); }");
     }
+
+    @Test
+    public void futureTyping() {
+        assertTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new C(f); fut = i!m(); }");
+    }
+    
+    
     
     // negative tests:
 

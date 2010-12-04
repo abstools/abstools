@@ -6,7 +6,7 @@ import java.util.Map;
 
 aspect Typing {
     
-    syn Type Model.getStdDataType(String n) =
+    syn DataTypeType Model.getStdDataType(String n) =
     	new DataTypeType((DataTypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n)));
     
     syn Model Model.getModel() = this;
@@ -27,7 +27,7 @@ aspect Typing {
     syn Type Model.getIntType() = getStdDataType("Int");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn lazy Type Model.getFutType(Type typeArg) = getStdDataType("Fut");
+    syn lazy Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
 
     eq Model.getCompilationUnit().getUnitType() = getUnitType();
     eq Model.getCompilationUnit().getIntType() = getIntType();
