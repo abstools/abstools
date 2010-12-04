@@ -343,7 +343,7 @@ aspect TypeChecker {
 	 //if (e.size() > nerrors)
 	 	//return;
 	 	
-   	 Type lastType = getUnitType();
+   	 Type lastType = getModel().getUnitType();
    	 ASTNode<?> errorNode = this;
    	 if (b.getNumStmt() > 0) {
    	 	 Stmt lastStmt = b.getStmt(b.getNumStmt()-1); 
@@ -361,19 +361,6 @@ aspect TypeChecker {
    	 
     }
 
-    public void FieldDecl.typeCheck(SemanticErrorList e) { 
-        getAccess().typeCheck(e);
-        Type t = getAccess().getType();
-        if (hasInitExp()) {
-            TypeCheckerHelper.checkAssignment(e, this, t, getInitExp());
-            getInitExp().typeCheck(e);
-        } else {
-            if (!t.isReferenceType() && !t.isFutureType()) {
-                e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
-            }
-        }
-    }
-    
     public void VarDecl.typeCheck(SemanticErrorList e) { 
    	 getAccess().typeCheck(e);
 
@@ -386,10 +373,24 @@ aspect TypeChecker {
    		 }
    	 } else {
    		 if (!t.isReferenceType() && !t.isFutureType()) {
-   			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
-   		 }
+ 			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
+       		 }
    	 }
     }
+
+    public void FieldDecl.typeCheck(SemanticErrorList e) { 
+        getAccess().typeCheck(e);
+
+        Type t = getAccess().getType();
+        if (hasInitExp()) {
+                TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
+                getInitExp().typeCheck(e);
+        } else {
+                if (!t.isReferenceType() && !t.isFutureType()) {
+                    e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
+                }
+        }
+   }
     
     public void ParamDecl.typeCheck(SemanticErrorList e) {
    	 	getAccess().typeCheck(e);
@@ -424,7 +425,7 @@ aspect TypeChecker {
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
    	 MethodImpl m = getContextMethod();
-   	 Type lht = getUnitType();
+   	 Type lht = getModel().getUnitType();
    	 Block block = getContextBlock();
 
    	 if (m != null) {
@@ -454,7 +455,7 @@ aspect TypeChecker {
     
     public void IfStmt.typeCheck(SemanticErrorList e) {
    	 getCondition().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
    	 getThen().typeCheck(e);
    	 if (hasElse())
    		 getElse().typeCheck(e);
@@ -463,7 +464,7 @@ aspect TypeChecker {
     
     public void WhileStmt.typeCheck(SemanticErrorList e) {
    	 getCondition().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
    	 getBody().typeCheck(e);
     }
     
@@ -472,7 +473,7 @@ aspect TypeChecker {
 
     public void AssertStmt.typeCheck(SemanticErrorList e) {
    	  getCondition().typeCheck(e);
-   	  TypeCheckerHelper.assertHasType(e,getCondition(),getBoolType());
+   	  TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
     }
 
     // GUARDS
@@ -491,7 +492,7 @@ aspect TypeChecker {
     }
     public void ExpGuard.typeCheck(SemanticErrorList e) { 
    	 getPureExp().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getPureExp(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
     }
     
     
@@ -578,20 +579,20 @@ aspect TypeChecker {
         getRight().typeCheck(e);
     }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getIntType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getIntType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
     public void BoolExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getBoolType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getBoolType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getIntType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getIntType());
    	 getLeft().typeCheck(e);
    	 getRight().typeCheck(e);
     }
@@ -672,12 +673,12 @@ aspect TypeChecker {
     }
 
     public void MinusExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getOperand(),getIntType());
+   	 TypeCheckerHelper.assertHasType(e,getOperand(),getModel().getIntType());
        getOperand().typeCheck(e);
     }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-   	 TypeCheckerHelper.assertHasType(e,getOperand(),getBoolType());
+   	 TypeCheckerHelper.assertHasType(e,getOperand(),getModel().getBoolType());
        getOperand().typeCheck(e);
     }
     

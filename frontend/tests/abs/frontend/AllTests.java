@@ -6,6 +6,7 @@ import abs.frontend.analyser.VarResolutionTest;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.AnnotationTests;
 import abs.frontend.typesystem.ExamplesTypeChecking;
+import abs.frontend.typesystem.LocationTypeTests;
 import abs.frontend.typesystem.NegativeTypeCheckerTests;
 import abs.frontend.typesystem.TypeCheckerTest;
 import abs.frontend.typesystem.TypingTest;
@@ -18,7 +19,7 @@ import org.junit.runners.Suite;
         // ScannerTest.class,
         ParserTest.class, RecoverTest.class, DuplicateCheckTest.class, InterfaceDeclarationTest.class,
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
-        NegativeTypeCheckerTests.class,
+        NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class })
 public class AllTests {
     // TODO: document this

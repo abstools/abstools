@@ -175,7 +175,7 @@ aspect TypeResolution {
 		if (r != null) {			
 	    	return r.getDecl();
 	    } else {	
-	   		return unknownDecl();
+	   		return getModel().unknownDecl();
 	    } 			
 	}	    
     
@@ -229,13 +229,14 @@ aspect TypeResolution {
     
     syn lazy Decl Decl.getContextDecl() = this;
     eq MethodImpl.getBlock().getContextDecl() = getContextDecl();
-    eq ModuleDecl.getBlock().getContextDecl() = unknownDecl();
+    eq ModuleDecl.getBlock().getContextDecl() = getModel().unknownDecl();
     eq ClassDecl.getInitBlock().getContextDecl() = getContextDecl();
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
     eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
     inh Decl MethodImpl.getContextDecl();
+    inh Decl TypedVarOrFieldDecl.getContextDecl();
     
     eq MethodImpl.getBlock().getContextMethod() = this;
     eq ClassDecl.getInitBlock().getContextMethod() = null;
@@ -275,13 +276,15 @@ aspect TypeResolution {
  
     syn lazy String CompilationUnit.getFileName() = getName();
     
-    inh String Exp.getFileName();
-    inh String Stmt.getFileName();
-  	inh String ModuleDecl.getFileName();
+    syn lazy CompilationUnit CompilationUnit.getCompilationUnit() = this;
+    
+    inh CompilationUnit Exp.getCompilationUnit();
+    inh CompilationUnit Stmt.getCompilationUnit();
+    inh CompilationUnit ModuleDecl.getCompilationUnit();
 
-	eq ModuleDecl.getDecl().getFileName() = getFileName();
-    eq ModuleDecl.getBlock().getFileName() = getFileName();
-    eq CompilationUnit.getModuleDecl().getFileName() = getFileName();
+    eq ModuleDecl.getDecl().getCompilationUnit() = getCompilationUnit();
+    eq ModuleDecl.getBlock().getCompilationUnit() = getCompilationUnit();
+    eq CompilationUnit.getModuleDecl().getCompilationUnit() = this;
 }
 
 // Local Variables:

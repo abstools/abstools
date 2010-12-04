@@ -34,7 +34,7 @@ public final class UnknownType extends Type {
     }
 
     @Override
-    protected Type copy() {
+    public Type copy() {
         return new UnknownType();
     }
 }

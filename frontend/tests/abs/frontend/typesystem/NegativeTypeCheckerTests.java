@@ -18,6 +18,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
     
     @Test
+    public void varDeclAssign() {
+        assertTypeErrors("{ Unit u = True; } ");
+        
+    }
+    
+    @Test
     public void testUnresolvableType() {
         assertTypeErrors("{ I i; }");
     }

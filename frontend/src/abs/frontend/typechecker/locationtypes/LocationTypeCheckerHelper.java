@@ -52,6 +52,8 @@ public class LocationTypeCheckerHelper {
             if (found == false) {
                 result = defaultType;
             }
+        } else if (t.isBoundedType()) {
+            result = LocationType.UNBOUND;
         }
         return result;
     }

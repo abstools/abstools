@@ -75,7 +75,7 @@ public class InterfaceType extends ReferenceType {
     }
 
     @Override
-    protected Type copy() {
+    public Type copy() {
         return new InterfaceType(decl);
     }
 

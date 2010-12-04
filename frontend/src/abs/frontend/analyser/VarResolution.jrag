@@ -131,7 +131,6 @@ aspect VarResolution {
     inh VarOrFieldDecl Exp.lookupVarName(String name);
     inh VarOrFieldDecl Stmt.lookupVarName(String name);
     inh VarOrFieldDecl MethodSig.lookupVarName(String name);
-    
     inh VarOrFieldDecl PatternVarUse.lookupVarName(String name);
     
     // replace unbound pattern variables with var decls

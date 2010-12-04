@@ -4,7 +4,7 @@ public final class AnyType extends Type {
     public static final AnyType INSTANCE = new AnyType();
 
     @Override
-    protected Type copy() {
+    public Type copy() {
         return INSTANCE;
     }
     

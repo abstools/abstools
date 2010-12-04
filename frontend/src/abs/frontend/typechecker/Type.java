@@ -17,7 +17,7 @@ public abstract class Type {
         return copy;
     }
     
-    protected abstract Type copy();
+    public abstract Type copy();
     
     private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
         ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
@@ -35,7 +35,20 @@ public abstract class Type {
      * A string representation of this type
      */
     public String toString() {
-        return getQualifiedName();
+        StringBuilder res = new StringBuilder();
+        if (!annotations.isEmpty()) {
+            res.append("[");
+            boolean first = true;
+            for (TypeAnnotation a : annotations) {
+                if (first) first = false;
+                else res.append(",");
+                res.append(a.toString());
+            }
+            res.append("] ");
+        }
+        
+        res.append(getQualifiedName());
+        return res.toString();
     }
 
     /**

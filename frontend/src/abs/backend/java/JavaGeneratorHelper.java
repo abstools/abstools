@@ -117,7 +117,7 @@ public class JavaGeneratorHelper {
 
     public static String getDebugString(Stmt stmt, int pos) {
         int line = Symbol.getLine(pos);
-        String fileName = stmt.getFileName().replace("\\", "\\\\");
+        String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (" + Config.class.getName() + ".DEBUGGING) " + JavaBackendConstants.ABSRUNTIME + ".nextStep(\""
                 + fileName + "\"," + line + ");";
     }

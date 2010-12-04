@@ -74,7 +74,31 @@ aspect LocationTypeChecker {
                 LocationTypeCheckerHelper.getLocationType(m.getMethodSig().getType(),getModel().getDefaultLocationType()));
         
     }
+    
+    refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+       TypeChecker.VarDecl.typeCheck(s);
+       if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+           return;
         
+       if (hasInitExp()) {
+           LocationTypeCheckerHelper.checkAssignable(s,this,
+                   getInitExp().getLocationType(),
+                   LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType()));
+       }
+    }
+
+    refine TypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        TypeChecker.FieldDecl.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || !s.isEmpty())
+            return;
+         
+        if (hasInitExp()) {
+            LocationTypeCheckerHelper.checkAssignable(s,this,
+                    getInitExp().getLocationType(),
+                    LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType()));
+        }
+     }
+    
     syn LocationType Exp.getLocationType() = LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType());
     
     eq Call.getLocationType() {

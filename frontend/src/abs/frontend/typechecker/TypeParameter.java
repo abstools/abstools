@@ -49,7 +49,7 @@ public class TypeParameter extends Type {
     }
 
     @Override
-    protected Type copy() {
+    public Type copy() {
         return new TypeParameter(decl);
     }
 }

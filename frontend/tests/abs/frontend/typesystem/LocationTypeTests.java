@@ -63,10 +63,15 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     @Test
-    public void typeList() {
+    public void typeMaybe() {
         assertTypeOk("{ [Near] I i; Maybe<[Near] I> m = Just(i); }");
     }
 
+    @Test
+    public void typeParamInference() {
+        assertTypeOk("{ [Near] I i; Maybe<Maybe<Bool>> m = Nothing; }");
+    }
+    
     @Test
     public void defaultTyping() {
         assertTypeOk("{ I i; [Far] I f; i = new C(f); }");
@@ -84,7 +89,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void typeListError() {
-        assertTypeErrorOnly("{ [Far] I i; Maybe<[Near] I> m = Just(i); }");
+        assertTypeErrorOnly("interface I { } { [Far] I i; Maybe<[Near] I> m = Just(i); }");
     }
     
     @Test

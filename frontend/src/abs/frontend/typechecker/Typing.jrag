@@ -20,8 +20,9 @@ aspect Typing {
     
     inh Model Stmt.getModel();
     inh Model Exp.getModel();
-    
-    
+    inh Model ExpGuard.getModel();
+    inh Model MethodImpl.getModel();
+    inh Model VarOrFieldDecl.getModel();
     
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
@@ -29,56 +30,15 @@ aspect Typing {
     syn Type Model.getStringType() = getStdDataType("String");
     syn lazy Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
 
-    eq Model.getCompilationUnit().getUnitType() = getUnitType();
-    eq Model.getCompilationUnit().getIntType() = getIntType();
-    eq Model.getCompilationUnit().getBoolType() = getBoolType();
-    eq Model.getCompilationUnit().getStringType() = getStringType();
-    eq Model.getCompilationUnit().getFutType(Type typeArg) = getFutType(typeArg);
-
-    inh Type Exp.getUnitType();
-    inh Type Exp.getIntType();
-    inh Type Exp.getBoolType();
-    inh Type Exp.getStringType();
-    inh Type Exp.getFutType(Type typeArg);
-
-    inh Type CompilationUnit.getUnitType();
-    inh Type CompilationUnit.getIntType();
-    inh Type CompilationUnit.getBoolType();
-    inh Type CompilationUnit.getStringType();
-    inh Type CompilationUnit.getFutType(Type typeArg);
-
-    inh Type ModuleDecl.getUnitType();
-    inh Type ModuleDecl.getIntType();
-    inh Type ModuleDecl.getBoolType();
-    inh Type ModuleDecl.getStringType();
-    inh Type ModuleDecl.getFutType(Type typeArg);
-    
-    inh Type Stmt.getUnitType();
-    inh Type Stmt.getBoolType();
-
-    inh Type Guard.getBoolType();
-    
-    eq ModuleDecl.getDecl().getUnitType() = getUnitType();
-    eq ModuleDecl.getDecl().getIntType() = getIntType();
-    eq ModuleDecl.getDecl().getBoolType() = getBoolType();
-    eq ModuleDecl.getDecl().getStringType() = getStringType();
-    eq ModuleDecl.getDecl().getFutType(Type typeArg) = getFutType(typeArg);
-
-    inh Type Decl.getUnitType();
-    inh Type Decl.getIntType();
-    inh Type Decl.getBoolType();
-    inh Type Decl.getStringType();
-    inh Type Decl.getFutType(Type typeArg);
-    
-    eq ClassDecl.getMethod().getUnitType() = getUnitType();
-    inh Type MethodImpl.getUnitType();
+//    eq ClassDecl.getMethod().getUnitType() = getUnitType();
+//    inh Type MethodImpl.getUnitType();
 
     syn lazy Type Decl.getType();
     
     eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
     eq DataConstructor.getType() = getDataTypeDecl().getType();
-    eq DeltaDecl.getType() = getUnitType();
+    eq DeltaDecl.getType() = getModel().getUnitType();
 
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);
@@ -109,7 +69,7 @@ aspect Typing {
     syn lazy Type Annotation.getType() = getValue().getType();
     
     /* STMTS */
-    syn Type Stmt.getType() = getUnitType();
+    syn Type Stmt.getType() = getModel().getUnitType();
     eq ReturnStmt.getType() = getRetExp().getType();
     
     /* EXPRESSIONS */
@@ -117,7 +77,7 @@ aspect Typing {
     syn lazy Type Exp.getType();
     
     eq AsyncCall.getType() {  
-        return getFutType(getCallType());
+        return getModel().getFutType(getCallType());
     }
 
     eq SyncCall.getType() {  
@@ -184,9 +144,9 @@ aspect Typing {
         return new DataTypeType((ParametricDataTypeDecl)d,getParams()).withAnnotations(getAnnotations());
     }
     eq AddAddExp.getType() = getLeft().getType();  // Int or String
-    eq ArithmeticExp.getType() = getIntType();
-    eq BoolExp.getType() = getBoolType();
-    eq RelationalExpr.getType() = getBoolType();
+    eq ArithmeticExp.getType() = getModel().getIntType();
+    eq BoolExp.getType() = getModel().getBoolType();
+    eq RelationalExpr.getType() = getModel().getBoolType();
     eq CaseExp.getType() {
    	 Type mostGeneralType = null;
    	 for (CaseBranch b : getBranchs()) {
@@ -230,12 +190,12 @@ aspect Typing {
    	 
     }
     eq LetExp.getType() = getExp().getType();
-    eq IntLiteral.getType() = getIntType();
-    eq StringLiteral.getType() =  getStringType();
+    eq IntLiteral.getType() = getModel().getIntType();
+    eq StringLiteral.getType() =  getModel().getStringType();
     eq NullExp.getType() = NullType.INSTANCE;
     eq ThisExp.getType() = getContextDecl().getType();
-    eq MinusExp.getType() = getIntType();
-    eq NegExp.getType() = getBoolType();
+    eq MinusExp.getType() = getModel().getIntType();
+    eq NegExp.getType() = getModel().getBoolType();
     
     syn lazy Type CaseBranch.getType() = getRight().getType();
 

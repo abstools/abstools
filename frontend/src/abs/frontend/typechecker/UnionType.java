@@ -107,7 +107,7 @@ public class UnionType extends ReferenceType {
     }
 
     @Override
-    protected Type copy() {
+    public Type copy() {
         return new UnionType(originatingClass,types.toArray(new InterfaceType[0]));
     }
 }

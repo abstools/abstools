@@ -165,7 +165,7 @@ public class DataTypeType extends Type {
     }
 
     public String toString() {
-        StringBuffer buf = new StringBuffer(decl.getName());
+        StringBuffer buf = new StringBuffer(super.toString());
         if (hasTypeArgs()) {
             buf.append('<');
             boolean first = true;

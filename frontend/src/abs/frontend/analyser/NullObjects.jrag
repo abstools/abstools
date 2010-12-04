@@ -4,18 +4,7 @@ aspect NullObjects {
   // explicit check if declaration is null object
   syn boolean Decl.isUnknown() = false;
   eq UnknownDecl.isUnknown() = true;
-    
-  // broadcast the unknown declaration null object to useful places in the AST
   syn lazy UnknownDecl Model.unknownDecl() = new UnknownDecl();
-//  eq Model.getPredefinedType().unknownDecl() = unknownDecl();
-  
-  inh UnknownDecl Exp.unknownDecl();
-  inh UnknownDecl CompilationUnit.unknownDecl();
-  inh UnknownDecl ModuleDecl.unknownDecl();
-  
-  eq Model.getCompilationUnit(int i).unknownDecl() = unknownDecl();
-  eq ModuleDecl.getDecl().unknownDecl() = unknownDecl();
-  eq ModuleDecl.getBlock().unknownDecl() = unknownDecl();
 
 }
 

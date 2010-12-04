@@ -47,8 +47,8 @@ ModifyMethodModifier : ModifierFragment ::= MethodImpl;
 RemoveMethodModifier : ModifierFragment ::= MethodSig;
 
 abstract	VarOrFieldDecl  ::= <Name>;
-abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access; 
-VarDecl:	TypedVarOrFieldDecl  ::= [InitExp:Exp];
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ; 
+VarDecl:	TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
 ParamDecl:	TypedVarOrFieldDecl ::= Annotation*;
 PatternVarDecl: VarOrFieldDecl;

@@ -8,11 +8,17 @@ public abstract class LocationType {
     public static final LocationType NEAR = new Near();
     public static final LocationType SOMEWHERE = new Somewhere();
     public static final LocationType NOTYPE = new NoType();
+    public static final LocationType UNBOUND = new Unbound();
     public static final LocationType BOTTOM = new Bottom();
    
     private final static class Far extends LocationType { }
     private final static class Near extends LocationType { }
     private final static class Somewhere extends LocationType { }
+
+    // to give unbound type variables a location type
+    private final static class Unbound extends LocationType { }
+    
+    // used to give data types a location type
     private final static class NoType extends LocationType { }
     private final static class Bottom extends LocationType { }
     
@@ -103,12 +109,16 @@ public abstract class LocationType {
         return this == BOTTOM;
     }
     
+    public boolean isUnbound() {
+        return this == UNBOUND;
+    }
+    
     public boolean isSubtypeOf(LocationType t) {
-        return this == t || t == SOMEWHERE || this == BOTTOM;
+        return this == UNBOUND || this == t || t == SOMEWHERE || this == BOTTOM;
     }
     
     public LocationType adaptTo(LocationType to) {
-        if (isNoType() || isBottom())
+        if (isNoType() || isBottom() || isUnbound())
             return this;
         
         if (to.isFar()) {
@@ -122,7 +132,7 @@ public abstract class LocationType {
         if (to.isSomewhere()) {
             return SOMEWHERE;
         }
-
+        
         throw new IllegalArgumentException("Cannot use location type "+to+" to adapt to");
     }
     
