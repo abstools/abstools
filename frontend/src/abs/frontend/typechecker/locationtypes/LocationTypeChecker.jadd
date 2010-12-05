@@ -33,6 +33,16 @@ aspect LocationTypeChecker {
         
     }
     
+    refine TypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
+        TypeChecker.DataConstructorExp.typeCheck(s);
+        if (!getModel().isLocationTypingEnabled() || (s.size() > nerrors))
+            return;
+
+        LocationTypeCheckerHelper.checkDataConstructorExp(s,this);
+   }
+    
+    
     refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
         int nerrors = s.size();
         TypeChecker.Call.typeCheck(s);

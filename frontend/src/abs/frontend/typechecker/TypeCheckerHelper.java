@@ -91,7 +91,7 @@ public class TypeCheckerHelper {
     }
 
     public static java.util.List<Type> applyBinding(Map<TypeParameter, Type> binding, java.util.List<Type> types) {
-        ArrayList<Type> res = new ArrayList<Type>();
+        ArrayList<Type> res = new ArrayList<Type>(types.size());
         for (Type t : types) {
             res.add(applyBinding(binding, t));
         }

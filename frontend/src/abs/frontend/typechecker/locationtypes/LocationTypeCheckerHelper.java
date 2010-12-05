@@ -1,20 +1,26 @@
 package abs.frontend.typechecker.locationtypes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.ReferenceType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 import abs.frontend.typechecker.TypeCheckerHelper;
+import abs.frontend.typechecker.TypeParameter;
+import abs.frontend.typechecker.locationtypes.LocationType.Parametric;
 
 public class LocationTypeCheckerHelper {
     
@@ -24,6 +30,44 @@ public class LocationTypeCheckerHelper {
             res.add(getLocationType(t,defaultType));
         }
         return res;
+    }
+    
+    
+    public static void checkDataConstructorExp(SemanticErrorList l, DataConstructorExp e) {
+        DataConstructor decl = (DataConstructor) e.getDecl();
+        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+            ParametricDataTypeDecl pd = (ParametricDataTypeDecl) decl.getDataTypeDecl();
+            HashMap<TypeParameter, LocationType> map = new HashMap<TypeParameter, LocationType>();
+            for (int i = 0; i < decl.getNumConstructorArg(); i++) {
+                LocationType t = e.getParam(i).getLocationType();
+                Type arg = decl.getConstructorArg(i).getType();
+                checkTypeParameter(l, e, map, t, arg);
+            }
+        }         
+    }
+
+
+    private static void checkTypeParameter(SemanticErrorList l, DataConstructorExp e,
+            HashMap<TypeParameter, LocationType> map, LocationType t, Type arg) {
+        if (arg.isTypeParameter()) {
+            TypeParameter typeParam = (TypeParameter) arg;
+            if (map.containsKey(typeParam)) {
+                LocationType lt = map.get(typeParam);
+                if (! (lt.isSubtypeOf(t) && t.isSubtypeOf(lt))) {
+                    l.add(new TypeError(e,ErrorMessage.LOCATION_TYPE_DIFFERENT_TYPE_INSTANTIATIONS,typeParam.getSimpleName(),e.getDecl().getName(),lt.toString(),t.toString()));
+                }
+            } else {
+                map.put(typeParam, t);
+            }
+        } else if (arg.isDataType()) {
+            DataTypeType dt = (DataTypeType) arg;
+            if (t.isParametric()) {
+                LocationType.Parametric lparam = (Parametric) t;
+                for (int i = 0; i < dt.numTypeArgs(); i++) {
+                     checkTypeParameter(l,e,map,lparam.typeParams.get(i),dt.getTypeArg(i));
+                }
+            }
+        }
     }
     
     public static LocationType getLocationType(Type t, LocationType defaultType) {

@@ -142,12 +142,16 @@ aspect TypeChecker {
     }
     
     // DECLS
-    public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
+    public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs, HashSet<InterfaceDecl> visitedDecls) {
+        if (visitedDecls.contains(this)) 
+            return;
+        visitedDecls.add(this);
+            
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
             Decl d = u.getDecl();
             if (d.isInterface()) {
                 InterfaceDecl id = (InterfaceDecl) d;
-                id.addAllMethodSigs(sigs);
+                id.addAllMethodSigs(sigs,visitedDecls);
             }    
         }
         
@@ -161,7 +165,7 @@ aspect TypeChecker {
             Decl d = u.getDecl();
             if (d.isInterface()) {
                 InterfaceDecl id = (InterfaceDecl) d;
-                id.addAllMethodSigs(sigs);
+                id.addAllMethodSigs(sigs, new HashSet<InterfaceDecl>());
             }
         }
     }
@@ -262,6 +266,19 @@ aspect TypeChecker {
         }
     }
     
+    public void InterfaceDecl.checkCycle(SemanticErrorList e, InterfaceDecl d) {
+        if (this == d) {
+            e.add(new TypeError(d, ErrorMessage.CYCLIC_INHERITANCE, getName()));
+        } else {
+            for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
+                Decl id = u.getDecl();
+                if (id.isInterface()) {
+                    ((InterfaceDecl)id).checkCycle(e,d);
+                }
+            }
+        }
+    }
+    
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
         HashMap<String, MethodSig> names = new HashMap<String, MethodSig>();
         for (MethodSig s : getBodys()) {
@@ -279,6 +296,8 @@ aspect TypeChecker {
                 e.add(new TypeError(u, ErrorMessage.ONLY_INTERFACE_EXTEND, d.getName()));
             } else {
                 InterfaceDecl id = (InterfaceDecl) d;
+                id.checkCycle(e,this);
+                
                 for (MethodSig s : id.getBodys()) {
                     if (names.containsKey(s.getName())) {
                         e.add(new TypeError(names.get(s.getName()), ErrorMessage.NO_METHOD_OVERRIDE, s.getName(), id.getName()));
@@ -519,7 +538,7 @@ aspect TypeChecker {
         if (type.getDecl() instanceof ParametricDataTypeDecl) {
             int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
             if (expected != type.numTypeArgs()) {
-                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,"0"));
+                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+type.numTypeArgs()));
             } else {
             	if (this instanceof ParametricDataTypeUse) {
             		for (DataTypeUse du : ((ParametricDataTypeUse)this).getParams()) {

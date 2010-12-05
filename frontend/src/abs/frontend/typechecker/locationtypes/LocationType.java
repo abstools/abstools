@@ -27,6 +27,8 @@ public abstract class LocationType {
         if (isFar()) return "Far";
         if (isNear()) return "Near";
         if (isSomewhere()) return "Somewhere";
+        if (isBottom()) return "Bottom";
+        if (isUnbound()) return "Unbound";
         return "NoType";
     }
     
@@ -64,6 +66,7 @@ public abstract class LocationType {
             return true;
         }
         
+
         @Override
         public String toString() {
             StringBuilder b = new StringBuilder();
@@ -114,7 +117,7 @@ public abstract class LocationType {
     }
     
     public boolean isSubtypeOf(LocationType t) {
-        return this == UNBOUND || this == t || t == SOMEWHERE || this == BOTTOM;
+        return this == UNBOUND || t == UNBOUND || this == t || t == SOMEWHERE || this == BOTTOM;
     }
     
     public LocationType adaptTo(LocationType to) {
@@ -134,6 +137,11 @@ public abstract class LocationType {
         }
         
         throw new IllegalArgumentException("Cannot use location type "+to+" to adapt to");
+    }
+
+
+    public boolean isParametric() {
+        return getClass().equals(Parametric.class);
     }
     
 }

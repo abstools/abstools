@@ -1,5 +1,8 @@
 package abs.frontend.typechecker;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodSig;
@@ -41,8 +44,24 @@ public class InterfaceType extends ReferenceType {
             return true;
 
         if (considerSubtyping) {
-            for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
-                if (i.getType().isAssignable(t))
+            if (isAssignable(t,new HashSet<Type>()))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isAssignable(Type t, Set<Type> visitedTypes) {
+        if (visitedTypes.contains(this))
+            return false;
+        
+        visitedTypes.add(this);
+        if (super.isAssignable(t))
+            return true;
+
+        for (InterfaceTypeUse i : decl.getExtendedInterfaceUses()) {
+            Type it = i.getType();
+            if (it.isInterfaceType()) {
+                if (((InterfaceType)it).isAssignable(t, visitedTypes))
                     return true;
             }
         }

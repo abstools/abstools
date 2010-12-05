@@ -96,8 +96,13 @@ public class LocationTypeTests extends FrontendTest {
 
     
     @Test
-    public void typeListError() {
+    public void typeMaybeError() {
         assertTypeErrorOnly("interface I { } { [Far] I i; Maybe<[Near] I> m = Just(i); }");
+    }
+
+    @Test
+    public void typeListError() {
+        assertTypeError("{ List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
     }
     
     @Test

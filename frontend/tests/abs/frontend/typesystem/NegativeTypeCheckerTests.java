@@ -137,6 +137,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void interfaceCyclicExtend() {
+        assertTypeErrors("interface I extends I {} ");
+        assertTypeErrors("interface I extends J {}  interface J extends I {}");
+    }
+
+    @Test
     public void interfaceMethodOverride() {
         assertTypeErrors("interface I { Unit m(); } interface J extends I { Unit m(); }");
     }
