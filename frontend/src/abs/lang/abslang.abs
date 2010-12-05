@@ -117,6 +117,18 @@ def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
  */
 def A nth<A>(List<A> list, Int n) = 
   case n { 0 => head(list) ; _ => nth(tail(list), n-1); };
+  
+/**
+ * Returns a list where all occurrences of a have been removed
+ */
+def List<A> without<A>(List<A> list, A a) =
+  case list {
+     Nil => Nil;
+     Cons(a, tail) => without(tail,a);
+     Cons(x, tail) => Cons(x, without(tail,a));
+  }
+;  
+  
 /**
  * Returns a list containing all elements of list 'list1'
  * followed by all elements of list 'list2'.
@@ -136,6 +148,8 @@ def List<A> reverse<A>(List<A> list) =
  * Returns a list of length 'n' containing 'p' n times.
  */
 def List<A> copy<A>(A p, Int n) = case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
+
+
 
 
 // Maps
