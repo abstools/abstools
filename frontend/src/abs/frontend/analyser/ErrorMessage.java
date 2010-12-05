@@ -51,7 +51,9 @@ public enum ErrorMessage {
     CIRCULAR_MODULE_DEPENDENCY_EXPORT("Circular module dependency in module %s"), 
     LOCATION_TYPE_MULTIPLE("Multiple location type annotations defined"),
     LOCATION_TYPE_CANNOT_ASSIGN("Cannot assign location type %s to location type %s"),
-    LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR("Synchronous call on non-near reference")
+    LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR("Synchronous call on non-near reference"),
+    CLASSKIND_PLAIN("Cannot instantiate class %s with cog as it is annotated with class kind Plain"),
+    CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG"),
     ;
 
     private String pattern;

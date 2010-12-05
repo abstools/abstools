@@ -1,0 +1,46 @@
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeAnnotation;
+import abs.frontend.typechecker.locationtypes.LocationType;
+
+/**
+ * Checks that when a class is annotated with [COG] it must be
+ * instantiated in a new cog.
+ * To ensure that class is alwas instantiated in the same COG
+ * use [Plain]
+ */ 
+
+aspect ClassKindChecker {
+    
+    
+    refine LocationTypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        int nerrors = s.size();
+        LocationTypeChecker.NewExp.typeCheck(s);
+        if (s.size() > nerrors)
+            return;
+        
+        ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
+        List<Annotation> anns = d.getAnnotations();
+        String found = null;
+        for (Annotation a : anns) {
+            if (a.getType().getQualifiedName().equals("ABS.StdLib.ClassKindAnnotation")) {
+                DataConstructorExp de = (DataConstructorExp) a.getValue();
+                found = de.getDecl().getName();
+            }
+        }
+            
+        if (found != null) {
+            if (getCog().equals("cog")) {
+                if (!found.equals("COG")) {
+                    s.add(new TypeError(this,ErrorMessage.CLASSKIND_PLAIN,d.getName()));
+                }
+            } else {
+                if (found.equals("COG")) {
+                    s.add(new TypeError(this,ErrorMessage.CLASSKIND_COG,d.getName()));
+                }
+            }
+        }
+    }
+    
+}
