@@ -1,0 +1,34 @@
+module ABSChat.Client;
+export *;
+import * from ABSChat.Interfaces;
+
+
+[COG]
+class ClientImpl implements Client { 
+
+   Server server;
+   Session session;
+   Unit setServer(Server s) {
+   	   this.server = s;
+   }
+   
+   Unit start() {
+      Fut<Session> f;
+      f = server!connect(this);
+      await f?;
+      session = f.get; 
+   }
+   
+   Unit receive(ServerMsg msg) {
+   	  await session != null;
+   	  ClientMsg ans = 
+   	  	case msg {
+   	  		  Welcome => ChatMessage("Hallo","Welt"); 
+   	  };
+   	  
+   	  Fut<Unit> u;
+   	  u = session ! receive(ans);
+   	  await u?;
+   	  session ! close();
+   }  
+}

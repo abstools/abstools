@@ -1,0 +1,18 @@
+module ABSChat.Main;
+
+import * from ABSChat.Interfaces;  
+import * from ABSChat.Server;
+import * from ABSChat.Client;
+
+
+{
+    Server server; 
+    server = new cog ServerImpl();  
+	
+	Client client;  
+	client = new cog ClientImpl();
+	client ! setServer(server);
+	
+	server ! start();
+	client ! start();
+}

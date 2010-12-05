@@ -1,0 +1,24 @@
+module ABSChat.Interfaces;
+export *;
+
+data ServerMsg = Welcome
+   	           | GoodBye
+          	   | NewMessage(String);
+
+data ClientMsg = ChatMessage(String,String);
+
+interface Server {
+   Unit start();
+   Session connect(Client c);
+}
+
+interface Session {
+   Unit receive(ClientMsg m);
+   Unit close();
+}
+
+interface Client {
+	Unit setServer(Server s);
+	Unit start();
+	Unit receive(ServerMsg m);
+}
