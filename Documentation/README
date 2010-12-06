@@ -14,6 +14,10 @@ Possible input source formats are for example:
 
   APT (simple ASCII based markup), Simplified DocBook, Xdoc, TWiki, and XHMTL.
 
+We are currently mainly use APT, which is described here:
+
+  http://maven.apache.org/doxia/references/apt-format.html:wq:
+
 Output formats are, for example:
 
   DocBook, XHMTL, Latex, PDF,...

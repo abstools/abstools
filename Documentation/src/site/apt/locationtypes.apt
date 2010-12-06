@@ -1,0 +1,82 @@
+Location Types
+
+* Introduction
+
+  The concurrency model of the ABS language is based on COGs 
+  (concurrent object groups). 
+  This means that every object belongs to a certain COG at runtime.
+  Statically, there is no way in ABS to know to which COG an object
+  belongs to. However, this is important, because synchronous calls
+  are only allowed on objects of the current COG.
+
+  From the perspective of an object, other objects are either <near>, 
+  if they belong to the same COG, or <far> if they belong to a different COG.
+  Synchronous calls are only allowed on near objects.
+  <Location types> are a way to statically ensure that synchronous calls
+  can never be done on far objects.
+  
+* Location Types 
+
+  This is realized by introducing a type annotation <<<TypeLocation>>>, 
+  which can be used to annotated types. <<<TypeLocation>>> is defined
+  as followed:
+
++---
+[TypeAnnotation]
+data TypeLocation = Near | Far | Somewhere;
++---
+
+  Types can be annotated with these annotations to specify where the
+  object at runtime has to be located. 
+  <<<Near>>> means that the object lives in the same COG as the current
+  receiver object, <<<Far>>> means that it lives in a different COG, and
+  <<<Somewhere>>> means that it can live in any COG, but we do not know
+  exactly in which one.
+  The following example shows how these annotations can be used:
+
++---
+[Near] I n;
+[Far] I f;
+[Somewhere] I s;
++---
+
+  The location type system now statically guarantees that
+  variable <<<n>>> can only refer to near objects, variable <<<f>>>
+  can only refer to far objects, and variable <<<s>>> can refer
+  to any object.
+  The type system ensures this, by restricting the possible assignments
+  of types with location annotations.
+  Assignments are restricted by the following subtyping relation, 
+  where Bottom is the type of <<<null>>>:
+
+** Subtyping Relation
+
++---
+      Somewhere
+       /    \
+     Near   Far
+       \    /
+       Bottom
++---
+
+* Technical Details
+
+** View-Point Adaption
+
+  The view-point adaption is defined as follows:
+
+
+*------------*-----------*--------------*
+| <<Target>> | <<Type>>  | <<Adapted Type>> 
+*------------*-----------*--------------* 
+  Far        | Far       | Somewhere    
+*------------*-----------*--------------* 
+  Far        | Near      | Far          
+*------------*-----------*--------------* 
+  _          | Somewhere | Somewhere    
+*------------*-----------*--------------* 
+  Near       | T         | T            
+*------------*-----------*--------------* 
+  Somewhere  | _         | Somewhere    
+*------------*-----------*--------------* 
+View-Point Adaption
