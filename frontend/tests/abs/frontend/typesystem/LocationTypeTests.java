@@ -73,6 +73,11 @@ public class LocationTypeTests extends FrontendTest {
     public void typeMaybe() {
         assertTypeOk("{ [Near] I i; Maybe<[Near] I> m = Just(i); }");
     }
+    
+    @Test
+    public void syncCallOnMaybeThis() {
+        assertTypeOk("interface K { Unit m(Maybe<[Near] K> p); } class D implements K { Unit m(Maybe<[Near] K> p) { this.m(Just(this)); } }");
+    }
 
     @Test
     public void typeParamInference() {
