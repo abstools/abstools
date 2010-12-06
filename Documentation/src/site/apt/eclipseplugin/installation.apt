@@ -1,0 +1,11 @@
+Installing the ABS Eclipse Plugin
+
+  Since the ABS Eclipse IDE is a plugin for Eclipse, you are first required to obtain an up-to-date Eclipse distribution ({{http://www.eclipse.org/downloads/}}). The plugin has been developed and tested under Helios (3.6.1), support for other Eclipse distributions is not provided.
+  
+  The ABS Eclipse plugin can be installed via an update site similar to other Eclipse plugins. 
+  To install the plugin first start Eclipse. You can install plugins under Help -> Install new Software. There, you need to specify an update site where the plugin to be installed is located.
+  The ABS Eclipse plugin is currently available at {{http://dijkstra.cs.uni-kl.de/absplugin}}. In the near future two sites will be provided, one for stable releases and one for latest builds.
+  
+  Note, that the category ABS on the update site contains four plugins. One of the additional plugins is the ABS Frontend, which contains the ABS front- and backends. The other two are necessary for creating UML diagrams.
+  
+  Once you selected all plugins or the category, you can continue with the next button, which will result in calculation of dependencies. Since the other three mentioned plugins are necessary for the ABS Eclipse plugin, they will be added in this step anyway. Last click Finish to install the plugins and restart Eclipse afterwards.

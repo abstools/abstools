@@ -1,0 +1,45 @@
+Using the ABS Eclipse IDE
+
+  This site provides you with a step by step introduction to the functionality added by the ABS Eclipse IDE.
+
+* The ABS Perspective
+
+  The first thing you should do after installing the project is switch into the ABS perspective, which allows you to access the newly added functionality. To do this, click on the "open perspective" button in the upper right corner and click "other" (the menu is also accessible via Window -> Open Perspective). Select the ABS perspective and click on OK to open it.
+  
+  The newly opened ABS perspective will rearrange you workbench windows, putting a project explorer to the left, an editor in the middle, an outline to the right and some windows containing further information and output to the bottom of the eclipse window. You may rearrange those later if you like. 
+  
+  Another important change are five new buttons in the bar above the editor, which will allow you to compile and execute you ABS project. The functionality provided by these buttons is also accessible via the newly added ABS menu in the menubar above.
+  
+* Creating ABS Projects
+ 
+  To create an ABS project, rightclick in the project exporer and select New -> Project. A selection Dialog will open containing different wizards for different project types including an ABS Project. Choose this wizard and click "Next". On the following Dialog page, you can enter a name for the project and may change the directory where the project will be generated. After entering a name, you can Finish the wizard.
+ 
+  This will generate a new project folder in the project explorer, which can be filled with ABS files.
+  
+* Creating and Modifying ABS Files
+
+  To create an ABS file, you first should create an ABS project like described above. You can then rightclick on the project and directly create an ABS module under New -> ABS module. Note, that you may also directly create other ABS projects this way. Modules can also be created by right-clicking on any file or folder inside an ABS project.
+
+  Creating new modules will directly open those in the editor. To open a previously created .abs file, simply double-click it in the project explorer.
+  
+  The following sections will explain functionality of the editor and outline in detail.
+  
+** Syntax Highlighting
+
+  The Editor will highlight specific elements of ABS modules, to improve readability of the document, namely keywords, strings and characters, comments, functions and types. Colors and style of the highlighting can be configured under Window -> Preferences -> ABS -> ABS Syntax Coloring.
+
+  Note, that syntax highlighting might not work correctly. If such behaviour is observed, please inform us of it (together with the example code leading to it).
+  
+** Outline
+
+  The outline provides a tree overview of the currently opened ABS file. It separates between imports and exports, classes, functions, datatypes, interfaces and the main block. The outline can be ordered by artifact type (resulting in a grouping of all Classe, all Functions and so on), by alphabetic order or both. Note, that ordering alphabetically will still group specific elements like datatypes and imports, since you usually do not want those intermiexed with classes, functions or interfaces.
+  
+  Classes and functions in the outline are also supplemented with their interface. Classes, functions and interfaces may again contain other elements.
+  
+  Imports, exports and fields can be hidden by buttons on top of the outline.
+
+** Content Assistant
+
+  The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, datatypes, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
+
+* {{{execution.html}Execution}}
