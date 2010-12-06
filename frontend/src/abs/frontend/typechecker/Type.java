@@ -2,22 +2,42 @@ package abs.frontend.typechecker;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
+    private static final Object ANNOTATION_KEY = new Object();
     
-    private List<TypeAnnotation> annotations = Collections.emptyList();
+    private Map<Object,Object> metaData = new HashMap<Object,Object>();
+    {
+        metaData.put(ANNOTATION_KEY, Collections.EMPTY_LIST);
+    }
     
     public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
-        Type copy = this.copy();
-        copy.annotations = convertToTypeAnnotations(anns);
+        Type copy = this.fullCopy();
+        copy.metaData.put(ANNOTATION_KEY, convertToTypeAnnotations(anns));
         return copy;
     }
     
-    public abstract Type copy();
+    public void addMetaData(Object key, Object value) {
+        metaData.put(key, value);
+    }
+    
+    public Object getMetaData(Object key) {
+        return metaData.get(key);
+    }
+    
+    public Type fullCopy() {
+        Type copy = copy();
+        copy.metaData.putAll(metaData);
+        return copy;
+    }
+    
+    protected abstract Type copy();
     
     private List<TypeAnnotation> convertToTypeAnnotations(abs.frontend.ast.List<Annotation> anns) {
         ArrayList<TypeAnnotation> res = new ArrayList<TypeAnnotation>();
@@ -36,10 +56,10 @@ public abstract class Type {
      */
     public String toString() {
         StringBuilder res = new StringBuilder();
-        if (!annotations.isEmpty()) {
+        if (!getTypeAnnotations().isEmpty()) {
             res.append("[");
             boolean first = true;
-            for (TypeAnnotation a : annotations) {
+            for (TypeAnnotation a : getTypeAnnotations()) {
                 if (first) first = false;
                 else res.append(",");
                 res.append(a.toString());
@@ -189,8 +209,9 @@ public abstract class Type {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public List<TypeAnnotation> getTypeAnnotations() {
-        return Collections.unmodifiableList(this.annotations);
+        return Collections.unmodifiableList((List<TypeAnnotation>) this.metaData.get(ANNOTATION_KEY));
     }
 
 }

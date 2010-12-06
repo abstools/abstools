@@ -76,7 +76,12 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void syncCallOnMaybeThis() {
-        assertTypeOk("interface K { Unit m(Maybe<[Near] K> p); } class D implements K { Unit m(Maybe<[Near] K> p) { this.m(Just(this)); } }");
+        String s = "def X id<X>(X x) = x; interface K { Unit m(Maybe<[Near] K> p); } " +
+          "class D implements K { [Near] K getThis() { return this; } Unit m(Maybe<[Near] K> p)";
+        assertTypeOk(s+ "{ this.m(Just(this)); } }");
+        assertTypeOk(s+ "{ [Near] K k; k = this; this.m(Just(k)); } }");
+        assertTypeOk(s+ "{ [Near] K k; this.m(case Just(k) { Just(x) => Just(x); }); } }");
+        assertTypeOk(s+ "{ [Near] K k; this.m(Just(id(k))); } }");
     }
 
     @Test

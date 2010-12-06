@@ -74,6 +74,11 @@ public class LocationTypeCheckerHelper {
         if (t.isNullType())
             return LocationType.BOTTOM;
         
+        LocationType meta = (LocationType) t.getMetaData(LocationType.LOCATION_KEY);
+        if (meta != null) {
+            return meta;
+        }
+        
         LocationType result = LocationType.NOTYPE;
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
@@ -129,9 +134,42 @@ public class LocationTypeCheckerHelper {
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
             PureExp exp = args.getChild(i);
-            checkAssignable(l,n,exp.getLocationType().adaptTo(adaptTo),getLocationType(argType,defaultType));
+            LocationType expLocType = exp.getLocationType();
+            LocationType adaptTo2 = expLocType.adaptTo(adaptTo);
+            LocationType argLocType = getLocationType(argType,defaultType);
+            checkAssignable(l,n,adaptTo2,argLocType);
         }
         
+    }
+    
+    public static LocationType getLocationType(Type type) {
+        return (LocationType) type.getMetaData(LocationType.LOCATION_KEY);
+    }
+
+/*    
+    public static Type withDefaultType(Type type, LocationType defaultType) {
+        if (hasLocationType(type))
+            return type;
+        return withLocationType(type,defaultType);
+    }
+*/
+
+    private static boolean hasLocationType(Type type) {
+        return null != type.getMetaData(LocationType.LOCATION_KEY);
+    }
+    
+    public static Type withCalcLocationType(Type type, LocationType defaultType) {
+        return withLocationType(type, getLocationType(type, defaultType));
+    }
+    
+    public static Type withLocationType(Type type, LocationType lt) {
+        Type copy = type.fullCopy();
+        copy.addMetaData(LocationType.LOCATION_KEY, lt);
+        return copy;
+    }
+    
+    public static Type adaptTo(Type type, Type to) {
+        return withLocationType(type,getLocationType(type).adaptTo(getLocationType(to)));
     }
     
 }

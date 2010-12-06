@@ -1,4 +1,9 @@
 
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.List;
+import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.typechecker.locationtypes.*;
 
 /**
@@ -116,26 +121,40 @@ aspect LocationTypeChecker {
      }
     
     syn LocationType Exp.getLocationType() = LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType());
+    syn Type Exp.getWithLocationType() = LocationTypeCheckerHelper.withCalcLocationType(getType(),getModel().getDefaultLocationType());
     
-    eq Call.getLocationType() {
-        return LocationTypeCheckerHelper.getLocationType(getType(),getModel().getDefaultLocationType()).adaptTo(LocationTypeCheckerHelper.getLocationType(getCallee().getType(),getModel().getDefaultLocationType()));
+    refine Typing eq SyncCall.getType() {
+        Type rt = LocationTypeCheckerHelper.withCalcLocationType(Typing.SyncCall.getType(), getModel().getDefaultLocationType());
+        return LocationTypeCheckerHelper.adaptTo(rt,getCallee().getWithLocationType());
+    }
+
+    refine Typing eq AsyncCall.getType() {
+        Type rt = LocationTypeCheckerHelper.withCalcLocationType(Typing.AsyncCall.getType(), getModel().getDefaultLocationType());
+        return LocationTypeCheckerHelper.adaptTo(rt,getCallee().getWithLocationType());
     }
     
-    eq NewExp.getLocationType() {
+    /*
+    eq DataConstructorExp.getLocationType() {
+        return LocationType.createFromDataConstructorExp(this);
+    }*/
+    
+    refine Typing eq NewExp.getType() {
         if (getCog().equals("cog")) {
-            return LocationType.FAR;
+            return LocationTypeCheckerHelper.withLocationType(Typing.NewExp.getType(),LocationType.FAR);
         } else {
-            return LocationType.NEAR;
+            return LocationTypeCheckerHelper.withLocationType(Typing.NewExp.getType(),LocationType.NEAR);
         }
     }
     
-    eq ThisExp.getLocationType() {
-        return LocationType.NEAR;
+    refine Typing eq NullExp.getType() {
+        return LocationTypeCheckerHelper.withLocationType(Typing.NullExp.getType(),LocationType.BOTTOM);
     }
     
-    eq NullExp.getLocationType() {
-        return LocationType.BOTTOM;
+    refine Typing eq ThisExp.getType() {
+        return LocationTypeCheckerHelper.withLocationType(Typing.ThisExp.getType(),LocationType.NEAR);
     }
+    
+    
     
     
     

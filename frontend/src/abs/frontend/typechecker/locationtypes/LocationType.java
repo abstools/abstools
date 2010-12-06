@@ -3,7 +3,14 @@ package abs.frontend.typechecker.locationtypes;
 import java.util.ArrayList;
 import java.util.List;
 
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.PureExp;
+
 public abstract class LocationType {
+    public static final Object LOCATION_KEY = new Object();
+    
     public static final LocationType FAR = new Far();
     public static final LocationType NEAR = new Near();
     public static final LocationType SOMEWHERE = new Somewhere();
@@ -31,7 +38,7 @@ public abstract class LocationType {
         if (isUnbound()) return "Unbound";
         return "NoType";
     }
-    
+
     public final static class Parametric extends LocationType {
         List<LocationType> typeParams;
         public Parametric(List<LocationType> t) {
