@@ -1,6 +1,6 @@
 In order to generate the documentation, Maven 2 is required.
 Then issue the following command:
-
+ 
   mvn site
 
 this will generate the documents into the target directory
