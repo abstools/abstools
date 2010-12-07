@@ -2,15 +2,21 @@ package abs.frontend.typesystem;
 
 import static org.junit.Assert.*;
 
+import java.util.Map;
+
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerHelper;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
+import abs.frontend.typechecker.locationtypes.infer.SatGenerator;
 
 public class LocationTypeTests extends FrontendTest {
     
@@ -100,6 +106,20 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     
+    @Test
+    public void syncCallInfer() {
+        assertInferOk("interface I { Unit m(); } { I i; i.m(); }", LocationType.NEAR);
+    }
+    
+    @Test
+    public void newCOGInfer() {
+        assertInferOk("interface I { } class C implements I {} { I i; i = new cog C(); }", LocationType.FAR);
+    }
+    
+    @Test
+    public void newObjectInfer() {
+        assertInferOk("interface I { } class C implements I {} { I i; i = new C(); }", LocationType.NEAR);
+    }
     
     
     // negative tests:
@@ -154,6 +174,18 @@ public class LocationTypeTests extends FrontendTest {
         assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
     }
     
+    private void assertInferOk(String code, LocationType expected) {
+        Model m = assertParseOk(code,true);
+        //m.setLocationTypingEnabled(true);
+        SemanticErrorList e = m.typeCheck();
+        Map<LocationTypeVariable, LocationType> generated = new SatGenerator(m.getLocationTypeConstraints()).generate();
+        System.out.println(generated);
+        VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
+        LocationType t = generated.get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
+        assertTrue(e.isEmpty());
+        assertTrue("Inference failed", generated != null);
+        assertEquals(expected, t);
+    }
     
     @Test
     public void multipleError() {

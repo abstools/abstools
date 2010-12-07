@@ -153,9 +153,6 @@ aspect LocationTypeChecker {
     refine Typing eq ThisExp.getType() {
         return LocationTypeCheckerHelper.withLocationType(Typing.ThisExp.getType(),LocationType.NEAR);
     }
-    
-    
-    
-    
+
     
 }

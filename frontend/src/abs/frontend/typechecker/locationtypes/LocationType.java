@@ -3,11 +3,6 @@ package abs.frontend.typechecker.locationtypes;
 import java.util.ArrayList;
 import java.util.List;
 
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.PureExp;
-
 public abstract class LocationType {
     public static final Object LOCATION_KEY = new Object();
     
@@ -17,6 +12,8 @@ public abstract class LocationType {
     public static final LocationType NOTYPE = new NoType();
     public static final LocationType UNBOUND = new Unbound();
     public static final LocationType BOTTOM = new Bottom();
+    
+    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
    
     private final static class Far extends LocationType { }
     private final static class Near extends LocationType { }
