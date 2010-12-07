@@ -4,6 +4,11 @@ import java.util.Set;
 
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.VarDecl;
 
 
 public class LocationTypeVariable {
@@ -31,9 +36,34 @@ public class LocationTypeVariable {
         if (node != null) {
             Position p = new Position(node);
             pos = " at " + p.getPositionString();
-        }   
-        return "v" + id + pos;
+        }  
+        return "v" + id + getASTNodeString();
     }
+
+    private String getASTNodeString() {
+        if (node == null)
+            return "";
+        
+        if (node instanceof MethodSig) {
+            MethodSig ms = (MethodSig) node;
+            return " Method "+((InterfaceDecl)ms.getParent().getParent()).getName()+"."+ms.getName();
+        } 
+        
+        if (node instanceof FieldDecl) {
+            FieldDecl fd = (FieldDecl) node;
+            return " Field "+((ClassDecl)fd.getParent().getParent()).getName()+"."+fd.getName();
+        }
+        
+        if (node instanceof VarDecl) {
+            VarDecl vd = (VarDecl) node;
+            return " Var "+vd.getName();
+        }
+         
+        
+        return node.getClass().getName();
+    }
+    
+    
     
 
 }

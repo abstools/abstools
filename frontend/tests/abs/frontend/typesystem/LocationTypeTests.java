@@ -120,7 +120,17 @@ public class LocationTypeTests extends FrontendTest {
     public void newObjectInfer() {
         assertInferOk("interface I { } class C implements I {} { I i; i = new C(); }", LocationType.NEAR);
     }
+
+    @Test
+    public void newObjectInfer2() {
+        assertInferOk("interface I { I getI(); } class C implements I { I i; { i = new C(); } I getI() { return i; } } " +
+        		"{ I i; I j; j = new C(); i = j.getI(); }", LocationType.NEAR);
+    }
     
+    @Test
+    public void newObjectInfer3() {
+        assertInferOk("interface I { } class C implements I {} { I i; i = new C(); i = new cog C(); }", LocationType.SOMEWHERE);
+    }
     
     // negative tests:
 
@@ -182,7 +192,7 @@ public class LocationTypeTests extends FrontendTest {
         System.out.println(generated);
         VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
         LocationType t = generated.get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
-        assertTrue(e.isEmpty());
+        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
         assertTrue("Inference failed", generated != null);
         assertEquals(expected, t);
     }

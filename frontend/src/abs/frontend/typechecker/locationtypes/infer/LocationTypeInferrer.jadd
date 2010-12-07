@@ -26,7 +26,7 @@ aspect LocationTypeInferrer {
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), getAccess());
+        LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
         return t; 
     }
     
@@ -35,7 +35,7 @@ aspect LocationTypeInferrer {
         for (ParamDecl p : getParams()) {
             LocationTypeInferrerHelper.annotateVar(p.getAccess().getType(), getReturnType().getModel().getLocationTypeConstraints(), p);
         }
-        LocationTypeInferrerHelper.annotateVar(t, getReturnType().getModel().getLocationTypeConstraints(), getReturnType());
+        LocationTypeInferrerHelper.annotateVar(t, getReturnType().getModel().getLocationTypeConstraints(), this);
         return t;
     }
     
