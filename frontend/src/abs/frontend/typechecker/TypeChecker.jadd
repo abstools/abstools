@@ -562,6 +562,7 @@ aspect TypeChecker {
     
     public void Call.typeCheck(SemanticErrorList e) {
         Type t = getType();
+        getCallee().typeCheck(e);
         if (t.isUnknownType() || getMethodSig() == null) {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
