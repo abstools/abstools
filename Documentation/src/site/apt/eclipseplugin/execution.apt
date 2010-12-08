@@ -6,13 +6,13 @@ Executing ABS Projects from ABS Eclipse IDE
   
 * Maude
 
-  In contrast to the Java execution, Maude can not directly be run by the plugin. Instead, Maude has to be installed separatly and the User is required to configure the Maude path accordingly. This can be done under Window -> Preferences -> ABS -> ABS Maude Preferences (If you try to run Maude without configuring this path, the preference dialog will pop up anyway).
-  For Linux and MacOS you can find at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
+  In contrast to the Java execution, Maude can not directly be run by the plug-in. Instead, Maude has to be installed separately and the User is required to configure the Maude path accordingly. This can be done under Window -> Preferences -> ABS -> ABS Maude Preferences (If you try to run Maude without configuring this path, the preference dialog will pop up anyway).
+  For Linux and Mac OS you can find at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
   
   Two Buttons are provided for Maude: compiling and executing. 
   
   Compile will generate a .maude file named after the project in a project specific folder (default is gen/maude). This folder can be changed in the project properties (right click on project in the package explorer -> properties -> ABS -> Maude Backend). In Addition, the abs-interpreter.maude is copied in that directory.
   
-  Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed succesfully, the output will be printed as info (black), otherwise as error (red).
+  Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed successfully, the output will be printed as info (black), otherwise as error (red).
   
   Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.

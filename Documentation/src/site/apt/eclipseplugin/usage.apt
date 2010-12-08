@@ -8,17 +8,21 @@ Using the ABS Eclipse IDE
   
   The newly opened ABS perspective will rearrange you workbench windows, putting a project explorer to the left, an editor in the middle, an outline to the right and some windows containing further information and output to the bottom of the eclipse window. You may rearrange those later if you like. 
   
-  Another important change are five new buttons in the bar above the editor, which will allow you to compile and execute you ABS project. The functionality provided by these buttons is also accessible via the newly added ABS menu in the menubar above.
+  Another important change are five new buttons in the bar above the editor, which will allow you to compile and execute you ABS project. The functionality provided by these buttons is also accessible via the newly added ABS menu in the menu bar above.
   
 * Creating ABS Projects
  
-  To create an ABS project, rightclick in the project exporer and select New -> Project. A selection Dialog will open containing different wizards for different project types including an ABS Project. Choose this wizard and click "Next". On the following Dialog page, you can enter a name for the project and may change the directory where the project will be generated. After entering a name, you can Finish the wizard.
+  To create an ABS project, right click in the project explorer and select New -> Project. A selection Dialog will open containing different wizards for different project types including an ABS Project. Choose this wizard and click "Next". On the following Dialog page, you can enter a name for the project and may change the directory where the project will be generated. After entering a name, you can Finish the wizard.
  
   This will generate a new project folder in the project explorer, which can be filled with ABS files.
   
+** Cleaning ABS Projects
+
+  You may clean ABS projects, either by right-clicking them in the project explorer and selecting "Source -> Clean Up..." or using the Project menu in the menu bar. Cleaning will rebuild the ABS project and delete all files generated while compiling or executing.
+  
 * Creating and Modifying ABS Files
 
-  To create an ABS file, you first should create an ABS project like described above. You can then rightclick on the project and directly create an ABS module under New -> ABS module. Note, that you may also directly create other ABS projects this way. Modules can also be created by right-clicking on any file or folder inside an ABS project.
+  To create an ABS file, you first should create an ABS project like described above. You can then right click on the project and directly create an ABS module under New -> ABS module. Note, that you may also directly create other ABS projects this way. Modules can also be created by right-clicking on any file or folder inside an ABS project.
 
   Creating new modules will directly open those in the editor. To open a previously created .abs file, simply double-click it in the project explorer.
   
@@ -32,7 +36,7 @@ Using the ABS Eclipse IDE
   
 ** Outline
 
-  The outline provides a tree overview of the currently opened ABS file. It separates between imports and exports, classes, functions, datatypes, interfaces and the main block. The outline can be ordered by artifact type (resulting in a grouping of all Classe, all Functions and so on), by alphabetic order or both. Note, that ordering alphabetically will still group specific elements like datatypes and imports, since you usually do not want those intermiexed with classes, functions or interfaces.
+  The outline provides a tree overview of the currently opened ABS file. It separates between imports and exports, classes, functions, data types, interfaces and the main block. The outline can be ordered by artifact type (resulting in a grouping of all Classes, all Functions and so on), by alphabetic order or both. Note, that ordering alphabetically will still group specific elements like data types and imports, since you usually do not want those intermixed with classes, functions or interfaces.
   
   Classes and functions in the outline are also supplemented with their interface. Classes, functions and interfaces may again contain other elements.
   
@@ -40,6 +44,6 @@ Using the ABS Eclipse IDE
 
 ** Content Assistant
 
-  The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, datatypes, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
+  The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
 
 * {{{execution.html}Execution}}
