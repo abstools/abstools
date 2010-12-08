@@ -25,6 +25,7 @@ import org.sat4j.specs.IProblem;
 import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
@@ -57,10 +58,21 @@ public class SatGenerator {
         constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_FAR, LocationType.FAR));
     }
 
+    public Map<LocationTypeVariable, LocationType> generate(SemanticErrorList s) {
+        Map<LocationTypeVariable, LocationType> res = generate();
+        
+        if (res == null) {
+            s.add(new LocationInferenceError());
+        }
+        
+        return res;
+        
+    }
+        
     public Map<LocationTypeVariable, LocationType> generate() {
         Map<LocationTypeVariable, LocationType> tvl = new HashMap<LocationTypeVariable, LocationType>();
         for (Constraint c : constraints) {
-            System.out.println(c);
+            //System.out.println(c);
             output.addAll(c.generateSat(e));
             c.variables(vars);
         }
@@ -101,9 +113,9 @@ public class SatGenerator {
         
         
         
-        System.out.println("Number of variables: " + nbvars);
+        //System.out.println("Number of variables: " + nbvars);
         
-        System.out.println("Number of clauses: " + nbclauses);
+        //System.out.println("Number of clauses: " + nbclauses);
         
         //System.out.println(sb);
         
@@ -120,19 +132,18 @@ public class SatGenerator {
             if ((model = problem.findModel()) != null) {
                 //int[] model = problem.model();
                 //model = problem.findModel();
-                System.out.println("Model generated");
+                //System.out.println("Model generated");
                 problem.printInfos(new PrintWriter(System.out), "INFO: ");
-                System.out.println(Arrays.toString(model));
+                //System.out.println(Arrays.toString(model));
                 for (int i : model) {
                     if (i > 0 && i <= nbvars) {
                         TypedVar tv = e.vars().get(i-1);
                         //System.out.println(tv.v + " : " + tv.t);
                         tvl.put(tv.v, tv.t);
-                    }
-                    
+                    }   
                 }
             } else {
-                throw new InferenceFailedException();
+                return null;
             }
             return tvl;
         } catch (FileNotFoundException e) {
@@ -146,7 +157,7 @@ public class SatGenerator {
             e.printStackTrace();
         } catch (ContradictionException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            //e.printStackTrace();
         } catch (TimeoutException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

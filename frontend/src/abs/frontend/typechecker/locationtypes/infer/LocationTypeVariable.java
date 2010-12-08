@@ -46,7 +46,7 @@ public class LocationTypeVariable {
         
         if (node instanceof MethodSig) {
             MethodSig ms = (MethodSig) node;
-            return " Method "+((InterfaceDecl)ms.getParent().getParent()).getName()+"."+ms.getName();
+            return " Method "+ms.getName();
         } 
         
         if (node instanceof FieldDecl) {

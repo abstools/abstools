@@ -132,9 +132,20 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk("interface I { } class C implements I {} { I i; i = new C(); i = new cog C(); }", LocationType.SOMEWHERE);
     }
     
+    @Test
+    public void annotatedlocaVarInfer() {
+        assertInferOk("interface I { } class C implements I {} { I i; [Near] I j; i = j; }", LocationType.NEAR);
+    }
+    
+    @Test
+    public void overrideOK() {
+        assertInferOk("interface I { [Somewhere] I m([Far] I i); } class C implements I { [Near] I m([Somewhere] I i) { return null; } } { }");
+    }
+    
+    
     // negative tests:
 
-    
+   
     @Test
     public void typeMaybeError() {
         assertTypeErrorOnly("interface I { } { [Far] I i; Maybe<[Near] I> m = Just(i); }");
@@ -142,7 +153,7 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void typeListError() {
-        assertTypeError("{ List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
+        assertTypeErrorOnly("interface I {} { List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
     }
     
     @Test
@@ -165,38 +176,6 @@ public class LocationTypeTests extends FrontendTest {
         assertTypeError("{ [Near] I i; [Far] I j; j = i.n(j); }");
     }
     
-    
-    private void assertTypeError(String code) {
-        assertTypeErrorOnly(INT+code);
-    }
-    
-    private void assertTypeErrorOnly(String code) {
-        Model m = assertParseOk(code,true);
-        m.setLocationTypingEnabled(true);
-        SemanticErrorList e = m.typeCheck();
-        assertFalse(e.isEmpty());
-    }
-
-    private void assertTypeOk(String code) {
-        Model m = assertParseOk(INT+code,true);
-        m.setLocationTypingEnabled(true);
-        SemanticErrorList e = m.typeCheck();
-        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
-    }
-    
-    private void assertInferOk(String code, LocationType expected) {
-        Model m = assertParseOk(code,true);
-        //m.setLocationTypingEnabled(true);
-        SemanticErrorList e = m.typeCheck();
-        Map<LocationTypeVariable, LocationType> generated = new SatGenerator(m.getLocationTypeConstraints()).generate();
-        System.out.println(generated);
-        VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
-        LocationType t = generated.get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
-        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
-        assertTrue("Inference failed", generated != null);
-        assertEquals(expected, t);
-    }
-    
     @Test
     public void multipleError() {
         Model m = assertParseOk("interface I { } class C { [Far] [Near] I i; }",true);
@@ -208,6 +187,69 @@ public class LocationTypeTests extends FrontendTest {
             assertTrue(true);
         }
     }
+    
+    @Test
+    public void overrideReturnFailed() {
+        assertInferFails("interface I { [Near] I m(I i); } class C implements I { [Somewhere] I m(I i) { return null; } } { }");
+    }
+    
+    @Test
+    public void overrideParameterFailed() {
+        assertInferFails("interface I { I m([Somewhere] I i); } class C implements I { I m([Near] I i) { return null; } } { }");
+    }
+    
+    private void assertTypeError(String code) {
+        assertTypeErrorOnly(INT+code);
+    }
+    
+    private void assertTypeErrorOnly(String code) {
+        Model m = assertParseOk(code,true);
+        m.setLocationTypingEnabled(true);
+        SemanticErrorList e = m.typeCheck();
+        assertFalse(e.isEmpty());
+        assertInferFails(code);
+    }
+
+    private void assertTypeOk(String code) {
+        Model m = assertParseOk(INT+code,true);
+        m.setLocationTypingEnabled(true);
+        SemanticErrorList e = m.typeCheck();
+        assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
+        assertInferOk(INT+code);
+    }
+    
+    private void assertInfer(String code, LocationType expected, boolean fails) {
+        Model m = assertParseOk(code,true);
+        //m.setLocationTypingEnabled(true);
+        m.setLocationInferenceEnabled(true);
+        SemanticErrorList e = m.typeCheck();
+        //System.out.println(generated);
+        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), fails, !e.isEmpty()); 
+        
+        //assertTrue("Inference failed", generated != null);
+        //assertEquals(fails, generated == null);
+        if (expected != null) {
+            VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
+            LocationType t = m.getLocationTypeInferenceResult().get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
+            assertEquals(expected, t);
+        }
+    }
+    
+    private void assertInferOk(String string, LocationType expected) {
+        assertInfer(string, expected, false);
+    }
+    
+    private void assertInferOk(String string) {
+        assertInfer(string, null, false);       
+    }
+    
+    private void assertInferFails(String string) {
+        assertInfer(string, null, true);
+    }
+
+
+    
+
 
 
 }

@@ -13,6 +13,12 @@ public class SemanticError extends CompilerError {
     public final String[] args;
     public final ASTNode<?> node;
 
+    protected SemanticError() {
+        msg = null;
+        args = null;
+        node = null;
+    }
+    
     public SemanticError(ASTNode<?> node, ErrorMessage msg, String... args) {
         this.node = node;
         this.msg = msg;

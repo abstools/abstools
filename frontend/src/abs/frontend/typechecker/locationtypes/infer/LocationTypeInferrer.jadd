@@ -6,6 +6,7 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.typechecker.locationtypes.*;
 import java.util.Set;
+import java.util.Map;
 import java.util.HashSet;
 import abs.frontend.typechecker.locationtypes.infer.*;
 
@@ -15,90 +16,217 @@ import abs.frontend.typechecker.locationtypes.infer.*;
 
 aspect LocationTypeInferrer {
     private Set<Constraint> Model.locationTypeConstraints = new HashSet<Constraint>();
+    private Map<LocationTypeVariable, LocationType> Model.locationTypeInferenceResult = null;
+    
+    private boolean Model.locationInferenceEnabled = false;
+
+    syn boolean Model.isLocationInferenceEnabled() = locationInferenceEnabled;
+    
+    public void Model.setLocationInferenceEnabled(boolean b) {
+        locationInferenceEnabled = b;
+    }
+    
+    public void Model.setLocationTypeInferenceResult(Map<LocationTypeVariable, LocationType> result) {
+        locationTypeInferenceResult = result;
+    }
+    
+    public Map<LocationTypeVariable, LocationType> Model.getLocationTypeInferenceResult() {
+        return locationTypeInferenceResult;
+    }
 
     syn Set<Constraint> Model.getLocationTypeConstraints() = locationTypeConstraints;
     
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
-        LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        if (getModel().isLocationInferenceEnabled()) { 
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        }
         return t;
     }
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        }
         return t; 
     }
     
     refine Typing eq MethodSig.getType() {
         Type t = Typing.MethodSig.getType();
-        for (ParamDecl p : getParams()) {
-            LocationTypeInferrerHelper.annotateVar(p.getAccess().getType(), getReturnType().getModel().getLocationTypeConstraints(), p);
+        if (getModel().isLocationInferenceEnabled()) {
+            for (ParamDecl p : getParams()) {
+                LocationTypeInferrerHelper.annotateVar(p.getAccess().getType(), getModel().getLocationTypeConstraints(), p);
+            }
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
         }
-        LocationTypeInferrerHelper.annotateVar(t, getReturnType().getModel().getLocationTypeConstraints(), this);
         return t;
     }
     
     refine Typing eq ParametricDataTypeUse.getType() {
-        Type t = Typing.ParametricDataTypeUse.getType();
-        LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        Type t = Typing.ParametricDataTypeUse.getType();        
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+        }
         return t;
     }
     
     refine LocationTypeChecker eq NullExp.getType() {
         Type t = LocationTypeChecker.NullExp.getType();
-        LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_BOTTOM, getModel().getLocationTypeConstraints());
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_BOTTOM, getModel().getLocationTypeConstraints());
+        }
         return t;
     }
     
     refine LocationTypeChecker eq ThisExp.getType() {
         Type t = LocationTypeChecker.ThisExp.getType();
-        LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_NEAR, getModel().getLocationTypeConstraints());
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_NEAR, getModel().getLocationTypeConstraints());
+        }
         return t;
     }
     
     refine LocationTypeChecker eq NewExp.getType() {
         Type t = LocationTypeChecker.NewExp.getType();
-        if (getCog().equals("cog")) {
-            LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_FAR, getModel().getLocationTypeConstraints());
-        } else {
-            LocationTypeInferrerHelper.annotateVar(t, LocationTypeVariable.ALWAYS_NEAR, getModel().getLocationTypeConstraints());
+        if (getModel().isLocationInferenceEnabled()) {
+            ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
+            LocationTypeVariable lt;
+            if (getCog().equals("cog")) {
+                lt = LocationTypeVariable.ALWAYS_FAR;
+            } else {
+                lt = LocationTypeVariable.ALWAYS_NEAR;
+            }
+            LocationTypeInferrerHelper.annotateVar(t, lt, getModel().getLocationTypeConstraints());
+            LocationTypeInferrerHelper.checkAssignable(lt,d.getParams(),getParams(),getModel().getLocationTypeConstraints());
         }
         return t;
     }
     
     refine LocationTypeChecker eq SyncCall.getType() {
         Type t = LocationTypeChecker.SyncCall.getType();
-        // do nothing
+        if (getModel().isLocationInferenceEnabled()) {
+            // do nothing
+        }
         return t;
     }
 
     refine LocationTypeChecker eq AsyncCall.getType() {
         Type t = LocationTypeChecker.AsyncCall.getType().fullCopy();
-        LocationTypeInferrerHelper.adaptTo(t, getCallee().getLocationTypeVar(), getModel().getLocationTypeConstraints());
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.adaptTo(t, getCallee().getLocationTypeVar(), getModel().getLocationTypeConstraints());
+        }
         return t;
     }
     
     refine LocationTypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
         LocationTypeChecker.AssignStmt.typeCheck(s);
         if (!s.isEmpty()) return;
-        LocationTypeInferrerHelper.checkAssignable(getValue().getType(),getVar().getType(), getModel().getLocationTypeConstraints()); 
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.checkAssignable(getValue().getType(),getVar().getType(), getModel().getLocationTypeConstraints());
+        }
     }
     
     refine LocationTypeChecker public void Call.typeCheck(SemanticErrorList s) {
         LocationTypeChecker.Call.typeCheck(s);
         if (!s.isEmpty()) return;
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeVariable t = getCallee().getLocationTypeVar();
         
-        LocationTypeVariable t = getCallee().getLocationTypeVar();
-        
-        if (this instanceof SyncCall) {
-            LocationTypeInferrerHelper.checkEq(t, LocationTypeVariable.ALWAYS_NEAR, getModel().getLocationTypeConstraints());
+            if (this instanceof SyncCall) {
+                LocationTypeInferrerHelper.checkEq(t, LocationTypeVariable.ALWAYS_NEAR, getModel().getLocationTypeConstraints());
+            }
+            if (getMethodSig() != null) {
+                LocationTypeInferrerHelper.checkAssignable(t,getMethodSig().getParams(),getParams(), getModel().getLocationTypeConstraints());
+            }
         }
-        if (getMethodSig() != null) {
-            LocationTypeInferrerHelper.checkAssignable(t,getMethodSig().getParams(),getParams(), getModel().getLocationTypeConstraints());
-        }
-        
     }
+    
+    refine TypeChecker public void ClassDecl.typeCheck(SemanticErrorList s) {
+        TypeChecker.ClassDecl.typeCheck(s);
+        if (!s.isEmpty()) return;
+        if (getModel().isLocationInferenceEnabled()) {
+            HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+            addAllMethodSigs(sigs);  
+      
+            HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
+      
+            for (MethodImpl m : getMethods()) {
+                String name = m.getMethodSig().getName();
+                if (sigs.containsKey(name)) {
+                    MethodSig sig = sigs.get(name);
+                    MethodSig ms = m.getMethodSig();
+                    InterfaceDecl d = (InterfaceDecl) sig.getParent().getParent();
+   		      
+                    Type expectedReturnType = sig.getType();
+                    Type actualReturnType = ms.getType();
+                    LocationTypeInferrerHelper.checkAssignable(actualReturnType, expectedReturnType, getModel().getLocationTypeConstraints());
+   		      
+                    for (int i = 0; i < sig.getNumParam(); i++) {
+                        Type texpected = sig.getParam(i).getType();
+   		                  Type tactual = ms.getParam(i).getType();
+   		                  LocationTypeInferrerHelper.checkAssignable(texpected, tactual, getModel().getLocationTypeConstraints());
+                    }
+                }
+            }
+        }
+    }
+    
+    refine LocationTypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.ReturnStmt.typeCheck(s);
+        if (!s.isEmpty()) return;
+        
+        if (getModel().isLocationInferenceEnabled()) {
+            MethodImpl m = getContextMethod();
+
+            if (m == null) {
+                return;
+            }
+
+            LocationTypeInferrerHelper.checkAssignable(getRetExp().getType(), m.getMethodSig().getType(),getModel().getLocationTypeConstraints());
+        }
+    }
+    
+    refine LocationTypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+       LocationTypeChecker.VarDecl.typeCheck(s);
+       if (!s.isEmpty()) return;
+        
+       if (getModel().isLocationInferenceEnabled()) {
+           if (hasInitExp()) {
+               LocationTypeInferrerHelper.checkAssignable(getInitExp().getType(), getType(),getModel().getLocationTypeConstraints());
+           }
+       }
+    }
+
+    refine LocationTypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.FieldDecl.typeCheck(s);
+        if (!s.isEmpty()) return;
+        
+        if (getModel().isLocationInferenceEnabled()) {
+            if (hasInitExp()) {
+                LocationTypeInferrerHelper.checkAssignable(getInitExp().getType(), getType(),getModel().getLocationTypeConstraints());
+            }
+        } 
+     }
+     
+     refine LocationTypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.DataConstructorExp.typeCheck(s);
+        if (!s.isEmpty()) return;
+        
+        if (getModel().isLocationInferenceEnabled()) {
+            LocationTypeInferrerHelper.checkDataConstructorExp(this, getModel().getLocationTypeConstraints());
+        }
+   }
+     
+     refine TypeChecker public void Model.typeCheck(SemanticErrorList s) {
+         TypeChecker.Model.typeCheck(s);
+         if (!s.isEmpty()) return;
+         
+         if (getModel().isLocationInferenceEnabled()) {
+             Map<LocationTypeVariable, LocationType> generated = new SatGenerator(getLocationTypeConstraints()).generate(s);
+             setLocationTypeInferenceResult(generated);
+         }
+     }
     
     
     syn LocationTypeVariable Exp.getLocationTypeVar() = LocationTypeInferrerHelper.getLocationTypeVar(getType());

@@ -1,15 +1,26 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
+import java.util.HashMap;
 import java.util.Set;
 
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.List;
 
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
+import abs.frontend.typechecker.TypeParameter;
+import abs.frontend.typechecker.locationtypes.LocationType;
+import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
+import abs.frontend.typechecker.locationtypes.LocationType.Parametric;
 
 public class LocationTypeInferrerHelper {
     
@@ -95,17 +106,63 @@ public class LocationTypeInferrerHelper {
     }
     
     public static void annotateVar(Type t, LocationTypeVariable tv, Set<Constraint> constraints) {
+        setIfAnnotated(tv, t, constraints);
         t.addMetaData(LocationTypeVariable.VAR_KEY,tv);
     }
     
+    private static void setIfAnnotated(LocationTypeVariable tv, Type t, Set<Constraint> constraints) {
+        if (t.isReferenceType()) {
+            LocationType lt = LocationTypeCheckerHelper.getLocationType(t, null);
+            if (lt != null) {
+                constraints.add(Constraint.constConstraint(tv, lt));
+            }
+        }
+    }
+
     private static LocationTypeVariable addNewVar(Type t, Set<Constraint> constraints, ASTNode<?> n) {
-        LocationTypeVariable v = LocationTypeVariable.newVar(constraints, n);
-        t.addMetaData(LocationTypeVariable.VAR_KEY,v);
-        return v;
+        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n);
+        annotateVar(t, tv, constraints);
+        return tv;
     }
     
     public static void checkEq(LocationTypeVariable tv1, LocationTypeVariable tv2, Set<Constraint> constraints) {
         constraints.add(Constraint.eqConstraint(tv1, tv2));
         //System.out.println("Require " + tv1 + " = " + tv2);
+    }
+    
+    public static void checkDataConstructorExp(DataConstructorExp e, Set<Constraint> constraints) {
+        DataConstructor decl = (DataConstructor) e.getDecl();
+        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+            ParametricDataTypeDecl pd = (ParametricDataTypeDecl) decl.getDataTypeDecl();
+            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
+            for (int i = 0; i < decl.getNumConstructorArg(); i++) {
+                Type t = e.getParam(i).getType();
+                Type arg = decl.getConstructorArg(i).getType();
+                checkTypeParameter(map, t, arg, constraints);
+            }
+        }         
+    }
+
+
+    private static void checkTypeParameter(HashMap<TypeParameter, Type> map, Type t, Type arg, Set<Constraint> constraints) {
+        if (arg.isTypeParameter()) {
+            TypeParameter typeParam = (TypeParameter) arg;
+            if (map.containsKey(typeParam)) {
+                Type lt = map.get(typeParam);
+                // TODO : make this checkEq
+                checkAssignable(lt,t,constraints);
+                checkAssignable(t,lt,constraints);
+            } else {
+                map.put(typeParam, t);
+            }
+        } else if (arg.isDataType()) {
+            DataTypeType argdt = (DataTypeType) arg;
+            if (argdt.hasTypeArgs()) {
+                DataTypeType dt = (DataTypeType)t;
+                for (int i = 0; i < dt.numTypeArgs(); i++) {
+                     checkTypeParameter(map,dt.getTypeArg(i),argdt.getTypeArg(i), constraints);
+                }
+            }
+        }
     }
 }

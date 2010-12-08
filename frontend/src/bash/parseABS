@@ -2,6 +2,4 @@
 
 BASEDIR="$(dirname $0)/../.."
 
-java -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar abs.frontend.parser.Main "$@"
-
-
+java -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar abs.frontend.parser.Main "$@"

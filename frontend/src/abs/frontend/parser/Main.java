@@ -38,6 +38,7 @@ public class Main {
     protected boolean dump = false;
     protected boolean checkLocationTypes = false;
     protected LocationType defaultLocationType = null;
+    protected boolean locationTypeInferenceEnabled = false;
 
     public static void main(final String... args) throws Exception {
         new Main().parse(args);
@@ -57,6 +58,8 @@ public class Main {
                 stdlib = false;
             else if (arg.equals("-loctypes"))
                 checkLocationTypes = true;
+            else if (arg.equals("-loctypeinfer"))
+                locationTypeInferenceEnabled = true;
             else if (arg.startsWith("-locdefault=")) {
                 String def = arg.split("=")[1];
                 defaultLocationType = LocationType.createFromName(def);
@@ -133,6 +136,9 @@ public class Main {
                             m.setDefaultLocationType(defaultLocationType);
                         }
                     }
+                    if (locationTypeInferenceEnabled) {
+                        m.setLocationInferenceEnabled(true);
+                    }
                     SemanticErrorList typeerrors = m.typeCheck();
                     for (SemanticError se : typeerrors) {
                         System.err.println(se.getHelpMessage());
@@ -172,14 +178,16 @@ public class Main {
                 + "*******************************\n" 
                 + "Usage: java " + this.getClass().getName()
                 + " [options] <absfiles>\n\n" 
-                + "  <absfiles>    ABS files to parse\n\n" + "Options:\n"
-                + "  -v            verbose output\n" 
-                + "  -notypecheck  disable typechecking\n"
-                + "  -nostdlib     do not include the standard lib \n"
-                + "  -loctypes     enable location type checking\n"
+                + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
+                + "  -v             verbose output\n" 
+                + "  -notypecheck   disable typechecking\n"
+                + "  -nostdlib      do not include the standard lib \n"
+                + "  -loctypes      enable location type checking\n"
                 + "  -locdefault==<loctype> \n"
-                + "                sets the default location type to <loctype>\n"
-                + "  -dump         dump AST to standard output \n" + "  -h            print this message\n");
+                + "                 sets the default location type to <loctype>\n"
+                + "  -loctypeinfer  enable location type inference\n"
+                + "  -dump          dump AST to standard output \n" 
+                + "  -h             print this message\n");
     }
 
     public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {

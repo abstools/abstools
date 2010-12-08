@@ -23,6 +23,7 @@ aspect Typing {
     inh Model ExpGuard.getModel();
     inh Model MethodImpl.getModel();
     inh Model VarOrFieldDecl.getModel();
+    inh Model MethodSig.getModel();
     
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
