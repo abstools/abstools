@@ -351,11 +351,13 @@ public class TypeCheckerHelper {
             } else if (i instanceof FromImport) {
                 FromImport fi = (FromImport) i;
                 ModuleDecl md = mod.lookupModule(fi.getModuleName());
+                if (md != null) {
                     Map<KindedName, ResolvedName> en = md.getExportedNames();
                     for (Name n : fi.getNames()) {
                         putKindedNames(n.getString(), en, res);
                         putKindedNames(fi.getModuleName() + "." + n.getString(), en, res);
                     }
+                }
             }
         }
         return res;

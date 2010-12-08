@@ -9,6 +9,11 @@ public class LocationInferenceError extends SemanticError {
         
     }
     
+    @Override 
+    public String getMsg() {
+        return getMessage();
+    }
+    
     @Override
     public String getMessage() {
         return "Location Type Inference failed, could not find a valid typing";

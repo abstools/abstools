@@ -64,6 +64,10 @@ public class LocationTypeVariable {
     }
     
     
+    public ASTNode<?> getNode() {
+        return node;
+    }
+    
     
 
 }

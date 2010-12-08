@@ -39,7 +39,7 @@ aspect LocationTypeInferrer {
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
         if (getModel().isLocationInferenceEnabled()) { 
-            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this.getTypeUse());
         }
         return t;
     }
@@ -47,7 +47,7 @@ aspect LocationTypeInferrer {
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
         if (getModel().isLocationInferenceEnabled()) {
-            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this.getAccess());
         }
         return t; 
     }
@@ -58,7 +58,7 @@ aspect LocationTypeInferrer {
             for (ParamDecl p : getParams()) {
                 LocationTypeInferrerHelper.annotateVar(p.getAccess().getType(), getModel().getLocationTypeConstraints(), p);
             }
-            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this);
+            LocationTypeInferrerHelper.annotateVar(t, getModel().getLocationTypeConstraints(), this.getReturnType());
         }
         return t;
     }
