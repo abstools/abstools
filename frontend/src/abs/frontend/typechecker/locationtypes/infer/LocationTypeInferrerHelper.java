@@ -93,7 +93,7 @@ public class LocationTypeInferrerHelper {
             DataTypeType dt = (DataTypeType) t;
             if (dt.hasTypeArgs()) {
                 for (Type ta : dt.getTypeArgs()) {
-                    annotateVar(ta, constraints, n);
+                    annotateVar(ta, constraints, null);
                 }
             }
         }

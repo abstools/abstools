@@ -11,6 +11,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.VarDeclStmt;
+import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
@@ -112,6 +113,16 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     @Test
+    public void callParamInfer() {
+        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i.m(null); } } { }");
+        ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
+        Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
+        LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerHelper.getLocationTypeVar(t));
+        assertEquals(LocationType.NEAR, lt);
+    }
+    
+    
+    @Test
     public void newCOGInfer() {
         assertInferOk("interface I { } class C implements I {} { I i; i = new cog C(); }", LocationType.FAR);
     }
@@ -154,6 +165,11 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void typeListError() {
         assertTypeErrorOnly("interface I {} { List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
+    }
+    
+    @Test
+    public void callWrongParam() {
+        assertTypeErrorOnly("interface I { Unit m([Near] I i); } { [Far] I i; i!m(i); }");
     }
     
     @Test
@@ -218,7 +234,7 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk(INT+code);
     }
     
-    private void assertInfer(String code, LocationType expected, boolean fails) {
+    private Model assertInfer(String code, LocationType expected, boolean fails) {
         Model m = assertParseOk(code,true);
         //m.setLocationTypingEnabled(true);
         m.setLocationInferenceEnabled(true);
@@ -233,14 +249,15 @@ public class LocationTypeTests extends FrontendTest {
             LocationType t = m.getLocationTypeInferenceResult().get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
             assertEquals(expected, t);
         }
+        return m;
     }
     
-    private void assertInferOk(String string, LocationType expected) {
-        assertInfer(string, expected, false);
+    private Model assertInferOk(String string, LocationType expected) {
+        return assertInfer(string, expected, false);
     }
     
-    private void assertInferOk(String string) {
-        assertInfer(string, null, false);       
+    private Model assertInferOk(String string) {
+        return assertInfer(string, null, false);       
     }
     
     private void assertInferFails(String string) {
