@@ -1,17 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry excluding="**/*.jadd|**/*.jrag|bash/parseABS|bash/parseAll" kind="src" path="src"/>
-	<classpathentry kind="lib" path="lib/antlr-3.2.jar"/>
-	<classpathentry kind="lib" path="lib/junit-4.8.1.jar"/>
-	<classpathentry kind="lib" path="lib/Java1.5Compiler.jar"/>
-	<classpathentry kind="lib" path="lib/org.sat4j.core.jar"/>
-	<classpathentry kind="lib" path="lib/org.sat4j.maxsat.jar"/>
-	<classpathentry kind="lib" path="lib/org.sat4j.pb.jar"/>
-	<classpathentry kind="lib" path="lib/sat4j-maxsat.jar"/>
-	<classpathentry kind="lib" path="lib/sat4j-pb.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/beaver-rt-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/antlr-3.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/beaver-rt-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/beaver-rt.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/beaver.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jastadd2-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jastadd2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/JastAddParser-src.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/JastAddParser.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/Java1.5Compiler.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/JFlex.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/junit-4.8.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/org.sat4j.core.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/org.sat4j.maxsat.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/org.sat4j.pb.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/proj.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sat4j-maxsat.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sat4j-pb.jar"/>
+	<classpathentry exported="true" kind="lib" path="bin" sourcepath="bin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
