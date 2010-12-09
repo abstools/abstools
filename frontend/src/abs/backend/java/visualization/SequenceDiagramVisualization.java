@@ -265,7 +265,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     first = false;
                 else
                     argString.append(", ");
-                argString.append(v.toString());
+                argString.append(""+v);
             }
 
             out.print(shorten(argString.toString()));

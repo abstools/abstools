@@ -10,7 +10,7 @@ public class StringUtil {
                 first = false;
             else
                 sb.append(sep);
-            sb.append(o.toString());
+            sb.append(""+o);
 
         }
         return sb.toString();
