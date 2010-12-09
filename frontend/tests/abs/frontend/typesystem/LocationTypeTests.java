@@ -15,9 +15,7 @@ import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
-import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerHelper;
-import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
-import abs.frontend.typechecker.locationtypes.infer.SatGenerator;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 
 public class LocationTypeTests extends FrontendTest {
     
@@ -117,7 +115,7 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i.m(null); } } { }");
         ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
         Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
-        LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerHelper.getLocationTypeVar(t));
+        LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(t));
         assertEquals(LocationType.NEAR, lt);
     }
     
@@ -153,6 +151,15 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk("interface I { [Somewhere] I m([Far] I i); } class C implements I { [Near] I m([Somewhere] I i) { return null; } } { }");
     }
     
+    @Test
+    public void callNullParam() {
+        assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Far] I2 i; i!m(null); }");
+    }
+    
+    @Test
+    public void callNullParam2() {
+        assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Somewhere] I2 i; i!m(null); }");
+    }
     
     // negative tests:
 
@@ -237,7 +244,8 @@ public class LocationTypeTests extends FrontendTest {
     private Model assertInfer(String code, LocationType expected, boolean fails) {
         Model m = assertParseOk(code,true);
         //m.setLocationTypingEnabled(true);
-        m.setLocationInferenceEnabled(true);
+        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+        m.registerTypeSystemExtension(ltie);
         SemanticErrorList e = m.typeCheck();
         //System.out.println(generated);
         assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), fails, !e.isEmpty()); 
@@ -246,7 +254,7 @@ public class LocationTypeTests extends FrontendTest {
         //assertEquals(fails, generated == null);
         if (expected != null) {
             VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
-            LocationType t = m.getLocationTypeInferenceResult().get(LocationTypeInferrerHelper.getLocationTypeVar(vds.getVarDecl().getType()));
+            LocationType t = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(vds.getVarDecl().getType()));
             assertEquals(expected, t);
         }
         return m;

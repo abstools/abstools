@@ -1,0 +1,170 @@
+import abs.frontend.ast.*;
+import abs.frontend.typechecker.ext.*;
+import java.util.Set;
+import java.util.Map;
+import java.util.HashSet;
+
+aspect TypeCheckerExtension {
+    private TypeExtensionHelper Model.typeCheckerExtension = new TypeExtensionHelper();
+    
+
+    public void Model.registerTypeSystemExtension(TypeSystemExtension tse) {
+        typeCheckerExtension.register(tse);
+    }
+    
+    public TypeExtensionHelper Model.getTypeExt() {
+        return typeCheckerExtension;
+    }
+    
+    refine Typing eq FunctionDecl.getType() {
+        Type t = Typing.FunctionDecl.getType();
+        getModel().getTypeExt().annotateType(t, this.getTypeUse());
+        return t;
+    }
+        
+    refine Typing eq TypedVarOrFieldDecl.getType() {
+        Type t = Typing.TypedVarOrFieldDecl.getType();
+        getModel().getTypeExt().annotateType(t, this.getAccess());
+        return t; 
+    }
+    
+    refine Typing eq MethodSig.getType() {
+        Type t = Typing.MethodSig.getType();
+        getModel().getTypeExt().annotateType(t, this.getReturnType());
+        return t;
+    }
+    
+    refine Typing eq ParametricDataTypeUse.getType() {
+        Type t = Typing.ParametricDataTypeUse.getType();        
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
+    refine LocationTypeChecker eq NullExp.getType() {
+        Type t = LocationTypeChecker.NullExp.getType();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
+    refine LocationTypeChecker eq ThisExp.getType() {
+        Type t = LocationTypeChecker.ThisExp.getType();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
+    refine LocationTypeChecker eq NewExp.getType() {
+        Type t = LocationTypeChecker.NewExp.getType();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
+    refine LocationTypeChecker eq SyncCall.getType() {
+        Type t = LocationTypeChecker.SyncCall.getType();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+
+    refine LocationTypeChecker eq AsyncCall.getType() {
+        Type t = LocationTypeChecker.AsyncCall.getType().fullCopy();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
+    refine ClassKindChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        ClassKindChecker.NewExp.typeCheck(s);
+        if (!s.isEmpty()) return;
+        ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
+        getModel().getTypeExt().checkAssignable(getType(),d.getParams(),getParams());
+    }
+    
+    refine LocationTypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.AssignStmt.typeCheck(s);
+        if (!s.isEmpty()) return;
+        getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType());
+    }
+    
+    refine LocationTypeChecker public void Call.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.Call.typeCheck(s);
+        if (!s.isEmpty()) return;
+        getModel().getTypeExt().checkMethodCall(this);
+        if (getMethodSig() != null) {
+           getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams());
+        }
+    }
+    
+    refine TypeChecker public void ClassDecl.typeCheck(SemanticErrorList s) {
+        TypeChecker.ClassDecl.typeCheck(s);
+        if (!s.isEmpty()) return;
+
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        addAllMethodSigs(sigs);  
+
+        HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
+
+        for (MethodImpl m : getMethods()) {
+            String name = m.getMethodSig().getName();
+            if (sigs.containsKey(name)) {
+                MethodSig sig = sigs.get(name);
+                MethodSig ms = m.getMethodSig();
+                InterfaceDecl d = (InterfaceDecl) sig.getParent().getParent();
+
+                Type expectedReturnType = sig.getType();
+                Type actualReturnType = ms.getType();
+                getModel().getTypeExt().checkAssignable(actualReturnType, expectedReturnType);
+
+                for (int i = 0; i < sig.getNumParam(); i++) {
+                    Type texpected = sig.getParam(i).getType();
+                    Type tactual = ms.getParam(i).getType();
+                    getModel().getTypeExt().checkAssignable(texpected, tactual);
+                }
+            }
+        }
+
+    }
+    
+    refine LocationTypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.ReturnStmt.typeCheck(s);
+        if (!s.isEmpty()) return;
+
+        MethodImpl m = getContextMethod();
+
+        if (m == null) {
+            return;
+        }
+
+        getModel().getTypeExt().checkAssignable(getRetExp().getType(), m.getMethodSig().getType());
+    }
+    
+    refine LocationTypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.VarDecl.typeCheck(s);
+        if (!s.isEmpty()) return;
+
+        if (hasInitExp()) {
+            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType());
+        }
+    }
+
+    refine LocationTypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.FieldDecl.typeCheck(s);
+        if (!s.isEmpty()) return;
+
+        if (hasInitExp()) {
+            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType());
+        }
+ 
+     }
+     
+     refine LocationTypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
+        LocationTypeChecker.DataConstructorExp.typeCheck(s);
+        if (!s.isEmpty()) return;
+        
+        getModel().getTypeExt().checkDataConstructorExp(this);
+   }
+     
+     refine TypeChecker public void Model.typeCheck(SemanticErrorList s) {
+         getTypeExt().setSemanticErrorList(s);
+         TypeChecker.Model.typeCheck(s);
+         if (!s.isEmpty()) return;
+         getTypeExt().finished();
+     }
+}

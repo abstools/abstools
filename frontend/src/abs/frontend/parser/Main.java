@@ -28,6 +28,7 @@ import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
 import abs.frontend.typechecker.locationtypes.LocationType;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 
 public class Main {
 
@@ -137,7 +138,8 @@ public class Main {
                         }
                     }
                     if (locationTypeInferenceEnabled) {
-                        m.setLocationInferenceEnabled(true);
+                        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+                        m.registerTypeSystemExtension(ltie);
                     }
                     SemanticErrorList typeerrors = m.typeCheck();
                     for (SemanticError se : typeerrors) {

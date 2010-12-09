@@ -150,13 +150,18 @@ public abstract class Constraint {
                 result.add(values);
             }
             // if tv3 = SOMEWHERE  and tv2 = t then tv1 = SOMEWHERE
-            for (LocationType t : ALLTYPES) {
+            for (LocationType t : new LocationType[]{NEAR, FAR, SOMEWHERE}) {
                 values = new ArrayList<Integer>();
-                values.add(- e.get(tv3, FAR));
+                values.add(- e.get(tv3, SOMEWHERE));
                 values.add(- e.get(tv2, t));
                 values.add(e.get(tv1, SOMEWHERE));
                 result.add(values);
             }
+            // if tv2 = BOTTOM then tv1 = BOTTOM
+            values = new ArrayList<Integer>();
+            values.add(- e.get(tv2, BOTTOM));
+            values.add(e.get(tv1, BOTTOM));
+            result.add(values);
             return result;
         }
 

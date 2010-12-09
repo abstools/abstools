@@ -15,6 +15,7 @@ aspect LocationTypeChecker {
 
     private boolean Model.locationTypingEnabled = false;
     private LocationType Model.defaultLocationType = LocationType.SOMEWHERE;
+    
 
     syn boolean Model.isLocationTypingEnabled() = locationTypingEnabled;
     syn LocationType Model.getDefaultLocationType() = defaultLocationType;
@@ -153,6 +154,5 @@ aspect LocationTypeChecker {
     refine Typing eq ThisExp.getType() {
         return LocationTypeCheckerHelper.withLocationType(Typing.ThisExp.getType(),LocationType.NEAR);
     }
-
     
 }
