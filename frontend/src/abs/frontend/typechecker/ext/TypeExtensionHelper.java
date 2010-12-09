@@ -98,7 +98,7 @@ public class TypeExtensionHelper {
 
 
     private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type t, Type arg) {
-        if (arg.isTypeParameter()) {
+        if (arg.isTypeParameter() && t.isReferenceType()) {
             TypeParameter typeParam = (TypeParameter) arg;
             if (map.containsKey(typeParam)) {
                 Type lt = map.get(typeParam);

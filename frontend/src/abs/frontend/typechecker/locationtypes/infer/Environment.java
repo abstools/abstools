@@ -14,6 +14,7 @@ public class Environment {
     int current = 0;
     
     public int get(LocationTypeVariable v, LocationType t) {
+        assert v != null;
         TypedVar tv = new TypedVar(v, t);
         if (map.containsKey(tv)) {
             return map.get(tv);

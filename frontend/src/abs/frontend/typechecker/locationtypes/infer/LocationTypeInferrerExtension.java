@@ -29,7 +29,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
     
     public static LocationTypeVariable getLV(Type t) {
-        return (LocationTypeVariable) t.getMetaData(LocationTypeVariable.VAR_KEY);
+        LocationTypeVariable ltv = (LocationTypeVariable) t.getMetaData(LocationTypeVariable.VAR_KEY); 
+        return ltv;
     }
     
     private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, LocationTypeVariable adaptTo, ASTNode<?> n) {
