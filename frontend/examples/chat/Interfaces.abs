@@ -1,6 +1,8 @@
 module ABSChat.Interfaces;
 export *;
 
+import * from GUI;
+
 data ServerMsg = Welcome
    	           | GoodBye
           	   | NewMessage(String);
@@ -18,7 +20,16 @@ interface Session {
 }
 
 interface Client {
-	Unit setServer(Server s);
+	Unit setServer([Somewhere] Server s);
 	Unit start();
 	Unit receive(ServerMsg m);
+	[Near] ClientGUI getGUI();
 }
+
+interface ClientGUI {
+   Unit init();
+   [Somewhere] Button getSendButton();
+   [Somewhere] TextField getTextField();
+}
+
+

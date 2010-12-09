@@ -1,14 +1,93 @@
 module ABSChat.Client;
-export *;
+export ClientImpl;
+export ClientGUI;
 import * from ABSChat.Interfaces;
+import * from GUI;
+
+interface ClientIntern extends Client {
+	 Unit sendText(String text);
+}
+ 
+interface ClientGUIIntern extends ClientGUI {
+   ClientIntern getClientIntern();
+   String getTextFieldText();
+} 
+
+ 
+class ClientGUIImpl(ClientIntern client) implements ClientGUIIntern {
+   Window gui;
+   Button sendButton;
+   TextField textField;
+   Bool initialized = False;
+   
+   {
+   	  gui = new cog WindowImpl();
+   }
+   
+   Unit init() {
+   	  Fut<Button> f;
+   	  f = gui!newButton("Send");
+   	  sendButton = f.get;
+   	  ButtonListener l;
+   	  l = new SendButtonListener(this);
+   	  sendButton!registerListener(l);
+
+      Fut<TextField> tf;
+      tf = gui!newTextField();
+      textField = tf.get;
+
+   	  initialized = True;
+   }
+   
+   Button getSendButton() {
+      await initialized;
+      return sendButton;
+   }
+   
+   TextField getTextField() {
+      await initialized;
+      return textField;
+   }
+   
+   String getTextFieldText() {
+      Fut<String> f;
+      f = textField!getText();
+      return f.get;
+   }
+   
+   ClientIntern getClientIntern() {
+      return client;
+   }
+}
+
+[Plain]
+class SendButtonListener(ClientGUIIntern client) implements ButtonListener {
+   Unit pressed() {
+       ClientIntern ci;
+       ci = client.getClientIntern();
+       String s = "";
+       s = client.getTextFieldText();
+   	   ci.sendText(s);
+   }
+}
 
 
 [COG]
-class ClientImpl implements Client { 
-
+class ClientImpl implements ClientIntern { 
+   String name = "Alice";
    Server server;
    Session session;
-   Unit setServer(Server s) {
+   [Near] ClientGUI gui;
+
+   ClientGUI getGUI() {
+	  if (gui == null) {
+	     gui = new ClientGUIImpl(this);
+	     gui.init();
+	  }
+   	  return gui;
+   }
+
+   Unit setServer(Server s) { 
    	   this.server = s;
    }
    
@@ -23,7 +102,7 @@ class ClientImpl implements Client {
    	  await session != null;
    	  ClientMsg ans = 
    	  	case msg {
-   	  		  Welcome => ChatMessage("Hallo","Welt"); 
+   	  		  Welcome => ChatMessage(name,"Welt"); 
    	  };
    	  
    	  Fut<Unit> u;
@@ -31,4 +110,9 @@ class ClientImpl implements Client {
    	  await u?;
    	  session ! close();
    }  
+   
+   Unit sendText(String text) {
+      await session != null;
+      session ! receive(ChatMessage(name,text));
+   }
 }

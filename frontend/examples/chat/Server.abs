@@ -15,7 +15,7 @@ interface SessionIntern extends Session {
 [COG]
 class ServerImpl implements ServerIntern { 
    Bool running = False;
-   List<[Near] SessionIntern> sessions = Nil;
+   List<SessionIntern> sessions = Nil;
    
    Unit start() {
       running = True;
@@ -23,21 +23,21 @@ class ServerImpl implements ServerIntern {
    
    Session connect(Client c) {
        await running;
-       [Near] SessionIntern s;
+       SessionIntern s;
        s = new SessionImpl(this, c);
        sessions = Cons(s,sessions);
        s!init();
        return s;
    }
 
-	Unit sessionClosed([Near] SessionIntern i) {
+	Unit sessionClosed(SessionIntern i) {
 	   sessions = without(sessions,i);
 	}
 
 }
 
 [Plain]
-class SessionImpl([Near] ServerIntern server, Client c) implements SessionIntern {
+class SessionImpl(ServerIntern server, Client c) implements SessionIntern {
 	Unit init() {
 		c!receive(Welcome);
 	}

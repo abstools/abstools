@@ -3,16 +3,27 @@ module ABSChat.Main;
 import * from ABSChat.Interfaces;  
 import * from ABSChat.Server;
 import * from ABSChat.Client;
+import * from ABSChat.User;
 
 
 {
     Server server; 
     server = new cog ServerImpl();  
+	server ! start();
 	
 	Client client;  
 	client = new cog ClientImpl();
 	client ! setServer(server);
-	
-	server ! start();
 	client ! start();
+	
+	User user;
+	user = new cog UserImpl();
+	
+	Fut<ClientGUI> fgui;
+	fgui = client ! getGUI();
+	[Somewhere] ClientGUI gui;
+	gui = fgui.get;
+	
+	user ! use(gui);	
+	
 }
