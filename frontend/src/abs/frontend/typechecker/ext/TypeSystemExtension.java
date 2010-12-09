@@ -7,7 +7,7 @@ import abs.frontend.typechecker.Type;
 
 public interface TypeSystemExtension {
 
-    void checkAssignable(Type adaptTo, Type rht, Type lht);
+    void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n);
 
     void annotateType(Type t, ASTNode<?> n);
 

@@ -74,13 +74,13 @@ aspect TypeCheckerExtension {
         ClassKindChecker.NewExp.typeCheck(s);
         if (!s.isEmpty()) return;
         ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
-        getModel().getTypeExt().checkAssignable(getType(),d.getParams(),getParams());
+        getModel().getTypeExt().checkAssignable(getType(),d.getParams(),getParams(), this);
     }
     
     refine LocationTypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
         LocationTypeChecker.AssignStmt.typeCheck(s);
         if (!s.isEmpty()) return;
-        getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType());
+        getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType(), this);
     }
     
     refine LocationTypeChecker public void Call.typeCheck(SemanticErrorList s) {
@@ -88,7 +88,7 @@ aspect TypeCheckerExtension {
         if (!s.isEmpty()) return;
         getModel().getTypeExt().checkMethodCall(this);
         if (getMethodSig() != null) {
-           getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams());
+           getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams(), this);
         }
     }
     
@@ -110,12 +110,12 @@ aspect TypeCheckerExtension {
 
                 Type expectedReturnType = sig.getType();
                 Type actualReturnType = ms.getType();
-                getModel().getTypeExt().checkAssignable(actualReturnType, expectedReturnType);
+                getModel().getTypeExt().checkAssignable(actualReturnType, expectedReturnType, m);
 
                 for (int i = 0; i < sig.getNumParam(); i++) {
                     Type texpected = sig.getParam(i).getType();
                     Type tactual = ms.getParam(i).getType();
-                    getModel().getTypeExt().checkAssignable(texpected, tactual);
+                    getModel().getTypeExt().checkAssignable(texpected, tactual, m);
                 }
             }
         }
@@ -132,7 +132,7 @@ aspect TypeCheckerExtension {
             return;
         }
 
-        getModel().getTypeExt().checkAssignable(getRetExp().getType(), m.getMethodSig().getType());
+        getModel().getTypeExt().checkAssignable(getRetExp().getType(), m.getMethodSig().getType(), this);
     }
     
     refine LocationTypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
@@ -140,7 +140,7 @@ aspect TypeCheckerExtension {
         if (!s.isEmpty()) return;
 
         if (hasInitExp()) {
-            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType());
+            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
         }
     }
 
@@ -149,7 +149,7 @@ aspect TypeCheckerExtension {
         if (!s.isEmpty()) return;
 
         if (hasInitExp()) {
-            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType());
+            getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
         }
  
      }

@@ -67,6 +67,50 @@ public abstract class Constraint {
         
     }
     
+    private static class FarConstraint extends Constraint {
+        LocationTypeVariable tv1, tv2;
+
+        public FarConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
+            this.tv1 = tv1;
+            this.tv2 = tv2;
+        }
+
+        @Override
+        public String toString() {
+            return tv1+ " <:_FAR " + tv2;
+        }
+        
+        @Override
+        public List<List<Integer>> generateSat(Environment e) {
+            List<List<Integer>> result = new ArrayList<List<Integer>>();
+            List<Integer> values;
+            values = new ArrayList<Integer>();
+            values.add(- e.get(tv1, BOTTOM));
+            values.addAll(generate(tv2, e, ALLTYPES));
+            result.add(values);
+            values = new ArrayList<Integer>();
+            values.add(- e.get(tv1, NEAR));
+            values.addAll(generate(tv2, e, FAR, SOMEWHERE));
+            result.add(values);
+            values = new ArrayList<Integer>();
+            values.add(- e.get(tv1, FAR));
+            values.addAll(generate(tv2, e, FAR, SOMEWHERE));
+            result.add(values);
+            values = new ArrayList<Integer>();
+            values.add(- e.get(tv1, SOMEWHERE));
+            values.addAll(generate(tv2, e, FAR, SOMEWHERE));
+            result.add(values);
+            return result;
+        }
+
+        @Override
+        public void variables(Set<LocationTypeVariable> vars) {
+            vars.add(tv1);
+            vars.add(tv2);
+        }
+        
+    }
+    
     public static class DeclConstraint extends Constraint {
         LocationTypeVariable tv;
 
@@ -270,5 +314,10 @@ public abstract class Constraint {
     
     public static Constraint declConstraint(LocationTypeVariable tv) {
         return new DeclConstraint(tv);
+    }
+
+    // tv1 <_far tv2
+    public static Constraint farConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
+        return new FarConstraint(tv1, tv2);
     }
 }

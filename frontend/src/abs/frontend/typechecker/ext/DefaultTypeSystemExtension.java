@@ -18,8 +18,8 @@ public abstract class DefaultTypeSystemExtension implements TypeSystemExtension 
     }
     
     public void checkEq(Type lt, Type t) {
-        checkAssignable(null, lt, t);
-        checkAssignable(null, t, lt);
+        checkAssignable(null, lt, t, null);
+        checkAssignable(null, t, lt, null);
     }
     
     @Override

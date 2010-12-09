@@ -37,32 +37,32 @@ public class TypeExtensionHelper {
     }
     
     
-    public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args) {
+    public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {
         java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
             PureExp exp = args.getChild(i);
-            checkAssignable(callee, exp.getType(), argType);
+            checkAssignable(callee, exp.getType(), argType, n);
         }
     }
     
-    public void checkAssignable(Type rht, Type lht) {
-        checkAssignable(null, rht, lht);
+    public void checkAssignable(Type rht, Type lht, ASTNode<?> n) {
+        checkAssignable(null, rht, lht, n);
     }
     
-    public void checkAssignable(Type adaptTo, Type rht, Type lht) {
+    public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
         if (lht.isDataType() && rht.isDataType()) {
             DataTypeType dtl = (DataTypeType) lht;
             DataTypeType dtr = (DataTypeType) rht;
             if (dtl.hasTypeArgs() && dtr.hasTypeArgs() && dtl.getTypeArgs().size() == dtr.getTypeArgs().size()) {
                 for (int i = 0; i < dtl.getTypeArgs().size(); i++) {
-                    checkAssignable(adaptTo, dtr.getTypeArg(i), dtl.getTypeArg(i));
+                    checkAssignable(adaptTo, dtr.getTypeArg(i), dtl.getTypeArg(i), n);
                 }
             }
         }
         if (lht.isReferenceType() && rht.isReferenceType()) {
             for (TypeSystemExtension tse : obs) {
-                tse.checkAssignable(adaptTo, rht, lht);
+                tse.checkAssignable(adaptTo, rht, lht, n);
             }
         }
     }
