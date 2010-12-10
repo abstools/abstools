@@ -35,7 +35,7 @@ aspect TypeCheckerExtension {
     }
     
     refine Typing eq ParametricDataTypeUse.getType() {
-        Type t = Typing.ParametricDataTypeUse.getType();        
+        Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
@@ -47,19 +47,19 @@ aspect TypeCheckerExtension {
     }
     
     refine LocationTypeChecker eq ThisExp.getType() {
-        Type t = LocationTypeChecker.ThisExp.getType();
+        Type t = LocationTypeChecker.ThisExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
     refine LocationTypeChecker eq NewExp.getType() {
-        Type t = LocationTypeChecker.NewExp.getType();
+        Type t = LocationTypeChecker.NewExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
     refine LocationTypeChecker eq SyncCall.getType() {
-        Type t = LocationTypeChecker.SyncCall.getType();
+        Type t = LocationTypeChecker.SyncCall.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }

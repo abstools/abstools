@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ABS Compiler
 Bundle-SymbolicName: eu.hatsproject.abs.compiler;singleton:=true
-Bundle-Version: 0.6.0.1
+Bundle-Version: 0.6.0.2
 Bundle-Vendor: HATS Project
 Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/beaver-rt-src.jar,
@@ -11,11 +11,8 @@ Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/JFlex.jar,
  lib/junit-4.8.1.jar,
  lib/org.sat4j.core.jar,
- lib/org.sat4j.maxsat.jar,
  lib/org.sat4j.pb.jar,
- lib/proj.jar,
  lib/sat4j-maxsat.jar,
- lib/sat4j-pb.jar,
  .,
  bin,
  lib/jastadd2.jar

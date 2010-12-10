@@ -125,12 +125,18 @@ aspect LocationTypeChecker {
     syn Type Exp.getWithLocationType() = LocationTypeCheckerHelper.withCalcLocationType(getType(),getModel().getDefaultLocationType());
     
     refine Typing eq SyncCall.getType() {
-        Type rt = LocationTypeCheckerHelper.withCalcLocationType(Typing.SyncCall.getType(), getModel().getDefaultLocationType());
+        Type t = Typing.SyncCall.getType();
+        if (!getModel().isLocationTypingEnabled())
+            return t;
+        Type rt = LocationTypeCheckerHelper.withCalcLocationType(t, getModel().getDefaultLocationType());
         return LocationTypeCheckerHelper.adaptTo(rt,getCallee().getWithLocationType());
     }
 
     refine Typing eq AsyncCall.getType() {
-        Type rt = LocationTypeCheckerHelper.withCalcLocationType(Typing.AsyncCall.getType(), getModel().getDefaultLocationType());
+        Type t = Typing.AsyncCall.getType();
+        if (!getModel().isLocationTypingEnabled())
+            return t;
+        Type rt = LocationTypeCheckerHelper.withCalcLocationType(t, getModel().getDefaultLocationType());
         return LocationTypeCheckerHelper.adaptTo(rt,getCallee().getWithLocationType());
     }
     

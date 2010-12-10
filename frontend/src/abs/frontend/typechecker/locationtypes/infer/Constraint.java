@@ -153,67 +153,69 @@ public abstract class Constraint {
     }
     
     private static class AdaptConstraint extends Constraint {
-        LocationTypeVariable tv1, tv2, tv3;
+        LocationTypeVariable resultTv, tv, adaptToTv;
 
-        public AdaptConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2, LocationTypeVariable tv3) {
-            this.tv1 = tv1;
-            this.tv2 = tv2;
-            this.tv3 = tv3;
+        public AdaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptToTv) {
+            if (resultTv == null || tv == null || adaptToTv == null)
+                throw new IllegalArgumentException("some variable is null: "+resultTv+", "+tv+", "+adaptToTv);
+            this.resultTv = resultTv;
+            this.tv = tv;
+            this.adaptToTv = adaptToTv;
         }
 
         @Override
         public String toString() {
-            return tv3 + " >> " + tv2 + " = " + tv1;
+            return tv + " >> " + adaptToTv + " = " + resultTv;
         }
         
         @Override
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
-            // if tv3 = NEAR then tv1 = tv2
+            // if adaptToTv= NEAR then resultTv = tv
             for (LocationType t : ALLTYPES) {
-                // tv3 != NEAR or tv1 != T or tv2 = T
+                // adaptToTv!= NEAR or resultTv != T or tv = T
                 values = new ArrayList<Integer>();
-                values.add(- e.get(tv3, NEAR));
-                values.add(- e.get(tv1, t));
-                values.add(e.get(tv2, t));
+                values.add(- e.get(adaptToTv, NEAR));
+                values.add(- e.get(resultTv, t));
+                values.add(e.get(tv, t));
                 result.add(values);
             }
-            // if tv3 = FAR  and tv2 = NEAR then tv1 = FAR
+            // if adaptToTv = FAR  and tv = NEAR then resultTv = FAR
             values = new ArrayList<Integer>();
-            values.add(- e.get(tv3, FAR));
-            values.add(- e.get(tv2, NEAR));
-            values.add(e.get(tv1, FAR));
+            values.add(- e.get(adaptToTv, FAR));
+            values.add(- e.get(tv, NEAR));
+            values.add(e.get(resultTv, FAR));
             result.add(values);
-            // if tv3 = FAR  and tv2 = {FAR, SOMEWHERE} then tv1 = SOMEWHERE
+            // if adaptToTv= FAR  and tv = {FAR, SOMEWHERE} then resultTv = SOMEWHERE
             for (LocationType t : new LocationType[]{FAR, SOMEWHERE}) {
                 values = new ArrayList<Integer>();
-                values.add(- e.get(tv3, FAR));
-                values.add(- e.get(tv2, t));
-                values.add(e.get(tv1, SOMEWHERE));
+                values.add(- e.get(adaptToTv, FAR));
+                values.add(- e.get(tv, t));
+                values.add(e.get(resultTv, SOMEWHERE));
                 result.add(values);
             }
-            // if tv3 = SOMEWHERE  and tv2 = t then tv1 = SOMEWHERE
+            // if adaptToTv= SOMEWHERE  and tv = t then resultTv = SOMEWHERE
             for (LocationType t : new LocationType[]{NEAR, FAR, SOMEWHERE}) {
                 values = new ArrayList<Integer>();
-                values.add(- e.get(tv3, SOMEWHERE));
-                values.add(- e.get(tv2, t));
-                values.add(e.get(tv1, SOMEWHERE));
+                values.add(- e.get(adaptToTv, SOMEWHERE));
+                values.add(- e.get(tv, t));
+                values.add(e.get(resultTv, SOMEWHERE));
                 result.add(values);
             }
-            // if tv2 = BOTTOM then tv1 = BOTTOM
+            // if tv = BOTTOM then resultTv = BOTTOM
             values = new ArrayList<Integer>();
-            values.add(- e.get(tv2, BOTTOM));
-            values.add(e.get(tv1, BOTTOM));
+            values.add(- e.get(tv, BOTTOM));
+            values.add(e.get(resultTv, BOTTOM));
             result.add(values);
             return result;
         }
 
         @Override
         public void variables(Set<LocationTypeVariable> vars) {
-            vars.add(tv1);
-            vars.add(tv2);
-            vars.add(tv3);
+            vars.add(resultTv);
+            vars.add(tv);
+            vars.add(adaptToTv);
         }
         
     }
@@ -308,8 +310,8 @@ public abstract class Constraint {
     
 
     // tv1 = tv2 |> tv3
-    public static Constraint adaptConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2, LocationTypeVariable tv3) {
-        return new AdaptConstraint(tv1, tv2, tv3);
+    public static Constraint adaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptTo) {
+        return new AdaptConstraint(resultTv, tv, adaptTo);
     }
     
     public static Constraint declConstraint(LocationTypeVariable tv) {

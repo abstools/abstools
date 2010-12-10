@@ -24,6 +24,17 @@ public class DataTypeType extends Type {
         return new DataTypeType(decl,typeArgs);
     }
     
+    @Override
+    public Type fullCopy() {
+        List<Type> typeArgCopy = new ArrayList<Type>();
+        for (Type t : typeArgs) {
+            typeArgCopy.add(t.fullCopy());
+        }
+        Type copy = new DataTypeType(decl,typeArgCopy);
+        copy.metaData.putAll(metaData);
+        return copy;
+    }
+    
     public DataTypeType(DataTypeDecl decl) {
         this(decl, new Type[0]);
     }

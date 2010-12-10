@@ -12,7 +12,7 @@ import abs.frontend.ast.MethodSig;
 public abstract class Type {
     private static final Object ANNOTATION_KEY = new Object();
     
-    private Map<Object,Object> metaData = new HashMap<Object,Object>();
+    protected Map<Object,Object> metaData = new HashMap<Object,Object>();
     {
         metaData.put(ANNOTATION_KEY, Collections.EMPTY_LIST);
     }

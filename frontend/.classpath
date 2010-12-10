@@ -13,6 +13,5 @@
 	<classpathentry exported="true" kind="lib" path="lib/JFlex.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/junit-4.8.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/sat4j-maxsat.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/sat4j-pb.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

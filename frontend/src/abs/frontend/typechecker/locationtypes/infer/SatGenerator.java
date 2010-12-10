@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,18 +14,13 @@ import java.util.Set;
 
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
 import org.sat4j.maxsat.reader.WDimacsReader;
-import org.sat4j.minisat.SolverFactory;
 import org.sat4j.pb.IPBSolver;
-import org.sat4j.reader.LecteurDimacs;
 import org.sat4j.reader.ParseFormatException;
-import org.sat4j.reader.Reader;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IProblem;
-import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.analyser.TypeError;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 public class SatGenerator {
