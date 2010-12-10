@@ -14,5 +14,5 @@ import abs.backend.maude.MaudeTests;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.class })
-public class AllTests {
+public class AllBackendTests {
 }

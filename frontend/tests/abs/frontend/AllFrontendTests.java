@@ -22,4 +22,4 @@ import org.junit.runners.Suite;
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
         ClassKindTests.class})
-public class AllTests {}
+public class AllFrontendTests {}

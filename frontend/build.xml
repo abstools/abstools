@@ -113,13 +113,18 @@
       
 	<target name="genshell">
 		<copy todir="${bash.build.dir}">
-			<filelist id="shellfiles" dir="${bash.dir}" files="parseABS,parseAll,generateMaude,generateJava,debugJava" />
+			<fileset id="shellfiles" dir="${bash.dir}">
+			  <include name="*" />
+			</fileset>
 			<filterset>
 				<filter token="BASEDIR" value="${basedir}" />
 			</filterset>
 		</copy>
 		<chmod perm="ugo+x">
-			<filelist dir="${bash.build.dir}" files="parseABS,parseAll,generateMaude,generateJava,debugJava" />
+			<fileset dir="${bash.build.dir}" >
+		  		<include name="*" />
+			</fileset>
+			
 		</chmod>
 	</target>
 
@@ -183,8 +188,8 @@
 	</path>
 
 	<!-- suite file -->
-	<property name="test.frontend.suite.name" value="abs.frontend.AllTests" />
-   <property name="test.backend.suite.name" value="abs.backend.AllTests" />
+	<property name="test.frontend.suite.name" value="abs.frontend.AllFrontendTests" />
+   <property name="test.backend.suite.name" value="abs.backend.AllBackendTests" />
    <property name="test.backend.semantic.suite.name" value="abs.backend.common.AllSemanticTests" />
 
    <target name="tests-all" depends="tests-frontend, tests-backend" />

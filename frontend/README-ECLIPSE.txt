@@ -1,4 +1,5 @@
-Readme for Developers that use Eclipse
+ABS Developer Information for developers using Eclipse
+------------------------------------------------------
 
    Please import the absformatter.xml file to apply the correct formatting.
     
