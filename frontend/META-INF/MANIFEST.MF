@@ -6,12 +6,7 @@ Bundle-Version: 1.6.4
 Bundle-Vendor: HATS Project
 Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/beaver-rt-src.jar,
- lib/beaver-rt.jar,
  lib/beaver.jar,
- lib/jastadd2-src.jar,
- lib/jastadd2.jar,
- lib/JastAddParser-src.jar,
- lib/JastAddParser.jar,
  lib/Java1.5Compiler.jar,
  lib/JFlex.jar,
  lib/junit-4.8.1.jar,
@@ -22,7 +17,8 @@ Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/sat4j-maxsat.jar,
  lib/sat4j-pb.jar,
  .,
- bin
+ bin,
+ lib/jastadd2.jar
 Export-Package: .,
  AST,
  JFlex,
@@ -158,6 +154,5 @@ Export-Package: .,
  org.sat4j.tools,
  org.sat4j.tools.xplain,
  parser,
- scanner,
- tools.t.beaver
-
+ scanner
+ 
