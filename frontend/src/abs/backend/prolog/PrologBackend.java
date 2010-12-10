@@ -14,6 +14,7 @@ public class PrologBackend extends Main {
     protected File outFile;
     protected PrintStream outStream;
     private String outFilename = "abs.pl";
+    public static int awaitId = 0;
 
     public static void main(final String[] args) {
         PrologBackend prologBE = new PrologBackend();

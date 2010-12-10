@@ -644,7 +644,7 @@ aspect GenerateProlog {
     }
     //statements
     public void AwaitStmt.generateProlog(PrintStream s) {
-        s.print("awaitStmt(");
+        s.print("awaitStmt(" + PrologBackend.awaitId++ + ",");
         getGuard().generateProlog(s);
         s.print(")");
     }
@@ -681,7 +681,7 @@ aspect GenerateProlog {
         s.print("skipStmt");
     }
     public void SuspendStmt.generateProlog(PrintStream s) {
-        s.print("suspendStmt");
+        s.print("suspendStmt(" + PrologBackend.awaitId++ + ")");
     }   
     public void IfStmt.generateProlog(PrintStream s){
 
