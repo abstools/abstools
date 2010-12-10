@@ -152,6 +152,11 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     @Test
+    public void overrideminimal() {
+        assertInferOk("interface I { I m([Far] I i); } class C implements I { [Near] I m([Somewhere] I i) { return null; } } { I i; I k; Fut<I> j; j = k!m(i); i = j.get; i = new cog C(); }", LocationType.FAR);
+    }
+    
+    @Test
     public void callNullParam() {
         assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Far] I2 i; i!m(null); }");
     }
