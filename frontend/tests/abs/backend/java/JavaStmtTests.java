@@ -18,6 +18,11 @@ public class JavaStmtTests extends JavaBackendTest {
     public void skipStmt() {
         assertValid("{ skip; }");
     }
+    
+    @Test
+    public void interfaceNamedLikeModule() {
+        assertValid("interface JavaUnitTest { JavaUnitTest m(); } { JavaUnitTest i; i.m();}");
+    }
 
     @Test
     public void assertStmt() {

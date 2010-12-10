@@ -181,7 +181,7 @@ aspect GenerateJava {
 
     public void InterfaceDecl.generateJava(PrintStream stream) {
         JavaGeneratorHelper.generateHelpLine(this,stream);
-        stream.print("public interface "+getName()+" extends "+ABSInterface.class.getName());
+        stream.print("public interface "+JavaBackend.getJavaName(this)+" extends "+ABSInterface.class.getName());
         for (InterfaceTypeUse use : getExtendedInterfaceUses()) {
             String iname = JavaBackend.getQualifiedString(((InterfaceType)use.getType()).getDecl());
             stream.print(", "+iname);

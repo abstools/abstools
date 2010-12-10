@@ -25,6 +25,7 @@ import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.TypeUse;
@@ -203,8 +204,12 @@ public class JavaBackend extends Main {
         return getConstructorName(((DataTypeType) decl.getType()).getDecl(), decl.getName());
     }
 
+    public static String getInterfaceName(String name) {
+        return name + "_i";
+    }
+    
     public static String getClassName(String name) {
-        return name + "_Class";
+        return name + "_c";
     }
 
     public static String getFunctionName(String name) {
@@ -234,6 +239,8 @@ public class JavaBackend extends Main {
             return getConstructorName((DataConstructor) decl);
         } else if (decl instanceof ClassDecl) {
             return getClassName(decl.getName());
+        } else if (decl instanceof InterfaceDecl) {
+            return getInterfaceName(decl.getName());
         }
 
         return decl.getName();
