@@ -18,19 +18,19 @@ aspect TypeCheckerExtension {
     
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
-        getModel().getTypeExt().annotateType(t, this.getTypeUse());
+        getModel().getTypeExt().annotateType(t, this);
         return t;
     }
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        getModel().getTypeExt().annotateType(t, this.getAccess());
+        getModel().getTypeExt().annotateType(t, this);
         return t; 
     }
     
     refine Typing eq MethodSig.getType() {
         Type t = Typing.MethodSig.getType();
-        getModel().getTypeExt().annotateType(t, this.getReturnType());
+        getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
@@ -69,7 +69,7 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
-    
+
     refine ClassKindChecker public void NewExp.typeCheck(SemanticErrorList s) {
         ClassKindChecker.NewExp.typeCheck(s);
         if (!s.isEmpty()) return;

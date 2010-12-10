@@ -51,14 +51,14 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         }
         if (rht.isReferenceType()) {
             if (adaptTo != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
-                LocationTypeVariable tv = adaptTo(getLV(rht), adaptTo, null);
+                LocationTypeVariable rhtlv = getLV(rht);
+                LocationTypeVariable tv = adaptTo(rhtlv, adaptTo, null);
                 annotateVar(rht, tv);
             }
         }
     }
     
     private void annotateVar(Type t, LocationTypeVariable tv) {
-        setConstantConstraint(tv, t);
         t.addMetaData(LocationTypeVariable.VAR_KEY,tv);
     }
     
@@ -72,7 +72,11 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
 
     private LocationTypeVariable addNewVar(Type t, ASTNode<?> n) {
+        LocationTypeVariable ltv = getLV(t);
+        if (ltv != null) 
+            return ltv;
         LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n);
+        setConstantConstraint(tv, t);
         annotateVar(t, tv);
         return tv;
     }

@@ -160,6 +160,17 @@ public class LocationTypeTests extends FrontendTest {
     public void callNullParam2() {
         assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Somewhere] I2 i; i!m(null); }");
     }
+
+    @Test
+    public void callReturn() {
+        assertInferOk("interface I2 { [Near] I2 m(); }  { I2 i2; [Far] I2 i; Fut<I2> f; f = i!m(); i2 = f.get; }", LocationType.FAR);
+    }
+
+    @Test
+    public void callReturn2() {
+        assertInferOk("module M.S1; export *; interface I { [Near] I m(); } class C implements I { [Near] I m() { return null; } } " +
+                      "module M.S2; import * from M.S1; { I i; i = new cog C(); i!m(); }", LocationType.FAR);
+    }
     
     // negative tests:
 
@@ -247,7 +258,7 @@ public class LocationTypeTests extends FrontendTest {
         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
         m.registerTypeSystemExtension(ltie);
         SemanticErrorList e = m.typeCheck();
-        //System.out.println(generated);
+        //System.out.println(ltie.getConstraints());
         assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), fails, !e.isEmpty()); 
         
         //assertTrue("Inference failed", generated != null);

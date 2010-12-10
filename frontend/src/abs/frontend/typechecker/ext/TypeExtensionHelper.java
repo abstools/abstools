@@ -73,7 +73,7 @@ public class TypeExtensionHelper {
             DataTypeType dt = (DataTypeType) t;
             if (dt.hasTypeArgs()) {
                 for (Type ta : dt.getTypeArgs()) {
-                    annotateType(ta, null);
+                    annotateType(ta, n);
                 }
             }
         } 
