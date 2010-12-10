@@ -1,8 +1,8 @@
 aspect VarResolution {
 
     syn lazy VarOrFieldDecl VarOrFieldUse.getDecl();
-    eq VarUse.getDecl() = lookupVarName(getName());
-    eq FieldUse.getDecl() = lookupVarName(getName());
+    eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
+    eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
     syn lazy int Block.getNumVar() = getVars().size();
     
@@ -16,35 +16,39 @@ aspect VarResolution {
         return res;
     }
 
-    syn lazy VarOrFieldDecl Block.localLookupVarName(String name);
-    eq Block.localLookupVarName(String name) {
-        for (VarDecl decl : getVars()) {
-            if (decl.getName().equals(name))
-                return decl;
+    syn lazy VarOrFieldDecl Block.locallookupVarOrFieldName(String name, boolean fieldOnly);
+    eq Block.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            for (VarDecl decl : getVars()) {
+                if (decl.getName().equals(name))
+                    return decl;
+            }
         }
         return null;
     }
     
-    syn lazy PatternVarDecl Pattern.localLookupVarName(String name);
-    eq Pattern.localLookupVarName(String name) = null;
-    eq PatternVarUse.localLookupVarName(String name) = null;
-    eq PatternVar.localLookupVarName(String name) {
-        if (getVar().getName().equals(name))
+    syn lazy PatternVarDecl Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly);
+    eq Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq PatternVarUse.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq PatternVar.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly && getVar().getName().equals(name))
             return getVar();
         return null;
     }
-    eq ConstructorPattern.localLookupVarName(String name) {
-        for (Pattern p : getParams()) {
-            PatternVarDecl d = p.localLookupVarName(name);
-            if (d != null)
-                return d;
+    eq ConstructorPattern.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            for (Pattern p : getParams()) {
+                PatternVarDecl d = p.locallookupVarOrFieldName(name,fieldOnly);
+                if (d != null)
+                    return d;
+            }
         }
         return null;
     }
     
-    syn lazy VarOrFieldDecl Decl.localLookupVarName(String name);
-    eq Decl.localLookupVarName(String name) = null;
-    eq FunctionDecl.localLookupVarName(String name) {
+    syn lazy VarOrFieldDecl Decl.locallookupVarOrFieldName(String name, boolean fieldOnly);
+    eq Decl.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    eq FunctionDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         for (VarOrFieldDecl decl : getParams()) {
             if (decl.getName().equals(name))
                 return decl;
@@ -52,7 +56,7 @@ aspect VarResolution {
         return null;
     }
     
-    eq ClassDecl.localLookupVarName(String name) {
+    eq ClassDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
    	  for (ParamDecl p : getParams()) {
    		  if (p.getName().equals(name)) 
    			  return p;
@@ -65,77 +69,89 @@ aspect VarResolution {
         return null;
     }
 
-    eq Block.getStmt(int i).lookupVarName(String name) {
-        VarOrFieldDecl d = localLookupVarName(name);
-        if (d != null)
-            return d;
-        
-        return lookupVarName(name);
+    eq Block.getStmt(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl d = locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null)
+                return d;
+        }       
+        return lookupVarOrFieldName(name,fieldOnly);
     }
     
-    syn lazy VarOrFieldDecl MethodSig.localLookupVarName(String name) {
-        for (ParamDecl d : getParams()) {
-            if (d.getName().equals(name))
-                return d;
+    syn lazy VarOrFieldDecl MethodSig.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            for (ParamDecl d : getParams()) {
+                if (d.getName().equals(name))
+                    return d;
+            }
         }
         return null;
     }
     
-    inh VarOrFieldDecl MethodImpl.lookupVarName(String name);
+    inh VarOrFieldDecl MethodImpl.lookupVarOrFieldName(String name, boolean fieldOnly);
     
-    eq ClassDecl.getMethod(int i).lookupVarName(String name) 
-        = localLookupVarName(name);
+    eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = locallookupVarOrFieldName(name,fieldOnly);
     
-    syn lazy VarOrFieldDecl MethodImpl.localLookupVarName(String name) {
-        VarOrFieldDecl d = getMethodSig().localLookupVarName(name);
-        if (d != null) 
-            return d;
-        
-        return lookupVarName(name);
+    syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl d = getMethodSig().locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null) 
+                return d;
+        }
+        return lookupVarOrFieldName(name,fieldOnly);
     }
 
-    eq InterfaceDecl.getBody(int i).lookupVarName(String name) 
-        = getBody(i).localLookupVarName(name);
+    eq InterfaceDecl.getBody(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = getBody(i).locallookupVarOrFieldName(name,fieldOnly);
     
-    eq MethodImpl.getMethodSig().lookupVarName(String name) { 
-        VarOrFieldDecl d = getMethodSig().localLookupVarName(name);
-        if (d != null) 
-            return d;
+    eq MethodImpl.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) { 
+        if (!fieldOnly) {
+            VarOrFieldDecl d = getMethodSig().locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null) 
+                return d;
+        }
 
-        return lookupVarName(name);
+        return lookupVarOrFieldName(name,fieldOnly);
     }
     
-    eq MethodImpl.getBlock().lookupVarName(String name) {
-        VarOrFieldDecl d = getBlock().localLookupVarName(name);
-        if (d != null) 
-            return d;
-            
-        return localLookupVarName(name);
+    eq MethodImpl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl d = getBlock().locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null) 
+                return d;
+        }
+        return locallookupVarOrFieldName(name,fieldOnly);
     }
     
-    eq ModuleDecl.getBlock().lookupVarName(String name) = getBlock().localLookupVarName(name);
-    eq ModuleDecl.getDecl(int i).lookupVarName(String name) = getDecl(i).localLookupVarName(name);
-    eq CaseExp.getBranch(int i).lookupVarName(String name) {
-   	 VarOrFieldDecl d = getBranch(i).getLeft().localLookupVarName(name);
-   	 if (d != null)
-   		 return d;
-   	 return lookupVarName(name);
+    eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = getBlock().locallookupVarOrFieldName(name,fieldOnly);
+    eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
+
+    eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+     if (!fieldOnly) {
+        VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
+        if (d != null)
+        return d;
+     }
+     return lookupVarOrFieldName(name,fieldOnly);
     }
 
-    eq LetExp.getExp().lookupVarName(String name) {
-        if (getVar().getName().equals(name))
+    eq LetExp.getExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly && getVar().getName().equals(name))
             return getVar();
-        return lookupVarName(name);
+        return lookupVarOrFieldName(name, fieldOnly);
     }
     
-    inh VarOrFieldDecl Exp.lookupVarName(String name);
-    inh VarOrFieldDecl Stmt.lookupVarName(String name);
-    inh VarOrFieldDecl MethodSig.lookupVarName(String name);
-    inh VarOrFieldDecl PatternVarUse.lookupVarName(String name);
+    inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
+    inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
+    inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
+    inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     // replace unbound pattern variables with var decls
     rewrite PatternVarUse {
-        when (lookupVarName(getName()) == null)
+        when (lookupVarOrFieldName(getName(),false) == null)
             to PatternVar new PatternVar(new PatternVarDecl(getName()));
     }
     

@@ -206,7 +206,7 @@ aspect Typing {
     syn lazy Type Pattern.getType();
     eq ConstructorPattern.getType() = getInhType();
     eq PatternVarUse.getType() {
-        VarOrFieldDecl d = lookupVarName(getName());
+        VarOrFieldDecl d = lookupVarOrFieldName(getName(),false);
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
     	

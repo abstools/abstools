@@ -712,7 +712,7 @@ aspect GenerateJava {
        stream.println("() {");
        stream.print("      public "+expType+" of(");
        for (String freeVarName : getFreeVars()) {
-          VarOrFieldDecl decl = lookupVarName(freeVarName);
+          VarOrFieldDecl decl = lookupVarOrFieldName(freeVarName,false);
           String freeVarType = JavaBackend.getQualifiedString(decl.getType());
           stream.print("final "+freeVarType+" "+JavaBackend.getVariableName(freeVarName));
            stream.print(", ");
@@ -882,7 +882,7 @@ aspect GenerateJava {
         for (String freeVarName : getExp().getFreeVars()) {
           if (freeVarName.equals(getVar().getName()))
             continue;
-          VarOrFieldDecl decl = getExp().lookupVarName(freeVarName);
+          VarOrFieldDecl decl = getExp().lookupVarOrFieldName(freeVarName,false);
           if (decl == null) {
             throw new IllegalArgumentException("Variable "+freeVarName+" cannot be resolved");
           }
