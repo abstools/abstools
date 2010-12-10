@@ -4,7 +4,7 @@ Installing the ABS Eclipse Plug-in
   
   The ABS Eclipse plug-in can be installed via an update site similar to other Eclipse plug-ins. 
   To install the plug-in first start Eclipse. You can install plug-ins under Help -> Install new Software. There, you need to specify an update site where the plug-in to be installed is located.
-  The ABS Eclipse plug-in is currently available at {{http://dijkstra.cs.uni-kl.de/absplugin}}. In the near future two sites will be provided, one for stable releases and one for latest builds.
+  The ABS Eclipse plug-in is available at {{http://tools.hats-project.eu/update-site}}. In the near future two sites will be provided, one for stable releases and one for latest builds.
   
   Note, that the category ABS on the update site contains four plug-ins. One of the additional plug-ins is the ABS Frontend, which contains the ABS front- and backends. The other two are necessary for creating UML diagrams.
   

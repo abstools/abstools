@@ -14,8 +14,8 @@
 
  <distributionManagement>
     <site>
-      <id>dijkstra</id>
-      <url>scp://dijkstra.cs.uni-kl.de/var/www/abstools/</url>
+      <id>repos.hats-project.eu</id>
+      <url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/</url>
     </site>
   </distributionManagement>
 
