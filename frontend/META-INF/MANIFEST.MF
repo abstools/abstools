@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: ABS Compiler Frontend
-Bundle-SymbolicName: eu.hatsproject.absfrontend;singleton:=true
-Bundle-Version: 1.6.4
+Bundle-Name: ABS Compiler
+Bundle-SymbolicName: eu.hatsproject.abs.compiler;singleton:=true
+Bundle-Version: 0.6.0.0
 Bundle-Vendor: HATS Project
 Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/beaver-rt-src.jar,

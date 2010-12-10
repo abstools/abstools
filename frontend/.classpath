@@ -14,6 +14,5 @@
 	<classpathentry exported="true" kind="lib" path="lib/junit-4.8.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/sat4j-maxsat.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/sat4j-pb.jar"/>
-	<classpathentry exported="true" kind="lib" path="bin" sourcepath="bin"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
