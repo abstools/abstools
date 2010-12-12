@@ -232,7 +232,9 @@ aspect TypeResolution {
     eq ModuleDecl.getBlock().getContextDecl() = getModel().unknownDecl();
     eq ClassDecl.getInitBlock().getContextDecl() = getContextDecl();
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
+    eq ClassDecl.getField().getContextDecl() = getContextDecl();
     eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
+
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
     inh Decl MethodImpl.getContextDecl();

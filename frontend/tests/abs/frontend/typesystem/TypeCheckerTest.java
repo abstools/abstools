@@ -24,6 +24,11 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void fieldInit() {
+        assertNoTypeErrorsNoLib("interface I {} class C implements I { I i = this; }");
+    }
+    
+    @Test
     public void testClass() {
         assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new C(); }");
     }

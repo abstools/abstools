@@ -1,6 +1,18 @@
 aspect EffectAnalysis {
     
     syn lazy boolean Exp.hasSideEffects();
-    eq Exp.hasSideEffects() = true;
+    eq Exp.hasSideEffects() = ! isPure();
     eq PureExp.hasSideEffects() = false;
+    eq VarUse.hasSideEffects() = false;
+    eq FieldUse.hasSideEffects() = false;
+    
+    syn lazy boolean Exp.isPure();
+    eq Exp.isPure() = false;
+    eq PureExp.isPure() = true;
+    
+    eq ThisExp.isPure() = true;
+    eq NullExp.isPure() = true;
+    
+    
+    
 }
