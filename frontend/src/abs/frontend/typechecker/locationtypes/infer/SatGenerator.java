@@ -15,6 +15,7 @@ import java.util.Set;
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
 import org.sat4j.maxsat.reader.WDimacsReader;
 import org.sat4j.pb.IPBSolver;
+import org.sat4j.pb.OptToPBSATAdapter;
 import org.sat4j.reader.ParseFormatException;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.IProblem;
@@ -117,17 +118,23 @@ public class SatGenerator {
         
         //System.exit(0);
         
-        WDimacsReader reader = new WDimacsReader(new WeightedMaxSatDecorator(solver));
+        WeightedMaxSatDecorator wmsd = new WeightedMaxSatDecorator(solver);
+        
+        WDimacsReader reader = new WDimacsReader(wmsd);
         
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
-            int[] model;
-            if ((model = problem.findModel()) != null) {
+            OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
+            opt.setVerbose(false);
+            //opt.setTimeout(arg0)
+            
+            if (opt.isSatisfiable()) {
+                int[] model = opt.model();
                 //int[] model = problem.model();
                 //model = problem.findModel();
                 //System.out.println("Model generated");
-                problem.printInfos(new PrintWriter(System.out), "INFO: ");
+                //problem.printInfos(new PrintWriter(System.out), "INFO: ");
                 //System.out.println(Arrays.toString(model));
                 for (int i : model) {
                     if (i > 0 && i <= nbvars) {
