@@ -645,12 +645,12 @@ mod ABS-CONFIGURATION is
   op invoc(_,_,_,_,_) : Oid Label String DataList Bool -> Msg
     [ctor format (b d o  b so  b so  b so  b so b on)] .
   --- Invocation message received by the called object, pre method lookup:
-  op findMethod : String Cid DeltaList Label Oid DataList Bool -> Msg .
+  op findMethod(_,_,_,_,_,_,_) : String Cid DeltaList Label Oid DataList Bool -> Msg .
   --- Invocation message plus method object and defining Delta, received by
   --- the called object:
-  op foundMethod : Method Did Label Oid DataList Bool -> Msg .
+  op foundMethod(_,_,_,_,_,_) : Method Did Label Oid DataList Bool -> Msg .
   --- Process creation in target object:
-  op makeProcess : Method Did Label DataList Bool -> Process .
+  op makeProcess(_,_,_,_,_) : Method Did Label DataList Bool -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -984,16 +984,23 @@ mod ABS-MACHINE-BASICS is
     [label Process-terminate] .
 
   *** Handle synchronous calls within cogs.
+  *** 
+  *** Only schedule the process if it is ready - so we have to capture the
+  *** entire state here as well.
   ceq
-    < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
-    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+      < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
+      CN
+    }
   =
-    < CG : Cog | Object: O1 >
-    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
-    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
+    { < CG : Cog | Object: O1 >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+      < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
+      CN
+    }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1[@ ".label"]
+  if  L[A] == L1[@ ".label"] /\ ready(SL1, (S1 :: L1), CN, 0)
     [label schedule-cog] .
 
   *** Handle synchronous self-calls
@@ -1090,9 +1097,9 @@ mod ABS-MACHINE-BASICS-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
-  var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var P : Process .    var A : Vid .
+  vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
+  vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G : Nat .
+  var CN : Configuration .  var P : Process .    vars A A' : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
@@ -1125,6 +1132,37 @@ mod ABS-MACHINE-BASICS-TIMED is
     < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
     [label Process-terminate] .
+
+  *** Handle synchronous calls within cogs.
+  *** 
+  *** Only schedule the process if it is ready - so we have to capture the
+  *** entire state here as well.
+  ceq
+    { < CG : Cog | Object: O >
+      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+      < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
+      < T : Clock | Limit: LIM >
+      CN
+    }
+  =
+    { < CG : Cog | Object: O1 >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+      < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
+      < T : Clock | Limit: LIM >
+      CN
+    }
+    *** L[A] because synchronous calls are always handled via ".staticfuture"
+  if  L[A] == L1[@ ".label"] /\ ready(SL1, (S1 :: L1), CN, T)
+    [label schedule-cog] .
+
+  *** Handle synchronous self-calls
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    *** L[A] because synchronous calls are always handled via ".staticfuture"
+  if  L[A] == L1[@ ".label"]
+    [label schedule-self] .
 
   --- mark
   ---
