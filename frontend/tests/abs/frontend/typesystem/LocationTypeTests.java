@@ -16,6 +16,7 @@ import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
+import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
 
@@ -246,7 +247,8 @@ public class LocationTypeTests extends FrontendTest {
     
     private void assertTypeErrorOnly(String code) {
         Model m = assertParse(code,WITH_STD_LIB);
-        m.setLocationTypingEnabled(true);
+        LocationTypeExtension te = new LocationTypeExtension(m);
+        m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
         assertFalse(e.isEmpty());
         assertInferFails(code);
@@ -254,7 +256,8 @@ public class LocationTypeTests extends FrontendTest {
 
     private void assertTypeOk(String code) {
         Model m = assertParse(INT+code,WITH_STD_LIB);
-        m.setLocationTypingEnabled(true);
+        LocationTypeExtension te = new LocationTypeExtension(m);
+        m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
         assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
         assertInferOk(INT+code);
