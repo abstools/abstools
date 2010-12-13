@@ -617,7 +617,7 @@ Stmt stmt =
 	|  annotation_list.al? SKIP SEMICOLON         {: return new SkipStmt(al) ; :}
 	|  annotation_list.al? SUSPEND SEMICOLON      {: return new SuspendStmt(al) ; :} 
 	|  return_stmt 
-	|  annotation_list.al? eff_exp.e SEMICOLON    {: return new ExpressionStmt(al, e) ; :}	
+	|  annotation_list.al? exp.e SEMICOLON    {: return new ExpressionStmt(al, e) ; :}
 	|  if_then_else_stmt 
 	|  while_stmt 
 	|  annotation_list.al? var_decl.vd SEMICOLON  {: return new VarDeclStmt(al,vd) ; :}

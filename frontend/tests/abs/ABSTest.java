@@ -44,7 +44,7 @@ public class ABSTest {
             s = preamble + s;
         Model p = null;
         try {
-            p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(ALLOW_INCOMPLETE_EXPR));
+            p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(ALLOW_INCOMPLETE_EXPR, config));
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
