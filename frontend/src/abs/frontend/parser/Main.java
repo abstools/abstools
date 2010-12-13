@@ -241,20 +241,30 @@ public class Main {
     }
 
     public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib) throws Exception {
+        return parse(file, sourceCode, reader, withStdLib, false);
+    }
+    
+    public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (withStdLib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader, withStdLib));
+        units.add(parseUnit(file, sourceCode, reader, withStdLib, allowIncompleteExpr));
         return new Model(units);
     }
 
     public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib)
+    throws IOException {
+         return parseUnit(file, sourceCode, reader, importStdLib, false);
+    }
+    
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib, boolean allowIncompleteExpr)
             throws IOException {
         try {
             ABSParser parser = new ABSParser();
             ABSScanner scanner = new ABSScanner(reader);
             parser.setSourceCode(sourceCode);
             parser.setFile(file);
+            parser.allowIncompleteExpr(allowIncompleteExpr);
 
             CompilationUnit u = null;
             try {
@@ -279,4 +289,8 @@ public class Main {
         return parse(null, s, new StringReader(s), withStdLib);
     }
 
+    public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
+        return parse(null, s, new StringReader(s), withStdLib, allowIncompleteExpr);
+    }
+    
 }

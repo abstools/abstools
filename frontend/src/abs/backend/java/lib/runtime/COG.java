@@ -14,7 +14,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 
 public class COG {
-    private TaskScheduler scheduler = ABSRuntime.taskSchedulerFactory.createTaskScheduler(this);
+    private TaskScheduler scheduler = ABSRuntime.createTaskScheduler(this);
     // private TaskScheduler scheduler = new DefaultTaskScheduler(this);
     private Class<?> initialClass;
     private static AtomicInteger counter = new AtomicInteger();

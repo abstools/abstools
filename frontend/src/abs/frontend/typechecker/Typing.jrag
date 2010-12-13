@@ -77,6 +77,11 @@ aspect Typing {
     
     syn lazy Type Exp.getType();
     
+    eq IncompleteExp.getType() {
+        return UnknownType.INSTANCE;
+    }
+
+    
     eq AsyncCall.getType() {  
         return getModel().getFutType(getCallType());
     }

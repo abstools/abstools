@@ -21,6 +21,8 @@ import abs.ABSTest;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import static abs.ABSTest.Config.*;
+
 
 public class JavaBackendTest extends ABSTest {
 
@@ -35,7 +37,7 @@ public class JavaBackendTest extends ABSTest {
     }
 
     protected void assertValidJavaFile(String absFile, boolean useStdLib) {
-        Model m = assertParseFileOk(absFile, true, true);
+        Model m = assertParseFileOk(absFile, WITH_STD_LIB, TYPE_CHECK);
         try {
             assertValidJava(getJavaCode(m));
         } catch (IOException e) {

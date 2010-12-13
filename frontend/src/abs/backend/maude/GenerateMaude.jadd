@@ -89,11 +89,19 @@ aspect GenerateMaude {
 
     abstract public void Exp.generateMaude(PrintStream stream);
 
+    public void IncompleteExp.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+    }
+    
     public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
 
     abstract public void Exp.generateMaudeAsStatement(PrintStream stream, String var);
+    
+    public void IncompleteExp.generateMaudeAsStatement(PrintStream stream, String var) {
+        stream.print("noStmt");
+    }
     
     public void PureExp.generateMaudeAsStatement(PrintStream stream, String var)
     {

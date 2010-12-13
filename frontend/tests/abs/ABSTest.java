@@ -8,29 +8,45 @@ import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import static abs.ABSTest.Config.*;
 
 public class ABSTest {
-
-    protected Model assertParseOk(String s, boolean withStdLib) {
-        return assertParseOk(s, withStdLib, true);
+    public static enum Config {
+        NONE,
+        WITH_STD_LIB,
+        WITHOUT_MODULE_NAME,
+        EXPECT_PARSE_ERROR,
+        EXPECT_TYPE_ERROR,
+        ALLOW_INCOMPLETE_EXPR,
+        TYPE_CHECK
     }
-
-    protected Model assertParseOk(String s, boolean withStdLib, boolean addModuleName) {
-        return assertParse(s, withStdLib, addModuleName, false);
+        
+    protected boolean isSet(Config c, Config...configs) {
+        if (configs == null)
+            throw new IllegalArgumentException("Must give an array of configs");
+        for (Config c2: configs) {
+            if (c2 == c)
+                return true;
+        }
+        return false;
     }
-
-    protected Model assertParse(String s, boolean withStdLib, boolean addModuleName, boolean expectError) {
+    
+    protected Model assertParseOk(String s, Config... config) {
+        return assertParse(s,config);
+    }
+    
+    protected Model assertParse(String s, Config... config) {
 
         String preamble = "module UnitTest; export *; ";
-        if (withStdLib)
+        if (isSet(WITH_STD_LIB, config))
             preamble = preamble + " import * from ABS.StdLib;";
-        if (addModuleName)
+        if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
         Model p = null;
         try {
-            p = Main.parseString(s, withStdLib);
+            p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(ALLOW_INCOMPLETE_EXPR));
 
-            if (expectError) {
+            if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
                     fail("Expected to find parse error");
             } else {
@@ -44,22 +60,14 @@ public class ABSTest {
         return p;
     }
 
-    protected Model assertParseOk(String s) {
-        return assertParseOk(s, false);
-    }
-
     protected Model assertParseError(String absCode) {
-        return assertParseError(absCode, false, true);
+        return assertParse(absCode, EXPECT_PARSE_ERROR);
     }
 
-    protected Model assertParseError(String absCode, boolean withStdLib, boolean addModuleName) {
-        return assertParse(absCode, withStdLib, addModuleName, true);
-    }
-
-    protected Model assertParseFileOk(String fileName, boolean typeCheck, boolean withStdLib) {
+    protected Model assertParseFileOk(String fileName, Config... config) {
         Model m = null;
         try {
-            m = Main.parse(new File(fileName), withStdLib);
+            m = Main.parse(new File(fileName), isSet(WITH_STD_LIB,config));
         } catch (Throwable e) {
             e.printStackTrace();
             fail("Failed to parse: " + fileName + "\n" + e.getMessage());
@@ -71,7 +79,7 @@ public class ABSTest {
                 for (SemanticError error : m.getErrors())
                     errs = errs.append(error.getHelpMessage() + "\n");
                 fail("Failed to parse: " + fileName + "\n" + errs.toString());
-            } else if (typeCheck) {
+            } else if (isSet(TYPE_CHECK, config)) {
                 SemanticErrorList l = m.typeCheck();
                 if (!l.isEmpty()) {
                     for (SemanticError error : l)

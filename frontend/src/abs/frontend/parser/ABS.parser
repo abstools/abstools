@@ -16,8 +16,13 @@ import java.io.IOException;
 %embed {:
 	ArrayList<ParserError> errors = new ArrayList<ParserError>();
     boolean raiseExceptions = false;
+    boolean allowIncompleteExpr = false;
     File file;
     String sourceCode; // only set if not read from file
+
+    public void allowIncompleteExpr(boolean b) {
+        allowIncompleteExpr = b;
+    }
 
 	public void setSourceCode(String sourceCode) {
 	   this.sourceCode = sourceCode;
@@ -26,16 +31,21 @@ import java.io.IOException;
 	public void setFile(File file) {
 	   this.file = file;
 	}
+	
+	protected void addSyntaxError(String msg, Symbol token) {
+            SyntaxError e = new SyntaxError(msg, Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()), token);
+            e.setFile(file);
+            e.setSourceCode(sourceCode);
+            errors.add(e);
+            if (raiseExceptions) 
+                throw new ParseException(e);
+	}
 
 	class Events extends Parser.Events {
 		public void syntaxError(Symbol token) {
-			SyntaxError e = new SyntaxError("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()], Symbol.getLine(token.getStart()), Symbol.getColumn(token.getStart()), token);
-			e.setFile(file);
-			e.setSourceCode(sourceCode);
-			errors.add(e);
-			if (raiseExceptions) 
-				throw new ParseException(e);
+		    addSyntaxError("Syntactic error: unexpected token " + Terminals.NAMES[token.getId()], token);
 		}
+		
 		public void scannerError(Scanner.Exception e) {
 			LexicalError err = new LexicalError("Lexical error: " + e.getMessage(), e.line, e.column);
 			err.setFile(file);
@@ -557,8 +567,9 @@ List pattern_list =
 Exp exp = 
 	  eff_exp.e   {: return e; :}
 	| data_exp.e  {: return e; :}
+	| incomplete_exp.e {: return e; :}
 	;
-
+	
 Exp eff_exp = 
     pure_exp.p DOT GET    {: return new GetExp(p) ; :}
     | new_exp 
@@ -580,6 +591,24 @@ SyncCall sync_call =
 	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(new ThisExp(),method,params) ; :} 
 	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :} 
 	;
+
+// Needed to support auto-completion in the Eclipse IDE
+IncompleteExp incomplete_exp = 
+      pure_exp.callee DOT.d {:
+        if (allowIncompleteExpr) { 
+            return new IncompleteSyncAccess(callee); 
+        } else {
+            addSyntaxError("Missing method or field name",callee);
+        }            
+      :}
+    | pure_exp.callee BANG.b {: 
+        if (allowIncompleteExpr) { 
+            return new IncompleteAsyncAccess(callee);
+        } else {
+            addSyntaxError("Missing method name",callee);
+        } 
+      :}
+;
 
 
 Stmt stmt = 

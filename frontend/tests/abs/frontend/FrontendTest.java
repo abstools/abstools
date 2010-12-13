@@ -21,32 +21,33 @@ import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
+import static abs.ABSTest.Config.*;
 
 public class FrontendTest extends ABSTest {
 
     protected Model assertParseOkStdLib(String s) {
-        return assertParseOk(s, true);
+        return assertParse(s, WITH_STD_LIB);
     }
 
     protected void assertParseFileOk(String fileName, boolean withStdLib) {
-        assertParseFileOk(fileName, false, true);
+        assertParseFileOk(fileName, WITH_STD_LIB);
     }
 
     protected void assertTypeCheckFileOk(String fileName, boolean withStdLib) {
-        assertParseFileOk(fileName, true, withStdLib);
+        assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
     }
 
     protected Exp getFirstExp(String absCode) {
-        Model m = assertParseOk(absCode);
+        Model m = assertParse(absCode);
         return getFirstExp(m);
     }
 
     protected Exp getSecondExp(String absCode) {
-        return getSecondExp(assertParseOk(absCode));
+        return getSecondExp(assertParse(absCode));
     }
 
     protected Exp getExp(String absCode, int i) {
-        return getExp(assertParseOk(absCode), i);
+        return getExp(assertParse(absCode), i);
     }
 
     protected Exp getSecondExp(Model m) {
@@ -135,29 +136,25 @@ public class FrontendTest extends ABSTest {
     }
 
     protected void assertNoTypeErrorsNoLib(String absCode) {
-        assertTypeErrors(absCode, false, false);
+        assertTypeErrors(absCode, new Config[0]);
     }
 
     protected void assertNoTypeErrors(String absCode) {
-        assertTypeErrors(absCode, false, true);
+        assertTypeErrors(absCode, WITH_STD_LIB);
     }
 
     protected void assertTypeErrors(String absCode) {
-        assertTypeErrors(absCode, true, true);
+        assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
     }
 
-    protected void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib) {
-        assertTypeErrors(absCode, expectErrors, withStdLib, true);
-    }
-
-    protected void assertTypeErrors(String absCode, boolean expectErrors, boolean withStdLib, boolean addModuleName) {
-        Model m = assertParseOk(absCode, withStdLib, addModuleName);
+    protected void assertTypeErrors(String absCode, Config... config) {
+        Model m = assertParse(absCode, config);
         String msg = "";
         SemanticErrorList l = m.typeCheck();
         if (!l.isEmpty()) {
             msg = l.getFirst().getMsgWithHint(absCode);
         }
-        assertEquals(msg, expectErrors, !l.isEmpty());
+        assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), !l.isEmpty());
     }
 
 }

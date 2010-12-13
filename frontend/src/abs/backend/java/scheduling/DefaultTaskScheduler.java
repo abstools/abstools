@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import abs.backend.java.lib.runtime.ABSGuard;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
+import abs.backend.java.lib.runtime.ABSThreadManager;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
@@ -23,9 +24,11 @@ public class DefaultTaskScheduler implements TaskScheduler {
     private Task<?> activeTask;
     private volatile SchedulerThread thread;
     private final COG cog;
+    private final ABSThreadManager threadManager;
 
-    public DefaultTaskScheduler(COG cog) {
+    public DefaultTaskScheduler(COG cog, ABSThreadManager m) {
         this.cog = cog;
+        this.threadManager = m;
     }
 
     public synchronized void addTask(Task<?> task) {
@@ -46,6 +49,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
         private Task<?> runningTask;
 
         public SchedulerThread() {
+            super(threadManager);
             setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
         }
@@ -185,8 +189,8 @@ public class DefaultTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(COG cog) {
-                return new DefaultTaskScheduler(cog);
+            public TaskScheduler createTaskScheduler(COG cog, ABSThreadManager m) {
+                return new DefaultTaskScheduler(cog, m);
             }
         };
     }

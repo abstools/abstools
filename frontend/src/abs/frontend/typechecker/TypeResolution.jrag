@@ -41,7 +41,7 @@ aspect TypeResolution {
        return getName().substring(0,getName().lastIndexOf('.'));
     }
     
-        syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleNames() circular [new HashMap<KindedName, ResolvedName>()];
+    syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleNames() circular [new HashMap<KindedName, ResolvedName>()];
 	eq ModuleDecl.getVisibleNames() {
 		return TypeCheckerHelper.getVisibleNames(this);
 	}
@@ -279,7 +279,6 @@ aspect TypeResolution {
     syn lazy String CompilationUnit.getFileName() = getName();
     
     syn lazy CompilationUnit CompilationUnit.getCompilationUnit() = this;
-    
     inh CompilationUnit Exp.getCompilationUnit();
     inh CompilationUnit Stmt.getCompilationUnit();
     inh CompilationUnit ModuleDecl.getCompilationUnit();

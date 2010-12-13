@@ -599,6 +599,10 @@ aspect GenerateJava {
 
     public abstract void Exp.generateJava(PrintStream stream);
 
+    public void IncompleteExp.generateJava(PrintStream s) {
+        // never called for type correct programs
+    }
+    
     public void AsyncCall.generateJava(PrintStream stream) {
         stream.print(ABSRuntime.class.getName()+".asyncCall(");
         String targetType = JavaBackend.getQualifiedString(getCallee().getType());

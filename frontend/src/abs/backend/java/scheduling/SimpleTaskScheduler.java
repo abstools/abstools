@@ -13,6 +13,7 @@ import abs.backend.java.lib.runtime.ABSGuard;
 import abs.backend.java.lib.runtime.ABSInitObjectTask;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
+import abs.backend.java.lib.runtime.ABSThreadManager;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
@@ -33,6 +34,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
     static Logger logger = Logging.getLogger("scheduler");
+    private final ABSThreadManager threadManager; 
 
     public class TaskInfo {
         /**
@@ -99,7 +101,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     protected final COG cog;
 
-    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat) {
+    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat, ABSThreadManager m) {
+        this.threadManager = m;
         this.cog = cog;
         this.schedulingStrategy = strat;
     }
@@ -164,6 +167,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         private ABSGuard guard;
 
         public SimpleSchedulerThread(TaskInfo activeTask) {
+            super(threadManager);
             this.executingTask = activeTask;
             setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
@@ -217,7 +221,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
                         wait();
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    wasInterrupted(e);
                 }
                 logger.finest(executingTask + " resumed");
                 active = true;
@@ -383,8 +387,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(COG cog) {
-                return new SimpleTaskScheduler(cog, ABSRuntime.taskSchedulingStrategy);
+            public TaskScheduler createTaskScheduler(COG cog, ABSThreadManager m) {
+                return new SimpleTaskScheduler(cog, ABSRuntime.taskSchedulingStrategy, m);
             }
         };
     }

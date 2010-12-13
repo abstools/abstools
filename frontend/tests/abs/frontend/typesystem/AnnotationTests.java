@@ -13,6 +13,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
+import static abs.ABSTest.Config.*;
 
 public class AnnotationTests extends FrontendTest {
 
@@ -47,7 +48,7 @@ public class AnnotationTests extends FrontendTest {
     }
     
     private Model assertParseOkAnn(String exampleCode) {
-        return assertParseOk(TEST_ANN+exampleCode,true);
+        return assertParse(TEST_ANN+exampleCode,WITH_STD_LIB);
     }
 
     private void assertHasLocAnnotation(Type t, String s) {

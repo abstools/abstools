@@ -51,7 +51,7 @@ public class BackPositionTest extends FrontendTest {
     }
 
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
-        Model m = assertParseOk(absCode, false, false);
+        Model m = assertParse(absCode);
         SourcePosition pos = SourcePosition.findPosition(m.getCompilationUnit(0), line, col);
         if (pos == null)
             assertTrue("Expected to find " + clazz + " at " + line + ":" + col + " but found nothing", false);

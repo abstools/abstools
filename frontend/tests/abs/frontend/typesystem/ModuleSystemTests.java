@@ -3,6 +3,7 @@ package abs.frontend.typesystem;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import static abs.ABSTest.Config.*;
 
 public class ModuleSystemTests extends FrontendTest {
 
@@ -154,11 +155,11 @@ public class ModuleSystemTests extends FrontendTest {
     }
     
     protected void assertNoTypeErrors(String absCode) {
-        assertTypeErrors(absCode, false, false, false);
+        assertTypeErrors(absCode);
     }
 
     protected void assertTypeErrors(String absCode) {
-        assertTypeErrors(absCode, true, false, false);
+        assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
     }
 
 }

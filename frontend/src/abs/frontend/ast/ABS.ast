@@ -73,6 +73,13 @@ abstract VarOrFieldUse: Access ::= <Name>;
 VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f
 
+// Used for the IDE to provide auto-completion:
+abstract IncompleteExp:     Exp;
+abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
+IncompleteSyncAccess:       IncompleteAccess; // something like "x." 
+IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"                     
+IncompleteNewExp:           IncompleteExp; // a "new" without a classname 
+
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 
 

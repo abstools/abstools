@@ -16,6 +16,7 @@ import abs.backend.java.scheduling.ScheduleAction;
 import abs.backend.java.scheduling.ScheduleOptions;
 import abs.backend.java.scheduling.ScheduleTask;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
+import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulerFactory;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
@@ -29,6 +30,8 @@ public class ABSRuntime {
     public static final GlobalScheduler globalScheduler = Config.globalScheduler;
     public static final TaskSchedulingStrategy taskSchedulingStrategy = Config.taskSchedulingStrategy;
     public static final TaskSchedulerFactory taskSchedulerFactory = Config.taskSchedulerFactory;
+    
+    private static final ABSThreadManager threadManager = new ABSThreadManager();
 
     public static void scheduleTaskDone() {
         if (Config.GLOBAL_SCHEDULING)
@@ -120,6 +123,14 @@ public class ABSRuntime {
 
     public static GlobalScheduler getGlobalScheduler() {
         return globalScheduler;
+    }
+    
+    public static void shutdown() {
+        
+    }
+
+    public static TaskScheduler createTaskScheduler(COG cog) {
+        return taskSchedulerFactory.createTaskScheduler(cog, threadManager);
     }
 
 }
