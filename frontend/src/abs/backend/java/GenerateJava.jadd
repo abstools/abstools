@@ -275,7 +275,10 @@ aspect GenerateJava {
          }
         }
 
-
+        if (hasInitBlock()) {
+            stream.println("       this.__ABS_init();");
+        }
+        
         stream.println("       getCOG().objectCreated(this);");
         stream.println("   }");
 
@@ -316,8 +319,8 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
-        if (hasInitBlock()) {
-            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSInitObjectTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        if (isActiveClass()) {
+            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
         stream.println("          return __ABS_result;");
         stream.println("       } finally {");
@@ -327,12 +330,15 @@ aspect GenerateJava {
 
         // static constructor method for new cog C
         stream.print("   public static "+className+" __ABS_createNewObject");
-        JavaGeneratorHelper.generateParams(stream, getParams());
+        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source", getParams());
         stream.println(" {");
         stream.print("            "+className+" __ABS_result = new "+className);
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
-        stream.println("          __ABS_result.__ABS_init();");
+        if (isActiveClass()) {
+            stream.println("          final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
+            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        }
         stream.println("          return __ABS_result;");
         stream.println("   }");
 
@@ -672,7 +678,7 @@ aspect GenerateJava {
 	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
         } else {
             stream.print(className+".__ABS_createNewObject");
-	        JavaGeneratorHelper.generateArgs(stream,getParams());
+	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
         }
     }
 

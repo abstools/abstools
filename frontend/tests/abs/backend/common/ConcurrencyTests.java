@@ -82,6 +82,13 @@ public class ConcurrencyTests extends SemanticTests {
                 + COG_CALL_M_ASYNC);
     }
 
+    @Test
+    public void runMethodCOG() {
+        assertEvalTrue(INTERFACE_I
+                + "class C implements I { Bool b = False; Unit run() { b = True; } Unit n() { } Bool m() { return b; }} "
+                + COG_CALL_M_ASYNC);
+    }
+    
     // ERROR Tests
 
     static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";

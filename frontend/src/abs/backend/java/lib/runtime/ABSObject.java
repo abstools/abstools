@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
+import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ClassView;
@@ -14,37 +15,43 @@ import abs.backend.java.observing.ObjectView;
 import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
 public abstract class ABSObject implements ABSRef {
-    private final COG cog;
-    protected final long id;
+    private final COG __cog;
+    protected final long __id;
 
     public ABSObject(long id) {
         this(getCurrentCOG(), id);
     }
 
     public String toString() {
-        return getClassName() + " " + id;
+        return getClassName() + " " + __id;
     }
 
     public abstract String getClassName();
 
     protected ABSObject(COG cog, long id) {
-        this.cog = cog;
-        this.id = id;
+        this.__cog = cog;
+        this.__id = id;
     }
 
     public final COG getCOG() {
-        return cog;
+        return __cog;
     }
 
     /**
      * Represents the init block
      */
     public void __ABS_init() {
-
+    }
+    
+    /**
+     * Represents an optional ruin method
+     */
+    public ABSUnit run() {
+        return ABSUnit.UNIT;
     }
 
     protected final void __ABS_checkSameCOG() {
-        if (cog != getCurrentCOG()) {
+        if (__cog != getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
         }
     }
@@ -69,13 +76,13 @@ public abstract class ABSObject implements ABSRef {
         return true;
     }
 
-    protected volatile ObjectView view;
+    protected volatile ObjectView __view;
 
     public synchronized ObjectView getView() {
-        if (view == null) {
-            view = new View();
+        if (__view == null) {
+            __view = new View();
         }
-        return view;
+        return __view;
     }
 
     protected ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
@@ -86,7 +93,7 @@ public abstract class ABSObject implements ABSRef {
 
         @Override
         public COGView getCOG() {
-            return cog.getView();
+            return __cog.getView();
         }
 
         @Override
