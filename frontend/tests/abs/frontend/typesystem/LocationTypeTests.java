@@ -15,7 +15,6 @@ import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
-import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
@@ -116,7 +115,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void callParamInfer() {
-        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { i.m(null); } } { }");
+        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; j = new C(); i.m(j); } } { }");
         ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
         Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
         LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(t));
@@ -157,12 +156,12 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void overrideminimal() {
-        assertInferOk("interface I { I m([Far] I i); } class C implements I { [Near] I m([Somewhere] I i) { return null; } } { I i; I k; Fut<I> j; j = k!m(i); i = j.get; i = new cog C(); }", LocationType.FAR);
+        assertInferOk("interface I { I m([Far] I i); } class C implements I { [Near] I m([Somewhere] I i) { return null; } } { I i; [Near] I k; Fut<I> j; j = k!m(null); i = j.get; }", LocationType.NEAR);
     }
     
     @Test
     public void callNullParam() {
-        assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Far] I2 i; i!m(null); }");
+        assertTypeOkOnly("interface I2 { Unit m([Near] I2 i); } { [Far] I2 i; i!m(null); }");
     }
     
     @Test
@@ -253,14 +252,18 @@ public class LocationTypeTests extends FrontendTest {
         assertFalse(e.isEmpty());
         assertInferFails(code);
     }
-
+    
     private void assertTypeOk(String code) {
-        Model m = assertParse(INT+code,WITH_STD_LIB);
+        assertTypeOkOnly(INT+code);
+    }
+
+    private void assertTypeOkOnly(String code) {
+        Model m = assertParse(code,WITH_STD_LIB);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
         assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
-        assertInferOk(INT+code);
+        assertInferOk(code);
     }
     
     private Model assertInfer(String code, LocationType expected, boolean fails) {

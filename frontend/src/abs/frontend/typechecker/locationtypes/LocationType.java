@@ -14,6 +14,8 @@ public abstract class LocationType {
     public static final LocationType BOTTOM = new Bottom();
     
     public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
+    
+    public static final LocationType[] ALLVISTYPES = {FAR, NEAR, SOMEWHERE};
    
     private final static class Far extends LocationType { }
     private final static class Near extends LocationType { }
@@ -34,56 +36,6 @@ public abstract class LocationType {
         if (isBottom()) return "Bottom";
         if (isUnbound()) return "Unbound";
         return "NoType";
-    }
-
-    public final static class Parametric extends LocationType {
-        List<LocationType> typeParams;
-        public Parametric(List<LocationType> t) {
-            this.typeParams = t;
-        }
-        
-        @Override
-        public LocationType adaptTo(LocationType to) {
-            List<LocationType> adapted = new ArrayList<LocationType>();
-            for (LocationType t : typeParams) {
-                adapted.add(t.adaptTo(to));
-            }
-            return new Parametric(adapted);
-        }
-        
-        @Override
-        public boolean isSubtypeOf(LocationType t) {
-            if (super.isSubtypeOf(t))
-                return true;
-            
-            if (! (t instanceof Parametric))
-                return false;
-            
-            Parametric p = (Parametric) t;
-            if (p.typeParams.size() != this.typeParams.size())
-                return false;
-            
-            for (int i = 0; i < typeParams.size(); i++) {
-                if (!this.typeParams.get(i).isSubtypeOf(p.typeParams.get(i)))
-                    return false;
-            }
-            return true;
-        }
-        
-
-        @Override
-        public String toString() {
-            StringBuilder b = new StringBuilder();
-            b.append("[");
-            boolean first = true;
-            for (LocationType t : typeParams) {
-                if (first) first = false;
-                else b.append(",");
-                b.append(t.toString());
-            }
-            b.append("]");
-            return b.toString();
-        }
     }
     
     public static LocationType createFromName(String name) { 
@@ -126,6 +78,16 @@ public abstract class LocationType {
         return this == UNBOUND || t == UNBOUND || this == t || t == SOMEWHERE || this == BOTTOM;
     }
     
+    public boolean isSubtypeOfFarAdapted(LocationType t) {
+        if (this.isBottom()) {
+            return true;
+        }
+        if (this.isNear() || this.isFar() || this.isSomewhere()) {
+            return t.isFar() || t.isSomewhere();
+        }
+        throw new IllegalArgumentException("Cannot use location type "+this+" to check subtypeOfFar");
+    }
+    
     public LocationType adaptTo(LocationType to) {
         if (isNoType() || isBottom() || isUnbound())
             return this;
@@ -142,12 +104,10 @@ public abstract class LocationType {
             return SOMEWHERE;
         }
         
+        if (to.isBottom()) {
+            return SOMEWHERE;
+        }
+        
         throw new IllegalArgumentException("Cannot use location type "+to+" to adapt to");
     }
-
-
-    public boolean isParametric() {
-        return getClass().equals(Parametric.class);
-    }
-    
 }

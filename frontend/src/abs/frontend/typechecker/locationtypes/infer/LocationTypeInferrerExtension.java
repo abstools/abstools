@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Call;
@@ -11,11 +12,10 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.ThisExp;
-import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import abs.frontend.typechecker.locationtypes.LocationType;
-import abs.frontend.typechecker.locationtypes.LocationTypeCheckerHelper;
+import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 
 public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     public LocationTypeInferrerExtension(Model m) {
@@ -34,27 +34,17 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
     
     private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, LocationTypeVariable adaptTo, ASTNode<?> n) {
-        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n);
+        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n, false);
         constraints.add(Constraint.adaptConstraint(tv, expLocType, adaptTo));
         //System.out.println("Require " + tv + " = " + expLocType + " |>" + adaptTo);
         return tv;
     }
     
     private void adaptAndSet(Type rht, LocationTypeVariable adaptTo) {
-        if (rht.isDataType()) {
-            DataTypeType dtr = (DataTypeType) rht;
-            if (dtr.hasTypeArgs()) {
-                for (int i = 0; i < dtr.getTypeArgs().size(); i++) {
-                    adaptAndSet(dtr.getTypeArg(i), adaptTo);
-                }
-            }
-        }
-        if (rht.isReferenceType()) {
-            if (adaptTo != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
-                LocationTypeVariable rhtlv = getLV(rht);
-                LocationTypeVariable tv = adaptTo(rhtlv, adaptTo, null);
-                annotateVar(rht, tv);
-            }
+        if (adaptTo != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
+            LocationTypeVariable rhtlv = getLV(rht);
+            LocationTypeVariable tv = adaptTo(rhtlv, adaptTo, null);
+            annotateVar(rht, tv);
         }
     }
     
@@ -64,9 +54,9 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     private void setConstantConstraint(LocationTypeVariable tv, Type t) {
         if (t.isReferenceType()) {
-            LocationType lt = LocationTypeCheckerHelper.getLocationType(t, null);
+            LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
             if (lt != null) {
-                constraints.add(Constraint.constConstraint(tv, lt));
+                constraints.add(Constraint.constConstraint(tv, lt, Constraint.MUST_HAVE));
             }
         }
     }
@@ -75,7 +65,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         LocationTypeVariable ltv = getLV(t);
         if (ltv != null) 
             return ltv;
-        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n);
+        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n, true);
         setConstantConstraint(tv, t);
         annotateVar(t, tv);
         return tv;
@@ -127,23 +117,35 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     @Override
     public void checkMethodCall(Call call) {
+        LocationTypeVariable lv = getLV(call.getCallee().getType());
         if (call instanceof SyncCall) {
-            checkEq(getLV(call.getCallee().getType()), LocationTypeVariable.ALWAYS_NEAR);
+            //checkEq(lv, LocationTypeVariable.ALWAYS_NEAR, Constraint.SHOULD_HAVE);
+            constraints.add(Constraint.constConstraint(lv, LocationType.NEAR, Constraint.SHOULD_HAVE));
+        } else {
+        //checkNeq(getLV(call.getCallee().getType()), LocationTypeVariable.ALWAYS_BOTTOM, Constraint.SHOULD_HAVE);
+            constraints.add(Constraint.constConstraint(lv, LocationType.ALLVISTYPES, Constraint.SHOULD_HAVE));
         }
     }
-    
-    private void checkEq(LocationTypeVariable ltv1, LocationTypeVariable ltv2) {
-        constraints.add(Constraint.eqConstraint(ltv1, ltv2));
+
+  private void checkEq(LocationTypeVariable ltv1, LocationTypeVariable ltv2, Integer importance) {
+        constraints.add(Constraint.eqConstraint(ltv1, ltv2, importance));
     }
 
     @Override
     public void checkEq(Type t1, Type t2) {
-        checkEq(getLV(t1), getLV(t2));
+        checkEq(getLV(t1), getLV(t2), Constraint.SHOULD_HAVE);
     }
     
     @Override
     public void finished() {
         Map<LocationTypeVariable, LocationType> generated = new SatGenerator(constraints).generate(errors);
         model.setLocationTypeInferenceResult(generated);
-    }
+        if (errors.isEmpty()) {
+            SemanticErrorList sel = new SemanticErrorList();
+            model.getTypeExt().unregister(this);
+            model.getTypeExt().register(new LocationTypeExtension(model));
+            model.typeCheck(sel);
+            errors.addAll(sel);
+        }
+     }
 }

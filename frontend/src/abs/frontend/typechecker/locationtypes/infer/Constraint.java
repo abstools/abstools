@@ -1,6 +1,7 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -9,6 +10,15 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 import static abs.frontend.typechecker.locationtypes.LocationType.*;
 
 public abstract class Constraint {
+    public final static Integer MUST_HAVE = 2147483647;
+    public final static Integer NICE_TO_HAVE = 1;
+    public final static Integer SHOULD_HAVE = 100;
+    
+    protected void prependAll(Integer i, List<List<Integer>> l) {        
+        for (List<Integer> subl : l) {
+            subl.add(0, i);
+        }
+    }
     
     public abstract List<List<Integer>> generateSat(Environment e);
     
@@ -56,6 +66,7 @@ public abstract class Constraint {
             values.add(- e.get(tv1, SOMEWHERE));
             values.addAll(generate(tv2, e, SOMEWHERE));
             result.add(values);
+            prependAll(SHOULD_HAVE, result);
             return result;
         }
 
@@ -100,6 +111,7 @@ public abstract class Constraint {
             values.add(- e.get(tv1, SOMEWHERE));
             values.addAll(generate(tv2, e, FAR, SOMEWHERE));
             result.add(values);
+            prependAll(SHOULD_HAVE, result);
             return result;
         }
 
@@ -136,6 +148,7 @@ public abstract class Constraint {
                     }
                 }
             }
+            prependAll(MUST_HAVE, result);
             return result;
         }
 
@@ -208,6 +221,10 @@ public abstract class Constraint {
             values.add(- e.get(tv, BOTTOM));
             values.add(e.get(resultTv, BOTTOM));
             result.add(values);
+            
+            prependAll(MUST_HAVE, result);
+            // adaptToTv should always be unequal to BOTTOM
+            //result.addAll(Constraint.neqConstraint(adaptToTv, LocationTypeVariable.ALWAYS_BOTTOM, SHOULD_HAVE).generateSat(e));
             return result;
         }
 
@@ -222,10 +239,12 @@ public abstract class Constraint {
     
     private static class EqConstraint extends Constraint {
         LocationTypeVariable tv1, tv2;
+        Integer importance;
 
-        public EqConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
+        public EqConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2, Integer importance) {
             this.tv1 = tv1;
             this.tv2 = tv2;
+            this.importance = importance;
         }
 
         @Override
@@ -238,6 +257,7 @@ public abstract class Constraint {
                 values.add(e.get(tv2, t));
                 result.add(values);
             }
+            prependAll(importance, result);
             return result;
         }
         
@@ -256,11 +276,13 @@ public abstract class Constraint {
     
     private static class ConstConstraint extends Constraint {
         LocationTypeVariable tv;
-        LocationType t;
+        LocationType[] t;
+        Integer importance;
 
-        public ConstConstraint(LocationTypeVariable tv, LocationType t) {
+        public ConstConstraint(LocationTypeVariable tv, LocationType[] t, Integer importance) {
             this.tv = tv;
             this.t = t;
+            this.importance = importance;
         }
 
         @Override
@@ -268,22 +290,24 @@ public abstract class Constraint {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
             values = new ArrayList<Integer>();
-            values.add(e.get(tv, t));
+            for (LocationType lt : t) {
+                values.add(e.get(tv, lt));
+            }
             result.add(values);
-            for (LocationType t2 : LocationType.ALLTYPES) {
+            /*for (LocationType t2 : LocationType.ALLTYPES) {
                 if (!t.equals(t2)) {
                     values = new ArrayList<Integer>();
                     values.add(- e.get(tv, t2));
                     result.add(values);
                 }
-            }
-            result.add(values);
+            }*/
+            prependAll(importance, result);
             return result;
         }
         
         @Override
         public String toString() {
-            return tv + " := " + t;
+            return tv + " := " + Arrays.toString(t);
         }
 
         @Override
@@ -299,15 +323,18 @@ public abstract class Constraint {
     }
     
     // tv1 = tv2
-    public static Constraint eqConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
-        return new EqConstraint(tv1, tv2);
+    public static Constraint eqConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2, Integer importance) {
+        return new EqConstraint(tv1, tv2, importance);
     }
     
     // tv := t
-    public static Constraint constConstraint(LocationTypeVariable tv, LocationType t) {
-        return new ConstConstraint(tv, t);
+    public static Constraint constConstraint(LocationTypeVariable tv, LocationType t, Integer importance) {
+        return new ConstConstraint(tv, new LocationType[]{t}, importance);
     }
     
+    public static Constraint constConstraint(LocationTypeVariable tv, LocationType[] tl, Integer importance) {
+        return new ConstConstraint(tv, tl, importance);
+    }
 
     // tv1 = tv2 |> tv3
     public static Constraint adaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptTo) {

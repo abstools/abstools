@@ -32,7 +32,6 @@ public class SatGenerator {
     
     final Environment e;
     
-    public final static int MAX = 2147483647;
     
     
     
@@ -46,11 +45,11 @@ public class SatGenerator {
     
     private void initializeConstraints() {
         constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_BOTTOM));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_BOTTOM, LocationType.BOTTOM));
+        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_BOTTOM, LocationType.BOTTOM, Constraint.MUST_HAVE));
         constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_NEAR));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_NEAR, LocationType.NEAR));
+        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_NEAR, LocationType.NEAR, Constraint.MUST_HAVE));
         constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_FAR));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_FAR, LocationType.FAR));
+        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_FAR, LocationType.FAR, Constraint.MUST_HAVE));
     }
 
     public Map<LocationTypeVariable, LocationType> generate(SemanticErrorList s) {
@@ -74,7 +73,7 @@ public class SatGenerator {
         
         StringBuffer weights = new StringBuffer();
         for (LocationTypeVariable tv : vars) {
-            weights.append(2);
+            weights.append(Constraint.NICE_TO_HAVE);
             weights.append(" ");
             weights.append(e.get(tv, LocationType.NEAR));
             weights.append(" ");
@@ -91,12 +90,10 @@ public class SatGenerator {
         sb.append(" ");
         sb.append(nbclauses);
         sb.append(" ");
-        sb.append(MAX);
+        sb.append(Constraint.MUST_HAVE);
         sb.append("\n");
         
         for (List<Integer> line : output) {
-            sb.append(MAX);
-            sb.append(" ");
             for (Integer i : line) {
                 sb.append(i);
                 sb.append(" ");

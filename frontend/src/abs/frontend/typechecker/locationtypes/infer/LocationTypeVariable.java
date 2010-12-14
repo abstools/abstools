@@ -9,6 +9,7 @@ import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.VarDecl;
+import abs.frontend.typechecker.locationtypes.LocationType;
 
 
 public class LocationTypeVariable {
@@ -23,10 +24,13 @@ public class LocationTypeVariable {
     private int id = ++counter;
     private ASTNode<?> node;
     
-    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n) {
+    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared) {
         LocationTypeVariable result = new LocationTypeVariable();
         result.node = n;
         constraints.add(Constraint.declConstraint(result));
+        if (declared) {
+            constraints.add(Constraint.constConstraint(result, LocationType.ALLVISTYPES, Constraint.MUST_HAVE));
+        }
         return result;
     }
     

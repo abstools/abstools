@@ -24,7 +24,7 @@ import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeExtensionHelper {
-    private final java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
+    private java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
     
     private void registerDefaultExtensions(Model m) {
         register(new ClassKindTypeExtension(m));
@@ -42,7 +42,13 @@ public class TypeExtensionHelper {
     }
     
     public void register(TypeSystemExtension tse) {
+        obs = new ArrayList<TypeSystemExtension>(obs);
         obs.add(tse);
+    }
+    
+    public void unregister(TypeSystemExtension tse) {
+        obs = new ArrayList<TypeSystemExtension>(obs); 
+        obs.remove(tse);
     }
     
     public void checkMethodCall(Call call) {

@@ -1,5 +1,7 @@
 package abs.frontend.typechecker.locationtypes;
 
+import java.util.Map;
+
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
@@ -14,6 +16,8 @@ import abs.frontend.ast.ThisExp;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 
 public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
@@ -31,13 +35,21 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
         LocationType rhtl = getLocationType(rht);
         LocationType lhtl = getLocationType(lht);
-        LocationType adaptedRht = rhtl;
-        if (adaptTo != null) {
-            adaptedRht = rhtl.adaptTo(getLocationType(adaptTo));
+        
+        if (n instanceof NewExp && ((NewExp)n).hasCog()) {
+            if (!rhtl.isSubtypeOfFarAdapted(lhtl)) {
+                errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,rhtl.toString(),lhtl.toString()));
+            }
+        } else {
+            LocationType adaptedRht = rhtl;
+            if (adaptTo != null) {
+                adaptedRht = rhtl.adaptTo(getLocationType(adaptTo));
+            }
+            if (!adaptedRht.isSubtypeOf(lhtl)) {
+                errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
+            }
         }
-        if (!adaptedRht.isSubtypeOf(lhtl)) {
-            errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
-        }
+        
     }
 
     @Override
@@ -96,6 +108,9 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkMethodCall(Call call) {
         LocationType lt = getLocationType(call.getCallee().getType());
+        if (lt.isBottom()) {
+            errors.add(new TypeError(call,ErrorMessage.LOCATION_TYPE_CALL_ON_BOTTOM,new String[0]));
+        } else
         if (call instanceof SyncCall) {
             if (!lt.isNear()) {
                 errors.add(new TypeError(call,ErrorMessage.LOCATION_TYPE_SYNC_CALL_ON_NON_NEAR,new String[0]));
@@ -104,6 +119,13 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     public LocationType getLocationType(Type type) {
+        Map<LocationTypeVariable, LocationType> locationTypeInferenceResult = model.getLocationTypeInferenceResult();
+        if (locationTypeInferenceResult != null) {
+            LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(type);
+            if (lv != null) {
+                return locationTypeInferenceResult.get(lv);
+            }
+        }
         return (LocationType) type.getMetaData(LocationType.LOCATION_KEY);
     }
     
@@ -114,5 +136,4 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public void adaptTo(Type type, Type to) {
         setLocationType(type,getLocationType(type).adaptTo(getLocationType(to)));
     }
-    
 }
