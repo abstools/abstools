@@ -93,6 +93,8 @@ public abstract class LocationType {
             return NEAR;
         if (name.equals("Somewhere"))
             return SOMEWHERE;
+        if (name.equals("Bottom"))
+            return BOTTOM;
         throw new IllegalArgumentException(name+" is not a location type");
     }
     
