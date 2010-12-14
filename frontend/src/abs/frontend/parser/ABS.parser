@@ -591,19 +591,17 @@ SyncCall sync_call =
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp = 
       pure_exp.callee DOT.d {:
-        if (allowIncompleteExpr) { 
-            return new IncompleteSyncAccess(callee); 
-        } else {
-            addSyntaxError("Missing method or field name",callee);
+        if (!allowIncompleteExpr) {
+           addSyntaxError("Missing method or field name",callee);
         }            
+        return new IncompleteSyncAccess(callee); 
       :}
     | pure_exp.callee BANG.b {: 
-        if (allowIncompleteExpr) { 
-            return new IncompleteAsyncAccess(callee);
-        } else {
+        if (!allowIncompleteExpr) { 
             addSyntaxError("Missing method name",callee);
         } 
-      :}
+        return new IncompleteAsyncAccess(callee);
+        :}
     | NEW cog.c? {: return new IncompleteNewExp(c) ; :} 
      
 ;
