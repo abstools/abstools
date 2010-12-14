@@ -145,7 +145,7 @@ aspect TypeChecker {
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         for (MethodImpl m : getMethods()) {
             String name = m.getMethodSig().getName();
-            sigs.put(name,m);        
+            sigs.put(name,m.getMethodSig());        
         }
         return sigs.values();
     }
