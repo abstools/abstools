@@ -69,7 +69,7 @@ aspect GenerateMaude {
         } else {
             for (VarOrFieldDecl param : getParams()) {
                 if (inList == false) inList = true; else stream.print(", ");
-                stream.print("@ \"" + param.getName() + "\" ");
+                stream.print("'" + param.getName() + " ");
             }
             stream.print(".\n");
         }
@@ -119,7 +119,7 @@ aspect GenerateMaude {
             // Invariant of asynchronous calls as right-hand side of an
             // assignment: futures are freed before overwriting the
             // variable's binding with the new future.
-            stream.print("$free(@ \"" + var + "\" ) ; ");
+            stream.print("$free('" + var + " ) ; ");
         }
         // All parameters of type Future get their reference count
         // incremented here, and decremented at the end of the
@@ -146,9 +146,9 @@ aspect GenerateMaude {
                 }
             }
         }
-        stream.print("asynccall(@ \""
+        stream.print("asynccall('"
                      + (var.equals("_") ? ".staticfuture" : var)
-                     + "\" ; ");
+                     + " ; ");
         getCallee().generateMaude(stream);
         stream.print(" ; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
@@ -169,14 +169,14 @@ aspect GenerateMaude {
             // calls, which have the same behavior (except that
             // synchronous calls synchronize and read the value of
             // .staticfuture before freeing it).
-            stream.print("; $free(@ \".staticfuture\") ");
+            stream.print("; $free('.staticfuture) ");
         }
     }
 
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var)
     {
         boolean inlist = false;
-        stream.print("synccall(@ \".staticfuture\" ; ");
+        stream.print("synccall('.staticfuture ; ");
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
@@ -189,15 +189,15 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
-        stream.print(") ; get( @ \".staticfuture\" ; @ \"" + var + "\") ");
-        stream.print("; $free(@ \".staticfuture\") ");
+        stream.print(") ; get( '.staticfuture ; '" + var + ") ");
+        stream.print("; $free('.staticfuture) ");
     }
 
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
         stream.print("get(");
         getPureExp().generateMaude(stream);
-        stream.print(" ; @ \"" + var + "\") ");
+        stream.print(" ; '" + var + ") ");
     }
 
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var)
@@ -208,7 +208,7 @@ aspect GenerateMaude {
         } else {
             stream.print("new(");
         }
-        stream.print("@ \"" + var + "\" ; \"" + getClassName() + "\" ; ");
+        stream.print("'" + var + " ; \"" + getClassName() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
@@ -264,7 +264,7 @@ aspect GenerateMaude {
     }
 
     public void ThisExp.generateMaude(PrintStream stream) {
-        stream.print("@ \"this\" ");
+        stream.print("'this ");
     }
 
     public void NullExp.generateMaude(PrintStream stream) {
@@ -290,11 +290,11 @@ aspect GenerateMaude {
     }
 
 	public void VarUse.generateMaude(PrintStream stream) {
-        stream.print("@ \"" + getName() + "\" ");
+        stream.print("'" + getName() + " ");
 	}
 
 	public void FieldUse.generateMaude(PrintStream stream) {
-        stream.print("@@ \"" + getName() + "\" ");
+        stream.print("@ '" + getName() + " ");
 	}
 
     public void FnApp.generateMaude(PrintStream stream) {
@@ -313,7 +313,7 @@ aspect GenerateMaude {
 
     public void LetExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("let @ \"" + getVar().getName() + "\" = ");
+        stream.print("let '" + getVar().getName() + " = ");
         getVal().generateMaude(stream);
         stream.print("in ");
         getExp().generateMaude(stream);
@@ -341,7 +341,7 @@ aspect GenerateMaude {
 	abstract public void Pattern.generateMaude(PrintStream stream);
 
     public void UnderscorePattern.generateMaude(PrintStream stream) {
-        stream.print("@ \"_\" ");
+        stream.print("'_ ");
     }
 
     public void PatternVar.generateMaude(PrintStream stream) {
@@ -349,11 +349,11 @@ aspect GenerateMaude {
     }
 
     public void PatternVarUse.generateMaude(PrintStream stream) {
-        stream.print("@ \"" + getName() + "\" ");
+        stream.print("'" + getName() + " ");
     }
     
     public void PatternVarDecl.generateMaude(PrintStream stream) {
-        stream.print("@ \"" + getName() + "\" ");
+        stream.print("'" + getName() + " ");
     }
 
     public void LiteralPattern.generateMaude(PrintStream stream) {
@@ -388,7 +388,7 @@ aspect GenerateMaude {
             stream.print("(");
             for (ParamDecl param : getParams()) {
                 if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + param.getName() + "\"");
+                stream.print("'" + param.getName() + "");
             }
             stream.print(")");
         }
@@ -399,7 +399,7 @@ aspect GenerateMaude {
             inlist = false;
             for (FieldDecl field : getFields()) {
                 if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + field.getName() + "\" |-> null ");
+                stream.print("'" + field.getName() + " |-> null ");
             }
         }
         stream.print(",\n  Mtds: ");
@@ -462,7 +462,7 @@ aspect GenerateMaude {
             stream.print("(");
             for (ParamDecl param : sig.getParams()) {
                 if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + param.getName() + "\"");
+                stream.print("'" + param.getName() + "");
             }
             stream.print(")");
         }
@@ -482,16 +482,16 @@ aspect GenerateMaude {
                     Type t = vardecl.getVarDecl().getAccess().getType();
                     if (t.isFutureType()) {
                         if (inlist) stream.print("; "); else inlist = true;
-                        stream.print("$free(@ \"" 
+                        stream.print("$free('" 
                                      + vardecl.getVarDecl().getName()
-                                     + "\") ");
+                                     + ") ");
                     }
                 }
             }
             // ... and all parameters
             for (ParamDecl param : sig.getParams()) {
                 if (param.getType().isFutureType()) {
-                    stream.print("; $free(@ \"" + param.getName() + "\") ");
+                    stream.print("; $free('" + param.getName() + ") ");
                 }
             }
             // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for
@@ -523,7 +523,7 @@ aspect GenerateMaude {
         VarDecl var = getVarDecl();
         if (inMainBlock) {
             if (var.hasInitExp()) {
-                stream.print("assign( @@ \"" + var.getName() + "\" ; ");
+                stream.print("assign( @ '" + var.getName() + " ; ");
                 var.getInitExp().generateMaude(stream);
                 stream.print(") ");
             } else {
@@ -532,7 +532,7 @@ aspect GenerateMaude {
                 stream.print("noStmt ");
             }
         } else {
-            stream.print("$vardecl( @ \"" + var.getName() + "\" ; ");
+            stream.print("$vardecl( '" + var.getName() + " ; ");
             if (var.hasInitExp()) {
                 var.getInitExp().generateMaude(stream);
             } else {
@@ -586,7 +586,7 @@ aspect GenerateMaude {
             // assigned to dummy variable _
             if (getRetExp() instanceof AsyncCall) var = ".staticfuture";
             getRetExp().generateMaudeAsStatement(stream, var);
-            stream.print("; return(@ \"" + var + "\") " );
+            stream.print("; return('" + var + ") " );
         }
     }
 
@@ -661,7 +661,7 @@ aspect GenerateMaude {
             inlist = false;
             for (VarDecl var : getVars()) {
                 if (inlist) stream.print(", "); else inlist = true;
-                stream.print("@ \"" + var.getName() + "\" |-> null ");
+                stream.print("'" + var.getName() + " |-> null ");
             }
         }
         stream.print(",\n  Mtds: ");
@@ -692,8 +692,8 @@ aspect GenerateMaude {
                 VarDeclStmt vardecl = (VarDeclStmt)stmt;
                 Type t = vardecl.getVarDecl().getAccess().getType();
                 if (t.isFutureType()) {
-                    stream.print("; $free(@ \"" + vardecl.getVarDecl().getName()
-                                 + "\") ");
+                    stream.print("; $free('" + vardecl.getVarDecl().getName()
+                                 + ") ");
                 }
             }
         }
@@ -710,7 +710,7 @@ aspect GenerateMaude {
         for (FieldDecl field : fields) {
             if (field.hasInitExp()) {
                 if (inlist) stream.print("; "); else inlist = true;
-                stream.print("assign( @@ \"" + field.getName() + "\" ; ");
+                stream.print("assign( @ '" + field.getName() + " ; ");
                 field.getInitExp().generateMaude(stream);
                 stream.print(") ");
             }
@@ -722,8 +722,8 @@ aspect GenerateMaude {
         if (inlist) stream.print("; "); else inlist = true;
         stream.print("return(null) ");
         if (isActiveClass) {
-            stream.print("; asynccall(@ \".staticfuture\" ; @ \"this\" ; \"run\" ; emp) ");
-            stream.print("; $free(@ \".staticfuture\") ");
+            stream.print("; asynccall('.staticfuture ; 'this ; \"run\" ; emp) ");
+            stream.print("; $free('.staticfuture) ");
         }
         stream.print("> ");
     }

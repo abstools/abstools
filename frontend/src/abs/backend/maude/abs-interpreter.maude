@@ -63,15 +63,16 @@ endv
 fmod ABS-DATA-VID is
   extending ABS-DATA-SIG .
   protecting STRING .
+  protecting QID .
 
   sort Vid .
-  subsort Vid < Expr .
+  subsort Qid < Vid < Expr .
 
-  *** Variable references
-  op @_ : String -> Vid [ctor] .
-  *** Instance variable references
+  *** Variable references are named by Qids directly.
 
-  op @@_ : String -> Vid [ctor] .
+  *** Instance variable references are decorated:
+
+  op @_ : Qid -> Vid [ctor] .
 endfm
 
 view Vid from TRIV to ABS-DATA-VID is
@@ -149,16 +150,16 @@ fmod ABS-DATA-BOOL is
   eq true asAbsBool = "True"[ emp ] .
   eq false asAbsBool = "False"[ emp ] .
 
-  eq fparams("==") = @ "D1", @ "D2" .
+  eq fparams("==") = 'D1, 'D2 .
   eq fdefn("==") = $builtin("==") .
-  eq fparams("/=") = @ "D1", @ "D2" .
+  eq fparams("/=") = 'D1, 'D2 .
   eq fdefn("/=") = $builtin("/=") .
 
-  eq fparams("~") = @ "D" .
+  eq fparams("~") = 'D .
   eq fdefn("~") = $builtin("~") .
-  eq fparams("&&") = @ "D1", @ "D2" .
+  eq fparams("&&") = 'D1, 'D2 .
   eq fdefn("&&") = $builtin("&&") .
-  eq fparams("||") = @ "D1", @ "D2" .
+  eq fparams("||") = 'D1, 'D2 .
   eq fdefn("||") = $builtin("||") .
   
 endfm
@@ -215,30 +216,30 @@ fmod ABS-DATA-INT is
   op _asNat : Data -> Nat .
   eq "int"[N] asNat = N .
 
-  eq fparams("--") = @ "I" .
+  eq fparams("--") = 'I .
   eq fdefn("--") = $builtin("--") .
-  eq fparams("+") = @ "I1", @ "I2" .
+  eq fparams("+") = 'I1, 'I2 .
   eq fdefn("+") = $builtin("+") .
-  eq fparams("-") = @ "I1", @ "I2" .
+  eq fparams("-") = 'I1, 'I2 .
   eq fdefn("-") = $builtin("-") .
-  eq fparams("*") = @ "I1", @ "I2" .
+  eq fparams("*") = 'I1, 'I2 .
   eq fdefn("*") = $builtin("*") .
-  eq fparams("/") = @ "I1", @ "I2" .
+  eq fparams("/") = 'I1, 'I2 .
   eq fdefn("/") = $builtin("/") .
-  eq fparams("%") = @ "I1", @ "I2" .
+  eq fparams("%") = 'I1, 'I2 .
   eq fdefn("%") = $builtin("%") .
   
   *** eq "**" ("int"[I] :: "int"[I']) = "int"[I ^ I'] .
   *** eq "random" ("int"[I]) = "int"[random(I)] .
   *** eq "real_of_int" ("int"[I]) = "float"[float(I)] .
 
-  eq fparams("<") = @ "I1", @ "I2" .
+  eq fparams("<") = 'I1, 'I2 .
   eq fdefn("<") = $builtin("<") .
-  eq fparams("<=") = @ "I1", @ "I2" .
+  eq fparams("<=") = 'I1, 'I2 .
   eq fdefn("<=") = $builtin("<=") .
-  eq fparams(">") = @ "I1", @ "I2" .
+  eq fparams(">") = 'I1, 'I2 .
   eq fdefn(">") = $builtin(">") .
-  eq fparams(">=") = @ "I1", @ "I2" .
+  eq fparams(">=") = 'I1, 'I2 .
   eq fdefn(">=") = $builtin(">=") .
 
 endfm
@@ -264,9 +265,9 @@ fmod ABS-DATA-STRING is
   eq "#" ("str"[S]) = "int"[length(S)] .
   eq "ascii" ("str"[S]) = "int"[ascii(S)] .
   eq "char" ("int"[N]) = "str"[char(N)] .
-  eq fparams("substr") = @ "S", @ "L", @ "R" .
+  eq fparams("substr") = 'S, 'L, 'R .
   eq fdefn("substr") = $builtin("substr") .
-  eq fparams("strlen") = @ "S" .
+  eq fparams("strlen") = 'S .
   eq fdefn("strlen") = $builtin("strlen") .
   eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
   eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
@@ -717,6 +718,7 @@ mod ABS-EVAL is
   vars A A' : Vid .
   var AL : VidList .
   vars Q C : String .
+  var QID : Qid .
   vars S S' : Subst .
   var R : MatchResult .
   var SS : SSubst .
@@ -744,18 +746,18 @@ mod ABS-EVAL is
   eq eval(D, S, CN, N) = D .
 
   *** Normal variable lookup.  Can be either instance or local variable.
-  eq eval(@ Q, S, CN, N) =  S [@ Q] .
-  *** Instance variable lookup.  The distinction between @@ and @ needs to be
-  *** made in all lookup operations.
-  eq eval(@@ Q, (SS :: S), CN, N) =  SS [@ Q] .
+  eq eval(QID, S, CN, N) =  S [QID] .
+  *** Instance variable lookup.  The distinction between @ and raw qids needs
+  *** to be made in all lookup operations.
+  eq eval(@ QID, (SS :: S), CN, N) =  SS [QID] .
   *** Function expansions are expressions, subject to further evaluation.
   *** They are not evaluated in the current environment but in the environment
   *** in which they are defined (which is currently always empty).
   eq eval(Q(EL), S, CN, N) = eval(fdefn(Q), 
       createSubst(fparams(Q), evalList(EL, S, CN, N)), CN, N) .
   eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
-  eq eval(?(@ Q), S, CN, N) = completed(S[@ Q], CN) asAbsBool .
-  eq eval(?(@@ Q), (SS :: S), CN, N) = completed(SS[@ Q], CN) asAbsBool .
+  eq eval(?(QID), S, CN, N) = completed(S[QID], CN) asAbsBool .
+  eq eval(?(@ QID), (SS :: S), CN, N) = completed(SS[QID], CN) asAbsBool .
   eq eval(?(L), S, CN, N) = completed(L, CN) asAbsBool .
   eq eval(if E th E' el E'' fi, S, CN, N) =
     if eval(E, S, CN, N) asBool
@@ -774,7 +776,7 @@ mod ABS-EVAL is
   op $match : Data Expr Subst MatchResult -> MatchResult .
   eq $match(D, E, S, noMatch) = noMatch .
   eq $match(D, D, S, R) = R .           *** matching two literals
-  eq $match(D, @ "_", S, R) = R .       *** "Don't care" placeholder
+  eq $match(D, '_, S, R) = R .       *** "Don't care" placeholder
   eq $match(D, A, S, R) =               *** Create / check variable binding
     if hasMapping(S, A)
     then
@@ -815,39 +817,39 @@ mod ABS-EVAL is
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(@ Q ; A') ; SL , S, CN, N) = completed(S[@ Q], CN) . 
-  eq ready(get(@@ Q ; A') ; SL , (SS :: S), CN, N) = completed(SS[@ Q], CN) . 
+  eq ready(get(QID ; A') ; SL , S, CN, N) = completed(S[QID], CN) . 
+  eq ready(get(@ QID ; A') ; SL , (SS :: S), CN, N) = completed(SS[QID], CN) . 
   eq ready(get(L ; A') ; SL , S, CN, N) = completed(L, CN) . 
   eq ready(SL, S, CN, N) = enabled(SL, S, CN, N) [owise] .
 
   *** Evaluate various builtin functions.
 
   *** ABS-DATA-BOOL
-  eq eval($builtin("=="), S, CN, N) = (S[@ "D1"] == S[@ "D2"]) asAbsBool .
-  eq eval($builtin("/="), S, CN, N) = (S[@ "D1"] =/= S[@ "D2"]) asAbsBool .
-  eq eval($builtin("~"), S, CN, N) = (not ((S[@ "D"]) asBool)) asAbsBool .
-  eq eval($builtin("&&"), S, CN, N) = ((S[@ "D1"]) asBool and (S[@ "D2"]) asBool) asAbsBool .
-  eq eval($builtin("||"), S, CN, N) = ((S[@ "D1"]) asBool or (S[@ "D2"]) asBool) asAbsBool .
+  eq eval($builtin("=="), S, CN, N) = (S['D1] == S['D2]) asAbsBool .
+  eq eval($builtin("/="), S, CN, N) = (S['D1] =/= S['D2]) asAbsBool .
+  eq eval($builtin("~"), S, CN, N) = (not ((S['D]) asBool)) asAbsBool .
+  eq eval($builtin("&&"), S, CN, N) = ((S['D1]) asBool and (S['D2]) asBool) asAbsBool .
+  eq eval($builtin("||"), S, CN, N) = ((S['D1]) asBool or (S['D2]) asBool) asAbsBool .
   
   *** ABS-DATA-INT
-  eq eval($builtin("--"), S, CN, N) = "int"[-(S[@ "I"]) asInt] .
+  eq eval($builtin("--"), S, CN, N) = "int"[-(S['I]) asInt] .
   ceq eval($builtin("+"), S, CN, N) = "int"[I1:Int + I2:Int]
-  if "int"[I1:Int] := S[@ "I1"] /\ "int"[I2:Int] := S[@ "I2"] .
-  eq eval($builtin("-"), S, CN, N) = "int"[(S[@ "I1"]) asInt - (S[@ "I2"]) asInt] .
-  eq eval($builtin("*"), S, CN, N) = "int"[(S[@ "I1"]) asInt * (S[@ "I2"]) asInt] .
-  eq eval($builtin("/"), S, CN, N) = "int"[(S[@ "I1"]) asInt quo (S[@ "I2"]) asInt] .
-  eq eval($builtin("%"), S, CN, N) = "int"[(S[@ "I1"]) asInt rem (S[@ "I2"]) asInt] .
-  eq eval($builtin("<"), S, CN, N) = ((S[@ "I1"]) asInt < (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin("<="), S, CN, N) = ((S[@ "I1"]) asInt <= (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin(">"), S, CN, N) = ((S[@ "I1"]) asInt > (S[@ "I2"]) asInt) asAbsBool .
-  eq eval($builtin(">="), S, CN, N) = ((S[@ "I1"]) asInt >= (S[@ "I2"]) asInt) asAbsBool .
+  if "int"[I1:Int] := S['I1] /\ "int"[I2:Int] := S['I2] .
+  eq eval($builtin("-"), S, CN, N) = "int"[(S['I1]) asInt - (S['I2]) asInt] .
+  eq eval($builtin("*"), S, CN, N) = "int"[(S['I1]) asInt * (S['I2]) asInt] .
+  eq eval($builtin("/"), S, CN, N) = "int"[(S['I1]) asInt quo (S['I2]) asInt] .
+  eq eval($builtin("%"), S, CN, N) = "int"[(S['I1]) asInt rem (S['I2]) asInt] .
+  eq eval($builtin("<"), S, CN, N) = ((S['I1]) asInt < (S['I2]) asInt) asAbsBool .
+  eq eval($builtin("<="), S, CN, N) = ((S['I1]) asInt <= (S['I2]) asInt) asAbsBool .
+  eq eval($builtin(">"), S, CN, N) = ((S['I1]) asInt > (S['I2]) asInt) asAbsBool .
+  eq eval($builtin(">="), S, CN, N) = ((S['I1]) asInt >= (S['I2]) asInt) asAbsBool .
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, N) = "str"[I1:String + I2:String]
-  if "str"[I1:String] := S[@ "I1"] /\ "str"[I2:String] := S[@ "I2"] .
+  if "str"[I1:String] := S['I1] /\ "str"[I2:String] := S['I2] .
   eq eval($builtin("substr"), S, CN, N) =
-    "str"[substr((S[@ "S"]) asString, (S[@ "L"]) asInt, (S[@ "R"]) asInt)] .
+    "str"[substr((S['S]) asString, (S['L]) asInt, (S['R]) asInt)] .
   eq eval($builtin("strlen"), S, CN, N) =
-    "int"[length((S[@ "S"]) asString)] .
+    "int"[length((S['S]) asString)] .
   *** ABS-DATA-TIME
   --- N will be 0 in the untimed case.
   eq eval($builtin("currentms"), S, CN, N) = "int"[N] .
@@ -934,7 +936,7 @@ mod ABS-MSG-TRANSPORT is
 
   eq makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL, B)
   =
-    { @ ".label" |-> N, @ ".method" |-> "str"[ M ], @ ".delta" |-> "str"[D], @ ".staticfuture" |-> null, @ "_" |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.label |-> N, '.method |-> "str"[ M ], '.delta |-> "str"[D], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
 endm
 
@@ -1000,7 +1002,7 @@ mod ABS-MACHINE-BASICS is
       CN
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1[@ ".label"] /\ ready(SL1, (S1 :: L1), CN, 0)
+  if  L[A] == L1['.label] /\ ready(SL1, (S1 :: L1), CN, 0)
     [label schedule-cog] .
 
   *** Handle synchronous self-calls
@@ -1009,7 +1011,7 @@ mod ABS-MACHINE-BASICS is
   =
     < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1[@ ".label"]
+  if  L[A] == L1['.label]
     [label schedule-self] .
 
   --- mark
@@ -1152,7 +1154,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       CN
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1[@ ".label"] /\ ready(SL1, (S1 :: L1), CN, T)
+  if  L[A] == L1['.label] /\ ready(SL1, (S1 :: L1), CN, T)
     [label schedule-cog] .
 
   *** Handle synchronous self-calls
@@ -1161,7 +1163,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   =
     < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1[@ ".label"]
+  if  L[A] == L1['.label]
     [label schedule-self] .
 
   --- mark
@@ -1331,25 +1333,26 @@ mod ABS-STMT-ASSIGN-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   vars Q CG : String .
+  var E : Expr .       var D : Data .   var CG : String .
+  var Q : Qid .
 
   *** Variable or field assignment
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =>
-    if hasMapping(L, @ Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    if hasMapping(L, Q) then
+      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
@@ -1357,25 +1360,26 @@ mod ABS-STMT-ASSIGN-EQ is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   vars Q CG : String .
+  var E : Expr .       var D : Data .   var CG : String .
+  var Q : Qid .
 
   *** Variable or field assignment.
   ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =
-    if hasMapping(L, @ Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    if hasMapping(L, Q) then
+      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, 0)
     [label assignment] .
 
   *** Field assignment.
   ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
@@ -1383,19 +1387,19 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   vars Q CG : String .
-  vars T LIM : Nat .
+  var E : Expr .       var D : Data .   var CG : String .
+  vars T LIM : Nat .   var Q : Qid .
 
   *** Variable or field assignment.
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    if hasMapping(L, @ Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(@ Q, D, L) |  SL }, PrQ: W, Lcnt: F >
+    if hasMapping(L, Q) then
+      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, T)
     [label assignment] .
@@ -1403,10 +1407,10 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   *** Field assignment.
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: insert(@ Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, T)
     [label field-assignment] .
 endm
@@ -1739,10 +1743,10 @@ mod ABS-NEW-RL is
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -1751,11 +1755,11 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G), 
-                             Att: (@ "this" |-> ob(newId(B, G)), S1,
+                             Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: null >
@@ -1778,10 +1782,10 @@ mod ABS-NEW-EQ is
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -1790,11 +1794,11 @@ mod ABS-NEW-EQ is
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
-                             Att: (@ "this" |-> ob(newId(B, G)), S1,
+                             Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: null >
@@ -1819,10 +1823,10 @@ mod ABS-NEW-EQ-TIMED is
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; get( @ ".staticfuture" ; @ "_") ; $free(@ ".staticfuture"); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Cog: CG, Att: (@ "this" |-> ob(newId(B, G)), S1,
+    < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -1833,11 +1837,11 @@ mod ABS-NEW-EQ-TIMED is
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall(@ ".staticfuture" ; ob(newId(B, G)) ; ".init" ; emp) ; $free(@ ".staticfuture") ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
-                             Att: (@ "this" |-> ob(newId(B, G)), S1,
+                             Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: null >
@@ -1864,7 +1868,7 @@ mod ABS-STMT-RETURN-RL is
     *** return statement in each code branch.
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
-  if N == L[@ ".label"]
+  if N == L['.label]
       [label return] .
 endm
 mod ABS-STMT-RETURN-EQ is
@@ -1885,7 +1889,7 @@ mod ABS-STMT-RETURN-EQ is
     *** return statement in each code branch.
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
-  if N == L[@ ".label"]
+  if N == L['.label]
       [label return] .
 endm
 mod ABS-STMT-RETURN-EQ-TIMED is
@@ -1909,7 +1913,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, T) >
-  if N == L[@ ".label"]
+  if N == L['.label]
       [label return] .
 endm
 
@@ -1997,7 +2001,7 @@ mod ABS-SIMULATOR-RL is
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
       < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
@@ -2029,7 +2033,7 @@ mod ABS-SIMULATOR-EQ is
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
       < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
@@ -2063,7 +2067,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
       < 0 : Clock | Limit: 100 >
       < "main" : Cog | Object: ob("main") >
       < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { @ "var" |-> null, @ ".staticfuture" |-> null | new(@ "var" ; B:String ; DL:DataList) },
+        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.

@@ -40,7 +40,7 @@ public class MaudeTests extends ABSTest {
             // TODO: test with other simulators (equational, timed) here as well
             String generatedMaudeCode = getMaudeCode(absCode, "ABS-SIMULATOR-RL");
             String maudeOutput = getMaudeOutput(generatedMaudeCode);
-            Pattern pattern = Pattern.compile(".*@ \"testresult\" \\|-> \"(\\w+)\"\\[emp\\].*");
+            Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
             Matcher matcher = pattern.matcher(maudeOutput);
             if (matcher.find()) {
                 String boolValue = matcher.group(1);
