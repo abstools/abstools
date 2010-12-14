@@ -31,7 +31,7 @@ aspect ClassKindChecker {
         }
             
         if (found != null) {
-            if (getCog().equals("cog")) {
+            if (hasCog()) {
                 if (!found.equals("COG")) {
                     s.add(new TypeError(this,ErrorMessage.CLASSKIND_PLAIN,d.getName()));
                 }

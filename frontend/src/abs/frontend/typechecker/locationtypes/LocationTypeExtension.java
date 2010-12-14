@@ -52,7 +52,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         if (n instanceof NewExp) {
             NewExp newExp = (NewExp)n;
             LocationType type = LocationType.NEAR;
-            if (newExp.getCog().equals("cog")) {
+            if (newExp.hasCog()) {
                 type = LocationType.FAR;
             } 
             setLocationType(t,type);

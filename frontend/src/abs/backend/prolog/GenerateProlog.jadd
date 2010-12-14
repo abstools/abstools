@@ -762,10 +762,14 @@ aspect GenerateProlog {
             params.getChild(i).generateProlog(s);
             if (i != n-1) s.print(",");
         }
-        if(getCog().length()==0)
-            s.print("],'noCog')");
+        s.print("],'");
+        
+        if(hasCog())
+            s.print("cog");
         else
-            s.print("],"+quote(getCog())+")");
+            s.print("noCog");
+            
+        s.print("')");
     }
     //guards
     public void AndGuard.generateProlog(PrintStream s) {

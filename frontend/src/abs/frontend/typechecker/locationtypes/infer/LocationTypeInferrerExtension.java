@@ -85,7 +85,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
         LocationTypeVariable sub = getLV(rht);
         LocationTypeVariable tv = getLV(lht);
-        if (n instanceof NewExp && ((NewExp)n).getCog().equals("cog")) {
+        if (n instanceof NewExp && ((NewExp)n).hasCog()) {
             constraints.add(Constraint.farConstraint(sub, tv));
         } else {
             if (adaptTo != null && getLV(adaptTo) != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
@@ -109,7 +109,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         if (n instanceof NewExp) {
             NewExp newExp = (NewExp)n;
             LocationTypeVariable ltv;
-            if (newExp.getCog().equals("cog")) {
+            if (newExp.hasCog()) {
                 ltv = LocationTypeVariable.ALWAYS_FAR;
             } else {
                 ltv = LocationTypeVariable.ALWAYS_NEAR;

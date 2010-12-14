@@ -78,7 +78,7 @@ abstract IncompleteExp:     Exp;
 abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
 IncompleteSyncAccess:       IncompleteAccess; // something like "x." 
 IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"                     
-IncompleteNewExp:           IncompleteExp; // a "new" without a classname 
+IncompleteNewExp:           IncompleteExp ::= [Cog]; // a "new" without a classname 
 
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 
@@ -158,8 +158,10 @@ LiteralPattern:		Pattern ::= Literal:LiteralExp;
 UnderscorePattern:	Pattern; 
 
 
+Cog ; // just the COG marker
+
 // Expressions with side effects. 
-NewExp: EffExp			::= <ClassName> Param:PureExp* <Cog> ; //todo, optional cog 
+NewExp: EffExp			::= <ClassName> Param:PureExp* [Cog] ; 
 abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;

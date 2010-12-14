@@ -558,6 +558,8 @@ List pattern_list =
     pattern.i                              {: return new List().add(i); :}
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
+	
+Cog cog = COG.g {: return new Cog(); :} ;	
 
 Exp exp = 
 	  eff_exp.e   {: return e; :}
@@ -573,8 +575,7 @@ Exp eff_exp =
 	; 
 
 NewExp new_exp = 
-	  NEW type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,"") ; :} 
-	| NEW COG.c type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,c) ; :} 
+	  NEW cog.c? type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,c) ; :} 
 	;
 
 AsyncCall async_call = 
@@ -603,6 +604,8 @@ IncompleteExp incomplete_exp =
             addSyntaxError("Missing method name",callee);
         } 
       :}
+    | NEW cog.c? {: return new IncompleteNewExp(c) ; :} 
+     
 ;
 
 

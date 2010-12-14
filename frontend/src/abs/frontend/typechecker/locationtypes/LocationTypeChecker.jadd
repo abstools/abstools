@@ -146,7 +146,7 @@ aspect LocationTypeChecker {
     }*/
     
     refine Typing eq NewExp.getType() {
-        if (getCog().equals("cog")) {
+        if (hasCog()) {
             return LocationTypeCheckerHelper.withLocationType(Typing.NewExp.getType(),LocationType.FAR);
         } else {
             return LocationTypeCheckerHelper.withLocationType(Typing.NewExp.getType(),LocationType.NEAR);

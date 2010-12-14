@@ -677,7 +677,7 @@ aspect GenerateJava {
 
     public void NewExp.generateJava(PrintStream stream) {
       String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
-        if (getCog().equals("cog")) {
+        if (hasCog()) {
             stream.print(className+".__ABS_createNewCOG");
 	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
         } else {
