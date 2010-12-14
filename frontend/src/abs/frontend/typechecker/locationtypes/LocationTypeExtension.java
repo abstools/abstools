@@ -33,7 +33,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         LocationType lhtl = getLocationType(lht);
         LocationType adaptedRht = rhtl;
         if (adaptTo != null) {
-            rhtl.adaptTo(getLocationType(adaptTo));
+            adaptedRht = rhtl.adaptTo(getLocationType(adaptTo));
         }
         if (!adaptedRht.isSubtypeOf(lhtl)) {
             errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
@@ -66,21 +66,30 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     private void setAnnotatedType(Type t) {
-        LocationType lt = getLocationTypeFromAnnotations(t);
-        if (lt == null)
-            lt = defaultType;
-        setLocationType(t, lt);
+        try {
+            LocationType lt = getLocationTypeFromAnnotations(t);
+            if (lt == null)
+                lt = defaultType;
+            setLocationType(t, lt);
+        } catch (LocationTypeCheckerException e) {
+            errors.add(e.getTypeError());
+        }
     }
     
     public static LocationType getLocationTypeFromAnnotations(Type t) {
+        LocationType res = null;
         for (TypeAnnotation an : t.getTypeAnnotations()) {
             if (an.getType().getQualifiedName().equals("ABS.StdLib.LocationType")) {
                 DataConstructorExp de = (DataConstructorExp) an.getValue();
                 String name = de.getDecl().getName();
-                return LocationType.createFromName(name);
+                if (res != null) {
+                    throw new LocationTypeCheckerException(new TypeError(an.getValue(),ErrorMessage.LOCATION_TYPE_MULTIPLE, new String[0]));
+                } else {
+                    res = LocationType.createFromName(name); 
+                }
             }
         }
-        return null;
+        return res;
     }
     
 

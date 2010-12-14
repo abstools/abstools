@@ -210,7 +210,7 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     @Test
-    public void illegalAsyncSyncCall() {
+    public void illegalAsyncCall() {
         assertTypeError("{ [Far] I i; i!farM(i); }");
     }
     
