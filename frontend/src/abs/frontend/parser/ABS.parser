@@ -616,12 +616,11 @@ Stmt stmt =
       :}
     | SEMICOLON  {: return new SkipStmt(new List()); :}
     | annotation_list.al? stmt_without_annotations.s error.e {:
-        if (allowIncompleteExpr) { 
-            s.setAnnotationList(al);
-            return new IncompleteStmt(new List(), s);
-        } else {
+        if (!allowIncompleteExpr) { 
             addSyntaxError("Missing semicolon",s);
-        } 
+        }
+        s.setAnnotationList(al);
+        return new IncompleteStmt(new List(), s);
       :}
 ;
 
