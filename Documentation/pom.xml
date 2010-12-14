@@ -60,10 +60,10 @@
   </mailingLists>
 
 <scm>
-    <developerConnection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS/</developerConnection>
-    <connection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS/</connection>
+    <developerConnection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS</developerConnection>
+    <connection>scm:svn:https://repos.hats-project.eu:444/svn/hats/Tools/ABS</connection>
     <tag>trunk</tag>
-    <url>http://127.0.0.1/websvn/my-project</url>
+    <url>https://trac.hats-project.eu/projects/ABSTools/browser/trunk/</url>
   </scm>
 
 
@@ -115,4 +115,16 @@
 
   </plugins>
   </build>
+
+<!--
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-changelog-plugin</artifactId>
+        <version>2.2</version>
+      </plugin>
+    </plugins>
+  </reporting>
+-->
 </project>
