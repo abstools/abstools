@@ -141,6 +141,21 @@ aspect TypeChecker {
     	}
     }
     
+    public Collection<MethodSig> ClassDecl.getAllMethodSigs() {
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        for (MethodImpl m : getMethods()) {
+            String name = m.getMethodSig().getName();
+            sigs.put(name,m);        
+        }
+        return sigs.values();
+    }
+    
+    public Collection<MethodSig> InterfaceDecl.getAllMethodSigs() {
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        addAllMethodSigs(sigs, new HashSet<InterfaceDecl>());
+        return sigs.values();
+    }
+    
     // DECLS
     public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs, HashSet<InterfaceDecl> visitedDecls) {
         if (visitedDecls.contains(this)) 

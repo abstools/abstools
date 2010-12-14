@@ -1,0 +1,53 @@
+import java.io.PrintWriter;
+
+import abs.frontend.tests.*;
+
+aspect PrettyPrint {
+    
+    public String ASTNode.toString() {
+        StringWriter writer = new StringWriter();
+        PrintWriter w = new PrintWriter(writer);
+        ABSFormatter f = new EmptyFormatter();
+        prettyPrint(w,f);
+        return writer.toString();
+    }
+    
+    public void ASTNode.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(this.getClass().getSimpleName()+"(");
+        prettyPrintChildren(w,f);
+        w.print(")");
+    }
+    
+    public void ASTNode.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        for(int i = 0; i < getNumChild(); i++) {
+            if (i > 0) w.print(",");
+            getChild(i).prettyPrint(w,f);
+            i++;
+        }
+    }
+    
+    public void List.prettyPrint(PrintWriter w, ABSFormatter f) {
+        prettyPrintChildren(w,f);
+    }
+    
+    public void TypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+    }
+    
+    public void ParametricDataTypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+        w.print('<');
+        getParamList().prettyPrint(w,f);
+        w.print('>');
+    }
+    
+    public void MethodSig.prettyPrint(PrintWriter w, ABSFormatter f) {
+        getReturnType().prettyPrint(w,f);
+        w.print(' ');
+        w.print(getName());
+        w.print('(');
+        getParams().prettyPrint(w,f);
+        w.print(')');
+    }
+    
+} 

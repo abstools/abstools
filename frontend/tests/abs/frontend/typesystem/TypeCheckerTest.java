@@ -2,12 +2,19 @@ package abs.frontend.typesystem;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.VarDeclStmt;
 
 public class TypeCheckerTest extends FrontendTest {
 
@@ -241,4 +248,19 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrors("class C(Bool b) { } { new C(True); }");
     }
 
+    @Test
+    public void methodSigs() {
+        Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB); 
+        ModuleDecl module = m.getCompilationUnit(1).getModuleDecl(0);
+        InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
+        ArrayList<MethodSig> list = new ArrayList<MethodSig>(d.getAllMethodSigs());
+        assertEquals(3,list.size());
+        
+        VarDeclStmt stmt = (VarDeclStmt) module.getBlock().getStmt(0);
+        Collection<MethodSig> sigs = stmt.getVarDecl().getAccess().getType().getAllMethodSigs();
+        assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());
+        
+    }
+    
+    
 }

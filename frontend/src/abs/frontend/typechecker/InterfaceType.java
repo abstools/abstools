@@ -1,5 +1,6 @@
 package abs.frontend.typechecker;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -98,4 +99,8 @@ public class InterfaceType extends ReferenceType {
         return new InterfaceType(decl);
     }
 
+    @Override
+    public Collection<MethodSig> getAllMethodSigs() {
+        return decl.getAllMethodSigs();
+    }
 }

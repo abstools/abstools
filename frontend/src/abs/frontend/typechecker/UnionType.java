@@ -2,9 +2,11 @@ package abs.frontend.typechecker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodSig;
@@ -109,5 +111,19 @@ public class UnionType extends ReferenceType {
     @Override
     public Type copy() {
         return new UnionType(originatingClass,types.toArray(new InterfaceType[0]));
+    }
+    
+    @Override
+    public Collection<MethodSig> getAllMethodSigs() {
+        return originatingClass.getAllMethodSigs();
+    }
+    
+    @Override
+    public Collection<FieldDecl> getAllFieldDecls() {
+        ArrayList<FieldDecl> res = new ArrayList<FieldDecl>();
+        for (FieldDecl d : originatingClass.getFieldList()) {
+            res.add(d);
+        }
+        return res;
     }
 }

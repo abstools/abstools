@@ -1,12 +1,14 @@
 package abs.frontend.typechecker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
@@ -214,4 +216,11 @@ public abstract class Type {
         return Collections.unmodifiableList((List<TypeAnnotation>) this.metaData.get(ANNOTATION_KEY));
     }
 
+    public Collection<MethodSig> getAllMethodSigs() {
+        return Collections.emptyList();
+    }
+    
+    public Collection<FieldDecl> getAllFieldDecls() {
+        return Collections.emptyList();
+    }
 }
