@@ -512,6 +512,10 @@ aspect GenerateMaude {
 
     abstract public void Stmt.generateMaude(PrintStream stream);
 
+    public void IncompleteStmt.generateMaude(PrintStream stream) {
+        // ignore
+    }
+    
     public void VarDeclStmt.generateMaude(PrintStream stream) {
         // HACK FIXME: this should be an attribute
         boolean inMainBlock = getParent().getParent() instanceof MainBlock;

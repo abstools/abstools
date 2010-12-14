@@ -27,7 +27,7 @@ public class LocationTypeTests extends FrontendTest {
     public void fieldDecl() {
         Model m = assertParse("interface I { } class C { [Far] I i; }",WITH_STD_LIB);
         ClassDecl decl = getFirstClassDecl(m);
-        LocationType ft = LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType(),m.getDefaultLocationType());
+        LocationType ft = LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
         assertEquals(LocationType.FAR,ft);
     }
 
@@ -35,7 +35,7 @@ public class LocationTypeTests extends FrontendTest {
     public void varDecl() {
         Model m = assertParse("interface I { } { [Somewhere] I i; [Near] I jloc; i = jloc; }",WITH_STD_LIB);
         m.typeCheck();
-        assertEquals(LocationType.NEAR,LocationTypeCheckerHelper.getLocationType(getTypeOfFirstAssignment(m),m.getDefaultLocationType()));
+        assertEquals(LocationType.NEAR,LocationTypeExtension.getLocationTypeFromAnnotations(getTypeOfFirstAssignment(m)));
     }
     private static String INT = "interface I { [Near] I m(); [Far] I n([Near] I i); Unit farM([Far] I i);}" +
     		" class C([Somewhere] I f) implements I { " +
@@ -224,7 +224,7 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParse("interface I { } class C { [Far] [Near] I i; }",WITH_STD_LIB);
         ClassDecl decl = getFirstClassDecl(m);
         try {
-            LocationTypeCheckerHelper.getLocationType(decl.getField(0).getType(),m.getDefaultLocationType());
+            LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
             fail("Expected exception");
         } catch(LocationTypeCheckerException e) {
             assertTrue(true);

@@ -28,6 +28,7 @@ import abs.frontend.parser.ABSParser;
 import abs.frontend.parser.ABSScanner;
 import abs.frontend.parser.SyntaxError;
 import abs.frontend.typechecker.locationtypes.LocationType;
+import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 
 public class Main {
@@ -132,10 +133,11 @@ public class Main {
             } else {
                 if (typecheck) {
                     if (checkLocationTypes) {
-                        m.setLocationTypingEnabled(true);
+                        LocationTypeExtension lte = new LocationTypeExtension(m);
                         if (defaultLocationType != null) {
-                            m.setDefaultLocationType(defaultLocationType);
+                            lte.setDefaultType(defaultLocationType);
                         }
+                        m.registerTypeSystemExtension(lte);
                     }
                     if (locationTypeInferenceEnabled) {
                         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);

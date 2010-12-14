@@ -6,24 +6,39 @@ import java.util.HashMap;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Call;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.List;
+import abs.frontend.ast.Model;
+import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.PureExp;
+import abs.frontend.typechecker.ClassKindTypeExtension;
 import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
 import abs.frontend.typechecker.TypeParameter;
+import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeExtensionHelper {
     private final java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
+    
+    private void registerDefaultExtensions(Model m) {
+        register(new ClassKindTypeExtension(m));
+    }
     
     public void setSemanticErrorList(SemanticErrorList s) {
         for (TypeSystemExtension tse : obs) {
             tse.setSemanticErrorList(s);
         }
+    }
+    
+    public void typeCheckStarted(Model m, SemanticErrorList e) {
+        registerDefaultExtensions(m);
+        setSemanticErrorList(e);
     }
     
     public void register(TypeSystemExtension tse) {
@@ -35,6 +50,17 @@ public class TypeExtensionHelper {
             tse.checkMethodCall(call);
         }
     }
+    
+    public void checkNewExp(NewExp e) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkNewExp(e);
+        }
+
+        ClassDecl d = (ClassDecl) e.lookup(new KindedName(Kind.CLASS,e.getClassName()));
+        checkAssignable(e.getType(),d.getParams(),e.getParams(), e);
+    }
+
+    
     
     
     public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {

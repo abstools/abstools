@@ -418,6 +418,10 @@ aspect TypeChecker {
     // STMTS
     
     public abstract void Stmt.typeCheck(SemanticErrorList e);
+    
+    public void IncompleteStmt.typeCheck(SemanticErrorList e) {
+       // ignore
+    }
     public void ExpressionStmt.typeCheck(SemanticErrorList e) {
    	   getExp().typeCheck(e);
     }

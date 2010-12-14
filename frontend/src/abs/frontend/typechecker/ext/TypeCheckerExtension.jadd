@@ -40,51 +40,50 @@ aspect TypeCheckerExtension {
         return t;
     }
     
-    refine LocationTypeChecker eq NullExp.getType() {
-        Type t = LocationTypeChecker.NullExp.getType();
+    refine Typing eq NullExp.getType() {
+        Type t = Typing.NullExp.getType();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
-    refine LocationTypeChecker eq ThisExp.getType() {
-        Type t = LocationTypeChecker.ThisExp.getType().fullCopy();
+    refine Typing eq ThisExp.getType() {
+        Type t = Typing.ThisExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
-    refine LocationTypeChecker eq NewExp.getType() {
-        Type t = LocationTypeChecker.NewExp.getType().fullCopy();
+    refine Typing eq NewExp.getType() {
+        Type t = Typing.NewExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
     
-    refine LocationTypeChecker eq SyncCall.getType() {
-        Type t = LocationTypeChecker.SyncCall.getType().fullCopy();
+    refine Typing eq SyncCall.getType() {
+        Type t = Typing.SyncCall.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
 
-    refine LocationTypeChecker eq AsyncCall.getType() {
-        Type t = LocationTypeChecker.AsyncCall.getType().fullCopy();
+    refine Typing eq AsyncCall.getType() {
+        Type t = Typing.AsyncCall.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
 
-    refine ClassKindChecker public void NewExp.typeCheck(SemanticErrorList s) {
-        ClassKindChecker.NewExp.typeCheck(s);
+    refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        TypeChecker.NewExp.typeCheck(s);
         if (!s.isEmpty()) return;
-        ClassDecl d = (ClassDecl) lookup(new KindedName(Kind.CLASS,getClassName()));
-        getModel().getTypeExt().checkAssignable(getType(),d.getParams(),getParams(), this);
+        getModel().getTypeExt().checkNewExp(this);
     }
     
-    refine LocationTypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.AssignStmt.typeCheck(s);
+    refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
+        TypeChecker.AssignStmt.typeCheck(s);
         if (!s.isEmpty()) return;
         getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType(), this);
     }
     
-    refine LocationTypeChecker public void Call.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.Call.typeCheck(s);
+    refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
+        TypeChecker.Call.typeCheck(s);
         if (!s.isEmpty()) return;
         getModel().getTypeExt().checkMethodCall(this);
         if (getMethodSig() != null) {
@@ -122,8 +121,8 @@ aspect TypeCheckerExtension {
 
     }
     
-    refine LocationTypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.ReturnStmt.typeCheck(s);
+    refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        TypeChecker.ReturnStmt.typeCheck(s);
         if (!s.isEmpty()) return;
 
         MethodImpl m = getContextMethod();
@@ -135,8 +134,8 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().checkAssignable(getRetExp().getType(), m.getMethodSig().getType(), this);
     }
     
-    refine LocationTypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.VarDecl.typeCheck(s);
+    refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+        TypeChecker.VarDecl.typeCheck(s);
         if (!s.isEmpty()) return;
 
         if (hasInitExp()) {
@@ -144,8 +143,8 @@ aspect TypeCheckerExtension {
         }
     }
 
-    refine LocationTypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.FieldDecl.typeCheck(s);
+    refine TypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        TypeChecker.FieldDecl.typeCheck(s);
         if (!s.isEmpty()) return;
 
         if (hasInitExp()) {
@@ -154,15 +153,15 @@ aspect TypeCheckerExtension {
  
      }
      
-     refine LocationTypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
-        LocationTypeChecker.DataConstructorExp.typeCheck(s);
+     refine TypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
+        TypeChecker.DataConstructorExp.typeCheck(s);
         if (!s.isEmpty()) return;
         
         getModel().getTypeExt().checkDataConstructorExp(this);
    }
      
      refine TypeChecker public void Model.typeCheck(SemanticErrorList s) {
-         getTypeExt().setSemanticErrorList(s);
+         getTypeExt().typeCheckStarted(this,s);
          TypeChecker.Model.typeCheck(s);
          if (!s.isEmpty()) return;
          getTypeExt().finished();

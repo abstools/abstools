@@ -79,6 +79,7 @@ abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
 IncompleteSyncAccess:       IncompleteAccess; // something like "x." 
 IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"                     
 IncompleteNewExp:           IncompleteExp ::= [Cog]; // a "new" without a classname 
+IncompleteStmt:             Stmt ::= Stmt;
 
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
 									// Will be  resolved by rewriting.   TODO: needed? 

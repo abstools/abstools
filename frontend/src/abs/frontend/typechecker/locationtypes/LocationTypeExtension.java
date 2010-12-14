@@ -72,7 +72,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         setLocationType(t, lt);
     }
     
-    private static LocationType getLocationTypeFromAnnotations(Type t) {
+    public static LocationType getLocationTypeFromAnnotations(Type t) {
         for (TypeAnnotation an : t.getTypeAnnotations()) {
             if (an.getType().getQualifiedName().equals("ABS.StdLib.LocationType")) {
                 DataConstructorExp de = (DataConstructorExp) an.getValue();

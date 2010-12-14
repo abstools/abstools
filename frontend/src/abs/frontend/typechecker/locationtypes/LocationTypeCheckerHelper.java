@@ -39,7 +39,7 @@ public class LocationTypeCheckerHelper {
             ParametricDataTypeDecl pd = (ParametricDataTypeDecl) decl.getDataTypeDecl();
             HashMap<TypeParameter, LocationType> map = new HashMap<TypeParameter, LocationType>();
             for (int i = 0; i < decl.getNumConstructorArg(); i++) {
-                LocationType t = e.getParam(i).getLocationType();
+                LocationType t = null; //e.getParam(i).getLocationType();
                 Type arg = decl.getConstructorArg(i).getType();
                 checkTypeParameter(l, e, map, t, arg);
             }
@@ -134,7 +134,7 @@ public class LocationTypeCheckerHelper {
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
             PureExp exp = args.getChild(i);
-            LocationType expLocType = exp.getLocationType();
+            LocationType expLocType = null; //exp.getLocationType();
             LocationType adaptTo2 = expLocType.adaptTo(adaptTo);
             LocationType argLocType = getLocationType(argType,defaultType);
             checkAssignable(l,n,adaptTo2,argLocType);

@@ -3,6 +3,7 @@ package abs.frontend.typechecker.ext;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Call;
+import abs.frontend.ast.NewExp;
 import abs.frontend.typechecker.Type;
 
 public interface TypeSystemExtension {
@@ -12,7 +13,9 @@ public interface TypeSystemExtension {
     void annotateType(Type t, ASTNode<?> n);
 
     void checkMethodCall(Call call);
-
+    
+    void checkNewExp(NewExp e);
+    
     void checkEq(Type lt, Type t);
 
     void setSemanticErrorList(SemanticErrorList errors);

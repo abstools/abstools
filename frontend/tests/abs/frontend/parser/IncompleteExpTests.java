@@ -28,4 +28,8 @@ public class IncompleteExpTests extends FrontendTest {
         assertParseOk("{ x = new cog ; }", ALLOW_INCOMPLETE_EXPR); 
     }
     
+    @Test
+    public void incompleteStmt() {
+        assertParseOk("{ I i; i = new C() }", ALLOW_INCOMPLETE_EXPR); 
+    }
 }

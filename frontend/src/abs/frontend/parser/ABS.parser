@@ -617,6 +617,14 @@ Stmt stmt =
         s.setAnnotationList(al); return s;
       :}
     | SEMICOLON  {: return new SkipStmt(new List()); :}
+    | annotation_list.al? stmt_without_annotations.s error.e {:
+        if (allowIncompleteExpr) { 
+            s.setAnnotationList(al);
+            return new IncompleteStmt(new List(), s);
+        } else {
+            addSyntaxError("Missing semicolon",s);
+        } 
+      :}
 ;
 
 Stmt stmt_without_annotations =
