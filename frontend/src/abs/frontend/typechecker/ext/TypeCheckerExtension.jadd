@@ -71,20 +71,23 @@ aspect TypeCheckerExtension {
     }
 
     refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.NewExp.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
         getModel().getTypeExt().checkNewExp(this);
     }
     
     refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.AssignStmt.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
         getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType(), this);
     }
     
     refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.Call.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
         getModel().getTypeExt().checkMethodCall(this);
         if (getMethodSig() != null) {
            getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams(), this);
@@ -92,8 +95,9 @@ aspect TypeCheckerExtension {
     }
     
     refine TypeChecker public void ClassDecl.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.ClassDecl.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         addAllMethodSigs(sigs);  
@@ -122,8 +126,9 @@ aspect TypeCheckerExtension {
     }
     
     refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.ReturnStmt.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
 
         MethodImpl m = getContextMethod();
 
@@ -135,8 +140,9 @@ aspect TypeCheckerExtension {
     }
     
     refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.VarDecl.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
@@ -144,8 +150,9 @@ aspect TypeCheckerExtension {
     }
 
     refine TypeChecker public void FieldDecl.typeCheck(SemanticErrorList s) {
+        int size = s.size();
         TypeChecker.FieldDecl.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
 
         if (hasInitExp()) {
             getModel().getTypeExt().checkAssignable(getInitExp().getType(), getType(), this);
@@ -154,8 +161,9 @@ aspect TypeCheckerExtension {
      }
      
      refine TypeChecker public void DataConstructorExp.typeCheck(SemanticErrorList s) {
+         int size = s.size();
         TypeChecker.DataConstructorExp.typeCheck(s);
-        if (!s.isEmpty()) return;
+        if (s.size() > size) return;
         
         getModel().getTypeExt().checkDataConstructorExp(this);
    }
@@ -163,7 +171,6 @@ aspect TypeCheckerExtension {
      refine TypeChecker public void Model.typeCheck(SemanticErrorList s) {
          getTypeExt().typeCheckStarted(this,s);
          TypeChecker.Model.typeCheck(s);
-         if (!s.isEmpty()) return;
          getTypeExt().finished();
      }
 }
