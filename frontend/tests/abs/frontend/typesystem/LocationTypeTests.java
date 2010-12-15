@@ -2,9 +2,6 @@ package abs.frontend.typesystem;
 
 import static org.junit.Assert.*;
 
-
-import java.util.Map;
-
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
@@ -180,8 +177,18 @@ public class LocationTypeTests extends FrontendTest {
                       "module M.S2; import * from M.S1; { I i; i = new cog C(); i!m(); }", LocationType.FAR);
     }
     
+    @Test
+    public void typeSyn() {
+        assertInferOk("interface I {} type I2 = [Somewhere] I; { I2 i; i = null; }", LocationType.SOMEWHERE);
+    }
+    
     // negative tests:
 
+    @Test
+    public void typeSynFail() {
+        assertInferFails("interface I {} type I2 = [Somewhere] I; { [Far] I2 i; i = null; }");
+    }
+    
    
     @Test
     public void typeMaybeError() {

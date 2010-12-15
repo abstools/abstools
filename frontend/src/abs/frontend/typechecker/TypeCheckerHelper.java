@@ -154,7 +154,7 @@ public class TypeCheckerHelper {
     public static java.util.List<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
-            res.add(u.getType().withAnnotations(u.getAnnotations()));
+            res.add(u.getType());
         }
         return res;
     }

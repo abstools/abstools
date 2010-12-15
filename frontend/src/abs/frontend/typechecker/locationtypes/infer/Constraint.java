@@ -135,13 +135,13 @@ public abstract class Constraint {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values = new ArrayList<Integer>();
             
-            // vt must be a visible type
+            // vt must have at least a type
             for (LocationType it : ALLTYPES) {
                 values.add(e.get(tv, it));
             }
             result.add(values);
             
-            // vt must have a unique type
+            // vt must have maximally one type
             for (LocationType it1 : ALLTYPES) {
                 for (LocationType it2 : ALLTYPES) {
                     if (!it1.equals(it2)) {

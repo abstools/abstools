@@ -21,7 +21,14 @@ public abstract class Type {
     
     public Type withAnnotations(abs.frontend.ast.List<Annotation> anns) {
         Type copy = this.fullCopy();
-        copy.metaData.put(ANNOTATION_KEY, convertToTypeAnnotations(anns));
+        List<TypeAnnotation> newAnnos = new ArrayList<TypeAnnotation>();
+        @SuppressWarnings("unchecked")
+        List<TypeAnnotation> annos = (List<TypeAnnotation>) copy.metaData.get(ANNOTATION_KEY);
+        if (annos != null) {
+            newAnnos.addAll(annos);
+        }
+        newAnnos.addAll(convertToTypeAnnotations(anns));
+        copy.metaData.put(ANNOTATION_KEY, newAnnos);
         return copy;
     }
     
