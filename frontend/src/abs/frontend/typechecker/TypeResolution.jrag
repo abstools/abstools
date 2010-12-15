@@ -233,12 +233,14 @@ aspect TypeResolution {
     eq ClassDecl.getInitBlock().getContextDecl() = getContextDecl();
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
     eq ClassDecl.getField().getContextDecl() = getContextDecl();
+    eq InterfaceDecl.getBody().getContextDecl() = getContextDecl();
     eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
 
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
     inh Decl MethodImpl.getContextDecl();
     inh Decl TypedVarOrFieldDecl.getContextDecl();
+    inh Decl MethodSig.getContextDecl();
     
     eq MethodImpl.getBlock().getContextMethod() = this;
     eq ClassDecl.getInitBlock().getContextMethod() = null;
