@@ -2,13 +2,17 @@ package abs.frontend.typechecker.locationtypes.infer;
 
 import java.util.Set;
 
+import beaver.Symbol;
+
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Access;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 
@@ -44,6 +48,32 @@ public class LocationTypeVariable {
         return "v" + id + getASTNodeString();
     }
 
+    public ASTNode<?> getTypeNode() {
+        if (node instanceof MethodSig) {
+            MethodSig ms = (MethodSig) node;
+            return ms.getReturnType();
+        } 
+        
+        if (node instanceof FieldDecl) {
+            FieldDecl fd = (FieldDecl) node;
+            return fd.getAccess();
+        }
+        
+        if (node instanceof ParamDecl) {
+            ParamDecl pd = (ParamDecl) node;
+            return pd.getAccess();
+        }
+        
+        if (node instanceof VarDecl) {
+            VarDecl vd = (VarDecl) node;
+            return vd.getAccess();
+        }
+         
+        
+        return node;
+        
+    }
+    
     private String getASTNodeString() {
         if (node == null)
             return "";

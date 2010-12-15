@@ -15,17 +15,17 @@ aspect TypeChecker {
     
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
-        try {
-        	typeCheck(res);
-        } catch (TypeCheckerException e) {
-        	res.add(e.getTypeError());
-        }
+        typeCheck(res);
         return res;
     }
     
-    public void Model.typeCheck(SemanticErrorList e) {
-        for (CompilationUnit u : getCompilationUnits()) {
-            u.typeCheck(e);
+    public void Model.typeCheck(SemanticErrorList errors) {
+        try {
+            for (CompilationUnit u : getCompilationUnits()) {
+                u.typeCheck(errors);
+            }
+        } catch (TypeCheckerException e) {
+            errors.add(e.getTypeError());
         }
     }
 

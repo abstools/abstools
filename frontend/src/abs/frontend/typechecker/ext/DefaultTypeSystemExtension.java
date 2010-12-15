@@ -38,7 +38,7 @@ public abstract class DefaultTypeSystemExtension implements TypeSystemExtension 
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {    }
     
     @Override
-    public void annotateType(Type t, ASTNode<?> n) {  }
+    public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {  }
     
     @Override
     public void finished() {}

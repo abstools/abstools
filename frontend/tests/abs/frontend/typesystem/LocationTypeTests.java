@@ -240,6 +240,16 @@ public class LocationTypeTests extends FrontendTest {
         assertInferFails("interface I { I m([Somewhere] I i); } class C implements I { I m([Near] I i) { return null; } } { }");
     }
     
+    @Test
+    public void testInferenceRetypeChecking() {
+        String code = "interface I { Unit m(); } { [Far] I i; I j; i = j; j.m(); }";
+        Model m = assertParse(code,WITH_STD_LIB);
+        LocationTypeExtension te = new LocationTypeExtension(m);
+        m.registerTypeSystemExtension(te);
+        SemanticErrorList e = m.typeCheck();
+        m.typeCheck(new SemanticErrorList());
+    }
+    
     private void assertTypeError(String code) {
         assertTypeErrorOnly(INT+code);
     }

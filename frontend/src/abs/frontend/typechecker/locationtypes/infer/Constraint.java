@@ -25,7 +25,7 @@ public abstract class Constraint {
     public abstract void variables(Set<LocationTypeVariable> vars);
     
     
-    List<Integer> generate(LocationTypeVariable v, Environment e, LocationType... types) {
+    private static List<Integer> generate(LocationTypeVariable v, Environment e, LocationType... types) {
         List<Integer> values = new ArrayList<Integer>();
         for (LocationType t : types) {
             values.add(e.get(v, t));
@@ -134,17 +134,19 @@ public abstract class Constraint {
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values = new ArrayList<Integer>();
+            
+            // vt must be a visible type
             for (LocationType it : ALLTYPES) {
                 values.add(e.get(tv, it));
             }
             result.add(values);
+            
+            // vt must have a unique type
             for (LocationType it1 : ALLTYPES) {
                 for (LocationType it2 : ALLTYPES) {
                     if (!it1.equals(it2)) {
-                        values = new ArrayList<Integer>();
-                        values.add(- e.get(tv, it1));
-                        values.add(- e.get(tv, it2));
-                        result.add(values);
+                        // !tv = it1 or !tv = it2  ===  ! (tv = it1 && tv = it2)
+                        result.add(new CL(e).not(tv).is(it1).orNot(tv).is(it2).getValues());
                     }
                 }
             }
@@ -264,7 +266,6 @@ public abstract class Constraint {
         @Override
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
-            List<Integer> values;
             for (LocationType t : ALLTYPES) {
                 result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(resultTv).is(t).then(tv).is(t).getValues());
             }
@@ -277,7 +278,6 @@ public abstract class Constraint {
             for (LocationType t : new LocationType[]{NEAR, FAR, SOMEWHERE}) {
                 result.add(new CL(e).if_(adaptToTv).is(SOMEWHERE).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
             }
-            // if tv = BOTTOM then resultTv = BOTTOM
             result.add(new CL(e).if_(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
             
             prependAll(MUST_HAVE, result);

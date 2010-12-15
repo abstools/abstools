@@ -86,18 +86,18 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void annotateType(Type t, ASTNode<?> n) {
-        if (n instanceof SyncCall) {
+    public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
+        if (originatingNode instanceof SyncCall) {
         } else
-        if (n instanceof AsyncCall) {
-            AsyncCall call = (AsyncCall)n;
+        if (originatingNode instanceof AsyncCall) {
+            AsyncCall call = (AsyncCall)originatingNode;
             adaptAndSet(t, getLV(call.getCallee().getType()));
         } else
-        if (n instanceof ThisExp) {
+        if (originatingNode instanceof ThisExp) {
             annotateVar(t, LocationTypeVariable.ALWAYS_NEAR);
         } else
-        if (n instanceof NewExp) {
-            NewExp newExp = (NewExp)n;
+        if (originatingNode instanceof NewExp) {
+            NewExp newExp = (NewExp)originatingNode;
             LocationTypeVariable ltv;
             if (newExp.hasCog()) {
                 ltv = LocationTypeVariable.ALWAYS_FAR;
@@ -107,7 +107,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             annotateVar(t, ltv);
         } else {
             if (t.isReferenceType()) {
-                addNewVar(t, n);
+                addNewVar(t, typeNode);
             } 
             if (t.isNullType()) {
                 annotateVar(t, LocationTypeVariable.ALWAYS_BOTTOM);

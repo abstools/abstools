@@ -53,23 +53,23 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void annotateType(Type t, ASTNode<?> n) {
-        if (n instanceof AsyncCall) {
-            AsyncCall ac = (AsyncCall) n;
+    public void annotateType(Type t, ASTNode<?> origNode, ASTNode<?> typeNode) {
+        if (origNode instanceof AsyncCall) {
+            AsyncCall ac = (AsyncCall) origNode;
             adaptTo(t,ac.getCallee().getType());
         } else
-        if (n instanceof ThisExp) {
+        if (origNode instanceof ThisExp) {
             setLocationType(t,LocationType.NEAR);
         } else            
-        if (n instanceof NewExp) {
-            NewExp newExp = (NewExp)n;
+        if (origNode instanceof NewExp) {
+            NewExp newExp = (NewExp)origNode;
             LocationType type = LocationType.NEAR;
             if (newExp.hasCog()) {
                 type = LocationType.FAR;
             } 
             setLocationType(t,type);
         } else
-        if (n instanceof NullExp) {
+        if (origNode instanceof NullExp) {
             setLocationType(t, LocationType.BOTTOM);
         } else if (t.isReferenceType()) {
             setAnnotatedType(t);

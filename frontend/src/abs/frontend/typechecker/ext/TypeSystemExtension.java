@@ -10,7 +10,7 @@ public interface TypeSystemExtension {
 
     void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n);
 
-    void annotateType(Type t, ASTNode<?> n);
+    void annotateType(Type t, ASTNode<?> orinatingNode, ASTNode<?> typeNode);
 
     void checkMethodCall(Call call);
     

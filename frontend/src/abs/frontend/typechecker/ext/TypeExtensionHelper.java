@@ -14,6 +14,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
 import abs.frontend.typechecker.ClassKindTypeExtension;
 import abs.frontend.typechecker.DataTypeType;
@@ -99,19 +100,32 @@ public class TypeExtensionHelper {
         }
     }
 
+    public void annotateType(Type t, ASTNode<?> originatingNode) {
+        annotateType(t, originatingNode, null);
+    }
     
-    public void annotateType(Type t, ASTNode<?> n) {
+    public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
             if (dt.hasTypeArgs()) {
+                
+                ParametricDataTypeUse pu = null;
+                // typeNode maybe a type synonym
+                if (typeNode instanceof ParametricDataTypeUse)  
+                    pu = (ParametricDataTypeUse) typeNode;
+                int i = 0;
                 for (Type ta : dt.getTypeArgs()) {
-                    annotateType(ta, n);
+                    ASTNode<?> childTypeNode = null;
+                    if (pu != null) 
+                        childTypeNode = pu.getParam(i);
+                    annotateType(ta, originatingNode, childTypeNode);
+                    i++;
                 }
             }
         } 
         if (t.isReferenceType() || t.isNullType()) {
             for (TypeSystemExtension tse : obs) {
-                tse.annotateType(t, n);
+                tse.annotateType(t, originatingNode, typeNode);
             }
         }
     }

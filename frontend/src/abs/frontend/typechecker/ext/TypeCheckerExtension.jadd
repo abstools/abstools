@@ -18,25 +18,25 @@ aspect TypeCheckerExtension {
     
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
-        getModel().getTypeExt().annotateType(t, this);
+        getModel().getTypeExt().annotateType(t, this, getTypeUse());
         return t;
     }
         
     refine Typing eq TypedVarOrFieldDecl.getType() {
         Type t = Typing.TypedVarOrFieldDecl.getType();
-        getModel().getTypeExt().annotateType(t, this);
+        getModel().getTypeExt().annotateType(t, this, getAccess());
         return t; 
     }
     
     refine Typing eq MethodSig.getType() {
         Type t = Typing.MethodSig.getType();
-        getModel().getTypeExt().annotateType(t, this);
+        getModel().getTypeExt().annotateType(t, this, getReturnType());
         return t;
     }
     
     refine Typing eq ParametricDataTypeUse.getType() {
         Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
-        getModel().getTypeExt().annotateType(t, this);
+        getModel().getTypeExt().annotateType(t, this, this);
         return t;
     }
     
