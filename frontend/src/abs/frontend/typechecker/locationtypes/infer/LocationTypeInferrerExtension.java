@@ -51,7 +51,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     private void annotateVar(Type t, LocationTypeVariable tv) {
         t.addMetaData(LocationTypeVariable.VAR_KEY,tv);
     }
-    
+    /*
     private void setConstantConstraint(LocationTypeVariable tv, Type t) {
         if (t.isReferenceType()) {
             LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
@@ -59,14 +59,19 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 constraints.add(Constraint.constConstraint(tv, lt, Constraint.MUST_HAVE));
             }
         }
-    }
+    }*/
 
     private LocationTypeVariable addNewVar(Type t, ASTNode<?> n) {
         LocationTypeVariable ltv = getLV(t);
         if (ltv != null) 
             return ltv;
-        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, n, true);
-        setConstantConstraint(tv, t);
+        LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
+        LocationTypeVariable tv;
+        if (lt != null) {
+            tv = LocationTypeVariable.getFromLocationType(lt);
+        } else {
+            tv = LocationTypeVariable.newVar(constraints, n, true);
+        } 
         annotateVar(t, tv);
         return tv;
     }

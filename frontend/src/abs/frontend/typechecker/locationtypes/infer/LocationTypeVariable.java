@@ -24,6 +24,7 @@ public class LocationTypeVariable {
     public static final LocationTypeVariable ALWAYS_NEAR = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_FAR = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_BOTTOM = new LocationTypeVariable();
+    public static final LocationTypeVariable ALWAYS_SOMEWHERE = new LocationTypeVariable();
     
     private int id = ++counter;
     private ASTNode<?> node;
@@ -100,6 +101,14 @@ public class LocationTypeVariable {
     
     public ASTNode<?> getNode() {
         return node;
+    }
+
+    public static LocationTypeVariable getFromLocationType(LocationType lt) {
+        if (lt.isBottom()) return ALWAYS_BOTTOM;
+        if (lt.isFar()) return ALWAYS_FAR;
+        if (lt.isNear()) return ALWAYS_NEAR;
+        if (lt.isSomewhere()) return ALWAYS_SOMEWHERE;
+        throw new IllegalArgumentException("Location type " + lt + " not allowed");
     }
     
     

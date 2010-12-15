@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,12 +43,11 @@ public class SatGenerator {
     }
     
     private void initializeConstraints() {
-        constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_BOTTOM));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_BOTTOM, LocationType.BOTTOM, Constraint.MUST_HAVE));
-        constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_NEAR));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_NEAR, LocationType.NEAR, Constraint.MUST_HAVE));
-        constraints.add(Constraint.declConstraint(LocationTypeVariable.ALWAYS_FAR));
-        constraints.add(Constraint.constConstraint(LocationTypeVariable.ALWAYS_FAR, LocationType.FAR, Constraint.MUST_HAVE));
+        for (LocationType lt : LocationType.ALLTYPES) {
+            LocationTypeVariable cltv = LocationTypeVariable.getFromLocationType(lt);
+            constraints.add(Constraint.declConstraint(cltv));
+            constraints.add(Constraint.constConstraint(cltv, lt, Constraint.MUST_HAVE));
+        }
     }
 
     public Map<LocationTypeVariable, LocationType> generate(SemanticErrorList s) {
@@ -64,6 +62,7 @@ public class SatGenerator {
     }
         
     public Map<LocationTypeVariable, LocationType> generate() {
+        //long l = System.nanoTime();
         Map<LocationTypeVariable, LocationType> tvl = new HashMap<LocationTypeVariable, LocationType>();
         for (Constraint c : constraints) {
             //System.out.println(c);
@@ -122,12 +121,15 @@ public class SatGenerator {
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
+            //System.out.println("Parsing time " + (System.nanoTime() - l) / 1000000);
+            //l = System.nanoTime();
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
             //opt.setTimeout(arg0)
             
             if (opt.isSatisfiable()) {
                 int[] model = opt.model();
+                //System.out.println("Solving time " + (System.nanoTime() - l) / 1000000);
                 //int[] model = problem.model();
                 //model = problem.findModel();
                 //System.out.println("Model generated");
