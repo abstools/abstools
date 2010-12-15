@@ -6,14 +6,19 @@ Executing ABS Projects from ABS Eclipse IDE
 
   There are three different predefined run configurations / buttons: compiling (1) , debugging (2) and starting SDEdit (3).
   
-  Button (1) compiles all .abs files in an ABS project to Java files. If one of the .abs files has an error, no Java files will be generated and you get an error message.
+  * Button (1) compiles all .abs files in an ABS project to Java files. If one of the .abs files has an error, no Java files will be generated and you get an error message.
   
-  Button (2) opens a dialog to debug .abs files based on the .java files. If there are no Java files, you have to compile them first. If there is more than one main block, there a three different behaviours.
-     a) If an ABS file containing a main block is opened and focused in the ABS Editor, the debugger prefers this main method.
-	 b) If a generated "Main.java" file is opened and focused in the ABS Editor, the debugger prefers this main method.
-	 c) If the conditions of a) and b) are not fulfilled, the plug-in uses the first "Main.java" file in the generated files.
+  * Button (2) opens a dialog to debug .abs files based on the .java files. If there are no Java files, you have to compile them first. If there is more than one main block, there a three different behaviours.
+
+    [[a]] If an ABS file containing a main block is opened and focused in the ABS Editor, the debugger prefers this main method.
   
-  Button (3) starts the debugger as described above and in addition an UML representation of the ABS Code.
+    [[b]] If a generated "Main.java" file is opened and focused in the ABS Editor, the debugger prefers this main method.
+  
+    [[c]] If the conditions of (a) and (b) are not fulfilled, the plug-in uses the first "Main.java" file in the generated files.
+  
+  * Button (3) starts the debugger as described above and in addition an UML representation of the ABS Code.
+  
+  []
   
   Some of the default values (like the output folder) can be changed on the project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend).
   
