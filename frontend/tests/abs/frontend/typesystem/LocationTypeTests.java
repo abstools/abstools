@@ -49,6 +49,11 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     @Test
+    public void asyncCall() {
+        assertTypeOk("{ [Far] I i; Fut<[Far] I> f; f = i!m(); }");
+    }
+    
+    @Test
     public void syncCallOnThis() {
         assertTypeOk("class D { Unit m() { this.m(); } }");
     }
@@ -108,6 +113,11 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void syncCallInfer() {
         assertInferOk("interface I { Unit m(); } { I i; i.m(); }", LocationType.NEAR);
+    }
+
+    @Test
+    public void asyncCallInfer() {
+        assertInferOk("interface I { [Near] I m(); } { I j; [Far] I i; Fut<I> f; f = i!m(); j = f.get; }", LocationType.FAR);
     }
     
     /*

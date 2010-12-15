@@ -26,6 +26,7 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 public class SatGenerator {
     final Set<Constraint> constraints;
     final Set<LocationTypeVariable> vars;
+    private boolean enableStats = false;
     
     final List<List<Integer>> output;
     
@@ -62,12 +63,18 @@ public class SatGenerator {
     }
         
     public Map<LocationTypeVariable, LocationType> generate() {
-        //long l = System.nanoTime();
+        long startNanos = System.nanoTime();
+
         Map<LocationTypeVariable, LocationType> tvl = new HashMap<LocationTypeVariable, LocationType>();
         for (Constraint c : constraints) {
             //System.out.println(c);
             output.addAll(c.generateSat(e));
             c.variables(vars);
+        }
+        
+        long genNanos = System.nanoTime();
+        if (enableStats) {
+            System.out.println("Constraint generation time: " + (genNanos - startNanos) / 1000000);
         }
         
         StringBuffer weights = new StringBuffer();
@@ -84,13 +91,8 @@ public class SatGenerator {
         StringBuffer sb = new StringBuffer();
         int nbclauses = output.size() + vars.size();
         int nbvars = e.current;
-        sb.append("p wcnf ");
-        sb.append(nbvars);
-        sb.append(" ");
-        sb.append(nbclauses);
-        sb.append(" ");
-        sb.append(Constraint.MUST_HAVE);
-        sb.append("\n");
+        
+        addInitLine(sb,nbclauses,nbvars);
         
         for (List<Integer> line : output) {
             for (Integer i : line) {
@@ -103,10 +105,10 @@ public class SatGenerator {
         sb.append(weights);
         
         
-        
-        //System.out.println("Number of variables: " + nbvars);
-        
-        //System.out.println("Number of clauses: " + nbclauses);
+        if (enableStats) {
+           System.out.println("Number of variables: " + nbvars);
+           System.out.println("Number of clauses: " + nbclauses);
+        }
         
         //System.out.println(sb);
         
@@ -121,15 +123,21 @@ public class SatGenerator {
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
-            //System.out.println("Parsing time " + (System.nanoTime() - l) / 1000000);
-            //l = System.nanoTime();
+            long parseNanos = System.nanoTime();
+            if (enableStats) {
+                System.out.println("Parsing time: " + (parseNanos - genNanos) / 1000000);
+            }
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
             //opt.setTimeout(arg0)
             
             if (opt.isSatisfiable()) {
                 int[] model = opt.model();
-                //System.out.println("Solving time " + (System.nanoTime() - l) / 1000000);
+                long solveNanos = System.nanoTime();
+                if (enableStats) {
+                   System.out.println("Solving time: " + (solveNanos-parseNanos) / 1000000);
+                   System.out.println("Total time: " + (solveNanos-startNanos) / 1000000);
+                }
                 //int[] model = problem.model();
                 //model = problem.findModel();
                 //System.out.println("Model generated");
@@ -163,6 +171,16 @@ public class SatGenerator {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private void addInitLine(StringBuffer sb, int nbclauses, int nbvars) {
+        sb.append("p wcnf ");
+        sb.append(nbvars);
+        sb.append(" ");
+        sb.append(nbclauses);
+        sb.append(" ");
+        sb.append(Constraint.MUST_HAVE);
+        sb.append("\n");
     }
     
 }

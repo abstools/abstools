@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class LocationType {
-    public static final Object LOCATION_KEY = new Object();
+    public static final String LOCATION_KEY = "LOCATION_KEY";
     
     public static final LocationType FAR = new Far();
     public static final LocationType NEAR = new Near();
