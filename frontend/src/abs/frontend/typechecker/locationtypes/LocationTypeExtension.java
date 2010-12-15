@@ -23,8 +23,15 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
 
     private LocationType defaultType = LocationType.SOMEWHERE;
     
+    private LocationTypeInferrerExtension ltie;
+    
     public LocationTypeExtension(Model m) {
         super(m);
+    }
+    
+    public LocationTypeExtension(Model m, LocationTypeInferrerExtension ltie) {
+        super(m);
+        this.ltie = ltie;
     }
     
     public void setDefaultType(LocationType newDefault) {
@@ -119,11 +126,13 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     public LocationType getLocationType(Type type) {
-        Map<LocationTypeVariable, LocationType> locationTypeInferenceResult = model.getLocationTypeInferenceResult();
-        if (locationTypeInferenceResult != null) {
-            LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(type);
-            if (lv != null) {
-                return locationTypeInferenceResult.get(lv);
+        if (ltie != null) {
+            Map<LocationTypeVariable, LocationType> locationTypeInferenceResult = ltie.getResults();
+            if (locationTypeInferenceResult != null) {
+                LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(type);
+                if (lv != null) {
+                    return locationTypeInferenceResult.get(lv);
+                }
             }
         }
         return (LocationType) type.getMetaData(LocationType.LOCATION_KEY);

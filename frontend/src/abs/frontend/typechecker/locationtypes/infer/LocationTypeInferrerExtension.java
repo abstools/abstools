@@ -18,6 +18,8 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 
 public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
+    Map<LocationTypeVariable, LocationType> results;
+    
     public LocationTypeInferrerExtension(Model m) {
         super(m);
     }
@@ -26,6 +28,10 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     public Set<Constraint> getConstraints() {
         return constraints;
+    }
+    
+    public Map<LocationTypeVariable, LocationType> getResults() {
+        return results;
     }
     
     public static LocationTypeVariable getLV(Type t) {
@@ -143,12 +149,11 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     @Override
     public void finished() {
-        Map<LocationTypeVariable, LocationType> generated = new SatGenerator(constraints).generate(errors);
-        model.setLocationTypeInferenceResult(generated);
+        results = new SatGenerator(constraints).generate(errors);
         if (errors.isEmpty()) {
             SemanticErrorList sel = new SemanticErrorList();
             model.getTypeExt().unregister(this);
-            model.getTypeExt().register(new LocationTypeExtension(model));
+            model.getTypeExt().register(new LocationTypeExtension(model, this));
             model.typeCheck(sel);
             errors.addAll(sel);
         }
