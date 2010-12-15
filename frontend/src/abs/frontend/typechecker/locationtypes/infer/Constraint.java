@@ -165,6 +165,86 @@ public abstract class Constraint {
 
     }
     
+    private static class CL {
+        private ArrayList<Integer> values = new ArrayList<Integer>();
+        private Environment e;
+        public CL(Environment e) {
+            this.e = e;
+        }
+
+        class Predicate {
+            LocationTypeVariable tv;
+            private boolean not;
+            Predicate(LocationTypeVariable v, boolean not) {
+               tv = v; 
+               this.not = not;
+            }
+            
+            CL is(LocationType t) {
+                if (not) {
+                    return orNot(tv,t);
+                } else {
+                    return or(tv,t);
+                }
+                    
+            }
+        }
+        
+        public Predicate or(LocationTypeVariable tv) {
+            return new Predicate(tv,false);
+        }
+
+        public Predicate then(LocationTypeVariable tv) {
+            return new Predicate(tv,false);
+        }
+        
+        public Predicate orNot(LocationTypeVariable tv) {
+            return new Predicate(tv,true);
+        }
+
+        public Predicate not(LocationTypeVariable tv) {
+            return orNot(tv);
+        }
+
+        public Predicate if_(LocationTypeVariable tv) {
+            return orNot(tv);
+        }
+
+        public Predicate andIf(LocationTypeVariable tv) {
+            return orNot(tv);
+        }
+        
+        public CL not(LocationTypeVariable tv, LocationType t) {
+            return orNot(tv,t);
+        }
+        
+        public CL orNot(LocationTypeVariable tv, LocationType t) {
+            values.add(- e.get(tv, t));
+            return this;
+        }
+        
+        public CL or(LocationTypeVariable tv, LocationType t) {
+            values.add(e.get(tv, t));
+            return this;
+        }
+        
+        public CL if_(LocationTypeVariable tv, LocationType t) {
+            return not(tv, t);
+        }
+
+        public CL andIf(LocationTypeVariable tv, LocationType t) {
+            return not(tv, t);
+        }
+        
+        public CL then(LocationTypeVariable tv, LocationType t) {
+            return or(tv, t);
+        }
+        
+        public ArrayList<Integer> getValues() {
+            return values;
+        }
+    }
+    
     private static class AdaptConstraint extends Constraint {
         LocationTypeVariable resultTv, tv, adaptToTv;
 
@@ -185,42 +265,20 @@ public abstract class Constraint {
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
-            // if adaptToTv= NEAR then resultTv = tv
             for (LocationType t : ALLTYPES) {
-                // adaptToTv!= NEAR or resultTv != T or tv = T
-                values = new ArrayList<Integer>();
-                values.add(- e.get(adaptToTv, NEAR));
-                values.add(- e.get(resultTv, t));
-                values.add(e.get(tv, t));
-                result.add(values);
+                result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(resultTv).is(t).then(tv).is(t).getValues());
             }
-            // if adaptToTv = FAR  and tv = NEAR then resultTv = FAR
-            values = new ArrayList<Integer>();
-            values.add(- e.get(adaptToTv, FAR));
-            values.add(- e.get(tv, NEAR));
-            values.add(e.get(resultTv, FAR));
-            result.add(values);
-            // if adaptToTv= FAR  and tv = {FAR, SOMEWHERE} then resultTv = SOMEWHERE
+            result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
+
             for (LocationType t : new LocationType[]{FAR, SOMEWHERE}) {
-                values = new ArrayList<Integer>();
-                values.add(- e.get(adaptToTv, FAR));
-                values.add(- e.get(tv, t));
-                values.add(e.get(resultTv, SOMEWHERE));
-                result.add(values);
+                result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
             }
-            // if adaptToTv= SOMEWHERE  and tv = t then resultTv = SOMEWHERE
+            
             for (LocationType t : new LocationType[]{NEAR, FAR, SOMEWHERE}) {
-                values = new ArrayList<Integer>();
-                values.add(- e.get(adaptToTv, SOMEWHERE));
-                values.add(- e.get(tv, t));
-                values.add(e.get(resultTv, SOMEWHERE));
-                result.add(values);
+                result.add(new CL(e).if_(adaptToTv).is(SOMEWHERE).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
             }
             // if tv = BOTTOM then resultTv = BOTTOM
-            values = new ArrayList<Integer>();
-            values.add(- e.get(tv, BOTTOM));
-            values.add(e.get(resultTv, BOTTOM));
-            result.add(values);
+            result.add(new CL(e).if_(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
             
             prependAll(MUST_HAVE, result);
             // adaptToTv should always be unequal to BOTTOM
