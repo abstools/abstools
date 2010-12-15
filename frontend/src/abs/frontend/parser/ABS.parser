@@ -86,7 +86,7 @@ import java.io.IOException;
 	
 	public String getFileName() {
 		if (file != null)
-		    return file.getAbsolutePath();
+		    return file.getPath();
 		return "<unknown>";
 	}
 :};

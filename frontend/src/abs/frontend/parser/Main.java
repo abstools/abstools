@@ -33,7 +33,7 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 
 public class Main {
 
-    private static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
