@@ -11,12 +11,19 @@ import java.util.HashMap;
 
 aspect TypeChecker {
     
+    private SemanticErrorList Model.typeErrors;
+    
     syn lazy boolean Model.hasTypeErrors() = !typeCheck().isEmpty();
     
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
         typeCheck(res);
+        typeErrors = res;
         return res;
+    }
+    
+    public SemanticErrorList Model.getTypeErrors() {
+        return typeErrors;
     }
     
     public void Model.typeCheck(SemanticErrorList errors) {
