@@ -52,7 +52,7 @@ public abstract class Constraint {
             List<Integer> values;
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, BOTTOM));
-            values.addAll(generate(tv2, e, ALLTYPES));
+            values.addAll(generate(tv2, e, ALLVISTYPES));
             result.add(values);
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, NEAR));
@@ -97,7 +97,7 @@ public abstract class Constraint {
             List<Integer> values;
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, BOTTOM));
-            values.addAll(generate(tv2, e, ALLTYPES));
+            values.addAll(generate(tv2, e, ALLVISTYPES));
             result.add(values);
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, NEAR));
@@ -136,14 +136,14 @@ public abstract class Constraint {
             List<Integer> values = new ArrayList<Integer>();
             
             // vt must have at least a type
-            for (LocationType it : ALLTYPES) {
+            for (LocationType it : ALLVISTYPES) {
                 values.add(e.get(tv, it));
             }
             result.add(values);
             
             // vt must have maximally one type
-            for (LocationType it1 : ALLTYPES) {
-                for (LocationType it2 : ALLTYPES) {
+            for (LocationType it1 : ALLVISTYPES) {
+                for (LocationType it2 : ALLVISTYPES) {
                     if (!it1.equals(it2)) {
                         // !tv = it1 or !tv = it2  ===  ! (tv = it1 && tv = it2)
                         result.add(new CL(e).not(tv).is(it1).orNot(tv).is(it2).getValues());
@@ -266,7 +266,7 @@ public abstract class Constraint {
         @Override
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
-            for (LocationType t : ALLTYPES) {
+            for (LocationType t : ALLVISTYPES) {
                 result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(resultTv).is(t).then(tv).is(t).getValues());
             }
             result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
@@ -309,7 +309,7 @@ public abstract class Constraint {
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
-            for (LocationType t : ALLTYPES) {
+            for (LocationType t : ALLVISTYPES) {
                 values = new ArrayList<Integer>();
                 values.add(- e.get(tv1, t));
                 values.add(e.get(tv2, t));

@@ -3,55 +3,47 @@ package abs.frontend.typechecker.locationtypes;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class LocationType {
+public class LocationType {
     public static final String LOCATION_KEY = "LOCATION_KEY";
     
-    public static final LocationType FAR = new Far();
-    public static final LocationType NEAR = new Near();
-    public static final LocationType SOMEWHERE = new Somewhere();
-    public static final LocationType NOTYPE = new NoType();
-    public static final LocationType UNBOUND = new Unbound();
-    public static final LocationType BOTTOM = new Bottom();
+    public static final LocationType FAR = new LocationType("Far");
+    public static final LocationType NEAR = new LocationType("Near");
+    public static final LocationType SOMEWHERE = new LocationType("Somewhere");
+    public static final LocationType BOTTOM = new LocationType("Bottom");
+    public static final LocationType INFER = new LocationType("Infer");
+    public static final LocationType NOTYPE = new LocationType("NoType");
+    public static final LocationType UNBOUND = new LocationType("Unbound");
     
-    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
-    
-    public static final LocationType[] ALLVISTYPES = {FAR, NEAR, SOMEWHERE};
+    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM, INFER, NOTYPE, UNBOUND};
+    public static final LocationType[] ALLVISTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
+    public static final LocationType[] ALLCONCRETEUSERTYPES = {FAR, NEAR, SOMEWHERE};
+    public static final LocationType[] ALLUSERTYPES = {FAR, NEAR, SOMEWHERE, INFER};
    
-    private final static class Far extends LocationType { }
-    private final static class Near extends LocationType { }
-    private final static class Somewhere extends LocationType { }
-
-    // to give unbound type variables a location type
-    private final static class Unbound extends LocationType { }
+    private String name;
     
-    // used to give data types a location type
-    private final static class NoType extends LocationType { }
-    private final static class Bottom extends LocationType { }
+    private LocationType(String name) {
+        this.name = name;
+    }
     
     @Override
     public String toString() {
-        if (isFar()) return "Far";
-        if (isNear()) return "Near";
-        if (isSomewhere()) return "Somewhere";
-        if (isBottom()) return "Bottom";
-        if (isUnbound()) return "Unbound";
-        return "NoType";
+        return name;
     }
     
-    public static LocationType createFromName(String name) { 
-        if (name.equals("Far"))
-            return FAR;
-        if (name.equals("Near"))
-            return NEAR;
-        if (name.equals("Somewhere"))
-            return SOMEWHERE;
-        if (name.equals("Bottom"))
-            return BOTTOM;
+    public static LocationType createFromName(String name) {
+        for (LocationType t : ALLTYPES) {
+            if (t.name.equals(name))
+                return t;
+        }
         throw new IllegalArgumentException(name+" is not a location type");
     }
     
     public boolean isFar() { 
         return this == FAR;
+    }
+    
+    public boolean isInfer() { 
+        return this == INFER;
     }
     
     public boolean isNear() {
@@ -75,7 +67,11 @@ public abstract class LocationType {
     }
     
     public boolean isSubtypeOf(LocationType t) {
-        return this == UNBOUND || t == UNBOUND || this == t || t == SOMEWHERE || this == BOTTOM;
+        return this.isUnbound() 
+            || this == t 
+            || this.isBottom() 
+            || t.isUnbound() 
+            || t.isSomewhere();
     }
     
     public boolean isSubtypeOfFarAdapted(LocationType t) {

@@ -44,7 +44,7 @@ public class SatGenerator {
     }
     
     private void initializeConstraints() {
-        for (LocationType lt : LocationType.ALLTYPES) {
+        for (LocationType lt : LocationType.ALLVISTYPES) {
             LocationTypeVariable cltv = LocationTypeVariable.getFromLocationType(lt);
             constraints.add(Constraint.declConstraint(cltv));
             constraints.add(Constraint.constConstraint(cltv, lt, Constraint.MUST_HAVE));

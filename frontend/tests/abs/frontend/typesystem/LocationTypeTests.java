@@ -135,6 +135,11 @@ public class LocationTypeTests extends FrontendTest {
     public void newCOGInfer() {
         assertInferOk("interface I { } class C implements I {} { I i; i = new cog C(); }", LocationType.FAR);
     }
+
+    @Test
+    public void newCOGInferAnn() {
+        assertInferOk("interface I { } class C implements I {} { [Infer] I i; i = new cog C(); }", LocationType.FAR);
+    }
     
     @Test
     public void newObjectInfer() {

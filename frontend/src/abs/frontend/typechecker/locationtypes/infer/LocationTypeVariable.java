@@ -34,7 +34,7 @@ public class LocationTypeVariable {
         result.node = n;
         constraints.add(Constraint.declConstraint(result));
         if (declared) {
-            constraints.add(Constraint.constConstraint(result, LocationType.ALLVISTYPES, Constraint.MUST_HAVE));
+            constraints.add(Constraint.constConstraint(result, LocationType.ALLUSERTYPES, Constraint.MUST_HAVE));
         }
         return result;
     }

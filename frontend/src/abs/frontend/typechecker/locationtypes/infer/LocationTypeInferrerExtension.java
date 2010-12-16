@@ -18,10 +18,15 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 
 public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
-    Map<LocationTypeVariable, LocationType> results;
+    private Map<LocationTypeVariable, LocationType> results;
+    private LocationType defaultType = LocationType.INFER;
     
     public LocationTypeInferrerExtension(Model m) {
         super(m);
+    }
+    
+    public void setDefaultType(LocationType type) {
+        defaultType = type;
     }
 
     private Set<Constraint> constraints = new HashSet<Constraint>();
@@ -71,17 +76,25 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         LocationTypeVariable ltv = getLV(t);
         if (ltv != null) 
             return ltv;
-        LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
+        LocationType lt = getLocationTypeOrDefault(t);
         LocationTypeVariable tv;
-        if (lt != null) {
-            tv = LocationTypeVariable.getFromLocationType(lt);
-        } else {
+        if (lt.isInfer()) {
             tv = LocationTypeVariable.newVar(constraints, n, true);
+        } else {
+            tv = LocationTypeVariable.getFromLocationType(lt);
         } 
         annotateVar(t, tv);
         return tv;
     }
     
+    private LocationType getLocationTypeOrDefault(Type t) {
+        LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
+        if (lt == null) {
+            return defaultType;
+        }
+        return lt;
+    }
+
     @Override
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
         LocationTypeVariable sub = getLV(rht);
@@ -134,7 +147,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             constraints.add(Constraint.constConstraint(lv, LocationType.NEAR, Constraint.SHOULD_HAVE));
         } else {
         //checkNeq(getLV(call.getCallee().getType()), LocationTypeVariable.ALWAYS_BOTTOM, Constraint.SHOULD_HAVE);
-            constraints.add(Constraint.constConstraint(lv, LocationType.ALLVISTYPES, Constraint.SHOULD_HAVE));
+            constraints.add(Constraint.constConstraint(lv, LocationType.ALLUSERTYPES, Constraint.SHOULD_HAVE));
         }
     }
 
