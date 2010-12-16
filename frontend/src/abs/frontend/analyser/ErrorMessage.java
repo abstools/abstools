@@ -55,6 +55,7 @@ public enum ErrorMessage {
     LOCATION_TYPE_CALL_ON_BOTTOM("Call on Bottom location type"),
     CLASSKIND_PLAIN("Cannot instantiate class %s with cog as it is annotated with class kind Plain"),
     CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG"),
+    ASSIGN_TO_FINAL("Assignment to %s %s, which is annotated with [Final]"),
     ;
 
     private String pattern;

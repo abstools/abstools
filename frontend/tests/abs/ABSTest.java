@@ -52,6 +52,19 @@ public class ABSTest {
             } else {
                 if (p.hasParserErrors()) {
                     fail("Failed to parse: " + s + "\n" + p.getParserErrors().get(0).getMessage());
+                } else {
+                    if (isSet(TYPE_CHECK, config)) {
+                        SemanticErrorList l = p.typeCheck();
+                        if (isSet(EXPECT_TYPE_ERROR,config)) {
+                            if (l.isEmpty()) {
+                                fail("Expected type errors, but none appeared");
+                            }
+                        } else {
+                            if (!l.isEmpty()) {
+                                fail("Failed to typecheck: " + s + "\n" + l.get(0).getMessage());
+                            }
+                        }
+                    }                    
                 }
             }
         } catch (Exception t) {

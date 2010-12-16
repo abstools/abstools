@@ -2,6 +2,7 @@ package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
@@ -42,5 +43,8 @@ public abstract class DefaultTypeSystemExtension implements TypeSystemExtension 
     
     @Override
     public void finished() {}
+
+    @Override
+    public void checkAssignStmt(AssignStmt s) {    }
     
 }

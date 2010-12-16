@@ -2,6 +2,7 @@ package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.NewExp;
 import abs.frontend.typechecker.Type;
@@ -21,5 +22,7 @@ public interface TypeSystemExtension {
     void setSemanticErrorList(SemanticErrorList errors);
 
     void finished();
+
+    void checkAssignStmt(AssignStmt s);
 
 }

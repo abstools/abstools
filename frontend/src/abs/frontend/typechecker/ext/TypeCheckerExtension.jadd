@@ -81,7 +81,7 @@ aspect TypeCheckerExtension {
         int size = s.size();
         TypeChecker.AssignStmt.typeCheck(s);
         if (s.size() > size) return;
-        getModel().getTypeExt().checkAssignable(getValue().getType(),getVar().getType(), this);
+        getModel().getTypeExt().checkAssignStmt(this);
     }
     
     refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {

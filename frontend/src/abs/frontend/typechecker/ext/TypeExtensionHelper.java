@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
@@ -18,6 +19,7 @@ import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
 import abs.frontend.typechecker.ClassKindTypeExtension;
 import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.FinalAnnotationTypeExtension;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
@@ -29,6 +31,7 @@ public class TypeExtensionHelper {
     
     private void registerDefaultExtensions(Model m) {
         register(new ClassKindTypeExtension(m));
+        register(new FinalAnnotationTypeExtension(m));
     }
     
     public void setSemanticErrorList(SemanticErrorList s) {
@@ -68,7 +71,13 @@ public class TypeExtensionHelper {
     }
 
     
-    
+    public void checkAssignStmt(AssignStmt s) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkAssignStmt(s);
+        }
+
+        checkAssignable(s.getValue().getType(),s.getVar().getType(), s);
+    }
     
     public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {
         java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);

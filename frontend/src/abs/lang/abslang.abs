@@ -256,4 +256,17 @@ data Annotation = TypeAnnotation;
 [TypeAnnotation]
 data LocationType = Far | Near | Somewhere | Infer;
  
+/**
+ * Can be used to annotated classes and to ensure that
+ * classes are always instantiated in the right way.
+ * I.e. classes annotated with [COG] must be created by using
+ * new cog, class annotated with [Plain] must be created by using
+ * just new, without cog.
+ */
 data ClassKindAnnotation = COG | Plain;
+
+/**
+ * Declare local variables to be final
+ */
+data FinalAnnotation = Final;
+

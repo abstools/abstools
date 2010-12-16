@@ -222,7 +222,7 @@ public abstract class Type {
     public List<TypeAnnotation> getTypeAnnotations() {
         return Collections.unmodifiableList((List<TypeAnnotation>) this.metaData.get(ANNOTATION_KEY));
     }
-
+    
     public Collection<MethodSig> getAllMethodSigs() {
         return Collections.emptyList();
     }
