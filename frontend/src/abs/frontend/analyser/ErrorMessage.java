@@ -43,7 +43,6 @@ public enum ErrorMessage {
     METHOD_NOT_FOUND("Method %s could not be found"),
     NO_CLASS_DECL("Class %s could not be found"),
     RETURN_STMT_MUST_BE_LAST("Return statements can only appear as last statement of a method."),
-    VAR_INIT_WITH_SIDE_EFFECTS("Variable initializer expressions are currently not allowed to have side-effects."),
     NAME_NOT_EXPORTED_BY_MODULE("Imported name %s is not exported by module %s."),
     ONLY_UNQUALIFIED_NAMES_ALLOWED("Only unqualfied names are allowed when import names from modules, but name %s is qualified."),
     ONLY_QUALIFIED_NAMES_ALLOWED("Only qualfied names are allowed when directly importing names, but name %s is unqualified."),

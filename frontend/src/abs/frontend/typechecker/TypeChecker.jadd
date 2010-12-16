@@ -409,9 +409,6 @@ aspect TypeChecker {
    	 if (hasInitExp()) {
    		 TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
    		 getInitExp().typeCheck(e);
-   		 if (getInitExp().hasSideEffects()) {
-   		     e.add(new TypeError(this, ErrorMessage.VAR_INIT_WITH_SIDE_EFFECTS, new String[0]));
-   		 }
    	 } else {
    		 if (!t.isReferenceType() && !t.isFutureType()) {
  			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
