@@ -29,7 +29,7 @@ aspect Typing {
     syn Type Model.getIntType() = getStdDataType("Int");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn lazy Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
+    syn Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
 
 //    eq ClassDecl.getMethod().getUnitType() = getUnitType();
 //    inh Type MethodImpl.getUnitType();
