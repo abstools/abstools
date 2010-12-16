@@ -3,7 +3,7 @@ module ABSChat.User;
 export User, UserImpl;
 
 import Client from ABSChat.Interfaces;
-import ClientGUI from ABSChat.Client;
+import ClientGUI, ClientGUIImpl from ABSChat.Client;
 import * from GUI;
 
 /**
@@ -13,7 +13,6 @@ interface User {
    Unit use(ClientGUI client);
 }
 
-
 [COG] 
 class UserImpl implements User {
    ClientGUI gui;
@@ -22,7 +21,6 @@ class UserImpl implements User {
 	
    Unit use(ClientGUI client) { 
 	  gui = client;
-	  
 	  Fut<Button> f;
 	  f = gui!getSendButton();
 	  sendBtn = f.get;

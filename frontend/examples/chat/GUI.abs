@@ -37,7 +37,7 @@ class TextFieldImpl implements TextField {
 
 [COG]
 class WindowImpl implements Window {
-   Button newButton(String label) {
+   [Near] Button newButton(String label) {
       return new ButtonImpl(this, label);
    }
    

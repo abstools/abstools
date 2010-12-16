@@ -1,6 +1,6 @@
 module ABSChat.Client;
 export ClientImpl;
-export ClientGUI;
+export ClientGUI, ClientGUIImpl;
 import * from ABSChat.Interfaces;
 import * from GUI;
 
@@ -9,27 +9,24 @@ interface ClientIntern extends Client {
 }
  
 interface ClientGUIIntern extends ClientGUI {
-   ClientIntern getClientIntern();
+   [Near] ClientIntern getClientIntern();
    String getTextFieldText();
 } 
 
- 
-class ClientGUIImpl(ClientIntern client) implements ClientGUIIntern {
+class ClientGUIImpl([Near] ClientIntern client) implements ClientGUIIntern {
    Window gui;
-   Button sendButton;
-   TextField textField;
+   Button sendButton;   
+   TextField textField; 
    Bool initialized = False;
    
-   {
-   	  gui = new cog WindowImpl();
-   }
+   {   
+   	  gui = new cog WindowImpl(); 
+   } 
    
-   Unit init() {
-   	  Fut<Button> f;
-   	  f = gui!newButton("Send");
+   Unit init() { 
+   	  Fut<Button> f = gui!newButton("Send");
    	  sendButton = f.get;
-   	  ButtonListener l;
-   	  l = new SendButtonListener(this);
+   	  ButtonListener l = new SendButtonListener(this);
    	  sendButton!registerListener(l);
 
       Fut<TextField> tf;
@@ -50,8 +47,7 @@ class ClientGUIImpl(ClientIntern client) implements ClientGUIIntern {
    }
    
    String getTextFieldText() {
-      Fut<String> f;
-      f = textField!getText();
+      Fut<String> f = textField!getText();
       return f.get;
    }
    
@@ -61,12 +57,10 @@ class ClientGUIImpl(ClientIntern client) implements ClientGUIIntern {
 }
 
 [Plain]
-class SendButtonListener(ClientGUIIntern client) implements ButtonListener {
+class SendButtonListener([Final] [Near] ClientGUIIntern client) implements ButtonListener {
    Unit pressed() {
-       ClientIntern ci;
-       ci = client.getClientIntern();
-       String s = "";
-       s = client.getTextFieldText();
+       ClientIntern ci = client.getClientIntern();
+       String s = client.getTextFieldText();
    	   ci.sendText(s);
    }
 }
@@ -92,8 +86,7 @@ class ClientImpl implements ClientIntern {
    }
    
    Unit start() {
-      Fut<Session> f;
-      f = server!connect(this);
+      Fut<Session> f = server!connect(this);
       await f?;
       session = f.get; 
    }
@@ -105,8 +98,7 @@ class ClientImpl implements ClientIntern {
    	  		  Welcome => ChatMessage(name,"Welt"); 
    	  };
    	  
-   	  Fut<Unit> u;
-   	  u = session ! receive(ans);
+   	  Fut<Unit> u = session ! receive(ans);
    	  await u?;
    	  session ! close();
    }  
