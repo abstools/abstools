@@ -523,22 +523,31 @@ aspect GenerateMaude {
         VarDecl var = getVarDecl();
         if (inMainBlock) {
             if (var.hasInitExp()) {
-                stream.print("assign( @ '" + var.getName() + " ; ");
-                var.getInitExp().generateMaude(stream);
-                stream.print(") ");
+                if (var.getInitExp() instanceof PureExp) {
+                    stream.print("assign( @ '" + var.getName() + " ; ");
+                    var.getInitExp().generateMaude(stream);
+                    stream.print(") ");
+                } else {
+                    var.getInitExp().generateMaudeAsStatement(stream, var.getName());
+                }
             } else {
                 // nothing to do in this case, since the variable has
                 // been converted into an object attribute.
                 stream.print("noStmt ");
             }
         } else {
-            stream.print("$vardecl( '" + var.getName() + " ; ");
-            if (var.hasInitExp()) {
-                var.getInitExp().generateMaude(stream);
+            if (!var.hasInitExp() || var.getInitExp() instanceof PureExp) {
+                stream.print("$vardecl( '" + var.getName() + " ; ");
+                if (var.hasInitExp()) {
+                    var.getInitExp().generateMaude(stream);
+                } else {
+                    stream.print("null ");
+                }
+                stream.print(") ");
             } else {
-                stream.print("null ");
+                stream.print("$vardecl( '" + var.getName() + " ; null ); ");
+                var.getInitExp().generateMaudeAsStatement(stream, var.getName());
             }
-            stream.print(") ");
         }
     }
     
