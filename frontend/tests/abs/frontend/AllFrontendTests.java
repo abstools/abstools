@@ -2,6 +2,7 @@ package abs.frontend;
 
 import abs.frontend.analyser.DuplicateCheckTest;
 import abs.frontend.analyser.InterfaceDeclarationTest;
+import abs.frontend.analyser.OtherAnalysisTests;
 import abs.frontend.analyser.VarResolutionTest;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.AnnotationTests;
@@ -21,5 +22,5 @@ import org.junit.runners.Suite;
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
-        ClassKindTests.class})
+        ClassKindTests.class, OtherAnalysisTests.class})
 public class AllFrontendTests {}
