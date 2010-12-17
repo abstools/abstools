@@ -1,0 +1,34 @@
+
+
+aspect InitChecker {
+
+    public void ASTNode.checkLegalInit(SemanticErrorList l) {
+        for (ASTNode<?> n : this) {
+            n.checkLegalInit(l);
+        }
+    }
+    
+    public void AwaitStmt.checkLegalInit(SemanticErrorList l) {
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Await statements"));
+    }
+    public void SyncCall.checkLegalInit(SemanticErrorList l) { 
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Synchronous calls"));
+    }
+    public void GetExp.checkLegalInit(SemanticErrorList l) { 
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Get expressions"));
+    }
+
+    
+    public void TypedVarOrFieldDecl.checkLegalInit(SemanticErrorList l) {}
+    public void FieldDecl.checkLegalInit(SemanticErrorList l) {
+        if (hasInitExp()) {
+             getInitExp().checkLegalInit(l);
+         }
+    }
+    public void VarDecl.checkLegalInit(SemanticErrorList l) {
+        if (hasInitExp()) {
+             getInitExp().checkLegalInit(l);
+        }
+    }
+
+}

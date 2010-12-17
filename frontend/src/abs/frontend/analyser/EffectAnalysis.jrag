@@ -14,5 +14,4 @@ aspect EffectAnalysis {
     eq NullExp.isPure() = true;
     
     
-    
 }

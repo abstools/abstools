@@ -139,7 +139,7 @@ public class FrontendTest extends ABSTest {
         assertTypeErrors(absCode, new Config[0]);
     }
 
-    protected void assertNoTypeErrors(String absCode) {
+    protected void assertTypeOK(String absCode) {
         assertTypeErrors(absCode, WITH_STD_LIB);
     }
 

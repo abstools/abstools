@@ -220,6 +220,7 @@ aspect TypeChecker {
 
       if (hasInitBlock()) {
           getInitBlock().typeCheck(e);
+          getInitBlock().checkLegalInit(e);
       }
       
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
@@ -423,6 +424,7 @@ aspect TypeChecker {
         if (hasInitExp()) {
                 TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
                 getInitExp().typeCheck(e);
+                getInitExp().checkLegalInit(e);
         } else {
                 if (!t.isReferenceType() && !t.isFutureType()) {
                     e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));

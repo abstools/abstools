@@ -60,7 +60,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void parametericDataTypeNoTypeArgs3() {
-        assertNoTypeErrors("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
+        assertTypeOK("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
                 + "def Money createMoney(Euro e, Cent c) = Pair(e,c); ");
     }
 
@@ -86,7 +86,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void testClassFieldAccessWithoutThis() {
-        assertNoTypeErrors("class C(Int b) { Int c = b; } ");
+        assertTypeOK("class C(Int b) { Int c = b; } ");
     }
 
     @Test
@@ -407,4 +407,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("class C { { return Unit; return Unit; } }");
     }
     
+    @Test
+    public void initCodeBlock() {
+        assertTypeErrors("class C { { await True; } }");
+        assertTypeErrors("class C { { Fut<Unit> f; f.get; } }");
+        assertTypeErrors("class C { { this.m(); } Unit m() { }}");
+    }
+
 }

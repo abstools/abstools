@@ -56,6 +56,7 @@ public enum ErrorMessage {
     CLASSKIND_PLAIN("Cannot instantiate class %s with cog as it is annotated with class kind Plain"),
     CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG"),
     ASSIGN_TO_FINAL("Assignment to %s %s, which is annotated with [Final]"),
+    NOT_ALLOWED_IN_INIT_CODE("%s are not allowed in class initialization code")
     ;
 
     private String pattern;
