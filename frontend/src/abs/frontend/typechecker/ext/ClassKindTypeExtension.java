@@ -1,13 +1,13 @@
 package abs.frontend.typechecker.ext;
 
+import java.util.List;
+
+import abs.frontend.analyser.AnnotationHelper;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
-import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.typechecker.KindedName;
@@ -22,22 +22,16 @@ public class ClassKindTypeExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkNewExp(NewExp e) {
         ClassDecl d = (ClassDecl) e.lookup(new KindedName(Kind.CLASS,e.getClassName()));
-        List<Annotation> anns = d.getAnnotations();
-        String found = null;
-        for (Annotation a : anns) {
-            if (a.getType().getQualifiedName().equals("ABS.StdLib.ClassKindAnnotation")) {
-                DataConstructorExp de = (DataConstructorExp) a.getValue();
-                found = de.getDecl().getName();
-            }
-        }
+        List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(d.getAnnotations(), "ABS.StdLib.ClassKindAnnotation");
             
-        if (found != null) {
+        if (!anns.isEmpty()) {
+            String name = ((DataConstructorExp) anns.get(0).getValue()).getDecl().getName();
             if (e.hasCog()) {
-                if (!found.equals("COG")) {
+                if (!name.equals("COG")) {
                     errors.add(new TypeError(e,ErrorMessage.CLASSKIND_PLAIN,d.getName()));
                 }
             } else {
-                if (found.equals("COG")) {
+                if (name.equals("COG")) {
                     errors.add(new TypeError(e,ErrorMessage.CLASSKIND_COG,d.getName()));
                 }
             }

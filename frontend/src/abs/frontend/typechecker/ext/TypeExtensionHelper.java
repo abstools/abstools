@@ -4,19 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AssignStmt;
-import abs.frontend.ast.Call;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.List;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.NewExp;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.ParametricDataTypeUse;
-import abs.frontend.ast.PureExp;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
@@ -24,12 +12,13 @@ import abs.frontend.typechecker.TypeCheckerHelper;
 import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.KindedName.Kind;
 
-public class TypeExtensionHelper {
+public class TypeExtensionHelper implements TypeSystemExtension {
     private java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
     
     private void registerDefaultExtensions(Model m) {
         register(new ClassKindTypeExtension(m));
         register(new FinalAnnotationTypeExtension(m));
+        register(new AtomicityChecker(m));
     }
     
     public void setSemanticErrorList(SemanticErrorList s) {
@@ -68,6 +57,12 @@ public class TypeExtensionHelper {
         checkAssignable(e.getType(),d.getParams(),e.getParams(), e);
     }
 
+    @Override
+    public void checkGetExp(GetExp e) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkGetExp(e);
+        }
+    }
     
     public void checkAssignStmt(AssignStmt s) {
         for (TypeSystemExtension tse : obs) {
@@ -75,6 +70,21 @@ public class TypeExtensionHelper {
         }
 
         checkAssignable(s.getValue().getType(),s.getVar().getType(), s);
+    }
+    
+    public void checkReturnStmt(ReturnStmt s) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkReturnStmt(s);
+        }
+
+        MethodImpl m = s.getContextMethod();
+
+        if (m == null) {
+            return;
+        }
+
+        checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
+        
     }
     
     public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {
@@ -180,6 +190,62 @@ public class TypeExtensionHelper {
     public void finished() {
         for (TypeSystemExtension tse : obs) {
             tse.finished();
+        }
+    }
+
+    @Override
+    public void checkAssertStmt(AssertStmt assertStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkAssertStmt(assertStmt);
+        }
+    }
+
+    @Override
+    public void checkAwaitStmt(AwaitStmt awaitStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkAwaitStmt(awaitStmt);
+        }
+    }
+
+    @Override
+    public void checkBlock(Block block) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkBlock(block);
+        }
+    }
+
+    @Override
+    public void checkExpressionStmt(ExpressionStmt expressionStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkExpressionStmt(expressionStmt);
+        }
+    }
+
+    @Override
+    public void checkIfStmt(IfStmt ifStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkIfStmt(ifStmt);
+        }
+    }
+
+    @Override
+    public void checkSuspendStmt(SuspendStmt suspendStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkSuspendStmt(suspendStmt);
+        }
+    }
+
+    @Override
+    public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkVarDeclStmt(varDeclStmt);
+        }
+    }
+
+    @Override
+    public void checkWhileStmt(WhileStmt whileStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkWhileStmt(whileStmt);
         }
     }
 

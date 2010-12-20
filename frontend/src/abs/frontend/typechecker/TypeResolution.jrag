@@ -227,6 +227,10 @@ aspect TypeResolution {
     }
     
     
+    syn boolean Call.isAsync();
+    eq SyncCall.isAsync() = false;
+    eq Call.isAsync() = false;
+    
     syn lazy Decl Decl.getContextDecl() = this;
     eq MethodImpl.getBlock().getContextDecl() = getContextDecl();
     eq ModuleDecl.getBlock().getContextDecl() = getModel().unknownDecl();

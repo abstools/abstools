@@ -70,18 +70,88 @@ aspect TypeCheckerExtension {
         return t;
     }
 
-    refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+    // STATEMENTS
+    
+    refine TypeChecker public void AssertStmt.typeCheck(SemanticErrorList s) {
         int size = s.size();
-        TypeChecker.NewExp.typeCheck(s);
+        TypeChecker.AssertStmt.typeCheck(s);
         if (s.size() > size) return;
-        getModel().getTypeExt().checkNewExp(this);
+        getModel().getTypeExt().checkAssertStmt(this);
     }
+
     
     refine TypeChecker public void AssignStmt.typeCheck(SemanticErrorList s) {
         int size = s.size();
         TypeChecker.AssignStmt.typeCheck(s);
         if (s.size() > size) return;
         getModel().getTypeExt().checkAssignStmt(this);
+    }
+    
+    refine TypeChecker public void AwaitStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.AwaitStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkAwaitStmt(this);
+    }
+
+   
+    refine TypeChecker public void Block.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.Block.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkBlock(this);
+    }
+    
+    refine TypeChecker public void ExpressionStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.ExpressionStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkExpressionStmt(this);
+    }
+    
+    refine TypeChecker public void IfStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.IfStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkIfStmt(this);
+    }
+
+    refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.ReturnStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkReturnStmt(this);
+    }
+    
+    refine TypeChecker public void SuspendStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.SuspendStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkSuspendStmt(this);
+    }
+
+    refine TypeChecker public void VarDeclStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.VarDeclStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkVarDeclStmt(this);
+    }
+    
+    refine TypeChecker public void WhileStmt.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.WhileStmt.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkWhileStmt(this);
+    }
+
+    
+    // EXPRESSIONS
+    
+    refine TypeChecker public void NewExp.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.NewExp.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkNewExp(this);
     }
     
     refine TypeChecker public void Call.typeCheck(SemanticErrorList s) {
@@ -92,6 +162,13 @@ aspect TypeCheckerExtension {
         if (getMethodSig() != null) {
            getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams(), this);
         }
+    }
+
+    refine TypeChecker public void GetExp.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.GetExp.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkGetExp(this);
     }
     
     refine TypeChecker public void ClassDecl.typeCheck(SemanticErrorList s) {
@@ -123,20 +200,6 @@ aspect TypeCheckerExtension {
             }
         }
 
-    }
-    
-    refine TypeChecker public void ReturnStmt.typeCheck(SemanticErrorList s) {
-        int size = s.size();
-        TypeChecker.ReturnStmt.typeCheck(s);
-        if (s.size() > size) return;
-
-        MethodImpl m = getContextMethod();
-
-        if (m == null) {
-            return;
-        }
-
-        getModel().getTypeExt().checkAssignable(getRetExp().getType(), m.getMethodSig().getType(), this);
     }
     
     refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {

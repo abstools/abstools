@@ -6,6 +6,7 @@ import abs.frontend.analyser.OtherAnalysisTests;
 import abs.frontend.analyser.VarResolutionTest;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.AnnotationTests;
+import abs.frontend.typesystem.AtomicityTests;
 import abs.frontend.typesystem.ClassKindTests;
 import abs.frontend.typesystem.ExamplesTypeChecking;
 import abs.frontend.typesystem.LocationTypeTests;
@@ -22,5 +23,5 @@ import org.junit.runners.Suite;
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
-        ClassKindTests.class, OtherAnalysisTests.class})
+        ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class})
 public class AllFrontendTests {}
