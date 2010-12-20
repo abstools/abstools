@@ -20,15 +20,15 @@ public abstract class Constraint {
         }
     }
     
-    protected List<LocationType> commonParametricFarTypes(LocationType[] lt1, LocationType[] lt2) {
+    protected List<LocationType> commonTypes(LocationType[] lt1, LocationType[] lt2) {
         List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
         result.retainAll(Arrays.asList(lt2));
         return result;
     }
     
-    protected List<LocationType> remainingParametricFarTypes(LocationType[] lt1, LocationType[] lt2) {
+    protected List<LocationType> diffTypes(LocationType[] lt1, LocationType[] lt2) {
         List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
-        result.removeAll(commonParametricFarTypes(lt1, lt2));
+        result.removeAll(commonTypes(lt1, lt2));
         return result;
     }
 
@@ -316,10 +316,10 @@ public abstract class Constraint {
             result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(NEAR).then(resultTv).is(NEAR).getValues());
             result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(FAR).then(resultTv).is(FAR).getValues());
             result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
-            for (LocationType t : commonParametricFarTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+            for (LocationType t : commonTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
                 result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(t).then(resultTv).is(t).getValues());
             }
-            for (LocationType t : remainingParametricFarTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+            for (LocationType t : diffTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
                 result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(t).then(resultTv).is(FAR).getValues());
             }
             
@@ -339,7 +339,7 @@ public abstract class Constraint {
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(FAR).then(resultTv).is(SOMEWHERE).getValues());
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
             }
-            List<LocationType> commonAdaptTvAndTv = commonParametricFarTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes());
+            List<LocationType> commonAdaptTvAndTv = commonTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes());
             for (LocationType t : commonAdaptTvAndTv) {
                 for (LocationType t2 : commonAdaptTvAndTv) {
                     if (t != t2) {
@@ -349,8 +349,8 @@ public abstract class Constraint {
                     }
                 }
             }
-            for (LocationType t : remainingParametricFarTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes())) {
-                for (LocationType t2 : remainingParametricFarTypes(tv.parametricFarTypes(), adaptToTv.parametricFarTypes())) {
+            for (LocationType t : diffTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes())) {
+                for (LocationType t2 : diffTypes(tv.parametricFarTypes(), adaptToTv.parametricFarTypes())) {
                     result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
                 }
             }
@@ -395,18 +395,18 @@ public abstract class Constraint {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
             //boolean b = tv1.allTypes().length > tv2.allTypes().length; 
-            for (LocationType t : tv1.allTypes()) {
+            for (LocationType t : commonTypes(tv1.allTypes(), tv2.allTypes())) {
                 values = new ArrayList<Integer>();
                 values.add(- e.get(tv1, t));
                 values.add(e.get(tv2, t));
                 result.add(values);
             }
-            for (LocationType lt : remainingParametricFarTypes(tv1.parametricFarTypes(), tv2.parametricFarTypes())) {
+            for (LocationType lt : diffTypes(tv1.parametricFarTypes(), tv2.parametricFarTypes())) {
                 values = new ArrayList<Integer>();
                 values.add(- e.get(tv1, lt));
                 result.add(values);
             }
-            for (LocationType lt : remainingParametricFarTypes(tv2.parametricFarTypes(), tv1.parametricFarTypes())) {
+            for (LocationType lt : diffTypes(tv2.parametricFarTypes(), tv1.parametricFarTypes())) {
                 values = new ArrayList<Integer>();
                 values.add(- e.get(tv2, lt));
                 result.add(values);
