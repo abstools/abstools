@@ -10,6 +10,8 @@ import abs.frontend.ast.Call;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.GetExp;
 import abs.frontend.ast.IfStmt;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
@@ -55,5 +57,7 @@ public interface TypeSystemExtension {
     void checkAwaitStmt(AwaitStmt awaitStmt);
 
     void checkGetExp(GetExp e);
+
+    void checkOverride(MethodSig impl, MethodSig overriden);
 
 }

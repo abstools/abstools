@@ -48,6 +48,28 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
     }
     
+    
+    @Override
+    public void checkOverride(MethodSig impl, MethodSig overriden) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkOverride(impl,overriden);
+        }
+
+        InterfaceDecl d = (InterfaceDecl) overriden.getParent().getParent();
+        Type expectedReturnType = overriden.getType();
+        Type actualReturnType = impl.getType();
+        checkAssignable(actualReturnType, expectedReturnType, impl);
+
+        for (int i = 0; i < overriden.getNumParam(); i++) {
+            Type texpected = overriden.getParam(i).getType();
+            Type tactual = impl.getParam(i).getType();
+            checkAssignable(texpected, tactual, impl);
+        }
+        
+    }
+
+
+    
     public void checkNewExp(NewExp e) {
         for (TypeSystemExtension tse : obs) {
             tse.checkNewExp(e);
@@ -248,6 +270,5 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             tse.checkWhileStmt(whileStmt);
         }
     }
-
 
 }

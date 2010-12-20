@@ -57,7 +57,8 @@ public enum ErrorMessage {
     CLASSKIND_COG("Cannot instantiate class %s without cog as it is annotated with class kind COG"),
     ASSIGN_TO_FINAL("Assignment to %s %s, which is annotated with [Final]"),
     NOT_ALLOWED_IN_INIT_CODE("%s are not allowed in class initialization code"), 
-    ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s")
+    ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s"), 
+    ATOMIC_METHOD_WRONG_OVERRIDE("Method %s has not the same atomicity annotation from the method %s defined in interface %s")
     ;
 
     private String pattern;

@@ -26,6 +26,24 @@ public class AtomicityTests extends FrontendTest {
         checkStmt("Fut<Unit> f; f.get;");
     }
     
+    @Test
+    public void overriding() {
+        checkOverride("[Atomic]", "[Atomic]", false);
+        checkOverride("[Atomic]", "", true);
+        checkOverride("", "[Atomic]", true);
+        
+    }
+
+    public void checkOverride(String a1, String a2, boolean fail) {
+        String code = "interface I { "+a1+" Unit m(); } class C implements I { "+a2+" Unit m() { } }";
+        if (fail) {
+            assertTypeErrors(code);
+        } else {
+            assertTypeOK(code);
+        }
+
+    }
+    
     public void checkStmt(String s) {
         assertTypeErrors("class C { [Atomic] Unit m() { "+s+"; } Unit n() { } [Atom] Unit atomN() { }}");
         assertTypeOK("class C { Unit m() { "+s+"; } Unit n() { } Unit atomN() { }}");

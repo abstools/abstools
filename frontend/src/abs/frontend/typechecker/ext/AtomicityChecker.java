@@ -22,6 +22,13 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
     }
 
     @Override
+    public void checkOverride(MethodSig impl, MethodSig overriden) {
+        if (impl.isAtomic() != overriden.isAtomic()) {
+            errors.add(new TypeError(impl, ErrorMessage.ATOMIC_METHOD_WRONG_OVERRIDE,impl.getName(),impl.getName(),overriden.getContextDecl().getName()));
+        }
+    }
+    
+    @Override
     public void checkAwaitStmt(AwaitStmt s) {
         ensureNonAtomic(s,s.getContextMethod(),"an await statement");
     }
@@ -50,7 +57,7 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
         if (impl == null)
             return;
         MethodSig sig = impl.getMethodSig();
-        if (isAtomic(sig.getAnnotations())) {
+        if (sig.isAtomic()) {
             errors.add(new TypeError(n, ErrorMessage.ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE,descr,sig.getName()));
         }
     }

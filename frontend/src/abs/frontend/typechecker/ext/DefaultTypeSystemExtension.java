@@ -11,6 +11,8 @@ import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.GetExp;
 import abs.frontend.ast.IfStmt;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ReturnStmt;
@@ -88,4 +90,7 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     @Override
     public void checkGetExp(GetExp e) {
     }
+
+    @Override
+    public void checkOverride(MethodSig impl, MethodSig overriden) {    }
 }
