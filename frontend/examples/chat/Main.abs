@@ -7,23 +7,18 @@ import * from ABSChat.User;
 
 
 {
-    Server server; 
-    server = new cog ServerImpl();  
+    Server server = new cog ServerImpl();  
 	server ! start();
 	
-	Client client;  
-	client = new cog ClientImpl();
+	Client client = new cog ClientImpl();
 	client ! setServer(server);
 	client ! start();
 	
-	User user;
-	user = new cog UserImpl();
 	
-	Fut<ClientGUI> fgui;
-	fgui = client ! getGUI();
-	[Somewhere] ClientGUI gui;
-	gui = fgui.get;
+	Fut<ClientGUI> fgui = client ! getGUI();
+	ClientGUI gui = fgui.get;
 	
+	User user = new cog UserImpl();
 	user ! use(gui);	
 	
 }

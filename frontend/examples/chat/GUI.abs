@@ -21,7 +21,7 @@ interface TextField {
 interface Button {
    Unit press();
    String getLabel();
-   Unit registerListener([Somewhere] ButtonListener l);
+   Unit registerListener(ButtonListener l);
 }
 
 class TextFieldImpl implements TextField {
@@ -47,7 +47,7 @@ class WindowImpl implements Window {
 }
 
 [Plain] 
-class ButtonImpl(Window gui, String label) implements Button {
+class ButtonImpl([Near] Window gui, String label) implements Button {
     List<ButtonListener> listener = Nil;
    
 	Unit press() {

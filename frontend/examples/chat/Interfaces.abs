@@ -11,7 +11,7 @@ data ClientMsg = ChatMessage(String,String);
 
 interface Server {
    Unit start();
-   Session connect(Client c);
+   [Near] Session connect(Client c);
 }
 
 interface Session {
@@ -20,7 +20,7 @@ interface Session {
 }
 
 interface Client {
-	Unit setServer([Somewhere] Server s);
+	Unit setServer(Server s);
 	Unit start();
 	Unit receive(ServerMsg m);
 	[Near] ClientGUI getGUI();
@@ -28,8 +28,8 @@ interface Client {
 
 interface ClientGUI {
    Unit init();
-   [Somewhere] Button getSendButton();
-   [Somewhere] TextField getTextField();
+   [Far] Button getSendButton();
+   [Far] TextField getTextField();
 }
 
 

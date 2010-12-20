@@ -21,12 +21,10 @@ class UserImpl implements User {
 	
    Unit use(ClientGUI client) { 
 	  gui = client;
-	  Fut<Button> f;
-	  f = gui!getSendButton();
+	  Fut<Button> f = gui!getSendButton();
 	  sendBtn = f.get;
 	  
-	  Fut<TextField> f2;
-	  f2 = gui!getTextField();
+	  Fut<TextField> f2 = gui!getTextField();
 	  textField = f2.get;
 	  
 	  textField!setText("Hello");

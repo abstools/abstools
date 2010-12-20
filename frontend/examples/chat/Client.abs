@@ -20,7 +20,7 @@ class ClientGUIImpl([Near] ClientIntern client) implements ClientGUIIntern {
    Bool initialized = False;
    
    {   
-   	  gui = new cog WindowImpl(); 
+   	  gui = new cog WindowImpl();
    } 
    
    Unit init() { 
@@ -86,6 +86,7 @@ class ClientImpl implements ClientIntern {
    }
    
    Unit start() {
+      await server != null;
       Fut<Session> f = server!connect(this);
       await f?;
       session = f.get; 
