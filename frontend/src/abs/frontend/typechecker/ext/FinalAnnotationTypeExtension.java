@@ -1,4 +1,4 @@
-package abs.frontend.typechecker;
+package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
@@ -6,7 +6,6 @@ import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.VarOrFieldDecl;
-import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
 
 public class FinalAnnotationTypeExtension extends DefaultTypeSystemExtension {
     

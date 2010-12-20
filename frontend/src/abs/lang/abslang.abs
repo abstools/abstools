@@ -270,3 +270,9 @@ data ClassKindAnnotation = COG | Plain;
  */
 data FinalAnnotation = Final;
 
+/**
+ * Declare methods to be atomic, i.e., such methods must not
+ * contain scheduling code and also no .get
+ */ 
+data AtomicAnnotation = Atomic;
+

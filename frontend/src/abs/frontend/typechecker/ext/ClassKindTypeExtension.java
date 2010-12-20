@@ -1,4 +1,4 @@
-package abs.frontend.typechecker;
+package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
@@ -10,8 +10,8 @@ import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
+import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
-import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
 
 public class ClassKindTypeExtension extends DefaultTypeSystemExtension {
     
