@@ -27,6 +27,7 @@ public class SatGenerator {
     final Set<Constraint> constraints;
     final Set<LocationTypeVariable> vars;
     private boolean enableStats = false;
+    private boolean enableDebug = false;
     
     final List<List<Integer>> output;
     
@@ -67,8 +68,9 @@ public class SatGenerator {
 
         Map<LocationTypeVariable, LocationType> tvl = new HashMap<LocationTypeVariable, LocationType>();
         for (Constraint c : constraints) {
-            //System.out.println(c);
-            output.addAll(c.generateSat(e));
+            if (enableDebug) System.out.println(c);
+            List<List<Integer>> gen = c.generateSat(e);
+            output.addAll(gen);
             c.variables(vars);
         }
         
@@ -85,6 +87,12 @@ public class SatGenerator {
             weights.append(" ");
             weights.append(e.get(tv, LocationType.FAR));
             weights.append(" ");
+            if (tv.getNode() == null) {
+                for (LocationType lt : tv.parametricFarTypes()) {
+                    weights.append(e.get(tv, lt));
+                    weights.append(" ");
+                }
+            }
             weights.append("0\n");
         }
         
@@ -130,7 +138,6 @@ public class SatGenerator {
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
             //opt.setTimeout(arg0)
-            
             if (opt.isSatisfiable()) {
                 int[] model = opt.model();
                 long solveNanos = System.nanoTime();
@@ -150,6 +157,7 @@ public class SatGenerator {
                         tvl.put(tv.v, tv.t);
                     }   
                 }
+                if (enableDebug) System.out.println("Solution: " + tvl);
             } else {
                 return null;
             }

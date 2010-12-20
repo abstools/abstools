@@ -1,8 +1,5 @@
 package abs.frontend.typechecker.locationtypes;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class LocationType {
     public static final String LOCATION_KEY = "LOCATION_KEY";
     
@@ -11,10 +8,8 @@ public class LocationType {
     public static final LocationType SOMEWHERE = new LocationType("Somewhere");
     public static final LocationType BOTTOM = new LocationType("Bottom");
     public static final LocationType INFER = new LocationType("Infer");
-    public static final LocationType NOTYPE = new LocationType("NoType");
-    public static final LocationType UNBOUND = new LocationType("Unbound");
     
-    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM, INFER, NOTYPE, UNBOUND};
+    public static final LocationType[] ALLTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM, INFER};
     public static final LocationType[] ALLVISTYPES = {FAR, NEAR, SOMEWHERE, BOTTOM};
     public static final LocationType[] ALLCONCRETEUSERTYPES = {FAR, NEAR, SOMEWHERE};
     public static final LocationType[] ALLUSERTYPES = {FAR, NEAR, SOMEWHERE, INFER};
@@ -38,6 +33,20 @@ public class LocationType {
         throw new IllegalArgumentException(name+" is not a location type");
     }
     
+    public static LocationType createParametricFar(String s) {
+        return new ParameterizedFarType(s);
+    }
+    
+    private static class ParameterizedFarType extends LocationType {
+        private ParameterizedFarType(String s) {
+            super("Far(" + s + ")");
+        }        
+    }
+    
+    public boolean isParametricFar() {
+        return this instanceof ParameterizedFarType;
+    }
+    
     public boolean isFar() { 
         return this == FAR;
     }
@@ -53,43 +62,43 @@ public class LocationType {
     public boolean isSomewhere() {
         return this == SOMEWHERE;
     }
-    
-    public boolean isNoType() {
-        return this == NOTYPE;
-    }
 
     public boolean isBottom() {
         return this == BOTTOM;
     }
     
-    public boolean isUnbound() {
-        return this == UNBOUND;
-    }
-    
     public boolean isSubtypeOf(LocationType t) {
-        return this.isUnbound() 
-            || this == t 
-            || this.isBottom() 
-            || t.isUnbound() 
-            || t.isSomewhere();
+        return this == t
+            || this.isBottom()
+            || t.isSomewhere()
+            || this.isParametricFar() && t.isFar();
     }
     
     public boolean isSubtypeOfFarAdapted(LocationType t) {
         if (this.isBottom()) {
             return true;
         }
-        if (this.isNear() || this.isFar() || this.isSomewhere()) {
+        if (this.isNear() || this.isFar() || this.isParametricFar() || this.isSomewhere()) {
             return t.isFar() || t.isSomewhere();
         }
         throw new IllegalArgumentException("Cannot use location type "+this+" to check subtypeOfFar");
     }
     
     public LocationType adaptTo(LocationType to) {
-        if (isNoType() || isBottom() || isUnbound())
+        if (isBottom())
             return this;
         
         if (to.isFar()) {
             return this.isNear() ? FAR : SOMEWHERE; 
+        }
+        
+        if (to.isParametricFar()) {
+            if (this.isNear())
+                return to;
+            if (this.isParametricFar() && this != to) {
+                return FAR;
+            }
+            return SOMEWHERE; 
         }
         
         if (to.isNear()) {

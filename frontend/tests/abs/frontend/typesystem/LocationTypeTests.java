@@ -9,7 +9,6 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
@@ -102,6 +101,11 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void defaultTyping() {
         assertTypeOk("{ I i; [Far] I f; i = new C(f); }");
+    }
+    
+    @Test
+    public void simpleAssignInfer() {
+        assertInferOk("interface I {} { I i; [Far] I i2; i = i2; }", LocationType.FAR);
     }
 
     @Test
@@ -196,6 +200,16 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void typeSyn() {
         assertInferOk("interface I {} type I2 = [Somewhere] I; { I2 i; i = null; }", LocationType.SOMEWHERE);
+    }
+    
+    @Test
+    public void typeImprovedInfer() {
+        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
+    }
+    
+    @Test
+    public void fieldTypeImprovedInfer() {
+        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { I i1; I i2; Unit m([Far] I i) { i1 = new cog C(); i2 = new cog C(); i1!m(i2); } } { }");
     }
     
     // negative tests:

@@ -20,6 +20,19 @@ public abstract class Constraint {
         }
     }
     
+    protected List<LocationType> commonParametricFarTypes(LocationType[] lt1, LocationType[] lt2) {
+        List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
+        result.retainAll(Arrays.asList(lt2));
+        return result;
+    }
+    
+    protected List<LocationType> remainingParametricFarTypes(LocationType[] lt1, LocationType[] lt2) {
+        List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
+        result.removeAll(commonParametricFarTypes(lt1, lt2));
+        return result;
+    }
+
+    
     public abstract List<List<Integer>> generateSat(Environment e);
     
     public abstract void variables(Set<LocationTypeVariable> vars);
@@ -66,6 +79,21 @@ public abstract class Constraint {
             values.add(- e.get(tv1, SOMEWHERE));
             values.addAll(generate(tv2, e, SOMEWHERE));
             result.add(values);
+
+            for (LocationType pft : tv1.parametricFarTypes()) {
+                if (Arrays.asList(tv2.parametricFarTypes()).contains(pft)) {
+                    values = new ArrayList<Integer>();
+                    values.add(- e.get(tv1, pft));
+                    values.addAll(generate(tv2, e, pft, FAR, SOMEWHERE));
+                    result.add(values);
+                } else {
+                    values = new ArrayList<Integer>();
+                    values.add(- e.get(tv1, pft));
+                    values.addAll(generate(tv2, e, FAR, SOMEWHERE));
+                    result.add(values);
+                }
+                
+            }
             prependAll(SHOULD_HAVE, result);
             return result;
         }
@@ -82,6 +110,9 @@ public abstract class Constraint {
         LocationTypeVariable tv1, tv2;
 
         public FarConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
+            if (tv2.parametricFarTypes().length > 0) {
+                throw new IllegalArgumentException("tv2 should not contain parametric Far Types");
+            }
             this.tv1 = tv1;
             this.tv2 = tv2;
         }
@@ -97,7 +128,7 @@ public abstract class Constraint {
             List<Integer> values;
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, BOTTOM));
-            values.addAll(generate(tv2, e, ALLVISTYPES));
+            values.addAll(generate(tv2, e, tv2.allTypes()));
             result.add(values);
             values = new ArrayList<Integer>();
             values.add(- e.get(tv1, NEAR));
@@ -111,6 +142,12 @@ public abstract class Constraint {
             values.add(- e.get(tv1, SOMEWHERE));
             values.addAll(generate(tv2, e, FAR, SOMEWHERE));
             result.add(values);
+            for (LocationType pft : tv1.parametricFarTypes()) {
+                values = new ArrayList<Integer>();
+                values.add(- e.get(tv1, pft));
+                values.addAll(generate(tv2, e, FAR, SOMEWHERE));
+                result.add(values);
+            }
             prependAll(SHOULD_HAVE, result);
             return result;
         }
@@ -136,14 +173,14 @@ public abstract class Constraint {
             List<Integer> values = new ArrayList<Integer>();
             
             // vt must have at least a type
-            for (LocationType it : ALLVISTYPES) {
+            for (LocationType it : tv.allTypes()) {
                 values.add(e.get(tv, it));
             }
             result.add(values);
             
             // vt must have maximally one type
-            for (LocationType it1 : ALLVISTYPES) {
-                for (LocationType it2 : ALLVISTYPES) {
+            for (LocationType it1 : tv.allTypes()) {
+                for (LocationType it2 : tv.allTypes()) {
                     if (!it1.equals(it2)) {
                         // !tv = it1 or !tv = it2  ===  ! (tv = it1 && tv = it2)
                         result.add(new CL(e).not(tv).is(it1).orNot(tv).is(it2).getValues());
@@ -157,7 +194,7 @@ public abstract class Constraint {
         
         @Override
         public String toString() {
-            return "unique "+tv;
+            return tv + " def= " + Arrays.toString(tv.allTypes());
         }
 
         @Override
@@ -253,6 +290,13 @@ public abstract class Constraint {
         public AdaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptToTv) {
             if (resultTv == null || tv == null || adaptToTv == null)
                 throw new IllegalArgumentException("some variable is null: "+resultTv+", "+tv+", "+adaptToTv);
+            /*if (!Arrays.equals(adaptToTv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+                throw new IllegalArgumentException("Parametric Far Types for adaptToTv and resultTv should be equal");
+            }*/
+            /*
+            if (adaptToTv.parametricFarTypes().length > 0 && !Arrays.equals(adaptToTv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+                throw new IllegalArgumentException("Parametric Far Types for adaptToTv and resultTv should be equal");
+            }*/
             this.resultTv = resultTv;
             this.tv = tv;
             this.adaptToTv = adaptToTv;
@@ -266,19 +310,57 @@ public abstract class Constraint {
         @Override
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
-            for (LocationType t : ALLVISTYPES) {
-                result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(resultTv).is(t).then(tv).is(t).getValues());
+            
+            // if adaptToTv = NEAR
+            result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
+            result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(NEAR).then(resultTv).is(NEAR).getValues());
+            result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(FAR).then(resultTv).is(FAR).getValues());
+            result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
+            for (LocationType t : commonParametricFarTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+                result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(t).then(resultTv).is(t).getValues());
             }
+            for (LocationType t : remainingParametricFarTypes(tv.parametricFarTypes(), resultTv.parametricFarTypes())) {
+                result.add(new CL(e).if_(adaptToTv).is(NEAR).andIf(tv).is(t).then(resultTv).is(FAR).getValues());
+            }
+            
+            // if adaptToTv = FAR
+            result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
             result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
-
-            for (LocationType t : new LocationType[]{FAR, SOMEWHERE}) {
+            result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(FAR).then(resultTv).is(SOMEWHERE).getValues());
+            result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
+            for (LocationType t : tv.parametricFarTypes()) {
                 result.add(new CL(e).if_(adaptToTv).is(FAR).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
             }
             
-            for (LocationType t : new LocationType[]{NEAR, FAR, SOMEWHERE}) {
-                result.add(new CL(e).if_(adaptToTv).is(SOMEWHERE).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
+            // if adaptToTv = FAR(i)
+            for (LocationType t : adaptToTv.parametricFarTypes()) {
+                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
+                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(t).getValues());
+                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(FAR).then(resultTv).is(SOMEWHERE).getValues());
+                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
             }
-            result.add(new CL(e).if_(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
+            List<LocationType> commonAdaptTvAndTv = commonParametricFarTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes());
+            for (LocationType t : commonAdaptTvAndTv) {
+                for (LocationType t2 : commonAdaptTvAndTv) {
+                    if (t != t2) {
+                        result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(FAR).getValues());
+                    } else {
+                        result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
+                    }
+                }
+            }
+            for (LocationType t : remainingParametricFarTypes(adaptToTv.parametricFarTypes(), tv.parametricFarTypes())) {
+                for (LocationType t2 : remainingParametricFarTypes(tv.parametricFarTypes(), adaptToTv.parametricFarTypes())) {
+                    result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
+                }
+            }
+            
+            // if adaptToTv = SOMEWHERE
+            for (LocationType t : tv.allTypes()) {
+                if (t != BOTTOM)
+                    result.add(new CL(e).if_(adaptToTv).is(SOMEWHERE).andIf(tv).is(t).then(resultTv).is(SOMEWHERE).getValues());
+            }
+            result.add(new CL(e).if_(adaptToTv).is(SOMEWHERE).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
             
             prependAll(MUST_HAVE, result);
             // adaptToTv should always be unequal to BOTTOM
@@ -300,6 +382,9 @@ public abstract class Constraint {
         Integer importance;
 
         public EqConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2, Integer importance) {
+            /*if (!Arrays.equals(tv1.parametricFarTypes(), tv2.parametricFarTypes())) {
+                throw new IllegalArgumentException("Parametric Far Types for tv1 and tv2 should be equal");
+            }*/
             this.tv1 = tv1;
             this.tv2 = tv2;
             this.importance = importance;
@@ -309,12 +394,24 @@ public abstract class Constraint {
         public List<List<Integer>> generateSat(Environment e) {
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
-            for (LocationType t : ALLVISTYPES) {
+            //boolean b = tv1.allTypes().length > tv2.allTypes().length; 
+            for (LocationType t : tv1.allTypes()) {
                 values = new ArrayList<Integer>();
                 values.add(- e.get(tv1, t));
                 values.add(e.get(tv2, t));
                 result.add(values);
             }
+            for (LocationType lt : remainingParametricFarTypes(tv1.parametricFarTypes(), tv2.parametricFarTypes())) {
+                values = new ArrayList<Integer>();
+                values.add(- e.get(tv1, lt));
+                result.add(values);
+            }
+            for (LocationType lt : remainingParametricFarTypes(tv2.parametricFarTypes(), tv1.parametricFarTypes())) {
+                values = new ArrayList<Integer>();
+                values.add(- e.get(tv2, lt));
+                result.add(values);
+            }
+            
             prependAll(importance, result);
             return result;
         }
@@ -338,6 +435,9 @@ public abstract class Constraint {
         Integer importance;
 
         public ConstConstraint(LocationTypeVariable tv, LocationType[] t, Integer importance) {
+            if (!Arrays.asList(tv.allTypes()).containsAll(Arrays.asList(t))) {
+                throw new IllegalArgumentException("t should be a subset of types in tv");
+            }
             this.tv = tv;
             this.t = t;
             this.importance = importance;

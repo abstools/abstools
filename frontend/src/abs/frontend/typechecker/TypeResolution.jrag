@@ -239,6 +239,7 @@ aspect TypeResolution {
     eq ClassDecl.getField().getContextDecl() = getContextDecl();
     eq InterfaceDecl.getBody().getContextDecl() = getContextDecl();
     eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
+    eq ClassDecl.getParam().getContextDecl() = null;
 
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
@@ -256,7 +257,12 @@ aspect TypeResolution {
     eq ClassDecl.getInitBlock().getContextBlock() = getInitBlock();
     eq ModuleDecl.getBlock().getContextBlock() = getBlock();
     inh Block Stmt.getContextBlock();
-    
+    inh Block Exp.getContextBlock();
+    inh Block FieldDecl.getContextBlock();
+    eq ClassDecl.getField().getContextBlock() = null;
+    eq ClassDecl.getMethod().getContextBlock() = null;
+    eq InterfaceDecl.getBody().getContextBlock() = null;
+    eq ClassDecl.getParam().getContextBlock() = null;
     
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
    	 for (MethodImpl m : getMethods()) {
