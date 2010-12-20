@@ -10,6 +10,7 @@ import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.GetExp;
+import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.SuspendStmt;
@@ -22,17 +23,17 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkAwaitStmt(AwaitStmt s) {
-        ensureNonAtomic(s,s.getContextMethod().getMethodSig(),"an await statement");
+        ensureNonAtomic(s,s.getContextMethod(),"an await statement");
     }
 
     @Override
     public void checkSuspendStmt(SuspendStmt s) {
-        ensureNonAtomic(s,s.getContextMethod().getMethodSig(),"a suspend statement");
+        ensureNonAtomic(s,s.getContextMethod(),"a suspend statement");
     }
 
     @Override
     public void checkGetExp(GetExp e) {
-        ensureNonAtomic(e,e.getContextMethod().getMethodSig(),"a suspend statement");
+        ensureNonAtomic(e,e.getContextMethod(),"a suspend statement");
     }
     
     @Override
@@ -40,18 +41,21 @@ public class AtomicityChecker extends DefaultTypeSystemExtension {
         if (!call.isAsync()) {
             MethodSig sig = call.getMethodSig();
             if (!isAtomic(sig.getAnnotations())) {
-                ensureNonAtomic(call, call.getContextMethod().getMethodSig(), "a synchronous call of a non-atomic method");
+                ensureNonAtomic(call, call.getContextMethod(), "a synchronous call of a non-atomic method");
             }
         }
     }
     
-    private void ensureNonAtomic(ASTNode<?> n, MethodSig sig, String descr) {
+    private void ensureNonAtomic(ASTNode<?> n, MethodImpl impl, String descr) {
+        if (impl == null)
+            return;
+        MethodSig sig = impl.getMethodSig();
         if (isAtomic(sig.getAnnotations())) {
             errors.add(new TypeError(n, ErrorMessage.ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE,descr,sig.getName()));
         }
     }
     
-    private boolean isAtomic(abs.frontend.ast.List<Annotation> list) {
+    public static boolean isAtomic(abs.frontend.ast.List<Annotation> list) {
         List<Annotation> anns = AnnotationHelper.getAnnotationsOfType(list, "ABS.StdLib.AtomicityAnnotation");
         return !anns.isEmpty();
         

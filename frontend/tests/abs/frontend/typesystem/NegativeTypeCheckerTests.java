@@ -412,6 +412,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("class C { { await True; } }");
         assertTypeErrors("class C { { Fut<Unit> f; f.get; } }");
         assertTypeErrors("class C { { this.m(); } Unit m() { }}");
+        assertTypeOK("class C { { this.m(); } [Atomic] Unit m() { }}");
     }
 
 }

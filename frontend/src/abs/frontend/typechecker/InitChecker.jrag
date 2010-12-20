@@ -8,11 +8,16 @@ aspect InitChecker {
         }
     }
     
+    public void SuspendStmt.checkLegalInit(SemanticErrorList l) {
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Suspend statements"));
+    }
     public void AwaitStmt.checkLegalInit(SemanticErrorList l) {
        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Await statements"));
     }
     public void SyncCall.checkLegalInit(SemanticErrorList l) { 
-       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Synchronous calls"));
+        if (!getMethodSig().isAtomic()) {
+            l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Synchronous calls of non-atomic methods"));
+        }
     }
     public void GetExp.checkLegalInit(SemanticErrorList l) { 
        l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Get expressions"));
