@@ -27,7 +27,7 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 public class SatGenerator {
     final Set<Constraint> constraints;
     final Set<LocationTypeVariable> vars;
-    private boolean enableStats = true;
+    private boolean enableStats = false;
     private boolean enableDebug = false;
     
     final List<List<Integer>> output;
