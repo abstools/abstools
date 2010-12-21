@@ -1,7 +1,7 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +16,7 @@ public class Environment {
     
     public int get(LocationTypeVariable v, LocationType t) {
         if (v == null) throw new IllegalArgumentException("v is null");
-        List<LocationType> l = Arrays.asList(v.allTypes());
+        List<LocationType> l = v.allTypes();
         if (!l.contains(t)) 
             throw new IllegalArgumentException("element " + t + " does not exist in " + l);
         TypedVar tv = new TypedVar(v, t);
@@ -31,7 +31,7 @@ public class Environment {
     }
     
     List<TypedVar> vars() {
-        return list;
+        return Collections.unmodifiableList(list);
     }
 
 }

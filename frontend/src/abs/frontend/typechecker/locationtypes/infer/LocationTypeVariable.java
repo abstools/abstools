@@ -1,5 +1,8 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import abs.common.Position;
@@ -17,54 +20,60 @@ public class LocationTypeVariable {
     
     public static int counter = 0;
     
+    boolean updated = false;
+    
+    boolean declared = false;
+    
     public static final LocationTypeVariable ALWAYS_NEAR = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_FAR = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_BOTTOM = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_SOMEWHERE = new LocationTypeVariable();
     
-    private LocationType[] parametricFarTypes = new LocationType[0];
+    private List<LocationType> parametricFarTypes = new ArrayList<LocationType>();
+    
+    List<LocationType> parametricClassLocalFarTypes = new ArrayList<LocationType>();
+    List<LocationType> allCTypes = new ArrayList<LocationType>(Arrays.asList(LocationType.ALLCONCRETEUSERTYPES));
+    List<LocationType> parametricMethodLocalFarTypes = new ArrayList<LocationType>();
     
     private int id = ++counter;
     private ASTNode<?> node;
 
-    private LocationType[] allTypes = LocationType.ALLVISTYPES;
+    private List<LocationType> allTypes = Arrays.asList(LocationType.ALLVISTYPES);
     
-    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, LocationType[] parametricFarTypes) {
+    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, List<LocationType> parametricMethodLocalFarTypes, List<LocationType> parametricClassLocalFarTypes) {
         LocationTypeVariable result = new LocationTypeVariable();
-        result.parametricFarTypes = parametricFarTypes;
-        result.allTypes = new LocationType[parametricFarTypes.length + LocationType.ALLVISTYPES.length];
-        int j = 0;
-        for (LocationType lt : LocationType.ALLVISTYPES) {
-            result.allTypes[j] = lt;
-            j++;
-        }
-        for (LocationType lt : parametricFarTypes) {
-            result.allTypes[j] = lt;
-            j++;
-        }
         result.node = n;
+        result.parametricMethodLocalFarTypes = parametricMethodLocalFarTypes;
+        result.parametricClassLocalFarTypes = parametricClassLocalFarTypes;
+        result.declared = declared;
+        
         constraints.add(Constraint.declConstraint(result));
         if (declared) {
-            LocationType[] allCTypes = new LocationType[parametricFarTypes.length + LocationType.ALLCONCRETEUSERTYPES.length];
-            int i = 0;
-            for (LocationType lt : LocationType.ALLCONCRETEUSERTYPES) {
-                allCTypes[i] = lt;
-                i++;
-            }
-            for (LocationType lt : parametricFarTypes) {
-                allCTypes[i] = lt;
-                i++;
-            }
-            constraints.add(Constraint.constConstraint(result, allCTypes, Constraint.MUST_HAVE));
+            constraints.add(Constraint.constConstraint(result, result.allCTypes, Constraint.MUST_HAVE));
         }
         return result;
     }
     
-    public LocationType[] parametricFarTypes() {
+    private void update() {
+        if (updated) return;
+        parametricFarTypes.addAll(parametricClassLocalFarTypes);
+        parametricFarTypes.addAll(parametricMethodLocalFarTypes);
+        allTypes = new ArrayList<LocationType>();
+        allTypes.addAll(Arrays.asList(LocationType.ALLVISTYPES));
+        allTypes.addAll(parametricFarTypes);
+        if (declared) {
+            allCTypes.addAll(parametricFarTypes);
+        }
+        updated = true;
+    }
+    
+    public List<LocationType> parametricFarTypes() {
+        update();
         return parametricFarTypes;
     }
     
-    public LocationType[] allTypes() {
+    public List<LocationType> allTypes() {
+        update();
         return allTypes;
     }
     

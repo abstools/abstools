@@ -8,6 +8,7 @@ import java.util.Set;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 import static abs.frontend.typechecker.locationtypes.LocationType.*;
+import static abs.frontend.typechecker.locationtypes.infer.MultiListIterable.fromIterable;
 
 public abstract class Constraint {
     public final static Integer MUST_HAVE = 2147483647;
@@ -20,25 +21,28 @@ public abstract class Constraint {
         }
     }
     
-    protected List<LocationType> commonTypes(LocationType[] lt1, LocationType[] lt2) {
-        List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
-        result.retainAll(Arrays.asList(lt2));
+    protected List<LocationType> commonTypes(List<LocationType> lt1, List<LocationType> lt2) {
+        List<LocationType> result = new ArrayList<LocationType>(lt1);
+        result.retainAll(lt2);
         return result;
     }
     
-    protected List<LocationType> diffTypes(LocationType[] lt1, LocationType[] lt2) {
-        List<LocationType> result = new ArrayList<LocationType>(Arrays.asList(lt1));
+    protected List<LocationType> diffTypes(List<LocationType> lt1, List<LocationType> lt2) {
+        List<LocationType> result = new ArrayList<LocationType>(lt1);
         result.removeAll(commonTypes(lt1, lt2));
         return result;
     }
 
-    
     public abstract List<List<Integer>> generateSat(Environment e);
     
     public abstract void variables(Set<LocationTypeVariable> vars);
     
     
     private static List<Integer> generate(LocationTypeVariable v, Environment e, LocationType... types) {
+        return generate(v,e,Arrays.asList(types));
+    }
+    
+    private static List<Integer> generate(LocationTypeVariable v, Environment e, List<LocationType> types) {
         List<Integer> values = new ArrayList<Integer>();
         for (LocationType t : types) {
             values.add(e.get(v, t));
@@ -81,7 +85,7 @@ public abstract class Constraint {
             result.add(values);
 
             for (LocationType pft : tv1.parametricFarTypes()) {
-                if (Arrays.asList(tv2.parametricFarTypes()).contains(pft)) {
+                if (tv2.parametricFarTypes().contains(pft)) {
                     values = new ArrayList<Integer>();
                     values.add(- e.get(tv1, pft));
                     values.addAll(generate(tv2, e, pft, FAR, SOMEWHERE));
@@ -110,7 +114,7 @@ public abstract class Constraint {
         LocationTypeVariable tv1, tv2;
 
         public FarConstraint(LocationTypeVariable tv1, LocationTypeVariable tv2) {
-            if (tv2.parametricFarTypes().length > 0) {
+            if (tv2.parametricFarTypes().size() > 0) {
                 throw new IllegalArgumentException("tv2 should not contain parametric Far Types");
             }
             this.tv1 = tv1;
@@ -194,7 +198,7 @@ public abstract class Constraint {
         
         @Override
         public String toString() {
-            return tv + " def= " + Arrays.toString(tv.allTypes());
+            return tv + " def= " + tv.allTypes();
         }
 
         @Override
@@ -431,20 +435,20 @@ public abstract class Constraint {
     
     private static class ConstConstraint extends Constraint {
         LocationTypeVariable tv;
-        LocationType[] t;
+        Iterable<LocationType> t;
         Integer importance;
 
-        public ConstConstraint(LocationTypeVariable tv, LocationType[] t, Integer importance) {
-            if (!Arrays.asList(tv.allTypes()).containsAll(Arrays.asList(t))) {
-                throw new IllegalArgumentException("t should be a subset of types in tv");
-            }
+        public ConstConstraint(LocationTypeVariable tv, Iterable<LocationType> list, Integer importance) {
             this.tv = tv;
-            this.t = t;
+            this.t = list;
             this.importance = importance;
         }
 
         @Override
         public List<List<Integer>> generateSat(Environment e) {
+            if (!tv.allTypes().containsAll(fromIterable(t))) {
+                throw new IllegalArgumentException("t should be a subset of types in tv");
+            }
             List<List<Integer>> result = new ArrayList<List<Integer>>();
             List<Integer> values;
             values = new ArrayList<Integer>();
@@ -465,7 +469,7 @@ public abstract class Constraint {
         
         @Override
         public String toString() {
-            return tv + " := " + Arrays.toString(t);
+            return tv + " := " + t;
         }
 
         @Override
@@ -487,10 +491,14 @@ public abstract class Constraint {
     
     // tv := t
     public static Constraint constConstraint(LocationTypeVariable tv, LocationType t, Integer importance) {
-        return new ConstConstraint(tv, new LocationType[]{t}, importance);
+        return new ConstConstraint(tv, Arrays.asList(t), importance);
     }
     
     public static Constraint constConstraint(LocationTypeVariable tv, LocationType[] tl, Integer importance) {
+        return new ConstConstraint(tv, Arrays.asList(tl), importance);
+    }
+    
+    public static Constraint constConstraint(LocationTypeVariable tv, Iterable<LocationType> tl, Integer importance) {
         return new ConstConstraint(tv, tl, importance);
     }
 
