@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
@@ -26,7 +27,7 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 public class SatGenerator {
     final Set<Constraint> constraints;
     final Set<LocationTypeVariable> vars;
-    private boolean enableStats = false;
+    private boolean enableStats = true;
     private boolean enableDebug = false;
     
     final List<List<Integer>> output;
@@ -158,6 +159,21 @@ public class SatGenerator {
                     }   
                 }
                 if (enableDebug) System.out.println("Solution: " + tvl);
+                if (enableStats) {
+                    int fars = 0;
+                    int sws = 0;
+                    int nears = 0;
+                    for (Entry<LocationTypeVariable, LocationType> e : tvl.entrySet()) {
+                        if (e.getKey().getNode() != null) {
+                            LocationType t = e.getValue();
+                            if (t.isFar()) fars++;
+                            if (t.isFar()) fars++;
+                            if (t.isNear()) nears++;
+                            if (t.isSomewhere()) sws++;
+                        } 
+                    }
+                    System.out.println("Fars: " + fars + " Somewheres: " + sws + " Nears: " + nears);
+                }
             } else {
                 return null;
             }
