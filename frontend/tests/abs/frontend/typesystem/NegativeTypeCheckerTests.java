@@ -415,4 +415,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeOK("class C { { this.m(); } [Atomic] Unit m() { }}");
     }
 
+    @Test
+    public void wrongNumberOfParams() {
+        assertTypeErrors("module Bug;"
+          + "def String f (String name) = name;"
+          + "{ List<String> s = Cons(f(\"foo\", Nil)); }");
+    }
+    
 }

@@ -189,6 +189,8 @@ aspect Typing {
    	 DataTypeDecl dataDecl = d.getDataTypeDecl();
    	 Type declaredResultType = dataDecl.getType();
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
+   	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
+   	         return UnknownType.INSTANCE;
    		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromDataTypeUse(d.getConstructorArgs(),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
    	 } else {

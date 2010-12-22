@@ -256,5 +256,4 @@ public class TypeCheckerTest extends FrontendTest {
         
     }
     
-    
 }

@@ -700,10 +700,15 @@ aspect TypeChecker {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    	 } else {
    	 	DataConstructor c = (DataConstructor) decl;
-    	   if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-   	   	TypeCheckerHelper.typeCheckMatchingParams(e,this,c,getParams());
+   	 	
+   	   if (c.getConstructorArgs().getNumChild() != getParams().getNumChild()) {
+   	       e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
    	   } else {
-    	     TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
+   	       if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+   	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this,c.getConstructorArgs(),getParams());
+   	       } else {
+   	           TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
+   	       }
    	   }
    	 }
    	 

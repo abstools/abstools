@@ -62,15 +62,13 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckEqualParams(SemanticErrorList l, ASTNode<?> n, List<ParamDecl> params,
-            List<PureExp> args) {
+    public static void typeCheckEqualParams(SemanticErrorList l, ASTNode<?> n, List<ParamDecl> params, List<PureExp> args) {
         typeCheckEqual(l, n, getTypes(params), args);
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, DataConstructor decl,
-            List<PureExp> args) {
-        Map<TypeParameter, Type> binding = getTypeParamBindingFromDataTypeUse(decl.getConstructorArgs(), args);
-        java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(decl.getConstructorArgs()));
+    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<DataTypeUse> params, List<PureExp> args) {        
+        Map<TypeParameter, Type> binding = getTypeParamBindingFromDataTypeUse(params, args);
+        java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(params));
         typeCheckEqual(l, n, types, args);
     }
 
