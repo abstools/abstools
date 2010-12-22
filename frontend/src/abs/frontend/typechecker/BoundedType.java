@@ -92,7 +92,7 @@ public class BoundedType extends Type {
     public Type copy() {
         BoundedType copy = new BoundedType();
         copy.boundType = boundType;
-        return boundType;
+        return copy;
     }
     
     public Type fullCopy() {

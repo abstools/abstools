@@ -707,6 +707,7 @@ aspect TypeChecker {
    	   if (c.getConstructorArgs().getNumChild() != getParams().getNumChild()) {
    	       e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
    	   } else {
+   	       Type t = e.getType();
    	       if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
    	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this,c.getConstructorArgs(),getParams());
    	       } else {

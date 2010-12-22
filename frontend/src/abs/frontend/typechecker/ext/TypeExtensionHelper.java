@@ -145,11 +145,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
     
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
-        if (rht.isBoundedType()) {
-            BoundedType brht = (BoundedType)rht;
-            if (brht.hasBoundType())
-                rht = brht.getBoundType();
-        }
+        rht = resolveBoundedType(rht);
 
         if (lht.isDataType() && rht.isDataType()) {
             DataTypeType dtl = (DataTypeType) lht;
@@ -199,15 +195,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
-        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
-            for (int i = 0; i < decl.getNumConstructorArg(); i++) {
-                Type rht = e.getParam(i).getType();
-                Type arg = decl.getConstructorArg(i).getType();
-                checkTypeParameter(map, rht, arg);
-                checkAssignable(null, rht, arg, e);
-            }
-        } 
+        checkTypeParameter(new HashMap<TypeParameter, Type>(),e.getType(),decl.getType());
     }
 
 
@@ -226,29 +214,38 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     
-    private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type t, Type arg) {
+    private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type rht, Type lht) {
+        rht = resolveBoundedType(rht);
+        if (rht.isBoundedType())
+            return;
+        if (lht.isTypeParameter() && rht.isReferenceType()) {
+            TypeParameter typeParam = (TypeParameter) lht;
+            if (map.containsKey(typeParam)) {
+                Type lt = map.get(typeParam);
+                checkEq(lt,rht);
+            } else {
+                map.put(typeParam, rht);
+            }
+        } else if (lht.isDataType()) {
+            DataTypeType argdt = (DataTypeType) lht;
+            if (argdt.hasTypeArgs()) {
+                DataTypeType dt = (DataTypeType)rht;
+                for (int i = 0; i < dt.numTypeArgs(); i++) {
+                     checkTypeParameter(map,dt.getTypeArg(i),argdt.getTypeArg(i));
+                }
+            }
+        } else if (lht.isReferenceType()) {
+            checkEq(lht,rht);
+        }
+    }
+
+    private Type resolveBoundedType(Type t) {
         if (t.isBoundedType()) {
             BoundedType bt = (BoundedType)t;
             if (bt.hasBoundType())
                 t = bt.getBoundType();
         }
-        if (arg.isTypeParameter() && t.isReferenceType()) {
-            TypeParameter typeParam = (TypeParameter) arg;
-            if (map.containsKey(typeParam)) {
-                Type lt = map.get(typeParam);
-                checkEq(lt,t);
-            } else {
-                map.put(typeParam, t);
-            }
-        } else if (arg.isDataType()) {
-            DataTypeType argdt = (DataTypeType) arg;
-            if (argdt.hasTypeArgs()) {
-                DataTypeType dt = (DataTypeType)t;
-                for (int i = 0; i < dt.numTypeArgs(); i++) {
-                     checkTypeParameter(map,dt.getTypeArg(i),argdt.getTypeArg(i));
-                }
-            }
-        }
+        return t;
     }
 
     public void checkEq(Type lt, Type t) {

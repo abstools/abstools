@@ -133,7 +133,7 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     @Test
-    public void testSpecialListConstruct() {
+    public void testListConstruct() {
         assertLocationTypeErrorOnly("interface K {} { List<[Near] K> res = Nil; [Far] K j; res = Cons(j,Nil); }");
     }
 
