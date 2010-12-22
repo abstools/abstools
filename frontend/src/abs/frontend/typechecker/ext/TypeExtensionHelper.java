@@ -227,6 +227,11 @@ public class TypeExtensionHelper implements TypeSystemExtension {
 
     
     private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type t, Type arg) {
+        if (t.isBoundedType()) {
+            BoundedType bt = (BoundedType)t;
+            if (bt.hasBoundType())
+                t = bt.getBoundType();
+        }
         if (arg.isTypeParameter() && t.isReferenceType()) {
             TypeParameter typeParam = (TypeParameter) arg;
             if (map.containsKey(typeParam)) {

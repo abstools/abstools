@@ -40,14 +40,15 @@ aspect TypeCheckerExtension {
         return t;
     }
 
+    /*
     refine Typing eq DataTypeUse.getType() {
         Type t = Typing.DataTypeUse.getType().fullCopy();        
         getModel().getTypeExt().annotateType(t, this, this);
         return t;
-    }
+    }*/
     
     refine Typing eq NullExp.getType() {
-        Type t = Typing.NullExp.getType();
+        Type t = Typing.NullExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
