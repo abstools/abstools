@@ -662,20 +662,13 @@ aspect TypeChecker {
    		 e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
    		 return;
    	 }
-   	 Type t = null;
+   	 Type t = getType();
    	 for (CaseBranch b : getBranchs()) {
-   		 b.typeCheck(e,(DataTypeType) et);
-   		 if (t == null) {
-   			 t = b.getType();
-   		 } else {
-   			 Type t2 = b.getType();
-   			 if (!t.isAssignable(t2) && !t2.isAssignable(t)) {
-   				 e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
-   			 } else {
-   				 if (t.isAssignable(t2))
-   					 t = t2;
-   			 }
-   		 }
+   	     b.typeCheck(e,(DataTypeType) et);
+   	     Type t2 = b.getType();
+   	     if (!t2.isAssignable(t)) {
+  		e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+   	     }
    	 }
     } 
     

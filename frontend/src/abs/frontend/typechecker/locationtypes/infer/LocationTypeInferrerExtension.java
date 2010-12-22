@@ -245,7 +245,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkEq(Type t1, Type t2) {
+    public void checkEq(Type t1, Type t2, ASTNode<?> node) {
         checkEq(getLV(t1), getLV(t2), Constraint.SHOULD_HAVE);
     }
     

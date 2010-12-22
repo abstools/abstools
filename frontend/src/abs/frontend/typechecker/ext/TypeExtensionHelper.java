@@ -193,6 +193,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
     }
     
+    public void checkCaseExp(CaseExp e) {
+        Type t = e.getType();
+        for (CaseBranch b : e.getBranchs()) {
+            checkAssignable(null,b.getType(),t, b.getRight());
+        }
+    }
+    
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
         if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) { 
@@ -200,7 +207,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             for (int i = 0; i < decl.getNumConstructorArg(); i++) { 
                 Type rht = e.getParam(i).getType(); 
                 Type arg = decl.getConstructorArg(i).getType(); 
-                checkTypeParameter(map, rht, arg); 
+                checkTypeParameter(map, rht, arg, e.getParam(i)); 
             } 
         }      
     }
@@ -213,7 +220,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             for (int i = 0; i < decl.getNumParam(); i++) {
                 Type t = f.getParam(i).getType();
                 Type arg = decl.getParam(i).getType();
-                checkTypeParameter(map, t, arg);
+                checkTypeParameter(map, t, arg, f.getParam(i));
             }
         } else {
             checkAssignable(null, decl.getParams(), f.getParams(), f);
@@ -221,7 +228,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     
-    private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type rht, Type lht) {
+    private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type rht, Type lht, ASTNode<?> origin) {
         rht = resolveBoundedType(rht);
         if (rht.isBoundedType())
             return;
@@ -229,7 +236,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             TypeParameter typeParam = (TypeParameter) lht;
             if (map.containsKey(typeParam)) {
                 Type lt = map.get(typeParam);
-                checkEq(lt,rht);
+                checkEq(lt,rht,origin);
             } else {
                 map.put(typeParam, rht);
             }
@@ -238,11 +245,11 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             if (argdt.hasTypeArgs()) {
                 DataTypeType dt = (DataTypeType)rht;
                 for (int i = 0; i < dt.numTypeArgs(); i++) {
-                     checkTypeParameter(map,dt.getTypeArg(i),argdt.getTypeArg(i));
+                     checkTypeParameter(map,dt.getTypeArg(i),argdt.getTypeArg(i),origin);
                 }
             }
         } else if (lht.isReferenceType()) {
-            checkEq(lht,rht);
+            checkEq(lht,rht,origin);
         }
     }
 
@@ -255,9 +262,21 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         return t;
     }
 
-    public void checkEq(Type lt, Type t) {
-        for (TypeSystemExtension tse : obs) {
-            tse.checkEq(lt, t);
+    public void checkEq(Type lht, Type rht, ASTNode<?> origin) {
+        
+        if (lht.isDataType() && rht.isDataType()) {
+            DataTypeType dtl = (DataTypeType) lht;
+            DataTypeType dtr = (DataTypeType) rht;
+            if (dtl.hasTypeArgs() && dtr.hasTypeArgs() && dtl.getTypeArgs().size() == dtr.getTypeArgs().size()) {
+                for (int i = 0; i < dtl.getTypeArgs().size(); i++) {
+                    checkEq(dtr.getTypeArg(i), dtl.getTypeArg(i), origin);
+                }
+            }
+        }
+        if (lht.isReferenceType() && rht.isReferenceType()) {
+            for (TypeSystemExtension tse : obs) {
+                tse.checkEq(rht, lht, origin);
+            }
         }
     }
     

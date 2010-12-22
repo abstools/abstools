@@ -30,7 +30,7 @@ public interface TypeSystemExtension {
     
     void checkNewExp(NewExp e);
     
-    void checkEq(Type lt, Type t);
+    void checkEq(Type lt, Type t, ASTNode<?> origin);
 
     void setSemanticErrorList(SemanticErrorList errors);
 

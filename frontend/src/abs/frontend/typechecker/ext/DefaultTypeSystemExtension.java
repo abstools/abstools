@@ -37,9 +37,9 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
         errors = s;
     }
     
-    public void checkEq(Type lt, Type t) {
-        checkAssignable(null, lt, t, null);
-        checkAssignable(null, t, lt, null);
+    public void checkEq(Type lt, Type t, ASTNode<?> origin) {
+        checkAssignable(null, lt, t, origin);
+        checkAssignable(null, t, lt, origin);
     }
     
     @Override

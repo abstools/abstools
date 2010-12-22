@@ -13,10 +13,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import abs.common.FileUtils;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParamDecl;
@@ -30,16 +32,20 @@ public class InferMain extends Main {
         INTERFACES,
         CLASSES,
         LOCAL_VAR_DECLS,
-        FIELDS
+        FIELDS,
+        FUNCTIONS
     }
     
     EnumSet<Config> config = EnumSet.of(Config.INTERFACES, Config.CLASSES);
     
     public static void main(final String... args) {
-
+        InferMain m = new InferMain();
         try {
-            new InferMain().compile(args);
-        } catch (Exception e) {
+            m.compile(args);
+        } catch (WrongProgramArgumentException pe) {
+            System.err.println(pe.getMessage());
+            m.printUsageAndExit();
+        }  catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
             e.printStackTrace();
 
@@ -59,18 +65,16 @@ public class InferMain extends Main {
             if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
-                    System.err.println("Please provide a destination directory");
-                    System.exit(1);
+                    new WrongProgramArgumentException("Please provide a destination directory");
                 } else {
                     destDir = new File(args[i]);
                 }
-            } if (arg.equals("-locinferwritebackscope")) {
-                i++;
-                if (i == restArgs.size()) {
-                    System.err.println("Please provide a scope");
-                    System.exit(1);
+            } if (arg.startsWith("-locinferwritebackscope=")) {
+                String[] s = arg.split("=");
+                if (s.length < 2) {
+                    new WrongProgramArgumentException("Please provide a scope");
                 } else {
-                    readScopeArg(args[i]);
+                    readScopeArg(s[1]);
                 }
             } else {
                 remainingArgs.add(arg);
@@ -80,18 +84,20 @@ public class InferMain extends Main {
         return remainingArgs;
     }
 
-    private void readScopeArg(String scope) {
-        if (scope.equals("interfaces"))
-            config = EnumSet.of(Config.INTERFACES);
-        else if (scope.equals("classes"))
-            config = EnumSet.of(Config.INTERFACES, Config.CLASSES);
-        else if (scope.equals("fields"))
-            config = EnumSet.of(Config.INTERFACES, Config.CLASSES, Config.FIELDS);
-        else if (scope.equals("complete"))
-            config = EnumSet.allOf(Config.class);
-        else {
-            System.err.println("Unknown scope "+scope);
-            System.exit(1);
+    private void readScopeArg(String scope) throws WrongProgramArgumentException {
+        String[] scopes = scope.split(",");
+        config = EnumSet.noneOf(Config.class);
+        for (String s : scopes) {
+            if (s.equals("all")) {
+                config = EnumSet.allOf(Config.class);
+            } else {
+                try {
+                    Config c = Config.valueOf(s.toUpperCase());
+                    config.add(c);
+                } catch (IllegalArgumentException e) {
+                    throw new WrongProgramArgumentException("Unkown scope "+scope);
+                }
+            }
         }
     }
 
@@ -99,8 +105,10 @@ public class InferMain extends Main {
         super.printUsage();
         System.out.println("Location Type Inferrer:");
         System.out.println("  -d <dir>     generate files to <dir>");
-        System.out.println("  -locinferwritebackscope <scope>     only write back location type inference results");
-        System.out.println("                                      to <scope>. Where <scope> in { interfaces, classes, fields, complete }\n");
+        System.out.println("  -locinferwritebackscope=<scope>,<scope>,... "); 
+        System.out.println("		   only write back location type inference results");
+        System.out.println("               to given scopes. Where <scope> can be one of ");
+        System.out.println("               interfaces, classes, fields, functions, and all \n");
     }
 
     private void compile(String[] args) throws Exception {
@@ -193,6 +201,9 @@ public class InferMain extends Main {
         
             if (contextDecl.isInterface() && !config.contains(Config.INTERFACES))
                 return false;
+
+            if (contextDecl.isFunction() && !config.contains(Config.FUNCTIONS))
+                return false;
         }
         
         if (node instanceof VarDecl && !config.contains(Config.LOCAL_VAR_DECLS)) 
@@ -201,6 +212,7 @@ public class InferMain extends Main {
         if (node instanceof FieldDecl && !config.contains(Config.FIELDS)) 
             return false;
 
+        
         return true;
     }
 

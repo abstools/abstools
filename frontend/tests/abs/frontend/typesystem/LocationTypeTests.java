@@ -143,6 +143,12 @@ public class LocationTypeTests extends FrontendTest {
     }
 
     @Test
+    public void caseExp() {
+        assertLocationTypeError("interface K {} { Maybe<[Far] K> m = Nothing; [Near] K knear;" +
+        		"[Far] K k = case m { Nothing => knear; Just(x) => x;  };  }");
+    }
+    
+    @Test
     public void function() {
         assertLocationTypeErrorOnly("interface K {} def [Near] K f([Somewhere] K k) = k;");
     }

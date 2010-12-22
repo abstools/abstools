@@ -66,6 +66,14 @@ public class RecoverTest extends FrontendTest {
         assertContainsMethodWithName(m, "m");
     }
 
+    // FIXME: recovery fails: 
+    //@Test
+    public void caseExp() {
+        Model m = assertParseError("interface K {} { Maybe<[Somewhere] K> m = Nothing; " +
+        "[Far] K k = case m { Nothing => null; Just(x) => x; _ => null };  }");
+        assertContainsDeclWithName(m, "K");
+    }
+    
     private void assertContainsMethodWithName(Model m, String name) {
         boolean found = false;
         for (MethodImpl mi : ((ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(0)).getMethods()) {

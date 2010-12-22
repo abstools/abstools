@@ -161,7 +161,7 @@ public class Main {
         printUsageAndExit();
     }
 
-    private void printUsageAndExit() {
+    protected void printUsageAndExit() {
         printUsage();
         System.exit(1);
     }
