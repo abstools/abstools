@@ -21,6 +21,15 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new AtomicityChecker(m));
     }
     
+    public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
+        for (TypeSystemExtension tse : obs) {
+            if (tse.getClass().equals(clazz)) {
+                return tse;
+            }
+        }
+        return null;
+    }
+    
     public void setSemanticErrorList(SemanticErrorList s) {
         for (TypeSystemExtension tse : obs) {
             tse.setSemanticErrorList(s);
@@ -40,6 +49,14 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     public void unregister(TypeSystemExtension tse) {
         obs = new ArrayList<TypeSystemExtension>(obs); 
         obs.remove(tse);
+    }
+    
+    public void clearTypeSystemExtensions() {
+        obs = new ArrayList<TypeSystemExtension>(); 
+    }
+    
+    public java.util.List<TypeSystemExtension> getTypeSystemExtensionList() {
+        return new ArrayList<TypeSystemExtension>(obs);
     }
     
     public void checkMethodCall(Call call) {
@@ -269,6 +286,11 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         for (TypeSystemExtension tse : obs) {
             tse.checkWhileStmt(whileStmt);
         }
+    }
+
+    public void registerAll(java.util.List<TypeSystemExtension> curr) {
+        obs = new ArrayList<TypeSystemExtension>(obs);
+        obs.addAll(curr);
     }
 
 }

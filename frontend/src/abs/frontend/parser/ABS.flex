@@ -3,6 +3,7 @@ package abs.frontend.parser;
 
 import beaver.Symbol;
 import beaver.Scanner;
+import abs.frontend.parser.ABSSymbol;
 import abs.frontend.parser.ABSParser.Terminals;
 
 %%
@@ -13,19 +14,20 @@ import abs.frontend.parser.ABSParser.Terminals;
 %extends Scanner
 %unicode
 %function nextToken
-%type Symbol
+%type ABSSymbol
 %yylexthrow Scanner.Exception
 %line
 %column
+%char
 
 %{
   StringBuffer string = new StringBuffer();
 
-  private Symbol sym(short id) {
-    return new Symbol(id, yyline + 1, yycolumn + 1, yylength(), yytext());
+  private ABSSymbol sym(short id) {
+    return new ABSSymbol(id, yyline + 1, yycolumn + 1, yylength(), yychar, yytext());
   }
-  private Symbol sym(short id, String text) {
-    return new Symbol(id, yyline + 1, yycolumn + 1, text.length(), text);
+  private ABSSymbol sym(short id, String text) {
+    return new ABSSymbol(id, yyline + 1, yycolumn + 1, text.length(), yychar, text);
   }
 %}
 

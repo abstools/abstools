@@ -295,6 +295,7 @@ aspect TypeResolution {
     inh CompilationUnit Exp.getCompilationUnit();
     inh CompilationUnit Stmt.getCompilationUnit();
     inh CompilationUnit ModuleDecl.getCompilationUnit();
+    inh CompilationUnit ASTNode.getCompilationUnit();
 
     eq ModuleDecl.getDecl().getCompilationUnit() = getCompilationUnit();
     eq ModuleDecl.getBlock().getCompilationUnit() = getCompilationUnit();

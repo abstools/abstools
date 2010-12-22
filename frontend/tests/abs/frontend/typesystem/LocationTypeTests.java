@@ -2,8 +2,15 @@ package abs.frontend.typesystem;
 
 import static org.junit.Assert.*;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.junit.Test;
 
+import abs.common.FileUtils;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
@@ -212,6 +219,12 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk("interface I { Unit m([Far] I i); } class C implements I { I i1; I i2; Unit m([Far] I i) { i1 = new cog C(); i2 = new cog C(); i1!m(i2); } } { }");
     }
     
+    @Test
+    public void writeBackTest() throws IOException {
+        String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
+        System.out.println(s);
+    }
+    
     // negative tests:
 
     @Test
@@ -330,6 +343,20 @@ public class LocationTypeTests extends FrontendTest {
             assertEquals(expected, t);
         }
         return m;
+    }
+    
+    private String writeBackSolutions(String code) throws IOException {
+        File f = File.createTempFile("test", "abs");
+        FileWriter fw = new FileWriter(f);
+        fw.write(code);
+        fw.close();
+        Model m = assertParseFileOk(f.getAbsolutePath(), Config.WITH_STD_LIB);
+        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+        m.registerTypeSystemExtension(ltie);
+        SemanticErrorList e = m.typeCheck();
+        assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), false, !e.isEmpty());
+        ltie.writeInferenceResultsBack();
+        return FileUtils.fileToStringBuilder(f).toString();
     }
     
     private Model assertInferOk(String string, LocationType expected) {

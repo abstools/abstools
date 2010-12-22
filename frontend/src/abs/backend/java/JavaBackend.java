@@ -60,7 +60,7 @@ public class JavaBackend extends Main {
     @Override
     public List<String> parseArgs(String[] args) throws Exception {
         List<String> restArgs = super.parseArgs(args);
-        List<String> remaindingArgs = new ArrayList<String>();
+        List<String> remainingArgs = new ArrayList<String>();
 
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
@@ -75,11 +75,11 @@ public class JavaBackend extends Main {
             } else if (arg.equals("-sourceonly")) {
                 this.sourceOnly = true;
             } else {
-                remaindingArgs.add(arg);
+                remainingArgs.add(arg);
             }
         }
 
-        return remaindingArgs;
+        return remainingArgs;
     }
 
     protected void printUsage() {

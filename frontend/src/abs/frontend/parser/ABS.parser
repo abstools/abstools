@@ -128,7 +128,10 @@ Name module_name_decl =
 Name module_name = type_name ;
 
 Name simple_type_name =
-  TYPE_IDENTIFIER.id      {: return new Name(id); :}
+  TYPE_IDENTIFIER.id      {: Symbol curr_sym = _symbols[offset + 1]; // Trust me, there is no other way to get the original symbol (beaver replaces id by id.value and casts it to String). 
+    Name n = new Name(id); 
+    n.setAbsolutePosition(((ABSSymbol)curr_sym).getAbsolutePosition()); 
+    return n; :}
 ;
         
 Name simple_name =
@@ -156,7 +159,7 @@ Name qualified_name =
   ;
 
 Name qualified_type_name =
-    type_name.qn DOT TYPE_IDENTIFIER.n {: return new Name(qn.getName() + "." + n); :} 
+    type_name.qn DOT TYPE_IDENTIFIER.n {: Name nn = new Name(qn.getName() + "." + n); nn.setAbsolutePosition(qn.getAbsolutePosition()); return nn; :} 
   ;
   
 Export export =
@@ -320,12 +323,14 @@ Annotation annotation =
     ;
 
 InterfaceTypeUse ifname =
-    type_name.n {: return new InterfaceTypeUse(n.getName()) ; :}
+    type_name.n {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName()) ; res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
     ;
 
 DataTypeUse datatypeuse =
-	  annotation_list.l? type_name.n LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(n.getName(),l, p); :}
-	| annotation_list.l? type_name.n {: return new DataTypeUse(n.getName(),l); :}
+	  annotation_list.l? type_name.n LT datatypeuse_list.p GT {: DataTypeUse res = new ParametricDataTypeUse(n.getName(),l, p); 
+	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+	| annotation_list.l? type_name.n {: DataTypeUse res = new DataTypeUse(n.getName(),l);
+	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
     ;
 
 TypeParameterDecl datatypeparam =
@@ -333,8 +338,10 @@ TypeParameterDecl datatypeparam =
     ;
 
 Access type_exp =
-	  type_name.id LT datatypeuse_list.p GT {: return new ParametricDataTypeUse(id.getName(), new List(), p); :}
-	| type_name.id 		{: return new DataTypeUse(id.getName(), new List()); :}
+	  type_name.n LT datatypeuse_list.p GT {: Access res = new ParametricDataTypeUse(n.getName(), new List(), p); 
+	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+	| type_name.n 		{: Access res = new DataTypeUse(n.getName(), new List()); 
+	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
 	;	
 
 //fix class_var --> field

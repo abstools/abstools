@@ -40,7 +40,12 @@ public class LocationType {
     private static class ParameterizedFarType extends LocationType {
         private ParameterizedFarType(String s) {
             super("Far(" + s + ")");
-        }        
+        }
+        
+        @Override
+        public String toAnnoString() {
+            return "";
+        }
     }
     
     public boolean isParametricFar() {
@@ -114,5 +119,9 @@ public class LocationType {
         }
         
         throw new IllegalArgumentException("Cannot use location type "+to+" to adapt to");
+    }
+
+    public String toAnnoString() {
+        return "["+toString()+"] ";
     }
 }

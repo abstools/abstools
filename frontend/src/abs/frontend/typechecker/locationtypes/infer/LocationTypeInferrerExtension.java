@@ -1,19 +1,26 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import abs.common.FileUtils;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.FieldDecl;
@@ -26,6 +33,7 @@ import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
+import abs.frontend.typechecker.ext.TypeSystemExtension;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 
@@ -246,10 +254,13 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         results = new SatGenerator(constraints).generate(errors);
         if (errors.isEmpty()) {
             SemanticErrorList sel = new SemanticErrorList();
-            model.getTypeExt().unregister(this);
+            List<TypeSystemExtension> curr = model.getTypeExt().getTypeSystemExtensionList();
+            model.getTypeExt().clearTypeSystemExtensions();
             model.getTypeExt().register(new LocationTypeExtension(model, this));
             model.typeCheck(sel);
             errors.addAll(sel);
+            model.getTypeExt().clearTypeSystemExtensions();
+            model.getTypeExt().registerAll(curr);
         }
     }
     
@@ -290,5 +301,53 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         System.arraycopy(lt1, 0, result, 0, lt1.length);
         System.arraycopy(lt2, 0, result, lt1.length, lt2.length);
         return result;
+    }
+    
+    /*
+    public void writeInferenceResultsBack(File from, File to) throws IOException {
+        writeInferenceResultsBack(from, to, null);
+    }*/
+    
+    public void writeInferenceResultsBack() throws IOException {
+        Map<CompilationUnit, List<LocationTypeVariable>> m = new HashMap<CompilationUnit, List<LocationTypeVariable>>();
+        for (LocationTypeVariable ltv : results.keySet()) {
+            ASTNode<?> node = ltv.getNode();
+            if (node == null) continue;
+            CompilationUnit cu = node.getCompilationUnit();
+            if (cu.getName().equals("ABS.StdLib")) continue;
+            List<LocationTypeVariable> list = m.get(cu);
+            if (list == null) {
+                list = new ArrayList<LocationTypeVariable>();
+                m.put(cu, list);
+            }
+            list.add(ltv);
+        }
+        
+        for (Entry<CompilationUnit, List<LocationTypeVariable>> e : m.entrySet()) {
+            CompilationUnit cu = e.getKey();
+            List<LocationTypeVariable> l = e.getValue();
+            Collections.sort(l, new Comparator<LocationTypeVariable>() {
+                
+                @Override
+                public int compare(LocationTypeVariable o1, LocationTypeVariable o2) {
+                    int pos1 = o1.getTypeNode().getAbsolutePosition();
+                    int pos2 = o2.getTypeNode().getAbsolutePosition();
+                    if (pos1 == -1 || pos2 == -1) {
+                        throw new RuntimeException("Absolute position not defined");
+                    }
+                    return Integer.valueOf(pos1).compareTo(pos2);
+                }
+            });
+            File file = new File(cu.getFileName());
+            StringBuilder sb = FileUtils.fileToStringBuilder(file);
+            int offset = 0;
+            for (LocationTypeVariable ltv : l) {
+                int pos = offset + ltv.getTypeNode().getAbsolutePosition();
+                String s = results.get(ltv).toAnnoString();
+                sb.insert(pos, s);
+                offset += s.length();
+            }
+            FileUtils.writeStringBuilderToFile(sb, file);
+        }
     }
 }
