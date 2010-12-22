@@ -187,7 +187,7 @@ aspect Typing {
 
 	 DataConstructor d = getDataConstructor();
    	 DataTypeDecl dataDecl = d.getDataTypeDecl();
-   	 Type declaredResultType = d.getType();
+   	 Type declaredResultType = dataDecl.getType();
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
    	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
    	         return UnknownType.INSTANCE;

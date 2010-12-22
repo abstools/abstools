@@ -195,7 +195,14 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
-        checkTypeParameter(new HashMap<TypeParameter, Type>(),e.getType(),decl.getType());
+        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) { 
+            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>(); 
+            for (int i = 0; i < decl.getNumConstructorArg(); i++) { 
+                Type rht = e.getParam(i).getType(); 
+                Type arg = decl.getConstructorArg(i).getType(); 
+                checkTypeParameter(map, rht, arg); 
+            } 
+        }      
     }
 
 

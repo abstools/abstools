@@ -48,7 +48,10 @@ aspect TypeCheckerExtension {
     
     refine Typing eq DataConstructor.getType() {
         Type t = Typing.DataConstructor.getType();        
-        getModel().getTypeExt().annotateType(t, this, this);
+        for (DataTypeUse du : getConstructorArgs()) {
+            getModel().getTypeExt().annotateType(du.getType(),du,du);
+        }
+//        getModel().getTypeExt().annotateType(t, this, this);
         return t;
     }
     
@@ -235,6 +238,13 @@ aspect TypeCheckerExtension {
         }
     }
     
+    refine TypeChecker public void DataConstructor.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.DataConstructor.typeCheck(s);
+        if (s.size() > size) return;
+        // to guarantee type annotation:
+        getType();
+    }
     
     
     refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
