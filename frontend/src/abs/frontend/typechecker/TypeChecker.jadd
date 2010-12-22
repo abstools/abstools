@@ -404,12 +404,15 @@ aspect TypeChecker {
     }
 
     public void VarDecl.typeCheck(SemanticErrorList e) { 
+         int nerrors = e.size();            
    	 getAccess().typeCheck(e);
+         if (e.size() > nerrors) return;
 
    	 Type t = getAccess().getType();
    	 if (hasInitExp()) {
-   		 TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
-   		 getInitExp().typeCheck(e);
+   		getInitExp().typeCheck(e);
+    	        if (e.size() > nerrors) return;
+                TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
    	 } else {
    		 if (!t.isReferenceType() && !t.isFutureType()) {
  			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
@@ -417,14 +420,17 @@ aspect TypeChecker {
    	 }
     }
 
-    public void FieldDecl.typeCheck(SemanticErrorList e) { 
+    public void FieldDecl.typeCheck(SemanticErrorList e) {
+        int nerrors = e.size();            
         getAccess().typeCheck(e);
+        if (e.size() > nerrors) return;
 
         Type t = getAccess().getType();
         if (hasInitExp()) {
-                TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
-                getInitExp().typeCheck(e);
-                getInitExp().checkLegalInit(e);
+            getInitExp().typeCheck(e);
+            getInitExp().checkLegalInit(e);
+            if (e.size() > nerrors) return;
+            TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
                 if (!t.isReferenceType() && !t.isFutureType()) {
                     e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
@@ -456,15 +462,12 @@ aspect TypeChecker {
    	 Type lht = getVar().getType();
    	 	
      int nerrors = e.size();   	 	
-	 getValue().typeCheck(e);
-	 getVar().typeCheck(e);
+     getValue().typeCheck(e);
+     getVar().typeCheck(e);
 
      if (e.size() > nerrors)
      	return;
-
-	 if (!rht.isAssignable(lht)) {
-		 e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
-	 }
+     TypeCheckerHelper.checkAssignment(e,this,lht,getValue());
     }
     
     public void ReturnStmt.typeCheck(SemanticErrorList e) {

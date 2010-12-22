@@ -42,10 +42,10 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type t, Exp e) {
-        Type te = e.getType();
-        if (!te.isAssignable(t)) {
-            l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, t));
+    public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type lht, Exp rhte) {
+        Type te = rhte.getType();
+        if (!te.isAssignable(lht)) {
+            l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
 
     }
