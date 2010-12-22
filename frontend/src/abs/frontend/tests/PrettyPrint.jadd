@@ -33,12 +33,23 @@ aspect PrettyPrint {
     public void TypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
     }
+
+    public void VarUse.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+    }
     
     public void ParametricDataTypeUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
         w.print('<');
         getParamList().prettyPrint(w,f);
         w.print('>');
+    }
+
+    public void DataConstructorExp.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getConstructor());
+        w.print('(');
+        getParams().prettyPrint(w,f);
+        w.print(')');
     }
     
     public void MethodSig.prettyPrint(PrintWriter w, ABSFormatter f) {

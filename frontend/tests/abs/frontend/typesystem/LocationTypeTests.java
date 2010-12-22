@@ -52,63 +52,63 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void syncCall() {
-        assertTypeOk("{ [Near] I i; i = i.m(); }");
+        assertLocationTypeOk("{ [Near] I i; i = i.m(); }");
     }
 
     @Test
     public void asyncCall() {
-        assertTypeOk("{ [Far] I i; Fut<[Far] I> f; f = i!m(); }");
+        assertLocationTypeOk("{ [Far] I i; Fut<[Far] I> f; f = i!m(); }");
     }
     
     @Test
     public void syncCallOnThis() {
-        assertTypeOk("class D { Unit m() { this.m(); } }");
+        assertLocationTypeOk("class D { Unit m() { this.m(); } }");
     }
     
     @Test
     public void nullLit() {
-        assertTypeOk("{ [Near] I i; i = null; [Far] I j; j = null; }");
+        assertLocationTypeOk("{ [Near] I i; i = null; [Far] I j; j = null; }");
     }
     
     @Test
     public void syncCallParam() {
-        assertTypeOk("{ [Near] I i; [Far] I j; j = i.n(i); }");
+        assertLocationTypeOk("{ [Near] I i; [Far] I j; j = i.n(i); }");
     }
 
     @Test
     public void newCog() {
-        assertTypeOk("{ [Far] I i; i = new cog C(i); }");
+        assertLocationTypeOk("{ [Far] I i; i = new cog C(i); }");
     }
 
     @Test
     public void newObject() {
-        assertTypeOk("{ [Near] J i; i = new E(); }");
-        assertTypeOk("{ [Somewhere] J i; i = new E(); }");
+        assertLocationTypeOk("{ [Near] J i; i = new E(); }");
+        assertLocationTypeOk("{ [Somewhere] J i; i = new E(); }");
     }
 
     @Test
     public void typeMaybe() {
-        assertTypeOk("{ [Near] I i; Maybe<[Near] I> m = Just(i); }");
+        assertLocationTypeOk("{ [Near] I i; Maybe<[Near] I> m = Just(i); }");
     }
     
     @Test
     public void syncCallOnMaybeThis() {
         String s = "def X id<X>(X x) = x; interface K { Unit m(Maybe<[Near] K> p); } " +
           "class D implements K { [Near] K getThis() { return this; } Unit m(Maybe<[Near] K> p)";
-        assertTypeOk(s+ "{ this.m(Just(this)); } }");
-        assertTypeOk(s+ "{ [Near] K k; k = this; this.m(Just(k)); } }");
-        assertTypeOk(s+ "{ [Near] K k; this.m(case Just(k) { Just(x) => Just(x); }); } }");
-        assertTypeOk(s+ "{ [Near] K k; this.m(Just(id(k))); } }");
+        assertLocationTypeOk(s+ "{ this.m(Just(this)); } }");
+        assertLocationTypeOk(s+ "{ [Near] K k; k = this; this.m(Just(k)); } }");
+        assertLocationTypeOk(s+ "{ [Near] K k; this.m(case Just(k) { Just(x) => Just(x); }); } }");
+        assertLocationTypeOk(s+ "{ [Near] K k; this.m(Just(id(k))); } }");
     }
 
     @Test
     public void typeParamInference() {
-        assertTypeOk("{ [Near] I i; Maybe<Maybe<Bool>> m = Nothing; }");
+        assertLocationTypeOk("{ [Near] I i; Maybe<Maybe<Bool>> m = Nothing; }");
     }
     
     @Test
     public void defaultTyping() {
-        assertTypeOk("{ I i; [Far] I f; i = new C(f); }");
+        assertLocationTypeOk("{ I i; [Far] I f; i = new C(f); }");
     }
     
     @Test
@@ -118,7 +118,7 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void futureTyping() {
-        assertTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new C(f); fut = i!m(); }");
+        assertLocationTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new C(f); fut = i!m(); }");
     }
     
     
@@ -130,6 +130,31 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void asyncCallInfer() {
         assertInferOk("interface I { [Near] I m(); } { I j; [Far] I i; Fut<I> f; f = i!m(); j = f.get; }", LocationType.FAR);
+    }
+    
+    @Test
+    public void testSpecialListConstruct() {
+        assertLocationTypeErrorOnly("interface K {} { List<[Near] K> res = Nil; [Far] K j; res = Cons(j,Nil); }");
+    }
+
+    @Test
+    public void patternMatch() {
+        assertLocationTypeErrorOnly("interface K {} { Maybe<[Near] K> m = Nothing; [Far] K k = case m { Nothing => null; Just(x) => x; };  }");
+    }
+
+    @Test
+    public void function() {
+        assertLocationTypeErrorOnly("interface K {} def [Near] K f([Somewhere] K k) = k;");
+    }
+
+    @Test
+    public void fnapp() {
+        assertLocationTypeErrorOnly("interface K {} def Unit f([Near] K k) = Unit; { [Far] K k; Unit u = f(k);}");
+    }
+
+    @Test
+    public void dataExp() {
+        assertLocationTypeErrorOnly("interface K {} data Foo = Bar([Far] K); { [Near] K k; Foo f = Bar(k);}");
     }
     
     /*
@@ -191,7 +216,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void callNullParam2() {
-        assertTypeOk("interface I2 { Unit m([Near] I2 i); } { [Somewhere] I2 i; i!m(null); }");
+        assertLocationTypeOk("interface I2 { Unit m([Near] I2 i); } { [Somewhere] I2 i; i!m(null); }");
     }
 
     @Test
@@ -237,37 +262,37 @@ public class LocationTypeTests extends FrontendTest {
    
     @Test
     public void typeMaybeError() {
-        assertTypeErrorOnly("interface I { } { [Far] I i; Maybe<[Near] I> m = Just(i); }");
+        assertLocationTypeErrorOnly("interface I { } { [Far] I i; Maybe<[Near] I> m = Just(i); }");
     }
 
     @Test
     public void typeListError() {
-        assertTypeErrorOnly("interface I {} { List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
+        assertLocationTypeErrorOnly("interface I {} { List<[Far] I> list = Nil; [Near] I i; list = Cons(i,list); }");
     }
     
     @Test
     public void callWrongParam() {
-        assertTypeErrorOnly("interface I { Unit m([Near] I i); } { [Far] I i; i!m(i); }");
+        assertLocationTypeErrorOnly("interface I { Unit m([Near] I i); } { [Far] I i; i!m(i); }");
     }
     
     @Test
     public void assignWrong() {
-        assertTypeError("{ [Far] I i; [Near] I j; i = j; }");
+        assertLocationTypeError("{ [Far] I i; [Near] I j; i = j; }");
     }
 
     @Test
     public void illegalSyncCall() {
-        assertTypeError("{ [Far] I i; i.m(); }");
+        assertLocationTypeError("{ [Far] I i; i.m(); }");
     }
 
     @Test
     public void illegalAsyncCall() {
-        assertTypeError("{ [Far] I i; i!farM(i); }");
+        assertLocationTypeError("{ [Far] I i; i!farM(i); }");
     }
     
     @Test
     public void syncCallWrongParam() {
-        assertTypeError("{ [Near] I i; [Far] I j; j = i.n(j); }");
+        assertLocationTypeError("{ [Near] I i; [Far] I j; j = i.n(j); }");
     }
     
     @Test
@@ -302,20 +327,20 @@ public class LocationTypeTests extends FrontendTest {
         m.typeCheck(new SemanticErrorList());
     }
     
-    private void assertTypeError(String code) {
-        assertTypeErrorOnly(INT+code);
+    private void assertLocationTypeError(String code) {
+        assertLocationTypeErrorOnly(INT+code);
     }
     
-    private void assertTypeErrorOnly(String code) {
+    private void assertLocationTypeErrorOnly(String code) {
         Model m = assertParse(code,WITH_STD_LIB);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
-        assertFalse(e.isEmpty());
+        assertFalse("No type error occurred", e.isEmpty());
         assertInferFails(code);
     }
     
-    private void assertTypeOk(String code) {
+    private void assertLocationTypeOk(String code) {
         assertTypeOkOnly(INT+code);
     }
 

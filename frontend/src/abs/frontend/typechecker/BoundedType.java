@@ -16,6 +16,23 @@ public class BoundedType extends Type {
     }
 
     @Override
+    public Object getMetaData(Object key) {
+        if (hasBoundType()) {
+            return boundType.getMetaData(key);
+        }
+        return super.getMetaData(key);
+    }
+    
+    @Override
+    public void addMetaData(Object key, Object value) {
+        if (hasBoundType()) {
+            boundType.addMetaData(key,value);
+        } else  {
+            super.addMetaData(key, value);
+        }
+    }
+    
+    @Override
     public boolean isAssignable(Type t) {
         if (hasBoundType())
             return boundType.isAssignable(t);
@@ -76,6 +93,15 @@ public class BoundedType extends Type {
         BoundedType copy = new BoundedType();
         copy.boundType = boundType;
         return boundType;
+    }
+    
+    public Type fullCopy() {
+        if (hasBoundType()) {
+            BoundedType copy = (BoundedType) copy();
+            copy.boundType.metaData.putAll(boundType.metaData);
+            return copy;
+        } else
+            return super.fullCopy();
     }
 
 }

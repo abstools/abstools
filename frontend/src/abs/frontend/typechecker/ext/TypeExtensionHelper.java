@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.*;
+import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
@@ -128,6 +129,10 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     
     public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {
         java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);
+        checkAssignable(callee, paramsTypes, args, n);
+    }
+
+    private void checkAssignable(Type callee, java.util.List<Type> paramsTypes, List<PureExp> args, ASTNode<?> n) {
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
             PureExp exp = args.getChild(i);
@@ -140,6 +145,12 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
     
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
+        if (rht.isBoundedType()) {
+            BoundedType brht = (BoundedType)rht;
+            if (brht.hasBoundType())
+                rht = brht.getBoundType();
+        }
+
         if (lht.isDataType() && rht.isDataType()) {
             DataTypeType dtl = (DataTypeType) lht;
             DataTypeType dtr = (DataTypeType) rht;
@@ -191,20 +202,35 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
             HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
             for (int i = 0; i < decl.getNumConstructorArg(); i++) {
-                Type t = e.getParam(i).getType();
+                Type rht = e.getParam(i).getType();
                 Type arg = decl.getConstructorArg(i).getType();
-                checkTypeParameter(map, t, arg);
+                checkTypeParameter(map, rht, arg);
+                checkAssignable(null, rht, arg, e);
             }
-        }         
+        } 
     }
 
 
+    public void checkFnApp(FnApp f) {
+        FunctionDecl decl = (FunctionDecl) f.getDecl();
+        if (decl instanceof ParametricFunctionDecl) {
+            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
+            for (int i = 0; i < decl.getNumParam(); i++) {
+                Type t = f.getParam(i).getType();
+                Type arg = decl.getParam(i).getType();
+                checkTypeParameter(map, t, arg);
+            }
+        } else {
+            checkAssignable(null, decl.getParams(), f.getParams(), f);
+        }
+    }
+
+    
     private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type t, Type arg) {
         if (arg.isTypeParameter() && t.isReferenceType()) {
             TypeParameter typeParam = (TypeParameter) arg;
             if (map.containsKey(typeParam)) {
                 Type lt = map.get(typeParam);
-                // TODO : make this checkEq
                 checkEq(lt,t);
             } else {
                 map.put(typeParam, t);

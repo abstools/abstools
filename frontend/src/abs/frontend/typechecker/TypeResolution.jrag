@@ -238,8 +238,12 @@ aspect TypeResolution {
     eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
     eq ClassDecl.getField().getContextDecl() = getContextDecl();
     eq InterfaceDecl.getBody().getContextDecl() = getContextDecl();
+    eq TypeSynDecl.getValue().getContextDecl() = getContextDecl();
+    eq FunctionDecl.getFunctionDef().getContextDecl() = getContextDecl();
+    eq FunctionDecl.getTypeUse().getContextDecl() = getContextDecl();
     eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
     eq ClassDecl.getParam().getContextDecl() = null;
+    inh Decl ASTNode.getContextDecl();
 
     inh Decl Stmt.getContextDecl();
     inh Decl Exp.getContextDecl();
@@ -253,16 +257,21 @@ aspect TypeResolution {
     inh MethodImpl Stmt.getContextMethod();
     inh MethodImpl Exp.getContextMethod();
 
+    syn lazy Block ModuleDecl.getContextBlock() = null;
+    eq FunctionDecl.getFunctionDef().getContextBlock() = null;
     eq MethodImpl.getBlock().getContextBlock() = getBlock();
     eq ClassDecl.getInitBlock().getContextBlock() = getInitBlock();
     eq ModuleDecl.getBlock().getContextBlock() = getBlock();
     inh Block Stmt.getContextBlock();
     inh Block Exp.getContextBlock();
     inh Block FieldDecl.getContextBlock();
+    inh Block ASTNode.getContextBlock();
     eq ClassDecl.getField().getContextBlock() = null;
     eq ClassDecl.getMethod().getContextBlock() = null;
     eq InterfaceDecl.getBody().getContextBlock() = null;
     eq ClassDecl.getParam().getContextBlock() = null;
+    eq TypeSynDecl.getValue().getContextBlock() = null;
+    
     
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
    	 for (MethodImpl m : getMethods()) {

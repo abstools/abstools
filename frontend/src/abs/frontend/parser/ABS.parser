@@ -130,7 +130,9 @@ Name module_name = type_name ;
 Name simple_type_name =
   TYPE_IDENTIFIER.id      {: Symbol curr_sym = _symbols[offset + 1]; // Trust me, there is no other way to get the original symbol (beaver replaces id by id.value and casts it to String). 
     Name n = new Name(id); 
-    n.setAbsolutePosition(((ABSSymbol)curr_sym).getAbsolutePosition()); 
+    if (curr_sym instanceof ABSSymbol) {
+        n.setAbsolutePosition(((ABSSymbol)curr_sym).getAbsolutePosition());
+    } 
     return n; :}
 ;
         

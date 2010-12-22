@@ -44,10 +44,10 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         CLASS_LOCAL_FAR
     }
     
-    LocationTypingPrecision LOCATION_TYPING_PRECISION = LocationTypingPrecision.CLASS_LOCAL_FAR;
+    private LocationTypingPrecision precision = LocationTypingPrecision.CLASS_LOCAL_FAR;
     
     public void setLocationTypingPrecision(LocationTypingPrecision p) {
-        LOCATION_TYPING_PRECISION = p;
+        precision = p;
     }
     
     
@@ -139,7 +139,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         LocationTypeVariable tv;
         if (lt.isInfer()) {
             java.util.List<LocationType> cls = Collections.emptyList();
-            if (LOCATION_TYPING_PRECISION == LocationTypingPrecision.CLASS_LOCAL_FAR && 
+            if (precision == LocationTypingPrecision.CLASS_LOCAL_FAR && 
                     originatingNode instanceof FieldDecl) {
                 FieldDecl fd = (FieldDecl)originatingNode;
                 ClassDecl cd = (ClassDecl)fd.getContextDecl();
@@ -156,8 +156,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     private java.util.List<LocationType> getClassLocalFarTypes(ClassDecl cd) {
         if (cd == null || 
-                LOCATION_TYPING_PRECISION == LocationTypingPrecision.BASIC || 
-                LOCATION_TYPING_PRECISION == LocationTypingPrecision.METHOD_LOCAL_FAR) 
+                precision == LocationTypingPrecision.BASIC || 
+                precision == LocationTypingPrecision.METHOD_LOCAL_FAR) 
             return Collections.emptyList();
         java.util.List<LocationType> cls;
         cls = classLocalFarTypes.get(cd);
@@ -266,7 +266,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     private java.util.List<LocationType> getMethodLocalFarTypes(ASTNode<?> n) {
         java.util.List<LocationType> result = new ArrayList<LocationType>();
-        if (LOCATION_TYPING_PRECISION == LocationTypingPrecision.BASIC)
+        if (precision == LocationTypingPrecision.BASIC)
             return result;
         Block b = null;
         if (n instanceof Stmt) {

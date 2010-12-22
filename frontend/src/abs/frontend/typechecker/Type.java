@@ -12,7 +12,7 @@ import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
 
 public abstract class Type {
-    private static final Object ANNOTATION_KEY = new Object();
+    private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
     
     protected Map<Object,Object> metaData = new HashMap<Object,Object>();
     {
@@ -23,12 +23,12 @@ public abstract class Type {
         Type copy = this.fullCopy();
         List<TypeAnnotation> newAnnos = new ArrayList<TypeAnnotation>();
         @SuppressWarnings("unchecked")
-        List<TypeAnnotation> annos = (List<TypeAnnotation>) copy.metaData.get(ANNOTATION_KEY);
+        List<TypeAnnotation> annos = (List<TypeAnnotation>) copy.getMetaData(ANNOTATION_KEY);
         if (annos != null) {
             newAnnos.addAll(annos);
         }
         newAnnos.addAll(convertToTypeAnnotations(anns));
-        copy.metaData.put(ANNOTATION_KEY, newAnnos);
+        copy.addMetaData(ANNOTATION_KEY, newAnnos);
         return copy;
     }
     
@@ -220,7 +220,7 @@ public abstract class Type {
 
     @SuppressWarnings("unchecked")
     public List<TypeAnnotation> getTypeAnnotations() {
-        return Collections.unmodifiableList((List<TypeAnnotation>) this.metaData.get(ANNOTATION_KEY));
+        return Collections.unmodifiableList((List<TypeAnnotation>) getMetaData(ANNOTATION_KEY));
     }
     
     public Collection<MethodSig> getAllMethodSigs() {

@@ -39,6 +39,12 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().annotateType(t, this, this);
         return t;
     }
+
+    refine Typing eq DataTypeUse.getType() {
+        Type t = Typing.DataTypeUse.getType().fullCopy();        
+        getModel().getTypeExt().annotateType(t, this, this);
+        return t;
+    }
     
     refine Typing eq NullExp.getType() {
         Type t = Typing.NullExp.getType();
@@ -163,6 +169,14 @@ aspect TypeCheckerExtension {
            getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig().getParams(),getParams(), this);
         }
     }
+    
+    refine TypeChecker public void FnApp.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.FnApp.typeCheck(s);
+        if (s.size() > size) return;
+        getModel().getTypeExt().checkFnApp(this);
+    }
+    
 
     refine TypeChecker public void GetExp.typeCheck(SemanticErrorList s) {
         int size = s.size();
@@ -191,6 +205,21 @@ aspect TypeCheckerExtension {
         }
 
     }
+    
+    refine TypeChecker public void FunctionDecl.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.FunctionDecl.typeCheck(s);
+        if (s.size() > size) return;
+        
+        if (getFunctionDef() instanceof ExpFunctionDef) {
+            // built-in functions are assumed type-correct.
+            ExpFunctionDef def = (ExpFunctionDef)getFunctionDef();
+            def.getRhs().typeCheck(s);
+            getModel().getTypeExt().checkAssignable(def.getRhs().getType(), getType(), this);
+        }
+    }
+    
+    
     
     refine TypeChecker public void VarDecl.typeCheck(SemanticErrorList s) {
         int size = s.size();
