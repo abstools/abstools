@@ -19,6 +19,7 @@ import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
+import abs.frontend.typechecker.locationtypes.infer.InferMain;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
 
@@ -222,7 +223,8 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void writeBackTest() throws IOException {
         String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
-        System.out.println(s);
+        //System.out.println(s);
+        // TODO: Do something later (2010+)
     }
     
     // negative tests:
@@ -355,7 +357,7 @@ public class LocationTypeTests extends FrontendTest {
         m.registerTypeSystemExtension(ltie);
         SemanticErrorList e = m.typeCheck();
         assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), false, !e.isEmpty());
-        ltie.writeInferenceResultsBack();
+        new InferMain().writeInferenceResultsBack(ltie.getResults());
         return FileUtils.fileToStringBuilder(f).toString();
     }
     
