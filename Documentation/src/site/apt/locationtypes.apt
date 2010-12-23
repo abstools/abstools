@@ -23,7 +23,7 @@ Location Types
 
 +---
 [TypeAnnotation]
-data TypeLocation = Near | Far | Somewhere;
+data TypeLocation = Near | Far | Somewhere | Infer;
 +---
 
   Types can be annotated with these annotations to specify where the
@@ -31,13 +31,21 @@ data TypeLocation = Near | Far | Somewhere;
   <<<Near>>> means that the object lives in the same COG as the current
   receiver object, <<<Far>>> means that it lives in a different COG, and
   <<<Somewhere>>> means that it can live in any COG, but we do not know
-  exactly in which one.
+  exactly in which one. It is also possible to automatically infer the
+  location type by using the <<<Infer>>> annotation.
   The following example shows how these annotations can be used:
 
 +---
-[Near] I n;
-[Far] I f;
-[Somewhere] I s;
+module LocationTypes.Example;
+interface I {}
+class C implements I{};
+
+{
+  [Near] I n = new C();
+  [Far] I f = new cog C();
+  [Somewhere] I s = f;
+  [Infer] I i = n; // will infer Near
+}
 +---
 
   The location type system now statically guarantees that
