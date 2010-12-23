@@ -20,5 +20,10 @@ public class TypeAnnotation {
     public PureExp getValue() {
         return value;
     }
+    
+    public String toString() {
+        String type = getType() == null ? "" : getType().toString()+":";
+        return "["+ type + getValue().toString()+"]";
+    }
 
 }

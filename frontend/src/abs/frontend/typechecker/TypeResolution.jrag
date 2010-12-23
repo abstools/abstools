@@ -231,48 +231,33 @@ aspect TypeResolution {
     eq SyncCall.isAsync() = false;
     eq Call.isAsync() = false;
     
-    syn lazy Decl Decl.getContextDecl() = this;
-    eq MethodImpl.getBlock().getContextDecl() = getContextDecl();
-    eq ModuleDecl.getBlock().getContextDecl() = getModel().unknownDecl();
-    eq ClassDecl.getInitBlock().getContextDecl() = getContextDecl();
-    eq ClassDecl.getMethod().getContextDecl() = getContextDecl();
-    eq ClassDecl.getField().getContextDecl() = getContextDecl();
-    eq InterfaceDecl.getBody().getContextDecl() = getContextDecl();
-    eq TypeSynDecl.getValue().getContextDecl() = getContextDecl();
-    eq FunctionDecl.getFunctionDef().getContextDecl() = getContextDecl();
-    eq FunctionDecl.getTypeUse().getContextDecl() = getContextDecl();
-    eq DeltaDecl.getModifier().getContextDecl() = getContextDecl();
-    eq ClassDecl.getParam().getContextDecl() = null;
-    inh Decl ASTNode.getContextDecl();
+    syn lazy Decl ASTNode.getContextDecl() = (Decl) calcContextNode(Decl.class);
+    syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
+    syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);
+    syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
+    
 
-    inh Decl Stmt.getContextDecl();
-    inh Decl Exp.getContextDecl();
-    inh Decl MethodImpl.getContextDecl();
-    inh Decl TypedVarOrFieldDecl.getContextDecl();
-    inh Decl MethodSig.getContextDecl();
-    
-    eq MethodImpl.getBlock().getContextMethod() = this;
-    eq ClassDecl.getInitBlock().getContextMethod() = null;
-    eq ModuleDecl.getBlock().getContextMethod() = null;
-    inh MethodImpl Stmt.getContextMethod();
-    inh MethodImpl Exp.getContextMethod();
+    public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
+        ASTNode<?> n = this;
+        while (n != null) {
+            ASTNode<?> parent = n.getParent();
+            
+            if (clazz.isAssignableFrom(n.getClass())) {
+                if (parent == null)
+                    return n;
+                                        
+                ASTNode<?> pn = parent.calcContextNode(clazz);
+                if (pn != null)
+                    return pn;
+                else
+                    return n;
+            }
+            n = parent;
+        }
+        return null;
+    }
 
-    syn lazy Block ModuleDecl.getContextBlock() = null;
-    eq FunctionDecl.getFunctionDef().getContextBlock() = null;
-    eq MethodImpl.getBlock().getContextBlock() = getBlock();
-    eq ClassDecl.getInitBlock().getContextBlock() = getInitBlock();
-    eq ModuleDecl.getBlock().getContextBlock() = getBlock();
-    inh Block Stmt.getContextBlock();
-    inh Block Exp.getContextBlock();
-    inh Block FieldDecl.getContextBlock();
-    inh Block ASTNode.getContextBlock();
-    eq ClassDecl.getField().getContextBlock() = null;
-    eq ClassDecl.getMethod().getContextBlock() = null;
-    eq InterfaceDecl.getBody().getContextBlock() = null;
-    eq ClassDecl.getParam().getContextBlock() = null;
-    eq TypeSynDecl.getValue().getContextBlock() = null;
-    
-    
+
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
    	 for (MethodImpl m : getMethods()) {
    		 if (m.getMethodSig().getName().equals(name))
@@ -299,16 +284,6 @@ aspect TypeResolution {
  
  
     syn lazy String CompilationUnit.getFileName() = getName();
-    
-    syn lazy CompilationUnit CompilationUnit.getCompilationUnit() = this;
-    inh CompilationUnit Exp.getCompilationUnit();
-    inh CompilationUnit Stmt.getCompilationUnit();
-    inh CompilationUnit ModuleDecl.getCompilationUnit();
-    inh CompilationUnit ASTNode.getCompilationUnit();
-
-    eq ModuleDecl.getDecl().getCompilationUnit() = getCompilationUnit();
-    eq ModuleDecl.getBlock().getCompilationUnit() = getCompilationUnit();
-    eq CompilationUnit.getModuleDecl().getCompilationUnit() = this;
 }
 
 // Local Variables:

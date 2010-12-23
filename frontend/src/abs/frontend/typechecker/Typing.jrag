@@ -60,7 +60,7 @@ aspect Typing {
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
     
     syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
-    eq TypedVarOrFieldDecl.getType() = getAccess().getType().withAnnotations(getAnnotations());
+    eq TypedVarOrFieldDecl.getType() = getAccess().getType();
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
    	 return v.getType();
@@ -91,7 +91,7 @@ aspect Typing {
    }
     
     syn lazy Type MethodSig.getType() {
-        return getReturnType().getType().withAnnotations(getAnnotations());
+        return getReturnType().getType();
     }
     
     syn lazy Type Call.getCallType() {
@@ -130,6 +130,17 @@ aspect Typing {
         return d.getType();
     }
 
+    protected List<Annotation> DataTypeUse.calcAnnotations() {
+        if (getParent() instanceof MethodSig) {
+            return ((MethodSig)getParent()).getAnnotations();
+        } else if (getParent() instanceof TypedVarOrFieldDecl) {
+            return ((TypedVarOrFieldDecl)getParent()).getAnnotations();
+        }
+        return getAnnotations();            
+    }
+
+    syn lazy List<Annotation> DataTypeUse.findAnnotations() = calcAnnotations();
+
 	syn lazy Type VarOrFieldUse.getType();    
     eq FieldUse.getType() { 
         VarOrFieldDecl d = getDecl();
@@ -142,7 +153,7 @@ aspect Typing {
         return d.getType();
     }
     eq TypeUse.getType() = getDecl().getType();
-    eq DataTypeUse.getType() = getDecl().getType().withAnnotations(getAnnotations());
+    eq DataTypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
     eq ParametricDataTypeUse.getType() {
         Decl d = getDecl();
         if (d == null || !(d instanceof ParametricDataTypeDecl))

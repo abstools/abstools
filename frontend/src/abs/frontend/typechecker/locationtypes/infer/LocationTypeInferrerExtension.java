@@ -109,49 +109,48 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }*/
     
     private ClassDecl getClassDecl(ASTNode<?> n) {
-        Decl d = null;
-        if (n instanceof Stmt) {
-            d = ((Stmt)n).getContextDecl();
-        } else
-        if (n instanceof Exp) {
-            d = ((Exp)n).getContextDecl();
-        } else
-        if (n instanceof VarDecl) {
-            d = ((VarDecl)n).getAccess().getContextDecl();
-        } else
-        if (n instanceof MethodImpl) {
-            d = ((MethodImpl)n).getBlock().getContextDecl();
-        } else
-        if (n instanceof FieldDecl) {
-            d = ((FieldDecl)n).getAccess().getContextDecl();
-        }
-        if (d instanceof ClassDecl) {
-            return (ClassDecl)d;
-        }
+        Decl d =  n.getContextDecl();
+        if (d instanceof ClassDecl)
+            return (ClassDecl) d;
         return null;
     }
 
     private LocationTypeVariable addNewVar(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
+        LocationTypeExtension.getLocationTypeFromAnnotations(t); // check consistency of annotations
         LocationTypeVariable ltv = getLV(t);
         if (ltv != null) 
             return ltv;
         LocationType lt = getLocationTypeOrDefault(t);
         LocationTypeVariable tv;
         if (lt.isInfer()) {
-            java.util.List<LocationType> cls = Collections.emptyList();
-            if (precision == LocationTypingPrecision.CLASS_LOCAL_FAR && 
-                    originatingNode instanceof FieldDecl) {
-                FieldDecl fd = (FieldDecl)originatingNode;
-                ClassDecl cd = (ClassDecl)fd.getContextDecl();
-                cls = getClassLocalFarTypes(cd);
-                cls.add(LocationType.createParametricFar("C"+cls.size()));
+            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getMethodLocalFarTypes(originatingNode), getClassLocalFarTypes(originatingNode));
+        } else if (lt.isFar() && precision != LocationTypingPrecision.BASIC){
+            List<LocationType> mlft = getMethodLocalFarTypes(originatingNode);
+            List<LocationType> clft = getClassLocalFarTypes(originatingNode);
+            if (mlft.isEmpty() && clft.isEmpty()) {
+                tv = LocationTypeVariable.getFromLocationType(lt);
+            } else { 
+                tv = LocationTypeVariable.newVar(constraints, typeNode, true, mlft, clft);
+                ArrayList<LocationType> fars = new ArrayList<LocationType>(mlft);
+                fars.add(LocationType.FAR);
+                fars.addAll(clft);
+                Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE);
             }
-            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getMethodLocalFarTypes(originatingNode), cls);
         } else {
             tv = LocationTypeVariable.getFromLocationType(lt);
         } 
         annotateVar(t, tv);
         return tv;
+    }
+
+    private java.util.List<LocationType> getClassLocalFarTypes(ASTNode<?> originatingNode) {
+        java.util.List<LocationType> cls = Collections.emptyList();
+        if (precision == LocationTypingPrecision.CLASS_LOCAL_FAR && 
+                originatingNode.getParent() instanceof FieldDecl) {
+            cls = getClassLocalFarTypes(getClassDecl(originatingNode));
+            cls.add(LocationType.createParametricFar("C"+cls.size()));
+        }
+        return cls;
     }
 
     private java.util.List<LocationType> getClassLocalFarTypes(ClassDecl cd) {
@@ -268,19 +267,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         java.util.List<LocationType> result = new ArrayList<LocationType>();
         if (precision == LocationTypingPrecision.BASIC)
             return result;
-        Block b = null;
-        if (n instanceof Stmt) {
-            b = ((Stmt)n).getContextBlock();
-        }
-        if (n instanceof Exp) {
-            b = ((Exp)n).getContextBlock();
-        }
-        if (n instanceof VarDecl) {
-            b = ((VarDecl)n).getAccess().getContextBlock();
-        }
-        if (n instanceof MethodImpl) {
-            b = ((MethodImpl)n).getBlock().getContextBlock();
-        }
+        Block b = n.getContextBlock();
+
         if (b != null) {
             if (methodLocalFarTypes.containsKey(b)) {
                 result = methodLocalFarTypes.get(b);

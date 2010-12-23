@@ -248,7 +248,10 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void fieldTypeImprovedInfer() {
-        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { I i1; I i2; Unit m([Far] I i) { i1 = new cog C(); i2 = new cog C(); i1!m(i2); } } { }");
+        assertInferOk("interface I { Unit m([Far] I i); } " +
+        	"class C implements I { " +
+        	"    I i1; I i2; " +
+        	"    Unit m([Far] I i) { i1 = new cog C(); i2 = new cog C(); i1!m(i2); } } { }");
     }
     
     @Test

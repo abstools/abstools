@@ -13,7 +13,7 @@ import static abs.frontend.typechecker.locationtypes.infer.MultiListIterable.fro
 public abstract class Constraint {
     public final static Integer MUST_HAVE = 2147483647;
     public final static Integer NICE_TO_HAVE = 1;
-    public final static Integer SHOULD_HAVE = 100;
+    public final static Integer SHOULD_HAVE = 1000;
     
     protected void prependAll(Integer i, List<List<Integer>> l) {        
         for (List<Integer> subl : l) {

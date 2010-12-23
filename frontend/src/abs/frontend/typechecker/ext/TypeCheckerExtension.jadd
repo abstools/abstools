@@ -16,6 +16,7 @@ aspect TypeCheckerExtension {
         return typeCheckerExtension;
     }
     
+/*    
     refine Typing eq FunctionDecl.getType() {
         Type t = Typing.FunctionDecl.getType();
         getModel().getTypeExt().annotateType(t, this, getTypeUse());
@@ -33,18 +34,19 @@ aspect TypeCheckerExtension {
         getModel().getTypeExt().annotateType(t, this, getReturnType());
         return t;
     }
+*/    
     
-    refine Typing eq ParametricDataTypeUse.getType() {
-        Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
-        getModel().getTypeExt().annotateType(t, this, this);
-        return t;
-    }
-
-//    refine Typing eq DataTypeUse.getType() {
-//        Type t = Typing.DataTypeUse.getType().fullCopy();        
+//    refine Typing eq ParametricDataTypeUse.getType() {
+//        Type t = Typing.ParametricDataTypeUse.getType().fullCopy();        
 //        getModel().getTypeExt().annotateType(t, this, this);
 //        return t;
 //    }
+
+    refine Typing eq DataTypeUse.getType() {
+        Type t = Typing.DataTypeUse.getType();        
+        getModel().getTypeExt().annotateType(t, this, this);
+        return t;
+    }
     
     refine Typing eq DataConstructor.getType() {
         Type t = Typing.DataConstructor.getType();        
