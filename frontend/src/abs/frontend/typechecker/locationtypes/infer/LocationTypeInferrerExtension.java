@@ -1,36 +1,26 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import abs.common.FileUtils;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
-import abs.frontend.ast.Exp;
 import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
-import abs.frontend.ast.Stmt;
 import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.ThisExp;
-import abs.frontend.ast.VarDecl;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
 import abs.frontend.typechecker.ext.TypeSystemExtension;
@@ -134,7 +124,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 ArrayList<LocationType> fars = new ArrayList<LocationType>(mlft);
                 fars.add(LocationType.FAR);
                 fars.addAll(clft);
-                Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE);
+                constraints.add(Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE));
             }
         } else {
             tv = LocationTypeVariable.getFromLocationType(lt);
