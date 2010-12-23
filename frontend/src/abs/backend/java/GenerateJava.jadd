@@ -703,7 +703,9 @@ aspect GenerateJava {
     }
 
     public void FieldUse.generateJava(PrintStream stream) {
-        stream.print("this."+JavaBackend.getVariableName(getName()));
+        ClassDecl d = (ClassDecl) getContextDecl();
+        String className = JavaBackend.getClassName(d.getName());
+        stream.print(className+".this."+JavaBackend.getVariableName(getName()));
     }
 
     public void VarUse.generateJava(PrintStream stream) {

@@ -55,6 +55,11 @@ public class JavaStmtTests extends JavaBackendTest {
     }
 
     @Test
+    public void awaitStmtField() {
+        assertValidStdLib(" class C { Bool b = True; Unit m() { await this.b; } } "); 
+    }
+    
+    @Test
     public void awaitStmtFutGuard() {
         assertValidStdLib(" { Fut<Bool> f; await f?; }");
     }
