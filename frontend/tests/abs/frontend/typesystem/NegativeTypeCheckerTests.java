@@ -24,6 +24,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
     
     @Test
+    public void duplicateVarDecls() {
+        assertTypeErrors("{ Unit u = Unit; Unit u = Unit; }"); 
+    }
+
+    @Test
+    public void varDelcaredLater() {
+        assertTypeErrors("{ Unit u = f; Unit f = Unit; }"); 
+    }
+    
+    @Test
     public void testUnresolvableType() {
         assertTypeErrors("{ I i; }");
     }

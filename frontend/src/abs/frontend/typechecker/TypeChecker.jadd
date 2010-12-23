@@ -365,7 +365,13 @@ aspect TypeChecker {
     
     
     public void Block.typeCheck(SemanticErrorList e) {
+        Set<String> varNames = new HashSet<String>();
         for (VarDecl v : getVars()) {
+            if (varNames.contains(v.getName())) {
+                e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED,v.getName()));
+            } else {
+                varNames.add(v.getName());
+            }
             v.typeCheck(e);
         }
         

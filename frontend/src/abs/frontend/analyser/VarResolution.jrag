@@ -11,21 +11,13 @@ aspect VarResolution {
         for (Stmt stmt : getStmts()) {
             if (stmt instanceof VarDeclStmt) {
                 res.add(((VarDeclStmt) stmt).getVarDecl());
+            } else if (stmt instanceof Block) {
+                res.addAll(((Block)stmt).getVars());
             }
         }
         return res;
     }
 
-    syn lazy VarOrFieldDecl Block.locallookupVarOrFieldName(String name, boolean fieldOnly);
-    eq Block.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (!fieldOnly) {
-            for (VarDecl decl : getVars()) {
-                if (decl.getName().equals(name))
-                    return decl;
-            }
-        }
-        return null;
-    }
     
     syn lazy PatternVarDecl Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly);
     eq Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
@@ -71,11 +63,27 @@ aspect VarResolution {
 
     eq Block.getStmt(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
-            VarOrFieldDecl d = locallookupVarOrFieldName(name,fieldOnly);
-            if (d != null)
-                return d;
+            Stmt s = getStmt(i);
+            if (s instanceof VarDeclStmt) {
+                VarDeclStmt vds = (VarDeclStmt) s;
+                VarOrFieldDecl d = vds.locallookupVarOrFieldName(name,fieldOnly);
+                if (d != null)
+                    return d;
+            }
         }       
-        return lookupVarOrFieldName(name,fieldOnly);
+        if (i > 0)
+            return getStmt(i-1).lookupVarOrFieldName(name,fieldOnly);
+        else
+            return lookupVarOrFieldName(name,fieldOnly);
+    }
+    
+    
+    syn lazy VarOrFieldDecl VarDeclStmt.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            if (getVarDecl().getName().equals(name))
+                return getVarDecl();
+        }
+        return null;
     }
     
     syn lazy VarOrFieldDecl MethodSig.locallookupVarOrFieldName(String name, boolean fieldOnly) {
@@ -116,16 +124,11 @@ aspect VarResolution {
     }
     
     eq MethodImpl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (!fieldOnly) {
-            VarOrFieldDecl d = getBlock().locallookupVarOrFieldName(name,fieldOnly);
-            if (d != null) 
-                return d;
-        }
         return locallookupVarOrFieldName(name,fieldOnly);
     }
     
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = getBlock().locallookupVarOrFieldName(name,fieldOnly);
+        = null;
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
 

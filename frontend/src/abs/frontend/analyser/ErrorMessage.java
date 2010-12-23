@@ -8,6 +8,7 @@ public enum ErrorMessage {
     UNKOWN_INTERFACE_OR_DATATYPE("Unknown interface or datatype: %s."),
     DUPLICATE_TYPE_DECL("Duplicate interface or data declaration: %s."),
     DUPLICATE_BEHAVIOR_DECL("Duplicate class or function declaration: %s."),
+    VARIABLE_ALREADY_DECLARED("Variable %s is already declared"),
     EXPECTED_TYPE("Expected type %s, but found type %s instead."),
     NO_SUBTYPE("Type %s must be a subtype of type %s."),
     CANNOT_ASSIGN("Cannot assign %s to type %s."),
