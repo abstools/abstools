@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Binary;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
@@ -33,6 +35,7 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.VarDecl;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
@@ -435,6 +438,27 @@ public class TypeCheckerHelper {
         return res;
     }
 
+    public static void typeCheckBinary(SemanticErrorList e, Binary b, Type t) {
+        assertHasType(e, b.getLeft(),t);
+        assertHasType(e, b.getRight(),t);
+        b.getLeft().typeCheck(e);
+        b.getRight().typeCheck(e);
+        
+    }
+    
+    public static void checkForDuplicates(SemanticErrorList e, Collection<VarDecl> decls) {
+        Set<String> varNames = new HashSet<String>();
+        for (VarDecl v : decls) {
+            if (varNames.contains(v.getName())) {
+                e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED,v.getName()));
+            } else {
+                varNames.add(v.getName());
+            }
+        }
+        
+    }
+    
+    
     private static void putNamesOfModule(ModuleDecl mod, HashMap<KindedName, ResolvedName> res, String moduleName,
             String simpleNamePattern) {
         for (Entry<KindedName, ResolvedName> entry : mod.getVisibleNames().entrySet()) {

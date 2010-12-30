@@ -29,6 +29,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void duplicateVarDeclsParams() {
+        assertTypeErrors("class C { Unit m(Unit u) { Unit u = Unit; } }"); 
+    }
+    
+    @Test
     public void varDelcaredLater() {
         assertTypeErrors("{ Unit u = f; Unit f = Unit; }"); 
     }
@@ -228,6 +233,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeErrors("{ Int i = 4 + True; }");
     }
 
+    @Test
+    public void plusError2() {
+        assertTypeErrors("{ Int i = 4 + \"a\"; }");
+    }
+    
     @Test
     public void getError() {
         assertTypeErrors("{ Bool f = True; f.get; }");

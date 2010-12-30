@@ -24,6 +24,7 @@ public enum ErrorMessage {
     BRANCH_INCOMPARABLE_TYPE("Case branches with incomparable types, %s and %s."),
     CASE_NO_DATATYPE("Cases are only possible on data types, but found type %s."),
     EQUALITY_INCOMPARABLE_TYPE("Equality expression with incomparable types, %s and %s."),
+    ADD_INCOMPARABLE_TYPE("Add expression with incomparable types, %s and %s."),
     WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s."),
     WRONG_NUMBER_OF_TYPE_ARGS("Wrong number of type arguments for parametric type %s. Expected %s, but found %s."),
     WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS("Wrong number of arguments for data constructor %s. Expected %s, but found %s."),

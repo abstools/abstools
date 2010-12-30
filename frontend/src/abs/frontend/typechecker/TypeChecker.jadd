@@ -365,16 +365,9 @@ aspect TypeChecker {
     
     
     public void Block.typeCheck(SemanticErrorList e) {
-        Set<String> varNames = new HashSet<String>();
-        for (VarDecl v : getVars()) {
-            if (varNames.contains(v.getName())) {
-                e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED,v.getName()));
-            } else {
-                varNames.add(v.getName());
-            }
-            v.typeCheck(e);
-        }
         
+        TypeCheckerHelper.checkForDuplicates(e,getVars());
+
         for (Stmt s : getStmts()) {
             s.typeCheck(e);
         }
@@ -623,32 +616,32 @@ aspect TypeChecker {
     }
     public void AddAddExp.typeCheck(SemanticErrorList e) {
         // Special case: can also "add" strings.
-        if (!getLeft().getType().isStringType() && !getLeft().getType().isIntType()) {
-            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, getLeft().getType()));
+        Type lt = getLeft().getType();
+        Type rt = getRight().getType();
+        
+        if (! (lt.isIntType() || lt.isStringType())) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
         }
-        if (!getRight().getType().isStringType() && !getRight().getType().isIntType()) {
-            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, getRight().getType()));
+        if (! (rt.isIntType() || rt.isStringType())) {
+            e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
         }
+        if (!lt.isAssignable(rt) && !rt.isAssignable(lt)) {
+            e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
+        }
+        
         getLeft().typeCheck(e);
         getRight().typeCheck(e);
     }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getIntType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getIntType());
-   	 getLeft().typeCheck(e);
-   	 getRight().typeCheck(e);
+        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getIntType());
     }
+    
     public void BoolExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getBoolType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getBoolType());
-   	 getLeft().typeCheck(e);
-   	 getRight().typeCheck(e);
+        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getBoolType());
     }
+    
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getLeft(),getModel().getIntType());
-   	 TypeCheckerHelper.assertHasType(e,getRight(),getModel().getIntType());
-   	 getLeft().typeCheck(e);
-   	 getRight().typeCheck(e);
+         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getIntType());
     }
 
     public void EqualityExpr.typeCheck(SemanticErrorList e) {
