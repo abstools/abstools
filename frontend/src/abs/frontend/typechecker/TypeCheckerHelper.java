@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import abs.common.Constants;
+import abs.common.ListUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
@@ -24,6 +25,7 @@ import abs.frontend.ast.FromExport;
 import abs.frontend.ast.FromImport;
 import abs.frontend.ast.Import;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NamedExport;
@@ -35,6 +37,7 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.TypedVarOrFieldDecl;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.typechecker.KindedName.Kind;
 
@@ -446,9 +449,16 @@ public class TypeCheckerHelper {
         
     }
     
-    public static void checkForDuplicates(SemanticErrorList e, Collection<VarDecl> decls) {
+    public static void checkForDuplicates(SemanticErrorList e, MethodImpl m) {
+        java.util.List<TypedVarOrFieldDecl> l = new ArrayList<TypedVarOrFieldDecl>();
+        l.addAll(m.getBlock().getVars());
+        l.addAll(ListUtils.toJavaList(m.getMethodSig().getParams()));
+        checkForDuplicates(e,l);
+    }
+    
+    public static <A extends TypedVarOrFieldDecl> void checkForDuplicates(SemanticErrorList e, Collection<A> decls) {
         Set<String> varNames = new HashSet<String>();
-        for (VarDecl v : decls) {
+        for (TypedVarOrFieldDecl v : decls) {
             if (varNames.contains(v.getName())) {
                 e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED,v.getName()));
             } else {

@@ -380,9 +380,9 @@ aspect TypeChecker {
    	 sig.typeCheck(e);
    	 b.typeCheck(e);
 
-     // skip other checks if already errors have occurred
-	 //if (e.size() > nerrors)
-	 	//return;
+	 if (e.size() == nerrors) {
+	     TypeCheckerHelper.checkForDuplicates(e,this);
+	 }
 	 	
    	 Type lastType = getModel().getUnitType();
    	 ASTNode<?> errorNode = this;
