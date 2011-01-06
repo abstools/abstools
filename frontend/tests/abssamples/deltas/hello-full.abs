@@ -1,0 +1,22 @@
+// include ABS code...
+include hello.abs;
+
+//************************************************************
+// mTVL feature model
+//************************************************************
+root HelloMultiLingual {
+	group allof {
+		Language {
+			group oneof {English, Dutch, German, French}
+		},
+		opt Repeat {
+			int [0,1000] times;
+			times >= 0; 
+		}
+	}
+}
+
+English {
+	Repeat -> (Repeat.times >= 2 && Repeat.times <= 5);
+}
+

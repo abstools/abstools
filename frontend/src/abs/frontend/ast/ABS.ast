@@ -27,7 +27,7 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:    TypeDecl;		// Unknown declarations
 ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-DeltaDecl:      Decl    ::= Annotation* Modifier:ClassModifier*;
+DeltaDecl:      Decl    ::= Annotation* Param:ParamDecl* Modifier:ClassModifier*;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
@@ -206,17 +206,25 @@ EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
 
 
-ProductLine ::=
-  <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondition* ;
+// feature Configuration and Selection Language (FCL/FSL)
+ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondition* ;
 
-// The third argument (Feature*) is meant to be a conjunction of
-// features that have to be present for the delta to be applied.  It will
-// be replaced by a more expressive expression language later.
-Deltacondition ::=
-  Delta [RequiredDelta:Delta] Feature* ;
+// TODO: The third argument (Feature*) is meant to be an application condition, 
+// i.e. a propositional formula over features. If the application condition evaluates
+// to true, then the delta is applied.
+Deltacondition ::= Delta [RequiredDelta:Delta] Feature* ;
 
-Feature ::= <Name> ;
+Feature ::= <Name> AttrAssignment*;
 
-Delta ::= <Name> ;
+AttrAssignment ::= <Name:String> Value ;
+abstract Value;
+IntVal:  Value ::= <Value:int>;
+BoolVal: Value ::= <Value:Boolean>;
+
+Delta ::= <Name> Deltaparam* ;
+abstract Deltaparam;
+CID: Deltaparam ::= <Name> ;
+FIDAID: Deltaparam ::= <FeatName> <AttrName>;
+Const: Deltaparam ::= Value ;
 
 Product ::= <Name> Feature* InitBlock:MainBlock ;

@@ -1,0 +1,114 @@
+module Hello;
+
+//************************************************************
+// ABS implementation
+//************************************************************
+interface Greeting {
+    String say_hello();
+}
+
+class Greeter implements Greeting {
+    String say_hello() {
+        return "Hello world";
+    }
+}
+
+delta Rpt (Int times) {
+    modifies Greeter {
+        modifies String say_hello() {
+            String result = "";
+            Int i = 0;
+            while (i < times) {
+                result = result + original();
+                i = i + 1;
+            }
+            return result;
+        }
+    }
+}
+
+delta De {
+    modifies Greeter {
+        modifies String say_hello() {
+            return "Hallo Welt";
+        }
+    }
+}
+
+delta Nl {
+    modifies Greeter {
+        modifies String say_hello() {
+            return "Hallo wereld";
+        }
+    }
+}
+
+delta Fr {
+    modifies Greeter {
+        modifies String say_hello() {
+            return "Bonjour tout le monde";
+        }
+    }
+}
+
+//************************************************************
+// Configuration (FCL)
+//************************************************************
+productline HelloMultiLingual {
+    features Repeat, German, French, Dutch;
+//  corefeatures English;
+    core English;
+
+    delta Rpt(Repeat.times) 
+        after De, Fr, Nl 
+        when Repeat;
+    delta De when German;
+    delta Fr when French;
+    delta Nl when Dutch;
+}
+
+//************************************************************
+// Products (FSL)
+//************************************************************
+// basic product with no deltas
+product P1 (English) {
+    Greeting bob;
+    bob = new Greeter();
+    String s = "";
+    s = bob.say_hello();
+}
+
+// apply delta Fr
+product P2 (French) {
+    Greeting bob;
+    bob = new Greeter();
+    String s = "";
+    s = bob.say_hello();
+}
+
+// apply deltas Fr and Repeat
+product P3 (French, Repeat{times=10}) {
+    Greeting bob;
+    bob = new Greeter();
+    String s = "";
+    s = bob.say_hello();
+}
+
+// apply deltas En and Repeat, but it should be refused because "times > 5"
+product P4 (English, Repeat{times=6}) {
+    Greeting bob;
+    bob = new Greeter();
+    String s = "";
+    s = bob.say_hello();
+}
+
+{
+    // default init block does nothing
+    Greeting bob;
+    bob = new Greeter();
+    String s = "";
+    s = bob.say_hello();
+} 
+
+
+

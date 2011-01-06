@@ -1,0 +1,13 @@
+product P1 is  
+	A,
+	B {a = false},
+	C {a = true},
+	D {x = 999};
+
+product P2 is  
+	B {a = false},
+	C {a = true},
+	D {x = 999},
+	E;
+
+

@@ -48,10 +48,12 @@ EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
 //Identifiers defined using character classes 
+// BoolLiteral = [Tt]rue | [Ff]alse
+
 Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
 TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*																 
-
 IntLiteral = 0 | [1-9][0-9]*
+
 
 //Alternative, explicit definition 
 //Alpha = [a-zA-Z]
@@ -144,6 +146,13 @@ IntLiteral = 0 | [1-9][0-9]*
  "_"          { return sym(Terminals.USCORE); }
 }
 
+//Literals
+<YYINITIAL> {
+    \"            { yybegin(STRING); string.setLength(0);  }
+    {IntLiteral}  { return sym(Terminals.INTLITERAL); }
+//    {BoolLiteral} { return sym(Terminals.BOOLLITERAL); }
+}
+
 <YYINITIAL> {
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
     {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
@@ -151,11 +160,6 @@ IntLiteral = 0 | [1-9][0-9]*
 	{WhiteSpace}  { /* discard token */ }
 }
 
-//Literals
-<YYINITIAL> {
- \"            { yybegin(STRING); string.setLength(0);  }
- {IntLiteral}  { return sym(Terminals.INTLITERAL); }
-}
 
 
 

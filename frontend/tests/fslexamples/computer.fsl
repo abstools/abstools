@@ -1,0 +1,5 @@
+product P1 is  
+    Computer { maxRam = 2048 },
+    Motherboard,
+    CPU,
+    GraphicsCard { minMem = 64 };

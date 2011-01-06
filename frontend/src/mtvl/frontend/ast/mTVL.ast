@@ -1,0 +1,89 @@
+//$Id$ 
+//
+
+// Expressions
+
+Model ::= CompilationUnit*;
+
+CompilationUnit ::= [Feature] FExt*;
+
+FExt ::= <Name> Attribute* Constr*;
+
+Feature ::= <Name> [Group] Attribute* Constr*;
+
+Group ::=  Card:Cardinality FNode*;
+
+abstract  FNode ::= Feat:Feature;
+OptFeat:  FNode;
+MandFeat: FNode;
+
+abstract Cardinality;
+AllOf:   Cardinality;
+Minim:   Cardinality ::= <CFrom:int>;
+CRange:  Cardinality ::= <CFrom:int> <CTo:int>;
+
+Attribute ::= <Name> AType:Type;
+
+abstract  Type;
+BoolType: Type;
+IntType:  Type ::= Min:BoundaryInt Max:BoundaryInt;
+
+abstract BoundaryInt;
+Limit: BoundaryInt;
+BoundaryVal: BoundaryInt ::= <Value:int>;
+
+abstract Constr;
+IfIn:    Constr ::= Expr: Exp;
+IfOut:   Constr ::= Expr: Exp;
+Exclude: Constr ::= FeatVar;
+Require: Constr ::= FeatVar;
+
+abstract            Exp: Constr;
+abstract SimpleExp: Exp;
+abstract Unary:     Exp ::= Operand: Exp;
+abstract Binary:    Exp ::= Left:Exp  Right:Exp; 
+
+
+//Booleans 
+NegExp: Unary ;
+
+abstract    BoolExp: Binary ;
+AndBoolExp: BoolExp ; 
+OrBoolExp:  BoolExp ; 
+ImpliesExp: BoolExp ; 
+EquivExp:   BoolExp ; 
+
+abstract RelationalExpr: Binary;
+LTExp:   RelationalExpr ;
+GTExp:   RelationalExpr ;
+LTEQExp: RelationalExpr ;
+GTEQExp: RelationalExpr ;
+
+abstract  EqualityExpr: RelationalExpr;
+EqExp:    EqualityExpr ;
+NotEqExp: EqualityExpr ;
+
+//Integers
+MinusExp : Unary ;  
+
+abstract ArithmeticExpr : Binary ; 
+
+abstract     MultExp: ArithmeticExpr ;   
+MultMultExp: MultExp ;
+DivMultExp:  MultExp ;
+ModMultExp:  MultExp ;
+
+abstract   AddExp: ArithmeticExpr ;
+AddAddExp: AddExp ;
+SubAddExp: AddExp ;
+
+
+// Variables and values 
+abstract Variable: SimpleExp;
+BoolVal: SimpleExp ::= <Value:Boolean>;
+IntVal:  SimpleExp ::= <Value:int>;
+
+// variables
+AttVar:  Variable ::= <AName>;
+FeatVar: Variable ::= <FName>;
+FAVar:   Variable ::= <FName> <AName>;

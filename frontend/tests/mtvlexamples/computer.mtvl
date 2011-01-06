@@ -1,0 +1,31 @@
+root Computer {
+  group allof {
+    Motherboard,
+    CPU,
+    GraphicsCard { Int minMem in [64..3072]; },
+    opt Accessories {
+      group [0..2] {Printer, Speakers, Scanner, Screen}
+    }
+  }
+  // Accessories <-> true;
+  Accessories -> Accessories.packageID == 1;
+  GraphicsCard.minMem <= 300;
+}
+
+extension Computer {
+  Int maxRam in [0..10000];
+  maxRam > 0;
+}
+
+extension Motherboard {
+  Int xdim in [0..1000];
+  Int ydim in [0..1000];
+  ifin: xdim > -1 && xdim < 15;
+  ifin: ydim > -1 && ydim < 15;
+  ifin: ydim >= xdim;
+}
+
+extension Accessories {
+  Int packageID; Int randomexp; Int lemon;
+  ifin: packageID == 1  -> GraphicsCard.minMem >= 256;
+} 

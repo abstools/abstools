@@ -207,12 +207,12 @@ List decl_list =
 
 Decl decl =
 		datatype_decl
-	|   typesyn_decl
+	|   	typesyn_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
-    |   delta_decl
-    |   error
+	|	delta_decl
+	|	error
 	;
 
 // Same as other blocks, but a different class for code-generation purposes.
@@ -270,7 +270,7 @@ ClassDecl class_decl =
   ;
 
 DeltaDecl delta_decl =
-    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id LBRACE class_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, modifiers); :} ;
+    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id param_decls.params? LBRACE class_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, params, modifiers); :} ;
 
 List class_modifier_list =
     class_modifier.m {: return new List().add(m); :}
@@ -705,8 +705,20 @@ List feature_list = feature.f {: return new List().add(f); :}
     | feature_list.l COMMA feature.f {: return l.add(f); :}
     ;
 
-Feature feature = TYPE_IDENTIFIER.id {: return new Feature(id); :} ;
+Feature feature = TYPE_IDENTIFIER.id attr_assignments.attrs? {: return new Feature(id, attrs); :} ;
 
+//List attr_decls = LBRACE param_decl_list.f? RBRACE {: return f; :};
+
+List attr_assignments = LBRACE attr_assignment_list.l RBRACE {: return l; :};
+List attr_assignment_list  = attr_assignment.a {: return new List().add(a); :}
+    | attr_assignment_list.l COMMA attr_assignment.a {: return l.add(a); :}
+    ;
+
+AttrAssignment attr_assignment = IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
+    | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
+        if (c=="True") return new AttrAssignment(n, new BoolVal(true)); 
+        else return new AttrAssignment(n, new BoolVal(false)); :}
+    ;
 
 List deltacondition_list = {: return new List(); :}
     | deltacondition_list.l DELTA delta.d after_condition.a? when_condition.w?
@@ -714,7 +726,24 @@ List deltacondition_list = {: return new List(); :}
 
 Delta after_condition = AFTER delta.d {: return d; :} ;
 
-Delta delta = TYPE_IDENTIFIER.id {: return new Delta(id); :} ;
+// FIXME: allow "hasMethod"-style parameters 
+Delta delta = TYPE_IDENTIFIER.id deltaparams.params? {: return new Delta(id, params); :} ;
+
+List deltaparams = LPAREN deltaparam_list.l RPAREN {: return l; :};
+
+List deltaparam_list = deltaparam.p {: return new List().add(p); :}
+    | deltaparam_list.l COMMA deltaparam.p {: return l.add(p); :}
+    ;
+
+// CID | FID.aid | CONSTANT
+Deltaparam deltaparam =
+      TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
+    | INTLITERAL.i {: return new Const(new IntVal(Integer.parseInt((String)i))); :}
+    | TYPE_IDENTIFIER.c {: // hack...
+        if (c=="True") return new Const(new BoolVal(true)); 
+        else if (c == "False") return new Const(new BoolVal(false));
+	else return new CID(c); :}
+    ;
 
 List when_condition = WHEN application_condition.dl {: return dl; :};
 
@@ -729,6 +758,7 @@ List product_list = product.p {: return new List().add(p); :}
 Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l RPAREN main_block.b
     {: return new Product(id, l, b); :} ;
         
+
 
 // Local Variables:
 // tab-width: 4
