@@ -211,7 +211,10 @@ public class InferMain extends Main {
         
         if (node instanceof FieldDecl && !config.contains(Config.FIELDS)) 
             return false;
-
+        
+        if (ltv.getAnnotatedType() != null) {
+            return false;
+        }
         
         return true;
     }

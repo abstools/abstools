@@ -29,6 +29,8 @@ public class LocationTypeVariable {
     public static final LocationTypeVariable ALWAYS_BOTTOM = new LocationTypeVariable();
     public static final LocationTypeVariable ALWAYS_SOMEWHERE = new LocationTypeVariable();
     
+    private LocationType annotatedType;
+    
     private List<LocationType> parametricFarTypes = new ArrayList<LocationType>();
     
     List<LocationType> parametricClassLocalFarTypes = new ArrayList<LocationType>();
@@ -40,12 +42,13 @@ public class LocationTypeVariable {
 
     private List<LocationType> allTypes = Arrays.asList(LocationType.ALLVISTYPES);
     
-    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, List<LocationType> parametricMethodLocalFarTypes, List<LocationType> parametricClassLocalFarTypes) {
+    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, List<LocationType> parametricMethodLocalFarTypes, List<LocationType> parametricClassLocalFarTypes, LocationType annotatedType) {
         LocationTypeVariable result = new LocationTypeVariable();
         result.node = n;
         result.parametricMethodLocalFarTypes = parametricMethodLocalFarTypes;
         result.parametricClassLocalFarTypes = parametricClassLocalFarTypes;
         result.declared = declared;
+        result.annotatedType = annotatedType;
         
         constraints.add(Constraint.declConstraint(result));
         if (declared) {
@@ -147,6 +150,10 @@ public class LocationTypeVariable {
         if (lt.isNear()) return ALWAYS_NEAR;
         if (lt.isSomewhere()) return ALWAYS_SOMEWHERE;
         throw new IllegalArgumentException("Location type " + lt + " not allowed");
+    }
+
+    public LocationType getAnnotatedType() {
+        return annotatedType;
     }
     
     
