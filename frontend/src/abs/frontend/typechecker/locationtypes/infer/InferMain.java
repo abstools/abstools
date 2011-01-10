@@ -28,7 +28,7 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 
 public class InferMain extends Main {
     
-    enum Config {
+    public enum Config {
         INTERFACES,
         CLASSES,
         LOCAL_VAR_DECLS,
