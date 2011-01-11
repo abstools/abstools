@@ -1,6 +1,6 @@
 import java.util.Collection;
 import java.util.ArrayList;
-import mtvl.frontend.analyser.*;
+import mtvl.analyser.*;
 import choco.Choco;
 // import choco.Choco.MAX_UPPER_BOUND;
 // import choco.Choco.MIN_LOWER_BOUND;

@@ -1,9 +1,9 @@
 //$Id$ 
-package mtvl.frontend.parser;
+package mtvl.parser;
 
 import beaver.Symbol;
 import beaver.Scanner;
-import mtvl.frontend.parser.MTVLParser.Terminals;
+import mtvl.parser.MTVLParser.Terminals;
 import abs.frontend.parser.LexicalError;
 import abs.frontend.parser.ParseException;
 

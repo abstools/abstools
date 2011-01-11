@@ -1,6 +1,6 @@
 import java.util.Collection;
 import java.util.ArrayList;
-import mtvl.frontend.analyser.*;
+import mtvl.analyser.*;
 
 
 /**

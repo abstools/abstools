@@ -1,6 +1,6 @@
-package mtvl.frontend.analyser;
+package mtvl.analyser;
 
-import mtvl.frontend.ast.Model;
+import mtvl.ast.Model;
 
 import java.text.MessageFormat;
 import java.util.Map;

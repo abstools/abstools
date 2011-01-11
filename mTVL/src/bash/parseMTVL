@@ -67,7 +67,7 @@ fi
 
 if [ -n "$1" ] ; then
     java -cp $BASEDIR/lib/beaver.jar:$BASEDIR/bin:$BASEDIR/lib/choco-solver-2.1.1.jar \
-        mtvl.frontend.parser.Main $verbose $solve $check $@
+        mtvl.parser.Main $verbose $solve $check $@
 else
     echo $progname: "No mTVL files specified"
 fi

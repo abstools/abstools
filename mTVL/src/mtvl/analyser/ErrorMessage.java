@@ -1,4 +1,4 @@
-package mtvl.frontend.analyser;
+package mtvl.analyser;
 
 public enum ErrorMessage {
       UNDECLARED_VARIABLE("Unknown variable: %s.")

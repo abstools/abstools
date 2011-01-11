@@ -6,9 +6,9 @@
 %class "MTVLParser" ;
 
 %header {:
-package mtvl.frontend.parser;
+package mtvl.parser;
 
-import mtvl.frontend.ast.*;
+import mtvl.ast.*;
 // import mtvl.frontend.exceptions.*;
 import abs.frontend.parser.ParseException;
 import abs.frontend.parser.ParserError;

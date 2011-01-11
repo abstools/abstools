@@ -1,4 +1,4 @@
-package mtvl.frontend.analyser;
+package mtvl.analyser;
 
 import java.util.ArrayList;
 

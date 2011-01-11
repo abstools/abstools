@@ -212,8 +212,9 @@ ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondit
 // TODO: The third argument (Feature*) is meant to be an application condition, 
 // i.e. a propositional formula over features. If the application condition evaluates
 // to true, then the delta is applied.
-Deltacondition ::= Delta [RequiredDelta:Delta] Feature* ;
+Deltacondition ::= Deltaspec Delta* Feature* ;
 
+Delta ::= <Name>;
 Feature ::= <Name> AttrAssignment*;
 
 AttrAssignment ::= <Name:String> Value ;
@@ -221,10 +222,10 @@ abstract Value;
 IntVal:  Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
 
-Delta ::= <Name> Deltaparam* ;
+Deltaspec ::= <Name> Deltaparam* ;
 abstract Deltaparam;
 CID: Deltaparam ::= <Name> ;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* InitBlock:MainBlock ;
+Product ::= <Name> Feature* InitBlock:Block ;

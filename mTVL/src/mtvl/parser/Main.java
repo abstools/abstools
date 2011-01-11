@@ -3,7 +3,7 @@
 //   abs/frontend/parser/Main.java
 //   6015 2010-09-22 13:58:36Z jschaefer
 
-package mtvl.frontend.parser;
+package mtvl.parser;
 
 
 import java.io.BufferedReader;
@@ -15,22 +15,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.ArrayList;
 
 import java.util.Map;
 import java.util.HashMap;
 
-import mtvl.frontend.ast.CompilationUnit;
-import mtvl.frontend.ast.List;
-import mtvl.frontend.ast.Model;
-//import mtvl.frontend.ast.ModuleDecl;
-//import mtvl.frontend.ast.StarImport;
-import mtvl.frontend.parser.MTVLParser;
-import mtvl.frontend.parser.MTVLScanner;
-import mtvl.frontend.analyser.SemanticError;
-import mtvl.frontend.analyser.SemanticErrorList;
-import mtvl.frontend.analyser.ChocoSolver;
+import mtvl.ast.CompilationUnit;
+import mtvl.ast.List;
+import mtvl.ast.Model;
+//import mtvl.ast.ModuleDecl;
+//import mtvl.ast.StarImport;
+import mtvl.parser.MTVLParser;
+import mtvl.parser.MTVLScanner;
+import mtvl.analyser.SemanticError;
+import mtvl.analyser.SemanticErrorList;
+import mtvl.analyser.ChocoSolver;
 import abs.frontend.parser.SyntaxError;
 import abs.frontend.parser.ParseException;
 // import fsl.frontend.parser.FSLParser;

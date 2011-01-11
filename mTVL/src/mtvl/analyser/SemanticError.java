@@ -1,9 +1,9 @@
-package mtvl.frontend.analyser;
+package mtvl.analyser;
 
 import beaver.Symbol;
-import mtvl.frontend.ast.ASTNode;
-import mtvl.frontend.ast.CompilationUnit;
-import mtvl.frontend.ast.Feature;
+import mtvl.ast.ASTNode;
+import mtvl.ast.CompilationUnit;
+import mtvl.ast.Feature;
 
 public class SemanticError {
     public final ErrorMessage msg;

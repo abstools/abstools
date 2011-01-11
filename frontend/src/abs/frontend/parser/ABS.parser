@@ -721,13 +721,27 @@ AttrAssignment attr_assignment = IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new
     ;
 
 List deltacondition_list = {: return new List(); :}
-    | deltacondition_list.l DELTA delta.d after_condition.a? when_condition.w?
+    | deltacondition_list.l DELTA deltaspec.d after_condition.a? when_condition.w?
       SEMICOLON {: return l.add(new Deltacondition(d, a, w)); :};
+    
+/*| deltacondition_list.l DELTA deltaspec.d when_condition.w?
+      SEMICOLON {: return l.add(new Deltacondition(d, new List(), w)); :};
+    | deltacondition_list.l DELTA deltaspec.d after_condition.a when_condition.w?
+      SEMICOLON {: return l.add(new Deltacondition(d, a, w)); :};
+*/
 
-Delta after_condition = AFTER delta.d {: return d; :} ;
+List after_condition = AFTER delta_list.l {: return l; :} ;
 
-// FIXME: allow "hasMethod"-style parameters 
-Delta delta = TYPE_IDENTIFIER.id deltaparams.params? {: return new Delta(id, params); :} ;
+Delta delta = TYPE_IDENTIFIER.id {: return new Delta(id); :} ;
+
+List delta_list = delta.id {: return new List().add(id); :}
+    | delta_list.l COMMA delta.id {: return l.add(id); :}
+    ;
+
+// FCL
+// A delta specification is a name + an optional list of feature attributes or "has" parameters
+// FIXME: support "hasMethod"/"hasAttribute" parameters
+Deltaspec deltaspec = TYPE_IDENTIFIER.id deltaparams.params? {: return new Deltaspec(id, params); :} ;
 
 List deltaparams = LPAREN deltaparam_list.l RPAREN {: return l; :};
 
@@ -755,7 +769,7 @@ List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
     ;
 
-Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l RPAREN main_block.b
+Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l RPAREN block.b
     {: return new Product(id, l, b); :} ;
         
 

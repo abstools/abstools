@@ -23,13 +23,6 @@
 	<property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
 	<property name="junit.jar" value="junit-4.8.1.jar" />
 	
-	<!-- new properties for mTVL related parser -->
-	<property name="mtvl.ast.src.dir" value="${src.dir}/mtvl/frontend/ast" />
-	<property name="mtvl.ast.gen.dir" value="${gen.dir}/mtvl/frontend" />
-	<property name="mtvl.parser.src.dir" value="${src.dir}/mtvl/frontend/parser" />
-	<property name="mtvl.parser.gen.dir" value="${gen.dir}/mtvl/frontend/parser" />
-	<property name="mtvl.ast.package" value="mtvl.frontend.ast" />
-
 	<!-- The package name of JastAdd generated files -->
 	<property name="ast.package" value="abs.frontend.ast" />
 
@@ -55,14 +48,13 @@
 	</target>
 
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-		<javac srcdir="${src.dir}/abs:${src.dir}/mtvl:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
+		<javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
 			<classpath>
             <pathelement location="${ext.dir}/Java1.5Compiler.jar" />
 				<pathelement location="${ext.dir}/beaver.jar" />
 				<pathelement location="${ext.dir}/jastadd2.jar" />
 				<pathelement location="${ext.dir}/JastAddParser.jar" />
 				<pathelement location="${ext.dir}/${junit.jar}" />
-				<pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
 				<pathelement location="${ext.dir}/org.sat4j.core.jar" />
 				<pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
 				<pathelement location="${ext.dir}/org.sat4j.pb.jar" />
@@ -92,9 +84,6 @@
 		</delete>
 	</target>
 
-	<target name="gen" depends="genabs,genmtvl">
-	</target>
-
 	<target name="rebuild" depends="clean, compile">
 	</target>
 
@@ -104,10 +93,10 @@
 
 	<!-- generate ABS -->
 
-	<target name="genabs" depends="genabsshell, genabsparser, genabsast, genabslang">
+	<target name="gen" depends="genshell, genparser, genast, genlang">
 	</target>
 
-	<target name="genabsast">
+	<target name="genast">
 		<jastadd package="${ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
 			<fileset dir=".">
 				<include name="src/abs/**/*.ast" />
@@ -117,14 +106,14 @@
 		</jastadd>
 	</target>
 
-   <target name="genabslang">
+   <target name="genlang">
       <mkdir dir="${build.dir}/abs/lang" />
       <copy todir="${build.dir}/abs/lang" >
          <filelist dir="${src.dir}/abs/lang" files="abslang.abs" />
       </copy>
    </target>
       
-	<target name="genabsshell">
+	<target name="genshell">
 		<copy todir="${bash.build.dir}">
 			<fileset id="shellfiles" dir="${bash.dir}">
 			  <include name="*" />
@@ -143,17 +132,17 @@
 
 
 
-	<target name="genabsparser" depends="genabsflex,genp1,genp2">
+	<target name="genparser" depends="genflex,genp1,genp2">
 	</target>
 
 
-	<target name="genabsflex">
+	<target name="genflex">
 		<!-- generate the scanner -->
 		<echo message="Running jflex" />
 		<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}" nobak="yes" />
 	</target>
 
-	<target name="genp1" depends="genabsflex, genabsast">
+	<target name="genp1" depends="genflex, genast">
 		<echo message="Parser phase1" />
 		<!-- generate the parser phase 1, translating .lalr to .beaver -->
 		<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
@@ -166,50 +155,6 @@
 		<echo message="Parser phase" />
 		<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
 	</target>
-
-
-	<!-- generate MTVL -->
-
-  <target name="genmtvl" depends="genmtvlast, genmtvlparser, genmtvlshell">
-  </target>
-
-	<target name="genmtvlshell">
-		<copy todir="${bash.build.dir}">
-			<filelist id="shellfiles" dir="${bash.dir}" files="parseMTVL" />
-			<filterset>
-				<filter token="BASEDIR" value="${basedir}" />
-			</filterset>
-		</copy>
-		<chmod perm="ugo+x">
-			<filelist dir="${bash.build.dir}" files="parseMTVL" />
-		</chmod>
-	</target>
-
-  <!-- mtvl's AST -->
-	<target name="genmtvlast">
-		<jastadd package="${mtvl.ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
-			<fileset dir=".">
-				<include name="src/mtvl/**/*.ast" />
-				<include name="src/mtvl/**/*.jadd" />
-				<include name="src/mtvl/**/*.jrag" />
-			</fileset>
-		</jastadd>
-	</target>
-
-  <!-- mtvl's Scanner -->
-	<target name="genmtvlscanner">
-		<echo message="Running jflex" />
-		<jflex file="${mtvl.parser.src.dir}/mTVL.flex" outdir="${mtvl.parser.gen.dir}" nobak="yes" />
-	</target>
-
-  <!-- mtvl's Parser -->
-	<target name="genmtvlparser" depends="genmtvlscanner, genmtvlast">
-		<echo message="Running beaver" />
-		<beaver file="${mtvl.parser.src.dir}/mTVL.beaver"
-		        destdir = "${mtvl.parser.gen.dir}"
-		        terminalNames="yes" compress="no" useSwitch="yes" />
-	</target>
-
 
 
 	<!-- create distribution files for ABS -->
@@ -279,46 +224,6 @@
 	<!-- From command line: -->
 	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
-
-	<!-- MTVL - run a single test in verbose mode -->
-	<target name="testmtvl" depends="compile">
-		<echo message="Parsing mtvlexamples/runningtest.mtvl"/>
-		<java classpath="${ext.dir}/beaver.jar:${build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.frontend.parser.Main">
-			<arg line="-v ${tests.dir}/mtvlexamples/runningtest.mtvl" />
-		</java>
-	</target>
-
-	<!-- MTVL - run a test for the ChosoSolver main method (sandbox) -->
-	<target name="testchoco" depends="compile">
-		<echo message="Running ChocoSolver.java"/>
-		<java classpath="${ext.dir}/beaver.jar:${build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.frontend.analyser.ChocoSolver">
-		</java>
-	</target>
-
-	<!-- MTVL - run a test for the computer with solver -->
-	<target name="testcomp" depends="compile">
-		<echo message="Parsing mtvlexamples/computer.mtvl"/>
-		<java classpath="${ext.dir}/beaver.jar:${build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.frontend.parser.Main">
-			<arg line="-s ${tests.dir}/mtvlexamples/computer.mtvl" />
-		</java>
-	</target>
-
-	<!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using computer example, with negative result. -->
-	<target name="testsat" depends="compile">
-		<echo message="Checking satisfiability of fslexamples/computer.fsl wrt mtvlexamples/computer.mtvl"/>
-		<java classpath="${ext.dir}/beaver.jar:${build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.frontend.parser.Main">
-			<arg line="-v -c P1 ${tests.dir}/fslexamples/computer.fsl ${tests.dir}/mtvlexamples/computer.mtvl" />
-		</java>
-
-	</target>
-
-	<!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using helloworld example, with positive result. -->
-	<target name="testsatok" depends="compile">
-		<echo message="Checking satisfiability of fslexamples/computer.fsl wrt mtvlexamples/computer.mtvl"/>
-		<java classpath="${ext.dir}/beaver.jar:${build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.frontend.parser.Main">
-			<arg line="-v -c P3 ${tests.dir}/abssamples/deltas/hello.abs ${tests.dir}/mtvlexamples/helloworld.mtvl" />
-		</java>
-	</target>
 
 
 </project>
