@@ -84,7 +84,7 @@ public class LocationType {
             return true;
         }
         if (this.isNear() || this.isFar() || this.isParametricFar() || this.isSomewhere()) {
-            return t.isFar() || t.isSomewhere();
+            return t.isFar() || t.isSomewhere() || (t.isParametricFar() && t == this);
         }
         throw new IllegalArgumentException("Cannot use location type "+this+" to check subtypeOfFar");
     }
@@ -101,7 +101,7 @@ public class LocationType {
             if (this.isNear())
                 return to;
             if (this.isParametricFar() && this != to) {
-                return FAR;
+                return this;
             }
             return SOMEWHERE; 
         }

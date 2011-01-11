@@ -31,8 +31,11 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     public static enum LocationTypingPrecision {
         BASIC,
         METHOD_LOCAL_FAR,
-        CLASS_LOCAL_FAR
+        CLASS_LOCAL_FAR,
+        GLOBAL_FAR
     }
+
+    private static final int NUM_GLOBAL_VARS = 20;
     
     private LocationTypingPrecision precision = LocationTypingPrecision.CLASS_LOCAL_FAR;
     
@@ -55,6 +58,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
 
     private Set<Constraint> constraints = new HashSet<Constraint>();
+    private List<LocationType> globalFarTypes = new ArrayList<LocationType>();
     
     public Set<Constraint> getConstraints() {
         return constraints;
@@ -70,7 +74,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
     
     private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, LocationTypeVariable adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
-        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, typeNode, false, getMethodLocalFarTypes(originatingNode), getClassLocalFarTypes(getClassDecl(originatingNode)), null);
+        LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, typeNode, false, getMethodLocalFarTypes(originatingNode), getClassLocalFarTypes(getClassDecl(originatingNode)), getGlobalFarTypes(), null);
         constraints.add(Constraint.adaptConstraint(tv, expLocType, adaptTo));
         //System.out.println("Require " + tv + " = " + expLocType + " |>" + adaptTo);
         return tv;
@@ -113,19 +117,18 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         LocationType lt = getLocationTypeOrDefault(t);
         LocationTypeVariable tv;
         if (lt.isInfer()) {
-            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getMethodLocalFarTypes(originatingNode), getClassLocalFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t));
+            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getMethodLocalFarTypes(originatingNode), getClassLocalFarTypes(originatingNode), getGlobalFarTypes(), LocationTypeExtension.getLocationTypeFromAnnotations(t));
         } else if (lt.isFar() && precision != LocationTypingPrecision.BASIC){
             List<LocationType> mlft = getMethodLocalFarTypes(originatingNode);
             List<LocationType> clft = getClassLocalFarTypes(originatingNode);
-            if (mlft.isEmpty() && clft.isEmpty()) {
+            /*if (mlft.isEmpty() && clft.isEmpty() && getGlobalFarTypes().isEmpty()) {
                 tv = LocationTypeVariable.getFromLocationType(lt);
-            } else { 
-                tv = LocationTypeVariable.newVar(constraints, typeNode, true, mlft, clft, LocationTypeExtension.getLocationTypeFromAnnotations(t));
-                ArrayList<LocationType> fars = new ArrayList<LocationType>(mlft);
-                fars.add(LocationType.FAR);
-                fars.addAll(clft);
+            } else {*/ 
+                tv = LocationTypeVariable.newVar(constraints, typeNode, true, mlft, clft, getGlobalFarTypes(), LocationTypeExtension.getLocationTypeFromAnnotations(t));
+                @SuppressWarnings("unchecked")
+                MultiListIterable<LocationType> fars = new MultiListIterable<LocationType>(mlft, clft, Arrays.asList(LocationType.FAR), getGlobalFarTypes());
                 constraints.add(Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE));
-            }
+            //}
         } else {
             tv = LocationTypeVariable.getFromLocationType(lt);
         } 
@@ -135,7 +138,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     private java.util.List<LocationType> getClassLocalFarTypes(ASTNode<?> originatingNode) {
         java.util.List<LocationType> cls = Collections.emptyList();
-        if (precision == LocationTypingPrecision.CLASS_LOCAL_FAR && 
+        if ((precision == LocationTypingPrecision.CLASS_LOCAL_FAR || precision == LocationTypingPrecision.GLOBAL_FAR) && 
                 originatingNode.getParent() instanceof FieldDecl) {
             cls = getClassLocalFarTypes(getClassDecl(originatingNode));
             cls.add(LocationType.createParametricFar("C"+cls.size()));
@@ -155,6 +158,16 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             classLocalFarTypes.put(cd, cls);
         }
         return cls;
+    }
+    
+    private java.util.List<LocationType> getGlobalFarTypes() {
+        if (precision == LocationTypingPrecision.GLOBAL_FAR && globalFarTypes.size() == 0) {
+            globalFarTypes = new ArrayList<LocationType>();
+            for (int i = 0; i < NUM_GLOBAL_VARS; i++) {
+                globalFarTypes.add(LocationType.createParametricFar("G"+i));
+            }
+        }
+        return globalFarTypes;
     }
     
     private LocationType getLocationTypeOrDefault(Type t) {
@@ -197,9 +210,9 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
                 //ltv = LocationTypeVariable.ALWAYS_FAR;
                 java.util.List<LocationType> parFarTypes = getMethodLocalFarTypes(originatingNode);
                 java.util.List<LocationType> clFT = getClassLocalFarTypes(getClassDecl(originatingNode));
-                ltv = LocationTypeVariable.newVar(constraints, typeNode, false, parFarTypes, clFT, null);
+                ltv = LocationTypeVariable.newVar(constraints, typeNode, false, parFarTypes, clFT, getGlobalFarTypes(), null);
                 @SuppressWarnings("unchecked")
-                MultiListIterable<LocationType> mi = new MultiListIterable<LocationType>(parFarTypes, Arrays.asList(LocationType.FAR), clFT);
+                MultiListIterable<LocationType> mi = new MultiListIterable<LocationType>(parFarTypes, Arrays.asList(LocationType.FAR), clFT, getGlobalFarTypes());
                 constraints.add(Constraint.constConstraint(ltv, mi, Constraint.MUST_HAVE));
             } else {
                 ltv = LocationTypeVariable.ALWAYS_NEAR;
@@ -223,9 +236,9 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             constraints.add(Constraint.constConstraint(lv, LocationType.NEAR, Constraint.SHOULD_HAVE));
         } else {
         //checkNeq(getLV(call.getCallee().getType()), LocationTypeVariable.ALWAYS_BOTTOM, Constraint.SHOULD_HAVE);
-            @SuppressWarnings("unchecked")
-            Iterable<LocationType> lts = new MultiListIterable<LocationType>(Arrays.asList(LocationType.ALLCONCRETEUSERTYPES), lv.parametricFarTypes());
-            constraints.add(Constraint.constConstraint(lv, lts, Constraint.SHOULD_HAVE));
+            //@SuppressWarnings("unchecked")
+            //Iterable<LocationType> lts = new MultiListIterable<LocationType>(Arrays.asList(LocationType.ALLCONCRETEUSERTYPES), );
+            constraints.add(Constraint.constConstraint(lv, lv.allCTypes, Constraint.SHOULD_HAVE));
         }
     }
 

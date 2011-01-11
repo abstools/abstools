@@ -81,27 +81,39 @@ public class SatGenerator {
         }
         
         StringBuffer weights = new StringBuffer();
+        
+        int countNiceConstraints = 0;
         for (LocationTypeVariable tv : vars) {
-            weights.append(Constraint.NICE_TO_HAVE);
-            weights.append(" ");
-            weights.append(e.get(tv, LocationType.NEAR));
-            weights.append(" ");
-            weights.append(e.get(tv, LocationType.FAR));
-            weights.append(" ");
-            if (tv.getNode() == null) {
-                for (LocationType lt : tv.parametricFarTypes()) {
+            if (tv.getNode() != null) {
+                countNiceConstraints++;
+                weights.append(Constraint.NICE_TO_HAVE);
+                weights.append(" ");
+                weights.append(e.get(tv, LocationType.NEAR));
+                weights.append(" ");
+                weights.append(e.get(tv, LocationType.FAR));
+                weights.append(" ");
+                /*for (LocationType lt : tv.parametricFarTypes()) {
                     weights.append(e.get(tv, lt));
                     weights.append(" ");
-                }
+                }*/
+                weights.append("0\n");
             }
-            weights.append("0\n");
         }
         
         StringBuffer sb = new StringBuffer();
-        int nbclauses = output.size() + vars.size();
+        int nbclauses = output.size() + countNiceConstraints;
         int nbvars = e.current;
         
         addInitLine(sb,nbclauses,nbvars);
+        
+        // update should_have
+        int newShouldHave = countNiceConstraints * Constraint.NICE_TO_HAVE + 1;
+        for (List<Integer> line : output) {
+            if (line.get(0).equals(Constraint.SHOULD_HAVE)) {
+                line.set(0, newShouldHave);
+            }
+        }
+        //System.out.println("SHOULD_HAVE value: "+ newShouldHave);
         
         for (List<Integer> line : output) {
             for (Integer i : line) {
@@ -163,16 +175,17 @@ public class SatGenerator {
                     int fars = 0;
                     int sws = 0;
                     int nears = 0;
+                    int paramfars = 0;
                     for (Entry<LocationTypeVariable, LocationType> e : tvl.entrySet()) {
                         if (e.getKey().getNode() != null) {
                             LocationType t = e.getValue();
                             if (t.isFar()) fars++;
-                            if (t.isFar()) fars++;
+                            if (t.isParametricFar()) paramfars++;
                             if (t.isNear()) nears++;
                             if (t.isSomewhere()) sws++;
                         } 
                     }
-                    System.out.println("Fars: " + fars + " Somewheres: " + sws + " Nears: " + nears);
+                    System.out.println("Fars: " + fars + " Somewheres: " + sws + " Nears: " + nears + " Parametric Fars: " + paramfars);
                 }
             } else {
                 return null;
