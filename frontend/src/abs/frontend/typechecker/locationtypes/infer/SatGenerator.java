@@ -92,10 +92,10 @@ public class SatGenerator {
                 weights.append(" ");
                 weights.append(e.get(tv, LocationType.FAR));
                 weights.append(" ");
-                /*for (LocationType lt : tv.parametricFarTypes()) {
+                for (LocationType lt : tv.parametricFarTypes()) {
                     weights.append(e.get(tv, lt));
                     weights.append(" ");
-                }*/
+                }
                 weights.append("0\n");
             }
         }

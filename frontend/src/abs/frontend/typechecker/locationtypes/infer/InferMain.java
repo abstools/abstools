@@ -147,7 +147,8 @@ public class InferMain extends Main {
             int offset = 0;
             for (LocationTypeVariable ltv : l) {
                 if (shouldBeConsidered(ltv)) {
-                    int pos = offset + ltv.getTypeNode().getAbsolutePosition();
+                    int diff = ltv.getTypeNode().getAbsolutePosition();
+                    int pos = offset + diff;
                     String s = results.get(ltv).toAnnoString();
                     sb.insert(pos, s);
                     offset += s.length();
@@ -166,6 +167,9 @@ public class InferMain extends Main {
                 int pos2 = o2.getTypeNode().getAbsolutePosition();
                 if (pos1 == -1 || pos2 == -1) {
                     throw new RuntimeException("Absolute position not defined");
+                }
+                if (pos1 == pos2) {
+                    throw new RuntimeException("Two elements can not have the same position");
                 }
                 return Integer.valueOf(pos1).compareTo(pos2);
             }

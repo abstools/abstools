@@ -44,7 +44,7 @@ public class LocationType {
         
         @Override
         public String toAnnoString() {
-            return "";
+            return "[Far] ";
         }
     }
     
