@@ -1,5 +1,8 @@
-product P1 is  
+module Computer;
+
+product P1 (  
     Computer { maxRam = 2048 },
     Motherboard,
     CPU,
-    GraphicsCard { minMem = 64 };
+    GraphicsCard { minMem = 64 }
+) {}

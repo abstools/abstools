@@ -1,13 +1,15 @@
-product P1 is  
+module FSL;
+
+product P1 (
 	A,
-	B {a = false},
-	C {a = true},
-	D {x = 999};
+	B {a = False},
+	C {a = True},
+	D {x = 999}
+) {}
 
-product P2 is  
-	B {a = false},
-	C {a = true},
+product P2 (
+	B {a = False},
+	C {a = True},
 	D {x = 999},
-	E;
-
-
+	E
+) {}

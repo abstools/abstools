@@ -1,2 +1,3 @@
-product P1 is F { speed = 1001 }, Lit, Eval; 
+module FSL;
 
+product P1 (F { speed = 1001 }, Lit, Eval) {}
