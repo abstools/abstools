@@ -40,4 +40,8 @@ public class TaskInfo {
     public TaskState getState(){
         return state;
     }
+    
+    public TaskView getTaskView(){
+        return task;
+    }
 }

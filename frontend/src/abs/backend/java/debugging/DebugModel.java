@@ -206,31 +206,28 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     //New Methods
     public List<COGView> getCOGs(){
         List<COGView> cogs = new ArrayList<COGView>();
-        for(COGView cog : cogInfo.keySet()){
-            cogs.add(cog);
-        }
+        cogs.addAll(cogInfo.keySet());
         return cogs;
     }
     
     public List<COGInfo> getCOGInfos(){
         List<COGInfo> cogInfos = new ArrayList<COGInfo>();
-        for(COGView cog : cogInfo.keySet()){
+        for(COGView cog : getCOGs()){
             cogInfos.add(cogInfo.get(cog));
         }
         return cogInfos;
     }
     
-    public List<TaskView> getTasks(COGView cog){
-        //TODO: Order of tasks is different each time...
-        List<TaskView> tasks = cog.getScheduler().getSuspendedTasks();
-        if(cog.getScheduler().getActiveTask() != null){
-            tasks.add(cog.getScheduler().getActiveTask());
-        }
-        return tasks;
-    }
-    
     public List<TaskInfo> getTaskInfos(COGView cog){
         return cogInfo.get(cog).getTasks();
+    }
+    
+    public List<TaskView> getTasks(COGView cog){
+        List<TaskView> tasks = new ArrayList<TaskView>();
+        for(TaskInfo taskInfo : getTaskInfos(cog)){
+            tasks.add(taskInfo.getTaskView());
+        }
+        return tasks;
     }
 
 }
