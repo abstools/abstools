@@ -17,13 +17,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Semaphore;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
@@ -50,22 +46,14 @@ import javax.swing.text.Highlighter.HighlightPainter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import abs.backend.java.lib.runtime.ABSException;
-import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
-import abs.backend.java.observing.GuardView;
 import abs.backend.java.observing.ObjectCreationObserver;
-import abs.backend.java.observing.ObjectObserver;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
-import abs.backend.java.observing.TaskObserver;
-import abs.backend.java.observing.TaskSchedulerObserver;
-import abs.backend.java.observing.TaskView;
 import abs.backend.java.utils.ColorUtils;
 import abs.backend.java.utils.StringUtil;
 
@@ -92,270 +80,6 @@ public class GraphicalDebugger implements SystemObserver {
         model.cogCreated(cog, initialObject);
     }
 
-}
-
-interface DebugModelListener {
-    void taskInfoChanged(TaskInfo line);
-
-    void taskInfoAdded(TaskInfo line);
-
-    void taskInfoRemoved(TaskInfo line);
-
-    void cogCreated(COGInfo info);
-
-    void cogChanged(COGInfo info);
-}
-
-class COGInfo {
-    final COGView cog;
-    final ObjectView initialObject;
-    final List<TaskInfo> tasks = new ArrayList<TaskInfo>();
-
-    COGInfo(COGView cog, ObjectView o) {
-        this.cog = cog;
-        this.initialObject = o;
-    }
-
-    public void addTask(TaskInfo task) {
-        tasks.add(task);
-    }
-
-}
-
-class DebugModel implements TaskObserver, TaskSchedulerObserver {
-    final Map<TaskView, TaskInfo> taskToLineMap = new HashMap<TaskView, TaskInfo>();
-    final Map<COGView, COGInfo> cogInfo = new HashMap<COGView, COGInfo>();
-    final ArrayList<DebugModelListener> listener = new ArrayList<DebugModelListener>();
-    final Set<TaskView> steppingTasks = new HashSet<TaskView>();
-
-    public COGInfo getCOGInfo(COGView view) {
-        return cogInfo.get(view);
-    }
-
-    public synchronized TaskInfo getTaskInfo(TaskView task) {
-        return taskToLineMap.get(task);
-    }
-
-    public synchronized Semaphore getSema(TaskView info) {
-        return taskToLineMap.get(info).stepSema;
-    }
-
-    public void stepTask(TaskView task) {
-        getSema(task).release();
-    }
-
-    public void cogCreated(COGView cog, ObjectView initialObject) {
-        cog.getScheduler().registerTaskSchedulerObserver(this);
-        ArrayList<DebugModelListener> localList;
-        COGInfo info = new COGInfo(cog, initialObject);
-        synchronized (this) {
-            cogInfo.put(cog, info);
-            localList = new ArrayList<DebugModelListener>(listener);
-        }
-
-        for (DebugModelListener l : localList) {
-            l.cogCreated(info);
-        }
-    }
-
-    public synchronized TaskInfo addInfoLine(TaskView task) {
-        TaskInfo line = new TaskInfo(task);
-        taskToLineMap.put(task, line);
-        for (DebugModelListener l : listener) {
-            l.taskInfoAdded(line);
-        }
-        return line;
-    }
-
-    public void updateInfoLine(TaskView task, TaskInfo line) {
-        ArrayList<DebugModelListener> localList;
-        synchronized (this) {
-            taskToLineMap.put(task, line);
-            localList = new ArrayList<DebugModelListener>(listener);
-        }
-
-        for (DebugModelListener l : localList) {
-            l.taskInfoChanged(line);
-        }
-    }
-
-    public synchronized void removeInfoLine(TaskView task) {
-        TaskInfo line = taskToLineMap.remove(task);
-        for (DebugModelListener l : listener) {
-            l.taskInfoRemoved(line);
-        }
-    }
-
-    public synchronized void registerListener(DebugModelListener l) {
-        listener.add(l);
-    }
-
-    @Override
-    public synchronized void taskCreated(TaskView task) {
-        steppingTasks.add(task);
-
-        task.registerTaskListener(this);
-        TaskInfo info = addInfoLine(task);
-
-        COGInfo cinfo = cogInfo.get(task.getCOG());
-        cinfo.addTask(info);
-        cogInfoChanged(cinfo);
-    }
-
-    private synchronized void cogInfoChanged(COGInfo info) {
-        for (DebugModelListener l : listener) {
-            l.cogChanged(info);
-        }
-    }
-
-    @Override
-    public synchronized void taskSuspended(TaskView task, GuardView guard) {
-        updateTaskState(task, TaskState.SUSPENDED, guard, null);
-    }
-
-    @Override
-    public synchronized void taskStarted(TaskView task) {
-        updateTaskState(task, TaskState.RUNNING, null, null);
-    }
-
-    @Override
-    public synchronized void taskDeadlocked(TaskView task) {
-        updateTaskState(task, TaskState.DEADLOCKED, null, null);
-    }
-
-    @Override
-    public synchronized void taskFinished(TaskView task) {
-        TaskState newState = TaskState.FINISHED;
-
-        if (task.hasException()) {
-            ABSException e = task.getException();
-            if (e.isAssertion()) {
-                newState = TaskState.ASSERTION_FAILED;
-            } else {
-                newState = TaskState.EXCEPTION;
-            }
-        }
-
-        updateTaskState(task, newState, null, null);
-    }
-
-    @Override
-    public synchronized void taskBlockedOnFuture(TaskView task, FutView fut) {
-        updateTaskState(task, TaskState.BLOCKED, null, fut);
-    }
-
-    @Override
-    public void taskRunningAfterWaiting(TaskView task, FutView fut) {
-        updateTaskState(task, TaskState.RUNNING, null, null);
-    }
-
-    @Override
-    public void taskResumed(TaskView task, GuardView view) {
-        updateTaskState(task, TaskState.RUNNING, null, null);
-    }
-
-    @Override
-    public void taskReady(TaskView task) {
-        updateTaskState(task, TaskState.READY, null, null);
-    }
-
-    private void updateTaskState(TaskView task, TaskState state, GuardView guard, FutView fut) {
-        synchronized (this) {
-            TaskInfo info = getTaskInfo(task);
-            if (state == TaskState.RUNNING) {
-                if (info.isStepping) {
-                    steppingTasks.add(task);
-                }
-            } else {
-                steppingTasks.remove(task);
-            }
-            info.state = state;
-            info.waitingOnGuard = guard;
-            info.blockedOnFuture = fut;
-            updateInfoLine(task, info);
-        }
-    }
-
-    private void waitForClick(TaskView task) {
-        try {
-            System.out.println("Task " + task.getID() + " waiting for click...");
-            if (getTaskInfo(task).isStepping)
-                getSema(task).acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void taskStep(TaskView task, String fileName, int line) {
-        synchronized (this) {
-            TaskInfo info = getTaskInfo(task);
-            info.updateLine(line);
-            info.updateFile(fileName);
-            info.state = TaskState.RUNNING;
-            updateInfoLine(task, info);
-        }
-        // waitForClick(task);
-    }
-
-    public synchronized void stepRandom() {
-        stepTask(steppingTasks.iterator().next());
-    }
-
-    public synchronized void runTask(TaskView task) {
-        steppingTasks.remove(task);
-        getTaskInfo(task).isStepping = false;
-        getSema(task).release();
-    }
-
-}
-
-class Line {
-    int startPos;
-    int endPos;
-}
-
-enum TaskState {
-    READY(ColorUtils.setSaturation(Color.YELLOW, 0.5f)), SUSPENDED(ColorUtils.setSaturation(Color.ORANGE, 0.5f)), RUNNING(
-            ColorUtils.setSaturation(Color.GREEN, 0.5f)), FINISHED(Color.LIGHT_GRAY), DEADLOCKED(Color.red), ASSERTION_FAILED(
-            ColorUtils.PSYCHEDELIC_PURPLE), EXCEPTION(ColorUtils.PSYCHEDELIC_PURPLE), BLOCKED(ColorUtils.setSaturation(
-            Color.RED, 0.5f));
-    public final Color color;
-
-    TaskState(Color c) {
-        this.color = c;
-    }
-}
-
-class TaskInfo {
-    public FutView blockedOnFuture;
-    TaskView task;
-    int currentLine;
-    int previousLine;
-    String previousFile;
-    String currentFile;
-    TaskState state = TaskState.READY;
-    GuardView waitingOnGuard;
-    Semaphore stepSema = new Semaphore(0);
-    boolean isStepping = true;
-
-    public TaskInfo(TaskView task) {
-        this.task = task;
-    }
-
-    public String toString() {
-        return "Task " + task.getID();
-    }
-
-    public void updateLine(int newLine) {
-        previousLine = currentLine;
-        currentLine = newLine;
-    }
-
-    public void updateFile(String fileName) {
-        previousFile = currentFile;
-        currentFile = fileName;
-    }
 }
 
 class SourceView extends JPanel implements DebugModelListener {
