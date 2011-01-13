@@ -9,7 +9,7 @@ import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
-import abs.backend.java.scheduling.RandomTaskSchedulingStrategy;
+import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.RecordingSchedulerStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulerFactory;
@@ -73,7 +73,6 @@ public class Config {
     private static final Logger logger = Logging.getLogger(Config.class.getName());
 
     public static final long RANDOM_SEED;
-    public static final Random RANDOM = new Random(Config.RANDOM_SEED);
 
     private static boolean configuredTaskScheduling = false;
 
@@ -144,6 +143,8 @@ public class Config {
 
         logger.config("Random Seed: " + RANDOM_SEED);
     }
+    
+    public static final Random RANDOM = new Random(Config.RANDOM_SEED);
 
     public static long getSeed() {
         return RANDOM_SEED;
@@ -166,7 +167,7 @@ public class Config {
             configuredTaskScheduling = true;
 
         if (strat == null) {
-            strat = new RandomTaskSchedulingStrategy(RANDOM);
+            strat = new RandomSchedulingStrategy(RANDOM);
         }
 
         logger.config("Using task scheduling strategy defined by class " + strat.getClass().getName());

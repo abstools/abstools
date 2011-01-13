@@ -22,7 +22,7 @@ public class SemanticTests {
 
     @Parameters
     public static Collection<?> data() {
-        Object[][] data = new Object[][] { { new JavaTestDriver() }, { new MaudeTestDriver() } };
+        Object[][] data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver() } };
         return Arrays.asList(data);
     }
 

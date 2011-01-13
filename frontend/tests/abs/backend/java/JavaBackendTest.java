@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import junit.framework.Assert;
 
 import abs.ABSTest;
+import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
@@ -27,7 +28,17 @@ import static abs.ABSTest.Config.*;
 public class JavaBackendTest extends ABSTest {
 
     private static final boolean DEBUG = false;
+    private long randomSeed;
+    private boolean useRandomScheduler = false;
+    
+    public JavaBackendTest() {
+    }
 
+    public JavaBackendTest(long randomSeed) {
+        this.randomSeed = randomSeed;
+        this.useRandomScheduler = true;
+    }
+    
     void assertValidStdLib(String absCode) {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, true));
     }
@@ -95,7 +106,14 @@ public class JavaBackendTest extends ABSTest {
     boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) {
         StringBuffer output = null;
         try {
-            output = runJava(javaCode);
+            String[] jvmArgs = new String[0];
+            if (useRandomScheduler) {
+                jvmArgs = new String[] { 
+                        "-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName(),
+                        "-Dabs.randomseed="+randomSeed};
+            } 
+            
+            output = runJava(javaCode, jvmArgs);
             String s = output.toString() + "\n";
             String result = null;
             Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);

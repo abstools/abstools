@@ -660,8 +660,8 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     private final JButton runBtn;
     private long seed = System.nanoTime();
     private final Random r = new Random(seed);
-    private final RandomGlobalSchedulingStrategy strat = new RandomGlobalSchedulingStrategy(r);
-    private final RandomTaskSchedulingStrategy taskStrat = new RandomTaskSchedulingStrategy(r);
+    private final RandomSchedulingStrategy globalStrat = new RandomSchedulingStrategy(r);
+    private final RandomSchedulingStrategy taskStrat = new RandomSchedulingStrategy(r);
     private final InteractiveScheduler scheduler;
     private TaskInfo nextTask;
     private GridBagLayout gridBagLayout;
@@ -787,7 +787,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
         if (remaindingSteps > 0)
             remaindingSteps--;
         if (!options.isEmpty()) {
-            return strat.choose(options);
+            return globalStrat.choose(options);
         }
         return null;
     }

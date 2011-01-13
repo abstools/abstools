@@ -257,7 +257,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             ABSRuntime.addScheduleAction(new ScheduleTask(cog) {
                 @Override
                 public void execute() {
-                    System.out.println("Calling doSchedule...");
+                    logger.finest("Calling do schedule");
                     doSchedule();
                 }
                 

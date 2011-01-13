@@ -7,18 +7,33 @@ import java.util.logging.Logger;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
-public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy {
-    private final static Logger logger = Logging.getLogger(RandomGlobalSchedulingStrategy.class.getName());
+/**
+ * A scheduling strategy that randomly chooses the next task
+ * 
+ * It is possible to set the initial seed used for the random generator by
+ * setting the property abs.schedulerseed to some long value.
+ * 
+ * @author Jan Schäfer
+ * 
+ */
+public class RandomSchedulingStrategy implements TotalSchedulingStrategy {
+    private final static Logger logger = Logging.getLogger(RandomSchedulingStrategy.class.getName());
 
     private final Random random;
 
-    public RandomGlobalSchedulingStrategy() {
+    public RandomSchedulingStrategy() {
         random = Config.RANDOM;
     }
-
-    public RandomGlobalSchedulingStrategy(Random r) {
+    
+    public RandomSchedulingStrategy(Random r) {
         random = r;
+    }
+
+    @Override
+    public synchronized TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> schedulableTasks) {
+        return schedulableTasks.get(random.nextInt(schedulableTasks.size()));
     }
 
     @Override
@@ -43,5 +58,5 @@ public class RandomGlobalSchedulingStrategy implements GlobalSchedulingStrategy 
         res.append("}");
         return res.toString();
     }
-
+    
 }

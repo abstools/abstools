@@ -14,7 +14,7 @@ public class ABSRunMethodTask<T extends ABSObject> extends Task<T> {
 
     @Override
     public String methodName() {
-        return "init block";
+        return "run";
     }
 
 }

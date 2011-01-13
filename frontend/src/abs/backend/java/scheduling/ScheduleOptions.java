@@ -13,9 +13,15 @@ public class ScheduleOptions {
     }
 
     public void addOption(ScheduleAction a) {
-        if (!actions.contains(a))
-            actions.add(a);
+        // do not add two actions for the same COG
+        for (ScheduleAction a2 : actions) {
+            if (a.getCOG() == a2.getCOG())
+                return;
+        }
+
+        actions.add(a);
     }
+    
 
     public List<ScheduleAction> allOptions() {
         return Collections.unmodifiableList(actions);
