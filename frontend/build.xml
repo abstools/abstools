@@ -77,7 +77,7 @@
 
 	<target name="clean">
 		<delete failonerror="false" includeemptydirs="true">
-			<fileset dir="${gen.dir}/abs" />
+			<fileset dir="${gen.dir}" />
 			<!--       <fileset dir = "${gen.dir}/docs"/> -->
 			<fileset dir="${build.dir}" />
 			<fileset dir="${dist.dir}" />
