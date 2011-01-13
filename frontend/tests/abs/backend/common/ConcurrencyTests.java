@@ -14,6 +14,7 @@ public class ConcurrencyTests extends SemanticTests {
 
     static String INTERFACE_I = "interface I { Bool m(); Unit n(); } ";
     static String CLASS_C = "class C implements I { Unit n() { } Bool m() { return True; } } ";
+    static String CLASS_D = "interface DI { } class D implements DI { { Bool b = False; } }";
     static String CALL_M_ASYNC = "{ Bool testresult = True; I i; i = new C(); i!m(); }";
     static String COG_CALL_M_ASYNC = "{ Bool testresult = True; Fut<Bool> f; I i; i = new cog C(); f = i!m(); testresult = f.get; }";
 
@@ -82,6 +83,13 @@ public class ConcurrencyTests extends SemanticTests {
                 + COG_CALL_M_ASYNC);
     }
 
+    @Test
+    public void initBlockCOG2() {
+        assertEvalTrue(INTERFACE_I+CLASS_D
+                + "class C implements I { Bool b = False; { b = True; DI i = new D(); } Unit n() { } Bool m() { return b; }} "
+                + COG_CALL_M_ASYNC);
+    }
+    
     @Test
     public void runMethodCOG() {
         assertEvalTrue(INTERFACE_I

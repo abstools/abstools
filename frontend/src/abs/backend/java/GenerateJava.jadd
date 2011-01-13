@@ -260,34 +260,33 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParams(stream, getParams());
         stream.println(" {");
         stream.println("      super(__idCounter.incrementAndGet());");
-
+        
         for (ParamDecl p : getParams()) {
             stream.println("      this."+JavaBackend.getVariableName(p.getName())+" = "+JavaBackend.getVariableName(p.getName())+";");
         }
+        stream.println("       getCOG().objectCreated(this);");
+
+        stream.println(" }");
+        
+        stream.println("   public void __ABS_init() {");
 
         for (FieldDecl f : getFields()) {
-      if (f.hasInitExp()) {
-         stream.print("this.");
-         stream.print(JavaBackend.getVariableName(f.getName()));
-            stream.print(" = ");
-            f.getInitExp().generateJava(stream);
-            stream.print(";");
-         }
+            if (f.hasInitExp()) {
+                stream.print("this.");
+                stream.print(JavaBackend.getVariableName(f.getName()));
+                stream.print(" = ");
+                f.getInitExp().generateJava(stream);
+                stream.print(";");
+            }
         }
 
         if (hasInitBlock()) {
-            stream.println("       this.__ABS_init();");
+            getInitBlock().generateJava("      ",stream);
         }
-        
-        stream.println("       getCOG().objectCreated(this);");
+
         stream.println("   }");
 
-
-
-        if (hasInitBlock()) {
-            stream.print("   public void __ABS_init()");
-            getInitBlock().generateJava("      ",stream);
-        } 
+            
 
 
 
@@ -319,6 +318,8 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
         stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
+        stream.println("          __ABS_cog.getScheduler().addTask(new "+
+                ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         if (isActiveClass()) {
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
@@ -335,6 +336,7 @@ aspect GenerateJava {
         stream.print("            "+className+" __ABS_result = new "+className);
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
+        stream.println("        __ABS_result.__ABS_init();");
         if (isActiveClass()) {
             stream.println("          final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");

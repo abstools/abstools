@@ -134,6 +134,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         logger.finest("next step done");
     }
 
+    
     @Override
     public synchronized void addTask(final Task<?> task) {
         
@@ -416,4 +417,5 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
     }
+
 }

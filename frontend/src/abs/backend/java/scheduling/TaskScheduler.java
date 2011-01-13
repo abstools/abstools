@@ -17,6 +17,12 @@ import abs.backend.java.observing.TaskSchedulerView;
  */
 public interface TaskScheduler {
 
+
+    /**
+     * Adds a task to the task queue of this task scheduler
+     * 
+     * @param task the task to be added
+     */
     void addTask(Task<?> task);
 
     TaskSchedulerView getView();
@@ -32,11 +38,14 @@ public interface TaskScheduler {
      * Called by the thread that is executing the currently active task, when
      * hitting an await statement with a guard.
      * 
-     * @param g
-     *            the guard
+     * @param g the guard
      */
     void await(ABSGuard g);
 
+    /**
+     * The COG of this scheduler
+     * @return the COG of this scheduler
+     */
     COG getCOG();
 
 }

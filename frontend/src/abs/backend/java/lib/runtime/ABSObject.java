@@ -14,6 +14,12 @@ import abs.backend.java.observing.ObjectObserver;
 import abs.backend.java.observing.ObjectView;
 import static abs.backend.java.lib.runtime.ABSRuntime.*;
 
+/**
+ * The super class of all ABS classes
+ * 
+ * @author Jan Schäfer
+ *
+ */
 public abstract class ABSObject implements ABSRef {
     private final COG __cog;
     protected final long __id;
