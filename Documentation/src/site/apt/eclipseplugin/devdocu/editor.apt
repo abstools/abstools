@@ -1,0 +1,63 @@
+Editor
+
+* ABSEditor and Content Type
+
+* Markers and Annotations
+
+  * defined with extension point <org.eclipse.core.resources.markers>
+  
+  * two kinds of markers: <absproblem> and <locationtypeinferenceinfo>
+  
+  ** additional attributes (startline, endline, startcol, endcol)
+  
+  * subtypes of absproblem: <absparseproblem> and <abstypecheckproblem>
+  
+  * annotationTypes
+  
+  ** defined with extension point <org.eclipse.ui.editors.annotationTypes>
+  
+  ** connection with markers over property <markerType>
+  
+  * markerAnnotationSpecification
+  
+  ** spefification of the style of highlighting
+  
+  ** the keys used (like colorPreferenceKey) are keys in the preferencestore and <<need to be unique>>
+  
+  ** connection to annotations with property <annotationType>
+  
+  * <eu.hatsproject.absplugin.editor.ABSMarkerAnnotationModel>
+  
+  ** method <createPositionFromMarker(..)> reads the additional attributes (see above) and returns the respective positions (relative to the document of the editor)
+
+* Decoration for Location Types
+
+* Semantic highlighting
+
+  In eclipse, a text editor partitions the text into different partition types. One of the types is the source code, in this case of the ABS program. The partitioner doing the job is the <ABSCodeScanner> (eu.hatsproject.absplugin.editor.ABSCodeScanner). It is initialized in the <ABSSourceViewerConfiguration> (eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration).
+  
+  The ABSCodeScanner initializes the list of keywords (given by the abs frontend in class <abs.frontend.parser.Keywords>). The color and style of the tokens are taken from the preference store of the plugin. For highlighting elements of the abs language like functions, data types and so on, there are two possibilities: Regular expressions or semantic rules.
+  
+  When the document of an editor changes, it determines the damage and tries to repair it. For this, the changed part of the document has to be rescanned. The method <setRange(..)> gets called. In this method one can do initialization stuff like reparsing the document (because there could be changes in the editor that are not yet saved). Next the method <nextToken()> gets called as long as there are parts of the document left that needs to be repaired/rescanned. There the interesting stuff happens. The next token is searched for using a word detector (here for finding identifiers) and the token for this identifier is determined. Keywords have highest priority, if semantic highlighting fails (for example if the file is not part of an abs project) regexp matching is used.
+  
+  The style of highlighting can be changed in the preference page (under ABS -> ABS Syntax Coloring). This page can be changed in the class <ABSSyntaxColoring> (eu.hatsproject.absplugin.preferences.ABSSyntaxColoring). New elements have to be added to the list in method <createContents(..)> and added to the case in the selection listener some line underneath. The graphical elements are all FieldEditors which means you only have to supply the preference store and the key of the property. The rest is realized inside the field editor like loading and saving the values from and to the store.
+  
+* Content Assistant
+
+* Jump To Declaration Feature
+
+  * command added to <org.eclipse.ui.commands> extension point for key binding
+  
+  * key binding in <org.eclipse.ui.bindings> extension point
+  
+  ** abs editor scope to activate binding only when an abs file is opened in editor
+  
+  * command included in editor popup menu with <org.eclipse.ui.popupMenus> extension point
+  
+  * real action added with <org.eclipse.ui.editorActions> extension point
+  
+  ** definitionId to define which command should be handled (for previous bindings)
+  
+  * abs editor scope added with <org.eclipse.ui.contexts> extension point
+
+* Outline

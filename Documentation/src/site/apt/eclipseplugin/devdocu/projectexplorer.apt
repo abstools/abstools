@@ -1,0 +1,15 @@
+Project Explorer
+
+* Outline
+
+* ABS Menu
+
+** add locations to file
+
+  * commands (org.eclipse.ui.commands)
+  
+  * menus (org.eclipse.ui.menus)
+  
+  ** visibleWhen for projectNature = AbsNature
+  
+  ** connection for commands

@@ -1,0 +1,12 @@
+Internal Thinds that don't fit anywhere else
+
+* Perspectives
+
+  * defined in extension point <org.eclipse.ui.perspective>
+  
+  * factory classes <ABSPerspectiveFactory> and <ABSDebugPerspectiveFactory>
+  
+  * method <createInitialLayout(..)> for defining the layout
+
+* AST handling
+
