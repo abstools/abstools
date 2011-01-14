@@ -7,8 +7,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.observing.SystemObserver;
@@ -26,6 +30,8 @@ public class ABSRuntime {
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
 
     private final ABSThreadManager threadManager = new ABSThreadManager();
+    private final AtomicInteger cogCounter = new AtomicInteger();
+    private final AtomicInteger objectCounter = new AtomicInteger();
 
     /**
      * Starts a new ABS program by giving a generated Main class
@@ -52,6 +58,11 @@ public class ABSRuntime {
             e.printStackTrace();
         }
     }
+    
+    int freshCOGID() {
+        return cogCounter.incrementAndGet();
+    }
+
     
     /**
      * Starts this runtime by using the Main class with name mainClassName (full qualified).
@@ -270,6 +281,19 @@ public class ABSRuntime {
     public static ABSFut<?> asyncCall(Task<?> task) {
         task.schedule();
         return task.getFut();
+    }
+
+    private final Map<Class<?>,AtomicInteger> objectIds = new HashMap<Class<?>,AtomicInteger>();
+    public long getFreshObjectID(Class<?> clazz) {
+        AtomicInteger ai = null;
+        synchronized (objectIds) {
+            ai = objectIds.get(clazz);
+            if (ai == null) {
+                ai = new AtomicInteger();
+                objectIds.put(clazz, ai);
+            }
+            return ai.incrementAndGet();
+        }
     }
 
 }

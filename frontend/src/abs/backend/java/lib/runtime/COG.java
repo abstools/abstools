@@ -14,16 +14,16 @@ import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 
 public class COG {
-    private TaskScheduler scheduler;
-    private Class<?> initialClass;
-    private static AtomicInteger counter = new AtomicInteger();
-    private final int id = counter.incrementAndGet();
+    private final TaskScheduler scheduler;
+    private final Class<?> initialClass;
+    private final int id;
     private final ABSRuntime runtime;
 
     public COG(ABSRuntime runtime, Class<?> clazz) {
         initialClass = clazz;
         this.runtime = runtime;
         scheduler = runtime.createTaskScheduler(this);
+        id = runtime.freshCOGID();
     }
     
     public ABSRuntime getRuntime() {
@@ -36,14 +36,6 @@ public class COG {
 
     public TaskScheduler getScheduler() {
         return scheduler;
-    }
-
-    public void release() {
-
-    }
-
-    public void aquire() {
-
     }
 
     public void addTask(Task<?> task) {

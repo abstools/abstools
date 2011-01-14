@@ -42,7 +42,7 @@ aspect GenerateJava {
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public Main("+COG.class.getName()+" cog) { super(cog,1); }");
+            stream.println("   public Main("+COG.class.getName()+" cog) { super(cog); }");
 
             // main block
             stream.println("   public ABSUnit run() {");
@@ -252,7 +252,6 @@ aspect GenerateJava {
         stream.print("   public "+className);
         JavaGeneratorHelper.generateParams(stream, getParams());
         stream.println(" {");
-        stream.println("      super(__idCounter.incrementAndGet());");
         
         for (ParamDecl p : getParams()) {
             stream.println("      this."+JavaBackend.getVariableName(p.getName())+" = "+JavaBackend.getVariableName(p.getName())+";");

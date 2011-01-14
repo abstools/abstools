@@ -16,4 +16,6 @@ public interface ObjectView {
     void registerObjectObserver(ObjectObserver l);
 
     List<String> getFieldNames();
+
+    long getID();
 }
