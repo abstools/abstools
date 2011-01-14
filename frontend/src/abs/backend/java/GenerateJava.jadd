@@ -42,7 +42,7 @@ aspect GenerateJava {
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public Main() { super(1); }");
+            stream.println("   public Main("+COG.class.getName()+" cog) { super(cog,1); }");
 
             // main block
             stream.println("   public ABSUnit run() {");

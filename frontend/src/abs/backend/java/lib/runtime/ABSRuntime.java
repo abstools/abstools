@@ -1,5 +1,11 @@
 package abs.backend.java.lib.runtime;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,19 +25,59 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
 public class ABSRuntime {
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
 
-    private static final ThreadLocal<COG> currentCOG = new ThreadLocal<COG>();
-    
-    
     private final ABSThreadManager threadManager = new ABSThreadManager();
 
-    public void start(Class<? extends ABSObject> mainClass) throws InstantiationException, IllegalAccessException {
+    /**
+     * Starts a new ABS program by giving a generated Main class
+     * @param mainClass the Main class to be used
+     * @throws InstantiationException if the Main class could not be instantiated
+     * @throws IllegalAccessException if the Main class could not be accessed
+     */
+    public void start(Class<?> mainClass) throws InstantiationException, IllegalAccessException {
         systemStarted();
         COG cog = new COG(this,mainClass);
-        currentCOG.set(cog);
-        ABSObject mainObject = mainClass.newInstance();
-        cogCreated(mainObject);
-        asyncCall(new ABSMainTask(mainObject));
-        doNextStep();
+        try {
+            Constructor<?> constr = mainClass.getConstructor(COG.class);
+            ABSObject mainObject = (ABSObject) constr.newInstance(cog);
+            cogCreated(mainObject);
+            asyncCall(new ABSMainTask(mainObject));
+            doNextStep();
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Starts this runtime by using the Main class with name mainClassName (full qualified).
+     * It uses the directory targetDir to search for that class.
+     * Example: <code>start(new File("javatest"), "LeaderElection.Main");</code>
+
+     * @param targetDir the directory that holds the generated class files
+     * @param mainClassName the full qualified name of the class name.
+     * @throws ClassNotFoundException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
+     */
+    public void start(File targetDir, String mainClassName) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        if (!targetDir.canRead()) {
+            throw new IllegalArgumentException("Directory "+targetDir+" cannot be read");
+        }
+        
+        URL[] urls;
+        try {
+            urls = new URL[] { targetDir.toURI().toURL() };
+            ClassLoader classLoader = new URLClassLoader(urls, ABSRuntime.class.getClassLoader());
+            Class<?> mainClass = classLoader.loadClass(mainClassName);
+            start(mainClass);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
     
     private final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
@@ -45,10 +91,10 @@ public class ABSRuntime {
     private Random random;
     
 
-    public synchronized void addSystemObserver(List<SystemObserver> systemObserver) {
-        this.systemObserver.addAll(systemObserver);
+    public void addSystemObserver(SystemObserver t) {
+        this.systemObserver.add(t);
     }
-
+    
     public synchronized long getRandomSeed() {
         return randomSeed;
     }
@@ -209,8 +255,8 @@ public class ABSRuntime {
         final ABSThread thread = getCurrentThread();
         if (thread != null)
             return thread.getCOG();
-        
-        return currentCOG.get();
+        else
+            return null;
     }
 
     public static ABSThread getCurrentThread() {

@@ -87,16 +87,14 @@ public class Config {
     }
     
     public void loadSystemObserver() {
-        ArrayList<SystemObserver> systemObserver = new ArrayList<SystemObserver>();     
         String observerString = System.getProperty(SYSTEM_OBSERVER_OPTION.propertyName);
         if (observerString != null) {
             String[] systemObservers = observerString.split(",");
 
             for (String s : systemObservers) {
                 System.out.println(s);
-                systemObserver.add((SystemObserver) loadClassByName(s));
+                runtime.addSystemObserver((SystemObserver) loadClassByName(s));
             }
-            runtime.addSystemObserver(systemObserver);
         }
     }
 
