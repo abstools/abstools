@@ -1,0 +1,35 @@
+module Assertions;
+
+
+data Condition = Pre(Bool) | Post(Bool);
+
+// special function to represent the result of a method
+def Bool result() = True;
+
+interface I {
+   [Pre(x == True)] 
+   [Post(result() == ~x)]
+   Bool m(Bool x);
+}
+
+class C implements I {
+   
+   Bool m(Bool x) {
+       return x;
+   }
+}
+
+class D implements I {
+   
+   Bool m(Bool x) {
+       assert x == True;
+       Bool result__ = ~x;
+       assert result__ == x;
+       return result__;
+   }
+}
+
+{
+   I i = new D();
+   i.m(True);
+}
