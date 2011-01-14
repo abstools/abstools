@@ -19,10 +19,19 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
 public class ABSRuntime {
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
 
+    private static final ThreadLocal<COG> currentCOG = new ThreadLocal<COG>();
+    
+    
     private final ABSThreadManager threadManager = new ABSThreadManager();
 
-    public void start() {
+    public void start(Class<? extends ABSObject> mainClass) throws InstantiationException, IllegalAccessException {
         systemStarted();
+        COG cog = new COG(this,mainClass);
+        currentCOG.set(cog);
+        ABSObject mainObject = mainClass.newInstance();
+        cogCreated(mainObject);
+        asyncCall(new ABSMainTask(mainObject));
+        doNextStep();
     }
     
     private final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
@@ -160,7 +169,7 @@ public class ABSRuntime {
     }
     
     public void shutdown() {
-        
+        threadManager.shutdownAllThreads();
     }
 
     public TaskScheduler createTaskScheduler(COG cog) {
@@ -200,8 +209,8 @@ public class ABSRuntime {
         final ABSThread thread = getCurrentThread();
         if (thread != null)
             return thread.getCOG();
-        else
-            return null;
+        
+        return currentCOG.get();
     }
 
     public static ABSThread getCurrentThread() {

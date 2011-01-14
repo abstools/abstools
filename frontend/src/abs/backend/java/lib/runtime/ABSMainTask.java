@@ -1,16 +1,14 @@
 package abs.backend.java.lib.runtime;
 
-import abs.backend.java.lib.types.ABSRef;
+public class ABSMainTask extends Task<ABSObject> {
 
-public class ABSMainTask<T extends ABSRef> extends Task<T> {
-
-    public ABSMainTask(T target) {
+    public ABSMainTask(ABSObject target) {
         super(null, target);
     }
 
     @Override
     public Object execute() {
-        ((ABSObject)target).run(); 
+        target.run(); 
         return null;
     }
 

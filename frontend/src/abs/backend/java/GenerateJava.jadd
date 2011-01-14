@@ -34,20 +34,15 @@ aspect GenerateJava {
 
             Block block = getBlock();
             stream.println("public class Main extends "+ABSObject.class.getName()+" {");
-            stream.println("   public static void main(java.lang.String[] args) {");
+            stream.println("   public static void main(java.lang.String[] args) throws Exception {");
             stream.println("       "+ABSRuntime.class.getName()+" runtime = new "+ABSRuntime.class.getName()+"();");
             stream.println("       new "+Config.class.getName()+"(runtime);");
-            stream.println("       runtime.start();");
-            stream.println("       "+COG.class.getName()+" cog = new "+COG.class.getName()+"(runtime,Main.class);");
-            stream.println("       Main main = new Main(cog);");
-            stream.println("       runtime.cogCreated(main);");
-            stream.println("       runtime.asyncCall(new "+ABSMainTask.class.getName()+"(main));");
-            stream.println("       runtime.doNextStep();");
+            stream.println("       runtime.start(Main.class);");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public Main("+COG.class.getName()+" cog) { super(cog,1); }");
+            stream.println("   public Main() { super(1); }");
 
             // main block
             stream.println("   public ABSUnit run() {");

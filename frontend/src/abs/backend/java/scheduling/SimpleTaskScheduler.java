@@ -348,6 +348,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     @Override
     public synchronized Task<?> getActiveTask() {
+        if (activeTask == null)
+            return null;
         return activeTask.task;
     }
 
