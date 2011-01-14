@@ -39,6 +39,10 @@ public abstract class ABSObject implements ABSRef {
         this.__id = id;
     }
 
+    public final ABSRuntime __ABS_getRuntime() {
+        return getCOG().getRuntime();
+    }
+    
     public final COG getCOG() {
         return __cog;
     }
@@ -50,7 +54,7 @@ public abstract class ABSObject implements ABSRef {
     }
     
     /**
-     * Represents an optional ruin method
+     * Represents an optional run method
      */
     public ABSUnit run() {
         return ABSUnit.UNIT;

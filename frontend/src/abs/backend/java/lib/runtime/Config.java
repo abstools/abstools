@@ -39,11 +39,6 @@ public class Config {
         }
     }
 
-    public static final TotalSchedulingStrategy totalSchedulingStrategy;
-    public static final GlobalScheduler globalScheduler;
-    public static final TaskSchedulingStrategy taskSchedulingStrategy;
-    public static final TaskSchedulerFactory taskSchedulerFactory;
-
     private static final List<ConfigOption> options = new ArrayList<ConfigOption>();
 
     public static final ConfigOption LOGLEVEL_OPTION = newOption("abs.loglevel", "sets a logging level",
@@ -72,12 +67,27 @@ public class Config {
 
     private static final Logger logger = Logging.getLogger(Config.class.getName());
 
-    public static final long RANDOM_SEED;
+    private boolean configuredTaskScheduling = false;
 
-    private static boolean configuredTaskScheduling = false;
+    private ABSRuntime runtime;
 
-    public static final List<SystemObserver> systemObserver = new ArrayList<SystemObserver>();
-    static {
+    public Config(ABSRuntime runtime) {
+        this.runtime = runtime;
+        loadProperties();
+    }
+    
+    public void loadProperties() {
+        loadSystemObserver();
+        loadDebugging();
+        loadTotalSchedulingStrategy();
+        loadTaskSchedulingStrategy();
+        loadGlobalSchedulingStrategy();
+        loadSchedulerFactory();
+        loadRandomSeed();
+    }
+    
+    public void loadSystemObserver() {
+        ArrayList<SystemObserver> systemObserver = new ArrayList<SystemObserver>();     
         String observerString = System.getProperty(SYSTEM_OBSERVER_OPTION.propertyName);
         if (observerString != null) {
             String[] systemObservers = observerString.split(",");
@@ -86,11 +96,13 @@ public class Config {
                 System.out.println(s);
                 systemObserver.add((SystemObserver) loadClassByName(s));
             }
+            runtime.addSystemObserver(systemObserver);
         }
-
     }
 
-    public static final boolean DEBUGGING = System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true");
+    public void loadDebugging() {
+        runtime.enableDebugging(System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true"));
+    }
 
     public static Object loadClassByProperty(String property) {
         String s = System.getProperty(property);
@@ -100,7 +112,7 @@ public class Config {
         return null;
     }
 
-    static {
+    public static boolean printHelp() {
         if (Boolean.parseBoolean(System.getProperty("abs.help", "false"))) {
             System.err.println(" ABS Java Backend - Runtime Configuration Options");
             System.err.println(" ================================================");
@@ -108,8 +120,10 @@ public class Config {
                 System.err.println(String.format("%36s\t%s", "-D" + o.propertyName + "=<"
                         + o.type.toString().toLowerCase() + ">", o.description));
             }
-            System.exit(1);
+            return true;
         }
+        
+        return false;
     }
 
     private static Object loadClassByName(String s) {
@@ -126,49 +140,35 @@ public class Config {
         return null;
     }
 
-    static {
+    
+    public void loadRandomSeed() {
+        long randomSeed = System.nanoTime();
         String seedString = System.getProperty("abs.randomseed");
-        if (seedString == null) {
-            RANDOM_SEED = System.nanoTime();
-        } else {
-            long seed = 0;
+        if (seedString != null) {
             try {
-                seed = Long.parseLong(seedString);
+                randomSeed = Long.parseLong(seedString);
             } catch (Exception e) {
                 System.err.println("Illegal random seed " + seedString);
-                System.exit(1);
             }
-            RANDOM_SEED = seed;
+            runtime.setRandomSeed(randomSeed);
         }
 
-        logger.config("Random Seed: " + RANDOM_SEED);
-    }
-    
-    public static final Random RANDOM = new Random(Config.RANDOM_SEED);
-
-    public static long getSeed() {
-        return RANDOM_SEED;
     }
 
-    static {
+    public void loadTotalSchedulingStrategy() {
         TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty(TOTAL_SCHEDULER_OPTION.propertyName);
         if (strat != null) {
             logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
             configuredTaskScheduling = true;
+            runtime.setTotalSchedulingStrategy(strat);
         }
-        totalSchedulingStrategy = strat;
     }
 
-    static {
+    public void loadTaskSchedulingStrategy() {
         TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByProperty(TASK_SCHEDULER_STRATEGY_OPTION.propertyName);
         if (strat == null)
-            strat = totalSchedulingStrategy;
-        else
-            configuredTaskScheduling = true;
-
-        if (strat == null) {
-            strat = new RandomSchedulingStrategy(RANDOM);
-        }
+            return;
+        configuredTaskScheduling = true;
 
         logger.config("Using task scheduling strategy defined by class " + strat.getClass().getName());
 
@@ -179,45 +179,36 @@ public class Config {
             logger.config("Recording schedule");
         }
 
-        taskSchedulingStrategy = strat;
+        runtime.setTaskSchedulingStrategy(strat);
     }
 
-    static {
-        GlobalSchedulingStrategy globalSchedulerStrat = (GlobalSchedulingStrategy) loadClassByProperty(GLOBAL_SCHEDULER_OPTION.propertyName);
-        if (globalSchedulerStrat == null)
-            globalSchedulerStrat = totalSchedulingStrategy;
-
-        if (globalSchedulerStrat != null) {
-            logger.config("Using global scheduling strategy defined by class "
-                    + globalSchedulerStrat.getClass().getName());
-            globalScheduler = new GlobalScheduler(globalSchedulerStrat);
-        } else {
-            globalScheduler = null;
-        }
+    public void loadGlobalSchedulingStrategy() {
+        GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByProperty(GLOBAL_SCHEDULER_OPTION.propertyName);
+        if (strat != null)
+            runtime.setGlobalSchedulingStrategy(strat);
     }
 
-    static {
-        taskSchedulerFactory = getSchedulerFactory();
-    }
-
-    private static TaskSchedulerFactory getSchedulerFactory() {
+    private void loadSchedulerFactory() {
+        
+        TaskSchedulerFactory taskSchedulerFactory;
         // only the SimpleTaskScheduler supports configuring
         if (configuredTaskScheduling) {
             logger.config("Using simple task scheduler, because task scheduling is specified");
-            return SimpleTaskScheduler.getFactory();
+            taskSchedulerFactory = SimpleTaskScheduler.getFactory();
+        } else {
+            String schedulerName = System.getProperty(TASK_SCHEDULER_OPTION.propertyName, "default");
+            logger.config("Scheduler: " + schedulerName);
+            if (schedulerName.equals("default")) {
+                taskSchedulerFactory = DefaultTaskScheduler.getFactory();
+            } else if (schedulerName.equals("simple")) {
+                taskSchedulerFactory = SimpleTaskScheduler.getFactory();
+            } else {
+                logger.warning("The task scheduler " + schedulerName
+                        + " does not exist, falling back to the default task scheduler.");
+                taskSchedulerFactory = DefaultTaskScheduler.getFactory();
+            }
         }
-
-        String schedulerName = System.getProperty(TASK_SCHEDULER_OPTION.propertyName, "default");
-        logger.config("Scheduler: " + schedulerName);
-        if (schedulerName.equals("default"))
-            return DefaultTaskScheduler.getFactory();
-        else if (schedulerName.equals("simple"))
-            return SimpleTaskScheduler.getFactory();
-        logger.warning("The task scheduler " + schedulerName
-                + " does not exist, falling back to the default task scheduler.");
-        return DefaultTaskScheduler.getFactory();
+        runtime.setTaskSchedulerFactory(taskSchedulerFactory);
     }
-
-    public static final boolean GLOBAL_SCHEDULING = globalScheduler != null;
 
 }

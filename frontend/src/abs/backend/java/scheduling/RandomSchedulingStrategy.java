@@ -21,13 +21,16 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 public class RandomSchedulingStrategy implements TotalSchedulingStrategy {
     private final static Logger logger = Logging.getLogger(RandomSchedulingStrategy.class.getName());
 
-    private final Random random;
+    private Random random;
 
     public RandomSchedulingStrategy() {
-        random = Config.RANDOM;
     }
     
     public RandomSchedulingStrategy(Random r) {
+        random = r;
+    }
+    
+    public void setRandom(Random r) {
         random = r;
     }
 

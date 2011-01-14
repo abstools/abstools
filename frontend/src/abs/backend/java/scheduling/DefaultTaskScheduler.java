@@ -189,7 +189,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(COG cog, ABSThreadManager m) {
+            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m) {
                 return new DefaultTaskScheduler(cog, m);
             }
         };

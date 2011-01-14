@@ -2,14 +2,23 @@ package abs.backend.java.lib.runtime;
 
 public abstract class ABSException extends RuntimeException {
 
+    private long randomSeed = -1;
+    
     public ABSException(String string) {
         super(string);
+    }
+
+    public ABSException(String string, long randomSeed) {
+        super(string);
+        this.randomSeed = randomSeed;
     }
 
     @Override
     public String getMessage() {
         String res = super.getMessage();
-        res += "\nRandom seed: " + Config.RANDOM_SEED;
+        if (randomSeed != -1)
+            res += "\n Random seed = "+randomSeed;
+        
         return res;
     }
 

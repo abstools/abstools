@@ -109,9 +109,8 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             t.calledGetOnFut(this);
         }
 
-        // System.out.println("GET CALLED");
-        if (Config.GLOBAL_SCHEDULING) {
-            ABSRuntime.getGlobalScheduler().handleGet(this);
+        if (ABSRuntime.getCurrentRuntime().hasGlobalScheduler()) {
+            ABSRuntime.getCurrentRuntime().getGlobalScheduler().handleGet(this);
         }
 
         await();

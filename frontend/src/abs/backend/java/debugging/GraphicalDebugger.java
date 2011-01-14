@@ -683,10 +683,15 @@ class COGTree extends JPanel {
         }
 
         @Override
-        public void objectCreated(ObjectView o, boolean newCOG) {
+        public void objectCreated(ObjectView o) {
             addObjectNode(o);
         }
 
+        @Override
+        public void objectInitialized(ObjectView o) {
+            // nothing
+        }
+        
         private void addObjectNode(ObjectView o) {
             DefaultMutableTreeNode objectsNode = (DefaultMutableTreeNode) cogs.get(o.getCOG()).getChildAt(0);
             DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(o);

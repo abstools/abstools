@@ -11,9 +11,11 @@ public class GlobalScheduler {
     private static Logger logger = Logging.getLogger(GlobalScheduler.class.getName());
     private final ScheduleOptions options = new ScheduleOptions();
     private final GlobalSchedulingStrategy strategy;
+    private final ABSRuntime runtime;
 
-    public GlobalScheduler(GlobalSchedulingStrategy strategy) {
+    public GlobalScheduler(ABSRuntime runtime, GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
+        this.runtime = runtime;
     }
 
     private long totalNumChoices = 0;
@@ -91,9 +93,9 @@ public class GlobalScheduler {
             return;
         }
 
-        Waker w = new Waker();
+        Waker w = new Waker(this);
         fut.addWaitingThread(w);
-        ABSRuntime.doNextStep();
+        runtime.doNextStep();
         System.out.println("future waiting");
         w.await();
 
@@ -101,7 +103,12 @@ public class GlobalScheduler {
 
     static class Waker implements GuardWaiter {
         boolean awaked;
-
+        final GlobalScheduler globalScheduler;
+        public Waker(GlobalScheduler scheduler) {
+            globalScheduler = scheduler;
+        }
+        
+        
         public synchronized void awake() {
             awaked = true;
             notify();
@@ -124,11 +131,11 @@ public class GlobalScheduler {
             if (Logging.DEBUG)
                 logger.finest("checking guard...");
 
-            ABSRuntime.getGlobalScheduler().ignoreNextStep();
+            globalScheduler.ignoreNextStep();
             awake();
             if (Logging.DEBUG)
                 logger.finest("await next step");
-            ABSRuntime.getGlobalScheduler().awaitNextStep();
+            globalScheduler.awaitNextStep();
         }
     }
 

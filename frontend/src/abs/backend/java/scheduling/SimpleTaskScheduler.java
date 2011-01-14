@@ -100,16 +100,18 @@ public class SimpleTaskScheduler implements TaskScheduler {
     protected TaskInfo activeTask;
 
     protected final COG cog;
+    private final ABSRuntime runtime;
 
-    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat, ABSThreadManager m) {
+    public SimpleTaskScheduler(COG cog, ABSRuntime runtime, ABSThreadManager m) {
         this.threadManager = m;
         this.cog = cog;
-        this.schedulingStrategy = strat;
+        this.schedulingStrategy = runtime.getTaskSchedulingStrategy();
+        this.runtime = runtime;
     }
 
     protected void taskDeadlocked() {
         logger.finest("Task deadlocked");
-        ABSRuntime.doNextStep();
+        runtime.doNextStep();
 
     }
 
@@ -130,7 +132,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         // we now have to wait for all tasks that waited for the future
         // of this task to give them the opportunitiy to add a schedule action
         // to the global scheduler, before we do this step
-        ABSRuntime.doNextStep();
+        runtime.doNextStep();
         logger.finest("next step done");
     }
 
@@ -143,9 +145,9 @@ public class SimpleTaskScheduler implements TaskScheduler {
             view.taskAdded(task.getView());
 
         if (activeTask == null) {
-            if (Config.GLOBAL_SCHEDULING &&
+            if (runtime.hasGlobalScheduler() &&
                 (task instanceof ABSInitObjectTask)) {
-                    ABSRuntime.addScheduleAction(new ActivateTask(cog,task) {
+                    runtime.addScheduleAction(new ActivateTask(cog,task) {
                         @Override
                         public void execute() {
                             synchronized (SimpleTaskScheduler.this) {
@@ -250,11 +252,11 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     private synchronized void schedule() {
-        if (Config.GLOBAL_SCHEDULING) {
+        if (runtime.hasGlobalScheduler()) {
             if (suspendedTasks.isEmpty() && readyTasks.isEmpty())
                 return;
             logger.finest("Adding scheduling action...");
-            ABSRuntime.addScheduleAction(new ScheduleTask(cog) {
+            runtime.addScheduleAction(new ScheduleTask(cog) {
                 @Override
                 public void execute() {
                     logger.finest("Calling do schedule");
@@ -282,7 +284,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         if (choices.isEmpty()) {
             logger.info("Choices are empty!");
-            ABSRuntime.doNextStep();
+            runtime.doNextStep();
             return;
         } 
 
@@ -370,7 +372,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
         }
 
-        ABSRuntime.doNextStep();
+        runtime.doNextStep();
 
         synchronized (this) {
             newTask = activeTask;
@@ -388,8 +390,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(COG cog, ABSThreadManager m) {
-                return new SimpleTaskScheduler(cog, ABSRuntime.taskSchedulingStrategy, m);
+            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m) {
+                return new SimpleTaskScheduler(cog, runtime, m);
             }
         };
     }

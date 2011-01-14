@@ -78,9 +78,12 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
     }
 
     @Override
-    public void objectCreated(ObjectView o, boolean newCOG) {
+    public void objectCreated(ObjectView o) {
         System.out.println("OBJECT CREATED: " + o.getClassName());
-
+    }
+    
+    @Override
+    public void objectInitialized(ObjectView o) {
         if (o.getClassName().equals("FieldClass")) {
             try {
                 ABSString s = (ABSString) o.getFieldValue("field");

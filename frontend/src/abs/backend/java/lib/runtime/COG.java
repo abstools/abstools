@@ -14,14 +14,20 @@ import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 
 public class COG {
-    private TaskScheduler scheduler = ABSRuntime.createTaskScheduler(this);
-    // private TaskScheduler scheduler = new DefaultTaskScheduler(this);
+    private TaskScheduler scheduler;
     private Class<?> initialClass;
     private static AtomicInteger counter = new AtomicInteger();
     private final int id = counter.incrementAndGet();
+    private final ABSRuntime runtime;
 
-    public COG(Class<?> clazz) {
+    public COG(ABSRuntime runtime, Class<?> clazz) {
         initialClass = clazz;
+        this.runtime = runtime;
+        scheduler = runtime.createTaskScheduler(this);
+    }
+    
+    public ABSRuntime getRuntime() {
+        return runtime;
     }
 
     public Class<?> getInitialClass() {
@@ -57,6 +63,11 @@ public class COG {
             view.objectCreated(absObject);
     }
 
+    public void objectInitialized(ABSObject absObject) {
+        if (view != null)
+            view.objectInitialized(absObject);
+    }
+    
     private View view;
 
     public synchronized COGView getView() {
@@ -69,11 +80,14 @@ public class COG {
     private class View implements COGView {
         private List<ObjectCreationObserver> creationListeners;
         private Map<String, List<ObjectCreationObserver>> creationClassListeners;
-
-        synchronized void objectCreated(ABSObject absObject) {
+        
+        synchronized void notifyListeners(ABSObject absObject, boolean created) {
             if (creationListeners != null) {
                 for (ObjectCreationObserver l : creationListeners) {
-                    l.objectCreated(absObject.getView(), false);
+                    if (created)
+                        l.objectCreated(absObject.getView());
+                    else
+                        l.objectInitialized(absObject.getView());
                 }
             }
 
@@ -81,12 +95,24 @@ public class COG {
                 List<ObjectCreationObserver> list = creationClassListeners.get(absObject.getClassName());
                 if (list != null) {
                     for (ObjectCreationObserver l : list) {
-                        l.objectCreated(absObject.getView(), false);
+                        if (created)
+                            l.objectCreated(absObject.getView());
+                        else
+                            l.objectInitialized(absObject.getView());
                     }
                 }
             }
+            
         }
 
+        synchronized void objectCreated(ABSObject absObject) {
+            notifyListeners(absObject, true);
+        }
+
+        synchronized void objectInitialized(ABSObject absObject) {
+            notifyListeners(absObject, false);
+        }
+        
         @Override
         public synchronized void registerObjectCreationListener(ObjectCreationObserver listener) {
             if (creationListeners == null) {

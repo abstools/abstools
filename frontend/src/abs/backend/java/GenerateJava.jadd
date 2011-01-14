@@ -35,27 +35,25 @@ aspect GenerateJava {
             Block block = getBlock();
             stream.println("public class Main extends "+ABSObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) {");
-        stream.println("       "+ABSRuntime.class.getName()+".systemStarted();");
-            stream.println("       "+COG.class.getName()+" cog = new "+COG.class.getName()+"(Main.class);");
+            stream.println("       "+ABSRuntime.class.getName()+" runtime = new "+ABSRuntime.class.getName()+"();");
+            stream.println("       new "+Config.class.getName()+"(runtime);");
+            stream.println("       runtime.start();");
+            stream.println("       "+COG.class.getName()+" cog = new "+COG.class.getName()+"(runtime,Main.class);");
             stream.println("       Main main = new Main(cog);");
-            stream.println("       "+ABSRuntime.class.getName()+".cogCreated(main);");
-            stream.println("       "+ABSRuntime.class.getName()+".asyncCall(new MainTask(main));");
-            stream.println("       "+ABSRuntime.class.getName()+".doNextStep();");
+            stream.println("       runtime.cogCreated(main);");
+            stream.println("       runtime.asyncCall(new "+ABSMainTask.class.getName()+"(main));");
+            stream.println("       runtime.doNextStep();");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
             stream.println("   public Main("+COG.class.getName()+" cog) { super(cog,1); }");
 
-            stream.println("   static class MainTask extends "+Task.class.getName()+"<Main> {");
-            stream.println("      public MainTask(Main target) { super(null,target); }");
-            stream.println("      public Object execute() { target.start(); return null;}");
-            stream.println("      public java.lang.String methodName() { return \"start\"; }");
-            stream.println("   }");
-
             // main block
-            stream.print("   public void start() ");
+            stream.println("   public ABSUnit run() {");
             block.generateJava("   ",stream);
+            stream.println("      return ABSUnit.UNIT;");
+            stream.println("   }");
             stream.println("}");
         } finally {
           if (stream != null)
@@ -284,6 +282,8 @@ aspect GenerateJava {
             getInitBlock().generateJava("      ",stream);
         }
 
+        stream.println("       getCOG().objectInitialized(this);");
+
         stream.println("   }");
 
             
@@ -308,7 +308,8 @@ aspect GenerateJava {
         stream.print("   public static "+className+" __ABS_createNewCOG");
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",getParams());
         stream.println(" {");
-        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"("+className+".class);");
+        stream.println("       final "+ABSRuntime.class.getName()+" __ABS_runtime = "+ABSRuntime.class.getName()+".getCurrentRuntime();");
+        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"(__ABS_runtime,"+className+".class);");
         stream.println("       final "+ABSThread.class.getName()+" __ABS_thread = "+ABSRuntime.class.getName()+".getCurrentThread();");
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
         stream.println("       final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
@@ -317,7 +318,7 @@ aspect GenerateJava {
         stream.print("            "+className+" __ABS_result = new "+className);
         JavaGeneratorHelper.generateParamArgs(stream,getParams());
         stream.println(";");
-        stream.println("          "+ABSRuntime.class.getName()+".cogCreated(__ABS_result);");
+        stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
         stream.println("          __ABS_cog.getScheduler().addTask(new "+
                 ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         if (isActiveClass()) {

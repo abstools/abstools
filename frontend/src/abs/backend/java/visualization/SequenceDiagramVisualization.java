@@ -73,7 +73,16 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
     
     @Override
-    public synchronized void objectCreated(ObjectView o, boolean newCOG) {
+    public synchronized void objectCreated(ObjectView o) {
+/*        if (!staticActors) {
+            out.println(getActorName(o) + ":" + o.getClassName() + "[a]");
+        }
+*/        
+        
+    }
+
+    @Override
+    public synchronized void objectInitialized(ObjectView o) {
 /*        if (!staticActors) {
             out.println(getActorName(o) + ":" + o.getClassName() + "[a]");
         }
