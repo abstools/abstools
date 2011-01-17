@@ -43,6 +43,7 @@
 
     <menu name="Eclipse Integration">
       <item name="Introduction" href="eclipseplugin/eclipseplugin.html"/>
+	  <item name="News" href="eclipseplugin/changelog.html"/>
 	  <item name="Installation" href="eclipseplugin/installation.html"/>
 	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
