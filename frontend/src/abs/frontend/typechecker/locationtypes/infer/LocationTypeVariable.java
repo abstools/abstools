@@ -33,29 +33,25 @@ public class LocationTypeVariable {
     
     private List<LocationType> parametricFarTypes = new ArrayList<LocationType>();
     
-    List<LocationType> parametricClassLocalFarTypes = new ArrayList<LocationType>();
+    List<LocationType> farTypes = new ArrayList<LocationType>();
     List<LocationType> allCTypes = new ArrayList<LocationType>(Arrays.asList(LocationType.ALLCONCRETEUSERTYPES)); // all but bottom
-    List<LocationType> parametricMethodLocalFarTypes = new ArrayList<LocationType>();
-    List<LocationType> parametricGlobalFarTypes = new ArrayList<LocationType>();
     
     private int id = ++counter;
     private ASTNode<?> node;
 
     private List<LocationType> allTypes = Arrays.asList(LocationType.ALLVISTYPES);
     
-    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, List<LocationType> parametricMethodLocalFarTypes, List<LocationType> parametricClassLocalFarTypes, List<LocationType> parametricGlobalFarTypes, LocationType annotatedType) {
+    public static LocationTypeVariable newVar(Set<Constraint> constraints, ASTNode<?> n, boolean declared, List<LocationType> farTypes, LocationType annotatedType) {
         LocationTypeVariable result = new LocationTypeVariable();
         result.node = n;
-        result.parametricMethodLocalFarTypes = parametricMethodLocalFarTypes;
-        result.parametricClassLocalFarTypes = parametricClassLocalFarTypes;
-        result.parametricGlobalFarTypes = parametricGlobalFarTypes;
+        result.farTypes = farTypes;
         result.declared = declared;
         result.annotatedType = annotatedType;
         
         constraints.add(Constraint.declConstraint(result));
         if (declared) {
             //constraints.add(Constraint.constConstraint(result, result.allCTypes, Constraint.MUST_HAVE));
-            MultiListIterable<LocationType> tt = new MultiListIterable<LocationType>(parametricMethodLocalFarTypes, parametricClassLocalFarTypes, Arrays.asList(LocationType.ALLCONCRETEUSERTYPES), parametricGlobalFarTypes);
+            MultiListIterable<LocationType> tt = new MultiListIterable<LocationType>(farTypes, Arrays.asList(LocationType.ALLCONCRETEUSERTYPES));
             constraints.add(Constraint.constConstraint(result, tt, Constraint.MUST_HAVE));
         }
         return result;
@@ -63,21 +59,18 @@ public class LocationTypeVariable {
     
     private void update() {
         if (updated) return;
-        parametricFarTypes.addAll(parametricClassLocalFarTypes);
-        parametricFarTypes.addAll(parametricMethodLocalFarTypes);
-        parametricFarTypes.addAll(parametricGlobalFarTypes);
         allTypes = new ArrayList<LocationType>();
         allTypes.addAll(Arrays.asList(LocationType.ALLVISTYPES));
-        allTypes.addAll(parametricFarTypes);
+        allTypes.addAll(farTypes);
         if (declared) {
-            allCTypes.addAll(parametricFarTypes);
+            allCTypes.addAll(farTypes);
         }
         updated = true;
     }
     
     public List<LocationType> parametricFarTypes() {
         update();
-        return parametricFarTypes;
+        return farTypes;
     }
     
     public List<LocationType> allTypes() {

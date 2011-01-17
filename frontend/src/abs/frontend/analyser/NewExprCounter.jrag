@@ -12,7 +12,5 @@ aspect NewExpCounter {
         return hasCog() ? 1 : 0;
     }
 
-    syn lazy int Block.getNumberOfNewCogExpr() = countNumberOfNewCogExpr();
-    
-
+    syn lazy int ASTNode.getNumberOfNewCogExpr() = countNumberOfNewCogExpr();
 }

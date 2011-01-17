@@ -231,6 +231,7 @@ aspect TypeResolution {
     eq SyncCall.isAsync() = false;
     eq Call.isAsync() = false;
     
+    syn lazy ModuleDecl ASTNode.getModuleDecl() = (ModuleDecl) calcContextNode(ModuleDecl.class);
     syn lazy Decl ASTNode.getContextDecl() = (Decl) calcContextNode(Decl.class);
     syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
     syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);

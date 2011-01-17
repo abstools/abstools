@@ -259,6 +259,7 @@ public class LocationTypeTests extends FrontendTest {
         String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
         //System.out.println(s);
         // TODO: Do something later (2010+)
+        assertEquals(s, "module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { [Far] I i1; [Far] I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
     }
     
     // negative tests:
