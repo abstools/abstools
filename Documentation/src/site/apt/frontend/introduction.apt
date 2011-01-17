@@ -1,0 +1,25 @@
+The ABS Frontend
+
+  The ABS Frontend consists of a {{parser}} and a {{{typechecker}type-checker}}.
+
+* Version History
+
+** 0.6.4
+
+*** Restricted Expressions and Statements inside the initialization code of classes
+
+   Expressions and statements appearing in the initialization of fields
+   or in initialization blocks of classes are being restricted by the
+   type-checker. The following statements and expressions may not appear
+   in class initialization code anymore:
+
+   * <<<await>>> statements
+
+   * <<<suspend>>> statements
+
+   * <<<get>>> expressions
+
+   * synchronous methods calls
+
+   these restrictions ensure that there is no task scheduling during the
+   initialization of an object.
