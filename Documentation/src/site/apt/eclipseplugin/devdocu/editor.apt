@@ -1,5 +1,35 @@
 Editor
 
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|| Feature                      || Extension Points                                     || Classes                                                         |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|  ABSEditor and Content Type   |                                                       |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|  Markers and Annotations      |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.ABSMarkerAnnotationModel        |
+|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
+|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+| Decoration for Location Types |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.decoration.ABSDecorationSupport |
+|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSEditor                       |
+|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |  org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy|
+|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+| Semantic highlighting         |                                                       |  eu.hatsproject.absplugin.editor.ABSCodeScanner                  |
+|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
+|                               |                                                       |  abs.frontend.parser.Keywords                                    |
+|                               |                                                       |  eu.hatsproject.absplugin.preferences.ABSSyntaxColoring          |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+| Content Assistant             |                                                       |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+| Jump to declaration           |  org.eclipse.ui.commands                              |  eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate       |
+|                               |  org.eclipse.ui.bindings                              |                                                                  |
+|                               |  org.eclipse.ui.popupMenus                            |                                                                  |
+|                               |  org.eclipse.ui.editorActions                         |                                                                  |
+|                               |  org.eclipse.ui.contexts                              |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+| Outline                       |                                                       |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+
 * ABSEditor and Content Type
 
 * Markers and Annotations
@@ -8,29 +38,39 @@ Editor
   
   * two kinds of markers: <absproblem> and <locationtypeinferenceinfo>
   
-  ** additional attributes (startline, endline, startcol, endcol)
+    * additional attributes (startline, endline, startcol, endcol)
   
   * subtypes of absproblem: <absparseproblem> and <abstypecheckproblem>
   
   * annotationTypes
   
-  ** defined with extension point <org.eclipse.ui.editors.annotationTypes>
+    * defined with extension point <org.eclipse.ui.editors.annotationTypes>
   
-  ** connection with markers over property <markerType>
+    * connection with markers over property <markerType>
   
   * markerAnnotationSpecification
   
-  ** spefification of the style of highlighting
+    * spefification of the style of highlighting with extension point <org.eclipse.ui.editors.markerAnnotationSpecification>
   
-  ** the keys used (like colorPreferenceKey) are keys in the preferencestore and <<need to be unique>>
+    * the keys used (like colorPreferenceKey) are keys in the preferencestore and and can be chosen freely but <<need to be unique>>
   
-  ** connection to annotations with property <annotationType>
+    * connection to annotations with property <annotationType>
   
   * <eu.hatsproject.absplugin.editor.ABSMarkerAnnotationModel>
   
-  ** method <createPositionFromMarker(..)> reads the additional attributes (see above) and returns the respective positions (relative to the document of the editor)
+    * method <createPositionFromMarker(..)> reads the additional attributes (see above) and returns the respective positions (relative to the document of the editor)
+  
+  * <eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration>
+  
+    * add cases for the new markers to the methods getAnnotationHover(..) and getTextHover(..) so you get popups for the new annotations when hovering the mouse over it.
 
 * Decoration for Location Types
+
+  * create annotation and marker types like in "Markers and Annotations"
+  
+  * add special DrawingStrategy in ABSDecorationSupport (eu.hatsproject.absplugin.editor.decoration.ABSDecorationSupport)
+  
+  * change textstyle values in ABSEditor (eu.hatsproject.absplugin.editor.ABSEditor) in method configureSourceViewerDecorationSupport(..)
 
 * Semantic highlighting
 
@@ -50,13 +90,13 @@ Editor
   
   * key binding in <org.eclipse.ui.bindings> extension point
   
-  ** abs editor scope to activate binding only when an abs file is opened in editor
+    * abs editor scope to activate binding only when an abs file is opened in editor
   
   * command included in editor popup menu with <org.eclipse.ui.popupMenus> extension point
   
   * real action added with <org.eclipse.ui.editorActions> extension point
   
-  ** definitionId to define which command should be handled (for previous bindings)
+    * definitionId to define which command should be handled (for previous bindings)
   
   * abs editor scope added with <org.eclipse.ui.contexts> extension point
 

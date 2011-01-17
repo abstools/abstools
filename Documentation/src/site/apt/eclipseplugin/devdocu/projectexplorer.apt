@@ -10,6 +10,6 @@ Project Explorer
   
   * menus (org.eclipse.ui.menus)
   
-  ** visibleWhen for projectNature = AbsNature
+    * visibleWhen for projectNature = AbsNature
   
-  ** connection for commands
+    * connection for commands
