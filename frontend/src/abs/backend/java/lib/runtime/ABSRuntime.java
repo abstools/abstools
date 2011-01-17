@@ -31,7 +31,7 @@ public class ABSRuntime {
 
     private final ABSThreadManager threadManager = new ABSThreadManager();
     private final AtomicInteger cogCounter = new AtomicInteger();
-    private final AtomicInteger objectCounter = new AtomicInteger();
+    private final AtomicInteger taskCounter = new AtomicInteger();
 
     /**
      * Starts a new ABS program by giving a generated Main class
@@ -57,6 +57,10 @@ public class ABSRuntime {
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
+    }
+    
+    int freshTaskID() {
+        return taskCounter.incrementAndGet();
     }
     
     int freshCOGID() {

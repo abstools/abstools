@@ -9,12 +9,14 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import abs.backend.java.lib.runtime.ABSException;
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerObserver;
+import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskView;
 
 public class DebugModel implements TaskObserver, TaskSchedulerObserver {
@@ -228,6 +230,18 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
             tasks.add(taskInfo.getTaskView());
         }
         return tasks;
+    }
+
+    @Override
+    public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

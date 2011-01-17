@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import abs.backend.java.lib.runtime.TaskStack.Frame;
 import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
@@ -14,14 +15,14 @@ import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 
 public abstract class Task<T extends ABSRef> {
-    private static AtomicInteger counter = new AtomicInteger();
     private final ABSFut<? super ABSValue> future;
     protected final T target;
     protected final ABSObject source;
     protected final Task<?> sender;
-    private final int id = counter.incrementAndGet();
+    private final int id;
     private Thread executingThread;
     private ABSException exception;
+    private TaskStack stack;
 
     public Task(ABSObject source, T target) {
         this(ABSRuntime.getCurrentTask(), source, target);
@@ -32,10 +33,25 @@ public abstract class Task<T extends ABSRef> {
         this.source = source;
         this.target = target;
         future = new ABSFut(this);
+        ABSRuntime runtime = ((ABSObject)target).__ABS_getRuntime();
+        id = runtime.freshTaskID();
+        if (runtime.debuggingEnabled()) {
+            stack = new TaskStack(this);
+        }
     }
 
     public int getID() {
         return id;
+    }
+    
+    public synchronized void setLocalVariable(String name, ABSValue v) {
+        if (stack != null) {
+            Frame f = stack.getCurrentFrame();
+            f.setValue(name,v);
+            if (view != null) {
+                view.localVariableChanged(f,name,v);
+            }
+        }
     }
 
     public synchronized boolean isDeadlocked() {
@@ -76,6 +92,15 @@ public abstract class Task<T extends ABSRef> {
             v.futureReady(someFut);
     }
 
+    public void newStackFrame() {
+        if (stack != null) {
+            Frame f = stack.pushNewFrame();
+            if (view != null) {
+                view.newStackFrameCreated(f);
+            }
+        }
+    }
+    
     public void run() {
         synchronized (this) {
             if (view != null)
@@ -83,6 +108,7 @@ public abstract class Task<T extends ABSRef> {
             executingThread = Thread.currentThread();
         }
 
+        
         try {
             ABSValue res = (ABSValue) execute();
             future.resolve(res);
@@ -135,6 +161,18 @@ public abstract class Task<T extends ABSRef> {
             if (sender == null)
                 return null;
             return sender.getView();
+        }
+
+        public synchronized void localVariableChanged(Frame f,String name, ABSValue v) {
+            for (TaskObserver l : getObservers()) {
+                l.localVariableChanged(f,name, v);
+            }
+        }
+
+        public synchronized void newStackFrameCreated(Frame f) {
+            for (TaskObserver l : getObservers()) {
+                l.stackFrameCreated(this,f);
+            }
         }
 
         public synchronized void nextStep(String fileName, int line) {

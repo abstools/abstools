@@ -1,5 +1,7 @@
 package abs.backend.java.observing;
 
+import abs.backend.java.lib.types.ABSValue;
+
 public interface TaskObserver {
     void taskStarted(TaskView task);
 
@@ -32,4 +34,22 @@ public interface TaskObserver {
      * @param task
      */
     void taskDeadlocked(TaskView task);
+    
+    /**
+     * Called when a new stack frame is created in task.
+     * This is called for every method that the task invokes synchronously, 
+     * in particular it is also called for the initially called method.
+     * 
+     * @param task the task where the stack frame has been created
+     * @param stackFrame the new stack frame
+     */
+    void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame);
+
+    /**
+     * Called when the value of a local variable has changed.
+     * Note that this is also called for the initial value of a variable
+     * @param name the name of the variable
+     * @param v the new value
+     */
+    void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v);
 }

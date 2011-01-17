@@ -23,6 +23,7 @@ import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerObserver;
+import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskView;
 
 public class SequenceDiagramVisualization implements SystemObserver, TaskObserver, ObjectCreationObserver, TaskSchedulerObserver {
@@ -450,6 +451,18 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     public void taskDeadlocked(TaskView task) {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

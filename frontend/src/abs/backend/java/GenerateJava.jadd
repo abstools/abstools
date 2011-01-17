@@ -360,6 +360,14 @@ aspect GenerateJava {
         }
       }
       stream.println("{ __ABS_checkSameCOG(); ");
+      stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
+      stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
+      stream.println("       __ABS_currentTask.newStackFrame();");
+      for (ParamDecl d : getMethodSig().getParams()) {
+          stream.print("     __ABS_currentTask.setLocalVariable(");
+          stream.println("\""+d.getName()+"\","+d.getName()+");");
+      }
+      stream.println("    }");
       getBlock().generateJava(indent, stream, addReturn);
      stream.print("}");
     }
@@ -440,7 +448,14 @@ aspect GenerateJava {
 
     public void Block.generateJava(String indent, PrintStream stream, boolean addReturn) {
         stream.println(" {");
-      super.generateJava(indent,stream);
+        super.generateJava(indent,stream);
+      
+        if (this instanceof MainBlock) {
+            stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
+            stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
+            stream.println("       __ABS_currentTask.newStackFrame(); }");
+        }
+      
         String newIndent = incIndent(indent);
         for (Stmt stmt : getStmts()) {
             stmt.generateJava(newIndent,stream);
@@ -465,7 +480,8 @@ aspect GenerateJava {
     public void VarDecl.generateJava(String indent, PrintStream stream) {
         stream.print(indent);
         getAccess().generateJava(stream);
-        stream.print(" "+JavaBackend.getVariableName(getName())+" = ");
+        String name = JavaBackend.getVariableName(getName());
+        stream.print(" "+name+" = ");
 
         if (hasInitExp()) {
             getInitExp().generateJava(stream);
@@ -474,6 +490,8 @@ aspect GenerateJava {
         }
         stream.print(";");
 
+        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
+        stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+getName()+"\","+name+");");
     }
 
 
@@ -500,6 +518,14 @@ aspect GenerateJava {
         stream.print(" = ");
         getValue().generateJava(stream);
         stream.println(";");
+        
+        if (getVar() instanceof VarUse) {
+            stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+getVar().getName()+"\",");
+            getVar().generateJava(stream);
+            stream.print(");");
+        }
+
     }
 
     public void AwaitStmt.generateJava(String indent, PrintStream stream) {

@@ -15,6 +15,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.GuardView;
@@ -22,6 +23,7 @@ import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerObserver;
+import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskView;
 
 public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObserver, TaskObserver {
@@ -156,6 +158,18 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
         case 8: o.taskStep(null, null, 0); break;
         case 9: o.taskSuspended(null, null); break;
         }
+    }
+
+    @Override
+    public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+        // TODO Auto-generated method stub
+        
     }
 
 }
