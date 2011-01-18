@@ -1,34 +1,40 @@
 Editor
 
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-|| Feature                      || Extension Points                                     || Classes                                                         |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-|  ABSEditor and Content Type   |                                                       |                                                                  |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-|  Markers and Annotations      |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.ABSMarkerAnnotationModel        |
-|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
-|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |                                                                  |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-| Decoration for Location Types |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.decoration.ABSDecorationSupport |
-|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSEditor                       |
-|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |  org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy|
-|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-| Semantic highlighting         |                                                       |  eu.hatsproject.absplugin.editor.ABSCodeScanner                  |
-|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration    |
-|                               |                                                       |  abs.frontend.parser.Keywords                                    |
-|                               |                                                       |  eu.hatsproject.absplugin.preferences.ABSSyntaxColoring          |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-| Content Assistant             |                                                       |                                                                  |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-| Jump to declaration           |  org.eclipse.ui.commands                              |  eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate       |
-|                               |  org.eclipse.ui.bindings                              |                                                                  |
-|                               |  org.eclipse.ui.popupMenus                            |                                                                  |
-|                               |  org.eclipse.ui.editorActions                         |                                                                  |
-|                               |  org.eclipse.ui.contexts                              |                                                                  |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-| Outline                       |                                                       |                                                                  |
-*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|| Feature                      || Extension Points                                     || Classes                                                                     |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  ABSEditor and Content Type   |                                                       |                                                                              |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  Markers and Annotations      |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.ABSMarkerAnnotationModel                    |
+|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration                |
+|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |                                                                              |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+| Decoration for Location Types |  org.eclipse.core.resources.markers                   |  eu.hatsproject.absplugin.editor.decoration.ABSDecorationSupport             |
+|                               |  org.eclipse.ui.editors.annotationTypes               |  eu.hatsproject.absplugin.editor.ABSEditor                                   |
+|                               |  org.eclipse.ui.editors.markerAnnotationSpecification |  org.eclipse.jface.text.source.AnnotationPainter.IDrawingStrategy            |
+|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration                |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+| Semantic highlighting         |                                                       |  eu.hatsproject.absplugin.editor.ABSCodeScanner                              |
+|                               |                                                       |  eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration                |
+|                               |                                                       |  abs.frontend.parser.Keywords                                                |
+|                               |                                                       |  eu.hatsproject.absplugin.preferences.ABSSyntaxColoring                      |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+| Content Assistant             |                                                       |                                                                              |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+| Jump to declaration           |  org.eclipse.ui.commands                              |  eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate                   |
+|                               |  org.eclipse.ui.bindings                              |                                                                              |
+|                               |  org.eclipse.ui.popupMenus                            |                                                                              |
+|                               |  org.eclipse.ui.editorActions                         |                                                                              |
+|                               |  org.eclipse.ui.contexts                              |                                                                              |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+| Outline                       |  --                                                   |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFilters            |
+|                               |                                                       |  ...outline.ABSContentOutlinePage                                            |
+|                               |                                                       |  ...outline.ABSContentOutlineProvider                                        |
+|                               |                                                       |  ...outline.ABSContentOutlineStyledLabelProvider                             |
+|                               |                                                       |  ...outline.ABSContentOutlineUtils                                           |
+|                               |                                                       |  ...outline.handlers.ABSContentOutlineFilterHandler                          |
+|                               |                                                       |  ...outline.handlers.ABSContentOutlineSortHandler                            |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
 
 * ABSEditor and Content Type
 
@@ -101,3 +107,5 @@ Editor
   * abs editor scope added with <org.eclipse.ui.contexts> extension point
 
 * Outline
+
+  
