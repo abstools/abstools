@@ -1,5 +1,18 @@
 Internal Thinds that don't fit anywhere else
 
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|| Feature                      || Extension Points                                     || Classes                                                         |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|  Perspectives                 |  org.eclipse.ui.perspectives                          |  eu.hatsproject.ABSPerspectiveFactory                            |
+|                               |  org.eclipse.ui.perspectiveExtensions                 |  eu.hatsproject.ABSDebugPerspective                              |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|  AST handling                 |                                                       |                                                                  |
+|                               |                                                       |                                                                  |
+|                               |                                                       |                                                                  |
+*-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
+|                               |                                                       |                                                                  |
+
+
 * Perspectives
 
   * defined in extension point <org.eclipse.ui.perspective>
@@ -7,6 +20,12 @@ Internal Thinds that don't fit anywhere else
   * factory classes <ABSPerspectiveFactory> and <ABSDebugPerspectiveFactory>
   
   * method <createInitialLayout(..)> for defining the layout
+  
+  * <addView(..)> and <addPlaceholder(..)> to define the layout
+  
+  * <addNewWizardShortcut(..)> to add wizards to the new menu of the project explorer
+  
+  * <addPerspectiveShortcut(..)> to add perspectives to the "Open Perspective" menu
 
 * AST handling
 
