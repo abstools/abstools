@@ -34,3 +34,9 @@ Executing ABS Projects from ABS Eclipse IDE
   Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed successfully, the output will be printed as info (black), otherwise as error (red).
   
   Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.
+  
+* Run Configurations
+
+  In addition to the described buttons, the Eclipse plug-in offers run configurations for both Java and Maude executions. Those offer more detailed options for the run and store these configurations for further usage.
+  
+  Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files. Furthermore, three of the configurations, which are available as buttons, (namely Debug Java, Debug Java with SEdit and running Maude) are provided as run configurations (Run -> Run as).

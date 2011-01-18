@@ -1,0 +1,17 @@
+Execution and Debugging
+
+* Execution
+
+  Text about Jobs and launch support of Eclipse in general
+
+** Java
+
+  Text about the JavaJob
+
+** Maude
+
+  Text about MaudeJob/ChangeListener
+
+* Debugging
+
+  Text about integration of the Debugger - perhaps the perspective and views? Note, that this is NOT related to the Eclipse Debug API but implements everything manually.

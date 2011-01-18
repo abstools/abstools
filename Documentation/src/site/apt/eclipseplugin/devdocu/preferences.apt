@@ -1,0 +1,15 @@
+Preferences and Properties
+
+* Preference Store
+
+  General text about handling of preference stores and preferences/properties by eclipse
+  Perhaps a line about FieldEditors and/or "normal" editors...
+
+* Preference Pages
+
+  Extension point for preference page, ...
+
+* Property Pages
+
+  Extension point for property pages, similar to preference pages, ...
+
