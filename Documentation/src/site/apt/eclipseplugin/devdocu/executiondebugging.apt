@@ -3,14 +3,45 @@ Execution and Debugging
 * Execution
 
   Text about Jobs and launch support of Eclipse in general
-
+  
+  Eclipse supports asynchronous execution via so called Jobs, implemented in <org.eclipse.core.runtime.jobs.Job>. These Jobs can be scheduled with <Job.schedule>, which will execute the <run> method of a Job, which returns an <IStatus>.
+  
+  <JobChangeListeners> can be added to a Job and react to the <IStatus> returned by the <run> method of a Job.
+  
 ** Java
 
   Text about the JavaJob
 
 ** Maude
 
-  Text about MaudeJob/ChangeListener
+  The <eu.hatsproject.absplugin.actions.MaudeJob> offers compiling to .maude files and execution of such. To do so, one has to create a new MaudeJob, add a new MaudeJobChangeListener to it and schedule the Job.
+  
+  The probably most interesting part is the returned status of the jobs run method. The MaudeJob will always return an IStatus with severity <IStatus.INFO>, the actual state is encoded within the <code> of the <IStatus>. The following outcomes are possible:
+ 
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|| Code                      || What happened                                        || Reaction of the listener                                                    |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_OK>                |  files have been generated, but not executed          |  none                                                                        |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_INFO>              |  files have been generated, execution was successful  |  the message of the status (console output of Maude) will be printed on the  |
+|                            |                                                       |  Eclipse console as Info (black)                                             |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_WARNING>           |  this code is not used by the MaudeJob                |  the message of the status will be printed on the Eclipse console as warning |
+|                            |                                                       |  (yellow)                                                                    |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_ERROR_MAUDE>       |  Maude encountered an error during execution of the   |  the message of the status will be printed on the Eclipse console as error   |
+|                            |  genrated .maude file                                 |  (red)                                                                       |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_ERROR>             |  Other errors have been encountered during compiling  |  An error message containing the message of the status will pop up           |
+|                            |  or starting the Maude process                        |                                                                              |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_ERROR_MAUDE_PATH>  |  No file has been found at the Maude location         |  An error message will pop up. If this is dismissed, the  Maude Preference   |
+|                            |  specified in the preferences                         |  Page will open and allow the user to specify a valid Maude path.            |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+|  <MAUDE_USER_ABORT>        |  The user aborted the Maude Job                       |  An abort message is printed on the Eclipse console as error (red)           |
+*----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
+
+  You may extend these by implementing new codes, but then have to adapt both the Job returning the new code as well as the listener which has to react on the new code appropriately.
 
 * Debugging
 
