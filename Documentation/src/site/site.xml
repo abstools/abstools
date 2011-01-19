@@ -53,6 +53,8 @@
         <item name="Project Explorer" href="eclipseplugin/devdocu/projectexplorer.html"/>
 		<item name="Preferences and Properties" href="eclipseplugin/devdocu/preferences.html"/>
 		<item name="Execution and Debugging" href="eclipseplugin/devdocu/executiondebugging.html"/>
+		<item name="Wizards" href="eclipseplugin/devdocu/wizards.html"/>
+		<item name="Module Explorer" href="eclipseplugin/devdocu/moduleexplorer.html"/>
       </item>
     </menu>
 
