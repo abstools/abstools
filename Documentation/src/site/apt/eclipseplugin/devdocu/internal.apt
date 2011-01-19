@@ -1,4 +1,4 @@
-Internal Thinds that don't fit anywhere else
+Internal Things that don't fit anywhere else
 
 *-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
 || Feature                      || Extension Points                                     || Classes                                                         |
@@ -10,7 +10,6 @@ Internal Thinds that don't fit anywhere else
 |                               |                                                       |                                                                  |
 |                               |                                                       |                                                                  |
 *-------------------------------+-------------------------------------------------------+------------------------------------------------------------------+
-|                               |                                                       |                                                                  |
 
 
 * Perspectives
@@ -28,4 +27,15 @@ Internal Thinds that don't fit anywhere else
   * <addPerspectiveShortcut(..)> to add perspectives to the "Open Perspective" menu
 
 * AST handling
+
+  * the builder <eu.hatsproject.absplugin.builder.AbsBuilder> is registered as builder for ABS files. It gets called when an abs file needs building for example when it is changed in some way and the automatic building is active in eclipse.
+  
+  * the AST is hold in <eu.hatsproject.absplugin.builder.AbsNature>. Every ABS project has an instance of this class.
+  
+    * methods like <parseABSFile(..)>, <getCompilationUnit(..)>, <typeCheckModel(..)> and so on are mostly redirected to the IncrementalModelBuilder
+    
+    * markers are added for parser errors and typecheck errors after parsing a file (<parseABSFile(..)>) respectively typechecking (<typeCheckModel(..)>) the model.
+    * markers are added for parser errors and typecheck errors after parsing a file (<parseABSFile(..)>) respectively typechecking (<typeCheckModel(..)>) the model.
+  
+  * <eu.hatsproject.absplugin.internal.IncrementalModelBuilder> should at first be implemented as an incremental builder for abs files. It is in the current state not really an incremental builder but it takes the whole process of parsing and typechecking all abs files in a project.
 
