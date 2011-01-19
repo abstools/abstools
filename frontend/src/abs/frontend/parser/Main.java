@@ -11,10 +11,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.net.URL;
 import java.util.ArrayList;
-
-import beaver.Parser;
+import java.util.Arrays;
 
 import abs.common.Constants;
 import abs.frontend.analyser.SemanticError;
@@ -24,12 +22,10 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.StarImport;
-import abs.frontend.parser.ABSParser;
-import abs.frontend.parser.ABSScanner;
-import abs.frontend.parser.SyntaxError;
 import abs.frontend.typechecker.locationtypes.LocationType;
-import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
+import beaver.Parser;
 
 public class Main {
 
@@ -38,9 +34,9 @@ public class Main {
     protected boolean typecheck = true;
     protected boolean stdlib = true;
     protected boolean dump = false;
-    protected boolean checkLocationTypes = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
+    protected LocationTypingPrecision locationTypeScope = null;
 
     public static void main(final String... args) throws Exception {
         new Main().parse(args);
@@ -58,13 +54,14 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
-            else if (arg.equals("-loctypes"))
-                checkLocationTypes = true;
-            else if (arg.equals("-loctypeinfer"))
+            else if (arg.equals("-loctypes")) {
                 locationTypeInferenceEnabled = true;
-            else if (arg.startsWith("-locdefault=")) {
+            } else if (arg.startsWith("-locdefault=")) {
                 String def = arg.split("=")[1];
                 defaultLocationType = LocationType.createFromName(def);
+            } else if (arg.startsWith("-locscope=")) {
+                String def = arg.split("=")[1];
+                locationTypeScope = LocationTypingPrecision.valueOf(def);
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
@@ -132,15 +129,14 @@ public class Main {
                 }
             } else {
                 if (typecheck) {
-                    if (checkLocationTypes) {
-                        LocationTypeExtension lte = new LocationTypeExtension(m);
-                        if (defaultLocationType != null) {
-                            lte.setDefaultType(defaultLocationType);
-                        }
-                        m.registerTypeSystemExtension(lte);
-                    }
                     if (locationTypeInferenceEnabled) {
                         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+                        if (defaultLocationType != null) {
+                            ltie.setDefaultType(defaultLocationType);
+                        }
+                        if (locationTypeScope != null) {
+                            ltie.setLocationTypingPrecision(locationTypeScope);
+                        }
                         m.registerTypeSystemExtension(ltie);
                     }
                     SemanticErrorList typeerrors = m.typeCheck();
@@ -187,9 +183,12 @@ public class Main {
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib \n"
                 + "  -loctypes      enable location type checking\n"
-                + "  -locdefault==<loctype> \n"
+                + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
-                + "  -loctypeinfer  enable location type inference\n"
+                + "                 where <loctype> in " + Arrays.toString(LocationType.ALLUSERTYPES) + "\n"
+                + "  -locscope=<scope> \n"
+                + "                 sets the location aliasing scope to <scope>\n"
+                + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n" 
                 + "  -h             print this message\n");
     }
