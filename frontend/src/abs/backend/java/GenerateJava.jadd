@@ -450,7 +450,7 @@ aspect GenerateJava {
         stream.println(" {");
         super.generateJava(indent,stream);
       
-        if (this instanceof MainBlock) {
+        if (this instanceof MainBlock || this instanceof InitBlock) {
             stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
             stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
             stream.println("       __ABS_currentTask.newStackFrame(); }");
