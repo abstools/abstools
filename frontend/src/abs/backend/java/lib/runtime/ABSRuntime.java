@@ -21,6 +21,7 @@ import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.ScheduleAction;
+import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulerFactory;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
@@ -148,6 +149,11 @@ public class ABSRuntime {
 
     public synchronized void setTaskSchedulingStrategy(TaskSchedulingStrategy strat) {
         taskSchedulingStrategy = strat;
+        if (strat != null) {
+            taskSchedulerFactory = SimpleTaskScheduler.getFactory();
+        } else {
+            taskSchedulerFactory = DefaultTaskScheduler.getFactory();
+        }
     }
     
     public synchronized void setGlobalSchedulingStrategy(GlobalSchedulingStrategy strat) {
