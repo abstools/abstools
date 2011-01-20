@@ -59,6 +59,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
             this.task = task;
         }
 
+        public boolean isSchedulable() {
+            return !isSuspended() || guard.isTrue();
+        }
+        
         public boolean isSuspended() {
             return guard != null;
         }
@@ -405,14 +409,48 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     private class View extends AbstractTaskSchedulerView {
 
+        @Override 
+        public List<TaskView> getSchedulableTasks() {
+            synchronized (SimpleTaskScheduler.this) {
+                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                if (getActiveTask() != null) {
+                    result.add(getActiveTask());
+                    return result;
+                }
+                
+                result.addAll(getReadyTasks());
+                for (TaskInfo t : suspendedTasks) {
+                    if (t.isSchedulable()) {
+                        result.add(t.task.getView());
+                    }
+                }
+                
+                return result;
+            }
+        }
+        
         @Override
-        public List<TaskView> getNewTasks() {
-            return null;
+        public List<TaskView> getReadyTasks() {
+            synchronized (SimpleTaskScheduler.this) {
+                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                for (TaskInfo t : readyTasks) {
+                    result.add(t.task.getView());
+                }
+                
+                return result;
+            }
         }
 
         @Override
         public List<TaskView> getSuspendedTasks() {
-            return null;
+            synchronized (SimpleTaskScheduler.this) {
+                ArrayList<TaskView> result = new ArrayList<TaskView>();
+                for (TaskInfo t : suspendedTasks) {
+                    result.add(t.task.getView());
+                }
+                return result;
+            }
+            
         }
 
         @Override

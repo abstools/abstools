@@ -241,6 +241,20 @@ public class TypeCheckerTest extends FrontendTest {
     public void newExp() {
         assertTypeOK("class C(Bool b) { } { new C(True); }");
     }
+    
+    @Test
+    public void ticket188() {
+        assertTypeOK("module Main;"
+           +"def Bool g<A>(A a, A id) = True;"
+           +"def A f<A>(List<A> fs, A id) ="
+           +"    case fs {"
+           +"            Insert(x,ts) =>"
+           +"                    case g(x,id) {"
+           +"                            True => x;"
+           +"                           False => f(ts,id);"
+           +"                   };"
+           +"   };");
+    }
 
     @Test
     public void methodSigs() {

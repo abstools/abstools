@@ -168,14 +168,17 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
     private class View extends AbstractTaskSchedulerView {
         @Override
-        public List<TaskView> getNewTasks() {
-            // TODO Auto-generated method stub
+        public List<TaskView> getReadyTasks() {
             return null;
         }
 
         @Override
         public List<TaskView> getSuspendedTasks() {
-            // TODO Auto-generated method stub
+            return null;
+        }
+        
+        @Override
+        public List<TaskView> getSchedulableTasks() {
             return null;
         }
 
