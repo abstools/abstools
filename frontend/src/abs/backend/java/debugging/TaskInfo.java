@@ -22,6 +22,14 @@ public class TaskInfo {
        this.task = task;
     }
     
+    public int getCurrentLine() {
+        return currentLine;
+    }
+
+    public String getCurrentFile() {
+        return currentFile;
+    }
+
     public String toString() {
         return "Task " + task.getID();
     }
