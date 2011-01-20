@@ -32,12 +32,9 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public LocationTypeExtension(Model m, LocationTypeInferrerExtension ltie) {
         super(m);
         this.ltie = ltie;
+        defaultType = ltie.getDefaultType();
     }
-    
-    public void setDefaultType(LocationType newDefault) {
-        defaultType = newDefault;
-    }
- 
+
     @Override
     public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
         LocationType rhtl = getLocationType(rht);

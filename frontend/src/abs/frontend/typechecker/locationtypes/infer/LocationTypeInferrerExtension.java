@@ -59,6 +59,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
 
     private Set<Constraint> constraints = new HashSet<Constraint>();
     //private List<LocationType> globalFarTypes = new ArrayList<LocationType>();
+    boolean enablesStats;;
     
     public Set<Constraint> getConstraints() {
         return constraints;
@@ -244,7 +245,9 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     @Override
     public void finished() {
-        results = new SatGenerator(constraints).generate(errors);
+        SatGenerator satGen = new SatGenerator(constraints);
+        satGen.enableStats = enablesStats;
+        results = satGen.generate(errors);
         if (errors.isEmpty()) {
             SemanticErrorList sel = new SemanticErrorList();
             List<TypeSystemExtension> curr = model.getTypeExt().getTypeSystemExtensionList();
@@ -255,5 +258,13 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             model.getTypeExt().clearTypeSystemExtensions();
             model.getTypeExt().registerAll(curr);
         }
+    }
+
+    public void enableStatistics() {
+        enablesStats = true;
+    }
+
+    public LocationType getDefaultType() {
+        return defaultType;
     }
 }

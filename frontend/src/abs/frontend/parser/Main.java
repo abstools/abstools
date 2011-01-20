@@ -36,6 +36,7 @@ public class Main {
     protected boolean dump = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
+    protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
 
     public static void main(final String... args) throws Exception {
@@ -54,6 +55,8 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
+            else if (arg.equals("-loctypestats"))
+                locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
                 locationTypeInferenceEnabled = true;
             } else if (arg.startsWith("-locdefault=")) {
@@ -131,6 +134,9 @@ public class Main {
                 if (typecheck) {
                     if (locationTypeInferenceEnabled) {
                         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+                        if (locationTypeStats) {
+                            ltie.enableStatistics();
+                        }
                         if (defaultLocationType != null) {
                             ltie.setDefaultType(defaultLocationType);
                         }
