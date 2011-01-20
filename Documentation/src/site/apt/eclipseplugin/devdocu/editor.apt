@@ -114,7 +114,7 @@ Editor
   
   The ABS content outline is realized by implementing a content outline page (ABSContentOutlinePage). These outline pages are queried by the built-in Eclipse Content Outline View using the getAdapter(Class) method of the currently active Editor page to an IContentOutlinePage.  Hence, to provide an outline, it is the editor's responsibility to override the getAdapter(Class) method to deliver an instance of an IContentOutlinePage.
   
-  Code to hook the content outline page: 
+  Code to hook the content outline page into the ABSEditor: 
   
 +---+
 public Object getAdapter(Class key){
@@ -127,10 +127,12 @@ public Object getAdapter(Class key){
 	return super.getAdapter(key);
 }
 +---+
+
+   If the outline should be <<extended>> with new elements or elements should be <<altered>>, the classes ABSContentOutlineProvider and ABSContentOutlineStyledLabelProvider have to be altered (see below).
   
 **ABS Content outline page (ABSContentOutlinePage)
 
-  Basically, the ABS content outline page is the container of a SWT TreeViewer component eventually displaying the content outline tree. It is responsible for setting up the tree viewer component - including setting a label provider, a content provider as well as an input the tree viewer should display and it registers listeners for example to track down resource changes or listen to selection events in the underlying tree viewer. Lastly, the ABS content outline page is responsible for restoring the state of tree filters and tree sorters.
+  Basically, the ABS content outline page is the container of a SWT TreeViewer component displaying the content outline tree. It is responsible for setting up the tree viewer component - including setting a label provider, a content provider as well as an input the tree viewer should display and it registers listeners for example to track down resource changes or listen to selection events in the underlying tree viewer. Lastly, the ABS content outline page is responsible for restoring the state of tree filters and tree sorters.
   
   Example how to provide the TreeViewer with a content provider and a label provider :
   
@@ -197,6 +199,10 @@ public boolean hasChildren(java.lang.Object element) {
   * Image getImage(Object element)
   
   * String getText(Object element).
+  
+  ...
+  
+**ABS outline filters
   
   ...
 

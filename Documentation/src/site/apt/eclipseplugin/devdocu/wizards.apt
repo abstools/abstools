@@ -1,3 +1,48 @@
 Wizards
 
-  Developer documentation of ABS wizards
+*-------------------------------+---------------------------------------------------------+---------------------------------------------------------------------------------+
+|| Feature                      || Extension Points                                       || Classes                                                                        |
+*-------------------------------+---------------------------------------------------------+---------------------------------------------------------------------------------+
+|  ABS wizards                  |  org.eclipse.ui.newWizards                              |  eu.hatsproject.absplugin.wizards.NewABSFileWizard                              |
+|                               |  org.eclipse.ui.navigator.navigatorContent#commonWizard |  eu.hatsproject.absplugin.wizards.NewABSProjectWizard                           |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.NewClassWizard                                |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.NewInterfaceWizard                            |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.NewModuleWizard                               |
+*-------------------------------+---------------------------------------------------------+---------------------------------------------------------------------------------+
+|  ABS wizard pages             |  --                                                     |  eu.hatsproject.absplugin.wizards.pages.IABSClassInterfaceWizardPage            |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.pages.NewClassInFileWizardPage                |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.pages.NewInterfaceInFileWizardPage            |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.pages.NewModuleWizard                         |       
+*-------------------------------+---------------------------------------------------------+---------------------------------------------------------------------------------+
+| ABS wizard page composites    |  --                                                     |  eu.hatsproject.absplugin.wizards.composite.ModuleGroup                         |
+|                               |                                                         |  eu.hatsproject.absplugin.wizards.composite.ResourceGroup                       |
+*-------------------------------+---------------------------------------------------------+---------------------------------------------------------------------------------+
+
+*ABS wizards
+
+  In eclipse wizards are a convenient method to create, import or export elements or files.
+  
+  Within the ABS plugin only new wizards are used so far, which can be added using the <org.eclipse.ui.newWizards> extension point. The addition of new wizard to this extension point extends the wizard selection page in File->New->Other... . If wizards should be added to the popup menu of the project explorer or the module explorer, they must be hooked into the respective views with the help of thh org.eclipse.ui.navigator.navigatorContent#commonWizard extension point.
+  
+**ABS wizard pages
+
+  Every wizard of the org.eclipse.ui.newWizards extension point needs a class implementing the logic of the wizard and adding one or more wizard pages. 
+  These pages are displayed one after another (in the order to their addition to the wizard) and can be traversed using the Next and Previous buttons in the wizard. These pages are added using the in the wizard class's addPages() method.
+  
+  Example how to add wizard pages to a wizard:
+  
++---+
+@Override
+public void addPages() {
+	mainPage = new WizardNewProjectCreationPage("ABSProject");
+	mainPage.setDescription("Create a new ABS Project");
+	mainPage.setTitle("ABS Proejct");
+	addPage(mainPage);
+}
++---+
+
+  Each wizard page can determine if it contains a valid input and the user can go the next page. Only if all pages are valid, the wizard can be finished. In order to determine, whether a page is valid the wizard invokes the page's validate() method. If a page should not be valid an error message can be displayed in the parent wizard using the page's setErrorMessage(String).
+  
+  If all wizards pages indicate their valid status, the wizards performFinish() method is invoked to actually create the new element or insert text at the right places.
+  
+  
