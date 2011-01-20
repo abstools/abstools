@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.runtime.ABSAndGuard;
@@ -277,12 +278,12 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private void doSchedule() {
         List<TaskInfo> choices;
         synchronized (this) {
-            System.out.println("Executing doSchedule...");
+            logger.finest("Executing doSchedule...");
 
-            List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
-            choices = new ArrayList<TaskInfo>(readyTasks);
-            choices.addAll(suspendedTasksWithSatisfiedGuards);
-            logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
+            choices = getSchedulableTasks();
+            
+            if (logger.isLoggable(Level.INFO))
+                logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
 
         }
 
@@ -305,6 +306,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
             activateTask(nextTask);
         }
 
+    }
+
+    private synchronized List<TaskInfo> getSchedulableTasks() {
+        List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
+        List<TaskInfo> choices = new ArrayList<TaskInfo>(readyTasks);
+        choices.addAll(suspendedTasksWithSatisfiedGuards);
+        return choices;
     }
 
     private synchronized void activateTask(TaskInfo nextTask) {
@@ -418,11 +426,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
                     return result;
                 }
                 
-                result.addAll(getReadyTasks());
-                for (TaskInfo t : suspendedTasks) {
-                    if (t.isSchedulable()) {
-                        result.add(t.task.getView());
-                    }
+                for (TaskInfo t : SimpleTaskScheduler.this.getSchedulableTasks()) {
+                    result.add(t.task.getView());
                 }
                 
                 return result;
@@ -455,7 +460,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         @Override
         public TaskView getActiveTask() {
-            return SimpleTaskScheduler.this.getActiveTask().getView();
+            Task<?> activeTask = SimpleTaskScheduler.this.getActiveTask(); 
+            if (activeTask == null)
+                return null;
+            return activeTask.getView();
         }
 
     }

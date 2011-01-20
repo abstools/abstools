@@ -1,6 +1,7 @@
 package abs.backend.java.scheduling;
 
 import abs.backend.java.lib.runtime.Task;
+import abs.backend.java.observing.TaskView;
 
 public class StepTask extends ScheduleAction {
     private final Task<?> task;
@@ -10,8 +11,10 @@ public class StepTask extends ScheduleAction {
         this.task = task;
     }
 
-    public Task<?> getTask() {
-        return task;
+    public TaskView getTask() {
+        if (task == null)
+            return null;
+        return task.getView();
     }
 
     public String toString() {

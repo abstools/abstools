@@ -380,7 +380,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
                 String text = "Schedule Next Task";
                 if (action instanceof StepTask) {
                     StepTask st = (StepTask) action;
-                    text = "Step Task " + st.getTask().getID() + " (" + st.getTask().methodName() + ")";
+                    text = "Step Task " + st.getTask().getID() + " (" + st.getTask().getMethodName() + ")";
                 }
                 setText(text);
                 setEnabled(true);
