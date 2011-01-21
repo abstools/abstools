@@ -107,6 +107,10 @@ public class ABSRuntime {
     private Random random;
     
 
+    public ABSRuntime() {
+        setRandomSeed(System.nanoTime());
+    }
+    
     public void addSystemObserver(SystemObserver t) {
         this.systemObserver.add(t);
     }

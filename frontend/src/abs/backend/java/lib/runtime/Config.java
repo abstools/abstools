@@ -1,5 +1,7 @@
 package abs.backend.java.lib.runtime;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -79,11 +81,11 @@ public class Config {
     public void loadProperties() {
         loadSystemObserver();
         loadDebugging();
+        loadRandomSeed();
         loadTotalSchedulingStrategy();
         loadTaskSchedulingStrategy();
         loadGlobalSchedulingStrategy();
         loadSchedulerFactory();
-        loadRandomSeed();
     }
     
     public void loadSystemObserver() {
@@ -102,10 +104,10 @@ public class Config {
         runtime.enableDebugging(System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true"));
     }
 
-    public static Object loadClassByProperty(String property) {
+    public static Object loadClassByProperty(String property, Object... args) {
         String s = System.getProperty(property);
         if (s != null) {
-            return loadClassByName(s);
+            return loadClassByName(s, args);
         }
         return null;
     }
@@ -124,15 +126,24 @@ public class Config {
         return false;
     }
 
-    private static Object loadClassByName(String s) {
+    private static Object loadClassByName(String s, Object...args) {
         try {
             Class<?> clazz = Config.class.getClassLoader().loadClass(s);
+            for (Constructor<?> c : clazz.getConstructors()) {
+                if (c.getParameterTypes().length == args.length) {
+                    return c.newInstance(args);
+                }
+            }
             return clazz.newInstance();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
         return null;
@@ -154,7 +165,7 @@ public class Config {
     }
 
     public void loadTotalSchedulingStrategy() {
-        TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty(TOTAL_SCHEDULER_OPTION.propertyName);
+        TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty(TOTAL_SCHEDULER_OPTION.propertyName, runtime.getRandom());
         if (strat != null) {
             logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
             configuredTaskScheduling = true;
