@@ -34,7 +34,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     final Map<COGView, String> createdCOGClasses = new HashMap<COGView, String>();
 
-    final Map<ObjectView, Integer> objectIds = new HashMap<ObjectView, Integer>();
+    final Map<COGView, Integer> objectIds = new HashMap<COGView, Integer>();
     final Map<String, AtomicInteger> idCounters = new HashMap<String, AtomicInteger>();
 
     PrintWriter out;
@@ -93,7 +93,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     
 
     protected synchronized Integer getID(ObjectView v) {
-        Integer id = objectIds.get(v);
+        Integer id = objectIds.get(v.getCOG());
         if (id == null) {
             AtomicInteger counter = idCounters.get(v.getClassName());
             if (counter == null) {
@@ -101,7 +101,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 idCounters.put(v.getClassName(), counter);
             }
             id = counter.incrementAndGet();
-            objectIds.put(v, id);
+            objectIds.put(v.getCOG(), id);
         }
         return id;
     }
