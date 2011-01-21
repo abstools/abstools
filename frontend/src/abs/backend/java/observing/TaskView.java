@@ -18,7 +18,7 @@ public interface TaskView {
      * The source object of the asynchronous call leading to this task is null
      * for the main task, otherwise is never null
      * 
-     * @return
+     * @return the source object, or <code>null</code> if there is no source object
      */
     ObjectView getSource();
 
