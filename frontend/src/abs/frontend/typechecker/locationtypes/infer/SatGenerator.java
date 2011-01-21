@@ -185,7 +185,11 @@ public class SatGenerator {
                             if (t.isSomewhere()) sws++;
                         } 
                     }
-                    System.out.println("Fars: " + fars + " Somewheres: " + sws + " Nears: " + nears + " Parametric Fars: " + paramfars);
+                    System.out.println("Fars: " + fars);
+                    System.out.println("Somewheres: " + sws);
+                    System.out.println("Nears: " + nears);
+                    System.out.println("Parametric Fars: " + paramfars);
+                    System.out.println("Total: " + (fars + sws + nears + paramfars));
                 }
             } else {
                 return null;
