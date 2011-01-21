@@ -2,6 +2,12 @@ import java.io.PrintWriter;
 
 import abs.frontend.tests.*;
 
+/**
+ * A pretty printer to generate ABS source code from an AST.
+ * It is uses an ABSFormatter to format the output.
+ * 
+ * @author Jan Schäfer
+ */
 aspect PrettyPrint {
     
     public String ASTNode.toString() {
