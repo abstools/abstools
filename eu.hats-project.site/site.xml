@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/eu.hatsproject.absplugin_0.0.0.jar" id="eu.hatsproject.absplugin" version="0.0.0" os="linux,macosx,win32">
+      <category name="eu.hatsproject.abs"/>
+   </feature>
+   <feature url="features/eu.hatsproject.abs.compiler_0.0.0.jar" id="eu.hatsproject.abs.compiler" version="0.0.0" os="linux,macosx,win32">
+      <category name="eu.hatsproject.abs"/>
+   </feature>
+   <feature url="features/eu.hatsproject.sdedit_0.0.0.jar" id="eu.hatsproject.sdedit" version="0.0.0" os="linux,macosx,win32">
+      <category name="eu.hatsproject.abs"/>
+   </feature>
+   <category-def name="eu.hatsproject.abs" label="ABS">
+      <description>
+         Features for the ABS language
+      </description>
+   </category-def>
+</site>
