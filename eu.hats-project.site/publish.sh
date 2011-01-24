@@ -1,6 +1,8 @@
 #!/bin/bash
 rm -rf /tmp/ABSSite/
-cp -r ABSSite /tmp/
+mkdir /tmp/ABSSite
+cp -r * /tmp/ABSSite
+rm -rf /tmp/ABSSite/publish.sh
 rm -rf /tmp/ABSSite/.svn
 rm -rf /tmp/ABSSite/features/.svn
 rm -rf /tmp/ABSSite/plugins/.svn
