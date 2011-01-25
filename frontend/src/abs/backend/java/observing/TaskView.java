@@ -41,4 +41,6 @@ public interface TaskView {
     boolean hasException();
 
     ABSException getException();
+    
+    TaskStackView getStack();
 }

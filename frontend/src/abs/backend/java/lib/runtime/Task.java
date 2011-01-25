@@ -12,6 +12,7 @@ import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.TaskObserver;
+import abs.backend.java.observing.TaskStackView;
 import abs.backend.java.observing.TaskView;
 
 public abstract class Task<T extends ABSRef> {
@@ -22,7 +23,7 @@ public abstract class Task<T extends ABSRef> {
     private final int id;
     private Thread executingThread;
     private ABSException exception;
-    private TaskStack stack;
+    private final TaskStack stack;
 
     public Task(ABSObject source, T target) {
         this(ABSRuntime.getCurrentTask(), source, target);
@@ -37,6 +38,8 @@ public abstract class Task<T extends ABSRef> {
         id = runtime.freshTaskID();
         if (runtime.debuggingEnabled()) {
             stack = new TaskStack(this);
+        } else {
+            stack = null;
         }
     }
 
@@ -266,6 +269,11 @@ public abstract class Task<T extends ABSRef> {
         @Override
         public ABSException getException() {
             return Task.this.getException();
+        }
+
+        @Override
+        public TaskStackView getStack() {
+            return stack;
         }
 
     }
