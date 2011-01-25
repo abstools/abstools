@@ -24,5 +24,9 @@ public class COGInfo {
     public List<TaskInfo> getTasks(){
         return tasks;
     }
+    
+    public ObjectView getInitialObject(){
+        return initialObject;
+    }
 
 }
