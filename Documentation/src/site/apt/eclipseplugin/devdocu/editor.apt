@@ -19,7 +19,8 @@ Editor
 |                               |                                                       |  abs.frontend.parser.Keywords                                                   |
 |                               |                                                       |  eu.hatsproject.absplugin.preferences.ABSSyntaxColoring                         |
 *-------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
-| Content Assistant             |                                                       |                                                                                 |
+| Content Assistant             |                                                       |  eu.hatsproject.absplugin.contentassist.ABSCompletionProcessor                  |
+|                               |                                                       |  eu.hatsproject.absplugin.contentassist.ProposalFactory                         |
 *-------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
 | Jump to declaration           |  org.eclipse.ui.commands                              |  eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate                      |
 |                               |  org.eclipse.ui.bindings                              |                                                                                 |

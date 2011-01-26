@@ -2,14 +2,41 @@ Preferences and Properties
 
 * Preference Store
 
-  General text about handling of preference stores and preferences/properties by eclipse
-  Perhaps a line about FieldEditors and/or "normal" editors...
+ There are different ways to handle preferences and properties and save those over two sessions. We use <preference stores> for this purpose.
+  
+ Preference stores hide complexity from the user and offer easy access to stored values. To be more detailed, values are bound to String identifiers and methods are offered, to store and obtain those. For each identifier two values are stored: the current value and the default value. While the current value may change, the default value should not. The current value can be restored to default if necessary (with a simple method).
+  
+ We use one global preference store to handle out global preferences and a <scoped preference store> in each project to handle project specific properties. As the name suggests, the scoped preference store has a scope, therefor the same identifier can have different values in different scopes (or rather different preference stores).
 
 * Preference Pages
 
-  Extension point for preference page, ...
+ <Preference Pages> are reachable with the menu bar of eclipse and handle global preferences, for example colours for syntax highlighting.
+  
+ They can be added via the extension point <org.eclipse.ui.preferencePage>. The implementation of a preference page must implement the interface <org.eclipse.ui.IWorkbenchPreferencePage>.
+  
+ Extending <org.eclipse.jface.preference.PreferencePage> reduces the methods to be implemented to only two: an initialization method and the <createControl> method, in which the layout of the page is defined.
+  
+ If the contents of the page should be saved, <performOk> and <performDefaults> should be overridden as well, the first one being called, whenever the "apply" or "ok" buttons are pressed, the latter one when the "restore defaults" button is pressed.
 
 * Property Pages
 
-  Extension point for property pages, similar to preference pages, ...
+ <Property Pages> are reachable over the project menu and handel project specific preferences, for example paths for file generation. In other ways, property pages are very similar ot preference pages, only paths and names differ.
+  
+ They can be added via the extension point <org.eclipse.ui.propertyPages>. The implementation of a property page must implement the interface <org.eclipse.ui.IWorkbenchPropertyPage>.
+  
+ Extending <org.eclipse.jface.dialogs.PropertyPage reduces the methods to be implemented to only the <createContents>, which handles the layout, similar to preference pages.
+  
+ Again, <performOk> and <performDefaults> should be overridden for saving contents.
+  
+* Run configurations
 
+ <Run configurations> handle properties of a specific run, for example which project to run. More detailed information about those can be found at {{{executiondebugging.html}Execution & Debugging}}.
+
+* Field Editors
+
+ Editors are fields, which are used to input data, for example a simple textfield or a checkbox. <Field editors> are specialized editors, which exploit preference stores. Usually, if a preference store and field editors are used inside a <org.eclipse.jface.preference.FieldEditorPreferencePage>, saving and restoring defaults are handled by the page.
+  
+ Unfortunatly, those pages are unable to handle non-Field editors and offer very limited to no support of arranging those editors on the page. We did not use FieldEditorPreferencePages, but used some field editors and handle saving of their values manually.
+
+  
+  
