@@ -1,0 +1,150 @@
+import java.util.Map;
+import java.util.HashMap;
+import abs.frontend.delta.*;
+import abs.frontend.delta.exceptions.*;
+
+aspect DeltaFlattener {
+
+    //propagate
+    public void ASTNode.applyDelta(Delta delta) throws ASTNodeNotFoundException {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).applyDelta(delta);
+        }
+    }
+    
+    public void ModuleDecl.applyDelta(Delta delta) throws ASTNodeNotFoundException {
+        String moduleid = this.getName();
+
+        //if Delta has ClassModifiers that apply to this Module, apply them...
+        if (delta.appliesTo(moduleid)) {
+            for (ClassModifier cmod : delta.getClassModifiers(moduleid)) {
+                System.out.println("*** applying " + cmod + " to module " + moduleid);
+                cmod.applyTo(this);
+            }
+        }
+    }
+
+    /**************************************************************************
+     * ClassModifiers are applied to Modules
+     * - add/remove/modify classes
+     */
+    public abstract void ClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException;
+    
+    public void RemoveClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
+        // find class by name
+        String classname = this.getName();
+        int found = -1;
+        for (int i = 0; i < md.getNumDecl(); i++) {
+            Decl d = md.getDecl(i);
+            if (d instanceof ClassDecl)
+                if (d.getName().equals(classname)) {
+                    found = i;
+                    break;
+                }
+        }
+        if (found >= 0)
+            //remove ClassDecl
+            md.getDecls().removeChild(found);
+        else
+            throw new ASTNodeNotFoundException(md, classname);
+    }
+
+    public void AddClassModifier.applyTo(ModuleDecl md) {
+        md.getDecls().addChild(this.getClassDecl().copy());
+    }
+
+    public void ModifyClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
+        // find class by name
+        String classname = this.getName();
+        int found = -1;
+        for (int i = 0; i < md.getNumDecl(); i++) {
+            Decl d = md.getDecl(i);
+            if (d instanceof ClassDecl)
+                if (d.getName().equals(classname)) {
+                    found = i;
+                    break;
+                }
+        }
+        if (found >= 0)
+            // apply all modifiers
+            for (Modifier mod : this.getModifiers()) {
+                System.out.println("--- applying " + mod + " to class " + md.getDecl(found).getName());
+                mod.applyTo((ClassDecl) md.getDecl(found));
+            }
+        else
+            throw new ASTNodeNotFoundException(md, classname);
+    }
+
+    /**************************************************************************
+     * Modifiers are applied to Classes
+     * - add/remove/modify methods
+     * - add/remove fields
+     */
+    public abstract void Modifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException;
+
+    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodSig();
+
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // remove MethodImpl from list
+            cd.getMethods().removeChild(found);
+        else  
+            throw new ASTNodeNotFoundException(cd, mysig);
+    }
+
+    public void AddMethodModifier.applyTo(ClassDecl cd) {
+        cd.getMethods().addChild(this.getMethodImpl().copy());
+    }
+
+    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodImpl().getMethodSig();
+
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // replace MethodImpl
+            cd.getMethods().setChild(this.getMethodImpl().copy(), found);
+        else  
+            throw new ASTNodeNotFoundException(cd, mysig);
+    }
+
+    public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        // FIXME possible problems with field declarations that include assignment?
+       
+        FieldDecl myfield = this.getFieldDecl();
+
+        // in given ClassDecl: find FieldDecl that matches this
+        int found = -1;
+        for (int i = 0; i < cd.getNumField(); i++) {
+            FieldDecl field = cd.getField(i);
+            if (field.matches(myfield)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            cd.getFields().setChild(this.getFieldDecl().copy(), found);
+        else  
+            throw new ASTNodeNotFoundException(cd, myfield);
+    }
+    
+    public void AddFieldModifier.applyTo(ClassDecl cd) {
+        cd.getFields().addChild(this.getFieldDecl().copy());
+    }
+}

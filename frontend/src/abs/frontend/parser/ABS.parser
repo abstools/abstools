@@ -270,7 +270,33 @@ ClassDecl class_decl =
   ;
 
 DeltaDecl delta_decl =
-    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id param_decls.params? LBRACE class_modifier_list.modifiers? RBRACE {: return new DeltaDecl(id, annotations, params, modifiers); :} ;
+    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id delta_param_decls.params? LBRACE class_modifier_list.modifiers? RBRACE
+    {: return new DeltaDecl(id, annotations, params, modifiers); :} ;
+
+
+List delta_param_decls =
+	LPAREN delta_param_decl_list.f? RPAREN     {: return f ; :}
+	;
+
+List delta_param_decl_list =
+      delta_param_decl.i                               {: return new List().add(i); :}
+    | delta_param_decl_list.l COMMA delta_param_decl.i {: return l.add(i); :}
+  ;
+
+DeltaParamDecl delta_param_decl =
+    param_decl.p   {: return new DeltaFieldParam(p); :}
+  | TYPE_IDENTIFIER.id has_condition.c   {: return new DeltaClassParam(id,c); :}
+  ;
+
+HasCondition has_condition =
+    HASFIELD field_decl.f   {: return new HasField(f); :}
+  | HASMETHOD methodsig.ms  {: return new HasMethod(ms); :}
+  | HASINTERFACE type_name.n
+        {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName()) ;
+           res.setAbsolutePosition(n.getAbsolutePosition());
+           return res; :}
+  ;
+
 
 List class_modifier_list =
     class_modifier.m {: return new List().add(m); :}
@@ -278,17 +304,22 @@ List class_modifier_list =
   ;
 
 ClassModifier class_modifier =
-    MODIFIES TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new ClassModifier(id, fragments); :} ;
+    MODIFIES CLASS TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, fragments); :}
+  | ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+  | REMOVES CLASS TYPE_IDENTIFIER.id {: return new RemoveClassModifier(id); :}
+  ;
 
 List modifier_fragment_list =
     modifier_fragment.f {: return new List().add(f); :}
   | modifier_fragment_list.l modifier_fragment.f {: return l.add(f); :}
   ;
 
-ModifierFragment modifier_fragment =
-    ADDS method.m {: return new AddMethodModifier(m); :}
-  | MODIFIES method.m {: return new ModifyMethodModifier(m); :}
-  | REMOVES methodsig.ms SEMICOLON {: return new RemoveMethodModifier(ms); :}
+Modifier modifier_fragment =
+    ADDS field_decl.f SEMICOLON     {: return new AddFieldModifier(f); :}
+  | REMOVES field_decl.f SEMICOLON  {: return new RemoveFieldModifier(f); :}
+  | ADDS method.m                   {: return new AddMethodModifier(m); :}
+  | MODIFIES method.m               {: return new ModifyMethodModifier(m); :}
+  | REMOVES methodsig.ms SEMICOLON  {: return new RemoveMethodModifier(ms); :}
   ;
 
 List data_constructor_list =
@@ -732,7 +763,7 @@ List deltacondition_list = {: return new List(); :}
 
 List after_condition = AFTER delta_list.l {: return l; :} ;
 
-Delta delta = TYPE_IDENTIFIER.id {: return new Delta(id); :} ;
+DeltaID delta = TYPE_IDENTIFIER.id {: return new DeltaID(id); :} ;
 
 List delta_list = delta.id {: return new List().add(id); :}
     | delta_list.l COMMA delta.id {: return l.add(id); :}

@@ -75,7 +75,7 @@
 	</target>
 
 
-	<target name="clean">
+	<target name="clean" description="cleans everything">
 		<delete failonerror="false" includeemptydirs="true">
 			<fileset dir="${gen.dir}" />
 			<!--       <fileset dir = "${gen.dir}/docs"/> -->

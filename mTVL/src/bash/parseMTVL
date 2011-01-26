@@ -12,8 +12,21 @@ progname=${0##*/}
 
 function usage
 {
-    echo "Usage: "$progname" [-hvsc] [FSL file] <mTVL files>"
-    echo
+#    echo "Usage: "$progname" [-hvsc] [FSL file] <mTVL files>"
+#    echo
+    echo "*******************************"
+    echo "*       MTVL TOOL SUITE       *"
+    echo "*******************************"
+    echo "Usage: "$progname" [options] [prodname] [fslfile] <mtvlfiles>" 
+    echo "  [prodname]     name of the product to check" 
+    echo "  [fslfile]      FSL file to parse" 
+    echo "  <mtvlfiles>    mTVL files to parse" 
+    echo "Options:"
+    echo "  -v            verbose output" 
+    echo "  -s            solve constraint satisfaction problem" 
+    echo "  -c            check satisfiability of a feature selection" 
+    echo "  -h            print help message"
+
 }
 
 function identify
@@ -25,12 +38,12 @@ function help
 {
     identify;
     usage;
-    echo "Legal options: "
-    echo "-h : Display help"
-    echo "-v : Verbose"
-    echo "-s : Solve CSP"
-    echo "-c : Check if an FSL file satisfies the feature model"
-    exit 0
+#     echo "Legal options: "
+#     echo "-h : Display help"
+#     echo "-v : Verbose"
+#     echo "-s : Solve CSP"
+#     echo "-c : Check satisfiability of a feature selection" 
+     exit 0
 }
 
 while getopts "h v s c" Option

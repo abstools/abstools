@@ -81,6 +81,9 @@ IntLiteral = 0 | [1-9][0-9]*
  "adds"        { return sym(Terminals.ADDS); }
  "modifies"    { return sym(Terminals.MODIFIES); }
  "removes"     { return sym(Terminals.REMOVES); }
+ "hasField"    { return sym(Terminals.HASFIELD); }
+ "hasMethod"   { return sym(Terminals.HASMETHOD); }
+ "hasInterface" { return sym(Terminals.HASINTERFACE); }
  "productline" { return sym(Terminals.PRODUCTLINE); }
  "features"    { return sym(Terminals.OPTFEATURES); }
  "core"        { return sym(Terminals.COREFEATURES); }

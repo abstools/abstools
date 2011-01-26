@@ -1,0 +1,9 @@
+aspect ModuleName {
+
+    //inform every Decl about the name of the Module where it was declared
+    inh String Decl.moduleName();
+    eq ModuleDecl.getDecl().moduleName() = this.getName();
+
+    inh String ClassModifier.moduleName();
+    eq DeltaDecl.getClassModifier().moduleName() = this.moduleName();
+}

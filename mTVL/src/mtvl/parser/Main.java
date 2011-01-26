@@ -191,8 +191,9 @@ public class Main {
                 "*******************************\n"+
                 "*       MTVL TOOL SUITE       *\n"+
                 "*******************************\n"+
-                "Usage: java "+this.getClass().getName()+" [options] <absfiles>\n\n" +
-                "  [fslfiles]     FSL files to parse\n" +
+                "Usage: java "+this.getClass().getName()+" [options] [prodname] [fslfile] <mtvlfiles>\n\n" +
+                "  [prodname]     name of the product to check\n" +
+                "  [fslfile]      FSL file to parse\n" +
                 "  <mtvlfiles>    mTVL files to parse\n\n" +
                 "Options:\n"+
                 "  -v            verbose output\n" +

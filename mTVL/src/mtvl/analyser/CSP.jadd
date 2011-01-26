@@ -137,7 +137,7 @@ aspect CSP {
   // REQUIRE/EXCLUDE
   public Constraint Require.collectConstraints(ChocoSolver s) {
     Constraint c = 
-      ChocoSolver.eqeq(s.getVar(pname()), s.getVar(getFeatVar().getFName()));
+      Choco.implies(ChocoSolver.isTrue(s.getVar(pname())), ChocoSolver.isTrue(s.getVar(getFeatVar().getFName())));
     return c;
   } 
   public Constraint Exclude.collectConstraints(ChocoSolver s) {

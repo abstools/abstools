@@ -2,44 +2,45 @@ import java.util.Map;
 
 aspect ProdSolution {
 
-  //propagate request for getting solution: 
-  public void ASTNode.getSolution(String product, Map<String,Integer> sol) {
-    for(int i = 0; i < getNumChild(); i++)
-      getChildNoTransform(i).getSolution(product, sol);
-  }
-
-  public void Product.getSolution(String product, Map<String,Integer> sol) {
-    if (product.equalsIgnoreCase(getName())) {
-      for(int i = 0; i < getNumFeature(); i++)
-        getFeature(i).getSolution(true, sol);
+    //propagate request for getting solution: 
+    public void ASTNode.getSolution(String product, Map<String,Integer> sol) {
+        for(int i = 0; i < getNumChild(); i++)
+            getChildNoTransform(i).getSolution(product, sol);
     }
-  }
 
-  // store feature in solution
-  public void Feature.getSolution(Boolean found, Map<String,Integer> sol) {
-    if (found) {
-      sol.put(getName(),new Integer(1));
-      for(int i = 0; i < getNumAttrAssignment(); i++)
-        getAttrAssignment(i).getSolution(true, sol);
-
+    public void Product.getSolution(String product, Map<String,Integer> sol) {
+        if (product.equalsIgnoreCase(getName())) {
+            for(int i = 0; i < getNumFeature(); i++)
+                getFeature(i).getSolution(true, sol);
+        }
     }
-  }
 
-  // store attribute in solution
-  public void AttrAssignment.getSolution(Boolean found, Map<String,Integer> sol) {
-    if (found) {
-      Feature parent = (Feature) getParent().getParent();
-      sol.put(parent.getName()+"."+getName(),getValue().getIntValue());
+    // store feature in solution
+    public void Feature.getSolution(Boolean found, Map<String,Integer> sol) {
+        if (found) {
+            sol.put(getName(),new Integer(1));
+            for(int i = 0; i < getNumAttrAssignment(); i++)
+                getAttrAssignment(i).getSolution(true, sol);
+
+        }
     }
-  }
 
-  abstract public Integer Value.getIntValue();
-  public Integer IntVal.getIntValue() {
-      return getValue();
-  }
-  public Integer BoolVal.getIntValue() {
-      if (getValue()) return new Integer(1);
-      else            return new Integer(0);
-  }
+    // store attribute in solution
+    public void AttrAssignment.getSolution(Boolean found, Map<String,Integer> sol) {
+        if (found) {
+            Feature parent = (Feature) getParent().getParent();
+            sol.put(parent.getName()+"."+getName(),getValue().getIntValue());
+        }
+    }
+
+    abstract public Integer Value.getIntValue();
+    public Integer IntVal.getIntValue() {
+            return getValue();
+    }
+    public Integer BoolVal.getIntValue() {
+            if (getValue()) return new Integer(1);
+            else            return new Integer(0);
+    }
+
 
 }  

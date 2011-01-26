@@ -1,0 +1,18 @@
+root HelloMultiLingual {
+  group allof {
+    Language {
+      group oneof { English, Dutch, French, German }
+    },
+    opt Repeat {
+      int times in [0..1000];     // Int times in [0..1000]
+      times >= 0; 
+    }
+  }
+}
+
+English {                         // extension English {
+  bool x;                         // Bool x
+  x == true;
+  ifin: Repeat -> (Repeat.times >= 2 && Repeat.times <= 5);
+  English excludes Dutch;         // excludes Dutch;
+}

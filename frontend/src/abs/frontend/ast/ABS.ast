@@ -27,9 +27,9 @@ abstract TypeDecl:		Decl; // Entities used in type expressions
 
 UnknownDecl:    TypeDecl;		// Unknown declarations
 ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-DeltaDecl:      Decl    ::= Annotation* Param:ParamDecl* Modifier:ClassModifier*;
+DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* ClassModifier*;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
-DataConstructor : BehaviorDecl ::= <Name> ConstructorArg:DataTypeUse* ;
+DataConstructor : BehaviorDecl  ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
@@ -38,16 +38,30 @@ ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParamet
 TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
 
 
-ClassModifier  ::= <Name> ModifierFragment* ;
+abstract          DeltaParamDecl;
+DeltaClassParam : DeltaParamDecl ::= <Name> HasCondition;
+DeltaFieldParam : DeltaParamDecl ::= ParamDecl; // same parameter as method parameters
 
-abstract ModifierFragment ;
+abstract       HasCondition;
+HasField     : HasCondition ::= FieldDecl;
+HasMethod    : HasCondition ::= MethodSig;
+HasInterface : HasCondition ::= InterfaceTypeUse;
 
-AddMethodModifier : ModifierFragment ::= MethodImpl;
-ModifyMethodModifier : ModifierFragment ::= MethodImpl;
-RemoveMethodModifier : ModifierFragment ::= MethodSig;
+abstract Modifier;
+abstract ClassModifier;
+
+ModifyClassModifier : ClassModifier  ::= <Name> Modifier*;
+AddClassModifier    : ClassModifier  ::= ClassDecl;
+RemoveClassModifier : ClassModifier  ::= <Name>;
+
+AddFieldModifier: Modifier      ::= FieldDecl;
+RemoveFieldModifier: Modifier   ::= FieldDecl;
+AddMethodModifier : Modifier    ::= MethodImpl;
+ModifyMethodModifier : Modifier ::= MethodImpl;
+RemoveMethodModifier : Modifier ::= MethodSig;
 
 abstract	VarOrFieldDecl  ::= <Name>;
-abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ; 
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl:	TypedVarOrFieldDecl ::= [InitExp:Exp];
 FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
 ParamDecl:	TypedVarOrFieldDecl ::= Annotation*;
@@ -86,7 +100,7 @@ UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved 
 
 
 /*
-Constructors occur as 
+Constructors occur as
 - DataConstructors as in data declarations Co(_D_)
 - term consctructors as in Co(_t_)
 - patterns as in Co(_p_)
@@ -106,7 +120,7 @@ SuspendStmt: Stmt;
 ReturnStmt: Stmt		::= RetExp:Exp; 
 ExpressionStmt: Stmt	::= Exp:Exp;
 AssertStmt: Stmt        ::= Condition:PureExp;
-VarDeclStmt: Stmt ::= VarDecl:VarDecl;
+VarDeclStmt: Stmt       ::= VarDecl:VarDecl;
 
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
@@ -206,21 +220,25 @@ EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
 
 
+
 // feature Configuration and Selection Language (FCL/FSL)
 ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondition* ;
 
 // TODO: The third argument (Feature*) is meant to be an application condition, 
 // i.e. a propositional formula over features. If the application condition evaluates
 // to true, then the delta is applied.
-Deltacondition ::= Deltaspec Delta* Feature* ;
+Deltacondition ::= Deltaspec DeltaID* Feature* ;
 
-Delta ::= <Name>;
+DeltaID ::= <Name>;
 Feature ::= <Name> AttrAssignment*;
 
 AttrAssignment ::= <Name:String> Value ;
 abstract Value;
 IntVal:  Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
+
+
+
 
 Deltaspec ::= <Name> Deltaparam* ;
 abstract Deltaparam;

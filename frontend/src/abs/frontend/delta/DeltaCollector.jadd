@@ -1,0 +1,79 @@
+import java.util.Map;
+import abs.frontend.delta.*;
+
+aspect DeltaCollector {
+
+    //propagate
+    public void ASTNode.readDeltas(ArrayList<Delta> deltas) {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).readDeltas(deltas);
+        }
+    }
+
+    public void Model.readDeltas(ArrayList<Delta> deltas) {
+        super.readDeltas(deltas);
+    }
+
+    /*
+     * remember the modifications (addition/removal/modification of classes)
+       that this delta applies
+     */
+    public void DeltaDecl.readDeltas(ArrayList<Delta> deltas) {
+        String moduleid = this.moduleName();
+
+        Delta delta = new Delta(moduleid + "." + this.getName());
+        for (ClassModifier cm : this.getClassModifiers())
+            delta.addClassModifier(moduleid, cm);
+
+        deltas.add(delta);
+    }
+
+
+    /*
+     * Collect features (and later attributes) from a product.
+     */
+
+    // return a product given its name
+    public Product ASTNode.getOptProd(String product) {
+        for(int i = 0; i < getNumChild(); i++) {
+            Product p = getChildNoTransform(i).getOptProd(product);
+            if (p != null)
+                return p;
+        }
+        return null;
+    }
+
+    public Product Product.getOptProd(String product) {
+        if (product.equalsIgnoreCase(getName()))
+            return this;
+        else
+            return null;
+    }
+
+    // collect all features inside a product
+    public void Product.getFeatures(Collection<String> feats) {
+        for(int i = 0; i < getNumFeature(); i++)
+            getFeature(i).getFeatures(feats);
+    }
+
+    public void Feature.getFeatures(Collection<String> feats) {
+        feats.add(getName());
+    }
+
+    // collect all deltas that match a product  (under construction)
+
+    public void Model.collectDeltas(Product prod) {
+        HashSet<DeltaDecl> deltas = new HashSet<DeltaDecl>();
+        HashSet<String>    feats  = new HashSet<String>();
+        prod.getFeatures(feats);
+        collectDeltas(feats,deltas);
+    }
+    public void ASTNode.collectDeltas(Collection<String> feats, Collection<DeltaDecl> deltas) {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).collectDeltas(feats,deltas);
+        }
+    }
+    // ...
+
+//    public void
+}

@@ -22,6 +22,7 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.StarImport;
+import abs.frontend.delta.*;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -36,6 +37,7 @@ public class Main {
     protected boolean dump = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
+    protected boolean fullabs = false;
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
 
@@ -51,6 +53,8 @@ public class Main {
                 dump = true;
             else if (arg.equals("-v"))
                 verbose = true;
+            else if (arg.equals("-fullabs"))
+                fullabs = true;
             else if (arg.equals("-notypecheck"))
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
@@ -149,6 +153,19 @@ public class Main {
                     for (SemanticError se : typeerrors) {
                         System.err.println(se.getHelpMessage());
                     }
+                }
+                if (verbose) {
+                    System.out.println(m);
+                }
+                if (fullabs) {
+                    ArrayList<Delta> deltas = new ArrayList<Delta>();
+                    m.readDeltas(deltas);
+
+                    for (Delta delta : deltas)
+                        System.out.println(delta);
+
+                    for (Delta delta : deltas)
+                        m.applyDelta(delta);
                 }
             }
         }

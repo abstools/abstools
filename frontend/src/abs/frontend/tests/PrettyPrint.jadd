@@ -28,7 +28,6 @@ aspect PrettyPrint {
         for(int i = 0; i < getNumChild(); i++) {
             if (i > 0) w.print(",");
             getChild(i).prettyPrint(w,f);
-            i++;
         }
     }
     
@@ -66,5 +65,32 @@ aspect PrettyPrint {
         getParams().prettyPrint(w,f);
         w.print(')');
     }
+
+    public void FieldDecl.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+    }
+
+    public void ClassDecl.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+        w.print(' ');
+        super.prettyPrintChildren(w,f);        
+    }
     
-} 
+    public void AddClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print(getClassDecl().getName());
+        w.print(' ');
+        super.prettyPrintChildren(w,f);   
+    }
+
+    public void RemoveClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+    }
+
+    public void ModifyClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print(getName());
+        w.print(' ');
+        super.prettyPrintChildren(w,f);   
+    }
+}

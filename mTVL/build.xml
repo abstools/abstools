@@ -221,16 +221,16 @@
   </target>
 
   <!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using computer example, with negative result. -->
-  <target name="testsat" depends="compile">
+  <target name="testsatneg" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
     <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
-      <arg line="-v -c P1 ${abs.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl" />
+      <arg line="-v -c P1 ${abs.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl ${tests.dir}/mtvlsamples/computerext.mtvl" />
     </java>
 
   </target>
 
   <!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using helloworld example, with positive result. -->
-  <target name="testsatok" depends="compile">
+  <target name="testsatpos" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
     <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
       <arg line="-v -c P3 ${abs.tests.dir}/abssamples/deltas/hello.abs ${tests.dir}/mtvlsamples/helloworld.mtvl" />
