@@ -55,7 +55,7 @@ class TaskStack implements TaskStackView {
         }
         
         void setValue(String variableName, ABSValue v) {
-            
+            values.put(variableName, v);
         }
 
         @Override
