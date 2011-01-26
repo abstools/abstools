@@ -74,7 +74,6 @@ public class SatGenerator {
             output.addAll(gen);
             c.variables(vars);
         }
-        
         long genNanos = System.nanoTime();
         if (enableStats) {
             System.out.println("Constraint generation time: " + (genNanos - startNanos) / 1000000);
@@ -125,7 +124,6 @@ public class SatGenerator {
         
         sb.append(weights);
         
-        
         if (enableStats) {
            System.out.println("Number of variables: " + nbvars);
            System.out.println("Number of clauses: " + nbclauses);
@@ -141,15 +139,28 @@ public class SatGenerator {
         
         WDimacsReader reader = new WDimacsReader(wmsd);
         
+        //System.out.println(sb.toString());
+        
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
+            if (enableStats) {
+                System.gc();
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+                System.gc();
+            }
             long parseNanos = System.nanoTime();
             if (enableStats) {
                 System.out.println("Parsing time: " + (parseNanos - genNanos) / 1000000);
             }
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
+            //parseNanos = System.nanoTime();
             //opt.setTimeout(arg0)
             if (opt.isSatisfiable()) {
                 int[] model = opt.model();
@@ -164,7 +175,7 @@ public class SatGenerator {
                 //problem.printInfos(new PrintWriter(System.out), "INFO: ");
                 //System.out.println(Arrays.toString(model));
                 for (int i : model) {
-                    if (i > 0 && i <= nbvars) {
+                    if (i > 0 /*&& i <= nbvars*/) {
                         TypedVar tv = e.vars().get(i-1);
                         //System.out.println(tv.v + " : " + tv.t);
                         tvl.put(tv.v, tv.t);

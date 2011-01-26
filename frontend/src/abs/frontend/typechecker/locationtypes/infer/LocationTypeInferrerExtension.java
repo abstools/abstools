@@ -245,6 +245,14 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     
     @Override
     public void finished() {
+        if (enablesStats) {
+            for (int i = 0; i < 4; i++) {
+                SatGenerator satGen = new SatGenerator(constraints);
+                //satGen.enableStats = enablesStats;
+                results = satGen.generate(errors);
+            }
+        }
+            
         SatGenerator satGen = new SatGenerator(constraints);
         satGen.enableStats = enablesStats;
         results = satGen.generate(errors);
