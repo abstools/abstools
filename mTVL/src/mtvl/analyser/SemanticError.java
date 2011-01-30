@@ -34,9 +34,12 @@ public class SemanticError {
                 return "<could not find filename>";
         }
         CompilationUnit u = (CompilationUnit) parent;
-        Feature root = u.getFeature();
-        if (root == null)
-          return "<unkown>";
+//        Feature root = u.getFeature();
+//        if (root == null)
+//          return "<unkown>";
+        if (u.getNumFeature() == 0)
+          return "<unknown>";
+        Feature root = u.getFeature(0);
         String name = root.getName();
         if (name == null)
           return "<unkown>";

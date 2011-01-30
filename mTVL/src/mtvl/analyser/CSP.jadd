@@ -51,12 +51,19 @@ aspect CSP {
 	}
 	
 	// ROOT: has to be present
+//	public Constraint CompilationUnit.collectConstraints(ChocoSolver s) {
+//	  if (hasFeature()) s.forceTrue(getFeature().getName());
+//	  super.collectConstraints(s);
+//	  return Choco.TRUE;
+//	}
 	public Constraint CompilationUnit.collectConstraints(ChocoSolver s) {
-	  if (hasFeature()) s.forceTrue(getFeature().getName());
+	  for (int i = 0; i < getNumFeature(); i++) {
+	    s.forceTrue(getFeature(i).getName());
+	  }
 	  super.collectConstraints(s);
 	  return Choco.TRUE;
 	}
-	  
+
 
   // FEATURE -> collect constraints, check cardinality, and check children.
   public Constraint Feature.collectConstraints(ChocoSolver s) {

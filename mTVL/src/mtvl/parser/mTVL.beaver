@@ -98,6 +98,7 @@ import java.io.File;
 %left RARROW,LRARROW;
 %typeof compilation_unit = "CompilationUnit";
 %typeof fextension_list = "List";
+%typeof rootfeature_list = "List";
 %typeof fextension = "FExt";
 %typeof feature = "Feature";
 %typeof group = "Group";
@@ -118,10 +119,10 @@ import java.io.File;
 
 compilation_unit =
 //    {: return new CompilationUnit(new Opt(), new List()); :} 
-    fextension_list.ext
-    {: return new CompilationUnit(new Opt(),ext); :}
-  | ROOT feature.f fextension_list.ext
-    {: return new CompilationUnit(new Opt(f),ext); :};
+//    fextension_list.ext
+//    {: return new CompilationUnit(new Opt(),ext); :}
+    rootfeature_list.r fextension_list.ext
+    {: return new CompilationUnit(r,ext); :};
 
 fextension_list = 
     {: return new List(); :}
@@ -130,6 +131,11 @@ fextension_list =
 
 fextension = EXTENSION FID.f LBRACE attribute_list.as constraint_list.cl RBRACE
              {: return new FExt(f, as,cl); :} ;
+
+rootfeature_list =
+    {: return new List(); :}
+  | rootfeature_list.l ROOT feature.f {: return l.add(f); :}
+  ;
 
 feature =
     FID.f {: return new Feature(f,new Opt(),new List(),new List()); :}

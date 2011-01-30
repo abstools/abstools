@@ -16,9 +16,9 @@ aspect Variables {
     getBoolFVars(fv);
     return fv;
   }
-  public ArrayList<String> ASTNode.getFeatures() {
+  public ArrayList<String> ASTNode.readFeatures() {
     ArrayList<String> f = new ArrayList<String>();
-    getFeatures(f);
+    readFeatures(f);
     return f;
   }
   public Map<String,BoundaryInt[]> ASTNode.getIntCVars() {
@@ -33,7 +33,7 @@ aspect Variables {
   }
   public ArrayList<String> ASTNode.getCFeatures() {
     ASTNode parent = getParent();
-    if (parent == null) return getFeatures();
+    if (parent == null) return readFeatures();
     else                return parent.getCFeatures();
   }
 
@@ -46,9 +46,9 @@ aspect Variables {
     for(int i = 0; i < getNumChild(); i++)
       getChild(i).getBoolFVars(bvars);
   }
-  public void ASTNode.getFeatures(ArrayList<String> fs) {
+  public void ASTNode.readFeatures(ArrayList<String> fs) {
     for(int i = 0; i < getNumChild(); i++)
-      getChild(i).getFeatures(fs);
+      getChild(i).readFeatures(fs);
   }
 
   // get Feature names in attributes (scope of attributes).
@@ -113,7 +113,7 @@ aspect Variables {
   }
   public void ASTNode.getCFeatures(ArrayList<String> f) {
     ASTNode parent = getParent();
-    if (parent == null) getFeatures(f);
+    if (parent == null) readFeatures(f);
     else                parent.getCFeatures(f);
   }
 
@@ -121,7 +121,7 @@ aspect Variables {
   syn lazy ArrayList<String> Model.features();
   syn lazy Map<String,BoundaryInt[]> Model.ints(); // triple name:String, min:int, max:int
   syn lazy ArrayList<String> Model.bools();
-  eq Model.features() = getFeatures();
+  eq Model.features() = readFeatures();
   eq Model.ints() = getIntFVars();
   eq Model.bools() = getBoolFVars();
   public ArrayList<String> Model.getCFeatures() { return features(); }
@@ -130,8 +130,8 @@ aspect Variables {
 
   // get feature names, and check if repeated
   public boolean Feature.isRepeated = false;
-  public void Feature.getFeatures(ArrayList<String> fs) {
-    super.getFeatures(fs);
+  public void Feature.readFeatures(ArrayList<String> fs) {
+    super.readFeatures(fs);
     if (fs.indexOf(getName()) != -1)
       isRepeated = true;
     fs.add(getName());

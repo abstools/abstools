@@ -5,7 +5,7 @@
 
 Model ::= CompilationUnit*;
 
-CompilationUnit ::= [Feature] FExt*;
+CompilationUnit ::= Feature* FExt*;
 
 FExt ::= <Name> Attribute* Constr*;
 
