@@ -1,3 +1,27 @@
-Module Explorer
+ABS Module Explorer
 
-  Developer documentation of the ABS module explorer
+*--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+|| Feature                             || Extension Points                                     || Classes                                                                        |
+*--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------|
+| ABS Module Explorer Core             | org.eclipse.ui.navigator.viewer                       | eu.hatsproject.absplugin.navigator.ABSNavigator                                 |
+*--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+| ABS Module Explorer Content          | org.eclipse.ui.navigator.navigatorContent             | eu.hatsproject.absplugin.navigator.ABSNavgiatorStyledLabelProvider              |
+|                                      |                                                       | eu.hatsproject.absplugin.navigator.ABSNavigatorContentProvider                  |
+*--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+| ABS Module Explorer Link with Editor | org.eclipse.ui.navigator.linkHelper                   | eu.hatsproject.absplugin.navigator.LinkHelper                                   |
+*--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+
+*ABS Module Explorer
+
+**ABS Module Explorer Core
+  The ABS Module Explorer uses the Common Navigator Framework (CNF) that was included into Eclipse since version 3.2. A new CNF Navigator is created by creating a new org.eclipse.ui.navigator.viewer extension point.
+  Within this extension point, 
+  ...
+  
+**ABS Module Explorer Content
+
+  ...
+  
+**ABS Module Ecxplorer Link With Editor
+
+  ...

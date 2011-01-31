@@ -147,7 +147,7 @@ public Object getAdapter(Class key){
 	}
 +---+
 
-**ABS outline content provider (ABSContentOutlineProvider)
+** {ABS outline content provider (ABSContentOutlineProvider)}
 
   Any SWT TreeViewer needs a content provider that bridges the gap between the TreeViewer input model (setInput(Object)) and the viewer itself. Therefore, the ABS content outline provider is responsible for dissecting the AST of an ABS file (or more specifically a compilation unit) into a tree structure. The ABS content provider is set using the TreeViewer's method setContentProvider(ITreeContentProvider) during the setup of the TreeViewer.
   
