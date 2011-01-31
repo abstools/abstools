@@ -49,4 +49,8 @@ public class EmptyCompleteObserver implements CompleteObserver {
     @Override
     public void taskSuspended(TaskView task, GuardView guard) {
     }
+
+    @Override
+    public void systemFinished() {
+    }
 }

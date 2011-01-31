@@ -94,4 +94,9 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
         }
     }
 
+    @Override
+    public void systemFinished() {
+        System.out.println("SYSTEM FINISHED");
+    }
+
 }

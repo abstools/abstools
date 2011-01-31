@@ -465,4 +465,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         
     }
 
+    @Override
+    public void systemFinished() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

@@ -172,6 +172,12 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
         
     }
 
+    @Override
+    public void systemFinished() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
 
 class TaskHistoryViewer {

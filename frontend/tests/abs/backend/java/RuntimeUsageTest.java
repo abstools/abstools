@@ -139,4 +139,10 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         
     }
 
+    @Override
+    public void systemFinished() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

@@ -80,6 +80,12 @@ public class GraphicalDebugger implements SystemObserver {
         model.cogCreated(cog, initialObject);
     }
 
+    @Override
+    public void systemFinished() {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
 
 class SourceView extends JPanel implements DebugModelListener {

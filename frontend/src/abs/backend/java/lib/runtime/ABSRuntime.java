@@ -220,18 +220,14 @@ public class ABSRuntime {
     }
 
     public void cogCreated(ABSObject o) {
-        if (!systemObserver.isEmpty()) {
-            for (SystemObserver obs : systemObserver) {
-                obs.newCOGCreated(o.getCOG().getView(), o.getView());
-            }
+        for (SystemObserver obs : systemObserver) {
+            obs.newCOGCreated(o.getCOG().getView(), o.getView());
         }
     }
 
     public void systemStarted() {
-        if (!systemObserver.isEmpty()) {
-            for (SystemObserver obs : systemObserver) {
-                obs.systemStarted();
-            }
+        for (SystemObserver obs : systemObserver) {
+             obs.systemStarted();
         }
     }
 
@@ -307,6 +303,12 @@ public class ABSRuntime {
                 objectIds.put(clazz, ai);
             }
             return ai.incrementAndGet();
+        }
+    }
+
+    public void noSchedulingOptionsLeft() {
+        for (SystemObserver obs : systemObserver) {
+            obs.systemFinished();
         }
     }
 
