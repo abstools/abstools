@@ -29,7 +29,7 @@ Editor
 |                               |  org.eclipse.ui.contexts                              |                                                                                 |
 *-------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
 | Outline                       |  org.eclipse.ui.menus                                 |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFilters               |
-|                               |                                                       |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlinePage                  |
+|                               |  org.eclipse.ui.commands                              |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlinePage                  |
 |                               |                                                       |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlineProvider              |
 |                               |                                                       |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlineStyledLabelProvider   |
 |                               |                                                       |  eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils                 |
@@ -267,8 +267,41 @@ public void update(ViewerCell cell) {
   
 **ABS outline filters
   
-  t.b.d.
+    The buttons for enabling content outline filters and sorters are added using the <menuContribution> subelement of the <<<org.eclipse.ui.menus>>> extension point. The right locationURI to add buttons to the outline view is
+  
++---+
+toolbar:org.eclipse.ui.views.ContentOutline?after=additions
++---+
 
+  and the button types are toggle buttons. Each of the buttons has a command attached defined by the <<<org.eclipse.commands>>> extension point.
+
+  Example: Definition of the sort outline command:
+  
++---+
+<command
+	 defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineSortHandler"
+	 description="Sorts the content outline view alphabetically"
+	 id="eu.hatsproject.absplugin.sortCommand"
+	 name="Sort">
+  <state
+	class="org.eclipse.ui.handlers.RegistryToggleState:false"
+	id="org.eclipse.ui.commands.toggleState">
+  </state>
+</command>
++---+
+
+  Note that the command has a <<pre-defined toggle state>> attached that is used to determine the current state of the toggle button. The state of a toggle button can be determined using the <<<HandlerUtil.toggleCommandState(String commandId)>>>
+  Moreover, the pre-defined toggle state is persistable and is stored over different eclipse sessions.
+  
+  In addition to the button and command definition in the plugin.xml, each commanfd needs a Handler class (extends AbstractHandler implements IHandler) that are defined in <<<eu.hatsproject.absplugin.editor.outline.handlers.*>>>
+  
+  Basically, these handlers are responsible for setting a <<<org.eclipse.jface.viewers.ViewerFilter>>> or <<<org.eclipse.jface.viewers.ViewerComparator>>> to the TreeViewer of the content outline page. ViewerFilters are set using the TreeViewer's <<<setFilters(ViewerFilter[])>>> method and a ViewerSorter is set using the <<<setComparator(ViewerComparator)>>>
+  
+  ...
+  
+  
+  
+  
   
  
   
