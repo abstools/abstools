@@ -33,7 +33,7 @@ DataConstructor : BehaviorDecl  ::= <Name> ConstructorArg:DataTypeUse* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
-TypeParameterDecl	: TypeDecl 	::= <Name∑>;  // local declaration
+TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
 
