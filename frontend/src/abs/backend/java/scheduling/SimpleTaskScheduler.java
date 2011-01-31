@@ -293,8 +293,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
             return;
         } 
 
+        TaskInfo nextTask = schedule(choices);
         synchronized (this) {
-            TaskInfo nextTask = schedule(choices);
 
             if (nextTask.isSuspended()) {
                 suspendedTasks.remove(nextTask);
