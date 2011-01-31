@@ -317,7 +317,7 @@ public class ParserTest extends FrontendTest {
     
     @Test
     public void ticket203() {
-        assertParseOk("def Bool fun(String a, String b) = True; def Bool gun(String a, String b) = fun(String a, String b);");
+        assertParseError("def Bool g() = f(String a, String b);");
     }
     
 }
