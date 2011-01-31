@@ -13,3 +13,11 @@ root HelloMultiLingual {
 extension English {
   ifin: Repeat -> (Repeat.times >= 2 && Repeat.times <= 5);
 }
+
+// true and
+// E+D+F+G >= 1 
+// E+D+F+G <= 1 
+// times >= 0
+// $Repeat = 1 -> true
+// Lang+$Repeat = 2
+// Eng = 1 -> ( Rpeat = 1 -> ( Repeat >= 2 /\ Repeat <= 5 ))

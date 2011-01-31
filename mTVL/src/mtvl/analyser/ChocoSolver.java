@@ -84,8 +84,10 @@ public class ChocoSolver {
   
   public void solve() {
     // show the problem
-    if (verbose)
+    if (verbose) {
+      System.out.print("## The constraints:");
       System.out.println(m.pretty());
+    }
     
     // Read the model
     s.read(m);
