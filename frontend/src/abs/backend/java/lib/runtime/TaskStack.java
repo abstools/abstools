@@ -27,17 +27,17 @@ class TaskStack implements TaskStackView {
         this.task = task;
     }
     
-    Frame pushNewFrame() {
+    synchronized Frame pushNewFrame() {
         Frame f = new Frame();
         frames.add(f);
         return f;
     }
     
-    Frame popFrame() {
+    synchronized Frame popFrame() {
         return frames.remove(frames.size()-1);
     }
     
-    int getDepth() {
+    synchronized int getDepth() {
         return frames.size();
     }
     
@@ -45,16 +45,16 @@ class TaskStack implements TaskStackView {
         private final Map<String,ABSValue> values = new HashMap<String,ABSValue>();
         
         @Override
-        public Set<String> getVariableNames() {
+        public synchronized Set<String> getVariableNames() {
             return values.keySet();
         }
 
         @Override
-        public ABSValue getValue(String variableName) {
+        public synchronized ABSValue getValue(String variableName) {
             return values.get(variableName);
         }
         
-        void setValue(String variableName, ABSValue v) {
+        synchronized void setValue(String variableName, ABSValue v) {
             values.put(variableName, v);
         }
 
@@ -70,10 +70,15 @@ class TaskStack implements TaskStackView {
     }
 
     @Override
-    public Frame getCurrentFrame() {
+    public synchronized Frame getCurrentFrame() {
         return frames.get(frames.size()-1);
     }
 
+    @Override
+    public synchronized boolean hasFrames() {
+        return ! frames.isEmpty();
+    }
+    
     @Override
     public TaskView getTask() {
         return task.getView();

@@ -8,6 +8,7 @@ import java.util.List;
  * The stack consists of multiple stack frames.
  * A stack frame represents a single method invocation.
  * The stack frames can be obtained by using the getFrames() method.
+ * It is possible that a task has no stack frame at all if it has not been started yet.
  * 
  * @author Jan Schäfer
  *
@@ -30,7 +31,14 @@ public interface TaskStackView {
     /**
      * Returns the current active frame of the task stack.
      * I.e. the top of the stack.
-     * @return the current active frame of the task stack.
+     * Returns null if there is no stack frame
+     * @return the current active frame of the task stack, or null if there is no frame 
      */
     public TaskStackFrameView getCurrentFrame();
+
+    /**
+     * Whether this task has any frames
+     * @return whether this task has any frames
+     */
+    boolean hasFrames();
 }
