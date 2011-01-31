@@ -3,13 +3,13 @@ ABS Module Explorer
 *--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
 || Feature                             || Extension Points                                     || Classes                                                                        |
 *--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------|
-| ABS Module Explorer Core             | org.eclipse.ui.views                                  | eu.hatsproject.absplugin.navigator.ABSNavigator                                 |
-|                                      | org.eclipse.ui.navigator.viewer                       |                                                                                 |
+| ABS Module Explorer Core             | <<<org.eclipse.ui.views>>>                            | eu.hatsproject.absplugin.navigator.ABSNavigator                                 |
+|                                      | <<<org.eclipse.ui.navigator.viewer>>>                 |                                                                                 |
 *--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
-| ABS Module Explorer Content          | org.eclipse.ui.navigator.navigatorContent             | eu.hatsproject.absplugin.navigator.ABSNavgiatorStyledLabelProvider              |
+| ABS Module Explorer Content          | <<<org.eclipse.ui.navigator.navigatorContent>>>       | eu.hatsproject.absplugin.navigator.ABSNavgiatorStyledLabelProvider              |
 |                                      |                                                       | eu.hatsproject.absplugin.navigator.ABSNavigatorContentProvider                  |
 *--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
-| ABS Module Explorer Link with Editor | org.eclipse.ui.navigator.linkHelper                   | eu.hatsproject.absplugin.navigator.LinkHelper                                   |
+| ABS Module Explorer Link with Editor | <<<org.eclipse.ui.navigator.linkHelper>>>             | eu.hatsproject.absplugin.navigator.LinkHelper                                   |
 *--------------------------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
 
 *ABS Module Explorer
@@ -18,19 +18,19 @@ ABS Module Explorer
 
     The ABS Module Explorer uses the {{{http://wiki.eclipse.org/index.php/Common_Navigator_Framework}Common Navigator Framework (CNF)}} that was included into Eclipse since version 3.2. 
 	
-  The first step is to create a new view with the help of the org.eclipse.ui.views extension point. This extension point is used to create new, but empty view.
+  The first step is to create a new view with the help of the <<<org.eclipse.ui.views>>> extension point. This extension point is used to create new, but empty view.
 
-  This new view is made to a CNF view by adding a new org.eclipse.ui.navigator.viewer extension point and a <viewer> sub-element to the plugin.xml.
-  The <viewer> subelement is used to name the viewer with an ID (the same as the ID in the org.eclipse.ui.views extension point) and to provide according popup menu entries.
+  This new view is made to a CNF view by adding a new <<<org.eclipse.ui.navigator.viewer>>> extension point and a <viewer> sub-element to the plugin.xml.
+  The <viewer> subelement is used to name the viewer with an ID (the same as the ID in the <<<org.eclipse.ui.views extension point>>>) and to provide according popup menu entries.
   
-  Up to now, the CNF view is still empty and has no actions attached. The addition of content and actions is done with the viewerContentBinding and viewerActionBinding subelements of the org.eclipse.ui.navigator.viewer extension point.
+  Up to now, the CNF view is still empty and has no actions attached. The addition of content and actions is done with the viewerContentBinding and viewerActionBinding subelements of the <<<org.eclipse.ui.navigator.viewer>>> extension point.
   
     * ViewerContentBindings describe, which content is displayed in the CNF view and which filters should be included in the respective view.
   
     * ViewerActionBindings determine, which actions should be available the the CNF view. 
   
   
-  Both subelements specify patterns of org.eclipse.ui.navigator.navigatorContent extension point IDs. The 
+  Both subelements specify patterns of <<<org.eclipse.ui.navigator.navigatorContent>>> extension point IDs. The 
   
   * <includes> subelements indicate to take the contents of the respective extension points into account.
   
@@ -61,7 +61,7 @@ ABS Module Explorer
   
 **ABS Module Explorer Content
 
-  After the view has been set up, the extension point org.eclipse.ui.navigator.navigatorContent (and its navigatorContent) is used to group and define content and actions for a CNF view.
+  After the view has been set up, the extension point <<<org.eclipse.ui.navigator.navigatorContent>>> (and its navigatorContent) is used to group and define content and actions for a CNF view.
   Within this extension following things can be set: 
   
   * Content and Label Providers:  Define the contents of this navigatorContent extension point. For more information on Content and Label Providers, see the section on {{{./editor.html#ABS_outline_content_provider_ABSContentOutlineProvider}ABS content outline}}
@@ -72,18 +72,20 @@ ABS Module Explorer
     
 **ABS Module Explorer Link With Editor
 
-  The CNF framework provides an easy mechanism to provide "Link with Editor" functionality for a given viewer. In order to provide "Link with Editor" functionality the extension point org.eclipse.ui.navigator.linkHelper.
+  The CNF framework provides an easy mechanism to provide "Link with Editor" functionality for a given viewer. In order to provide "Link with Editor" functionality the extension point <<<org.eclipse.ui.navigator.linkHelper>>> is used.
   This extension point necessitates to implement a LinkHelper class that implements the ILinkHelper interface. 
   
   This interface has two methods that must be implemented:
 
- +---+
- 
- 	IStructuredSelection findSelection(IEditorInput anInput);
-	
-	void activateEditor(IWorkbenchPage aPage, IStructuredSelection aSelection);
- 
- +---+
++---+
+IStructuredSelection findSelection(IEditorInput anInput){
+  ...
+}
+
+void activateEditor(IWorkbenchPage aPage, IStructuredSelection aSelection){
+  ...
+}
++---+
  
   The <findSelection> method is responsible for finding the correct element in the tree of the CNF view given a certain editor input. The ABS Module Explorer selects the module declaration, in which the last cursor position was located in or the first module declaration of the compilation unit (the editor input) that was brought to top if no last cursor position existed.
   

@@ -133,7 +133,7 @@ public Object getAdapter(Class key){
   
 **ABS Content outline page (ABSContentOutlinePage)
 
-  Basically, the ABS content outline page is the container of a SWT TreeViewer component displaying the content outline tree. It is responsible for setting up the tree viewer component - including setting a label provider, a content provider as well as an input the tree viewer should display and it registers listeners for example to track down resource changes or listen to selection events in the underlying tree viewer. Lastly, the ABS content outline page is responsible for restoring the state of tree filters and tree sorters.
+    Basically, the ABS content outline page is the container of a SWT TreeViewer component displaying the content outline tree. It is responsible for setting up the tree viewer component - including setting a label provider, a content provider as well as an input the tree viewer should display and it registers listeners for example to track down resource changes or listen to selection events in the underlying tree viewer. Lastly, the ABS content outline page is responsible for restoring the state of tree filters and tree sorters.
   
   Example how to provide the TreeViewer with a content provider and a label provider :
   
@@ -149,7 +149,7 @@ public Object getAdapter(Class key){
 
 ** {ABS outline content provider (ABSContentOutlineProvider)}
 
-  Any SWT TreeViewer needs a content provider that bridges the gap between the TreeViewer input model (setInput(Object)) and the viewer itself. Therefore, the ABS content outline provider is responsible for dissecting the AST of an ABS file (or more specifically a compilation unit) into a tree structure. The ABS content provider is set using the TreeViewer's method setContentProvider(ITreeContentProvider) during the setup of the TreeViewer.
+    Any SWT TreeViewer needs a content provider that bridges the gap between the TreeViewer input model (setInput(Object)) and the viewer itself. Therefore, the ABS content outline provider is responsible for dissecting the AST of an ABS file (or more specifically a compilation unit) into a tree structure. The ABS content provider is set using the TreeViewer's method setContentProvider(ITreeContentProvider) during the setup of the TreeViewer.
   
   If a TreeViewer has got a content provider, it uses the content provider's methods 
   
@@ -192,20 +192,82 @@ public boolean hasChildren(java.lang.Object element) {
   
 **ABS outline label provider (ABSContentOutlineStyledLabelProvider)
 
-  The ABS outline label provider (implements ILabelProvider interface) is used to map objects from the TreeViewer's model to a String representation as well as an optional image or icon.
+    The ABS outline label provider (implements ILabelProvider interface) is used to map objects from the TreeViewer's model to a String representation as well as an optional image or icon.
   A TreeViewer uses an ILabelProvider to get a String representation of its internal model.
   
-  Relevant methods:
+  Relevant methods for the basic ILabelProvider:
   
-  * Image getImage(Object element)
+  * <<<Image getImage(Object element)>>>
   
-  * String getText(Object element).
+  * <<<String getText(Object element)>>>.
   
-  ...
+  []
+  
+  The <<<getImage>>> method is provided with an Object that is a member of the TreeViewer and should return an image that is used to identify the object. If the Icon is included in the plugin's jar file, an Image can be loaded with the following method:
+  
++---+
+/**
+ * Retrieves an image specified by a path <b>LOCAL</b> to the plugin  
+ * @param path The Path of the image local to the plugin bundle (jar file)
+ * @return The desired Image or a default image, if the desired image was not found;
+ */
+public static Image createImage(String path){
+	Bundle bundle = Platform.getBundle(Constants.PLUGIN_ID);
+	IPath imagepath = new Path(path);
+	URL imageUrl = FileLocator.find(bundle, imagepath,null);
+	ImageDescriptor id = ImageDescriptor.createFromURL(imageUrl);
+	Image im = id.createImage();
+	return im;
+}
++---+
+
+  If the Strings should contain colored information a normal ILabelProvider is not enough.
+  To provide coloured outputs, following steps have to be taken: 
+  
+   [[1]] Create Stylers.
+   
+   ** StyledStrings need Stylers to obtain their text style and color information. The can be created using <<<StyledString.createColorRegistryStyler(String fgColor, String bgColor)>>> where fgColor and bgColors are color definitions stored in the ColorRegistry (see Activator.initializeColors() method)
+   
+   []
+   
+   [[2]] Provide a method that gives a StyledString for an Object
+   
+    ** For simple Strings with only one color you can use: 
+	
++---+
+StyledString st = new StyledString("uncoloredString",Styler)
++---+
+     
+	[]
+
+	** For more complex Strings that contain more than one color use: 
+	
++---+
+StyledString st = new StyledString();
+st.append("uncoloredString", Styler)
++---+
+	
+   [[3]] The Label provider must extend the <<<org.eclipse.jface.viewers.StyledLabelCellProvider>>> class and has to override the <<<update(ViewerCell cell)>>> method with the following code:
+  
++---+
+@Override
+public void update(ViewerCell cell) {
+	Object obj = cell.getElement();
+
+	StyledString styledString = getLabel(obj);
+
+	cell.setText(styledString.toString());
+	cell.setStyleRanges(styledString.getStyleRanges());
+	cell.setImage(getImage(obj));
+	super.update(cell);
+}
++---+
+
+ []
   
 **ABS outline filters
   
-  ...
+  t.b.d.
 
   
  
