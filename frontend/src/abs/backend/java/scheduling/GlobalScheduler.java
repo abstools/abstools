@@ -36,7 +36,6 @@ public class GlobalScheduler {
                 if (totalNumChoices == 0) {
                     System.out.println("Program is deterministic!");
                 }
-                runtime.noSchedulingOptionsLeft();
                 return;
             }
 

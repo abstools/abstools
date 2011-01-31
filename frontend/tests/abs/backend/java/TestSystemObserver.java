@@ -35,7 +35,7 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
                         @Override
                         public void taskFinished(TaskView task) {
                             if (task == mainTask)
-                                System.out.println("SYSTEM TERMINATED");
+                                System.out.println("MAIN TERMINATED");
                         }
                     });
                 }

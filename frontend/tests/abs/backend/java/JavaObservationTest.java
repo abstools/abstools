@@ -12,10 +12,15 @@ public class JavaObservationTest extends JavaBackendTest {
     }
 
     @Test
-    public void systemTerminated() {
-        assertOutputContains("{ }", "SYSTEM TERMINATED");
+    public void mainTerminated() {
+        assertOutputContains("{ }", "MAIN TERMINATED");
     }
 
+    @Test
+    public void systemTerminated() {
+        assertOutputContains("{ }", "SYSTEM FINISHED");
+    }
+    
     @Test
     public void objectCreated() {
         assertOutputContains("class C { } { new C(); }", "OBJECT CREATED: C");

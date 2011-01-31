@@ -3,7 +3,7 @@ package abs.backend.java.lib.runtime;
 import java.util.logging.Logger;
 
 public class ABSThread extends Thread {
-    private Logger logger = Logging.getLogger(ABSThread.class.getName());
+    private static Logger logger = Logging.getLogger(ABSThread.class.getName());
     private COG cog;
     private ABSThreadManager manager;
     protected boolean shutdown;
@@ -30,7 +30,12 @@ public class ABSThread extends Thread {
 
     public void setCOG(COG c) {
         cog = c;
-
+    }
+    
+    @Override
+    public synchronized void start() {
+        super.start();
+        manager.removeThread(this);
     }
 
     public void checkGuard() {

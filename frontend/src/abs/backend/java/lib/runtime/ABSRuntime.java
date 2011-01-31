@@ -30,7 +30,7 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
 public class ABSRuntime {
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
 
-    private final ABSThreadManager threadManager = new ABSThreadManager();
+    private final ABSThreadManager threadManager = new ABSThreadManager(this);
     private final AtomicInteger cogCounter = new AtomicInteger();
     private final AtomicInteger taskCounter = new AtomicInteger();
 
@@ -306,7 +306,7 @@ public class ABSRuntime {
         }
     }
 
-    public void noSchedulingOptionsLeft() {
+    public void systemFinished() {
         for (SystemObserver obs : systemObserver) {
             obs.systemFinished();
         }
