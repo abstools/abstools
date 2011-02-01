@@ -780,6 +780,7 @@ List deltaparam_list = deltaparam.p {: return new List().add(p); :}
     | deltaparam_list.l COMMA deltaparam.p {: return l.add(p); :}
     ;
 
+// TODO: accept feature, attributes, or constants (DataExp).
 // CID | FID.aid | CONSTANT
 Deltaparam deltaparam =
       TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
