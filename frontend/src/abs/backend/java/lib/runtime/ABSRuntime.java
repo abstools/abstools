@@ -105,6 +105,8 @@ public class ABSRuntime {
     private volatile boolean debugging = false;
     private long randomSeed;
     private Random random;
+
+    private volatile boolean isShutdown;
     
 
     public ABSRuntime() {
@@ -195,7 +197,14 @@ public class ABSRuntime {
         }
 
         if (hasGlobalScheduler()) {
-            globalScheduler.stepTask(getCurrentTask());
+            try {
+                globalScheduler.stepTask(getCurrentTask());
+            } catch (InterruptedException e) {
+                if (!isShutdown)
+                    e.printStackTrace();
+                else
+                    throw new SystemTerminatedException();
+            }
         }
 
     }
@@ -236,6 +245,11 @@ public class ABSRuntime {
     }
     
     public void shutdown() {
+        if (isShutdown)
+            throw new IllegalStateException("ABS Runtime was already shutdown");
+        isShutdown = true;
+        if (hasGlobalScheduler())
+            globalScheduler.shutdown();
         threadManager.shutdownAllThreads();
     }
 

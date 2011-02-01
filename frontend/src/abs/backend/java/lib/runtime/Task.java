@@ -125,6 +125,8 @@ public abstract class Task<T extends ABSRef> {
         } catch (ABSException e) {
             this.exception = e;
             System.err.println("Error in " + this + ":\n" + e.getMessage());
+        } catch (SystemTerminatedException e) {
+            
         } catch (Exception e) {
             e.printStackTrace();
         }

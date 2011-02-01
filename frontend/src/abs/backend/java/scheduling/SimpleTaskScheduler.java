@@ -18,6 +18,7 @@ import abs.backend.java.lib.runtime.ABSThreadManager;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.lib.runtime.SystemTerminatedException;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.observing.TaskObserver;
@@ -191,6 +192,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
                     taskDeadlocked();
                 else
                     taskFinished();
+            } catch (SystemTerminatedException e){
+                
             } finally {
                 finished();
             }

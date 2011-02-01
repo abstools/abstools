@@ -12,6 +12,7 @@ public class GlobalScheduler {
     private final ScheduleOptions options = new ScheduleOptions();
     private final GlobalSchedulingStrategy strategy;
     private final ABSRuntime runtime;
+    private volatile boolean isShutdown;
 
     public GlobalScheduler(ABSRuntime runtime, GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
@@ -21,6 +22,7 @@ public class GlobalScheduler {
     private long totalNumChoices = 0;
 
     public void doNextScheduleStep() {
+        if (isShutdown) return;
         logger.finest("Do next step...");
         ScheduleAction next = null;
         synchronized (this) {
@@ -47,12 +49,16 @@ public class GlobalScheduler {
             options.removeOption(next);
             logger.finest("Executing Action " + next);
 
+
         }
+        if (isShutdown) return;
         next.execute();
         logger.finest("Action " + next + " was executed.");
     }
 
-    public void stepTask(Task<?> task) {
+    public void stepTask(Task<?> task) throws InterruptedException {
+        if (isShutdown) return;
+        
         ScheduleAction a = new StepTask(task);
 
         synchronized (this) {
@@ -137,6 +143,10 @@ public class GlobalScheduler {
                 logger.finest("await next step");
             globalScheduler.awaitNextStep();
         }
+    }
+
+    public void shutdown() {
+        isShutdown = true;
     }
 
 }

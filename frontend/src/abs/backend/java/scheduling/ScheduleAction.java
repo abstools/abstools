@@ -31,14 +31,10 @@ public abstract class ScheduleAction {
         notify();
     }
 
-    public synchronized void await() {
-        try {
+    public synchronized void await() throws InterruptedException {
             while (!executed) {
                 wait();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public abstract String shortString();

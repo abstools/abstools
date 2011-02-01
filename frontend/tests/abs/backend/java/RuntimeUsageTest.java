@@ -1,5 +1,7 @@
 package abs.backend.java;
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.types.ABSValue;
@@ -13,6 +15,11 @@ import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskSchedulerObserver;
 import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskView;
+import abs.backend.java.scheduling.ScheduleAction;
+import abs.backend.java.scheduling.ScheduleOptions;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
+import abs.backend.java.scheduling.TaskScheduler;
+import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
 
 public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver, TaskSchedulerObserver, TaskObserver {
@@ -21,6 +28,32 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
     
     RuntimeUsageTest(String n) {
         name = n;
+    }
+    
+    class TestScheduler implements TotalSchedulingStrategy {
+
+        private ABSRuntime runtime;
+        private final AtomicInteger counter = new AtomicInteger();
+
+        public TestScheduler(ABSRuntime r) {
+            this.runtime = r;
+        }
+
+        @Override
+        public ScheduleAction choose(ScheduleOptions options) {
+            int i = counter.incrementAndGet();
+            if (i == 5) {
+                System.out.println("Terminating system "+name);
+                runtime.shutdown();
+            }
+            return options.allOptions().get(0);
+        }
+
+        @Override
+        public TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> scheduableTasks) {
+            return scheduableTasks.get(0);
+        }
+        
     }
     
     /**
@@ -32,6 +65,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
                 RuntimeUsageTest t = new RuntimeUsageTest("System "+i);
                 ABSRuntime r = new ABSRuntime();
                 r.addSystemObserver(t);
+                r.setTotalSchedulingStrategy(t.getScheduler(r));
                 r.enableDebugging(true);
                 r.start(new File("javatest"), "LeaderElection.Main");
             }
@@ -42,6 +76,10 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+    }
+
+    private TotalSchedulingStrategy getScheduler(ABSRuntime r) {
+        return new TestScheduler(r);
     }
 
     @Override
@@ -141,8 +179,7 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
 
     @Override
     public void systemFinished() {
-        // TODO Auto-generated method stub
-        
+        System.out.println(name+" system finished");
     }
 
 }
