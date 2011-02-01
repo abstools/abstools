@@ -56,14 +56,15 @@ public class DefaultTaskScheduler implements TaskScheduler {
 
         @Override
         public void run() {
-
-            while (true) {
+            try {
+            loop:
+            while (!shutdown) {
                 synchronized (DefaultTaskScheduler.this) {
                     activeTask = null;
                     if (newTasks.isEmpty()) {
                         thread = null;
                         DefaultTaskScheduler.this.notifyAll();
-                        return;
+                        break loop;
                     }
 
                     activeTask = newTasks.remove(0);
@@ -86,6 +87,9 @@ public class DefaultTaskScheduler implements TaskScheduler {
                         log.finest("EXCEPTION in Task " + runningTask);
                     e.printStackTrace();
                 }
+            }
+            } finally {
+                finished();
             }
         }
 

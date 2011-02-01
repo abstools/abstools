@@ -183,14 +183,17 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         @Override
         public void run() {
-            View v = view;
-            active = true;
-            executingTask.task.run();
-            if (executingTask.task.isDeadlocked())
-                taskDeadlocked();
-            else
-                taskFinished();
-
+            try {
+                View v = view;
+                active = true;
+                executingTask.task.run();
+                if (executingTask.task.isDeadlocked())
+                    taskDeadlocked();
+                else
+                    taskFinished();
+            } finally {
+                finished();
+            }
         }
 
         public synchronized void checkGuard() {

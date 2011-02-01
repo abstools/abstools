@@ -32,11 +32,21 @@ public class ABSThread extends Thread {
         cog = c;
     }
     
+
     @Override
-    public synchronized void start() {
-        super.start();
+    public void run() {
+        super.run();
+        finished();
+    }
+    
+    /**
+     * Must be called by subclasses that override run,
+     * when the run method has finished
+     */
+    protected void finished() {
         manager.removeThread(this);
     }
+    
 
     public void checkGuard() {
     }
