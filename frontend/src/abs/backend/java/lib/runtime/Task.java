@@ -9,7 +9,9 @@ import abs.backend.java.lib.runtime.TaskStack.Frame;
 import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.ClassView;
 import abs.backend.java.observing.FutView;
+import abs.backend.java.observing.MethodView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskStackView;
@@ -95,9 +97,14 @@ public abstract class Task<T extends ABSRef> {
             v.futureReady(someFut);
     }
 
-    public void newStackFrame() {
+    public void newStackFrame(ABSObject target, String methodName) {
         if (stack != null) {
-            Frame f = stack.pushNewFrame();
+            
+            ClassView cv = null;
+            if (target != null) 
+                cv = target.getView().getClassView();
+                
+            Frame f = stack.pushNewFrame(new ABSMethod(cv,methodName));
             if (view != null) {
                 view.newStackFrameCreated(f);
             }

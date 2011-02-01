@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.backend.java.lib.runtime.TaskStack.Frame;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.observing.MethodView;
 import abs.backend.java.observing.TaskStackFrameView;
 import abs.backend.java.observing.TaskStackView;
 import abs.backend.java.observing.TaskView;
@@ -27,8 +29,8 @@ class TaskStack implements TaskStackView {
         this.task = task;
     }
     
-    synchronized Frame pushNewFrame() {
-        Frame f = new Frame();
+    synchronized Frame pushNewFrame(MethodView method) {
+        Frame f = new Frame(method);
         frames.add(f);
         return f;
     }
@@ -43,6 +45,11 @@ class TaskStack implements TaskStackView {
     
     public class Frame implements TaskStackFrameView {
         private final Map<String,ABSValue> values = new HashMap<String,ABSValue>();
+        private final MethodView method;
+        
+        Frame(MethodView v) {
+            method = v;
+        }
         
         @Override
         public synchronized Set<String> getVariableNames() {
@@ -61,6 +68,11 @@ class TaskStack implements TaskStackView {
         @Override
         public TaskStackView getStack() {
             return TaskStack.this;
+        }
+
+        @Override
+        public MethodView getMethod() {
+            return method;
         }
     }
 

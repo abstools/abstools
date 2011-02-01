@@ -362,7 +362,7 @@ aspect GenerateJava {
       stream.println("{ __ABS_checkSameCOG(); ");
       stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
       stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
-      stream.println("       __ABS_currentTask.newStackFrame();");
+      stream.println("       __ABS_currentTask.newStackFrame(this,\""+getMethodSig().getName()+"\");");
       for (ParamDecl d : getMethodSig().getParams()) {
           stream.print("     __ABS_currentTask.setLocalVariable(");
           stream.println("\""+d.getName()+"\","+d.getName()+");");
@@ -452,7 +452,10 @@ aspect GenerateJava {
         super.generateJava(indent,stream);
         if (this instanceof MainBlock || this instanceof InitBlock) {
             stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.println("__ABS_getRuntime().getCurrentTask().newStackFrame();");
+            String name = "init block";
+            if (this instanceof MainBlock)
+                name = "main block";
+            stream.println("__ABS_getRuntime().getCurrentTask().newStackFrame(this,\""+name+"\");");
         }
         
         String newIndent = incIndent(indent);

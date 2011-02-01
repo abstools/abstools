@@ -102,7 +102,7 @@ public abstract class ABSObject implements ABSRef {
         throw new NoSuchFieldException(fieldName);
     }
 
-    private class View implements ObjectView {
+    private class View implements ObjectView, ClassView {
 
         @Override
         public COGView getCOG() {
@@ -111,7 +111,7 @@ public abstract class ABSObject implements ABSRef {
 
         @Override
         public ClassView getClassView() {
-            return null;
+            return this;
         }
 
         @Override
@@ -126,8 +126,7 @@ public abstract class ABSObject implements ABSRef {
 
         @Override
         public void registerObjectObserver(ObjectObserver l) {
-            // TODO Auto-generated method stub
-
+            throw new RuntimeException("Not implemented yet");
         }
 
         @Override
@@ -142,6 +141,16 @@ public abstract class ABSObject implements ABSRef {
         @Override
         public long getID() {
             return ABSObject.this.__id;
+        }
+
+        @Override
+        public String getName() {
+            return getClassName();
+        }
+
+        @Override
+        public List<String> getMethodNames() {
+            return null;
         }
 
     }

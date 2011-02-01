@@ -31,5 +31,11 @@ public interface TaskStackFrameView {
      * @return the value of variable variableName
      */
     public ABSValue getValue(String variableName);
+    
+    /** 
+     * Returns the method of this stack frame
+     * @return the method of this stack frame
+     */
+    public MethodView getMethod();
 
 }
