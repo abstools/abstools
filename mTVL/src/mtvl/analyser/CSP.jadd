@@ -84,14 +84,13 @@ aspect CSP {
       if (g.getFNode(i) instanceof OptFeat) {
         v = Choco.makeBooleanVar("$"+fname);
         s.addConstraint(
-          Choco.implies(ChocoSolver.isTrue(v)
-                       ,g.getFNode(i).collectConstraints(s)));
+          Choco.implies(s.getVar(fname),ChocoSolver.isTrue(v));
       } else {
         v = s.getVar(fname);
-        s.addConstraint(g.getFNode(i).collectConstraints(s));
       }
+      s.addConstraint(g.getFNode(i).collectConstraints(s));
       feats[i] = v;
-      // $f -> [[f]]
+      // f -> $f /\ [f]
     }
     // n1 <= $f1 + ... + $fn <= n2
     if      (g.getCard() instanceof AllOf)
