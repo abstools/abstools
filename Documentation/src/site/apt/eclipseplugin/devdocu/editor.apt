@@ -107,7 +107,7 @@ Editor
   
   * abs editor scope added with <org.eclipse.ui.contexts> extension point
 
-* Outline
+* {Outline}
 
 **General
 

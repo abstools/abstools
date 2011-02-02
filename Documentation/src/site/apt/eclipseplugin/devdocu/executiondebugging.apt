@@ -57,4 +57,41 @@ Execution and Debugging
   
 * Debugging
 
- Text about integration of the Debugger - perhaps the perspective and views? Note, that this is NOT related to the Eclipse Debug API but implements everything manually.
+** General Architecture
+ 
+ Talk about the general structure of the debugger - Jans debugger in different thread, choose/schedule methods, ... (not yet over our scheduler in detail - see last chaper for that).
+
+ Note, that this is NOT related to the Eclipse Debug API but implements everything manually.
+ 
+** Graphical User Interface
+
+ Extension points and classes for the debugging interface:
+
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+
+|| Feature                        || Extension Points                   || Classes                                                               |
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+
+| Debug Perspective               |  org.eclipse.ui.perspectives        |  eu.hatsproject.absplugin.dbeug.perspective.ABSDebugPerspectiveFactory |
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+ 
+| Debug View                      |  org.eclipse.ui.views               |  eu.hatsproject.absplugin.debug.views.debugview.DebugView              |
+| Variable View                   |                                     |  eu.hatsproject.absplugin.debug.views.variablesview.VariablView        |
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+
+| Buttons                         |  org.eclipse.ui.viewActions         |  eu.hatsproject.absplugin.debug.DebugActionDelegate                    |
+|                                 |                                     |  eu.hatsproject.absplugin.debug.SchedulerChoiceDelegate                |
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+
+| Hotkeys                         |  org.eclipse.ui.commands            |  eu.hatsproject.absplugin.debug.commands.ResumeCommandHandler          |
+|                                 |                                     |  eu.hatsproject.absplugin.debug.commands.StepOverCommand               |
+*---------------------------------+-------------------------------------+------------------------------------------------------------------------+
+
+ Debugging of ABS files is done in a new <ABSDebugPerspective>. The <ABSDebugPerspectiveFactory> sets up the initial design of the perspective, containing the <DebugView> and the <VariableView>.
+ 
+ The <DebugView> is the most important view for debugging. Here, a TreeViewer shows the current state of the debugged program. The <DebugTreeContentProvider> and <DebugTreeStyledLabelProvider> (found in <eu.hatsproject.absplugin.debug.views.debugview>) construct this tree out of a given <DebugModel> (which is found in the ABSFrontend at <abs.backend.java.debugging>), similar to the TreeViewer found in the {{{editor.html#ABS_outline_content_provider_ABSContentOutlineProvider}Outline}}
+ 
+ The <VariableView> again is similar to the OutlinePage, classes are found at <eu.hatsproject.absplugin.debug.views.VariableView>. The only difference worth mentioning is the LabeProvider being an <org.eclipse.jface.viewers.ITableLabelProvider>, which results in the contents of the tree being shown in multiple columns. Classes implementing <ITableLabelProvider> need to implement the methods <getColumnImage> and <getColumnText> which are similar to the equivalently named methods in the conventional LabelProvider, but also take a column index as parameter and return only the value for a specific element in a specific column. So the elements returned by the ContentProvider need to contain data for each column of the table.
+ 
+ Buttons are added to the DebugView with another extension point. Enablement of this buttons is set by the method <eu.hatsproject.absplugin.debug.DebugUtils.refreshButtonEnablement>, which is called whenever task is stepped, another task (or different element) is selected in the debug tree or the scheduler is changed. The enablement is set according to the currently selected scheduler, the selection of the debug tree and the steps that are currently possible.
+ 
+ 
+ 
+** Scheduler
+
+ Text about our scheduler and interactive behaviour with Jans debugger.
