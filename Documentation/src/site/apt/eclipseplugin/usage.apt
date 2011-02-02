@@ -22,19 +22,37 @@ Using the ABS Eclipse IDE
   
 * Creating and Modifying ABS Files
 
-  To create an ABS file, you first should create an ABS project like described above. You can then right click on the project and directly create an ABS module under New -> ABS module. Note, that you may also directly create other ABS projects this way. Modules can also be created by right-clicking on any file or folder inside an ABS project.
+  To create an ABS file, you first should create an ABS project like described above. You can then right click on the project and directly create an ABS module by choosing either New -> ABS module (new file) or New -> ABS module (existing file). Note, that you may also directly create other ABS projects this way. Modules can also be created by right-clicking on any file or folder inside an ABS project.
 
   Creating new modules will directly open those in the editor. To open a previously created .abs file, simply double-click it in the project explorer.
+
+** Using wizards
+
+ Instead of creating new interfaces or classes <by hand>, you can use wizards. By <right clicking> on an ABS module - either in the project or module explorer - you can choose New -> New Class or New -> New Interface. 
+
+ <<Note:>> The selected module element must have an underlying module declaration in an ABS file. If a selected module element has <no> underlying module declaration, you only have the possibility to use the module creation 
+
+** ABS Editor
   
   The following sections will explain functionality of the editor and outline in detail.
   
-** Syntax Highlighting
+*** Syntax Highlighting
 
   The Editor will highlight specific elements of ABS modules, to improve readability of the document, namely keywords, strings and characters, comments, functions and types. Colors and style of the highlighting can be configured under Window -> Preferences -> ABS -> ABS Syntax Coloring.
 
   Note, that syntax highlighting might not work correctly. If such behaviour is observed, please inform us of it (together with the example code leading to it).
+
+*** Module Explorer
+
+    Similar to the package explorer of the Java perspective, the ABS Module Explorer gives an overview of all modules - and their respective subelements - contained in ABS projects in the current workspace.
+
+  Using the convention, that '.' characters in module names indicate a module hierarchy, the module explorer dissects all module names of a project and represents the respective hierarchy in its tree view.
+
+  Moreover, the Module Explorer supports the 'Link with editor' functionality that expands the tree structure to the corresponding module when switching to another editor.
+
+  <<Note:>> If more than one module declaration is in one editor page, the module that contains the <last known cursor> position is selected. If there is no last known cursor position, the tree is expanded to the <first> module declaration of that edior page.
   
-** Outline
+*** Outline
 
   The outline provides a tree overview of the currently opened ABS file. It separates between imports and exports, classes, functions, data types, interfaces and the main block. The outline can be ordered by artifact type (resulting in a grouping of all Classes, all Functions and so on), by alphabetic order or both. Note, that ordering alphabetically will still group specific elements like data types and imports, since you usually do not want those intermixed with classes, functions or interfaces.
   
@@ -42,8 +60,10 @@ Using the ABS Eclipse IDE
   
   Imports, exports and fields can be hidden by buttons on top of the outline.
 
-** Content Assistant
+*** Content Assistant
 
   The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
 
 * {{{execution.html}Execution}}
+
+    <<t.b.d>>
