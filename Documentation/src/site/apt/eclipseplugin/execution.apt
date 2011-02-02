@@ -1,42 +1,107 @@
 Executing ABS Projects from ABS Eclipse IDE
 
-  The ABS Eclipse IDE currently offers two backends: Java and Maude. In the following, we will explain how ABS projects can be compiled and executed in the respective languages.
+ The ABS Eclipse IDE currently offers two backends: Java and Maude. In the following, we will explain how ABS projects can be compiled and executed in the respective languages.
   
 * Java
 
-  There are three different predefined run configurations / buttons: compiling (1) , debugging (2) and starting SDEdit (3).
+ There are three different predefined run configurations / buttons: compiling (1) , debugging (2) and starting SDEdit (3).
   
   * Button (1) compiles all .abs files in an ABS project to Java files. If one of the .abs files has an error, no Java files will be generated and you get an error message.
   
   * Button (2) opens a dialog to debug .abs files based on the .java files. If there are no Java files, you have to compile them first. If there is more than one main block, there a three different behaviours.
 
-    [[a]] If an ABS file containing a main block is opened and focused in the ABS Editor, the debugger prefers this main method.
+   [[a]] If an ABS file containing a main block is opened and focused in the ABS Editor, the debugger prefers this main method.
   
-    [[b]] If a generated "Main.java" file is opened and focused in the ABS Editor, the debugger prefers this main method.
-  
-    [[c]] If the conditions of (a) and (b) are not fulfilled, the plug-in uses the first "Main.java" file in the generated files.
+   [[b]] If a generated "Main.java" file is opened and focused in the ABS Editor, the debugger prefers this main method.
+ 
+   [[c]] If the conditions of (a) and (b) are not fulfilled, the plug-in uses the first "Main.java" file in the generated files.
   
   * Button (3) starts the debugger as described above and in addition an UML representation of the ABS Code.
   
   []
   
-  Some of the default values (like the output folder) can be changed on the project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend).
+ Some of the default values (like the output folder) can be changed on the project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend).
   
 * Maude
 
-  In contrast to the Java execution, Maude can not directly be run by the plug-in. Instead, Maude has to be installed separately and the User is required to configure the Maude path accordingly. This can be done under Window -> Preferences -> ABS -> ABS Maude Preferences (If you try to run Maude without configuring this path, the preference dialog will pop up anyway).
-  For Linux and Mac OS you can find at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
+ In contrast to the Java execution, Maude can not directly be run by the plug-in. Instead, Maude has to be installed separately and the User is required to configure the Maude path accordingly. This can be done under Window -> Preferences -> ABS -> ABS Maude Preferences (If you try to run Maude without configuring this path, the preference dialog will pop up anyway).
+ For Linux and Mac OS you can find at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
   
-  Two Buttons are provided for Maude: compiling and executing. 
+ Two Buttons are provided for Maude: compiling and executing. 
   
-  Compile will generate a .maude file named after the project in a project specific folder (default is gen/maude). This folder can be changed in the project properties (right click on project in the package explorer -> properties -> ABS -> Maude Backend). In Addition, the abs-interpreter.maude is copied in that directory.
+ Compile will generate a .maude file named after the project in a project specific folder (default is gen/maude). This folder can be changed in the project properties (right click on project in the package explorer -> properties -> ABS -> Maude Backend). In Addition, the abs-interpreter.maude is copied in that directory.
   
-  Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed successfully, the output will be printed as info (black), otherwise as error (red).
+ Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed successfully, the output will be printed as info (black), otherwise as error (red).
   
-  Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.
+ Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.
   
 * Run Configurations
 
-  In addition to the described buttons, the Eclipse plug-in offers run configurations for both Java and Maude executions. Those offer more detailed options for the run and store these configurations for further usage.
+ In addition to the described buttons, the Eclipse plug-in offers run configurations for both Java and Maude executions. Those offer more detailed options for the run and store these configurations for further usage.
   
-  Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files. Furthermore, three of the configurations, which are available as buttons, (namely Debug Java, Debug Java with SEdit and running Maude) are provided as run configurations (Run -> Run as).
+ Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files. Furthermore, three of the configurations, which are available as buttons, (namely Debug Java, Debug Java with SEdit and running Maude) are provided as run configurations (Run -> Run as).
+  
+* Debugging and the ABS Debug Perspective
+
+ Debugging Java with the given buttons (or specific run configurations) will result in opening the ABS Debug Perspective and allows you to debug your program with the internal debugger of the ABS Eclipse plug-in. 
+  
+ The Debug Perspective provides two new views, the debug view and the variable view. If you close these views by accident, you can reopen them under "window -> show view".
+  
+** Debug View
+
+ The Debug View is where you can control your debug process. It contains a tree of COGs, tasks, stackframes and objects representing the state of your program. It also contains a set of buttons, allowing you to step single tasks. 
+  
+ The plug-in currently provides two schedulers, which determine which task to step next. A third scheduler is planned. The scheduler can be selected with the "Choose scheduler" button in the debug view.
+  
+  * Interactive Scheduler
+  
+  The interactive scheduler allows you to select the task you want to step by selecting the task (or a stackframe of the task) in the debug view tree.
+  
+  * Random Scheduler
+
+  The random scheduler will select the task to step randomly.
+  
+  * History Scheduler (planned)
+  
+  The history scheduler allows you to run a history from a file.
+  
+  []
+  
+ Functionality of the buttons unter a specific scheduler is as follows:
+  
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|| Action\Scheduler || Interactive                                       || Random                                || History                   |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|  Single Step      |  Steps the task currently selected in the debug    |  Steps a randomly selected task once.  |  Makes the next step       | 
+|                   |  view tree (or, if a stack frame is selected,      |                                        |  from the history.         |
+|                   |  the task with that stack frame).                  |                                        |                            |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|  N Steps          |  Same as single step but does multiple steps on    |  Makes n random steps (step a          |  Makes the next n steps    |
+|                   |  this task. If the task terminates or suspends     |  randomly selected task, step another  |  from the history.         |
+|                   |  before being stepped n times, no further steps    |  randomly selected task, ...).         |                            |
+|                   |  will be done.                                     |                                        |                            |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|  Step Over        |                                                    |                                        |  Does nothing              |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|  Run to Line      |  Steps the currently selected task until a         |  Makes random steps until a given      |  Does nothing              |
+|                   |  given line will be reached. If the line is never  |  line is reached by any task. If it    |                            |
+|                   |  reached, the task runs until it finishes or has   |  is never reached, steps are done      |                            |
+|                   |  to wait for another task to continue.             |  until the program terminates.         |                            |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+|  Resume           |  Steps the currently selected task until it        |  Makes random steps until the          |  Makes all remaining steps |
+|                   |  finishes or suspends.                             |  program is terminated.                |  contained in the history. |
+*-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
+ 
+ Two more buttons are contained in the debug view.
+ 
+  * save history
+  
+  Save the sequence of taken steps in a file, allowing you to re-execute this run at a later point in time, e.g. after you fixed a bug in your abs sources.
+  
+  * terminate (not really working so far)
+  
+  Terminates the debug process.
+  
+** Variable View
+
+ The variable view allows you to inspect stack frames and objects of your program. If a stack frame or an object is selected, the variable view is refreshed an shows the values of the selected stack frame or object in a tree. If the program makes a step, the current stack frame of the stepped task is loaded to the variable view.
