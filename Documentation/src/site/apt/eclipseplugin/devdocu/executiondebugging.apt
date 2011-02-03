@@ -59,11 +59,56 @@ Execution and Debugging
 
 ** General Architecture
  
- Talk about the general structure of the debugger - Jans debugger in different thread, choose/schedule methods, ... (not yet over our scheduler in detail - see last chaper for that).
-
- Note, that this is NOT related to the Eclipse Debug API but implements everything manually.
+ Generally, debugging is done by the ABSFrontend. The Eclipse plug-in creates and starts an <abs.backend.java.lib.runtime.ABSRuntime> and adds an internal scheduler and listeners to it. 
  
-** Graphical User Interface
+ Schedulers have to implement abs.backend.java.scheduling.TotalSchedulingStrategy and therefor contain a <choose> and a <schedule> method.
+ 
+   * choose is always executed, when the debugger has finished a step and awaits selection of the next COG which should take a step
+   
+   * schedule is called, when a COG without a running task and more then one schedulable task is selected by choose. It determines which task of the chosen COG should be scheduled next.
+  
+   []
+ 
+ Listeners implement methods, which are called on specific events occuring during debugging, e.g. creation of a new COG or termination of a task.
+ 
+ The debug package is split into four parts or subpackages
+ 
+  * <eu.hatsproject.absplugin.debug.scheduling> containing the <SchedulingStrategy> with all schedulers
+  
+  * <eu.hatsproject.absplugin.debug.model> which implements listeners / obeservers and augments the model with additional information
+  
+  * <eu.hatsproject.absplugin.debug.perspective> containing classes which constitute to the <ABSDebugPerspective>
+  
+  * <eu.hatsproject.absplugin.debug.views> containing views specific for the debug perspective.
+  
+  []
+ 
+ For more details about these packeges see below.
+ 
+ Note, that this debugger is NOT related to the Eclipse Debug API but implements everything manually.
+ 
+** Debug Model 
+
+ A short overview of the classes augmenting <abs.backend.java.debugging.DebugModel>
+
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+|| Class                                                      || Implemented interface                            || Functionality                                                            |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+| eu.hatsproject.absplugin.debug.model.Debugger               | abs.backend.java.observing.SystemObserver         | manage model, start and terminate debug process, react on <newCOGCreated> |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+| eu.hatsproject.absplugin.debug.model.DebugModelListener     | abs.backend.java.debugging.DebugModelListener     | react on COG and Task creations and changes                               |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+| eu.hatsproject.absplugin.debug.model.ObjectCreationObserver | abs.backend.java.observing.ObjectCreationObserver | react on object creation and initialization                               |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+| eu.hatsproject.absplugin.debug.model.Objects                |                                                   | necessary to group objects and tasks in the debug viewer tree.            | 
+| eu.hatsproject.absplugin.debug.model.Tasks                  |                                                   |                                                                           |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+| eu.hatsproject.absplugin.debug.model.VariableValuePair      |                                                   | necessary for variable view to link field names with their values         |
+*-------------------------------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------+
+
+ For more details about the model see documentation of <abs.backend.java.debugging.DebugModel> and related classes.
+
+** Graphical User Interface (Perspective and Views)
 
  Extension points and classes for the debugging interface:
 
@@ -90,8 +135,7 @@ Execution and Debugging
  
  Buttons are added to the DebugView with another extension point. Enablement of this buttons is set by the method <eu.hatsproject.absplugin.debug.DebugUtils.refreshButtonEnablement>, which is called whenever task is stepped, another task (or different element) is selected in the debug tree or the scheduler is changed. The enablement is set according to the currently selected scheduler, the selection of the debug tree and the steps that are currently possible.
  
- 
- 
-** Scheduler
+
+** Scheduler (SchedulingStrategy)
 
  Text about our scheduler and interactive behaviour with Jans debugger.

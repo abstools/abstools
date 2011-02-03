@@ -91,6 +91,30 @@ Editor
   
 * Content Assistant
 
+  The content assistant should provide users with a list of completion proposals to the current input. In Eclipse, these proposals are provided by an <org.eclipse.jface.text.contentassist.IContentAssistProcessor> which has to be added to the sourceViewerConfiguration (override the method <getContentAssistant> to return an ICompletionProcessor).
+
+  This interface is implemented by the <eu.hatsproject.absplugin.editor.contentassist.ABSCompletionProcessor>. Notable int this class are the following methods
+
+  * <ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int documentOffset)>
+  
+    This method should return a list of proposals depending on the current input. It is already apparent in the interface and is called whenever the content assist is invoked on a file. The actual computation of the proposals is done by our ProposalFactory (<eu.hatsproject.absplugin.editor.contentassist.ProposalFactory>).
+
+  *	<Qualifier getQualifier(IDocument doc, int documentOffset)>
+  
+	This returns the String which is already typed in by the user. 
+	
+  * <char[] getCompletionProposalAutoActivationCharacters()>
+  
+    As the name suggests, if one of the chars returned by this method is typed by the user, auto completion is invoked automatically.
+  
+  []
+  
+  As mentioned above, the computation of proposals is done by a ProposalFactory. Such a factory is created, whenever the content assist is invoked. 
+  
+  The constructor of this factory requests the qualifier already typed in, the position in the document, the document, the editor and an empty proposal list which should be populated.
+  
+  Most important is the method <computeStructureProposals>, which populates the list with keywords, main blocks, classes, different incomplete acces proposals, top level and class field proposals.
+
 * Jump To Declaration Feature
 
   * command added to <org.eclipse.ui.commands> extension point for key binding
