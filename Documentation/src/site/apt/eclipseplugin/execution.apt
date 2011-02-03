@@ -4,23 +4,67 @@ Executing ABS Projects from ABS Eclipse IDE
   
 * Java
 
- There are three different predefined run configurations / buttons: compiling (1) , debugging (2) and starting SDEdit (3).
-  
-  * Button (1) compiles all .abs files in an ABS project to Java files. If one of the .abs files has an error, no Java files will be generated and you get an error message.
-  
-  * Button (2) opens a dialog to debug .abs files based on the .java files. If there are no Java files, you have to compile them first. If there is more than one main block, there a three different behaviours.
-
-   [[a]] If an ABS file containing a main block is opened and focused in the ABS Editor, the debugger prefers this main method.
-  
-   [[b]] If a generated "Main.java" file is opened and focused in the ABS Editor, the debugger prefers this main method.
+ The Java Backend can be started either by using a run configuration or by pressing a predefined button in the toolbar.
  
-   [[c]] If the conditions of (a) and (b) are not fulfilled, the plug-in uses the first "Main.java" file in the generated files.
-  
-  * Button (3) starts the debugger as described above and in addition an UML representation of the ABS Code.
-  
-  []
-  
- Some of the default values (like the output folder) can be changed on the project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend).
+ * Toolbar buttons:
+ 
+ 
+*-------------------+----------------------------------------------------+------------------------------------------------------+
+|| Button Nr.       || Button tooltip                                    || Functionality /Description                          |
+*-------------------+----------------------------------------------------+------------------------------------------------------+
+|      1            |  "Generate Java Code"                              |  ABS files -> Java & Class files                     |  
+|                   |                                                    |  Compiles the ABS Model from selected file's project | 
+|                   |                                                    |  into Java                                           |  
+*-------------------+----------------------------------------------------+------------------------------------------------------+
+|      2            |  "Debug Model (Java)"                              |  Opens debug perspective with default observer and   |
+|                   |                                                    |  scheduler.                                          |
+*-------------------+----------------------------------------------------+------------------------------------------------------+
+|      3            |  "Start SDEdit (Java)"                             |  Like button 2, but in addition an UML observer      |
+|                   |                                                    |  and SDEdit will be used /started.                   |
+*-------------------+----------------------------------------------------+------------------------------------------------------+
+ 
+ * Run configurations:
+ 
+ The user can create, manage and run different run configurations. Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files.
+ 
+ Options:
+ 
+   * ABS Project: The chosen project with an ABS Model.
+   
+   * Observer   : User can add / remove one or more (new or predefined) observers.
+   
+   * Scheduler  : User can select a scheduler. 
+   
+   * Enable debug mode       : Should be selected.
+   
+   * Generate Java file first: The Java files are needed to debug.
+   
+   * Execute debugger in external process: Starts the command line debugger. If this option is selected, the user can not use the "Eclipse scheduler".
+   
+   * Additional Arguments: More arguments for the command line debugger. 
+ 
+ Note: It is recommended to use the "Eclipse scheduler" and "Eclipse observer" in combination. "Eclipse scheduler" without "Eclipse observer" makes no sense. If both are not selected, the user could not use the debug perspective in Eclipse. 
+ 
+ Predefined run configurations:
+ 
+*---------------------------+-------------------------------------------------------------------+
+|| Name                     || Description                     				                 |
+*---------------------------+-------------------------------------------------------------------+
+|  ABS Java Backend         |  Starts debugger without any scheduler or observer. Does not open |  
+|                           |  the debug perspective.											 |
+*---------------------------+-------------------------------------------------------------------+
+|  ABS Java Backend (Debug) |  Like toolbar button 2:                                           |  
+|                           |  "Eclipse scheduler" and "Eclipse observer" are selected.		 |	
+*---------------------------+-------------------------------------------------------------------+
+|  ABS Java Backend (Debug  |  Like toolbar button 3:                                           |  
+|  with Sequence Diagram)   |  "Eclipse scheduler", "Eclipse observer" and "UML observer"       |
+|                           |  are selected.		                                             |
+*---------------------------+-------------------------------------------------------------------+
+ 
+ "Generate debugger file first" and "Enable debug mode" are selected in all predefined run configurations.
+ 
+ See also project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend) where the user can change default options.
+ 
   
 * Maude
 
@@ -34,13 +78,9 @@ Executing ABS Projects from ABS Eclipse IDE
  Execute will do the same, but will also run Maude afterwards with the generated code. The output of Maude will be printed in a console. If Maude completed successfully, the output will be printed as info (black), otherwise as error (red).
   
  Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.
-  
-* Run Configurations
-
- In addition to the described buttons, the Eclipse plug-in offers run configurations for both Java and Maude executions. Those offer more detailed options for the run and store these configurations for further usage.
-  
- Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files. Furthermore, three of the configurations, which are available as buttons, (namely Debug Java, Debug Java with SEdit and running Maude) are provided as run configurations (Run -> Run as).
-  
+ 
+ In addition to the described buttons, the Eclipse plug-in offers run configurations for Maude executions. Those offer more detailed options for the run and store these configurations for further usage. 
+ 
 * Debugging and the ABS Debug Perspective
 
  Debugging Java with the given buttons (or specific run configurations) will result in opening the ABS Debug Perspective and allows you to debug your program with the internal debugger of the ABS Eclipse plug-in. 
