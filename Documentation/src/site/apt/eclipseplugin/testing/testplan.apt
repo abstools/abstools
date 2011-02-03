@@ -5,7 +5,7 @@
      -------
      -------
 	 
-ABS Plugin Quality Assurance - System Test plan
+ABS Plugin Quality Assurance - Test plan
 
 *Introduction
 
@@ -15,8 +15,6 @@ ABS Plugin Quality Assurance - System Test plan
 	* Test strategy
 	
 	* Test objects
-	
-	* Test objectives
 	
 	* Mapping of resources and requirements for performing the test plan.
 	
@@ -85,7 +83,7 @@ ABS Plugin Quality Assurance - System Test plan
 
 	[]
 	
-	The code review step is optional. Only if the unit testing and walkthrough steps are finished in time, code review will be done. 
+	The step "code review" is optional. Only if the unit testing and walkthrough steps are finished in time, code review will be done. 
 	
 **Unit testing
 
@@ -117,12 +115,74 @@ ABS Plugin Quality Assurance - System Test plan
 	[[11]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
 
 **Walkthrough
-
+	
+	In addition to unit testing a walkthrough of all basic use cases will be done using the eclipse plugin.
+	
+	Problems and failures will be recorded using the problem list for walkthroughs ....
+	
+	<<t.b.d.>>
 
 
 **Code review
 
-*Test objectives
+	In order to assure code quality, all packages and their respective classes should be reviewed. For the review following checklist can be used:
+	
+	* Javadoc
+	
+		* Are all public and protected methods bigger than 5 LOC documented using javadoc?
+		
+		* Are all public variables documented using javadoc
+		
+		* Is the javadoc useful and meaningful?
+		
+		* Do javadoc parameters match the actual method parameters?
+		
+		* Do javadoc comments contain throws clauses where necessary?
+		
+		* Are exceptional cases like null argument documented?
+		
+		[]
+		
+	*Coding style
+		
+		* Is lots of code commented out?
+		
+		* Is the code understandable and provides comments at crucial places?
+		
+		* Do method names reflect the functionality of the code?
+		
+		* Do all methods handle errors reasonably?
+		
+		* Are stack traces printed out where error handling should they should not be printed out?
+		
+		* ...
+		
+		[]
+		
+	*Understandability
+	
+		* Could some code of a class be extracted to increase the understandability of the code?
+		
+		* Does the class have an appropriate size in order to support understandability?
+		
+		* Are the number of methods reasonable? Are the classes over-refactored? 
+		
+		* ...
+		
+		[]
+		
+	*Packaging
+	
+		* Is the partitioning of the code in the respective class reasonable?
+		
+		* Does the package structure
+		
+		* ...
+		
+		[]
+		
+		
+		
 
 *Resource mapping
 
@@ -153,6 +213,10 @@ ABS Plugin Quality Assurance - System Test plan
 *------------+---------------------+
 |  11        |  mweber             |
 *------------+---------------------+
+
+**Walkthroughs
+
+    <<t.b.d>>
 
 **Code reviews
 
