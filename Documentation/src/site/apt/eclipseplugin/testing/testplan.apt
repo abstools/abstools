@@ -54,21 +54,24 @@ ABS Plugin Quality Assurance - Test plan
 	
 	* Debugging of ABS models including
 	
+		* Navigating through the COG and task structure
+		
 		* Stepping of one task
 		
-		* Showing stack frames 
+		* Displaying stack frames 
 		
-		* Showing a variable view
+		* Displaying current values of variables
 		
-		* ...
+		* Tracking of the code execution by highlighting the current code line in the editor.
 	
-	* Setting of preferences...
+	* Setting of preferences relevant for the ABS plugin
 
 **System environment
 
     The ABS plugin provides an Integrated development environment for creating programs and model created with the ABS modeling language.
+	Therefore the ABS plugin supports a developer in creating ABS models.
 	
-	It is integrated into the Eclipse platform, and can used on every platform eclipse runs on....
+	The plugin itself is integrated into the Eclipse platform, and can used on every platform eclipse runs on. The plugin uses a pre-existing ABS Compiler and Frontend and uses pre-existing structures for debugging  the ABS model.
 
 	
 *Test strategy
@@ -139,7 +142,7 @@ ABS Plugin Quality Assurance - Test plan
 		
 		* Do javadoc comments contain throws clauses where necessary?
 		
-		* Are exceptional cases like null argument documented?
+		* Are exceptional cases like null arguments documented?
 		
 		[]
 		
@@ -149,13 +152,17 @@ ABS Plugin Quality Assurance - Test plan
 		
 		* Is the code understandable and provides comments at crucial places?
 		
+		* Is the code 
+		
 		* Do method names reflect the functionality of the code?
 		
 		* Do all methods handle errors reasonably?
 		
 		* Are stack traces printed out where error handling should they should not be printed out?
 		
-		* ...
+		* Is the visibility of methods reasonable?
+		
+		* Is <<<System.out.println()>>> used to document or debug code?
 		
 		[]
 		
@@ -167,17 +174,13 @@ ABS Plugin Quality Assurance - Test plan
 		
 		* Are the number of methods reasonable? Are the classes over-refactored? 
 		
-		* ...
+		* Are comments used to increase understandability at crucial points?
 		
 		[]
 		
 	*Packaging
 	
 		* Is the partitioning of the code in the respective class reasonable?
-		
-		* Does the package structure
-		
-		* ...
 		
 		[]
 		
@@ -221,7 +224,7 @@ ABS Plugin Quality Assurance - Test plan
 **Code reviews
 
 *------------------+----------------------+
-|| Package         || Responsible person  |
+|| Package         || Responsible persons |
 *------------------+----------------------+
 |  actions         | cseise, mweber       |
 *------------------+----------------------+
