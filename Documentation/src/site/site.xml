@@ -56,6 +56,9 @@
 		<item name="Wizards" href="eclipseplugin/devdocu/wizards.html"/>
 		<item name="Module Explorer" href="eclipseplugin/devdocu/moduleexplorer.html"/>
       </item>
+	  <item name="Quality Assurance" href="eclipseplugin/testing/index.html">
+		<item name="Test plan" href="eclipseplugin/testing/testplan.html"/>
+	  </item>
     </menu>
 
     <menu name="Project Information" href="project-info.html">

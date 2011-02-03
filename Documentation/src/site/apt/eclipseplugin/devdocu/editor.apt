@@ -221,12 +221,12 @@ public static Image createImage(String path){
 }
 +---+
 
-  If the Strings should contain colored information a normal ILabelProvider is not enough.
+  If the Strings should be colored, a "normal" ILabelProvider is not enough.
   To provide coloured outputs, following steps have to be taken: 
   
    [[1]] Create Stylers.
    
-   ** StyledStrings need Stylers to obtain their text style and color information. The can be created using <<<StyledString.createColorRegistryStyler(String fgColor, String bgColor)>>> where fgColor and bgColors are color definitions stored in the ColorRegistry (see Activator.initializeColors() method)
+   ** StyledStrings need Stylers to obtain their text style and color information. They can be created using <<<StyledString.createColorRegistryStyler(String fgColor, String bgColor)>>> where fgColor and bgColors are color definitions stored in the ColorRegistry (see Activator.initializeColors() method)
    
    []
    
@@ -247,14 +247,15 @@ StyledString st = new StyledString();
 st.append("uncoloredString", Styler)
 +---+
 	
-   [[3]] The Label provider must extend the <<<org.eclipse.jface.viewers.StyledLabelCellProvider>>> class and has to override the <<<update(ViewerCell cell)>>> method with the following code:
+   [[3]] The extended Label provider must extend the <<<org.eclipse.jface.viewers.StyledLabelCellProvider>>> class and has to override the <<<update(ViewerCell cell)>>> method with the following code:
   
 +---+
 @Override
 public void update(ViewerCell cell) {
 	Object obj = cell.getElement();
 
-	StyledString styledString = getLabel(obj);
+	//Get the StyledString of the object here...
+	StyledString styledString = ...;
 
 	cell.setText(styledString.toString());
 	cell.setStyleRanges(styledString.getStyleRanges());
@@ -291,9 +292,9 @@ toolbar:org.eclipse.ui.views.ContentOutline?after=additions
 +---+
 
   Note that the command has a <<pre-defined toggle state>> attached that is used to determine the current state of the toggle button. The state of a toggle button can be determined using the <<<HandlerUtil.toggleCommandState(String commandId)>>>
-  Moreover, the pre-defined toggle state is persistable and is stored over different eclipse sessions.
+  Moreover, this pre-defined toggle state is persistable and is stored over different eclipse sessions.
   
-  In addition to the button and command definition in the plugin.xml, each commanfd needs a Handler class (extends AbstractHandler implements IHandler) that are defined in <<<eu.hatsproject.absplugin.editor.outline.handlers.*>>>
+  In addition to the button and command definition in the plugin.xml, each command needs a Handler class (extends AbstractHandler implements IHandler) that are defined in <<<eu.hatsproject.absplugin.editor.outline.handlers.*>>>
   
   Basically, these handlers are responsible for setting a <<<org.eclipse.jface.viewers.ViewerFilter>>> or <<<org.eclipse.jface.viewers.ViewerComparator>>> to the TreeViewer of the content outline page. ViewerFilters are set using the TreeViewer's <<<setFilters(ViewerFilter[])>>> method and a ViewerSorter is set using the <<<setComparator(ViewerComparator)>>>
   

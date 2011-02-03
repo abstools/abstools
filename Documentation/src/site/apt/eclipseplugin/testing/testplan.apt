@@ -1,0 +1,193 @@
+     -------
+     Testing the ABS Plugin
+     -------
+	 Testplan
+     -------
+     -------
+	 
+ABS Plugin Quality Assurance - System Test plan
+
+*Introduction
+
+    The purpose of this plan is to systematise and coordinate the testing activities of the ABS Eclipse plugin.
+	This test plan summarizes:
+	
+	* Test strategy
+	
+	* Test objects
+	
+	* Test objectives
+	
+	* Mapping of resources and requirements for performing the test plan.
+	
+*Test objects
+
+**System overview
+	
+	Following functionality is supported by the plugin:
+	
+	* Create ABS projects and gather ABS models in these projects by adding one or more ABS files.
+	
+	* Translate ABS models into both Java and Maude.
+	
+	* Run ABS models either with Java or Maude with the use of the integrated Eclipse run dialogs
+	
+	* Editor with syntax highlighting.
+	
+		* Content assist (CTRL-SPACE) giving completion proposals.
+
+		* Content outline.
+		
+		* Marking code problems (syntax and semantical errors).
+		
+		* Marking of location types.
+		
+		[]
+
+	* Module explorer showing the module structure of ABS projects supporting wizards for the creation of new
+		* ABS projects
+		
+		* ABS modules (new or existing file)
+		
+		* ABS classes
+		
+		* ABS interfaces
+		
+	
+	* Debugging of ABS models including
+	
+		* Stepping of one task
+		
+		* Showing stack frames 
+		
+		* Showing a variable view
+		
+		* ...
+	
+	* Setting of preferences...
+
+**System environment
+
+    The ABS plugin provides an Integrated development environment for creating programs and model created with the ABS modeling language.
+	
+	It is integrated into the Eclipse platform, and can used on every platform eclipse runs on....
+
+	
+*Test strategy
+	
+	For testing the ABS plugin one week (part-time) is considered. Testing is done in three steps:
+
+	* Unit tests of functionality that is decoupled from the Eclipse framework
+	
+	* Walkthrough of basic functionality 
+	
+	* Code review
+
+	[]
+	
+	The code review step is optional. Only if the unit testing and walkthrough steps are finished in time, code review will be done. 
+	
+**Unit testing
+
+    Unit testing will be done for classes that can be <decoupled> from the Eclipse framework. In these respective classes <only> methods that do <not> require user interface interaction will be tested.
+	Additionally, Label and content providers will be covered by walkthroughs and will <not> be unit tested.
+	
+	Following classes should be tested:
+		
+	[[1]] <<<eu.hatsproject.absplugin.console.ConsoleManager>>>
+	
+	[[2]] <<<eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils>>>
+	
+	[[3]] <<<eu.hatsproject.absplugin.internal.IncrementalModelBuilder>>>
+	
+	[[4]] <<<eu.hatsproject.absplugin.navigator.ModulePath>>> 
+	
+	[[5]] <<<eu.hatsproject.absplugin.navigator.NavigatorUtils>>>	
+	
+	[[6]] <<<eu.hatsproject.absplugin.util.CoreControlUnit>>>	
+	
+	[[7]] <<<eu.hatsproject.absplugin.util.InternalASTNode>>>		
+	
+	[[8]] <<<eu.hatsproject.absplugin.util.UtilityFunctions>>>
+	
+	[[9]] <<<eu.hatsproject.absplugin.util.WizardUtil>>>
+	
+	[[10]] <<<eu.hatsproject.absplugin.debug.DebugUtils>>>	
+	
+	[[11]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
+
+**Walkthrough
+
+
+
+**Code review
+
+*Test objectives
+
+*Resource mapping
+
+**Unit test
+
+*------------+---------------------+
+|| UnitTest  || Responsible person |
+*----------- +---------------------+
+|  1         |  fstrauss           |
+*------------+---------------------+
+|  2         |  cseise             |
+*------------+---------------------+
+|  3         |  mweber             |
+*------------+---------------------+
+|  4         |  cseise             |
+*------------+---------------------+
+|  5         |  cseise             |
+*------------+---------------------+
+|  6         |  fstrauss           |
+*------------+---------------------+
+|  7         |  cseise             |
+*------------+---------------------+
+|  8         |  cseise             |
+*------------+---------------------+
+|  9         |  cseise             |
+*------------+---------------------+
+|  10        |  tfischer           |
+*------------+---------------------+
+|  11        |  mweber             |
+*------------+---------------------+
+
+**Code reviews
+
+*------------------+----------------------+
+|| Package         || Responsible person  |
+*------------------+----------------------+
+|  actions         | cseise, mweber       |
+*------------------+----------------------+
+|  builder         | tfischer             |
+*------------------+----------------------+
+|  console         | fstrauss             |
+*------------------+----------------------+
+|  contentassist   | fstrauss,cseise      |
+*------------------+----------------------+
+|  debug.model     | mweber, fstrauss     |
+*------------------|----------------------+
+|  debug.schedule  | tfischer, cseise     |
+*------------------+----------------------+
+|  editor          | fstrauss, tfischer   |
+*------------------+----------------------+
+|  internal        | cseise               |
+*------------------+----------------------+
+|  navigator       | tfischer             |
+*------------------+----------------------+
+|  preferences     | all                  |
+*------------------+----------------------+
+|  properties      | cseise, mweber       |
+*------------------+----------------------+
+|  testexpressions | mweber               |
+*------------------+----------------------+
+|  util            | all                  |
+*------------------+----------------------+
+|  wizard          | mweber               |
+*------------------+----------------------+
+
+
+
+
