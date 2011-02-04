@@ -147,6 +147,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "<="          { return sym(Terminals.LTEQ); }
  ">="          { return sym(Terminals.GTEQ); }
  "_"          { return sym(Terminals.USCORE); }
+ "'"          { return sym(Terminals.PRIME); }
 }
 
 //Literals

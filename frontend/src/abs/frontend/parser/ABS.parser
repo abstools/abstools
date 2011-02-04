@@ -736,7 +736,9 @@ List feature_list = feature.f {: return new List().add(f); :}
     | feature_list.l COMMA feature.f {: return l.add(f); :}
     ;
 
-Feature feature = TYPE_IDENTIFIER.id attr_assignments.attrs? {: return new Feature(id, attrs); :} ;
+Feature feature = TYPE_IDENTIFIER.id attr_assignments.attrs? {: return new Feature(id, attrs); :}
+                | TYPE_IDENTIFIER.id PRIME attr_assignments.attrs? {: return new Feature("$"+id, attrs); :} ;
+                // hack: feat' to refer to the intermediate feature "$feat"
 
 //List attr_decls = LBRACE param_decl_list.f? RBRACE {: return f; :};
 
@@ -796,6 +798,9 @@ List when_condition = WHEN application_condition.dl {: return dl; :};
 List application_condition = feature.f {: return new List().add(f); :}
     | application_condition.l ANDAND feature.f {: return l.add(f); :}
     ;
+
+
+// PSL - Product selection language
 
 List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
