@@ -83,22 +83,29 @@ aspect CSP {
       // add intermediate variable $f if f is optional.
       if (g.getFNode(i) instanceof OptFeat) {
         v = Choco.makeBooleanVar("$"+fname);
+        // f -> $f
         s.addConstraint(
-          Choco.implies(s.getVar(fname),ChocoSolver.isTrue(v));
+          Choco.implies(ChocoSolver.isTrue(s.getVar(fname)),ChocoSolver.isTrue(v)));
       } else {
         v = s.getVar(fname);
       }
+      // f -> fparent
+      s.addConstraint(Choco.implies(ChocoSolver.isTrue(v),ChocoSolver.isTrue(s.getVar(getName()))));
+      // rec - FNode
       s.addConstraint(g.getFNode(i).collectConstraints(s));
       feats[i] = v;
-      // f -> $f /\ [f]
+      // f -> $f /\ f -> fparent /\ [f]
     }
     // n1 <= $f1 + ... + $fn <= n2
     if      (g.getCard() instanceof AllOf)
+      // #feats = nfeats
       s.addConstraint(ChocoSolver.eqeq(Choco.sum(feats),nfeats));
     else if (g.getCard() instanceof Minim)
+      // #feats >= from
       s.addConstraint(
         Choco.geq(Choco.sum(feats),((Minim) g.getCard()).getCFrom()));
     else {
+      // to >= #feats >= from
       s.addConstraint(
         Choco.geq(Choco.sum(feats),((CRange) g.getCard()).getCFrom()));
       s.addConstraint(
