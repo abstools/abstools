@@ -114,6 +114,16 @@ ABS Plugin Quality Assurance - Test plan
 	[[9]] <<<eu.hatsproject.absplugin.util.WizardUtil>>>
 	
 	[[10]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
+	
+	[[11]] <<<eu.hatsproject.absplugin.debug.scheduling.GUIScheduler>>>	
+	
+	[[12]] <<<eu.hatsproject.absplugin.debug.scheduling.NStepScheduler>>>	
+	
+	[[13]] <<<eu.hatsproject.absplugin.debug.schedulung.RandomScheduler>>>	
+	
+	[[14]] <<<eu.hatsproject.absplugin.debug.scheduling.RunToLineScheduler>>>	
+	
+	[[15]] <<<eu.hatsproject.absplugin.debug.scheudling.StepOverScheduler>>>	
 
 **Walkthrough
 	
@@ -211,6 +221,14 @@ ABS Plugin Quality Assurance - Test plan
 |  9         |  cseise             |
 *------------+---------------------+
 |  10        |  mweber             |
+*------------+---------------------+
+|  12        |  mweber             |
+*------------+---------------------+
+|  13        |  mweber             |
+*------------+---------------------+
+|  14        |  mweber             |
+*------------+---------------------+
+|  15        |  mweber             |
 *------------+---------------------+
 
 **Walkthroughs
