@@ -10,8 +10,45 @@ Execution and Debugging
   
 ** Java
 
- Text about the JavaJob
+  All Java related tasks are handled by the <eu.hatsproject.absplugin.actions.JavaJob>. 
+  There are three different classes starting an Java Job.
+  
+  [[1]] <eu.hatsproject.absplugin.actions.JavaAction> - the predefined toolbar icons
+  
+  [[2]] <eu.hatsproject.absplugin.actions.shortcuts.AbstractLaunchJavaShortcut> - the predefined run configurations
+  
+  [[3]] <eu.hatsproject.absplugin.actions.runconfig.JavaRunConfiguration> - customized run configurations
+  
+  []
+  
+  You can start a simple JavaJob with "new JavaJob(name,action,project,file).schedule()", where 
+  
+  * name is the name of this job
+  
+  * the action defines, if we need to start SDEdit:
+  
+*----------------------+------------------------------------------------------+
+|| Action Id           || Effect                                              |
+*----------------------+------------------------------------------------------+
+| <ACTION_DEBUG_ID>    | starts debugging                                     |
+*----------------------+------------------------------------------------------+
+| <ACTION_START_SDE>   | starts debugging and SDEdit                          |
+*----------------------+------------------------------------------------------+
+| else                 | only compiling (.abs files to .java and .class files)|
+*----------------------+------------------------------------------------------+
 
+  * project - must be an ABS project and not null
+  
+  * file - the selected file, where to find the main block. If this file is null, then the JavaJob tries to find the main block in the generated Java files.
+  
+  []
+  
+  You can overwrite the default arguments before scheduling the JavaJob. There are several set methods like for example "setDebuggerArgsSystemObserver(String debuggerArgsSystemObserver)". The default arguments are set in "setDebuggerArgumentsIfNull".
+  
+  If you want to see more output / informations while a JavaJob is working, just set the boolean debugMode to true.
+  For further information see the Javadoc and the code itself.
+  
+  
 ** Maude
 
  The <eu.hatsproject.absplugin.actions.MaudeJob> extends the default Job and overrides the run method offering compiling to .maude files and execution of such. To do so, one has to create a new MaudeJob, add a new MaudeJobChangeListener to it and schedule the Job.
@@ -54,7 +91,15 @@ Execution and Debugging
  At all these three points, the explained process of creating a job, adding a <MaudeJobChangeListener> and scheduling the job is followed.
   
  For further reference see the Javadoc and the code itself.
+ 
+** Run Configurations
+
+  Each run configuration consits of one ore more tabs (<eu.hatsproject.absplugin.actions.runconfig.JavaTab> or <eu.hatsproject.absplugin.actions.runconfig.MaudeTab>). Run configuration attributes are set in these classes.\
+  Tabs are composed into TabGroups (<eu.hatsproject.absplugin.actions.runconfig.JavaTabGroup> or <eu.hatsproject.absplugin.actions.runconfig.MaudeTabGroup>). \
+  The launch of a run configuration is in <eu.hatsproject.absplugin.actions.runconfig.JavaRunConfiguration> or <eu.hatsproject.absplugin.actions.runconfig.MaudeRunConfiguration>.
   
+  If you want to add a new Scheduler or SystemObserver in the Java run configuration, just modify <eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums>.
+
 * Debugging
 
 ** General Architecture
