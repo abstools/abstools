@@ -322,7 +322,7 @@ toolbar:org.eclipse.ui.views.ContentOutline?after=additions
   
   Basically, these handlers are responsible for setting a <<<org.eclipse.jface.viewers.ViewerFilter>>> or <<<org.eclipse.jface.viewers.ViewerComparator>>> to the TreeViewer of the content outline page. ViewerFilters are set using the TreeViewer's <<<setFilters(ViewerFilter[])>>> method and a ViewerSorter is set using the <<<setComparator(ViewerComparator)>>>
   
-  ...
+  The ViewerFilters and ViewerComparators are stored in the ABSContentOutlineFiltersAndComparators class.
   
   
   

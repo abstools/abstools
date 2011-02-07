@@ -91,7 +91,7 @@ ABS Plugin Quality Assurance - Test plan
 **Unit testing
 
     Unit testing will be done for classes that can be <decoupled> from the Eclipse framework. In these respective classes <only> methods that do <not> require user interface interaction will be tested.
-	Additionally, Label and content providers will be covered by walkthroughs and will <not> be unit tested.
+	Additionally, functionality connected to Label and content providers will be covered by walkthroughs and will <not> be unit tested.
 	
 	Following classes should be tested:
 		
@@ -113,9 +113,7 @@ ABS Plugin Quality Assurance - Test plan
 	
 	[[9]] <<<eu.hatsproject.absplugin.util.WizardUtil>>>
 	
-	[[10]] <<<eu.hatsproject.absplugin.debug.DebugUtils>>>	
-	
-	[[11]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
+	[[10]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
 
 **Walkthrough
 	
@@ -204,7 +202,7 @@ ABS Plugin Quality Assurance - Test plan
 *------------+---------------------+
 |  5         |  cseise             |
 *------------+---------------------+
-|  6         |  fstrauss           |
+|  6         |  tfischer           |
 *------------+---------------------+
 |  7         |  cseise             |
 *------------+---------------------+
@@ -212,9 +210,7 @@ ABS Plugin Quality Assurance - Test plan
 *------------+---------------------+
 |  9         |  cseise             |
 *------------+---------------------+
-|  10        |  tfischer           |
-*------------+---------------------+
-|  11        |  mweber             |
+|  10        |  mweber             |
 *------------+---------------------+
 
 **Walkthroughs
