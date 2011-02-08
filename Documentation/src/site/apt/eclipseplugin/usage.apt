@@ -64,6 +64,6 @@ Using the ABS Eclipse IDE
 
   The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
 
-* {{{execution.html}Execution}}
+* Execution
 
-    <<t.b.d>>
+  {{{execution.html}see "Executing ABS"}}

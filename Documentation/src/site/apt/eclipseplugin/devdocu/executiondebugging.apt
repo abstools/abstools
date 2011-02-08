@@ -104,7 +104,7 @@ Execution and Debugging
 
 ** General Architecture
  
- Generally, debugging is done by the ABSFrontend. The Eclipse plug-in creates and starts an <abs.backend.java.lib.runtime.ABSRuntime> and adds an internal scheduler and listeners to it. 
+ Generally, debugging is done in coperation with the ABSFrontend. The Eclipse plug-in creates and starts an <abs.backend.java.lib.runtime.ABSRuntime> and adds an internal scheduler and listeners to it. 
  
  Schedulers have to implement abs.backend.java.scheduling.TotalSchedulingStrategy and therefor contain a <choose> and a <schedule> method.
  
@@ -160,7 +160,7 @@ Execution and Debugging
 *---------------------------------+-------------------------------------+------------------------------------------------------------------------+
 || Feature                        || Extension Points                   || Classes                                                               |
 *---------------------------------+-------------------------------------+------------------------------------------------------------------------+
-| Debug Perspective               |  org.eclipse.ui.perspectives        |  eu.hatsproject.absplugin.dbeug.perspective.ABSDebugPerspectiveFactory |
+| Debug Perspective               |  org.eclipse.ui.perspectives        |  eu.hatsproject.absplugin.debug.perspective.ABSDebugPerspectiveFactory |
 *---------------------------------+-------------------------------------+------------------------------------------------------------------------+ 
 | Debug View                      |  org.eclipse.ui.views               |  eu.hatsproject.absplugin.debug.views.debugview.DebugView              |
 | Variable View                   |                                     |  eu.hatsproject.absplugin.debug.views.variablesview.VariablView        |
@@ -183,4 +183,35 @@ Execution and Debugging
 
 ** Scheduler (SchedulingStrategy)
 
- Text about our scheduler and interactive behaviour with Jans debugger.
+  Scheduling is done in two layers. The <eu.hatsproject.absplugin.debug.scheduling.SchedulingStrategy> is directly connected the debugger implemented in the ABSFrontend. Calls to the <choose(..)> and <schedule(..)> methods are delegated to the internal schedulers. These schedulers are an extension of the <abs.backend.java.scheduling.TotalSchedulingStrategy> with an additional state. The interface is <eu.hatsproject.absplugin.debug.scheduling.TotalScheduler>. It supports a <reset()> method to invalidate the internal state of the scheduler.
+ 
+  The SchedulingStrategy delegates all calls first to the <curScheduler>. This is mostly a scheduler dedicated to the action the user whats to perform. The current implementations are:
+ 
+  * GUIScheduler
+ 
+    It is connected to the <SchedulingStrategy.doSingleStep()> method. It waits for user input and when triggert performs a single step.
+ 
+  * NStepScheduler
+ 
+    It is connected to the <SchedulingStrategy.doMultipleSteps(..)> method. It performs the number of steps the user entered.
+ 
+  * RunToLineScheduler
+ 
+    It is connected to the <SchedulingStrategy.doRunToLine(..)> method. It performs steps till the debugger reaches the given line in the given file. If the line is not reached, it performs all possible steps.
+ 
+  * StepOverScheduler
+ 
+    It is connected to the <SchedulingStrategy.doStepOver()> method. It takes the stack frame of the task, that was selected last time, and performs stepps till the same stack frame is reached again. If the stack frame is never reached again, all possible steps are performed.
+ 
+  []
+ 
+  All these action schedulers ask a base scheduler for the next action that can be performed. The task of a base scheduler is to run through the program in a given order/sequence without interruption. If the sequence is finished, the scheduler switches the <curScheduler> to the GUIScheduler and lets the user decide on the next steps to take. It is controlled by an action scheduler (see above). There are currently two implementations:
+ 
+ 
+  * RandomScheduler
+ 
+    It is an extension of the <abs.backend.java.scheduling.RandomSchedulingStrategy>. It decides on the next step randomly. If there are no deadlocks, this scheduler can decide on all steps till the program is finished.
+   
+  * RunTaskScheduler
+ 
+    This scheduler decides on all steps of the given task. After a reset, it may schedule the given task. Afterwards it will try to decide on the step actions. If there are no more step actions possible, the scheduler switches the <curScheduler> to the GUIScheduler and lets the user decide. That means, if the task is blocked or there are no steps left, the scheduler will ask the user to decide on the next actions (for example to continue by resetting the scheduler -single step ore resume- or by choosing another task).
