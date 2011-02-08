@@ -260,7 +260,7 @@ ABS Plugin Quality Assurance - Test plan
 *------------------+----------------------+
 |  preferences     | all                  |
 *------------------+----------------------+
-|  properties      | cseise, mweber       |
+|  properties      | cseise               |
 *------------------+----------------------+
 |  testexpressions | mweber               |
 *------------------+----------------------+
