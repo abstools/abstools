@@ -6,7 +6,7 @@ Preferences and Properties
   
  Preference stores hide complexity from the user and offer easy access to stored values. To be more detailed, values are bound to String identifiers and methods are offered, to store and obtain those. For each identifier two values are stored: the current value and the default value. While the current value may change, the default value should not. The current value can be restored to default if necessary (with a simple method).
   
- We use one global preference store to handle out global preferences and a <scoped preference store> in each project to handle project specific properties. As the name suggests, the scoped preference store has a scope, therefor the same identifier can have different values in different scopes (or rather different preference stores).
+ We use one global preference store to handle our global preferences and a <scoped preference store> in each project to handle project specific properties. As the name suggests, the scoped preference store has a scope, therefor the same identifier can have different values in different scopes (or rather different preference stores).
 
 * Preference Pages
 

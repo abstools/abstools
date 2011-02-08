@@ -4,9 +4,9 @@ Execution and Debugging
 
  Text about Jobs and launch support of Eclipse in general
   
- Eclipse supports asynchronous execution via so called Jobs, implemented in <org.eclipse.core.runtime.jobs.Job>. These Jobs can be scheduled with <Job.schedule>, which will execute the <run> method of a Job, which returns an <IStatus>.
+ Eclipse supports asynchronous execution via so called Jobs, implemented in <org.eclipse.core.runtime.jobs.Job>. These Jobs can be scheduled with <Job.schedule()>, which will execute the <run()> method of a Job, which returns an <IStatus>.
   
- <JobChangeListeners> can be added to a Job and react to the <IStatus> returned by the <run> method of a Job.
+ <JobChangeListeners> can be added to a Job and react to the <IStatus> returned by the <run()> method of a Job.
   
 ** Java
 
