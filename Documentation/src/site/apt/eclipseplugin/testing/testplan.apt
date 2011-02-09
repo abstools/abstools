@@ -105,25 +105,23 @@ ABS Plugin Quality Assurance - Test plan
 	
 	[[5]] <<<eu.hatsproject.absplugin.navigator.NavigatorUtils>>>	
 	
-	[[6]] <<<eu.hatsproject.absplugin.util.CoreControlUnit>>>	
+	[[6]] <<<eu.hatsproject.absplugin.util.InternalASTNode>>>		
 	
-	[[7]] <<<eu.hatsproject.absplugin.util.InternalASTNode>>>		
+	[[7]] <<<eu.hatsproject.absplugin.util.UtilityFunctions>>>
 	
-	[[8]] <<<eu.hatsproject.absplugin.util.UtilityFunctions>>>
+	[[8]] <<<eu.hatsproject.absplugin.util.WizardUtil>>>
 	
-	[[9]] <<<eu.hatsproject.absplugin.util.WizardUtil>>>
+	[[9]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
 	
-	[[10]] <<<eu.hatsproject.absplugin.debug.SchedulingStrategy>>>	
+	[[10]] <<<eu.hatsproject.absplugin.debug.scheduling.GUIScheduler>>>	
 	
-	[[11]] <<<eu.hatsproject.absplugin.debug.scheduling.GUIScheduler>>>	
+	[[11]] <<<eu.hatsproject.absplugin.debug.scheduling.NStepScheduler>>>	
 	
-	[[12]] <<<eu.hatsproject.absplugin.debug.scheduling.NStepScheduler>>>	
+	[[12]] <<<eu.hatsproject.absplugin.debug.schedulung.RandomScheduler>>>	
 	
-	[[13]] <<<eu.hatsproject.absplugin.debug.schedulung.RandomScheduler>>>	
+	[[13]] <<<eu.hatsproject.absplugin.debug.scheduling.RunToLineScheduler>>>	
 	
-	[[14]] <<<eu.hatsproject.absplugin.debug.scheduling.RunToLineScheduler>>>	
-	
-	[[15]] <<<eu.hatsproject.absplugin.debug.scheudling.StepOverScheduler>>>	
+	[[14]] <<<eu.hatsproject.absplugin.debug.scheudling.StepOverScheduler>>>	
 
 **Walkthrough
 	
@@ -212,28 +210,22 @@ ABS Plugin Quality Assurance - Test plan
 *------------+---------------------+
 |  5         |  cseise             |
 *------------+---------------------+
-|  6         |  tfischer           |
+|  6         |  cseise             |
 *------------+---------------------+
 |  7         |  cseise             |
 *------------+---------------------+
 |  8         |  cseise             |
 *------------+---------------------+
-|  9         |  cseise             |
+|  9         |  mweber             |
 *------------+---------------------+
 |  10        |  mweber             |
+*------------+---------------------+
+|  11        |  mweber             |
 *------------+---------------------+
 |  12        |  mweber             |
 *------------+---------------------+
 |  13        |  mweber             |
 *------------+---------------------+
-|  14        |  mweber             |
-*------------+---------------------+
-|  15        |  mweber             |
-*------------+---------------------+
-
-**Walkthroughs
-
-    <<t.b.d>>
 
 **Code reviews
 
