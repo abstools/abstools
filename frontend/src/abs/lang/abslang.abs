@@ -1,4 +1,3 @@
-//data type declarations 
 module ABS.StdLib;
 export *;
 
@@ -37,7 +36,6 @@ def A fstT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => s; };
 def B sndT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => f; };
 def C trd<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => g; };
 
-
 // Sets
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
@@ -63,6 +61,12 @@ def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet);
  * Returns the size of set 'xs'.
  */
 def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size(ss); };
+
+def Set<A> union<A>(Set<A> set1, Set<A> set2) =
+    case set1 {
+        EmptySet => set2;
+        Insert(a, s) => union(s,insertElement(set2,a))
+    }; 
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.
@@ -90,7 +94,6 @@ def Bool hasNext<A>(Set<A> s) = ~ emptySet(s);
 // Partial function to iterate over a set.
 def Pair<Set<A>,A> next<A>(Set<A> s) =  case s { Insert(e, set2) => Pair(set2,e); };
 
-
 // Lists
 data List<A> = Nil | Cons(A, List<A>);
 def List<A> list<A>(List<A> l) = l; // list constructor helper
@@ -99,19 +102,23 @@ def List<A> list<A>(List<A> l) = l; // list constructor helper
  * Returns the length of list 'list'.
  */
 def Int length<A>(List<A> list) = case list { Nil => 0 ; Cons(p, l) => 1 + length(l) ; };
+
 /**
  * Returns True if list 'list' is empty, False otherwise.
  */
 def Bool isEmpty<A>(List<A> list) = list == Nil;
+
 /**
  * Returns the first element of list 'list'.
  */
 def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+
 /**
  * Returns a (possibly empty) list containing all elements of 'list'
  * except the first one.
  */
 def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+
 /**
  * Returns element 'n' of list 'list'.
  */
@@ -126,8 +133,7 @@ def List<A> without<A>(List<A> list, A a) =
      Nil => Nil;
      Cons(a, tail) => without(tail,a);
      Cons(x, tail) => Cons(x, without(tail,a));
-  }
-;  
+  };  
   
 /**
  * Returns a list containing all elements of list 'list1'
@@ -135,15 +141,18 @@ def List<A> without<A>(List<A> list, A a) =
  */
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
   case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
+  
 /**
  * Returns a list containing all elements of list 'list' followed by 'p'.
  */
 def List<A> appendright<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));
+
 /**
  * Returns a list containing all elements of 'list' in reverse order.
  */
 def List<A> reverse<A>(List<A> list) =
   case list { Cons(hd, tl) => appendright(reverse(tl), hd); Nil => Nil; };
+  
 /**
  * Returns a list of length 'n' containing 'p' n times.
  */
@@ -157,6 +166,7 @@ data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
  // map constructor helper (does not preserve injectivity)
 def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
   case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
+  
 /**
  * Returns a set containing all keys of map 'map'.
  */
@@ -174,6 +184,7 @@ def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   	InsertAssoc(Pair(k, y), _) => y;
         InsertAssoc(_, tm) => lookup(tm, k);
   };
+  
 /**
  * Returns the value associated with key 'k' in map 'ms', or the value 'd'
  * if 'k' has no entry in 'ms'.
@@ -184,11 +195,13 @@ def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
         InsertAssoc(_, tm) => lookupDefault(tm, k, d);
   	EmptyMap => d;
   };
+  
 /**
  * Returns a map with all entries of 'map' plus an entry 'p',
  * which might override but not remove another entry with the same key.
  */
 def Map<A, B> insert<A, B>(Map<A, B> map, Pair<A, B> p) = InsertAssoc(p, map);
+
 /**
  * Returns a map with all entries of 'ms' plus an entry mapping 'k' to 'v',
  * minus the first entry already mapping 'k' to a value.
@@ -233,7 +246,6 @@ def String substr(String str, Int start, Int length) = builtin;
  */
 def Int strlen(String str) = builtin;
 
-
 // A Time datatype.
 data Time = Time(Int);
 def Int currentms() = builtin;
@@ -244,14 +256,11 @@ def Int timeval(Time t) = case t { Time(v) => v; };
 def Int timeDifference(Time t1, Time t2) =
   abs(timeval(t2) - timeval(t1));
   
-  
-  
 /**
  * Annotation data type to define the type of annotations
  * currently only TypeAnnotation exists
  */
 data Annotation = TypeAnnotation; 
- 
  
 [TypeAnnotation]
 data LocationType = Far | Near | Somewhere | Infer;
