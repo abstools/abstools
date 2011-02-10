@@ -1,5 +1,6 @@
 package abs.frontend.delta;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Collection;
@@ -7,7 +8,7 @@ import abs.frontend.ast.ClassModifier;
 
 /*
  * A Delta stores a collection of ClassModifiers for each module
- * These are applied "simultaneously"
+ * These are applied "simultaneously", so an order is not important
  */
 public class Delta {
 
@@ -50,7 +51,10 @@ public class Delta {
      * returns all ClassModifiers that apply to given module name
      */
     public Collection<ClassModifier> getClassModifiers(String id) {
-        return modules.get(id);
+        if (modules.containsKey(id))
+            return modules.get(id);
+        else
+            return Collections.emptySet();
     }
 
     public String toString() {
