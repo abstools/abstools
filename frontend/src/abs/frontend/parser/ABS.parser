@@ -207,7 +207,7 @@ List decl_list =
 
 Decl decl =
 		datatype_decl
-	|   	typesyn_decl
+	|	typesyn_decl
 	|	function_decl
 	|	interface_decl
 	|	class_decl
@@ -245,7 +245,11 @@ FunctionDecl  function_decl =
 	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new BuiltinFunctionDef(), al, p); :}
     | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new ExpFunctionDef(ef), al, p); :}
 	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new FunctionDecl(fn, al, t, l, new BuiltinFunctionDef()); :}
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(ef)); :}
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON 
+	  {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(ef)); :}
+	// error recovery:
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN error 
+	  {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(new NullExp())); :}
 	; 
 
 InterfaceDecl interface_decl =
@@ -264,6 +268,7 @@ InterfaceDecl interface_decl =
 ClassDecl class_decl =
 	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE 
 	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
+  // error recovery:
   | annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE error  
 	{: return new ClassDecl(id, annotations, params,  i, new Opt(), new List(), new List()); :}
 
@@ -482,6 +487,7 @@ CaseExp case_exp =
 List data_exp_list = 
 	  data_exp.i                            {: return new List().add(i); :}
 	| data_exp_list.l COMMA data_exp.i    {: return l.add(i); :}
+	| error {: return new List(); :}
 	;
 
 
@@ -604,7 +610,6 @@ Cog cog = COG.g {: return new Cog(); :} ;
 Exp exp = 
 	  eff_exp.e   {: return e; :}
 	| data_exp.e  {: return e; :}
-	| incomplete_exp.e {: return e; :}
 	;
 	
 Exp eff_exp = 
@@ -612,6 +617,7 @@ Exp eff_exp =
     | new_exp 
 	| async_call 
 	| sync_call
+    | incomplete_exp.e {: return e; :}
 	; 
 
 NewExp new_exp = 
