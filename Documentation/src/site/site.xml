@@ -47,6 +47,7 @@
 	  <item name="Installation" href="eclipseplugin/installation.html"/>
 	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
+	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
       <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html">
         <item name="Editor" href="eclipseplugin/devdocu/editor.html"/>
         <item name="Internals" href="eclipseplugin/devdocu/internal.html"/>
