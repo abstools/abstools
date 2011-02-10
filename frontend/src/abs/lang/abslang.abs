@@ -65,7 +65,7 @@ def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size
 def Set<A> union<A>(Set<A> set1, Set<A> set2) =
     case set1 {
         EmptySet => set2;
-        Insert(a, s) => union(s,insertElement(set2,a))
+        Insert(a, s) => union(s,insertElement(set2,a));
     }; 
 
 /**
