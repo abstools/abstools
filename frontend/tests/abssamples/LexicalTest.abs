@@ -1,0 +1,6 @@
+module LexicalTest;
+
+
+def Bool æåëßfë() = True;
+
+/* /* */ data X = Y; 
