@@ -192,6 +192,9 @@ public class ABSRuntime {
     }
 
     public void nextStep(String fileName, int line) {
+        if (isShutdown)
+            return;
+            
         if (debugging) {
             getCurrentTask().nextStep(fileName, line);
         }
@@ -223,7 +226,7 @@ public class ABSRuntime {
     }
 
     public void doNextStep() {
-        if (hasGlobalScheduler()) {
+        if (!isShutdown && hasGlobalScheduler()) {
             globalScheduler.doNextScheduleStep();
         }
     }
