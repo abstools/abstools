@@ -10,7 +10,7 @@ Executing ABS Projects from ABS Eclipse IDE
  
  
 *-------------------+----------------------------------------------------+------------------------------------------------------+
-|| Button Nr.       || Button tooltip                                    || Functionality /Description                          |
+|| Button Number    || Button tooltip                                    || Functionality /Description                          |
 *-------------------+----------------------------------------------------+------------------------------------------------------+
 |      1            |  "Generate Java Code"                              |  ABS files -> Java & Class files                     |  
 |                   |                                                    |  Compiles the ABS Model from selected file's project | 
@@ -48,17 +48,17 @@ Executing ABS Projects from ABS Eclipse IDE
  Predefined run configurations:
  
 *---------------------------+-------------------------------------------------------------------+
-|| Name                     || Description                     				                 |
+|| Name                     || Description                     				                    |
 *---------------------------+-------------------------------------------------------------------+
 |  ABS Java Backend         |  Starts debugger without any scheduler or observer. Does not open |  
-|                           |  the debug perspective.											 |
+|                           |  the debug perspective.									        |
 *---------------------------+-------------------------------------------------------------------+
 |  ABS Java Backend (Debug) |  Like toolbar button 2:                                           |  
-|                           |  "Eclipse scheduler" and "Eclipse observer" are selected.		 |	
+|                           |  "Eclipse scheduler" and "Eclipse observer" are selected.		    |	
 *---------------------------+-------------------------------------------------------------------+
 |  ABS Java Backend (Debug  |  Like toolbar button 3:                                           |  
 |  with Sequence Diagram)   |  "Eclipse scheduler", "Eclipse observer" and "UML observer"       |
-|                           |  are selected.		                                             |
+|                           |  are selected.		                                            |
 *---------------------------+-------------------------------------------------------------------+
  
  "Generate debugger file first" and "Enable debug mode" are selected in all predefined run configurations.
@@ -89,13 +89,13 @@ Executing ABS Projects from ABS Eclipse IDE
   
 ** Debug View
 
- The Debug View is where you can control your debug process. It contains a tree of COGs, tasks, stackframes and objects representing the state of your program. It also contains a set of buttons, allowing you to step single tasks. 
+ The Debug View is where you can control your debug process. It contains a tree of COGs, tasks, stack frames and objects representing the state of your program. It also contains a set of buttons, allowing you to step single tasks. 
   
  The plug-in currently provides two schedulers, which determine which task to step next. A third scheduler is planned. The scheduler can be selected with the "Choose scheduler" button in the debug view.
   
   * Interactive Scheduler
   
-  The interactive scheduler allows you to select the task you want to step by selecting the task (or a stackframe of the task) in the debug view tree.
+  The interactive scheduler allows you to select the task you want to step by selecting the task (or a stack frame of the task) in the debug view tree.
   
   * Random Scheduler
 
@@ -107,7 +107,7 @@ Executing ABS Projects from ABS Eclipse IDE
   
   []
   
- Functionality of the buttons unter a specific scheduler is as follows:
+ Functionality of the buttons under a specific scheduler is as follows:
   
 *-------------------+----------------------------------------------------+----------------------------------------+----------------------------+
 || Action\Scheduler || Interactive                                       || Random                                || History                   |

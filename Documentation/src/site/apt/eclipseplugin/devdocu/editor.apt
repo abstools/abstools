@@ -57,9 +57,9 @@ Editor
   
   * markerAnnotationSpecification
   
-    * spefification of the style of highlighting with extension point <org.eclipse.ui.editors.markerAnnotationSpecification>
+    * specification of the style of highlighting with extension point <org.eclipse.ui.editors.markerAnnotationSpecification>
   
-    * the keys used (like colorPreferenceKey) are keys in the preferencestore and and can be chosen freely but <<need to be unique>>
+    * the keys used (like colorPreferenceKey) are keys in the preference store and and can be chosen freely but <<need to be unique>>
   
     * connection to annotations with property <annotationType>
   
@@ -69,7 +69,7 @@ Editor
   
   * <eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration>
   
-    * add cases for the new markers to the methods getAnnotationHover(..) and getTextHover(..) so you get popups for the new annotations when hovering the mouse over it.
+    * add cases for the new markers to the methods getAnnotationHover(..) and getTextHover(..) so you get pop-ups for the new annotations when hovering the mouse over it.
 
 * Decoration for Location Types
 
@@ -77,15 +77,15 @@ Editor
   
   * add special DrawingStrategy in ABSDecorationSupport (eu.hatsproject.absplugin.editor.decoration.ABSDecorationSupport)
   
-  * change textstyle values in ABSEditor (eu.hatsproject.absplugin.editor.ABSEditor) in method configureSourceViewerDecorationSupport(..)
+  * change text style values in ABSEditor (eu.hatsproject.absplugin.editor.ABSEditor) in method configureSourceViewerDecorationSupport(..)
 
 * Semantic highlighting
 
   In eclipse, a text editor partitions the text into different partition types. One of the types is the source code, in this case of the ABS program. The partitioner doing the job is the <ABSCodeScanner> (eu.hatsproject.absplugin.editor.ABSCodeScanner). It is initialized in the <ABSSourceViewerConfiguration> (eu.hatsproject.absplugin.editor.ABSSourceViewerConfiguration).
   
-  The ABSCodeScanner initializes the list of keywords (given by the abs frontend in class <abs.frontend.parser.Keywords>). The color and style of the tokens are taken from the preference store of the plugin. For highlighting elements of the abs language like functions, data types and so on, there are two possibilities: Regular expressions or semantic rules.
+  The ABSCodeScanner initializes the list of keywords (given by the abs Frontend in class <abs.frontend.parser.Keywords>). The color and style of the tokens are taken from the preference store of the plug-in. For highlighting elements of the abs language like functions, data types and so on, there are two possibilities: Regular expressions or semantic rules.
   
-  When the document of an editor changes, it determines the damage and tries to repair it. For this, the changed part of the document has to be rescanned. The method <setRange(..)> gets called. In this method one can do initialization stuff like reparsing the document (because there could be changes in the editor that are not yet saved). Next the method <nextToken()> gets called as long as there are parts of the document left that needs to be repaired/rescanned. There the interesting stuff happens. The next token is searched for using a word detector (here for finding identifiers) and the token for this identifier is determined. Keywords have highest priority, if semantic highlighting fails (for example if the file is not part of an abs project) regexp matching is used.
+  When the document of an editor changes, it determines the damage and tries to repair it. For this, the changed part of the document has to be rescanned. The method <setRange(..)> gets called. In this method one can do initialization stuff like re-parsing the document (because there could be changes in the editor that are not yet saved). Next the method <nextToken()> gets called as long as there are parts of the document left that needs to be repaired/rescanned. There the interesting stuff happens. The next token is searched for using a word detector (here for finding identifiers) and the token for this identifier is determined. Keywords have highest priority, if semantic highlighting fails (for example if the file is not part of an abs project) regexp matching is used.
   
   The style of highlighting can be changed in the preference page (under ABS -> ABS Syntax Coloring). This page can be changed in the class <ABSSyntaxColoring> (eu.hatsproject.absplugin.preferences.ABSSyntaxColoring). New elements have to be added to the list in method <createContents(..)> and added to the case in the selection listener some line underneath. The graphical elements are all FieldEditors which means you only have to supply the preference store and the key of the property. The rest is realized inside the field editor like loading and saving the values from and to the store.
   
@@ -113,7 +113,7 @@ Editor
   
   The constructor of this factory requests the qualifier already typed in, the position in the document, the document, the editor and an empty proposal list which should be populated.
   
-  Most important is the method <computeStructureProposals>, which populates the list with keywords, main blocks, classes, different incomplete acces proposals, top level and class field proposals.
+  Most important is the method <computeStructureProposals>, which populates the list with keywords, main blocks, classes, different incomplete access proposals, top level and class field proposals.
 
 * Jump To Declaration Feature
 
@@ -123,7 +123,7 @@ Editor
   
     * abs editor scope to activate binding only when an abs file is opened in editor
   
-  * command included in editor popup menu with <org.eclipse.ui.popupMenus> extension point
+  * command included in editor pop-up menu with <org.eclipse.ui.popupMenus> extension point
   
   * real action added with <org.eclipse.ui.editorActions> extension point
   
@@ -227,12 +227,12 @@ public boolean hasChildren(java.lang.Object element) {
   
   []
   
-  The <<<getImage>>> method is provided with an Object that is a member of the TreeViewer and should return an image that is used to identify the object. If the Icon is included in the plugin's jar file, an Image can be loaded with the following method:
+  The <<<getImage>>> method is provided with an Object that is a member of the TreeViewer and should return an image that is used to identify the object. If the Icon is included in the plug-in's jar file, an Image can be loaded with the following method:
   
 +---+
 /**
- * Retrieves an image specified by a path <b>LOCAL</b> to the plugin  
- * @param path The Path of the image local to the plugin bundle (jar file)
+ * Retrieves an image specified by a path <b>LOCAL</b> to the plug-in  
+ * @param path The Path of the image local to the plug-in bundle (jar file)
  * @return The desired Image or a default image, if the desired image was not found;
  */
 public static Image createImage(String path){
@@ -292,7 +292,7 @@ public void update(ViewerCell cell) {
   
 **ABS outline filters
   
-    The buttons for enabling content outline filters and sorters are added using the <menuContribution> subelement of the <<<org.eclipse.ui.menus>>> extension point. The right locationURI to add buttons to the outline view is
+    The buttons for enabling content outline filters and sorters are added using the <menuContribution> sub-element of the <<<org.eclipse.ui.menus>>> extension point. The right locationURI to add buttons to the outline view is
   
 +---+
 toolbar:org.eclipse.ui.views.ContentOutline?after=additions

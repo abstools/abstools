@@ -67,7 +67,7 @@ Execution and Debugging
 |                            |                                                       |  (yellow)                                                                    |
 *----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
 |  <MAUDE_ERROR_MAUDE>       |  Maude encountered an error during execution of the   |  the message of the status will be printed on the Eclipse console as error   |
-|                            |  genrated .maude file                                 |  (red)                                                                       |
+|                            |  generated .maude file                                 |  (red)                                                                       |
 *----------------------------+-------------------------------------------------------+------------------------------------------------------------------------------+
 |  <MAUDE_ERROR>             |  Other errors have been encountered during compiling  |  An error message containing the message of the status will pop up           |
 |                            |  or starting the Maude process                        |                                                                              |
@@ -94,7 +94,7 @@ Execution and Debugging
  
 ** Run Configurations
 
-  Each run configuration consits of one ore more tabs (<eu.hatsproject.absplugin.actions.runconfig.JavaTab> or <eu.hatsproject.absplugin.actions.runconfig.MaudeTab>). Run configuration attributes are set in these classes.\
+  Each run configuration consist of one ore more tabs (<eu.hatsproject.absplugin.actions.runconfig.JavaTab> or <eu.hatsproject.absplugin.actions.runconfig.MaudeTab>). Run configuration attributes are set in these classes.\
   Tabs are composed into TabGroups (<eu.hatsproject.absplugin.actions.runconfig.JavaTabGroup> or <eu.hatsproject.absplugin.actions.runconfig.MaudeTabGroup>). \
   The launch of a run configuration is in <eu.hatsproject.absplugin.actions.runconfig.JavaRunConfiguration> or <eu.hatsproject.absplugin.actions.runconfig.MaudeRunConfiguration>.
   
@@ -104,7 +104,7 @@ Execution and Debugging
 
 ** General Architecture
  
- Generally, debugging is done in coperation with the ABSFrontend. The Eclipse plug-in creates and starts an <abs.backend.java.lib.runtime.ABSRuntime> and adds an internal scheduler and listeners to it. 
+ Generally, debugging is done in cooperation with the ABSFrontend. The Eclipse plug-in creates and starts an <abs.backend.java.lib.runtime.ABSRuntime> and adds an internal scheduler and listeners to it. 
  
  Schedulers have to implement abs.backend.java.scheduling.TotalSchedulingStrategy and therefor contain a <choose> and a <schedule> method.
  
@@ -114,13 +114,13 @@ Execution and Debugging
   
    []
  
- Listeners implement methods, which are called on specific events occuring during debugging, e.g. creation of a new COG or termination of a task.
+ Listeners implement methods, which are called on specific events occurring during debugging, e.g. creation of a new COG or termination of a task.
  
- The debug package is split into four parts or subpackages
+ The debug package is split into four parts or sub-packages
  
   * <eu.hatsproject.absplugin.debug.scheduling> containing the <SchedulingStrategy> with all schedulers
   
-  * <eu.hatsproject.absplugin.debug.model> which implements listeners / obeservers and augments the model with additional information
+  * <eu.hatsproject.absplugin.debug.model> which implements listeners / observers and augments the model with additional information
   
   * <eu.hatsproject.absplugin.debug.perspective> containing classes which constitute to the <ABSDebugPerspective>
   
@@ -128,7 +128,7 @@ Execution and Debugging
   
   []
  
- For more details about these packeges see below.
+ For more details about these packages see below.
  
  Note, that this debugger is NOT related to the Eclipse Debug API but implements everything manually.
  
@@ -189,7 +189,7 @@ Execution and Debugging
  
   * GUIScheduler
  
-    It is connected to the <SchedulingStrategy.doSingleStep()> method. It waits for user input and when triggert performs a single step.
+    It is connected to the <SchedulingStrategy.doSingleStep()> method. It waits for user input and when triggered performs a single step.
  
   * NStepScheduler
  
@@ -201,7 +201,7 @@ Execution and Debugging
  
   * StepOverScheduler
  
-    It is connected to the <SchedulingStrategy.doStepOver()> method. It takes the stack frame of the task, that was selected last time, and performs stepps till the same stack frame is reached again. If the stack frame is never reached again, all possible steps are performed.
+    It is connected to the <SchedulingStrategy.doStepOver()> method. It takes the stack frame of the task, that was selected last time, and performs steps till the same stack frame is reached again. If the stack frame is never reached again, all possible steps are performed.
  
   []
  

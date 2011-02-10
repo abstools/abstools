@@ -44,13 +44,13 @@ Using the ABS Eclipse IDE
 
 *** Module Explorer
 
-    Similar to the package explorer of the Java perspective, the ABS Module Explorer gives an overview of all modules - and their respective subelements - contained in ABS projects in the current workspace.
+  Similar to the package explorer of the Java perspective, the ABS Module Explorer gives an overview of all modules - and their respective sub-elements - contained in ABS projects in the current workspace.
 
   Using the convention, that '.' characters in module names indicate a module hierarchy, the module explorer dissects all module names of a project and represents the respective hierarchy in its tree view.
 
   Moreover, the Module Explorer supports the 'Link with editor' functionality that expands the tree structure to the corresponding module when switching to another editor.
 
-  <<Note:>> If more than one module declaration is in one editor page, the module that contains the <last known cursor> position is selected. If there is no last known cursor position, the tree is expanded to the <first> module declaration of that edior page.
+  <<Note:>> If more than one module declaration is in one editor page, the module that contains the <last known cursor> position is selected. If there is no last known cursor position, the tree is expanded to the <first> module declaration of that editor page.
   
 *** Outline
 

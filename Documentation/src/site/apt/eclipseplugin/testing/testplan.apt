@@ -1,15 +1,15 @@
      -------
-     Testing the ABS Plugin
+     Testing the ABS Plug-in
      -------
-	 Testplan
+	 Test plan
      -------
      -------
 	 
-ABS Plugin Quality Assurance - Test plan
+ABS Plug-in Quality Assurance - Test plan
 
 *Introduction
 
-    The purpose of this plan is to systematise and coordinate the testing activities of the ABS Eclipse plugin.
+    The purpose of this plan is to systematise and coordinate the testing activities of the ABS Eclipse plug-in.
 	This test plan summarizes:
 	
 	* Test strategy
@@ -22,7 +22,7 @@ ABS Plugin Quality Assurance - Test plan
 
 **System overview
 	
-	Following functionality is supported by the plugin:
+	Following functionality is supported by the plug-in:
 	
 	* Create ABS projects and gather ABS models in these projects by adding one or more ABS files.
 	
@@ -64,19 +64,19 @@ ABS Plugin Quality Assurance - Test plan
 		
 		* Tracking of the code execution by highlighting the current code line in the editor.
 	
-	* Setting of preferences relevant for the ABS plugin
+	* Setting of preferences relevant for the ABS plug-in
 
 **System environment
 
-    The ABS plugin provides an Integrated development environment for creating programs and model created with the ABS modeling language.
-	Therefore the ABS plugin supports a developer in creating ABS models.
+    The ABS plug-in provides an Integrated development environment for creating programs and model created with the ABS modeling language.
+	Therefore the ABS plug-in supports a developer in creating ABS models.
 	
-	The plugin itself is integrated into the Eclipse platform, and can used on every platform eclipse runs on. The plugin uses a pre-existing ABS Compiler and Frontend and uses pre-existing structures for debugging  the ABS model.
+	The plug-in itself is integrated into the Eclipse platform, and can used on every platform eclipse runs on. The plug-in uses a pre-existing ABS Compiler and Frontend and uses pre-existing structures for debugging  the ABS model.
 
 	
 *Test strategy
 	
-	For testing the ABS plugin one week (part-time) is considered. Testing is done in three steps:
+	For testing the ABS plug-in one week (part-time) is considered. Testing is done in three steps:
 
 	* Unit tests of functionality that is decoupled from the Eclipse framework
 	
@@ -125,7 +125,7 @@ ABS Plugin Quality Assurance - Test plan
 
 **Walkthrough
 	
-	In addition to unit testing a walkthrough of all basic use cases will be done using the eclipse plugin.
+	In addition to unit testing a walkthrough of all basic use cases will be done using the eclipse plug-in.
 	
 	Problems and failures will be recorded using the problem list for walkthroughs ....
 	
@@ -138,15 +138,15 @@ ABS Plugin Quality Assurance - Test plan
 	
 	* Javadoc
 	
-		* Are all public and protected methods bigger than 5 LOC documented using javadoc?
+		* Are all public and protected methods bigger than 5 LoC documented using Javadoc?
 		
-		* Are all public variables documented using javadoc
+		* Are all public variables documented using Javadoc
 		
-		* Is the javadoc useful and meaningful?
+		* Is the Javadoc useful and meaningful?
 		
-		* Do javadoc parameters match the actual method parameters?
+		* Do Javadoc parameters match the actual method parameters?
 		
-		* Do javadoc comments contain throws clauses where necessary?
+		* Do Javadoc comments contain throws clauses where necessary?
 		
 		* Are exceptional cases like null arguments documented?
 		
@@ -158,13 +158,11 @@ ABS Plugin Quality Assurance - Test plan
 		
 		* Is the code understandable and provides comments at crucial places?
 		
-		* Is the code 
-		
 		* Do method names reflect the functionality of the code?
 		
 		* Do all methods handle errors reasonably?
 		
-		* Are stack traces printed out where error handling should they should not be printed out?
+		* Are stack traces printed out where the error could have been handled better?
 		
 		* Is the visibility of methods reasonable?
 		
@@ -198,7 +196,7 @@ ABS Plugin Quality Assurance - Test plan
 **Unit test
 
 *------------+---------------------+
-|| UnitTest  || Responsible person |
+|| Unit Test  || Responsible person |
 *----------- +---------------------+
 |  1         |  fstrauss           |
 *------------+---------------------+

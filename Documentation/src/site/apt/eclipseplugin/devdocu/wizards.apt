@@ -26,7 +26,7 @@ Wizards
 
     In eclipse wizards are a convenient method to create, import or export elements or files.
   
-  Within the ABS plugin only new wizards are used so far, which can be added using the <org.eclipse.ui.newWizards> extension point. The addition of new wizard to this extension point extends the wizard selection page in File->New->Other... . If wizards should be added to the popup menu of the project explorer or the module explorer, they must be hooked into the respective views with the help of the org.eclipse.ui.navigator.navigatorContent#commonWizard extension point.
+  Within the ABS plug-in only new wizards are used so far, which can be added using the <org.eclipse.ui.newWizards> extension point. The addition of new wizard to this extension point extends the wizard selection page in File->New->Other... . If wizards should be added to the pop-up menu of the project explorer or the module explorer, they must be hooked into the respective views with the help of the org.eclipse.ui.navigator.navigatorContent#commonWizard extension point.
   
 **ABS wizard pages
 
@@ -40,7 +40,7 @@ Wizards
 public void addPages() {
 	mainPage = new WizardNewProjectCreationPage("ABSProject");
 	mainPage.setDescription("Create a new ABS Project");
-	mainPage.setTitle("ABS Proejct");
+	mainPage.setTitle("ABS Project");
 	addPage(mainPage);
 }
 +---+
