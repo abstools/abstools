@@ -136,9 +136,13 @@ public class JavaBackendTest extends ABSTest {
                 return false;
             }
         } catch (Exception e) {
-            System.out.println(output.toString());
-            System.out.println(javaCode);
+            if (output != null)
+                System.err.println(output.toString());
+            else
+                System.err.println("NO OUTPUT");
+            System.err.println(javaCode);
             Assert.fail(e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
