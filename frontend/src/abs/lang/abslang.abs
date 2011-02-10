@@ -167,6 +167,20 @@ data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
 def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
   case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
   
+  
+def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
+  case map {
+    InsertAssoc(Pair(key, _), map) => map;
+    InsertAssoc(pair, tail) => InsertAssoc(pair, removeKey(tail, key));
+  };
+    
+
+def List<B> values<A, B>(Map<A, B> map) =
+  case map {
+    EmptyMap => Nil ;
+    InsertAssoc(Pair(_, elem), tail) => Cons(elem, values(tail)) ;
+  };
+
 /**
  * Returns a set containing all keys of map 'map'.
  */
