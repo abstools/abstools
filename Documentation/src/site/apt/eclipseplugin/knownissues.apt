@@ -2,6 +2,8 @@ Using the ABS Eclipse IDE
 
  This site documents bugs and problems already which are known, but will not be fixed by the current team due to time constraints.
  
+ Also see the bug tracking for further information about severity, assignment and the current process on fixing these and other problems (note, that smaller problems documented here might not occur in the bug tracking and vice versa).
+ 
 * All Operating Systems
 
  * General
@@ -24,6 +26,10 @@ Using the ABS Eclipse IDE
   
   * Executing "Run as Java Backend" does not display assertion failures (does not print any stdoutput)
   
+  * Currently, the first main block found in a project is executed if a file without main block is executed. It should be possible to choose from a list of main blocks instead
+  
+  * As long as SDEdit is running, Eclipse shows an unfinished progress bar in th lower right corner
+  
   []
   
  * Debugging
@@ -36,6 +42,8 @@ Using the ABS Eclipse IDE
  
   * The scheduler is not reset to interactive when starting a new debug process
   
+  * Sometimes, highlighting is not active when starting a new debug process. This occurs if some schedulers which deactivate highlighting do not terminate correctly and therefor do not reactivate the highlighting
+ 
   * Variable view doesn't show tooltips for values
   
   * RunToLine does not work in the editor (context menu or use cursor position in the dialog)
@@ -65,6 +73,8 @@ Using the ABS Eclipse IDE
   * The Debug View Tree is not extended automatically
   
   * Sometimes refreshing of the editor is very slow
+  
+  * RunToLine might not terminate and the debug view is not refreshed showing still steppable tasks
   
   []
   
