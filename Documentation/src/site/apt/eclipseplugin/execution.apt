@@ -29,19 +29,19 @@ Executing ABS Projects from ABS Eclipse IDE
  
  Options:
  
-   * ABS Project: The chosen project with an ABS Model.
+  * ABS Project: The chosen project with an ABS Model.
    
-   * Observer   : User can add / remove one or more (new or predefined) observers.
+  * Observer   : User can add / remove one or more (new or predefined) observers.
    
-   * Scheduler  : User can select a scheduler. 
+  * Scheduler  : User can select a scheduler. 
    
-   * Enable debug mode       : Should be selected.
+  * Enable debug mode       : Should be selected.
    
-   * Generate Java file first: The Java files are needed to debug.
+  * Generate Java file first: The Java files are needed to debug.
    
-   * Execute debugger in external process: Starts the command line debugger. If this option is selected, the user can not use the "Eclipse scheduler".
+  * Execute debugger in external process: Starts the command line debugger. If this option is selected, the user can not use the "Eclipse scheduler".
    
-   * Additional Arguments: More arguments for the command line debugger. 
+  * Additional Arguments: More arguments for the command line debugger. 
  
  Note: It is recommended to use the "Eclipse scheduler" and "Eclipse observer" in combination. "Eclipse scheduler" without "Eclipse observer" makes no sense. If both are not selected, the user could not use the debug perspective in Eclipse. 
  
@@ -63,13 +63,13 @@ Executing ABS Projects from ABS Eclipse IDE
  
  "Generate debugger file first" and "Enable debug mode" are selected in all predefined run configurations.
  
- See also project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend) where the user can change default options.
+ See also project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend). There, you can set default settings for the respective project.
  
   
 * Maude
 
  In contrast to the Java execution, Maude can not directly be run by the plug-in. Instead, Maude has to be installed separately and the User is required to configure the Maude path accordingly. This can be done under Window -> Preferences -> ABS -> ABS Maude Preferences (If you try to run Maude without configuring this path, the preference dialog will pop up anyway).
- For Linux and Mac OS you can find at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
+ For Linux and Mac OS you can find the maude executables at the site of the University of Illinois at Urbana-Champaign ({{http://maude.cs.uiuc.edu/download/}}). Windows users may use Maude for Windows provided by the Moment project ({{http://moment.dsic.upv.es/}}).
   
  Two Buttons are provided for Maude: compiling and executing. 
   
@@ -79,7 +79,7 @@ Executing ABS Projects from ABS Eclipse IDE
   
  Note, that the Maude backend can only handle one main block. Compiling a project with multiple main blocks will lead to unspecified behaviour. Since a complete project is compiled into one .maude file, this consequently leads to the restriction of one main block per project.
  
- In addition to the described buttons, the Eclipse plug-in offers run configurations for Maude executions. Those offer more detailed options for the run and store these configurations for further usage. 
+ In addition to the described buttons, the Eclipse plug-in offers run configurations for Maude executions. Those offer more detailed options for running and stroing these configurations for further usage. 
  
 * Debugging and the ABS Debug Perspective
 
@@ -89,7 +89,7 @@ Executing ABS Projects from ABS Eclipse IDE
   
 ** Debug View
 
- The Debug View is where you can control your debug process. It contains a tree of COGs, tasks, stack frames and objects representing the state of your program. It also contains a set of buttons, allowing you to step single tasks. 
+ With the help of the debug view you can, you can control your debug process. It contains a tree of COGs, tasks, stack frames and objects representing the state of your program. It also contains a set of buttons, allowing you to step single tasks. 
   
  The plug-in currently provides two schedulers, which determine which task to step next. A third scheduler is planned. The scheduler can be selected with the "Choose scheduler" button in the debug view.
   
@@ -101,7 +101,7 @@ Executing ABS Projects from ABS Eclipse IDE
 
   The random scheduler will select the task to step randomly.
   
-  * History Scheduler (planned)
+  * <History Scheduler (planned)>
   
   The history scheduler allows you to run a history from a file.
   

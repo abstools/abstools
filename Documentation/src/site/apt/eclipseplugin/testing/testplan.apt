@@ -12,9 +12,9 @@ ABS Plug-in Quality Assurance - Test plan
     The purpose of this plan is to systematise and coordinate the testing activities of the ABS Eclipse plug-in.
 	This test plan summarizes:
 	
-	* Test strategy
-	
 	* Test objects
+	
+	* Test strategy
 	
 	* Mapping of resources and requirements for performing the test plan.
 	
@@ -69,7 +69,7 @@ ABS Plug-in Quality Assurance - Test plan
 **System environment
 
     The ABS plug-in provides an Integrated development environment for creating programs and model created with the ABS modeling language.
-	Therefore the ABS plug-in supports a developer in creating ABS models.
+	Therefore, the ABS plug-in supports a developer in creating ABS models.
 	
 	The plug-in itself is integrated into the Eclipse platform, and can used on every platform eclipse runs on. The plug-in uses a pre-existing ABS Compiler and Frontend and uses pre-existing structures for debugging  the ABS model.
 
@@ -86,11 +86,11 @@ ABS Plug-in Quality Assurance - Test plan
 
 	[]
 	
-	The step "code review" is optional. Only if the unit testing and walkthrough steps are finished in time, code review will be done. 
+	The step "walkthrough" is optional. Only if the unit testing and code review steps are finished in time, walkthroughs will be conducted. 
 	
 **Unit testing
 
-    Unit testing will be done for classes that can be <decoupled> from the Eclipse framework. In these respective classes <only> methods that do <not> require user interface interaction will be tested.
+    Unit tests will be done for classes that can be <decoupled> from the Eclipse framework. In these respective classes <only> methods that do <not> require user interface interaction will be tested.
 	Additionally, functionality connected to Label and content providers will be covered by walkthroughs and will <not> be unit tested.
 	
 	Following classes should be tested:
@@ -125,16 +125,15 @@ ABS Plug-in Quality Assurance - Test plan
 
 **Walkthrough
 	
-	In addition to unit testing a walkthrough of all basic use cases will be done using the eclipse plug-in.
+	In addition to unit testing, walkthroughs of all basic use cases will be done using the eclipse plug-in.
 	
-	Problems and failures will be recorded using the problem list for walkthroughs ....
-	
-	<<t.b.d.>>
+	Problems and failures will be recorded using the problem list for walkthroughs that can be found in the testing/templates folder of the plugin svn directory.
+
 
 
 **Code review
 
-	In order to assure code quality, all packages and their respective classes should be reviewed. For the review following checklist can be used:
+	In order to assure code quality, all packages and their respective classes should be reviewed. To start with, for the review following checklist can be used:
 	
 	* Javadoc
 	

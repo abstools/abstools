@@ -6,9 +6,9 @@ Using the ABS Eclipse IDE
 
   The first thing you should do after installing the project is switch into the ABS perspective, which allows you to access the newly added functionality. To do this, click on the "open perspective" button in the upper right corner and click "other" (the menu is also accessible via Window -> Open Perspective). Select the ABS perspective and click on OK to open it.
   
-  The newly opened ABS perspective will rearrange you workbench windows, putting a project explorer to the left, an editor in the middle, an outline to the right and some windows containing further information and output to the bottom of the eclipse window. You may rearrange those later if you like. 
+  The newly opened ABS perspective will rearrange you workbench windows, putting a project explorer and a module explorer to the left, an editor in the middle, an outline to the right and some windows containing further information and output to the bottom of the eclipse window. You may rearrange those later if you like. 
   
-  Another important change are five new buttons in the bar above the editor, which will allow you to compile and execute you ABS project. The functionality provided by these buttons is also accessible via the newly added ABS menu in the menu bar above.
+  In the main tool bar of the eclipse window, there will be five new buttons, allowing you to compile and execute you ABS project. The functionality provided by these buttons is also accessible via the newly added ABS menu in the menu bar above or can be used with eclipse's mechanism of run configurations.
   
 * Creating ABS Projects
  
@@ -54,7 +54,23 @@ Using the ABS Eclipse IDE
   
 *** Outline
 
-  The outline provides a tree overview of the currently opened ABS file. It separates between imports and exports, classes, functions, data types, interfaces and the main block. The outline can be ordered by artifact type (resulting in a grouping of all Classes, all Functions and so on), by alphabetic order or both. Note, that ordering alphabetically will still group specific elements like data types and imports, since you usually do not want those intermixed with classes, functions or interfaces.
+  The outline provides a tree overview of the currently opened ABS file. It distinguishes between
+  
+   * imports and exports
+
+   * classes
+   
+   * functions
+
+   * data types
+
+   * interfaces and the
+   
+   * main block. 
+  
+   []  
+	
+  The outline can be ordered by artifact type (resulting in a grouping of all Classes, all Functions and so on), or lexicographically. Note, that ordering lexicographically will still group specific elements like data types and imports, since you usually do not want those intermixed with classes, functions or interfaces.
   
   Classes and functions in the outline are also supplemented with their interface. Classes, functions and interfaces may again contain other elements.
   
@@ -62,7 +78,7 @@ Using the ABS Eclipse IDE
 
 *** Content Assistant
 
-  The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. This is not context sensitive and therefor may propose syntactically or semantically wrong elements.
+  The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. <<Note:>> The content assist itself is not context sensitive and therefore may propose syntactically or semantically wrong elements.
 
 * Execution
 
