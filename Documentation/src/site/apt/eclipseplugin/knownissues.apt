@@ -22,6 +22,8 @@ Using the ABS Eclipse IDE
   
   * Executing a run configuration does not save beforehand
   
+  * Executing "Run as Java Backend" does not display assertion failures (does not print any stdoutput)
+  
   []
   
  * Debugging
