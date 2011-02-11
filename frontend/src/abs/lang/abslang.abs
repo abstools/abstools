@@ -7,40 +7,61 @@ data Int;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 
-def Bool and(Bool a, Bool b) = case a { True => b; _ => False; };
-def Bool not(Bool a) = case a { True => False; False => True; };
+def Bool and(Bool a, Bool b) = a && b;
+def Bool not(Bool a) = ~a;
 
-def Int max(Int a, Int b) = case a > b { True => a; False => b; };
-def Int abs(Int x) = case x > 0 { True => x; False => -x; };
+def Int max(Int a, Int b) = 
+    case a > b { True => a; False => b; };
+    
+def Int abs(Int x) = 
+    case x > 0 { True => x; False => -x; };
 
 data Maybe<A> = Nothing | Just(A);
 
 def A fromJust<A>(Maybe<A> a) = case a { Just(j) => j; };
-def Bool isJust<A>(Maybe<A> a) = case a { Just(j) => True; Nothing => False; };
+def Bool isJust<A>(Maybe<A> a) = 
+    case a { Just(j) => True; Nothing => False; };
 
 data Either<A, B> = Left(A) | Right(B);
 
-def A left<A,B>(Either<A, B> val) = case val { Left(x) => x; };
-def B right<A,B>(Either<A, B> val) = case val { Right(x) => x; };
-def Bool isLeft<A,B>(Either<A, B> val) = case val { Left(x) => True; _ => False; };
+def A left<A,B>(Either<A, B> val) = 
+    case val { Left(x) => x; };
+    
+def B right<A,B>(Either<A, B> val) = 
+    case val { Right(x) => x; };
+    
+def Bool isLeft<A,B>(Either<A, B> val) = 
+    case val { Left(x) => True; _ => False; };
+    
 def Bool isRight<A,B>(Either<A, B> val) = ~isLeft(val);
 
-data Pair<A, B> = Pair(A, B); // pair
+
+data Pair<A, B> = Pair(A, B); 
 
 def A fst<A, B>(Pair<A, B> p) = case p { Pair(s, f) => s; };
 def B snd<A, B>(Pair<A, B> p) = case p { Pair(s, f) => f; };
 
-data Triple<A, B, C> = Triple(A, B, C); // triple
 
-def A fstT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => s; };
-def B sndT<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => f; };
-def C trd<A, B, C>(Triple<A, B, C> p) = case p { Triple(s, f, g) => g; };
+data Triple<A, B, C> = Triple(A, B, C); 
+
+def A fstT<A, B, C>(Triple<A, B, C> p) = 
+    case p { Triple(s, f, g) => s; };
+    
+def B sndT<A, B, C>(Triple<A, B, C> p) = 
+    case p { Triple(s, f, g) => f; };
+    
+def C trd<A, B, C>(Triple<A, B, C> p) = 
+    case p { Triple(s, f, g) => g; };
 
 // Sets
 data Set<A> = EmptySet | Insert(A, Set<A>);
 
 // set constructor helper
-def Set<A> set<A>(List<A> l) = case l { Nil => EmptySet; Cons(x,xs) => Insert(x,set(xs)); };
+def Set<A> set<A>(List<A> l) = 
+    case l { 
+       Nil => EmptySet; 
+       Cons(x,xs) => Insert(x,set(xs)); 
+    };
 
 /**
  * Returns True if set 'ss' contains element 'e', False otherwise.
@@ -60,13 +81,17 @@ def Bool emptySet<A>(Set<A> xs) = (xs == EmptySet);
 /**
  * Returns the size of set 'xs'.
  */
-def Int size<A>(Set<A> xs) = case xs { EmptySet => 0 ; Insert(s, ss) => 1 + size(ss); };
+def Int size<A>(Set<A> xs) = 
+   case xs { 
+      EmptySet => 0 ; 
+      Insert(s, ss) => 1 + size(ss); 
+   };
 
 def Set<A> union<A>(Set<A> set1, Set<A> set2) =
-    case set1 {
-        EmptySet => set2;
-        Insert(a, s) => union(s,insertElement(set2,a));
-    }; 
+   case set1 {
+      EmptySet => set2;
+      Insert(a, s) => union(s,insertElement(set2,a));
+   }; 
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.
@@ -83,25 +108,33 @@ def Set<A> insertElement<A>(Set<A> xs, A e) =
  */
 def Set<A> remove<A>(Set<A> xs, A e) = 
   case xs {
-    EmptySet => EmptySet ;
-    Insert(e, ss) => ss;
-    Insert(s, ss) => Insert(s,remove(ss,e));
+     EmptySet => EmptySet ;
+     Insert(e, ss) => ss;
+     Insert(s, ss) => Insert(s,remove(ss,e));
   };
 
 // checks whether the input set has more elements to be iterated.
 def Bool hasNext<A>(Set<A> s) = ~ emptySet(s); 
 
 // Partial function to iterate over a set.
-def Pair<Set<A>,A> next<A>(Set<A> s) =  case s { Insert(e, set2) => Pair(set2,e); };
+def Pair<Set<A>,A> next<A>(Set<A> s) = 
+   case s { 
+      Insert(e, set2) => Pair(set2,e); 
+   };
 
 // Lists
 data List<A> = Nil | Cons(A, List<A>);
+
 def List<A> list<A>(List<A> l) = l; // list constructor helper
 
 /**
  * Returns the length of list 'list'.
  */
-def Int length<A>(List<A> list) = case list { Nil => 0 ; Cons(p, l) => 1 + length(l) ; };
+def Int length<A>(List<A> list) = 
+   case list { 
+      Nil => 0 ; 
+      Cons(p, l) => 1 + length(l) ; 
+   };
 
 /**
  * Returns True if list 'list' is empty, False otherwise.
@@ -111,19 +144,24 @@ def Bool isEmpty<A>(List<A> list) = list == Nil;
 /**
  * Returns the first element of list 'list'.
  */
-def A head<A>(List<A> list) = case list { Cons(p,l) => p ; };
+def A head<A>(List<A> list) = 
+   case list { Cons(p,l) => p ; };
 
 /**
  * Returns a (possibly empty) list containing all elements of 'list'
  * except the first one.
  */
-def List<A> tail<A>(List<A> list) = case list { Cons(p,l) => l ; };
+def List<A> tail<A>(List<A> list) = 
+   case list { Cons(p,l) => l ; };
 
 /**
  * Returns element 'n' of list 'list'.
  */
 def A nth<A>(List<A> list, Int n) = 
-  case n { 0 => head(list) ; _ => nth(tail(list), n-1); };
+  case n { 
+    0 => head(list) ; 
+    _ => nth(tail(list), n-1); 
+  };
   
 /**
  * Returns a list where all occurrences of a have been removed
@@ -140,23 +178,31 @@ def List<A> without<A>(List<A> list, A a) =
  * followed by all elements of list 'list2'.
  */
 def List<A> concatenate<A>(List<A> list1, List<A> list2) =
-  case list1 { Nil => list2 ; Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); };
+  case list1 { 
+    Nil => list2 ; 
+    Cons(head, tail) =>  Cons(head, concatenate(tail, list2)); 
+  };
   
 /**
  * Returns a list containing all elements of list 'list' followed by 'p'.
  */
-def List<A> appendright<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));
+def List<A> appendright<A>(List<A> list, A p) = 
+    concatenate(list, Cons(p, Nil));
 
 /**
  * Returns a list containing all elements of 'list' in reverse order.
  */
 def List<A> reverse<A>(List<A> list) =
-  case list { Cons(hd, tl) => appendright(reverse(tl), hd); Nil => Nil; };
+  case list { 
+     Cons(hd, tl) => appendright(reverse(tl), hd); 
+     Nil => Nil; 
+  };
   
 /**
  * Returns a list of length 'n' containing 'p' n times.
  */
-def List<A> copy<A>(A p, Int n) = case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
+def List<A> copy<A>(A p, Int n) = 
+   case n { 0 => Nil; m => Cons(p,copy(p,m-1)); };
 
 
 
@@ -165,7 +211,10 @@ def List<A> copy<A>(A p, Int n) = case n { 0 => Nil; m => Cons(p,copy(p,m-1)); }
 data Map<A, B> = EmptyMap | InsertAssoc(Pair<A, B>, Map<A, B>);
  // map constructor helper (does not preserve injectivity)
 def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
-  case l { Nil => EmptyMap; Cons(hd, tl) => InsertAssoc(hd, map(tl)); };
+  case l { 
+     Nil => EmptyMap; 
+     Cons(hd, tl) => InsertAssoc(hd, map(tl)); 
+  };
   
   
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
@@ -195,8 +244,8 @@ def Set<A> keys<A, B>(Map<A, B> map) =
  */
 def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
-  	InsertAssoc(Pair(k, y), _) => y;
-        InsertAssoc(_, tm) => lookup(tm, k);
+     InsertAssoc(Pair(k, y), _) => y;
+     InsertAssoc(_, tm) => lookup(tm, k);
   };
   
 /**
@@ -205,9 +254,9 @@ def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
  */
 def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
   case ms {
-        InsertAssoc(Pair(k, y), _) => y;
-        InsertAssoc(_, tm) => lookupDefault(tm, k, d);
-  	EmptyMap => d;
+     InsertAssoc(Pair(k, y), _) => y;
+     InsertAssoc(_, tm) => lookupDefault(tm, k, d);
+     EmptyMap => d;
   };
   
 /**
