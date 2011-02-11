@@ -19,7 +19,7 @@ aspect MyDumpTree
 	
 	protected void ASTNode.dump(PrintStream stream, int pattern, int level, boolean last)
 	{
-		java.util.regex.Matcher m = p.matcher(this.toString());
+		java.util.regex.Matcher m = p.matcher(super.toString());
 		String clsName = null;
 		String address = null;
 		
@@ -30,7 +30,10 @@ aspect MyDumpTree
 			clsName = m.group(1);
 			address = m.group(2);
 		}
-
+		
+		// the above code doesn't work because toString() is frequently overridden
+		clsName = getClass().getName();
+		
 		// General idea:
 		// In the printed version of the AST, each line is composed of level(number) prefixes.
 		// I used the pth bit of integer pattern to record which prefix at position p should
@@ -177,4 +180,40 @@ aspect MyDumpTree
     {
     	stream.print(this.getMethod());
     }
+    
+    protected void AddClassModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getClassDecl().getName());
+    }
+    protected void ModifyClassModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getName());
+    }
+    protected void RemoveClassModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getName());
+    }
+
+    protected void AddMethodModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getMethodImpl().getMethodSig());
+    }
+    protected void ModifyMethodModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getMethodImpl().getMethodSig());
+    }
+    protected void RemoveMethodModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getMethodSig());
+    }
+
+    protected void AddFieldModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getFieldDecl());
+    }
+    protected void RemoveFieldModifier.printInfo(PrintStream stream)
+    {
+    	stream.print(this.getFieldDecl());
+    }
+
 }  
