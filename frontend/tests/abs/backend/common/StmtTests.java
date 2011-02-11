@@ -20,7 +20,7 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void ifFalse() {
-        assertEvalTrue("{ Bool testresult = False; if (False) ; else testresult = True;  }");
+        assertEvalTrue("{ Bool testresult = False; if (False) skip; else testresult = True;  }");
     }
 
     @Test

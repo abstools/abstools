@@ -660,7 +660,6 @@ Stmt stmt =
     | annotation_list.al? compound_stmt.s {:
         s.setAnnotationList(al); return s;
       :}
-    | SEMICOLON  {: return new SkipStmt(new List()); :}
     | annotation_list.al? stmt_without_annotations.s error.e {:
         if (!allowIncompleteExpr) { 
             addSyntaxError("Missing semicolon",s);

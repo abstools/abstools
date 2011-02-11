@@ -71,8 +71,7 @@ public class ParserTest extends FrontendTest {
         assertParseOk("{   skip ; return x.get ;    }"); // n statements
         assertParseOk("{ Int x ; Int y ;  skip ; return x.get ;   }"); // Variable
                                                                        // decls
-        assertParseOk("{  ; ; ; ;  ; return x.get ;   }");
-        assertParseOk("{   ; skip  ; return x.get ;  }");
+        assertParseOk("{   skip  ; return x.get ;  }");
         assertParseOk("{ Fut<I> x ; J z ; }"); // need trailing semicolon here.
         assertParseOk(" { Fut<I> x ; Fut<Fut<I>> y ;  J z ; K w  ; }");
         assertParseOk("{ Int x = 5; Int y; Foo ref = null; List<Int> list = Cons(5, Nil); skip; }"); // Variable
@@ -259,7 +258,7 @@ public class ParserTest extends FrontendTest {
         assertParseOk("{ x = y ; y = z ; skip  ; }");
 
         assertParseOk("{ { x = y ; skip ; await x? ; } skip ; }");
-        assertParseOk("{ { x = y ; } ; skip ; }");
+        assertParseOk("{ { x = y ; } skip ; }");
         assertParseOk(" { { } { } { } }  ");
 
     }

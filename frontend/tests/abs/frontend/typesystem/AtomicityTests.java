@@ -23,7 +23,7 @@ public class AtomicityTests extends FrontendTest {
 
     @Test
     public void getExp() {
-        checkStmt("Fut<Unit> f; f.get;");
+        checkStmt("Fut<Unit> f; f.get");
     }
     
     @Test
