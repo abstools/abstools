@@ -135,6 +135,19 @@ public class Main {
                     System.err.flush();
                 }
             } else {
+                if (fullabs) {
+                    ArrayList<Delta> deltas = new ArrayList<Delta>();
+                    m.readDeltas(deltas);
+                    
+                    for (Delta delta : deltas)
+                        System.out.println(delta);
+                    
+                    for (Delta delta : deltas)
+                        m.applyDelta(delta);
+                    
+                    if (dump)
+                        m.dump();
+                }
                 if (typecheck) {
                     if (locationTypeInferenceEnabled) {
                         LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
@@ -156,16 +169,6 @@ public class Main {
                 }
                 if (verbose) {
                     System.out.println(m);
-                }
-                if (fullabs) {
-                    ArrayList<Delta> deltas = new ArrayList<Delta>();
-                    m.readDeltas(deltas);
-
-                    for (Delta delta : deltas)
-                        System.out.println(delta);
-
-                    for (Delta delta : deltas)
-                        m.applyDelta(delta);
                 }
             }
         }
