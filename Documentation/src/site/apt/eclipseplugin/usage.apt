@@ -80,6 +80,3 @@ Using the ABS Eclipse IDE
 
   The ABS Eclipse IDE provides a primitive content assistant (the default to activate it is ctrl+space), which provides you with keywords and all classes, data types, functions and interfaces found in this project. <<Note:>> The content assist itself is not context sensitive and therefore may propose syntactically or semantically wrong elements.
 
-* Execution
-
-  {{{execution.html}see "Executing ABS"}}

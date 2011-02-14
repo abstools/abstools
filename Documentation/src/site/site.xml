@@ -8,8 +8,10 @@
   <body>
     <menu name="Overview">
       <item name="Introduction" href="overview.html" />
+      <item name="Getting Started" href="gettingstarted.html" />
     </menu>
 
+<!--
     <menu name="The ABS Language">
       <item name="Introduction" href="abslang.html" />
       <item name="Standard Data Types" href="stdlib.html" />
@@ -21,6 +23,7 @@
       <item name="Class Annotations" href="classannotations.html" />
       <item name="Location Types" href="locationtypes.html" />
     </menu>
+-->
 
     <menu name="The Frontend">
       <item name="Introduction" href="frontend/introduction.html" />

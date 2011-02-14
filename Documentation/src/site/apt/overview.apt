@@ -1,3 +1,7 @@
 The ABS Tool Suite
 
-  The ABS Tool Suite consists of a set of different tools. ...
+  This site contains information about the ABS tools suite.
+  The Abstract Behavioral Specification Language (ABS) is a concurrent
+  object-oriented modeling language that features functional data-types.
+  The current language specification is available as a {{{./abslangspec.pdf}PDF file}}.
+

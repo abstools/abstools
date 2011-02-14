@@ -2,6 +2,8 @@ The ABS Language
 
   The Abstract Behavioral Specification Language (ABS) is a concurrent
   object-oriented modeling language that features functional data-types.
+
+  The current language specification is available as a {{{./abslangspec.pdf}PDF file}}.
   
 * Key Elements
 
