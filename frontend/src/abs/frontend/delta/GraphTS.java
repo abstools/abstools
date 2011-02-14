@@ -190,7 +190,7 @@ public class GraphTS {
 //    GraphTS g = new GraphTS(tosort);
 //    g.addEdge(0,1); g.addEdge(0,2);  // a <- b c
 //    g.addEdge(1,2); g.addEdge(1,3);  // b <- c d
-//    g.addEdge("dd","c");             // d <- c
+//    g.addEdge("d","c");              // d <- c
 //
 //    boolean success = g.topo();
 //

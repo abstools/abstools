@@ -743,7 +743,7 @@ List feature_list = feature.f {: return new List().add(f); :}
 
 Feature feature = TYPE_IDENTIFIER.id attr_assignments.attrs? {: return new Feature(id, attrs); :}
                 | TYPE_IDENTIFIER.id PRIME attr_assignments.attrs? {: return new Feature("$"+id, attrs); :} ;
-                // hack: feat' to refer to the intermediate feature "$feat"
+                // allow writing feat' to refer to the intermediate feature "$feat"
 
 //List attr_decls = LBRACE param_decl_list.f? RBRACE {: return f; :};
 
@@ -800,6 +800,7 @@ Deltaparam deltaparam =
 
 List when_condition = WHEN application_condition.dl {: return dl; :};
 
+// TODO: application conditions should be mTVL expressions, or at least have negation and parenthesis.
 List application_condition = feature.f {: return new List().add(f); :}
     | application_condition.l ANDAND feature.f {: return l.add(f); :}
     ;
