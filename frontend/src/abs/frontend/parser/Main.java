@@ -13,6 +13,9 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import abs.common.Constants;
 import abs.frontend.analyser.SemanticError;
@@ -38,6 +41,7 @@ public class Main {
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
     protected boolean fullabs = false;
+    protected String product;
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
 
@@ -53,8 +57,10 @@ public class Main {
                 dump = true;
             else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.equals("-fullabs"))
+            else if (arg.startsWith("-fullabs=")) {
                 fullabs = true;
+                product = arg.split("=")[1];
+            }
             else if (arg.equals("-notypecheck"))
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
@@ -136,14 +142,8 @@ public class Main {
                 }
             } else {
                 if (fullabs) {
-                    ArrayList<Delta> deltas = new ArrayList<Delta>();
-                    m.readDeltas(deltas);
-                    
-                    for (Delta delta : deltas)
-                        System.out.println(delta);
-                    
-                    for (Delta delta : deltas)
-                        m.applyDelta(delta);
+                    // apply deltas that correspond to given product
+                    m.configureProduct(product);
                     
                     if (dump)
                         m.dump();
@@ -206,8 +206,10 @@ public class Main {
                 + " [options] <absfiles>\n\n" 
                 + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
                 + "  -v             verbose output\n" 
+                + "  -fullabs=<product>\n"
+                + "                 full ABS; apply deltas for the given product\n"
                 + "  -notypecheck   disable typechecking\n"
-                + "  -nostdlib      do not include the standard lib \n"
+                + "  -nostdlib      do not include the standard lib\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
