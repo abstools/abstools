@@ -1,31 +1,119 @@
 import java.util.Map;
 import abs.frontend.delta.*;
+import abs.common.*;
+import abs.frontend.delta.exceptions.*;
+import abs.frontend.ast.Product;
 
 aspect DeltaCollector {
+	
+	// configure a product
+	// TODO
+	public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+		System.out.println("configuring product: " + prod.getName());
 
+		// first, collect ALL deltas
+		HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
+		this.collectDeltas(alldeltas);
+		for (String deltaid : alldeltas.keySet())
+		    System.out.println("collect: " + deltaid);
+	        
+
+		// for each DeltaCondition: evaluate appcon in the context of prod.getFeatures()
+		// 		if true, add deltaID to deltaids (ArrayList)
+		// sort ArrayList<Delta> deltas
+		ArrayList<String> deltaids = new ArrayList<String>();
+
+		for (CompilationUnit u : this.getCompilationUnits()) {
+			for (ModuleDecl d : u.getModuleDecls()) {
+			    ProductLine pl = d.getProductLine(); // FIXME ProductLine is optional!
+			    for (DeltaClause cond : pl.getDeltaClauses()) {
+			        String deltaid = cond.getDeltaspec().getName();
+//			        if (cond.evaluate(prod.getFeatures())) // TODO write...
+//			            deltaids.add(deltaid);
+			    }
+			    
+			}
+		}
+
+        // given a list of delta IDs, compute a list of deltas that should be applied
+        ArrayList<Delta> deltas = this.getApplicableDeltas(deltaids, alldeltas);
+        
+        // apply the applicable deltas in the given order 
+        for (Delta delta : deltas)
+            this.applyDelta(delta);
+	}
+	
+	/*
+	 *  TODO 
+	 *  Evaluate the application condition assciated with this
+	 *  in the context of the given list of features and attribute values 
+	 */
+	public boolean DeltaClause.evaluate(List<Feature> features) {
+	
+	    return false;
+	}
+	
+	/**************************************************************************
+	 * find a particular product
+	 */
+	public Product Model.findProduct(String id) throws WrongProgramArgumentException {
+		for (CompilationUnit u : this.getCompilationUnits()) {
+			for (ModuleDecl d : u.getModuleDecls()) {
+				for (Product p : d.getProducts()) {
+					if (p.getName().equals(id))
+						return p;
+				}
+			}
+		}
+		throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
+	}
+	
+	
+	/**************************************************************************
+	 * collect all Deltas 
+	 */
     //propagate
-    public void ASTNode.readDeltas(ArrayList<Delta> deltas) {
+    public void ASTNode.collectDeltas(HashMap<String, Delta> deltas) {
         for(int i = 0; i < getNumChild(); i++) {
-            getChildNoTransform(i).readDeltas(deltas);
+            getChildNoTransform(i).collectDeltas(deltas);
         }
     }
 
-    public void Model.readDeltas(ArrayList<Delta> deltas) {
-        super.readDeltas(deltas);
+    public void Model.collectDeltas(HashMap<String, Delta> deltas) {
+        super.collectDeltas(deltas);
     }
 
     /*
      * remember the modifications (addition/removal/modification of classes)
        that this delta applies
      */
-    public void DeltaDecl.readDeltas(ArrayList<Delta> deltas) {
+    public void DeltaDecl.collectDeltas(HashMap<String, Delta> deltas) {
         String moduleid = this.moduleName();
-
-        Delta delta = new Delta(moduleid + "." + this.getName());
+        String deltaid = moduleid + "." + this.getName();
+        
+        Delta delta = new Delta(deltaid);
         for (ClassModifier cm : this.getClassModifiers())
             delta.addClassModifier(moduleid, cm);
 
-        deltas.add(delta);
+        deltas.put(deltaid, delta);
+    }
+    
+	/**************************************************************************
+	 * map a list of delta names (IDs) to a list of Deltas
+	 */
+    public ArrayList<Delta> Model.getApplicableDeltas(
+    		ArrayList<String> deltaids, 
+    		HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
+    	
+    	ArrayList<Delta> deltas = new ArrayList<Delta>();
+    	for (String id : deltaids) {
+    		if (alldeltas.containsKey(id))
+    			deltas.add(alldeltas.get(id));
+    		else 
+    			throw new WrongProgramArgumentException("Delta [" + id + "] is not declared");
+    	}
+    	return deltas;
     }
 
 
