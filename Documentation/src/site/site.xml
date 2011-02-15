@@ -1,10 +1,17 @@
 <project name="ABS">
+
   <bannerLeft>
     <name>ABS Tools</name>
     <alt>ABS Tools Logo</alt>
     <src>images/ABSToolsLogo.jpg</src>
     <href>index.html</href>
   </bannerLeft>
+  <bannerRight>
+    <alt>HATS Logo</alt>
+    <src>http://www.cse.chalmers.se/research/hats/sites/default/files/garland_logo.png</src>
+    <href>http://www.hats-project.eu</href>
+  </bannerRight>
+  
   <body>
     <menu name="Overview">
       <item name="Introduction" href="overview.html" />
@@ -25,6 +32,7 @@
     </menu>
 -->
 
+<!--
     <menu name="The Frontend">
       <item name="Introduction" href="frontend/introduction.html" />
       <item name="Parser" href="frontend/parser.html" />
@@ -37,21 +45,17 @@
 
     <menu name="Java Backend">
       <item name="Introduction" href="javabackend.html" />
-<!--
-      <item name="Compilation" />
-      <item name="Simulation" />
-      <item name="UML Sequence Diagram Generation" />
--->
-    </menu>
 
+    </menu>
+-->
     <menu name="Eclipse Integration">
-      <item name="Introduction" href="eclipseplugin/eclipseplugin.html"/>
-	  <item name="News" href="eclipseplugin/changelog.html"/>
+<!--      <item name="Introduction" href="eclipseplugin/eclipseplugin.html"/>
+	  <item name="News" href="eclipseplugin/changelog.html"/> -->
 	  <item name="Installation" href="eclipseplugin/installation.html"/>
 	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
 	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
-      <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html">
+      <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html" collapse="true">
         <item name="Editor" href="eclipseplugin/devdocu/editor.html"/>
         <item name="Internals" href="eclipseplugin/devdocu/internal.html"/>
         <item name="Project Explorer" href="eclipseplugin/devdocu/projectexplorer.html"/>
@@ -60,7 +64,7 @@
 		<item name="Wizards" href="eclipseplugin/devdocu/wizards.html"/>
 		<item name="Module Explorer" href="eclipseplugin/devdocu/moduleexplorer.html"/>
       </item>
-	  <item name="Quality Assurance" href="eclipseplugin/testing/index.html">
+	  <item name="Quality Assurance" href="eclipseplugin/testing/index.html" collapse="true">
 		<item name="Test plan" href="eclipseplugin/testing/testplan.html"/>
 	  </item>
     </menu>
