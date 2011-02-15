@@ -1,11 +1,11 @@
-//$Id$ 
+//$Id$
 //
- 
+
 // needed for lists of strings
 Name ::= <Name>;
 
 Model                         ::= CompilationUnit*;
- 
+
 CompilationUnit ::= <Name> ModuleDecl* ;
 ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] Product*
     [Block:MainBlock] ;
@@ -35,7 +35,7 @@ InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse*
 DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
 TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
-TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ; 
+TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ;
 
 
 abstract          DeltaParamDecl;
@@ -81,7 +81,7 @@ abstract IdUse:			Access	::= <Name>;
 abstract TypeUse:		IdUse;
 InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
 DataTypeUse:			TypeUse ::= Annotation*;
-ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ; 
+ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ;
 TypeParameterUse:		TypeUse;
 abstract VarOrFieldUse: Access ::= <Name>;
 VarUse:					VarOrFieldUse;
@@ -90,13 +90,13 @@ FieldUse:				VarOrFieldUse;        // this.f
 // Used for the IDE to provide auto-completion:
 abstract IncompleteExp:     Exp;
 abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
-IncompleteSyncAccess:       IncompleteAccess; // something like "x." 
-IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"                     
-IncompleteNewExp:           IncompleteExp ::= [Cog]; // a "new" without a classname 
+IncompleteSyncAccess:       IncompleteAccess; // something like "x."
+IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"
+IncompleteNewExp:           IncompleteExp ::= [Cog]; // a "new" without a classname
 IncompleteStmt:             Stmt ::= Stmt;
 
 UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
-									// Will be  resolved by rewriting.   TODO: needed? 
+									// Will be  resolved by rewriting.   TODO: needed?
 
 
 /*
@@ -104,20 +104,20 @@ Constructors occur as
 - DataConstructors as in data declarations Co(_D_)
 - term consctructors as in Co(_t_)
 - patterns as in Co(_p_)
-- Don't know yet how to organise these.   
+- Don't know yet how to organise these.
 */
 
 Annotation      ::= Value:PureExp;
 TypedAnnotation : Annotation ::= Access;
 
-abstract Stmt   ::= Annotation* ; 
+abstract Stmt   ::= Annotation* ;
 abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
 
 AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
 AwaitStmt: Stmt			::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
-ReturnStmt: Stmt		::= RetExp:Exp; 
+ReturnStmt: Stmt		::= RetExp:Exp;
 ExpressionStmt: Stmt	::= Exp:Exp;
 AssertStmt: Stmt        ::= Condition:PureExp;
 VarDeclStmt: Stmt       ::= VarDecl:VarDecl;
@@ -125,8 +125,8 @@ VarDeclStmt: Stmt       ::= VarDecl:VarDecl;
 IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
 WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
 // A Block is the body of programs and methods and is also used for initblocks
-// It contains a list of zero or more ast.VarOrFieldDecl 
-// and zero or more ast.Stmt, these are named Fields and Stmts resp.  
+// It contains a list of zero or more ast.VarOrFieldDecl
+// and zero or more ast.Stmt, these are named Fields and Stmts resp.
 Block: Stmt				::= Stmt:Stmt*;
 InitBlock: Block;		// Initializer block in a class - can be handled specially during code generation
 MainBlock: Block;             // Active behavior of the model
@@ -135,48 +135,48 @@ MainBlock: Block;             // Active behavior of the model
 abstract Guard;
 ClaimGuard: Guard		::= Var:PureExp;
 AndGuard: Guard			::= Left:Guard Right:Guard;
-//For boolean guards   
-ExpGuard: Guard			::= PureExp ; 
+//For boolean guards
+ExpGuard: Guard			::= PureExp ;
 
 
-// Expressions 
+// Expressions
 abstract Exp;
 // Pure expressions
 abstract PureExp: Exp;
-// Expressions with side effect. 
+// Expressions with side effect.
 abstract EffExp: Exp;
 
-// Side effect free expressions 
+// Side effect free expressions
 NullExp: PureExp;
 ThisExp: PureExp;
 // plus *Use-s
 
 abstract LiteralExp: PureExp;
-// For now the literal just contain a variable Content of type String. 
+// For now the literal just contain a variable Content of type String.
 StringLiteral: LiteralExp  ::= <Content> ;
-IntLiteral: LiteralExp ::= <Content>;        
+IntLiteral: LiteralExp ::= <Content>;
 
 DataConstructorExp : PureExp  ::= <Constructor> Param:PureExp* ;
-LetExp  : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ; 
+LetExp  : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
 FnApp  : PureExp ::= <Name> Param:PureExp* ;
 CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
-CaseBranch ::= Left:Pattern Right:PureExp ; 
+CaseBranch ::= Left:Pattern Right:PureExp ;
 
-//Patterns 
-abstract Pattern ; 
+//Patterns
+abstract Pattern ;
 
 PatternVarUse:    Pattern ::= <Name>;
-PatternVar:			Pattern ::= Var:PatternVarDecl; 
+PatternVar:			Pattern ::= Var:PatternVarDecl;
 ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
 LiteralPattern:		Pattern ::= Literal:LiteralExp;
 //PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
-UnderscorePattern:	Pattern; 
+UnderscorePattern:	Pattern;
 
 
 Cog ; // just the COG marker
 
-// Expressions with side effects. 
-NewExp: EffExp			::= <ClassName> Param:PureExp* [Cog] ; 
+// Expressions with side effects.
+NewExp: EffExp			::= <ClassName> Param:PureExp* [Cog] ;
 abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;
@@ -184,15 +184,15 @@ GetExp: EffExp			::= PureExp;
 
 abstract Unary : PureExp ::= Operand:PureExp;
 
-abstract Binary : PureExp ::= Left:PureExp Right:PureExp; 
+abstract Binary : PureExp ::= Left:PureExp Right:PureExp;
 
 
 //Integers
-MinusExp : Unary ;  
+MinusExp : Unary ;
 
-abstract ArithmeticExp : Binary ; 
+abstract ArithmeticExp : Binary ;
 
-abstract MultExp :  ArithmeticExp ;   
+abstract MultExp :  ArithmeticExp ;
 MultMultExp  : MultExp ;
 DivMultExp  : MultExp ;
 ModMultExp : MultExp ;
@@ -201,12 +201,12 @@ abstract AddExp :  ArithmeticExp ;
 AddAddExp  : AddExp ;
 SubAddExp : AddExp ;
 
-//Booleans 
-NegExp: Unary ; 
+//Booleans
+NegExp: Unary ;
 
-abstract BoolExp : Binary ; 
-AndBoolExp : BoolExp ; 
-OrBoolExp : BoolExp ; 
+abstract BoolExp : Binary ;
+AndBoolExp : BoolExp ;
+OrBoolExp : BoolExp ;
 
 //Relations
 abstract RelationalExpr : Binary;
@@ -221,13 +221,13 @@ NotEqExp : EqualityExpr ;
 
 
 
-// feature Configuration and Selection Language (FCL/FSL)
-ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* Deltacondition* ;
+// feature Configuration and Product Selection Language (CL/PSL)
+ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause* ;
 
-// TODO: The third argument (Feature*) is meant to be an application condition, 
+// TODO: The third argument (Feature*) is meant to be an application condition,
 // i.e. a propositional formula over features. If the application condition evaluates
 // to true, then the delta is applied.
-Deltacondition ::= Deltaspec DeltaID* Feature* ;
+DeltaClause ::= Deltaspec DeltaID* Feature* ;
 
 DeltaID ::= <Name>;
 Feature ::= <Name> AttrAssignment*;
@@ -237,13 +237,10 @@ abstract Value;
 IntVal:  Value ::= <Value:int>;
 BoolVal: Value ::= <Value:Boolean>;
 
-
-
-
 Deltaspec ::= <Name> Deltaparam* ;
 abstract Deltaparam;
 CID: Deltaparam ::= <Name> ;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* InitBlock:Block ;
+Product ::= <Name> Feature* MainBlock:Block ;

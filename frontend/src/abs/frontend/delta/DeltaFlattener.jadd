@@ -125,8 +125,6 @@ aspect DeltaFlattener {
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
-        // FIXME possible problems with field declarations that include assignment?
-       
         FieldDecl myfield = this.getFieldDecl();
 
         // in given ClassDecl: find FieldDecl that matches this
