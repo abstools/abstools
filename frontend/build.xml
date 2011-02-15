@@ -22,6 +22,7 @@
     <property name="parser.src.dir" value="${src.dir}/abs/frontend/parser" />
     <property name="parser.gen.dir" value="${gen.dir}/abs/frontend/parser" />
     <property name="junit.jar" value="junit-4.8.1.jar" />
+	<property name="target.jar" value="${dist.dir}/absfrontend.jar" />
 
     <!-- The package name of JastAdd generated files -->
     <property name="ast.package" value="abs.frontend.ast" />
@@ -160,7 +161,7 @@
     <!-- create distribution files for ABS -->
 
     <target name="dist" depends="clean,compile" description="create distribution files">
-        <jar jarfile="${dist.dir}/absfrontend.jar">
+        <jar jarfile="${target.jar}">
             <fileset dir="${build.dir}" includes="abs/**" />
             <fileset dir="${src.dir}" includes="abs/**" />
             <zipfileset src="${ext.dir}/jastadd2.jar" />
