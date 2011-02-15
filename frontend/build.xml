@@ -35,6 +35,14 @@
 
     <!-- "jastadd" is an ant task class in jastadd2.jar -->
     <taskdef name="jastadd" classname="jastadd.JastAddTask" classpath="${ext.dir}/jastadd2.jar" />
+	 
+	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
+		<classpath>
+			<pathelement location="${ext.dir}/svnant.jar" />
+			<pathelement location="${ext.dir}/svnClientAdapter.jar" />
+	    </classpath>
+    </taskdef>
+
 
 
     <target name="prepare">
@@ -49,7 +57,7 @@
     </target>
 
     <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-        <javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
+        <javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off">
             <classpath>
                 <pathelement location="${ext.dir}/Java1.5Compiler.jar" />
                 <pathelement location="${ext.dir}/beaver.jar" />
@@ -158,9 +166,12 @@
     </target>
 
 
-    <!-- create distribution files for ABS -->
-
+	<!-- create distribution files for ABS -->
     <target name="dist" depends="clean,compile" description="create distribution files">
+    	<svn failonerror="false" javahl="false"><wcVersion path="${basedir}"/></svn>
+    	<condition property="frontend.version" value="${revision.max}" else="">  
+    	    <isset property="revision.max" />  
+        </condition>
         <jar jarfile="${target.jar}">
             <fileset dir="${build.dir}" includes="abs/**" />
             <fileset dir="${src.dir}" includes="abs/**" />
@@ -173,6 +184,7 @@
             <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
             <manifest>
                 <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
+            	<attribute name="Implementation-Version" value="${frontend.version}"/>
             </manifest>
         </jar>
     </target>

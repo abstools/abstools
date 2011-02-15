@@ -143,7 +143,7 @@ public class Main {
             } else {
                 if (fullabs) {
                     // apply deltas that correspond to given product
-                    m.configureProduct(product);
+                    //m.configureProduct(product);
                     
                     if (dump)
                         m.dump();
@@ -198,10 +198,17 @@ public class Main {
     }
 
     protected void printUsage() {
+        String version = Main.class.getPackage().getImplementationVersion();
+        String header = "ABS TOOL SUITE" + "  Build version: " + version;
+        StringBuilder starline = new StringBuilder();
+        for (int i = 0; i < header.length() + 4; i++) {
+            starline.append("*");
+        }
+        starline.append("\n");
         System.out.println(
-                  "*******************************\n" 
-                + "*        ABS TOOL SUITE       *\n"
-                + "*******************************\n" 
+                  starline 
+                + "* " + header + " *\n" 
+                + starline 
                 + "Usage: java " + this.getClass().getName()
                 + " [options] <absfiles>\n\n" 
                 + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
