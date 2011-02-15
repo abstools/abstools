@@ -66,6 +66,29 @@
     <url>https://trac.hats-project.eu/projects/ABSTools/browser/trunk/</url>
   </scm>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target name = "frontend-dist">
+                <ant antfile="../ABSFrontend/build.xml" useNativeBasedir="true" target="dist">
+                  <property name="target.jar" value="${basedir}/src/site/resources/absfrontend.jar" /> 
+                </ant>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <!-- <build> -->
   <!-- <plugins> -->
