@@ -143,7 +143,7 @@ public class Main {
             } else {
                 if (fullabs) {
                     // apply deltas that correspond to given product
-                    //m.configureProduct(product);
+                    m.configureProduct(product);
                     
                     if (dump)
                         m.dump();
