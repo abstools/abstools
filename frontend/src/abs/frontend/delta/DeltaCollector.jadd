@@ -16,13 +16,10 @@ aspect DeltaCollector {
 //        for (String deltaid : alldeltas.keySet())
 //            System.out.println("collected delta: " + deltaid);
 
-        // given a product, find the names of applicable deltas
-        ArrayList<String> deltaids = this.findApplicableDeltaIDs(prod);
-        for (String deltaid : deltaids)
-            System.out.println(">>> applicable delta: " + deltaid);
-
-        // given a list of delta IDs, compute a list of deltas that should be applied
-        ArrayList<Delta> deltas = this.findApplicableDeltas(deltaids, alldeltas);
+        // given a product, find the applicable deltas (and sort them)
+        ArrayList<Delta> deltas = this.findApplicableDeltas(prod, alldeltas);
+        for (Delta delta : deltas)
+            System.out.println(">>> applicable delta: " + delta.getName());
 
         // apply the applicable deltas in the given order
         for (Delta delta : deltas)
@@ -35,8 +32,8 @@ aspect DeltaCollector {
     public Product Model.findProduct(String id) throws WrongProgramArgumentException {
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
-                String moduleid = d.getName();
                 for (Product p : d.getProducts()) {
+                    String moduleid = p.moduleName();
                     if (id.equals(moduleid + "." + p.getName()))
                         return p;
                 }
@@ -81,44 +78,49 @@ aspect DeltaCollector {
      *
      * TODO sort the applicable deltas according to partial order
      */
-    public ArrayList<String> Model.findApplicableDeltaIDs(Product prod) {
-        ArrayList<String> deltaids = new ArrayList<String>();
-
+    public ArrayList<Delta> Model.findApplicableDeltas(
+            Product prod, 
+            HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
+   
+        ArrayList<Delta> deltas = new ArrayList<Delta>();
+        GraphTS g = new GraphTS(100);
+        
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ModuleDecl module : u.getModuleDecls()) {
                 String moduleid = module.getName();
                 if (module.hasProductLine()) {
                     ProductLine pl = module.getProductLine();
                     for (DeltaClause c : pl.getDeltaClauses()) {
-                        String deltaid = c.getDeltaspec().getName();
-                        if (c.evaluateAppCond(prod.getFeatures()))
-                            deltaids.add(moduleid + "." + deltaid);
-                            // TODO: handle delta parameters
+                        String deltaid = moduleid + "." + c.getDeltaspec().getName();
+                        if (c.evaluateAppCond(prod.getFeatures())) {
+                            if (alldeltas.containsKey(deltaid)) {
+                                Delta delta = alldeltas.get(deltaid);
+                                deltas.add(delta);
+                                // add vertex delta
+                                g.addVertex(delta);
+                                // for each thatdelta in "after" list:
+                                // add edge (delta, thatdelta)
+                                for (DeltaID otherid : c.getDeltaIDs()) {
+                                    if (alldeltas.containsKey(otherid.getName()))
+                                        try {
+                                            g.addEdge(delta, alldeltas.get(otherid.getName()));
+                                        } catch (VertexNotFoundException x) {
+                                            // TODO
+                                        }
+                                    else 
+                                        throw new WrongProgramArgumentException("Delta [" + otherid.getName() + "] is not declared");
+                                }    
+                            } else
+                                throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
+                        }
                     }
                 }
             }
         }
-        return deltaids;
-    }
-
-    /**************************************************************************
-     * map a list of delta names (IDs) to a list of Deltas
-     */
-    public ArrayList<Delta> Model.findApplicableDeltas(
-            ArrayList<String> deltaids,
-            HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
-
-        ArrayList<Delta> deltas = new ArrayList<Delta>();
-        for (String id : deltaids) {
-            if (alldeltas.containsKey(id))
-                deltas.add(alldeltas.get(id));
-            else
-                throw new WrongProgramArgumentException("Delta [" + id + "] is not declared");
-        }
-        
-        // sort deltas
+        // TODO sort g;
         return deltas;
     }
+
 
     /**************************************************************************
      *  Evaluate the application condition assciated with *this*

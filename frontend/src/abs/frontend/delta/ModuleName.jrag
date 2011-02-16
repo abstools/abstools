@@ -13,3 +13,20 @@ aspect ModuleName {
     inh String ProductLine.moduleName();
     eq ModuleDecl.getProductLine().moduleName() = this.getName();
 }
+
+
+aspect Qualified {
+    
+    // prepend the name of the module where this declaration occured
+    public String Decl.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+
+    public String Product.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+
+    public String ProductLine.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+}

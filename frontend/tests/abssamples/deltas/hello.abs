@@ -56,11 +56,10 @@ delta Fr {
 //************************************************************
 productline HelloMultiLingual {
     features Repeat, German, French, Dutch;
-//  corefeatures English;
     core English;
 
-    delta Rpt(Repeat.times) 
-        after De, Fr, Nl 
+    delta Rpt(Repeat.times)
+        after De, Fr, Nl
         when Repeat;
     delta De when German;
     delta Fr when French;
@@ -108,7 +107,7 @@ product P4 (English, Repeat{times=6}) {
     bob = new Greeter();
     String s = "";
     s = bob.say_hello();
-} 
+}
 
 
 
