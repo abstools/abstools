@@ -6,4 +6,10 @@ aspect ModuleName {
 
     inh String ClassModifier.moduleName();
     eq DeltaDecl.getClassModifier().moduleName() = this.moduleName();
+    
+    inh String Product.moduleName();
+    eq ModuleDecl.getProduct().moduleName() = this.getName();
+
+    inh String ProductLine.moduleName();
+    eq ModuleDecl.getProductLine().moduleName() = this.getName();
 }

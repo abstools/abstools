@@ -11,7 +11,7 @@ aspect DeltaFlattener {
             getChildNoTransform(i).applyDelta(delta);
         }
     }
-    
+
     public void ModuleDecl.applyDelta(Delta delta) throws ASTNodeNotFoundException {
         String moduleid = this.getName();
 
@@ -29,7 +29,7 @@ aspect DeltaFlattener {
      * - add/remove/modify classes
      */
     public abstract void ClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException;
-    
+
     public void RemoveClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
         // find class by name
         String classname = this.getName();
@@ -97,7 +97,7 @@ aspect DeltaFlattener {
         if (found >= 0)
             // remove MethodImpl from list
             cd.getMethods().removeChild(found);
-        else  
+        else
             throw new ASTNodeNotFoundException(cd, mysig);
     }
 
@@ -120,7 +120,7 @@ aspect DeltaFlattener {
         if (found >= 0)
             // replace MethodImpl
             cd.getMethods().setChild(this.getMethodImpl().copy(), found);
-        else  
+        else
             throw new ASTNodeNotFoundException(cd, mysig);
     }
 
@@ -138,10 +138,10 @@ aspect DeltaFlattener {
         }
         if (found >= 0)
             cd.getFields().setChild(this.getFieldDecl().copy(), found);
-        else  
+        else
             throw new ASTNodeNotFoundException(cd, myfield);
     }
-    
+
     public void AddFieldModifier.applyTo(ClassDecl cd) {
         cd.getFields().addChild(this.getFieldDecl().copy());
     }

@@ -4,48 +4,51 @@ import abs.common.*;
 import abs.frontend.delta.exceptions.*;
 
 aspect DeltaCollector {
-	
-	// configure a product
-	public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+
+    // configure a product
+    public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
-		System.out.println("configuring product: " + prod.getName());
+        System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
 
-		// first, collect ALL deltas
-		HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
-		this.collectDeltas(alldeltas);
-		for (String deltaid : alldeltas.keySet())
-		    System.out.println("collect: " + deltaid);
+        // first, collect ALL deltas
+        HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
+        this.collectDeltas(alldeltas);
+//        for (String deltaid : alldeltas.keySet())
+//            System.out.println("collected delta: " + deltaid);
 
-		// given a product, find the names of applicable deltas
-		ArrayList<String> deltaids = this.findApplicableDeltaIDs(prod);
-		
+        // given a product, find the names of applicable deltas
+        ArrayList<String> deltaids = this.findApplicableDeltaIDs(prod);
+        for (String deltaid : deltaids)
+            System.out.println(">>> applicable delta: " + deltaid);
+
         // given a list of delta IDs, compute a list of deltas that should be applied
         ArrayList<Delta> deltas = this.findApplicableDeltas(deltaids, alldeltas);
-        
-        // apply the applicable deltas in the given order 
+
+        // apply the applicable deltas in the given order
         for (Delta delta : deltas)
             this.applyDelta(delta);
-	}
-	
-	/**************************************************************************
-	 * find a particular product given by its name
-	 */
-	public Product Model.findProduct(String id) throws WrongProgramArgumentException {
-		for (CompilationUnit u : this.getCompilationUnits()) {
-			for (ModuleDecl d : u.getModuleDecls()) {
-				for (Product p : d.getProducts()) {
-					if (p.getName().equals(id))
-						return p;
-				}
-			}
-		}
-		throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
-	}
-	
-	
-	/**************************************************************************
-	 * collect all Deltas 
-	 */
+    }
+
+    /**************************************************************************
+     * find a particular product given by its name
+     */
+    public Product Model.findProduct(String id) throws WrongProgramArgumentException {
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                String moduleid = d.getName();
+                for (Product p : d.getProducts()) {
+                    if (id.equals(moduleid + "." + p.getName()))
+                        return p;
+                }
+            }
+        }
+        throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
+    }
+
+
+    /**************************************************************************
+     * collect all Deltas
+     */
     //propagate
     public void ASTNode.collectDeltas(HashMap<String, Delta> deltas) {
         for(int i = 0; i < getNumChild(); i++) {
@@ -64,78 +67,82 @@ aspect DeltaCollector {
     public void DeltaDecl.collectDeltas(HashMap<String, Delta> deltas) {
         String moduleid = this.moduleName();
         String deltaid = moduleid + "." + this.getName();
-        
+
         Delta delta = new Delta(deltaid);
         for (ClassModifier cm : this.getClassModifiers())
             delta.addClassModifier(moduleid, cm);
 
         deltas.put(deltaid, delta);
     }
-    
-	/**************************************************************************
-	 * map a list of delta names (IDs) to a list of Deltas
-	 */
-    public ArrayList<Delta> Model.findApplicableDeltas(
-    		ArrayList<String> deltaids, 
-    		HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
-    	
-    	ArrayList<Delta> deltas = new ArrayList<Delta>();
-    	for (String id : deltaids) {
-    		if (alldeltas.containsKey(id))
-    			deltas.add(alldeltas.get(id));
-    		else 
-    			throw new WrongProgramArgumentException("Delta [" + id + "] is not declared");
-    	}
-    	return deltas;
-    }
 
-    
-	/**************************************************************************
-	 * Evaluate each delta clause to find the applicable deltas
-	 * i.e. test each application condition in the context of the features which are ON in the given product
-	 * 
-	 * TODO sort the applicable deltas according to partial order
-	 */
+    /**************************************************************************
+     * Evaluate each delta clause to find the applicable deltas
+     * i.e. test each application condition in the context of the features which are ON in the given product
+     *
+     * TODO sort the applicable deltas according to partial order
+     */
     public ArrayList<String> Model.findApplicableDeltaIDs(Product prod) {
         ArrayList<String> deltaids = new ArrayList<String>();
-        
+
         for (CompilationUnit u : this.getCompilationUnits()) {
-            for (ModuleDecl d : u.getModuleDecls()) {
-                ProductLine pl = d.getProductLine(); // FIXME ProductLine is optional!
-                for (DeltaClause c : pl.getDeltaClauses()) {
-                    String deltaid = c.getDeltaspec().getName();
-                    if (c.evaluateAppCond(prod.getFeatures()))
-                        deltaids.add(deltaid);
-                    // TODO handle delta parameters?
+            for (ModuleDecl module : u.getModuleDecls()) {
+                String moduleid = module.getName();
+                if (module.hasProductLine()) {
+                    ProductLine pl = module.getProductLine();
+                    for (DeltaClause c : pl.getDeltaClauses()) {
+                        String deltaid = c.getDeltaspec().getName();
+                        if (c.evaluateAppCond(prod.getFeatures()))
+                            deltaids.add(moduleid + "." + deltaid);
+                            // TODO: handle delta parameters
+                    }
                 }
             }
         }
         return deltaids;
     }
-    
-	/**************************************************************************
-	 *  Evaluate the application condition assciated with *this*
-	 *  in the context of the given list of features and attribute values 
-	 *  
-	 *  currently this only compares feature NAMES 
-	 *  and only delas with the AND operator
-	 *  TODO properly handle all logical connectives, also feature attributes
-	 */
-	public boolean DeltaClause.evaluateAppCond(List<Feature> onFeatures) {
-	    // first, log the names of all onFeatures in a set, for easy lookup
-	    HashSet<String> onFeatureIDs = new HashSet<String>();
-	    for (Feature f : onFeatures)
-	        onFeatureIDs.add(f.getName());
-	    
-	    // check whether each required feature is also ON
-	    for (Feature reqFeature : this.getFeatures()) {
-	        System.out.print(">>> required feature: " + reqFeature.getName() +  " is " + onFeatureIDs.contains(reqFeature.getName()));
-	        if (! onFeatureIDs.contains(reqFeature.getName()))
-	            return false;
-	    }
-	    return true;
-	}
-	
+
+    /**************************************************************************
+     * map a list of delta names (IDs) to a list of Deltas
+     */
+    public ArrayList<Delta> Model.findApplicableDeltas(
+            ArrayList<String> deltaids,
+            HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
+
+        ArrayList<Delta> deltas = new ArrayList<Delta>();
+        for (String id : deltaids) {
+            if (alldeltas.containsKey(id))
+                deltas.add(alldeltas.get(id));
+            else
+                throw new WrongProgramArgumentException("Delta [" + id + "] is not declared");
+        }
+        
+        // sort deltas
+        return deltas;
+    }
+
+    /**************************************************************************
+     *  Evaluate the application condition assciated with *this*
+     *  in the context of the given list of features and attribute values
+     *
+     *  currently this only compares feature NAMES
+     *  and only delas with the AND operator
+     *  TODO properly handle all logical connectives, also feature attributes
+     */
+    public boolean DeltaClause.evaluateAppCond(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
+
+        // check whether each required feature is also ON
+        for (Feature reqFeature : this.getFeatures()) {
+//            System.out.println(">>> required feature: " + reqFeature.getName() +  " is " + onFeatureIDs.contains(reqFeature.getName()));
+            if (! onFeatureIDs.contains(reqFeature.getName()))
+                return false;
+        }
+        return true;
+    }
+
 
 //    /*
 //     * Collect features (and later attributes) from a product.
