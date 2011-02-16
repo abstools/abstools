@@ -169,6 +169,7 @@ aspect TypeResolution {
     inh Decl InterfaceDecl.lookup(KindedName name);
 	eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
 	eq ModuleDecl.getBlock().lookup(KindedName name) = lookup(name);
+        eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
 
 	syn lazy Decl ModuleDecl.lookup(KindedName name) {
 		ResolvedName r = TypeCheckerHelper.resolveName(this,name);
