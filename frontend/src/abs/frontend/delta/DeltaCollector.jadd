@@ -182,4 +182,27 @@ aspect DeltaCollector {
 //        }
 //    }
 
+    // undested!
+    abstract public Value Deltaparam.calcValue(List<Feature> feats)
+        throws WrongProgramArgumentException;
+    public Value Const.calcValue(List<Feature> feats)  {
+        return getValue();
+    }
+    public Value CID.calcValue(List<Feature> feats) {
+        for (Feature f : feats) {
+            if (f.getName().equals(getName()))
+                return new BoolVal(true);
+        }
+        return new BoolVal(false);
+    }
+    public Value FIDAID.calcValue(List<Feature> feats) throws WrongProgramArgumentException {
+        for (Feature f : feats) {
+            if (f.getName().equals(getFeatName())) // found feature
+                for (AttrAssignment attr : f.getAttrAssignments()) {
+                    if (attr.getName().equals(getAttrName()))   // found attribute
+                        return attr.getValue();
+                }
+        }
+        throw new WrongProgramArgumentException("Argument " + getFeatName() + "."+ getAttrName() +" not found.");
+    }
 }
