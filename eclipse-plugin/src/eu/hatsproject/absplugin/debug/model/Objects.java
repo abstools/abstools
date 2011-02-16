@@ -1,0 +1,34 @@
+package eu.hatsproject.absplugin.debug.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.ObjectView;
+
+/**
+ * This class is necessary to group objects in the tree viewer of the debug view.
+ * @see eu.hatsproject.absplugin.debug.views.debugview.DebugTreeContentProvider
+ * @author tfischer
+ */
+public class Objects {
+	private COGView cog;
+	private List<ObjectView> objects;
+	
+	public Objects(COGView cog){
+		this.cog = cog;
+		objects = new ArrayList<ObjectView>();
+	}
+	
+	public COGView getCOG(){
+		return cog;
+	}
+	
+	public void addObject(ObjectView object){
+		objects.add(object);
+	}
+	
+	public List<ObjectView> getObjects(){
+		return objects;
+	}
+}

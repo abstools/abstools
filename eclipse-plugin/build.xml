@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<project name="ABS Update Site" default="build" basedir=".">
+
+
+	<property name="update-site.dir" location="${basedir}/update-site" />
+	<property name="frontend.dir" location="../ABSFrontend" />
+	<property name="eclipse.home" location="/Applications/eclipse" />
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="build.dir" value="${basedir}/bin" />
+	<property name="dist.dir" value="${basedir}/dist" />
+	<property name="ext.dir" value="${basedir}/lib" />
+	<property name="plugin.name" value="eu.hatsproject.absplugin" />
+	
+	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
+	        <classpath>
+	            <pathelement location="${frontend.dir}/lib/svnant.jar" />
+	            <pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
+	        </classpath>
+	    </taskdef>
+
+
+
+	<target name="publish">
+		<mkdir dir="${update-site.dir}"/>
+		<copydir dest="${update-site.dir}" src="../../../trunk/frontend/dist/">
+		</copydir>
+		<p2.publish.featuresAndBundles 
+			artifactRepository="file:///${update-site.dir}" 
+            metadataRepository="file:///${update-site.dir}" 
+			artifactRepositoryName="HATS Update-Site"
+            metadataRepositoryName="HATS Update-Site"
+			publishArtifacts="false" 
+			compress="true" 
+			>
+			<bundles dir="${update-site.dir}/plugins" />
+			<features dir="${update-site.dir}/features" />
+		</p2.publish.featuresAndBundles>
+	</target>
+
+	<target name="build">
+		<java classname="org.eclipse.core.launcher.Main" fork="true">
+			<classpath>
+				<fileset dir="${eclipse.home}/plugins"
+	                	  includes="org.eclipse.equinox.launcher_*.jar" />
+			</classpath>
+			<arg value="-application" />
+			<arg value="org.eclipse.ant.core.antRunner" />
+			<arg value="-v" />
+			<arg value="-buildfile" />
+			<arg value="build.xml" />
+			<arg value="publish" />
+		</java>
+	</target>
+
+	<target name="compile" depends="" description="Compiles all java files in the source directory.">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off">
+			<classpath>
+				<pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
+				<fileset dir="${eclipse.home}/plugins"
+	            	                          includes="**/*.jar" />
+				<pathelement location="${frontend.dir}/bin" />
+				<fileset dir="${frontend.dir}/lib"
+	            	                                              includes="**/*.jar" />
+			</classpath>
+		</javac>
+	</target>
+	
+	
+	<target name="versionstamp">
+	        <svn failonerror="false" javahl="false">
+	            <wcVersion path="${basedir}" />
+	        </svn>
+	        <condition property="plugin.version" value="1.0.0.${revision.max}" else="">
+	            <isset property="revision.max" />
+	        </condition>
+	    </target>
+	
+	<target name="build-eclipse-plugin" depends="compile,versionstamp">
+	        <mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
+	        <copy todir="${basedir}/${plugin.name}_${frontend.version}" failonerror="true" overwrite="true">
+	            <fileset dir="${basedir}">
+	                <include name="META-INF/"/>
+	                <include name="lib/"/>
+	                <include name="feature.xml"/>
+	            </fileset>
+	            <fileset dir="${build.dir}">
+	                <include name="abs/"/>
+	            </fileset>
+	        </copy>
+	        <manifest file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF" mode="update">
+	            <attribute name="Bundle-Version" value="${frontend.version}"/>
+	        </manifest>
+	        <zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false"/>
+	        <replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="VERSION_STRING" value="${frontend.version}"/>
+	        <zip destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
+	            <include name="feature.xml" />
+	        </zip>
+	        <delete dir="${basedir}/${plugin.name}_${frontend.version}"/>
+	    </target>
+	
+
+</project>
