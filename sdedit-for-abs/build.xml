@@ -15,7 +15,7 @@
 	<property name="plugin.name" value="eu.hatsproject.sdedit" />
 	<property name="revision.prefix" value="0.2.4" />
 	<property name="dist.dir" value="${basedir}/dist" />
-	<property name="frontend.dir" location="../ABSFrontend" />
+	<property name="frontend.dir" location="../frontend" />
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
 		<classpath>
