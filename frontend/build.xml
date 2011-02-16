@@ -245,7 +245,7 @@
 	<!-- From command line: -->
 	<!-- java -cp bin:lib/junit-4.8.1.jar:lib/beaver-rt-src.jar  org.junit.runner.JUnitCore abs.frontend.AllTests -->
 
-	<target name="build-eclipse-plugin" depends="compile,versionstamp">
+	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
 		<mkdir dir="${basedir}/${plugin.name}_${frontend.version}"/>
 		<copy todir="${basedir}/${plugin.name}_${frontend.version}" failonerror="true" overwrite="true">
 			<fileset dir="${basedir}">
@@ -260,8 +260,10 @@
 		<manifest file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF" mode="update">
 			<attribute name="Bundle-Version" value="${frontend.version}"/>
 		</manifest>
-		<zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false"/>
-		<replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="VERSION_STRING" value="${frontend.version}"/>
+		<zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
+			<exclude name="feature.xml" />
+        </zip>
+		<replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${frontend.version}"/>
 		<zip destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
 			<include name="feature.xml" />
 		</zip>

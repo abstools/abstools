@@ -2,7 +2,7 @@
 <feature
       id="eu.hatsproject.abs.compiler"
       label="ABS Compiler"
-      version="VERSION_STRING"
+      version="0.0.0.VERSION_STRING"
       provider-name="HATS Project"
       os="linux,macosx,win32">
 
@@ -18,6 +18,6 @@
          id="eu.hatsproject.abs.compiler"
          download-size="0"
          install-size="0"
-         version="VERSION_STRING"/>
+         version="0.0.0"/>
 
 </feature>
