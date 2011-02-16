@@ -3,7 +3,7 @@
 
 
 	<property name="update-site.dir" location="${basedir}/update-site" />
-	<property name="frontend.dir" location="../ABSFrontend" />
+	<property name="frontend.dir" location="../frontend" />
 	<property name="sdedit.dir" location="../sdedit-for-abs" />
 	<property name="eclipse.home" location="/Applications/eclipse" />
 	<property name="src.dir" value="${basedir}/src" />
