@@ -260,9 +260,9 @@
 		<manifest file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF" mode="update">
 			<attribute name="Bundle-Version" value="${frontend.version}"/>
 		</manifest>
-		<zip destfile="${basedir}/gen-eclipse/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false"/>
+		<zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false"/>
 		<replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="VERSION_STRING" value="${frontend.version}"/>
-		<zip destfile="${basedir}/gen-eclipse/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
+		<zip destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
 			<include name="feature.xml" />
 		</zip>
 		<delete dir="${basedir}/${plugin.name}_${frontend.version}"/>
