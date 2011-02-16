@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="eu.hatsproject.sdedit"
+      label="ABS UML Sequence Diagram Editor"
+      version="0.0.0.VERSION_STRING"
+      provider-name="HATS Project"
+      os="linux,macosx,win32">
+
+   <description url="http://www.hats-project.eu">
+      ABS Frontend
+   </description>
+
+   <url>
+      <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
+   </url>
+
+   <plugin
+         id="eu.hatsproject.sdedit"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>

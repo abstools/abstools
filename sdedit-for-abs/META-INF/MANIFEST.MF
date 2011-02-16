@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ABS UML Sequence Diagram Editor
 Bundle-SymbolicName: eu.hatsproject.sdedit;singleton:=true
-Bundle-Version: 0.2.3
+Bundle-Version: 0.0.0.qualifier
 Bundle-ClassPath: bin
 Bundle-Vendor: HATS Project
 Export-Package: net.sf.sdedit,
