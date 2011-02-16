@@ -14,7 +14,7 @@ class Greeter implements Greeting {
 }
 
 delta Rpt (Int times) {
-    modifies Greeter {
+    modifies class Greeter {
         modifies String say_hello() {
             String result = "";
             Int i = 0;
@@ -28,7 +28,7 @@ delta Rpt (Int times) {
 }
 
 delta De {
-    modifies Greeter {
+    modifies class Greeter {
         modifies String say_hello() {
             return "Hallo Welt";
         }
@@ -36,7 +36,7 @@ delta De {
 }
 
 delta Nl {
-    modifies Greeter {
+    modifies class Greeter {
         modifies String say_hello() {
             return "Hallo wereld";
         }
@@ -44,7 +44,7 @@ delta Nl {
 }
 
 delta Fr {
-    modifies Greeter {
+    modifies class Greeter {
         modifies String say_hello() {
             return "Bonjour tout le monde";
         }
