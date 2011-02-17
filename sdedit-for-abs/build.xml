@@ -89,6 +89,7 @@
 				<path refid="libs"/>
 			</classpath>
 			<exclude name="**/AppInstallerImpl.java"/>
+            <exclude name="**/SequenceTaglet.java"/>
 		</javac>
 	</target>
 
