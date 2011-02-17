@@ -453,22 +453,32 @@ aspect GenerateMaude {
 	}
 
     public void DeltaDecl.generateMaude(PrintStream stream) {
-        boolean found = false;
-        boolean inlist = false;
         stream.println("\n\n< \"" + getName() + "\" : Delta | ");
-        for (ClassModifier d : getClassModifiers()) {
-            // TODO: check other class modifiers!
-            if (d instanceof ModifyClassModifier) {
-                ModifyClassModifier dm = (ModifyClassModifier) d;
-                for (Modifier f : dm.getModifiers()) {
-                    found = true;
-                    if (inlist) stream.print(", "); else inlist = true;
-                    f.generateMaude(stream);
-                }
+        if (getNumClassModifier() > 0) {
+            boolean inlist = false;
+            for (ClassModifier d : getClassModifiers()) {
+                if (inlist) stream.print(", "); else inlist = true;
+                d.generateMaude(stream);
             }
+        } else {
+            stream.print("empty ");
         }
-        if (!found) stream.print("empty ");
         stream.print(">\n");
+    }
+
+    public abstract void ClassModifier.generateMaude(PrintStream stream);
+    public void AddClassModifier.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
+    }
+    public void RemoveClassModifier.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
+    }
+    public void ModifyClassModifier.generateMaude(PrintStream stream) {
+        boolean inlist = false;
+        for (Modifier f : getModifiers()) {
+            if (inlist) stream.print(", "); else inlist = true;
+            f.generateMaude(stream);
+        }
     }
 
     public abstract void Modifier.generateMaude(PrintStream stream);
