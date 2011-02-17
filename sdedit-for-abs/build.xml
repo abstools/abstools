@@ -31,6 +31,14 @@
 			<include name="**/*.jar"/>
 		</fileset>
 	</path>
+	
+	<pathconvert property="lib.project.manifest.classpath"
+	             pathsep=" ">
+	  <path refid="libs"/>
+	  <map from="${lib}" to="lib" />
+	</pathconvert>
+
+
 	<target description="about this ant script" name="about">
 		<echo level="info">
 			<![CDATA[
@@ -89,7 +97,7 @@
 				<path refid="libs"/>
 			</classpath>
 			<exclude name="**/AppInstallerImpl.java"/>
-            <exclude name="**/SequenceTaglet.java"/>
+			<exclude name="**/SequenceTaglet.java"/>
 		</javac>
 	</target>
 
@@ -159,13 +167,20 @@
 
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
 		<mkdir dir="${basedir}/${plugin.name}_${plugin.version}" />
+		<jar jarfile="${basedir}/${plugin.name}_${plugin.version}/sdedit.jar">
+			<fileset dir="${build}" />
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+				<attribute name="Main-Class" value="net.sf.sdedit.Main" />
+				<attribute name="Class-Path" value="${lib.project.manifest.classpath}" />
+			</manifest>
+		</jar>
 		<copy todir="${basedir}/${plugin.name}_${plugin.version}" failonerror="true" overwrite="true">
 			<fileset dir="${basedir}">
 				<include name="META-INF/"/>
 				<include name="feature.xml"/>
-                <include name="lib/**"/>
+				<include name="lib/**"/>
 			</fileset>
-			<fileset dir="${build}" />
 		</copy>
 		<manifest file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF" mode="update">
 			<attribute name="Bundle-Version" value="${plugin.version}"/>
@@ -181,6 +196,6 @@
 		<zip destfile="${dist.dir}/features/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
 			<include name="feature.xml" />
 		</zip>
-		<!--  <delete dir="${basedir}/${plugin.name}_${plugin.version}"/> -->
+		<delete dir="${basedir}/${plugin.name}_${plugin.version}"/>
 	</target>
 </project>

@@ -3,7 +3,6 @@ package eu.hatsproject.absplugin.actions;
 import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -671,14 +670,14 @@ public class JavaJob extends Job {
 		ArrayList<String> args = new ArrayList<String>();
 		
 		args.add("java");
-		args.add("-classpath");
-		String classpath = "bin"+File.pathSeparatorChar+jarFile.getAbsolutePath();
-      System.out.println("CLASSPATH: "+classpath);
-      args.add(classpath);
+		args.add("-cp");
+		args.add(jarFile.getAbsolutePath());
+		args.add("-jar");
+		args.add(new File(jarFile,"sdedit.jar").getAbsolutePath());
 		
-		args.add(SDE_MAIN_CLASS);
 		args.add("-s");
 		args.add(String.valueOf(port));
+		System.out.println(args);
 		return args.toArray(new String[0]);
 	}
 
