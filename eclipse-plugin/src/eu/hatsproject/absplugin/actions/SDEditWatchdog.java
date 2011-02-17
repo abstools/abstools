@@ -84,7 +84,9 @@ final class SDEditWatchdog extends WorkspaceJob {
 				if(exception!= null){
 					exception.printStackTrace(sdeditconsole.getPrintStream(MessageType.MESSAGE_ERROR));
 				}
-				debugProcess.destroy();
+				if (debugProcess != null) {
+				   debugProcess.destroy();
+				}
 				break;
 			default:
 				// How do we end up here???
