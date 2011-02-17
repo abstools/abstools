@@ -3,27 +3,49 @@ import java.util.HashMap;
 import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
-aspect DeltaFlattener {
+aspect Flattener {
 
+    // configure a product
+    public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        System.out.println("configuring product: " + prod.qualifiedName());
+
+        ArrayList<DeltaDecl> deltas = this.getSortedDeltas(prod);
+
+        System.out.print("applicable deltas: ");
+        for (DeltaDecl delta : deltas)
+            System.out.print(delta.qualifiedName() + ", ");
+        System.out.println("");
+
+        // TODO resolve original() calls
+        for (DeltaDecl delta : deltas)
+            ; // this.resolveOriginalCall(delta);
+        
+        // apply the applicable deltas in the given order
+        for (DeltaDecl delta : deltas)
+            this.applyDelta(delta);
+    }
+    
     //propagate
-    public void ASTNode.applyDelta(Delta delta) throws ASTNodeNotFoundException {
+    public void ASTNode.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         for(int i = 0; i < getNumChild(); i++) {
             getChildNoTransform(i).applyDelta(delta);
         }
     }
 
-    public void ModuleDecl.applyDelta(Delta delta) throws ASTNodeNotFoundException {
+    public void ModuleDecl.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         String moduleid = this.getName();
 
-        //if Delta has ClassModifiers that apply to this Module, apply them...
-        if (delta.appliesTo(moduleid)) {
-            for (ClassModifier cmod : delta.getClassModifiers(moduleid)) {
+        //if DeltaDecl was defined in *this* module, apply its ClassModifiers...
+        if (delta.moduleName().equals(moduleid)) {
+            for (ClassModifier cmod : delta.getClassModifiers()) {
                 System.out.println("*** applying " + cmod + " to module " + moduleid);
                 cmod.applyTo(this);
             }
         }
     }
 
+    
     /**************************************************************************
      * ClassModifiers are applied to Modules
      * - add/remove/modify classes

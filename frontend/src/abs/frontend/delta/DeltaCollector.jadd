@@ -5,35 +5,18 @@ import abs.frontend.delta.exceptions.*;
 
 aspect DeltaCollector {
 
-    // configure a product
-    public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
-        Product prod = this.findProduct(id);
-        System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
-
-        ArrayList<Delta> deltas = this.getSortedDeltas(prod);
-
-        System.out.print("applicable deltas: ");
-        for (Delta delta : deltas)
-            System.out.print(delta.getName() + ", ");
-        System.out.println("");
-
-        // apply the applicable deltas in the given order
-        for (Delta delta : deltas)
-            this.applyDelta(delta);
-    }
-    
-    public ArrayList<Delta> Model.getSortedDeltas(Product prod) {
+    public ArrayList<DeltaDecl> Model.getSortedDeltas(Product prod) {
 
         // first, collect ALL deltas
-        HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
+        HashMap<String, DeltaDecl> alldeltas = new HashMap<String, DeltaDecl>();
         this.collectDeltas(alldeltas);
 
         // given a product, find the applicable deltas (and sort them)
-        HashMap<String, Delta> appdeltas;
+        HashMap<String, DeltaDecl> appdeltas;
         try {
             appdeltas = this.findApplicableDeltas(prod, alldeltas);
         } catch(WrongProgramArgumentException e) {
-            return new ArrayList<Delta>(); // shouldn't happen
+            return new ArrayList<DeltaDecl>(); // shouldn't happen
         }
 
         return sortDeltas(appdeltas);
@@ -47,8 +30,7 @@ aspect DeltaCollector {
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 for (Product p : d.getProducts()) {
-                    String moduleid = p.moduleName();
-                    if (id.equals(moduleid + "." + p.getName()))
+                    if (id.equals(p.qualifiedName()))
                         return p;
                 }
             }
@@ -61,29 +43,20 @@ aspect DeltaCollector {
      * collect all Deltas
      */
     //propagate
-    public void ASTNode.collectDeltas(HashMap<String, Delta> deltas) {
+    public void ASTNode.collectDeltas(HashMap<String, DeltaDecl> deltas) {
         for(int i = 0; i < getNumChild(); i++) {
             getChildNoTransform(i).collectDeltas(deltas);
         }
     }
 
-    public void Model.collectDeltas(HashMap<String, Delta> deltas) {
+    public void Model.collectDeltas(HashMap<String, DeltaDecl> deltas) {
         super.collectDeltas(deltas);
     }
 
-    /*
-     * remember the modifications (addition/removal/modification of classes)
-       that this delta applies
-     */
-    public void DeltaDecl.collectDeltas(HashMap<String, Delta> deltas) {
-        String moduleid = this.moduleName();
-        String deltaid = moduleid + "." + this.getName();
-
-        Delta delta = new Delta(deltaid);
-        for (ClassModifier cm : this.getClassModifiers())
-            delta.addClassModifier(moduleid, cm);
-
-        deltas.put(deltaid, delta);
+    // remember this DeltaDecl
+    public void DeltaDecl.collectDeltas(HashMap<String, DeltaDecl> deltas) {
+        String deltaid = this.qualifiedName();
+        deltas.put(deltaid, this);
     }
 
     /**************************************************************************
@@ -91,11 +64,11 @@ aspect DeltaCollector {
      * i.e. test each application condition in the context of the features which are ON in the given product
      *
      */
-    public HashMap<String, Delta> Model.findApplicableDeltas(
+    public HashMap<String, DeltaDecl> Model.findApplicableDeltas(
             Product prod, 
-            HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
+            HashMap<String, DeltaDecl> alldeltas) throws WrongProgramArgumentException {
 
-        HashMap<String, Delta> deltas = new HashMap<String, Delta>();
+        HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
         
         // collect applicable deltas
         for (CompilationUnit u : this.getCompilationUnits()) {
@@ -106,7 +79,7 @@ aspect DeltaCollector {
                         String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
                         if (c.evaluateAppCond(prod.getFeatures())) {
                             if (alldeltas.containsKey(deltaid)) {
-                                Delta delta = alldeltas.get(deltaid);
+                                DeltaDecl delta = alldeltas.get(deltaid);
                                 deltas.put(deltaid, delta);
                             } else
                                 throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
@@ -122,8 +95,8 @@ aspect DeltaCollector {
      * Sort the given deltas using the partial orders defined in DeltaClauses
      * 
      */
-    public ArrayList<Delta> Model.sortDeltas(
-            HashMap<String, Delta> deltas) {
+    public ArrayList<DeltaDecl> Model.sortDeltas(
+            HashMap<String, DeltaDecl> deltas) {
         
         // sort deltas
         GraphTS g = new GraphTS(deltas.values().toArray());
@@ -135,12 +108,12 @@ aspect DeltaCollector {
                     for (DeltaClause c : pl.getDeltaClauses()) {
                         String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
                         if (deltas.containsKey(deltaid)) {
-                            Delta delta = deltas.get(deltaid);
+                            DeltaDecl delta = deltas.get(deltaid);
                             // for each afterdelta: add an edge (delta, afterdelta)
                             for (DeltaID did : c.getDeltaIDs()) {
                                 String otherid = c.moduleName() + "." + did.getName();
                                 if (deltas.containsKey(otherid)) {
-                                    Delta otherdelta = deltas.get(otherid);
+                                    DeltaDecl otherdelta = deltas.get(otherid);
                                     try {
                                         g.addEdge(otherdelta, delta);
                                     } catch (VertexNotFoundException e) {

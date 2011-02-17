@@ -41,12 +41,12 @@ aspect GenerateMaude {
         for (Product p: getProducts()) {
             stream.println("op " + p.getName() + " : -> Product .");
             stream.print("eq deltas(" + p.getName() + ") = ");
-            ArrayList<Delta> deltas = getSortedDeltas(p);
+            ArrayList<DeltaDecl> deltas = getSortedDeltas(p);
             if (deltas.isEmpty()) {
             	stream.print("noDelta ");
             } else {
                 Collections.reverse(deltas);
-            	for (Delta d: deltas) {
+            	for (DeltaDecl d: deltas) {
                     String name = d.getName();
                     if (name.lastIndexOf('.') > -1) {
                         name = name.substring(name.lastIndexOf('.') + 1);

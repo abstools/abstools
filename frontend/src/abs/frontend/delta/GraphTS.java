@@ -2,6 +2,7 @@ package abs.frontend.delta;
 
 import java.util.*;
 
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.delta.exceptions.VertexNotFoundException;
 
 /**
@@ -93,11 +94,11 @@ public class GraphTS {
         return sortedArray;
     }
 
-    public ArrayList<Delta> getSortedDeltas() {
-        ArrayList<Delta> sortedDeltas = new ArrayList<Delta>();
+    public ArrayList<DeltaDecl> getSortedDeltas() {
+        ArrayList<DeltaDecl> sortedDeltas = new ArrayList<DeltaDecl>();
         
         for (Object element : sortedArray)
-            sortedDeltas.add((Delta)element);
+            sortedDeltas.add((DeltaDecl)element);
  
         return sortedDeltas;       
     }
