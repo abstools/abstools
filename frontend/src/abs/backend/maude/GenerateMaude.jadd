@@ -461,34 +461,36 @@ aspect GenerateMaude {
             if (d instanceof ModifyClassModifier) {
                 ModifyClassModifier dm = (ModifyClassModifier) d;
                 for (Modifier f : dm.getModifiers()) {
-                    if (f instanceof AddMethodModifier) {
-                        AddMethodModifier af = (AddMethodModifier)f;
-                        found = true;
-                        if (inlist) stream.print(", "); else inlist = true;
-                        stream.print("addM(\"" + dm.getName() + "\", ");
-                        af.getMethodImpl().generateMaude(stream);
-                        stream.println(") ");
-                    }
-                    else if (f instanceof ModifyMethodModifier) {
-                        ModifyMethodModifier mf = (ModifyMethodModifier)f;
-                        found = true;
-                        if (inlist) stream.print(", "); else inlist = true;
-                        stream.print("addM(\"" + dm.getName() + "\", ");
-                        mf.getMethodImpl().generateMaude(stream);
-                        stream.println(") ");
-                    }
-                    if (f instanceof RemoveMethodModifier) {
-                        RemoveMethodModifier rf = (RemoveMethodModifier)f;
-                        found = true;
-                        if (inlist) stream.print(", "); else inlist = true;
-					    stream.print("removeM(\"" + dm.getName() + "\", ");
-                        stream.println("\"" + rf.getMethodSig().getName() + "\") ");
-                    }
+                    found = true;
+                    if (inlist) stream.print(", "); else inlist = true;
+                    f.generateMaude(stream);
                 }
             }
         }
         if (!found) stream.print("empty ");
         stream.print(">\n");
+    }
+
+    public abstract void Modifier.generateMaude(PrintStream stream);
+    public void AddMethodModifier.generateMaude(PrintStream stream) {
+        stream.print("addM(\"" + getMethodImpl().getMethodSig().getName() + "\", ");
+        getMethodImpl().generateMaude(stream);
+        stream.println(") ");
+    }
+    public void ModifyMethodModifier.generateMaude(PrintStream stream) {
+        stream.print("addM(\"" + getMethodImpl().getMethodSig().getName() + "\", ");
+        getMethodImpl().generateMaude(stream);
+        stream.println(") ");
+    }
+    public void RemoveMethodModifier.generateMaude(PrintStream stream) {
+        stream.print("removeM(\"" + getMethodSig().getName() + "\", ");
+        stream.println("\"" + getMethodSig().getName() + "\") ");
+    }
+    public void AddFieldModifier.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
+    }
+    public void RemoveFieldModifier.generateMaude(PrintStream stream) {
+        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
     }
 
     public void MethodImpl.generateMaude(PrintStream stream) {
