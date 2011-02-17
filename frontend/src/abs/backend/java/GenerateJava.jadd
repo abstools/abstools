@@ -686,6 +686,10 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
+    public void OriginalCall.generateJava(PrintStream stream) {
+        // TODO: implement me
+    }
+
     public void GetExp.generateJava(PrintStream stream) {
         DataTypeType t = (DataTypeType) getPureExp().getType();
         // assume to be of type Fut<V>

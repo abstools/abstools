@@ -617,6 +617,7 @@ Exp eff_exp =
     | new_exp
 	| async_call
 	| sync_call
+    | original_call
     | incomplete_exp.e {: return e; :}
 	;
 
@@ -633,6 +634,8 @@ SyncCall sync_call =
 	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(new ThisExp(),method,params) ; :}
 	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :}
 	;
+
+OriginalCall original_call = ORIGINAL LPAREN RPAREN {: return new OriginalCall(); :} ;
 
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =

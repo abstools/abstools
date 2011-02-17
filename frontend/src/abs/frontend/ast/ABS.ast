@@ -181,6 +181,7 @@ abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;
 GetExp: EffExp			::= PureExp;
+OriginalCall: EffExp;
 
 abstract Unary : PureExp ::= Operand:PureExp;
 

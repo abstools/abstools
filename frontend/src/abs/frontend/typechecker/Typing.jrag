@@ -87,8 +87,13 @@ aspect Typing {
     }
 
     eq SyncCall.getType() {  
-       return getCallType();
-   }
+        return getCallType();
+    }
+
+    eq OriginalCall.getType() {
+        // FIXME: look up current method, return its return type
+        return UnknownType.INSTANCE;
+    }
     
     syn lazy Type MethodSig.getType() {
         return getReturnType().getType();

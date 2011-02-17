@@ -192,6 +192,11 @@ aspect GenerateMaude {
         stream.print(") ; get( '.staticfuture ; '" + var + ") ");
         stream.print("; $free('.staticfuture) ");
     }
+    public void OriginalCall.generateMaudeAsStatement(
+        PrintStream stream, String var)
+    {
+        stream.print("original( '" + var + ") ");
+    }
 
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
