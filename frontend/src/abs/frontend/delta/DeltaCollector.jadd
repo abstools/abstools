@@ -17,7 +17,7 @@ aspect DeltaCollector {
             this.applyDelta(delta);
     }
     
-    public ArrayList<Delta> Model.getSortedDeltas(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public ArrayList<Delta> Model.getSortedDeltas(Product prod) {
 
         System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
 
@@ -26,12 +26,16 @@ aspect DeltaCollector {
         this.collectDeltas(alldeltas);
 
         // given a product, find the applicable deltas (and sort them)
-        HashMap<String, Delta> appdeltas = this.findApplicableDeltas(prod, alldeltas);
+        HashMap<String, Delta> appdeltas;
+        try {
+            appdeltas = this.findApplicableDeltas(prod, alldeltas);
+        } catch(WrongProgramArgumentException e) {
+            return new ArrayList<Delta>(); // shouldn't happen
+        }
         for (Delta delta : appdeltas.values())
             System.out.println(">>> applicable delta: " + delta.getName());
 
-        ArrayList<Delta> deltas = this.sortApplicableDeltas(appdeltas);
-        return deltas;
+        return sortApplicableDeltas(appdeltas);
     }    
 
 //    public ArrayList<String> Model.getSortedDeltaIDs(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {

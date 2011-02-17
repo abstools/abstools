@@ -89,6 +89,16 @@ aspect TypeResolution {
         return res;
     }
     
+    syn lazy Collection<Product> Model.getProducts() {
+        ArrayList<Product> res = new ArrayList<Product>();
+       	for (ModuleDecl mdecl : getModuleDecls()) {
+            for (Product p : mdecl.getProducts()) {
+               	res.add(p);
+            }
+        }
+        return res;
+    }
+
     syn lazy Block Model.getMainBlock() {
         for (CompilationUnit u : getCompilationUnits()) {
         	if (u.hasMainBlock())

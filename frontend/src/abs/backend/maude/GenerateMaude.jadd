@@ -29,11 +29,41 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
+        for (Product p : getProducts()) {
+            p.generateMaude(stream); // this generates the class only
+        }
         if (hasMainBlock()) getMainBlock().generateMaude(stream);
-        stream.println(".");
-        stream.println("\n--- Start the model with 'rew start .'");
+        stream.println(".\n");
+        stream.println("sort Product .");
+        stream.println("op deltas : Product -> DeltaList .");
+        stream.println("op mainclass : Product -> Cid .");
+        stream.println();
+        for (Product p: getProducts()) {
+            stream.println("op " + p.getName() + " : -> Product .");
+            stream.print("eq deltas(" + p.getName() + ") = ");
+            ArrayList<Delta> deltas = getSortedDeltas(p);
+            if (deltas.isEmpty()) {
+            	stream.print("noDelta ");
+            } else {
+                Collections.reverse(deltas);
+            	for (Delta d: deltas) {
+                    String name = d.getName();
+                    if (name.lastIndexOf('.') > -1) {
+                        name = name.substring(name.lastIndexOf('.') + 1);
+                    }
+            		stream.print("\"" + name + "\" ");
+            	}
+            }
+            stream.println(".");
+            stream.println("eq mainclass(" + p.getName() + ") = \".P" + p.getName() + "\" .");
+        }
+        stream.println();
+        stream.println("--- Start the main block with 'rew start .'");
+        stream.println("--- Start a product with 'rew start(Productname) .'");
         stream.println("op start : -> State .");
         stream.println("eq start = main(classes(noDelta), \".Start\", emp) .");
+        stream.println("op start : Product -> State .");
+        stream.println("eq start(P:Product) = main(classes(deltas(P:Product)), mainclass(P:Product), emp) .");
         stream.println("op start : DeltaList -> State .");
         stream.println("eq start(DeL) = main(classes(DeL), \".Start\", emp) .");
         stream.println("\nendm");
@@ -527,7 +557,8 @@ aspect GenerateMaude {
     
     public void VarDeclStmt.generateMaude(PrintStream stream) {
         // HACK FIXME: this should be an attribute
-        boolean inMainBlock = getParent().getParent() instanceof MainBlock;
+        boolean inMainBlock = getParent().getParent() instanceof MainBlock
+            || getParent().getParent().getParent() instanceof Product;
 
         VarDecl var = getVarDecl();
         if (inMainBlock) {
@@ -718,6 +749,37 @@ aspect GenerateMaude {
         stream.print("; $endscope ");
 	}
 	
+    public void Product.generateMaude(PrintStream stream) {
+        Block b = getMainBlock();
+        boolean inlist = false;
+        stream.println("\n\n< \".P" + getName() + "\" : Class | Deltas: DeL,");
+        stream.println("  Param: noVid,");
+        stream.print("  Att: ");
+        if (b.getNumVar() == 0) {
+            stream.print("noSubst");
+        } else {
+            inlist = false;
+            for (VarDecl var : b.getVars()) {
+                if (inlist) stream.print(", "); else inlist = true;
+                stream.print("'" + var.getName() + " |-> null ");
+            }
+        }
+        stream.print(",\n  Mtds: ");
+        stream.print("< \".init\" : Method | Param: noVid,\n");
+        stream.print("      Code: ");
+        inlist = false;
+        if (!inlist && b.getNumStmt() == 0) {
+            stream.print("return(null) ");
+        } else {
+            for (Stmt stmt : b.getStmts()) {
+                if (inlist) stream.print("; "); else inlist = true;
+                stmt.generateMaude(stream);
+            }
+            stream.print("; return(null) ");
+        }
+        stream.print(">,\n  Ocnt: 0 > ");
+    }
+    
     public void InitBlock.generateMaude(PrintStream stream,
                                         List<FieldDecl> fields,
                                         boolean isActiveClass) {
