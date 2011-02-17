@@ -12,14 +12,17 @@ aspect DeltaCollector {
 
         ArrayList<Delta> deltas = this.getSortedDeltas(prod);
 
+        System.out.print("applicable deltas: ");
+        for (Delta delta : deltas)
+            System.out.print(delta.getName() + " ");
+        System.out.println("");
+
         // apply the applicable deltas in the given order
         for (Delta delta : deltas)
             this.applyDelta(delta);
     }
     
     public ArrayList<Delta> Model.getSortedDeltas(Product prod) {
-
-        System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
 
         // first, collect ALL deltas
         HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
@@ -32,19 +35,10 @@ aspect DeltaCollector {
         } catch(WrongProgramArgumentException e) {
             return new ArrayList<Delta>(); // shouldn't happen
         }
-        for (Delta delta : appdeltas.values())
-            System.out.println(">>> applicable delta: " + delta.getName());
 
         return sortApplicableDeltas(appdeltas);
     }    
 
-//    public ArrayList<String> Model.getSortedDeltaIDs(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
-//        ArrayList<String> deltaids = new ArrayList<String>();
-//        for (Delta delta : this.getSortedDeltas(prod)) {
-//            deltaids.add(delta.getName());
-//        }
-//        return deltaids;
-//    }    
 
     /**************************************************************************
      * find a particular product given by its name
