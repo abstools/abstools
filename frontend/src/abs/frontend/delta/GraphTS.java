@@ -93,7 +93,20 @@ public class GraphTS {
         return sortedArray;
     }
 
-    public boolean topo() // toplogical sort
+    public ArrayList<Delta> getSortedDeltas() {
+        ArrayList<Delta> sortedDeltas = new ArrayList<Delta>();
+        
+        for (Object element : sortedArray)
+            sortedDeltas.add((Delta)element);
+ 
+        return sortedDeltas;       
+    }
+    
+    public boolean sort() {
+        return topo();
+    }
+    
+    public boolean topo() // topological sort
     {
 //    int orig_nVerts = numVerts;
 

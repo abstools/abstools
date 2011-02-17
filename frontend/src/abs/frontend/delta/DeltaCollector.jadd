@@ -10,21 +10,37 @@ aspect DeltaCollector {
         Product prod = this.findProduct(id);
         System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
 
-        // first, collect ALL deltas
-        HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
-        this.collectDeltas(alldeltas);
-//        for (String deltaid : alldeltas.keySet())
-//            System.out.println("collected delta: " + deltaid);
-
-        // given a product, find the applicable deltas (and sort them)
-        ArrayList<Delta> deltas = this.findApplicableDeltas(prod, alldeltas);
-        for (Delta delta : deltas)
-            System.out.println(">>> applicable delta: " + delta.getName());
+        ArrayList<Delta> deltas = this.getSortedDeltas(prod);
 
         // apply the applicable deltas in the given order
         for (Delta delta : deltas)
             this.applyDelta(delta);
     }
+    
+    public ArrayList<Delta> Model.getSortedDeltas(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+
+        System.out.println("configuring product: " + prod.moduleName() + "." + prod.getName());
+
+        // first, collect ALL deltas
+        HashMap<String, Delta> alldeltas = new HashMap<String, Delta>();
+        this.collectDeltas(alldeltas);
+
+        // given a product, find the applicable deltas (and sort them)
+        HashMap<String, Delta> appdeltas = this.findApplicableDeltas(prod, alldeltas);
+        for (Delta delta : appdeltas.values())
+            System.out.println(">>> applicable delta: " + delta.getName());
+
+        ArrayList<Delta> deltas = this.sortApplicableDeltas(appdeltas);
+        return deltas;
+    }    
+
+//    public ArrayList<String> Model.getSortedDeltaIDs(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+//        ArrayList<String> deltaids = new ArrayList<String>();
+//        for (Delta delta : this.getSortedDeltas(prod)) {
+//            deltaids.add(delta.getName());
+//        }
+//        return deltaids;
+//    }    
 
     /**************************************************************************
      * find a particular product given by its name
@@ -78,38 +94,23 @@ aspect DeltaCollector {
      *
      * TODO sort the applicable deltas according to partial order
      */
-    public ArrayList<Delta> Model.findApplicableDeltas(
+    public HashMap<String, Delta> Model.findApplicableDeltas(
             Product prod, 
             HashMap<String, Delta> alldeltas) throws WrongProgramArgumentException {
-   
-        ArrayList<Delta> deltas = new ArrayList<Delta>();
-        GraphTS g = new GraphTS(100);
+
+        HashMap<String, Delta> deltas = new HashMap<String, Delta>();
         
+        // collect applicable deltas
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ModuleDecl module : u.getModuleDecls()) {
-                String moduleid = module.getName();
                 if (module.hasProductLine()) {
                     ProductLine pl = module.getProductLine();
                     for (DeltaClause c : pl.getDeltaClauses()) {
-                        String deltaid = moduleid + "." + c.getDeltaspec().getName();
+                        String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
                         if (c.evaluateAppCond(prod.getFeatures())) {
                             if (alldeltas.containsKey(deltaid)) {
                                 Delta delta = alldeltas.get(deltaid);
-                                deltas.add(delta);
-                                // add vertex delta
-                                g.addVertex(delta);
-                                // for each thatdelta in "after" list:
-                                // add edge (delta, thatdelta)
-                                for (DeltaID otherid : c.getDeltaIDs()) {
-                                    if (alldeltas.containsKey(otherid.getName()))
-                                        try {
-                                            g.addEdge(delta, alldeltas.get(otherid.getName()));
-                                        } catch (VertexNotFoundException x) {
-                                            // TODO
-                                        }
-                                    else 
-                                        throw new WrongProgramArgumentException("Delta [" + otherid.getName() + "] is not declared");
-                                }    
+                                deltas.put(deltaid, delta);
                             } else
                                 throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
                         }
@@ -117,8 +118,44 @@ aspect DeltaCollector {
                 }
             }
         }
-        // TODO sort g;
         return deltas;
+    }
+    
+    public ArrayList<Delta> Model.sortApplicableDeltas(
+            HashMap<String, Delta> deltas) {
+        
+        // sort applicable deltas
+        GraphTS g = new GraphTS(deltas.values().toArray());
+
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (ModuleDecl module : u.getModuleDecls()) {
+                if (module.hasProductLine()) {
+                    ProductLine pl = module.getProductLine();
+                    for (DeltaClause c : pl.getDeltaClauses()) {
+                        String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
+                        if (deltas.containsKey(deltaid)) {
+                            Delta delta = deltas.get(deltaid);
+                            // for each afterdelta: add an edge (delta, afterdelta)
+                            for (DeltaID did : c.getDeltaIDs()) {
+                                String otherid = did.getName();
+                                if (deltas.containsKey(otherid)) {
+                                    Delta otherdelta = deltas.get(otherid);
+                                    try {
+                                        g.addEdge(delta, otherdelta);
+                                    } catch (VertexNotFoundException x) {
+                                        // FIXME
+                                        System.out.println("Exception caught: " + x);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        g.sort();
+        return g.getSortedDeltas();
     }
 
 

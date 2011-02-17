@@ -12,10 +12,13 @@ aspect ModuleName {
 
     inh String ProductLine.moduleName();
     eq ModuleDecl.getProductLine().moduleName() = this.getName();
+
+    inh String DeltaClause.moduleName();
+    eq ProductLine.getDeltaClause().moduleName() = this.moduleName();
 }
 
 
-aspect Qualified {
+aspect QualifiedName {
     
     // prepend the name of the module where this declaration occured
     public String Decl.qualifiedName() {
