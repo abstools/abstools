@@ -75,6 +75,8 @@ public class JavaJob extends Job {
 	private String debuggerArgsRandomSeed;
 	private boolean useInternalDebugger;
 	private boolean debuggerIsInDebugMode;
+
+   private SDEditWatchdog sdeWatchdogJob;
 	
 	
 	/**
@@ -647,34 +649,36 @@ public class JavaJob extends Job {
 		if (sdeditIsRunning(port))
 			return;
 		
-		ArrayList<String> args = buildSDEditCommand(port);
+		String[] args = buildSDEditCommand(port);
 		
-		Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
-		
-		File installdir = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
-		ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
-		pb.directory(new File(installdir.toString()));
+		ProcessBuilder pb = new ProcessBuilder(args);
 		sdeditProcess = pb.start();
 
-		Job watchdogJob = 
+		if (sdeWatchdogJob != null) {
+		   sdeWatchdogJob.cancel();
+		}
+		
+		sdeWatchdogJob = 
 			new SDEditWatchdog(this,"SDEdit running...", sdeditconsole, sdeditProcess, debugProcess);
 
-		watchdogJob.schedule();
+		sdeWatchdogJob.schedule();
 	}
 
-	private ArrayList<String> buildSDEditCommand(int port) {
+	private String[] buildSDEditCommand(int port) throws IOException {
+      Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
+      File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
+	   
 		ArrayList<String> args = new ArrayList<String>();
 		
 		args.add("java");
 		args.add("-classpath");
 		
-		StringBuilder sb = buildClasspath();
-		args.add(sb.toString());
+		args.add("bin"+File.pathSeparatorChar+jarFile.getAbsolutePath());
 		
 		args.add(SDE_MAIN_CLASS);
 		args.add("-s");
 		args.add(String.valueOf(port));
-		return args;
+		return args.toArray(new String[0]);
 	}
 
 	private boolean sdeditIsRunning(int port) {
@@ -689,35 +693,6 @@ public class JavaJob extends Job {
 			return false;
 		}
    }
-
-	private StringBuilder buildClasspath() {
-		ArrayList<String> libList = new ArrayList<String>();
-
-		libList.add("lib/commons-cli-1.1.jar");
-		libList.add("lib/freehep-export-2.1.1.jar");
-		libList.add("lib/freehep-graphics2d-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-emf-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-java-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-pdf-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-ps-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-svg-2.1.1.jar");
-		libList.add("lib/freehep-graphicsio-swf-2.1.1.jar");
-		libList.add("lib/freehep-io-2.0.2.jar");
-		libList.add("lib/freehep-swing-2.0.3.jar");
-		libList.add("lib/freehep-util-2.0.2.jar");
-		libList.add("lib/freehep-xml-2.1.1.jar");
-		libList.add("lib/openide-lookup-1.9-patched-1.0.jar");
-		
-		StringBuilder cp = new StringBuilder();
-		cp.append("bin");
-		for (String lib : libList) {
-			cp.append(File.pathSeparator);
-			cp.append(lib);
-		}
-		
-		return cp;
-	}
 
 	@Override
 	protected void canceling() {
