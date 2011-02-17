@@ -17,11 +17,11 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.debug.ui,
  org.junit,
  org.eclipse.ui.navigator.resources,
- eu.hatsproject.sdedit;bundle-version="0.0.0",
- eu.hatsproject.abs.compiler;bundle-version="0.0.0",
  org.eclipse.core.filesystem,
  org.eclipse.core.expressions,
- org.eclipse.jdt.debug.ui
+ org.eclipse.jdt.debug.ui,
+ eu.hatsproject.sdedit;bundle-version="0.0.0",
+ eu.hatsproject.abs.compiler;bundle-version="0.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
