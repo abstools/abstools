@@ -672,8 +672,9 @@ public class JavaJob extends Job {
 		
 		args.add("java");
 		args.add("-classpath");
-		
-		args.add("bin"+File.pathSeparatorChar+jarFile.getAbsolutePath());
+		String classpath = "bin"+File.pathSeparatorChar+jarFile.getAbsolutePath();
+      System.out.println("CLASSPATH: "+classpath);
+      args.add(classpath);
 		
 		args.add(SDE_MAIN_CLASS);
 		args.add("-s");

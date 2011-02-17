@@ -25,7 +25,7 @@
       <import plugin="org.eclipse.ui.views"/>
       <import plugin="org.eclipse.ui.navigator"/>
       <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
-      <import plugin="eu.hatsproject.sdedit" version="0.2.3" match="greaterOrEqual"/>
+      <import plugin="eu.hatsproject.sdedit" version="0.2.6" match="greaterOrEqual"/>
       <import plugin="org.eclipse.debug.core"/>
       <import plugin="org.eclipse.debug.ui"/>
       <import plugin="org.junit"/>

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <project name="ABS Update Site" default="compile" basedir=".">
+    <property name="revision.prefix" value="1.0.1" />
 
 	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
@@ -115,7 +116,7 @@
 		<svn failonerror="false" javahl="false">
 			<wcVersion path="${basedir}" />
 		</svn>
-		<condition property="plugin.version" value="1.0.0.${revision.max}" else="">
+		<condition property="plugin.version" value="${revision.prefix}.${revision.max}" else="">
 			<isset property="revision.max" />
 		</condition>
 	</target>
