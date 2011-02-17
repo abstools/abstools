@@ -326,14 +326,16 @@ public class JavaJob extends Job {
 		String moduleName = null;
 		String info = null;
 
-		//Search for a main file in the model of the current abs file
-		if(UtilityFunctions.isABSFile(currentFile)){
-		   searchForMainInModel(currentFile, project, moduleName, mainFile);
-		} else if(currentFile.getName().equals("Main.java")){
-		   if (currentFile.getLocation().isAbsolute()) {
-		      mainFile = currentFile.getLocation().toFile();
-		   } else {
-		      mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
+		if (currentFile != null) {
+		   //Search for a main file in the model of the current abs file
+		   if(UtilityFunctions.isABSFile(currentFile)){
+		      searchForMainInModel(currentFile, project, moduleName, mainFile);
+		   } else if(currentFile.getName().equals("Main.java")){
+		      if (currentFile.getLocation().isAbsolute()) {
+		         mainFile = currentFile.getLocation().toFile();
+		      } else {
+		         mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
+		      }
 		   }
 		}
 
