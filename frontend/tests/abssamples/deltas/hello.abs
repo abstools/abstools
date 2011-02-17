@@ -19,7 +19,8 @@ delta Rpt (Int times) {
             String result = "";
             Int i = 0;
             while (i < times) {
-                result = result + original();
+                String orig = original();
+                result = result + orig;
                 i = i + 1;
             }
             return result;
