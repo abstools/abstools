@@ -57,7 +57,7 @@ public class Main {
                 dump = true;
             else if (arg.equals("-v"))
                 verbose = true;
-            else if (arg.startsWith("-fullabs=")) {
+            else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
             }
@@ -213,8 +213,7 @@ public class Main {
                 + " [options] <absfiles>\n\n" 
                 + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
                 + "  -v             verbose output\n" 
-                + "  -fullabs=<product>\n"
-                + "                 full ABS; apply deltas for the given product\n"
+                + "  -product=<PID> build given product by applying deltas (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
                 + "  -loctypes      enable location type checking\n"
