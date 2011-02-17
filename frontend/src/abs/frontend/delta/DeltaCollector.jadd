@@ -219,51 +219,122 @@ aspect DeltaCollector {
     }
 
     // collect the substitution to be applied in a DeltaDecl given the parameters and the feature selection
-    public Map<DeltaParamDecl,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats)
+    public HashMap<String,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats)
     throws WrongProgramArgumentException
     {
-        HashMap<DeltaParamDecl,Value> res = new HashMap<DeltaParamDecl,Value>();
+        HashMap<String,Value> res = new HashMap<String,Value>();
         for (int i = 0; i < dparams.getNumChild(); i++) {
-            res.put(getParam(i),dparams.getChild(i).calcValue(feats));
+            res.put(getParam(i).getName(),dparams.getChild(i).calcValue(feats));
         }
         return res;
     }
 
+    abstract public String DeltaParamDecl.getName();
+    public String DeltaFieldParam.getName() {
+        return getParamDecl().getName();
+    }
+
+    public DeltaDecl DeltaDecl.substitute(List<Deltaparam> dparams, List<Feature> feats)
+    throws WrongProgramArgumentException
+    {
+        DeltaDecl d;
+        try {
+            d = this.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            d = this;
+        }
+        d.applySubstitution(d.getSubstitution(dparams,feats));
+        return d;
+    }
+
     // apply a substitution to DeltaDecl
-    public void DeltaDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    public void DeltaDecl.applySubstitution(HashMap<String,Value> subst) {
         for (ClassModifier d : getClassModifiers())
             d.applySubstitution(subst);
     }
 
-    abstract public void ClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst);
-    public void ModifyClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
-        for (Modifier m : getModifiers())
-            m.applySubstitution(subst);
+    abstract public void ClassModifier.applySubstitution(HashMap<String,Value> subst);
+    public void ModifyClassModifier.applySubstitution(HashMap<String,Value> subst) {
+        for (Modifier m : getModifiers()) m.applySubstitution(subst);
     }
-    public void AddClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    public void AddClassModifier.applySubstitution(HashMap<String,Value> subst) {
         getClassDecl().applySubstitution(subst);
     }
-    public void RemoveClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+    public void RemoveClassModifier.applySubstitution(HashMap<String,Value> subst) {}
 
-    abstract public void Modifier.applySubstitution(Map<DeltaParamDecl,Value> subst);
-    public void AddFieldModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    abstract public void Modifier.applySubstitution(HashMap<String,Value> subst);
+    public void AddFieldModifier.applySubstitution(HashMap<String,Value> subst) {
         getFieldDecl().applySubstitution(subst);
     }
-    public void RemoveFieldModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    public void RemoveFieldModifier.applySubstitution(HashMap<String,Value> subst) {
         getFieldDecl().applySubstitution(subst);
     }
-    public void AddMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    public void AddMethodModifier.applySubstitution(HashMap<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
-    public void ModifyMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+    public void ModifyMethodModifier.applySubstitution(HashMap<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
-    public void RemoveMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+    public void RemoveMethodModifier.applySubstitution(HashMap<String,Value> subst) {}
 
-    // to do
-    public void ClassDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
-    public void FieldDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
-    public void MethodImpl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+    public void ClassDecl.applySubstitution(HashMap<String,Value> subst) {
+        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+        for (ParamDecl p : getParams())   p.updateSubstitution(subst2);
+        if (hasInitBlock())  getInitBlock().applySubstitution(subst2);
+        for (FieldDecl f : getFields())   f.applySubstitution(subst2);
+        for (MethodImpl m : getMethods()) m.applySubstitution(subst2);
+    }
+    public void FieldDecl.applySubstitution(HashMap<String,Value> subst) {
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
+        if (hasInitExp()) getInitExp().applySubstitution(subst);
+        for (Annotation a : getAnnotations()) a.applySubstitution(subst);
+    }
+    public void VarDecl.applySubstitution(HashMap<String,Value> subst) {
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
+        if (hasInitExp()) getInitExp().applySubstitution(subst);
+    }
+    public void ParamDecl.updateSubstitution(HashMap<String,Value> subst) {
+        subst.remove(getName());
+        for (Annotation a : getAnnotations()) a.applySubstitution(subst);
+    }
+    public void MethodImpl.applySubstitution(HashMap<String,Value> subst) {
+        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+        getMethodSig().updateSubstitution(subst2);
+        getBlock().applySubstitution(subst2);
+    }
+    public void MethodSig.updateSubstitution(HashMap<String,Value> subst) {
+        for (ParamDecl p : getParams()) p.updateSubstitution(subst);
+    }
+
+    // teh actual substitution!
+    public void VarUse.applySubstitution(HashMap<String,Value> subst) {
+        if (subst.containsKey(getName())) {
+            Value v = subst.get(getName());
+            ASTNode p = getParent();
+            int i = p.getIndexOfChild(this);
+            p.setChild(v.calcExpr(),i);
+        }
+    }
+    abstract public PureExp Value.calcExpr();
+    public PureExp IntVal.calcExpr() {
+        return new IntLiteral(""+getValue());
+    }
+    public PureExp BoolVal.calcExpr() {
+        if (getValue())
+            return new DataConstructorExp("True", new List());
+        else
+            return new DataConstructorExp("False", new List());
+    }
+
+    // used to go down Blocks, Stmts, Exps
+    public void ASTNode.applySubstitution(HashMap<String,Value> subst) {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).applySubstitution(subst);
+        }
+    }
 
 
 
