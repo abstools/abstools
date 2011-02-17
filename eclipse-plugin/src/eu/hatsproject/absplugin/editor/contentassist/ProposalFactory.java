@@ -6,7 +6,7 @@ import static eu.hatsproject.absplugin.util.Images.getImageForASTNode;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getASTNodeOfOffset;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getSuperOfASTNode;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.hasABSFileExtension;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class ProposalFactory{
 				final IncrementalModelBuilder builder,
 				IResource resource) throws IOException,
 				CoreException, NoModelException {
-			if (hasABSFileExtension(resource)) {
+			if (isABSFile(resource)) {
 				IFile visitedfile = (IFile) resource;
 				CompilationUnit cu = parseUnit(visitedfile.getLocation().toFile(),
 						null, new InputStreamReader(visitedfile.getContents()), true, true);
@@ -104,7 +104,7 @@ public class ProposalFactory{
 					@Override
 					public boolean visit(IResource resource) throws CoreException {
 						try{
-							if(hasABSFileExtension(resource)){
+							if(isABSFile(resource)){
 								parseABSFile(builder, resource);
 							}
 						} catch(IOException ex){

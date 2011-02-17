@@ -211,10 +211,13 @@ public class AbsNature implements IProjectNature {
 	 * @throws CoreException @{@link IResource#deleteMarkers(String, boolean, int)} 
 	 */
 	public static void parseABSFile(IResource resource, IncrementalModelBuilder builder, boolean withincomplete) throws CoreException {
-		if (hasABSFileExtension(resource)) {
+		if (isABSFile(resource)) {
 			IFile file = (IFile) resource;
 			file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO);
 			try {
+			   if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
+			      file.refreshLocal(IResource.DEPTH_ZERO, null);
+			   }
 				CompilationUnit cu = abs.frontend.parser.Main.parseUnit(file.getLocation().toFile(), null, new InputStreamReader(file.getContents()), true, withincomplete);
 				cu.setName(file.getLocation().toFile().getAbsolutePath());
 				builder.setCompilationUnit(cu);

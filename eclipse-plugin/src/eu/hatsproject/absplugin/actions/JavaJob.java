@@ -3,7 +3,7 @@ package eu.hatsproject.absplugin.actions;
 import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.hasABSFileExtension;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -326,17 +326,15 @@ public class JavaJob extends Job {
 		String moduleName = null;
 		String info = null;
 
-		if(currentFile !=null){
-			//Search for a main file in the model of the current abs file
-			if(hasABSFileExtension(currentFile)){
-				searchForMainInModel(currentFile, project, moduleName, mainFile);
-			} else if(currentFile.getName().equals("Main.java")){
-				if (currentFile.getLocation().isAbsolute()) {
-					mainFile = currentFile.getLocation().toFile();
-				} else {
-					mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
-				}
-			}
+		//Search for a main file in the model of the current abs file
+		if(UtilityFunctions.isABSFile(currentFile)){
+		   searchForMainInModel(currentFile, project, moduleName, mainFile);
+		} else if(currentFile.getName().equals("Main.java")){
+		   if (currentFile.getLocation().isAbsolute()) {
+		      mainFile = currentFile.getLocation().toFile();
+		   } else {
+		      mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
+		   }
 		}
 
 		//Search for the main file if previous searching was not successful

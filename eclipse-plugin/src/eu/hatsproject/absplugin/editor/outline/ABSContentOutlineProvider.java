@@ -5,7 +5,7 @@ import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isI
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isStandardLibImport;
 import static eu.hatsproject.absplugin.util.Constants.ABS_FILE_EXTENSION;
 import static eu.hatsproject.absplugin.util.Constants.EMPTY_OBJECT_ARRAY;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.hasABSFileExtension;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 
 import java.util.ArrayList;
 
@@ -284,7 +284,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	}
 	
 	private boolean hasChildren(IFile file){
-		if(!hasABSFileExtension(file))
+		if(!UtilityFunctions.hasABSFileExtension(file))
 			return false;
 		AbsNature nature = UtilityFunctions.getAbsNature(file.getProject());
 		if(nature != null){

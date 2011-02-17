@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.Path;
 
 import static eu.hatsproject.absplugin.util.CoreControlUnit.notifyBuildListener;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.hasABSFileExtension;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 
 /**
  * Builds the abs files in abs projects. Automated building has to be activated for all abs files to be parsed
@@ -76,7 +76,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		@Override
 		public boolean visit(IResource resource) throws CoreException{
 			AbsNature nature = getAbsNature(resource.getProject());
-			if(hasABSFileExtension(resource)){
+			if(isABSFile(resource)){
 				nature.parseABSFile(resource);
 				changedFiles.add(resource.getFullPath().toString());
 			}

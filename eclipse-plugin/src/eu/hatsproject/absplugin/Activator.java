@@ -95,7 +95,7 @@ public class Activator extends AbstractUIPlugin {
 					project = r.getResource().getProject();
 					try {
 						if(project.isAccessible() && project.hasNature(NATURE_ID)){
-							if (UtilityFunctions.hasABSFileExtension(r.getResource()))
+							if (UtilityFunctions.isABSFile(r.getResource()))
 								absFileWasAdded = true;
 						}
 					} catch (CoreException e) {

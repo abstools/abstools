@@ -578,7 +578,7 @@ public class UtilityFunctions {
 		return false;
 	}
 	
-	public static boolean hasABSFileExtension(IResource file){
+	public static boolean isABSFile(IResource file){
 		if (file != null && file instanceof IFile){
 			return hasABSFileExtension((IFile)file);
 		}
