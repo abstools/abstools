@@ -204,7 +204,8 @@ public class GraphTS {
 //    g.addEdge(0,1); g.addEdge(0,2);  // a <- b c
 //    g.addEdge(1,2); g.addEdge(1,3);  // b <- c d
 //    g.addEdge("d","c");              // d <- c
-//
+//    //result yields a-b-d-c
+
 //    boolean success = g.topo();
 //
 //    System.out.println("Topological sort: "+success);

@@ -229,11 +229,17 @@ aspect DeltaCollector {
 //    }
 
     // undested!
+    // calculate the concrete value of a Deltaparam given a feature selection.
     abstract public Value Deltaparam.calcValue(List<Feature> feats)
-        throws WrongProgramArgumentException;
+    throws WrongProgramArgumentException;
+
     public Value Const.calcValue(List<Feature> feats)  {
-        return getValue();
+        try{
+            return getValue().clone();
+        }
+        catch (CloneNotSupportedException e) { return getValue(); }
     }
+
     public Value CID.calcValue(List<Feature> feats) {
         for (Feature f : feats) {
             if (f.getName().equals(getName()))
@@ -241,14 +247,69 @@ aspect DeltaCollector {
         }
         return new BoolVal(false);
     }
-    public Value FIDAID.calcValue(List<Feature> feats) throws WrongProgramArgumentException {
+
+    public Value FIDAID.calcValue(List<Feature> feats)
+    throws WrongProgramArgumentException {
         for (Feature f : feats) {
             if (f.getName().equals(getFeatName())) // found feature
                 for (AttrAssignment attr : f.getAttrAssignments()) {
                     if (attr.getName().equals(getAttrName()))   // found attribute
-                        return attr.getValue();
+                        try{
+                            return attr.getValue().clone();
+                        }
+                        catch (CloneNotSupportedException e) { return attr.getValue(); }
                 }
         }
         throw new WrongProgramArgumentException("Argument " + getFeatName() + "."+ getAttrName() +" not found.");
     }
+
+    // collect the substitution to be applied in a DeltaDecl given the parameters and the feature selection
+    public Map<DeltaParamDecl,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats)
+    throws WrongProgramArgumentException
+    {
+        HashMap<DeltaParamDecl,Value> res = new HashMap<DeltaParamDecl,Value>();
+        for (int i = 0; i < dparams.getNumChild(); i++) {
+            res.put(getParam(i),dparams.getChild(i).calcValue(feats));
+        }
+        return res;
+    }
+
+    // apply a substitution to DeltaDecl
+    public void DeltaDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        for (ClassModifier d : getClassModifiers())
+            d.applySubstitution(subst);
+    }
+
+    abstract public void ClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst);
+    public void ModifyClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        for (Modifier m : getModifiers())
+            m.applySubstitution(subst);
+    }
+    public void AddClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        getClassDecl().applySubstitution(subst);
+    }
+    public void RemoveClassModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+
+    abstract public void Modifier.applySubstitution(Map<DeltaParamDecl,Value> subst);
+    public void AddFieldModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        getFieldDecl().applySubstitution(subst);
+    }
+    public void RemoveFieldModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        getFieldDecl().applySubstitution(subst);
+    }
+    public void AddMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        getMethodImpl().applySubstitution(subst);
+    }
+    public void ModifyMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {
+        getMethodImpl().applySubstitution(subst);
+    }
+    public void RemoveMethodModifier.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+
+    // to do
+    public void ClassDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+    public void FieldDecl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+    public void MethodImpl.applySubstitution(Map<DeltaParamDecl,Value> subst) {}
+
+
+
 }
