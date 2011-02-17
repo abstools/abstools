@@ -14,7 +14,7 @@ aspect DeltaCollector {
 
         System.out.print("applicable deltas: ");
         for (Delta delta : deltas)
-            System.out.print(delta.getName() + " ");
+            System.out.print(delta.getName() + ", ");
         System.out.println("");
 
         // apply the applicable deltas in the given order
@@ -36,7 +36,7 @@ aspect DeltaCollector {
             return new ArrayList<Delta>(); // shouldn't happen
         }
 
-        return sortApplicableDeltas(appdeltas);
+        return sortDeltas(appdeltas);
     }    
 
 
@@ -90,7 +90,6 @@ aspect DeltaCollector {
      * Evaluate each delta clause to find the applicable deltas
      * i.e. test each application condition in the context of the features which are ON in the given product
      *
-     * TODO sort the applicable deltas according to partial order
      */
     public HashMap<String, Delta> Model.findApplicableDeltas(
             Product prod, 
@@ -119,12 +118,16 @@ aspect DeltaCollector {
         return deltas;
     }
     
-    public ArrayList<Delta> Model.sortApplicableDeltas(
+    /**************************************************************************
+     * Sort the given deltas using the partial orders defined in DeltaClauses
+     * 
+     */
+    public ArrayList<Delta> Model.sortDeltas(
             HashMap<String, Delta> deltas) {
         
-        // sort applicable deltas
+        // sort deltas
         GraphTS g = new GraphTS(deltas.values().toArray());
-
+        
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (ModuleDecl module : u.getModuleDecls()) {
                 if (module.hasProductLine()) {
@@ -135,14 +138,13 @@ aspect DeltaCollector {
                             Delta delta = deltas.get(deltaid);
                             // for each afterdelta: add an edge (delta, afterdelta)
                             for (DeltaID did : c.getDeltaIDs()) {
-                                String otherid = did.getName();
+                                String otherid = c.moduleName() + "." + did.getName();
                                 if (deltas.containsKey(otherid)) {
                                     Delta otherdelta = deltas.get(otherid);
                                     try {
-                                        g.addEdge(delta, otherdelta);
-                                    } catch (VertexNotFoundException x) {
-                                        // FIXME
-                                        System.out.println("Exception caught: " + x);
+                                        g.addEdge(otherdelta, delta);
+                                    } catch (VertexNotFoundException e) {
+                                        assert false; // should never reach this point
                                     }
                                 }
                             }
@@ -151,7 +153,6 @@ aspect DeltaCollector {
                 }
             }
         }
-
         g.sort();
         return g.getSortedDeltas();
     }
