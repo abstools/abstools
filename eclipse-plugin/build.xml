@@ -1,11 +1,9 @@
 <?xml version="1.0"?>
 <project name="ABS Update Site" default="compile" basedir=".">
 
-
 	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
 	<property name="sdedit.dir" location="../sdedit-for-abs" />
-	<property name="eclipse.home" location="/Applications/eclipse" />
 	<property name="src.dir" value="${basedir}/src" />
 	<property name="build.dir" value="${basedir}/bin" />
 	<property name="dist.dir" value="${basedir}/dist" />
@@ -19,10 +17,41 @@
 			<pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
 		</classpath>
 	</taskdef>
+	
+	<target name="init">
+	   <mkdir dir="${dist.dir}" />
+	   <mkdir dir="${build.dir}" />
+	    <propertyfile file="eclipsehome.properties">
+	    	<entry key="eclipse.home" default="PLEASE SPECIFY"/>
+	    </propertyfile>
+		
+        <property file="eclipsehome.properties" />
 
+        <condition property="eclipse.home.notset">
+		  <equals arg1="${eclipse.home}" arg2="PLEASE SPECIFY"/>
+		</condition>
+	    <antcall target="exitIfEclipseHomeNotSet"></antcall>
+	</target>
+    
+	<target name="exitIfEclipseHomeNotSet" if="eclipse.home.notset">
+		<fail message="Please specify the Eclipse home in the eclipsehome.properties file"/>
+    </target>
+        
 
-
-	<target name="publish-helper">
+	
+	<!-- Note in order to execute this task it is required that rsync is installed
+	     and that the necessary ssh-key is installed on the system.
+	     Ask Richard Bubel to get a key if you want to be deploy the update site -->
+	<target name="deploy-update-site" depends="generate-update-site" 
+	description="deploys the update site to the official HATS update site">
+	  <exec executable="rsync">
+	    <arg value="-rcv"/>
+	    <arg value="${update-site-dir}/*"/>
+	    <arg value="hatsbuilder@repos.hats-project.eu:public_html/tools/update-site"/>
+	  </exec>
+	</target>
+	
+	<target name="generate-update-site-helper" depends="init">
 		<mkdir dir="${update-site.dir}"/>
 		<copy todir="${update-site.dir}" failonerror="true" overwrite="true">
 			<fileset dir="${dist.dir}" />
@@ -45,7 +74,7 @@
 		</eclipse.publish.featuresAndBundles>
 	</target>
 
-	<target name="publish">
+	<target name="generate-update-site" depends="init">
 		<java classname="org.eclipse.core.launcher.Main" fork="true">
 			<classpath>
 				<fileset dir="${eclipse.home}/plugins"
@@ -55,7 +84,7 @@
 			<arg value="org.eclipse.ant.core.antRunner" />
 			<arg value="-buildfile" />
 			<arg value="build.xml" />
-			<arg value="publish-helper" />
+			<arg value="generate-update-site-helper" />
 		</java>
 	</target>
 
@@ -66,7 +95,7 @@
 		</delete>
 	</target>
 
-	<target name="compile" depends="" description="Compiles all java files in the source directory.">
+	<target name="compile" depends="init" description="Compiles all java files in the source directory.">
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off">
 			<classpath>
