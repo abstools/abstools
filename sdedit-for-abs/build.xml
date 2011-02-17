@@ -162,7 +162,6 @@
 		<copy todir="${basedir}/${plugin.name}_${plugin.version}" failonerror="true" overwrite="true">
 			<fileset dir="${basedir}">
 				<include name="META-INF/"/>
-				<include name="lib/"/>
 				<include name="feature.xml"/>
 			</fileset>
 			<fileset dir="${build}" />
@@ -178,6 +177,21 @@
 	            />
 		<zip destfile="${dist.dir}/plugins/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
 			<exclude name="feature.xml" />
+			<zipfileset src="${lib}/commons-cli-1.1.jar" />
+			<zipfileset src="${lib}/freehep-export-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphics2d-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-emf-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-java-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-pdf-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-ps-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-svg-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-graphicsio-swf-2.1.1.jar" />
+			<zipfileset src="${lib}/freehep-io-2.0.2.jar" />
+			<zipfileset src="${lib}/freehep-swing-2.0.3.jar" />
+			<zipfileset src="${lib}/freehep-util-2.0.2.jar" />
+			<zipfileset src="${lib}/freehep-xml-2.1.1.jar" />
+			<zipfileset src="${lib}/openide-lookup-1.9-patched-1.0.jar" />
 		</zip>
 		<replace file="${basedir}/${plugin.name}_${plugin.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${plugin.version}"/>
 		<zip destfile="${dist.dir}/features/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
