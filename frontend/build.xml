@@ -2,6 +2,8 @@
 <project name="ABS Frontend" default="compile" basedir=".">
 	<!-- $Id$ -->
 
+	<property name="revision.prefix" value="1.0.1" />
+
 	<property environment="env" />
 	<!-- include environment variables -->
 
@@ -172,7 +174,7 @@
 		<svn failonerror="false" javahl="false">
 			<wcVersion path="${basedir}" />
 		</svn>
-		<condition property="frontend.version" value="1.0.0.${revision.max}" else="">
+		<condition property="frontend.version" value="${revision.prefix}.${revision.max}" else="">
 			<isset property="revision.max" />
 		</condition>
 	</target>

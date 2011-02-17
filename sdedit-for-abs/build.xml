@@ -6,6 +6,7 @@
 -->
 <project basedir="." default="about" name="sdedit ant script">
 	<description>Quick Sequence Diagram Editor</description>
+	<property name="revision.prefix" value="0.2.6" />
 	<property location="src" name="src"/>
 	<property location="bin" name="build"/>
 	<property location="dist" name="jar"/>
@@ -13,8 +14,7 @@
 	<property location="sdedit.jar" name="jarfile"/>
 	<property name="mainclass" value="net.sf.sdedit.Main"/>
 	<property name="plugin.name" value="eu.hatsproject.sdedit" />
-	<property name="revision.prefix" value="0.2.4" />
-	<property name="dist.dir" value="${basedir}/dist" />
+	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="frontend.dir" location="../frontend" />
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
@@ -163,10 +163,9 @@
 			<fileset dir="${basedir}">
 				<include name="META-INF/"/>
 				<include name="feature.xml"/>
+                <include name="lib/**"/>
 			</fileset>
 			<fileset dir="${build}" />
-			<!-- <fileset dir="icons/" /> -->
-			<!-- <include name="abs/"/> -->
 		</copy>
 		<manifest file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF" mode="update">
 			<attribute name="Bundle-Version" value="${plugin.version}"/>
@@ -177,26 +176,11 @@
 	            />
 		<zip destfile="${dist.dir}/plugins/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
 			<exclude name="feature.xml" />
-			<zipfileset src="${lib}/commons-cli-1.1.jar" />
-			<zipfileset src="${lib}/freehep-export-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphics2d-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-emf-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-java-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-pdf-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-ps-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-svg-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-graphicsio-swf-2.1.1.jar" />
-			<zipfileset src="${lib}/freehep-io-2.0.2.jar" />
-			<zipfileset src="${lib}/freehep-swing-2.0.3.jar" />
-			<zipfileset src="${lib}/freehep-util-2.0.2.jar" />
-			<zipfileset src="${lib}/freehep-xml-2.1.1.jar" />
-			<zipfileset src="${lib}/openide-lookup-1.9-patched-1.0.jar" />
 		</zip>
 		<replace file="${basedir}/${plugin.name}_${plugin.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${plugin.version}"/>
 		<zip destfile="${dist.dir}/features/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
 			<include name="feature.xml" />
 		</zip>
-		<delete dir="${basedir}/${plugin.name}_${plugin.version}"/>
+		<!--  <delete dir="${basedir}/${plugin.name}_${plugin.version}"/> -->
 	</target>
 </project>
