@@ -815,7 +815,7 @@ List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
     ;
 
-Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l RPAREN block.b
+Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN block.b
     {: return new Product(id, l, b); :} ;
 
 
