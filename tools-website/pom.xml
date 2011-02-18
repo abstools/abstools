@@ -79,7 +79,7 @@
             </goals>
             <configuration>
               <target name = "frontend-dist">
-                <ant antfile="../ABSFrontend/build.xml" useNativeBasedir="true" target="dist">
+                <ant antfile="../ABSFrontend/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
                   <property name="target.jar" value="${basedir}/src/site/resources/absfrontend.jar" /> 
                 </ant>
               </target>
