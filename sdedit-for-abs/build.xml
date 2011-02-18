@@ -16,6 +16,7 @@
 	<property name="plugin.name" value="eu.hatsproject.sdedit" />
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="frontend.dir" location="../frontend" />
+	
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
 		<classpath>
@@ -165,16 +166,22 @@
 		</delete>
 	</target>
 
+	<target name="create-sdedit-jar" >
+        <jar jarfile="${jarfile}">
+            <fileset dir="${build}" />
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value="net.sf.sdedit.Main" />
+                <attribute name="Class-Path" value="${lib.project.manifest.classpath}" />
+            </manifest>
+        </jar>
+	</target>
+	
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
-		<mkdir dir="${basedir}/${plugin.name}_${plugin.version}" />
-		<jar jarfile="${basedir}/${plugin.name}_${plugin.version}/sdedit.jar">
-			<fileset dir="${build}" />
-			<manifest>
-				<attribute name="Built-By" value="${user.name}"/>
-				<attribute name="Main-Class" value="net.sf.sdedit.Main" />
-				<attribute name="Class-Path" value="${lib.project.manifest.classpath}" />
-			</manifest>
-		</jar>
+        <mkdir dir="${basedir}/${plugin.name}_${plugin.version}" />
+		<antcall target="create-sdedit-jar">
+	        <param name="jarfile" location="${basedir}/${plugin.name}_${plugin.version}/sdedit.jar" />
+		</antcall>				
 		<copy todir="${basedir}/${plugin.name}_${plugin.version}" failonerror="true" overwrite="true">
 			<fileset dir="${basedir}">
 				<include name="META-INF/"/>
