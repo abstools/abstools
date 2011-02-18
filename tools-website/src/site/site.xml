@@ -13,9 +13,9 @@
   </bannerRight>
   
   <body>
-    <menu name="Overview">
-      <item name="Introduction" href="overview.html" />
-      <item name="Getting Started" href="gettingstarted.html" />
+    <menu name="Welcome">
+      <item name="Introduction" href="index.html" />
+<!--      <item name="Getting Started" href="gettingstarted.html" /> -->
     </menu>
 
 <!--

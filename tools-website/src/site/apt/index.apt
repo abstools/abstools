@@ -4,9 +4,13 @@
      -------
      -------
 
-Welcome to the ABS Tools web site
+The ABS Tool Suite
 
-  ABS is a behavioral specification language to precisely model
-  software systems. This site contains information about the
-  tools for ABS.
+  This site contains information about the ABS tools suite.
+  The Abstract Behavioral Specification Language (ABS) is a concurrent
+  object-oriented modeling language that features functional data-types.
+  The current language specification is available as a {{{./abslangspec.pdf}PDF file}}.
+
+  The best way to get started is to {{{./eclipseplugin/installation.html}install}} the ABS Eclipse Plug-In. It is also possible to {{{./absfrontend.jar}download}} the ABS command-line tools.
+
 
