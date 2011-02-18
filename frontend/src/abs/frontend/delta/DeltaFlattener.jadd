@@ -4,8 +4,12 @@ import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
 aspect Flattener {
-
-    // configure a product
+    /* Configure a product
+     * 
+     * This is the top level method, which does everything from
+     * finding the features of a given product, finding the sequence of 
+     * associated deltas, and applying them.
+     */
     public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
         System.out.println("configuring product: " + prod.qualifiedName());
@@ -18,12 +22,12 @@ aspect Flattener {
         System.out.println("");
 
         // TODO resolve original() calls
-        for (DeltaDecl delta : deltas)
-            ; // this.resolveOriginalCall(delta);
+        this.resolveOriginalCalls(deltas);
         
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
+        
     }
     
     //propagate
@@ -72,7 +76,7 @@ aspect Flattener {
     }
 
     public void AddClassModifier.applyTo(ModuleDecl md) {
-        md.getDecls().addChild(this.getClassDecl().copy());
+        md.getDecls().addChild(this.getClassDecl().fullCopy());
     }
 
     public void ModifyClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
@@ -124,7 +128,7 @@ aspect Flattener {
     }
 
     public void AddMethodModifier.applyTo(ClassDecl cd) {
-        cd.getMethods().addChild(this.getMethodImpl().copy());
+        cd.addMethod(this.getMethodImpl().fullCopy());
     }
 
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
@@ -141,7 +145,7 @@ aspect Flattener {
         }
         if (found >= 0)
             // replace MethodImpl
-            cd.getMethods().setChild(this.getMethodImpl().copy(), found);
+            cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
         else
             throw new ASTNodeNotFoundException(cd, mysig);
     }
@@ -159,12 +163,12 @@ aspect Flattener {
             }
         }
         if (found >= 0)
-            cd.getFields().setChild(this.getFieldDecl().copy(), found);
+            cd.getFields().setChild(this.getFieldDecl().fullCopy(), found);
         else
             throw new ASTNodeNotFoundException(cd, myfield);
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
-        cd.getFields().addChild(this.getFieldDecl().copy());
+        cd.addField(this.getFieldDecl().fullCopy());
     }
 }
