@@ -2,7 +2,7 @@
 <project name="ABS Frontend" default="compile" basedir=".">
 	<!-- $Id$ -->
 
-	<property name="revision.prefix" value="1.0.1" />
+	<property name="revision.prefix" value="1.0.2" />
 
 	<property environment="env" />
 	<!-- include environment variables -->
