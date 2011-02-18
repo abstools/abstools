@@ -477,29 +477,29 @@ aspect GenerateMaude {
         boolean inlist = false;
         for (Modifier f : getModifiers()) {
             if (inlist) stream.print(", "); else inlist = true;
-            f.generateMaude(stream);
+            f.generateMaude(stream, getName());
         }
     }
 
-    public abstract void Modifier.generateMaude(PrintStream stream);
-    public void AddMethodModifier.generateMaude(PrintStream stream) {
-        stream.print("addM(\"" + getMethodImpl().getMethodSig().getName() + "\", ");
+    public abstract void Modifier.generateMaude(PrintStream stream, String className);
+    public void AddMethodModifier.generateMaude(PrintStream stream, String className) {
+        stream.print("addM(\"" + className + "\", ");
         getMethodImpl().generateMaude(stream);
         stream.println(") ");
     }
-    public void ModifyMethodModifier.generateMaude(PrintStream stream) {
-        stream.print("addM(\"" + getMethodImpl().getMethodSig().getName() + "\", ");
+    public void ModifyMethodModifier.generateMaude(PrintStream stream, String className) {
+        stream.print("addM(\"" + className + "\", ");
         getMethodImpl().generateMaude(stream);
         stream.println(") ");
     }
-    public void RemoveMethodModifier.generateMaude(PrintStream stream) {
-        stream.print("removeM(\"" + getMethodSig().getName() + "\", ");
+    public void RemoveMethodModifier.generateMaude(PrintStream stream, String className) {
+        stream.print("removeM(\"" + className + "\", ");
         stream.println("\"" + getMethodSig().getName() + "\") ");
     }
-    public void AddFieldModifier.generateMaude(PrintStream stream) {
+    public void AddFieldModifier.generateMaude(PrintStream stream, String className) {
         stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
     }
-    public void RemoveFieldModifier.generateMaude(PrintStream stream) {
+    public void RemoveFieldModifier.generateMaude(PrintStream stream, String className) {
         stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
     }
 
