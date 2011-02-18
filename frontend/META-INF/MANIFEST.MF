@@ -16,6 +16,7 @@ Bundle-ClassPath: lib/antlr-3.2.jar,
  .,
  bin,
  lib/jastadd2.jar
+Eclipse-BundleShape: dir
 Export-Package: .,
  AST,
  JFlex,
