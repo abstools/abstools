@@ -194,7 +194,7 @@
 			<manifest>
 				<attribute name="Main-Class" value="abs.frontend.parser.Main"/>
 				<attribute name="Implementation-Version" value="${frontend.version}"/>
-                <attribute name="Bundle-Version" value="${frontend.version}"/>
+				<attribute name="Bundle-Version" value="${frontend.version}"/>
 			</manifest>
 		</jar>
 	</target>
@@ -258,13 +258,16 @@
 			<fileset dir="${build.dir}">
 				<include name="abs/"/>
 			</fileset>
+			<fileset dir="${src.dir}">
+				<include name="abs/backend/maude/abs-interpreter.maude" />
+			</fileset>
 		</copy>
 		<manifest file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF" mode="update">
 			<attribute name="Bundle-Version" value="${frontend.version}"/>
 		</manifest>
 		<zip destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
 			<exclude name="feature.xml" />
-        </zip>
+		</zip>
 		<replace file="${basedir}/${plugin.name}_${frontend.version}/feature.xml" token="0.0.0.VERSION_STRING" value="${frontend.version}"/>
 		<zip destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar" basedir="${basedir}/${plugin.name}_${frontend.version}" filesonly="true" whenempty="skip" update="false">
 			<include name="feature.xml" />
