@@ -179,7 +179,7 @@ delta DFileFilter() {
     modifies class Node {
         modifies Server findServer(Filename fId, Catalog catalog) {
             if (isValid(fId)) {
-                original(fId, catalog);
+//                original(fId, catalog);
             } else {
                 return null;
             }
@@ -210,6 +210,7 @@ product P2 (FileFilter) {}
 product P3 (ParentalControl) {}
 product P4 (FileFilter,ParentalControl) {}
 
+//***************************************************************
 
 {
   // Map<Filename, File>
