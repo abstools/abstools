@@ -1,8 +1,8 @@
-//$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $ 
+//$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $
 
 module PeerToPeer;
 
-//type synonyms  
+//type synonyms
 
 type Filename = String ;
 type Filenames = Set<String> ;
@@ -10,8 +10,8 @@ type Packet = String ;
 type File = List<Packet> ;
 type Catalog = List<Pair<Peer, Filenames> > ;
 
- 
- 
+
+
 // Application functions
 def Peer findServer(Filename file, Catalog catalog) =
   case catalog {
@@ -28,7 +28,7 @@ interface Server {
 }
 
 
-interface Peer extends Client, Server { 
+interface Peer extends Client, Server {
    Unit setAdmin(Network admin);
    Unit run();
 }
@@ -59,7 +59,7 @@ class DataBaseImpl(Map<Filename, File> db) implements DataBase {
 
   Unit storeFile(Filename fId, File file) {
     db = InsertAssoc(Pair(fId,file), db);
-  } 
+  }
 
   Filenames listFiles() {
     return keys(db);
@@ -72,9 +72,9 @@ class Node(DataBase db, Filename file) implements Peer {
   Network admin = null;
 
   Unit run() {
-    Fut<Catalog> c ; 
+    Fut<Catalog> c ;
     Fut<List<Peer>> f;
-    Server server ; 
+    Server server ;
 
     await admin != null;
     f = admin!getNeighbors(this);   // Asynchronous call to admin
@@ -93,15 +93,15 @@ class Node(DataBase db, Filename file) implements Peer {
     this.admin = admin;
   }
 
-  Filenames enquire() { 
-    Fut<Filenames> f ;  
+  Filenames enquire() {
+    Fut<Filenames> f ;
     f = db!listFiles();
     await f?;
     return f.get;
   }
 
   Int getLength(Filename fId) {
-    Fut<Int> length ; 
+    Fut<Int> length ;
     length = db!getLength(fId);
     await length?;
     return length.get;
@@ -118,9 +118,9 @@ class Node(DataBase db, Filename file) implements Peer {
 
   Catalog availFiles (List<Peer> sList) {
     Catalog cat = Nil;
-    Filenames fNames = EmptySet; 
+    Filenames fNames = EmptySet;
     Fut<Filenames> fN;
-    Catalog catList = Nil; 
+    Catalog catList = Nil;
     Fut<Catalog> cL;
 
     if (sList != Nil) {
@@ -129,9 +129,9 @@ class Node(DataBase db, Filename file) implements Peer {
       await fN? & cL?;
       catList = cL.get;
       fNames = fN.get;
-      cat = appendright(catList, Pair(head(sList), fNames)); 
+      cat = appendright(catList, Pair(head(sList), fNames));
     }
-    return cat; 
+    return cat;
   }
 
   Unit reqFile(Server sId, Filename fId) {
@@ -143,14 +143,14 @@ class Node(DataBase db, Filename file) implements Peer {
 
     l1 = sId!getLength(fId);
     await l1?;
-    lth = l1.get; 
+    lth = l1.get;
     while (lth > 0) {
       lth = lth - 1;            // indexing is zero-based
       l2 = sId!getPack(fId, lth);
       await l2?;
       pack = l2.get ;
-      file = Cons(pack, file); 
-    } 
+      file = Cons(pack, file);
+    }
     db!storeFile(fId, file);
   }
 }
@@ -168,7 +168,50 @@ implements Network
   }
 }
 
-{ 
+
+/****************************************************************
+ * Variability in a Peer-To-Peer Node (see D1.2, Chapter 7)
+ * Extended ABS syntax...
+ *
+ */
+
+delta DFileFilter() {
+    modifies class Node {
+        modifies Server findServer(Filename fId, Catalog catalog) {
+            if (isValid(fId)) {
+                original(fId, catalog);
+            } else {
+                return null;
+            }
+        }
+        adds Bool isValid(Filename fId) {
+            return True;
+        }
+    }
+}
+
+delta DParentalControl() {
+    modifies class Node {
+        modifies Bool isValid(Filename fId) {
+            return (~isSubstring("xxx", fId));
+        }
+    }
+}
+
+
+productline Peer2Peer {
+    features Basic, FileFilter, ParentalControl;
+    delta DFileFilter when FileFilter;
+    delta DParentalControl after DFileFilter when ParentalControl;
+}
+
+product P1 (Basic) {}
+product P2 (FileFilter) {}
+product P3 (ParentalControl) {}
+product P4 (FileFilter,ParentalControl) {}
+
+
+{
   // Map<Filename, File>
   DataBase db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
   DataBase db1 = new cog DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
