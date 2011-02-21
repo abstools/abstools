@@ -1,0 +1,16 @@
+root MultiLingualHelloWorld {
+  group allof {
+    Language {
+      group oneof { English, Dutch, French, German }
+    },
+    opt Repeat {
+      Int times in [0..1000];
+      times > 0;
+    }
+  }
+}
+
+extension English {
+  ifin: Repeat -> (Repeat.times >= 2 && Repeat.times <= 5);
+}
+
