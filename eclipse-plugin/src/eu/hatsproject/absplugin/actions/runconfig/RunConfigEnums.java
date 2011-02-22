@@ -5,7 +5,7 @@ import eu.hatsproject.absplugin.debug.scheduling.SchedulingStrategy;
 import abs.backend.java.debugging.GraphicalDebugger;
 import abs.backend.java.scheduling.InteractiveScheduler;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
-import abs.backend.java.visualization.General;
+import abs.backend.java.visualization.UMLSequenceChart;
 
 public class RunConfigEnums {
 
@@ -16,7 +16,7 @@ public class RunConfigEnums {
 	public enum DebuggerObserver {
 		ECLIPSE(Debugger.class.getName(),"Eclipse observer", true),
 		GRAPHICAL(GraphicalDebugger.class.getName(), "Graphical observer", false),
-		UML (General.class.getName(), "UML observer", false);
+		UML (UMLSequenceChart.class.getName(), "UML observer", false);
 		
 		private String className;
 		private String userReadableName;
