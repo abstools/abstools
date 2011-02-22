@@ -345,6 +345,9 @@ public class ABSCodeScanner implements ITokenScanner {
 		try {
 			IFile file = (IFile)fEditor.getEditorInput().getAdapter(IFile.class);
 			AbsNature nature = getAbsNature(file);
+			if (nature == null)
+			   return token;
+			
 			synchronized (nature.modelLock) {
 				final ASTNode<?> currentNode = getASTNodeOfOffset(doc, compilationUnit, fTokenOffset);
 				Model typecheckedModel = nature.getCompleteModel();
