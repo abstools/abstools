@@ -235,10 +235,7 @@ public class Main {
     
     protected void printVersionAndExit() {
         String version = getVersion();
-        if (version == null)
-            System.out.println("The version is only available when the JAR file of the ABS tool suite is used.");
-        else 
-            System.out.println("ABS Tool Suite v"+version);
+        System.out.println("ABS Tool Suite v"+version);
         System.exit(1);
     }
     
@@ -288,7 +285,11 @@ public class Main {
     }
 
     private String getVersion() {
-        return Main.class.getPackage().getImplementationVersion();
+        String version = Main.class.getPackage().getImplementationVersion();
+        if (version == null)
+            return "HEAD";
+        else
+            return version;
     }
 
     public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
