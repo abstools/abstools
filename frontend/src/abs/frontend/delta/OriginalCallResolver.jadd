@@ -3,9 +3,11 @@ import java.util.HashMap;
 import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
+
 aspect OriginalCallResolver {
     
     public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) {
+        Collections.reverse(deltas);
         for (DeltaDecl delta : deltas) {
             delta.resolveOriginalCalls();
         }
@@ -13,8 +15,29 @@ aspect OriginalCallResolver {
 
     // TODO
     public void DeltaDecl.resolveOriginalCalls() {
+        /*
+         * for each class modifier
+         *      for each (Add|Modify)MethodModifier m
+         *          for each original() call
+         *              find the target - 
+         *              replace call with call to target
+         */
         
-        
+       for (ClassModifier cm : this.getClassModifiers()) {
+           if (cm instanceof AddClassModifier) {
+               for (MethodImpl m : ((AddClassModifier)cm).getClassDecl().getMethods()) {
+                   // find calls
+                   Block block = m.getBlock();
+                   for (Stmt s : block.getStmts()) {
+                       System.out.println(s);
+                   }
+               }
+           } else if (cm instanceof ModifyClassModifier) {
+               
+           }
+       }
     }
     
+
+
 }

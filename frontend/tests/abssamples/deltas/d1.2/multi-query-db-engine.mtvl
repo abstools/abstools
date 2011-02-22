@@ -1,7 +1,7 @@
 root Resources {
     group oneof {
-        MultiCore { Int resources in [1 .. *] },
-        MemoryManager { Int memory in [1 .. *] },
+        MultiCore { Int resources in [1 .. *]; },
+        MemoryManager { Int memory in [1 .. *]; },
         Cloud {
             Int memory in [1 .. *];
             Int resources in [1 .. *];
@@ -16,9 +16,9 @@ root Query {
             Int max;
             min >= 0;
             max >= min;
-        }
+        },
         opt Rate {
-            Int rate in [1 .. *]
+            Int rate in [1 .. *];
         }
     }
 }
