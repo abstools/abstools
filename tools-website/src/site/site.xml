@@ -32,6 +32,7 @@
 
     <menu name="The Core Tools">
       <item name="Introduction" href="core/introduction.html" />
+      <item name="Ant Tasks" href="core/anttasks.html" />
 <!--      <item name="Parser" href="core/parser.html" />
       <item name="Type-Checker" href="core/typechecker.html" /> -->
     </menu>
