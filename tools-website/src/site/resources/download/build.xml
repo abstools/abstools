@@ -58,7 +58,7 @@
 <!-- START SNIPPET: lib.abs.getjar -->
   <target name="lib.abs.getjar">
     <mkdir dir="${lib}" />
-    <get src="http://tools.hats-project.eu/absfrontend.jar"
+    <get src="http://tools.hats-project.eu/download/absfrontend.jar"
          dest="${lib}" usetimestamp="true" verbose="true" />
   </target>
 <!-- END SNIPPET: lib.abs.getjar -->
