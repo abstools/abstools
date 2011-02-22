@@ -2,7 +2,7 @@ package abs.backend.java.visualization;
 
 import abs.backend.java.observing.TaskView;
 
-public class General extends SequenceDiagramVisualization {
+public class UMLSequenceChart extends SequenceDiagramVisualization {
 
     @Override
     public boolean isObserved(TaskView task) {

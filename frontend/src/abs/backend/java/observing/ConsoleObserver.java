@@ -12,7 +12,7 @@ import abs.backend.java.utils.StringUtil;
  * @author Jan Schäfer
  *
  */
-public class PrintlnObserver extends RegistratingObserver {
+public class ConsoleObserver extends RegistratingObserver {
 
     PrintStream s = System.out;
     
