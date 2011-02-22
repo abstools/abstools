@@ -1,4 +1,4 @@
 In order to deploy the content of this site call
    
-   mvn deploy
+   mvn package site-deploy
 
