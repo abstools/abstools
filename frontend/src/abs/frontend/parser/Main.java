@@ -60,6 +60,8 @@ public class Main {
                 dump = true;
             else if (arg.equals("-v"))
                 verbose = true;
+            else if (arg.equals("-version"))
+                printVersionAndExit();
             else if (arg.startsWith("-product=")) {
                 fullabs = true;
                 product = arg.split("=")[1];
@@ -86,6 +88,7 @@ public class Main {
         }
         return remaindingArgs;
     }
+
 
     public Model parse(final String[] args) throws Exception {
         Model m = parseFiles(parseArgs(args));
@@ -229,6 +232,16 @@ public class Main {
         printUsage();
         System.exit(1);
     }
+    
+    protected void printVersionAndExit() {
+        String version = getVersion();
+        if (version == null)
+            System.out.println("The version is only available when the JAR file of the ABS tool suite is used.");
+        else 
+            System.out.println("ABS Tool Suite v"+version);
+        System.exit(1);
+    }
+    
 
     public static CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
@@ -240,20 +253,12 @@ public class Main {
     }
 
     protected void printUsage() {
-        String version = Main.class.getPackage().getImplementationVersion();
-        String header = "ABS TOOL SUITE" + "  Build version: " + version;
-        StringBuilder starline = new StringBuilder();
-        for (int i = 0; i < header.length() + 4; i++) {
-            starline.append("*");
-        }
-        starline.append("\n");
-        System.out.println(
-                  starline 
-                + "* " + header + " *\n" 
-                + starline 
+        printHeader();
+        System.out.println(""
                 + "Usage: java " + this.getClass().getName()
                 + " [options] <absfiles>\n\n" 
                 + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
+                + "  -version       print version\n" 
                 + "  -v             verbose output\n" 
                 + "  -product=<PID> build given product by applying deltas (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
@@ -267,6 +272,23 @@ public class Main {
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n" 
                 + "  -h             print this message\n");
+    }
+
+    protected void printHeader() {
+        String header = "ABS TOOL SUITE" + " v" + getVersion();
+        StringBuilder starline = new StringBuilder();
+        for (int i = 0; i < header.length() + 4; i++) {
+            starline.append("*");
+        }
+        starline.append("\n");
+        System.out.print(
+                  starline 
+                + "* " + header + " *\n" 
+                + starline );
+    }
+
+    private String getVersion() {
+        return Main.class.getPackage().getImplementationVersion();
     }
 
     public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
