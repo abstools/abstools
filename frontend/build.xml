@@ -2,6 +2,9 @@
 <project name="ABS Frontend" default="compile" basedir=".">
 	<!-- $Id$ -->
 
+	<!-- this is needed to be able to call targets from maven -->
+	<property name="build.compiler" value="extJavac"/>
+
 	<property name="revision.prefix" value="1.0.2" />
 
 	<property environment="env" />
@@ -218,7 +221,7 @@
 	<property name="test.backend.suite.name" value="abs.backend.AllBackendTests" />
 	<property name="test.backend.semantic.suite.name" value="abs.backend.common.AllSemanticTests" />
 
-	<target name="tests-all" depends="tests-frontend, tests-backend" />
+	<target name="tests-all" depends="tests-frontend, tests-backend, tests-backend-semantic" />
 
 	<target name="tests-backend-semantic" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
