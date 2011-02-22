@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import abs.common.Constants;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
@@ -26,6 +28,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.StarImport;
 import abs.frontend.delta.*;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -85,42 +88,37 @@ public class Main {
     }
 
     public Model parse(final String[] args) throws Exception {
+        Model m = parseFiles(parseArgs(args));
+        analyzeModel(m);
+        return m;
+    }
 
-        java.util.List<String> files = parseArgs(args);
-
+    private Model parseFiles(java.util.List<String> files) throws IOException {
         if (files.isEmpty()) {
             printErrorAndExit("Please provide at least one intput file");
         }
 
+        
         List<CompilationUnit> units = new List<CompilationUnit>();
 
         if (stdlib) {
             units.add(getStdLib());
         }
 
-        for (String file : files) {
-            if (file.startsWith("-")) {
-                printErrorAndExit("Illegal option " + file);
+        for (String fileName : files) {
+            if (fileName.startsWith("-")) {
+                printErrorAndExit("Illegal option " + fileName);
             }
-
-            try {
-                units.add(parseUnit(new File(file), stdlib));
-
-            } catch (FileNotFoundException e1) {
-                printErrorAndExit("File not found: " + file);
-            } catch (ParseException pex) {
-                System.err.println(pex.getError().getHelpMessage());
-                System.exit(1);
-            } catch (Exception e1) {
-                // Catch-all
-                System.err.println("Compilation of " + file + " failed with Exception");
-                System.err.println(e1);
-                System.exit(1);
-            }
+            parseFiles(units, new File(fileName));
         }
 
         Model m = new Model(units);
+        return m;
+    }
 
+    private void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
+        if (verbose)
+            System.out.println("Analyzing Model...");
         if (dump) {
             m.dump();
         }
@@ -148,32 +146,76 @@ public class Main {
                     if (dump)
                         m.dump();
                 }
-                if (typecheck) {
-                    if (locationTypeInferenceEnabled) {
-                        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
-                        if (locationTypeStats) {
-                            ltie.enableStatistics();
-                        }
-                        if (defaultLocationType != null) {
-                            ltie.setDefaultType(defaultLocationType);
-                        }
-                        if (locationTypeScope != null) {
-                            ltie.setLocationTypingPrecision(locationTypeScope);
-                        }
-                        m.registerTypeSystemExtension(ltie);
-                    }
-                    SemanticErrorList typeerrors = m.typeCheck();
-                    for (SemanticError se : typeerrors) {
-                        System.err.println(se.getHelpMessage());
-                    }
-                }
-                if (verbose) {
-                    System.out.println(m);
-                }
+                typeCheckModel(m);
             }
         }
+    }
 
-        return m;
+    private void typeCheckModel(Model m) {
+        if (typecheck) {
+            if (verbose)
+                System.out.println("Typechecking Model...");
+            
+            registerLocationTypeChecking(m);
+            SemanticErrorList typeerrors = m.typeCheck();
+            for (SemanticError se : typeerrors) {
+                System.err.println(se.getHelpMessage());
+            }
+        }
+    }
+
+    private void registerLocationTypeChecking(Model m) {
+        if (locationTypeInferenceEnabled) {
+            if (verbose)
+                System.out.println("Registering Location Type Checking...");
+            LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+            if (locationTypeStats) {
+                ltie.enableStatistics();
+            }
+            if (defaultLocationType != null) {
+                ltie.setDefaultType(defaultLocationType);
+            }
+            if (locationTypeScope != null) {
+                ltie.setLocationTypingPrecision(locationTypeScope);
+            }
+            m.registerTypeSystemExtension(ltie);
+        }
+    }
+
+    private void parseFiles(List<CompilationUnit> units, File file) {
+        if (!file.canRead()) {
+            printErrorAndExit("Cannot read file "+file);
+        }
+        if (file.isDirectory()) {
+            if (file.canRead() && !file.isHidden()) {
+                for (File f : file.listFiles()) {
+                    if (f.isFile() && !f.getName().endsWith(".abs"))
+                        continue;
+                    parseFiles(units, f);
+                }
+            }
+        } else {
+            parseSingleFile(units, file);
+        }
+    }
+
+    private void parseSingleFile(List<CompilationUnit> units, File file) {
+        if (verbose)
+            System.out.println("Parsing file "+file.getAbsolutePath());
+        try {
+            units.add(parseUnit(file, stdlib));
+
+        } catch (FileNotFoundException e1) {
+            printErrorAndExit("File not found: " + file);
+        } catch (ParseException pex) {
+            System.err.println(pex.getError().getHelpMessage());
+            System.exit(1);
+        } catch (Exception e1) {
+            // Catch-all
+            System.err.println("Compilation of " + file + " failed with Exception");
+            System.err.println(e1);
+            System.exit(1);
+        }
     }
 
     private void printErrorAndExit(String error) {
