@@ -30,13 +30,13 @@
       <item name="Location Types" href="locationtypes.html" />
     </menu>
 
-<!--
-    <menu name="The Frontend">
-      <item name="Introduction" href="frontend/introduction.html" />
-      <item name="Parser" href="frontend/parser.html" />
-      <item name="Type-Checker" href="frontend/typechecker.html" />
+    <menu name="The Core Tools">
+      <item name="Introduction" href="core/introduction.html" />
+<!--      <item name="Parser" href="core/parser.html" />
+      <item name="Type-Checker" href="core/typechecker.html" /> -->
     </menu>
 
+<!--
     <menu name="Maude Backend">
       <item name="Introduction" href="maudebackend.html" />
     </menu>
