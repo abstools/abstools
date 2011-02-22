@@ -6,7 +6,7 @@
 -->
 <project basedir="." default="about" name="sdedit ant script">
 	<description>Quick Sequence Diagram Editor</description>
-	<property name="revision.prefix" value="0.2.6" />
+	<property name="revision.prefix" value="0.2.7" />
 	<property location="src" name="src"/>
 	<property location="bin" name="build"/>
 	<property location="dist" name="jar"/>
