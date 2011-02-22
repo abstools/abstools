@@ -73,6 +73,12 @@ public class Config {
 
     private ABSRuntime runtime;
 
+    {
+        if (printHelp()) {
+            System.exit(1);
+        }
+    }
+    
     public Config(ABSRuntime runtime) {
         this.runtime = runtime;
         loadProperties();
