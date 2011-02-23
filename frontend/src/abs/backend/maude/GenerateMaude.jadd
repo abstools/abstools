@@ -225,7 +225,19 @@ aspect GenerateMaude {
     public void OriginalCall.generateMaudeAsStatement(
         PrintStream stream, String var)
     {
-        stream.print("original( '" + var + ") ");
+        stream.print("original( '" + var + " ; ");
+        if (getNumParam() == 0) {
+            stream.print("emp ");
+        } else {
+            boolean inlist = false;
+            stream.print("(");
+            for (PureExp param : getParams()) {
+                if (inlist) stream.print(":: "); else inlist = true;
+                param.generateMaude(stream);
+            }            
+            stream.print(") ");
+        }
+        stream.print(") ");
     }
 
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var)
