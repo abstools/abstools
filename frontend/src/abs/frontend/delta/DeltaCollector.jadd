@@ -79,7 +79,12 @@ aspect DeltaCollector {
                         String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
                         if (c.evaluateAppCond(prod.getFeatures())) {
                             if (alldeltas.containsKey(deltaid)) {
+                                // # Found clause with applicable delta!
                                 DeltaDecl delta = alldeltas.get(deltaid);
+                                List<Deltaparam> params = c.getDeltaspec().getDeltaparams();
+                                delta = delta.substituteDeltaParams(params, prod.getFeatures());
+                                for (Deltaparam p : params)
+                                    deltaid = deltaid + "#" + p.getName();  // getName defined below
                                 deltas.put(deltaid, delta);
                             } else
                                 throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
@@ -88,9 +93,19 @@ aspect DeltaCollector {
                 }
             }
         }
+        // DEBUG
+        System.out.println("Collected deltas:");
+        System.out.println(deltas.toString());
         return deltas;
     }
-    
+
+    public abstract String Deltaparam.getName();
+    public String FIDAID.getName()  { return getFeatName() + "." + getAttrName(); }
+    public String Const.getName()   { return getValue().getName(); }
+    public abstract String Value.getName();
+    public String IntVal.getName()  { return "" + getValue(); }
+    public String BoolVal.getName() { return "" + getValue(); }
+
     /**************************************************************************
      * Sort the given deltas using the partial orders defined in DeltaClauses
      * 
@@ -126,7 +141,7 @@ aspect DeltaCollector {
                 }
             }
         }
-        g.sort(); // FIXME catch the case when sort fails
+        g.sort(); // FIXME catch the case when sort fails -- use assert?
         return g.getSortedDeltas();
     }
 
@@ -162,10 +177,7 @@ aspect DeltaCollector {
     throws WrongProgramArgumentException;
 
     public Value Const.calcValue(List<Feature> feats)  {
-        try{
-            return getValue().clone();
-        }
-        catch (CloneNotSupportedException e) { return getValue(); }
+        return (Value) getValue().fullCopy();
     }
 
     public Value CID.calcValue(List<Feature> feats) {
@@ -182,10 +194,7 @@ aspect DeltaCollector {
             if (f.getName().equals(getFeatName())) // found feature
                 for (AttrAssignment attr : f.getAttrAssignments()) {
                     if (attr.getName().equals(getAttrName()))   // found attribute
-                        try{
-                            return attr.getValue().clone();
-                        }
-                        catch (CloneNotSupportedException e) { return attr.getValue(); }
+                        return (Value) attr.getValue().fullCopy();
                 }
         }
         throw new WrongProgramArgumentException("Argument " + getFeatName() + "."+ getAttrName() +" not found.");
@@ -197,8 +206,10 @@ aspect DeltaCollector {
     {
         HashMap<String,Value> res = new HashMap<String,Value>();
         for (int i = 0; i < dparams.getNumChild(); i++) {
-            res.put(getParam(i).getName(),dparams.getChild(i).calcValue(feats));
+            System.out.println("## next param: " + getParam(i).getName());
+            res.put(getParam(i).getName(),dparams.getChildNoTransform(i).calcValue(feats));
         }
+        System.out.println("## collected subst: " + res);
         return res;
     }
 
@@ -207,22 +218,21 @@ aspect DeltaCollector {
         return getParamDecl().getName();
     }
 
-    public DeltaDecl DeltaDecl.substitute(List<Deltaparam> dparams, List<Feature> feats)
+    // This is the main function that should be used!
+    public DeltaDecl DeltaDecl.substituteDeltaParams(List<Deltaparam> dparams, List<Feature> feats)
     throws WrongProgramArgumentException
     {
         DeltaDecl d;
-        try {
-            d = this.clone();
-        }
-        catch (CloneNotSupportedException e) {
-            d = this;
-        }
+        System.out.println("## creating copy.");
+        d = this.fullCopy();
+        System.out.println("## substituting using " + dparams.getNumChild()+" params:");
         d.applySubstitution(d.getSubstitution(dparams,feats));
         return d;
     }
 
     // apply a substitution to DeltaDecl
     public void DeltaDecl.applySubstitution(HashMap<String,Value> subst) {
+        System.out.println("## calling substitute method in all class modifiers.");
         for (ClassModifier d : getClassModifiers())
             d.applySubstitution(subst);
     }
