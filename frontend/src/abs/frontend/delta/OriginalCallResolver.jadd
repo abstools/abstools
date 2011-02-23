@@ -24,20 +24,27 @@ aspect OriginalCallResolver {
          */
         
        for (ClassModifier cm : this.getClassModifiers()) {
-           if (cm instanceof AddClassModifier) {
-               for (MethodImpl m : ((AddClassModifier)cm).getClassDecl().getMethods()) {
-                   // find calls
-                   Block block = m.getBlock();
-                   for (Stmt s : block.getStmts()) {
-                       System.out.println(s);
-                   }
-               }
-           } else if (cm instanceof ModifyClassModifier) {
-               
-           }
-       }
+           cm.resolveOriginalCalls();
+      }
     }
     
 
+    public abstract void ClassModifier.resolveOriginalCalls();
+    
+    public void AddClassModifier.resolveOriginalCalls() {
+        for (MethodImpl m : this.getClassDecl().getMethods()) {
+            // find calls
+            Block block = m.getBlock();
+            for (Stmt s : block.getStmts()) {
+                System.out.println(this.deltaName() + "> " + s);
+            }
+        }
+        
+    }
+    
+    public void RemoveClassModifier.resolveOriginalCalls() {}
+    public void ModifyClassModifier.resolveOriginalCalls() {}
+
 
 }
+    

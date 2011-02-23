@@ -124,7 +124,7 @@ aspect DeltaCollector {
                         String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
                         if (deltas.containsKey(deltaid)) {
                             DeltaDecl delta = deltas.get(deltaid);
-                            // for each afterdelta: add an edge (delta, afterdelta)
+                            // for each afterdelta: add an edge to delta
                             for (DeltaID did : c.getDeltaIDs()) {
                                 String otherid = c.moduleName() + "." + did.getName();
                                 if (deltas.containsKey(otherid)) {
@@ -147,7 +147,7 @@ aspect DeltaCollector {
 
 
     /**************************************************************************
-     *  Evaluate the application condition assciated with *this*
+     *  Evaluate the application condition assciated with this DeltaClause
      *  in the context of the given list of features and attribute values
      *
      *  currently this only compares feature NAMES

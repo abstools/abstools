@@ -635,7 +635,7 @@ SyncCall sync_call =
 	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :}
 	;
 
-OriginalCall original_call = ORIGINAL LPAREN RPAREN {: return new OriginalCall(); :} ;
+OriginalCall original_call = ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :} ;
 
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =

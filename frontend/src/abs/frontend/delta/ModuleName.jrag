@@ -33,3 +33,11 @@ aspect QualifiedName {
         return this.moduleName() + "." + this.getName();
     }
 }
+
+aspect DeltaName {
+    inh String ClassModifier.deltaName();
+    eq DeltaDecl.getClassModifier().deltaName() = this.getName();
+
+    inh String Modifier.deltaName();
+    eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
+}
