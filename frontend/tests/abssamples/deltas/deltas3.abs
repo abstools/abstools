@@ -1,0 +1,40 @@
+module Fruits;
+
+//************************************************************
+// ABS implementation
+//************************************************************
+
+class Fruit {
+    String name = "";
+    Int size = 101;
+    Int price = 2;
+
+    String get_name() { return name; }
+    Int get_size() { return size; }
+}
+
+delta D1          { adds class Pear  { Int n = 1; }}
+delta D2(Int i)   { adds class Pear  { Int n = i; }}
+delta D3(Int s)   { adds class Melon { Int str = s; }}
+
+//************************************************************
+// Configuration (FCL)
+//************************************************************
+productline FruteConf {
+    features F1, F2, F3, F4;
+
+    delta D1 after D2 when F1;
+    delta D2(2) when F2;
+    delta D3(3) when F3;
+}
+
+//************************************************************
+// Products (FSL)
+//************************************************************
+product P1 (F1 {stk=11}, F2, F3) {
+    new Application();
+}
+
+product P2 (F1 {stk=7} ) {
+    new Application();
+}
