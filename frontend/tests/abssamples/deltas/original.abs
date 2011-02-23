@@ -1,0 +1,80 @@
+// test the original() call substitution
+module HowOriginal;
+
+
+interface Fruity {
+	String get_name();
+}
+
+class Fruit implements Fruity {
+    String name = "fruit";
+    String get_name() { return name; }
+}
+
+// ADD class
+delta D1 {
+    adds class Vege implements Fruity {
+        String name = "vege";
+        String get_name() { return name; }
+    }
+}
+
+// MOD class - ADD method
+delta D2 {
+    modifies class Fruit {
+        adds Int size = 99;
+        adds Int get_size() { return size; }
+    }
+}
+
+/* MOD class - MOD method
+ * The way I (Radu) see it,
+ * calling original() only makes sense in a delta that modifies an existing class
+ * by modifying a method in that class.
+ */
+
+delta D3 {
+    modifies class Fruit {
+        modifies String get_name() { return "Fruit NAME " + original(); }
+    }
+}
+delta D4 {
+    modifies class Vege {
+        modifies String get_name() { return "Vege NAME " + original(); }
+    }
+}
+
+
+
+//*****************************************************************
+
+productline PL {
+    features Stuff;
+    delta D1 when Stuff;
+    delta D2 when Stuff;
+    delta D3 when Stuff;
+    delta D4 after D1 when Stuff;
+
+}
+
+//*****************************************************************
+
+product P (Stuff) {
+    Fruity fruit = new Fruit();
+    String name = fruit.get_name();
+    Int x = fruit.get_size();
+
+    Fruity veg = new Vege();
+    String name = veg.get_name();
+    Int x = veg.get_size();
+}
+
+
+//*****************************************************************
+
+// MainBlock
+{
+	Fruity fruit = new Fruit();
+	String n = fruit.get_name();
+}
+

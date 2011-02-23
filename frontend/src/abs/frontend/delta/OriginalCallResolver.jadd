@@ -16,34 +16,34 @@ aspect OriginalCallResolver {
     // TODO
     public void DeltaDecl.resolveOriginalCalls() {
         /*
-         * for each class modifier
-         *      for each (Add|Modify)MethodModifier m
-         *          for each original() call
-         *              find the target - 
-         *              replace call with call to target
+         * calling original() only seems to make sense in a delta that *modifies* 
+         * an existing class when *modifying* a method in that class,
+         * so we only deal with this case.
          */
-        
-       for (ClassModifier cm : this.getClassModifiers()) {
-           cm.resolveOriginalCalls();
-      }
-    }
-    
-
-    public abstract void ClassModifier.resolveOriginalCalls();
-    
-    public void AddClassModifier.resolveOriginalCalls() {
-        for (MethodImpl m : this.getClassDecl().getMethods()) {
-            // find calls
-            Block block = m.getBlock();
-            for (Stmt s : block.getStmts()) {
-                System.out.println(this.deltaName() + "> " + s);
-            }
+        for (ClassModifier cm : this.getClassModifiers()) {
+           if (cm instanceof ModifyClassModifier)
+               for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
+                   if (m instanceof ModifyMethodModifier)
+                       ((ModifyMethodModifier)m).resolveOriginalCalls();
         }
-        
     }
     
-    public void RemoveClassModifier.resolveOriginalCalls() {}
-    public void ModifyClassModifier.resolveOriginalCalls() {}
+    public void ModifyMethodModifier.resolveOriginalCalls() {
+        MethodImpl method = getMethodImpl();
+        // find calls
+        Block block = method.getBlock();
+        for (Stmt s : block.getStmts()) {
+            System.out.println(this.deltaName() + "> " + s);
+            for (Annotation a : s.getAnnotations()) {
+                System.out.println("> " + a);              
+            }
+
+            //                if (s instanceof OriginalCall) {
+            //                    System.out.println("O");                    
+            //                }
+        }
+    }
+    
 
 
 }
