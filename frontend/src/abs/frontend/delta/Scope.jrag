@@ -1,0 +1,10 @@
+aspect Scope {
+    
+    // inform ClassModifiers and Modifiers about the DeltaDecl where they were declared
+    inh DeltaDecl ClassModifier.delta();
+    eq DeltaDecl.getClassModifier().delta() = this;
+    
+    inh DeltaDecl Modifier.delta();
+    eq ModifyClassModifier.getModifier().delta() = this.delta();
+
+}

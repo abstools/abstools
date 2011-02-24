@@ -35,7 +35,7 @@ delta D2 {
 
 delta D3 {
     modifies class Fruit {
-        modifies String get_name() { String o = original(); return "Fruit NAME " + o; }
+        modifies String get_name() { original(); String o = original(); return "Fruit NAME " + o; }
     }
 }
 delta D4 {

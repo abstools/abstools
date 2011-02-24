@@ -21,9 +21,13 @@ aspect Flattener {
             System.out.print(delta.qualifiedName() + ", ");
         System.out.println("");
 
+        System.out.println("\n=================================================================\n");
+
         // TODO resolve original() calls
         this.resolveOriginalCalls(deltas);
         
+        System.out.println("\n=================================================================\n");
+
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
@@ -42,8 +46,9 @@ aspect Flattener {
 
         //if DeltaDecl was defined in *this* module, apply its ClassModifiers...
         if (delta.moduleName().equals(moduleid)) {
+            System.out.println("**D** applying Delta" + delta.qualifiedName());
             for (ClassModifier cmod : delta.getClassModifiers()) {
-                System.out.println("*** applying " + cmod + " to module " + moduleid);
+                System.out.println("==C== applying " + cmod.getClass().getName() + " to class " + cmod.qualifiedName());
                 cmod.applyTo(this);
             }
         }
@@ -94,7 +99,7 @@ aspect Flattener {
         if (found >= 0)
             // apply all modifiers
             for (Modifier mod : this.getModifiers()) {
-                System.out.println("--- applying " + mod + " to class " + md.getDecl(found).getName());
+                System.out.println("--M-- applying " + mod.getClass().getName());
                 mod.applyTo((ClassDecl) md.getDecl(found));
             }
         else

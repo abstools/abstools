@@ -8,39 +8,59 @@ aspect OriginalCallResolver {
     
     public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) {
         Collections.reverse(deltas);
-        for (DeltaDecl delta : deltas) {
-            delta.resolveOriginalCalls();
+        // Walk list of deltas in reverse order of application and resolve original() calls.
+        // Original calls in delta are resolved by finding the original method 
+        // declaration in the list of previously applied deltas + core,
+        // and calling it instead of original().
+        for (int i=0; i < deltas.size(); i++) {
+            DeltaDecl delta = deltas.remove(i);
+            delta.resolveOriginalCalls(deltas);
         }
     }
 
     // TODO
-    public void DeltaDecl.resolveOriginalCalls() {
+    public void DeltaDecl.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) {
         /*
          * calling original() only seems to make sense in a delta that *modifies* 
          * an existing class when *modifying* a method in that class,
          * so we only deal with this case.
          */
+        System.out.println("resolving in Delta: " + this.qualifiedName());
         for (ClassModifier cm : this.getClassModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
                    if (m instanceof ModifyMethodModifier)
-                       ((ModifyMethodModifier)m).resolveOriginalCalls();
+                       ((ModifyMethodModifier)m).resolveOriginalCalls(deltas);
         }
     }
     
-    public void ModifyMethodModifier.resolveOriginalCalls() {
+    public void ModifyMethodModifier.resolveOriginalCalls(ArrayList<DeltaDecl> prevdeltas) {
+        String classid = this.className();
         MethodImpl method = getMethodImpl();
-        // find calls
+        String methodid = method.getMethodSig().getName();
+        // find original calls
         Block block = method.getBlock();
         for (Stmt s : block.getStmts()) {
-            System.out.println(this.deltaName() + "> " + s);
-            for (Annotation a : s.getAnnotations()) {
-                System.out.println("> " + a);              
-            }
+            System.out.println(this.deltaName() + " > " + s.getClass().getName() + " > " + s);
 
-            //                if (s instanceof OriginalCall) {
-            //                    System.out.println("O");                    
-            //                }
+            if (s instanceof ExpressionStmt) {
+                Exp e = ((ExpressionStmt)s).getExp();
+                if (e instanceof OriginalCall) {
+                    // FOUND
+                    // find MethodImpl with name classid.methodid in previous delta list
+//                  MethodImpl originalImpl = module.findOriginal(prevdeltas, classid, methodid);
+                    MethodImpl originalImpl = new MethodImpl(); // FIXME
+                    // add a new AddMethodModifier that wraps that MethodImpl (with different name) to the current delta.
+                    ModifyClassModifier cm = new ModifyClassModifier();
+                    MethodImpl originalImplCopy = originalImpl.fullCopy();
+                    originalImplCopy.getMethodSig().setName(methodid + "Original"); // FIXME maybe too simple?
+                    cm.addModifier(new AddMethodModifier(originalImplCopy));
+                    delta().addClassModifier(cm);
+                    // replace OriginalCall node with a call to that method (new name)
+                    // TODO
+                    System.out.println(">>> Call to original " + classid + "." + methodid + "(" + ((OriginalCall)e).getParams() + ")");
+                }
+            }
         }
     }
     

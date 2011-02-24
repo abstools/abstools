@@ -18,21 +18,6 @@ aspect ModuleName {
 }
 
 
-aspect QualifiedName {
-    // prepend the name of the module where this declaration occured
-    public String Decl.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
-    }
-
-    public String Product.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
-    }
-
-    public String ProductLine.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
-    }
-}
-
 aspect DeltaName {
     inh String ClassModifier.deltaName();
     eq DeltaDecl.getClassModifier().deltaName() = this.getName();
@@ -41,7 +26,41 @@ aspect DeltaName {
     eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
 }
 
-aspect MethodName {
-//    inh String OriginallCall.methodName();
-//    eq  MethodImpl.getBlock().getStmt(). = this.getMethodSig().getName();
+
+aspect ClassName {
+    public String AddClassModifier.className() {
+        return this.getClassDecl().getName();
+    }
+    public String RemoveClassModifier.className() {
+        return this.getName();
+    }
+    public String ModifyClassModifier.className() {
+        return this.getName();
+    }
+    public String ClassModifier.className() {
+        return "ABSTRACT";
+    }
+    
+    inh String ModifyMethodModifier.className();
+    eq ModifyClassModifier.getModifier().className() = this.className();
+}
+
+
+aspect QualifiedName {
+    // prepend the name of the module where this declaration occured
+    public String Decl.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+    
+    public String Product.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+    
+    public String ProductLine.qualifiedName() {
+        return this.moduleName() + "." + this.getName();
+    }
+    
+    public String ClassModifier.qualifiedName() {
+        return this.moduleName() + "." + this.className();
+    }
 }
