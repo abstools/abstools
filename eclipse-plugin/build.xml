@@ -121,6 +121,8 @@
 	<target name="apidoc" description="generates JavaDoc" depends="init">
 		  <javadoc sourcepath="${src.dir}" destdir="${doc.api.dir}">
 		  	<classpath refid="build.classpath" />
+		  	<link href="http://help.eclipse.org/helios/nftopic/org.eclipse.platform.doc.isv/reference/api/" />
+		  	<link href="http://download.oracle.com/javase/6/docs/api/" />
 		  </javadoc>
 	</target>
 
