@@ -167,7 +167,7 @@ public class JavaJob extends Job {
 			monitor.worked(12);
 
 			if (debugCode && !isCanceled) {
-				executeDebugger(absFrontendLocation);
+				executeJavaMain(absFrontendLocation);
 
 			}
 			monitor.worked(12);
@@ -290,7 +290,7 @@ public class JavaJob extends Job {
 				progress);
 	}
 
-	private void executeDebugger(String absFrontendLocation) throws AbsJobException,
+	private void executeJavaMain(String absFrontendLocation) throws AbsJobException,
 			IOException, CoreException {
 		checkPath(javaPath);
 		if (startSDE && !isCanceled) {
@@ -447,33 +447,37 @@ public class JavaJob extends Job {
 			boolean useBothObserver, final String moduleName, String info)
 			throws IOException {
 		setDebuggerArgumentsIfNull(useBothObserver);
-		
-		final ArrayList<String> args = new ArrayList<String>();
-
-		args.add("java");
-		args.add("-cp");
-		args.add(absFrontendLocation+File.pathSeparator+javaPath);
-		
-		if(debuggerIsInDebugMode){
-			addIfNotNullOrEmpty(args,"-Dabs.debug=true");
-		}
-		addIfNotNullOrEmpty(args,debuggerArgsOther);
-		addIfNotNullOrEmpty(args,debuggerArgsSystemObserver);
-		
-		addIfNotNullOrEmpty(args,debuggerArgsTotalScheduler);
-		addIfNotNullOrEmpty(args,debuggerArgsRandomSeed);
-
-		args.add(moduleName);
-
-		if (debugMode) System.out.println("run java code with: "+args);
 
 		if(useInternalDebugger){
-			startInternalDebugger(javaPath, moduleName);	
+			executeABSSystem(javaPath, moduleName);	
 		} else {
-			debugProcess = Runtime.getRuntime().exec(args.toArray(new String[args.size()]));
-			printProcessOutput(moduleName, info, debugProcess);
+	      executeABSSystemInExternalProcess(absFrontendLocation, javaPath, moduleName, info);
 		}
 	}
+
+   private void executeABSSystemInExternalProcess(String absFrontendLocation, final Path javaPath,
+         final String moduleName, String info) throws IOException {
+      final ArrayList<String> args = new ArrayList<String>();
+
+      args.add("java");
+      args.add("-cp");
+      args.add(absFrontendLocation+File.pathSeparator+javaPath);
+      
+      if(debuggerIsInDebugMode){
+         addIfNotNullOrEmpty(args,"-Dabs.debug=true");
+      }
+      addIfNotNullOrEmpty(args,debuggerArgsOther);
+      addIfNotNullOrEmpty(args,debuggerArgsSystemObserver);
+      
+      addIfNotNullOrEmpty(args,debuggerArgsTotalScheduler);
+      addIfNotNullOrEmpty(args,debuggerArgsRandomSeed);
+
+      args.add(moduleName);
+
+      if (debugMode) System.out.println("run java code with: "+args);
+      debugProcess = Runtime.getRuntime().exec(args.toArray(new String[args.size()]));
+      printProcessOutput(moduleName, info, debugProcess);
+   }
 	
 	/**
 	 * The following arguments may be null, if the user selected one of the tool bar icons.
@@ -511,7 +515,7 @@ public class JavaJob extends Job {
 			args.add(s);
 	}
 
-	private void startInternalDebugger(final Path javaPath,
+	private void executeABSSystem(final Path javaPath,
 			final String moduleName) {
 		Debugger.startABSRuntime(myProject.getName(), moduleName, javaPath,
 				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
