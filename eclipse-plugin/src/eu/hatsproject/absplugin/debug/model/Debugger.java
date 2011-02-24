@@ -119,7 +119,8 @@ public class Debugger implements SystemObserver{
         		
         	}
         });
-        if(useOurScheduling || useOurSystemObserver){
+        
+        if (useOurScheduling) {
     		Display.getDefault().asyncExec(new Runnable() {
     			@Override
 				public void run() {
@@ -131,7 +132,9 @@ public class Debugger implements SystemObserver{
     					showErrorMessage("Could not open ABS debug perspective");
     				}
     			}});
-        } 
+        } else {
+           debuggerRunner.start();
+        }
 	
 	}
 
@@ -139,7 +142,6 @@ public class Debugger implements SystemObserver{
 	 * Terminate the current ABSRuntime, if one exists.
 	 */
 	public void shutdown(){
-		//TODO: Some bug in Jans code? Steps are still possible, even after shutting the Runtime down, even after stopping debug thread...
 		if(isRunning()){
 			runtime.shutdown();
 			runtime = null;
