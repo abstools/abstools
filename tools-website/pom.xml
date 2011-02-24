@@ -73,6 +73,7 @@
         <version>1.6</version>
         <executions>
           <execution>
+	    <id>generate frontend jar</id>
             <phase>package</phase>
             <goals>
               <goal>run</goal>
@@ -80,11 +81,26 @@
             <configuration>
               <target name = "frontend-dist">
                 <ant antfile="../frontend/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
-                  <property name="target.jar" value="${basedir}/src/site/resources/download/absfrontend.jar" /> 
+                  <property name="target.jar" value="${basedir}/target/site/resources/download/absfrontend.jar" /> 
                 </ant>
               </target>
             </configuration>
           </execution>
+          <execution>
+	    <id>generate eclipse api doc</id>
+	  <phase>site</phase>
+	  <goals>
+	    <goal>run</goal>
+	  </goals>
+	  <configuration>
+	     <target name="eclipse-plugin-api">
+                <ant antfile="../eclipse-plugin/build.xml" useNativeBasedir="true" target="apidoc" inheritAll="false">
+                  <property name="doc.api.dir" value="../eclipse-plugin/${basedir}/target/site/eclipseplugin/devdocu/api/" /> 
+                </ant>
+	     </target>
+	  </configuration>
+	  
+	  </execution>
         </executions>
       </plugin>
     </plugins>

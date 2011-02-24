@@ -55,6 +55,7 @@
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
 	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
       <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html" collapse="true">
+        <item name="API Documentation" href="eclipseplugin/devdocu/api/index.html"/>
         <item name="Editor" href="eclipseplugin/devdocu/editor.html"/>
         <item name="Internals" href="eclipseplugin/devdocu/internal.html"/>
         <item name="Project Explorer" href="eclipseplugin/devdocu/projectexplorer.html"/>
