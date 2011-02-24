@@ -5,10 +5,13 @@
 	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
 	<property name="sdedit.dir" location="../sdedit-for-abs" />
-	<property name="src.dir" value="${basedir}/src" />
-	<property name="build.dir" value="${basedir}/bin" />
-	<property name="dist.dir" value="${basedir}/dist" />
-	<property name="ext.dir" value="${basedir}/lib" />
+	<property name="src.dir" location="${basedir}/src" />
+	<property name="build.dir" location="${basedir}/bin" />
+	<property name="dist.dir" location="${basedir}/dist" />
+	<property name="ext.dir" location="${basedir}/lib" />
+    <property name="doc.dir" location="${basedir}/doc" />
+    <property name="doc.api.dir" location="${doc.dir}/api" />
+	
 	<property name="plugin.name" value="eu.hatsproject.absplugin" />
 	<property name="frontend.version" value="1.0.0" />
 
@@ -18,6 +21,7 @@
 			<pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
 		</classpath>
 	</taskdef>
+	
 	
 	<target name="init">
 	   <mkdir dir="${dist.dir}" />
@@ -32,6 +36,21 @@
 		  <equals arg1="${eclipse.home}" arg2="PLEASE SPECIFY"/>
 		</condition>
 	    <antcall target="exitIfEclipseHomeNotSet"></antcall>
+		
+        <fileset id="eclipse-plugin-jars" dir="${eclipse.home}/plugins">
+            <include name="**/org.eclipse.*" />
+        </fileset>
+		
+        <path id="build.classpath">
+           <pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
+           <pathelement location="${frontend.dir}/bin" />
+           <path location="${frontend.dir}/lib/beaver.jar"/>
+           <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
+           <fileset refid="eclipse-plugin-jars" />
+        </path>
+            
+		
+		
 	</target>
     
 	<target name="exitIfEclipseHomeNotSet" if="eclipse.home.notset">
@@ -98,16 +117,17 @@
 			<fileset dir="${dist.dir}" />
 		</delete>
 	</target>
+	
+	<target name="apidoc" description="generates JavaDoc" depends="init">
+		  <javadoc sourcepath="${src.dir}" destdir="${doc.api.dir}">
+		  	<classpath refid="build.classpath" />
+		  </javadoc>
+	</target>
 
 	<target name="compile" depends="init" description="Compiles all java files in the source directory.">
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off">
-			<classpath>
-				<pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
-				<pathelement location="${frontend.dir}/bin" />
-				<fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
-				<fileset dir="${eclipse.home}/plugins" includes="**/*.jar" />
-			</classpath>
+			<classpath refid="build.classpath" />
 		</javac>
 	</target>
 

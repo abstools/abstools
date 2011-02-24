@@ -22,9 +22,6 @@ import eu.hatsproject.absplugin.util.InternalASTNode;
  */
 public class ABSNavigatorStyledLabelProvider extends StyledCellLabelProvider implements ILabelProvider{
 
-	/**
-	 * @{inheritDoc}
-	 */
 	@Override
 	public void update(ViewerCell cell) {
 		Object obj = cell.getElement();

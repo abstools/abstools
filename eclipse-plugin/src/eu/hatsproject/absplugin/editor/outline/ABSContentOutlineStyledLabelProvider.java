@@ -23,9 +23,8 @@ public class ABSContentOutlineStyledLabelProvider extends StyledCellLabelProvide
 	public ABSContentOutlineStyledLabelProvider(){
 		super(StyledCellLabelProvider.COLORS_ON_SELECTION);
 	}
-	/**
-	 * @{inheritDoc}
-	 */
+
+
 	@Override
 	public void update(ViewerCell cell) {
 		Object obj = cell.getElement();
@@ -38,17 +37,11 @@ public class ABSContentOutlineStyledLabelProvider extends StyledCellLabelProvide
 		super.update(cell);
 	}
 
-	/**
-	 * @{inheritDoc}
-	 */
 	@Override
 	public Image getImage(Object element) {
 		return getImageForObject(element);
 	}
 
-	/**
-	 * @{inheritDoc}
-	 */
 	@Override
 	public String getText(Object element) {
 		return getLabel(element).toString();

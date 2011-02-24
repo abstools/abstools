@@ -41,7 +41,7 @@ public abstract class AbstractLaunchJavaShortcut {
 	 * Starts a JavaJob using the default arguments/settings with the given action id 
 	 * and the selected resource from the given selection
 	 * 
-	 * @see {@link #launchSelectedFile(ISelection, String, boolean)}
+	 * @see #launchSelectedFile(ISelection, String, boolean)
 	 * @param selection
 	 * @param actionId
 	 */
@@ -53,7 +53,7 @@ public abstract class AbstractLaunchJavaShortcut {
 	 * Starts a JavaJob using the default arguments/settings with the given action id 
 	 * and the active file in the given editor.
 	 * 
-	 * @see {@link #launchActiveFile(IEditorPart, String, boolean)}
+	 * @see #launchActiveFile(IEditorPart, String, boolean)
 	 * @param editor
 	 * @param actionId
 	 */
