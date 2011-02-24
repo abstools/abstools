@@ -35,12 +35,12 @@ delta D2 {
 
 delta D3 {
     modifies class Fruit {
-        modifies String get_name() { return "Fruit NAME " + original(); }
+        modifies String get_name() { String o = original(); return "Fruit NAME " + o; }
     }
 }
 delta D4 {
     modifies class Vege {
-        modifies String get_name() { return "Vege NAME " + original(); }
+        modifies String get_name() { String o = original(); return "Vege NAME " + o; }
     }
 }
 
