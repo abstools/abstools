@@ -833,7 +833,7 @@ class DebugWindow implements DebugModelListener {
         this.model = model;
         frame = new JFrame("ABS Graphical Debugger");
         frame.setLayout(new BorderLayout());
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         tabs = new JTabbedPane();
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
