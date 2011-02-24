@@ -69,6 +69,7 @@ aspect DeltaCollector {
             HashMap<String, DeltaDecl> alldeltas) throws WrongProgramArgumentException {
 
         HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
+        int seed = 0;
         
         // collect applicable deltas
         for (CompilationUnit u : this.getCompilationUnits()) {
@@ -82,9 +83,12 @@ aspect DeltaCollector {
                                 // # Found clause with applicable delta!
                                 DeltaDecl delta = alldeltas.get(deltaid);
                                 List<Deltaparam> params = c.getDeltaspec().getDeltaparams();
+//                                System.out.println("## Found delta "+ c.getDeltaspec().getName() + "-" +
+//                                    params.getNumChild() + " - " + params.toString());
                                 delta = delta.substituteDeltaParams(params, prod.getFeatures());
-                                for (Deltaparam p : params)
-                                    deltaid = deltaid + "#" + p.getName();  // getName defined below
+//                                for (Deltaparam p : params)
+//                                    deltaid = deltaid + "#" + p.getName();  // getName defined below
+//                                deltaid = deltaid + "#" + (seed++);
                                 deltas.put(deltaid, delta);
                             } else
                                 throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
@@ -94,8 +98,8 @@ aspect DeltaCollector {
             }
         }
         // DEBUG
-        System.out.println("Collected deltas:");
-        System.out.println(deltas.toString());
+        // System.out.println("## Collected deltas:");
+        // System.out.println(deltas.toString());
         return deltas;
     }
 
@@ -206,10 +210,9 @@ aspect DeltaCollector {
     {
         HashMap<String,Value> res = new HashMap<String,Value>();
         for (int i = 0; i < dparams.getNumChild(); i++) {
-            System.out.println("## next param: " + getParam(i).getName());
             res.put(getParam(i).getName(),dparams.getChildNoTransform(i).calcValue(feats));
         }
-        System.out.println("## collected subst: " + res);
+        System.out.println("## collected subst ["+getName()+"]: " + res);
         return res;
     }
 
@@ -223,16 +226,13 @@ aspect DeltaCollector {
     throws WrongProgramArgumentException
     {
         DeltaDecl d;
-        System.out.println("## creating copy.");
         d = this.fullCopy();
-        System.out.println("## substituting using " + dparams.getNumChild()+" params:");
         d.applySubstitution(d.getSubstitution(dparams,feats));
         return d;
     }
 
     // apply a substitution to DeltaDecl
     public void DeltaDecl.applySubstitution(HashMap<String,Value> subst) {
-        System.out.println("## calling substitute method in all class modifiers.");
         for (ClassModifier d : getClassModifiers())
             d.applySubstitution(subst);
     }
@@ -300,6 +300,7 @@ aspect DeltaCollector {
             int i = p.getIndexOfChild(this);
             p.setChild(v.calcExpr(),i);
         }
+
     }
     abstract public PureExp Value.calcExpr();
     public PureExp IntVal.calcExpr() {

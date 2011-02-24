@@ -70,6 +70,7 @@ aspect PrettyPrint {
         w.print(getAccess());
         w.print(' ');
         w.print(getName());
+        if (hasInitExp()) w.print(" = "+getInitExp());
     }
 
     public void ClassDecl.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
@@ -93,4 +94,16 @@ aspect PrettyPrint {
         w.print(' ');
         super.prettyPrintChildren(w,f);   
     }
+
+	public void Value.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+		w.print("Const(" + this.getName() + ")");
+	}
+	public void StringLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
+		w.print("StringLiteral(" + this.getContent() + ")");
+	}
+	public void IntLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
+		w.print("IntLiteral(" + this.getContent() + ")");
+	}
+
+
 }
