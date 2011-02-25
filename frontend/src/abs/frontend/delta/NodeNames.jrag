@@ -26,7 +26,7 @@ aspect DeltaName {
     eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
 }
 
-
+// inform various nodes about the name of the class where they were defined
 aspect ClassName {
     public String AddClassModifier.className() {
         return this.getClassDecl().getName();
@@ -43,11 +43,17 @@ aspect ClassName {
     
     inh String ModifyMethodModifier.className();
     eq ModifyClassModifier.getModifier().className() = this.className();
+    
+//    inh String Stmt.className();
+//    eq ModifyMethodModifier.getMethodImpl().getBlock().getStmt().className() = this.className();
+//    
+//    inh String Exp.className();
+//    eq ExpressionStmt.getExp().className() = this.className();
 }
 
 
+// qualify node names with the name of the module where they were defined
 aspect QualifiedName {
-    // prepend the name of the module where this declaration occured
     public String Decl.qualifiedName() {
         return this.moduleName() + "." + this.getName();
     }

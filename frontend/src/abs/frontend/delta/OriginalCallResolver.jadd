@@ -34,37 +34,56 @@ aspect OriginalCallResolver {
         }
     }
     
-    public void ModifyMethodModifier.resolveOriginalCalls(ArrayList<DeltaDecl> prevdeltas) {
+    public void ModifyMethodModifier.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) {
         String classid = this.className();
         MethodImpl method = getMethodImpl();
         String methodid = method.getMethodSig().getName();
         // find original calls
         Block block = method.getBlock();
         for (Stmt s : block.getStmts()) {
-            System.out.println(this.deltaName() + " > " + s.getClass().getName() + " > " + s);
+            System.out.println(this.deltaName() + " <Statement> " + s.getClass().getName() + " > " + s);
 
             if (s instanceof ExpressionStmt) {
-                Exp e = ((ExpressionStmt)s).getExp();
-                if (e instanceof OriginalCall) {
-                    // FOUND
-                    // find MethodImpl with name classid.methodid in previous delta list
-//                  MethodImpl originalImpl = module.findOriginal(prevdeltas, classid, methodid);
-                    MethodImpl originalImpl = new MethodImpl(); // FIXME
-                    // add a new AddMethodModifier that wraps that MethodImpl (with different name) to the current delta.
-                    ModifyClassModifier cm = new ModifyClassModifier();
-                    MethodImpl originalImplCopy = originalImpl.fullCopy();
-                    originalImplCopy.getMethodSig().setName(methodid + "Original"); // FIXME maybe too simple?
-                    cm.addModifier(new AddMethodModifier(originalImplCopy));
-                    delta().addClassModifier(cm);
-                    // replace OriginalCall node with a call to that method (new name)
-                    // TODO
-                    System.out.println(">>> Call to original " + classid + "." + methodid + "(" + ((OriginalCall)e).getParams() + ")");
+                Exp exp = ((ExpressionStmt)s).getExp();
+                if (exp instanceof OriginalCall) {
+                    // replace OriginalCall with new expression
+                    EffExp newexp = ((OriginalCall)exp).resolve(deltas, classid, methodid);
+                    ((ExpressionStmt)s).setExp(newexp);
+                }
+            } else if (s instanceof VarDeclStmt) {
+                VarDecl vd = ((VarDeclStmt)s).getVarDecl();
+                Exp exp = vd.hasInitExp() ? vd.getInitExp() : null;
+                if (exp instanceof OriginalCall) {
+                    // replace OriginalCall with new expression
+                    EffExp newexp = ((OriginalCall)exp).resolve(deltas, classid, methodid);
+                    ((VarDeclStmt)s).getVarDecl().setInitExp(newexp);
                 }
             }
         }
     }
     
-
-
-}
     
+    public EffExp OriginalCall.resolve(
+            ArrayList<DeltaDecl> prevdeltas, 
+            String classid, 
+            String methodid) {
+        // find MethodImpl with name classid.methodid in previous delta list
+//      MethodImpl originalImpl = module.findOriginal(prevdeltas, classid, methodid);
+        MethodImpl originalImpl = new MethodImpl(); // FIXME
+        // add a new AddMethodModifier that wraps that MethodImpl (with different name) to the current delta.
+        ModifyClassModifier cm = new ModifyClassModifier();
+//        MethodImpl originalImplCopy = originalImpl.fullCopy();
+        String methodidOriginal = methodid + "^Original"; // FIXME maybe too simple?
+//      originalImplCopy.getMethodSig().setName(methodidOriginal); 
+//      cm.addModifier(new AddMethodModifier(originalImplCopy));
+//      delta().addClassModifier(cm);
+        // replace OriginalCall node with a call to that method (new name)
+        // TODO
+//        System.out.println(">>> Call to original " + classid + "." + methodid + "(" + ((OriginalCall)exp).getParams() + ")");
+        
+        // create new call to this.methodidOriginal, pass on original params
+        return new SyncCall(new ThisExp(), methodidOriginal, this.getParams());
+    }
+    
+    
+}

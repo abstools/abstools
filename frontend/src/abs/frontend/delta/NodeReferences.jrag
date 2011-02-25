@@ -1,4 +1,4 @@
-aspect Scope {
+aspect NodeReferences {
     
     // inform ClassModifiers and Modifiers about the DeltaDecl where they were declared
     inh DeltaDecl ClassModifier.delta();
