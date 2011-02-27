@@ -163,7 +163,7 @@ aspect OriginalCallResolver {
         ModifyClassModifier cm = new ModifyClassModifier();
         cm.setName(this.className());
         MethodImpl methodCopy = method.fullCopy();
-        String uid = Integer.toString(UUID.randomUUID().hashCode());
+        String uid = Integer.toHexString(UUID.randomUUID().hashCode());
         String methodCopyID = method.getMethodSig().getName() + "_Orig" + uid;
         // TODO include the delta's name in the new method's name?
         methodCopy.getMethodSig().setName(methodCopyID); 
