@@ -212,7 +212,7 @@ aspect DeltaCollector {
         for (int i = 0; i < dparams.getNumChild(); i++) {
             res.put(getParam(i).getName(),dparams.getChildNoTransform(i).calcValue(feats));
         }
-        System.out.println("## collected subst ["+getName()+"]: " + res);
+//        System.out.println("## collected subst ["+getName()+"]: " + res);
         return res;
     }
 

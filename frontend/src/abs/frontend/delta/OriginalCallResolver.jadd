@@ -14,7 +14,7 @@ aspect OriginalCallResolver {
         ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
         for (DeltaDecl delta : deltas) {
             delta.resolveOriginalCalls(prevdeltas);
-            prevdeltas.add(delta);
+            prevdeltas.add(0, delta);
         }
     }
 
@@ -37,7 +37,7 @@ aspect OriginalCallResolver {
     /* This field is used to save/cache the original MethodImpl
      * once it has been found.
      */
-    private MethodImpl ModifyMethodModifier.OriginalImpl = null;
+    private MethodImpl ModifyMethodModifier.OriginalMethodImpl = null;
 
     
     /*
@@ -50,7 +50,7 @@ aspect OriginalCallResolver {
 
         // replace OriginalCalls with calls to copy of original method
         for (Stmt s : method.getBlock().getStmts()) {
-            System.out.println(this.deltaName() + " <Statement> " + s.getClass().getName() + " > " + s);
+            System.out.println("++++++ Statement " + s.getClass().getName() + " := " + s);
 
             if (s instanceof ExpressionStmt) {
                 Exp exp = ((ExpressionStmt)s).getExp();
@@ -79,12 +79,15 @@ aspect OriginalCallResolver {
         
         String classid = this.className();
         String methodid = this.getMethodImpl().getMethodSig().getName();
-        MethodImpl method = this.OriginalImpl;
+        MethodImpl method = this.OriginalMethodImpl;
         
         if (method == null) {
             // find original MethodImpl and copy it
             MethodImpl original = findOriginal(methodid, classid, deltas);
+            System.out.println("found original: " + original.getMethodSig());
+
             method = copyOriginal(original);
+            System.out.println("copied original: " + method.getMethodSig());
         }
         // construct call and pass on the original params
         return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams());
