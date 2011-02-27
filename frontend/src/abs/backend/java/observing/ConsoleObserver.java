@@ -39,7 +39,7 @@ public class ConsoleObserver extends RegistratingObserver {
     }
     
     @Override
-    public void methodCalled(String method, List<ABSValue> args) {
+    public void methodCalled(ObjectView object, String method, List<ABSValue> args) {
         show("Method called: "+method+"("+StringUtil.iterableToString(args, ",")+")");
     }
     

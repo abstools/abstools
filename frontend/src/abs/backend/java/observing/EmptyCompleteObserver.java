@@ -23,15 +23,15 @@ public class EmptyCompleteObserver implements CompleteObserver {
     }
 
     @Override
-    public void methodCalled(String method, List<ABSValue> args) {
+    public void methodCalled(ObjectView o, String method, List<ABSValue> args) {
     }
 
     @Override
-    public void fieldRead(String field, ABSValue value) {
+    public void fieldRead(ObjectView o, String field, ABSValue value) {
     }
 
     @Override
-    public void fieldUpdated(String field, ABSValue oldValue, ABSValue newValue) {
+    public void fieldUpdated(ObjectView o, String field, ABSValue oldValue, ABSValue newValue) {
     }
 
     @Override
