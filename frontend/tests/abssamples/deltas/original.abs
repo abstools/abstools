@@ -19,9 +19,7 @@ class Fruit implements Fruity {
 delta D1 {
     modifies class Fruit {
         modifies String get_name() {
-//            String o = original();
-//            return "D1." + o;
-            return "D1";
+            return original(); // ReturnStmt
         }
     }
 }
@@ -29,7 +27,7 @@ delta D1 {
 delta D2 {
     modifies class Fruit {
         modifies String get_name() {
-            String o = original();
+            String o = original(); // VarDeclStmt
             return "D2." + o;
         }
     }
@@ -38,7 +36,9 @@ delta D2 {
 delta D3 {
     modifies class Fruit {
         modifies String get_name() {
-            String o = original();
+            original(); // ExpressionStmt
+            String o = "";
+            o = original(); // AssignStmt
             return "D3." + o;
         }
     }
@@ -47,13 +47,20 @@ delta D3 {
 delta D4 {
     modifies class Fruit {
         modifies String get_name() {
-            String o = original();
+            String o = original(); // VarDeclStmt
             return "D4." + o;
         }
     }
 }
 
+delta DX {}
 
+delta D5 {
+    adds class XXX {
+        Unit hello() {}
+        Unit bye() { this.hello(); }
+    }
+}
 
 //*****************************************************************
 
@@ -61,8 +68,10 @@ productline PL {
     features Stuff;
     delta D1 when Stuff;
     delta D2 after D1 when Stuff;
-    delta D3 after D2 when Stuff;
+    delta DX when Stuff;
+    delta D3 after D2,DX when Stuff;
     delta D4 after D3 when Stuff;
+    delta D5 after D4 when Stuff;
 
 }
 

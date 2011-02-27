@@ -1,10 +1,21 @@
-aspect NodeReferences {
-    
-    // inform ClassModifiers and Modifiers about the DeltaDecl where they were declared
+// inform ClassModifiers and Modifiers about the DeltaDecl where they were declared
+aspect Delta {
     inh DeltaDecl ClassModifier.delta();
     eq DeltaDecl.getClassModifier().delta() = this;
     
     inh DeltaDecl Modifier.delta();
     eq ModifyClassModifier.getModifier().delta() = this.delta();
 
+}
+
+//inform a Decl about the Module where it was declared
+aspect Module {
+    inh ModuleDecl Decl.module();
+    eq ModuleDecl.getDecl().module() = this;
+
+    inh ModuleDecl ClassModifier.module();
+    eq DeltaDecl.getClassModifier().module() = this.module();
+
+    inh ModuleDecl Modifier.module();
+    eq ModifyClassModifier.getModifier().module() = this.module();
 }

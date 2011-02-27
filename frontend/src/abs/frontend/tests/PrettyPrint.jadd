@@ -79,6 +79,40 @@ aspect PrettyPrint {
         super.prettyPrintChildren(w,f);        
     }
     
+    public void ClassModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(this.getClass().getSimpleName() + "(" + this.qualifiedName() + ")");
+        
+    }
+
+    public void Modifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(this.getClass().getSimpleName());        
+    }
+
+    public void AddMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        super.prettyPrint(w, f);
+        w.print("(" + this.getMethodImpl().getMethodSig() + ")");       
+    }
+
+    public void ModifyMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        super.prettyPrint(w, f);
+        w.print("(" + this.getMethodImpl().getMethodSig() + ")");       
+    }
+    
+    public void RemoveMethodModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        super.prettyPrint(w, f);
+        w.print("(" + this.getMethodSig() + ")");       
+    }
+
+    public void AddFieldModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        super.prettyPrint(w, f);
+        w.print("(" + this.getFieldDecl() + ")");        
+    }
+
+    public void RemoveFieldModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+        super.prettyPrint(w, f);
+        w.print("(" + this.getFieldDecl() + ")");        
+    }
+
     public void AddClassModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getClassDecl().getName());
         w.print(' ');
@@ -94,16 +128,16 @@ aspect PrettyPrint {
         w.print(' ');
         super.prettyPrintChildren(w,f);   
     }
-
-	public void Value.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
-		w.print("Const(" + this.getName() + ")");
-	}
-	public void StringLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
-		w.print("StringLiteral(" + this.getContent() + ")");
-	}
-	public void IntLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
-		w.print("IntLiteral(" + this.getContent() + ")");
-	}
+    
+    public void Value.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print("Const(" + this.getName() + ")");
+    }
+    public void StringLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print("StringLiteral(" + this.getContent() + ")");
+    }
+    public void IntLiteral.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print("IntLiteral(" + this.getContent() + ")");
+    }
 
 
 }

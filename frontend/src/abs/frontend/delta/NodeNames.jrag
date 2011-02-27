@@ -1,6 +1,5 @@
+//inform a Decl about the name of the Module where it was declared
 aspect ModuleName {
-
-    //inform every Decl about the name of the Module where it was declared
     inh String Decl.moduleName();
     eq ModuleDecl.getDecl().moduleName() = this.getName();
 
