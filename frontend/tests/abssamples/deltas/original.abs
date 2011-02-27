@@ -11,36 +11,45 @@ class Fruit implements Fruity {
     String get_name() { return name; }
 }
 
-// ADD class
+/* MOD class - MOD method
+ *
+ * I seems that calling original() only makes sense in a delta
+ * that modifies an existing class by modifying a method in that class.
+ */
 delta D1 {
-    adds class Vege implements Fruity {
-        String name = "vege";
-        String get_name() { return name; }
+    modifies class Fruit {
+        modifies String get_name() {
+//            String o = original();
+//            return "D1." + o;
+            return "D1";
+        }
     }
 }
 
-// MOD class - ADD method
 delta D2 {
     modifies class Fruit {
-        adds Int size = 99;
-        adds Int get_size() { return size; }
+        modifies String get_name() {
+            String o = original();
+            return "D2." + o;
+        }
     }
 }
-
-/* MOD class - MOD method
- * The way I (Radu) see it,
- * calling original() only makes sense in a delta that modifies an existing class
- * by modifying a method in that class.
- */
 
 delta D3 {
     modifies class Fruit {
-        modifies String get_name() { original(); String o = original(); return "Fruit NAME " + o; }
+        modifies String get_name() {
+            String o = original();
+            return "D3." + o;
+        }
     }
 }
+
 delta D4 {
-    modifies class Vege {
-        modifies String get_name() { String o = original(); return "Vege NAME " + o; }
+    modifies class Fruit {
+        modifies String get_name() {
+            String o = original();
+            return "D4." + o;
+        }
     }
 }
 
@@ -51,9 +60,9 @@ delta D4 {
 productline PL {
     features Stuff;
     delta D1 when Stuff;
-    delta D2 when Stuff;
-    delta D3 when Stuff;
-    delta D4 after D1 when Stuff;
+    delta D2 after D1 when Stuff;
+    delta D3 after D2 when Stuff;
+    delta D4 after D3 when Stuff;
 
 }
 
@@ -62,11 +71,6 @@ productline PL {
 product P (Stuff) {
     Fruity fruit = new Fruit();
     String name = fruit.get_name();
-    Int x = fruit.get_size();
-
-    Fruity veg = new Vege();
-    String name = veg.get_name();
-    Int x = veg.get_size();
 }
 
 

@@ -77,7 +77,7 @@ aspect Flattener {
             //remove ClassDecl
             md.getDecls().removeChild(found);
         else
-            throw new ASTNodeNotFoundException(md, classname);
+            throw new ASTNodeNotFoundException("ClassDecl " + md.getName() + "." + classname);
     }
 
     public void AddClassModifier.applyTo(ModuleDecl md) {
@@ -103,7 +103,7 @@ aspect Flattener {
                 mod.applyTo((ClassDecl) md.getDecl(found));
             }
         else
-            throw new ASTNodeNotFoundException(md, classname);
+            throw new ASTNodeNotFoundException("ClassDecl " + md.getName() + "." + classname);
     }
 
     /**************************************************************************
@@ -129,7 +129,7 @@ aspect Flattener {
             // remove MethodImpl from list
             cd.getMethods().removeChild(found);
         else
-            throw new ASTNodeNotFoundException(cd, mysig);
+            throw new ASTNodeNotFoundException("MethodDecl " + cd.qualifiedName() + "." + mysig);
     }
 
     public void AddMethodModifier.applyTo(ClassDecl cd) {
@@ -152,7 +152,7 @@ aspect Flattener {
             // replace MethodImpl
             cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
         else
-            throw new ASTNodeNotFoundException(cd, mysig);
+            throw new ASTNodeNotFoundException("MethodDecl " + cd.qualifiedName() + "." + mysig);
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
@@ -170,7 +170,7 @@ aspect Flattener {
         if (found >= 0)
             cd.getFields().setChild(this.getFieldDecl().fullCopy(), found);
         else
-            throw new ASTNodeNotFoundException(cd, myfield);
+            throw new ASTNodeNotFoundException("FieldDecl " + cd.qualifiedName() + "." + myfield);
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
