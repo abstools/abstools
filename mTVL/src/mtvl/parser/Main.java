@@ -91,7 +91,7 @@ public class Main {
                 if (checkfst && (product == null))
                   product = file;
                 else if (checkfst) {
-                  System.out.println("parsing FSL file: "+file);
+                  System.out.println("parsing ABS file:  "+file);
                   fsunit = parseFSUnit(new File(file));
                   checkfst = false;
                 }
@@ -148,8 +148,14 @@ public class Main {
           if (check) {
             ChocoSolver s = m.getCSModel(verbose);
             Map<String,Integer> guess = new HashMap<String,Integer>();
-            fsunit.getSolution(product,guess);
-            System.out.println("checking solution: "+s.checkSolution(guess,m));            
+            if (fsunit.getSolution(product,guess))
+              System.out.println("checking solution: "+s.checkSolution(guess,m));
+            else {
+              System.out.println("Product '"+product+"' not found.");
+              if (!product.contains("."))
+                System.out.println("Maybe you forgot the module name?");
+            }
+
           }
 //           else {
 //             ChocoSolver s = m.getCSModel(verbose);

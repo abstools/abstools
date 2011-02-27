@@ -82,7 +82,7 @@ public class ChocoSolver {
     return (IntegerVariable) vars.get(var);
   }
   
-  public void solve() {
+  public boolean solve() {
     // show the problem
     if (verbose) {
       System.out.print("## The constraints:");
@@ -92,8 +92,9 @@ public class ChocoSolver {
     // Read the model
     s.read(m);
     // Solve the model
-    s.solve();
-    solved = true;
+    solved = s.solve();
+    //solved = true;
+    return solved;
   }
 
   public Map<String,Integer> getSolution() {
@@ -112,6 +113,9 @@ public class ChocoSolver {
 
   public String resultToString() {
     if (!solved) solve();
+
+    if (!solved)
+      return "-- No solution found --\n";
 
     String result = "";
 

@@ -292,7 +292,7 @@ aspect DeltaCollector {
         for (ParamDecl p : getParams()) p.updateSubstitution(subst);
     }
 
-    // teh actual substitution!
+    // the actual substitution!
     public void VarUse.applySubstitution(HashMap<String,Value> subst) {
         if (subst.containsKey(getName())) {
             Value v = subst.get(getName());
