@@ -10,10 +10,10 @@ class Greeter implements Greeting {
 }
 
 class Application {
+    String s = "";
     Unit run() {
         Greeting bob;
         bob = new Greeter();
-        String s = "";
         s = bob.sayHello();
     }
 }
