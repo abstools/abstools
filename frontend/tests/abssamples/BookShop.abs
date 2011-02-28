@@ -302,9 +302,9 @@ class SessionImp(Agent agent, Database db) implements Session {
             shippingtime = calculatetime(getBookMap(preresult), countryshiptime(info(getCountryinfo(preresult))));
             updatedb = db.confirmOrder(map2list(getBookMap(preresult)));
             if (updatedb){result = Result(map2list(getBookMap(preresult)), shippingcost, shippingtime);}
-            else {result = OrderFail;};         
+            else {result = OrderFail;}
          }
-        else {result = OrderFail;};
+        else {result = OrderFail;}
         agent.free(this);
         return result;
         
