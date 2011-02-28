@@ -10,7 +10,7 @@ aspect Flattener {
      * finding the features of a given product, finding the sequence of 
      * associated deltas, and applying them.
      */
-    public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
         System.out.println("*** configuring product: " + prod.qualifiedName());
 

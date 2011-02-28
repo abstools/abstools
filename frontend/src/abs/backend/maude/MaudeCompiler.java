@@ -75,7 +75,7 @@ public class MaudeCompiler {
 
         if (!hasErrors) {
             if (flatten) {
-                m.configureProduct(product);
+                m.flattenForProduct(product);
             }
             PrintStream stream = System.out;
             if (outputfile != null) {
