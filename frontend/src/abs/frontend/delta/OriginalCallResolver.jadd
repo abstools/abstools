@@ -83,6 +83,7 @@ aspect OriginalCallResolver {
     
     /* Find the original method implementation, copy it to current delta,
      * and construct a call to it.
+     * FIXME take into account method removal in deltas
      */
     public EffExp ModifyMethodModifier.constructNewCall(
             OriginalCall oc, 
