@@ -27,6 +27,8 @@ public class MaudeCompiler {
         boolean hasErrors = false;
         boolean stdlib = true;
         boolean expectOutputFile = false;
+        boolean flatten = false;
+        String product = "";
         File outputfile = null;
         String module = "ABS-SIMULATOR-RL";
         for (String arg : args) {
@@ -37,6 +39,9 @@ public class MaudeCompiler {
                 stdlib = false;
             } else if (arg.equals("-timed")) {
                 module = "ABS-SIMULATOR-EQ-TIMED";
+            } else if (arg.startsWith("-product=")) {
+                flatten = true;
+                product = arg.split("=")[1];
             } else if (arg.equals("-h")) {
                 printUsage();
                 System.exit(1);
@@ -69,6 +74,9 @@ public class MaudeCompiler {
         }
 
         if (!hasErrors) {
+            if (flatten) {
+                m.configureProduct(product);
+            }
             PrintStream stream = System.out;
             if (outputfile != null) {
                 stream = new PrintStream(outputfile);
