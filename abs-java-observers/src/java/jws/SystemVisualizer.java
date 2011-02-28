@@ -29,21 +29,20 @@ import abs.backend.java.observing.TaskView;
 
 public class SystemVisualizer extends RegistratingObserver {
 
-	final MyObjectGraph graph = new MyObjectGraph();
-	Viewer viewer = graph.display();
+	final ObjectGraph graph;
 	
-	{
-		viewer.setCloseFramePolicy(CloseFramePolicy.EXIT);
-		
-
+	public SystemVisualizer() {
+		 graph = new GraphStreamGraph();
 	}
 	
-	final AtomicInteger edgeCounter = new AtomicInteger();
+	protected SystemVisualizer(ObjectGraph graph) {
+		this.graph = graph;
+	}
 	
 	@Override
 	public synchronized void taskCreated(TaskView task) {
 		if (task.getSource() != null) {
-			graph.addEdge(edgeCounter.incrementAndGet()+"edge", task.getSource(), task.getTarget());
+			graph.addEdge(task.getSource(), task.getTarget());
 		}
 	}
 	
@@ -55,43 +54,20 @@ public class SystemVisualizer extends RegistratingObserver {
 	   graph.addObject(initialObject, true);
 	}
 	
-	private String fileName;
-	private FileSink fileSink;
-	
-	
-	
 	@Override
 	public synchronized void objectCreated(ObjectView o) {
-//	   super.objectCreated(o);
-
 	   graph.addObject(o, false);
 	   //graph.addEdge(edgeCounter.incrementAndGet()+"edge", initialObjects.get(o.getCOG()), o, true);
 	}
 
 	@Override
-	public void systemStarted() {
-		fileSink = new FileSinkDGS();
-		graph.graph.addSink(fileSink);
-		Random r = new Random();
-      fileName = "graph"+r.nextInt(Integer.MAX_VALUE)+ ".dgs";
-      try {
-	      fileSink.begin(fileName);
-      } catch (IOException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      }
+	public synchronized void systemStarted() {
+		graph.begin();
 	}
 	
 	@Override
 	public synchronized void systemFinished() {
-		try {
-	      fileSink.end();
-	      File f = new File(fileName);
-	      System.out.println("Graph written to "+f.toURI().toURL().toExternalForm());
-      } catch (IOException e) {
-	      // TODO Auto-generated catch block
-	      e.printStackTrace();
-      }
+		graph.end();
 	}
 	
 }
