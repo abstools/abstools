@@ -166,7 +166,6 @@ aspect DeltaCollector {
 
         // check whether each required feature is also ON
         for (Feature reqFeature : this.getFeatures()) {
-//            System.out.println(">>> required feature: " + reqFeature.getName() +  " is " + onFeatureIDs.contains(reqFeature.getName()));
             if (! onFeatureIDs.contains(reqFeature.getName()))
                 return false;
         }

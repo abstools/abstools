@@ -12,27 +12,21 @@ aspect Flattener {
      */
     public void Model.configureProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
-        System.out.println("configuring product: " + prod.qualifiedName());
+        System.out.println("*** configuring product: " + prod.qualifiedName());
 
         ArrayList<DeltaDecl> deltas = this.getSortedDeltas(prod);
 
-        System.out.print("applicable deltas: ");
+        System.out.print("*** applicable deltas: ");
         for (DeltaDecl delta : deltas)
             System.out.print(delta.qualifiedName() + ", ");
         System.out.println("");
 
-        System.out.println("\n=================================================================\n");
-
         // TODO resolve original() calls
         this.resolveOriginalCalls(deltas);
         
-        System.out.println("\n=================================================================\n");
-
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
-        
-        System.out.println("\n=================================================================\n");
     }
     
     //propagate
@@ -47,9 +41,9 @@ aspect Flattener {
 
         //if DeltaDecl was defined in *this* module, apply its ClassModifiers...
         if (delta.moduleName().equals(moduleid)) {
-            System.out.println("**D** applying Delta" + delta.qualifiedName());
+            System.out.println("***D applying Delta" + delta.qualifiedName());
             for (ClassModifier cmod : delta.getClassModifiers()) {
-                System.out.println("==C== applying " + cmod);
+                System.out.println("***C applying " + cmod);
                 cmod.applyTo(this);
             }
         }
@@ -100,7 +94,7 @@ aspect Flattener {
         if (found >= 0)
             // apply all modifiers
             for (Modifier mod : this.getModifiers()) {
-                System.out.println("--M-- applying " + mod);
+                System.out.println("***M applying " + mod);
                 mod.applyTo((ClassDecl) md.getDecl(found));
             }
         else
