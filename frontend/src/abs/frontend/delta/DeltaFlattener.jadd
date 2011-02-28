@@ -41,9 +41,9 @@ aspect Flattener {
 
         //if DeltaDecl was defined in *this* module, apply its ClassModifiers...
         if (delta.moduleName().equals(moduleid)) {
-            System.out.println("***D applying Delta" + delta.qualifiedName());
+//            System.out.println("***D applying Delta" + delta.qualifiedName());
             for (ClassModifier cmod : delta.getClassModifiers()) {
-                System.out.println("***C applying " + cmod);
+//                System.out.println("***C applying " + cmod);
                 cmod.applyTo(this);
             }
         }
@@ -94,7 +94,7 @@ aspect Flattener {
         if (found >= 0)
             // apply all modifiers
             for (Modifier mod : this.getModifiers()) {
-                System.out.println("***M applying " + mod);
+//                System.out.println("***M applying " + mod);
                 mod.applyTo((ClassDecl) md.getDecl(found));
             }
         else
