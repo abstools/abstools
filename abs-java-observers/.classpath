@@ -5,5 +5,8 @@
 	<classpathentry kind="lib" path="lib/gs-core.jar"/>
 	<classpathentry kind="lib" path="lib/absfrontend.jar"/>
 	<classpathentry kind="lib" path="lib/jung-api-2.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/jung-graph-impl-2.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/jung-algorithms-2.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/jung-visualization-2.0.1.jar"/>
 	<classpathentry kind="output" path="target/java/bin"/>
 </classpath>

@@ -24,24 +24,31 @@
   <property name="lib.abs" location="${lib}/absfrontend.jar" />
 
   <!-- change this to the name of the module that contains the main block -->
-   <property name="abs.mainmodule" value="ReplicationSystem.Main" />
+   <property name="abs.mainmodule" value="Environment.MainBlock" />
 <!--
    <property name="abs.mainmodule" value="ABSChat.Main" />
-     <property name="abs.mainmodule" value="Environment.MainBlock" />
+   <property name="abs.mainmodule" value="ReplicationSystem.Main" />
 -->
 <!-- END SNIPPET: properties -->
 
 <!-- START SNIPPET: build.abs.classpath -->
   <path id="build.abs.classpath">
      <pathelement location="${lib.abs}"/>
-     <pathelement location="bin"/>  	
-   <pathelement location="${lib}/gs-core.jar"/>     
+     <pathelement location="${target.java.bin}"/>  	
+     <pathelement location="${lib}/gs-core.jar"/>
+  	  <fileset dir="${lib}" >
+  	       <include name="*.jar"/>
+  	   </fileset>
+
   </path>
 <!-- END SNIPPET: build.abs.classpath -->
 
 <!-- START SNIPPET: src.abs.files -->
   <fileset dir="${src.abs}" id="src.abs.files">
      <include name="**/*.abs" />
+     <exclude name="**/deltas/**/*.abs" />
+     <exclude name="**/BookShop.abs" />
+   <exclude name="**/skeleton.abs" />
   </fileset>
   <pathconvert property="src.abs.fileargs" refid="src.abs.files" pathsep=" " />
 
@@ -105,12 +112,12 @@
     <java classname="${abs.mainmodule}.Main" fork="true"> 
     	
       <jvmarg value="-Dabs.debug=true"/>
-<!--    	 
-      <jvmarg value="-Dabs.systemobserver=jws.SystemVisualizer,abs.backend.java.debugging.GraphicalDebugger"/>
+      <jvmarg value="-Dabs.systemobserver=jws.JungSystemVisualizer,abs.backend.java.debugging.GraphicalDebugger"/>
       <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.InteractiveScheduler"/>
--->       
+<!--    	 
       <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.RandomSchedulingStrategy"/>
-     <jvmarg value="-Dabs.systemobserver=jws.SystemVisualizer"/>
+     <jvmarg value="-Dabs.systemobserver=jws.JungSystemVisualizer"/>
+-->       
        <classpath>
 	 <path refid="build.abs.classpath" />
 	 <pathelement path="${target.java.bin}" />
