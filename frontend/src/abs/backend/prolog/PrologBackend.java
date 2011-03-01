@@ -17,6 +17,7 @@ public class PrologBackend extends Main {
     public static int awaitId = 0;
 
     public static void main(final String[] args) {
+    	awaitId = 0;
         PrologBackend prologBE = new PrologBackend();
         try {
             prologBE.absToPrologTerms(args);
