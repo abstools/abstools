@@ -83,7 +83,6 @@ aspect OriginalCallResolver {
     
     /* Find the original method implementation, copy it to current delta,
      * and construct a call to it.
-     * FIXME take into account method removal in deltas
      */
     public EffExp ModifyMethodModifier.constructNewCall(
             OriginalCall oc, 
@@ -131,11 +130,18 @@ aspect OriginalCallResolver {
                                 MethodImpl method = ((ModifyMethodModifier)m).getMethodImpl();
                                 if (method.getMethodSig().getName().equals(methodid))
                                     return method;
+                            } else if (m instanceof RemoveMethodModifier) {
+                                if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
+                                    throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                                            + " -- it was removed in delta " + delta.getName());
                             }
                     } else if (cm instanceof AddClassModifier) {
                         for (MethodImpl method : ((AddClassModifier)cm).getClassDecl().getMethods())
                             if (method.getMethodSig().getName().equals(methodid))
                                 return method;
+                    } else if (cm instanceof RemoveClassModifier) {
+                        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                                + " -- it was removed in delta " + delta.getName());
                     }
                 }
             }
@@ -152,7 +158,7 @@ aspect OriginalCallResolver {
             }
         }
         // give up
-        throw new ASTNodeNotFoundException("Original MethodImpl of " + classid + "." + methodid);
+        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid);
     }   
     
     /* copy given MethodImpl to current delta
