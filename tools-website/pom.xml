@@ -84,6 +84,13 @@
                   <property name="target.jar" value="${basedir}/target/site/resources/download/absfrontend.jar" /> 
                 </ant>
               </target>
+<!-- 
+              <target name = "mtvl-dist">
+                <ant antfile="../mtvl/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
+                  <property name="target.jar" value="${basedir}/target/site/resources/download/mtvl.jar" /> 
+                </ant>
+              </target>
+ -->
             </configuration>
           </execution>
           <execution>

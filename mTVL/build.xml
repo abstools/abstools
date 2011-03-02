@@ -25,6 +25,7 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="junit.jar" value="junit-4.8.1.jar" />
+	<property name="target.jar" value="${dist.dir}/mtvl.jar" />
 
   <!-- new properties for mTVL related parser -->
   <property name="ast.src.dir" value="${src.dir}/mtvl/ast" />
@@ -165,7 +166,16 @@
 
   <!-- create distribution files for mTVL -->
 
-  <target name="dist" depends="clean,compile" description="create distribution files">
+  <target name="versionstamp">
+    <svn failonerror="false" javahl="false">
+      <wcVersion path="${basedir}" />
+    </svn>
+    <condition property="mtvl.version" value="${revision.prefix}.${revision.max}" else="">
+      <isset property="revision.max" />
+    </condition>
+  </target>
+  
+  <target name="dist" depends="clean,compile,versionstamp" description="create distribution files">
     <jar jarfile="${dist.dir}/mtvl.jar">
       <fileset dir="${build.dir}" includes="mtvl/**" />
       <fileset dir="${src.dir}" includes="mtvl/**" />
@@ -177,17 +187,20 @@
       <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
       <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
- -->
       <zipfileset src="${abs.dir}/dist/absfrontend.jar" />
+ -->
       <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
       <manifest>
         <attribute name="Main-Class" value="mtvl.parser.Main"/>
+        <attribute name="Implementation-Version" value="${abs.version}"/>
+        <attribute name="Bundle-Version" value="${abs.version}"/>
       </manifest>
     </jar>
   </target>
 
 
-  <!-- create distribution files for mTVL, using absfrontend as Main -->
+  <!-- create distribution files for mTVL, including absfrontend.jar
+      and using absfrontend as Main -->
 
 <target name="frontendversionstamp">
   <svn failonerror="false" javahl="false">
@@ -199,7 +212,7 @@
 </target>
 
 <target name="frontenddist" depends="clean,compile,frontendversionstamp" description="create distribution files">
-    <jar jarfile="${dist.dir}/absfrontend.jar">
+    <jar jarfile="${dist.dir}/fullabsfrontend.jar">
       <fileset dir="${build.dir}" includes="mtvl/**" />
       <fileset dir="${src.dir}" includes="mtvl/**" />
 <!--
