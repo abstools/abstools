@@ -17,6 +17,8 @@
   <property name="src" location="src" />
   <property name="target" location="target" />
    
+  <property name="src.java" location="${src}/java" />
+
   <property name="src.abs" location="${src}/abs" />
   <property name="target.java.src" location="${target}/java/src" />
   <property name="target.java.bin" location="${target}/java/bin" />
@@ -28,6 +30,7 @@
 <!--
    <property name="abs.mainmodule" value="ABSChat.Main" />
    <property name="abs.mainmodule" value="ReplicationSystem.Main" />
+
 -->
 <!-- END SNIPPET: properties -->
 
@@ -74,6 +77,13 @@
   </target>
 <!-- END SNIPPET: lib.abs.getjar -->
 
+  <target name="java.compile" depends="prepare">
+    <javac classpathref="build.abs.classpath" 
+       srcdir="${src.java}" 
+       destdir="${target.java.bin}">
+    </javac>
+  </target>
+
 <!-- START SNIPPET: abs.typecheck -->
   <target name="abs.typecheck" depends="prepare">
     <java classname="abs.frontend.parser.Main"
@@ -108,22 +118,34 @@
 <!-- END SNIPPET: abs.compile.java -->
 
 <!-- START SNIPPET: abs.run.java -->
-  <target name="abs.run.java" depends="">
+  <target name="abs.run.java" depends="java.compile">
     <java classname="${abs.mainmodule}.Main" fork="true"> 
     	
       <jvmarg value="-Dabs.debug=true"/>
-      <jvmarg value="-Dabs.systemobserver=jws.JungSystemVisualizer,abs.backend.java.debugging.GraphicalDebugger"/>
-      <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.InteractiveScheduler"/>
 <!--    	 
-      <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.RandomSchedulingStrategy"/>
-     <jvmarg value="-Dabs.systemobserver=jws.JungSystemVisualizer"/>
+        <jvmarg value="-Dabs.systemobserver=jws.SystemVisualizer,abs.backend.java.debugging.GraphicalDebugger"/>
+        <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.InteractiveScheduler"/>
 -->       
+        <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.RandomSchedulingStrategy"/>
+        <jvmarg value="-Dabs.systemobserver=jws.SystemVisualizer"/>
        <classpath>
 	 <path refid="build.abs.classpath" />
 	 <pathelement path="${target.java.bin}" />
        </classpath>
     </java>
   </target>
-<!-- END SNIPPET: abs.run.java -->
+
+  <target name="abs.debug.java" depends="java.compile">
+    <java classname="${abs.mainmodule}.Main" fork="true"> 
+      <jvmarg value="-Dabs.debug=true"/>
+      <jvmarg value="-Dabs.systemobserver=jws.SystemVisualizer,abs.backend.java.debugging.GraphicalDebugger"/>
+      <jvmarg value="-Dabs.totalscheduler=abs.backend.java.scheduling.InteractiveScheduler"/>
+       <classpath>
+	 <path refid="build.abs.classpath" />
+	 <pathelement path="${target.java.bin}" />
+       </classpath>
+    </java>
+  </target>
+
 
 </project>
