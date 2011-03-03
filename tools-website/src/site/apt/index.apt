@@ -11,6 +11,36 @@ The ABS Tool Suite
   object-oriented modeling language that features functional data-types.
   The current language specification is available as a {{{./download/abslangspec.pdf}PDF file}}.
 
-  The best way to get started is to {{{./eclipseplugin/installation.html}install}} the ABS Eclipse Plug-In. It is also possible to {{{./download/absfrontend.jar}download}} the ABS command-line tools.
+  The best way to get started is to install the ABS  {{{./eclipseplugin/installation.html}Eclipse Plug-In}}. It is also possible to download the ABS {{{./download/absfrontend.jar}command-line tools}}.
+
+* Core Tools
+
+  The ABS core tools consist of 
+
+    [[1]] A parser and syntax-checker
+
+    [[2]] A type-checker and semantic analyser
+
+    [[3]] A Java code generator
+
+    [[4]] A Maude code generator
+
+  The ABS core tools are all contained in the {{{./download/absfrontend.jar}absfrontend.jar}} JAR file. The tools should be executable on all systems with an installed Java Runtime Environment (JRE). The minimal required version is JRE 1.6.
+
+* Integrated Development Environment
+
+  ABS features an Integrated Development Environment (IDE) for writing ABS models. The IDE is realized as an Eclipse plug-in for the current Eclipse distribution version 3.6 (Helios). It can be installed by using the standard Eclipse installation routine via the update site {{http://tools.hats-project.eu/update-site}}.
+
+  {{{./eclipseplugin/installation.html}More information}}
+
+* COSTABS
+
+  COSTABS is a research prototype which performs automatic program analysis and which is able to infer cost and termination information about ABS programs (more information on ABS can be found here). The system receives as input an ABS program and a cost model chosen from a selection of resource descriptions and tries to bound the resource consumption of the program with respect to the cost model. COSTABS provides several notions of resource: number of instructions, size of functional data, number of concurrent objects and number of spawned tasks.
+
+  When performing cost analysis, COSTABS produces a cost equation system, which is an extended form of recurrence relations. In order to obtain a closed (i.e., non-recursive) form for such recurrence relations which represents an upper bound, COSTABS includes a dedicated solver called PUBS. An interesting feature of COSTABS is that it uses pretty much the same machinery for inferring upper bounds on cost as for proving termination (which also implies the boundedness of any resource consumption).
+
+  The COSTABS web interface allows users to try out the system on a set of representative examples, and also to upload their own programs.
+
+  {{{http://costa.ls.fi.upm.es/costabs}COSTABS Web Interface}}
 
 
