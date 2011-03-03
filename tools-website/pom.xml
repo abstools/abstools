@@ -69,6 +69,30 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.5</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <!-- here the phase you need -->
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/site/download</outputDirectory>
+              <resources>          
+                <resource>
+	           <directory>../frontend/src/abs/backend/maude</directory>
+		   <includes><include>abs-interpreter.maude</include></includes>
+                </resource>
+              </resources>              
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.6</version>
         <executions>

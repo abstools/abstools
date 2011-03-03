@@ -11,7 +11,7 @@ The ABS Tool Suite
   object-oriented modeling language that features functional data-types.
   The current language specification is available as a {{{./download/abslangspec.pdf}PDF file}}.
 
-  The best way to get started is to install the ABS  {{{./eclipseplugin/installation.html}Eclipse Plug-In}}. It is also possible to download the ABS {{{./download/absfrontend.jar}command-line tools}}.
+%{toc}
 
 * Core Tools
 
@@ -26,6 +26,78 @@ The ABS Tool Suite
     [[4]] A Maude code generator
 
   The ABS core tools are all contained in the {{{./download/absfrontend.jar}absfrontend.jar}} JAR file. The tools should be executable on all systems with an installed Java Runtime Environment (JRE). The minimal required version is JRE 1.6.
+
+** Syntax- and Type-Checking
+
+  To check an ABS model (a set of ABS files) for syntax and type-errors, run
+
+---
+java -jar absfrontend.jar <absfiles>
+---
+
+** Java Code Generation and Execution
+
+  Java code generation is done by the ABS Java backend.
+
+*** Java Code Generation
+
+  To generate Java code from an ABS model, run
+
+---
+java -cp absfrontend abs.backend.java.JavaBackend -d <targetdir> <absfiles>
+---
+
+  If the command is successful it will generate Java source and JVM class files into the <<<<targetdir>>>> directory.
+
+*** Executing Generated Java Code
+  
+  The Java backend generates for every Main block that exists in an ABS model, a corresponding <<<Main>>> class that contains a standard Java <<<main>>> method. Thus, the generated Java code can be executed like any other standard Java code by using the <<<java>>> command. The generated Java code relies on a runtime library (included in the {{{./download/absfrontend.jar}absfrontend.jar}}), which must be provided when executing the system.
+To execute the code generated can use the following command on the command line:
+
+---
+java -cp <targetdir>:absfrontend.jar <MainModule>.Main
+---
+
+  where <<<<targetdir>>>> is the directory that contains the generated Java classes and <<<<MainModule>>>> is the name of the module that contains the main block.
+
+
+** Maude Code Generation and Execution
+
+  The Maude backend is responsible for generating Maude code from ABS models.
+{{{http://maude.cs.uiuc.edu/}Maude}} is a tool for executing models defined in rewriting logic.
+
+*** Maude Code Generation
+
+  To generate Maude code run
+
+---
+java -cp absfrontend.jar abs.backend.maude.MaudeCompiler <absfiles> -o <outputfile>.maude
+---
+
+  This will generate a file Maude file <<<<outputfile>.maude>>>.
+
+*** Maude Execution
+
+  To execute the generated Maude file, load the file into Maude.
+The model's main block is started by the following command:
+
+---
+rew start .
+---
+
+  The result of evaluating is a dump of the complete system state of
+the model, with one Maude term for each class, cog, object, and future
+variable.
+
+* Product Selection and Validation
+
+  Product selections are validated with respect to a given feature model using the mTVL tools. These tools are provided by the {{{./download/mtvl.jar}mtvl.jar}} file. Note that this JAR file depends on the {{{./download/absfrontend.jar}absfrontend.jar}} file. To execute the mTVL tools use
+
+---
+java -jar mtvl.jar
+---
+
+  make sure in that case that the {{{./download/absfrontend.jar}absfrontend.jar}} file is located in the same directory as the {{{./download/mtvl.jar}mtvl.jar}} file.
 
 * Integrated Development Environment
 
