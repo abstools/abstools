@@ -78,7 +78,10 @@ java -cp absfrontend.jar abs.backend.maude.MaudeCompiler <absfiles> -o <outputfi
 
 *** Maude Execution
 
-  To execute the generated Maude file, load the file into Maude.
+  To execute the generated Maude file, load the file into Maude. 
+  When loading, Maude expects the file {{{./download/abs-interpreter.maude}abs-interpreter.maude}} to be either already
+loaded, in the same directory as the generated file or in a
+directory included in the environment variable <<<MAUDE_LIB>>>.
 The model's main block is started by the following command:
 
 ---
