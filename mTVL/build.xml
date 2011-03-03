@@ -25,7 +25,7 @@
   <!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
   <property name="apidoc.dir" value="${gen.dir}/docs/api" />
   <property name="junit.jar" value="junit-4.8.1.jar" />
-	<property name="target.jar" value="${dist.dir}/mtvl.jar" />
+  <property name="target.jar" value="${dist.dir}/mtvl.jar" />
 
   <!-- new properties for mTVL related parser -->
   <property name="ast.src.dir" value="${src.dir}/mtvl/ast" />
@@ -37,11 +37,11 @@
   <!-- The package name of JastAdd generated files -->
   <property name="ast.package" value= "mtvl.ast" />
 
-  <!-- ABS references -->
-  <property name="abs.dir" value="${basedir}/../frontend" />
-  <property name="abs.tests.dir" value="${abs.dir}/tests" />
-  <property name="abs.build.dir" value="${abs.dir}/bin" />
-  <property name="abs.gen.dir" value="${abs.dir}/gen" />
+  <!-- Frontend references -->
+  <property name="frontend.dir" value="${basedir}/../frontend" />
+  <property name="frontend.tests.dir" value="${frontend.dir}/tests" />
+  <property name="frontend.build.dir" value="${frontend.dir}/bin" />
+  <property name="frontend.gen.dir" value="${frontend.dir}/gen" />
 
 
   <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
@@ -56,8 +56,8 @@
 
   <taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
     <classpath>
-      <pathelement location="${abs.dir}/lib/svnant.jar" />
-      <pathelement location="${abs.dir}/lib/svnClientAdapter.jar" />
+      <pathelement location="${frontend.dir}/lib/svnant.jar" />
+      <pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
     </classpath>
   </taskdef>
 
@@ -76,19 +76,13 @@
   <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
     <javac srcdir="${src.dir}/mtvl:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
       <classpath>
-        <pathelement location="${ext.dir}/Java1.5Compiler.jar" />
         <pathelement location="${ext.dir}/beaver.jar" />
         <pathelement location="${ext.dir}/jastadd2.jar" />
         <pathelement location="${ext.dir}/JastAddParser.jar" />
         <pathelement location="${ext.dir}/${junit.jar}" />
         <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
-        <pathelement location="${ext.dir}/org.sat4j.core.jar" />
-        <pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
-        <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
-        <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
-        <pathelement location="${ext.dir}/sat4j-pb.jar" />
-        <pathelement location="${abs.gen.dir}" />
-        <pathelement location="${abs.build.dir}" />
+        <pathelement location="${frontend.gen.dir}" />
+        <pathelement location="${frontend.build.dir}" />
       </classpath>
     </javac>
   </target>
@@ -105,7 +99,7 @@
 
 
   <target name="clean">
-    <delete failonerror="false" includeemptydirs="true">
+    <delete failonerror="true" includeemptydirs="true">
       <fileset dir="${gen.dir}/mtvl" />
       <!--       <fileset dir = "${gen.dir}/docs"/> -->
       <fileset dir="${build.dir}" />
@@ -176,24 +170,15 @@
   </target>
   
   <target name="dist" depends="clean,compile,versionstamp" description="create distribution files">
-    <jar jarfile="${dist.dir}/mtvl.jar">
+    <jar jarfile="${target.jar}">
       <fileset dir="${build.dir}" includes="mtvl/**" />
       <fileset dir="${src.dir}" includes="mtvl/**" />
-<!-- 
-      <zipfileset src="${ext.dir}/jastadd2.jar" />
-      <zipfileset src="${ext.dir}/beaver-rt-src.jar" />
-      <zipfileset src="${ext.dir}/JFlex.jar" />
-      <zipfileset src="${ext.dir}/Java1.5Compiler.jar" />
-      <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
-      <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
-      <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
-      <zipfileset src="${abs.dir}/dist/absfrontend.jar" />
- -->
       <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
       <manifest>
         <attribute name="Main-Class" value="mtvl.parser.Main"/>
         <attribute name="Implementation-Version" value="${abs.version}"/>
         <attribute name="Bundle-Version" value="${abs.version}"/>
+        <attribute name="Class-Path" value="absfrontend.jar"/>
       </manifest>
     </jar>
   </target>
@@ -212,19 +197,10 @@
 </target>
 
 <target name="frontenddist" depends="clean,compile,frontendversionstamp" description="create distribution files">
-    <jar jarfile="${dist.dir}/fullabsfrontend.jar">
+    <jar jarfile="${dist.dir}/fullabs.jar">
       <fileset dir="${build.dir}" includes="mtvl/**" />
       <fileset dir="${src.dir}" includes="mtvl/**" />
-<!--
-      <zipfileset src="${ext.dir}/jastadd2.jar" />
-      <zipfileset src="${ext.dir}/beaver-rt-src.jar" />
-      <zipfileset src="${ext.dir}/JFlex.jar" />
-      <zipfileset src="${ext.dir}/Java1.5Compiler.jar" />
-      <zipfileset src="${ext.dir}/org.sat4j.core.jar" />
-      <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
-      <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
- -->
-      <zipfileset src="${abs.dir}/dist/absfrontend.jar" />
+      <zipfileset src="${frontend.dir}/dist/absfrontend.jar" />
       <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
       <manifest>
         <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
@@ -267,7 +243,7 @@
   <!-- MTVL - run a single test in verbose mode -->
   <target name="testmtvl" depends="compile">
     <echo message="Parsing mtvlsamples/runningtest.mtvl"/>
-    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
+    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
       <arg line="-v ${tests.dir}/mtvlsamples/runningtest.mtvl" />
     </java>
   </target>
@@ -275,14 +251,14 @@
   <!-- MTVL - run a test for the ChosoSolver main method (sandbox) -->
   <target name="testchoco" depends="compile">
     <echo message="Running ChocoSolver.java"/>
-    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.analyser.ChocoSolver">
+    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.analyser.ChocoSolver">
     </java>
   </target>
 
   <!-- MTVL - run a test for the computer with solver -->
   <target name="testcomp" depends="compile">
     <echo message="Parsing mtvlsamples/computer.mtvl"/>
-    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
+    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
       <arg line="-s ${tests.dir}/mtvlsamples/computer.mtvl" />
     </java>
   </target>
@@ -290,8 +266,8 @@
   <!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using computer example, with negative result. -->
   <target name="testsatneg" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
-    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
-      <arg line="-v -c P1 ${abs.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl ${tests.dir}/mtvlsamples/computerext.mtvl" />
+    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
+      <arg line="-v -c P1 ${frontend.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl ${tests.dir}/mtvlsamples/computerext.mtvl" />
     </java>
 
   </target>
@@ -299,8 +275,8 @@
   <!-- MTVL/FSL - checking satisfiability of a FS wrt a PL in verbose mode. Using helloworld example, with positive result. -->
   <target name="testsatpos" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
-    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${abs.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
-      <arg line="-v -c P3 ${abs.tests.dir}/abssamples/deltas/hello.abs ${tests.dir}/mtvlsamples/helloworld.mtvl" />
+    <java classpath="${ext.dir}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
+      <arg line="-v -c P3 ${frontend.tests.dir}/abssamples/deltas/hello.abs ${tests.dir}/mtvlsamples/helloworld.mtvl" />
     </java>
   </target>
 
