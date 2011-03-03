@@ -57,6 +57,7 @@ public class SystemVisualizer extends RegistratingObserver {
 	@Override
 	public synchronized void objectCreated(ObjectView o) {
 	   graph.addObject(o, false);
+	   
 	   //graph.addEdge(edgeCounter.incrementAndGet()+"edge", initialObjects.get(o.getCOG()), o, true);
 	}
 

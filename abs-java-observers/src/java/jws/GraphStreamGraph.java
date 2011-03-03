@@ -92,11 +92,13 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 			n.addAttribute("ui.size", "25");
 			n.addAttribute("Size", 20);
 			n.addAttribute("Color", "[0,255,0]");
+	      n.addAttribute("kind", "cog");
 		} else {
 			n.addAttribute("layout.weight", 0.5f);
 			n.addAttribute("ui.size", "20");
 			n.addAttribute("Size", 10);
 			n.addAttribute("Color", "[255,0,0]");
+         n.addAttribute("kind", "object");
 		}
 		
 		if (o.equals("Main 1")) {
@@ -116,17 +118,24 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 
 	@Override
    public void addEdge(ObjectView source, ObjectView target, boolean cog) {
-		Edge e = graph.addEdge(String.valueOf(edgeCounter.incrementAndGet()),getID(source),getID(target),true);
-		if (cog) {
-			e.addAttribute("ui.class", "cog");
-			e.addAttribute("layout.weight", 0.1f);
-			e.addAttribute("Weight", 5);
-			
-		} else {
-			e.addAttribute("layout.weight", 0.5f);
-			e.addAttribute("Weight", 5);
-			
-		}
+	   String edgeName = getID(source)+"-"+getID(target);
+	   Edge e = graph.getEdge(edgeName);
+	   
+	   if (e == null) {
+	      e = graph.addEdge(edgeName,getID(source),getID(target),true);
+         e.addAttribute("count", 1);
+	      if (cog) {
+	         e.addAttribute("kind", "cog");
+	         e.addAttribute("weight", 5);
+	      } else {
+	         e.addAttribute("kind", "usage");
+	         e.addAttribute("weight", 1);
+	      }
+	   } else {
+	      int c = (Integer) e.getAttribute("count");
+	      e.setAttribute("count", c+1);
+	      System.out.println("Count = "+(c+1));
+	   }
 	}
 	
 	public Viewer display() {
@@ -212,6 +221,9 @@ class MyGMLWriter {
       pw.println("\t edge [");
       pw.println("\t\t source "+e.getSourceNode().getId());
       pw.println("\t\t target "+e.getTargetNode().getId());
+      pw.println("\t\t weight "+e.getAttribute("weight"));
+      pw.println("\t\t count "+e.getAttribute("count"));
+      pw.println("\t\t kind "+escape((String)e.getAttribute("kind")));
       pw.println("\t ]");
       
    }
@@ -220,7 +232,7 @@ class MyGMLWriter {
       pw.println("\t node [");
       pw.println("\t\t id "+n.getId());
       pw.println("\t\t label "+escape((String)n.getAttribute("label")));
-      pw.println("\t\t kind "+escape("object"));
+      pw.println("\t\t kind "+escape((String)n.getAttribute("kind")));
       pw.println("\t\t class "+escape((String)n.getAttribute("class")));
       pw.println("\t\t cog "+n.getAttribute("cog"));
       pw.println("\t ]");
