@@ -44,11 +44,13 @@ public class ABSCodeScanner implements ITokenScanner {
 	
 	protected static final int UNDEFINED = -1;
 	protected static final int EOF = -1;
-	private IDocument fDocument;
+   private static final IToken DEFAULT_RETURN_TOKEN = new Token(null);
+
+   private IDocument fDocument;
 	private int fOffset;
 	private int fRangeEnd;
 	private char[][] fDelimiters;
-	private IToken fDefaultReturnToken;
+;
 	private int fTokenOffset;
 	
 	private final IToken keywordToken;
@@ -249,8 +251,6 @@ public class ABSCodeScanner implements ITokenScanner {
 		for (int i= 0; i < delimiters.length; i++)
 			fDelimiters[i] = delimiters[i].toCharArray();
 
-		if (fDefaultReturnToken == null)
-			fDefaultReturnToken = new Token(null);
 		
 		String doccontent = document.get();
 		try {
@@ -277,7 +277,17 @@ public class ABSCodeScanner implements ITokenScanner {
 
 	@Override
 	public IToken nextToken() {
-		fTokenOffset = fOffset;
+	   try {
+	      return internalNextToken();
+	   } catch (RuntimeException e) {
+	      if (doDebug)
+	         e.printStackTrace();
+	      return DEFAULT_RETURN_TOKEN;
+	   }
+	}
+
+   private IToken internalNextToken() {
+      fTokenOffset = fOffset;
 
 		int c = read();
 		if (c != ICharacterScanner.EOF && fDetector.isWordStart((char) c)) {
@@ -316,8 +326,8 @@ public class ABSCodeScanner implements ITokenScanner {
 		
 		if (read() == EOF)
 			return Token.EOF;
-		return fDefaultReturnToken;
-	}
+		return DEFAULT_RETURN_TOKEN;
+   }
 
 	private IToken matchKeywords() {
 		String buffer = fBuffer.toString();
