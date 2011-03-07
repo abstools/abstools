@@ -24,7 +24,7 @@ public class ChocoSolver {
   public final CPSolver s;
   public boolean solved = false;
   public final Map<String,IntegerVariable> vars;
-  public boolean verbose = false;
+  private boolean verbose = false;
   
   
   public ChocoSolver() {
@@ -122,7 +122,8 @@ public class ChocoSolver {
     Iterator<IntegerVariable> it = m.getIntVarIterator();
     while (it.hasNext()) {
       IntegerVariable var = (IntegerVariable) it.next();
-      result = result + var.getName() + " -> "+s.getVar(var).getVal() + "\n";
+      if (verbose || !var.getName().startsWith("$"))
+        result = result + var.getName() + " -> "+s.getVar(var).getVal() + "\n";
     }
     return result;
   }
