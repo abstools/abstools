@@ -30,7 +30,7 @@ import mtvl.parser.MTVLScanner;
 import mtvl.analyser.SemanticError;
 import mtvl.analyser.SemanticErrorList;
 import mtvl.analyser.ChocoSolver;
-import abs.frontend.parser.SyntaxError;
+//import abs.frontend.parser.SyntaxError;
 import abs.frontend.parser.ParseException;
 // import fsl.frontend.parser.FSLParser;
 // import fsl.frontend.parser.FSLScanner;
