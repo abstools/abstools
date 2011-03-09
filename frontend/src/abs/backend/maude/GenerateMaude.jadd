@@ -634,9 +634,9 @@ aspect GenerateMaude {
             getValue().generateMaude(stream);
             stream.print(") ");
             if (t.isFutureType()) {
-                stream.print("$mark( ");
+                stream.print("; $mark( ");
                 getVar().generateMaude(stream);
-                stream.print("); ");
+                stream.print(") ");
             }
         } else {
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName());
