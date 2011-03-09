@@ -1,0 +1,25 @@
+import java.io.PrintStream;
+
+aspect GenerateCoreABS {
+
+    public void ASTNode.generateCoreABS(PrintStream stream) {
+        // placeholder
+    }
+    
+    public void Model.generateCoreABS(PrintStream stream) {
+        for (ModuleDecl decl : getModuleDecls()) {
+            decl.generateCoreABS(stream);
+        }
+    }
+ 
+    public void ModuleDecl.generateCoreABS(PrintStream stream) {
+        
+        stream.println("Module " + getName() + ";");
+        
+        for (Decl decl : getDecls()) {
+            decl.generateCoreABS(stream);
+        }
+    }
+    
+    
+}

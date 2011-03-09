@@ -1,4 +1,4 @@
-package abs.frontend.rewriter;
+package abs.frontend.delta;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
