@@ -1,4 +1,4 @@
-module Hello;
+module Helloworld;
 
 interface Greeting {
     String sayHello();
@@ -8,27 +8,12 @@ class Greeter implements Greeting {
         return "Hello world";
     }
 }
-
 class Application {
     String s = "";
     Unit run() {
         Greeting bob;
         bob = new Greeter();
         s = bob.sayHello();
-    }
-}
-delta Rpt (Int times) {
-    modifies class Greeter {
-        modifies String sayHello() {
-            String result = "";
-            Int i = 0;
-            while (i < times) {
-                String o = original();
-                result = result + o;
-                i = i + 1;
-            }
-            return result;
-        }
     }
 }
 delta De {
@@ -45,17 +30,29 @@ delta Nl {
         }
     }
 }
-delta Gen(Cl hasMethod String sayHello(), String hello) {
-    modifies class Cl {
+delta Fr {
+    modifies class Greeter {
         modifies String sayHello() {
-            return hello;
+            return "Bonjour tout le monde";
+        }
+    }
+}
+delta Rpt (Int times) {
+    modifies class Greeter {
+        modifies String sayHello() {
+            String result = "";
+            Int i = 0;
+            while (i < times) {
+                String orig = original();
+                result = result + " " + orig;
+                i = i + 1;
+            }
+            return result;
         }
     }
 }
 
-//************************************************************
-// Configuration (FCL)
-//************************************************************
+
 productline MultiLingualHelloWorld {
     features English, German, French, Dutch, Repeat;
 
@@ -65,12 +62,9 @@ productline MultiLingualHelloWorld {
     delta Nl when Dutch;
 }
 
-//************************************************************
-// Products (FSL)
-//************************************************************
 // basic product with no deltas
 product P1 (English) {
-    new Application();
+    new Application();  // this runs the application
 }
 
 // apply delta Fr
@@ -89,6 +83,5 @@ product P4 (English, Repeat{times=6}) {
 }
 
 {
-    // this automatically calls run()
     new Application();
 }

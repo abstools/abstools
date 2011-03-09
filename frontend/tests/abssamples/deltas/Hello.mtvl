@@ -5,12 +5,11 @@ root MultiLingualHelloWorld {
     },
     opt Repeat {
       Int times in [0..1000];
-      times > 0;
-    }
-  }
+      ifin: times > 0; 
+    } 
+  } 
 }
-
 extension English {
-  ifin: Repeat -> (Repeat.times >= 2 && Repeat.times <= 5);
+  ifin: Repeat ->
+        (Repeat.times >= 2 && Repeat.times <= 5);
 }
-
