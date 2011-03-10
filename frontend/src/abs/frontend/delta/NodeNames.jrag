@@ -69,3 +69,13 @@ aspect QualifiedName {
         return this.moduleName() + "." + this.className();
     }
 }
+
+// inform ModuleDecls about the name of the file where they were declared
+aspect FileName {
+    inh String ModuleDecl.getFileName();
+    eq CompilationUnit.getModuleDecl().getFileName() = this.getFileName();
+
+    inh String Decl.getFileName();
+    eq ModuleDecl.getDecl().getFileName() = this.getFileName();
+
+}
