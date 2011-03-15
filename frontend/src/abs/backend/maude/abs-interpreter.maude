@@ -1630,13 +1630,13 @@ mod ABS-CALLSTMTS-RL is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  vars O O1 : Oid .            var C : Cid .        vars S S1 L : Subst .
-  var SL : StmtList .          var W : MProc .      vars F G : Nat .
-  var CN : Configuration .     var E : Expr .       vars Q CG M : String .
+  vars O O1 : Oid .            vars C C1 : Cid .    vars S S1 L : Subst .
+  var SL : StmtList .          vars W W1 : MProc .  vars F F1 G : Nat .
+  var CN : Configuration .     var E : Expr .       vars Q CG CG1 M : String .
   var A : Vid .                var EL : ExprList .  var AL : VidList .
   var N : Label .              var DL : DataList .  var MS : MMtd .
   vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .  var SS : SSubst .
-  var MIS : MMtd .
+  var MIS : MMtd .             var P1 : Process .
 
   --- async-call
   ---
@@ -1651,15 +1651,28 @@ mod ABS-CALLSTMTS-RL is
 
   --- sync-call
   ---
-  --- TODO: check whether target is in the same cog
+  --- Create a $cont at end of called process if both objects are in the same
+  --- cog (CG == CG1)
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       [label sync-call] .
+
+  --- sync-selfcall
+  crl
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =>
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, 0)
+      /\ O := eval(E, (S :: L), none, 0)
+      /\ N := label(O, F)
+      [label sync-selfcall] .
 
   --- original-call
   ---
@@ -1679,13 +1692,13 @@ mod ABS-CALLSTMTS-EQ is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  vars O O1 : Oid .         var C : Cid .        vars S S1 L : Subst .
-  var SL : StmtList .       var W : MProc .      vars F G : Nat .
-  var CN : Configuration .  var E : Expr .       vars Q CG M : String .
-  var A : Vid .             var EL : ExprList .  var AL : VidList .
-  var N : Label .           var DL : DataList .  var MS : MMtd .
+  vars O O1 : Oid .            vars C C1 : Cid .    vars S S1 L : Subst .
+  var SL : StmtList .          vars W W1 : MProc .  vars F F1 G : Nat .
+  var CN : Configuration .     var E : Expr .       vars Q CG CG1 M : String .
+  var A : Vid .                var EL : ExprList .  var AL : VidList .
+  var N : Label .              var DL : DataList .  var MS : MMtd .
   vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .  var SS : SSubst .
-  var MIS : MMtd .
+  var MIS : MMtd .             var P1 : Process .
 
   --- async-call
   ---
@@ -1700,15 +1713,28 @@ mod ABS-CALLSTMTS-EQ is
 
   --- sync-call
   ---
-  --- TODO: check whether target is in the same cog
+  --- Create a $cont at end of called process if both objects are in the same
+  --- cog (CG == CG1)
   ceq
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   if DL :=  evalList(EL, (S :: L), none, 0)
       /\ O1 := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       [label sync-call] .
+
+  --- sync-selfcall
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, 0)
+      /\ O := eval(E, (S :: L), none, 0)
+      /\ N := label(O, F)
+      [label sync-selfcall] .
 
   --- original-call
   ---
@@ -1728,13 +1754,13 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
 
-  vars O O1 : Oid .            var C : Cid .         vars S S1 L : Subst .
-  var SL : StmtList .          var W : MProc .       vars F G : Nat .
-  var CN : Configuration .     var E : Expr .        vars Q CG M : String .
+  vars O O1 : Oid .            vars C C1 : Cid .     vars S S1 L : Subst .
+  var SL : StmtList .          vars W W1 : MProc .   vars F F1 G : Nat .
+  var CN : Configuration .     var E : Expr .        vars Q CG CG1 M : String .
   var A : Vid .                var EL : ExprList .   var AL : VidList .
   var N : Label .              var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .           var SS : SSubst .     var MIS : MMtd .
-  vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .
+  vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .   var P1 : Process .
   --- async-call
   ---
   ceq
@@ -1750,17 +1776,32 @@ mod ABS-CALLSTMTS-EQ-TIMED is
 
   --- sync-call
   ---
-  --- TODO: check whether target is in the same cog
+  --- Create a $cont at end of called process if both objects are in the same
+  --- cog (CG == CG1)
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
+  if DL :=  evalList(EL, (S :: L), none, T)
+      /\ O1 := eval(E, (S :: L), none, T)
+      /\ N := label(O, F)
+      [label sync-call] .
+
+  --- sync-selfcall
   ceq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
   if DL :=  evalList(EL, (S :: L), none, T)
-      /\ O1 := eval(E, (S :: L), none, T)
+      /\ O := eval(E, (S :: L), none, T)
       /\ N := label(O, F)
-      [label sync-call] .
+      [label sync-selfcall] .
 
   --- original-call
   ---
