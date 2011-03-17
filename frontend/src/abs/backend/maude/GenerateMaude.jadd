@@ -6,7 +6,7 @@ aspect GenerateMaude {
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
-    public void Model.generateMaude(PrintStream stream, String module) {
+    public void Model.generateMaude(PrintStream stream, String module, boolean generateDeltas) {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
                        + module + " .\n");
@@ -23,14 +23,16 @@ aspect GenerateMaude {
                 decl.generateMaude(stream);
             }
         }
-        for (Decl decl : getDecls()) {
-            if (decl instanceof DeltaDecl) {
-                hasClasses = true;
-                decl.generateMaude(stream);
+        if (generateDeltas) {
+            for (Decl decl : getDecls()) {
+                if (decl instanceof DeltaDecl) {
+                    hasClasses = true;
+                    decl.generateMaude(stream);
+                }
             }
-        }
-        for (Product p : getProducts()) {
-            p.generateMaude(stream); // this generates the class only
+            for (Product p : getProducts()) {
+                p.generateMaude(stream); // this generates the class only
+            }
         }
         if (hasMainBlock()) getMainBlock().generateMaude(stream);
         stream.println(".\n");
@@ -169,7 +171,10 @@ aspect GenerateMaude {
                 sig = it.lookupMethod(getMethod());
             }
             for (int i = 0; i < getNumParam(); i++) {
-                if (sig.getParam(i).getType().isFutureType()) {
+                // If we didn't find the method's signature (the call is
+                // in a delta, which are not type-checked), emit $mark
+                // just in case and let the runtime sort it out.
+                if (sig == null || sig.getParam(i).getType().isFutureType()) {
                     stream.print("$mark( ");
                     getParam(i).generateMaude(stream);
                     stream.print(") ; ");

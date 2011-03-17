@@ -214,9 +214,9 @@ public class MaudeJob extends Job{
 			
 			//Generate Maude code with chosen interpreter
 			if(realTime){
-				model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED");
+                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", true);
 			} else{
-				model.generateMaude(ps, "ABS-SIMULATOR-RL");
+                            model.generateMaude(ps, "ABS-SIMULATOR-RL", true);
 			}
 		} finally{
 			if (ps != null){

@@ -1038,6 +1038,16 @@ mod ABS-MACHINE-BASICS is
   if N := eval(E, (S :: L), none, 0)
       [label mark] .
 
+  --- Ignore superfluous $mark instructions -- these are generated for code
+  --- fragments that are not type-checked (e.g. within deltas) since the
+  --- method signature is not available there.
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if not eval(E, (S :: L), none, 0) :: Label
+      [label ignored-mark] .
+
   --- free
   ---
   --- Free a Future.

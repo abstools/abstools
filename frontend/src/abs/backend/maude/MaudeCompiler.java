@@ -81,7 +81,7 @@ public class MaudeCompiler {
             if (outputfile != null) {
                 stream = new PrintStream(outputfile);
             }
-            m.generateMaude(stream, module);
+            m.generateMaude(stream, module, !flatten);
             System.exit(0);
         } else
             System.exit(1);
@@ -92,8 +92,10 @@ public class MaudeCompiler {
                 + "  <absfiles>   ABS files to parse\n" + "Options:\n"
                 + "  -o <file>  write output to <file> instead of standard output\n"
                 + "  -nostdlib  do not include the standard lib\n"
-                + "  -timed     generate code for timed interpreter\n" + "  -h         print this message\n");
-
+                + "  -timed     generate code for timed interpreter\n"
+                + "  -product=<Module.Productname>\n"
+                + "             Generate code for product only, do not generate delta code."
+                + "  -h         print this message\n");
     }
 
 }
