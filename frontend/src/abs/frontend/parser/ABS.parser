@@ -802,11 +802,11 @@ Deltaparam deltaparam =
     ;
 
 WhenCondition when_condition
-	 = WHEN application_condition.wc {: return wc; :};
-	 | {: return new WhenCondition(new List(), new ACTrue()) :};
+	 = WHEN application_condition.wc {: return wc; :}
+	 | {: return new WhenCondition(new List(), new ACTrue()); :};
 
 // TODO: application conditions should be mTVL expressions, or at least have negation and parenthesis.
-WhenCondition application_condition 
+WhenCondition application_condition
 	= feature.f {: return new WhenCondition(new List().add(f), new ACFeat(f)); :}
     | application_condition.wc ANDAND feature.f
     	 {: return new WhenCondition(wc.getFeatures().add(f), new ACAnd(wc.getAppCond(),new ACFeat(f))); :}
