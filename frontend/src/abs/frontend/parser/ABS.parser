@@ -762,8 +762,8 @@ AttrAssignment attr_assignment = IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new
     ;
 
 List deltaclause_list = {: return new List(); :}
-    | deltaclause_list.l DELTA deltaspec.d after_condition.a? when_condition.w?
-      SEMICOLON {: return l.add(new DeltaClause(d, a, w)); :};
+    | deltaclause_list.l DELTA deltaspec.d after_condition.a? when_condition.w
+      SEMICOLON {: return l.add(new DeltaClause(d, a, w.getFeatures(), w.getAppCond())); :};
 
 /*| deltaclause_list.l DELTA deltaspec.d when_condition.w?
       SEMICOLON {: return l.add(new DeltaClause(d, new List(), w)); :};
@@ -801,11 +801,21 @@ Deltaparam deltaparam =
 	else return new CID(c); :}
     ;
 
-List when_condition = WHEN application_condition.dl {: return dl; :};
+WhenCondition when_condition
+	 = WHEN application_condition.wc {: return wc; :};
+	 | {: return new WhenCondition(new List(), new ACTrue()) :};
 
 // TODO: application conditions should be mTVL expressions, or at least have negation and parenthesis.
-List application_condition = feature.f {: return new List().add(f); :}
-    | application_condition.l ANDAND feature.f {: return l.add(f); :}
+WhenCondition application_condition 
+	= feature.f {: return new WhenCondition(new List().add(f), new ACFeat(f)); :}
+    | application_condition.wc ANDAND feature.f
+    	 {: return new WhenCondition(wc.getFeatures().add(f), new ACAnd(wc.getAppCond(),new ACFeat(f))); :}
+    | application_condition.wc OROR feature.f
+    	 {: return new WhenCondition(wc.getFeatures().add(f), new ACOr(wc.getAppCond(),new ACFeat(f))); :}
+    | NEGATION application_condition.wc
+    	 {: return new WhenCondition(wc.getFeatures(), new ACNeg(wc.getAppCond())); :}
+    | LPAREN application_condition.wc RPAREN
+    	 {: return new WhenCondition(wc.getFeatures(), wc.getAppCond()); :}
     ;
 
 

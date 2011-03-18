@@ -228,7 +228,7 @@ ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause
 // TODO: The third argument (Feature*) is meant to be an application condition,
 // i.e. a propositional formula over features. If the application condition evaluates
 // to true, then the delta is applied.
-DeltaClause ::= Deltaspec DeltaID* Feature* ;
+DeltaClause ::= Deltaspec DeltaID* Feature* AppCond;
 
 DeltaID ::= <Name>;
 Feature ::= <Name> AttrAssignment*;
@@ -245,3 +245,13 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 Product ::= <Name> Feature* MainBlock:Block ;
+
+// intermediate pair
+WhenCondition ::= Feature* AppCond;
+
+abstract AppCond;
+ACFeat: AppCond ::= Feature;
+ACAnd:  AppCond ::= <Left:AppCond> <Right:AppCond>;
+ACOr:   AppCond ::= <Left:AppCond> <Right:AppCond>;
+ACNeg:  AppCond ::= AppCond;
+ACTrue: AppCond;
