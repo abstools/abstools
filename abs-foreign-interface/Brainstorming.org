@@ -1,12 +1,13 @@
-* Preamble
-** Authors
-  - Jan Schaefer <jschaefer@cs.uni-kl.de>
-** Summary
-  This document contains first ideas of how to
-  connect ABS to foreign languages.
+The ABS Foreign Language Interface (ABSFLI)
 
-* Introcuction
-ABS should be able to interact with other foreign languages (FLs) like
+#+AUTHOR: Jan Schaefer <jschaefer@cs.uni-kl.de>
+#+OPTIONS: H:4
+
+
+* Introduction
+This document contains first ideas of how to
+connect ABS to foreign languages (FLs).
+ABS should be able to interact with FLs like
 Java to be able to write critical components of a system
 in ABS. 
 
