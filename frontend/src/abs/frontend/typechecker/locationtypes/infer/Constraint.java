@@ -346,7 +346,7 @@ public abstract class Constraint {
             // if adaptToTv = FAR(i)
             for (LocationType t : adaptToTv.parametricFarTypes()) {
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
-                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(t).getValues());
+                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(FAR).then(resultTv).is(SOMEWHERE).getValues());
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
             }
@@ -354,11 +354,7 @@ public abstract class Constraint {
             for (LocationType t : adaptToTv.parametricFarTypes()) {
                 for (LocationType t2 : tv.parametricFarTypes()) {
                     if (t != t2) {
-                        if (resultTv.parametricFarTypes().contains(t2)) {
-                            result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(t2).getValues());
-                        } else {
-                            result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(FAR).getValues());
-                        }
+                        result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(FAR).getValues());
                     } else {
                         result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
                     }
