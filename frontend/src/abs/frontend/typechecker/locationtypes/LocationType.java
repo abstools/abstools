@@ -99,9 +99,9 @@ public class LocationType {
         
         if (to.isParametricFar()) {
             if (this.isNear())
-                return to;
+                return FAR;
             if (this.isParametricFar() && this != to) {
-                return this;
+                return FAR;
             }
             return SOMEWHERE; 
         }
