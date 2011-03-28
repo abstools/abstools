@@ -19,13 +19,14 @@
 This document contains ideas and notes on how to implement a JUnit-like testing
 framework (test harness) for ABS language.
 
-There are essentially two main ingredients for this framework
+There are essentially three main ingredients for this framework
 \begin{enumerate}
   \item Test Runner -- should be in ABS, facilitate simulation with different
   resource scenarios for example.
   \begin{itemize}
     \item How does a test runner find out which ABS classes are 'test classes' 
-    \item Support 'Test' and 'Theories'?
+    \item Support 'Test' and 'Theories'? -- with Theories, test methods are
+    executed over one or more pieces of test data.
   \end{itemize}
   \item Rules to specify/implement test cases
   \begin{itemize}
@@ -33,15 +34,23 @@ There are essentially two main ingredients for this framework
     \item annotations 
     \item implementing a specific interface
   \end{itemize}
+  \item Support assertion on test oracle, there is already an assertion language
+  (assert with Boolean expression), but should we allow more complex test
+  assertion such as matcher composition similar to Java's Hamcrest library
+  (\url{http://code.google.com/p/hamcrest/})
 \end{enumerate}
 
 \noindent Naming convention:
 \begin{absexamplen}
 module Test;
 
-class SomeTest { 
+import * from TestLib;
+
+class SomeTest {
+
   Unit testSomeMethod() {
   	 ..
+  	 assert(...);
   }
 }
 \end{absexamplen}
