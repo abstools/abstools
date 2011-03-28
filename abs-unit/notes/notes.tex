@@ -1,0 +1,78 @@
+\documentclass[a4paper,11pt,final]{article}
+\input{preamble}
+\input{definitions}
+\input{abs}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\newcommand{\deliverableTitle}{ABSUnit -- ABS Testing Framework} 
+
+\title{\deliverableTitle}
+
+\author{Peter Y. H. Wong}
+
+\begin{document}
+
+\maketitle 
+
+\section{Introduction}
+This document contains ideas and notes on how to implement a JUnit-like testing
+framework (test harness) for ABS language.
+
+There are essentially two main ingredients for this framework
+\begin{enumerate}
+  \item Test Runner -- should be in ABS, facilitate simulation with different
+  resource scenarios for example.
+  \begin{itemize}
+    \item How does a test runner find out which ABS classes are 'test classes' 
+    \item Support 'Test' and 'Theories'?
+  \end{itemize}
+  \item Rules to specify/implement test cases
+  \begin{itemize}
+    \item name convention: Methods whose name have the prefix 'test' and classes whose name have the suffix 'Test'
+    \item annotations 
+    \item implementing a specific interface
+  \end{itemize}
+\end{enumerate}
+
+\noindent Naming convention:
+\begin{absexamplen}
+module Test;
+
+class SomeTest { 
+  Unit testSomeMethod() {
+  	 ..
+  }
+}
+\end{absexamplen}
+
+\noindent Annotations
+\begin{absexamplen}
+module Test;
+
+class SomeClass { 
+  [Test] Unit someMethod() {
+  	 ..
+  }
+}
+\end{absexamplen}
+
+\noindent Interface Implementation
+\begin{absexamplen}
+module Test;
+
+class SomeClass implements Test { 
+  Unit someMethod() {
+  	 ..
+  }
+}
+\end{absexamplen}
+
+\subsection{Discussion}
+\begin{itemize}
+  \item Testing in various back-ends: Java, Maude\ldots
+  \item Handling concurrency: schedules, interactively, symbolically?
+  \item Debugging test
+\end{itemize}
+
+\end{document}

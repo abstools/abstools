@@ -1,0 +1,82 @@
+\lstset{mathescape}
+\lstset{basicstyle=\footnotesize\ttfamily}
+\lstset{numberstyle=\tiny}%
+\lstset{language=}
+\lstset{emphstyle=\color{red},emphstyle={[2]\color{blue}\underbar}}%% global
+
+%% ABS
+\lstdefinelanguage{ABS}{keywords=
+{dyndelta,new,data,type,def,case,of,cog,class,interface,extends,implements,if,else,await,get,Fut,return,skip,while,module, import, export, from, suspend, delta,adds,modifies,removes,original,productline,features,core,corefeatures,optionalfeatures,after,when,product,hasAttribute,hasMethod,root,extension,group,allof,oneof,require,exclude,original,ifin,ifout,opt}, sensitive=true, comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"}
+
+%\def\codesize{\fontsize{9}{10}}
+
+\lstdefinestyle{absstyle}{
+language=ABS,columns=fullflexible,
+ 		   mathescape=true,%
+ 		   showstringspaces=false,%
+keywordstyle=\bf\sffamily,
+commentstyle=\sl\sffamily,%
+basicstyle=\footnotesize\tttfamily,
+inputencoding=latin1, % i would prefer utf8
+extendedchars,xleftmargin=2em
+}
+
+\lstnewenvironment{abs}[1][]{%
+ \lstset{style=absstyle,#1}%
+   \csname lst@SetFirstLabel\endcsname}
+  {\csname lst@SaveFirstLabel\endcsname}
+
+% \newcommand{\Abs}[1]{%
+%   \lstinline[language=ABS,mathescape=true,%
+%            keywordstyle=\bf\sffamily,%
+%            basicstyle=\normalsize\sffamily,inputencoding=latin1, % i would prefer utf8
+%            extendedchars]!#1!}
+%   {\csname lst@SaveFirstLabel\endcsname}
+
+\newcommand{\Abs}[1]{\lstinline[language=ABS,columns=fullflexible,mathescape=true, keywordstyle=\bf\sffamily,basicstyle=\normalsize\ttfamily]!#1!}
+
+\newenvironment{absinline}[1][]{%
+\lstset{language=ABS,
+		 showstringspaces=false,
+		 columns=fullflexible,mathescape=true,%
+         keywordstyle=\bf\sffamily,commentstyle=\sl\sffamily,%
+         basicstyle=\normalsize\ttfamily,inputencoding=latin1, % i would prefer utf8
+         extendedchars,xleftmargin=2em,#1}}
+{}
+
+\newcommand{\absshow}[1]{%
+\absinline{\lstinputlisting{code/#1}}
+}
+
+\newenvironment{abscolumn}{\\\mbox{}\hspace{12pt}\rule{0.95\linewidth}{0.5pt}%\noindent\mbox{}\noindent\hrulefill
+\\}{\\\mbox{}\hspace{12pt}\rule{0.95\linewidth}{0.5pt}
+% \\\noindent\mbox{}\hrulefill\mbox{}
+}
+
+\lstnewenvironment{absexample}{
+~\\
+\noindent 
+\small{\textcolor{Green!80!black}{\bfseries\sffamily{Example:}}}\vspace{-4pt}
+\lstset{style=absstyle,
+basicstyle=\ttfamily,
+framerule=1pt,
+backgroundcolor=\color{Green!5},
+rulecolor=\color{Green!80!black},
+frame=tblr,
+xleftmargin=4pt,
+}}
+{}
+
+\lstnewenvironment{absexamplen}[1][]{
+\lstset{style=absstyle,
+basicstyle=\ttfamily,
+framerule=1pt,
+backgroundcolor=\color{Green!5},
+rulecolor=\color{Green!80!black},
+frame=tblr,
+captionpos=b,
+xleftmargin=4pt,#1
+}}
+{}
