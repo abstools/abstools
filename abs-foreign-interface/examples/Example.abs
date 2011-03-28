@@ -1,0 +1,59 @@
+/* This example shows an idea of how to 
+ * define and use foreign classes in ABS
+ * These are just ideas, nothing is fixed at
+ * the moment
+ */
+
+/**
+ * Addional annotations needed for FLI
+ */
+module ABS.FLI;
+export Foreign;
+
+data FLIAnnotation = Foreign;
+
+/* The FLUser module is a standard ABS module
+ * which acts as a client that uses FL code
+ */
+module FLUser;
+import * from FLDefs;
+// main block:
+{
+  // foreign classes must be created as cogs
+  [Far] ForeignInterface i = new cog ForeignClass();
+
+  // foreign objects can only be invoked asynchronously
+  // this ensures concurrency decoupling of foreign code with ABS.
+  Fut<Unit> f = i!m();
+}
+
+
+module FLDefs;
+export *;
+import * from ABS.FLI;
+
+interface ForeignInterface {
+   Unit m();
+}
+
+
+delta MyMock {
+  adds class ForeignClass {
+  
+  }
+}
+
+/*
+ * Foreign class.
+ * For foreign classes, the compilers generate proxy
+ * classes, which delegate calls to the actual objects.
+ * this way guarantees 
+ */
+[Foreign] class ForeignClass implements ForeignInterface {
+    // in the final realization no implementation 
+    // for the methods must be given as this cass is foreign
+    // this is just for the current compiler
+    Unit m() { }
+}
+
+
