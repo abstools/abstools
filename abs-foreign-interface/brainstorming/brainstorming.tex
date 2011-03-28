@@ -2,6 +2,7 @@
 \input{preamble}
 \input{abs}
 \input{java}
+\input{definitions}
 \usepackage{amsmath}
 \usepackage{amsthm}
 
@@ -31,6 +32,16 @@ There are essentially two questions to answer:
   \item How to use FLs from ABS
   \item How to use ABS from Fls
 \end{enumerate}
+
+\PW{We should think in terms of functions/datatypes, imperatives and
+concurrency?}
+
+\subsection{Concurrency}
+\begin{itemize}
+  \item \PW{Java object should only invoke ABS method synchronously?}
+  \item \PW{Does it make sense to asynchronously invoke Java object? Or both
+  ways must be synchronous?}
+\end{itemize}
 
 \section{Possible Solutions}
 
@@ -85,32 +96,34 @@ interface Output {
 class OuputImpl implements Output { }
 \end{absexamplen}
 
-\section{How to link Java code to ABS interfaces/classes/functions}
+\section{How to link Java to ABS interfaces/classes/functions}
 
-**** Use Conventions
-     For example, by having a special naming theme,
-     e.g. a Java class with the same name as the corresponding
-     ABS class.
-
-     Example:
+\subsection{Use Conventions}
+For example, by having a special naming theme, e.g. a Java class with the same
+name as the corresponding ABS class. Example:
      
-     ABS:
+\noindent ABS:
+\begin{absexamplen}
+module Foo;
+interface Baz { }
+[Foreign] class Bar implements Baz { }
+\end{absexamplen}
 
-     module Foo;
-     interface Baz { }
-     [Foreign] class Bar implements Baz { }
+\noindent Java:
+\begin{javaexample}
+package Foo;
+public class Bar {
 
-     Java:
-
-     package Foo;
-     public class Bar {
-     
-     }
+}
+\end{javaexample}
 
 \section{Discussion}
 Using conventions has the disadvantage that it is not very flexible. In
 particular, if classes have to be put in the same package as the generated ABS
 classes this could lead to name clashes.
+
+\PW{How to deal with sub-classing? e.g. Should we have ABS interfaces also for
+abstract classes?}
       
 \section{Use Annotations}
 Use annotations on the Java level to connect Java code to ABS.
@@ -158,6 +171,5 @@ public class OutputImpl {
   }
 }
 \end{javaexample}
-
 
 \end{document}
