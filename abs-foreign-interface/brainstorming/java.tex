@@ -1,0 +1,28 @@
+\lstset{mathescape}
+\lstset{basicstyle=\footnotesize\ttfamily}
+\lstset{numberstyle=\tiny}%
+\lstset{language=}
+\lstset{emphstyle=\color{red},emphstyle={[2]\color{blue}\underbar}}%% global
+
+\lstdefinestyle{javastyle}{
+language=Java,columns=fullflexible,
+ 		   mathescape=true,%
+ 		   showstringspaces=false,%
+keywordstyle=\bf\sffamily,
+commentstyle=\sl\sffamily,%
+basicstyle=\footnotesize\tttfamily,
+inputencoding=latin1, % i would prefer utf8
+extendedchars,xleftmargin=2em
+}
+
+\lstnewenvironment{javaexample}[1][]{
+\lstset{style=javastyle,
+basicstyle=\ttfamily,
+framerule=1pt,
+backgroundcolor=\color{Green!5},
+rulecolor=\color{Green!80!black},
+frame=tblr,
+captionpos=b,
+xleftmargin=4pt,#1
+}}
+{}

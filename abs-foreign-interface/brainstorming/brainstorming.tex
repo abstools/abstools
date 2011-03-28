@@ -1,0 +1,163 @@
+\documentclass[a4paper,11pt,final]{article}
+\input{preamble}
+\input{abs}
+\input{java}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\newcommand{\deliverableTitle}{The ABS Foreign Language Interface (ABSFLI)} 
+
+\title{\deliverableTitle}
+
+\author{Jan Sch\"{a}fer \and Peter Y. H. Wong}
+
+\begin{document}
+
+\maketitle 
+
+\section{Introduction}
+This document contains first ideas of how to
+connect ABS to foreign languages (FLs).
+ABS should be able to interact with FLs like
+Java to be able to write critical components of a system
+in ABS. 
+
+As FLs we mainly consider Java, but further
+options are: Maude, Scala, and Erlang
+
+\section{Main questions}
+There are essentially two questions to answer:
+\begin{enumerate}
+  \item How to use FLs from ABS
+  \item How to use ABS from Fls
+\end{enumerate}
+
+\section{Possible Solutions}
+
+\subsection{Deep Integration (the Scala way)}
+One would do a deep integration of Java and treat Java packages as Modules.
+For example:
+
+\begin{absexamplen}
+import * from java.lang;
+
+{
+  Double d = new Double();
+}
+\end{absexamplen}   
+
+\noindent Advantages: Easy use for ABS to access the Java libraries \\
+
+\noindent Disadvantages
+\begin{itemize}
+  \item Tightly coupled to Java
+  \item Not possible to extend this approach to other languages, e.g. Erlang/C
+  ...
+  \item Difficult to implement (type-checking)
+\end{itemize}
+  
+
+\subsection{Loose Integration (the JNI way)}
+Use an approach that is similar to JNI. i.e., define interfaces/methods/classes
+as \emph{foreign}. Provide an implementation for these interfaces in the
+target language 
+
+\noindent Advantages: 
+\begin{itemize}
+  \item loose coupling
+  \item independent of actual language 
+\end{itemize}
+
+
+\noindent Foreign ABS Classes/Functions -- Idea: classes and functions can be
+declared to be Foreign, either by using an annotations, or by using some keyword.
+
+\begin{absexamplen}
+module Test;
+
+def Int random() = foreign;
+
+interface Output {
+  Unit println();
+}
+
+[Foreign]
+class OuputImpl implements Output { }
+\end{absexamplen}
+
+\section{How to link Java code to ABS interfaces/classes/functions}
+
+**** Use Conventions
+     For example, by having a special naming theme,
+     e.g. a Java class with the same name as the corresponding
+     ABS class.
+
+     Example:
+     
+     ABS:
+
+     module Foo;
+     interface Baz { }
+     [Foreign] class Bar implements Baz { }
+
+     Java:
+
+     package Foo;
+     public class Bar {
+     
+     }
+
+\section{Discussion}
+Using conventions has the disadvantage that it is not very flexible. In
+particular, if classes have to be put in the same package as the generated ABS
+classes this could lead to name clashes.
+      
+\section{Use Annotations}
+Use annotations on the Java level to connect Java code to ABS.
+Example:
+     
+\noindent ABS:
+\begin{absexamplen}
+module Foo;
+interface Baz {
+  Unit print(String s);
+}
+
+[Foreign]
+class Bar implements Baz { }
+\end{absexamplen}     
+
+
+\noindent Java:
+\begin{javaexample}
+package foo;
+
+@AbsClass{"Foo.Bar"}
+public class Bar {
+  ABSUnit print(ABSString s2) {
+    System.out.println(s2.toString());
+  }
+}
+\end{javaexample}
+
+\noindent Possible Java Code
+\begin{javaexample}
+package Test;
+import abs.backend.java.afi.*;
+
+// function definitions are put in a
+// class named "Def" and must be static
+@AbsDef{"Test.random"}
+public static ABSInt random() {
+  return new Random().nextInt();
+}
+
+public class OutputImpl {
+  public ABSUnit println(ABSString s) {
+    System.out.println(s.toString());
+  }
+}
+\end{javaexample}
+
+
+\end{document}
