@@ -51,11 +51,9 @@ public class JavaJob extends Job {
 	private static boolean debugMode = DO_DEBUG;
 
 	private MsgConsole javaConsole;
-	private MsgConsole sdeditconsole;
-	private IProject myProject;
+	private IProject project;
 	private IProgressMonitor refreshProgressMonitor;
 	private IFile currentFile;
-	private int sdeditPort = 60001;
 
 	// job
 	private IAction action;
@@ -96,7 +94,7 @@ public class JavaJob extends Job {
 	public JavaJob(String name, IAction action, IProject project, IFile file) {
 		super(name);
 		this.action = action;
-		this.myProject = project;
+		this.project = project;
 		this.currentFile = file;
 		this.setUser(true);
 		useInternalDebugger = true;
@@ -109,10 +107,10 @@ public class JavaJob extends Job {
 		
 		try{
 			//must be an ABS project
-			if (myProject == null || !myProject.exists()){
+			if (project == null || !project.exists()){
 				return showErrorMessage("The project does not exist.");
-			} else if (!myProject.hasNature(NATURE_ID)){
-				return showErrorMessage("Chosen project '"+myProject.getName()+"' is not an ABS project.");
+			} else if (!project.hasNature(NATURE_ID)){
+				return showErrorMessage("Chosen project '"+project.getName()+"' is not an ABS project.");
 			}			
 		} catch (CoreException e) {
 			return showErrorMessage("Project does not exist or project is not open", e);
@@ -131,12 +129,8 @@ public class JavaJob extends Job {
 	}
 
 	private void setUpConsole() {
-		javaConsole = getAbsNature(myProject).getJavaConsole();
+		javaConsole = getAbsNature(project).getJavaConsole();
 		javaConsole.clear();
-		if(startSDE){
-			sdeditconsole = getAbsNature(myProject).getSDEditConsole();
-			sdeditconsole.clear();
-		}
 	}
 	
 	/**
@@ -147,10 +141,10 @@ public class JavaJob extends Job {
 	 * @throws AbsJobException, if project is not an ABS project
 	 */
 	private void loadPropertyOptions() throws AbsJobException {
-		javaPath    = getPathToGeneratedJavaFiles(myProject);
-		sourceOnly  = getAbsNature(myProject).getProjectPreferenceStore().getBoolean(SOURCE_ONLY);
-		noWarnings  = getAbsNature(myProject).getProjectPreferenceStore().getBoolean(NO_WARNINGS);
-		compileCode = getAbsNature(myProject).getProjectPreferenceStore().getBoolean(ALWAYS_COMPILE);
+		javaPath    = getPathToGeneratedJavaFiles(project);
+		sourceOnly  = getAbsNature(project).getProjectPreferenceStore().getBoolean(SOURCE_ONLY);
+		noWarnings  = getAbsNature(project).getProjectPreferenceStore().getBoolean(NO_WARNINGS);
+		compileCode = getAbsNature(project).getProjectPreferenceStore().getBoolean(ALWAYS_COMPILE);
 		if (debuggerCompileFirst != null && debuggerCompileFirst.length() > 0){
 			compileCode = Boolean.valueOf(debuggerCompileFirst);
 		}
@@ -180,7 +174,7 @@ public class JavaJob extends Job {
 			monitor.worked(12);
 
 			// refresh project tree
-			myProject.refreshLocal(IProject.DEPTH_INFINITE, refreshProgressMonitor);
+			project.refreshLocal(IProject.DEPTH_INFINITE, refreshProgressMonitor);
 
 			return createStatus();
 
@@ -226,7 +220,7 @@ public class JavaJob extends Job {
 	private void executeCompiler(String absFrontendLocation) throws AbsJobException,
 			CoreException, IOException {
 		// generate .java files
-		generateJavaCode(javaPath, myProject);
+		generateJavaCode(javaPath, project);
 	
 		// generate class files
 		if (!sourceOnly && !isCanceled) {
@@ -309,7 +303,7 @@ public class JavaJob extends Job {
 
    private void startSDEdit() throws IOException {
       if (sdeditProcess == null)
-         sdeditProcess = new SDEditProcess(sdeditPort);
+         sdeditProcess = new SDEditProcess();
       sdeditProcess.start();
    }
 
@@ -380,7 +374,7 @@ public class JavaJob extends Job {
 		      if (currentFile.getLocation().isAbsolute()) {
 		         mainFile = currentFile.getLocation().toFile();
 		      } else {
-		         mainFile = myProject.getLocation().append(currentFile.getLocation()).toFile();
+		         mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
 		      }
 		   }
 		}
@@ -388,7 +382,7 @@ public class JavaJob extends Job {
    }
 
 	private void searchForMainInModel(String moduleName, File mainFile) throws AbsJobException{
-		AbsNature nature = UtilityFunctions.getAbsNature(myProject);
+		AbsNature nature = UtilityFunctions.getAbsNature(project);
 		if(nature == null){
 			throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
 		}
@@ -534,7 +528,7 @@ public class JavaJob extends Job {
 
 	private void executeABSSystem(final Path javaPath,
 			final String moduleName) {
-		Debugger.startABSRuntime(myProject.getName(), moduleName, javaPath,
+		Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
 				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
 				debuggerIsInDebugMode, debuggerArgsRandomSeed);
 	}
@@ -662,27 +656,24 @@ public class JavaJob extends Job {
 	class SDEditProcess {
 	   
 	   private Process process;
-      private int port;
+	   private final int PORT = 60001;
       private SDEditWatchdog sdeWatchdogJob;
+      private MsgConsole console;
 
-	   SDEditProcess(int port) {
-	      this.port = port;
-	   }
-	   
       /**
 	    * starts a new SDedit process 
 	    * 
-	    * @param port
+	    * @param PORT
 	    * @throws IOException
 	    */
 	   private void start() throws IOException{
 	      if (sdeditIsRunning())
 	         return;
 
-	      String[] args = buildSDEditCommand(port);
+         console = getAbsNature(project).getSDEditConsole();
+         console.clear();
 
-	      ProcessBuilder pb = new ProcessBuilder(args);
-	      process = pb.start();
+         Process p = startProcess();
 
 	      if (sdeWatchdogJob != null) {
 	         sdeWatchdogJob.cancel();
@@ -699,10 +690,10 @@ public class JavaJob extends Job {
 	   }
 	   
 	   public MsgConsole getConsole() {
-	      return sdeditconsole;
+	      return console;
 	   }
 
-	   private String[] buildSDEditCommand(int port) throws IOException {
+	   private Process startProcess() throws IOException {
 	      Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
 	      File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
 
@@ -715,15 +706,18 @@ public class JavaJob extends Job {
 	      args.add(new File(jarFile,"sdedit.jar").getAbsolutePath());
 
 	      args.add("-s");
-	      args.add(String.valueOf(port));
+	      args.add(String.valueOf(PORT));
 	      System.out.println(args);
-	      return args.toArray(new String[0]);
+	      
+         ProcessBuilder pb = new ProcessBuilder(args);
+         process = pb.start();
+         return process;
 	   }
 
 	   private boolean sdeditIsRunning() {
 	      try {
 	         Socket s = new Socket();
-	         s.connect(new InetSocketAddress("localhost", port));
+	         s.connect(new InetSocketAddress("localhost", PORT));
 	         s.close();
 	         if (debugMode)
 	            System.out.println("SDEdit server is already running");
