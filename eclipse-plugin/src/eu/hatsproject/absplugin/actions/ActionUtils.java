@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.navigator.CommonNavigator;
@@ -48,6 +49,7 @@ public class ActionUtils {
 	public static IProject getCurrentProject(IWorkbenchWindow window, IEditorPart editorPart) throws PartInitException{
 		
 		String activePage;
+
 		try{
 			activePage = window.getActivePage().getActivePart().getSite().getId();
 		} catch (NullPointerException e) {
@@ -55,25 +57,40 @@ public class ActionUtils {
 		}
 		
 		if(activePage.equals(EDITOR_ID)){
-			return getActiveFile(editorPart).getProject();
+			IFile f = getActiveFile(editorPart);
+			if (f != null)
+			   return f.getProject();
 		} else if(activePage.equals(IPageLayout.ID_PROJECT_EXPLORER)){
-			IResource r = getResource(window);
+			IResource r = getSelectedResourceOrNull(window);
 			if(r != null){
-				//some resource is selected in the explorer
 				return r.getProject();
 			}
 		} else{
 			if(editorPart != null) {
 				return getActiveFile(editorPart).getProject();
 			} else {
-				//get from project explorer
-				IResource r = getResource(window);
+				IResource r = getSelectedResourceOrNull(window);
 				return r.getProject();
 			}
 		}
+		
+      IFile f = getOpenFileOrNull(window);
+      if (f != null)
+         return f.getProject();
+		
 		//all other cases (e.g. no open editor and nothing is selected in projectExplorer)
 		return null;
-	}	
+	}
+
+   private static IFile getOpenFileOrNull(IWorkbenchWindow window) {
+      for (IWorkbenchPage p : window.getPages()) {
+         IEditorPart editor = p.getActiveEditor();
+         if (editor != null && editor.getSite().getId().equals(EDITOR_ID)) {
+            return getActiveFile(editor);
+         }
+      }
+      return null;
+   }	
 	
 	/**
 	 * Return the currently opened file. If no file is opened return the file selected
@@ -95,7 +112,7 @@ public class ActionUtils {
 		if(activePage.equals(EDITOR_ID)){
 			return getActiveFile(editorPart);
 		} else if(activePage.equals(IPageLayout.ID_PROJECT_EXPLORER)){
-			IResource r = getResource(window);
+			IResource r = getSelectedResourceOrNull(window);
 			try {
 				//if a file was selected
 				return (IFile) r;
@@ -108,7 +125,7 @@ public class ActionUtils {
 				return getActiveFile(editorPart);
 			} else {
 				//get file and project from project explorer
-				IResource r = getResource(window);
+				IResource r = getSelectedResourceOrNull(window);
 				try {
 					//if a file was selected
 					return (IFile) r;
@@ -163,9 +180,12 @@ public class ActionUtils {
 		return null;
 	}
 	
-	private static IResource getResource(IWorkbenchWindow window) throws PartInitException{
+	private static IResource getSelectedResourceOrNull(IWorkbenchWindow window) throws PartInitException{
 		CommonNavigator explorer = (CommonNavigator)window.getActivePage().showView(IPageLayout.ID_PROJECT_EXPLORER);
-		return ((IResource)((StructuredSelection)explorer.getCommonViewer().getSelection()).getFirstElement());
+		Object e = ((StructuredSelection)explorer.getCommonViewer().getSelection()).getFirstElement();
+		if (e instanceof IResource)
+		   return (IResource) e;
+		return null;
 	}
 	
 	/**

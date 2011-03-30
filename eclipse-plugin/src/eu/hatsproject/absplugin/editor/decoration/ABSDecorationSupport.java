@@ -67,7 +67,7 @@ class LocationTypeDrawingStrategy implements IDrawingStrategy {
 	    try {
 	        textBounds = textWidget.getTextBounds(offset, offset + length - 1);
 	    } catch (IllegalArgumentException e) {
-	        standardExceptionHandling(e);
+	        // this can happen and is not an error
 	        return;
 	    }
 	    if (gc != null) {
