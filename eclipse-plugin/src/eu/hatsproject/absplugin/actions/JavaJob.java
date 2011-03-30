@@ -308,7 +308,7 @@ public class JavaJob extends Job {
 	}
 
    private void startSDEdit() throws IOException {
-      if (sdeditProcess != null)
+      if (sdeditProcess == null)
          sdeditProcess = new SDEditProcess(sdeditPort);
       sdeditProcess.start();
    }
