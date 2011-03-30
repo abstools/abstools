@@ -49,12 +49,12 @@ public class JavaAction implements IWorkbenchWindowActionDelegate {
 			
 			saveEditors(project, true);
 			// starts a new job
-			JavaJob job = new JavaJob("ABS Java Code Generation", action, project, file);
+			JavaJob job = new JavaJob(JavaJob.COMPILE_JOB, action, project, file);
 			job.schedule();
 		} catch (Exception e) {
 			//do not kill the plug-in, if something goes wrong
 			standardExceptionHandling(e);
-			showErrorMessage("Fatal Error!");
+			showErrorMessage("Fatal Error! "+e.getMessage());
 		}
 
 	}

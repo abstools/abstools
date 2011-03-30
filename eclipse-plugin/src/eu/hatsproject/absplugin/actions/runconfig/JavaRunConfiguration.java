@@ -36,7 +36,7 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 		IFile file = null;
 	
 		ActionUtils.saveDirtyEditors(project);
-		JavaJob job = new JavaJob("ABS Java Backend Run Configuration", action, project, file);
+		JavaJob job = new JavaJob(JavaJob.RUN_JOB,action, project, file);
 		modifyDebuggerArguments(configuration, job);
 		job.schedule();
 	}

@@ -36,6 +36,7 @@ import abs.backend.java.JavaCode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import eu.hatsproject.absplugin.actions.JavaJob.SDEditProcess;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
 import eu.hatsproject.absplugin.builder.AbsNature;
@@ -53,7 +54,7 @@ public class JavaJob extends Job {
 	private MsgConsole sdeditconsole;
 	private IProject myProject;
 	private IProgressMonitor refreshProgressMonitor;
-	private IFile curFile;
+	private IFile currentFile;
 	private int sdeditPort = 60001;
 
 	// job
@@ -67,7 +68,6 @@ public class JavaJob extends Job {
 	
 	// canceling job
 	private Process debugProcess = null;
-	private Process sdeditProcess = null;
 	private boolean isCanceled = false;
 
 	// used by run config
@@ -79,8 +79,11 @@ public class JavaJob extends Job {
 	private boolean useInternalDebugger;
 	private boolean debuggerIsInDebugMode;
 
-   private SDEditWatchdog sdeWatchdogJob;
+   private SDEditProcess sdeditProcess;
+   
 	
+   public static final String COMPILE_JOB = "ABS Java Code Generation";
+   public static final String RUN_JOB = "ABS Java Execution";
 	
 	/**
 	 * creates a new job for an action. 
@@ -94,7 +97,7 @@ public class JavaJob extends Job {
 		super(name);
 		this.action = action;
 		this.myProject = project;
-		this.curFile = file;
+		this.currentFile = file;
 		this.setUser(true);
 		useInternalDebugger = true;
 		debuggerIsInDebugMode = true;
@@ -298,11 +301,17 @@ public class JavaJob extends Job {
 			IOException, CoreException {
 		checkPath(javaPath);
 		if (startSDE && !isCanceled) {
-			startSDE(sdeditPort);
+		   startSDEdit();
 		}
 		if (!isCanceled)
-			findAndExecuteMain(absFrontendLocation, javaPath, myProject, curFile, startSDE);
+			findAndExecuteMain(absFrontendLocation);
 	}
+
+   private void startSDEdit() throws IOException {
+      if (sdeditProcess != null)
+         sdeditProcess = new SDEditProcess(sdeditPort);
+      sdeditProcess.start();
+   }
 
 	private void checkPath(Path javaPath) throws AbsJobException {
 		File javaDir = javaPath.toFile();
@@ -319,30 +328,13 @@ public class JavaJob extends Job {
 	 * Finally: executes Modulename.Main
 	 * 
 	 * @param absFrontendLocation - where to find the absfrontend
-	 * @param javaPath - where to find generated Java files
-	 * @param project - the ABS project
-	 * @param currentFile - ABS file or Main.java (maybe null)
-	 * @param withSDE - start SDEdit
 	 * @throws AbsJobException - if no main block found
 	 * @throws IOException - If an I/O error occurs 
 	 */
-	private void findAndExecuteMain(String absFrontendLocation, Path javaPath, IProject project, IFile currentFile, boolean withSDE) throws AbsJobException, IOException {
-		File mainFile = null;
-		String moduleName = null;
+	private void findAndExecuteMain(String absFrontendLocation) throws AbsJobException, IOException {
 		String info = null;
 
-		if (currentFile != null) {
-		   //Search for a main file in the model of the current abs file
-		   if(UtilityFunctions.isABSFile(currentFile)){
-		      searchForMainInModel(currentFile, project, moduleName, mainFile);
-		   } else if(currentFile.getName().equals("Main.java")){
-		      if (currentFile.getLocation().isAbsolute()) {
-		         mainFile = currentFile.getLocation().toFile();
-		      } else {
-		         mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
-		      }
-		   }
-		}
+      File mainFile = findMainJavaFile();
 
 		//Search for the main file if previous searching was not successful
 		if(mainFile == null){
@@ -350,13 +342,19 @@ public class JavaJob extends Job {
 			if(mainFile == null){
 				throw new AbsJobException("No 'Main.java' file found.");
 			}
-			if(currentFile!=null){
+			if(currentFile != null){
 				info = "No main file found for \""+currentFile.getName()+"\".\nBut there is a main file in the project:";
 			}
 		}
 
+      String moduleName = findModuleName(mainFile);
+
+		debugAbsFiles(absFrontendLocation, javaPath, startSDE, moduleName, info);
+	}
+
+   private String findModuleName(File mainFile) throws AbsJobException {
+      String moduleName = null;
 		//Find the module name
-		if(moduleName == null){
 			moduleName = "Main";
 			File dir = new File(mainFile.getAbsolutePath());
 			while(!javaPath.toFile().equals(dir)){
@@ -369,13 +367,28 @@ public class JavaJob extends Job {
 					throw new AbsJobException("Module name not found");
 				}
 			}
+      return moduleName;
+   }
+
+   private File findMainJavaFile() throws AbsJobException {
+      File mainFile = null;
+		if (currentFile != null) {
+		   //Search for a main file in the model of the current abs file
+		   if(UtilityFunctions.isABSFile(currentFile)){
+		      searchForMainInModel(null, null);
+		   } else if(currentFile.getName().equals("Main.java")){
+		      if (currentFile.getLocation().isAbsolute()) {
+		         mainFile = currentFile.getLocation().toFile();
+		      } else {
+		         mainFile = myProject.getLocation().append(currentFile.getLocation()).toFile();
+		      }
+		   }
 		}
+      return mainFile;
+   }
 
-		debugAbsFiles(absFrontendLocation, javaPath, withSDE, moduleName, info);
-	}
-
-	private void searchForMainInModel(IFile currentFile, IProject project, String moduleName, File mainFile) throws AbsJobException{
-		AbsNature nature = UtilityFunctions.getAbsNature(project);
+	private void searchForMainInModel(String moduleName, File mainFile) throws AbsJobException{
+		AbsNature nature = UtilityFunctions.getAbsNature(myProject);
 		if(nature == null){
 			throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
 		}
@@ -530,7 +543,7 @@ public class JavaJob extends Job {
 	 * prints the output on users console using a new thread
 	 * 
 	 * @param moduleName
-	 * @param info
+	 * @param info, String nam
 	 * @param p
 	 * @throws IOException
 	 */
@@ -646,67 +659,94 @@ public class JavaJob extends Job {
 		return path;
 	}
 	
-	/**
-	 * starts a new SDedit process 
-	 * 
-	 * @param port
-	 * @throws IOException
-	 */
-	private void startSDE(int port) throws IOException{
-		if (sdeditIsRunning(port))
-			return;
-		
-		String[] args = buildSDEditCommand(port);
-		
-		ProcessBuilder pb = new ProcessBuilder(args);
-		sdeditProcess = pb.start();
-
-		if (sdeWatchdogJob != null) {
-		   sdeWatchdogJob.cancel();
-		}
-		
-		sdeWatchdogJob = 
-			new SDEditWatchdog(this,"SDEdit running...", sdeditconsole, sdeditProcess, debugProcess);
-
-		sdeWatchdogJob.schedule();
-	}
-
-	private String[] buildSDEditCommand(int port) throws IOException {
-      Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
-      File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
+	class SDEditProcess {
 	   
-		ArrayList<String> args = new ArrayList<String>();
-		
-		args.add("java");
-		args.add("-cp");
-		args.add(jarFile.getAbsolutePath());
-		args.add("-jar");
-		args.add(new File(jarFile,"sdedit.jar").getAbsolutePath());
-		
-		args.add("-s");
-		args.add(String.valueOf(port));
-		System.out.println(args);
-		return args.toArray(new String[0]);
-	}
+	   private Process process;
+      private int port;
+      private SDEditWatchdog sdeWatchdogJob;
 
-	private boolean sdeditIsRunning(int port) {
-		try {
-			Socket s = new Socket();
-			s.connect(new InetSocketAddress("localhost", port));
-			s.close();
-			if (debugMode)
-				System.out.println("SDEdit server is already running");
-			return true;
-		} catch (IOException e) {
-			return false;
-		}
+	   SDEditProcess(int port) {
+	      this.port = port;
+	   }
+	   
+      /**
+	    * starts a new SDedit process 
+	    * 
+	    * @param port
+	    * @throws IOException
+	    */
+	   private void start() throws IOException{
+	      if (sdeditIsRunning())
+	         return;
+
+	      String[] args = buildSDEditCommand(port);
+
+	      ProcessBuilder pb = new ProcessBuilder(args);
+	      process = pb.start();
+
+	      if (sdeWatchdogJob != null) {
+	         sdeWatchdogJob.cancel();
+	      }
+
+	      sdeWatchdogJob = 
+	         new SDEditWatchdog(this);
+
+	      sdeWatchdogJob.schedule();
+	   }
+	   
+	   public Process getProcess() {
+	      return process;
+	   }
+	   
+	   public MsgConsole getConsole() {
+	      return sdeditconsole;
+	   }
+
+	   private String[] buildSDEditCommand(int port) throws IOException {
+	      Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
+	      File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
+
+	      ArrayList<String> args = new ArrayList<String>();
+
+	      args.add("java");
+	      args.add("-cp");
+	      args.add(jarFile.getAbsolutePath());
+	      args.add("-jar");
+	      args.add(new File(jarFile,"sdedit.jar").getAbsolutePath());
+
+	      args.add("-s");
+	      args.add(String.valueOf(port));
+	      System.out.println(args);
+	      return args.toArray(new String[0]);
+	   }
+
+	   private boolean sdeditIsRunning() {
+	      try {
+	         Socket s = new Socket();
+	         s.connect(new InetSocketAddress("localhost", port));
+	         s.close();
+	         if (debugMode)
+	            System.out.println("SDEdit server is already running");
+	         return true;
+	      } catch (IOException e) {
+	         return false;
+	      }
+	   }
+
+      public void cancel() {
+         if (process != null)
+            process.destroy();
+         
+         sdeWatchdogJob.cancel();
+      }
+
    }
 
 	@Override
 	protected void canceling() {
 		isCanceled = true;
 		if(debugProcess != null) debugProcess.destroy();
-		if(sdeditProcess != null) sdeditProcess.destroy();
+		if(sdeditProcess != null) sdeditProcess.cancel();
 		super.canceling();
 	}
 
@@ -758,13 +798,5 @@ public class JavaJob extends Job {
 	
 	public void setDebuggerDebugMode(boolean b) {
 		this.debuggerIsInDebugMode = b;
-	}
-
-	public MsgConsole getSdeditconsole() {
-		return sdeditconsole;
-	}
-
-	public Process getSdeditProcess() {
-		return sdeditProcess;
 	}
 }

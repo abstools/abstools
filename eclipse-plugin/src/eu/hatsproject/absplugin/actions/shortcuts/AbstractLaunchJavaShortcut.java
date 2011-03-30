@@ -23,13 +23,15 @@ public abstract class AbstractLaunchJavaShortcut {
 		IProject project = resource.getProject();
 		IAction action = new Action() {}; 
 		action.setId(actionId);
-		JavaJob job;
+		IFile file = null;
+		
 		if (resource instanceof IFile){
-			job = new JavaJob("ABS Java Backend Standard Run Configuration", action, project, (IFile)resource);	
-		} else {
-			job = new JavaJob("ABS Java Backend Standard Run Configuration", action, project, null);	
+		   file = (IFile) resource;
 		}
-		if(withoutArgs){
+		
+      JavaJob job = new JavaJob(JavaJob.RUN_JOB, action, project, file);	
+
+      if(withoutArgs){
 			overwriteDefaultArgs(job);
 		}
 		job.schedule();
