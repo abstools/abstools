@@ -149,13 +149,31 @@
     <jflex file="${parser.src.dir}/mTVL.flex" outdir="${parser.gen.dir}" nobak="yes" />
   </target>
 
-  <!-- mtvl's Parser -->
-  <target name="genparser" depends="genscanner, genast">
-    <echo message="Running beaver" />
-    <beaver file="${parser.src.dir}/mTVL.beaver"
-            destdir = "${parser.gen.dir}"
-            terminalNames="yes" compress="no" useSwitch="yes" />
+  <!-- mtvl's Parser - deprecated version -->
+  <!--<target name="genparser" depends="genscanner, genast">-->
+    <!--<echo message="Running beaver" />-->
+    <!--<beaver file="${parser.src.dir}/mTVL_deprecated.beaver"-->
+            <!--destdir = "${parser.gen.dir}"-->
+            <!--terminalNames="yes" compress="no" useSwitch="yes" />-->
+  <!--</target>-->
+
+  <target name="genparser" depends="genscanner, genast, genp1, genp2">
   </target>
+
+  <target name="genp1" depends="genscanner, genast">
+    <echo message="Parser phase1" />
+    <!-- generate the parser phase 1, translating .lalr to .beaver -->
+    <java fork="true" dir="${parser.src.dir}" classpath="${frontend.lib}/JastAddParser.jar:${frontend.lib}/beaver-rt-src.jar" classname="Main">
+      <arg line="mTVL.parser '${parser.gen.dir}/MTVLParser.beaver'" />
+    </java>
+  </target>
+
+  <target name="genp2" depends="genp1">
+    <!-- generate the parser phase 2, translating .beaver to .java -->
+    <echo message="Parser phase" />
+    <beaver file="${parser.gen.dir}/MTVLParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
+  </target>
+
 
 
 
@@ -178,8 +196,8 @@
         <zipfileset src="${frontend.lib}/beaver.jar" />
       <manifest>
         <attribute name="Main-Class" value="mtvl.parser.Main"/>
-        <attribute name="Implementation-Version" value="${abs.version}"/>
-        <attribute name="Bundle-Version" value="${abs.version}"/>
+        <attribute name="Implementation-Version" value="${frontend.version}"/>
+        <attribute name="Bundle-Version" value="${frontend.version}"/>
         <attribute name="Class-Path" value="absfrontend.jar"/>
       </manifest>
     </jar>
@@ -269,7 +287,7 @@
   <target name="testsatneg" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
     <java classpath="${frontend.lib}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
-      <arg line="-v -c P1 ${frontend.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl ${tests.dir}/mtvlsamples/computerext.mtvl" />
+      <arg line="-v -c Computer.P1 ${frontend.tests.dir}/fslsamples/computer.fsl ${tests.dir}/mtvlsamples/computer.mtvl ${tests.dir}/mtvlsamples/computerext.mtvl" />
     </java>
 
   </target>
@@ -278,7 +296,7 @@
   <target name="testsatpos" depends="compile">
     <echo message="Checking satisfiability of fslsamples/computer.fsl wrt mtvlsamples/computer.mtvl"/>
     <java classpath="${frontend.lib}/beaver.jar:${build.dir}:${frontend.build.dir}:${ext.dir}/choco-solver-2.1.1.jar" classname="mtvl.parser.Main">
-      <arg line="-v -c P3 ${frontend.tests.dir}/abssamples/deltas/hello.abs ${tests.dir}/mtvlsamples/helloworld.mtvl" />
+      <arg line="-v -c Helloworld.P3 ${frontend.tests.dir}/abssamples/deltas/Hello.abs ${tests.dir}/mtvlsamples/helloworld.mtvl" />
     </java>
   </target>
 
