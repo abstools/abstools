@@ -27,6 +27,7 @@ import abs.frontend.ast.WhileStmt;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.ext.AdaptDirection;
 
 public class DefaultTypeSystemExtension implements TypeSystemExtension {
     
@@ -42,8 +43,8 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     }
     
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {
-        checkAssignable(null, lt, t, origin);
-        checkAssignable(null, t, lt, origin);
+        checkAssignable(null, null, lt, t, origin);
+        checkAssignable(null, null, t, lt, origin);
     }
     
     @Override
@@ -53,7 +54,7 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void checkMethodCall(Call call) { }
     
     @Override
-    public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {    }
+    public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {    }
     
     @Override
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {  }

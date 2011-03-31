@@ -20,6 +20,7 @@ import abs.frontend.ast.ThisExp;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
+import abs.frontend.typechecker.ext.AdaptDirection;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 
@@ -40,7 +41,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
+    public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
         LocationType rhtl = getLocationType(rht);
         LocationType lhtl = getLocationType(lht);
         
@@ -51,7 +52,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         } else {
             LocationType adaptedRht = rhtl;
             if (adaptTo != null) {
-                adaptedRht = rhtl.adaptTo(getLocationType(adaptTo));
+                adaptedRht = rhtl.adaptTo(getLocationType(adaptTo), dir);
             }
             if (!adaptedRht.isSubtypeOf(lhtl)) {
                 errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
@@ -64,7 +65,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     public void annotateType(Type t, ASTNode<?> origNode, ASTNode<?> typeNode) {
         if (origNode instanceof AsyncCall) {
             AsyncCall ac = (AsyncCall) origNode;
-            adaptTo(t,ac.getCallee().getType());
+            adaptTo(t,AdaptDirection.FROM,ac.getCallee().getType());
         } else
         if (origNode instanceof ThisExp) {
             setLocationType(t,LocationType.NEAR);
@@ -143,7 +144,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         type.addMetaData(LocationType.LOCATION_KEY, lt);
     }
     
-    public void adaptTo(Type type, Type to) {
-        setLocationType(type,getLocationType(type).adaptTo(getLocationType(to)));
+    public void adaptTo(Type type, AdaptDirection dir, Type to) {
+        setLocationType(type,getLocationType(type).adaptTo(getLocationType(to), dir));
     }
 }

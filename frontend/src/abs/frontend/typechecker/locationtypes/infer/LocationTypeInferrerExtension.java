@@ -27,6 +27,7 @@ import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.ThisExp;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
+import abs.frontend.typechecker.ext.AdaptDirection;
 import abs.frontend.typechecker.ext.TypeSystemExtension;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
@@ -78,18 +79,18 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         return ltv;
     }
     
-    private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, LocationTypeVariable adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
+    private LocationTypeVariable adaptTo(LocationTypeVariable expLocType, AdaptDirection dir, LocationTypeVariable adaptTo, ASTNode<?> typeNode, ASTNode<?> originatingNode) {
         LocationTypeVariable tv = LocationTypeVariable.newVar(constraints, typeNode, false, getFarTypes(originatingNode), null);
-        constraints.add(Constraint.adaptConstraint(tv, expLocType, adaptTo));
+        constraints.add(Constraint.adaptConstraint(tv, expLocType, dir, adaptTo));
         //System.out.println("Require " + tv + " = " + expLocType + " |>" + adaptTo);
         return tv;
     }
     
     
-    private void adaptAndSet(Type rht, LocationTypeVariable adaptTo, ASTNode<?> originatingNode) {
+    private void adaptAndSet(Type rht, AdaptDirection dir, LocationTypeVariable adaptTo, ASTNode<?> originatingNode) {
         if (adaptTo != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
             LocationTypeVariable rhtlv = getLV(rht);
-            LocationTypeVariable tv = adaptTo(rhtlv, adaptTo, null, originatingNode);
+            LocationTypeVariable tv = adaptTo(rhtlv, dir, adaptTo, null, originatingNode);
             annotateVar(rht, tv);
         }
     }
@@ -177,14 +178,14 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
 
     @Override
-    public void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n) {
+    public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
         LocationTypeVariable sub = getLV(rht);
         LocationTypeVariable tv = getLV(lht);
         if (n instanceof NewExp && ((NewExp)n).hasCog()) {
             constraints.add(Constraint.farConstraint(sub, tv));
         } else {
             if (adaptTo != null && getLV(adaptTo) != LocationTypeVariable.ALWAYS_NEAR) { // Optimization
-                sub = adaptTo(getLV(rht), getLV(adaptTo), null, n);
+                sub = adaptTo(getLV(rht), dir, getLV(adaptTo), null, n);
             }
             constraints.add(Constraint.subConstraint(sub, tv));
         } 
@@ -196,7 +197,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         } else
         if (originatingNode instanceof AsyncCall) {
             AsyncCall call = (AsyncCall)originatingNode;
-            adaptAndSet(t, getLV(call.getCallee().getType()), originatingNode);
+            adaptAndSet(t, AdaptDirection.FROM, getLV(call.getCallee().getType()), originatingNode);
         } else
         if (originatingNode instanceof ThisExp) {
             annotateVar(t, LocationTypeVariable.ALWAYS_NEAR);

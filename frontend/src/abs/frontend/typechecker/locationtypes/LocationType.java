@@ -4,18 +4,9 @@
  */
 package abs.frontend.typechecker.locationtypes;
 
+import abs.frontend.typechecker.ext.AdaptDirection;
+
 public class LocationType {
-    public static enum Direction {
-        FROM, TO;
-        
-        public boolean isFrom() {
-            return this == FROM;
-        }
-        
-        public boolean isTo() {
-            return this == TO;
-        }
-    }
     public static final String LOCATION_KEY = "LOCATION_KEY";
     
     public static final LocationType FAR = new LocationType("Far");
@@ -104,7 +95,7 @@ public class LocationType {
         throw new IllegalArgumentException("Cannot use location type "+this+" to check subtypeOfFar");
     }
     
-    public LocationType adaptTo(LocationType to) {
+    public LocationType adaptTo(LocationType to, AdaptDirection dir) {
         if (isBottom())
             return this;
         
@@ -114,9 +105,9 @@ public class LocationType {
         
         if (to.isParametricFar()) {
             if (this.isNear())
-                return FAR;
+                return dir.isFrom() ? to : FAR;
             if (this.isParametricFar() && this != to) {
-                return FAR;
+                return dir.isFrom() ? SOMEWHERE : this;
             }
             return SOMEWHERE; 
         }

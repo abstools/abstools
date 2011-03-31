@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import abs.frontend.typechecker.ext.AdaptDirection;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 import static abs.frontend.typechecker.locationtypes.LocationType.*;
@@ -301,10 +302,14 @@ public abstract class Constraint {
     
     private static class AdaptConstraint extends Constraint {
         LocationTypeVariable resultTv, tv, adaptToTv;
+        AdaptDirection dir;
 
-        public AdaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptToTv) {
+        public AdaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, AdaptDirection dir, LocationTypeVariable adaptToTv) {
             if (resultTv == null || tv == null || adaptToTv == null)
                 throw new IllegalArgumentException("some variable is null: "+resultTv+", "+tv+", "+adaptToTv);
+            if (dir == null) {
+                throw new IllegalArgumentException("direction is null");
+            }
             /*if (!Arrays.equals(adaptToTv.parametricFarTypes(), resultTv.parametricFarTypes())) {
                 throw new IllegalArgumentException("Parametric Far Types for adaptToTv and resultTv should be equal");
             }*/
@@ -315,11 +320,12 @@ public abstract class Constraint {
             this.resultTv = resultTv;
             this.tv = tv;
             this.adaptToTv = adaptToTv;
+            this.dir = dir;
         }
 
         @Override
         public String toString() {
-            return tv + " >> " + adaptToTv + " = " + resultTv;
+            return tv + " >>_" + dir + " " + adaptToTv + " = " + resultTv;
         }
         
         @Override
@@ -350,7 +356,10 @@ public abstract class Constraint {
             // if adaptToTv = FAR(i)
             for (LocationType t : adaptToTv.parametricFarTypes()) {
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(BOTTOM).then(resultTv).is(BOTTOM).getValues());
-                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
+                if (dir.isFrom())
+                    result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(t).getValues());
+                else
+                    result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(NEAR).then(resultTv).is(FAR).getValues());
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(FAR).then(resultTv).is(SOMEWHERE).getValues());
                 result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(SOMEWHERE).then(resultTv).is(SOMEWHERE).getValues());
             }
@@ -358,7 +367,15 @@ public abstract class Constraint {
             for (LocationType t : adaptToTv.parametricFarTypes()) {
                 for (LocationType t2 : tv.parametricFarTypes()) {
                     if (t != t2) {
-                        result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(FAR).getValues());
+                        if (dir.isFrom()) {
+                            result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
+                        } else {
+                            if (resultTv.parametricFarTypes().contains(t2)) {
+                                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(t2).getValues());
+                            } else {
+                                result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(FAR).getValues());
+                            }
+                        }
                     } else {
                         result.add(new CL(e).if_(adaptToTv).is(t).andIf(tv).is(t2).then(resultTv).is(SOMEWHERE).getValues());
                     }
@@ -514,8 +531,8 @@ public abstract class Constraint {
     }
 
     // tv1 = tv2 |> tv3
-    public static Constraint adaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, LocationTypeVariable adaptTo) {
-        return new AdaptConstraint(resultTv, tv, adaptTo);
+    public static Constraint adaptConstraint(LocationTypeVariable resultTv, LocationTypeVariable tv, AdaptDirection dir, LocationTypeVariable adaptTo) {
+        return new AdaptConstraint(resultTv, tv, dir, adaptTo);
     }
     
     public static Constraint declConstraint(LocationTypeVariable tv) {

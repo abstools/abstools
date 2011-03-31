@@ -23,10 +23,11 @@ import abs.frontend.ast.SuspendStmt;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.ast.WhileStmt;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.ext.AdaptDirection;
 
 public interface TypeSystemExtension {
 
-    void checkAssignable(Type adaptTo, Type rht, Type lht, ASTNode<?> n);
+    void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n);
 
     void annotateType(Type t, ASTNode<?> orinatingNode, ASTNode<?> typeNode);
 
