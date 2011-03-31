@@ -5,6 +5,17 @@
 package abs.frontend.typechecker.locationtypes;
 
 public class LocationType {
+    public static enum Direction {
+        FROM, TO;
+        
+        public boolean isFrom() {
+            return this == FROM;
+        }
+        
+        public boolean isTo() {
+            return this == TO;
+        }
+    }
     public static final String LOCATION_KEY = "LOCATION_KEY";
     
     public static final LocationType FAR = new LocationType("Far");
