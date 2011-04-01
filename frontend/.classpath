@@ -4,13 +4,12 @@
 	<classpathentry kind="lib" path="lib/org.sat4j.core.jar"/>
 	<classpathentry kind="lib" path="lib/org.sat4j.pb.jar"/>
 	<classpathentry kind="lib" path="lib/sat4j-maxsat.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/beaver-rt.jar" sourcepath="lib/beaver-rt-src.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="tests"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry excluding="**/*.jadd|**/*.jrag|bash/parseABS|bash/parseAll" kind="src" path="src"/>
-	<classpathentry exported="true" kind="lib" path="lib/beaver-rt-src.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/beaver.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/Java1.5Compiler.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/JFlex.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/junit-4.8.1.jar"/>
