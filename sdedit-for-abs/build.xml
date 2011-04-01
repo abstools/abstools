@@ -149,15 +149,15 @@
 		</javadoc>
 	</target>
 
-
-	<target name="versionstamp">
-		<svn failonerror="false" javahl="false">
-			<wcVersion path="${basedir}" />
-		</svn>
-		<condition property="plugin.version" value="${revision.prefix}.${revision.max}" else="">
-			<isset property="revision.max" />
-		</condition>
-	</target>
+    <target name="versionstamp">
+        <tstamp/>
+        <svn failonerror="false" javahl="false">
+            <wcVersion path="${basedir}" />
+        </svn>
+        <condition property="plugin.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+            <isset property="revision.max" />
+        </condition>
+    </target>
 
 	<target name="clean" description="cleans everything">
 		<delete failonerror="false" includeemptydirs="true">

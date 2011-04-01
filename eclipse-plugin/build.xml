@@ -133,15 +133,16 @@
 		</javac>
 	</target>
 
-
-	<target name="versionstamp">
-		<svn failonerror="false" javahl="false">
-			<wcVersion path="${basedir}" />
-		</svn>
-		<condition property="plugin.version" value="${revision.prefix}.${revision.max}" else="">
-			<isset property="revision.max" />
-		</condition>
-	</target>
+	
+    <target name="versionstamp">
+        <tstamp/>
+        <svn failonerror="false" javahl="false">
+            <wcVersion path="${basedir}" />
+        </svn>
+        <condition property="plugin.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+            <isset property="revision.max" />
+        </condition>
+    </target>
 
 	<target name="build-all-plugins">
 		<ant antfile="${frontend.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>

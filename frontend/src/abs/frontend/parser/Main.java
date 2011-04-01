@@ -277,8 +277,8 @@ public class Main {
         
         String[] header = new String[] {
            "The ABS Compiler" + " v" + getVersion(),
-           "Copyright (c) 2009-2011, The HATS Consortium", 
-           "All rights reserved.     www.hats-project.eu" };
+           "Copyright (c) 2009-2011,    The HATS Consortium", 
+           "All rights reserved. http://www.hats-project.eu" };
         
         int maxlength = header[1].length();
         StringBuilder starline = new StringBuilder();

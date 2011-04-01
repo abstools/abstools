@@ -174,10 +174,11 @@
 
 
 	<target name="versionstamp">
+		<tstamp/>
 		<svn failonerror="false" javahl="false">
 			<wcVersion path="${basedir}" />
 		</svn>
-		<condition property="frontend.version" value="${revision.prefix}.${revision.max}" else="">
+		<condition property="frontend.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
 			<isset property="revision.max" />
 		</condition>
 	</target>
@@ -188,6 +189,7 @@
 			<fileset dir="${build.dir}" includes="abs/**" />
 			<fileset dir="${src.dir}" includes="abs/**" />
 			<zipfileset src="${ext.dir}/jastadd2.jar" />
+            <zipfileset src="${ext.dir}/beaver-rt.jar" />
 			<zipfileset src="${ext.dir}/beaver-rt-src.jar" />
 			<zipfileset src="${ext.dir}/JFlex.jar" />
 			<zipfileset src="${ext.dir}/Java1.5Compiler.jar" />
