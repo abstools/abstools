@@ -274,16 +274,27 @@ public class Main {
     }
 
     protected void printHeader() {
-        String header = "ABS TOOL SUITE" + " v" + getVersion();
+        
+        String[] header = new String[] {
+           "The ABS Compiler" + " v" + getVersion(),
+           "Copyright (c) 2009-2011, The HATS Consortium", 
+           "All rights reserved.     www.hats-project.eu" };
+        
+        int maxlength = header[1].length();
         StringBuilder starline = new StringBuilder();
-        for (int i = 0; i < header.length() + 4; i++) {
+        for (int i = 0; i < maxlength + 4; i++) {
             starline.append("*");
         }
-        starline.append("\n");
-        System.out.print(
-                  starline 
-                + "* " + header + " *\n" 
-                + starline );
+        System.out.println(starline);
+        for (String h : header) {
+            System.out.print("* "+h);
+            for (int i = 0; i < maxlength-h.length(); i++) {
+                System.out.print(' ');
+            }
+            System.out.println(" *");
+        }
+        
+        System.out.println(starline);
     }
 
     private String getVersion() {

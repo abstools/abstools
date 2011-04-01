@@ -576,12 +576,12 @@ LetExp let_exp =
 	;
 
 List case_branch_list =
-    case_branch.b                         {: return new List().add(b); :}
+      case_branch.b                       {: return new List().add(b); :}
     | case_branch_list.l case_branch.b    {: return l.add(b); :}
 	;
 
 CaseBranch case_branch =
-	pattern.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
+	  pattern.lhs RARROW data_exp.rhs SEMICOLON {: return new CaseBranch(lhs, rhs); :}
 	;
 
 Pattern pattern =

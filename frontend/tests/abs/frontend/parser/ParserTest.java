@@ -319,6 +319,21 @@ public class ParserTest extends FrontendTest {
     }
     
     @Test
+    public void ticket189() {
+        assertParseOk("def Unit foo() = Unit;\n"+
+         "class Bob { \n" +
+         "   Unit run() { " +
+         "      case Nil {"+
+               "    Nil => Unit;"+
+               "   _ => foo() // Note missing semicolon\n"+
+               "}; \n" +
+             "} \n" +
+          "} \n");
+          
+    }
+    
+    
+    @Test
     public void ticket203() {
         assertParseError("def Bool g() = f(String a, String b);");
     }
