@@ -11,13 +11,17 @@
   <groupId>eu.hats-project</groupId>
   <artifactId>eu.hats-project.repository</artifactId>
   <version>0.1</version>
+  <name>HATS Maven Repository</name>
+  
   <dependencies>
     <dependency>
       <groupId>eu.hats-project</groupId>
       <artifactId>absfrontend</artifactId>
-      <version>1.0.0</version>
+      <classifier>jar-with-system-dependencies</classifier>
+      <version>1.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
+  
   <repositories>
     <repository>
       <id>local</id>
