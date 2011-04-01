@@ -18,7 +18,7 @@ public class RecoverTest extends FrontendTest {
 
     @Test
     public void importTest() {
-        Model m = assertParseError(" x class C { }");
+        Model m = assertParseError("x class C { }");
         assertContainsDeclWithName(m, "C");
     }
 

@@ -207,6 +207,7 @@
 	<path id="test.classpath">
 		<pathelement location="${build.dir}" />
 		<pathelement location="${ext.dir}/${junit.jar}" />
+        <pathelement location="${ext.dir}/beaver-rt.jar" />
 		<pathelement location="${ext.dir}/beaver-rt-src.jar" />
 		<pathelement location="${ext.dir}/Java1.5Compiler.jar" />
 		<pathelement location="${ext.dir}/org.sat4j.core.jar" />

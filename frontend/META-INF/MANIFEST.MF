@@ -4,7 +4,9 @@ Bundle-Name: ABS Compiler
 Bundle-SymbolicName: eu.hatsproject.abs.compiler;singleton:=true
 Bundle-Version: 0.0.0.qualifier
 Bundle-Vendor: HATS Project
-Bundle-ClassPath: lib/antlr-3.2.jar,
+Bundle-ClassPath: .,
+ bin,
+ lib/antlr-3.2.jar,
  lib/beaver-rt-src.jar,
  lib/beaver.jar,
  lib/Java1.5Compiler.jar,
@@ -13,8 +15,6 @@ Bundle-ClassPath: lib/antlr-3.2.jar,
  lib/org.sat4j.core.jar,
  lib/org.sat4j.pb.jar,
  lib/sat4j-maxsat.jar,
- .,
- bin,
  lib/jastadd2.jar
 Eclipse-BundleShape: dir
 Export-Package: .,

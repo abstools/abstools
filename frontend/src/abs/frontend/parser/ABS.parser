@@ -111,8 +111,8 @@ CompilationUnit compilation_unit =
   ;
 
 ModuleDecl module_decl =
-	  module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? product_list.pl? main_block.b?
-	  {: return new ModuleDecl(n.getName(),el,il,dl,pr,pl,b); :}
+    module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? product_list.pl? main_block.b?
+    {: return new ModuleDecl(n.getName(),el,il,dl,pr,pl,b); :}
   ;
 
 List module_decl_list =
