@@ -257,7 +257,10 @@ aspect Typing {
             return UnknownType.INSTANCE;
 
         DataTypeType dt = (DataTypeType) dataType;
-        return dt.substituteTypeParams(declaredType);
+        Type res = dt.substituteTypeParams(declaredType);
+        if (res == null)
+            return UnknownType.INSTANCE;
+        return res;
     }
 
 }

@@ -247,20 +247,6 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
-    public void ticket188() {
-        assertTypeOK("module Main;"
-           +"def Bool g<A>(A a, A id) = True;"
-           +"def A f<A>(List<A> fs, A id) ="
-           +"    case fs {"
-           +"            Insert(x,ts) =>"
-           +"                    case g(x,id) {"
-           +"                            True => x;"
-           +"                           False => f(ts,id);"
-           +"                   };"
-           +"   };");
-    }
-
-    @Test
     public void methodSigs() {
         Model m = assertParseOk("interface I { Unit m(); } interface J { Unit n(); } interface K extends I, J { Unit foo(); } { K k; } ", Config.WITH_STD_LIB); 
         ModuleDecl module = m.getCompilationUnit(1).getModuleDecl(0);

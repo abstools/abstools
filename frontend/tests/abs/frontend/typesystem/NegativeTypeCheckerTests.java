@@ -299,6 +299,15 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void ticket188() {
+        assertTypeErrors(
+            "def Bool f(List<Bool> list) ="
+           +"    case list {"
+           +"       Insert(xyz,_) => xyz;" // Insert is not a List constructor
+           +"   };");
+    }
+    
+    @Test
     public void caseErrorConstructorWrongArgNum() {
         assertTypeErrors("{ Bool x = True; Bool b = case x { True(5) => False; }; }");
     }
