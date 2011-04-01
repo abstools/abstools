@@ -11,24 +11,26 @@ import abs.frontend.ast.Model;
 
 public class JavaExamplesTests extends JavaBackendTest {
 
+    private static final String EXAMPLEDIR = "examples/"; 
+    
     @Test
     public void pingPong() {
-        assertValidJavaFile("pingpong.abs");
+        assertValidJavaFile(EXAMPLEDIR+"PingPong.abs", true);
     }
 
     @Test
     public void peerToPeer() {
-        assertValidJavaFile("PeerToPeer.abs");
+        assertValidJavaFile(EXAMPLEDIR+"PeerToPeer.abs", true);
     }
 
     @Test
     public void boundedBuffer() {
-        assertValidJavaFile("BoundedBuffer.abs");
+        assertValidJavaFile(EXAMPLEDIR+"BoundedBuffer.abs", true);
     }
 
     @Test
     public void randomBool() {
-        assertValidJavaFile("RandomBool.abs");
+        assertValidJavaExample("RandomBool.abs");
     }
 
     @Test
@@ -36,7 +38,7 @@ public class JavaExamplesTests extends JavaBackendTest {
         assertValidExample("lizeth.abs", false);
     }
 
-    private void assertValidJavaFile(String fileName) {
+    private void assertValidJavaExample(String fileName) {
         assertValidExample(fileName, true);
     }
 

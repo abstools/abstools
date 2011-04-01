@@ -10,6 +10,8 @@ import abs.frontend.FrontendTest;
 
 public class ExamplesTypeChecking extends FrontendTest {
 
+    private static final String EXAMPLEDIR = "examples/"; 
+    
     @Test
     public void abslang() {
         assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
@@ -17,17 +19,17 @@ public class ExamplesTypeChecking extends FrontendTest {
 
     @Test
     public void pingPong() {
-        assertTypeCheckTestFileOk("pingpong.abs");
+        assertTypeCheckExampleFileOk("PingPong.abs");
     }
 
     @Test
     public void peerToPeer() {
-        assertTypeCheckTestFileOk("PeerToPeer.abs");
+        assertTypeCheckExampleFileOk("PeerToPeer.abs");
     }
 
     @Test
     public void boundedBuffer() {
-        assertTypeCheckTestFileOk("BoundedBuffer.abs");
+        assertTypeCheckExampleFileOk("BoundedBuffer.abs");
     }
 
     @Test
@@ -40,6 +42,10 @@ public class ExamplesTypeChecking extends FrontendTest {
         assertTypeCheckTestFileOk("lizeth.abs", false);
     }
 
+    private void assertTypeCheckExampleFileOk(String fileName) {
+        assertTypeCheckFileOk("examples/"+fileName, true);
+    }
+    
     private void assertTypeCheckTestFileOk(String fileName) {
         assertTypeCheckTestFileOk(fileName, true);
     }
