@@ -1,1 +1,2 @@
 eu.hats-project:abs-maven-plugin:genjava
+eu.hats-project:abs-maven-plugin:genmaude

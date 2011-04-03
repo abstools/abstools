@@ -9,29 +9,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.maven.artifact.DefaultArtifact;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.project.MavenProject;
 
 import abs.backend.java.JavaBackend;
 
 /**
- * A Maven 2 plugin for the ABS compiler
+ * A Maven 2 plugin for the ABS To Java compiler
  * 
  * @goal genjava
  * @requiresDependencyResolution
  * @phase compile
  */
-public class ABSMojo extends AbstractMojo {
-    /**
-     * The ABS source folder.
-     * 
-     * @parameter expression="${abs.srcFolder}"
-     *            default-value="${project.basedir}/src/main/abs"
-     * @required
-     */
-    private File absSrcFolder;
+public class JavaMojo extends AbstractABSMojo {
 
     /**
      * The ABS Java Backend target folder.
@@ -52,15 +41,6 @@ public class ABSMojo extends AbstractMojo {
      */
     private boolean sourceOnly;
     
-    /**
-     * The Maven Project.
-     *
-     * @parameter expression="${project}"
-     * @required
-     * @readonly
-     */
-    private MavenProject project = null;
-
     public void execute() throws MojoExecutionException {
         
         File absfrontend = getABSFrontEnd();
@@ -96,39 +76,4 @@ public class ABSMojo extends AbstractMojo {
         JavaBackend.main(args.toArray(new String[0]));
     }
     
-    private File getABSFrontEnd() {
-        for (Object o : project.getArtifacts()) {
-            if (o instanceof DefaultArtifact) {
-                DefaultArtifact a = (DefaultArtifact) o;
-                return a.getFile();
-            }
-        }
-        return null;
-    }
-
-    private List<String> getFileNames(List<File> files) {
-        List<String> res = new ArrayList<String>(files.size());
-        for (File f : files) {
-            res.add(f.getAbsolutePath());
-        }
-
-        return res;
-    }
-
-    private List<File> getAbsFiles(File dir) {
-        List<File> absFiles = new ArrayList<File>();
-        for (File f : dir.listFiles()) {
-            if (!f.isHidden() && f.canRead()) {
-                if (f.isDirectory()) {
-                    absFiles.addAll(getAbsFiles(f));
-                } else {
-                    if (f.getName().endsWith(".abs")) {
-                        absFiles.add(f);
-                    }
-                }
-            }
-        }
-        return absFiles;
-    }
-
 }

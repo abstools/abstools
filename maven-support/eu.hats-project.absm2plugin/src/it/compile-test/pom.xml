@@ -23,13 +23,6 @@
 			<plugin>
 				<groupId>eu.hats-project</groupId>
 				<artifactId>abs-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>genjava</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
