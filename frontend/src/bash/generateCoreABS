@@ -2,4 +2,4 @@
 
 BASEDIR="$(dirname $0)/../.."
 
-java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/Java1.5Compiler.jar abs.backend.coreabs.CoreAbsBackend "$@"
+java -Xmx512m -cp $BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/beaver-rt.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/Java1.5Compiler.jar abs.backend.coreabs.CoreAbsBackend "$@"
