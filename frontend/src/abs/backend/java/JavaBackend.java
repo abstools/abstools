@@ -44,7 +44,6 @@ import abs.frontend.typechecker.UnionType;
 public class JavaBackend extends Main {
 
     public static void main(final String... args) {
-
         try {
             new JavaBackend().compile(args);
         } catch (Exception e) {

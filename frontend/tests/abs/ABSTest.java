@@ -84,7 +84,9 @@ public class ABSTest {
     protected Model assertParseFileOk(String fileName, Config... config) {
         Model m = null;
         try {
-            m = Main.parse(new File(fileName), isSet(WITH_STD_LIB,config));
+            Main main = new Main();
+            main.setWithStdLib(isSet(WITH_STD_LIB,config));
+            m = main.parseFiles(fileName);
         } catch (Throwable e) {
             e.printStackTrace();
             fail("Failed to parse: " + fileName + "\n" + e.getMessage());

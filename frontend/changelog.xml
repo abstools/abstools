@@ -1,0 +1,27 @@
+<!--
+This file contains structured information about
+the changelog of this project. It is processed by the
+maven-changes-plugin. See:
+
+http://maven.apache.org/plugins/maven-changes-plugin/usage.html
+-->
+<document xmlns="http://maven.apache.org/changes/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/xsd/changes-1.0.0.xsd">
+  <properties>
+    <title>ABS Frontend</title>
+    <author>The ABS Tools Team</author>
+  </properties>
+
+<body>
+  <release version="1.0.4">
+     <action dev="jschaefer" type="add">
+        Added functionality to handle ABS packages
+     </action>
+     <action def="jschaefer" type="fix" issue="189">Compiler crashes due to missing semicolon</action>
+     <action def="jschaefer" type="fix" issue="203">IllegalStateException is thrown when type checking an incorrect ABS script using generateMaude</action>
+  </release>
+  <release version="1.0" description="First release">
+  </release>
+</body>
+</document>

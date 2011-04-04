@@ -17,8 +17,12 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
@@ -54,6 +58,10 @@ public class Main {
         new Main().parse(args);
     }
 
+    public void setWithStdLib(boolean withStdLib) {
+        this.stdlib = withStdLib;
+    }
+    
     public java.util.List<String> parseArgs(String[] args) throws Exception {
         ArrayList<String> remaindingArgs = new ArrayList<String>();
 
@@ -93,13 +101,13 @@ public class Main {
 
 
     public Model parse(final String[] args) throws Exception {
-        Model m = parseFiles(parseArgs(args));
+        Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
         return m;
     }
 
-    private Model parseFiles(java.util.List<String> files) throws IOException {
-        if (files.isEmpty()) {
+    public Model parseFiles(String... fileNames) throws IOException {
+        if (fileNames.length == 0) {
             printErrorAndExit("Please provide at least one intput file");
         }
 
@@ -110,11 +118,11 @@ public class Main {
             units.add(getStdLib());
         }
 
-        for (String fileName : files) {
+        for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
                 printErrorAndExit("Illegal option " + fileName);
             }
-            parseFiles(units, new File(fileName));
+            parseFileOrDirectory(units, new File(fileName));
         }
 
         Model m = new Model(units);
@@ -187,31 +195,68 @@ public class Main {
         }
     }
 
-    private void parseFiles(List<CompilationUnit> units, File file) {
+    private void parseFileOrDirectory(List<CompilationUnit> units, File file) throws IOException {
         if (!file.canRead()) {
-            printErrorAndExit("Cannot read file "+file);
+            System.err.println("WARNING: Could not read file "+file+", file skipped.");
         }
+        
         if (file.isDirectory()) {
-            if (file.canRead() && !file.isHidden()) {
-                for (File f : file.listFiles()) {
-                    if (f.isFile() && !f.getName().endsWith(".abs"))
-                        continue;
-                    parseFiles(units, f);
-                }
-            }
+            parseDirectory(units, file);
         } else {
-            parseSingleFile(units, file);
+            if (isABSSourceFile(file))
+                parseABSSourceFile(units,file);
+            else if (isABSPackageFile(file))
+                parseABSPackageFile(units,file);
         }
     }
 
-    private void parseSingleFile(List<CompilationUnit> units, File file) {
+    private void parseABSPackageFile(List<CompilationUnit> units, File file) throws IOException {
+        JarFile jarFile = new JarFile(file);
+        Enumeration<JarEntry> e = jarFile.entries();
+        while (e.hasMoreElements()) {
+            JarEntry jarEntry = e.nextElement();
+            if (!jarEntry.isDirectory()) {
+                if (jarEntry.getName().endsWith(".abs")) {
+                    parseABSSourceFile(units, jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                }
+            }
+        }
+    }
+
+    private void parseDirectory(List<CompilationUnit> units, File file) throws IOException {
+        if (file.canRead() && !file.isHidden()) {
+            for (File f : file.listFiles()) {
+                if (f.isFile() && !isABSSourceFile(f) && !isABSPackageFile(f))
+                    continue;
+                parseFileOrDirectory(units, f);
+            }
+        }
+    }
+
+    private boolean isABSPackageFile(File f) {
+        return f.getName().endsWith(".jar");
+    }
+
+    private boolean isABSSourceFile(File f) {
+        return f.getName().endsWith(".abs");
+    }
+
+    private void parseABSSourceFile(List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
+        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream));
+    }
+
+    private void parseABSSourceFile(List<CompilationUnit> units, File file) throws FileNotFoundException {
+        parseABSSourceFile(units, file, new FileReader(file));
+    }
+    
+    private void parseABSSourceFile(List<CompilationUnit> units, File file, Reader reader) {
         if (verbose)
             System.out.println("Parsing file "+file.getAbsolutePath());
         try {
-            units.add(parseUnit(file, stdlib));
+            units.add(parseUnit(file, null, reader, stdlib));
 
         } catch (FileNotFoundException e1) {
-            printErrorAndExit("File not found: " + file);
+            System.err.println("WARNING: File not found: " + file +", skipping file.");
         } catch (ParseException pex) {
             System.err.println(pex.getError().getHelpMessage());
             System.exit(1);
@@ -256,7 +301,7 @@ public class Main {
         System.out.println(""
                 + "Usage: java " + this.getClass().getName()
                 + " [options] <absfiles>\n\n" 
-                + "  <absfiles>     ABS files to parse\n\n" + "Options:\n"
+                + "  <absfiles>     ABS files/directories/packages to parse\n\n" + "Options:\n"
                 + "  -version       print version\n" 
                 + "  -v             verbose output\n" 
                 + "  -product=<PID> build given product by applying deltas (PID is the qualified product ID)\n"
@@ -331,22 +376,12 @@ public class Main {
         return parseUnit(file, null, reader, withStdLib);
     }
 
-    public static Model parse(File file, boolean withStdLib) throws Exception {
-        List<CompilationUnit> units = new List<CompilationUnit>();
-        if (withStdLib)
-            units.add(getStdLib());
-        units.add(parseUnit(file, withStdLib));
-        return new Model(units);
-    }
-
-    public static Model parse(ArrayList<String> fileNames, boolean withStdLib) throws Exception {
-        List<CompilationUnit> units = new List<CompilationUnit>();
-        if (withStdLib)
-            units.add(getStdLib());
-        for (String filename : fileNames) {
-            units.add(parseUnit(new File(filename), withStdLib));
+    public static Iterable<File> toFiles(Iterable<String> fileNames) {
+        ArrayList<File> files = new ArrayList<File>();
+        for (String s : fileNames) {
+            files.add(new File(s));
         }
-        return new Model(units);
+        return files;
     }
 
     public static Model parse(File file, String sourceCode, InputStream stream, boolean withStdLib) throws Exception {
