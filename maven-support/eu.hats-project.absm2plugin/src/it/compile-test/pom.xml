@@ -27,11 +27,4 @@
 		</plugins>
 	</build>
 
-	<repositories>
-		<repository>
-			<id>local</id>
-			<url>file:///home/jan/svn/hats/Tools/ABS/trunk/eu.hats-project.repository/src/repository</url>
-		</repository>
-	</repositories>
-
 </project>
