@@ -120,10 +120,20 @@ aspect Variables {
   // to calculate the set of vars/features only once!
   syn lazy ArrayList<String> Model.features();
   syn lazy Map<String,BoundaryInt[]> Model.ints(); // triple name:String, min:int, max:int
-  syn lazy ArrayList<String> Model.bools();
+  syn lazy ArrayList<String> Model.bools() {
+    ArrayList<String> fv = new ArrayList<String>();
+    getBoolFVars(fv);
+    return fv;
+  }
   eq Model.features() = readFeatures();
   eq Model.ints() = getIntFVars();
-  eq Model.bools() = getBoolFVars();
+//  eq Model.bools() = getBoolFVars();
+//  eq Model.bools() {
+//    ArrayList<String> fv = new ArrayList<String>();
+//    getBoolFVars(fv);
+//    return fv;
+//  }
+
   public ArrayList<String> Model.getCFeatures() { return features(); }
   public ArrayList<String> Model.getBoolCVars() { return bools(); }
   public Map<String,BoundaryInt[]> Model.getIntCVars()  { return ints(); }

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
+ * This file is licensed under the terms of the Modified BSD License.
+ */
+
 //$Id: Main.java 2032 2010-11-17 13:33:06Z jose $
 // Adapted from: 
 //   abs/frontend/parser/Main.java

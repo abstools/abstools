@@ -14,6 +14,7 @@ root Computer {
 
 extension Computer {
   Int maxRam in [0..10000];
+  Bool bll;
   maxRam > 0;
 }
 
