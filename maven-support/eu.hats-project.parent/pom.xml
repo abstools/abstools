@@ -12,4 +12,18 @@
 	<!-- Here we input dependencies/plugin management or anything that is to 
 		be inherited by all HATS maven projects -->
 
+	<distributionManagement>
+		<!-- use the following if you're not using a snapshot version. -->
+		<repository>
+			<id>hats-repo</id>
+			<url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
+		</repository>
+		<!-- use the following if you ARE using a snapshot version. -->
+		<snapshotRepository>
+			<id>hats-repo</id>
+			<url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>
