@@ -43,7 +43,15 @@ abstract class AbstractABSMojo extends AbstractMojo {
      * @required
      */
     protected File absSrcFolder;
-
+    
+    /**
+     * The ABS test source folder.
+     * 
+     * @parameter expression="${abs.test.srcFolder}"
+     *            default-value="${project.basedir}/src/test/abs/"
+     */
+    protected File absTestSrcFolder;
+    
     /**
      * @parameter expression="${project}"
      * @required
@@ -180,6 +188,10 @@ abstract class AbstractABSMojo extends AbstractMojo {
 
     protected abstract void doExecute() throws Exception;
 
+    void setABSSrcFolder(File absSrcFolder) {
+        this.absSrcFolder = absSrcFolder;
+    }
+    
     /**
      * This method resolves the dependency artifacts from the project.
      * 
@@ -234,10 +246,6 @@ abstract class AbstractABSMojo extends AbstractMojo {
         return StringUtils.join(classpath.toArray(new String[classpath.size()]), File.pathSeparator);
     }
 
-    protected File getABSFrontEnd() {
-        return getArtifact("absfrontend");
-    }
-
     protected void addToClasspath(String groupId, String artifactId, String version, Set<String> classpath)
             throws Exception {
         addToClasspath(groupId, artifactId, version, classpath, true);
@@ -248,7 +256,7 @@ abstract class AbstractABSMojo extends AbstractMojo {
         addToClasspath(factory.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar"), classpath,
                 addDependencies);
     }
-
+    
     protected void addToClasspath(Artifact artifact, Set<String> classpath, boolean addDependencies) throws Exception {
         resolver.resolve(artifact, remoteRepos, localRepo);
         classpath.add(artifact.getFile().getCanonicalPath());
@@ -308,6 +316,13 @@ abstract class AbstractABSMojo extends AbstractMojo {
             }
         }
         return absFiles;
+    }
+    
+    protected List<String> getABSArguments() throws Exception {
+        List<String> args = new ArrayList<String>();
+        args.addAll(getFileNames(getAbsFiles(absSrcFolder)));
+        args.addAll(getAbsDependencies());
+        return args;
     }
 
 }
