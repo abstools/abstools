@@ -1,0 +1,25 @@
+module Application;
+
+export *;
+
+data Type = Value1 | Value2 | Constructor3(Int);
+
+def Bool someFunction(Type t) =
+	case t {
+		Constructor3(_) => True;
+	    _ => False;
+	};
+	
+interface Application {
+	Bool someMethod(Type t);
+}	
+	
+class ApplicationImpl implements Application {
+	Bool someMethod(Type t) {
+		return someFunction(t);
+	}
+}
+
+{
+	new ApplicationImpl();
+}

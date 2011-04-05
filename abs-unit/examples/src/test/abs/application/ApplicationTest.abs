@@ -1,0 +1,37 @@
+module Application.Test;
+
+export *;
+
+import * from Application;
+import * from ABSUnit;
+
+[TestClass]
+interface ApplicationImplTest {
+	Unit testSomeMethod(Type datapoint);
+	
+}
+
+[DataPoint] // test data 
+def Set<Type> getData() = set[Value1,Value2,Constructor3(1)];	
+
+
+// test class/method
+[TestClassImpl]
+class ApplicationImplTest 
+implements ApplicationImplTest {
+	
+	ABSAssert helper;
+	Application app;
+	
+	{
+		app = new ApplicationImpl(); // AUT
+		helper = new ABSAssertImpl(); // helper
+	}
+	
+	[Test]
+	Unit testSomeMethod(Type datapoint) {
+		Bool result = app.someMethod(datapoint);
+		helper.assertTrue(result);
+	}
+	
+}

@@ -1,0 +1,63 @@
+module ABSUnit;
+
+export *;
+
+[TypeAnnotation]
+data DataPoint = DataPoint; //data function
+
+[TypeAnnotation]
+data Test = Test; //test method
+
+[TypeAnnotation]
+data TestClass = TestClass; //test class
+
+[TypeAnnotation]
+data TestClassImpl = TestClassImpl; //test class implementation
+
+data TestObject<A> = TestObject(A);
+data TestData<A> = TestData(A);
+
+def A getA<A>(TestObject<A> to) = case to { TestObject(x) => x; }; 
+def Bool same<A>(TestObject<A> a, TestObject<A> b) = getA(a) == getA(b);
+
+// implement equals method?
+interface EqualObject {
+	Bool equal(EqualObject o);
+}
+
+interface ABSAssert {
+	Unit assertEquals(EqualObject a, EqualObject b);
+	Unit assertTrue(Bool value);
+	Unit assertSame(TestObject a, TestObject b);
+}
+
+class ABSAssertImpl implements ABSAssert {
+
+	Unit assertEquals(EqualObject a, EqualObject b) {
+		Bool resulta = a.equal(b);
+		Bool resultb = b.equal(a);
+		if (~resulta || ~resultb) {
+			// collect result
+			assert False;
+		} 
+	}
+	
+	Unit assertTrue(Bool value) {
+		if (~value) {
+			// collect result
+			assert False;
+		} 
+	}
+	
+	Unit assertSame(TestObject a, TestObject b) {
+		 if (~ same(a,b)) {
+		 	// collect result
+			assert False;
+		 }
+	}
+	
+}
+
+ 
+	
+	

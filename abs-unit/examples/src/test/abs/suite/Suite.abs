@@ -1,0 +1,16 @@
+module ABSUnit.Suite;
+
+//auto-generated?
+import * from Application.Test;
+import * from Application;
+
+//auto-generated?
+{
+	ApplicationImplTest test = new ApplicationImplTest();
+	Set<Type> datas = Application.Test.getData();
+	while (hasNext(datas)) {
+		Pair<Set<Type>,Type> ndatas = next(datas);
+		datas = fst(ndatas);
+		test.testSomeMethod(snd(ndatas));
+	}
+}
