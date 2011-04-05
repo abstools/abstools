@@ -37,6 +37,9 @@
 		<ast.gen.dir>${gen.dir}/abs/frontend</ast.gen.dir>
 
 		<apidoc.dir>${gen.dir}/docs/api</apidoc.dir>
+		
+		<!-- need to bundle this as resource -->
+		<maude.interpreter>${src.dir}/abs/backend/maude/</maude.interpreter>
 	</properties>
 
 	<dependencies>
@@ -121,8 +124,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
-
+			
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.6</version>
@@ -369,7 +371,7 @@
 					</descriptors>
 				</configuration>
 			</plugin>
-
+			
 		</plugins>
 	</build>
 
