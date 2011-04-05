@@ -23,7 +23,11 @@
 		<gen.dir>${basedir}/gen</gen.dir>
 		<build.dir>${basedir}/bin</build.dir>
 		<tests.dir>${basedir}/tests</tests.dir>
-
+		
+		<bash.dir>${src.dir}/bash</bash.dir>
+		<bash.build.dir>${basedir}/bin/bash</bash.build.dir>
+		
+		
 		<dist.dir>${basedir}/dist</dist.dir>
 
 		<parser.src.dir>${src.dir}/abs/frontend/parser</parser.src.dir>
@@ -46,50 +50,36 @@
 			<groupId>eu.hats-project</groupId>
 			<artifactId>java-compiler</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/Java1.5Compiler.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>beaver</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/beaver.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>jastadd2</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/jastadd2.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>jast-add-parser</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/JastAddParser.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>sat4j-core</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/org.sat4j.core.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>org-sat4j-pb</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/org.sat4j.pb.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
 			<artifactId>sat4j-maxsat</artifactId>
 			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${ext.dir}/sat4j-maxsat.jar</systemPath>
 		</dependency>
 	</dependencies>
 
@@ -98,7 +88,7 @@
 		<testOutputDirectory>${build.dir}</testOutputDirectory>
 		<sourceDirectory>${src.dir}</sourceDirectory>
 		<testSourceDirectory>${tests.dir}</testSourceDirectory>
-		
+
 		<plugins>
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
@@ -162,8 +152,10 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpathref="maven.plugin.classpath" />
-								<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}" nobak="yes" />
+								<taskdef name="jflex" classname="JFlex.anttask.JFlexTask"
+									classpathref="maven.plugin.classpath" />
+								<jflex file="${parser.src.dir}/ABS.flex" outdir="${parser.gen.dir}"
+									nobak="yes" />
 							</target>
 						</configuration>
 						<goals>
@@ -177,8 +169,10 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<taskdef name="jastadd" classname="jastadd.JastAddTask" classpathref="maven.plugin.classpath" />
-								<jastadd package="${ast.package}" rewrite="true" beaver="true" novisitcheck="true" outdir="${gen.dir}" debug="true">
+								<taskdef name="jastadd" classname="jastadd.JastAddTask"
+									classpathref="maven.plugin.classpath" />
+								<jastadd package="${ast.package}" rewrite="true" beaver="true"
+									novisitcheck="true" outdir="${gen.dir}" debug="true">
 									<fileset dir=".">
 										<include name="src/abs/**/*.ast" />
 										<include name="src/abs/**/*.jrag" />
@@ -198,7 +192,9 @@
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
+								<java fork="true" dir="${parser.src.dir}"
+									classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar"
+									classname="Main">
 									<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
 								</java>
 							</target>
@@ -207,15 +203,17 @@
 							<goal>run</goal>
 						</goals>
 					</execution>
-					
+
 					<!-- genp2 -->
 					<execution>
 						<id>genp2</id>
 						<phase>generate-sources</phase>
 						<configuration>
 							<target>
-								<taskdef name="beaver" classname="beaver.comp.run.AntTask" classpathref="maven.plugin.classpath" />
-								<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
+								<taskdef name="beaver" classname="beaver.comp.run.AntTask"
+									classpathref="maven.plugin.classpath" />
+								<beaver file="${parser.gen.dir}/ABSParser.beaver"
+									terminalNames="yes" compress="no" useSwitch="yes" />
 							</target>
 						</configuration>
 						<goals>
@@ -239,7 +237,33 @@
 							<goal>run</goal>
 						</goals>
 					</execution>
-					
+
+					<!-- genshell -->
+					<execution>
+						<id>genshell</id>
+						<phase>generate-resources</phase>
+						<configuration>
+							<target>
+								<copy todir="${bash.build.dir}">
+									<fileset id="shellfiles" dir="${bash.dir}">
+										<include name="*" />
+									</fileset>
+									<filterset>
+										<filter token="BASEDIR" value="${basedir}" />
+									</filterset>
+								</copy>
+								<chmod perm="ugo+x">
+									<fileset dir="${bash.build.dir}">
+										<include name="*" />
+									</fileset>
+								</chmod>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
 					<!-- dist -->
 					<execution>
 						<id>dist</id>
@@ -248,7 +272,8 @@
 							<target>
 								<mkdir dir="${dist.dir}" />
 								<copy verbose="true" tofile="${dist.dir}/absfrontend.jar">
-									<filelist dir="${project.build.directory}" files="absfrontend-1.0-SNAPSHOT-jar-with-system-dependencies.jar" />
+									<filelist dir="${project.build.directory}"
+										files="absfrontend-1.0-SNAPSHOT-jar-with-system-dependencies.jar" />
 								</copy>
 							</target>
 						</configuration>
@@ -256,29 +281,23 @@
 							<goal>run</goal>
 						</goals>
 					</execution>
-					
+
 				</executions>
 				<dependencies>
 					<dependency>
 						<groupId>eu.hats-project</groupId>
 						<artifactId>jastadd2</artifactId>
 						<version>1.0</version>
-						<scope>system</scope>
-						<systemPath>${ext.dir}/jastadd2.jar</systemPath>
 					</dependency>
 					<dependency>
 						<groupId>eu.hats-project</groupId>
 						<artifactId>jflex</artifactId>
 						<version>1.0</version>
-						<scope>system</scope>
-						<systemPath>${ext.dir}/JFlex.jar</systemPath>
 					</dependency>
 					<dependency>
 						<groupId>eu.hats-project</groupId>
 						<artifactId>beaver</artifactId>
 						<version>1.0</version>
-						<scope>system</scope>
-						<systemPath>${ext.dir}/beaver.jar</systemPath>
 					</dependency>
 				</dependencies>
 			</plugin>
@@ -317,14 +336,14 @@
 					<debug>true</debug>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
-        		<groupId>org.apache.maven.plugins</groupId>
-        		<artifactId>maven-surefire-plugin</artifactId>
-        		<version>2.8</version>
-        		<configuration>
-        			<test>AllFrontendTests</test>
-		        </configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<test>AllFrontendTests</test>
+				</configuration>
 			</plugin>
 
 			<plugin>
@@ -346,11 +365,11 @@
 						</manifest>
 					</archive>
 					<descriptors>
-						<descriptor>${basedir}/assembly.xml</descriptor>	
+						<descriptor>${basedir}/assembly.xml</descriptor>
 					</descriptors>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
 	</build>
 
