@@ -345,6 +345,7 @@
 				<version>2.8</version>
 				<configuration>
 					<test>AllFrontendTests</test>
+					<forkMode>never</forkMode>
 				</configuration>
 			</plugin>
 
