@@ -5,15 +5,6 @@
 	<artifactId>test</artifactId>
 	<version>1.0-SNAPSHOT</version>
 
-	<dependencies>
-		<dependency>
-			<groupId>eu.hats-project</groupId>
-			<artifactId>absfrontend</artifactId>
-			<version>1.0-SNAPSHOT</version>
-			<type>jar</type>
-		</dependency>
-	</dependencies>
-
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>

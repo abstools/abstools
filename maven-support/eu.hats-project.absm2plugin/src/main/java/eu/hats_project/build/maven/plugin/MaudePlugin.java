@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 
 import abs.backend.maude.MaudeCompiler;
 
@@ -31,21 +30,15 @@ public class MaudePlugin extends AbstractABSMojo {
      * @required
      */
     private File absMaudeBackendOutputFile;
-    
+
     /**
      * @parameter expression="${abs.maudeBackend.verbose}" default-value=false
      */
     private boolean verbose;
 
+    @Override
+    public void doExecute() throws Exception {
 
-	@Override
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		
-        File absfrontend = getABSFrontEnd();
-        if (absfrontend == null) {
-            throw new MojoExecutionException("Cannot locate ABS frontend.");
-        }
-        
         if (!absMaudeBackendOutputFile.exists()) {
             if (!absMaudeBackendOutputFile.getParentFile().mkdirs()) {
                 throw new MojoExecutionException("Could not create folder for output file " + absMaudeBackendOutputFile);
@@ -57,23 +50,23 @@ public class MaudePlugin extends AbstractABSMojo {
         }
 
         List<String> args = new ArrayList<String>();
-        System.setProperty("java.class.path",absfrontend.getAbsolutePath());
+        System.setProperty("java.class.path", absfrontEnd.getAbsolutePath());
         args.add("-o");
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
-        
+
         if (verbose) {
             args.add("-v");
         }
-        
+
         args.addAll(getFileNames(getAbsFiles(absSrcFolder)));
+        args.addAll(getAbsDependencies());
 
         try {
-			MaudeCompiler.main(args.toArray(new String[0]));
-		} catch (Exception e) {
-			throw new MojoExecutionException("Could not generate Maude script",e);
-		}
+            MaudeCompiler.main(args.toArray(new String[0]));
+        } catch (Exception e) {
+            throw new MojoExecutionException("Could not generate Maude script", e);
+        }
 
-
-	}
+    }
 
 }

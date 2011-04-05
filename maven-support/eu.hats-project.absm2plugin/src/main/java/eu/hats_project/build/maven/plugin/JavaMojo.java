@@ -17,8 +17,8 @@ import abs.backend.java.JavaBackend;
  * A Maven 2 plugin for the ABS To Java compiler
  * 
  * @goal genjava
- * @requiresDependencyResolution
  * @phase compile
+ * @requiresDependencyResolution compile
  */
 public class JavaMojo extends AbstractABSMojo {
 
@@ -41,14 +41,9 @@ public class JavaMojo extends AbstractABSMojo {
      */
     private boolean sourceOnly;
     
-    public void execute() throws MojoExecutionException {
+    protected void doExecute() throws Exception {
         
-        File absfrontend = getABSFrontEnd();
-        if (absfrontend == null) {
-            throw new MojoExecutionException("Cannot locate ABS frontend.");
-        }
-        
-        if (!absJavaBackendTargetFolder.exists()) {
+       if (!absJavaBackendTargetFolder.exists()) {
             if (!absJavaBackendTargetFolder.mkdirs()) {
                 throw new MojoExecutionException("Could not create target folder " + absJavaBackendTargetFolder);
             }
@@ -59,7 +54,7 @@ public class JavaMojo extends AbstractABSMojo {
         }
 
         List<String> args = new ArrayList<String>();
-        System.setProperty("java.class.path",absfrontend.getAbsolutePath());
+        System.setProperty("java.class.path",absfrontEnd.getAbsolutePath());
         args.add("-d");
         args.add(absJavaBackendTargetFolder.getAbsolutePath());
         
@@ -72,8 +67,9 @@ public class JavaMojo extends AbstractABSMojo {
         }
         
         args.addAll(getFileNames(getAbsFiles(absSrcFolder)));
+        args.addAll(getAbsDependencies());
 
-        JavaBackend.main(args.toArray(new String[0]));
+        JavaBackend.main(args.toArray(new String[args.size()]));
     }
     
 }
