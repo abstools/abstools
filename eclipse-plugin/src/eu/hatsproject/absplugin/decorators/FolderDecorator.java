@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.ui.PlatformUI;
 
 import eu.hatsproject.absplugin.util.Constants;
+import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
  * This Decorator is used for decorating folders with the ABS project icon. Only
@@ -42,11 +43,13 @@ public class FolderDecorator extends LabelProvider implements ILightweightLabelD
 			if (hasABSFiles((IFolder)element)){
 				decoration.addOverlay(MARKER_DESCRIPTOR);
 			}
-		}/*else if (element instanceof IFile){
-			if (checkFile((IResource)element)){
-				decoration.addOverlay(MARKER_DESCRIPTOR);				
-			}
-		}*/
+		} else if (element instanceof IFile){
+		   if (UtilityFunctions.isABSPackage((IFile)element)) {
+		      //if (checkFile((IResource)element)){
+		      decoration.addOverlay(MARKER_DESCRIPTOR);				
+		      //}
+		   }
+		}
 		
 	}
 	
@@ -77,7 +80,7 @@ public class FolderDecorator extends LabelProvider implements ILightweightLabelD
 	}
 
 	private boolean checkFile(IResource member) {
-		if (member instanceof IFile && member.getName().endsWith("." + Constants.ABS_FILE_EXTENSION)) {
+		if (UtilityFunctions.isABSSourceFile(member)) {
 			return true;
 		}
 		return false;

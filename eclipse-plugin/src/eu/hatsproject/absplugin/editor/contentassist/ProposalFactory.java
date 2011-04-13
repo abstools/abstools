@@ -4,14 +4,9 @@
  */
 package eu.hatsproject.absplugin.editor.contentassist;
 
-import static abs.frontend.parser.Main.parseUnit;
 import static eu.hatsproject.absplugin.util.Images.NO_IMAGE;
 import static eu.hatsproject.absplugin.util.Images.getImageForASTNode;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getASTNodeOfOffset;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getSuperOfASTNode;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,6 +27,7 @@ import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 import abs.frontend.ast.*;
+import abs.frontend.parser.Main;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.ResolvedName;
@@ -61,6 +57,7 @@ public class ProposalFactory{
 		private List<ICompletionProposal> proposals;
 		private CompilationUnit cu;
 		private ABSEditor editor;
+		private Main absParser;
 
 		/**
 		 * Initializes the {@link ProposalFactory} by parsing all abs files in the current project and
@@ -78,6 +75,9 @@ public class ProposalFactory{
 			this.doc = doc;
 			this.proposals = proposals;
 			this.editor = editor;
+			absParser.setAllowIncompleteExpr(true);
+		        absParser.setTypeChecking(false);
+			
 			
 			parseProject();
 		}
@@ -87,12 +87,12 @@ public class ProposalFactory{
 				final IncrementalModelBuilder builder,
 				IResource resource) throws IOException,
 				CoreException, NoModelException {
-			if (isABSFile(resource)) {
+			if (isABSSourceFile(resource)) {
 				IFile visitedfile = (IFile) resource;
-				CompilationUnit cu = parseUnit(visitedfile.getLocation().toFile(),
-						null, new InputStreamReader(visitedfile.getContents()), true, true);
+				CompilationUnit cu = absParser.parseUnit(visitedfile.getLocation().toFile(),
+						null, new InputStreamReader(visitedfile.getContents()));
 				cu.setName(visitedfile.getLocation().toFile().getAbsolutePath());
-				builder.setCompilationUnit(cu);
+				builder.addCompilationUnit(cu);
 			}
 		}
 
@@ -120,10 +120,13 @@ public class ProposalFactory{
 					}
 				});
 					// compile the current document with non-saved changes
-					cu = parseUnit(file.getLocation().toFile(), null,
-							new StringReader(prepareDocContent()), true, true);
+				        Main absParser = new Main();
+			                absParser.setAllowIncompleteExpr(true);
+			                absParser.setTypeChecking(false);
+					cu = absParser.parseUnit(file.getLocation().toFile(), null,
+							new StringReader(prepareDocContent()));
 					cu.setName(file.getLocation().toFile().getAbsolutePath());
-					builder.setCompilationUnit(cu);
+					builder.addCompilationUnit(cu);
 			} catch (CoreException e) {
 				standardExceptionHandling(e);
 			} catch (NoModelException e) {

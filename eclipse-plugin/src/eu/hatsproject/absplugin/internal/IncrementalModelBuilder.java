@@ -17,6 +17,7 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
+import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -38,19 +39,18 @@ public class IncrementalModelBuilder {
 		node.flushCache();
 	}
 	
-	public synchronized void setCompilationUnit(CompilationUnit cu) throws IOException, NoModelException  {
+    
+    public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {
+       for (CompilationUnit u : units) {
+          addCompilationUnit(u);
+       }
+    }
+    
+	public synchronized void addCompilationUnit(CompilationUnit cu) throws IOException, NoModelException  {
 		if(model == null){
 			model = new Model();
 			
-			CompilationUnit stdLib = abs.frontend.parser.Main.getStdLib();
-			File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
-
-			File src = new File(bundle, stdLib.getFileName());
-			if (!src.exists()) {
-				src = new File(bundle, "src/"+stdLib.getFileName());
-			}
-			stdLib.setName(src.getAbsolutePath());
-			model.addCompilationUnit(stdLib);
+			model.addCompilationUnit(getStdLibCompilationUnit());
 			model.addCompilationUnit(cu);
 			return;
 		}
@@ -69,6 +69,18 @@ public class IncrementalModelBuilder {
 //		model.flushCache();
 		flushAll(model);
 	}
+
+   private CompilationUnit getStdLibCompilationUnit() throws IOException {
+      CompilationUnit stdLib = new Main().getStdLib();
+      File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
+
+      File src = new File(bundle, stdLib.getFileName());
+      if (!src.exists()) {
+      	src = new File(bundle, "src/"+stdLib.getFileName());
+      }
+      stdLib.setName(src.getAbsolutePath());
+      return stdLib;
+   }
 	
 	public synchronized void removeCompilationUnit(CompilationUnit cu) throws NoModelException{
 		if(model == null)

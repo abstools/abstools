@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 
 import abs.frontend.ast.*;
+import abs.frontend.parser.Main;
 import abs.frontend.parser.ParseException;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
@@ -259,11 +260,12 @@ public class ABSCodeScanner implements ITokenScanner {
 		String doccontent = document.get();
 		try {
 			compilationUnit = null;
-			compilationUnit = abs.frontend.parser.Main.parseUnit(
+			Main absParser = new Main();
+			absParser.setTypeChecking(false);
+			compilationUnit = absParser.parseUnit(
 					new File(fEditor.getEditorInput().getName()),
 					doccontent,
-					new StringReader(doccontent),
-					true);
+					new StringReader(doccontent));
 		} catch (ParseException e) {
 			if (doDebug)
 				e.printStackTrace();

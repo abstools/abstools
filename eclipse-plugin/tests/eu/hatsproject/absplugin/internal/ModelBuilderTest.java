@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
@@ -232,10 +233,11 @@ public class ModelBuilderTest {
 			"  node3!run();\n"+
 			"}\n";
 
-		CompilationUnit testcu = abs.frontend.parser.Main.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText), true);
+      Main absParser = new Main();
+		CompilationUnit testcu = absParser.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText));
 		assertEquals(0, testcu.getParserErrors().size());
 		try{
-			modelbuilder.setCompilationUnit(testcu);
+			modelbuilder.addCompilationUnit(testcu);
 			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
 			assertEquals(2, testel.size()); //Why 2? Module not resolved gets inserted 2 times.
 		} catch(RuntimeException e){
@@ -246,9 +248,9 @@ public class ModelBuilderTest {
 			fail("Exception while typechecking!" + e.toString());
 		}
 		String importTestText = "module ImportTest;";
-		CompilationUnit importTestCU = abs.frontend.parser.Main.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText), true);
+		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
 		try{
-			modelbuilder.setCompilationUnit(importTestCU);
+			modelbuilder.addCompilationUnit(importTestCU);
 			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
 			assertEquals(0, testel.size());
 		} catch(RuntimeException e){

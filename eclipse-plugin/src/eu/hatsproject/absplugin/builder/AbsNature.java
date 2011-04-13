@@ -7,6 +7,8 @@ package eu.hatsproject.absplugin.builder;
 import static eu.hatsproject.absplugin.util.Constants.*;
 
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -21,6 +23,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
+import abs.frontend.parser.Main;
 import abs.frontend.parser.ParserError;
 import abs.frontend.parser.SyntaxError;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -222,40 +225,28 @@ public class AbsNature implements IProjectNature {
 			   if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
 			      file.refreshLocal(IResource.DEPTH_ZERO, null);
 			   }
-				CompilationUnit cu = abs.frontend.parser.Main.parseUnit(file.getLocation().toFile(), null, new InputStreamReader(file.getContents()), true, withincomplete);
-				cu.setName(file.getLocation().toFile().getAbsolutePath());
-				builder.setCompilationUnit(cu);
+			   
+			   Main m = new Main();
+			   m.setWithStdLib(true);
+			   m.setAllowIncompleteExpr(true);
+
+			   List<CompilationUnit> units = new ArrayList<CompilationUnit>(1);
+			   if (isABSPackage(file)) {
+			      units.addAll(m.parseABSPackageFile(file.getLocation().toFile()));
+			   } else {
+			      CompilationUnit cu = m.parseUnit(file.getLocation().toFile(), null, new InputStreamReader(file.getContents()));
+			      cu.setName(file.getLocation().toFile().getAbsolutePath());
+			      units.add(cu);
+			   }
+				builder.addCompilationUnits(units);
 				
-				if(cu.hasParserErrors()){
-					for(ParserError err : cu.getParserErrors()){
-
-						int startline   = err.getLine()-1;
-						int startcolumn = err.getColumn()-1;
-						int endline;
-						int endcolumn;
-
-						if(err instanceof SyntaxError){
-							SyntaxError serr = (SyntaxError)err;
-							int end   = serr.getToken().getEnd();
-							endline   = Symbol.getLine(end)-1;
-							endcolumn = Symbol.getColumn(end);
-						} else {
-							endcolumn = -1;
-							endline   = startline;
-						}
-
-						String message = err.getMessage();
-						int severity   = IMarker.SEVERITY_ERROR;
-						IMarker marker = file.createMarker(PARSE_MARKER_TYPE);
-						marker.setAttribute(IMarker.MESSAGE, message);
-						marker.setAttribute(IMarker.SEVERITY, severity);
-						marker.setAttribute(START_LINE, startline);
-						marker.setAttribute(START_COLUMN, startcolumn);
-						marker.setAttribute(END_LINE, endline);
-						marker.setAttribute(END_COLUMN, endcolumn);
-						marker.setAttribute(IMarker.LINE_NUMBER, startline+1);
-					}
-					return;
+				for (CompilationUnit cu : units) {
+				   if(cu.hasParserErrors()){
+				      for(ParserError err : cu.getParserErrors()){
+				         addMarker(file, err);
+				      }
+				      return;
+				   }
 				}
 			} catch(NoModelException e){
 				//ignore
@@ -264,6 +255,34 @@ public class AbsNature implements IProjectNature {
 			}
 		}
 	}
+
+   private static void addMarker(IFile file, ParserError err) throws CoreException {
+      int startline   = err.getLine()-1;
+      int startcolumn = err.getColumn()-1;
+      int endline;
+      int endcolumn;
+
+      if(err instanceof SyntaxError){
+      	SyntaxError serr = (SyntaxError)err;
+      	int end   = serr.getToken().getEnd();
+      	endline   = Symbol.getLine(end)-1;
+      	endcolumn = Symbol.getColumn(end);
+      } else {
+      	endcolumn = -1;
+      	endline   = startline;
+      }
+
+      String message = err.getMessage();
+      int severity   = IMarker.SEVERITY_ERROR;
+      IMarker marker = file.createMarker(PARSE_MARKER_TYPE);
+      marker.setAttribute(IMarker.MESSAGE, message);
+      marker.setAttribute(IMarker.SEVERITY, severity);
+      marker.setAttribute(START_LINE, startline);
+      marker.setAttribute(START_COLUMN, startcolumn);
+      marker.setAttribute(END_LINE, endline);
+      marker.setAttribute(END_COLUMN, endcolumn);
+      marker.setAttribute(IMarker.LINE_NUMBER, startline+1);
+   }
 	
 	/**
 	 * takes the properties from the project preference store for location type checking and location type precision. Typeckecks

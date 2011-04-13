@@ -31,8 +31,7 @@ import eu.hatsproject.absplugin.wizards.WizardUtilsTests;
 			WizardUtilsTests.class,
 			ABSContentOutlineUtilsTest.class,
 			ModelBuilderTest.class,
-			ConsoleManagerTest.class,
-			
+			ConsoleManagerTest.class
 		}
 )
 /**

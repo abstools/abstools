@@ -40,6 +40,7 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.parser.ABSPackageFile;
 import abs.frontend.parser.SourcePosition;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
@@ -582,15 +583,35 @@ public class UtilityFunctions {
 		return false;
 	}
 	
+	public static boolean isABSSourceFile(IResource file){
+	    if (file != null && file instanceof IFile)
+	       return hasABSFileExtension((IFile)file);
+	    return false;
+	}
+
 	public static boolean isABSFile(IResource file){
 		if (file != null && file instanceof IFile){
-			return hasABSFileExtension((IFile)file);
+			return hasABSFileExtension((IFile)file) || isABSPackage((IFile)file);
 		}
 		
 		return false;
 	}	
 	
-	/**
+
+	// assumes file != null
+	public static boolean isABSPackage(IFile file) {
+      if (! "jar".equals(file.getFileExtension()))
+         return false;
+      
+      try {
+         return new ABSPackageFile(file.getLocation().toFile()).isABSPackage();
+      } catch (IOException e) {
+         e.printStackTrace();
+         return false;
+      }
+   }
+
+   /**
 	 * If plug-in in debug mode, then print exception stack trace.
 	 * @param e
 	 */
