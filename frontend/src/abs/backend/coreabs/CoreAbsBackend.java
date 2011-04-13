@@ -17,15 +17,22 @@ public class CoreAbsBackend extends Main {
         // TODO Auto-generated constructor stub
     }
 
+    public void mainMethod(final String... args) {
+        try {
+            Model m = new CoreAbsBackend().parse(args);
+            PrintStream stream = System.out;
+            m.generateCoreABS(stream);
+            System.exit(0);
+        } catch (Exception e) {
+            printErrorAndExit(e.getMessage());
+        }
+    }
+    
     /**
      * @param args
      */
-    public static void main(final String... args) throws Exception {
-
-        Model m = new CoreAbsBackend().parse(args);
-        PrintStream stream = System.out;
-        m.generateCoreABS(stream);
-        System.exit(0);
+    public static void main(final String... args)  {
+        new CoreAbsBackend().mainMethod(args);
     }
 
 }

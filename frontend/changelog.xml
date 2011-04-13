@@ -14,6 +14,11 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
   </properties>
 
 <body>
+  <release version="1.0.5">
+     <action dev="jschaefer" type="add">
+        ABS packages now must have a header ABS-Package-Version in the MANIFEST
+     </action>
+  </release>
   <release version="1.0.4">
      <action dev="jschaefer" type="add">
         Added functionality to handle ABS packages

@@ -27,5 +27,6 @@ import org.junit.runners.Suite;
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
-        ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class})
+        ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
+        TestABSPackages.class})
 public class AllFrontendTests {}

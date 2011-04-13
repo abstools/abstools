@@ -47,6 +47,7 @@ public class Main {
     protected boolean typecheck = true;
     protected boolean stdlib = true;
     protected boolean dump = false;
+    protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
     protected boolean fullabs = false;
@@ -54,12 +55,29 @@ public class Main {
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
 
-    public static void main(final String... args) throws Exception {
-        new Main().parse(args);
+    public static void main(final String... args)  {
+       new Main().mainMethod(args);
+    }
+    
+    public void mainMethod(final String... args) {
+       try {
+          parse(args);
+       } catch (Exception e) {
+          printErrorAndExit(e.getMessage());
+       }
+       
     }
 
     public void setWithStdLib(boolean withStdLib) {
         this.stdlib = withStdLib;
+    }
+    
+    public void setAllowIncompleteExpr(boolean b) {
+        allowIncompleteExpr = b;
+    }
+    
+    public void setTypeChecking(boolean b) {
+        typecheck = b;
     }
     
     public java.util.List<String> parseArgs(String[] args) throws Exception {
@@ -112,7 +130,7 @@ public class Main {
         }
 
         
-        List<CompilationUnit> units = new List<CompilationUnit>();
+        java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
         if (stdlib) {
             units.add(getStdLib());
@@ -120,12 +138,29 @@ public class Main {
 
         for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
-                printErrorAndExit("Illegal option " + fileName);
+                throw new IllegalArgumentException("Illegal option " + fileName);
             }
-            parseFileOrDirectory(units, new File(fileName));
+
+            File f = new File(fileName);
+            if (!f.canRead()) {
+               throw new IllegalArgumentException("File "+fileName+" cannot be read");
+            }
+            
+            if (!f.isDirectory() && !isABSSourceFile(f) && !isABSPackageFile(f)) {
+               throw new IllegalArgumentException("File "+fileName+" is not a legal ABS file");
+            }
+        }
+        
+        for (String fileName : fileNames) {
+           parseFileOrDirectory(units, new File(fileName));
         }
 
-        Model m = new Model(units);
+        List<CompilationUnit> unitList = new List<CompilationUnit>();
+        for (CompilationUnit u : units) {
+            unitList.add(u);
+        }
+        
+        Model m = new Model(unitList);
         return m;
     }
 
@@ -195,7 +230,7 @@ public class Main {
         }
     }
 
-    private void parseFileOrDirectory(List<CompilationUnit> units, File file) throws IOException {
+    private void parseFileOrDirectory(java.util.List<CompilationUnit> units, File file) throws IOException {
         if (!file.canRead()) {
             System.err.println("WARNING: Could not read file "+file+", file skipped.");
         }
@@ -210,8 +245,16 @@ public class Main {
         }
     }
 
-    private void parseABSPackageFile(List<CompilationUnit> units, File file) throws IOException {
-        JarFile jarFile = new JarFile(file);
+    public java.util.List<CompilationUnit> parseABSPackageFile(File file) throws IOException {
+        java.util.List<CompilationUnit> res = new ArrayList<CompilationUnit>();
+        parseABSPackageFile(res, file);
+        return res;
+    }
+    
+    private void parseABSPackageFile(java.util.List<CompilationUnit> units, File file) throws IOException {
+        ABSPackageFile jarFile = new ABSPackageFile(file);
+        if (!jarFile.isABSPackage())
+           return;
         Enumeration<JarEntry> e = jarFile.entries();
         while (e.hasMoreElements()) {
             JarEntry jarEntry = e.nextElement();
@@ -223,7 +266,7 @@ public class Main {
         }
     }
 
-    private void parseDirectory(List<CompilationUnit> units, File file) throws IOException {
+    private void parseDirectory(java.util.List<CompilationUnit> units, File file) throws IOException {
         if (file.canRead() && !file.isHidden()) {
             for (File f : file.listFiles()) {
                 if (f.isFile() && !isABSSourceFile(f) && !isABSPackageFile(f))
@@ -233,42 +276,29 @@ public class Main {
         }
     }
 
-    private boolean isABSPackageFile(File f) {
-        return f.getName().endsWith(".jar");
+    private boolean isABSPackageFile(File f) throws IOException {
+       return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
     }
 
     private boolean isABSSourceFile(File f) {
         return f.getName().endsWith(".abs");
     }
 
-    private void parseABSSourceFile(List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
+    private void parseABSSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
         parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream));
     }
 
-    private void parseABSSourceFile(List<CompilationUnit> units, File file) throws FileNotFoundException {
+    private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
         parseABSSourceFile(units, file, new FileReader(file));
     }
     
-    private void parseABSSourceFile(List<CompilationUnit> units, File file, Reader reader) {
+    private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
         if (verbose)
             System.out.println("Parsing file "+file.getAbsolutePath());
-        try {
-            units.add(parseUnit(file, null, reader, stdlib));
-
-        } catch (FileNotFoundException e1) {
-            System.err.println("WARNING: File not found: " + file +", skipping file.");
-        } catch (ParseException pex) {
-            System.err.println(pex.getError().getHelpMessage());
-            System.exit(1);
-        } catch (Exception e1) {
-            // Catch-all
-            System.err.println("Compilation of " + file + " failed with Exception");
-            System.err.println(e1);
-            System.exit(1);
-        }
+        units.add(parseUnit(file, null, reader));
     }
 
-    private void printErrorAndExit(String error) {
+    protected void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
         System.err.println("  " + error);
         System.err.println();
@@ -281,19 +311,18 @@ public class Main {
     }
     
     protected void printVersionAndExit() {
-        String version = getVersion();
-        System.out.println("ABS Tool Suite v"+version);
+        System.out.println("ABS Tool Suite v"+getVersion());
         System.exit(1);
     }
     
 
-    public static CompilationUnit getStdLib() throws IOException {
+    public CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
             System.err.println("Could not found ABS Standard Library");
             System.exit(1);
         }
-        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream), false);
+        return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
 
     protected void printUsage() {
@@ -350,7 +379,7 @@ public class Main {
             return version;
     }
 
-    public static CompilationUnit parseUnit(File file, boolean withStdLib) throws Exception {
+    public CompilationUnit parseUnit(File file) throws Exception {
         Reader reader = new FileReader(file);
         BufferedReader rd = null;
         // Set to true to print source before parsing
@@ -373,7 +402,7 @@ public class Main {
             }
         }
 
-        return parseUnit(file, null, reader, withStdLib);
+        return parseUnit(file, null, reader);
     }
 
     public static Iterable<File> toFiles(Iterable<String> fileNames) {
@@ -384,28 +413,19 @@ public class Main {
         return files;
     }
 
-    public static Model parse(File file, String sourceCode, InputStream stream, boolean withStdLib) throws Exception {
-        return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)), withStdLib);
+    public Model parse(File file, String sourceCode, InputStream stream) throws Exception {
+        return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)));
     }
 
-    public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib) throws Exception {
-        return parse(file, sourceCode, reader, withStdLib, false);
-    }
-    
-    public static Model parse(File file, String sourceCode, Reader reader, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
+    public Model parse(File file, String sourceCode, Reader reader) throws Exception {
         List<CompilationUnit> units = new List<CompilationUnit>();
-        if (withStdLib)
+        if (stdlib)
             units.add(getStdLib());
-        units.add(parseUnit(file, sourceCode, reader, withStdLib, allowIncompleteExpr));
+        units.add(parseUnit(file, sourceCode, reader));
         return new Model(units);
     }
 
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib)
-    throws IOException {
-         return parseUnit(file, sourceCode, reader, importStdLib, false);
-    }
-    
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader, boolean importStdLib, boolean allowIncompleteExpr)
+    public CompilationUnit parseUnit(File file, String sourceCode, Reader reader)
             throws IOException {
         try {
             ABSParser parser = new ABSParser();
@@ -421,9 +441,10 @@ public class Main {
                 u = new CompilationUnit(parser.getFileName(), new List());
                 u.setParserErrors(parser.getErrors());
             }
-            if (importStdLib) {
+            if (stdlib) {
                 for (ModuleDecl d : u.getModuleDecls()) {
-                    d.getImports().add(new StarImport(Constants.STDLIB_NAME));
+                    if (!d.getName().equals(Constants.STDLIB_NAME))
+                        d.getImports().add(new StarImport(Constants.STDLIB_NAME));
                 }
             }
 
@@ -434,11 +455,14 @@ public class Main {
     }
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
-        return parse(null, s, new StringReader(s), withStdLib);
+        return parseString(s,withStdLib,false);
     }
 
     public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
-        return parse(null, s, new StringReader(s), withStdLib, allowIncompleteExpr);
+        Main m = new Main();
+        m.setWithStdLib(withStdLib);
+        m.setAllowIncompleteExpr(allowIncompleteExpr);
+        return m.parse(null, s, new StringReader(s));
     }
-    
+
 }
