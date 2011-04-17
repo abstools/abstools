@@ -132,12 +132,12 @@ aspect GenerateMaude {
     abstract public void Exp.generateMaudeAsStatement(PrintStream stream, String var);
     
     public void IncompleteExp.generateMaudeAsStatement(PrintStream stream, String var) {
-        stream.print("noStmt");
+        stream.print("noStmt ");
     }
     
     public void PureExp.generateMaudeAsStatement(PrintStream stream, String var)
     {
-        stream.print("noStmt");
+        stream.print("noStmt ");
     }
 
     public void EffExp.generateMaude(PrintStream stream) {
