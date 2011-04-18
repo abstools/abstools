@@ -230,7 +230,7 @@ public class AbsNature implements IProjectNature {
 			   m.setWithStdLib(true);
 			   m.setAllowIncompleteExpr(true);
 
-			   List<CompilationUnit> units = new ArrayList<CompilationUnit>(1);
+			   List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 			   if (isABSPackage(file)) {
 			      units.addAll(m.parseABSPackageFile(file.getLocation().toFile()));
 			   } else {
@@ -240,12 +240,12 @@ public class AbsNature implements IProjectNature {
 			   }
 				builder.addCompilationUnits(units);
 				
+				
 				for (CompilationUnit cu : units) {
 				   if(cu.hasParserErrors()){
 				      for(ParserError err : cu.getParserErrors()){
 				         addMarker(file, err);
 				      }
-				      return;
 				   }
 				}
 			} catch(NoModelException e){
