@@ -12,7 +12,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.FileUtils;
 
 /**
@@ -49,10 +51,13 @@ public class MaudeTestMojo extends AbstractABSMojo {
     private String maude;
     
     /**
-     * @parameter expression="${abs.maudeBackend.verbose}" default-value=false
+     * @parameter expression="${abs.maudetest.verbose}" default-value=false
      */
     private boolean verbose;
-
+    
+    private static final Pattern termination = 
+    	Pattern.compile("^.*\\[State\\]:.*$",Pattern.MULTILINE);
+	
     @Override
     protected void doExecute() throws Exception {
         //
@@ -64,8 +69,19 @@ public class MaudeTestMojo extends AbstractABSMojo {
                 absMaudeBackendTestOutputFile, 
                 verbose);
 
-        // run maude
-        getLog().debug(runMaude());
+        //run maude
+        final String maudeOutput = runMaude();
+        
+        if (! maudeTerminatesSuccessfully(maudeOutput)) {
+        	getLog().error("Maude Test fails.");
+        	getLog().error(maudeOutput);
+			throw new MojoFailureException(
+					"One or more maude tests have failed, see log information for details.");
+        } else {
+            // only in debug
+            getLog().debug(maudeOutput);
+        }
+        
     }
 
     /**
@@ -122,5 +138,17 @@ public class MaudeTestMojo extends AbstractABSMojo {
         args.addAll(super.getABSArguments());
         return args;
     }
-
+    
+	/**
+	 * Check that the input string representing the Maude output does not match
+	 * against '[State]' as this indicates the simulation did not terminate
+	 * successfully.
+	 * 
+	 * @param maudeOutput
+	 * @return
+	 */
+    boolean maudeTerminatesSuccessfully(String maudeOutput) {
+    	return ! termination.matcher(maudeOutput).find();
+    }
+    
 }
