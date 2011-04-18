@@ -19,7 +19,3 @@ class ApplicationImpl implements Application {
 		return someFunction(t);
 	}
 }
-
-{
-	new ApplicationImpl();
-}

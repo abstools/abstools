@@ -7,7 +7,7 @@ import * from Application;
 //auto-generated?
 {
 	ApplicationImplTest test = new ApplicationImplTest();
-	Set<Type> datas = Application.Test.getData();
+	Set<Type> datas = getData();
 	while (hasNext(datas)) {
 		Pair<Set<Type>,Type> ndatas = next(datas);
 		datas = fst(ndatas);

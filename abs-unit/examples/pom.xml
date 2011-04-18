@@ -10,6 +10,14 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
+	<dependencies>
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>abs-unit</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<sourceDirectory>src/main/abs</sourceDirectory>
 		<testSourceDirectory>src/test/abs</testSourceDirectory>
@@ -31,7 +39,7 @@
 							<goal>maudetest</goal>
 						</goals>
 						<configuration>
-							<maudeInterpreter>/local/home/pwong/research/hats/Tools/ABS/trunk/frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
+							<maudeInterpreter>/home/pwong/research/hats/Tools/ABS/trunk/frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
 							<maude>/usr/local/maude/maude.linux</maude>
 						</configuration>
 					</execution>
@@ -39,24 +47,17 @@
 			</plugin>
 			
 			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.6</version>
-				<executions>
-					<execution>
-						<phase>prepare-package</phase>
-						<configuration>
-							<target>
-								<mkdir dir="${project.build.outputDirectory}" />
-								<copy todir="${project.build.outputDirectory}">
-									<fileset dir="${project.build.sourceDirectory}" />
-								</copy>
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<classesDirectory>${project.build.sourceDirectory}</classesDirectory>
+					<archive>
+						<manifestEntries>
+							<ABS-Package-Version>1.0</ABS-Package-Version>
+						</manifestEntries>
+					</archive>
+				</configuration>
 			</plugin>
 			
 		</plugins>
