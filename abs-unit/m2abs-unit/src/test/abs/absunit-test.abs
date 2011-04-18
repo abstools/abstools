@@ -1,0 +1,36 @@
+module AbsUnit.Tests;
+
+import * from AbsUnit;
+
+[TestClass]
+interface ABSUnitTest { 
+	Unit testAssertTrue();
+	Unit testAssertFalse();
+}
+
+[TestClassImpl]
+class ABSUnitTestClass implements ABSUnitTest {
+	
+	ABSAssert aut;
+	
+	{
+		aut = new ABSAssertImpl(); // helper
+	}
+	
+	[Test]
+	Unit testAssertTrue() {
+		aut.assertTrue(True);	
+	}
+	
+	[Test]
+	Unit testAssertFalse() {
+		aut.assertFalse(False);
+	}
+	
+}
+
+{
+	ABSUnitTest testapp = new ABSUnitTestClass();
+	testapp.testAssertTrue();
+	testapp.testAssertFalse();
+}

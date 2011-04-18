@@ -1,0 +1,45 @@
+module AbsUnit;
+
+export *;
+
+[TypeAnnotation]
+data DataPoint = DataPoint; //data function
+
+[TypeAnnotation]
+data Test = Test; //test method
+
+[TypeAnnotation]
+data TestClass = TestClass; //test class
+
+[TypeAnnotation]
+data TestClassImpl = TestClassImpl; //test class implementation
+
+data TestData<A> = TestData(A);
+
+interface ABSAssert {
+	Unit assertTrue(Bool value);
+	Unit assertFalse(Bool value);
+}
+
+class ABSAssertImpl implements ABSAssert {
+	
+	Unit assertTrue(Bool value) {
+		if (~value) {
+			// collect result
+			assert False;
+		} 
+	}
+	
+	Unit assertFalse(Bool value) {
+		if (value) {
+			// collect result
+			assert False;
+		} 
+	}
+	
+	//not sure how to implements assertEquals or assertSame...
+}
+
+ 
+	
+	
