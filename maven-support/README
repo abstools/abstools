@@ -1,0 +1,218 @@
+Maven support for ABS
+=========
+Inside this folder we develop the infrastructure to add Maven dependencies management support for the ABS modelling language. 
+
+INTRODUCTION (from maven.apache.org)
+---
+Apache Maven is a software project management and comprehension tool. Based on the concept of a project object model (POM), Maven can manage a project's build, reporting and documentation from a central piece of information. 
+
+Maven's primary goal is to allow a developer to comprehend the complete state of a development effort in the shortest period of time. In order to attain this goal there are several areas of concern that Maven attempts to deal with:
+
+* Making the build process easy
+* Providing a uniform build system
+* Providing quality project information
+* Providing guidelines for best practices development
+* Allowing transparent migration to new features
+
+Please consulte maven.apache.org for general organization and usage of Maven.
+
+MOTIVATION
+---
+ABS is an executable modelling language designed for specifying, modelling and executing adaptable systems. The tools and techniques for analysing and using ABS are centered around the HATS methodology for Software Product Line Engineering (SPLE). 
+
+SPLE applies the concepts of variabilities between versions of software system where generic artifacts are kept in a arifacts repository of the product line for reuse. Maven dependency management provides the technological implementation to push/pull/maintain artifacts in this repository.
+
+HOWTO
+---
+An example of how to use Maven support on ABS can be found at Tools/ABS/trunk/abs-packages
+
+An ABS Maven module is organized in the following directory structure
+
+my-app
+|-- pom.xml
+`-- src
+    |-- main
+    |   `-- abs
+    |       `-- App.abs 
+    |           
+    `-- test
+        `-- abs
+            `-- AppTest.abs
+
+This is the standard layout for ABS Maven projects (the application sources reside in ${basedir}/src/main/abs and test sources reside in ${basedir}/src/test/abs, where ${basedir} represents the directory containing pom.xml).
+
+pom.xml contains the Project Object Model (POM) for this project. The POM is the basic unit of work in Maven, it is a xml file that declares the following information:
+
+* The identifier of the ABS Maven project
+* The 'dependencies', that is, other (ABS) Maven projects the project requires
+* How to compile (generate backend codes from) the source of the ABS Maven project
+* How to package the source of the ABS Maven project
+* How to test the source of the ABS Maven project
+* How to deploy the packaged ABS Maven project into a (remote) repository
+
+For ABS Maven project, the pom.xml would look similar to the following (http://tools.hats-project.eu/maven-repos requires a private key, consult Jan Schaefer for more information.) 
+
+<project>
+  ...
+  <repositories>
+    <repository>
+      <id>repos.hats-project.eu</id>
+      <url>http://tools.hats-project.eu/maven-repos/</url>
+    </repository>
+  </repositories>
+  ...
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repos.hats-project.eu</id>
+      <url>http://tools.hats-project.eu/maven-repos/</url>
+    </pluginRepository>
+  </pluginRepositories>
+  ...
+  <build>
+    <sourceDirectory>src/main/abs</sourceDirectory>
+    <testSourceDirectory>src/test/abs</testSourceDirectory>
+    ...
+    <plugins>
+      ...
+      <plugin>
+        <groupId>eu.hats-project</groupId>
+	<artifactId>abs-maven-plugin</artifactId>
+        ... (see other usage or goals for details) ...
+      </plugin>
+      ...
+    </plugins>
+    ...
+  </build>
+  ...
+</project>
+
+To generate Java/Maude from ABS using Maven
+---
+The ABS Maven plugin (abs-maven-plugin) provides the following functionalities 
+
+* Generate Java/Maude from ABS
+* Execute (simulate) Java/Maude generated from ABS
+
+Java backend
+---
+To generate Java from ABS in a ABS Maven project, include the following plugin declaration inside the <build><plugins>...</plugins></build> section of the pom.xml
+
+<plugin>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>abs-maven-plugin</artifactId>
+  <executions>
+    <execution>
+      <goals>
+	<goal>genjava</goal>
+      </goals>
+      <configuration>
+        ... (see optional configuration for detail) ...
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+
+Optional configuration goal genjava 
+* absSrcFolder, ABS source folder, default is ${project.basedir}/src/main/abs
+* absTestFolder, ABS test folder, default is ${project.basedir}/src/test/abs
+* absJavaBackendTargetFolder, ABS Java Backend target folder, default is ${project.build.directory}/abs/gen/java
+* verbose, toggle verbosity, default is false
+* sourceOnly, toggle sourceOnly, default is false 
+
+Then to generate Java from the source of the ABS Maven project, invoke the 'compile' goal (mvn compile)
+
+Maude backend
+---
+To generate Maude from ABS in a ABS Maven project, include the following plugin declaration inside the <build><plugins>...</plugins></build> section of the pom.xml
+
+<plugin>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>abs-maven-plugin</artifactId>
+  <executions>
+    <execution>
+      <goals>
+	<goal>genmaude</goal>
+      </goals>
+      <configuration>
+        ... (see optional configuration for detail) ...
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+
+Optional configuration goal genmaude
+* absSrcFolder, ABS source folder, default is ${project.basedir}/src/main/abs
+* absTestFolder, ABS test folder, default is ${project.basedir}/src/test/abs
+* absMaudeBackendOutputFile, ABS Maude Backend output file, default is ${project.build.directory}/abs/gen/maude/output.maude
+* verbose, toggle verbosity, default is false
+
+Then to generate Maude from the source of the ABS Maven project, invoke the 'compile' goal (mvn compile)
+
+Testing using Maude
+---
+Currently the abs-maven-plugin provide goal 'maudetest' to support simulation of ABS unit tests (test code resides at ${project.basedir}/src/test/abs by default) in Maude and interpreting the maude simulation output. 
+
+To simulate ABS test in Maude from ABS in a ABS Maven project, include the following plugin declaration inside the <build><plugins>...</plugins></build> section of the pom.xml
+
+<plugin>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>abs-maven-plugin</artifactId>
+  <executions>
+    <execution>
+      <id>abs-test</id>
+      <goals>
+        <goal>maudetest</goal>
+      </goals>
+      <configuration>
+        <maudeInterpreter>/path/to/abs-interpreter.maude</maudeInterpreter>
+        <maude>/path/to/<maude-executable></maude>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+
+Then to test the source of the ABS Maven project, invoke the 'test' goal (mvn test)
+
+Packaging ABS Maven project
+---
+The ABS frontend supports ABS packages (APK), to build a ABS package (jar) of the ABS Maven project, include the following plugin declaration inside the <build><plugins>...</plugins></build> section of the pom.xml
+
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-jar-plugin</artifactId>
+  <version>2.3.1</version>
+  <configuration>
+    <classesDirectory>${project.build.sourceDirectory}</classesDirectory>
+    <archive>
+      <manifestEntries>
+        <ABS-Package-Version>1.0</ABS-Package-Version>
+      </manifestEntries>
+    </archive>
+  </configuration>
+</plugin>
+
+Then to package the ABS Maven project, invoke the 'package' goal (mvn package)
+
+Deploy ABS Maven project to a Maven repository
+---
+To deploy ABS Maven project as a ABS package so that other ABA project can depend on it, we currently provide a central location (repos.hats-project.eu/tools/maven-repos) for this. To read from/write to this location, a private key is required. Consult Jan Schaefer for more information.
+
+To specify when the packaged ABS project is to be deployed, include the following distributionManagement declaration at the top level <project>...</project> section of the pom.xml
+
+<distributionManagement>
+  <!-- use the following if you're not using a snapshot version. -->
+  <repository>
+    <id>repos.hats-project.eu</id>
+    <url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
+  </repository>
+  <!-- use the following if you ARE using a snapshot version. -->
+  <snapshotRepository>
+    <id>repos.hats-project.eu</id>
+    <url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
+    <uniqueVersion>false</uniqueVersion>
+  </snapshotRepository>
+</distributionManagement>
+
+Then to package the ABS Maven project, invoke the 'deploy' goal (mvn deploy)
+
+
