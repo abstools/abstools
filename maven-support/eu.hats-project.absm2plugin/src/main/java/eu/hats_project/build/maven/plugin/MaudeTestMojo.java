@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -51,6 +52,22 @@ public class MaudeTestMojo extends AbstractABSMojo {
     private String maude;
     
     /**
+     * Delta names to applied during testing
+     * 
+     * @parameter
+     * 
+     */
+    private String[] deltaNames;
+    
+    /**
+     * Product selection
+     * 
+     * @parameter
+     * 
+     */
+    private String productName;
+    
+    /**
      * @parameter expression="${abs.maudetest.verbose}" default-value=false
      */
     private boolean verbose;
@@ -61,6 +78,11 @@ public class MaudeTestMojo extends AbstractABSMojo {
     @Override
     protected void doExecute() throws Exception {
         
+    	if (productName != null && deltaNames != null && deltaNames.length > 0) {
+    		throw new MojoExecutionException("Cannot perform product selection" +
+    				"and apply deltas on rewrite at the same time");
+    	}
+    	
     	if (absTestSrcFolder == null) {
     		getLog().warn("Test folder cannot be found. Skip tests");
     		return;
@@ -78,7 +100,8 @@ public class MaudeTestMojo extends AbstractABSMojo {
                 absTestSrcFolder, 
                 getABSArguments(), 
                 absMaudeBackendTestOutputFile, 
-                verbose);
+                verbose,
+                productName);
 
         //run maude
         final String maudeOutput = runMaude();
@@ -128,7 +151,18 @@ public class MaudeTestMojo extends AbstractABSMojo {
         while (in.ready()) {
             result.append(in.readLine());
         }
-        out.println("rew start .");
+        
+        if (deltaNames == null || deltaNames.length == 0) {
+        	out.println("rew start .");
+        } else {
+        	// apply deltas
+        	String names = "";
+        	for (String name : deltaNames) {
+        		names = names + "\""+ name + "\" ";
+        	}
+        	out.println("rew start ("+names+") .");
+        }
+        
         out.flush();
         while (in.ready()) {
             result.append(in.readLine() + "\n");

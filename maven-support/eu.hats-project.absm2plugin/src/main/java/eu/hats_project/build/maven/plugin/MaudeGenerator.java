@@ -10,7 +10,14 @@ import abs.backend.maude.MaudeCompiler;
 
 public class MaudeGenerator {
 
-    void generateMaude(File absfrontEnd, File absSrcFolder, List<String> absArguments, File absMaudeBackendOutputFile, boolean verbose) throws MojoExecutionException {
+    void generateMaude(
+    		File absfrontEnd, 
+    		File absSrcFolder, 
+    		List<String> absArguments, 
+    		File absMaudeBackendOutputFile, 
+    		boolean verbose, 
+    		String productName) throws MojoExecutionException {
+    	
         if (!absMaudeBackendOutputFile.getParentFile().exists()) {
             if (!absMaudeBackendOutputFile.getParentFile().mkdirs()) {
                 throw new MojoExecutionException("Could not create folder for output file " + absMaudeBackendOutputFile);
@@ -26,6 +33,11 @@ public class MaudeGenerator {
         args.add("-o");
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
+        if (productName != null) {
+        	args.add("-product");
+        	args.add(productName);
+        }
+        
         if (verbose) {
             args.add("-v");
         }
