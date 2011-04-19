@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>eu.hats-project</groupId>
+	<artifactId>abs-test3</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<name>ABS Test 3</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>abs-test</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>abs-test2</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>
+	</dependencies>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
+		<sourceDirectory>src/main/abs</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>eu.hats-project</groupId>
+				<artifactId>abs-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>genjava</goal>
+							<goal>genmaude</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<ABS-Package-Version>1.0</ABS-Package-Version>
+						</manifestEntries>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+		</plugins>
+	</build>
+
+</project>

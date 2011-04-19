@@ -1,0 +1,10 @@
+module ABSTest.Classes;
+
+import * from ABSTest.Data;
+
+interface I {
+}
+
+class C(SomeType t) implements I {
+
+}
