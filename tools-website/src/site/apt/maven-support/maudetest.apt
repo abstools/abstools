@@ -1,0 +1,40 @@
+     -------
+     Dependency Management for ABS
+     -------
+     -------
+     -------
+     
+Testing using Maude
+
+  Currently the abs-maven-plugin provide goal 'maudetest' to support simulation of 
+  ABS unit tests (test code resides at <<<${project.basedir}/src/test/abs>>> by default) in 
+  Maude and interpreting the maude simulation output. 
+
+  To simulate ABS test in Maude from ABS in a ABS Maven project, 
+  include the following plugin declaration inside the <<<<build><plugins>...</plugins></build>>>> 
+  section of the pom.xml
+
+----------------------------------------
+<plugin>
+  <groupId>eu.hats-project</groupId>
+  <artifactId>abs-maven-plugin</artifactId>
+  <executions>
+    <execution>
+      <id>abs-test</id>
+      <goals>
+        <goal>maudetest</goal>
+      </goals>
+      <configuration>
+        <maudeInterpreter>/path/to/abs-interpreter.maude</maudeInterpreter>
+        <maude>/path/to/<maude-executable></maude>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+---------------------------------------
+
+  To test the source of the ABS Maven project, invoke the 'test' goal 
+
+-----------------
+mvn test
+-----------------

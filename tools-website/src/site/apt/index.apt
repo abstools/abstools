@@ -118,4 +118,22 @@ java -jar mtvl.jar
 
   {{{http://costa.ls.fi.upm.es/costabs}COSTABS Web Interface}}
 
+* Dependency Management
 
+  ABS is supported by {{{http://maven.apache.org}Maven}} dependency management system. 
+  
+  Maven is based on the concept of a project object model (POM), Maven can manage a project's build, 
+reporting and documentation from a central piece of information.  
+
+  Maven support for ABS features a abs-maven-plugin that provides functionality to 
+  
+   * compile, generate backend codes from ABS models
+   
+   * execute test cases written in ABS 
+   
+   * package ABS models into standard ABS packages (APK)
+   
+   * deploy ABS packages as reusable artifacts into a global repository
+   
+  {{{./maven-support.html}More information}}
+   
