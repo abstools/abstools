@@ -15,3 +15,5 @@ read by the frontend.
 
 APK files can either be build by using the
 standard jar tool, or by using the abspk tool. 
+
+** Consult Tools/ABS/trunk/maven-support/README for ABS Maven support
