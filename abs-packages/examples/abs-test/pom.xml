@@ -23,6 +23,16 @@
 							<goal>genmaude</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>abs-test</id>
+						<goals>
+							<goal>maudetest</goal>
+						</goals>
+						<configuration>
+							<maudeInterpreter>/home/pwong/research/hats/Tools/ABS/trunk/frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
+							<maude>/usr/local/maude/maude.linux</maude>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
@@ -31,19 +41,13 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.3.1</version>
 				<configuration>
+					<classesDirectory>${project.build.sourceDirectory}</classesDirectory>
 					<archive>
 						<manifestEntries>
 							<ABS-Package-Version>1.0</ABS-Package-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 
 		</plugins>
