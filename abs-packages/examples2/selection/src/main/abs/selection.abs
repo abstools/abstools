@@ -1,0 +1,13 @@
+module Products;
+
+productline ProductLine {
+	features D1, D2;
+	delta Delta1 when D1;
+	delta Delta2 when D2;	
+}
+
+product P1 (D1) { 
+	Application app = new Application();
+	Int result = app.calculate(10);
+	assert result > 1;
+}

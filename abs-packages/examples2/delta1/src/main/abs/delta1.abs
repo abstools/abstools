@@ -1,0 +1,12 @@
+module DeltaArtifact1;
+
+import * from CoreArtifact;
+
+delta Delta1 {
+	modifies class Application {
+		modifies Int calculate(Int n) {
+			Int result = original(n);
+			return result + 1;
+		} 
+	}
+}

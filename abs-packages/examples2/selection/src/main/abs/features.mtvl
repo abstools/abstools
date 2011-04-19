@@ -1,0 +1,3 @@
+root ProductLine {
+	group [1..*] { D1, D2 }
+}
