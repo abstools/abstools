@@ -35,9 +35,9 @@ adaptable systems. The tools and techniques for analysing and using ABS are cent
 around the HATS methodology for Software Product Line Engineering (SPLE). 
 
   SPLE applies the concept of variabilities between versions of software system 
-where generic artifacts are kept in a arifacts repository of the product line for reuse. 
+whereby generic artifacts (with variabilities) are kept in an artifact repository of the product line for reuse. 
 Maven dependency management provides the technological implementation to push/pull/maintain
-artifacts in this repository.
+such artifacts in this repository.
 
 Using Maven
 
@@ -47,7 +47,7 @@ following functionalities
 
     * Generate Java from ABS (see {{{maven-support/genjava.html}genjava}} goal)
 
-	* Generate Maude from ABS (see {{{maven-support/genmaude.html}genmaude}} goal)
+    * Generate Maude from ABS (see {{{maven-support/genmaude.html}genmaude}} goal)
   
     * Execute (simulate) Java/Maude generated from ABS (see {{{maven-support/maudetest.html}maudetest}} goal)
     
