@@ -60,7 +60,18 @@ public class MaudeTestMojo extends AbstractABSMojo {
 	
     @Override
     protected void doExecute() throws Exception {
-        //
+        
+    	if (absTestSrcFolder == null) {
+    		getLog().warn("Test folder cannot be found. Skip tests");
+    		return;
+    	} else if (! absTestSrcFolder.exists()) {
+			getLog().warn(
+					String.format("There is no test code at folder %s",
+							absTestSrcFolder));
+			return;
+    	}
+    	
+    	//generate test.maude
         MaudeGenerator generator = new MaudeGenerator();
         generator.generateMaude(
                 absfrontEnd, 
