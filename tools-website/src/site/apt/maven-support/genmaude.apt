@@ -14,6 +14,7 @@ Maude backend
 <plugin>
   <groupId>eu.hats-project</groupId>
   <artifactId>abs-maven-plugin</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <executions>
     <execution>
       <goals>
@@ -36,7 +37,10 @@ Maude backend
    * <<<absMaudeBackendOutputFile>>>, ABS Maude Backend output file, default is <<<${project.build.directory}/abs/gen/maude/output.maude>>>
    
    * <<<verbose>>>, toggle verbosity, default is false
-
+   
+   * <<<productName>>>, build given product by applying deltas (productName is a string
+   that is the qualified product ID)
+   
   To generate Maude from the source of the ABS Maven project, invoke the 'compile' goal 
 
 ----------------------

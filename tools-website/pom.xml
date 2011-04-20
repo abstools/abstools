@@ -32,10 +32,22 @@
       </roles>
       <timezone>+1</timezone>
       <properties>
-<picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
+		<picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
       </properties>
     </developer>
-  </developers>
+    <developer>
+      <id>pwong</id>
+      <name>Peter</name>
+      <email>peter wong at fredhopper com</email>
+      <url>https://sites.google.com/site/peteryhwong/</url>
+      <organization>Fredhopper B.V.</organization>
+      <organizationUrl>http://www.fredhopper.com</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+</developers>
 
 <issueManagement>
     <system>Trac</system>

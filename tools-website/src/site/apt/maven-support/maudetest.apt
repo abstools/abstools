@@ -18,6 +18,7 @@ Testing using Maude
 <plugin>
   <groupId>eu.hats-project</groupId>
   <artifactId>abs-maven-plugin</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <executions>
     <execution>
       <id>abs-test</id>
@@ -33,6 +34,23 @@ Testing using Maude
 </plugin>
 ---------------------------------------
 
+  Optional configuration goal genmaude
+  
+   * <<<absTestFolder>>>, ABS test folder, default is <<<${project.basedir}/src/test/abs>>>
+   
+   * <<<deltaNames>>>, an ordered list of deltas to applied on Maude rewrite.
+   
+-------------------------------------
+<deltaNames>
+  <param>D1</param>
+  ...
+</deltaNames>
+-------------------------------------
+
+   * <<<productName>>>, build given product by applying deltas (productName is a string
+   that is the qualified product ID)
+   
+  Note that <<<productName>>> and <<<deltaNames>>> cannot be declared as the same time.
   To test the source of the ABS Maven project, invoke the 'test' goal 
 
 -----------------

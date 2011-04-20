@@ -6,7 +6,7 @@
 
 Getting Started
 
-  An example of how to use Maven support on ABS can be found at the Tools/ABS/trunk/abs-packages 
+  Examples of how to use Maven support for ABS can be found at the <<<Tools/ABS/trunk/abs-packages>>> 
 of the HATS svn repository.
 
   An ABS Maven module is organised in the following directory structure
@@ -25,8 +25,8 @@ my-app
 --------------------------
 
   This is the standard layout for ABS Maven projects. The application sources reside in 
-${basedir}/src/main/abs and test sources reside in ${basedir}/src/test/abs, where 
-${basedir} represents the directory containing pom.xml.
+<<<${basedir}/src/main/abs>>> and test sources reside in <<<${basedir}/src/test/abs>>>, where 
+<<<${basedir}>>> is the directory containing pom.xml.
 
   pom.xml contains the Project Object Model (POM) for this project. 
 The POM is the basic unit of work in Maven, it is a xml file that declares the 

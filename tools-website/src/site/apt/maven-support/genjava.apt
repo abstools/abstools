@@ -13,6 +13,7 @@ Java backend
 <plugin>
   <groupId>eu.hats-project</groupId>
   <artifactId>abs-maven-plugin</artifactId>
+  <version>1.0-SNAPSHOT</version>
   <executions>
     <execution>
       <goals>
