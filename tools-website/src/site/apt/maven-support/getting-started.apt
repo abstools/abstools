@@ -75,7 +75,8 @@ following information:
       ...
       <plugin>
         <groupId>eu.hats-project</groupId>
-	    <artifactId>abs-maven-plugin</artifactId>
+        <artifactId>abs-maven-plugin</artifactId>
+        <version>1.0-SNAPSHOT</version>
         ... (see other usage or goals for details) ...
       </plugin>
       ...

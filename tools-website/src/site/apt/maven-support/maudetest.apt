@@ -27,7 +27,8 @@ Testing using Maude
       </goals>
       <configuration>
         <maudeInterpreter>/path/to/abs-interpreter.maude</maudeInterpreter>
-        <maude>/path/to/<maude-executable></maude>
+        <maude>/path/to/maude-executable</maude>
+        ... (see optional configuration for detail) ...
       </configuration>
     </execution>
   </executions>
