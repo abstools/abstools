@@ -1,0 +1,58 @@
+﻿Agenda for ABS FLI
+1. What do we want to achieve and why do we need it?
+2. What language features should be supported?
+3. What do we want to guarantee 
+4. How do we want to achieve it?
+5. Who is willing to implement what?
+
+Foreign Languages
+- Only language for which backends exist
+  - Java
+  - Maude
+  - Scala
+  - Erlang
+
+ABS -> FL
+- use libraries
+- support I/O
+- integrate other external tools
+
+ABS <-> FL
+- model a critical component
+- verified code
+- incrementally replace parts of the system by ABS 
+- rapid prototyping
+
+Features
+- first step: restrict to interfaces/classes
+- later data types/functions
+  FL may call ABS functions use data types
+- Implement Java interfaces in ABS
+- Implement
+
+Guarantees
+- Core properties should not be violated
+   - Type safety, freeness of data races
+   - Everything that can be verified 
+   - Treat as black box
+
+Concurrency
+- synchronous method calls
+  - more efficient
+  - prevent data races by restricting the usage of Foreign Objects (do not pass to other COGs)
+- asynchronous method calls
+  - ensure that no two tasks are running in a COG
+
+Deltas
+ - ABS Deltas vs. Java Deltas
+
+Plan
+ - Task 1.5 (Integration), Task 1.4 (System Derivation)
+ - Maude: Rudi
+ - Java: Jan and Peter
+ - Scala: Tamo?
+ - Erlang: Chalmers and Oslo
+ - Deltas: Radu / Ina?
+ 
+ - Start with Java and Core ABS
+    - Come up with a more detailed solution until Amsterdam Meeting (Peter, Jan)
