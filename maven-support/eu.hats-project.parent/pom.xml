@@ -28,6 +28,13 @@
 			<url>http://tools.hats-project.eu/maven-repos/</url>
 		</repository>
 	</repositories>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>repos.hats-project.eu</id>
+			<url>http://tools.hats-project.eu/maven-repos/</url>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<distributionManagement>
 		<!-- use the following if you're not using a snapshot version. -->
