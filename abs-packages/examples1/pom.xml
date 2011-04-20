@@ -10,6 +10,7 @@
 	<description>Modules for testing ABS package system and maven integration</description>
 
 	<modules>
+		<module>abs-test-parent</module>
 		<module>abs-test</module>
 		<module>abs-test2</module>
 		<module>abs-test3</module>
