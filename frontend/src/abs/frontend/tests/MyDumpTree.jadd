@@ -154,6 +154,11 @@ aspect MyDumpTree
         stream.print(this.getName());
     }
 
+    protected void ModuleDecl.printInfo(PrintStream stream)
+    {
+        stream.print(this.getName());
+    }
+
     protected void StarImport.printInfo(PrintStream stream)
     {
         stream.print(this.getModuleName());
