@@ -1,0 +1,36 @@
+module Core;
+export *;
+interface Application { Int calculate(Int n); }
+class ApplicationImpl implements Application {
+  Int calculate(Int n) { return n + 1; }
+}
+
+module Delta;
+export *;
+import * from Core;
+delta Delta {
+  modifies class ApplicationImpl {
+    modifies Int calculate(Int n) {
+      Int result = original(n);
+      return result + 1;
+    }
+  }
+}
+
+module Products;
+import * from Core;
+import * from Delta;
+
+productline ProductLine {
+  features F1;
+  delta Delta when F1;
+}
+
+product P1(F1) { }
+
+{
+  Application app = new ApplicationImpl();
+  Int result = app.calculate(10);
+  assert result == 11;
+}
+
