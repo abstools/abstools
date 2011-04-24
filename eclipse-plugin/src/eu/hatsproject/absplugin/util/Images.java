@@ -21,6 +21,8 @@ import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
+import eu.hatsproject.absplugin.navigator.PackageEntry;
 
 public abstract class Images {
 	/**
@@ -96,6 +98,14 @@ public abstract class Images {
 	 * The standard icon for a Data constructor
 	 */
 	public final static Image DATACONSTRUCTOR_IMAGE = createIcon("abs_constructor.gif");
+	/**
+	 * The standard icon for package dependencies library
+	 */	
+	public final static Image PACKAGE_CONTAINER_IMAGE = createIcon("abs_packages.gif");
+	/**
+	 * The standard icon for an ABS package
+	 */	
+	public final static Image PACKAGE_IMAGE = createIcon("abs_package.gif");
 	/**
 	 * The standard icon for an open ABS Project
 	 */	
@@ -252,6 +262,10 @@ public abstract class Images {
 			}else{
 				return MODULE_EMPTY_IMAGE;
 			}
+		} else if (obj instanceof PackageContainer) {
+			return PACKAGE_CONTAINER_IMAGE;
+		} else if (obj instanceof PackageEntry) {
+			return PACKAGE_IMAGE;
 		} else {
 			return WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider().getImage(obj);
 		}
