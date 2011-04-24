@@ -13,6 +13,8 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Image;
 
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
+import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**
@@ -56,7 +58,11 @@ public class ABSContentOutlineStyledLabelProvider extends StyledCellLabelProvide
 			return ABSContentOutlineUtils.getLabel((InternalASTNode<?>)obj);
 		}else if (obj instanceof ModulePath){
 			return ABSContentOutlineUtils.getLabel((ModulePath)obj);			
-		}
-		return ABSContentOutlineUtils.getLabel(obj);		
+		}else if (obj instanceof PackageContainer) {
+			return ABSContentOutlineUtils.getLabel((PackageContainer)obj);
+		}else if (obj instanceof PackageEntry) {
+			return ABSContentOutlineUtils.getLabel((PackageEntry)obj);
+		}	
+		return ABSContentOutlineUtils.getLabel(obj);
 	}
 }

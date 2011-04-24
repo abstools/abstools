@@ -539,23 +539,6 @@
              labelProvider="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineStyledLabelProvider"
              name="ABS Outline"
              priority="normal">
-          <triggerPoints>
-             <or>
-                <instanceof
-                      value="abs.frontend.ast.ASTNode">
-                </instanceof>
-                <instanceof
-                      value="org.eclipse.core.resources.IFile">
-                </instanceof>
-             </or>
-          </triggerPoints>
-          <possibleChildren>
-             <or>
-                <instanceof
-                      value="abs.frontend.ast.ASTNode">
-                </instanceof>
-             </or>
-          </possibleChildren>
           <commonSorter
                 class="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
           </commonSorter>
@@ -568,9 +551,23 @@
              </enablement>
           </actionProvider>
           <enablement>
-             <instanceof
-                   value="org.eclipse.core.resources.IFile">
-             </instanceof>
+              <or>
+                <instanceof
+                      value="abs.frontend.ast.ASTNode">
+                </instanceof>
+                <instanceof
+                      value="org.eclipse.core.resources.IFile">
+                </instanceof>
+                <instanceof
+                      value="org.eclipse.core.resources.IProject">
+                </instanceof>
+				<instanceof
+                      value="org.eclipse.core.resources.IFolder">
+                </instanceof>
+                <instanceof
+                	  value="eu.hatsproject.absplugin.navigator.PackageContainer">
+                </instanceof>
+             </or>
           </enablement>
           <actionProvider
                 class="org.eclipse.ui.internal.navigator.resources.actions.NewActionProvider"

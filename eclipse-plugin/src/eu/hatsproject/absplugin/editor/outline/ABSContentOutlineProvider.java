@@ -4,24 +4,43 @@
  */
 package eu.hatsproject.absplugin.editor.outline;
 
+import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.getNatureForObject;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isExportList;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isImportList;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isStandardLibImport;
 import static eu.hatsproject.absplugin.util.Constants.ABS_FILE_EXTENSION;
 import static eu.hatsproject.absplugin.util.Constants.EMPTY_OBJECT_ARRAY;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 
-import abs.frontend.ast.*;
+import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.DataConstructor;
+import abs.frontend.ast.DataTypeDecl;
+import abs.frontend.ast.Export;
+import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.Import;
+import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.List;
+import abs.frontend.ast.MainBlock;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.VarDecl;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
@@ -39,6 +58,8 @@ import eu.hatsproject.absplugin.util.UtilityFunctions;
 public class ABSContentOutlineProvider implements ITreeContentProvider {
 
 	private static final ASTNode<?>[] EMPTY_NODES = new ASTNode<?>[0];
+	
+	private final BaseWorkbenchContentProvider baseProvider = new BaseWorkbenchContentProvider();
 
 	/**
 	 * @see
@@ -56,9 +77,24 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 				ASTNode<?>[] children = getChildrenOfASTNode(node.getASTNode());
 				return InternalASTNode.wrapASTNodes(children, node.getNature()).toArray();
 			}
+		} else if (parentElement instanceof IProject) {
+			return getChildrenOf((IProject) parentElement);
+		} else if (parentElement instanceof PackageContainer) {
+			return ((PackageContainer) parentElement).getPackages().toArray();
+		} 
+		
+		return EMPTY_OBJECT_ARRAY;
+	}
+	
+	private Object[] getChildrenOf(IProject project) {
+		if (project.isOpen()) {
+			AbsNature nature = getNatureForObject(project);
+			java.util.List<Object> children = new ArrayList<Object>();
+			children.add(nature.getPackages());
+			children.addAll(Arrays.asList(baseProvider.getChildren(project)));
+			return children.toArray();
 		}
-
-		return new Object[0];
+		return EMPTY_OBJECT_ARRAY;
 	}
 	
 	private ASTNode<?>[] getChildrenOfASTNode(ASTNode<?> parentElement){
@@ -263,6 +299,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 			}
 		} else if (element instanceof IFile) {
 			return hasChildren((IFile) element);
+		} else if (element instanceof PackageContainer) {
+			return ! ((PackageContainer) element).getPackages().isEmpty();
 		}
 		return false;
 

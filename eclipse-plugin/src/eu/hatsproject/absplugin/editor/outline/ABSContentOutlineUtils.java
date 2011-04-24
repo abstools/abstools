@@ -6,9 +6,9 @@ package eu.hatsproject.absplugin.editor.outline;
 
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.*;
 import static eu.hatsproject.absplugin.util.Constants.ABS_STDLIB_ID;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_BLACK;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_TYPES;
+import static eu.hatsproject.absplugin.util.Constants.*;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IFile;
@@ -20,6 +20,8 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
+import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -514,6 +516,31 @@ public class ABSContentOutlineUtils {
 	 */
 	public static StyledString getLabel(Object o){
 		return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(o), STYLER_BLACK);
+	}
+	
+	/**
+	 * Returns a String representation of the given {@link PackageContainer}.
+	 * @param element 
+	 * @return A String representation of the PackageContainer
+	 */
+	public static StyledString getLabel(PackageContainer element){
+		return new StyledString("ABS Package Dependencies");
+	}
+	
+	/**
+	 * Returns a String representation of the given {@link PackageEntry}.
+	 * @param element 
+	 * @return A String representation of the PackageEntry
+	 */
+	public static StyledString getLabel(PackageEntry element){
+		String[] segments = element.getPath().split(File.separator);
+		StyledString string = new StyledString(element.getName(), STYLER_BLACK);
+		StringBuffer displayPath = new StringBuffer();
+		displayPath.append(" - ");
+		for (int i = 0; i < segments.length - 1; i++) { 
+			displayPath.append(segments[i]).append(File.separator);
+		}
+		return string.append(displayPath.toString(), STYLER_GREY);
 	}
 	
 	/**

@@ -26,6 +26,7 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.TypeDecl;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**
@@ -92,6 +93,8 @@ public class ABSContentOutlineFiltersAndComparators {
 					return 10;
 				}
 			} else if (element instanceof ModulePath) {
+				return 0;
+			} else if (element instanceof PackageContainer) {
 				return 0;
 			}
 			return Integer.MAX_VALUE;
