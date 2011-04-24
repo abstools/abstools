@@ -6,7 +6,6 @@ package abs.frontend.parser;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 
 /**
