@@ -597,18 +597,21 @@ public class UtilityFunctions {
 		return false;
 	}	
 	
+	public static boolean isABSPackage(File file) {
+		try {
+			return file.exists() && new ABSPackageFile(file).isABSPackage();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}		
+	}
 
 	// assumes file != null
 	public static boolean isABSPackage(IFile file) {
       if (! "jar".equals(file.getFileExtension()))
          return false;
-      
-      try {
-         return new ABSPackageFile(file.getLocation().toFile()).isABSPackage();
-      } catch (IOException e) {
-         e.printStackTrace();
-         return false;
-      }
+
+      return isABSPackage(file.getLocation().toFile());
    }
 
    /**
