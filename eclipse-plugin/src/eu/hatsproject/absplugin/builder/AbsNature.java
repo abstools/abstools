@@ -6,11 +6,17 @@ package eu.hatsproject.absplugin.builder;
 
 import static eu.hatsproject.absplugin.util.Constants.*;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
@@ -35,11 +41,18 @@ import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
 import eu.hatsproject.absplugin.internal.TypecheckInternalException;
+import eu.hatsproject.absplugin.navigator.PackageContainer;
+import eu.hatsproject.absplugin.navigator.PackageEntry;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 public class AbsNature implements IProjectNature {
 	private IProject project;
 	IncrementalModelBuilder modelbuilder = new IncrementalModelBuilder();
+	
+	public static final String PACKAGE_DEPENDENCIES = ".dependencies";
+	public static final String READONLY_PACKAGE_SUFFIX = "-readonly";
+	
+	private final PackageContainer packageContainer = new PackageContainer();
 	
 	/**
 	 * the lock for access to the model. Should always be synchronized with when accessing the 
@@ -156,6 +169,8 @@ public class AbsNature implements IProjectNature {
 	@Override
 	public void setProject(IProject project) {
 		this.project = project;
+		// initialise package dependencies
+		initDependencies(); 
 	}
 	
 	private void createMarker(SemanticError error) throws CoreException {
@@ -298,6 +313,7 @@ public class AbsNature implements IProjectNature {
 		String defaultlocationtype = getProjectPreferenceStore().getString(DEFAULT_LOCATION_TYPE);
 		String defaultlocationtypeprecision = getProjectPreferenceStore().getString(LOCATION_TYPE_PRECISION);
 		try {
+			addPackagesForTypeChecking();
 			typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision);
 		} catch (NoModelException e) {
 			//ignore
@@ -316,6 +332,30 @@ public class AbsNature implements IProjectNature {
 			createLocationTypeInferenceMarker();
 		}
 	}
+	
+	/**
+	 * Add ABS package dependencies to {@link AbsNature#modelbuilder} for type checking 
+	 */
+	private void addPackagesForTypeChecking() {
+		try {
+			Main m = new Main();
+			m.setWithStdLib(true);
+			m.setAllowIncompleteExpr(true);
+			List<CompilationUnit> units = new ArrayList<CompilationUnit>();
+			for (PackageEntry entry : packageContainer.getPackages()) {
+				File file = new File(entry.getPath());
+				if (isABSPackage(file)) {
+				   units.addAll(m.parseABSPackageFile(file));
+				}
+			}
+			modelbuilder.addCompilationUnits(units);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NoModelException e) {
+			//ignore
+		}
+	}
+	
 	
 	/**
 	 * retrieves the result of the type inference from the modelbuilders
@@ -433,6 +473,33 @@ public class AbsNature implements IProjectNature {
 		preferencestore.setDefault(NO_WARNINGS, true);
 		preferencestore.setDefault(SOURCE_ONLY, false);
 		preferencestore.setDefault(ALWAYS_COMPILE, true);
+	}
+	
+	public void initDependencies() {
+		try {
+			if (project != null) {
+				IFile file = project.getFile(PACKAGE_DEPENDENCIES);
+				Set<PackageEntry> entries = new HashSet<PackageEntry>();
+				if (file.exists()) {
+					Properties prop = new Properties();
+					prop.loadFromXML(new FileInputStream(new File(file.getLocationURI())));
+					for (String qualified : prop.stringPropertyNames()) {
+						Boolean readonly = Boolean.valueOf(prop.getProperty(qualified));
+						String name = new File(qualified).getName();
+						if (isABSPackage(new File(qualified))) {
+							entries.add(new PackageEntry(name, qualified, readonly));
+						}
+					}
+					packageContainer.setPackages(entries);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public PackageContainer getPackages() {
+		return packageContainer;
 	}
 	
 	
