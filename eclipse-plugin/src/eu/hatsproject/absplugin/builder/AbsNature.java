@@ -478,11 +478,11 @@ public class AbsNature implements IProjectNature {
 	public void initDependencies() {
 		try {
 			if (project != null) {
-				IFile file = project.getFile(PACKAGE_DEPENDENCIES);
+				File file = new File(project.getFile(PACKAGE_DEPENDENCIES).getLocationURI());
 				Set<PackageEntry> entries = new HashSet<PackageEntry>();
 				if (file.exists()) {
 					Properties prop = new Properties();
-					prop.loadFromXML(new FileInputStream(new File(file.getLocationURI())));
+					prop.loadFromXML(new FileInputStream(file));
 					for (String qualified : prop.stringPropertyNames()) {
 						Boolean readonly = Boolean.valueOf(prop.getProperty(qualified));
 						String name = new File(qualified).getName();
