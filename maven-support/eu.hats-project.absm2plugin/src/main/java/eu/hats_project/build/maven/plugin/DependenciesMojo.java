@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 import org.apache.maven.artifact.Artifact;
@@ -48,17 +49,25 @@ public class DependenciesMojo extends AbstractABSMojo {
 		}
 
 		Properties prop = new Properties();
-		for (Artifact af : resolveDependencyArtifacts(project)) {
-			if (af.getType().equals("jar") && isABSPackage(af.getFile())) {
-				prop.setProperty(af.getFile().getAbsolutePath(), "true");
-			}
-		}
+		setPackages(prop,resolveDependencyArtifacts(project));
 
 		FileOutputStream out = new FileOutputStream(dep);
 		try {
 			prop.storeToXML(out, null);
 		} finally {
 			out.close();
+		}
+	}
+	
+	private void setPackages(Properties prop, Set<Artifact> as) throws Exception {
+		if (as.isEmpty()) 
+			return;
+		
+		for (Artifact a : as) {
+			if (a.getType().equals("jar") && isABSPackage(a.getFile())) {
+				prop.setProperty(a.getFile().getAbsolutePath(), "true");
+				setPackages(prop,resolveArtifactDependencies(a));
+			}
 		}
 	}
 
