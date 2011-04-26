@@ -108,6 +108,10 @@ public abstract class Images {
 	 */	
 	public final static Image PACKAGE_IMAGE = createIcon("abs_package.gif");
 	/**
+	 * The standard icon for an ABS file in an ABS package
+	 */	
+	public final static Image PACKAGE_ABS_FILE_IMAGE = createIcon("absicon.gif");
+	/**
 	 * The standard icon for an open ABS Project
 	 */	
 	public final static Image PROJECT_IMAGE = createStandardIcon(org.eclipse.ui.ide.IDE.SharedImages.IMG_OBJ_PROJECT);
@@ -268,8 +272,7 @@ public abstract class Images {
 		} else if (obj instanceof PackageEntry) {
 			return PACKAGE_IMAGE;
 		} else if (obj instanceof PackageAbsFile) {
-			ISharedImages simages = PlatformUI.getWorkbench().getSharedImages();
-			return simages.getImage(ISharedImages.IMG_OBJ_FILE);
+			return PACKAGE_ABS_FILE_IMAGE;
 		} else {
 			return WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider().getImage(obj);
 		}
