@@ -21,6 +21,7 @@ import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageAbsFile;
 import eu.hatsproject.absplugin.navigator.PackageContainer;
 import eu.hatsproject.absplugin.navigator.PackageEntry;
 
@@ -266,6 +267,9 @@ public abstract class Images {
 			return PACKAGE_CONTAINER_IMAGE;
 		} else if (obj instanceof PackageEntry) {
 			return PACKAGE_IMAGE;
+		} else if (obj instanceof PackageAbsFile) {
+			ISharedImages simages = PlatformUI.getWorkbench().getSharedImages();
+			return simages.getImage(ISharedImages.IMG_OBJ_FILE);
 		} else {
 			return WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider().getImage(obj);
 		}
