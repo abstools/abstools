@@ -568,9 +568,15 @@
                 <instanceof
                       value="org.eclipse.core.resources.IFile">
                 </instanceof>
-                <instanceof
-                      value="org.eclipse.core.resources.IProject">
-                </instanceof>
+                <and>
+                  <instanceof
+                        value="org.eclipse.core.resources.IProject">
+                  </instanceof>
+                  <test
+                         property="org.eclipse.core.resources.projectNature"
+                         value="eu.hatsproject.absplugin.ABSNature">
+                   </test>
+                </and>
 				<instanceof
                       value="org.eclipse.core.resources.IFolder">
                 </instanceof>
