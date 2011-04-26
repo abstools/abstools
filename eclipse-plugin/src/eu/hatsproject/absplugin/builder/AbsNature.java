@@ -433,8 +433,17 @@ public class AbsNature implements IProjectNature {
 	 * @return the comilationUnit for the file or <b>null</b> if the model is not (yet) parsed
 	 */
 	public CompilationUnit getCompilationUnit(IFile curFile){
+		return getCompilationUnit(curFile.getLocation().toFile().getAbsolutePath());
+	}
+	
+	/**
+	 * retrieves the compilationUnit for the file with the given absoluteFilePath from the modelbuilder
+	 * @param absoluteFilePath
+	 * @return
+	 */
+	public CompilationUnit getCompilationUnit(String absoluteFilePath){
 		try {
-			return modelbuilder.getCompilationUnit(curFile.getLocation().toFile().getAbsolutePath());
+			return modelbuilder.getCompilationUnit(absoluteFilePath);
 		} catch (NoModelException e) {
 			return null;
 		}
@@ -487,10 +496,11 @@ public class AbsNature implements IProjectNature {
 						Boolean readonly = Boolean.valueOf(prop.getProperty(qualified));
 						String name = new File(qualified).getName();
 						if (isABSPackage(new File(qualified))) {
-							entries.add(new PackageEntry(name, qualified, readonly));
+							entries.add(new PackageEntry(packageContainer, name, qualified, readonly));
 						}
 					}
 					packageContainer.setPackages(entries);
+					packageContainer.setProject(project);
 				}
 			}
 		} catch (IOException e) {

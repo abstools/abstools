@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.resources.IProject;
+
 /**
  * A container for entries of ABS package dependencies. Each ABS project
  * has one or more package containers.
@@ -17,8 +19,13 @@ import java.util.Set;
  */
 public class PackageContainer {
 
-	private final Set<PackageEntry> packages = new HashSet<PackageEntry>(); 
+	private final Set<PackageEntry> packages = new HashSet<PackageEntry>();
+	private IProject project; 
 
+	public void setProject(IProject project) {
+		this.project = project;
+	}
+	
 	public void addPackages(Set<PackageEntry> packages) {
 		this.packages.addAll(packages);
 	}
@@ -30,6 +37,10 @@ public class PackageContainer {
 	
 	public Set<PackageEntry> getPackages() {
 		return Collections.unmodifiableSet(this.packages);
+	}
+
+	public IProject getProject() {
+		return project;
 	}
 
 }

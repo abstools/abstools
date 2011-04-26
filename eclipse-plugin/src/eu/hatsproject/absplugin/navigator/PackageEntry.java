@@ -14,14 +14,25 @@ package eu.hatsproject.absplugin.navigator;
  */
 public class PackageEntry {
 
+	private final PackageContainer parent;
 	private final String packageName;
 	private final String absolutePath;
 	private final boolean isDependency;
 	
-	public PackageEntry(String packageName, String absolutePath, boolean isDependency) {
+	public PackageEntry(
+			PackageContainer parent,
+			String packageName, 
+			String absolutePath, 
+			boolean isDependency) {
+		
+		this.parent = parent;
 		this.packageName = packageName;
 		this.absolutePath = absolutePath;
 		this.isDependency = isDependency;
+	}
+	
+	public PackageContainer getPackageContainer() {
+		return parent;
 	}
 	
 	public String getName() { 
