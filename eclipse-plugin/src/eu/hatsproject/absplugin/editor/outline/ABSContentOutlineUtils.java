@@ -19,9 +19,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.navigator.ModulePath;
-import eu.hatsproject.absplugin.navigator.PackageAbsFile;
-import eu.hatsproject.absplugin.navigator.PackageContainer;
-import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 

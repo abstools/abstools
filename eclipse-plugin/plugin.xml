@@ -565,13 +565,13 @@
                       value="org.eclipse.core.resources.IFolder">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.navigator.PackageContainer">
+                	  value="eu.hatsproject.absplugin.editor.outline.PackageContainer">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.navigator.PackageEntry">
+                	  value="eu.hatsproject.absplugin.editor.outline.PackageEntry">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.navigator.PackageAbsFile">
+                	  value="eu.hatsproject.absplugin.editor.outline.PackageAbsFile">
                 </instanceof>
              </or>
           </enablement>

@@ -13,9 +13,6 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Image;
 
 import eu.hatsproject.absplugin.navigator.ModulePath;
-import eu.hatsproject.absplugin.navigator.PackageAbsFile;
-import eu.hatsproject.absplugin.navigator.PackageContainer;
-import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**

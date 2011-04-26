@@ -26,7 +26,6 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.TypeDecl;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import eu.hatsproject.absplugin.navigator.ModulePath;
-import eu.hatsproject.absplugin.navigator.PackageContainer;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**

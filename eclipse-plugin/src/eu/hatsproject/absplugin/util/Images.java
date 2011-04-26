@@ -20,10 +20,10 @@ import org.osgi.framework.Bundle;
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
+import eu.hatsproject.absplugin.editor.outline.PackageContainer;
+import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 import eu.hatsproject.absplugin.navigator.ModulePath;
-import eu.hatsproject.absplugin.navigator.PackageAbsFile;
-import eu.hatsproject.absplugin.navigator.PackageContainer;
-import eu.hatsproject.absplugin.navigator.PackageEntry;
 
 public abstract class Images {
 	/**

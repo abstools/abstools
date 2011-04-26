@@ -1,4 +1,4 @@
-package eu.hatsproject.absplugin.navigator;
+package eu.hatsproject.absplugin.editor.outline;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

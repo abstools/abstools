@@ -38,11 +38,11 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.MsgConsole;
+import eu.hatsproject.absplugin.editor.outline.PackageContainer;
+import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
 import eu.hatsproject.absplugin.internal.TypecheckInternalException;
-import eu.hatsproject.absplugin.navigator.PackageContainer;
-import eu.hatsproject.absplugin.navigator.PackageEntry;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 public class AbsNature implements IProjectNature {
