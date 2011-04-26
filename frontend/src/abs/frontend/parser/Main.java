@@ -260,7 +260,7 @@ public class Main {
             JarEntry jarEntry = e.nextElement();
             if (!jarEntry.isDirectory()) {
                 if (jarEntry.getName().endsWith(".abs")) {
-                    parseABSSourceFile(units, jarEntry.getName(), jarFile.getInputStream(jarEntry));
+                    parseABSSourceFile(units, "jar:file:"+file.getPath()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
                 }
             }
         }
