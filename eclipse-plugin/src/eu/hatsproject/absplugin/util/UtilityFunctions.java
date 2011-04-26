@@ -7,6 +7,8 @@ package eu.hatsproject.absplugin.util;
 import static eu.hatsproject.absplugin.util.Constants.*;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -47,6 +49,9 @@ import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
+import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 /**
  * Collection of project-wide utility functions
  * @author cseise, tfischer
@@ -501,17 +506,68 @@ public class UtilityFunctions {
 		if (node != null){
 			highlightInEditor(edit, node.getASTNode());
 		}
-	}	
+	}
+	
+	public static ABSEditor openABSEditorForFile(PackageAbsFile file){
+		try {
+			return (ABSEditor) IDE.openEditor(getActiveWorkbenchPage(),
+					new PackageAbsFileEditorInput(file), Constants.EDITOR_ID);
+		} catch (PartInitException e) {
+			
+		}
+		return null;
+	}
+	
+	/**
+	 * A convenient method to reconstruct a {@link PackageAbsFile} from the absolute
+	 * path to the ABS package and the name to the specific entry in the package.
+	 * @param pak
+	 * @param entry
+	 * @return 
+	 */
+	public static PackageAbsFile getPackageAbsFile(String pak, String entry) {
+		File file = new File(pak);
+		try {
+			if (new ABSPackageFile(file).isABSPackage()) {
+				return new PackageAbsFile(
+						new PackageEntry(
+								null, 
+								file.getName(), 
+								file.getAbsolutePath(), 
+								true), entry);
+			}
+		} catch (IOException e) {
+			
+		}
+		return null;
+	}
+	
+	/**
+	 * Get the current active {@link IWorkbenchPage}.
+	 * @return the current active {@link IWorkbenchPage}.
+	 */
+	private static IWorkbenchPage getActiveWorkbenchPage() {
+		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+	}
 	
 	public static ABSEditor openABSEditorForFile(IPath path){
 		IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
 		if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
-		    IWorkbenchPage page=  PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		    try {
-		        return (ABSEditor)IDE.openEditorOnFileStore(page, fileStore);
+		        return (ABSEditor)IDE.openEditorOnFileStore(getActiveWorkbenchPage(), fileStore);
 		    } catch (PartInitException e) {
 		        
 		    }
+		} else if (path.segment(0).equals("jar:file:")) {
+			// a jar file
+			try {
+				String parts = new URI(path.toString()).getSchemeSpecificPart();
+				String pak = new URI(parts.split("!/")[0]).getSchemeSpecificPart();
+				String entry = parts.split("!/")[1];
+				return openABSEditorForFile(getPackageAbsFile(pak, entry));
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}

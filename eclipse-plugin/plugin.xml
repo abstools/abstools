@@ -484,6 +484,11 @@
           </action>
        </editorContribution>
     </extension>
+    <extension point="org.eclipse.ui.elementFactories">
+      <factory 
+      		id="eu.hatsproject.absplugin.editor.outline.PackageAbsFileInputFactory" 
+      		class="eu.hatsproject.absplugin.editor.outline.PackageAbsFileInputFactory" /> 
+    </extension>
     <extension
           point="org.eclipse.ui.navigator.navigatorContent">
        <commonWizard
@@ -545,9 +550,14 @@
           <actionProvider
                 class="eu.hatsproject.absplugin.navigator.actionProvider.DoubleClickActionProvider">
              <enablement>
-                <instanceof
-                      value="eu.hatsproject.absplugin.util.InternalASTNode">
-                </instanceof>
+             	<or>
+                  <instanceof
+                       value="eu.hatsproject.absplugin.util.InternalASTNode">
+                  </instanceof>
+                  <instanceof
+                	   value="eu.hatsproject.absplugin.editor.outline.PackageAbsFile">
+                  </instanceof>
+                </or>
              </enablement>
           </actionProvider>
           <enablement>

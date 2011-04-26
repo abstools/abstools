@@ -4,6 +4,10 @@
  */
 package eu.hatsproject.absplugin.navigator;
 
+import static eu.hatsproject.absplugin.util.UtilityFunctions.getCompilationUnitOfASTNode;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.highlightInEditor;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.openABSEditorForFile;
+
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IProject;
@@ -18,11 +22,8 @@ import org.eclipse.ui.editors.text.TextEditor;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.ModuleDecl;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.util.InternalASTNode;
-
-import static eu.hatsproject.absplugin.util.UtilityFunctions.openABSEditorForFile;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.highlightInEditor;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getCompilationUnitOfASTNode;
 
 /**
  * Utility class used by ABS Navigator
@@ -48,19 +49,23 @@ public class NavigatorUtils {
 			TreePath path = ts.getPaths()[0];
 			IProject project = getProject(path);
 
-			if (project != null && path.getLastSegment() instanceof InternalASTNode<?>) {
-				InternalASTNode<?> node = (InternalASTNode<?>) path.getLastSegment();
-				openAndHighlightEditor(node);
-			} else if (project != null && path.getLastSegment() instanceof ModulePath){
-				ModulePath mp = (ModulePath) path.getLastSegment();
-				if (mp.hasModuleWithDecls()){
-					InternalASTNode<ModuleDecl> moduleDecl = mp.getModuleDecl();
-					openAndHighlightEditor(moduleDecl);
+			if (project != null) {
+				if (path.getLastSegment() instanceof InternalASTNode<?>) {
+					InternalASTNode<?> node = (InternalASTNode<?>) path.getLastSegment();
+					openAndHighlightEditor(node);
+				} else if (path.getLastSegment() instanceof ModulePath){
+					ModulePath mp = (ModulePath) path.getLastSegment();
+					if (mp.hasModuleWithDecls()){
+						InternalASTNode<ModuleDecl> moduleDecl = mp.getModuleDecl();
+						openAndHighlightEditor(moduleDecl);
+					}
+				} else if (path.getLastSegment() instanceof PackageAbsFile) {
+					openABSEditorForFile((PackageAbsFile) path.getLastSegment());
 				}
 			}
 		}
 	}
- 
+
 	private static void openAndHighlightEditor(InternalASTNode<?> node) throws PartInitException {
 		IEditorPart editorPart = openABSEditorForFile(getFileName(node));
 		if (editorPart instanceof TextEditor){
