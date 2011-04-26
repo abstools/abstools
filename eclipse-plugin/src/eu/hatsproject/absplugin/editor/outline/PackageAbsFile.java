@@ -1,6 +1,11 @@
 package eu.hatsproject.absplugin.editor.outline;
 
+import java.io.File;
+import java.net.URI;
+
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.URIUtil;
 
 /**
  * A lightweight class recording a single ABS file entry in a ABS package.
@@ -14,13 +19,13 @@ public class PackageAbsFile implements AbsFile {
 	private final PackageEntry parent;
 	private final String name;
 	private final String extension;
-	private final String path;
+	private final URI uri;
 	
 	public PackageAbsFile(PackageEntry parent, String name) {
 		this.parent = parent;
 		this.name = name;
 		this.extension = name.substring(name.lastIndexOf(".")+1,name.length());
-		this.path = "jar:file:"+parent.getPath()+"!/"+name;
+		this.uri = URIUtil.toJarURI(new File(parent.getPath()).toURI(),new Path(name));
 	}
 
 	public PackageEntry getParent() {
@@ -40,7 +45,11 @@ public class PackageAbsFile implements AbsFile {
 	}
 
 	public String getAbsoluteFilePath() {
-		return path;
+		return uri.toString();
+	}
+
+	public URI getURI() {
+		return uri;
 	}
 	
 }
