@@ -567,6 +567,12 @@
                 <instanceof
                 	  value="eu.hatsproject.absplugin.navigator.PackageContainer">
                 </instanceof>
+                <instanceof
+                	  value="eu.hatsproject.absplugin.navigator.PackageEntry">
+                </instanceof>
+                <instanceof
+                	  value="eu.hatsproject.absplugin.navigator.PackageAbsFile">
+                </instanceof>
              </or>
           </enablement>
           <actionProvider
