@@ -11,8 +11,12 @@ import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isS
 import static eu.hatsproject.absplugin.util.Constants.ABS_FILE_EXTENSION;
 import static eu.hatsproject.absplugin.util.Constants.EMPTY_OBJECT_ARRAY;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -39,8 +43,13 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.VarDecl;
+import abs.frontend.parser.ABSPackageFile;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.navigator.AbsFile;
+import eu.hatsproject.absplugin.navigator.AbsFileImpl;
+import eu.hatsproject.absplugin.navigator.PackageAbsFile;
 import eu.hatsproject.absplugin.navigator.PackageContainer;
+import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
@@ -81,11 +90,34 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 			return getChildrenOf((IProject) parentElement);
 		} else if (parentElement instanceof PackageContainer) {
 			return ((PackageContainer) parentElement).getPackages().toArray();
-		} 
+		} else if (parentElement instanceof PackageEntry) {
+			return getChildrenOf((PackageEntry) parentElement);
+		} else if (parentElement instanceof PackageAbsFile) {
+			return getChildrenOf((PackageAbsFile) parentElement);
+		}
 		
 		return EMPTY_OBJECT_ARRAY;
 	}
 	
+	private Object[] getChildrenOf(PackageEntry element) {
+		try {
+			ABSPackageFile pf = new ABSPackageFile(new File(element.getPath()));
+			if (pf.isABSPackage()) {
+				java.util.ArrayList<PackageAbsFile> results = new ArrayList<PackageAbsFile>(); 
+				for (Enumeration<JarEntry> e = pf.entries(); e.hasMoreElements();) {
+					JarEntry jarEntry = e.nextElement();
+					if (!jarEntry.isDirectory() && jarEntry.getName().endsWith(".abs")) {
+						results.add(new PackageAbsFile(element, jarEntry.getName()));
+		            }
+				}
+				return results.toArray();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return EMPTY_OBJECT_ARRAY;
+	}
+
 	private Object[] getChildrenOf(IProject project) {
 		if (project.isOpen()) {
 			AbsNature nature = getNatureForObject(project);
@@ -118,13 +150,16 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		return EMPTY_NODES;
 	}
 
-	private Object[] getChildrenOf(IFile file){
-		
+	private Object[] getChildrenOf(IFile file) {
+		return getChildrenOf(new AbsFileImpl(file));
+	}
+	
+	private Object[] getChildrenOf(AbsFile file) {
 		if(!ABS_FILE_EXTENSION.equalsIgnoreCase(file.getFileExtension()))
 			return null;
 		AbsNature nature = UtilityFunctions.getAbsNature(file.getProject());
 		if(nature != null){
-			CompilationUnit cu = nature.getCompilationUnit(file);
+			CompilationUnit cu = nature.getCompilationUnit(file.getAbsoluteFilePath());
 			try {
 				if (file.getProject().hasNature(Constants.NATURE_ID)){
 					return getChildrenOf(cu,(AbsNature)file.getProject().getNature(Constants.NATURE_ID));
@@ -303,6 +338,10 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 			return ! ((PackageContainer) element).getPackages().isEmpty();
 		} else if (element instanceof IProject) {
 			return getChildrenOf((IProject) element).length > 0;
+		} else if (element instanceof PackageEntry) {
+			return getChildrenOf((PackageEntry) element).length > 0;
+		} else if (element instanceof PackageAbsFile) {
+			return getChildrenOf((PackageAbsFile) element).length > 0;
 		}
 		return false;
 

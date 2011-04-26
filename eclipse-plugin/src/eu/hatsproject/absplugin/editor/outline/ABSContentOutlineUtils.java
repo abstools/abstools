@@ -5,7 +5,6 @@
 package eu.hatsproject.absplugin.editor.outline;
 
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.*;
-import static eu.hatsproject.absplugin.util.Constants.ABS_STDLIB_ID;
 import static eu.hatsproject.absplugin.util.Constants.*;
 
 import java.io.File;
@@ -20,6 +19,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.navigator.ModulePath;
+import eu.hatsproject.absplugin.navigator.PackageAbsFile;
 import eu.hatsproject.absplugin.navigator.PackageContainer;
 import eu.hatsproject.absplugin.navigator.PackageEntry;
 import eu.hatsproject.absplugin.util.InternalASTNode;
@@ -516,6 +516,15 @@ public class ABSContentOutlineUtils {
 	 */
 	public static StyledString getLabel(Object o){
 		return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(o), STYLER_BLACK);
+	}
+	
+	/**
+	 * Returns a String representation of the given {@link PackageAbsFile}.
+	 * @param element 
+	 * @return A String representation of the PackageAbsFile
+	 */
+	public static StyledString getLabel(PackageAbsFile element){
+		return new StyledString(element.getName(), STYLER_BLACK);
 	}
 	
 	/**
