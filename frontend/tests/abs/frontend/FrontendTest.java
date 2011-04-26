@@ -5,7 +5,6 @@
 package abs.frontend;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import abs.ABSTest;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
@@ -17,13 +16,11 @@ import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
 import static abs.ABSTest.Config.*;
 
@@ -34,11 +31,19 @@ public class FrontendTest extends ABSTest {
     }
 
     protected void assertParseFileOk(String fileName, boolean withStdLib) {
-        assertParseFileOk(fileName, WITH_STD_LIB);
+        if (withStdLib) {
+            assertParseFileOk(fileName, WITH_STD_LIB);
+        } else { 
+            assertParseFileOk(fileName);
+        }
     }
 
     protected void assertTypeCheckFileOk(String fileName, boolean withStdLib) {
-        assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
+        if (withStdLib) { 
+            assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
+        } else {
+            assertParseFileOk(fileName, TYPE_CHECK);
+        }
     }
 
     protected Exp getFirstExp(String absCode) {

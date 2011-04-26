@@ -387,7 +387,7 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     private String writeBackSolutions(String code) throws IOException {
-        File f = File.createTempFile("test", "abs");
+        File f = File.createTempFile("test", ".abs");
         FileWriter fw = new FileWriter(f);
         fw.write(code);
         fw.close();

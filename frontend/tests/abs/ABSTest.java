@@ -6,8 +6,6 @@ package abs;
 
 import static org.junit.Assert.fail;
 
-import java.io.File;
-
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
