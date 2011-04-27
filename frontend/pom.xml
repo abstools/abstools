@@ -275,7 +275,7 @@
 								<mkdir dir="${dist.dir}" />
 								<copy verbose="true" tofile="${dist.dir}/absfrontend.jar">
 									<filelist dir="${project.build.directory}"
-										files="absfrontend-1.0-SNAPSHOT-jar-with-system-dependencies.jar" />
+										files="absfrontend-1.0-SNAPSHOT-jar-with-dependencies.jar" />
 								</copy>
 							</target>
 						</configuration>
@@ -350,6 +350,7 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.2.1</version>
 				<executions>
@@ -367,9 +368,9 @@
 							<mainClass>abs.frontend.parser.Main</mainClass>
 						</manifest>
 					</archive>
-					<descriptors>
-						<descriptor>${basedir}/assembly.xml</descriptor>
-					</descriptors>
+					<descriptorRefs>
+            			<descriptorRef>jar-with-dependencies</descriptorRef>
+          			</descriptorRefs>
 				</configuration>
 			</plugin>
 			
