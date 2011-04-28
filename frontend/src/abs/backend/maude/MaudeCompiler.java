@@ -15,7 +15,6 @@ import abs.frontend.parser.Main;
 
 public class MaudeCompiler extends Main {
     String module = "ABS-SIMULATOR-RL";
-    private boolean flatten;
     private File outputfile;
 
     
@@ -42,16 +41,13 @@ public class MaudeCompiler extends Main {
             String arg = restArgs.get(i);
             if (arg.equals("-timed")) {
                 module = "ABS-SIMULATOR-EQ-TIMED";
-            } else if (arg.startsWith("-product=")) {
-                flatten = true;
-                product = arg.split("=")[1];
             } else if (arg.equals("-o")) {
                 i++;
                 if (i == restArgs.size()) {
                     System.err.println("Please provide an output file");
                     System.exit(1);
                 } else {
-                    outputfile = new File(args[i]);
+                    outputfile = new File(restArgs.get(i));
                 }
                 
             } else {
@@ -72,16 +68,12 @@ public class MaudeCompiler extends Main {
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
-        if (flatten) {
-            model.flattenForProduct(product);
-        }
-        
         PrintStream stream = System.out;
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
         }
         
-        model.generateMaude(stream, module, !flatten);
+        model.generateMaude(stream, module, !fullabs);
     }
 
     protected void printUsage() {
