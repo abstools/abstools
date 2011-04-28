@@ -62,7 +62,7 @@ public class MaudeTestMojo extends AbstractABSMojo {
     /**
      * Product selection
      * 
-     * @parameter
+     * @parameter expression="${abs.maudetest.product}"
      * 
      */
     private String productName;
@@ -111,10 +111,10 @@ public class MaudeTestMojo extends AbstractABSMojo {
         	getLog().error(maudeOutput);
 			throw new MojoFailureException(
 					"One or more maude tests have failed, see log information for details.");
-        } else {
-            // only in debug
-            getLog().debug(maudeOutput);
-        }
+        } 
+        
+        // only in debug
+        getLog().debug(maudeOutput);
         
     }
 
