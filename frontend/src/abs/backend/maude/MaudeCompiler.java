@@ -87,10 +87,8 @@ public class MaudeCompiler extends Main {
     protected void printUsage() {
         super.printUsage();
         System.out.println("Maude Backend:\n"
-                + "  -o <file>  write output to <file> instead of standard output\n"
-                + "  -timed     generate code for timed interpreter\n"
-                + "  -product=<Module.Productname>\n"
-                + "             Generate code for product only, do not generate delta code."
+                + "  -o <file>      write output to <file> instead of standard output\n"
+                + "  -timed         generate code for timed interpreter\n"
         );
     }
 
