@@ -34,8 +34,7 @@ public class MaudeGenerator {
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
         if (productName != null) {
-        	args.add("-product");
-        	args.add(productName);
+            args.add("-product="+productName);
         }
         
         if (verbose) {
