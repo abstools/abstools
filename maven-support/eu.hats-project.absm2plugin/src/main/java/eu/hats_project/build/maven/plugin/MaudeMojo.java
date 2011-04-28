@@ -33,7 +33,7 @@ public class MaudeMojo extends AbstractABSMojo {
 
     /**
      * Product selection
-     * @parameter expression="${abs.maudeBackend.productName}"
+     * @parameter expression="${abs.maudeBackend.product}"
      */
     private String productName;
     
