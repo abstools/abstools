@@ -6,6 +6,8 @@ package abs;
 
 import static org.junit.Assert.fail;
 
+import java.io.File;
+
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
@@ -32,7 +34,30 @@ public class ABSTest {
         }
         return false;
     }
-    
+
+    /**
+     * Take a file name and returns that name if it points to an existing file,
+     * otherwise if {@link File#getAbsoluteFile()} returns a file that points to
+     * an existing file, this method returns {@link File#getAbsolutePath()}.
+     * 
+     * @param fileName
+     * @return a valid file name from the input file name
+     * @throws IllegalArgumentException
+     *             if neither the input file name nor
+     *             {@link File#getAbsoluteFile()} points to a valid file.
+     */
+    protected String resolveFileName(String fileName) {
+        File f = new File(fileName);
+        if (f.exists()) {
+            return fileName;
+        } 
+        f = f.getAbsoluteFile();
+        if (f.exists()) {
+            return f.getAbsolutePath();
+        }
+        throw new IllegalArgumentException("File "+fileName+" cannot be read");
+    }
+
     protected Model assertParseOk(String s, Config... config) {
         return assertParse(s,config);
     }
@@ -78,13 +103,13 @@ public class ABSTest {
     protected Model assertParseError(String absCode) {
         return assertParse(absCode, EXPECT_PARSE_ERROR);
     }
-
+    
     protected Model assertParseFileOk(String fileName, Config... config) {
         Model m = null;
         try {
             Main main = new Main();
             main.setWithStdLib(isSet(WITH_STD_LIB,config));
-            m = main.parseFiles(fileName);
+            m = main.parseFiles(resolveFileName(fileName));
         } catch (Throwable e) {
             e.printStackTrace();
             fail("Failed to parse: " + fileName + "\n" + e.getMessage());
