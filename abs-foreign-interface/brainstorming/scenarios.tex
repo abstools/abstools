@@ -1,0 +1,174 @@
+\documentclass[a4paper,11pt,final]{article}
+\input{preamble}
+\input{abs}
+\input{java}
+\input{definitions}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\newcommand{\deliverableTitle}{Scenarios for the ABS Foreign Language Interface (ABSFLI)}
+
+\title{\deliverableTitle}
+
+\date{}
+
+\begin{document}
+
+\maketitle 
+
+\section{ABS $\rightarrow$ FLI (Java)}
+This section considers scenarios in which an ABS object invokes FLI (Java)
+method.
+
+\subsection{Leveraging Java API -- Input and Output}
+Using java.io and java.lang.System
+\begin{absexamplen}
+module ABSComp;
+import hello from HelloWorldApp; // ABS import
+import java.lang.*; // java import
+{
+  String helloWorld = hello(); //ABS code 
+  System.out.println(helloWorld); //Java static method invocation 
+}
+\end{absexamplen}
+The above code assumes calls Java static methods are allowed. If not, 
+\begin{absexamplen}
+module ABSComp;
+import hello from HelloWorldApp; // ABS import
+import java.lang.*; // java import
+{
+  String helloWorld = hello(); //ABS code
+  System sys = new System(); //Java object creation
+  sys.out.println(helloWorld); //instance method invocation 
+}
+\end{absexamplen}
+
+\begin{itemize}
+  \item The type \texttt{System} is a Java class
+  \item Static method invocation
+  \item Java imports.
+\end{itemize} 
+
+\subsection{Leveraging third party libraries -- JUnit}
+By interacting with JUnit, one can leverage the already usable testing framework
+\begin{absexamplen}
+module ABSComp;
+
+import helloFrom, Country from HelloWorldApp;
+import org.junit.*; // Java import
+
+interface HelloWorldAppTest { Unit testSomeMethod(); }
+
+class HelloWorldAppTestClass 
+implements HelloWorldAppTest {
+  Unit testHelloFrom() {
+    String helloWorldUSA = helloFrom(USA); //ABS code 
+    String helloWorldUK = helloFrom(UK); //ABS code
+    
+    //Java static method call
+    Assert.assertEquals(helloWorldUSA,helloWorldUK); 
+  }
+}
+{
+  HelloWorldAppTest test = new HelloWorldAppTestClass();
+  test.testHelloFrom();
+}
+\end{absexamplen}
+Several issues:
+\begin{itemize}
+  \item Static imports?
+  \item JUnit depends on some test runner handling exceptions and errors, not
+  sure what this means in the case of ABS
+  \item More generally what does it mean to call a method that 
+  \begin{itemize}
+    \item throws Exception
+    \item throws RuntimeException
+    \item throws Error (e.g. AssertionError in unit tests)
+  \end{itemize}
+\end{itemize}
+  
+\subsection{Leveraging third party libraries -- Black box testing}
+Leverage third party libraries to interact with external devices. For example
+WebDriver is a Java library for interacting with web browser, allowing one to
+write test cases for web application user interfaces.
+
+One could leverage formal specification and test case generation to generate
+test cases for user interface testing.
+
+\begin{absexamplen}
+module ABSComp;
+import org.openqa.selenium.*; // java import
+
+interface WebdriverWrapper {
+  Unit getPage(String url); 
+  Unit getCurrentUrl();
+  Unit click(String xpath);
+  WebElement find(String xpath); //WebElement is a Java object
+}
+
+class WrapperImpl implements WebdriverWrapper {
+  WebDriver driver; // java object
+  {
+    driver = new FirefoxDriver(); //java object instantiation
+  }
+  
+  Unit getPage(String url) {
+    driver.get(url); //java call
+  }
+	
+  String getCurrentUrl() {
+    String url = driver.getCurrentUrl(); //java call
+    return url;
+  }
+  
+  Unit click(String xpath) {
+     By p = By.xpath(xpath); // java call
+     driver.click(xpath); //java call
+  }
+  
+  WebElement find(String xpath) {
+     By p = By.xpath(xpath); // java call
+     return driver.findElement(xpath); //java call
+  }
+}
+
+{
+   WebdriverWrapper driver = new WrapperImpl();
+   driver.getPage("some url");
+   driver.click("xpath1");
+   WebElement answer = driver.find("xpath2");
+   //... check result on answer
+}
+\end{absexamplen}
+
+\begin{itemize}
+  \item Create Java objects in ABS code
+  \item Passing Java objects to Java method calls in ABS code 
+  \item ABS method with Java type as input/return type
+  \item So far only built-in ABS data types such as \Abs{String}
+\end{itemize}
+
+\subsection{Replication System}
+In Task 5.2 we modelled the existing Java implementation of Replication system
+using ABS. This ABS model abstracts from the physical file system and
+communication layer. To execute code generated from this model in a production
+environment, we would need to ``link'' the generate code back to the physical
+file system and communication layer.
+
+\begin{absexamplen}
+
+\end{absexamplen}
+
+
+\section{ABS $\leftarrow$ FLI (Java)}
+This section considers scenarios in which a foreign (Java) object invokes an
+ABS method.
+
+\subsection{Interval API}
+In Task 5.2 we modelled an existing implementation of 
+
+
+\section{ABS $\leftrightarrow$ FLI (Java)}
+
+
+\end{document}
