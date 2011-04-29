@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>eu.hats-project.parent</artifactId>
+		<groupId>eu.hats-project</groupId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../maven-support/eu.hats-project.parent</relativePath>
+	</parent>
+	<groupId>eu.hats-project</groupId>
+	<artifactId>mTVL</artifactId>
+	<version>1.0-SNAPSHOT</version>
+
+	<name>mTVL Feature Model</name>
+	<description>mTVL Feature Model</description>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<ext.dir>${basedir}/lib</ext.dir>
+		<src.dir>${basedir}/src</src.dir>
+		<gen.dir>${basedir}/gen</gen.dir>
+		<build.dir>${basedir}/bin</build.dir>
+		<tests.dir>${basedir}/tests</tests.dir>
+		
+		<bash.dir>${src.dir}/bash</bash.dir>
+		<bash.build.dir>${basedir}/bin/bash</bash.build.dir>
+		
+		
+		<dist.dir>${basedir}/dist</dist.dir>
+
+		<parser.src.dir>${src.dir}/mtvl/parser</parser.src.dir>
+		<parser.gen.dir>${gen.dir}/mtvl/parser</parser.gen.dir>
+
+		<ast.package>mtvl.ast</ast.package>
+		<ast.gen.dir>${gen.dir}/mtvl/parser</ast.gen.dir>
+
+		<apidoc.dir>${gen.dir}/docs/api</apidoc.dir>
+		
+		<!-- need to bundle this as resource -->
+		<maude.interpreter>${src.dir}/abs/backend/maude/</maude.interpreter>
+		
+		<revision.prefix>1.0.2</revision.prefix>
+		<frontend.version></frontend.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>absfrontend</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>choco-solver</artifactId>
+			<version>1.0</version>
+		</dependency>
+		
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>java-compiler</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>beaver</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>jastadd2</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>jast-add-parser</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>sat4j-core</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>org-sat4j-pb</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>eu.hats-project</groupId> -->
+<!-- 			<artifactId>sat4j-maxsat</artifactId> -->
+<!-- 			<version>1.0</version> -->
+<!-- 		</dependency> -->
+	</dependencies>
+
+	<build>
+		<outputDirectory>${build.dir}</outputDirectory>
+		<testOutputDirectory>${build.dir}</testOutputDirectory>
+		<sourceDirectory>${src.dir}</sourceDirectory>
+		<testSourceDirectory>${tests.dir}</testSourceDirectory>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<id>clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+						<configuration>
+							<failOnError>false</failOnError>
+							<filesets>
+								<fileset>
+									<directory>${gen.dir}</directory>
+								</fileset>
+								<fileset>
+									<directory>${build.dir}</directory>
+								</fileset>
+								<fileset>
+									<directory>${dist.dir}</directory>
+								</fileset>
+								<fileset>
+									<directory>${basedir}/gen-eclipse</directory>
+								</fileset>
+							</filesets>
+							<verbose>true</verbose>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<!-- prepare -->
+					<execution>
+						<id>prepare</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<target>
+								<mkdir dir="${project.build.testOutputDirectory}" />
+								<mkdir dir="${dist.dir}" />
+								<mkdir dir="${ast.gen.dir}" />
+								<mkdir dir="${parser.gen.dir}" />
+								<mkdir dir="${project.build.outputDirectory}" />
+								<mkdir dir="${apidoc.dir}" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- genflex -->
+					<execution>
+						<id>genflex</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<target>
+								<taskdef name="jflex" classname="JFlex.anttask.JFlexTask"
+									classpathref="maven.plugin.classpath" />
+								<echo message="Running jflex" />
+								<jflex file="${parser.src.dir}/mTVL.flex" outdir="${parser.gen.dir}"
+									nobak="yes" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- genast -->
+					<execution>
+						<id>genast</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<target>
+								<taskdef name="jastadd" classname="jastadd.JastAddTask"
+									classpathref="maven.plugin.classpath" />
+								<jastadd package="${ast.package}" rewrite="true" beaver="true"
+									novisitcheck="true" outdir="${gen.dir}" debug="true">
+									<fileset dir=".">
+										<include name="src/mtvl/**/*.ast" />
+										<include name="src/mtvl/**/*.jrag" />
+										<include name="src/mtvl/**/*.jadd" />
+									</fileset>
+								</jastadd>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- genp1 -->
+					<execution>
+						<id>genp1</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<target>
+								<java fork="true" dir="${parser.src.dir}"
+									classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar"
+									classname="Main">
+									<arg line="mTVL.parser '${parser.gen.dir}/MTVLParser.beaver'" />
+								</java>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- genp2 -->
+					<execution>
+						<id>genp2</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<target>
+								<taskdef name="beaver" classname="beaver.comp.run.AntTask"
+									classpathref="maven.plugin.classpath" />
+								<beaver file="${parser.gen.dir}/MTVLParser.beaver"
+									terminalNames="yes" compress="no" useSwitch="yes" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- genlang -->
+<!-- 					<execution> -->
+<!-- 						<id>genlang</id> -->
+<!-- 						<phase>generate-resources</phase> -->
+<!-- 						<configuration> -->
+<!-- 							<target> -->
+<!-- 								<mkdir dir="${build.dir}/abs/lang" /> -->
+<!-- 								<copy todir="${build.dir}/abs/lang"> -->
+<!-- 									<filelist dir="${src.dir}/abs/lang" files="abslang.abs" /> -->
+<!-- 								</copy> -->
+<!-- 							</target> -->
+<!-- 						</configuration> -->
+<!-- 						<goals> -->
+<!-- 							<goal>run</goal> -->
+<!-- 						</goals> -->
+<!-- 					</execution> -->
+
+					<!-- genshell -->
+					<execution>
+						<id>genshell</id>
+						<phase>generate-resources</phase>
+						<configuration>
+							<target>
+								<copy todir="${bash.build.dir}">
+									<filelist id="shellfiles" dir="${bash.dir}" files="parseMTVL" />
+									<filterset>
+										<filter token="BASEDIR" value="${basedir}" />
+									</filterset>
+								</copy>
+								<chmod perm="ugo+x">
+									<filelist dir="${bash.build.dir}" files="parseMTVL" />
+								</chmod>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+					<!-- dist -->
+					<execution>
+						<id>dist</id>
+						<phase>package</phase>
+						<configuration>
+							<target>
+								<mkdir dir="${dist.dir}" />
+								<copy verbose="true" tofile="${dist.dir}/mtvl.jar">
+									<filelist dir="${project.build.directory}"
+										files="mTVL-1.0-SNAPSHOT-jar-with-dependencies.jar" />
+								</copy>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>eu.hats-project</groupId>
+						<artifactId>jastadd2</artifactId>
+						<version>1.0</version>
+					</dependency>
+					<dependency>
+						<groupId>eu.hats-project</groupId>
+						<artifactId>jflex</artifactId>
+						<version>1.0</version>
+					</dependency>
+					<dependency>
+						<groupId>eu.hats-project</groupId>
+						<artifactId>beaver</artifactId>
+						<version>1.0</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${src.dir}/mtvl</source>
+								<source>${gen.dir}</source>
+								<source>${tests.dir}</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+					<showDeprecation>true</showDeprecation>
+					<debug>true</debug>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<test>AllTests</test>
+					<forkMode>never</forkMode>
+					<failIfNoTests>false</failIfNoTests>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<mainClass>mtvl.parser.Main</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+            			<descriptorRef>jar-with-dependencies</descriptorRef>
+          			</descriptorRefs>
+				</configuration>
+			</plugin>
+			
+		</plugins>
+	</build>
+
+</project>
