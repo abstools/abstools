@@ -75,10 +75,9 @@ public class ProposalFactory{
 			this.doc = doc;
 			this.proposals = proposals;
 			this.editor = editor;
-			absParser.setAllowIncompleteExpr(true);
-		        absParser.setTypeChecking(false);
-			
-			
+			this.absParser = new Main();
+			this.absParser.setAllowIncompleteExpr(true);
+		    this.absParser.setTypeChecking(false);
 			parseProject();
 		}
 		
@@ -120,9 +119,6 @@ public class ProposalFactory{
 					}
 				});
 					// compile the current document with non-saved changes
-				        Main absParser = new Main();
-			                absParser.setAllowIncompleteExpr(true);
-			                absParser.setTypeChecking(false);
 					cu = absParser.parseUnit(file.getLocation().toFile(), null,
 							new StringReader(prepareDocContent()));
 					cu.setName(file.getLocation().toFile().getAbsolutePath());
