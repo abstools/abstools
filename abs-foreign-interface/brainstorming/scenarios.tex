@@ -153,12 +153,156 @@ In Task 5.2 we modelled the existing Java implementation of Replication system
 using ABS. This ABS model abstracts from the physical file system and
 communication layer. To execute code generated from this model in a production
 environment, we would need to ``link'' the generate code back to the physical
-file system and communication layer.
+file system and communication layer. Here we consider interaction with the
+physical file system
 
+\subsubsection{Pure ABS}
 \begin{absexamplen}
-
+class SearchDirectoryItem(FileId qualified, ServerDataBase db) 
+implements ServerReplicationItem {
+  Directory snapshot = emptyDir(top());
+  { this.cleanup(); }  
+	
+  FileEntry getContents() { return dirContent(snapshot); }
+  Command getCommand() { return AppendSearchFile;	}
+  ItemType getType() { return SearchReplicationDirectory; }
+  FileId getAbsoluteDir() { return qualified; }
+	
+  [Atomic] Unit refresh() {
+    Set<FileId> fids = this.db.listCheckPointFiles();
+    while (hasNext(fids)) {
+      Pair<Set<FileId>,FileId> nt = next(fids); fids = fst(nt);
+      FileId fid = snd(nt);
+      if (isAncester(this.qualified,fid)) {
+        FileContent content = this.db.getContent(fid);
+        snapshot = updateDirWithContent(snapshot,fid,content);
+      }
+    }
+  }
+	
+  [Atomic] Unit cleanup() {
+    this.snapshot = 
+      updateDirWithDir(emptyDir(top()),emptyDir(qualified)); 
+  }
+}
 \end{absexamplen}
 
+\subsubsection{ABS + Java}
+An interface for File manipulation
+\begin{absexamplen}
+interface FileHelper {
+  FileEntry dirContent();
+  Unit updateDirWithContent(FileId id,FileContent content);
+  Unit cleanup();
+}
+\end{absexamplen}
+
+\noindent An implementation that remains at the ABS level 
+\begin{absexamplen}
+import * from ReplicationSystem.Environment.Files;
+
+class FileHelperImpl(FileId qualified) implements FileHelper {
+  Directory snapshot = emptyDir(top());
+
+  FileEntry dirContent() { return dirContent(this.dir); }
+   
+  Unit updateDirWithContent(FileId id, FileContent content) {
+    this.dir = updateDirWithContent(this.dir,id,content);
+  }
+                
+  Unit cleanup() {
+    this.dir = updateDirWithDir(this.dir,emptyDir(qualified)); 
+  }
+}
+\end{absexamplen}
+
+\noindent An implementation that interacts with Java IO. Note here
+the data/type definition of \Abs{FileContent} and \Abs{FileEntry}. 
+\begin{absexamplen}
+data FileContent = Content(FileSize) | Entries(FileEntry); 
+type FileEntry = Map<FileId,FileContent>;
+\end{absexamplen}
+
+\begin{absexamplen}
+import java.io.*;
+
+class JavaImpl(FileId qualified) implements FileHelper {
+  File snapshot; //Java object, initialise to null
+  
+  {
+    snapshot = new File(qualified); //type synonym to String 
+    assert dir.isDirectory(); //making sure this is a directory
+  }
+
+  FileEntry dirContent() {
+    FileEntry entries = EmptyMap;
+    
+    //built-in function from Java array to ABS list?
+    //type parameter on java class?
+    List<File> fs = arrayToList(snapshot.listFiles());  
+    
+    while (hasNext(fs)) {
+      Pair<Set<File>,File> nt = next(fs);
+      fs = fst(nt);
+      File file = snd(nt);
+      
+      // java method call #getAbsolutePath
+      FileId name = file.getAbsolutePath();
+      
+      // refer length of file as content 
+      entries = put(entries,name,file.length());
+    }
+    
+    return entries;
+  }
+   
+  Unit updateDirWithContent(FileId id, FileContent content) {
+    ... //interact with Java FileInputStream/FileOutputStream
+  }
+                
+  Unit cleanup() {
+    ... //interact with Java FileInputStream/FileOutputStream 
+  }
+}
+\end{absexamplen}
+
+\noindent The implementation of \Abs{SearchDirectoryItem} is then completely
+abstracted from the underlying Java interaction...
+\begin{absexamplen}
+class SearchDirectoryItem(FileId qualified, ServerDataBase db) 
+implements ServerReplicationItem {
+  FileHelper helper;
+
+  { 
+    helper = new JavaImpl(qualified);
+    this.cleanup(); 
+  }  
+	
+  FileEntry getContents() { return helper.dirContent(); }
+  ...
+	
+  [Atomic] Unit refresh() {
+    Set<FileId> fids = this.db.listCheckPointFiles();
+    while (hasNext(fids)) {
+      Pair<Set<FileId>,FileId> nt = next(fids);
+      fids = fst(nt);
+      FileId fid = snd(nt);
+      if (isAncester(this.qualified,fid)) {
+        FileContent content = this.db.getContent(fid);
+        helper.updateDirWithContent(fid,content);
+      }
+    }
+  }
+	
+  [Atomic] Unit cleanup() { helper.cleanup(); }
+}
+\end{absexamplen}
+
+\begin{itemize}
+  \item Data types that are type parametric to Java class/interface?
+  \item How to deal with Java arrays?
+  \item Allow ABS type synonyms? 
+\end{itemize}
 
 \section{ABS $\leftarrow$ FLI (Java)}
 This section considers scenarios in which a foreign (Java) object invokes an

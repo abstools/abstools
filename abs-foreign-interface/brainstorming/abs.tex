@@ -5,10 +5,19 @@
 \lstset{emphstyle=\color{red},emphstyle={[2]\color{blue}\underbar}}%% global
 
 %% ABS
-\lstdefinelanguage{ABS}{keywords=
-{dyndelta,new,data,type,def,case,of,cog,class,interface,extends,implements,if,else,await,get,Fut,return,skip,while,module, import, export, from, suspend, delta,adds,modifies,removes,original,productline,features,core,corefeatures,optionalfeatures,after,when,product,hasAttribute,hasMethod,root,extension,group,allof,oneof,require,exclude,original,ifin,ifout,opt}, sensitive=true, comment=[l]{//},
-  morecomment=[s]{/*}{*/},
-  morestring=[b]"}
+\lstdefinelanguage{ABS}{
+ language=Java,
+ deletekeywords={void,long,int,byte,boolean,true,false}, 
+ morekeywords={type, data, def, cog, export, import, get, let, in, await, assert,suspend,module,from, % core abs
+delta,adds,modifies,removes,original,productline,features,corefeatures,optionalfeatures,after,when,product,hasAttribute,hasMethod, % with deltas
+root,group,extension,oneof,allof,opt, ifin, ifout, require, exclude, % with feature models
+spec, out, task, requires, ensures, view % with specs
+}
+}
+% \lstdefinelanguage{ABS}{keywords=
+% {dyndelta,new,data,type,def,case,of,cog,class,interface,extends,implements,if,else,await,get,Fut,return,skip,while,module, import, export, from, suspend, delta,adds,modifies,removes,original,productline,features,core,corefeatures,optionalfeatures,after,when,product,hasAttribute,hasMethod,root,extension,group,allof,oneof,require,exclude,original,ifin,ifout,opt}, sensitive=true, comment=[l]{//},
+%   morecomment=[s]{/*}{*/},
+%   morestring=[b]"}
 
 %\def\codesize{\fontsize{9}{10}}
 
@@ -18,6 +27,7 @@ language=ABS,columns=fullflexible,
  		   showstringspaces=false,%
 keywordstyle=\bf\sffamily,
 commentstyle=\sl\sffamily,%
+morekeywords={Unit,Int, Bool, List, Set, Pair, Fut, Maybe, String, Triple, Either, Map},
 basicstyle=\footnotesize\tttfamily,
 inputencoding=latin1, % i would prefer utf8
 extendedchars,xleftmargin=2em
