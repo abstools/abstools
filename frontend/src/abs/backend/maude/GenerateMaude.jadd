@@ -80,22 +80,22 @@ aspect GenerateMaude {
 	}
 
 	public void DataTypeDecl.generateMaude(PrintStream stream) {
-		stream.println("*** Datatype " + getName());
+		stream.println("*** Datatype " + qualifiedName());
 	}
 
     public void TypeParameterDecl.generateMaude(PrintStream stream) {
-        stream.println("*** Type parameter " + getName());
+        stream.println("*** Type parameter " + qualifiedName());
     }
 
 	public void TypeSynDecl.generateMaude(PrintStream stream) {
-		stream.println("*** Type synonym: Datatype " + getName());
+		stream.println("*** Type synonym: Datatype " + qualifiedName());
 	}
 
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
 		boolean inList = false;
         if (getFunctionDef() instanceof BuiltinFunctionDef) return;
-        stream.print("eq fparams(\"" + getName() + "\") = ");
+        stream.print("eq fparams(\"" + qualifiedName() + "\") = ");
         if (getNumParam() == 0) {
             stream.println("noVid .");
         } else {
@@ -105,7 +105,7 @@ aspect GenerateMaude {
             }
             stream.print(".\n");
         }
-		stream.print("eq fdefn(\"" + getName() + "\") = ");
+		stream.print("eq fdefn(\"" + qualifiedName() + "\") = ");
 		getFunctionDef().generateMaude(stream);
         stream.println(".");
         stream.println();
@@ -260,7 +260,7 @@ aspect GenerateMaude {
         } else {
             stream.print("new(");
         }
-        stream.print("'" + var + " ; \"" + getClassName() + "\" ; ");
+        stream.print("'" + var + " ; \"" + (((UnionType)getType()).getOriginatingClass()).qualifiedName() + "\" ; ");
         if (getNumParam() == 0) {
             stream.print("emp");
         } else {
@@ -351,7 +351,7 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("\"" + getName() + "\"( ");
+        stream.print("\"" + getDecl().getModuleDecl().getName() + "." + getName() + "\"( ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -432,7 +432,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-		stream.println("\n\n< \"" + getName() + "\" : Class | Deltas: DeL,");
+		stream.println("\n\n< \"" + qualifiedName() + "\" : Class | Deltas: DeL,");
         stream.print("  Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -470,7 +470,7 @@ aspect GenerateMaude {
 	}
 
     public void DeltaDecl.generateMaude(PrintStream stream) {
-        stream.println("\n\n< \"" + getName() + "\" : Delta | ");
+        stream.println("\n\n< \"" + qualifiedName() + "\" : Delta | ");
         if (getNumClassModifier() > 0) {
             boolean inlist = false;
             for (ClassModifier d : getClassModifiers()) {
@@ -494,7 +494,7 @@ aspect GenerateMaude {
         boolean inlist = false;
         for (Modifier f : getModifiers()) {
             if (inlist) stream.print(", "); else inlist = true;
-            f.generateMaude(stream, getName());
+            f.generateMaude(stream, qualifiedName());
         }
     }
 
