@@ -29,6 +29,15 @@ class ABSUnitTestClass implements ABSUnitTest {
 	
 }
 
+class Comparator implements Comparator {
+	Int compare() { 	
+		return 0;	
+	}
+}
+
+
+
+
 {
 	ABSUnitTest testapp = new ABSUnitTestClass();
 	testapp.testAssertTrue();

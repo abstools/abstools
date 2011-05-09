@@ -16,9 +16,15 @@ data TestClassImpl = TestClassImpl; //test class implementation
 
 data TestData<A> = TestData(A);
 
+interface Comparator { 
+	Int compare(); 
+}
+
 interface ABSAssert {
 	Unit assertTrue(Bool value);
 	Unit assertFalse(Bool value);
+	Unit assertEquals(Comparator comp);
+	Unit assertNotEquals(Comparator comp);	
 }
 
 class ABSAssertImpl implements ABSAssert {
@@ -37,9 +43,55 @@ class ABSAssertImpl implements ABSAssert {
 		} 
 	}
 	
-	//not sure how to implements assertEquals or assertSame...
+	Unit assertEquals(Comparator comp) {
+		Int result = comp.compare();
+		if (result != 0) {
+			// collect result
+			assert False;
+		}
+	}
+	
+	Unit assertNotEquals(Comparator comp) {
+		Int result = comp.compare();
+		if (result == 0) {
+			// collect result
+			assert False;
+		}		
+	}
+	
 }
 
- 
+interface Matcher {
+    [Near] Bool matches();
+	[Near] Matcher equalsTo([Near] Comparator comp);
+	[Near] Matcher or([Near] Matcher matcher);
+	[Near] Matcher and([Near] Matcher matcher);
+	[Near] Matcher not([Near] Matcher matcher);
+}
+
+class MatcherImpl implements Matcher {
+
+	[Near] Bool matches() {
+		return False;
+	}
+
+	[Near] Matcher equalsTo([Near] Comparator comp) {
+		return null;
+	}
+	
+	[Near] Matcher or([Near] Matcher matcher) {
+		return null;
+	}
+	
+	[Near] Matcher and([Near] Matcher matcher){
+		return null;
+	}
+	
+	[Near] Matcher not([Near] Matcher matcher){
+		return null;
+	}
+}
+
+
 	
 	
