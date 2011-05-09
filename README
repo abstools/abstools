@@ -14,8 +14,8 @@ Folders
 eclipse-plugin - the Eclipse plugin of the ABS IDE
 
 frontend       - the ABS frontend as well as several backends like the Java
-
                   backend and the Maude backend
+
 mTVL           - the mTVL implementation
 
 sdedit-for-abs - a modified version of sdedit (sdedit.sourceforge.net) for
@@ -23,4 +23,9 @@ sdedit-for-abs - a modified version of sdedit (sdedit.sourceforge.net) for
 
 tools-website  - the content of the tools.hats-project.eu website
 
+maven-support  - Maven plugin for generating Java/Maude from ABS, testing and packaging ABS codes
+
+abs-packages   - demonstration and description of how to use ABS packages (with Maven dependencies management)
+
+abs-unit       - demonstration, description and initial ideas about the ABSUnit (a unit testing framework for ABS) (with Maven dependencies management)
 

@@ -1,5 +1,8 @@
 module Products;
 
+import * from DeltaArtifact1;
+import * from DeltaArtifact2;
+
 productline ProductLine {
 	features D1, D2;
 	delta Delta1 when D1;
