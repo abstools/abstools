@@ -116,7 +116,7 @@ public class ABSTestRunnerGenerator extends Main {
     public void generateTestRunner(PrintStream stream) {
         StringBuilder imports = generateImports();
         StringBuilder main = generateMainBlock(imports);
-        stream.println("module ABSUnit.TestRunner;");
+        stream.println("module AbsUnit.TestRunner;");
         stream.println(imports.toString());
         stream.println("{");
         stream.print(main);
