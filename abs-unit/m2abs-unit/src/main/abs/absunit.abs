@@ -2,6 +2,8 @@ module AbsUnit;
 
 export *;
 
+import Matcher from ABSUnit.Hamcrest;
+
 [TypeAnnotation]
 data DataPoint = DataPoint; //data function
 
@@ -25,6 +27,7 @@ interface ABSAssert {
 	Unit assertFalse(Bool value);
 	Unit assertEquals(Comparator comp);
 	Unit assertNotEquals(Comparator comp);	
+	Unit assertThat(Matcher matcher);
 }
 
 class ABSAssertImpl implements ABSAssert {
@@ -59,39 +62,12 @@ class ABSAssertImpl implements ABSAssert {
 		}		
 	}
 	
-}
-
-interface Matcher {
-    [Near] Bool matches();
-	[Near] Matcher equalsTo([Near] Comparator comp);
-	[Near] Matcher or([Near] Matcher matcher);
-	[Near] Matcher and([Near] Matcher matcher);
-	[Near] Matcher not([Near] Matcher matcher);
-}
-
-class MatcherImpl implements Matcher {
-
-	[Near] Bool matches() {
-		return False;
-	}
-
-	[Near] Matcher equalsTo([Near] Comparator comp) {
-		return null;
+	Unit assertThat(Matcher matcher) {
+		Bool result = matcher.matches();
+		if (~result) {
+			// collect result
+			assert False;
+		}
 	}
 	
-	[Near] Matcher or([Near] Matcher matcher) {
-		return null;
-	}
-	
-	[Near] Matcher and([Near] Matcher matcher){
-		return null;
-	}
-	
-	[Near] Matcher not([Near] Matcher matcher){
-		return null;
-	}
-}
-
-
-	
-	
+}	
