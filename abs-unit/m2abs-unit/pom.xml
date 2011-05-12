@@ -38,6 +38,7 @@
 						<configuration>
 							<maudeInterpreter>/home/pwong/research/hats/Tools/ABS/trunk/frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
 							<maude>/usr/local/maude/maude.linux</maude>
+							<generateRunner>true</generateRunner>
 						</configuration>
 					</execution>
 				</executions>

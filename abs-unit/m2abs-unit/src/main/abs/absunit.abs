@@ -2,7 +2,7 @@ module AbsUnit;
 
 export *;
 
-import Matcher from ABSUnit.Hamcrest;
+import Matcher from AbsUnit.Hamcrest;
 
 [TypeAnnotation]
 data DataPoint = DataPoint; //data function

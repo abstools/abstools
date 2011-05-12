@@ -1,4 +1,4 @@
-module ABSUnit.Hamcrest;
+module AbsUnit.Hamcrest;
 
 export *;
 

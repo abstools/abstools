@@ -1,13 +1,13 @@
 module AbsUnit.Tests;
 
-export ABSUnitTest, ABSUnitTestClass;
+export AbsUnitTest, AbsUnitTestClass;
 
 import * from AbsUnit;
-import * from ABSUnit.Hamcrest;
-import * from ABSUnit.Hamcrest.Core;
+import * from AbsUnit.Hamcrest;
+import * from AbsUnit.Hamcrest.Core;
 
 [TestClass]
-interface ABSUnitTest { 
+interface AbsUnitTest { 
 	[DataPoint] Set<Pair<Int,Int>> comparators();
 	[Test] Unit testAssertTrue();
 	[Test] Unit testAssertFalse();
@@ -17,7 +17,7 @@ interface ABSUnitTest {
 }
 
 [TestClassImpl]
-class ABSUnitTestClass implements ABSUnitTest {
+class AbsUnitTestClass implements AbsUnitTest {
 	
 	Set<Pair<Int,Int>> comps = EmptySet;
 	ABSAssert aut;

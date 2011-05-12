@@ -1,9 +1,9 @@
-module ABSUnit.Hamcrest.Core;
+module AbsUnit.Hamcrest.Core;
 
 export *;
 
 import Comparator from AbsUnit; 
-import * from ABSUnit.Hamcrest;
+import * from AbsUnit.Hamcrest;
 
 
 class Is(Comparator comp) implements Matcher {
@@ -41,6 +41,10 @@ class CoreMatcher(Formula formula) implements Matcher {
 			result = this.or(formula);
 		} else if (isNot(formula)) {
 			result = this.not(formula);
+		} else if (isAllOf(formula)) {
+			result = this.allOf(formula);
+		} else if (isAnyOf(formula)) {
+			result = this.anyOf(formula);
 		} else {
 			result = matcher(formula).matches();
 		} 
