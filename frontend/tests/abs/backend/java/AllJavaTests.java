@@ -11,8 +11,12 @@ import abs.backend.common.AllSemanticTests;
 import abs.backend.maude.MaudeTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ JavaPrimitiveTests.class, JavaStmtTests.class, JavaExprTests.class, JavaExamplesTests.class,
-        JavaObservationTest.class })
+@Suite.SuiteClasses({ JavaPrimitiveTests.class, 
+    JavaStmtTests.class, 
+    JavaExprTests.class, 
+    JavaExamplesTests.class,
+    JavaObservationTest.class,
+    JavaFLITest.class})
 public class AllJavaTests {
 
 }

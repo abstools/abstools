@@ -1,6 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 
 import java.io.*;
+
 import abs.backend.java.*;
 import abs.backend.java.lib.runtime.*;
 import abs.backend.java.lib.expr.*;
@@ -208,12 +209,25 @@ aspect GenerateJava {
         String className = JavaBackend.getClassName(getName());
         stream.print("public class "+className+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
         for (InterfaceType itype : ((UnionType)getType()).getTypes()) {
-            stream.print(", "+JavaBackend.getQualifiedString(itype.getDecl()));
+            String qualifiedName = JavaBackend.getQualifiedString(itype.getDecl());
+            stream.print(", "+qualifiedName);
         }
 
         ClassDecl d = null;
         stream.println(" {");
 
+        if (isForeign()) {
+            // TODO: currently a limitiation that only the first interface can be used
+            String fliInterface = JavaBackend.getQualifiedString(((UnionType)getType()).getTypes().get(0).getDecl());
+            stream.println("    private static final java.lang.Class<?> __ABS_foreignClass = " +
+            		"loadForeignClass(\""+this.qualifiedName()+"\");");
+            stream.println("    private final "+fliInterface+" __ABS_foreignObject = ("+fliInterface+
+                    ") loadForeignObject(__ABS_foreignClass);");
+        }
+            
+        
+        
+        
         stream.println("    private static java.util.concurrent.atomic.AtomicLong __idCounter = new java.util.concurrent.atomic.AtomicLong();");
 
         java.util.List<String> fieldNames = new ArrayList<String>();
@@ -360,6 +374,15 @@ aspect GenerateJava {
         }
       }
       stream.println("{ __ABS_checkSameCOG(); ");
+      
+      if (isForeign()) {
+          stream.println("    if (__ABS_foreignObject != null)");
+          stream.print("        return __ABS_foreignObject.");
+          stream.print(JavaBackend.getMethodName(getMethodSig().getName()));
+          JavaGeneratorHelper.generateParamArgs(stream, getMethodSig().getParams());
+          stream.println(";");
+      }
+      
       stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
       stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
       stream.println("       __ABS_currentTask.newStackFrame(this,\""+getMethodSig().getName()+"\");");

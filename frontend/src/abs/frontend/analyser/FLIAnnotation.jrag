@@ -1,0 +1,11 @@
+aspect FLIAnnotation {
+
+    syn lazy boolean ClassDecl.isForeign() {
+        return !AnnotationHelper.getAnnotationsOfType(getAnnotations(),"ABS.FLI.FLIAnnotation").isEmpty();
+    }
+    
+    syn lazy boolean MethodImpl.isForeign() {
+        return ((ClassDecl) getContextDecl()).isForeign();
+    }
+    
+}

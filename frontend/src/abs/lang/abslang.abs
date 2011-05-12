@@ -381,3 +381,13 @@ data FinalAnnotation = Final;
  */ 
 data AtomicityAnnotation = Atomic;
 
+
+/**
+ * Experimental foreign language interface (FLI) definitions
+ */
+module ABS.FLI;
+export *;
+
+data FLIAnnotation = Foreign;
+
+

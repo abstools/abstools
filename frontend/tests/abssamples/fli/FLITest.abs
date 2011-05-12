@@ -1,0 +1,14 @@
+module FLITest;
+
+import * from ABS.FLI;
+
+interface IO {
+   Unit m();
+}
+
+[Foreign]
+class C implements I { 
+    Unit m() {
+        // default implementation
+    }
+}
