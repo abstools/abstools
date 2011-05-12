@@ -254,34 +254,32 @@ public class ABSTestRunnerGenerator extends Main {
     private Set<Type> generateTestClassImpl(InterfaceDecl inf, ClassDecl clazz, StringBuilder main) {
         Set<Type> paramNames = new HashSet<Type>();
         Type dataType = generateDataPoints(inf, clazz, paramNames, main);
-        if (dataType != null) {
-            /*
-             * a while loop over all data points
-             */
-            String dataPointSet = dataPointSetName(clazz);
-            main.append("while (hasNext(").append(dataPointSet).append(")) {\n"); // begin
-                                                                                  // while
-
-            main.append("Pair<Set<").append(dataType).append(">,").append(dataType)
-                    .append("> nt = next(").append(dataPointSet).append(");\n");
-
-            main.append(dataType).append(" ").append(dataValue).append(" = snd(nt);\n");
-
-            main.append(dataPointSet).append(" = fst(nt);\n");
-
-        }
         String namePrefix = clazz.getName();
         int instance = 0;
         for (MethodSig method : getTestMethods(inf)) {
+            boolean needdata = method.getParamList().iterator().hasNext();
+            if (needdata) {
+                if (dataType == null) {
+                    throw new IllegalStateException("Test method requires arguments but test class defines no data point");
+                } 
+                /*
+                 * a while loop over all data points
+                 */
+                String dataPointSet = dataPointSetName(clazz);
+                main.append("while (hasNext(").append(dataPointSet).append(")) {\n"); // begin while
+                main.append("Pair<Set<").append(dataType).append(">,").append(dataType)
+                    .append("> nt = next(").append(dataPointSet).append(");\n");
+                main.append(dataType).append(" ").append(dataValue).append(" = snd(nt);\n");
+                main.append(dataPointSet).append(" = fst(nt);\n");
+            }
             main.append("//Test cases for method ").append(method.getName()).append("\n");
             String objectRef = uncap(namePrefix) + instance;
             main = newCog(main, inf, clazz, objectRef);
             generateAsyncTestCall(main, objectRef, method);
+            if (needdata) {
+                main.append("}\n"); // end while
+            }
             instance++;
-        }
-
-        if (dataType != null) {
-            main.append("}\n"); // end while
         }
 
         return paramNames;
