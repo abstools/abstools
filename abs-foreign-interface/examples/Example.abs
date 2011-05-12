@@ -19,12 +19,16 @@ module FLUser;
 import * from FLDefs;
 // main block:
 {
-  // foreign classes must be created as cogs
+  // foreign classes can be created in new cogs
   [Far] ForeignInterface i = new cog ForeignClass();
 
-  // foreign objects can only be invoked asynchronously
-  // this ensures concurrency decoupling of foreign code with ABS.
-  Fut<Unit> f = i!m("Hi Java");
+  // and communication can happen via asynchronous calls
+  Fut<Unit> f = i!m("Hi far Java object");
+  
+  ForeignInterface i2 = new ForeignClass();
+  i2.m("Well now you are near");
+
+  // futures also work
   f.get;
 }
 
