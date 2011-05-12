@@ -18,8 +18,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.FileUtils;
 
-import abs.backend.tests.ABSTestRunnerCompiler;
-
 /**
  * A Maven 2 plugin to simulate ABS test code in Maude
  * 
@@ -27,7 +25,7 @@ import abs.backend.tests.ABSTestRunnerCompiler;
  * @requiresDependencyResolution
  * @phase test
  */
-public class MaudeTestMojo extends AbstractABSMojo {
+public class MaudeTestMojo extends AbstractTestMojo {
 
     /**
      * @parameter expression="${abs.maude.interpreter}"
@@ -36,13 +34,6 @@ public class MaudeTestMojo extends AbstractABSMojo {
     private File maudeInterpreter;
     
     /**
-     * Check if test runner needs to be generated before simulation
-     * @parameter expression="${abs.maudeBackend.generateRunner}"
-     *            default-value=false
-     */
-    private boolean generateRunner;
-
-    /**
      * The ABS Maude Backend output file.
      * 
      * @parameter expression="${abs.maudeBackend.testOutput}"
@@ -50,14 +41,6 @@ public class MaudeTestMojo extends AbstractABSMojo {
      */
     private File absMaudeBackendTestOutputFile;
     
-    /**
-     * The generated ABSUnit test runner file
-     * 
-     * @parameter expression="${abs.maudeBackend.runnerOutput}"
-     *            default-value="${project.build.directory}/abs/gen/abs/runner.abs"
-     */
-    private File absMaudeBackendTestRunnerFile;
-
     /**
      * The maude executable
      * 
@@ -74,14 +57,6 @@ public class MaudeTestMojo extends AbstractABSMojo {
     private String[] deltaNames;
 
     /**
-     * Product selection
-     * 
-     * @parameter expression="${abs.maudetest.product}"
-     * 
-     */
-    private String productName;
-
-    /**
      * @parameter expression="${abs.maudetest.verbose}" default-value=false
      */
     private boolean verbose;
@@ -95,43 +70,24 @@ public class MaudeTestMojo extends AbstractABSMojo {
             throw new MojoExecutionException("Cannot perform product selection"
                     + "and apply deltas on rewrite at the same time");
         }
+        
+        /*
+         * Generate test runner
+         */
+        super.doExecute();
 
-        if (absTestSrcFolder == null) {
-            getLog().warn("Test folder cannot be found. Skip tests");
-            return;
-        } else if (!absTestSrcFolder.exists()) {
-            getLog().warn(String.format("There is no test code at folder %s", absTestSrcFolder));
-            return;
-        }
-        
-        if (generateRunner) {
-            if (! absMaudeBackendTestRunnerFile.exists() &&
-                ! absMaudeBackendTestRunnerFile.getParentFile().mkdirs() &&
-                ! absMaudeBackendTestRunnerFile.createNewFile()) {
-                throw new MojoFailureException("Cannot write to file: "+absMaudeBackendTestRunnerFile);
-            }
-            
-            List<String> args = new ArrayList<String>();
-            System.setProperty("java.class.path", absfrontEnd.getAbsolutePath());
-            args.add("-o");
-            args.add(absMaudeBackendTestRunnerFile.getAbsolutePath());
-            args.addAll(getABSArguments());
-            
-            try {
-                ABSTestRunnerCompiler.main(args.toArray(new String[0]));
-            } catch (Exception e) {
-                throw new MojoExecutionException("Could not generate ABSUnit test runner", e);
-            }
-        }
-        
         // generate test.maude
         MaudeGenerator generator = new MaudeGenerator();
         List<String> args = new ArrayList<String>();
-        if (absMaudeBackendTestRunnerFile.exists()) {
-            args.add(absMaudeBackendTestRunnerFile.getAbsolutePath());
+        if (absTestRunnerFile.exists()) {
+            args.add(absTestRunnerFile.getAbsolutePath());
         }
         args.addAll(getABSArguments());
-        generator.generateMaude(absfrontEnd, absTestSrcFolder, args, absMaudeBackendTestOutputFile,
+        generator.generateMaude(
+                absfrontEnd, 
+                absTestSrcFolder, 
+                args, 
+                absMaudeBackendTestOutputFile,
                 verbose, productName);
 
         // run maude
@@ -207,14 +163,6 @@ public class MaudeTestMojo extends AbstractABSMojo {
             result.append(in.readLine() + "\n");
         }
         return result.toString();
-    }
-
-    @Override
-    protected List<String> getABSArguments() throws Exception {
-        List<String> args = new ArrayList<String>();
-        args.addAll(getFileNames(getAbsFiles(absTestSrcFolder)));
-        args.addAll(super.getABSArguments());
-        return args;
     }
 
     /**

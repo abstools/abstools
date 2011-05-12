@@ -8,6 +8,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 
 import abs.backend.maude.MaudeCompiler;
 
+/**
+ * 
+ * @author pwong
+ *
+ */
 public class MaudeGenerator {
 
     void generateMaude(

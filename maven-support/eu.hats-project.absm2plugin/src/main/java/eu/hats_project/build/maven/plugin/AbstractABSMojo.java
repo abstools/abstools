@@ -36,6 +36,12 @@ abstract class AbstractABSMojo extends AbstractMojo {
     public static final String ABS_FRONTEND_ARTIFACTID = "absfrontend";
 
     /**
+     * Product selection
+     * @parameter expression="${abs.maudeBackend.product}"
+     */
+    protected String productName;
+    
+    /**
      * The ABS source folder.
      * 
      * @parameter expression="${abs.srcFolder}"

@@ -31,12 +31,6 @@ public class MaudeMojo extends AbstractABSMojo {
      */
     private boolean verbose;
 
-    /**
-     * Product selection
-     * @parameter expression="${abs.maudeBackend.product}"
-     */
-    private String productName;
-    
     @Override
     protected void doExecute() throws Exception {
         MaudeGenerator generator = new MaudeGenerator();
