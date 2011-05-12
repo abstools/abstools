@@ -79,6 +79,8 @@ public class ABSTestRunnerCompiler extends Main {
         ABSTestRunnerGenerator gen = new ABSTestRunnerGenerator(model);
         if (gen.hasUnitTest()) {
             gen.generateTestRunner(stream);
+        } else {
+            throw new IllegalStateException("Cannot generate test runner");
         }
     }
     
