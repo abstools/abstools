@@ -24,15 +24,9 @@
 				<artifactId>abs-maven-plugin</artifactId>
 				<executions>
 					<execution>
-						<id>abs-compile</id>
-						<goals>
-							<goal>genjava</goal>
-							<goal>genmaude</goal>
-						</goals>
-					</execution>
-					<execution>
 						<id>abs-test</id>
 						<goals>
+							<goal>javatest</goal>
 							<goal>maudetest</goal>
 						</goals>
 						<configuration>
