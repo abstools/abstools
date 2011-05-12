@@ -1,0 +1,1 @@
+java -cp bin:lib/absfrontend.jar -Dabs.fli.class.FLDefs.ForeignClass=example.ForeignClassImpl FLUser.Main;

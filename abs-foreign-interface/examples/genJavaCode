@@ -1,0 +1,1 @@
+java -cp lib/absfrontend.jar abs.backend.java.JavaBackend Example.abs -sourceonly -d gen/

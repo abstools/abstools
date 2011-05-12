@@ -1,0 +1,2 @@
+find gen -name '*.java' -print0|xargs -0 javac -cp lib/absfrontend.jar -d bin/
+find src -name '*.java' -print0|xargs -0 javac -cp lib/absfrontend.jar:bin -d bin/

@@ -24,7 +24,8 @@ import * from FLDefs;
 
   // foreign objects can only be invoked asynchronously
   // this ensures concurrency decoupling of foreign code with ABS.
-  Fut<Unit> f = i!m();
+  Fut<Unit> f = i!m("Hi Java");
+  f.get;
 }
 
 
@@ -33,7 +34,7 @@ export *;
 import * from ABS.FLI;
 
 interface ForeignInterface {
-   Unit m();
+   Unit m(String s);
 }
 
 
@@ -53,7 +54,7 @@ delta MyMock {
     // in the final realization no implementation 
     // for the methods must be given as this cass is foreign
     // this is just for the current compiler
-    Unit m() { }
+    Unit m(String s) { }
 }
 
 

@@ -15,6 +15,7 @@ import FLDefs.*;
 // Import classes and interface to interact with ABS
 // from Java
 import abs.backend.java.fli.*;
+import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 
 
@@ -22,18 +23,18 @@ import abs.backend.java.lib.types.ABSUnit;
  * Java classes and ABS classes is to use Annotations.
  * 
  */
-@RealizesABSClass("FLDefs.ForeignClass")
+//@RealizesABSClass("FLDefs.ForeignClass")
 /*
  * also possible is to directly inherit from the foreign
  * class and implement the corresponding methods 
  */
-class Test extends ForeignClass_c {
+public class ForeignClassImpl extends ABSForeignObject implements ForeignInterface_i {
 
-	@Override
-	public ABSUnit m() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+   @Override
+   public ABSUnit m(ABSString s) {
+      System.out.println("Hello ABS, just got "+s+ " from you!");
+      return ABSUnit.UNIT;
+   }
 
 }
 
