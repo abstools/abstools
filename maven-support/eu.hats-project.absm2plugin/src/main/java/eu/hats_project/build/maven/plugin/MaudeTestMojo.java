@@ -18,6 +18,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.codehaus.plexus.util.FileUtils;
 
+import abs.backend.tests.ABSTestRunnerGenerator;
+
 /**
  * A Maven 2 plugin to simulate ABS test code in Maude
  * 
@@ -60,7 +62,7 @@ public class MaudeTestMojo extends AbstractTestMojo {
      * @parameter expression="${abs.maudetest.verbose}" default-value=false
      */
     private boolean verbose;
-
+    
     private static final Pattern termination = Pattern.compile("^.*\\[State\\]:.*$", Pattern.MULTILINE);
 
     @Override
@@ -88,7 +90,9 @@ public class MaudeTestMojo extends AbstractTestMojo {
                 absTestSrcFolder, 
                 args, 
                 absMaudeBackendTestOutputFile,
-                verbose, productName);
+                verbose, 
+                productName,
+                ABSTestRunnerGenerator.RUNNER_MAIN);
 
         // run maude
         final String maudeOutput = runMaude();

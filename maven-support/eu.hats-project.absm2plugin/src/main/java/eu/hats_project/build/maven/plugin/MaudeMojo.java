@@ -30,6 +30,11 @@ public class MaudeMojo extends AbstractABSMojo {
      * @parameter expression="${abs.maudeBackend.verbose}" default-value=false
      */
     private boolean verbose;
+    
+    /**
+     * @parameter expression="${abs.maudeBackend.mainBlock}"
+     */
+    private String mainBlock;
 
     @Override
     protected void doExecute() throws Exception {
@@ -40,7 +45,8 @@ public class MaudeMojo extends AbstractABSMojo {
                 getABSArguments(), 
                 absMaudeBackendOutputFile, 
                 verbose,
-                productName);
+                productName,
+                mainBlock);
     }
     
 }

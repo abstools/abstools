@@ -21,7 +21,8 @@ public class MaudeGenerator {
     		List<String> absArguments, 
     		File absMaudeBackendOutputFile, 
     		boolean verbose, 
-    		String productName) throws MojoExecutionException {
+    		String productName,
+    		String mainBlock) throws MojoExecutionException {
     	
         if (!absMaudeBackendOutputFile.getParentFile().exists()) {
             if (!absMaudeBackendOutputFile.getParentFile().mkdirs()) {
@@ -45,7 +46,11 @@ public class MaudeGenerator {
         if (verbose) {
             args.add("-v");
         }
-
+        
+        if (mainBlock != null) {
+            args.add("-main="+mainBlock);
+        }
+        
         args.addAll(absArguments);
 
         try {
