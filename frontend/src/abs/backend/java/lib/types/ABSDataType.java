@@ -27,6 +27,28 @@ public abstract class ABSDataType implements ABSValue {
         return NO_ARGS;
     }
 
+    /**
+     * Returns the iths constructor argument of this data value.
+     * @param i the index of the constructor argument to return (starting from 0)
+     * @return
+     * @throws IllegalArgumentException if i < 0 or i >= getNumArgs() 
+     */
+    public ABSValue getArg(int i) {
+       if (i < 0 || i >= getNumArgs()) throw new IllegalArgumentException(i+ " is not a valid constructor argument index");
+       return getArgs()[i];
+    }
+    
+    /**
+     * Returns the number of constructor arguments of this data value
+     * @return
+     */
+    public int getNumArgs() {
+       return getArgs().length;
+    }
+    
+    /**
+     * Whether this data type is a built-in data type
+     */
     public boolean isBuiltIn() {
         return false;
     }
