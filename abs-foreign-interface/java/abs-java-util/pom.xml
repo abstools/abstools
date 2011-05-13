@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	
+
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<artifactId>eu.hats-project.parent</artifactId>
 		<groupId>eu.hats-project</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
-	
+
 	<groupId>eu.hats-project</groupId>
 	<artifactId>abs-java-utils</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>ABS Java Utils</name>
 	<description>ABS Java Utils</description>
-	
+
 	<developers>
 		<developer>
 			<name>Jan Schaefer</name>
@@ -27,11 +27,17 @@
 	<properties>
 		<abs.lang.src>${project.build.directory}/generated-resources</abs.lang.src>
 		<abs.lang.target>${project.build.directory}/generated-sources</abs.lang.target>
+
+		<abs.test.src>${project.basedir}/src/test/resources/abs</abs.test.src>
+		<abs.test.target>${project.build.directory}/generated-test-sources</abs.test.target>
+
 		<maven.version>2.2.1</maven.version>
 		<maven.compiler.source>1.6</maven.compiler.source>
 		<maven.compiler.target>1.6</maven.compiler.target>
 		<encoding>UTF-8</encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<version.selenium>2.0b3</version.selenium>
 	</properties>
 
 	<dependencies>
@@ -41,12 +47,38 @@
 			<version>1.0-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.2</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-api</artifactId>
+			<version>${version.selenium}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-firefox-driver</artifactId>
+			<version>${version.selenium}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-remote-driver</artifactId>
+			<version>${version.selenium}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-support</artifactId>
+			<version>${version.selenium}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -108,6 +140,70 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+
+			<plugin>
+				<groupId>eu.hats-project</groupId>
+				<artifactId>abs-maven-plugin</artifactId>
+				<version>1.0-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<id>generate-abs-test</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>genjava</goal>
+						</goals>
+						<configuration>
+							<absSrcFolder>${abs.test.src}</absSrcFolder>
+							<absJavaBackendTargetFolder>${abs.test.target}</absJavaBackendTargetFolder>
+							<sourceOnly>true</sourceOnly>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>add-test-source</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${abs.test.target}</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.8.1</version>
+				<executions>
+					<execution>
+						<configuration>
+							<systemPropertyVariables>
+								<abs.fli.class.WebDriver.FireFox.FireFox>abs.fli.java.WebDriverImpl</abs.fli.class.WebDriver.FireFox.FireFox>
+							</systemPropertyVariables>
+							<forkMode>never</forkMode>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>eu.hats-project</groupId>
+						<artifactId>absfrontend</artifactId>
+						<version>1.0-SNAPSHOT</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>

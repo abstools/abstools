@@ -1,1 +1,13 @@
 module Example;
+
+import * from WebDriver.FireFox;
+
+{
+	WebDriver driver = new FireFox();
+	
+	String expected = "http://tools.hats-project.eu/";
+	driver.getPage(expected);
+	String actual = driver.getCurrentUrl();
+	
+	assert expected == actual;
+}

@@ -1,5 +1,7 @@
 module JUnit.Assert;
 
+import * from ABS.FLI;
+
 interface JUnitTest { }
 
 interface AssertInterface {
