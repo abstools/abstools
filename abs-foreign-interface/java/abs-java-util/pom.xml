@@ -1,17 +1,39 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
+	
 	<parent>
 		<artifactId>eu.hats-project.parent</artifactId>
 		<groupId>eu.hats-project</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
+	
 	<groupId>eu.hats-project</groupId>
 	<artifactId>abs-java-utils</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<name>ABS Java Utils</name>
 	<description>ABS Java Utils</description>
 	
+	<developers>
+		<developer>
+			<name>Jan Schaefer</name>
+		</developer>
+		<developer>
+			<name>Peter Wong</name>
+		</developer>
+	</developers>
+
+	<properties>
+		<abs.lang.src>${project.build.directory}/generated-resources</abs.lang.src>
+		<abs.lang.target>${project.build.directory}/generated-sources</abs.lang.target>
+		<maven.version>2.2.1</maven.version>
+		<maven.compiler.source>1.6</maven.compiler.source>
+		<maven.compiler.target>1.6</maven.compiler.target>
+		<encoding>UTF-8</encoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
@@ -20,5 +42,68 @@
 			<type>jar</type>
 		</dependency>
 	</dependencies>
-	
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-remote-resources-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>download-abs-lang</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>process</goal>
+						</goals>
+						<configuration>
+							<resourceBundles>
+								<resourceBundle>eu.hats-project:absfrontend:1.0-SNAPSHOT</resourceBundle>
+							</resourceBundles>
+							<outputDirectory>${abs.lang.src}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>eu.hats-project</groupId>
+				<artifactId>abs-maven-plugin</artifactId>
+				<version>1.0-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<id>generate-abs-lang</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>genjava</goal>
+						</goals>
+						<configuration>
+							<absSrcFolder>${abs.lang.src}</absSrcFolder>
+							<absJavaBackendTargetFolder>${abs.lang.target}</absJavaBackendTargetFolder>
+							<stdlib>false</stdlib>
+							<sourceOnly>true</sourceOnly>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${abs.lang.target}</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
