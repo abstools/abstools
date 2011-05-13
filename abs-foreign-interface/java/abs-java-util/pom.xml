@@ -190,7 +190,7 @@
 					<execution>
 						<configuration>
 							<systemPropertyVariables>
-								<abs.fli.class.WebDriver.FireFox.FireFox>abs.fli.java.WebDriverImpl</abs.fli.class.WebDriver.FireFox.FireFox>
+								<abs.fli.class.WebDriver.FireFox>abs.fli.java.WebDriverImpl</abs.fli.class.WebDriver.FireFox>
 							</systemPropertyVariables>
 							<forkMode>never</forkMode>
 						</configuration>

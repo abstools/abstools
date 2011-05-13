@@ -1,4 +1,4 @@
-module WebDriver.FireFox;
+module WebDriver;
 
 export *;
 

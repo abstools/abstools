@@ -1,6 +1,6 @@
 module Example;
 
-import * from WebDriver.FireFox;
+import * from WebDriver;
 
 {
 	WebDriver driver = new FireFox();
