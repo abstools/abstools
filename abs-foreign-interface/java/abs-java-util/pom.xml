@@ -196,14 +196,6 @@
 						</configuration>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>eu.hats-project</groupId>
-						<artifactId>absfrontend</artifactId>
-						<version>1.0-SNAPSHOT</version>
-						<type>jar</type>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
