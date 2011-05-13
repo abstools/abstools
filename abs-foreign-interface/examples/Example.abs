@@ -28,6 +28,8 @@ import * from FLDefs;
   ForeignInterface i2 = new ForeignClass();
   i2.m("Well now you are near");
 
+  i2.foo(Bar("Hello"));
+
   // futures also work
   f.get;
 }
@@ -37,8 +39,11 @@ module FLDefs;
 export *;
 import * from ABS.FLI;
 
+data Test = Foo | Bar(String) | Baz(Int, Bool);
+
 interface ForeignInterface {
    Unit m(String s);
+   String foo(Test t);
 }
 
 
@@ -59,6 +64,7 @@ delta MyMock {
     // for the methods must be given as this cass is foreign
     // this is just for the current compiler
     Unit m(String s) { }
+    String foo(Test t) { return ""; }
 }
 
 

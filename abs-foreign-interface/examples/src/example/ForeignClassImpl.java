@@ -36,6 +36,15 @@ public class ForeignClassImpl extends ABSForeignObject implements ForeignInterfa
       return ABSUnit.UNIT;
    }
 
+   @Override
+   public ABSString foo(Test t) {
+       if (t.isBar()) {
+           System.out.println("Found a Bar with argument "+t.toBar().getArg0());
+           return t.toBar().getArg0();
+       }
+      return null;
+   }
+
 }
 
 
