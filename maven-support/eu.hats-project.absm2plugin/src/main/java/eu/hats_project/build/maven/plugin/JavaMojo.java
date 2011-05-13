@@ -35,6 +35,11 @@ public class JavaMojo extends AbstractABSMojo {
      */
     private boolean sourceOnly;
     
+    /**
+     * @parameter expression="${abs.javaBackend.stdlib}" default-value=true
+     */
+    private boolean stdlib;
+    
     protected void doExecute() throws Exception {
         
        JavaGenerator generator = new JavaGenerator();
@@ -45,6 +50,7 @@ public class JavaMojo extends AbstractABSMojo {
               absJavaBackendTargetFolder, 
               verbose, 
               sourceOnly, 
+              stdlib,
               productName);
       
     }

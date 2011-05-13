@@ -21,6 +21,7 @@ public class JavaGenerator {
             File absJavaBackendTargetFolder, 
             boolean verbose, 
             boolean sourceOnly,
+            boolean stdlib, 
             String productName) throws MojoExecutionException {
         
         if (!absJavaBackendTargetFolder.exists()) {
@@ -40,6 +41,10 @@ public class JavaGenerator {
         
         if (productName != null) {
             args.add("-product="+productName);
+        }
+        
+        if (! stdlib) {
+            args.add("-nostdlib");
         }
         
         if (sourceOnly) {

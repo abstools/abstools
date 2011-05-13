@@ -1,11 +1,13 @@
 package eu.hats_project.build.maven.plugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarFile;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -34,6 +36,7 @@ abstract class AbstractABSMojo extends AbstractMojo {
 
     public static final String ABS_GROUPID = "eu.hats-project";
     public static final String ABS_FRONTEND_ARTIFACTID = "absfrontend";
+    public static final String VERSION_ATTRIBUTE = "ABS-Package-Version";
 
     /**
      * Product selection
@@ -326,9 +329,18 @@ abstract class AbstractABSMojo extends AbstractMojo {
     
     protected List<String> getABSArguments() throws Exception {
         List<String> args = new ArrayList<String>();
-        args.addAll(getFileNames(getAbsFiles(absSrcFolder)));
-        args.addAll(getAbsDependencies());
+        args.addAll(getFileNames(getAbsFiles(absSrcFolder)));        
+        for (String dep : getAbsDependencies()) {
+            if (isABSPackage(new File(dep))) {
+                args.add(dep);
+            }
+        }
         return args;
+    }
+    
+    protected boolean isABSPackage(File file) throws IOException {
+        return new JarFile(file).getManifest().getMainAttributes()
+                        .getValue(VERSION_ATTRIBUTE) != null;
     }
 
 }

@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.Set;
-import java.util.jar.JarFile;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoFailureException;
@@ -20,8 +19,6 @@ import org.apache.maven.plugin.MojoFailureException;
  * 
  */
 public class DependenciesMojo extends AbstractABSMojo {
-
-	private static final String VERSION_ATTRIBUTE = "ABS-Package-Version";
 
 	/**
 	 * @parameter default-value="${basedir}"
@@ -69,11 +66,6 @@ public class DependenciesMojo extends AbstractABSMojo {
 				setPackages(prop,resolveArtifactDependencies(a));
 			}
 		}
-	}
-
-	private boolean isABSPackage(File file) throws IOException {
-		return new JarFile(file).getManifest().getMainAttributes()
-				.getValue(VERSION_ATTRIBUTE) != null;
 	}
 
 }
