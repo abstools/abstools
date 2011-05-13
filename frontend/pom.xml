@@ -325,6 +325,25 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<plugin>
+				<artifactId>maven-remote-resources-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>bundle-abs-lang</id>
+						<goals>
+							<goal>bundle</goal>
+						</goals>
+						<configuration>
+							<resourcesDirectory>${src.dir}</resourcesDirectory>
+							<includes>
+								<include>abs/lang/*.abs</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -348,7 +367,7 @@
 					<forkMode>never</forkMode>
 				</configuration>
 			</plugin>
-
+			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
