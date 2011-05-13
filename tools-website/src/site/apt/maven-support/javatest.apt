@@ -48,6 +48,8 @@ Testing using Java
    * <<<productName>>>, build given product by applying deltas (productName is a string
    that is the qualified product ID)
    
+   To test the source of the ABS Maven project, invoke the 'test' goal 
+   
 -----------------
 mvn test
 -----------------
