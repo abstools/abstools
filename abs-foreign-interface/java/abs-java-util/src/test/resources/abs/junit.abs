@@ -1,0 +1,13 @@
+module JUnit.Assert;
+
+interface JUnitTest { }
+
+interface AssertInterface {
+   Unit assertTrue(Bool v);
+   Unit assertFalse(Bool v);
+}
+
+[Foreign] class AssertClass implements AssertInterface {
+    Unit assertTrue(Bool v) { }
+   	Unit assertFalse(Bool v) { }
+}
