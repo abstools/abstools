@@ -4,7 +4,7 @@
     <name>ABS Tools</name>
     <alt>ABS Tools Logo</alt>
     <src>images/ABSToolsLogo.jpg</src>
-    <href>index.html</href>
+    <href>http://tools.hats-project.eu</href>
   </bannerLeft>
   <bannerRight>
     <alt>HATS Logo</alt>
@@ -28,6 +28,7 @@
       <!-- <item name="Module System" href="modulesystem.html" /> -->
       <item name="Class Annotations" href="classannotations.html" />
       <item name="Location Types" href="locationtypes.html" />
+      <item name="Packaging" href="packages.html" />
     </menu>
 
     <menu name="The Core Tools">
@@ -66,6 +67,7 @@
 	  <item name="Installation" href="eclipseplugin/installation.html"/>
 	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
+	  <item name="Package Dependencies" href="eclipseplugin/packagedependencies.html"/>
 	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
       <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html" collapse="true">
         <item name="API Documentation" href="eclipseplugin/devdocu/api/index.html"/>

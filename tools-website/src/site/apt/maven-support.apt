@@ -49,7 +49,8 @@ following functionalities
 
     * Generate Maude from ABS (see {{{maven-support/genmaude.html}genmaude}} goal)
   
-    * Execute (simulate) Java/Maude generated from ABS (see {{{maven-support/maudetest.html}maudetest}} goal)
+    * Execute (simulate) Java/Maude generated from ABS (see {{{maven-support/javatest.html}javatest}} and {{{maven-support/maudetest.html}maudetest}} goal)
     
-  In addition, Maven as a framework offers the functionalities to {{{maven-support/package.html}package}}
-  and {{{maven-support/deploy.html}deploy artifacts}} to repositories.
+  In addition, Maven as a framework offers the functionalities to {{{maven-support/package.html}package}},
+  {{{maven-support/deploy.html}deploy artifacts}} to repositories and generate 
+  {{{eclipseplugin/packagedependencies.html}package dependencies}} for Eclipse integraton.
