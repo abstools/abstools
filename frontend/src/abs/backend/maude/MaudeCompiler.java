@@ -16,7 +16,7 @@ import abs.frontend.parser.Main;
 public class MaudeCompiler extends Main {
     String module = "ABS-SIMULATOR-RL";
     private File outputfile;
-
+    private String mainBlock;
     
     public static void main(final String... args) {
         try {
@@ -49,7 +49,8 @@ public class MaudeCompiler extends Main {
                 } else {
                     outputfile = new File(restArgs.get(i));
                 }
-                
+            } else if (arg.startsWith("-main=")) {
+                mainBlock = arg.split("=")[1];
             } else {
                 remainingArgs.add(arg);
             }
@@ -73,14 +74,16 @@ public class MaudeCompiler extends Main {
             stream = new PrintStream(outputfile);
         }
         
-        model.generateMaude(stream, module, !fullabs);
+        model.generateMaude(stream, module, !fullabs, mainBlock);
     }
 
     protected void printUsage() {
         super.printUsage();
         System.out.println("Maude Backend:\n"
+                + "  -main=<ModuleName> \n" 
+                + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
-                + "  -timed         generate code for timed interpreter\n"
+                + "  -timed         generate code for timed interpreter"
         );
     }
 

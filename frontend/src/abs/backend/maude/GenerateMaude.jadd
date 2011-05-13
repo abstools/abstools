@@ -7,6 +7,10 @@ aspect GenerateMaude {
     // up, but has to leave whitespace at the end if needed.
 
     public void Model.generateMaude(PrintStream stream, String module, boolean generateDeltas) {
+    	generateMaude(stream,module,generateDeltas,null);
+    }
+
+    public void Model.generateMaude(PrintStream stream, String module, boolean generateDeltas, String mainBlock) {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
                        + module + " .\n");
@@ -34,7 +38,11 @@ aspect GenerateMaude {
                 p.generateMaude(stream); // this generates the class only
             }
         }
-        if (hasMainBlock()) getMainBlock().generateMaude(stream);
+        if (mainBlock == null) {
+            if (hasMainBlock()) getMainBlock().generateMaude(stream);
+        } else {
+            if (hasMainBlock(mainBlock)) getMainBlock(mainBlock).generateMaude(stream);
+        }
         stream.println(".\n");
         stream.println("sort Product .");
         stream.println("op deltas : Product -> DeltaList .");

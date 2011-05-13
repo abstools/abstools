@@ -36,6 +36,9 @@ import abs.frontend.typechecker.Type;
  * 
  */
 public class ABSTestRunnerGenerator extends Main {
+    
+    public static final String RUNNER_MAIN = "AbsUnit.TestRunner";
+    
     private static final String test = "AbsUnit.Test";
     private static final String dataPoint = "AbsUnit.DataPoint";
     private static final String testClass = "AbsUnit.TestClass";
@@ -63,11 +66,6 @@ public class ABSTestRunnerGenerator extends Main {
      */
     public ABSTestRunnerGenerator(Model model) {
         this.model = model;
-
-        // do not generate unit tests if there is already a main block
-        if (model.hasMainBlock()) {
-            return;
-        }
 
         gatherABSUnitAnnotations();
 
@@ -116,7 +114,7 @@ public class ABSTestRunnerGenerator extends Main {
     public void generateTestRunner(PrintStream stream) {
         StringBuilder imports = generateImports();
         StringBuilder main = generateMainBlock(imports);
-        stream.println("module AbsUnit.TestRunner;");
+        stream.println("module "+RUNNER_MAIN+";");
         stream.println(imports.toString());
         stream.println("{");
         stream.print(main);

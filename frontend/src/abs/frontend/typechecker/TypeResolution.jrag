@@ -106,6 +106,15 @@ aspect TypeResolution {
         }
         return null;
     }
+    
+    syn lazy Block Model.getMainBlock(String mainBlock) {
+    	for (CompilationUnit u : getCompilationUnits()) {
+        	if (u.hasMainBlock(mainBlock)) {
+        		return u.getMainBlock(mainBlock);
+        	}
+        }
+        return null;
+    }
 
     syn lazy Block CompilationUnit.getMainBlock() {
         for (ModuleDecl m: getModuleDecls()) {
@@ -115,8 +124,18 @@ aspect TypeResolution {
         return null;
     }
     
+    syn lazy Block CompilationUnit.getMainBlock(String mainBlock) {
+        for (ModuleDecl m : getModuleDecls()) {
+        	if (m.getName().equals(mainBlock) && m.hasBlock())
+        		return m.getBlock();
+        }
+        return null;
+    }
+    
     syn lazy boolean Model.hasMainBlock() = getMainBlock() != null;
+    syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
     syn lazy boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
+    syn lazy boolean CompilationUnit.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
     
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
