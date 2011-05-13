@@ -41,6 +41,8 @@ Maude backend
    * <<<productName>>>, build given product by applying deltas (productName is a string
    that is the qualified product ID)
    
+   * <<<mainBlock>>>, specifies the ABS module from which the main block to be executed 
+   
   To generate Maude from the source of the ABS Maven project, invoke the 'compile' goal 
 
 ----------------------

@@ -48,6 +48,18 @@
 
     </menu>
 -->
+    <menu name="Dependency Management">
+      <item name="Introduction" href="maven-support.html" />
+      <item name="Getting Started" href="maven-support/getting-started.html"/>
+      <item name="Generating Java" href="maven-support/genjava.html"/>
+      <item name="Generating Maude" href="maven-support/genmaude.html"/>
+      <item name="Testing in Java" href="maven-support/javatest.html"/>
+      <item name="Testing in Maude" href="maven-support/maudetest.html"/>
+      <item name="Packaging ABS artifact" href="maven-support/package.html"/>
+      <item name="Deploying ABS artifact" href="maven-support/deploy.html"/>
+      <item name="Reusing ABS artifacts" href="maven-support/reuse.html"/>
+    </menu>
+    
     <menu name="Eclipse Integration">
 <!--      <item name="Introduction" href="eclipseplugin/eclipseplugin.html"/>
 	  <item name="News" href="eclipseplugin/changelog.html"/> -->
@@ -70,17 +82,6 @@
 	  </item>
     </menu>
     
-    <menu name="Dependency Management">
-      <item name="Introduction" href="maven-support.html" />
-      <item name="Getting Started" href="maven-support/getting-started.html"/>
-      <item name="Generating Java" href="maven-support/genjava.html"/>
-      <item name="Generating Maude" href="maven-support/genmaude.html"/>
-      <item name="Testing in Maude" href="maven-support/maudetest.html"/>
-      <item name="Packaging ABS artifact" href="maven-support/package.html"/>
-      <item name="Deploying ABS artifact" href="maven-support/deploy.html"/>
-      <item name="Reusing ABS artifacts" href="maven-support/reuse.html"/>
-    </menu>
-
     <menu name="Project Information" href="project-info.html">
       <item name="Project Information" href="project-info.html"/>
     </menu>
