@@ -39,8 +39,8 @@ public abstract class ABSDataType implements ABSValue {
     }
     
     /**
-     * Returns the number of constructor arguments of this data value
-     * @return
+     * Returns the number of constructor arguments of this data value.
+     * @return the number of constructor arguments of this data value
      */
     public int getNumArgs() {
        return getArgs().length;

@@ -109,6 +109,7 @@ aspect GenerateJava {
           for (DataTypeUse u : getConstructorArgs()) {
             stream.print("   public final ");
             stream.println(JavaBackend.getJavaType(u)+" arg"+i+";");
+            stream.println("   public "+JavaBackend.getJavaType(u)+" getArg"+i+"() { return arg"+i+"; }");
             i++;
           }
 
@@ -413,7 +414,18 @@ aspect GenerateJava {
           JavaGeneratorHelper.generateTypeParameters(stream,pfd.getTypeParameters(), true);
         }
 
-        stream.println(" extends ABSDataType { }");
+        stream.println(" extends ABSDataType {");
+
+        for (DataConstructor c : getDataConstructors()) {
+            stream.println("   public final boolean is"+c.getName()+
+                    "() { return this instanceof "+JavaBackend.getConstructorName(c)+
+                    "; }");
+            stream.println("   public final "+JavaBackend.getConstructorName(c)+" to"+c.getName()+
+                    "() { return ("+JavaBackend.getConstructorName(c)+") this; }");
+
+        }
+        
+        stream.println("}");
     }
 
     public void FunctionDecl.generateJava(PrintStream stream) {
