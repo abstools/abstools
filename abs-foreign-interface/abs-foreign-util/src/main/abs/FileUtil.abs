@@ -33,15 +33,18 @@ interface FileHandler extends FileSetter {
 	Bool mkdir();
 }
 
-interface FileReader extends FileSetter {
-	String readLine(); 
-	Unit close();
+interface FileAccesser extends FileSetter {
+	Bool open();
+	Bool close();
 }
 
-interface FileWriter extends FileSetter {
-	Unit write(String s);
-	Unit flush();
-	Unit close();
+interface FileReader extends FileAccesser {
+	String readLine(); 
+}
+
+interface FileWriter extends FileAccesser {
+	Bool write(String s);
+	Bool flush();
 }
 
 [Foreign]
@@ -73,7 +76,8 @@ class FileReader implements FileReader {
 	Unit setFileAt(File parent, String name) { }
 	
 	String readLine() { return ""; }
-	Unit close() { }
+	Bool open() { return False; }
+	Bool close() { return False; }
 }
 
 [Foreign]
@@ -82,7 +86,8 @@ class FileWriter implements FileWriter {
 	Unit setFile(File f) { }
 	Unit setFileAt(File parent, String name) { }
 	
-	Unit write(String s) { }
-	Unit flush() { }
-	Unit close() { }
+	Bool write(String s) { return False; }
+	Bool flush() { return False; }
+	Bool open() { return False; }
+	Bool close() { return False; }
 }
