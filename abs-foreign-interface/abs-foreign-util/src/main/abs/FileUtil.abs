@@ -1,0 +1,88 @@
+module FLI.FileUtils;
+
+export *;
+
+import * from ABS.FLI;
+
+data File = File(String) | Parent(File,String);
+
+def List<String> filePath(File f) =
+	case f {
+		File(s) => list[s];
+		Parent(g,s) => appendright(filePath(g),s);
+	};
+
+interface FileSetter {
+	Unit setFileName(String f);
+	Unit setFile(File f);
+	Unit setFileAt(File parent, String name);
+}
+
+interface FileHandler extends FileSetter {
+	Bool canRead();
+	Bool canWrite(); 
+	Bool delete(); 
+	Bool isFile();
+	Bool isDirectory(); 
+	Bool createNewFile();
+	Bool renameTo(File dest); 
+	List<File> listFiles(); 
+	String getName();
+	String getParent(); 
+	String getAbsolutePath();
+	Bool mkdir();
+}
+
+interface FileReader extends FileSetter {
+	String readLine(); 
+	Unit close();
+}
+
+interface FileWriter extends FileSetter {
+	Unit write(String s);
+	Unit flush();
+	Unit close();
+}
+
+[Foreign]
+class FileHandler implements FileHandler {
+	Unit setFileName(String f) { }
+	Unit setFile(File f) { }
+	Unit setFileAt(File parent, String name) { }
+
+	Bool canRead() { return False; }
+	Bool canWrite() { return False; }
+	Bool delete() { return False; }
+	Bool isFile() { return False; }
+	Bool isDirectory() { return False; }
+	Bool createNewFile() { return False; }
+	Bool renameTo(File dest) { return False; }
+	Bool mkdir() { return False;}
+	
+	List<File> listFiles() { return Nil; }
+	String getName() { return ""; }
+	String getParent() { return ""; }
+	String getAbsolutePath() { return ""; }
+	
+}
+
+[Foreign]
+class FileReader implements FileReader {
+	Unit setFileName(String f) { }
+	Unit setFile(File f) { }
+	Unit setFileAt(File parent, String name) { }
+	
+	String readLine() { return ""; }
+	Unit close() { }
+}
+
+[Foreign]
+class FileWriter implements FileWriter {
+	Unit setFileName(String f) { }
+	Unit setFile(File f) { }
+	Unit setFileAt(File parent, String name) { }
+	
+	Unit write(String s) { }
+	Unit flush() { }
+	Unit close() { }
+}

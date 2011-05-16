@@ -1,0 +1,16 @@
+module FLI.SystemUtils;
+
+export *;
+
+import * from ABS.FLI;
+
+interface System {
+	Unit outPrint(String s);
+	Unit outPrintln(String s);
+}
+
+[Foreign] 
+class System implements System {
+	Unit outPrint(String s) { }
+	Unit outPrintln(String s) { }
+}

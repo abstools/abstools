@@ -1,11 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>eu.hats-project.parent</artifactId>
-		<groupId>eu.hats-project</groupId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
+	
+<!-- 	<parent> -->
+<!-- 		<artifactId>eu.hats-project.parent</artifactId> -->
+<!-- 		<groupId>eu.hats-project</groupId> -->
+<!-- 		<version>1.0-SNAPSHOT</version> -->
+<!-- 	</parent> -->
+	
 	<groupId>eu.hats-project</groupId>
 	<artifactId>abs-foreign-utils</artifactId>
 	<version>1.0-SNAPSHOT</version>
@@ -13,10 +16,27 @@
 	<description>ABS Foreign Interface Utils</description>
 	
 	<properties>
-		<maven.compiler.source>1.6</maven.compiler.source>
-		<maven.compiler.target>1.6</maven.compiler.target>
 		<encoding>UTF-8</encoding>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	
+	<build>
+		<sourceDirectory>src/main/abs</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.1</version>
+				<configuration>
+					<classesDirectory>${project.build.sourceDirectory}</classesDirectory>
+					<archive>
+						<manifestEntries>
+							<ABS-Package-Version>1.0</ABS-Package-Version>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 	
 </project>
