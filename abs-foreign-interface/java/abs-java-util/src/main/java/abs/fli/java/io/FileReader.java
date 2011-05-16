@@ -14,7 +14,8 @@ public class FileReader extends FileSetter implements FileReader_i {
     
     public ABSString readLine() {
         try {
-            return putil.convert(reader.readLine());
+            String r = reader.readLine();
+            return (r == null) ? ABSString.EMPTY : putil.convert(r);
         } catch (IOException e) {
             return ABSString.EMPTY;
         }
