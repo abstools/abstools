@@ -1,1 +1,14 @@
-java -cp bin:lib/absfrontend.jar -Dabs.fli.class.FLDefs.ForeignClass=example.ForeignClassImpl FLUser.Main;
+
+echo "TEST 1..."
+java -cp bin:lib/absfrontend.jar -Dabs.fli.debug=true -Dabs.fli.class.FLDefs.ForeignClass=example.ForeignClassImpl FLUser.Main;
+
+echo "----"
+echo "TEST 2..."
+java -cp bin:lib/absfrontend.jar:. -Dabs.fli.debug=true -Dabs.fli.properties=javatoabs.properties FLUser.Main;
+
+echo "----"
+echo "TEST 3..."
+# using default name absfli.properties
+java -cp bin:lib/absfrontend.jar:. -Dabs.fli.debug=true FLUser.Main;
+
+

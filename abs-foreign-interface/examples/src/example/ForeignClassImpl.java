@@ -12,6 +12,7 @@ package example;
 // Java interfaces, this is no problem at all.
 import ABS.StdLib.List;
 import ABS.StdLib.List_Cons;
+import ABS.StdLib.isEmpty_f;
 import FLDefs.*;
 
 // Import classes and interface to interact with ABS
@@ -44,7 +45,7 @@ public class ForeignClassImpl extends ABSForeignObject implements ForeignInterfa
            System.out.println("Found a Bar with argument "+t.toBar().getArg0());
            return t.toBar().getArg0();
        }
-      return null;
+      return ABSString.fromString("This is Java");
    }
 
    @Override

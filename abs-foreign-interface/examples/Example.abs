@@ -69,7 +69,7 @@ delta MyMock {
     // this is just for the current compiler
     Unit m(String s) { }
     String foo(Test t) { return ""; }
-   Unit visit(List<String> planets) { }
+    Unit visit(List<String> planets) { }
 }
 
 
