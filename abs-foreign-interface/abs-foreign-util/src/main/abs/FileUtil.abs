@@ -44,6 +44,7 @@ interface FileReader extends FileAccesser {
 
 interface FileWriter extends FileAccesser {
 	Bool write(String s);
+	Bool writeln(String s);
 	Bool flush();
 }
 
@@ -87,6 +88,7 @@ class FileWriter implements FileWriter {
 	Unit setFileAt(File parent, String name) { }
 	
 	Bool write(String s) { return False; }
+	Bool writeln(String s) { return False; }
 	Bool flush() { return False; }
 	Bool open() { return False; }
 	Bool close() { return False; }
