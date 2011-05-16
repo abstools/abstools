@@ -52,20 +52,6 @@ public class FileHandler extends ABSForeignObject implements FileHandler_i {
         return ABSUnit.UNIT;
     }
     
-    private java.io.File file(File f) {
-        return new java.io.File(name(f));
-    }
-    
-    private String name(File f) {
-        StringBuilder builder = new StringBuilder();
-        for (ABSValue value : cutil.convert(filePath_f.apply(f))) {
-            if (value instanceof ABSString) {
-                builder.append(value).append(sep);   
-            }
-        }
-        return builder.substring(0, builder.length()-1).toString();
-    }
-
     public ABSBool canRead() {
         return putil.convert(file.canRead());
     }
@@ -116,6 +102,24 @@ public class FileHandler extends ABSForeignObject implements FileHandler_i {
         } catch (Exception e) {
             return ABSBool.FALSE;
         }
+    }
+    
+    java.io.File getInternalFile() {
+        return file;
+    }
+    
+    private java.io.File file(File f) {
+        return new java.io.File(name(f));
+    }
+    
+    private String name(File f) {
+        StringBuilder builder = new StringBuilder();
+        for (ABSValue value : cutil.convert(filePath_f.apply(f))) {
+            if (value instanceof ABSString) {
+                builder.append(((ABSString) value).getString()).append(sep);   
+            }
+        }
+        return builder.substring(0, builder.length()-1).toString();
     }
 
 }

@@ -1,36 +1,41 @@
 package abs.fli.java.io;
 
-import FLI.FileUtils.File;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import FLI.FileUtils.FileReader_i;
-import abs.backend.java.fli.ABSForeignObject;
+import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSString;
-import abs.backend.java.lib.types.ABSUnit;
 
-public class FileReader extends ABSForeignObject implements FileReader_i {
-
-    public ABSUnit setFileName(ABSString f) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public ABSUnit setFile(File f) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public ABSUnit setFileAt(File parent, ABSString name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
+public class FileReader extends FileSetter implements FileReader_i {
+ 
+    private BufferedReader reader;
+    
     public ABSString readLine() {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            return putil.convert(reader.readLine());
+        } catch (IOException e) {
+            return ABSString.EMPTY;
+        }
+    }
+    
+    public ABSBool open() {
+        try {
+            reader = new BufferedReader(new java.io.FileReader(handler.getInternalFile()));
+            return ABSBool.TRUE;
+        } catch (FileNotFoundException e) {
+            return ABSBool.FALSE;  
+        }
     }
 
-    public ABSUnit close() {
-        // TODO Auto-generated method stub
-        return null;
+    public ABSBool close() {
+        try {
+            reader.close();
+            return ABSBool.TRUE;
+        } catch (IOException e) {
+            return ABSBool.FALSE;  
+        }
     }
 
 }
