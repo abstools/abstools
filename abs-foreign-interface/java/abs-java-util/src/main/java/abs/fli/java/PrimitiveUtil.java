@@ -6,7 +6,7 @@ import abs.backend.java.lib.types.ABSString;
 
 public class PrimitiveUtil {
     public Integer convert(ABSInteger i) {
-        return i.getNumArgs();
+        return i.toInt();
     }
     
     public ABSInteger convert(Integer i) {

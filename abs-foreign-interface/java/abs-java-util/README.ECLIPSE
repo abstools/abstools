@@ -1,0 +1,8 @@
+In order to work on abs-java-util in Eclipse,
+install the Maven Eclipse plugin
+http://m2eclipse.sonatype.org/
+
+run mvn test
+
+then add the target/generated-test-sources folder
+as a Java source folder
