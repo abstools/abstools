@@ -8,10 +8,18 @@ import org.junit.Test;
 
 public class JavaFLITest extends JavaBackendTest {
 
+    private final static String EXAMPLE_CODE = "import * from ABS.FLI; interface I { Unit foo(String s); } " +
+    "[Foreign] class A implements I { Unit foo(String s) { } } { Bool testresult = True; I i = new A(); i.foo(\"test\"); } ";
+    
     @Test
     public void foreignClass() {
-        assertValidStdLib("import * from ABS.FLI; interface I { Unit foo(String s); } " +
-                    "[Foreign] class A implements I { Unit foo(String s) { } }");
+        assertValidStdLib(EXAMPLE_CODE);
+    }
+    
+    @Test
+    public void foreignClass2() {
+        assertEvalTrue("module BackendTest; " + EXAMPLE_CODE);
+        
     }
 
 }

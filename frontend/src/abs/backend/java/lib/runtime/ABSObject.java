@@ -162,33 +162,5 @@ public abstract class ABSObject implements ABSRef {
     public abstract List<String> getFieldNames();
     
     
-    protected static Class<?> loadForeignClass(String name) {
-        String className = System.getProperty("abs.fli.class."+name);
-        if (className != null) {
-            try {
-                Class<?> result = ABSObject.class.getClassLoader().loadClass(className);
-                return result;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }   
-        return null;
-     }
-
-    
-    protected Object loadForeignObject(Class<?> foreignClass) {
-        if (foreignClass != null) {
-           try {
-              return foreignClass.newInstance();
-           } catch (InstantiationException e) {
-              e.printStackTrace();
-           } catch (IllegalAccessException e) {
-              e.printStackTrace();
-           }
-        }
-        
-        return null;
-     }
-     
-    
+   
 }

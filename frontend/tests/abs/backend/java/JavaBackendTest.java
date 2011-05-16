@@ -135,7 +135,7 @@ public class JavaBackendTest extends ABSTest {
                 throw e;
             } else {
                 System.out.println(output.toString());
-                System.out.println(javaCode);
+                //System.out.println(javaCode);
                 Assert.fail(e.getMessage());
                 return false;
             }
@@ -144,7 +144,7 @@ public class JavaBackendTest extends ABSTest {
                 System.err.println(output.toString());
             else
                 System.err.println("NO OUTPUT");
-            System.err.println(javaCode);
+            //System.err.println(javaCode);
             Assert.fail(e.getMessage());
             e.printStackTrace();
             return false;
@@ -217,8 +217,9 @@ public class JavaBackendTest extends ABSTest {
         if (DEBUG)
             System.out.println(javaCode);
         boolean res = runJavaAndTestResult(javaCode, false);
-        if (value != res)
-            System.out.println(javaCode);
+        if (value != res) {
+            //System.out.println(javaCode);
+        }
         Assert.assertEquals(value, res);
     }
 

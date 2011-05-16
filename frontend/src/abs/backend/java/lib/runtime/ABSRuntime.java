@@ -4,7 +4,10 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
@@ -14,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,7 +36,10 @@ import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
 public class ABSRuntime {
+    private static final String ABSFLI_PROPERTIES = "absfli.properties";
+
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
+    private static final boolean DEBUG_FLI = Boolean.parseBoolean(System.getProperty("abs.fli.debug", "false"));
 
     private final ABSThreadManager threadManager = new ABSThreadManager(this);
     private final AtomicInteger cogCounter = new AtomicInteger();
@@ -332,5 +339,112 @@ public class ABSRuntime {
             obs.systemFinished();
         }
     }
+    
+    public void setForeignClass(String absClassName, Class<?> javaClass) {
+        foreignClasses.put(absClassName, javaClass);
+    }
+    
+    /**
+     * Defines the properties to be used for the foreign class mapping
+     * @param the properties to be used
+     */
+    public void setFLIProperties(Properties p) {
+        fliProperties = p;
+    }
+    
+    /**
+     * Maps ABS class names of foreign classes to Java class implementations
+     */
+    private final Map<String, Class<?>> foreignClasses = new HashMap<String, Class<?>>();
+    
+    private Properties fliProperties;
+    private synchronized Class<?> getForeignClass(String name) {
+        Class<?> clazz = foreignClasses.get(name);
+        
+        // this is a dummy entry to prevent reloading of classes each time
+        if (clazz == ABSRuntime.class)
+            return null;
+        
+        if (clazz == null) {
+            clazz = loadForeignClass(name);
+            if (clazz != null) {
+                foreignClasses.put(name, clazz);
+            } else {
+                foreignClasses.put(name, ABSRuntime.class);
+            }
+            
+            if (DEBUG_FLI)
+                System.err.println("FLI: "+name+" = "+clazz);
+            
+        }
+        return clazz;
+    }
+    
+    private synchronized Class<?> loadForeignClass(String name) {
+        String className = System.getProperty("abs.fli.class."+name);
+        if (className == null) {
+            if (fliProperties == null) {
+                loadFLIProperties();
+            }
+            className = fliProperties.getProperty(name); 
+        }
+        
+        if (className != null) {
+            try {
+                Class<?> result = ABSRuntime.class.getClassLoader().loadClass(className);
+                return result;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }   
+        return null;
+     }
+
+    private void loadFLIProperties() {
+        String propertiesFileName = System.getProperty("abs.fli.properties",ABSFLI_PROPERTIES);
+        URL url = ABSRuntime.class.getClassLoader().getResource(propertiesFileName);
+        fliProperties = new Properties();
+        if (url == null) {
+            if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
+                System.err.println("Could not find ABS-FLI properties file "+propertiesFileName);
+            }
+        } else {
+            try {
+                fliProperties.load(new BufferedReader(
+                        new InputStreamReader(url.openStream())));
+
+                if (DEBUG_FLI) {
+                    System.err.println("FLI: Loaded properties from URL "+url);
+                    System.err.println("FLI: Loaded properties: "+fliProperties.toString());
+                }
+                
+            } catch (IOException e) {
+                if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
+                    System.err.println("ABS Error while trying to read the FLI properties file "+propertiesFileName);
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public Object getForeignObject(String absClassName) {
+        return loadForeignObject(getForeignClass(absClassName));
+    }
+    
+    private Object loadForeignObject(Class<?> foreignClass) {
+        if (foreignClass != null) {
+           try {
+              return foreignClass.newInstance();
+           } catch (InstantiationException e) {
+              e.printStackTrace();
+           } catch (IllegalAccessException e) {
+              e.printStackTrace();
+           }
+        }
+        
+        return null;
+     }
+     
+     
 
 }

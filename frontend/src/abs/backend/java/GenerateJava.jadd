@@ -220,10 +220,8 @@ aspect GenerateJava {
         if (isForeign()) {
             // TODO: currently a limitiation that only the first interface can be used
             String fliInterface = JavaBackend.getQualifiedString(((UnionType)getType()).getTypes().get(0).getDecl());
-            stream.println("    private static final java.lang.Class<?> __ABS_foreignClass = " +
-            		"loadForeignClass(\""+this.qualifiedName()+"\");");
             stream.println("    private final "+fliInterface+" __ABS_foreignObject = ("+fliInterface+
-                    ") loadForeignObject(__ABS_foreignClass);");
+                    ") "+ABSRuntime.class.getName()+".getCurrentRuntime().getForeignObject(\""+this.qualifiedName()+"\");");
         }
             
         
