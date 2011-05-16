@@ -29,6 +29,9 @@ import * from FLDefs;
   i2.m("Well now you are near");
 
   i2.foo(Bar("Hello"));
+  
+  List<String> planets = list["Mars", "Venus", "Pluto"];
+  i2.visit(planets);
 
   // futures also work
   f.get;
@@ -44,6 +47,7 @@ data Test = Foo | Bar(String) | Baz(Int, Bool);
 interface ForeignInterface {
    Unit m(String s);
    String foo(Test t);
+   Unit visit(List<String> planets);
 }
 
 
@@ -65,6 +69,7 @@ delta MyMock {
     // this is just for the current compiler
     Unit m(String s) { }
     String foo(Test t) { return ""; }
+   Unit visit(List<String> planets) { }
 }
 
 

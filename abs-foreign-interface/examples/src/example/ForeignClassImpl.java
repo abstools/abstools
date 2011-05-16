@@ -10,6 +10,8 @@ package example;
 // in the Example.abs file.
 // As interfaces generated from ABS are identical to
 // Java interfaces, this is no problem at all.
+import ABS.StdLib.List;
+import ABS.StdLib.List_Cons;
 import FLDefs.*;
 
 // Import classes and interface to interact with ABS
@@ -41,6 +43,18 @@ public class ForeignClassImpl extends ABSForeignObject implements ForeignInterfa
        if (t.isBar()) {
            System.out.println("Found a Bar with argument "+t.toBar().getArg0());
            return t.toBar().getArg0();
+       }
+      return null;
+   }
+
+   @Override
+   public ABSUnit visit(List planets) {
+       if (planets.isNil())
+           System.out.println("Planet list is Empty");
+       else {
+           List_Cons<ABSString> cons = planets.toCons();
+           ABSString s = cons.getArg0();
+           System.out.println("Found planet "+s);
        }
       return null;
    }
