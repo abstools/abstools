@@ -47,6 +47,8 @@ public class ABSTestRunnerGenerator extends Main {
     private static final String absStdLib = "ABS.StdLib";
 
     private static final String dataValue = "d";
+    private static final String futs = "futs";
+    private static final String fut = "fut";
 
     private DataConstructor testType;
     private DataConstructor dataPointType;
@@ -238,6 +240,8 @@ public class ABSTestRunnerGenerator extends Main {
     private StringBuilder generateMainBlock(StringBuilder imports) {
         StringBuilder builder = new StringBuilder();
         Set<Type> paramNames = new HashSet<Type>();
+        builder.append("Set<Fut<Unit>> ").append(futs).append(" = EmptySet;\n");
+        builder.append("Fut<Unit> ").append(fut).append(";\n");
         for (InterfaceDecl key : tests.keySet()) {
             builder.append("//Test cases for ").append(key.getType().getQualifiedName()).append("\n");
             for (ClassDecl clazz : tests.get(key)) {
@@ -245,8 +249,21 @@ public class ABSTestRunnerGenerator extends Main {
                 paramNames.addAll(generateTestClassImpl(key, clazz, builder));
             }
         }
+        generateWaitSync(builder);
         generateImports(imports, paramNames);
         return builder;
+    }
+    
+    private StringBuilder generateWaitSync(StringBuilder builder) {
+        return 
+          builder
+            .append("//waits for methods return...\n")
+            .append("while (hasNext(").append(futs).append(")) {\n") // begin while
+            .append("Pair<Set<Fut<Unit>>,Fut<Unit>> nt = next(").append(futs).append(");\n")
+            .append(fut).append(" = snd(nt);\n")
+            .append(futs).append(" = fst(nt);\n")
+            .append(fut).append(".get;\n")
+            .append("}\n"); // end while
     }
 
     private Set<Type> generateTestClassImpl(InterfaceDecl inf, ClassDecl clazz, StringBuilder main) {
@@ -362,7 +379,7 @@ public class ABSTestRunnerGenerator extends Main {
      * @param method
      */
     private void generateAsyncTestCall(StringBuilder builder, String objectRef, MethodSig method) {
-        builder.append(objectRef).append("!").append(method.getName());
+        builder.append(fut).append(" = ").append(objectRef).append("!").append(method.getName());
         Iterator<ParamDecl> paramIts = method.getParamList().iterator();
         if (paramIts.hasNext()) {
             builder.append("(").append(dataValue).append(");\n"); // add
@@ -371,6 +388,7 @@ public class ABSTestRunnerGenerator extends Main {
         } else {
             builder.append("();\n"); // no parameter
         }
+        builder.append(futs).append("= Insert(").append(fut).append(",").append(futs).append(");\n");
     }
 
     /**
