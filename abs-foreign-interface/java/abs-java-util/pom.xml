@@ -172,16 +172,6 @@
 						<configuration>
 							<classpathScope>test</classpathScope>
 							<mainClass>Example.File.Main</mainClass>
-							<systemProperties>
-								<systemProperty>
-									<key>abs.fli.class.FLI.FileUtils.FileHandler</key>
-									<value>abs.fli.java.io.FileHandler</value>
-								</systemProperty>
-								<systemProperty>
-									<key>abs.fli.class.FLI.SystemUtils.System</key>
-									<value>abs.fli.java.io.System</value>
-								</systemProperty>
-							</systemProperties>
 						</configuration>
 					</execution>
 				</executions>
