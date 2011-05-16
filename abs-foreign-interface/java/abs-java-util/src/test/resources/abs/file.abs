@@ -1,0 +1,31 @@
+module Example.File;
+
+export *;
+
+import * from FLI.FileUtils;
+import * from FLI.SystemUtils;  
+
+{
+	File file = File("hello.txt");
+	System sys = new System();
+	FileHandler handler = new FileHandler();
+	handler.setFile(file);
+	String fullName = handler.getAbsolutePath();
+	
+	Bool created = handler.createNewFile();
+	if (created) {
+		sys.outPrintln(fullName + " created");
+	} else {
+		sys.outPrintln(fullName + " not created");
+		assert False;
+	}
+	
+	Bool deleted = handler.delete();
+	if (deleted) {
+		sys.outPrintln(fullName + " deleted");
+	} else {
+		sys.outPrintln(fullName + " not deleted");
+		assert False;
+	}
+
+}
