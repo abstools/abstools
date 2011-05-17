@@ -561,7 +561,7 @@ public class UtilityFunctions {
 		} else if (path.segment(0).equals("jar:file:")) {
 			// a jar file
 			try {
-				String parts = new URI(path.toString()).getSchemeSpecificPart();
+				String parts = new URI(path.toString()).getRawSchemeSpecificPart();
 				String pak = new URI(parts.split("!/")[0]).getSchemeSpecificPart();
 				String entry = parts.split("!/")[1];
 				return openABSEditorForFile(getPackageAbsFile(pak, entry));
