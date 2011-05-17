@@ -146,6 +146,9 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	}
 
 	private Object[] getChildrenOf(IFile file) {
+		if (UtilityFunctions.isABSPackage(file)) {
+			return getChildren(makeABSPackage(file));
+		}
 		return getChildrenOf(new AbsFileImpl(file));
 	}
 	
@@ -361,9 +364,27 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		return false;
 	}
 	
+	/**
+	 * Create a {@link PackageEntry} that represents an {@link PackageAbsFile}
+	 * from an ABS package (as {@link IFile}) in the project.
+	 *  
+	 * @param file
+	 * @return
+	 */
+	private PackageEntry makeABSPackage(IFile file) {
+		PackageContainer container = new PackageContainer();
+		container.setProject(file.getProject());
+		return new PackageEntry(container,file.getName(),file.getLocation().toString(),false);
+	}
+	
 	private boolean hasChildren(IFile file){
-		if(!UtilityFunctions.hasABSFileExtension(file))
+		if(!UtilityFunctions.isABSFile(file))
 			return false;
+		
+		if(UtilityFunctions.isABSPackage(file)) {
+			return hasChildren(makeABSPackage(file));
+		}
+		
 		AbsNature nature = UtilityFunctions.getAbsNature(file.getProject());
 		if(nature != null){
 			CompilationUnit cu = nature.getCompilationUnit(file);
