@@ -23,11 +23,11 @@
 		<gen.dir>${basedir}/gen</gen.dir>
 		<build.dir>${basedir}/bin</build.dir>
 		<tests.dir>${basedir}/tests</tests.dir>
-		
+
 		<bash.dir>${src.dir}/bash</bash.dir>
 		<bash.build.dir>${basedir}/bin/bash</bash.build.dir>
-		
-		
+
+
 		<dist.dir>${basedir}/dist</dist.dir>
 
 		<parser.src.dir>${src.dir}/abs/frontend/parser</parser.src.dir>
@@ -37,9 +37,12 @@
 		<ast.gen.dir>${gen.dir}/abs/frontend</ast.gen.dir>
 
 		<apidoc.dir>${gen.dir}/docs/api</apidoc.dir>
-		
+
 		<!-- need to bundle this as resource -->
 		<maude.interpreter>${src.dir}/abs/backend/maude/</maude.interpreter>
+
+		<revision.prefix>1.0.5</revision.prefix>
+		<plugin.name>eu.hatsproject.abs.compiler</plugin.name>
 	</properties>
 
 	<dependencies>
@@ -124,7 +127,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<version>1.6</version>
@@ -325,7 +328,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<artifactId>maven-remote-resources-plugin</artifactId>
 				<version>1.2</version>
@@ -367,7 +370,7 @@
 					<forkMode>never</forkMode>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -388,12 +391,103 @@
 						</manifest>
 					</archive>
 					<descriptorRefs>
-            			<descriptorRef>jar-with-dependencies</descriptorRef>
-          			</descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>build-eclipse-plugin</id>
+			<activation>
+				<property>
+					<name>build-eclipse-plugin</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>build-eclipse-plugin</id>
+								<phase>package</phase>
+								<configuration>
+									<target>
+										<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask"
+											classpathref="maven.plugin.classpath" />
+										<tstamp />
+										<svn failonerror="false" javahl="false">
+											<wcVersion path="${basedir}" />
+										</svn>
+										<condition property="frontend.version"
+											value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}"
+											else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+											<isset property="revision.max" />
+										</condition>
+										<mkdir dir="${basedir}/${plugin.name}_${frontend.version}" />
+										<copy todir="${basedir}/${plugin.name}_${frontend.version}"
+											failonerror="true" overwrite="true">
+											<fileset dir="${basedir}">
+												<include name="META-INF/" />
+												<include name="lib/" />
+												<include name="feature.xml" />
+											</fileset>
+											<fileset dir="${build.dir}">
+												<include name="abs/" />
+											</fileset>
+											<fileset dir="${src.dir}">
+												<include name="abs/backend/maude/abs-interpreter.maude" />
+											</fileset>
+										</copy>
+										<manifest
+											file="${basedir}/${plugin.name}_${frontend.version}/META-INF/MANIFEST.MF"
+											mode="update">
+											<attribute name="Bundle-Version" value="${frontend.version}" />
+										</manifest>
+										<zip
+											destfile="${dist.dir}/plugins/${plugin.name}_${frontend.version}.jar"
+											basedir="${basedir}/${plugin.name}_${frontend.version}"
+											filesonly="true" whenempty="skip" update="false">
+											<exclude name="feature.xml" />
+										</zip>
+										<replace
+											file="${basedir}/${plugin.name}_${frontend.version}/feature.xml"
+											token="0.0.0.VERSION_STRING" value="${frontend.version}" />
+										<zip
+											destfile="${dist.dir}/features/${plugin.name}_${frontend.version}.jar"
+											basedir="${basedir}/${plugin.name}_${frontend.version}"
+											filesonly="true" whenempty="skip" update="false">
+											<include name="feature.xml" />
+										</zip>
+										<delete dir="${basedir}/${plugin.name}_${frontend.version}" />
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>eu.hats-project</groupId>
+								<artifactId>svn-client-adapter </artifactId>
+								<version>1.0</version>
+							</dependency>
+							<dependency>
+								<groupId>eu.hats-project</groupId>
+								<artifactId>svnant</artifactId>
+								<version>1.0</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
