@@ -8,14 +8,17 @@ import static eu.hatsproject.absplugin.util.Images.NO_IMAGE;
 import static eu.hatsproject.absplugin.util.Images.getImageForASTNode;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -35,8 +38,10 @@ import abs.frontend.typechecker.Type;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
+import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
+import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
  * Class generating the actual proposals for auto completion
@@ -81,18 +86,38 @@ public class ProposalFactory{
 			parseProject();
 		}
 		
-		
 		private void parseABSFile(
 				final IncrementalModelBuilder builder,
 				IResource resource) throws IOException,
 				CoreException, NoModelException {
-			if (isABSSourceFile(resource)) {
+			if (isABSFile(resource)) {
 				IFile visitedfile = (IFile) resource;
-				CompilationUnit cu = absParser.parseUnit(visitedfile.getLocation().toFile(),
-						null, new InputStreamReader(visitedfile.getContents()));
-				cu.setName(visitedfile.getLocation().toFile().getAbsolutePath());
-				builder.addCompilationUnit(cu);
+				if (isABSSourceFile(visitedfile)) {
+					CompilationUnit cu = absParser.parseUnit(visitedfile.getLocation().toFile(),
+							null, new InputStreamReader(visitedfile.getContents()));
+					cu.setName(visitedfile.getLocation().toFile().getAbsolutePath());
+					builder.addCompilationUnit(cu);
+				} else if (isABSPackage(visitedfile)) {
+					builder.addCompilationUnits(
+							absParser.parseABSPackageFile(visitedfile.getLocation().toFile()));
+				} 
 			}
+		}
+		
+		/**
+		 * Parse package dependencies in the ABS project containing the input file
+		 * @param file
+		 * @return a set of {@link CompilationUnit} of package dependencies.  
+		 * @throws IOException
+		 */
+		private Set<CompilationUnit> parseDependencies(IFile file) throws IOException {
+			//iterate over package dependencies
+			AbsNature nature = UtilityFunctions.getAbsNature(file);
+			Set<CompilationUnit> units = new HashSet<CompilationUnit>();  
+			for (PackageEntry entry : nature.getPackages().getPackages()) {
+				units.addAll(absParser.parseABSPackageFile(new File(entry.getPath())));
+			}
+			return units;
 		}
 
 		/**
@@ -118,11 +143,14 @@ public class ProposalFactory{
 						return true;
 					}
 				});
-					// compile the current document with non-saved changes
-					cu = absParser.parseUnit(file.getLocation().toFile(), null,
-							new StringReader(prepareDocContent()));
-					cu.setName(file.getLocation().toFile().getAbsolutePath());
-					builder.addCompilationUnit(cu);
+				
+				builder.addCompilationUnits(parseDependencies(file));
+				
+				// compile the current document with non-saved changes
+				cu = absParser.parseUnit(file.getLocation().toFile(), null,
+						new StringReader(prepareDocContent()));
+				cu.setName(file.getLocation().toFile().getAbsolutePath());
+				builder.addCompilationUnit(cu);
 			} catch (CoreException e) {
 				standardExceptionHandling(e);
 			} catch (NoModelException e) {
