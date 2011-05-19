@@ -35,6 +35,7 @@ import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.ResolvedName;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeCheckerException;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
@@ -389,24 +390,37 @@ public class ProposalFactory{
 				throw new IllegalArgumentException("Given ASTNode is not in a Module!");
 			}
 			
-			Map<KindedName, ResolvedName> visibleNames = moddecl.getVisibleNames();
-			
-			for(KindedName kname : visibleNames.keySet()){
-				if(qualifierIsPrefixOf(kname.getName())){
-					CompletionProposal proposal = makeVisibleNameProposal(visibleNames.get(kname), kname);
-					if(isQualified(kname)){
-						tempQual.add(proposal);
-					} else {
-						tempNonqual.add(proposal);
+			try {
+				Map<KindedName, ResolvedName> visibleNames = moddecl.getVisibleNames();
+				
+				for(KindedName kname : visibleNames.keySet()){
+					if(qualifierIsPrefixOf(kname.getName())){
+						CompletionProposal proposal = makeVisibleNameProposal(visibleNames.get(kname), kname);
+						if(isQualified(kname)){
+							tempQual.add(proposal);
+						} else {
+							tempNonqual.add(proposal);
+						}
 					}
 				}
+				
+				Collections.sort(tempNonqual, comp);
+				proposals.addAll(tempNonqual);
+				
+				Collections.sort(tempQual, comp);
+				proposals.addAll(tempQual);
+			} catch (TypeCheckerException e ) {
+				/*
+				 * XXX It seems invoking 
+				 * abs.frontend.ast.ModuleDecl.getVisibleNames() always throws 
+				 * a TypeCheckerException if the ast node is an Import.
+				 * This exception is suppressed for now until further
+				 * investigation
+				 */
+				if (! (node instanceof Import)) {
+					throw e;
+				}
 			}
-			
-			Collections.sort(tempNonqual, comp);
-			proposals.addAll(tempNonqual);
-			
-			Collections.sort(tempQual, comp);
-			proposals.addAll(tempQual);
 		}
 
 		private CompletionProposal makeVisibleNameProposal(ResolvedName resolvedName, KindedName kname) {
