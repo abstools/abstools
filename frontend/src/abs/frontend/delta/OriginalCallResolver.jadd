@@ -26,7 +26,7 @@ aspect OriginalCallResolver {
      */
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-//        System.out.println("*** resolving in Delta: " + this.qualifiedName());
+        System.out.println("*** resolving in Delta: " + this.qualifiedName());
         for (ClassModifier cm : this.getClassModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -95,14 +95,14 @@ aspect OriginalCallResolver {
         if (method == null) {
             // find original MethodImpl and copy it
             MethodImpl original = findOriginal(methodid, classid, deltas);
-//            System.out.println("*** found original: " + original.getMethodSig());
+            System.out.println("*** found original: " + original.getMethodSig());
 
             method = copyOriginal(original);
             this.OriginalMethodImpl = method;
-//            System.out.println("*** copied original: " + method.getMethodSig());
+            System.out.println("*** copied original: " + method.getMethodSig());
         }
         // construct call and pass on the original params
-//        System.out.println("*** replaced original call with call to: " + method.getMethodSig());
+        System.out.println("*** replaced original call with call to: " + method.getMethodSig());
         return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams());
     }
     
@@ -115,9 +115,15 @@ aspect OriginalCallResolver {
             String classid, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
         
+        // search for classid.methodid in the list of visible names
+//        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, c.getDeltaspec().getName());
+//        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
+
+        
+        System.out.println("*** searching for method " + classid + "." + methodid);
         // search in list of applied deltas
         for (DeltaDecl delta : deltas) {
-//            System.out.println("*** searching in delta " + delta.getName());
+            System.out.println("*** searching in delta " + delta.getName());
             for (ClassModifier cm : delta.getClassModifiers()) {
                 if (cm.className().equals(classid)) {
                     if (cm instanceof ModifyClassModifier) {
@@ -133,7 +139,7 @@ aspect OriginalCallResolver {
                             } else if (m instanceof RemoveMethodModifier) {
                                 if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
                                     throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
-                                            + " -- it was removed in delta " + delta.getName());
+                                            + " -- it was removed by delta " + delta.getName());
                             }
                     } else if (cm instanceof AddClassModifier) {
                         for (MethodImpl method : ((AddClassModifier)cm).getClassDecl().getMethods())
@@ -141,22 +147,27 @@ aspect OriginalCallResolver {
                                 return method;
                     } else if (cm instanceof RemoveClassModifier) {
                         throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
-                                + " -- it was removed in delta " + delta.getName());
+                                + " -- it was removed by delta " + delta.getName());
                     }
                 }
             }
         }
         // search in core classes
-        for (Decl decl : this.module().getDecls()) {
-            if (decl instanceof ClassDecl) {
-                ClassDecl cls = (ClassDecl)decl;
-//                System.out.println("*** searching in core class " + cls.getName());
-                for (MethodImpl method : cls.getMethods()) {
-                    if (method.getMethodSig().getName().equals(methodid))
-                        return method;                    
+        // TODO search all modules, not only current one
+        for (ModuleDecl module : this.getModel().getModuleDecls()) {
+            System.out.println("*** searching in module " + module.getName());
+            for (Decl decl : module.getDecls()) {
+                if (decl instanceof ClassDecl) {
+                    ClassDecl cls = (ClassDecl) decl;
+                    System.out.println("*** searching in core class " + cls.getName());
+                    for (MethodImpl method : cls.getMethods()) {
+                        if (method.getMethodSig().getName().equals(methodid))
+                            return method;                    
+                    }
                 }
             }
         }
+        
         // give up
         throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid);
     }   

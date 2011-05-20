@@ -40,7 +40,7 @@ aspect DeltaCollector {
 
 
     /**************************************************************************
-     * collect all Deltas
+     * collect all Deltas in the Model
      */
     //propagate
     public void ASTNode.collectDeltas(HashMap<String, DeltaDecl> deltas) {
@@ -56,7 +56,9 @@ aspect DeltaCollector {
     // remember this DeltaDecl
     public void DeltaDecl.collectDeltas(HashMap<String, DeltaDecl> deltas) {
         String deltaid = this.qualifiedName();
+//        String deltaid = this.getName();
         deltas.put(deltaid, this);
+//        System.out.println("--- AllDeltas: " + deltaid);
     }
 
     /**************************************************************************
@@ -77,21 +79,30 @@ aspect DeltaCollector {
                 if (module.hasProductLine()) {
                     ProductLine pl = module.getProductLine();
                     for (DeltaClause c : pl.getDeltaClauses()) {
-                        String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
+//                        System.out.println("DeltaClause: " + c.moduleName() + "." + c.getDeltaspec().getName());
+                        
                         if (c.evaluateAppCond(prod.getFeatures())) {
-                            if (alldeltas.containsKey(deltaid)) {
-                                // # Found clause with applicable delta!
-                                DeltaDecl delta = alldeltas.get(deltaid);
-                                List<Deltaparam> params = c.getDeltaspec().getDeltaparams();
-//                                System.out.println("## Found delta "+ c.getDeltaspec().getName() + "-" +
-//                                    params.getNumChild() + " - " + params.toString());
-                                delta = delta.substituteDeltaParams(params, prod.getFeatures());
-//                                for (Deltaparam p : params)
-//                                    deltaid = deltaid + "#" + p.getName();  // getName defined below
-//                                deltaid = deltaid + "#" + (seed++);
-                                deltas.put(deltaid, delta);
-                            } else
+                            DeltaDecl delta = null;
+                            String deltaid = null;
+
+                            // search for delta symbol in the list of visible names
+                            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, c.getDeltaspec().getName());
+                            Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
+                            
+                            if (visibleSymbols.containsKey(symbol)) {
+                                // found name of delta, now find the declaration...
+                                delta = (DeltaDecl) visibleSymbols.get(symbol).getDecl();
+                                deltaid = delta.moduleName() + "." + delta.getName();
+//                                System.out.println("=== found DeltaDecl: " + deltaid);
+                            } else {
+                                // delta not found
                                 throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
+                            }                    
+                            
+                            // substitute params, and remember delta
+                            List<Deltaparam> params = c.getDeltaspec().getDeltaparams();
+                            delta = delta.substituteDeltaParams(params, prod.getFeatures());
+                            deltas.put(deltaid, delta);
                         }
                     }
                 }

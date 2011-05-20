@@ -8,14 +8,21 @@ aspect Delta {
 
 }
 
-//inform a Decl about the Module where it was declared
+//inform nodes about the Module where they were declared
 aspect Module {
-    inh ModuleDecl Decl.module();
-    eq ModuleDecl.getDecl().module() = this;
+    inh ModuleDecl Decl.getModule();
+    eq ModuleDecl.getDecl().getModule() = this;
 
-    inh ModuleDecl ClassModifier.module();
-    eq DeltaDecl.getClassModifier().module() = this.module();
+    inh ModuleDecl ClassModifier.getModule();
+    eq DeltaDecl.getClassModifier().getModule() = this.getModule();
 
-    inh ModuleDecl Modifier.module();
-    eq ModifyClassModifier.getModifier().module() = this.module();
+    inh ModuleDecl Modifier.getModule();
+    eq ModifyClassModifier.getModifier().getModule() = this.getModule();
+}
+
+//inform various nodes about the Model
+aspect Model {
+    inh Model Modifier.getModel();
+    eq ModifyClassModifier.getModifier().getModel() = this.getModule().getModel();
+    
 }

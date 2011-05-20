@@ -6,101 +6,103 @@ import abs.frontend.delta.exceptions.*;
 aspect Flattener {
     /* Configure a product
      * 
-     * This is the top level method, which does everything from
+     * This is the top level method, which does everything:
      * finding the features of a given product, finding the sequence of 
      * associated deltas, and applying them.
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
-        System.out.println("*** configuring product: " + prod.qualifiedName());
+        System.out.println("--- configuring product: " + prod.qualifiedName());
 
         ArrayList<DeltaDecl> deltas = this.getSortedDeltas(prod);
 
-        System.out.print("*** applicable deltas: ");
-        for (DeltaDecl delta : deltas)
-            System.out.print(delta.qualifiedName() + ", ");
+        System.out.print("--- applying deltas to core << ");
+        String delim = "";
+        for (DeltaDecl delta : deltas) {
+            System.out.print(delim + delta.qualifiedName());
+            delim = " << ";
+        }
         System.out.println("");
 
-        // TODO resolve original() calls
+        // resolve original() calls
         this.resolveOriginalCalls(deltas);
         
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
+        
     }
     
-    //propagate
-    public void ASTNode.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
-        for(int i = 0; i < getNumChild(); i++) {
-            getChildNoTransform(i).applyDelta(delta);
-        }
-    }
-
-    public void ModuleDecl.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
-        String moduleid = this.getName();
-
-        //if DeltaDecl was defined in *this* module, apply its ClassModifiers...
-        if (delta.moduleName().equals(moduleid)) {
-//            System.out.println("***D applying Delta" + delta.qualifiedName());
-            for (ClassModifier cmod : delta.getClassModifiers()) {
-//                System.out.println("***C applying " + cmod);
-                cmod.applyTo(this);
-            }
-        }
-    }
-
-    
-    /**************************************************************************
-     * ClassModifiers are applied to Modules
-     * - add/remove/modify classes
+    /*
+     * Apply delta to model
+     * i.e. apply each classModifier to its corresponding class
      */
-    public abstract void ClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException;
-
-    public void RemoveClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
-        // find class by name
-        String classname = this.getName();
-        int found = -1;
-        for (int i = 0; i < md.getNumDecl(); i++) {
-            Decl d = md.getDecl(i);
-            if (d instanceof ClassDecl)
-                if (d.getName().equals(classname)) {
-                    found = i;
-                    break;
-                }
+    public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
+        for (ClassModifier cmod : delta.getClassModifiers()) {
+//            System.out.println("*** applying ClassModifier " + cmod);
+            cmod.apply(delta);
         }
-        if (found >= 0)
-            //remove ClassDecl
-            md.getDecls().removeChild(found);
-        else
-            throw new ASTNodeNotFoundException("ClassDecl " + md.getName() + "." + classname);
     }
 
-    public void AddClassModifier.applyTo(ModuleDecl md) {
-        md.getDecls().addChild(this.getClassDecl().fullCopy());
-    }
+    /**************************************************************************
+     * Apply ClassModifiers, 
+     * that is, add/remove/modify classes
+     */
+    public abstract void ClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
 
-    public void ModifyClassModifier.applyTo(ModuleDecl md) throws ASTNodeNotFoundException {
-        // find class by name
-        String classname = this.getName();
-        int found = -1;
-        for (int i = 0; i < md.getNumDecl(); i++) {
-            Decl d = md.getDecl(i);
-            if (d instanceof ClassDecl)
-                if (d.getName().equals(classname)) {
-                    found = i;
-                    break;
-                }
-        }
-        if (found >= 0)
-            // apply all modifiers
-            for (Modifier mod : this.getModifiers()) {
-//                System.out.println("***M applying " + mod);
-                mod.applyTo((ClassDecl) md.getDecl(found));
+    public void RemoveClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        ClassDecl cls = this.findClassModifiedBy(delta);
+        ModuleDecl module = delta.getModule();
+        for (int i = 0; i < module.getNumDecl(); i++) {
+            if (module.getDecl(i) == cls) {
+                module.getDecls().removeChild(i);
+                break;
             }
-        else
-            throw new ASTNodeNotFoundException("ClassDecl " + md.getName() + "." + classname);
+            assert false;
+        }
     }
 
+    public void AddClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        ModuleDecl module = delta.getModule();
+        module.getDecls().addChild(this.getClassDecl().fullCopy());
+    }
+    
+    public void ModifyClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        ClassDecl cls = this.findClassModifiedBy(delta);
+        // apply all modifiers
+        for (Modifier mod : this.getModifiers()) {
+            mod.applyTo(cls);
+        }
+    }
+
+    /*
+     * helper method
+     * find the ClassDecl which should be modified by the given delta
+     */
+    public ClassDecl ClassModifier.findClassModifiedBy(DeltaDecl delta) throws ASTNodeNotFoundException {
+        // find module where delta was defined
+        ModuleDecl module = delta.getModule();
+        ClassDecl cls = null;
+//        System.out.println("=== Delta " + module.getName() + "." + delta.getName() + " looking for ClassDecl: " + this.className());
+        
+        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
+        KindedName symbol = new KindedName(KindedName.Kind.CLASS, this.className());
+//        for (KindedName kn : visibleSymbols.keySet()) {
+//            System.out.println("visibleNames: " + kn.getKind() + " >>>> " + kn.getName());
+//        }
+        
+        // find the class to which the delta applies 
+        if (visibleSymbols.containsKey(symbol)) {
+            cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
+//            System.out.println("=== found ClassDecl: " + module.getName() + "." + cls.getName());
+        } else {
+            // class not found
+            throw new ASTNodeNotFoundException("Delta " + module.getName() + "." + delta.getName() 
+                    + " wants to modify class " + this.className() + ", which was not found.");
+        }
+        return cls;
+    }
+    
     /**************************************************************************
      * Modifiers are applied to Classes
      * - add/remove/modify methods
@@ -124,7 +126,8 @@ aspect Flattener {
             // remove MethodImpl from list
             cd.getMethods().removeChild(found);
         else
-            throw new ASTNodeNotFoundException("MethodDecl " + cd.qualifiedName() + "." + mysig);
+            throw new ASTNodeNotFoundException("Delta " + this.delta().getModule().getName() + "." + this.delta().getName() 
+                    + " wants to remove method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
     }
 
     public void AddMethodModifier.applyTo(ClassDecl cd) {
@@ -147,7 +150,8 @@ aspect Flattener {
             // replace MethodImpl
             cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
         else
-            throw new ASTNodeNotFoundException("MethodDecl " + cd.qualifiedName() + "." + mysig);
+            throw new ASTNodeNotFoundException("Delta " + this.delta().getModule().getName() + "." + this.delta().getName() 
+                    + " wants to modify method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
@@ -165,7 +169,8 @@ aspect Flattener {
         if (found >= 0)
             cd.getFields().setChild(this.getFieldDecl().fullCopy(), found);
         else
-            throw new ASTNodeNotFoundException("FieldDecl " + cd.qualifiedName() + "." + myfield);
+            throw new ASTNodeNotFoundException("Delta " + this.delta().getModule().getName() + "." + this.delta().getName() 
+                    + " wants to remove field " + cd.qualifiedName() + "." + myfield + ", which was not found.");
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
