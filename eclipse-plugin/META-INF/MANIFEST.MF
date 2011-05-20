@@ -21,7 +21,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.expressions,
  org.eclipse.jdt.debug.ui,
  eu.hatsproject.sdedit;bundle-version="0.0.0",
- eu.hatsproject.abs.compiler;bundle-version="0.0.0"
+ eu.hatsproject.abs.compiler;bundle-version="0.0.0",
+ costabs;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,

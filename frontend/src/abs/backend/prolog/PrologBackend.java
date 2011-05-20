@@ -32,7 +32,7 @@ public class PrologBackend extends Main {
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();
             }
-            System.exit(1);
+            //System.exit(1);
         } finally {
             prologBE.outStream.close();
         }
@@ -74,7 +74,7 @@ public class PrologBackend extends Main {
         return remainingArgs;
     }
 
-    private void absToPrologTerms(String[] args) throws Exception {
+    public void absToPrologTerms(String[] args) throws Exception {
         final Model model = parse(args); // This parses the ABS producing an AST
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;

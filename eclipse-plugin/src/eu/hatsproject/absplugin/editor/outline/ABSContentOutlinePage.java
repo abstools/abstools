@@ -7,6 +7,7 @@ package eu.hatsproject.absplugin.editor.outline;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.FILTER_COMMANDS;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.SORT_COMMAND_ID;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.Map;
 
 import org.eclipse.core.commands.State;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Composite;
@@ -26,13 +29,20 @@ import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
+import costabs.handlers.costabsHandler;
+
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.CoreControlUnit;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
+import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
 
 /**
  * Implements the Content Outline for ABS files
@@ -159,6 +169,9 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 				if (sel.isEmpty()) {
 					editor.resetHighlightRange();
 				} else {
+					
+					ABSContentOutlineUtils.insertCostabsItems(sel);
+					
 					// Get only the first element of the selection
 					InternalASTNode<?> t = ((InternalASTNode<?>) ((IStructuredSelection) sel)
 							.getFirstElement());

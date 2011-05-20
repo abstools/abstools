@@ -13,8 +13,13 @@ import java.util.ArrayList;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+
+
+import costabs.handlers.CostabsContainer;
 
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
@@ -569,7 +574,7 @@ public class ABSContentOutlineUtils {
 	    }
 	}
 
-	private static StyledString formatMethod(Object element){
+	static StyledString formatMethod(Object element){
 	    if (element instanceof MethodImpl){
 		return formatMethodSig(((MethodImpl) element).getMethodSig());
 	    } else if (element instanceof MethodSig){
@@ -633,7 +638,7 @@ public class ABSContentOutlineUtils {
 	    return null;
 	}
 
-	private static StyledString formatFunctionDecl(FunctionDecl element) {
+	static StyledString formatFunctionDecl(FunctionDecl element) {
 	    StyledString sb = new StyledString();
 	    FunctionDecl fDecl = (FunctionDecl) element;
 	    
@@ -727,4 +732,36 @@ public class ABSContentOutlineUtils {
 			return null;
 		}
 	}	
+	
+	public static void insertCostabsItems(ISelection sel) {
+		
+		//ConsoleHandler.defaultConsole = ConsoleManager.getDefault();
+		
+		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
+		CostabsContainer.SELECTED_ITEMS = new ArrayList<String>();
+		
+		for (int i = 0; (selectedItems != null) && (i < selectedItems.length); i++) {
+			InternalASTNode<?> node = (InternalASTNode<?>) selectedItems[i];
+
+			if (node.getASTNode() instanceof FunctionDecl) {
+				FunctionDecl del = (FunctionDecl) node.getASTNode();
+				CostabsContainer.SELECTED_ITEMS.add(del.getName());
+			} else if (node.getASTNode() instanceof MethodImpl) { 
+				MethodImpl del = (MethodImpl) node.getASTNode();
+				ASTNode<?> par = del.getContextDecl();
+				if (par instanceof ClassDecl) {
+					ClassDecl cl = (ClassDecl) par;
+					CostabsContainer.SELECTED_ITEMS.add(cl.getName() + "." + del.getMethodSig().getName());
+				}
+			} else if (node.getASTNode() instanceof MethodSig) {
+				MethodSig del = (MethodSig) node.getASTNode();
+				ASTNode<?> par = del.getContextDecl();
+				if (par instanceof ClassDecl) {
+					ClassDecl cl = (ClassDecl) par;
+					CostabsContainer.SELECTED_ITEMS.add(cl.getName() + "." + del.getName());
+				}
+			}
+	
+		}
+	}
 }

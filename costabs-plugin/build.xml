@@ -2,18 +2,13 @@
 <project name="ABS Update Site" default="compile" basedir=".">
     <property name="revision.prefix" value="1.0.5" />
 
-	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
-	<property name="costabs.dir" location="../costabs-plugin" /> 
-	<property name="sdedit.dir" location="../sdedit-for-abs" />
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="build.dir" location="${basedir}/bin" />
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="ext.dir" location="${basedir}/lib" />
-    <property name="doc.dir" location="${basedir}/doc" />
-    <property name="doc.api.dir" location="${doc.dir}/api" />
 	
-	<property name="plugin.name" value="eu.hatsproject.absplugin" />
+	<property name="plugin.name" value="costabs" />
 	<property name="frontend.version" value="1.0.0" />
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
@@ -21,8 +16,7 @@
 			<pathelement location="${frontend.dir}/lib/svnant.jar" />
 			<pathelement location="${frontend.dir}/lib/svnClientAdapter.jar" />
 		</classpath>
-	</taskdef>
-	
+	</taskdef>	
 	
 	<target name="init">
 	   <mkdir dir="${dist.dir}" />
@@ -43,9 +37,7 @@
         </fileset>
 		
         <path id="build.classpath">
-           <pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
            <pathelement location="${frontend.dir}/bin" />
-	   <pathelement location="${costabs.dir}/bin" />
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
@@ -58,75 +50,12 @@
 	<target name="exitIfEclipseHomeNotSet" if="eclipse.home.notset">
 		<fail message="Please specify the Eclipse home in the eclipsehome.properties file"/>
     </target>
-        
-
-	
-	<!-- Note in order to execute this task it is required that rsync is installed
-	     and that the necessary ssh-key is installed on the system.
-	     Ask Richard Bubel to get a key if you want to be deploy the update site -->
-	<target name="deploy-update-site" depends="generate-update-site"
-	description="deploys the update site to the official HATS update site">
-	  <exec executable="rsync">
-	    <arg value="-rcv"/>
-	    <arg value="${update-site.dir}/plugins"/>
-        <arg value="${update-site.dir}/features"/>
-        <arg value="${update-site.dir}/artifacts.xml"/>
-        <arg value="${update-site.dir}/content.xml"/>
-	    <arg value="hatsbuilder@repos.hats-project.eu:public_html/tools/update-site"/> 
-	  </exec>
-	</target>
-	
-	<target name="generate-update-site-helper" depends="init">
-		<mkdir dir="${update-site.dir}"/>
-		<copy todir="${update-site.dir}" failonerror="true" overwrite="true">
-			<fileset dir="${dist.dir}" />
-			<fileset dir="${frontend.dir}/dist" />
-			<fileset dir="${costabs.dir}/dist" />
-			<fileset dir="${sdedit.dir}/dist" />
-			<fileset dir="${basedir}">
-				<include name="site.xml"/>
-			</fileset>
-		</copy>
-		<eclipse.publish.featuresAndBundles 
-			artifactRepository="file:///${update-site.dir}" 
-            metadataRepository="file:///${update-site.dir}" 
-			artifactRepositoryName="HATS Update-Site"
-            metadataRepositoryName="HATS Update-Site"
-			site="file:///${update-site.dir}"
-			compress="false" 
-			>
-			<bundles dir="${update-site.dir}/plugins" />
-			<features dir="${update-site.dir}/features" />
-		</eclipse.publish.featuresAndBundles>
-	</target>
-
-	<target name="generate-update-site" depends="init">
-		<java classname="org.eclipse.core.launcher.Main" fork="true">
-			<classpath>
-				<fileset dir="${eclipse.home}/plugins"
-	                	  includes="org.eclipse.equinox.launcher_*.jar" />
-			</classpath>
-			<arg value="-application" />
-			<arg value="org.eclipse.ant.core.antRunner" />
-			<arg value="-buildfile" />
-			<arg value="build.xml" />
-			<arg value="generate-update-site-helper" />
-		</java>
-	</target>
 
 	<target name="clean" description="cleans everything">
 		<delete failonerror="false" includeemptydirs="true">
 			<fileset dir="${build.dir}" />
 			<fileset dir="${dist.dir}" />
 		</delete>
-	</target>
-	
-	<target name="apidoc" description="generates JavaDoc" depends="init">
-		  <javadoc sourcepath="${src.dir}" destdir="${doc.api.dir}">
-		  	<classpath refid="build.classpath" />
-		  	<link href="http://help.eclipse.org/helios/nftopic/org.eclipse.platform.doc.isv/reference/api/" />
-		  	<link href="http://download.oracle.com/javase/6/docs/api/" />
-		  </javadoc>
 	</target>
 
 	<target name="compile" depends="init" description="Compiles all java files in the source directory.">
@@ -149,8 +78,6 @@
 
 	<target name="build-all-plugins">
 		<ant antfile="${frontend.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
-		<ant antfile="${costabs.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
-		<ant antfile="${sdedit.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
 		<antcall target="build-eclipse-plugin"/>
     </target>
 	

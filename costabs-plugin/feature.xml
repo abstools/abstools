@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="costabs"
+      label="COSTABS Eclipse Integration"
+      version="0.0.0.VERSION_STRING"
+      provider-name="HATS Project"
+      os="linux">
+
+   <description url="http://hats-project.eu">
+      This feature adds the Costabs plugin.
+   </description>
+
+   <url>
+      <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.core.filesystem"/>
+      <import plugin="org.eclipse.core.resources" version="3.6.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.5" match="greaterOrEqual"/>
+      <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+   </requires>
+
+   <plugin
+         id="costabs"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
