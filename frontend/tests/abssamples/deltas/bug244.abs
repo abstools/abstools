@@ -1,14 +1,17 @@
+// ******************************************************************
 module Core;
 export *;
 interface Application { Int calculate(Int n); }
 class ApplicationImpl implements Application {
-  Int calculate(Int n) { return n + 1; }
+    Int calculate(Int n) { return n + 1; }
 }
 
-module Delta;
+// ******************************************************************
+module Deltas;
 export *;
 import * from Core;
-delta Delta {
+
+delta MyDelta {
   modifies class ApplicationImpl {
     modifies Int calculate(Int n) {
       Int result = original(n);
@@ -17,13 +20,20 @@ delta Delta {
   }
 }
 
+delta D2 {}
+delta D3 {}
+
+// ******************************************************************
 module Products;
 import * from Core;
-import * from Delta;
+import * from Deltas;
+
+delta MyOtherDelta {}
 
 productline ProductLine {
   features F1;
-  delta Delta when F1;
+  delta MyDelta when F1;
+  delta MyOtherDelta when F1;
 }
 
 product P1(F1) { }
