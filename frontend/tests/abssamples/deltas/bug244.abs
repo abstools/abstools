@@ -7,11 +7,16 @@ class ApplicationImpl implements Application {
 }
 
 // ******************************************************************
+module Core2;
+export *;
+class XXX {}
+
+// ******************************************************************
 module Deltas;
 export *;
 import * from Core;
 
-delta MyDelta {
+delta D1 {
   modifies class ApplicationImpl {
     modifies Int calculate(Int n) {
       Int result = original(n);
@@ -20,23 +25,30 @@ delta MyDelta {
   }
 }
 
-delta D2 {}
-delta D3 {}
+delta D2 {
+  modifies class ApplicationImpl {}
+}
+
+delta D3 {
+  modifies class XXX {}
+}
 
 // ******************************************************************
 module Products;
 import * from Core;
+import * from Core2;
 import * from Deltas;
-
-delta MyOtherDelta {}
 
 productline ProductLine {
   features F1;
-  delta MyDelta when F1;
-  delta MyOtherDelta when F1;
+  delta D1 when F1;
+  delta D2 when F2;
+  delta D3 when F3;
 }
 
 product P1(F1) { }
+product P2(F2) { }
+product P3(F3) { }
 
 {
   Application app = new ApplicationImpl();
