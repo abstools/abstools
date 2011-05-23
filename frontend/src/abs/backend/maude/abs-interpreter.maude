@@ -1377,33 +1377,6 @@ mod ABS-STMT-ASSIGN-RL is
   if D := eval(E, (S :: L), none, 0)
     [label field-assignment] .
 endm
-mod ABS-STMT-ASSIGN-EQ is
-  protecting ABS-EVAL .
-  var O : Oid .        var C : Cid .    vars S L : Subst .
-  var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var CG : String .
-  var Q : Qid .
-
-  *** Variable or field assignment.
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F > 
-  =
-    if hasMapping(L, Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  SL }, PrQ: W, Lcnt: F >
-    else
-      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    fi
-    if D := eval(E, (S :: L), none, 0)
-    [label assignment] .
-
-  *** Field assignment.
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none, 0)
-    [label field-assignment] .
-endm
 mod ABS-STMT-ASSIGN-EQ-TIMED is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
@@ -1447,23 +1420,6 @@ mod ABS-STMT-COND-RL is
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =>
-    if eval(E, (S :: L), none, 0) asBool then
-      < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
-    else
-      < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
-    fi
-    [label if-then-else] .
-endm
-mod ABS-STMT-COND-EQ is
-  protecting ABS-EVAL .
-
-  var O : Oid .                 var C : Cid .      vars S L : Subst .
-  vars SL SL1 SL2 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .                var CG : String .
-
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
-  =
     if eval(E, (S :: L), none, 0) asBool then
       < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
@@ -1584,29 +1540,6 @@ mod ABS-STMT-AWAIT-RL is
     fi
       [label await] .
 endm
-mod ABS-STMT-AWAIT-EQ is
-  protecting ABS-EVAL .
-
-  var O : Oid .             var C : Cid .    vars S L : Subst .
-  var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   vars Q CG : String .
-
-  eq
-    { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
-      CN  }
-  =
-    if enabled(await E, (S :: L), CN, 0) then
-      { < CG : Cog | Object: O >
-        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-        CN  }
-    else
-      { < CG : Cog | Object: null >
-        < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | await E ; SL}, Lcnt: F > 
-        CN  }
-    fi
-      [label await] .
-endm
 mod ABS-STMT-AWAIT-EQ-TIMED is
   protecting ABS-EVAL .
 
@@ -1698,68 +1631,6 @@ mod ABS-CALLSTMTS-RL is
       /\ "str"[DE] := L['.delta]
       [label original-call] .
 endm  
-mod ABS-CALLSTMTS-EQ is
-  protecting ABS-EVAL .
-  protecting ABS-MSG-TRANSPORT .
-
-  vars O O1 : Oid .            vars C C1 : Cid .    vars S S1 L : Subst .
-  var SL : StmtList .          vars W W1 : MProc .  vars F F1 G : Nat .
-  var CN : Configuration .     var E : Expr .       vars Q CG CG1 M : String .
-  var A : Vid .                var EL : ExprList .  var AL : VidList .
-  var N : Label .              var DL : DataList .  var MS : MMtd .
-  vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .  var SS : SSubst .
-  var MIS : MMtd .             var P1 : Process .
-
-  --- async-call
-  ---
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL) ; $call(N ; O1 ; Q ; DL ; false); SL }, PrQ: W, Lcnt: F > 
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O1 := eval(E, (S :: L), none, 0)
-      /\ N := label(O, F)
-      [label async-call] .
-
-  --- sync-call
-  ---
-  --- Create a $cont at end of called process if both objects are in the same
-  --- cog (CG == CG1)
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
-    < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O1 := eval(E, (S :: L), none, 0)
-      /\ N := label(O, F)
-      [label sync-call] .
-
-  --- sync-selfcall
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O := eval(E, (S :: L), none, 0)
-      /\ N := label(O, F)
-      [label sync-selfcall] .
-
-  --- original-call
-  ---
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | original(A ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N); SL }, PrQ: W, Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-    findMethod(M, C, pruneDeltaList(DeL, DE), N, O, evalList(EL, (S :: L), none, 0), true)
-  if N := label(O, F)
-      /\ "str"[M] := L['.method]
-      /\ "str"[DE] := L['.delta]
-      [label original-call] .
-endm
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
@@ -1873,45 +1744,6 @@ mod ABS-NEW-RL is
     < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
 endm
-mod ABS-NEW-EQ is
-  protecting ABS-EVAL .
-  protecting ABS-MSG-TRANSPORT .
-
-  var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
-  var SL : StmtList .  var W : MProc .   vars F G : Nat .
-  var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
-  var CG : String .
-
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
-  =
-    *** Here we get to write the whole synchronous invocation /
-    *** synchronization protocol by hand (normally it is generated by the code
-    *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
-              Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, 0))),
-                             Pr: idle, PrQ: noProc, Lcnt: 0 >
-    [label new-object] .
-
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
-              Lcnt: (s F) >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
-    < ob(newId(B, G)) :  B | Cog: newId(B, G),
-                             Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, 0))),
-                             Pr: idle, PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: null >
-    [label new-object-with-cog] .
-endm
 mod ABS-NEW-EQ-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
@@ -1969,27 +1801,6 @@ mod ABS-STMT-RETURN-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
     < N : Future | Name: Q, Completed: false, References: G, Value: null >
    =>
-    *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
-    *** the process.  We cannot return immediately since there might be
-    *** `release' or `$endscope' statements after this, so we must rely on the
-    *** compiler / type-checker to ascertain that there's one and only one
-    *** return statement in each code branch.
-    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
-  if N == L['.label]
-      [label return] .
-endm
-mod ABS-STMT-RETURN-EQ is
-  protecting ABS-EVAL .
-
-  vars O : Oid .        var C : Cid .    vars S L : Subst .
-  vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  vars Q CG : String .  var N : Label .  var E : Expr .
-
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: false, References: G, Value: null >
-   =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
     *** the process.  We cannot return immediately since there might be
     *** `release' or `$endscope' statements after this, so we must rely on the
@@ -2097,38 +1908,6 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-CALLSTMTS-RL .
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
-  protecting ABS-RECEIVE-RESULT .
-
-  --- System initialisation with arbitrary class.  In Abs, the compiler will
-  --- generate an operator "start" in the generated module that reduces to
-  --- this, with an instantiation of the anonymous class implementing the
-  --- block.  Still, this operator is useful by itself to create any active
-  --- object by itself.
-  op main : Configuration String DataList -> State .
-  eq main(CN:Configuration, B:String, DL:DataList) =
-    { CN:Configuration
-      < "main" : Cog | Object: ob("main") >
-      < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
-        PrQ: noProc, Lcnt: 0 > } .
-
-  --- The initial object commits suicide after it did its job.
-  eq < ob("main") : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
-    none .
-endm
-
-mod ABS-SIMULATOR-EQ is
-  --- A machine using equations.
-  protecting ABS-MACHINE-BASICS .
-  protecting ABS-STMT-SKIP-EQ .
-  protecting ABS-STMT-ASSIGN-EQ .
-  protecting ABS-STMT-COND-EQ .
-  protecting ABS-STMT-WHILE-EQ .
-  protecting ABS-STMT-SUSPEND-EQ .
-  protecting ABS-STMT-AWAIT-EQ .
-  protecting ABS-CALLSTMTS-EQ .
-  protecting ABS-NEW-EQ .
-  protecting ABS-STMT-RETURN-EQ .
   protecting ABS-RECEIVE-RESULT .
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will
