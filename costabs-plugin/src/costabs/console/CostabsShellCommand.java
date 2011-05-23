@@ -1,10 +1,7 @@
 package costabs.console;
 
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 

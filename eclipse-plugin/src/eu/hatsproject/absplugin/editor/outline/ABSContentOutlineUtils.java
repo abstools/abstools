@@ -20,6 +20,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 
 import costabs.handlers.CostabsContainer;
+import costabs.structures.ResultTracker;
 
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
@@ -735,30 +736,37 @@ public class ABSContentOutlineUtils {
 	
 	public static void insertCostabsItems(ISelection sel) {
 		
-		//ConsoleHandler.defaultConsole = ConsoleManager.getDefault();
-		
 		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
-		CostabsContainer.SELECTED_ITEMS = new ArrayList<String>();
+		CostabsContainer.SELECTED_ITEMS = new ResultTracker();
 		
 		for (int i = 0; (selectedItems != null) && (i < selectedItems.length); i++) {
 			InternalASTNode<?> node = (InternalASTNode<?>) selectedItems[i];
 
+			String callerName;
+			int line;
+			
 			if (node.getASTNode() instanceof FunctionDecl) {
 				FunctionDecl del = (FunctionDecl) node.getASTNode();
-				CostabsContainer.SELECTED_ITEMS.add(del.getName());
+				callerName = del.getName();
+				line = FunctionDecl.getLine(del.getStart());
+				CostabsContainer.SELECTED_ITEMS.addResult(callerName, "", "", line);
 			} else if (node.getASTNode() instanceof MethodImpl) { 
 				MethodImpl del = (MethodImpl) node.getASTNode();
 				ASTNode<?> par = del.getContextDecl();
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
-					CostabsContainer.SELECTED_ITEMS.add(cl.getName() + "." + del.getMethodSig().getName());
+					callerName = cl.getName() + "." + del.getMethodSig().getName();
+					line = MethodImpl.getLine(del.getStart());
+					CostabsContainer.SELECTED_ITEMS.addResult(callerName, "", "", line);
 				}
 			} else if (node.getASTNode() instanceof MethodSig) {
 				MethodSig del = (MethodSig) node.getASTNode();
 				ASTNode<?> par = del.getContextDecl();
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
-					CostabsContainer.SELECTED_ITEMS.add(cl.getName() + "." + del.getName());
+					callerName = cl.getName() + "." + del.getName();
+					line = MethodSig.getLine(del.getStart());
+					CostabsContainer.SELECTED_ITEMS.addResult(callerName, "",  "", line);
 				}
 			}
 	

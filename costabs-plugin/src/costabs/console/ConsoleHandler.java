@@ -1,6 +1,5 @@
 package costabs.console;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import org.eclipse.ui.console.ConsolePlugin;
@@ -41,10 +40,6 @@ public class ConsoleHandler {
 		}
 
 		public static void write(String text) {
-			/*
-			MessageConsole myConsole = findCostabsConsole();
-			MessageConsoleStream out = myConsole.newMessageStream();
-			out.println(text);*/
 			if (defaultConsole != null) {
 				MessageConsoleStream out = defaultConsole.newMessageStream();
 				out.setActivateOnWrite(true);
@@ -53,10 +48,7 @@ public class ConsoleHandler {
 		}
 	
 		public static void clearConsole() {
-			/*
-			MessageConsole myConsole = findCostabsConsole();
-			myConsole.clearConsole();
-			*/
+
 			if (defaultConsole != null) 
 				defaultConsole.clearConsole();
 		}
