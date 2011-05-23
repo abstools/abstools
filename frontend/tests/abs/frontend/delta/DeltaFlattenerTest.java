@@ -12,57 +12,72 @@ import abs.frontend.delta.exceptions.*;
 import abs.frontend.ast.*;
 
 public class DeltaFlattenerTest extends FrontendTest {
-    
     @Test
     public void removeClass() throws ASTNodeNotFoundException {
-        ModuleDecl m = new ModuleDecl();
-        m.addDecl(new ClassDecl("MyClass1", 
-                new List<Annotation>(), 
-                new List<ParamDecl>(),
-                new List<InterfaceTypeUse>(),
-                new Opt<InitBlock>(),
-                new List<FieldDecl>(),
-                new List<MethodImpl>()
-                ));
-        m.addDecl(new ClassDecl("MyClass2", 
-                new List<Annotation>(), 
-                new List<ParamDecl>(),
-                new List<InterfaceTypeUse>(),
-                new Opt<InitBlock>(),
-                new List<FieldDecl>(),
-                new List<MethodImpl>()
-                ));
-
-        assertTrue(m.getDeclList().getNumChild() == 2);
-
-        RemoveClassModifier cm = new RemoveClassModifier("MyClass1");
-//        cm.apply(m);
-//        assertTrue(m.getDeclList().getNumChild() == 1);
-
-        cm = new RemoveClassModifier("MyClass2");
-//        cm.applyTo(m);
-//        assertTrue(m.getDeclList().getNumChild() == 0);
+        Model model = assertParseOk("module M; class C {} delta D { removes class C }");
+        
+        ClassDecl cls = null;
+        for (Decl d : model.getDecls()) {
+            if (d instanceof ClassDecl && d.getName().equals("C")) {
+                cls = (ClassDecl) d;
+                break;
+            }
+        }
+        assertNotNull(cls);
+        
+        DeltaDecl delta = null;
+        for (Decl d : model.getDecls()) {
+            if (d instanceof DeltaDecl && d.getName().equals("D")) {
+                delta = (DeltaDecl) d;
+                break;
+            }
+        }
+        assertNotNull(delta);
+        
+        model.applyDelta(delta);
+        
+        cls = null;
+        for (ModuleDecl m : model.getModuleDecls()) {
+            for (Decl d : m.getDecls()) {
+                if (m.getName().equals("M") && d instanceof ClassDecl && d.getName().equals("C")) {
+                    cls = (ClassDecl) d;
+                    break;
+                }
+            }
+        }
+        assertNull(cls);
     }
+    
 
     @Test
     public void addClass() throws ASTNodeNotFoundException {
-        ModuleDecl m = new ModuleDecl();
-        assertTrue(m.getDeclList().getNumChild() == 0);
-        
-        AddClassModifier cm = new AddClassModifier(new ClassDecl("MyNewClass", 
-                new List<Annotation>(), 
-                new List<ParamDecl>(),
-                new List<InterfaceTypeUse>(),
-                new Opt<InitBlock>(),
-                new List<FieldDecl>(),
-                new List<MethodImpl>()
-        ));
-        
-//        cm.applyTo(m);
-//        assertTrue(m.getDeclList().getNumChild() == 1);
-        
-        
+        Model model = assertParseOk("module M; delta D { adds class C {} }");
+
+        DeltaDecl delta = null;
+        for (ModuleDecl m : model.getModuleDecls()) {
+            for (Decl d : model.getDecls()) {
+                if (m.getName().equals("M") && d instanceof DeltaDecl && d.getName().equals("D")) {
+                    delta = (DeltaDecl) d;
+                    break;
+                }
+            }
+        }
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+
+        ClassDecl cls = null;
+        for (ModuleDecl m : model.getModuleDecls()) {
+            for (Decl d : m.getDecls()) {
+                if (m.getName().equals("M") && d instanceof ClassDecl && d.getName().equals("C")) {
+                    cls = (ClassDecl) d;
+                    break;
+                }
+            }
+        }
+        assertNotNull(cls);
     }
+    
     
     // TODO test modifyClass
 }
