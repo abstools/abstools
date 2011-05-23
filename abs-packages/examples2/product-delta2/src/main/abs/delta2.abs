@@ -1,5 +1,6 @@
 module DeltaArtifact2;
 
+export *;
 import * from CoreArtifact;
 
 delta Delta2 {

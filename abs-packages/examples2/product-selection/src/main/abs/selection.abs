@@ -1,5 +1,6 @@
 module Products;
 
+import * from CoreArtifact;
 import * from DeltaArtifact1;
 import * from DeltaArtifact2;
 
