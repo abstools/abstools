@@ -150,8 +150,21 @@ public class JavaBackend extends Main {
             res = dataTypeMap.get(dt.getDecl().getName());
             if (res != null)
                 return res;
-
-            return getQualifiedString(dt.getDecl());
+            
+            StringBuilder sb = new StringBuilder();
+            if (dt.hasTypeArgs() /*&& !containsUnboundedType(dt.getTypeArgs())*/) {
+                sb.append("<"); 
+                boolean first = true; 
+                for (Type t : dt.getTypeArgs()) { 
+                    if (first)
+                        first = false; 
+                    else
+                        sb.append(','); 
+                    sb.append(getQualifiedString(t)); 
+                }
+                sb.append(">"); 
+            }
+            return getQualifiedString(dt.getDecl())+sb.toString();
             /*
              * if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs()))
              * {

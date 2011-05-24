@@ -17,10 +17,14 @@ import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.DataTypeDecl;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeParameterDecl;
@@ -57,8 +61,17 @@ public class JavaGeneratorHelper {
     }
 
     public static void generateParamArgs(PrintStream stream, List<ParamDecl> params) {
+        generateParamArgs(stream,null,params);
+    }
+    public static void generateParamArgs(PrintStream stream, String firstArg, List<ParamDecl> params) {
         stream.print("(");
         boolean first = true;
+        
+        if (firstArg != null) {
+            stream.print(firstArg);
+            first = false;
+        }
+
         for (ParamDecl d : params) {
             if (!first)
                 stream.print(", ");
@@ -91,8 +104,16 @@ public class JavaGeneratorHelper {
         stream.print(")");
     }
 
-    public static void generateTypeParameters(PrintStream stream, List<TypeParameterDecl> typeParams,
+    public static void generateTypeParameters(PrintStream stream, Decl dtd,
             boolean plusExtends) {
+        List<TypeParameterDecl> typeParams = null;
+        if (dtd instanceof ParametricDataTypeDecl) {
+            typeParams = ((ParametricDataTypeDecl)dtd).getTypeParameters();
+        } else
+        if (dtd instanceof ParametricFunctionDecl) {
+            typeParams = ((ParametricFunctionDecl)dtd).getTypeParameters();
+        } else
+            return;
         if (typeParams.getNumChild() > 0) {
             stream.print("<");
             boolean isFirst = true;
