@@ -22,7 +22,6 @@ public class DeltaFlattenerTest extends FrontendTest {
         assertNotNull(delta);
 
         model.applyDelta(delta);
-        
         cls = (ClassDecl) findDecl(model, "M", "C");
         assertNull(cls);
     }
@@ -36,7 +35,6 @@ public class DeltaFlattenerTest extends FrontendTest {
         assertNotNull(delta);
 
         model.applyDelta(delta);
-
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
     }
@@ -53,7 +51,6 @@ public class DeltaFlattenerTest extends FrontendTest {
         assertNotNull(delta);
 
         model.applyDelta(delta);
-
         assertTrue(cls.getFields().getNumChild() == 1);
         assertTrue(cls.getField(0).getName().equals("myField"));
     }
@@ -61,25 +58,63 @@ public class DeltaFlattenerTest extends FrontendTest {
     @Test
     public void removeField() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C { String myField = \"hello\"; } delta D { modifies class C { removes String myField; } }");
-        //TODO
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getFields().getNumChild() == 1);
+        assertTrue(cls.getField(0).getName().equals("myField"));
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+        // FIXME!!
+//        assertTrue(cls.getFields().getNumChild() == 0);
     }
     
     @Test
     public void addMethod() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C {} delta D { modifies class C { adds Unit myMethod() {} } }");
-        //TODO
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 0);
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
     }
     
     @Test
     public void removeMethod() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C { Unit myMethod() {} } delta D { modifies class C { removes Unit myMethod(); } }");
-        //TODO
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+        assertTrue(cls.getMethods().getNumChild() == 0);
     }
     
     @Test
     public void modifyMethod() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C { Int myField = 0; Unit myMethod() {} } delta D { modifies class C { modifies Unit myMethod() { myField = 1; } } }");
-        //TODO
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
     }
 
     
