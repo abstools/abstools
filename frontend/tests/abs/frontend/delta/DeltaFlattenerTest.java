@@ -115,6 +115,11 @@ public class DeltaFlattenerTest extends FrontendTest {
         model.applyDelta(delta);
         assertTrue(cls.getMethods().getNumChild() == 1);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
+        
+        // make sure the MethodImpl defined in the delta is now in the class
+        ModifyClassModifier cm = (ModifyClassModifier) delta.getClassModifier(0);
+        ModifyMethodModifier mm = (ModifyMethodModifier) cm.getModifier(0);
+        assertTrue(cls.getMethod(0).toString().equals(mm.getMethodImpl().toString()));
     }
 
     
