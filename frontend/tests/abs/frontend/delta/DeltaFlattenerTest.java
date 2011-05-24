@@ -16,35 +16,14 @@ public class DeltaFlattenerTest extends FrontendTest {
     public void removeClass() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C {} delta D { removes class C }");
         
-        ClassDecl cls = null;
-        for (Decl d : model.getDecls()) {
-            if (d instanceof ClassDecl && d.getName().equals("C")) {
-                cls = (ClassDecl) d;
-                break;
-            }
-        }
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
-        
-        DeltaDecl delta = null;
-        for (Decl d : model.getDecls()) {
-            if (d instanceof DeltaDecl && d.getName().equals("D")) {
-                delta = (DeltaDecl) d;
-                break;
-            }
-        }
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
         assertNotNull(delta);
-        
+
         model.applyDelta(delta);
         
-        cls = null;
-        for (ModuleDecl m : model.getModuleDecls()) {
-            for (Decl d : m.getDecls()) {
-                if (m.getName().equals("M") && d instanceof ClassDecl && d.getName().equals("C")) {
-                    cls = (ClassDecl) d;
-                    break;
-                }
-            }
-        }
+        cls = (ClassDecl) findDecl(model, "M", "C");
         assertNull(cls);
     }
     
@@ -53,31 +32,69 @@ public class DeltaFlattenerTest extends FrontendTest {
     public void addClass() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; delta D { adds class C {} }");
 
-        DeltaDecl delta = null;
-        for (ModuleDecl m : model.getModuleDecls()) {
-            for (Decl d : model.getDecls()) {
-                if (m.getName().equals("M") && d instanceof DeltaDecl && d.getName().equals("D")) {
-                    delta = (DeltaDecl) d;
-                    break;
-                }
-            }
-        }
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
         assertNotNull(delta);
 
         model.applyDelta(delta);
 
-        ClassDecl cls = null;
-        for (ModuleDecl m : model.getModuleDecls()) {
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+    }
+  
+
+    @Test
+    public void addField() throws ASTNodeNotFoundException {
+        Model model = assertParseOk("module M; class C {} delta D { modifies class C { adds String myField = \"hello\"; } }");
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        assertTrue(cls.getFields().getNumChild() == 0);
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+        model.applyDelta(delta);
+
+        assertTrue(cls.getFields().getNumChild() == 1);
+        assertTrue(cls.getField(0).getName().equals("myField"));
+    }
+    
+    @Test
+    public void removeField() throws ASTNodeNotFoundException {
+        Model model = assertParseOk("module M; class C { String myField = \"hello\"; } delta D { modifies class C { removes String myField; } }");
+        //TODO
+    }
+    
+    @Test
+    public void addMethod() throws ASTNodeNotFoundException {
+        Model model = assertParseOk("module M; class C {} delta D { modifies class C { adds Unit myMethod() {} } }");
+        //TODO
+    }
+    
+    @Test
+    public void removeMethod() throws ASTNodeNotFoundException {
+        Model model = assertParseOk("module M; class C { Unit myMethod() {} } delta D { modifies class C { removes Unit myMethod(); } }");
+        //TODO
+    }
+    
+    @Test
+    public void modifyMethod() throws ASTNodeNotFoundException {
+        Model model = assertParseOk("module M; class C { Int myField = 0; Unit myMethod() {} } delta D { modifies class C { modifies Unit myMethod() { myField = 1; } } }");
+        //TODO
+    }
+
+    
+    // helper method: find a Decl node in given module
+    private Decl findDecl(Model model, String moduleName, String name) {
+        Decl decl = null;
+        out: for (ModuleDecl m : model.getModuleDecls()) {
             for (Decl d : m.getDecls()) {
-                if (m.getName().equals("M") && d instanceof ClassDecl && d.getName().equals("C")) {
-                    cls = (ClassDecl) d;
-                    break;
+                if (m.getName().equals(moduleName) && d.getName().equals(name)) {
+                    decl = d;
+                    break out;
                 }
             }
         }
-        assertNotNull(cls);
+        return decl;
     }
-    
-    
-    // TODO test modifyClass
+
 }
