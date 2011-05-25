@@ -18,6 +18,7 @@ import FLDefs.*;
 // Import classes and interface to interact with ABS
 // from Java
 import abs.backend.java.fli.*;
+import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 
@@ -31,25 +32,25 @@ import abs.backend.java.lib.types.ABSUnit;
  * also possible is to directly inherit from the foreign
  * class and implement the corresponding methods 
  */
-public class ForeignClassImpl extends ABSForeignObject implements ForeignInterface_i {
+public class ForeignClassImpl extends ForeignClass_c {
 
    @Override
-   public ABSUnit m(ABSString s) {
+   public ABSUnit fli_m(ABSString s) {
       System.out.println("Hello ABS, just got "+s+ " from you!");
       return ABSUnit.UNIT;
    }
 
    @Override
-   public ABSString foo(Test t) {
+   public ABSString fli_foo(Test t) {
        if (t.isBar()) {
            System.out.println("Found a Bar with argument "+t.toBar().getArg0());
            return t.toBar().getArg0();
        }
       return ABSString.fromString("This is Java");
    }
-
+   
    @Override
-   public ABSUnit visit(List planets) {
+   public ABSUnit fli_visit(List<ABSString> planets) {
        if (planets.isNil())
            System.out.println("Planet list is Empty");
        else {
@@ -60,6 +61,13 @@ public class ForeignClassImpl extends ABSForeignObject implements ForeignInterfa
       return null;
    }
 
+   @Override
+   public ABSUnit fli_aPing(Ping_i p) {
+       ABSFut<ABSString> fut = p.async_ping(ABSString.fromString("Hi Ping!!!"));
+       System.out.println("Waiting for future....");
+       System.out.println("Got future: "+fut.get());
+      return ABSUnit.UNIT;
+   }
 }
 
 

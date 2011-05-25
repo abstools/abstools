@@ -4,14 +4,6 @@
  * the moment
  */
 
-/**
- * Addional annotations needed for FLI
- */
-module ABS.FLI;
-export Foreign;
-
-data FLIAnnotation = Foreign;
-
 /* The FLUser module is a standard ABS module
  * which acts as a client that uses FL code
  */
@@ -33,6 +25,10 @@ import * from FLDefs;
   List<String> planets = list["Mars", "Venus", "Pluto"];
   i2.visit(planets);
 
+  Ping p = new cog PingImpl();
+  Fut<Unit> f2 = i!aPing(p);
+  f2.get;
+
   // futures also work
   f.get;
 }
@@ -48,6 +44,7 @@ interface ForeignInterface {
    Unit m(String s);
    String foo(Test t);
    Unit visit(List<String> planets);
+   Unit aPing(Ping p);
 }
 
 
@@ -57,19 +54,31 @@ delta MyMock {
   }
 }
 
+interface Ping {
+    String ping(String s);
+}
+
+class PingImpl implements Ping {
+    String ping(String s) {
+        return s+" pinged";
+    }
+}
+
 /*
  * Foreign class.
  * For foreign classes, the compilers generate proxy
  * classes, which delegate calls to the actual objects.
  * this way guarantees 
  */
-[Foreign] class ForeignClass implements ForeignInterface {
+[Foreign] 
+class ForeignClass implements ForeignInterface {
     // in the final realization no implementation 
     // for the methods must be given as this cass is foreign
     // this is just for the current compiler
     Unit m(String s) { }
     String foo(Test t) { return ""; }
     Unit visit(List<String> planets) { }
+    Unit aPing(Ping p) { }
 }
 
 
