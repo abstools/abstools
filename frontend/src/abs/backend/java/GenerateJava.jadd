@@ -1015,18 +1015,16 @@ aspect GenerateJava {
           stream.print("new "+JavaBackend.getQualifiedString(c));
           if (decl instanceof ParametricDataTypeDecl) {
             DataTypeType type = (DataTypeType) this.getType();
-            if (type.hasTypeArgs()) {
-              /*
+            /*if (type.hasTypeArgs()) {
               stream.print("<");
               boolean first = true;
               for (Type typeArg : type.getTypeArgs()) {
                 if (first) first = false;
                 else stream.print(",");
-                JavaBackend.getQualifiedString(typeArg);
+                stream.print(JavaBackend.getQualifiedString(typeArg));
               }
               stream.print(">");
-              */
-            }
+            }*/
           }
           JavaGeneratorHelper.generateArgs(stream,getParams());
         }
