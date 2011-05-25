@@ -191,7 +191,7 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    private static java.util.List<Type> getTypesFromExp(List<PureExp> args) {
+    public static java.util.List<Type> getTypesFromExp(List<PureExp> args) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (PureExp e : args) {
             res.add(e.getType());

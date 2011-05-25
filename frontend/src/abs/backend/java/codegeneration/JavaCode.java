@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.java;
+package abs.backend.java.codegeneration;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 
 public class JavaCode {
     private final File srcDir;

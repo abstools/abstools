@@ -5,6 +5,8 @@ aspect FLIAnnotation {
     }
     
     syn lazy boolean MethodImpl.isForeign() {
+        if (!AnnotationHelper.getAnnotationsOfType(getMethodSig().getAnnotations(),"ABS.FLI.FLIAnnotation").isEmpty())
+            return true;
         return ((ClassDecl) getContextDecl()).isForeign();
     }
     

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;

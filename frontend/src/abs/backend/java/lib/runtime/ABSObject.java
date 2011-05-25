@@ -57,7 +57,7 @@ public abstract class ABSObject implements ABSRef {
     /**
      * Represents the init block
      */
-    public void __ABS_init() {
+    protected void __ABS_init() {
     }
     
     /**
@@ -74,28 +74,28 @@ public abstract class ABSObject implements ABSRef {
     }
 
     @Override
-    public ABSBool eq(ABSValue o) {
+    public final ABSBool eq(ABSValue o) {
         return ABSBool.fromBoolean(this == o);
     }
 
     @Override
-    public ABSBool notEq(ABSValue o) {
+    public final ABSBool notEq(ABSValue o) {
         return eq(o).negate();
     }
 
     @Override
-    public boolean isDataType() {
+    public final boolean isDataType() {
         return false;
     }
 
     @Override
-    public boolean isReference() {
+    public final boolean isReference() {
         return true;
     }
 
     protected volatile ObjectView __view;
 
-    public synchronized ObjectView getView() {
+    public final synchronized ObjectView getView() {
         if (__view == null) {
             __view = new View();
         }

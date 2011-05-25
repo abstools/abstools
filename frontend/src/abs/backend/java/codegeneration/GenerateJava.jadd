@@ -3,6 +3,7 @@
 import java.io.*;
 
 import abs.backend.java.*;
+import abs.backend.java.codegeneration.*;
 import abs.backend.java.lib.runtime.*;
 import abs.backend.java.lib.expr.*;
 import abs.backend.java.lib.types.*;
@@ -191,26 +192,11 @@ aspect GenerateJava {
     }
 
     public void MethodSig.generateJava(String indent, PrintStream stream) {
-        this.generateJava(indent, stream, false);
+        generateJava(indent,stream,false);
     }
-
+    
     public void MethodSig.generateJava(String indent, PrintStream stream, boolean async) {
-        JavaGeneratorHelper.generateHelpLine(this,stream);
-
-        stream.print(indent+"public ");
-        if (async) {
-            stream.print("abs.backend.java.lib.runtime.ABSFut<");
-        }
-        getReturnType().generateJava(stream);
-        if (async) {
-            stream.print(">");
-        }
-        stream.print(" ");
-        if (async) {
-            stream.print("async_");
-        }
-        stream.print(JavaBackend.getMethodName(getName()));
-        JavaGeneratorHelper.generateParams(stream, getParams());
+       JavaGeneratorHelper.generateMethodSig(indent,stream,this,async);
     }
 
     public void ParamDecl.generateJava(PrintStream stream) {
@@ -219,176 +205,7 @@ aspect GenerateJava {
     }
 
     public void ClassDecl.generateJava(PrintStream stream) {
-        JavaGeneratorHelper.generateHelpLine(this,stream);
-        String className = JavaBackend.getClassName(getName());
-        stream.print("public class "+className+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
-        for (InterfaceType itype : ((UnionType)getType()).getTypes()) {
-            String qualifiedName = JavaBackend.getQualifiedString(itype.getDecl());
-            stream.print(", "+qualifiedName);
-        }
-
-        ClassDecl d = null;
-        stream.println(" {");
-
-        if (isForeign()) {
-            // TODO: currently a limitiation that only the first interface can be used
-            String fliInterface = JavaBackend.getQualifiedString(((UnionType)getType()).getTypes().get(0).getDecl());
-            stream.println("    private final "+fliInterface+" __ABS_foreignObject = ("+fliInterface+
-                    ") "+ABSRuntime.class.getName()+".getCurrentRuntime().getForeignObject(\""+this.qualifiedName()+"\");");
-        }
-            
-        
-        
-        
-        stream.println("    private static java.util.concurrent.atomic.AtomicLong __idCounter = new java.util.concurrent.atomic.AtomicLong();");
-
-        java.util.List<String> fieldNames = new ArrayList<String>();
-        for (ParamDecl p : getParams()) {
-          fieldNames.add(p.getName());
-        }
-
-        for (FieldDecl f : getFields()) {
-          fieldNames.add(f.getName());
-        }
-
-
-        stream.print("    private static final java.lang.String[] __fieldNames = new java.lang.String[] {");
-
-        boolean first = true;
-        for (String fieldName : fieldNames) {
-          if (first) first = false;
-          else stream.print(",");
-          stream.print("\""+fieldName+"\"");
-        }
-        stream.println("};");
-
-        stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Arrays.asList(__fieldNames); }");
-
-        for (ParamDecl p : getParams()) {
-            stream.print("   private ");
-            p.generateJava(stream);
-            stream.println(";");
-        }
-
-        for (FieldDecl f : getFields()) {
-          f.generateJava("   private ", stream);
-        }
-
-        // constructor
-        stream.print("   public "+className);
-        JavaGeneratorHelper.generateParams(stream, getParams());
-        stream.println(" {");
-        
-        for (ParamDecl p : getParams()) {
-            stream.println("      this."+JavaBackend.getVariableName(p.getName())+" = "+JavaBackend.getVariableName(p.getName())+";");
-        }
-        stream.println("       getCOG().objectCreated(this);");
-
-        stream.println(" }");
-        
-        stream.println("   public void __ABS_init() {");
-
-        for (FieldDecl f : getFields()) {
-            if (f.hasInitExp()) {
-                stream.print("this.");
-                stream.print(JavaBackend.getVariableName(f.getName()));
-                stream.print(" = ");
-                f.getInitExp().generateJava(stream);
-                stream.print(";");
-            }
-        }
-
-        if (hasInitBlock()) {
-            getInitBlock().generateJava("      ",stream);
-        }
-
-        stream.println("       getCOG().objectInitialized(this);");
-
-        stream.println("   }");
-
-            
-
-
-
-      stream.println("   protected ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
-        for (ParamDecl p : getParams()) {
-            stream.println("   if (\""+p.getName()+"\".equals(__ABS_fieldName)) return "+JavaBackend.getVariableName(p.getName())+";");
-        }
-
-        for (FieldDecl f : getFields()) {
-            stream.println("   if (\""+f.getName()+"\".equals(__ABS_fieldName)) return "+JavaBackend.getVariableName(f.getName())+";");
-        }
-        stream.println("       return super.getFieldValue(__ABS_fieldName);");
-
-      stream.println("   }");
-
-    stream.println("   public java.lang.String getClassName() { return \""+getName()+"\"; }");
-
-
-        // Convenience method for new cog C
-        stream.print("   public static "+className+" createNewCOG");
-        JavaGeneratorHelper.generateParams(stream, getParams());
-        stream.print("{ ");
-        stream.print("return ");
-        stream.print(className + ".__ABS_createNewCOG");
-        JavaGeneratorHelper.generateParamArgs(stream, "null", getParams());
-        stream.println("; }");
-    
-        // static constructor method for new cog C    
-        stream.print("   public static "+className+" __ABS_createNewCOG");
-        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",getParams());
-        stream.println(" {");
-        stream.println("       final "+ABSRuntime.class.getName()+" __ABS_runtime = "+ABSRuntime.class.getName()+".getCurrentRuntime();");
-        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"(__ABS_runtime,"+className+".class);");
-        stream.println("       final "+ABSThread.class.getName()+" __ABS_thread = "+ABSRuntime.class.getName()+".getCurrentThread();");
-        stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
-        stream.println("       final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
-        stream.println("       __ABS_thread.setCOG(__ABS_cog);");
-        stream.println("       try { ");
-        stream.print("            "+className+" __ABS_result = new "+className);
-        JavaGeneratorHelper.generateParamArgs(stream,getParams());
-        stream.println(";");
-        stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("          __ABS_cog.getScheduler().addTask(new "+
-                ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
-        if (isActiveClass()) {
-            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
-        }
-        stream.println("          return __ABS_result;");
-        stream.println("       } finally {");
-        stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
-        stream.println("       }");
-        stream.println("   }");
-
-        // Convenience method for new C
-        stream.print("   public static "+className+" createNewObject");
-        JavaGeneratorHelper.generateParams(stream, getParams());
-        stream.print("{ ");
-        stream.print("return ");
-        stream.print(className + ".__ABS_createNewObject");
-        JavaGeneratorHelper.generateParamArgs(stream, "null", getParams());
-        stream.println("; }");
-    
-        // static constructor method for new C
-        stream.print("   public static "+className+" __ABS_createNewObject");
-        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source", getParams());
-        stream.println(" {");
-        stream.print("            "+className+" __ABS_result = new "+className);
-        JavaGeneratorHelper.generateParamArgs(stream,getParams());
-        stream.println(";");
-        stream.println("        __ABS_result.__ABS_init();");
-        if (isActiveClass()) {
-            stream.println("          final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
-            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
-        }
-        stream.println("          return __ABS_result;");
-        stream.println("   }");
-
-        // methods
-        for (MethodImpl m : getMethods()) {
-          m.generateJava("   ", stream);
-        }
-        stream.println("}");
+        JavaGeneratorHelper.generateClassDecl(stream,this);
     }
 
     public void DeltaDecl.generateJava(PrintStream stream) {
@@ -396,91 +213,7 @@ aspect GenerateJava {
     }
 
     public void MethodImpl.generateJava(String indent, PrintStream stream) {
-        boolean addReturn = false;
-        if (getMethodSig().getReturnType().getType().isUnitType()) {
-          if (getBlock().getNumStmt() == 0 ||
-              (! (getBlock().getStmt(getBlock().getNumStmt()-1) instanceof ReturnStmt))) {
-            addReturn = true;
-          }
-        }
-      // Async variant
-      getMethodSig().generateJava(indent,stream,true);
-      stream.println("{ ");
-      stream.print("return (abs.backend.java.lib.runtime.ABSFut)");
-      stream.print(ABSRuntime.class.getName()+".asyncCall(");
-      String targetType = JavaBackend.getQualifiedString(getContextDecl().getType());
-      stream.print("new "+Task.class.getName()+"<"+targetType+">(null,");
-      //stream.print(ABSRuntime.class.getName()+".checkForNull(");
-      //getCallee().generateJava(stream);
-      //stream.print(")");
-      stream.print("this");
-      stream.print(") {");
-      int i = 0;
-      for (ParamDecl e : getMethodSig().getParams()) {
-          stream.print(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
-          i++;
-      }
-
-      stream.print(" protected ABSValue[] getArgs() { return new ABSValue[] { ");
-      i = 0;
-      for (ParamDecl e : getMethodSig().getParams()) {
-          if (i > 0) stream.print(",");
-          stream.print("arg"+i);
-          i++;
-      }
-      stream.print(" }; } ");
-
-      stream.print("    public "+Task.class.getName()+"<?> init(");
-      i = 0;
-      for (ParamDecl e : getMethodSig().getParams()) {
-          if (i > 0) stream.print(",");
-          stream.print(JavaBackend.getQualifiedString(e.getType())+" _arg"+i);
-          i++;
-      }
-      stream.print(") {");
-      for (i = 0; i < getMethodSig().getNumParam(); i++) {
-          stream.print("arg"+i+" = _arg"+i+";");
-      }
-      stream.print(" return this; }");
-
-      stream.print(" public java.lang.String methodName() { return \""+getMethodSig().getName()+"\"; }");
-
-      stream.print(" public Object execute() {");
-      stream.print(" return target."+JavaBackend.getMethodName(getMethodSig().getName())+"(");
-      for (i = 0; i < getMethodSig().getNumParam(); i++) {
-          if (i > 0) stream.print(",");
-          stream.print("arg"+i);
-      }
-      stream.print(");");
-      stream.println(" }}");
-      stream.print("     .init");
-      JavaGeneratorHelper.generateParamArgs(stream,getMethodSig().getParams());
-      stream.print(")");
-      stream.print(";");
-      stream.println("}");
-      // Sync variant
-      getMethodSig().generateJava(indent,stream,false);
-      
-      stream.println("{ __ABS_checkSameCOG(); ");
-      
-      if (isForeign()) {
-          stream.println("    if (__ABS_foreignObject != null)");
-          stream.print("        return __ABS_foreignObject.");
-          stream.print(JavaBackend.getMethodName(getMethodSig().getName()));
-          JavaGeneratorHelper.generateParamArgs(stream, getMethodSig().getParams());
-          stream.println(";");
-      }
-      
-      stream.println("    if (__ABS_getRuntime().debuggingEnabled()) {");
-      stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
-      stream.println("       __ABS_currentTask.newStackFrame(this,\""+getMethodSig().getName()+"\");");
-      for (ParamDecl d : getMethodSig().getParams()) {
-          stream.print("     __ABS_currentTask.setLocalVariable(");
-          stream.println("\""+d.getName()+"\","+d.getName()+");");
-      }
-      stream.println("    }");
-      getBlock().generateJava(indent, stream, addReturn);
-     stream.print("}");
+        JavaGeneratorHelper.generateMethodImpl(indent, stream, this);
     }
 
     public void FieldDecl.generateJava(String indent, PrintStream stream) {
@@ -747,53 +480,7 @@ aspect GenerateJava {
     }
     
     public void AsyncCall.generateJava(PrintStream stream) {
-        stream.print(ABSRuntime.class.getName()+".asyncCall(");
-        String targetType = JavaBackend.getQualifiedString(getCallee().getType());
-        stream.print("new "+Task.class.getName()+"<"+targetType+">(this,");
-        stream.print(ABSRuntime.class.getName()+".checkForNull(");
-        getCallee().generateJava(stream);
-        stream.print(")) {");
-        int i = 0;
-        for (PureExp e : getParams()) {
-            stream.print(JavaBackend.getQualifiedString(e.getType())+" arg"+i+";");
-            i++;
-        }
-
-        stream.print(" protected ABSValue[] getArgs() { return new ABSValue[] { ");
-        i = 0;
-        for (PureExp e : getParams()) {
-            if (i > 0) stream.print(",");
-            stream.print("arg"+i);
-            i++;
-        }
-        stream.print(" }; } ");
-
-        stream.print("    public "+Task.class.getName()+"<?> init(");
-        i = 0;
-        for (PureExp e : getParams()) {
-            if (i > 0) stream.print(",");
-            stream.print(JavaBackend.getQualifiedString(e.getType())+" _arg"+i);
-            i++;
-        }
-        stream.print(") {");
-        for (i = 0; i < getNumParam(); i++) {
-            stream.print("arg"+i+" = _arg"+i+";");
-        }
-        stream.print(" return this; }");
-
-        stream.print(" public java.lang.String methodName() { return \""+getMethod()+"\"; }");
-
-        stream.print(" public Object execute() {");
-        stream.print(" return target."+JavaBackend.getMethodName(getMethod())+"(");
-        for (i = 0; i < getNumParam(); i++) {
-            if (i > 0) stream.print(",");
-            stream.print("arg"+i);
-        }
-        stream.print(");");
-        stream.println(" }}");
-        stream.print("     .init");
-        JavaGeneratorHelper.generateArgs(stream,getParams());
-        stream.print(")");
+        JavaGeneratorHelper.generateAsyncCall(stream, this);
     }
 
     public void SyncCall.generateJava(PrintStream stream) {
@@ -1013,9 +700,10 @@ aspect GenerateJava {
             stream.print("ABSUnit.UNIT");
         } else {
           stream.print("new "+JavaBackend.getQualifiedString(c));
+          /*
           if (decl instanceof ParametricDataTypeDecl) {
             DataTypeType type = (DataTypeType) this.getType();
-            /*if (type.hasTypeArgs()) {
+            if (type.hasTypeArgs()) {
               stream.print("<");
               boolean first = true;
               for (Type typeArg : type.getTypeArgs()) {
@@ -1024,8 +712,9 @@ aspect GenerateJava {
                 stream.print(JavaBackend.getQualifiedString(typeArg));
               }
               stream.print(">");
-            }*/
+            }
           }
+          */
           JavaGeneratorHelper.generateArgs(stream,getParams());
         }
     }
