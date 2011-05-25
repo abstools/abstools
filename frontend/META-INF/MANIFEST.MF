@@ -27,6 +27,7 @@ Export-Package: .,
  abs.backend,
  abs.backend.common,
  abs.backend.java,
+ abs.backend.java.codegeneration,
  abs.backend.java.debugging,
  abs.backend.java.lib.expr,
  abs.backend.java.lib.runtime,
@@ -115,4 +116,3 @@ Export-Package: .,
  org.sat4j.tools.xplain,
  parser,
  scanner
- 
