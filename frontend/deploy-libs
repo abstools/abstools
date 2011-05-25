@@ -77,3 +77,24 @@ mvn deploy:deploy-file \
 	 -Dversion=1.0 \
 	 -Dpackaging=jar \
 	 -DgeneratePom=true
+
+mvn deploy:deploy-file \
+         -Durl=scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos \
+         -DrepositoryId=repos.hats-project.eu \
+         -Dfile=lib/svnant.jar \
+         -DgroupId=eu.hats-project \
+         -DartifactId=svnant \
+         -Dversion=1.0 \
+         -Dpackaging=jar \
+         -DgeneratePom=true
+
+mvn deploy:deploy-file \
+         -Durl=scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos \
+         -DrepositoryId=repos.hats-project.eu \
+         -Dfile=lib/svnClientAdapter.jar \
+         -DgroupId=eu.hats-project \
+         -DartifactId=svn-client-adapter \
+         -Dversion=1.0 \
+         -Dpackaging=jar \
+         -DgeneratePom=true
+
