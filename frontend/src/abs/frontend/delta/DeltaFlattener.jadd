@@ -31,6 +31,11 @@ aspect Flattener {
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
         
+        Block block = prod.getMainBlock();
+        ModuleDecl mod = prod.getModuleDecl();
+        MainBlock mb = new MainBlock();
+        mb.setStmtList(block.getStmtList().copy());
+        mod.setBlock(mb);
     }
     
     /*
