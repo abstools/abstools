@@ -37,7 +37,11 @@ public class PackageAbsFile implements AbsFile {
 	}
 
 	public IProject getProject() {
-		return parent.getPackageContainer().getProject();
+		PackageContainer container = parent.getPackageContainer();
+		if (container != null) {
+			return container.getProject();
+		}
+		return null;
 	}
 
 	public String getFileExtension() {
