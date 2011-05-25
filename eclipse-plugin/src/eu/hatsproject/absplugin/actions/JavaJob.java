@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.osgi.framework.Bundle;
 
-import abs.backend.java.JavaCode;
+import abs.backend.java.codegeneration.JavaCode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
