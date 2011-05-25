@@ -4,6 +4,7 @@
  */
 package eu.hatsproject.absplugin.navigator;
 
+import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getCompilationUnitOfASTNode;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.highlightInEditor;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.openABSEditorForFile;
@@ -73,6 +74,17 @@ public class NavigatorUtils {
 			highlightInEditor(texteditor, node);
 		}
 	}	
+	
+	public static void updateDependencies(TreeSelection ts) {
+		if (!ts.equals(TreeSelection.EMPTY)) {
+			TreePath path = ts.getPaths()[0];
+			IProject project = getProject(path);
+			if (project != null) {
+				AbsNature nature = getAbsNature(project);
+				nature.initDependencies();
+			}
+		}
+	}
 	
 	/**
 	 * Retrieves the IProject for a given TreePath that comes from the

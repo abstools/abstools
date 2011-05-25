@@ -548,6 +548,16 @@
                 class="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
           </commonSorter>
           <actionProvider
+          		class="eu.hatsproject.absplugin.navigator.actionProvider.RefreshDependenciesProvider">
+          	 <enablement>
+          	   <or>
+          	     <instanceof
+                	  value="eu.hatsproject.absplugin.editor.outline.PackageContainer">
+                 </instanceof>
+          	   </or>
+             </enablement>
+          </actionProvider>
+          <actionProvider
                 class="eu.hatsproject.absplugin.navigator.actionProvider.DoubleClickActionProvider">
              <enablement>
              	<or>
