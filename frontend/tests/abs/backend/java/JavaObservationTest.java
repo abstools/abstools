@@ -8,6 +8,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import abs.backend.java.codegeneration.JavaCode;
+
 public class JavaObservationTest extends JavaBackendTest {
 
     @Test

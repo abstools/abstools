@@ -7,8 +7,21 @@ interface IO {
 }
 
 [Foreign]
-class C implements I { 
+class C implements IO { 
+    
+
     Unit m() {
         // default implementation
+    }
+}
+
+
+[Foreign]
+class D implements IO {
+    Unit m() {
+    }
+    
+    Unit neverForeign() {
+    
     }
 }

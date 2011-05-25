@@ -6,6 +6,8 @@ package abs.backend.java;
 
 import org.junit.Test;
 
+import abs.backend.java.codegeneration.JavaCode;
+
 import junit.framework.Assert;
 
 public class JavaDebuggingTest extends JavaBackendTest {

@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import junit.framework.Assert;
 
 import abs.ABSTest;
+import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
