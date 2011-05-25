@@ -7,6 +7,7 @@ package eu.hatsproject.absplugin.editor;
 import java.io.PrintStream;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -16,6 +17,7 @@ import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 
 import abs.frontend.ast.ASTNode;
@@ -42,6 +44,8 @@ import beaver.Symbol;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
 
@@ -57,9 +61,30 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 		}
 		
 		try{
+			IEditorInput input = editor.getEditorInput();
 			ABSEditor abseditor = (ABSEditor)editor;
-			IFile file = (IFile)abseditor.getEditorInput().getAdapter(IFile.class);
-			AbsNature nature = UtilityFunctions.getAbsNature(file);
+			AbsNature nature;
+			String path;
+			IProject project;
+			if (input instanceof PackageAbsFileEditorInput) {
+				/*
+				 * XXX This solution only works if 
+				 * dependencies are not cross projects. 
+				 */
+				PackageAbsFileEditorInput pInput =
+					(PackageAbsFileEditorInput) input;
+				
+				PackageAbsFile packageFile = pInput.getFile();
+				project = packageFile.getProject();
+				nature = UtilityFunctions.getAbsNature(packageFile.getProject());
+				path = packageFile.getAbsoluteFilePath();
+			} else {
+				IFile file = (IFile)abseditor.getEditorInput().getAdapter(IFile.class);
+				nature = UtilityFunctions.getAbsNature(file);
+				project = file.getProject();
+				path = file.getLocation().toFile().getAbsolutePath();
+			}
+			
 			if(nature==null){
 				MessageDialog.openError(Display.getCurrent().getActiveShell(), "No ABSProject", "The file is not in an ABS project!");
 				return;
@@ -68,7 +93,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 			synchronized (nature.modelLock) {
 				IDocument doc = abseditor.getDocumentProvider().getDocument(abseditor.getEditorInput());
 				
-				CompilationUnit compunit = nature.getCompilationUnit(file);
+				CompilationUnit compunit = nature.getCompilationUnit(path);
 				if(compunit==null){
 					MessageDialog.openInformation(abseditor.getSite().getShell(),"Error", "AST not set!");
 					return;
@@ -87,7 +112,8 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 					node.dumpTree("", pstream);
 				}
 				if(pos!=null){
-					ABSEditor targeteditor = UtilityFunctions.openABSEditorForFile(pos.getPath());
+					ABSEditor targeteditor = 
+						UtilityFunctions.openABSEditorForFile(pos.getPath(),project);
 					if(targeteditor==null){
 						MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "File not found!",
 								"Could not find file "+pos.getPath().toOSString());

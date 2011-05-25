@@ -51,6 +51,7 @@ import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
+import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 /**
  * Collection of project-wide utility functions
@@ -518,26 +519,61 @@ public class UtilityFunctions {
 		return null;
 	}
 	
+	public static PackageAbsFile getPackageAbsFile(String pak, String entry) {
+		return getPackageAbsFile(pak,entry,null);
+	}
+
 	/**
 	 * A convenient method to reconstruct a {@link PackageAbsFile} from the absolute
 	 * path to the ABS package and the name to the specific entry in the package.
 	 * @param pak
 	 * @param entry
+	 * @param name name of the project this ABS package is from. 
 	 * @return 
 	 */
-	public static PackageAbsFile getPackageAbsFile(String pak, String entry) {
+	public static PackageAbsFile getPackageAbsFile(String pak, String entry,
+			String name) {
 		File file = new File(pak);
 		try {
 			if (new ABSPackageFile(file).isABSPackage()) {
-				return new PackageAbsFile(
-						new PackageEntry(
-								null, 
+				
+				PackageContainer container = null;
+				PackageEntry pentry = null;
+				if (name != null) {
+					IProject proj = getAbsProjectFromWorkspace(name);
+					AbsNature nature = getAbsNature(proj);
+					for (PackageEntry e : nature.getPackages().getPackages()) {
+						if (e.getPath().equals(file.getAbsolutePath())) {
+							pentry = e;
+							break;
+						}
+					}
+					if (pentry == null) {
+						container = new PackageContainer();
+						container.setProject(proj);
+					}
+				}
+				
+				if (pentry == null) {
+					pentry = new PackageEntry(
+								container, 
 								file.getName(), 
 								file.getAbsolutePath(), 
-								true), entry);
+								true);
+				}
+				
+				return new PackageAbsFile(pentry, entry);
 			}
 		} catch (IOException e) {
 			
+		}
+		return null;
+	}
+	
+	private static IProject getAbsProjectFromWorkspace(String name) {
+		IProject p = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+		if (getAbsNature(p) != null) {
+			return p;
 		}
 		return null;
 	}
@@ -550,7 +586,11 @@ public class UtilityFunctions {
 		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	}
 	
-	public static ABSEditor openABSEditorForFile(IPath path){
+	public static ABSEditor openABSEditorForFile(IPath path) {
+		return openABSEditorForFile(path, null);
+	}
+	
+	public static ABSEditor openABSEditorForFile(IPath path, IProject project){
 		IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
 		if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
 		    try {
@@ -564,7 +604,8 @@ public class UtilityFunctions {
 				String parts = new URI(path.toString()).getRawSchemeSpecificPart();
 				String pak = new URI(parts.split("!/")[0]).getSchemeSpecificPart();
 				String entry = parts.split("!/")[1];
-				return openABSEditorForFile(getPackageAbsFile(pak, entry));
+				String pname = (project != null) ? project.getName() : null;
+				return openABSEditorForFile(getPackageAbsFile(pak, entry, pname));
 			} catch (URISyntaxException e) {
 				e.printStackTrace();
 			}

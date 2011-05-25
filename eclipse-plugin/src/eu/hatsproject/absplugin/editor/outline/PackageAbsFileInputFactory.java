@@ -1,5 +1,6 @@
 package eu.hatsproject.absplugin.editor.outline;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
@@ -28,8 +29,13 @@ public class PackageAbsFileInputFactory implements IElementFactory {
 	 * @param input the file editor input
 	 */
 	static void saveState(IMemento memento, PackageAbsFileEditorInput input) {
-		memento.putString(ABS_PACKAGE, input.getFile().getParent().getPath());
-		memento.putString(ABS_PACKAGE_ENTRY, input.getFile().getName());
+		PackageAbsFile file = input.getFile();
+		memento.putString(ABS_PACKAGE, file.getParent().getPath());
+		memento.putString(ABS_PACKAGE_ENTRY, file.getName());
+		IProject project = file.getProject();
+		if (project != null) {
+			memento.putString(ABS_PROJECT, project.getName());
+		}
 	}
 	
 	/**
@@ -37,11 +43,14 @@ public class PackageAbsFileInputFactory implements IElementFactory {
 	 */
 	private static final String ABS_PACKAGE_ENTRY = "abs_entry"; //$NON-NLS-1$
 	private static final String ABS_PACKAGE = "abs_package"; //$NON-NLS-1$
+	private static final String ABS_PROJECT = "abs_project"; //$NON-NLS-1$
 	
 	public IAdaptable createElement(IMemento memento) {
 		String pak = memento.getString(ABS_PACKAGE);
 		String entry = memento.getString(ABS_PACKAGE_ENTRY);
-		return new PackageAbsFileEditorInput(UtilityFunctions.getPackageAbsFile(pak,entry));
+		String name = memento.getString(ABS_PROJECT);
+		return new PackageAbsFileEditorInput(
+				UtilityFunctions.getPackageAbsFile(pak,entry,name));
 	}
 	
 }
