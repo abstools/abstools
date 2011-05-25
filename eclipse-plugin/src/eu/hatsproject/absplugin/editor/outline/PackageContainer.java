@@ -42,5 +42,9 @@ public class PackageContainer {
 	public IProject getProject() {
 		return project;
 	}
+	
+	public void clear() {
+		packages.clear();
+	}
 
 }
