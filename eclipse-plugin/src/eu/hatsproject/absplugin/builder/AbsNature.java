@@ -487,6 +487,7 @@ public class AbsNature implements IProjectNature {
 	public void initDependencies() {
 		try {
 			if (project != null) {
+				packageContainer.clear();
 				File file = new File(project.getFile(PACKAGE_DEPENDENCIES).getLocationURI());
 				Set<PackageEntry> entries = new HashSet<PackageEntry>();
 				if (file.exists()) {
