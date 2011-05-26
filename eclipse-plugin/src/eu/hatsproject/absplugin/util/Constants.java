@@ -128,6 +128,10 @@ public class Constants {
 	public static final String BACKEND_MAUDE_INTERPRETER = "abs/backend/maude/abs-interpreter.maude";
 	
 	//-------------------- PREFERENCES AND PROPERTIES----------------------------------------------------------
+	//Maven Executable path
+	public static final String MAVEN_EXEC_PATH                = "MavenPath";
+	public static final String DEFAULT_MAVEN_EXEC_PATH        = "";
+	
 	//Maude Executable path
 	public static final String MAUDE_EXEC_PATH                = "MaudePath";
 	public static final String DEFAULT_MAUDE_EXEC_PATH        = "";

@@ -76,14 +76,19 @@ public class NavigatorUtils {
 	}	
 	
 	public static void updateDependencies(TreeSelection ts) {
+		IProject project = getProject(ts);
+		if (project != null) {
+			AbsNature nature = getAbsNature(project);
+			nature.initDependencies();
+		}
+	}
+	
+	public static IProject getProject(TreeSelection ts) {
 		if (!ts.equals(TreeSelection.EMPTY)) {
 			TreePath path = ts.getPaths()[0];
-			IProject project = getProject(path);
-			if (project != null) {
-				AbsNature nature = getAbsNature(project);
-				nature.initDependencies();
-			}
+			return getProject(path);
 		}
+		return null;
 	}
 	
 	/**

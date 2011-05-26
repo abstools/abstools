@@ -77,6 +77,11 @@ public class AbsNature implements IProjectNature {
 	private MsgConsole defaultMaudeConsole = null;
 	
 	/**
+	 * The default console singleton used by getMavenConsole()
+	 */
+	private MsgConsole defaultMavenConsole = null;
+	
+	/**
 	 * Gives the default console for Java Output
 	 * @return Java Message Console
 	 */	
@@ -110,7 +115,19 @@ public class AbsNature implements IProjectNature {
 		}
 		
 		return defaultMaudeConsole;
-	}	
+	}
+	
+	/**
+	 * Gives the default console for Maven Output
+	 * @return Maven Message Console
+	 */	
+	public MsgConsole getMavenConsole(){
+		if (defaultMavenConsole == null){
+			defaultMavenConsole = ConsoleManager.newConsole("Maven Output (" + getProject().getName() + ")");
+		}
+		
+		return defaultMavenConsole;
+	}
 
 	/**
 	 * adds the current builder for abs files to the project. Is only called once when the
@@ -201,14 +218,18 @@ public class AbsNature implements IProjectNature {
 		if(declfile==null)
 			return;
 		
-		IMarker marker = declfile.createMarker(markerType);
-		marker.setAttribute(IMarker.MESSAGE, message);
-		marker.setAttribute(IMarker.SEVERITY, severity);
-		marker.setAttribute(START_LINE, Symbol.getLine(start)-1);
-		marker.setAttribute(START_COLUMN, Symbol.getColumn(start)-1);
-		marker.setAttribute(END_LINE, Symbol.getLine(end)-1);
-		marker.setAttribute(END_COLUMN, Symbol.getColumn(end));
-		marker.setAttribute(IMarker.LINE_NUMBER, Symbol.getLine(start));
+		try {
+			IMarker marker = declfile.createMarker(markerType);
+			marker.setAttribute(IMarker.MESSAGE, message);
+			marker.setAttribute(IMarker.SEVERITY, severity);
+			marker.setAttribute(START_LINE, Symbol.getLine(start)-1);
+			marker.setAttribute(START_COLUMN, Symbol.getColumn(start)-1);
+			marker.setAttribute(END_LINE, Symbol.getLine(end)-1);
+			marker.setAttribute(END_COLUMN, Symbol.getColumn(end));
+			marker.setAttribute(IMarker.LINE_NUMBER, Symbol.getLine(start));
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
    }
 	
 	/**

@@ -430,6 +430,12 @@
              id="eu.hatsproject.absplugin.preferences.ABSMaudePreferences"
              name="ABS Maude Preferences">
        </page>
+       <page
+             category="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
+             class="eu.hatsproject.absplugin.preferences.ABSMavenPreferences"
+             id="eu.hatsproject.absplugin.preferences.ABSMavenPreferences"
+             name="ABS Maven Preferences">
+       </page>
     </extension>
     <extension
           point="org.eclipse.ui.commands">
