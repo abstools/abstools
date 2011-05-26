@@ -6,14 +6,14 @@ import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 
 /**
- * A provider the {@link RightClickAction} that provides a menu
+ * A provider the {@link RefreshDependenciesAction} that provides a menu
  * item on the context menu of the package container for refresh.
  * @author pwong
  *
  */
 public class RefreshDependenciesProvider extends CommonActionProvider {
 	
-	private RightClickAction refresh;
+	private RefreshDependenciesAction refresh;
 	private ICommonActionExtensionSite aSite;
 	
 	@Override
@@ -21,7 +21,7 @@ public class RefreshDependenciesProvider extends CommonActionProvider {
 		super.init(aSite);
 		this.aSite = aSite;
 		Shell shell = aSite.getViewSite().getShell();
-		refresh = new RightClickAction(shell,aSite.getStructuredViewer().getSelection());
+		refresh = new RefreshDependenciesAction(shell,aSite.getStructuredViewer().getSelection());
 		aSite.getStructuredViewer().addSelectionChangedListener(refresh);
 	}
 	
