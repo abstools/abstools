@@ -21,7 +21,6 @@ import abs.backend.java.lib.types.ABSValue;
  * @author pwong
  *
  */
-@SuppressWarnings("unchecked")
 public class CollectionUtil {
     
     public <A extends ABSValue,B> java.util.List<B> convert(Fun<A,B> f, List<A> absList) {
@@ -81,58 +80,58 @@ public class CollectionUtil {
         return absMap;
     }
 
-    public java.util.List<ABSValue> convert(List<ABSValue> absList) {
-        java.util.List<ABSValue> list = new ArrayList<ABSValue>();
+    public <A extends ABSValue> java.util.List<A> convert(List<A> absList) {
+        java.util.List<A> list = new ArrayList<A>();
         if (absList.isCons()) {
-            List_Cons<ABSValue> cons = absList.toCons();
+            List_Cons<A> cons = absList.toCons();
             list.add(cons.getArg0());
             list.addAll(convert(cons.getArg1()));
         }
         return list;
     }
     
-    public List<ABSValue> convert(java.util.List<ABSValue> List) {
-        List<ABSValue> abslist = new List_Nil<ABSValue>();
-        for (ABSValue v : List) {
-            abslist = new List_Cons<ABSValue>(v, abslist);
+    public <A extends ABSValue> List<A> convert(java.util.List<A> List) {
+        List<A> abslist = new List_Nil<A>();
+        for (A v : List) {
+            abslist = new List_Cons<A>(v, abslist);
         }
         return abslist;
     }
 
-    public java.util.Set<ABSValue> convert(Set<ABSValue> absSet) {
-        java.util.Set<ABSValue> set = new HashSet<ABSValue>();
+    public <A extends ABSValue> java.util.Set<A> convert(Set<A> absSet) {
+        java.util.Set<A> set = new HashSet<A>();
         if (absSet.isInsert()) {
-            Set_Insert<ABSValue> insert = absSet.toInsert();
+            Set_Insert<A> insert = absSet.toInsert();
             set.add(insert.getArg0());
             set.addAll(convert(insert.getArg1()));
         }
         return set;
     }
 
-    public Set<ABSValue> convert(java.util.Set<ABSValue> set) {
-        Set<ABSValue> absSet = new Set_EmptySet<ABSValue>();
-        for (ABSValue v : set) {
-            absSet = new Set_Insert<ABSValue>(v, absSet);
+    public <A extends ABSValue> Set<A> convert(java.util.Set<A> set) {
+        Set<A> absSet = new Set_EmptySet<A>();
+        for (A v : set) {
+            absSet = new Set_Insert<A>(v, absSet);
         }
         return absSet;
     }
 
-    public java.util.Map<ABSValue, ABSValue> convert(Map<ABSValue, ABSValue> absMap) {
-        java.util.Map<ABSValue, ABSValue> map = new HashMap<ABSValue, ABSValue>();
+    public <A extends ABSValue,B extends ABSValue> java.util.Map<A, B> convert(Map<A, B> absMap) {
+        java.util.Map<A, B> map = new HashMap<A, B>();
         if (absMap.isInsertAssoc()) {
-            Map_InsertAssoc<ABSValue, ABSValue> insert = absMap.toInsertAssoc();
-            Pair_Pair<ABSValue, ABSValue> pair = insert.getArg0().toPair();
+            Map_InsertAssoc<A, B> insert = absMap.toInsertAssoc();
+            Pair_Pair<A, B> pair = insert.getArg0().toPair();
             map.put(pair.getArg0(), pair.getArg1());
             map.putAll(convert(insert.getArg1()));
         }
         return map;
     }
 
-    public Map<ABSValue, ABSValue> convert(java.util.Map<ABSValue, ABSValue> map) {
-        Map<ABSValue, ABSValue> absMap = new Map_EmptyMap<ABSValue, ABSValue>();
-        for (ABSValue v : map.keySet()) {
-            absMap = new Map_InsertAssoc<ABSValue, ABSValue>(
-                        new Pair_Pair<ABSValue, ABSValue>(v, map.get(v)), 
+    public <A extends ABSValue,B extends ABSValue> Map<A, B> convert(java.util.Map<A, B> map) {
+        Map<A, B> absMap = new Map_EmptyMap<A, B>();
+        for (A v : map.keySet()) {
+            absMap = new Map_InsertAssoc<A, B>(
+                        new Pair_Pair<A, B>(v, map.get(v)), 
                         absMap);
         }
         return absMap;

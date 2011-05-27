@@ -4,10 +4,9 @@ import java.util.Arrays;
 
 import ABS.StdLib.List;
 import FLI.FileUtils.File;
-import FLI.FileUtils.FileHandler_i;
+import FLI.FileUtils.FileHandler_c;
 import FLI.FileUtils.File_File;
 import FLI.FileUtils.filePath_f;
-import abs.backend.java.fli.ABSForeignObject;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
@@ -22,8 +21,7 @@ import abs.fli.java.PrimitiveUtil;
  * @author pwong
  *
  */
-@SuppressWarnings("unchecked")
-public class FileHandler extends ABSForeignObject implements FileHandler_i {
+public class FileHandler extends FileHandler_c {
 
     private final String sep = java.io.File.pathSeparator;
     private final CollectionUtil cutil = new CollectionUtil();
@@ -37,66 +35,66 @@ public class FileHandler extends ABSForeignObject implements FileHandler_i {
     
     private java.io.File file;
     
-    public ABSUnit setFileName(ABSString f) {
+    public ABSUnit fli_setFileName(ABSString f) {
         file = new java.io.File(f.getString());
         return ABSUnit.UNIT;
     }
 
-    public ABSUnit setFile(File f) {
+    public ABSUnit fli_setFile(File f) {
         file = file(f);
         return ABSUnit.UNIT;
     }
 
-    public ABSUnit setFileAt(File parent, ABSString name) {
+    public ABSUnit fli_setFileAt(File parent, ABSString name) {
         file = new java.io.File(file(parent),name.getString());
         return ABSUnit.UNIT;
     }
     
-    public ABSBool canRead() {
+    public ABSBool fli_canRead() {
         return putil.convert(file.canRead());
     }
 
-    public ABSBool canWrite() {
+    public ABSBool fli_canWrite() {
         return putil.convert(file.canWrite());
     }
 
-    public ABSBool delete() {
+    public ABSBool fli_delete() {
         return putil.convert(file.delete());
     }
 
-    public ABSBool isFile() {
+    public ABSBool fli_isFile() {
         return putil.convert(file.isFile());
     }
 
-    public ABSBool isDirectory() {
+    public ABSBool fli_isDirectory() {
         return putil.convert(file.isDirectory());
     }
 
-    public ABSBool renameTo(File dest) {
+    public ABSBool fli_renameTo(File dest) {
         return putil.convert(file.renameTo(file(dest)));
     }
     
-    public List<File> listFiles() {
+    public List<File> fli_listFiles() {
         return cutil.convert(toFile,Arrays.asList(file.listFiles()));
     }
 
-    public ABSString getName() {
+    public ABSString fli_getName() {
         return putil.convert(file.getName());
     }
 
-    public ABSString getParent() {
+    public ABSString fli_getParent() {
         return putil.convert(file.getParent());
     }
 
-    public ABSString getAbsolutePath() {
+    public ABSString fli_getAbsolutePath() {
         return putil.convert(file.getAbsolutePath());
     }
 
-    public ABSBool mkdir() {
+    public ABSBool fli_mkdir() {
         return putil.convert(file.mkdir());
     }
 
-    public ABSBool createNewFile() {
+    public ABSBool fli_createNewFile() {
         try {
             return putil.convert(file.createNewFile());
         } catch (Exception e) {

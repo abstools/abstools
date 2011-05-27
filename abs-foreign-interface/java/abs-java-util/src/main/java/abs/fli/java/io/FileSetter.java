@@ -1,25 +1,32 @@
 package abs.fli.java.io;
 
 import FLI.FileUtils.File;
-import abs.backend.java.fli.ABSForeignObject;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.fli.java.PrimitiveUtil;
 
-abstract class FileSetter extends ABSForeignObject {
+class FileSetter {
     
-    protected final PrimitiveUtil putil = new PrimitiveUtil();
-    protected FileHandler handler = new FileHandler();
+    private final PrimitiveUtil putil = new PrimitiveUtil();
+    private final FileHandler handler = new FileHandler();
     
-    public ABSUnit setFileName(ABSString f) {
+    PrimitiveUtil getPrimitiveUtil() { 
+        return putil; 
+    }
+    
+    FileHandler getHandler() { 
+        return handler; 
+    }
+    
+    ABSUnit setFileName(ABSString f) {
         return handler.setFileName(f);
     }
 
-    public ABSUnit setFile(File f) {
+    ABSUnit setFile(File f) {
         return handler.setFile(f);
     }
 
-    public ABSUnit setFileAt(File parent, ABSString name) {
+    ABSUnit setFileAt(File parent, ABSString name) {
         return handler.setFileAt(parent, name);
     }
 }

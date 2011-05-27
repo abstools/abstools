@@ -5,60 +5,105 @@ export *;
 import * from FLI.FileUtils;
 import * from FLI.SystemUtils;  
 
-{
-	System sys = new System();
-	FileHandler handler = new FileHandler();
-	FileWriter writer = new FileWriter();
-	FileReader reader = new FileReader();
+interface FileTest {
+	Unit setup(String name);
+	Unit create();
+	Unit writeTo();
+	Unit readFrom();
+	Unit tidyUp();
+}
+
+class FileTestImpl implements FileTest {
+
+	System sys = null;
+	FileHandler handler = null;
+	FileWriter writer = null;
+	FileReader reader = null;
+	List<String> lines = Nil;
+	String fullName = "";
 	
-	String line = "This is line1";
-	String line2 = "This is line2";
-	File file = File("hello.txt");
-	
-	handler.setFile(file);
-	writer.setFile(file);
-	reader.setFile(file);
-	
-	String fullName = handler.getAbsolutePath();
-	Bool b = handler.createNewFile();
-	if (b) {
-		sys.outPrintln(fullName + " created");
-	} else {
-		sys.outPrintln(fullName + " not created");
-		assert False;
-	}
-	
-	b = writer.open();
-	if (b) {
-		sys.outPrintln("Writing to: "+fullName);
-		writer.writeln(line);
-		writer.writeln(line2);
-	} else {
-		sys.outPrintln("Cannot open: "+fullName);
-		assert False;
-	}
-	writer.close();
-	
-	b = reader.open();
-	if (b) {
-		sys.outPrintln("Reading from: "+fullName);
-		String ln = reader.readLine();
-		while (ln != "") {
-			sys.outPrintln(ln);			
-			ln = reader.readLine();
-		}
-	} else {
-		sys.outPrintln("Cannot open: "+fullName);
-		assert False;
-	}
-	reader.close();
-	
-	b = handler.delete();
-	if (b) {
-		sys.outPrintln(fullName + " deleted");
-	} else {
-		sys.outPrintln(fullName + " not deleted");
-		assert False;
+	{
+		sys = new System();
+		handler = new FileHandler();
+		writer = new FileWriter();
+		reader = new FileReader();
+		lines = list["This is line1","This is line2"];
 	}
 
+	Unit setup(String name) {
+	
+		File file = File(name);
+		handler.setFile(file);
+		writer.setFile(file);
+		reader.setFile(file);
+		fullName = handler.getAbsolutePath(); 
+		
+		Bool b = handler.isFile();
+		if (b) {
+			sys.outPrintln(fullName + " exists");
+			b = handler.delete();
+			if (b) {
+				sys.outPrintln(fullName + " deleted");
+			} else {
+				sys.outPrintln(fullName + " not deleted");
+				assert False;
+			}
+		}
+	}
+	Unit create() { 
+		Bool b = handler.createNewFile();
+		if (b) {
+			sys.outPrintln(fullName + " created");
+		} else {
+			sys.outPrintln(fullName + " not created");
+			assert False;
+		}
+	}
+	Unit writeTo() { 
+		Bool b = writer.open();
+		if (b) {
+			sys.outPrintln("Writing to: "+fullName);
+			writer.writeln(nth(lines,0));
+			writer.writeln(nth(lines,1));
+		} else {
+			sys.outPrintln("Cannot open: "+fullName);
+			assert False;
+		}
+		writer.close();
+	}
+	
+	Unit readFrom() { 
+		Bool b = reader.open();
+		if (b) {
+			sys.outPrintln("Reading from: "+fullName);
+			String ln = reader.readLine();
+			while (ln != "") {
+				sys.outPrintln(ln);			
+				ln = reader.readLine();
+			}
+		} else {
+			sys.outPrintln("Cannot open: "+fullName);
+			assert False;
+		}
+		reader.close();
+	}
+	
+	Unit tidyUp() { 
+		Bool b = handler.delete();
+		if (b) {
+			sys.outPrintln(fullName + " deleted");
+		} else {
+			sys.outPrintln(fullName + " not deleted");
+			assert False;
+		}
+	}
+}
+	
+{
+	FileTest test = new FileTestImpl();
+	test.setup("hello.txt");
+	test.create();
+	test.writeTo();
+	test.readFrom();
+	test.tidyUp();
 }
