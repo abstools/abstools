@@ -5,11 +5,16 @@
 package eu.hatsproject.absplugin.navigator.actionProvider;
 
 import static eu.hatsproject.absplugin.navigator.NavigatorUtils.getProject;
+import static eu.hatsproject.absplugin.util.Constants.PLUGIN_ID;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.showErrorMessage;
 
 import java.io.IOException;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -35,20 +40,26 @@ public class MavenAction extends RefreshDependenciesAction {
 	@Override
 	public void run(){
 		if (selection != null && selection instanceof TreeSelection){
-			IProject project = getProject((TreeSelection)selection);
-			//saveEditors(project, true);
-			final MavenJob mavenJob = new MavenJob(project);
-			mavenJob.setUser(true);
-			try {
-				mavenJob.runMavenUpdates();
-			} catch (NoABSNatureException e) {
-				showErrorMessage(e.getMessage());
-			} catch (AbsJobException e) {
-				showErrorMessage(e.getMessage());
-			} catch (IOException e) {
-				showErrorMessage(e.getMessage());
-			}
-			super.run();
+			final IProject project = getProject((TreeSelection)selection);
+			new Job("Maven") {
+				
+				@SuppressWarnings("unused")
+				protected IStatus run(IProgressMonitor monitor) {
+					final MavenJob mavenJob = new MavenJob(project);
+					mavenJob.setUser(true);
+					try {
+						mavenJob.runMavenUpdates();
+					} catch (NoABSNatureException e) {
+						showErrorMessage(e.getMessage());
+					} catch (AbsJobException e) {
+						showErrorMessage(e.getMessage());
+					} catch (IOException e) {
+						showErrorMessage(e.getMessage());
+					}
+					MavenAction.super.run();
+					return new Status(IStatus.OK, PLUGIN_ID, "done");
+				}
+			}.schedule();
 		}
 	}
 

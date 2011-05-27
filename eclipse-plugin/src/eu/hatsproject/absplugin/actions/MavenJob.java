@@ -104,9 +104,15 @@ public class MavenJob extends Job {
 			while ((d = ins.read()) != -1) {
 				outs.write(d);
 			}
+			
+			if (process.waitFor() != 0) {
+				console.getOutputStream(MessageType.MESSAGE_ERROR).write("An error has occurred.");
+			}
+			
+		} catch (InterruptedException e) {
+			throw new AbsJobException(e.getMessage());
 		} finally {
 			if (ins != null) ins.close();
-			if (outs != null) outs.close();
 		}
 	}
 
