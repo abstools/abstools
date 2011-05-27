@@ -1,14 +1,17 @@
 
-echo "TEST 1..."
+echo "TEST 1 - Using system property"
 java -cp bin:lib/absfrontend.jar -Dabs.fli.debug=true -Dabs.fli.class.FLDefs.ForeignClass=example.ForeignClassImpl FLUser.Main;
 
 echo "----"
-echo "TEST 2..."
+echo "TEST 2 - Using properties file javatoabs.properties"
 java -cp bin:lib/absfrontend.jar:. -Dabs.fli.debug=true -Dabs.fli.properties=javatoabs.properties FLUser.Main;
 
 echo "----"
-echo "TEST 3..."
+echo "TEST 3 - Using default properties file absflie.properties"
 # using default name absfli.properties
 java -cp bin:lib/absfrontend.jar:. -Dabs.fli.debug=true FLUser.Main;
 
+echo "----"
+echo "TEST 4 - By Convention"
+java -cp bin:lib/absfrontend.jar:. -Dabs.fli.debug=true FLUser.Main;
 

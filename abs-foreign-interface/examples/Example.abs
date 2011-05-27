@@ -29,6 +29,10 @@ import * from FLDefs;
   Fut<Unit> f2 = i!aPing(p);
   f2.get;
 
+  Ping somePing = new cog SomePing();
+  Fut<String> f3 = somePing ! ping("Hi some ping");
+  f3.get;
+
   // futures also work
   f.get;
 }
@@ -61,6 +65,13 @@ interface Ping {
 class PingImpl implements Ping {
     String ping(String s) {
         return s+" pinged";
+    }
+}
+
+[Foreign]
+class SomePing implements Ping {
+    String ping(String s) {
+        return "not bound to foreign class";
     }
 }
 
