@@ -291,6 +291,15 @@ public class AbsNature implements IProjectNature {
 			}
 		}
 	}
+	
+	public boolean toIncludeInScope(IResource resource) {
+		IFolder target = project.getFolder("target");
+		if (! target.exists()) {
+			return true;
+		}
+		boolean ignore = getProjectPreferenceStore().getBoolean(MAVEN_IGNORE_TARGET_FOLDER);
+		return !ignore || !target.getProjectRelativePath().isPrefixOf(resource.getProjectRelativePath());
+	}
 
    private static void addMarker(IFile file, ParserError err) throws CoreException {
       int startline   = err.getLine()-1;
@@ -503,6 +512,12 @@ public class AbsNature implements IProjectNature {
 		preferencestore.setDefault(NO_WARNINGS, true);
 		preferencestore.setDefault(SOURCE_ONLY, false);
 		preferencestore.setDefault(ALWAYS_COMPILE, true);
+		
+		/*
+		 * Maven 
+		 */
+		preferencestore.setDefault(MAVEN_EXEC_PATH, DEFAULT_MAVEN_EXEC_PATH);
+		preferencestore.setDefault(MAVEN_IGNORE_TARGET_FOLDER, false);
 	}
 	
 	public void initDependencies() {

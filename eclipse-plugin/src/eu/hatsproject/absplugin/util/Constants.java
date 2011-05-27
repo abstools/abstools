@@ -168,6 +168,9 @@ public class Constants {
     public static final String LOCATION_TYPE_FAR_TEXTSTYLE_VALUE       = "FAR_LOCATION";
     public static final String LOCATION_TYPE_SOMEWHERE_TEXTSTYLE_VALUE = "SOMEWHERE_LOCATION";
     
+	//Maven properties
+    public static final String MAVEN_IGNORE_TARGET_FOLDER = "IGNORE_TARGET_FOLDER";
+    
 	//project preference store
 	public static final String PROJECT_PREFERENCE_STORE_QUALIFIER = "projectProperties";
 	

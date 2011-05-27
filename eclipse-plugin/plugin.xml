@@ -742,6 +742,21 @@
               </adapt>
            </enabledWhen>
         </page>
+        <page
+        	  category="eu.hatsproject.absplugin.properties.ABSPropertyPage"
+              class="eu.hatsproject.absplugin.properties.MavenPropertyPage"
+              id="eu.hatsproject.absplugin.properties.MavenPropertyPage"
+              name="Maven">
+           <enabledWhen>
+              <adapt
+                    type="org.eclipse.core.resources.IProject">
+                 <test
+                       property="org.eclipse.core.resources.projectNature"
+                       value="eu.hatsproject.absplugin.ABSNature">
+                 </test>
+              </adapt>
+           </enabledWhen>
+       </page>
     </extension>
     <extension
          point="org.eclipse.core.expressions.definitions">

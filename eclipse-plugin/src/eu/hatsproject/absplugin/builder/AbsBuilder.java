@@ -49,16 +49,20 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 			switch (delta.getKind()) {
 			case IResourceDelta.ADDED:
 				// handle added resource
-				nature.parseABSFile(resource);
-				changedFiles.add(resource.getFullPath().toString());
+				if (nature.toIncludeInScope(resource)) {
+					nature.parseABSFile(resource);
+					changedFiles.add(resource.getFullPath().toString());
+				}
 				break;
 			case IResourceDelta.REMOVED:
 				// handle removed resource
 				break;
 			case IResourceDelta.CHANGED:
 				// handle changed resource
-				nature.parseABSFile(resource);
-				changedFiles.add(resource.getFullPath().toString());
+				if (nature.toIncludeInScope(resource)) {
+					nature.parseABSFile(resource);
+					changedFiles.add(resource.getFullPath().toString());
+				}
 				break;
 			}
 			return true;
@@ -80,7 +84,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		@Override
 		public boolean visit(IResource resource) throws CoreException{
 			AbsNature nature = getAbsNature(resource.getProject());
-			if(isABSFile(resource)){
+			if(isABSFile(resource) && nature.toIncludeInScope(resource)){
 				nature.parseABSFile(resource);
 				changedFiles.add(resource.getFullPath().toString());
 			}
