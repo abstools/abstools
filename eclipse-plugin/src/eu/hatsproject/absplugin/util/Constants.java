@@ -80,6 +80,7 @@ public class Constants {
 	public static final String RUNCONFIG_DEBUGGER_USE_EXTERNAL 				= "externalDebugger";
 	public static final String RUNCONFIG_DEBUGGER_DEBUG_MODE				= "debugMode";
 	public static final String RUNCONFIG_DEBUGGER_OBSERVER_LIST 			= "observerList";
+	public static final String RUNCONFIG_DEBUGGER_CLASSPATH_LIST            = "classpathList"; 
 	public static final String RUNCONFIG_MAUDE_EXECUTE						= "executeMaude";
 	public static final String RUNCONFIG_MAUDE_PARTIAL_EXEC					= "partialExec";
 	public static final String RUNCONFIG_MAUDE_STEPS						= "maudeSteps";

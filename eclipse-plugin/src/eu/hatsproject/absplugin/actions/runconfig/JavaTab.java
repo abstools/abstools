@@ -40,6 +40,7 @@ public class JavaTab extends AbstractTab {
 	private Text seedNumber;
 	private Text historyText;
 	private org.eclipse.swt.widgets.List observerList;
+	private org.eclipse.swt.widgets.List classPathList;
 
 	@Override
 	public void createControl(Composite parent) {
@@ -49,6 +50,7 @@ public class JavaTab extends AbstractTab {
 	    setCompositeLayout(comp);
 	    createProjectDropDownMenu(myListener, comp);
 	    createObserverList(myListener, comp);
+	    createClassPathList(myListener, comp);
 	    Group schedulerGroup = createSchedulerDropDownMenu(myListener, comp);
 	    createSchedulerOptions(myListener, schedulerGroup);
 	    createOtherOptions(myListener, comp);
@@ -87,6 +89,7 @@ public class JavaTab extends AbstractTab {
 		try {
 			initProject(configuration);
 			initObserverList(configuration);
+			initClassPathList(configuration);
 			initCheckButtons(configuration);
 			initSchedulerDropDown(configuration);
 			initSchedulerOptions(configuration);
@@ -120,7 +123,12 @@ public class JavaTab extends AbstractTab {
 		for (String string : observerList.getItems()) {
 			observerClassNames.add(getObserverClassName(string));
 		}
+		ArrayList<String> classPathNames = new ArrayList<String>();
+        for (String string : classPathList.getItems()) {
+            classPathNames.add(string);
+        }
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, observerClassNames);
+		configuration.setAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, classPathNames);
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, getSelectedScheduler());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, compileCheckButton.getSelection());
@@ -260,6 +268,65 @@ public class JavaTab extends AbstractTab {
 		removeButton.setLayoutData(gridData2);	
 	}
 	
+	private void createClassPathList(TabListener myListener, Composite comp) {
+        Group group = createGroup(comp, "Classpath", 2, 1, GridData.FILL_HORIZONTAL);
+        classPathList = new org.eclipse.swt.widgets.List(group, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL);
+        GridData gridData1 = new GridData();
+        gridData1.widthHint =  400;
+        gridData1.heightHint = 150;
+        classPathList.setLayoutData(gridData1);
+        
+        Composite subComp = new Composite(group, SWT.NONE);
+        GridLayout gridLayout = new GridLayout(1, false);
+        gridLayout.verticalSpacing = 8;
+        subComp.setLayout(gridLayout);
+        
+        GridData gridData2 = new GridData();
+        gridData2.widthHint = 150;
+        
+        Button addButton = new Button(subComp, SWT.PUSH);
+        addButton.setText("Add new classpath entry");
+        addButton.addSelectionListener(new SelectionListener() {
+            
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                widgetDefaultSelected(e);
+                
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                DirectoryDialog dialog = new DirectoryDialog(Display.getDefault().getActiveShell(), SWT.APPLICATION_MODAL);
+                String input = dialog.open();
+                if(input != null) {
+                    classPathList.add(input);
+                    updateLaunchConfigurationDialog();
+                }
+                
+            }
+        });
+        addButton.setLayoutData(gridData2);
+        
+        Button removeButton = new Button(subComp, SWT.PUSH);
+        removeButton.setText("Remove selected classpath entry");
+        removeButton.addSelectionListener(new SelectionListener() {
+            
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                widgetDefaultSelected(e);
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                int[] indices = classPathList.getSelectionIndices();
+                if(indices != null){
+                    classPathList.remove(indices);
+                    updateLaunchConfigurationDialog();
+                }
+            }
+        });
+        removeButton.setLayoutData(gridData2);  
+    }
 	
 	private Group createSchedulerDropDownMenu(TabListener myListener,
 			Composite comp) {
@@ -436,6 +503,18 @@ public class JavaTab extends AbstractTab {
 		}
 
 	}
+
+	private void initClassPathList(ILaunchConfiguration configuration) throws CoreException {
+        classPathList.removeAll();
+        @SuppressWarnings("unchecked") //must be String, see org.eclipse.debug.core.ILaunchConfigurationWorkingCopy.setAttribute(String attributeName, List value)
+        List<String> cpentries = configuration.getAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, new ArrayList<String>());
+        if(cpentries != null){
+            for (String cpentry : cpentries) {
+                classPathList.add(cpentry);
+            }
+        }
+
+    }
 
 	private void initSchedulerDropDown(ILaunchConfiguration configuration) throws CoreException {
 		String selectedSchedulerString = configuration.getAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, DebuggerScheduler.getDefaultScheduler().toString());
