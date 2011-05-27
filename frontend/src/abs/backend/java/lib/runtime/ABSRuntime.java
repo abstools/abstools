@@ -36,6 +36,8 @@ import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
 public class ABSRuntime {
+    private static final String FLI_CLASS_SUFFIX = "_fli";
+
     private static final String ABSFLI_PROPERTIES = "absfli.properties";
 
     private static final Logger logger = Logging.getLogger(ABSRuntime.class.getName());
@@ -388,8 +390,20 @@ public class ABSRuntime {
             }
             className = fliProperties.getProperty(name); 
         }
-        
-        if (className != null) {
+
+        if (className == null) {
+            // try to load class by convention
+            try {
+                Class<?> result = ABSRuntime.class.getClassLoader().loadClass(name+FLI_CLASS_SUFFIX);
+                if (DEBUG_FLI)
+                    System.err.println("Loaded foreign class "+result.getName()+" by convention");
+                return result;
+            } catch (ClassNotFoundException e) {
+                if (DEBUG_FLI)
+                    System.err.println("Could not found class "+name+FLI_CLASS_SUFFIX);
+                    
+            }
+        } else {
             try {
                 Class<?> result = ABSRuntime.class.getClassLoader().loadClass(className);
                 return result;
