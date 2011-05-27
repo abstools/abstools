@@ -1,0 +1,38 @@
+module FLI.StreamUtils;
+
+export *;
+
+import * from ABS.FLI;
+
+data Feedback<A> = Error(String) | Result(A) | OK;
+data Byte = Byte(Int);
+data Long = Long(Int);
+
+interface InputStream {
+	Feedback<String> readUTF();
+}
+
+interface OutputStream {
+	Feedback<Unit> writeUTF(String s);
+	Feedback<Unit> writeLong(Long s);
+	Feedback<Unit> writeInt(Int s);
+	Feedback<Unit> write(List<Byte> b, Int off, Int len);
+}
+
+interface RandomAccessFile {
+	Feedback<List<Byte>> readFully(List<Byte> b, Int off, Int len); 
+	Feedback<Unit> seek(Int i);
+}
+
+[Foreign]
+class InputStream implements InputStream {
+	Feedback<String> readUTF() { return OK; }
+}
+
+[Foreign]
+class OutputStream implements OutputStream {
+	Feedback<Unit> writeUTF(String s) { return OK; }
+	Feedback<Unit> writeLong(Long s) { return OK; }
+	Feedback<Unit> writeInt(Int s) { return OK; }
+	Feedback<Unit> write(List<Byte> b, Int off, Int len) { return OK; }
+}

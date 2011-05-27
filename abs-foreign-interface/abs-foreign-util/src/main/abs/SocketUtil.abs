@@ -1,0 +1,21 @@
+module FLI.SocketUtils;
+
+export *;
+
+import * from ABS.FLI;
+import * from FLI.StreamUtils;
+
+interface Socket {
+	Feedback<Unit> connect(String server, Int port, Int timeout);
+	InputStream getInputStream();
+	OutputStream getOutputStream();
+	Feedback<Unit> close();
+}
+
+[Foreign]
+class Socket implements Socket {
+	Feedback<Unit> connect(String server, Int port, Int timeout) { return OK; }
+	InputStream getInputStream() { return null; }
+	OutputStream getOutputStream() { return null; }
+	Feedback<Unit> close() { return OK; }
+}
