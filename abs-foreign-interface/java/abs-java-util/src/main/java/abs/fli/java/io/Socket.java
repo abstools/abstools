@@ -29,6 +29,10 @@ public class Socket extends Socket_c  {
     private OutputStream output = new OutputStream();
     private PrimitiveUtil putil = new PrimitiveUtil();
 
+    void setSocket(java.net.Socket socket) {
+        this.client_socket = socket;
+    }
+    
     @Override
     public Feedback<ABSUnit> fli_connect(ABSString server, ABSInteger port, ABSInteger timeout) {
         try {

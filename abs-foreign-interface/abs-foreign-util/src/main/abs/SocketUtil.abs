@@ -12,10 +12,21 @@ interface Socket {
 	Feedback<Unit> close();
 }
 
+interface ServerSocket {
+ 	Feedback<Unit> bind(Int port);
+	Feedback<Socket> accept();
+}
+
 [Foreign]
 class Socket implements Socket {
 	Feedback<Unit> connect(String server, Int port, Int timeout) { return OK; }
 	InputStream getInputStream() { return null; }
 	OutputStream getOutputStream() { return null; }
 	Feedback<Unit> close() { return OK; }
+}
+
+[Foreign]
+class ServerSocket implements ServerSocket {
+	Feedback<Unit> bind(Int port) { return OK; }
+	Feedback<Socket> accept() { return OK; }
 }
