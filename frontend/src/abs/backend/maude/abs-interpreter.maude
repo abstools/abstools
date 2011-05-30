@@ -608,12 +608,7 @@ mod ABS-CONFIGURATION is
   ---    a $cont statement should be generated at the end.
   op invoc(_,_,_,_,_) : Oid Label String DataList Bool -> Msg
     [ctor format (b d o  b so  b so  b so  b so b on)] .
-  --- Invocation message received by the called object, pre method lookup:
-  op findMethod(_,_,_,_,_,_) : String Cid Label Oid DataList Bool -> Msg .
 
-  --- Invocation message plus method object, received by
-  --- the called object:
-  op foundMethod(_,_,_,_,_) : Method Label Oid DataList Bool -> Msg .
   --- Process creation in target object:
   op makeProcess(_,_,_,_) : Method Label DataList Bool -> Process .
 
@@ -844,34 +839,15 @@ mod ABS-MSG-TRANSPORT is
   ---
   eq
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
+    < C : Class | Param: AL', Att: S1, 
+                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
     invoc(O, N, M, DL, B)
   =
-    findMethod(M, C, N, O, DL, B)
-    < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
-    [label transport-imsg] .
-
-  --- Look up a method in the class itself.
-  eq
-    findMethod(M, C, N, O, DL, B)
-    < C : Class | Param: AL', Att: S1 , 
-                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
-                  Ocnt: G >
-  =
-    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL, B)
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)), Lcnt: F >
     < C : Class | Param: AL', Att: S1, 
-                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
-                  Ocnt: G > .
-
-  --- Create a process from a method invocation once the method has been found.
-  eq
-    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: W, Lcnt: F >
-    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL, B)
-  =
-    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)), Lcnt: F >
+                  Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
-    [label transport-imsg-2] .
+    [label transport-imsg] .
 
   eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)
   =
