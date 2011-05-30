@@ -75,7 +75,7 @@ public class MaudeTests extends ABSTest {
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             // TODO: handle delta generation / testing / flattening
-            model.generateMaude(new PrintStream(out), module, false);
+            model.generateMaude(new PrintStream(out), module);
             String res = out.toString();
             return res;
         } catch (NumberFormatException e) {

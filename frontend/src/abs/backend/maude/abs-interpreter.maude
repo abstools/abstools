@@ -354,18 +354,6 @@ view Oid from TRIV to ABS-OID is
   sort Elt to Oid .
 endv
 
-*** The sort of a delta identifier.
-***
-mod ABS-DID is
-  protecting STRING .
-  sort Did .
-  subsort String < Did .
-endm
-
-view Did from TRIV to ABS-DID is
-  sort Elt to Did .
-endv
-
 
 mod ABS-DATA-LABEL is
 
@@ -574,27 +562,6 @@ view Method from TRIV to ABS-METHOD is
   sort Elt to Method .
 endv
 
-*** The sort of a Class Modifier
-***
-mod ABS-CLASSMODIFIER is
-  protecting ABS-CID .
-  protecting ABS-METHOD .
-  protecting STRING .
-
-  sort ClassModifier .
-
-  --- Constructors
-  op addM : Cid Method -> ClassModifier 
-  [ctor format (n o)] .
-  op removeM : Cid String -> ClassModifier
-  [ctor format (n o)] .
-endm
-
-view ClassModifier from TRIV to ABS-CLASSMODIFIER is
-  sort Elt to ClassModifier .
-endv
-
-
 
 *** Abs's state configuration.
 ***
@@ -604,20 +571,15 @@ mod ABS-CONFIGURATION is
   protecting ABS-DATA-LABEL .
   protecting ABS-PROCESS-POOL .
   protecting ABS-OID .
-  protecting ABS-DID .
   protecting SET{Method} * (sort Set{Method} to MMtd,
                             op empty : -> Set{Method} to noMethod) .
   protecting SET{String} * (sort Set{String} to StringSet) .
-  protecting SET{ClassModifier} * (sort Set{ClassModifier} to ClassModifierSet,
-                                   op empty : -> Set{ClassModifier} to noModifier) .
-  protecting LIST{Did} * (sort List{Did} to DeltaList,
-                         op nil : -> List{Did} to noDelta) .
  
   --- Define object identifiers.
   protecting CONVERSION .
 
-  sorts Future Class Clock Delta Cog .
-  subsorts Class Future Clock Delta Cog < Configuration .
+  sorts Future Class Clock Cog .
+  subsorts Class Future Clock Cog < Configuration .
   vars B M : String .
   var C : Cid .
   vars O O' : Oid .
@@ -647,13 +609,13 @@ mod ABS-CONFIGURATION is
   op invoc(_,_,_,_,_) : Oid Label String DataList Bool -> Msg
     [ctor format (b d o  b so  b so  b so  b so b on)] .
   --- Invocation message received by the called object, pre method lookup:
-  op findMethod(_,_,_,_,_,_,_) : String Cid DeltaList Label Oid DataList Bool -> Msg .
+  op findMethod(_,_,_,_,_,_) : String Cid Label Oid DataList Bool -> Msg .
 
-  --- Invocation message plus method object and defining Delta, received by
+  --- Invocation message plus method object, received by
   --- the called object:
-  op foundMethod(_,_,_,_,_,_) : Method Did Label Oid DataList Bool -> Msg .
+  op foundMethod(_,_,_,_,_) : Method Label Oid DataList Bool -> Msg .
   --- Process creation in target object:
-  op makeProcess(_,_,_,_,_) : Method Did Label DataList Bool -> Process .
+  op makeProcess(_,_,_,_) : Method Label DataList Bool -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -676,16 +638,12 @@ mod ABS-CONFIGURATION is
   --- Define Classes.
   --- Class declaration.
   ---
-  op <_: Class | Deltas:_, Param:_, Att:_, Mtds:_, Ocnt:_> : 
-    Cid DeltaList VidList Subst MMtd Nat -> Class 
-    [ctor format (ng ! og o d  sg m d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
+  op <_: Class | Param:_, Att:_, Mtds:_, Ocnt:_> : 
+    Cid VidList Subst MMtd Nat -> Class 
+    [ctor format (ng ! og o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
 
   op <_: Clock | Limit:_> : Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
-
-  *** Define Deltas
-  op <_: Delta | _ > : Did ClassModifierSet -> Delta
-    [ctor format (nm ! om o d  sm++ o on)] .
 
   *** Cogs.  The second argument is of type Data since it can be an Oid (the
   *** currently active object) or null.  The first argument is a unique
@@ -864,20 +822,11 @@ mod ABS-MSG-TRANSPORT is
 
   vars M CG : String .   var MIS : MMtd .              vars AL AL' : VidList .
   vars S S1 L : Subst .  var SL : StmtList .           var N : Label .
-  var DL : DataList .    var C : Cid .                 var DeL : DeltaList .
+  var DL : DataList .    var C : Cid .
   vars F G : Nat .       vars O O1 : Oid .             var P : Process .
-  var W : MProc .        var MI : Method .             var D : Did .
-  var MS : StringSet .   var CMS : ClassModifierSet .  var B : Bool .
+  var W : MProc .        var MI : Method .
+  var MS : StringSet .   var B : Bool .
   var SS : SSubst .
-
-
-
-  --- This is used in the original() call to set the search starting point.
-  op pruneDeltaList : DeltaList Did -> DeltaList .
-  eq pruneDeltaList(noDelta, DE:Did) = noDelta .
-  eq pruneDeltaList(DeL:DeltaList DE:Did, DE:Did) = DeL:DeltaList .
-  ceq pruneDeltaList(DeL:DeltaList DE1:Did, DE:Did) = pruneDeltaList(DeL:DeltaList, DE:Did)
-  if DE1:Did =/= DE:Did .
 
   --- message generation
   eq
@@ -895,59 +844,38 @@ mod ABS-MSG-TRANSPORT is
   ---
   eq
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
+    < C : Class | Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
     invoc(O, N, M, DL, B)
   =
-    findMethod(M, C, DeL, N, O, DL, B)
+    findMethod(M, C, N, O, DL, B)
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
+    < C : Class | Param: AL, Att: S1 , Mtds: MIS , Ocnt: G >
     [label transport-imsg] .
 
-  --- Look up a method in the deltas of a class and the class itself.
+  --- Look up a method in the class itself.
   eq
-    findMethod(M, C, noDelta, N, O, DL, B)
-    < C : Class | Deltas: DeL, Param: AL', Att: S1 , 
+    findMethod(M, C, N, O, DL, B)
+    < C : Class | Param: AL', Att: S1 , 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G >
   =
-    foundMethod(< M : Method | Param: AL, Code: SL >, "", N, O, DL, B)
-    < C : Class | Deltas: DeL, Param: AL', Att: S1, 
+    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL, B)
+    < C : Class | Param: AL', Att: S1, 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >),
                   Ocnt: G > .
-
-  eq
-    findMethod(M, C, (DeL D), N, O, DL, B)
-    < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS >
-  =
-    foundMethod(< M : Method | Param: AL, Code: SL >, D, N, O, DL, B)
-    < D : Delta | addM(C, < M : Method | Param: AL, Code: SL >), CMS > .
-
-  eq
-    findMethod(M, C, (DeL D), N, O, DL, B)
-    < D : Delta | removeM(C, M), CMS >
-  =
-    foundMethod(noMethod, D, N, O, DL, B)
-    < D : Delta | removeM(C, M), CMS > .
-
-  eq
-    findMethod(M, C, (DeL D), N, O, DL, B)
-    < D : Delta | CMS >
-  =
-    findMethod(M, C, DeL, N, O, DL, B)
-    < D : Delta | CMS > [owise] . 
 
   --- Create a process from a method invocation once the method has been found.
   eq
     < O : C | Cog: CG, Att: S1, Pr: P, PrQ: W, Lcnt: F >
-    foundMethod(< M : Method | Param: AL, Code: SL >, D, N, O, DL, B)
+    foundMethod(< M : Method | Param: AL, Code: SL >, N, O, DL, B)
   =
-    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL, B)), Lcnt: F >
+    < O : C | Cog: CG, Att: S1, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)), Lcnt: F >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg-2] .
 
-  eq makeProcess(< M : Method | Param: AL, Code: SL >, D, N, DL, B)
+  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)
   =
-    { '.label |-> N, '.method |-> "str"[ M ], '.delta |-> "str"[D], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.label |-> N, '.method |-> "str"[ M ], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
 endm
 
@@ -970,7 +898,6 @@ mod ABS-MACHINE-BASICS is
   var E : Expr .            var AL : VidList .   var N : Label .
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
-  var DeL : DeltaList .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1126,7 +1053,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var E : Expr .            var AL : VidList .   var N : Label .
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
-  vars T LIM : Nat .        var DeL : DeltaList .
+  vars T LIM : Nat .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1578,7 +1505,7 @@ mod ABS-CALLSTMTS-RL is
   var CN : Configuration .     var E : Expr .       vars Q CG CG1 M : String .
   var A : Vid .                var EL : ExprList .  var AL : VidList .
   var N : Label .              var DL : DataList .  var MS : MMtd .
-  vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .  var SS : SSubst .
+  var SS : SSubst .
   var MIS : MMtd .             var P1 : Process .
 
   --- async-call
@@ -1616,20 +1543,6 @@ mod ABS-CALLSTMTS-RL is
       /\ O := eval(E, (S :: L), none, 0)
       /\ N := label(O, F)
       [label sync-selfcall] .
-
-  --- original-call
-  ---
-  crl
-    < O : C | Cog: CG, Att: S, Pr: { L | original(A ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-  =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign('.staticfuture ; N); get('.staticfuture ; A) ; $free('.staticfuture) ; SL }, PrQ: W, Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-    findMethod(M, C, pruneDeltaList(DeL, DE), N, O, evalList(EL, (S :: L), none, 0), true)
-  if N := label(O, F)
-      /\ "str"[M] := L['.method]
-      /\ "str"[DE] := L['.delta]
-      [label original-call] .
 endm  
 mod ABS-CALLSTMTS-EQ-TIMED is
   protecting ABS-EVAL .
@@ -1641,7 +1554,8 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   var A : Vid .                var EL : ExprList .   var AL : VidList .
   var N : Label .              var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .           var SS : SSubst .     var MIS : MMtd .
-  vars DeL DeL1 : DeltaList .  vars DE DE1 : Did .   var P1 : Process .
+  var P1 : Process .
+
   --- async-call
   ---
   ceq
@@ -1684,21 +1598,6 @@ mod ABS-CALLSTMTS-EQ-TIMED is
       /\ N := label(O, F)
       [label sync-selfcall] .
 
-  --- original-call
-  ---
-  ceq
-    < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | original(A ; EL); SL }, PrQ: W, Lcnt: F > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-  =
-    < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N); SL }, PrQ: W, Lcnt: (s F) > 
-    < C : Class | Deltas: DeL, Param: AL, Att: S1 , Mtds: MIS, Ocnt: G >
-    findMethod(M, C, pruneDeltaList(DeL, DE), N, O, evalList(EL, (S :: L), none, T), true)
-  if N := label(O, F)
-      /\ "str"[M] := L['.method]
-      /\ "str"[DE] := L['.delta]
-      [label original-call] .
 endm
 
 
@@ -1712,19 +1611,19 @@ mod ABS-NEW-RL is
   var O : Oid .        vars B C : Cid .  vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .   var DeL : DeltaList .
+  var AL : VidList .   var MS : MMtd .
   var CG : String .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
@@ -1732,11 +1631,11 @@ mod ABS-NEW-RL is
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G), 
                              Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
@@ -1751,13 +1650,13 @@ mod ABS-NEW-EQ-TIMED is
   var O : Oid .        vars B C : Cid .   vars S S1 L : Subst .
   var SL : StmtList .  var W : MProc .    vars F G : Nat .
   var E : Expr .       var A : Vid .      var EL : ExprList .
-  var AL : VidList .   var MS : MMtd .    var DeL : DeltaList .
+  var AL : VidList .   var MS : MMtd .
   vars T LIM : Nat .   var CG : String .
 
   eq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
@@ -1765,7 +1664,7 @@ mod ABS-NEW-EQ-TIMED is
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, 0))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
@@ -1774,12 +1673,12 @@ mod ABS-NEW-EQ-TIMED is
   eq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: (s F) >
-    < B : Class | Deltas: DeL, Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
                              Att: ('this |-> ob(newId(B, G)), S1,
                                createSubst(AL, evalList(EL, S :: L, none, T))),

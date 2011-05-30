@@ -6,11 +6,11 @@ aspect GenerateMaude {
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
-    public void Model.generateMaude(PrintStream stream, String module, boolean generateDeltas) {
-    	generateMaude(stream,module,generateDeltas,null);
+    public void Model.generateMaude(PrintStream stream, String module) {
+    	generateMaude(stream,module,null);
     }
 
-    public void Model.generateMaude(PrintStream stream, String module, boolean generateDeltas, String mainBlock) {
+    public void Model.generateMaude(PrintStream stream, String module, String mainBlock) {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
                        + module + " .\n");
@@ -18,64 +18,33 @@ aspect GenerateMaude {
             if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);
         }
-        stream.println("var DeL : DeltaList .");
-        stream.println("op classes : DeltaList -> Configuration .");
-        stream.print("eq classes(DeL) =");
+        stream.println("op classes : -> Configuration .");
+        stream.print("eq classes =");
         for (Decl decl : getDecls()) {
             if (decl instanceof ClassDecl) {
                 hasClasses = true;
                 decl.generateMaude(stream);
             }
         }
-        if (generateDeltas) {
-            for (Decl decl : getDecls()) {
-                if (decl instanceof DeltaDecl) {
-                    hasClasses = true;
-                    decl.generateMaude(stream);
-                }
+        if (mainBlock == null) {
+            if (hasMainBlock()) {
+                hasClasses = true;
+                getMainBlock().generateMaude(stream);
             }
-            for (Product p : getProducts()) {
-                p.generateMaude(stream); // this generates the class only
+        } else {
+            if (hasMainBlock(mainBlock)) {
+                hasClasses = true;
+                getMainBlock(mainBlock).generateMaude(stream);
             }
         }
-        if (mainBlock == null) {
-            if (hasMainBlock()) getMainBlock().generateMaude(stream);
-        } else {
-            if (hasMainBlock(mainBlock)) getMainBlock(mainBlock).generateMaude(stream);
+        if (!hasClasses) {
+            stream.print("none ");
         }
         stream.println(".\n");
-        stream.println("sort Product .");
-        stream.println("op deltas : Product -> DeltaList .");
-        stream.println("op mainclass : Product -> Cid .");
-        stream.println();
-        for (Product p: getProducts()) {
-            stream.println("op " + p.getName() + " : -> Product .");
-            stream.print("eq deltas(" + p.getName() + ") = ");
-            ArrayList<DeltaDecl> deltas = getSortedDeltas(p);
-            if (deltas.isEmpty()) {
-            	stream.print("noDelta ");
-            } else {
-                Collections.reverse(deltas);
-            	for (DeltaDecl d: deltas) {
-                    String name = d.getName();
-                    if (name.lastIndexOf('.') > -1) {
-                        name = name.substring(name.lastIndexOf('.') + 1);
-                    }
-            		stream.print("\"" + name + "\" ");
-            	}
-            }
-            stream.println(".");
-            stream.println("eq mainclass(" + p.getName() + ") = \".P" + p.getName() + "\" .");
-        }
         stream.println();
         stream.println("--- Start the main block with 'rew start .'");
-        stream.println("--- Start a product with 'rew start(Productname) .'");
         stream.println("op start : -> State .");
-        stream.println("eq start = main(classes(noDelta), \".Start\", emp) .");
-        stream.println("op start : Product -> State .");
-        stream.println("eq start(P:Product) = main(classes(deltas(P:Product)), mainclass(P:Product), emp) .");
-        stream.println("op start : DeltaList -> State .");
-        stream.println("eq start(DeL) = main(classes(DeL), \".Start\", emp) .");
+        stream.println("eq start = main(classes, \".Start\", emp) .");
         stream.println("\nendm");
     }
 
@@ -99,6 +68,9 @@ aspect GenerateMaude {
 		stream.println("*** Type synonym: Datatype " + qualifiedName());
 	}
 
+    public void DeltaDecl.generateMaude(PrintStream stream) {
+		stream.println("*** Delta: " + qualifiedName());
+    }
 	
 	public void FunctionDecl.generateMaude(PrintStream stream) {
 		boolean inList = false;
@@ -440,8 +412,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-		stream.println("\n\n< \"" + qualifiedName() + "\" : Class | Deltas: DeL,");
-        stream.print("  Param: ");
+		stream.println("\n\n< \"" + qualifiedName() + "\" : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
         } else {
@@ -476,57 +447,6 @@ aspect GenerateMaude {
         }
         stream.print(",\n  Ocnt: 0 > ");
 	}
-
-    public void DeltaDecl.generateMaude(PrintStream stream) {
-        stream.println("\n\n< \"" + qualifiedName() + "\" : Delta | ");
-        if (getNumClassModifier() > 0) {
-            boolean inlist = false;
-            for (ClassModifier d : getClassModifiers()) {
-                if (inlist) stream.print(", "); else inlist = true;
-                d.generateMaude(stream);
-            }
-        } else {
-            stream.print("empty ");
-        }
-        stream.print(">\n");
-    }
-
-    public abstract void ClassModifier.generateMaude(PrintStream stream);
-    public void AddClassModifier.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
-    }
-    public void RemoveClassModifier.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
-    }
-    public void ModifyClassModifier.generateMaude(PrintStream stream) {
-        boolean inlist = false;
-        for (Modifier f : getModifiers()) {
-            if (inlist) stream.print(", "); else inlist = true;
-            f.generateMaude(stream, qualifiedName());
-        }
-    }
-
-    public abstract void Modifier.generateMaude(PrintStream stream, String className);
-    public void AddMethodModifier.generateMaude(PrintStream stream, String className) {
-        stream.print("addM(\"" + className + "\", ");
-        getMethodImpl().generateMaude(stream);
-        stream.println(") ");
-    }
-    public void ModifyMethodModifier.generateMaude(PrintStream stream, String className) {
-        stream.print("addM(\"" + className + "\", ");
-        getMethodImpl().generateMaude(stream);
-        stream.println(") ");
-    }
-    public void RemoveMethodModifier.generateMaude(PrintStream stream, String className) {
-        stream.print("removeM(\"" + className + "\", ");
-        stream.println("\"" + getMethodSig().getName() + "\") ");
-    }
-    public void AddFieldModifier.generateMaude(PrintStream stream, String className) {
-        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
-    }
-    public void RemoveFieldModifier.generateMaude(PrintStream stream, String className) {
-        stream.println("--- Hey, this is not implemented yet! " + getClass().toString());
-    }
 
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
@@ -738,8 +658,7 @@ aspect GenerateMaude {
 
     public void MainBlock.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.println("\n\n< \".Start\" : Class | Deltas: DeL,");
-        stream.println("  Param: noVid,");
+        stream.println("\n\n< \".Start\" : Class | Param: noVid,");
         stream.print("  Att: ");
         if (getNumVar() == 0) {
             stream.print("noSubst");
@@ -786,37 +705,6 @@ aspect GenerateMaude {
         stream.print("; $endscope ");
 	}
 	
-    public void Product.generateMaude(PrintStream stream) {
-        Block b = getMainBlock();
-        boolean inlist = false;
-        stream.println("\n\n< \".P" + getName() + "\" : Class | Deltas: DeL,");
-        stream.println("  Param: noVid,");
-        stream.print("  Att: ");
-        if (b.getNumVar() == 0) {
-            stream.print("noSubst");
-        } else {
-            inlist = false;
-            for (VarDecl var : b.getVars()) {
-                if (inlist) stream.print(", "); else inlist = true;
-                stream.print("'" + var.getName() + " |-> null ");
-            }
-        }
-        stream.print(",\n  Mtds: ");
-        stream.print("< \".init\" : Method | Param: noVid,\n");
-        stream.print("      Code: ");
-        inlist = false;
-        if (!inlist && b.getNumStmt() == 0) {
-            stream.print("return(null) ");
-        } else {
-            for (Stmt stmt : b.getStmts()) {
-                if (inlist) stream.print("; "); else inlist = true;
-                stmt.generateMaude(stream);
-            }
-            stream.print("; return(null) ");
-        }
-        stream.print(">,\n  Ocnt: 0 > ");
-    }
-    
     public void InitBlock.generateMaude(PrintStream stream,
                                         List<FieldDecl> fields,
                                         boolean isActiveClass) {

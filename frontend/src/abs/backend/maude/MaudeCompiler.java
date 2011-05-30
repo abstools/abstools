@@ -74,7 +74,7 @@ public class MaudeCompiler extends Main {
             stream = new PrintStream(outputfile);
         }
         
-        model.generateMaude(stream, module, !fullabs, mainBlock);
+        model.generateMaude(stream, module, mainBlock);
     }
 
     protected void printUsage() {
