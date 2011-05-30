@@ -8,6 +8,9 @@ data Feedback<A> = Error(String) | Result(A) | OK;
 data Byte = Byte(Int);
 data Long = Long(Int);
 
+def Int fromByte(Byte b) = case b { Byte(i) => i; };
+def Int fromLong(Long b) = case b { Long(i) => i; }; 
+
 interface InputStream {
 	Feedback<String> readUTF();
 	Feedback<Int> readInt();
