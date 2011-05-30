@@ -1,9 +1,8 @@
 package abs.fli.java;
 
-import static abs.fli.java.CollectionsTestUtils.*;
 import static abs.backend.java.lib.types.ABSInteger.fromInt;
+import static abs.fli.java.CollectionsTestUtils.INT_COMP;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
@@ -43,26 +42,6 @@ public class CollectionUtilTest {
             cons(1,cons(2,cons(3,new List_Nil<ABSInteger>())));
         
         assertTrue(tutil.equals(INT_COMP,lint,util.convert(rint)));
-    }
-
-    @Test
-    public final void testConvertSetOfA() {
-        fail("Not yet implemented");
-    }
-
-    @Test
-    public final void testConvertSetOfA1() {
-        fail("Not yet implemented");
-    }
-
-    @Test
-    public final void testConvertMapOfAB() {
-        fail("Not yet implemented");
-    }
-
-    @Test
-    public final void testConvertMapOfAB1() {
-        fail("Not yet implemented");
     }
 
 }
