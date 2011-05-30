@@ -14,6 +14,7 @@ import ABS.StdLib.Pair_Pair;
 import ABS.StdLib.Set;
 import ABS.StdLib.Set_EmptySet;
 import ABS.StdLib.Set_Insert;
+import ABS.StdLib.reverse_f;
 import abs.backend.java.lib.types.ABSValue;
 
 /**
@@ -38,7 +39,7 @@ public class CollectionUtil {
         for (B v : List) {
             abslist = new List_Cons<A>(f.evaluate(v), abslist);
         }
-        return abslist;
+        return reverse_f.apply(abslist);
     }
     
     public <A extends ABSValue,B> java.util.Set<B> convert(Fun<A,B> f, Set<A> absSet) {
@@ -95,7 +96,7 @@ public class CollectionUtil {
         for (A v : List) {
             abslist = new List_Cons<A>(v, abslist);
         }
-        return abslist;
+        return reverse_f.apply(abslist);
     }
 
     public <A extends ABSValue> java.util.Set<A> convert(Set<A> absSet) {

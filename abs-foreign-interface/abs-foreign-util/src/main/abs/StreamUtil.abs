@@ -11,6 +11,7 @@ data Long = Long(Int);
 interface InputStream {
 	Feedback<String> readUTF();
 	Feedback<Int> readInt();
+	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len);
 }
 
 interface OutputStream {
@@ -29,6 +30,7 @@ interface RandomAccessFile {
 class InputStream implements InputStream {
 	Feedback<String> readUTF() { return OK; }
 	Feedback<Int> readInt() { return OK; }
+	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len) { return OK; }
 }
 
 [Foreign]
