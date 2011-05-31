@@ -22,7 +22,21 @@
 	
 	<build>
 		<sourceDirectory>src/main/abs</sourceDirectory>
+		<testSourceDirectory>src/test/abs</testSourceDirectory>
 		<plugins>
+			<plugin>
+				<groupId>eu.hats-project</groupId>
+				<artifactId>abs-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>abs-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>genjava</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>

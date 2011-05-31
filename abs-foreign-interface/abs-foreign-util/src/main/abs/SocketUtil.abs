@@ -10,11 +10,13 @@ interface Socket {
 	InputStream getInputStream();
 	OutputStream getOutputStream();
 	Feedback<Unit> close();
+	Bool isConnected();
 }
 
 interface ServerSocket {
  	Feedback<Unit> bind(Int port);
 	Feedback<Socket> accept();
+	Bool isClosed();
 }
 
 [Foreign]
@@ -23,10 +25,12 @@ class Socket implements Socket {
 	InputStream getInputStream() { return null; }
 	OutputStream getOutputStream() { return null; }
 	Feedback<Unit> close() { return OK; }
+	Bool isConnected() { return False; }
 }
 
 [Foreign]
 class ServerSocket implements ServerSocket {
 	Feedback<Unit> bind(Int port) { return OK; }
 	Feedback<Socket> accept() { return OK; }
+	Bool isClosed() { return False; }
 }

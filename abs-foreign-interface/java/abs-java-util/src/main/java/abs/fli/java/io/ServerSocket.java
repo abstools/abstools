@@ -9,6 +9,7 @@ import FLI.StreamUtils.Feedback;
 import FLI.StreamUtils.Feedback_Error;
 import FLI.StreamUtils.Feedback_OK;
 import FLI.StreamUtils.Feedback_Result;
+import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.fli.java.PrimitiveUtil;
@@ -45,5 +46,11 @@ public class ServerSocket extends ServerSocket_c {
             return new Feedback_Error<Socket_i>(putil.convert(e.getMessage()));
         }
     }
+    
+    @Override
+    public ABSBool fli_isClosed() {
+        return putil.convert(socket.isClosed());
+    }
+
     
 }

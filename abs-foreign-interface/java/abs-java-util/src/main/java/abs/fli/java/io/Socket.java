@@ -10,6 +10,7 @@ import FLI.StreamUtils.Feedback;
 import FLI.StreamUtils.Feedback_Error;
 import FLI.StreamUtils.Feedback_OK;
 import FLI.SocketUtils.Socket_c;
+import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
@@ -68,6 +69,11 @@ public class Socket extends Socket_c  {
         } catch (IOException e) {
             return new Feedback_Error<ABSUnit>(putil.convert(e.getMessage()));
         }
+    }
+    
+    @Override
+    public ABSBool fli_isConnected() {
+        return putil.convert(client_socket.isConnected());
     }
 
 }

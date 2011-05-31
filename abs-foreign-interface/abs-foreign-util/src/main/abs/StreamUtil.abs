@@ -8,6 +8,13 @@ data Feedback<A> = Error(String) | Result(A) | OK;
 data Byte = Byte(Int);
 data Long = Long(Int);
 
+def Bool isError<A>(Feedback<A> f) = case f { Error(_) => True; _ => False; };
+def Bool isResult<A>(Feedback<A> f) = case f { Result(_) => True; _ => False; };
+def Bool isOK<A>(Feedback<A> f) = f == OK;
+
+def String error<A>(Feedback<A> f) = case f { Error(s) => s; };
+def A result<A>(Feedback<A> f) = case f { Result(a) => a; };
+
 def Int fromByte(Byte b) = case b { Byte(i) => i; };
 def Int fromLong(Long b) = case b { Long(i) => i; }; 
 
