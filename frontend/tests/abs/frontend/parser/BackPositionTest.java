@@ -8,9 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import AST.MethodDecl;
 import abs.frontend.FrontendTest;
-import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataTypeUse;
