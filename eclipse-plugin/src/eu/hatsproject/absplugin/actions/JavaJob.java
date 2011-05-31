@@ -78,6 +78,8 @@ public class JavaJob extends Job {
 	private boolean debuggerIsInDebugMode;
 
    private SDEditProcess sdeditProcess;
+
+   private List<String> extraClassPaths;
    
 	
    public static final String COMPILE_JOB = "ABS Java Code Generation";
@@ -472,7 +474,7 @@ public class JavaJob extends Job {
 
       args.add("java");
       args.add("-cp");
-      args.add(absFrontendLocation+File.pathSeparator+javaPath);
+      args.add(absFrontendLocation+File.pathSeparator+javaPath+getExtraClassPathString());
       
       if(debuggerIsInDebugMode){
          addIfNotNullOrEmpty(args,"-Dabs.debug=true");
@@ -490,7 +492,15 @@ public class JavaJob extends Job {
       printProcessOutput(moduleName, info, debugProcess);
    }
 	
-	/**
+	private String getExtraClassPathString() {
+	   StringBuilder sb = new StringBuilder();
+	   for (String p : extraClassPaths) {
+	      sb.append(File.pathSeparator+p);
+	   }
+      return sb.toString();
+   }
+
+   /**
 	 * The following arguments may be null, if the user selected one of the tool bar icons.
 	 * Otherwise these arguments should be set, before using JavaJob.schedule(). 
 	 */
@@ -793,4 +803,8 @@ public class JavaJob extends Job {
 	public void setDebuggerDebugMode(boolean b) {
 		this.debuggerIsInDebugMode = b;
 	}
+
+   public void setExtraClassPaths(List<String> extraClassPaths) {
+      this.extraClassPaths = extraClassPaths;
+   }
 }

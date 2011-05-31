@@ -53,7 +53,6 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 		String observerArgs = "";
 		@SuppressWarnings("unchecked") //setAttribute(Attribute, List) only accepts List<String>
 		List<String> observerStrings = configuration.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, new ArrayList<String>());
-		if(!observerStrings.isEmpty()){
 			for (String observerClassName : observerStrings) {
 				if(!observerClassName.isEmpty()){
 					if (observerArgs.equals("")){
@@ -63,8 +62,9 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 					}
 				}
 			}
-		}
 		job.setDebuggerArgsSystemObserver(observerArgs);
+		
+		job.setExtraClassPaths(configuration.getAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, new ArrayList<String>()));
 		
 		String schedulerString = configuration.getAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, DebuggerScheduler.getDefaultScheduler().toString());
 		job.setDebuggerArgsTotalScheduler(DebuggerScheduler.valueOf(schedulerString).getCommand());
