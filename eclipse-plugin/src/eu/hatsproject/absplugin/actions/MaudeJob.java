@@ -216,11 +216,11 @@ public class MaudeJob extends Job{
 				throw new TypeCheckerException(model.typeCheck());
 			}
 			
-			//Generate Maude code with chosen interpreter
+			// FIXME: provide a dialog to choose the main block
 			if(realTime){
-                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", true);
+                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", null);
 			} else{
-                            model.generateMaude(ps, "ABS-SIMULATOR-RL", true);
+                            model.generateMaude(ps, "ABS-SIMULATOR-RL", null);
 			}
 		} finally{
 			if (ps != null){
