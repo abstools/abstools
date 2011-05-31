@@ -16,8 +16,6 @@ data TestClass = TestClass; //test class
 [TypeAnnotation]
 data TestClassImpl = TestClassImpl; //test class implementation
 
-data TestData<A> = TestData(A);
-
 interface Comparator { 
 	Int compare(); 
 }
