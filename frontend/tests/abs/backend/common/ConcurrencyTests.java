@@ -101,6 +101,12 @@ public class ConcurrencyTests extends SemanticTests {
                 + COG_CALL_M_ASYNC);
     }
     
+    @Test
+    public void initBlockCOG3() {
+        assertEvalTrue(INTERFACE_I+CLASS_C
+                +"{List<Fut<Unit>> fs = Nil; Fut<Unit> f; I a = new cog C(); f = a!n(); fs = Cons(f,fs); f = a!n(); f = head(fs); f.get;}");
+    }
+    
     // ERROR Tests
 
     static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
