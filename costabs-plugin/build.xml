@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="COST ABS plugin" default="compile" basedir=".">
+<project name="ABS Update Site" default="compile" basedir=".">
     <property name="revision.prefix" value="1.0.5" />
 
 	<property name="frontend.dir" location="../frontend" />
