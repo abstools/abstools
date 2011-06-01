@@ -462,6 +462,8 @@ mod ABS-STATEMENT is
 
   op skip : -> Stmt [ctor format (b o)] .
   op suspend : -> Stmt [ctor format (b o)] .
+  op duration(_;_) : Expr Expr -> Stmt [ctor format (b d o b o b o)] .
+  op $duration(_;_) : Nat Nat -> Stmt [ctor format (r d o r o r o) ] .
   op await_ : Expr -> Stmt [ctor format (b o d)] .
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
@@ -685,6 +687,7 @@ mod ABS-EVAL is
   var MS : Msg .
   var N : Nat .
   var B : Bool .
+  vars MIN MAX : Nat .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
@@ -769,6 +772,7 @@ mod ABS-EVAL is
 
   --- Enabledness
   eq enabled(await E ; SL, S, CN, N) = eval(E, S, CN, N) asBool .
+  eq enabled($duration(MIN ; MAX) ; SL, S, CN, N) = MIN <= 0 .
   eq enabled(SL, S, CN, N) = true [owise] .
 
   --- The ready predicate holds, if a statement is ready for execution,
@@ -776,6 +780,9 @@ mod ABS-EVAL is
   eq ready(get(QID ; A') ; SL , S, CN, N) = completed(S[QID], CN) . 
   eq ready(get(@ QID ; A') ; SL , (SS :: S), CN, N) = completed(SS[QID], CN) . 
   eq ready(get(L ; A') ; SL , S, CN, N) = completed(L, CN) . 
+  *** This is only for the untimed case -- in the timed interpreter, duration
+  *** is reduced to $duration via an equation.
+  eq ready(duration(E ; E') ; SL, S, CN, N) = true .
   eq ready(SL, S, CN, N) = enabled(SL, S, CN, N) [owise] .
 
   *** Evaluate various builtin functions.
@@ -1030,6 +1037,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .
+  vars MIN MAX : Nat .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1205,12 +1213,21 @@ mod ABS-MACHINE-BASICS-TIMED is
     not(enabled(SL, (S :: L), CN, T)) and canAdvance(CN, T) .
   eq canAdvance(CN, T) = true [owise] .
 
+  op advance : Configuration Nat -> Configuration .
+  eq advance(
+      < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
+      CN, T)
+  = 
+    < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN - T ; MAX - T ) ; SL }, PrQ: W, Lcnt: F >
+    advance(CN, T) .
+  eq advance(CN, T) = CN [owise] .
+  
 
   *** Now advance the clock.
   crl
     { CN < T : Clock | Limit: LIM > }
   =>
-    { CN
+    { advance(CN, 1)
       < T + 1 : Clock | Limit: LIM >  }
   if canAdvance (CN, T) and T < LIM
       [label tick] .
@@ -1413,6 +1430,52 @@ mod ABS-STMT-SUSPEND-EQ is
     < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
     [label suspend] .
+endm
+
+*** The Duration statement.
+***
+*** The duration statement blocks the object (or cog) for a period between the
+*** minimum and maximum given.  In the untimed interpreter, it is equivalent
+*** to a skip statement.
+mod ABS-STMT-DURATION-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
+  vars E1 E2 : Expr .
+
+  rl
+    < O : C | Cog: CG, Att: S, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+    [label duration] .
+endm
+mod ABS-STMT-DURATION-EQ-TIMED is
+  protecting ABS-EVAL .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var CG : String .
+  vars E1 E2 : Expr .
+  vars T LIM MIN MAX : Nat .
+
+  ceq
+    < T : Clock | Limit: LIM >
+    < O : C | Cog: CG, Att: S, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < T : Clock | Limit: LIM >
+    < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
+  if MIN := (eval(E1, (S :: L), none, T) asNat)
+      /\ MAX := (eval(E2, (S :: L), none, T) asNat)
+    [label duration] .
+
+  ceq 
+    < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if MIN <= 0 [label duration-finished] .
+
 endm
 
 *** The Await statement.
@@ -1779,6 +1842,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-STMT-COND-RL .
   protecting ABS-STMT-WHILE-RL .
   protecting ABS-STMT-SUSPEND-RL .
+  protecting ABS-STMT-DURATION-RL .
   protecting ABS-STMT-AWAIT-RL .
   protecting ABS-CALLSTMTS-RL .
   protecting ABS-NEW-RL .
@@ -1811,6 +1875,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-STMT-COND-EQ-TIMED .
   protecting ABS-STMT-WHILE-EQ .
   protecting ABS-STMT-SUSPEND-EQ .
+  protecting ABS-STMT-DURATION-EQ-TIMED .
   protecting ABS-STMT-AWAIT-EQ-TIMED .
   protecting ABS-CALLSTMTS-EQ-TIMED .
   protecting ABS-NEW-EQ-TIMED .

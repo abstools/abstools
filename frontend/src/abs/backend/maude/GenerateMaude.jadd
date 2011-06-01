@@ -620,6 +620,14 @@ aspect GenerateMaude {
         stream.print("suspend ");
     }
 
+    public void DurationStmt.generateMaude(PrintStream stream) {
+        stream.print("duration(");
+        getMin().generateMaude(stream);
+        stream.print("; ");
+        getMax().generateMaude(stream);
+        stream.print(") ");
+    }
+
     public void AwaitStmt.generateMaude(PrintStream stream) {
         stream.print("await ");
         getGuard().generateMaude(stream);

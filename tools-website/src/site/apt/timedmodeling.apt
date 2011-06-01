@@ -1,0 +1,34 @@
+Timed Model Simulation in Maude
+
+* Introduction
+
+  ABS models can be augmented with timing information and their
+  execution simulated on the Maude backend.  The timed Maude backend
+  adds a model of a clock counting up from <<<0>>>.  This section
+  describes language features related to this clock.
+
+* Language Elements
+
+** Time
+
+   The current value of the clock can be accessed with the <<<now()>>>
+   function, which returns a value of type <<<Time>>>.  The function
+   <<<currentms()>>> returns an integer value and is also available on
+   the Java backend, where it returns the system time.
+
++---
+Time t = now();
++---
+
+   The <<<duration(min, max)>>> statement causes execution on the
+   current COG to be blocked for at least <<<min>>> and at most
+   <<<max>>> time units.  This is used to simulate methods taking some
+   amount of time for execution.  (In the Java backend, time passes on
+   its own, so the <<<duration>>> statement does nothing there.)
+
++---
+// Time will advance between 3 and 5 units during execution of m
+Unit m() {
+  duration(3, 5);
+}
++---

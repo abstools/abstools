@@ -99,6 +99,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "if"          { return sym(Terminals.IF); }
  "else"        { return sym(Terminals.ELSE); }
  "suspend"     { return sym(Terminals.SUSPEND); }
+ "duration"    { return sym(Terminals.DURATION); }
  "new"         { return sym(Terminals.NEW); }
  "this"        { return sym(Terminals.THIS); }
  "original"    { return sym(Terminals.ORIGINAL); }
