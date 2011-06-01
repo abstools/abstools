@@ -265,10 +265,10 @@ fmod ABS-DATA-STRING is
   eq "#" ("str"[S]) = "int"[length(S)] .
   eq "ascii" ("str"[S]) = "int"[ascii(S)] .
   eq "char" ("int"[N]) = "str"[char(N)] .
-  eq fparams("substr") = 'S, 'L, 'R .
-  eq fdefn("substr") = $builtin("substr") .
-  eq fparams("strlen") = 'S .
-  eq fdefn("strlen") = $builtin("strlen") .
+  eq fparams("ABS.StdLib.substr") = 'S, 'L, 'R .
+  eq fdefn("ABS.StdLib.substr") = $builtin("substr") .
+  eq fparams("ABS.StdLib.strlen") = 'S .
+  eq fdefn("ABS.StdLib.strlen") = $builtin("strlen") .
   eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
   eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
@@ -300,8 +300,8 @@ fmod ABS-DATA-TIME is
 
   *** The central problem is to evaluate this function, since the clock is
   *** floating around in the global state.
-  eq fparams("currentms") = noVid .
-  eq fdefn("currentms") = $builtin("currentms") .
+  eq fparams("ABS.StdLib.currentms") = noVid .
+  eq fdefn("ABS.StdLib.currentms") = $builtin("currentms") .
 endfm
 
 
