@@ -1,0 +1,462 @@
+
+
+aspect GenerateScala {
+	public void Model.generateScala(File outputDir) throws IOException {
+		for (CompilationUnit unit: getCompilationUnits())
+			unit.generateScala(outputDir);
+	}
+	
+	public void CompilationUnit.generateScala(File outputDir) throws IOException {
+		for (ModuleDecl decl: getModuleDecls()) {			
+			File moduleDir = new File(outputDir, decl.getName().replace('.', File.separatorChar));
+			moduleDir.mkdirs();
+			decl.generateScala(moduleDir);
+		}
+	}
+	
+	public void ModuleDecl.generateScala(File dir) throws IOException {
+		// are we compiling the standard library?
+		if (!getName().equals("ABS.StdLib")) {
+			File target = new File(dir, "module.scala");		
+			PrintWriter writer = new PrintWriter(target);
+		
+			writer.println("package " + getName());
+			writer.println();
+			writer.println("import akka.actor.{Actor, ActorRef}");
+			writer.println("import akka.serialization.RemoteActorSerialization");
+			writer.println("import ee.ioc.cs.abscompiler.runtime.MyObject");
+			writer.println();
+		
+			for (Decl decl: getDecls())
+				decl.generateScala(writer);
+		
+			writer.close();
+		} else {
+			// yup, hack it!
+		}
+	}
+	
+	public void Decl.generateScala(PrintWriter output) {
+		System.out.println("Decl (" + getClass().getName() + "): " + getName());
+		dump();
+	}
+	
+	
+	private void ClassDecl.generateScalaActorInvocation(String className, MethodSig s, PrintWriter writer) {
+		String name = s.getName();
+		writer.print("\t\tcase " + className + "." + StringUtils.capitalize(name));
+		if (s.getNumParam() > 0) {
+			writer.print("(");
+			for (int i = 0; i < s.getNumParam(); i++) {
+				if (i > 0)
+					writer.print(", ");
+				writer.print("arg" + i);
+			}
+			writer.print(")");
+		}
+		writer.print(" => submit " + name + "(");
+		for (int i = 0; i < s.getNumParam(); i++) {
+			if (i > 0)
+				writer.print(", ");
+			writer.print("arg" + i);
+		}
+		writer.println(")");		
+	}
+	public void ClassDecl.generateScala(PrintWriter writer) {
+		// messages for asynchronous calls to self
+		writer.println("object " + getName() + " {");
+		
+		// why oh why doesn't Java have a proper List.map :(
+		abs.backend.scala.ScalaCompiler.generateMessages(new Iterable<MethodSig>() {
+			@Override
+			public Iterator<MethodSig> iterator() {
+				final Iterator<MethodImpl> it = getMethods().iterator();
+					
+				return new Iterator<MethodSig>() {
+					@Override
+					public boolean hasNext() { return it.hasNext(); }
+					
+					@Override
+					public MethodSig next() { return it.next().getMethodSig(); }
+					
+					@Override
+					public void remove() { it.remove(); }
+				};
+			}
+		}, writer);
+		writer.println("}");
+		writer.println();
+		
+		writer.println("class " + getName() + "(private val cog: ActorRef) extends MyObject(cog) {");
+		
+		// import all messages from interfaces
+		for (InterfaceTypeUse intf: getImplementedInterfaceUses())
+			intf.generateScala(writer);
+		writer.println();
+		
+		writer.println("\tprivate var remoteSelf: Array[Byte] = _");
+		writer.println();
+		
+		// fields
+		for (FieldDecl f: getFields())
+			f.generateScala(writer);
+		writer.println();
+		
+		// fake constructor
+		writer.println("\tdef init(args: Array[Any]) {");
+		// arguments
+		for (int i = 0; i < getNumParam(); i++)
+			getParam(i).generateScalaConstructor(i, writer);		
+		writer.println("\t}");
+		writer.println();
+		
+		// TODO handle (ABS) init blocks
+		
+		// TODO method implementations
+		for (MethodImpl m: getMethods())
+			m.generateScala(writer);
+		
+		// methods
+		writer.println("\tdef receive = {");
+		
+		// standard stuff
+		writer.println("\t\tcase MyObject.RemoteSelfRef(remoteSelf) => this.remoteSelf = remoteSelf");
+		writer.print("\t\tcase MyObject.Run => ");
+		for (MethodImpl m: getMethods()) {
+			if (m.getMethodSig().getName().equals("run") && m.getMethodSig().getNumParam() == 0) {
+				writer.print("submit run()");
+				break;
+			}
+		}
+		writer.println();
+		
+		// iterate over all the interfaces
+		for (InterfaceTypeUse intf: getImplementedInterfaceUses())
+			for (MethodSig sig: ((InterfaceDecl)intf.getDecl()).getBodys())
+				generateScalaActorInvocation(intf.getName(), sig, writer);
+			
+		// iterate over all the methods
+		for (MethodImpl m: getMethods())
+			generateScalaActorInvocation(getName(), m.getMethodSig(), writer);
+		
+		writer.println("\t}");
+		
+		writer.println();
+		writer.println("}");
+		writer.println();
+	}
+	
+	public void FieldDecl.generateScala(PrintWriter writer) {
+		writer.print("\tvar " + getName() + ": ");
+		getAccess().generateScala(writer);
+		if (hasInitExp()) {
+			writer.print(" = ");
+			getInitExp().generateScala(writer);
+		}
+		writer.println();
+	}
+	
+	public void ParamDecl.generateScalaConstructor(int offset, PrintWriter writer) {
+		writer.print("\t\tthis." + getName() + " = ");
+		String type = getAccess().getScalaType();
+		if (type.equals("ActorRef"))
+			writer.println("RemoteActorSerialization.fromBinaryToRemoteActorRef(args(" + offset + ").asInstanceOf[Array[Byte]])");
+		else
+			writer.println("args(" + offset + ").asInstanceOf[" + type + "]");
+	}
+
+	public void InterfaceDecl.generateScala(PrintWriter writer) {
+		writer.println("object " + getName() + " {");
+		writer.println("\tsealed trait Message");
+		for (MethodSig s : getBodys()) {
+			// run method is special, that will be handled by MyObject.Run
+			if (s.getName().equals("run"))
+				continue;
+			
+			writer.print("\tcase " + (s.getNumParam() == 0 ? "object" : "class") + " " + StringUtils.capitalize(s.getName()));
+			
+			if (s.getNumParam() > 0) {
+				boolean f = false;
+				int i = 0;
+				
+				writer.write("(");
+				
+				for (ParamDecl param: s.getParams()) {
+					if (f)
+						writer.write(", ");
+					writer.write(param.getName() + ": "); param.getAccess().generateScala(writer);					
+					f = true;
+				}
+				
+				writer.write(")");
+			}
+			
+			writer.println(" extends Message");
+		}
+		writer.println("}");
+		writer.println();
+	}
+	
+	public void ParametricDataTypeDecl.generateScala(PrintWriter writer) {
+		writer.println("sealed trait " + getName());
+		for (DataConstructor constructor: getDataConstructors())
+			constructor.generateScala(writer);
+		writer.println();
+	}
+	
+	public void DataConstructor.generateScala(PrintWriter writer) {		
+		writer.print("case " + (getNumConstructorArg() == 0 ? "object" : "class") + " " + getName());
+		
+		boolean f = false;
+		int i = 0;
+		
+		if (getNumConstructorArg() > 0) {
+			writer.write("(");
+			for (DataTypeUse use: getConstructorArgs()) {
+				if (f)
+					writer.write(", ");
+				writer.write("i" + (++i) + ": "); use.generateScala(writer);
+				f = true;
+			}
+			writer.write(")");
+		}
+		writer.println(" extends " + getDataTypeDecl().getName());
+	}
+
+	public abstract void Access.generateScala(PrintWriter writer);
+	public abstract String Access.getScalaType();
+	
+	public String DataTypeUse.getScalaType() {
+		if (getDecl().isInterface())
+			return "ActorRef";
+		else if (getDecl().isDataType())
+			return getDecl().getName();
+		else
+			// FIXME
+			throw new RuntimeException("Unimplemented decl type: " + getDecl().getClass().getName());
+	}
+	public void DataTypeUse.generateScala(PrintWriter writer) {
+		writer.write(getScalaType());
+	}
+	
+	public String InterfaceTypeUse.getScalaType() {
+		throw new RuntimeException("FIXME: InterfaceTypeUse");
+		// FIXME
+	}
+	
+	public void InterfaceTypeUse.generateScala(PrintWriter writer) {
+		for (InterfaceTypeUse intf: ((InterfaceDecl)getDecl()).getExtendedInterfaceUses())
+			intf.generateScala(writer);
+			
+		writer.println("\timport " + getName() + "._");
+	}
+	
+	public String TypeParameterUse.getScalaType() {
+		throw new RuntimeException("FIXME: FieldUse");
+		// FIXME
+	}
+	
+	public void TypeParameterUse.generateScala(PrintWriter output) {
+		throw new RuntimeException("FIXME: TypeParameterUse");
+		// FIXME
+	}
+	
+	public String UnresolvedTypeUse.getScalaType() {
+		throw new RuntimeException("FIXME: FieldUse");
+		// FIXME
+	}
+	
+	public void UnresolvedTypeUse.generateScala(PrintWriter output) {
+		throw new RuntimeException("This should not happen");
+	}
+	
+	
+	public String FieldUse.getScalaType() {
+		throw new RuntimeException("FIXME: FieldUse");
+		// FIXME
+	}
+	
+	public void FieldUse.generateScala(PrintWriter output) {
+		throw new RuntimeException("FIXME: FieldUse");
+		// FIXME
+	}
+	
+	public String VarUse.getScalaType() {
+		throw new RuntimeException("FIXME: VarUse");
+		// FIXME
+	}
+	
+	public void VarUse.generateScala(PrintWriter writer) {
+		writer.print(getName());
+	}
+		
+	public void MethodImpl.generateScala(PrintWriter writer) {
+		writer.print("\tprivate def " + getMethodSig().getName() + "(");
+		
+		boolean f = false;
+		
+		for (ParamDecl param: getMethodSig().getParams()) {
+			if (f)
+				writer.write(", ");
+			writer.write(param.getName() + ": "); param.getAccess().generateScala(writer);					
+			f = true;
+		}
+		
+		writer.print("): ");
+		getMethodSig().getReturnType().generateScala(writer);
+		writer.print(" = ");
+		getBlock().generateScala("\t", writer);
+		writer.println();
+		// FIXME
+	}
+	
+	public abstract void Stmt.generateScala(String prefix, PrintWriter writer);
+	
+	public void Block.generateScala(String prefix, PrintWriter writer) {
+		writer.println("{");
+		
+		for (Stmt stmt: getStmts())
+			stmt.generateScala(prefix + "\t", writer);
+		
+		writer.println(prefix + "}");
+	}
+	
+	public void ReturnStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("ReturnStmt");
+		dump();
+	}
+	
+	public void AssignStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("AssignStmt");
+		dump();
+	}
+	
+	public void AssertStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("AssertStmt");
+		dump();
+	}
+	
+	public void WhileStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("WhileStmt");
+		dump();
+	}
+	
+	public void VarDeclStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("VarDeclStmt");
+		dump();
+	}
+	
+	public void SuspendStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("SuspendStmt");
+		dump();
+	}
+	
+	public void IfStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("IfStmt");
+		dump();
+	}
+	
+	public void ExpressionStmt.generateScala(String prefix, PrintWriter writer) {
+		writer.write(prefix); getExp().generateScala(writer); writer.println();
+		dump();
+	}
+	
+	public void AwaitStmt.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("AwaitStmt");
+		dump();
+	}
+	
+	public void IncompleteStmt.generateScala(String prefix, PrintWriter writer) {
+		throw new RuntimeException("This should not happen: can't compile IncompleteStmt, go fix the frontend!");
+	}
+	
+	public void SkipStmt.generateScala(String prefix, PrintWriter writer) {
+		writer.println(prefix + "{}");
+	}
+	
+	public void DurationStmt.generateScala(String prefix, PrintWriter writer) {
+		writer.println(prefix + "{}");
+	}
+	
+	public abstract void Exp.generateScala(PrintWriter writer);
+	
+	public void ThisExp.generateScala(PrintWriter writer) {
+		writer.write("remoteSelf");
+	}
+	
+	public void DataConstructorExp.generateScala(PrintWriter writer) {
+		if (getNumParam() > 0)
+			writer.write("new ");
+		writer.write(getConstructor());
+		
+		if (getNumParam() > 0) {
+			writer.write("(");
+			boolean f = false;
+			for (PureExp param: getParams()) {
+				if (f) writer.write(", ");
+				param.generateScala(writer);
+				f = true;
+			}
+			writer.write(")");
+		}
+	}
+	
+	public void PureExp.generateScala(PrintWriter writer) {
+		dump();
+		throw new RuntimeException("FIXME: PureExp");
+		// FIXME
+	}
+	
+	// EffExp
+	public void NewExp.generateScala(PrintWriter writer) {
+		System.out.println("NewExp");
+		dump();
+	}
+	
+	// EffExp
+	public void GetExp.generateScala(PrintWriter writer) {
+		System.out.println("GetExp");
+		dump();
+	}
+	
+	// EffExp
+	public void OriginalCall.generateScala(PrintWriter writer) {
+		throw new RuntimeException("Should not happen: deltas haven't been flattened away, go fix the frontend!");
+	}
+	
+	// Call
+	public void AsyncCall.generateScala(PrintWriter writer) {
+		writer.write("asyncCall("); getCallee().generateScala(writer);
+		writer.write(", ");
+		if (getNumParam() > 0)
+			writer.write("new ");
+		writer.write(getCallee().getType().getSimpleName());
+		writer.write(".");
+		writer.write(StringUtils.capitalize(getMethod()));
+		if (getNumParam() > 0) {
+			writer.write("(");
+			boolean f = false;
+			for (PureExp args: getParams()) {
+				if (f)
+					writer.write(", ");
+				args.generateScala(writer);
+				f = true;
+			}
+			writer.write(")");
+		}
+		writer.write(")");
+		
+		System.out.println("AsyncCall");
+		dump();
+	}
+	
+	// Call
+	public void SyncCall.generateScala(PrintWriter writer) {
+		System.out.println("SyncCall");
+		dump();
+	}
+	
+	public final void IncompleteExp.generateScala(PrintWriter writer) {
+		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
+	}
+}
