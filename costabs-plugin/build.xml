@@ -76,11 +76,6 @@
         </condition>
     </target>
 
-	<target name="build-all-plugins">
-		<ant antfile="${frontend.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
-		<antcall target="build-eclipse-plugin"/>
-    </target>
-	
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
 		<mkdir dir="${basedir}/${plugin.name}_${plugin.version}" />
 		<copy todir="${basedir}/${plugin.name}_${plugin.version}" failonerror="true" overwrite="true">
