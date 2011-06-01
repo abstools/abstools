@@ -218,7 +218,7 @@ aspect TypeCheckerExtension {
         if (s.size() > size) return;
 
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
-        addAllMethodSigs(sigs);  
+        addAllMethodSigs(sigs,s);  
 
         HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
 

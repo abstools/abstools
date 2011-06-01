@@ -455,4 +455,13 @@ public class NegativeTypeCheckerTests extends FrontendTest {
           + "{ List<String> s = Cons(f(\"foo\", Nil)); }");
     }
     
+    @Test
+    public void overloadingOfImplementedInterfacesInClass() {
+        assertTypeErrors("module Test; interface A { Unit m(); } interface B { Unit m(Int x); } class C implements A, B { Unit m() { skip; }}");
+    }
+    
+    @Test
+    public void overloadingOfImplementedInterfacesInInterface() {
+        assertTypeErrors("module Test; interface A { Unit m(); } interface B { Unit m(Int x); } interface I extends A, B { }");
+    }
 }

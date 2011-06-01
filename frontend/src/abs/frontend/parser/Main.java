@@ -6,12 +6,15 @@ package abs.frontend.parser;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -277,11 +280,11 @@ public class Main {
     }
 
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
-        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream));
+        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream, "UTF-8"));
     }
 
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
-        parseABSSourceFile(units, file, new FileReader(file));
+        parseABSSourceFile(units, file, getUTF8FileReader(file));
     }
     
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
@@ -372,13 +375,13 @@ public class Main {
     }
 
     public CompilationUnit parseUnit(File file) throws Exception {
-        Reader reader = new FileReader(file);
+        Reader reader = getUTF8FileReader(file);
         BufferedReader rd = null;
         // Set to true to print source before parsing
         boolean dumpinput = false;
         if (dumpinput) {
             try {
-                rd = new BufferedReader(new FileReader(file));
+                rd = getUTF8FileReader(file);
                 String line = null;
                 int i = 1;
                 while ((line = rd.readLine()) != null) {
@@ -395,6 +398,10 @@ public class Main {
         }
 
         return parseUnit(file, null, reader);
+    }
+
+    private BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
     }
 
     public static Iterable<File> toFiles(Iterable<String> fileNames) {

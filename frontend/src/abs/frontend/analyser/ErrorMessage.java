@@ -46,6 +46,7 @@ public enum ErrorMessage {
     METHOD_IMPL_WRONG_NUM_PARAMS("Method %s does not have the same number of parameters as defined in interface %s. Expected %s, but found %s."),
     METHOD_IMPL_WRONG_PARAM_TYPE("Parameter %s of method %s has a different type as defined in interface %s. Expected %s, but found %s."),
     METHOD_IMPL_WRONG_RETURN_TYPE("Method %s has not the same return type as defined in interface %s. Expected %s, but found %s."),
+    CANNOT_IMPL_INTERFACE("Interface %s has a method %s that overloads a method from another implemented interface."),
     TARGET_NO_INTERFACE_TYPE("Target expression is not typable to an interface."),
     METHOD_NOT_FOUND("Method %s could not be found"),
     NO_CLASS_DECL("Class %s could not be found"),

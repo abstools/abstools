@@ -182,14 +182,50 @@ aspect TypeChecker {
         }
     }
     
-    public void ClassDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs) {
+    public void ClassDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs, SemanticErrorList e) {
         for (InterfaceTypeUse u : getImplementedInterfaceUses()) {
             Decl d = u.getDecl();
             if (d.isInterface()) {
                 InterfaceDecl id = (InterfaceDecl) d;
-                id.addAllMethodSigs(sigs, new HashSet<InterfaceDecl>());
+                HashMap<String, MethodSig> mysigs = new HashMap<String, MethodSig>(); 
+                id.addAllMethodSigs(mysigs, new HashSet<InterfaceDecl>());
+                checkOverloading(sigs,mysigs,u,e);
+                mysigs.putAll(sigs);
+                sigs.clear();
+                sigs.putAll(mysigs);
             }
         }
+    }
+    
+    public void Decl.checkOverloading(HashMap<String, MethodSig> sigs, HashMap<String, MethodSig> mysigs, InterfaceTypeUse u, SemanticErrorList e) {
+        for (Map.Entry<String, MethodSig> entry : mysigs.entrySet()) {
+            if (sigs.containsKey(entry.getKey())) {
+                boolean overloads = false;
+                MethodSig ms = entry.getValue();
+                MethodSig s = sigs.get(entry.getKey());
+                if (s.getNumParam() != ms.getNumParam()) {
+                    overloads = true;
+                } else {
+                    for (int i = 0; i < s.getNumParam(); i++) {
+                        Type texpected = s.getParam(i).getType();
+                        Type t = ms.getParam(i).getType();
+                        if (!texpected.equals(t)) {
+                            overloads = true;
+                        }
+                    }
+                }
+                
+                Type expectedReturnType = s.getReturnType().getType();
+                Type actualReturnType = ms.getReturnType().getType(); 
+                if (!expectedReturnType.equals(actualReturnType)) {
+                    overloads = true;                            
+                }
+                if (overloads) {
+                    e.add(new TypeError(u, ErrorMessage.CANNOT_IMPL_INTERFACE, u.getName(), s.getName()));
+                }
+            }
+        }
+        
     }
     
     public abstract void Decl.typeCheck(SemanticErrorList e);  
@@ -224,7 +260,7 @@ aspect TypeChecker {
       }
       
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
-      addAllMethodSigs(sigs);  
+      addAllMethodSigs(sigs,e);  
       
       HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
       
@@ -313,6 +349,7 @@ aspect TypeChecker {
             s.typeCheck(e);
         }
         
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
             Decl d = u.getDecl();
             if (!d.isInterface()) {
@@ -320,6 +357,13 @@ aspect TypeChecker {
             } else {
                 InterfaceDecl id = (InterfaceDecl) d;
                 id.checkCycle(e,this);
+                
+                HashMap<String, MethodSig> mysigs = new HashMap<String, MethodSig>();
+                id.addAllMethodSigs(mysigs, new HashSet<InterfaceDecl>());
+                checkOverloading(sigs,mysigs,u,e);
+                mysigs.putAll(sigs);
+                sigs.clear();
+                sigs.putAll(mysigs);
                 
                 for (MethodSig s : id.getBodys()) {
                     if (names.containsKey(s.getName())) {

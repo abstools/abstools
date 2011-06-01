@@ -33,11 +33,6 @@ public class JavaExamplesTests extends JavaBackendTest {
         assertValidJavaExample("RandomBool.abs");
     }
 
-    @Test
-    public void lizeth() {
-        assertValidExample("lizeth.abs", false);
-    }
-
     private void assertValidJavaExample(String fileName) {
         assertValidExample(fileName, true);
     }

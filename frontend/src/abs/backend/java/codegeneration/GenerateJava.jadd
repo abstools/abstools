@@ -658,6 +658,7 @@ aspect GenerateJava {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
          Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
 
+         /*
          StringBuffer buf = new StringBuffer();
          buf.append("<");
          boolean first = true;
@@ -679,7 +680,7 @@ aspect GenerateJava {
          if (buf != null) {
              stream.print(buf.toString());
              stream.print(">");
-         }
+         }*/
      }
 
       stream.print("apply");
