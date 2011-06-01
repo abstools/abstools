@@ -1,9 +1,9 @@
 mvn deploy:deploy-file \
 	 -Durl=scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos \
 	 -DrepositoryId=repos.hats-project.eu \
-	 -Dfile=lib/Java1.5Compiler.jar \
+	 -Dfile=lib/ecj-3.6.2.jar \
 	 -DgroupId=eu.hats-project \
-	 -DartifactId=java-compiler \
+	 -DartifactId=eclipse-java-compiler \
 	 -Dversion=1.0 \
 	 -Dpackaging=jar \
 	 -DgeneratePom=true

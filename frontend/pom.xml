@@ -54,7 +54,7 @@
 		</dependency>
 		<dependency>
 			<groupId>eu.hats-project</groupId>
-			<artifactId>java-compiler</artifactId>
+			<artifactId>eclipse-java-compiler</artifactId>
 			<version>1.0</version>
 		</dependency>
 		<dependency>
