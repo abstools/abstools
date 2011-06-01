@@ -317,40 +317,37 @@ def Int strlen(String str) = builtin;
 // 
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
-data Time = Time(Int) | InfTime;
+data Time = Time(Int);
 def Int currentms() = builtin;
 def Time now() = Time(currentms());
 def Int timeval(Time t) = case t { Time(v) => v; };
-def Bool isTimeInfinite(Time t) = 
-  case t { Time(_) => False; InfTime => True; };
 
 // use this like so:
 //   Time t = now(); await timeDifference(now(), t) > 5;
 def Int timeDifference(Time t1, Time t2) =
   abs(timeval(t2) - timeval(t1));
 def Bool timeLessThan(Time t1, Time t2) =
-  case t1 {
-      Time(v1) => case t2 {
-          Time(v2) => v1 < v2; 
-          InfTime => False; };
-      // If t1 and t2 are infinite, < is not antisymmetric ...
-      InfTime => False;
-  };
+  timeval(t1) < timeval(t2);
 
-data Duration = Duration(Int);
+data Duration = Duration(Int) | InfDuration;
 def Int durationValue(Duration d) = case d { Duration(x) => x; };
+def Bool isDurationInfinite(Duration d) = 
+  case d { Duration(_) => False; InfDuration => True; };
+
 def Time addDuration(Time t, Duration d) =
-  case t {
-      Time(v) => Time(v + durationValue(d));
-      InfTime => InfTime;
-  };
+  Time(timeval(t) + durationValue(d));
+
 def Time subtractDuration(Time t, Duration d) =
-  case t {
-      Time(v) => Time(v - durationValue(d));
-      InfTime => InfTime;
-  };
+  Time(timeval(t) - durationValue(d));
+
 def Bool durationLessThan(Duration d1, Duration d2) =
-  durationValue(d1) < durationValue(d2);
+  case d1 {
+      Duration(v1) => case d2 {
+          Duration(v2) => v1 < v2; 
+          InfDuration => False; };
+      // If d1 and d2 are infinite, < is not antisymmetric ...
+      InfDuration => False;
+  };
 
 /**
  * Annotation data type to define the type of annotations
