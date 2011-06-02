@@ -20,6 +20,8 @@ Timed Model Simulation in Maude
 Time t = now();
 +---
 
+** Advancing time in the COG
+
    The <<<duration(min, max)>>> statement causes execution on the
    current COG to be blocked for at least <<<min>>> and at most
    <<<max>>> time units.  This is used to simulate methods taking some
@@ -32,3 +34,22 @@ Unit m() {
   duration(3, 5);
 }
 +---
+
+** Advancing time in a process
+
+   The statement <<<await duration(min, max)>>> causes the running
+   process to be suspended for at least <<<min>>> time units.  The
+   difference to the <<<duration>>> statement is that other processes in
+   the same COG are allowed to run while the process is suspended.
+   Similar to the <<<duration>>> statement, this is for simulation
+   purposes, so <<<await duration>>> statements do not suspend the
+   process in the Java backend.
+
+
++---
+// m will return after at least 3 time units
+Unit m() {
+  await duration(3, 5);
+}
++---
+

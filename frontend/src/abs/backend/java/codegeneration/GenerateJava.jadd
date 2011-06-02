@@ -474,6 +474,9 @@ aspect GenerateJava {
       stream.print("; }}");
     }
 
+    public void DurationGuard.generateJava(PrintStream stream) {
+      stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public ABSBool evaluateExp() { return true; }}");
+    }
     /*
      * EXPRESSIONS
      */

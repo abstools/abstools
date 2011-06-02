@@ -21,6 +21,7 @@ aspect Typing {
     inh Model Stmt.getModel();
     inh Model Exp.getModel();
     inh Model ExpGuard.getModel();
+    inh Model DurationGuard.getModel();
     inh Model MethodImpl.getModel();
     inh Model VarOrFieldDecl.getModel();
     inh Model MethodSig.getModel();

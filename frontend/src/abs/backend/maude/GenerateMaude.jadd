@@ -616,6 +616,14 @@ aspect GenerateMaude {
         getPureExp().generateMaude(stream);
     }
 
+    public void DurationGuard.generateMaude(PrintStream stream) {
+        stream.print("?duration( ");
+        getMin().generateMaude(stream);
+        stream.print("; ");
+        getMax().generateMaude(stream);
+        stream.print(") ");
+    }
+
     public void SuspendStmt.generateMaude(PrintStream stream) {
         stream.print("suspend ");
     }

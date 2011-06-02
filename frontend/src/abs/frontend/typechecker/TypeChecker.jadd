@@ -590,6 +590,12 @@ aspect TypeChecker {
    	 getPureExp().typeCheck(e);
    	 TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
     }
+    public void DurationGuard.typeCheck(SemanticErrorList e) {
+        getMin().typeCheck(e);
+        getMax().typeCheck(e);
+        TypeCheckerHelper.assertHasType(e, getMin(), getModel().getIntType());
+        TypeCheckerHelper.assertHasType(e, getMax(), getModel().getIntType());
+    }
     
     
     

@@ -718,6 +718,7 @@ List stmt_list =
 
 Guard guard =
       var_or_field_ref.r QMARK        {: return new ClaimGuard(r) ; :}
+    | DURATION LPAREN data_exp.min COMMA data_exp.max RPAREN {: return new DurationGuard(min, max) ; :} 
     | data_exp.e    {: return new ExpGuard(e) ; :}
     | guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :}
     ;

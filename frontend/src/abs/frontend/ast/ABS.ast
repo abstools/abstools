@@ -138,6 +138,8 @@ ClaimGuard: Guard		::= Var:PureExp;
 AndGuard: Guard			::= Left:Guard Right:Guard;
 //For boolean guards
 ExpGuard: Guard			::= PureExp ;
+// For time-delay guards (used in Maude timed simulation, otherwise always true)
+DurationGuard: Guard       ::= Min:PureExp Max:PureExp;
 
 
 // Expressions

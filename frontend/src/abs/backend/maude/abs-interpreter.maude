@@ -127,6 +127,8 @@ fmod ABS-EXPRESSION is
   op let_=_in_ : VidList ExprList Expr -> Expr [ctor] .
   *** guard expression
   op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
+  *** duration guard expression
+  op ?duration(_;_) : Expr Expr -> Expr [ctor format (! o d d d d d) ] .
   *** Error terms
   op $error : String -> Expr [ctor format (r o)] .
 
@@ -717,6 +719,7 @@ mod ABS-EVAL is
   eq eval(?(QID), S, CN, N) = completed(S[QID], CN) asAbsBool .
   eq eval(?(@ QID), (SS :: S), CN, N) = completed(SS[QID], CN) asAbsBool .
   eq eval(?(L), S, CN, N) = completed(L, CN) asAbsBool .
+  eq eval(?duration(E ; E'), S, CN, N) = ((eval(E, S, CN, N) asNat) <= 0) asAbsBool .
   eq eval(if E th E' el E'' fi, S, CN, N) =
     if eval(E, S, CN, N) asBool
     then eval(E', S, CN, N)
@@ -1033,7 +1036,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G : Nat .
   var CN : Configuration .  var P : Process .    vars A A' : Vid .
-  var E : Expr .            var AL : VidList .   var N : Label .
+  vars E E' : Expr .        var AL : VidList .   var N : Label .
   vars Q CG : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .
@@ -1213,6 +1216,8 @@ mod ABS-MACHINE-BASICS-TIMED is
     not(enabled(SL, (S :: L), CN, T)) and canAdvance(CN, T) .
   eq canAdvance(CN, T) = true [owise] .
 
+  *** Advance time by T steps: decrement durations in blocked processes and
+  *** waiting processes.
   op advance : Configuration Nat -> Configuration .
   eq advance(
       < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
@@ -1220,8 +1225,32 @@ mod ABS-MACHINE-BASICS-TIMED is
   = 
     < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN - T ; MAX - T ) ; SL }, PrQ: W, Lcnt: F >
     advance(CN, T) .
+  eq advance(
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+      CN, T)
+  = 
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: advanceDelays(W, S, T), Lcnt: F >
+    advance(CN, T) .
   eq advance(CN, T) = CN [owise] .
   
+  op advanceDelays : MProc Subst Nat -> MProc .
+  ceq advanceDelays((P, W), S, T) = 
+    advanceDelays(P, S, T), advanceDelays(W, S, T)
+  if W =/= noProc .
+  eq advanceDelays(noProc, S, T) = noProc .
+
+  op advanceDelays : Process Subst Nat -> Process .
+  eq advanceDelays({ L | await E ; SL }, S, T) =
+    { L | await advanceDelays(E, (S :: L), T) ; SL } .
+  eq advanceDelays(P, S, T) = P [owise] .
+
+  op advanceDelays : Expr Subst Nat -> Expr .
+  eq advanceDelays("&&"(E :: E'), S, T) =
+    "&&"(advanceDelays(E, S, T) :: advanceDelays(E', S, T)) .
+  ceq advanceDelays(?duration(E ; E'), S, T) =
+    ?duration("int"[MIN - T] ; "int"[MAX - T])
+  if MIN := eval(E, S, none, T) asInt /\ MAX := eval(E', S, none, T) asInt .
+  eq advanceDelays(E, S, T) = E [owise] .
 
   *** Now advance the clock.
   crl
