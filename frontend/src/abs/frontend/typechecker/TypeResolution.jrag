@@ -15,6 +15,7 @@ aspect TypeResolution {
     syn boolean Decl.isInterface() = false;
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
+    syn boolean Decl.isFuture() = false;
   
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
@@ -23,6 +24,8 @@ aspect TypeResolution {
     eq DataConstructor.isDataConstructor() = true;
     eq TypeSynDecl.isTypeSyn() = true;
     eq TypeParameterDecl.isTypeParameter() = true;
+    eq DataTypeDecl.isFuture() = getName().equals("Fut");
+    eq TypeSynDecl.isFuture() = getValue().getDecl().isFuture();
   
     syn Boolean Name.isSimple();
     eq Name.isSimple() = !getName().contains(".");
