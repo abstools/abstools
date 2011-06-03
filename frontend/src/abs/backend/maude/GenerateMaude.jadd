@@ -169,7 +169,7 @@ aspect GenerateMaude {
         getCallee().generateMaude(stream);
         stream.print(" ; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
-            stream.print("emp");
+            stream.print("emp ");
         } else {
             stream.print("(");
             for (PureExp param : getParams()) {
@@ -201,7 +201,7 @@ aspect GenerateMaude {
         getCallee().generateMaude(stream);
         stream.print("; \"" + getMethod() + "\" ; ");
         if (getNumParam() == 0) {
-            stream.print("emp");
+            stream.print("emp ");
         } else {
             stream.print("(");
             for (PureExp param : getParams()) {
