@@ -30,7 +30,6 @@ import org.apache.maven.project.MavenProjectBuilder;
 import org.apache.maven.project.ProjectBuildingException;
 import org.apache.maven.project.artifact.InvalidDependencyVersionException;
 import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
-import org.codehaus.plexus.util.StringUtils;
 
 abstract class AbstractABSMojo extends AbstractMojo {
 
@@ -250,25 +249,16 @@ abstract class AbstractABSMojo extends AbstractMojo {
     }
 
     protected String getToolClassPath() throws Exception {
-        Set<String> classpath = new HashSet<String>();
-        addToClasspath(ABS_GROUPID, ABS_FRONTEND_ARTIFACTID, "1.0-SNAPSHOT", classpath);
-        return StringUtils.join(classpath.toArray(new String[classpath.size()]), File.pathSeparator);
+        return getClasspath(ABS_GROUPID, ABS_FRONTEND_ARTIFACTID, "1.0-SNAPSHOT");
     }
 
-    protected void addToClasspath(String groupId, String artifactId, String version, Set<String> classpath)
-            throws Exception {
-        addToClasspath(groupId, artifactId, version, classpath, true);
-    }
-
-    protected void addToClasspath(String groupId, String artifactId, String version, Set<String> classpath,
-            boolean addDependencies) throws Exception {
-        addToClasspath(factory.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar"), classpath,
-                addDependencies);
+    protected String getClasspath(String groupId, String artifactId, String version) throws Exception {
+        return getClasspath(factory.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar"));
     }
     
-    protected void addToClasspath(Artifact artifact, Set<String> classpath, boolean addDependencies) throws Exception {
+    protected String getClasspath(Artifact artifact) throws Exception {
         resolver.resolve(artifact, remoteRepos, localRepo);
-        classpath.add(artifact.getFile().getCanonicalPath());
+        return artifact.getFile().getCanonicalPath();
     }
 
     @SuppressWarnings("unchecked")
@@ -276,18 +266,18 @@ abstract class AbstractABSMojo extends AbstractMojo {
         return project.getCompileDependencies();
     }
 
-    protected Set<String> getAbsDependencies() throws Exception {
+    protected List<String> getAbsDependencies() throws Exception {
         Set<File> absJars = new HashSet<File>();
         for (Dependency d : getDependencies()) {
             Artifact artifact = factory.createArtifact(d.getGroupId(), d.getArtifactId(), d.getVersion(),
-                    Artifact.SCOPE_RUNTIME, "jar");
+                    Artifact.SCOPE_RUNTIME, d.getType());
             resolver.resolve(artifact, remoteRepos, localRepo);
             absJars.add(artifact.getFile());
             for (Artifact dep : resolveArtifactDependencies(artifact)) {
                 absJars.add(dep.getFile());
             }
         }
-        return new HashSet<String>(getFileNames(absJars));
+        return getFileNames(absJars);
     }
 
     protected File getArtifact(String artifactId) {

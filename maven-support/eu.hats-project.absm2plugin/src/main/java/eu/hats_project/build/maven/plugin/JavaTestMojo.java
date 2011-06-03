@@ -34,17 +34,22 @@ public class JavaTestMojo extends AbstractTestMojo {
      * @parameter expression="${abs.javaBackend.verbose}" default-value=false
      */
     private boolean verbose;
-
+    
     private final String testMainClass = "AbsUnit.TestRunner.Main";
-
+    
+    /**
+     * @parameter expression="${classpaths}"
+     */
+    private String[] classPaths;
+    
+    /**
+     * @parameter expression="${dependencies}"
+     */
+    private String[] dependencies;
+    
     @Override
-    protected void doExecute() throws Exception {
+    protected void makeTest() throws Exception {
 
-        /*
-         * Generate test runner
-         */
-        super.doExecute();
-        
         // generate Java code
         JavaGenerator generator = new JavaGenerator();
         List<String> args = new ArrayList<String>();
@@ -69,13 +74,34 @@ public class JavaTestMojo extends AbstractTestMojo {
 
     }
 
-    private StringBuilder runJava(String... jvmargs) {
+    private StringBuilder runJava(String... jvmargs) throws MojoFailureException {
         StringBuilder output = new StringBuilder();
 
         try {
             String classpath = absfrontEnd.getAbsolutePath() + ":" + absJavaBackendTestTargetFolder.getAbsolutePath();
+            
+            if (classPaths != null) {
+                for (String cp : classPaths) {
+                    classpath += ":" + cp;
+                }
+            }
+            
+            if (dependencies != null) {
+                for (String d : dependencies) {
+                    String[] ds = d.split(":");
+                    if (ds.length != 3) {
+                        throw new MojoFailureException("Cannot resolve dependency "+d);
+                    }
+                    
+                    try {
+                        classpath += ":" + getClasspath(ds[0], ds[1], ds[2]);
+                    } catch (Exception e) {
+                        throw new MojoFailureException("Cannot resolve dependency "+d,e);
+                    }
+                }
+            }
 
-            ArrayList<String> args = new ArrayList<String>();
+            List<String> args = new ArrayList<String>();
             args.add("java");
             args.addAll(Arrays.asList(jvmargs));
             args.addAll(Arrays.asList("-cp", classpath, testMainClass));

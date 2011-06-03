@@ -15,6 +15,18 @@ import abs.backend.java.JavaBackend;
  */
 public class JavaGenerator {
     
+    /**
+     * 
+     * @param absfrontEnd The frontend jar
+     * @param absSrcFolder 
+     * @param absArguments
+     * @param absJavaBackendTargetFolder
+     * @param verbose
+     * @param sourceOnly
+     * @param stdlib
+     * @param productName
+     * @throws MojoExecutionException
+     */
     void generateJava(File absfrontEnd, 
             File absSrcFolder, 
             List<String> absArguments, 

@@ -66,18 +66,13 @@ public class MaudeTestMojo extends AbstractTestMojo {
     private static final Pattern termination = Pattern.compile("^.*\\[State\\]:.*$", Pattern.MULTILINE);
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void makeTest() throws Exception {
 
         if (productName != null && deltaNames != null && deltaNames.length > 0) {
             throw new MojoExecutionException("Cannot perform product selection"
                     + "and apply deltas on rewrite at the same time");
         }
         
-        /*
-         * Generate test runner
-         */
-        super.doExecute();
-
         // generate test.maude
         MaudeGenerator generator = new MaudeGenerator();
         List<String> args = new ArrayList<String>();

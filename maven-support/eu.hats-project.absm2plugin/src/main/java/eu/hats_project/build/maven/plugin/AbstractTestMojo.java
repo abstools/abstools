@@ -17,7 +17,7 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
 
     /**
      * Check if test runner needs to be generated before simulation
-     * @parameter expression="${abs.javaBackend.generateRunner}"
+     * @parameter expression="${abs.generateRunner}"
      *            default-value=false
      */
     private boolean generateRunner;
@@ -25,12 +25,12 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
     /**
      * The generated ABSUnit test runner file
      * 
-     * @parameter expression="${abs.maudeBackend.runnerOutput}"
+     * @parameter expression="${abs.runnerOutput}"
      *            default-value="${project.build.directory}/abs/gen/abs/runner.abs"
      */
     protected File absTestRunnerFile;
     
-    protected void doExecute() throws Exception {
+    protected final void doExecute() throws Exception {
         if (absTestSrcFolder == null) {
             getLog().warn("Test folder cannot be found. Skip tests");
             return;
@@ -58,8 +58,11 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
                 throw new MojoExecutionException("Could not generate ABSUnit test runner", e);
             }
         }
-
+        
+        makeTest();
     }
+    
+    protected abstract void makeTest() throws Exception;
     
     @Override
     protected List<String> getABSArguments() throws Exception {
