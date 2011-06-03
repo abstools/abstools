@@ -7,11 +7,18 @@ package abs.backend.scala;
 import java.io.File;
 import java.io.PrintWriter;
 
+import abs.backend.java.utils.StringUtil;
+import abs.common.StringUtils;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.parser.Main;
 
+/**
+ * 
+ * @author Andri Saar <andri@cs.ioc.ee>
+ *
+ */
 public class ScalaCompiler extends Main {
     public static void main(final String... args) {
         try {
@@ -32,7 +39,6 @@ public class ScalaCompiler extends Main {
         File outputDir = new File("/tmp/output");
         outputDir.mkdirs();
 
-        //model.getCompilationUnit().getModuleDecl().getN
         model.generateScala(outputDir);
     }
     
@@ -43,9 +49,10 @@ public class ScalaCompiler extends Main {
                 // run method is special, that will be handled by MyObject.Run
                 if (s.getName().equals("run"))
                         continue;
-                
-                writer.print("\tcase " + (s.getNumParam() == 0 ? "object" : "class") + " " + 
-                                Character.toUpperCase(s.getName().charAt(0)) + s.getName().substring(1));
+  
+                writer.format("\tcase %s %s",
+                        (s.getNumParam() == 0 ? "object" : "class"),
+                        StringUtils.capitalize(s.getName()));
                 
                 if (s.getNumParam() > 0) {
                         boolean f = false;
@@ -55,7 +62,7 @@ public class ScalaCompiler extends Main {
                         for (ParamDecl param: s.getParams()) {
                                 if (f)
                                         writer.write(", ");
-                                writer.write(param.getName() + ": "); param.getAccess().generateScala(writer);                                  
+                                writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer);                                  
                                 f = true;
                         }
                         

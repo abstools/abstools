@@ -16,55 +16,73 @@ aspect GenerateScala {
 	
 	public void ModuleDecl.generateScala(File dir) throws IOException {
 		// are we compiling the standard library?
-		if (!getName().equals("ABS.StdLib")) {
+		//if (!getName().equals("ABS.StdLib")) {
 			File target = new File(dir, "module.scala");		
 			PrintWriter writer = new PrintWriter(target);
 		
-			writer.println("package " + getName());
+			writer.format("package %s", getName()); writer.println();
 			writer.println();
 			writer.println("import akka.actor.{Actor, ActorRef}");
 			writer.println("import akka.serialization.RemoteActorSerialization");
 			writer.println("import ee.ioc.cs.abscompiler.runtime.MyObject");
 			writer.println();
 		
+			writer.println("object `package` {");
 			for (Decl decl: getDecls())
-				decl.generateScala(writer);
+				if (!decl.isClass() && !decl.isDataType() && !decl.isInterface())
+					decl.generateScala("\t", writer);
+			writer.println("}");
+			writer.println();
+			
+			for (Decl decl: getDecls())
+				if (decl.isClass() || decl.isDataType() || decl.isInterface())
+					decl.generateScala("", writer);
 		
 			writer.close();
-		} else {
+		//} else {
 			// yup, hack it!
-		}
+		//}
 	}
 	
-	public void Decl.generateScala(PrintWriter output) {
-		System.out.println("Decl (" + getClass().getName() + "): " + getName());
+	public abstract void Decl.generateScala(String prefix, PrintWriter output); // {
+	//	System.out.println("Decl (" + getClass().getName() + "): " + getName());
+	//	dump();
+	//}
+	
+	public void DeltaDecl.generateScala(String prefix, PrintWriter output) {
+		throw new RuntimeException("Should not happen: deltas should be gone by now");
+	}
+
+	public void FunctionDecl.generateScala(String prefix, PrintWriter output) {
+		dump();
+		throw new RuntimeException("FunctionDecl");
+	}
+
+	public void TypeDecl.generateScala(String prefix, PrintWriter output) {
+		System.out.println("TypeDecl");
 		dump();
 	}
 	
-	
 	private void ClassDecl.generateScalaActorInvocation(String className, MethodSig s, PrintWriter writer) {
 		String name = s.getName();
-		writer.print("\t\tcase " + className + "." + StringUtils.capitalize(name));
+		writer.format("\t\tcase %s.%s", className, StringUtils.capitalize(name));
 		if (s.getNumParam() > 0) {
 			writer.print("(");
-			for (int i = 0; i < s.getNumParam(); i++) {
-				if (i > 0)
-					writer.print(", ");
-				writer.print("arg" + i);
-			}
+			
+			for (int i = 0; i < s.getNumParam(); i++)
+				writer.format("%sarg%d", i > 0 ? ", " : "", i);
+			
 			writer.print(")");
 		}
-		writer.print(" => submit " + name + "(");
-		for (int i = 0; i < s.getNumParam(); i++) {
-			if (i > 0)
-				writer.print(", ");
-			writer.print("arg" + i);
-		}
+		
+		writer.format(" => submit %s(", name);
+		for (int i = 0; i < s.getNumParam(); i++)
+			writer.format("%sarg%d", i > 0 ? ", " : "", i);
 		writer.println(")");		
 	}
-	public void ClassDecl.generateScala(PrintWriter writer) {
+	public void ClassDecl.generateScala(String prefix, PrintWriter writer) {
 		// messages for asynchronous calls to self
-		writer.println("object " + getName() + " {");
+		writer.format(prefix + "object %s {%n", getName());
 		
 		// why oh why doesn't Java have a proper List.map :(
 		abs.backend.scala.ScalaCompiler.generateMessages(new Iterable<MethodSig>() {
@@ -84,44 +102,47 @@ aspect GenerateScala {
 				};
 			}
 		}, writer);
-		writer.println("}");
-		writer.println();
+		writer.println(prefix + "}");
+		writer.println(prefix);
 		
-		writer.println("class " + getName() + "(private val cog: ActorRef) extends MyObject(cog) {");
+		writer.format(prefix + "class %s(private val cog: ActorRef) extends MyObject(cog) {%n", getName());
 		
 		// import all messages from interfaces
 		for (InterfaceTypeUse intf: getImplementedInterfaceUses())
-			intf.generateScala(writer);
+			intf.generateScala(prefix + "\t", writer);
 		writer.println();
 		
-		writer.println("\tprivate var remoteSelf: Array[Byte] = _");
+		writer.println(prefix + "\tprivate var remoteSelf: Array[Byte] = _");
 		writer.println();
 		
 		// fields
 		for (FieldDecl f: getFields())
-			f.generateScala(writer);
+			f.generateScala(prefix + "\t", writer);
+		for (ParamDecl p: getParams())
+			p.generateScala(prefix + "\t", writer);
+			
 		writer.println();
 		
 		// fake constructor
-		writer.println("\tdef init(args: Array[Any]) {");
+		writer.println(prefix + "\tdef init(args: Array[Any]) {");
 		// arguments
 		for (int i = 0; i < getNumParam(); i++)
 			getParam(i).generateScalaConstructor(i, writer);		
-		writer.println("\t}");
-		writer.println();
+		writer.println(prefix + "\t}");
+		writer.println(prefix);
 		
 		// TODO handle (ABS) init blocks
 		
 		// TODO method implementations
 		for (MethodImpl m: getMethods())
-			m.generateScala(writer);
+			m.generateScala(prefix + "\t", writer);
 		
 		// methods
-		writer.println("\tdef receive = {");
+		writer.println(prefix + "\tdef receive = {");
 		
 		// standard stuff
-		writer.println("\t\tcase MyObject.RemoteSelfRef(remoteSelf) => this.remoteSelf = remoteSelf");
-		writer.print("\t\tcase MyObject.Run => ");
+		writer.println(prefix + "\t\tcase MyObject.RemoteSelfRef(remoteSelf) => this.remoteSelf = remoteSelf");
+		writer.print(prefix + "\t\tcase MyObject.Run => ");
 		for (MethodImpl m: getMethods()) {
 			if (m.getMethodSig().getName().equals("run") && m.getMethodSig().getNumParam() == 0) {
 				writer.print("submit run()");
@@ -139,41 +160,72 @@ aspect GenerateScala {
 		for (MethodImpl m: getMethods())
 			generateScalaActorInvocation(getName(), m.getMethodSig(), writer);
 		
-		writer.println("\t}");
+		writer.println(prefix + "\t}");
 		
-		writer.println();
-		writer.println("}");
+		writer.println(prefix);
+		writer.println(prefix + "}");
+		writer.println(prefix);
+	}
+	
+	
+	protected boolean TypedVarOrFieldDecl.generateScalaInitExp(String prefix, PrintWriter writer) 
+	{
+		return false;
+	}
+	
+	public void TypedVarOrFieldDecl.generateScala(String prefix, PrintWriter writer) {
+		writer.format(prefix + "var %s: ", getName());
+		getAccess().generateScala(prefix, writer);
+		if (!generateScalaInitExp(prefix, writer))
+			writer.print(" = _ ");
 		writer.println();
 	}
 	
-	public void FieldDecl.generateScala(PrintWriter writer) {
-		writer.print("\tvar " + getName() + ": ");
-		getAccess().generateScala(writer);
-		if (hasInitExp()) {
-			writer.print(" = ");
-			getInitExp().generateScala(writer);
-		}
-		writer.println();
+	protected boolean FieldDecl.generateScalaInitExp(String prefix, PrintWriter writer) {
+		if (!hasInitExp())
+			return false;
+
+		writer.print(" = ");
+		getInitExp().generateScala(prefix, writer);
+		return true;
+	}
+	
+	protected boolean VarDecl.generateScalaInitExp(String prefix, PrintWriter writer) {
+		if (!hasInitExp())
+			return false;
+
+		writer.print(" = ");
+		getInitExp().generateScala(prefix, writer);
+		return true;
 	}
 	
 	public void ParamDecl.generateScalaConstructor(int offset, PrintWriter writer) {
-		writer.print("\t\tthis." + getName() + " = ");
+		writer.format("\t\tthis.%s = ", getName());
 		String type = getAccess().getScalaType();
 		if (type.equals("ActorRef"))
-			writer.println("RemoteActorSerialization.fromBinaryToRemoteActorRef(args(" + offset + ").asInstanceOf[Array[Byte]])");
+			writer.format("RemoteActorSerialization.fromBinaryToRemoteActorRef(args(%d).asInstanceOf[Array[Byte]])", offset);
 		else
-			writer.println("args(" + offset + ").asInstanceOf[" + type + "]");
+			writer.format("args(%d).asInstanceOf[%s]", offset, type);
+		writer.println();
+	}
+	
+	public void ParamDecl.generateScala(String prefix, PrintWriter writer) {
+		writer.format(prefix + "private var %s: ", getName());
+		getAccess().generateScala(prefix, writer);
+		writer.println(" = _");
 	}
 
-	public void InterfaceDecl.generateScala(PrintWriter writer) {
-		writer.println("object " + getName() + " {");
+	public void InterfaceDecl.generateScala(String prefix, PrintWriter writer) {
+		writer.format("object %s {%n", getName());
 		writer.println("\tsealed trait Message");
-		for (MethodSig s : getBodys()) {
+		for (MethodSig s: getBodys()) {
 			// run method is special, that will be handled by MyObject.Run
 			if (s.getName().equals("run"))
 				continue;
 			
-			writer.print("\tcase " + (s.getNumParam() == 0 ? "object" : "class") + " " + StringUtils.capitalize(s.getName()));
+			writer.format("\tcase %s %s", 
+					(s.getNumParam() == 0 ? "object" : "class"),
+					StringUtils.capitalize(s.getName()));
 			
 			if (s.getNumParam() > 0) {
 				boolean f = false;
@@ -184,7 +236,7 @@ aspect GenerateScala {
 				for (ParamDecl param: s.getParams()) {
 					if (f)
 						writer.write(", ");
-					writer.write(param.getName() + ": "); param.getAccess().generateScala(writer);					
+					writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer);					
 					f = true;
 				}
 				
@@ -197,14 +249,14 @@ aspect GenerateScala {
 		writer.println();
 	}
 	
-	public void ParametricDataTypeDecl.generateScala(PrintWriter writer) {
-		writer.println("sealed trait " + getName());
+	public void ParametricDataTypeDecl.generateScala(String prefix, PrintWriter writer) {
+		writer.format(prefix + "sealed trait %s%n", getName());
 		for (DataConstructor constructor: getDataConstructors())
-			constructor.generateScala(writer);
-		writer.println();
+			constructor.generateScala(prefix, writer);
+		writer.println(prefix);
 	}
 	
-	public void DataConstructor.generateScala(PrintWriter writer) {		
+	public void DataConstructor.generateScala(String prefix, PrintWriter writer) {		
 		writer.print("case " + (getNumConstructorArg() == 0 ? "object" : "class") + " " + getName());
 		
 		boolean f = false;
@@ -215,7 +267,7 @@ aspect GenerateScala {
 			for (DataTypeUse use: getConstructorArgs()) {
 				if (f)
 					writer.write(", ");
-				writer.write("i" + (++i) + ": "); use.generateScala(writer);
+				writer.format("i%d: ", ++i); use.generateScala(prefix, writer);
 				f = true;
 			}
 			writer.write(")");
@@ -223,11 +275,11 @@ aspect GenerateScala {
 		writer.println(" extends " + getDataTypeDecl().getName());
 	}
 
-	public abstract void Access.generateScala(PrintWriter writer);
+	public abstract void Access.generateScala(String prefix, PrintWriter writer);
 	public abstract String Access.getScalaType();
 	
 	public String DataTypeUse.getScalaType() {
-		if (getDecl().isInterface())
+		if (getDecl().isInterface() || getDecl().isFuture())
 			return "ActorRef";
 		else if (getDecl().isDataType())
 			return getDecl().getName();
@@ -235,7 +287,7 @@ aspect GenerateScala {
 			// FIXME
 			throw new RuntimeException("Unimplemented decl type: " + getDecl().getClass().getName());
 	}
-	public void DataTypeUse.generateScala(PrintWriter writer) {
+	public void DataTypeUse.generateScala(String prefix, PrintWriter writer) {
 		writer.write(getScalaType());
 	}
 	
@@ -244,29 +296,28 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	public void InterfaceTypeUse.generateScala(PrintWriter writer) {
+	public void InterfaceTypeUse.generateScala(String prefix, PrintWriter writer) {
 		for (InterfaceTypeUse intf: ((InterfaceDecl)getDecl()).getExtendedInterfaceUses())
-			intf.generateScala(writer);
-			
-		writer.println("\timport " + getName() + "._");
+			intf.generateScala(prefix, writer);
+
+		writer.format(prefix + "import %s._%n", getName());
 	}
 	
 	public String TypeParameterUse.getScalaType() {
-		throw new RuntimeException("FIXME: FieldUse");
+		throw new RuntimeException("FIXME: TypeParameterUse");
 		// FIXME
 	}
 	
-	public void TypeParameterUse.generateScala(PrintWriter output) {
+	public void TypeParameterUse.generateScala(String prefix, PrintWriter output) {
 		throw new RuntimeException("FIXME: TypeParameterUse");
 		// FIXME
 	}
 	
 	public String UnresolvedTypeUse.getScalaType() {
-		throw new RuntimeException("FIXME: FieldUse");
-		// FIXME
+		throw new RuntimeException("This should not happen");
 	}
 	
-	public void UnresolvedTypeUse.generateScala(PrintWriter output) {
+	public void UnresolvedTypeUse.generateScala(String prefix, PrintWriter output) {
 		throw new RuntimeException("This should not happen");
 	}
 	
@@ -276,9 +327,8 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	public void FieldUse.generateScala(PrintWriter output) {
-		throw new RuntimeException("FIXME: FieldUse");
-		// FIXME
+	public void FieldUse.generateScala(String prefix, PrintWriter writer) {
+		writer.format("this.%s", getName());
 	}
 	
 	public String VarUse.getScalaType() {
@@ -286,26 +336,26 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	public void VarUse.generateScala(PrintWriter writer) {
+	public void VarUse.generateScala(String prefix, PrintWriter writer) {
 		writer.print(getName());
 	}
 		
-	public void MethodImpl.generateScala(PrintWriter writer) {
-		writer.print("\tprivate def " + getMethodSig().getName() + "(");
+	public void MethodImpl.generateScala(String prefix, PrintWriter writer) {
+		writer.format(prefix + "private def %s(", getMethodSig().getName());
 		
 		boolean f = false;
 		
 		for (ParamDecl param: getMethodSig().getParams()) {
 			if (f)
 				writer.write(", ");
-			writer.write(param.getName() + ": "); param.getAccess().generateScala(writer);					
+			writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer);					
 			f = true;
 		}
 		
 		writer.print("): ");
-		getMethodSig().getReturnType().generateScala(writer);
+		getMethodSig().getReturnType().generateScala(prefix, writer);
 		writer.print(" = ");
-		getBlock().generateScala("\t", writer);
+		getBlock().generateScala(prefix, writer);
 		writer.println();
 		// FIXME
 	}
@@ -327,8 +377,11 @@ aspect GenerateScala {
 	}
 	
 	public void AssignStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("AssignStmt");
-		dump();
+		writer.write(prefix);
+		getVar().generateScala(prefix, writer);
+		writer.write(" = ");
+		getValue().generateScala(prefix, writer);
+		writer.println();
 	}
 	
 	public void AssertStmt.generateScala(String prefix, PrintWriter writer) {
@@ -342,8 +395,7 @@ aspect GenerateScala {
 	}
 	
 	public void VarDeclStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("VarDeclStmt");
-		dump();
+		getVarDecl().generateScala(prefix, writer);
 	}
 	
 	public void SuspendStmt.generateScala(String prefix, PrintWriter writer) {
@@ -352,17 +404,57 @@ aspect GenerateScala {
 	}
 	
 	public void IfStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("IfStmt");
-		dump();
+		writer.write(prefix + "if (");
+		getCondition().generateScala(prefix + "\t", writer);
+		
+		if (getThen() instanceof Block) {
+			writer.write(") ");
+			getThen().generateScala(prefix, writer);
+		}
+		else {
+			writer.println(")");
+			getThen().generateScala(prefix + "\t", writer);
+		}
+		
+		if (hasElse()) {
+			if (getElse() instanceof Block) {
+				writer.write(prefix + "else ");
+				getElse().generateScala(prefix, writer);
+			}
+			else {
+				writer.println(prefix + "else");
+				getElse().generateScala(prefix + "\t", writer);
+			}
+		}
 	}
 	
 	public void ExpressionStmt.generateScala(String prefix, PrintWriter writer) {
-		writer.write(prefix); getExp().generateScala(writer); writer.println();
-		dump();
+		writer.write(prefix); getExp().generateScala(prefix, writer); writer.println();
 	}
 	
 	public void AwaitStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("AwaitStmt");
+		writer.write(prefix + "await(");
+		getGuard().generateScala(prefix, writer);
+		writer.println(")");
+	}
+	
+	public abstract void Guard.generateScala(String prefix, PrintWriter writer);
+	
+	public void AndGuard.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("AndGuard");
+		dump();
+	}
+	
+	public void ClaimGuard.generateScala(String prefix, PrintWriter writer) {
+		getVar().generateScala(prefix, writer);
+	}
+	
+	public void DurationGuard.generateScala(String prefix, PrintWriter writer) {
+		writer.write("true");
+	}
+	
+	public void ExpGuard.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("ExpGuard");
 		dump();
 	}
 	
@@ -378,13 +470,15 @@ aspect GenerateScala {
 		writer.println(prefix + "{}");
 	}
 	
-	public abstract void Exp.generateScala(PrintWriter writer);
+	public abstract void Exp.generateScala(String prefix, PrintWriter writer);
 	
-	public void ThisExp.generateScala(PrintWriter writer) {
+	public void ThisExp.generateScala(String prefix, PrintWriter writer) {
+		// TODO determine if it used internally (should translate to "this")
+		//      or externally (remoteSelf)
 		writer.write("remoteSelf");
 	}
 	
-	public void DataConstructorExp.generateScala(PrintWriter writer) {
+	public void DataConstructorExp.generateScala(String prefix, PrintWriter writer) {
 		if (getNumParam() > 0)
 			writer.write("new ");
 		writer.write(getConstructor());
@@ -394,69 +488,128 @@ aspect GenerateScala {
 			boolean f = false;
 			for (PureExp param: getParams()) {
 				if (f) writer.write(", ");
-				param.generateScala(writer);
+				param.generateScala(prefix, writer);
 				f = true;
 			}
 			writer.write(")");
 		}
 	}
 	
-	public void PureExp.generateScala(PrintWriter writer) {
+	public void CaseExp.generateScala(String prefix, PrintWriter writer) {
+		getExpr().generateScala(prefix, writer);
+		writer.println(" match { ");
+		for (CaseBranch branch: getBranchs())
+			branch.generateScala(prefix + "\t", writer);
+		writer.print(prefix + "}");
+	}
+	
+	public void CaseBranch.generateScala(String prefix, PrintWriter writer) {
+		writer.print(prefix + "case ");
+		getLeft().generateScala(prefix, writer);
+		writer.print(" => ");
+		getRight().generateScala(prefix, writer);
+		writer.println();
+	}
+	
+	public abstract void Pattern.generateScala(String prefix, PrintWriter writer);
+	
+	public void UnderscorePattern.generateScala(String prefix, PrintWriter writer) {
+		writer.write("_");
+	}
+	
+	public void ConstructorPattern.generateScala(String prefix, PrintWriter writer) {
+		writer.write(getConstructor());
+		if (getNumParam() > 0) {
+			writer.write("(");
+			boolean b = false;
+			for (Pattern p: getParams()) {
+				if (b) writer.write(", ");
+				p.generateScala(prefix, writer);
+			}
+			writer.write(")");
+		}
+	}
+	
+	public void LiteralPattern.generateScala(String prefix, PrintWriter writer) {
+		dump();
+		throw new RuntimeException("LiteralPattern");
+	}
+	
+	public void PatternVar.generateScala(String prefix, PrintWriter writer) {
+		dump();
+		throw new RuntimeException("PatternVar");
+	}
+	
+	public void PatternVarUse.generateScala(String prefix, PrintWriter writer) {
+		dump();
+		throw new RuntimeException("FIXME: PatternVarUse");
+	}
+	
+	public void PureExp.generateScala(String prefix, PrintWriter writer) {
 		dump();
 		throw new RuntimeException("FIXME: PureExp");
 		// FIXME
 	}
 	
+	protected abstract String EqualityExpr.getScalaComp();
+	public void EqualityExpr.generateScala(String prefix, PrintWriter writer) {
+		getLeft().generateScala(prefix, writer);
+		writer.format(" %s ", getScalaComp());
+		getRight().generateScala(prefix, writer);
+	}
+	
+	protected String EqExp.getScalaComp() { return "=="; }
+	protected String NotEqExp.getScalaComp() { return "!="; }
+	
 	// EffExp
-	public void NewExp.generateScala(PrintWriter writer) {
+	public void NewExp.generateScala(String prefix, PrintWriter writer) {
 		System.out.println("NewExp");
 		dump();
 	}
 	
 	// EffExp
-	public void GetExp.generateScala(PrintWriter writer) {
-		System.out.println("GetExp");
-		dump();
+	public void GetExp.generateScala(String prefix, PrintWriter writer) {
+		writer.write("getFuture(");
+		getPureExp().generateScala(prefix, writer);
+		writer.write(")");
 	}
 	
 	// EffExp
-	public void OriginalCall.generateScala(PrintWriter writer) {
+	public void OriginalCall.generateScala(String prefix, PrintWriter writer) {
 		throw new RuntimeException("Should not happen: deltas haven't been flattened away, go fix the frontend!");
 	}
 	
 	// Call
-	public void AsyncCall.generateScala(PrintWriter writer) {
-		writer.write("asyncCall("); getCallee().generateScala(writer);
+	public void AsyncCall.generateScala(String prefix, PrintWriter writer) {
+		writer.write("asyncCall("); getCallee().generateScala(prefix, writer);
 		writer.write(", ");
 		if (getNumParam() > 0)
 			writer.write("new ");
-		writer.write(getCallee().getType().getSimpleName());
-		writer.write(".");
-		writer.write(StringUtils.capitalize(getMethod()));
+		writer.format("%s.%s",
+				getCallee().getType().getSimpleName(),
+				StringUtils.capitalize(getMethod()));
+
 		if (getNumParam() > 0) {
 			writer.write("(");
 			boolean f = false;
 			for (PureExp args: getParams()) {
 				if (f)
 					writer.write(", ");
-				args.generateScala(writer);
+				args.generateScala(prefix, writer);
 				f = true;
 			}
 			writer.write(")");
 		}
 		writer.write(")");
-		
-		System.out.println("AsyncCall");
-		dump();
 	}
 	
 	// Call
-	public void SyncCall.generateScala(PrintWriter writer) {
+	public void SyncCall.generateScala(String prefix, PrintWriter writer) {
 		System.out.println("SyncCall");
 		dump();
 	}
 	
-	public final void IncompleteExp.generateScala(PrintWriter writer) {
+	public final void IncompleteExp.generateScala(String prefix, PrintWriter writer) {
 		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
 	}
 }
