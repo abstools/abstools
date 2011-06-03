@@ -148,12 +148,15 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		IFile file = (IFile)editor.getEditorInput().getAdapter(IFile.class);
 		// Tries to get the ABS ProjectNature in order to get the AST
 		AbsNature nature = UtilityFunctions.getAbsNature(file);
-		if(nature == null){
+		if (nature == null) {
 			return;
 		}
 
 		CompilationUnit cu = nature.getCompilationUnit(file);
-
+		if (cu == null) {
+			throw new IllegalArgumentException("Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
+		}
+		
 		// Update the input of the tree viewer to reflect the new outline of the AST
 		tw.setInput(new InternalASTNode<CompilationUnit>(cu,nature));
 	}
