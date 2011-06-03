@@ -304,6 +304,8 @@ fmod ABS-DATA-TIME is
   *** floating around in the global state.
   eq fparams("ABS.StdLib.currentms") = noVid .
   eq fdefn("ABS.StdLib.currentms") = $builtin("currentms") .
+  eq fparams("ABS.StdLib.lowlevelDeadline") = noVid .
+  eq fdefn("ABS.StdLib.lowlevelDeadline") = $builtin("lowlevelDeadline") .
 endfm
 
 
@@ -471,10 +473,10 @@ mod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op newcog(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
-  op asynccall(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
-  op synccall(_;_;_;_) : Vid Expr String ExprList -> Stmt [ctor format (b d o b o b o b o b o)] .
+  op asynccall(_;_;_;_;_) : Vid Expr String ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
+  op synccall(_;_;_;_;_) : Vid Expr String ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op original(_;_) : Vid ExprList -> Stmt [ctor format (b d o b o b o)] .
-  op $call(_;_;_;_;_) : Label Oid String DataList Bool -> Stmt [ctor format (r d o r o r o r o r o r o)] .
+  op $call(_;_;_;_;_;_) : Label Oid String DataList Bool Data -> Stmt [ctor format (r d o r o r o r o r o r o r o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
 
@@ -610,11 +612,12 @@ mod ABS-CONFIGURATION is
   --- DL: The actual arguments.
   --- S: Flag indicating whether the call was made synchronously, i.e. whether
   ---    a $cont statement should be generated at the end.
-  op invoc(_,_,_,_,_) : Oid Label String DataList Bool -> Msg
-    [ctor format (b d o  b so  b so  b so  b so b on)] .
+  --- DE: The deadline
+  op invoc(_,_,_,_,_,_) : Oid Label String DataList Bool Data -> Msg
+    [ctor format (b d o  b so  b so  b so  b so  b so b on)] .
 
   --- Process creation in target object:
-  op makeProcess(_,_,_,_) : Method Label DataList Bool -> Process .
+  op makeProcess(_,_,_,_,_) : Method Label DataList Bool Data -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -690,6 +693,7 @@ mod ABS-EVAL is
   var N : Nat .
   var B : Bool .
   vars MIN MAX : Nat .
+  var MAC : SSubst .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
@@ -697,35 +701,35 @@ mod ABS-EVAL is
   eq completed(L, CN) = false [owise] .
 
   *** evaluate `Expr' with variable bindings `Subst', configuration
-  *** `Configuration' and time `Nat' (constant 0 in the untimed case).
-  op eval : Expr Subst Configuration Nat -> Data .
-  op evalList : ExprList Subst Configuration Nat -> DataList [strat (1 0 0 0)] .
-  op enabled : StmtList Subst Configuration Nat -> Bool .
-  op ready : StmtList Subst Configuration Nat -> Bool .
+  *** `Configuration' and other parameters `SSubst' (time, deadline).
+  op eval : Expr Subst Configuration SSubst -> Data .
+  op evalList : ExprList Subst Configuration SSubst -> DataList [strat (1 4 0)] .
+  op enabled : StmtList Subst Configuration SSubst -> Bool .
+  op ready : StmtList Subst Configuration SSubst -> Bool .
 
-  eq eval(D, S, CN, N) = D .
+  eq eval(D, S, CN, MAC) = D .
 
   *** Normal variable lookup.  Can be either instance or local variable.
-  eq eval(QID, S, CN, N) =  S [QID] .
+  eq eval(QID, S, CN, MAC) =  S [QID] .
   *** Instance variable lookup.  The distinction between @ and raw qids needs
   *** to be made in all lookup operations.
-  eq eval(@ QID, (SS :: S), CN, N) =  SS [QID] .
+  eq eval(@ QID, (SS :: S), CN, MAC) =  SS [QID] .
   *** Function expansions are expressions, subject to further evaluation.
   *** They are not evaluated in the current environment but in the environment
   *** in which they are defined (which is currently always empty).
-  eq eval(Q(EL), S, CN, N) = eval(fdefn(Q), 
-      createSubst(fparams(Q), evalList(EL, S, CN, N)), CN, N) .
-  eq eval(Q [EL], S, CN, N) = Q [ evalList(EL, S, CN, N) ] .
-  eq eval(?(QID), S, CN, N) = completed(S[QID], CN) asAbsBool .
-  eq eval(?(@ QID), (SS :: S), CN, N) = completed(SS[QID], CN) asAbsBool .
-  eq eval(?(L), S, CN, N) = completed(L, CN) asAbsBool .
-  eq eval(?duration(E ; E'), S, CN, N) = ((eval(E, S, CN, N) asNat) <= 0) asAbsBool .
-  eq eval(if E th E' el E'' fi, S, CN, N) =
-    if eval(E, S, CN, N) asBool
-    then eval(E', S, CN, N)
-    else eval(E'', S, CN, N) fi .
-  eq eval(let AL = EL in E, S, CN, N) = 
-    eval(E, S :: createSubst(AL, evalList(EL, S, CN, N)), CN, N) .
+  eq eval(Q(EL), S, CN, MAC) = eval(fdefn(Q), 
+      createSubst(fparams(Q), evalList(EL, S, CN, MAC)), CN, MAC) .
+  eq eval(Q [EL], S, CN, MAC) = Q [ evalList(EL, S, CN, MAC) ] .
+  eq eval(?(QID), S, CN, MAC) = completed(S[QID], CN) asAbsBool .
+  eq eval(?(@ QID), (SS :: S), CN, MAC) = completed(SS[QID], CN) asAbsBool .
+  eq eval(?(L), S, CN, MAC) = completed(L, CN) asAbsBool .
+  eq eval(?duration(E ; E'), S, CN, MAC) = ((eval(E, S, CN, MAC) asNat) <= 0) asAbsBool .
+  eq eval(if E th E' el E'' fi, S, CN, MAC) =
+    if eval(E, S, CN, MAC) asBool
+    then eval(E', S, CN, MAC)
+    else eval(E'', S, CN, MAC) fi .
+  eq eval(let AL = EL in E, S, CN, MAC) = 
+    eval(E, S :: createSubst(AL, evalList(EL, S, CN, MAC)), CN, MAC) .
 
   *** evaluate a case statement.  If the pattern matches, augment environment
   *** with the resulting bindings.
@@ -755,70 +759,72 @@ mod ABS-EVAL is
   *** internal operator $case avoids endless loop between "case D of" and
   *** "case E of" when first case branch doesn't match
   op $case : Data CaseBranchList -> Expr .
-  ceq eval($case(D, (E => E') ; CBL), S, CN, N) = 
+  ceq eval($case(D, (E => E') ; CBL), S, CN, MAC) = 
     if R == noMatch
-    then eval($case(D, CBL), S, CN, N)
-    else eval(E', S :: R, CN, N) fi
+    then eval($case(D, CBL), S, CN, MAC)
+    else eval(E', S :: R, CN, MAC) fi
   if R := match(D, E, S) .
   *** eq eval($case(D, noBranch), S, CN) = $error("No match in case expression") .
 
-  eq eval(case E of { CBL }, S, CN, N) = 
-    eval($case(eval(E, S, CN, N), CBL), S, CN, N) .
+  eq eval(case E of { CBL }, S, CN, MAC) = 
+    eval($case(eval(E, S, CN, MAC), CBL), S, CN, MAC) .
 
   --- Evaluate lists of expressions.
-  eq evalList(emp, S, CN, N) = emp .
-  eq evalList(noVid, S, CN, N) = emp .
-  eq evalList(DL, S, CN, N) = DL .
-  eq evalList(E, S, CN, N) = eval(E, S, CN, N) .
-  eq evalList(E :: NeEL, S, CN, N) =
-    eval(E, S, CN, N) :: evalList(NeEL, S, CN, N) .
+  eq evalList(emp, S, CN, MAC) = emp .
+  eq evalList(noVid, S, CN, MAC) = emp .
+  eq evalList(DL, S, CN, MAC) = DL .
+  eq evalList(E, S, CN, MAC) = eval(E, S, CN, MAC) .
+  eq evalList(E :: NeEL, S, CN, MAC) =
+    eval(E, S, CN, MAC) :: evalList(NeEL, S, CN, MAC) .
 
   --- Enabledness
-  eq enabled(await E ; SL, S, CN, N) = eval(E, S, CN, N) asBool .
-  eq enabled($duration(MIN ; MAX) ; SL, S, CN, N) = MIN <= 0 .
-  eq enabled(SL, S, CN, N) = true [owise] .
+  eq enabled(await E ; SL, S, CN, MAC) = eval(E, S, CN, MAC) asBool .
+  eq enabled($duration(MIN ; MAX) ; SL, S, CN, MAC) = MIN <= 0 .
+  eq enabled(SL, S, CN, MAC) = true [owise] .
 
   --- The ready predicate holds, if a statement is ready for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(QID ; A') ; SL , S, CN, N) = completed(S[QID], CN) . 
-  eq ready(get(@ QID ; A') ; SL , (SS :: S), CN, N) = completed(SS[QID], CN) . 
-  eq ready(get(L ; A') ; SL , S, CN, N) = completed(L, CN) . 
+  eq ready(get(QID ; A') ; SL , S, CN, MAC) = completed(S[QID], CN) . 
+  eq ready(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = completed(SS[QID], CN) . 
+  eq ready(get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) . 
   *** This is only for the untimed case -- in the timed interpreter, duration
   *** is reduced to $duration via an equation.
-  eq ready(duration(E ; E') ; SL, S, CN, N) = true .
-  eq ready(SL, S, CN, N) = enabled(SL, S, CN, N) [owise] .
+  eq ready(duration(E ; E') ; SL, S, CN, MAC) = true .
+  eq ready(SL, S, CN, MAC) = enabled(SL, S, CN, MAC) [owise] .
 
   *** Evaluate various builtin functions.
 
   *** ABS-DATA-BOOL
-  eq eval($builtin("=="), S, CN, N) = (S['D1] == S['D2]) asAbsBool .
-  eq eval($builtin("/="), S, CN, N) = (S['D1] =/= S['D2]) asAbsBool .
-  eq eval($builtin("~"), S, CN, N) = (not ((S['D]) asBool)) asAbsBool .
-  eq eval($builtin("&&"), S, CN, N) = ((S['D1]) asBool and (S['D2]) asBool) asAbsBool .
-  eq eval($builtin("||"), S, CN, N) = ((S['D1]) asBool or (S['D2]) asBool) asAbsBool .
+  eq eval($builtin("=="), S, CN, MAC) = (S['D1] == S['D2]) asAbsBool .
+  eq eval($builtin("/="), S, CN, MAC) = (S['D1] =/= S['D2]) asAbsBool .
+  eq eval($builtin("~"), S, CN, MAC) = (not ((S['D]) asBool)) asAbsBool .
+  eq eval($builtin("&&"), S, CN, MAC) = ((S['D1]) asBool and (S['D2]) asBool) asAbsBool .
+  eq eval($builtin("||"), S, CN, MAC) = ((S['D1]) asBool or (S['D2]) asBool) asAbsBool .
   
   *** ABS-DATA-INT
-  eq eval($builtin("--"), S, CN, N) = "int"[-(S['I]) asInt] .
-  ceq eval($builtin("+"), S, CN, N) = "int"[I1:Int + I2:Int]
+  eq eval($builtin("--"), S, CN, MAC) = "int"[-(S['I]) asInt] .
+  ceq eval($builtin("+"), S, CN, MAC) = "int"[I1:Int + I2:Int]
   if "int"[I1:Int] := S['I1] /\ "int"[I2:Int] := S['I2] .
-  eq eval($builtin("-"), S, CN, N) = "int"[(S['I1]) asInt - (S['I2]) asInt] .
-  eq eval($builtin("*"), S, CN, N) = "int"[(S['I1]) asInt * (S['I2]) asInt] .
-  eq eval($builtin("/"), S, CN, N) = "int"[(S['I1]) asInt quo (S['I2]) asInt] .
-  eq eval($builtin("%"), S, CN, N) = "int"[(S['I1]) asInt rem (S['I2]) asInt] .
-  eq eval($builtin("<"), S, CN, N) = ((S['I1]) asInt < (S['I2]) asInt) asAbsBool .
-  eq eval($builtin("<="), S, CN, N) = ((S['I1]) asInt <= (S['I2]) asInt) asAbsBool .
-  eq eval($builtin(">"), S, CN, N) = ((S['I1]) asInt > (S['I2]) asInt) asAbsBool .
-  eq eval($builtin(">="), S, CN, N) = ((S['I1]) asInt >= (S['I2]) asInt) asAbsBool .
+  eq eval($builtin("-"), S, CN, MAC) = "int"[(S['I1]) asInt - (S['I2]) asInt] .
+  eq eval($builtin("*"), S, CN, MAC) = "int"[(S['I1]) asInt * (S['I2]) asInt] .
+  eq eval($builtin("/"), S, CN, MAC) = "int"[(S['I1]) asInt quo (S['I2]) asInt] .
+  eq eval($builtin("%"), S, CN, MAC) = "int"[(S['I1]) asInt rem (S['I2]) asInt] .
+  eq eval($builtin("<"), S, CN, MAC) = ((S['I1]) asInt < (S['I2]) asInt) asAbsBool .
+  eq eval($builtin("<="), S, CN, MAC) = ((S['I1]) asInt <= (S['I2]) asInt) asAbsBool .
+  eq eval($builtin(">"), S, CN, MAC) = ((S['I1]) asInt > (S['I2]) asInt) asAbsBool .
+  eq eval($builtin(">="), S, CN, MAC) = ((S['I1]) asInt >= (S['I2]) asInt) asAbsBool .
   *** ABS-DATA-STRING
-  ceq eval($builtin("+"), S, CN, N) = "str"[I1:String + I2:String]
+  ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]
   if "str"[I1:String] := S['I1] /\ "str"[I2:String] := S['I2] .
-  eq eval($builtin("substr"), S, CN, N) =
+  eq eval($builtin("substr"), S, CN, MAC) =
     "str"[substr((S['S]) asString, (S['L]) asInt, (S['R]) asInt)] .
-  eq eval($builtin("strlen"), S, CN, N) =
+  eq eval($builtin("strlen"), S, CN, MAC) =
     "int"[length((S['S]) asString)] .
   *** ABS-DATA-TIME
   --- N will be 0 in the untimed case.
-  eq eval($builtin("currentms"), S, CN, N) = "int"[N] .
+  eq eval($builtin("currentms"), S, CN, MAC) = MAC['time] .
+  eq eval($builtin("lowlevelDeadline"), S, CN, MAC) = 
+    eval((case MAC['deadline] of { ("Duration"[ 'v ] => 'v) ; ("InfDuration"[ emp ] => "int"[ -1 ]) }), S, CN, MAC) .
 
 endm
 
@@ -832,13 +838,14 @@ mod ABS-MSG-TRANSPORT is
   var W : MProc .        var MI : Method .
   var MS : StringSet .   var B : Bool .
   var SS : SSubst .
+  var DE : Data .
 
   --- message generation
   eq
-    < O1 : C | Cog: CG, Att: S, Pr: { L | $call(N ; O ; M ; DL ; B) ; SL }, PrQ: W, Lcnt: F > 
+    < O1 : C | Cog: CG, Att: S, Pr: { L | $call(N ; O ; M ; DL ; B ; DE) ; SL }, PrQ: W, Lcnt: F > 
   =
     < O1 : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: (s F) >
-    invoc(O, N, M, DL, B)
+    invoc(O, N, M, DL, B, DE)
       [label call-internal] .
   
 
@@ -851,17 +858,17 @@ mod ABS-MSG-TRANSPORT is
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
     < C : Class | Param: AL', Att: S1, 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
-    invoc(O, N, M, DL, B)
+    invoc(O, N, M, DL, B, DE)
   =
-    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)), Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)), Lcnt: F >
     < C : Class | Param: AL', Att: S1, 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg] .
 
-  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B)
+  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)
   =
-    { '.label |-> N, '.method |-> "str"[ M ], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ M ], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
 endm
 
@@ -897,7 +904,7 @@ mod ABS-MACHINE-BASICS is
   =>
     { < CG : Cog | Object: O >
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
-  if ready(SL, (S :: L), CN, 0)
+  if ready(SL, (S :: L), CN, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       [label PrQ-ready] .
 
   --- Processes that end release the Cog.
@@ -926,7 +933,8 @@ mod ABS-MACHINE-BASICS is
       CN
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label] /\ ready(SL1, (S1 :: L1), CN, 0)
+  if  L[A] == L1['.label]
+      /\ ready(SL1, (S1 :: L1), CN, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
     [label schedule-cog] .
 
   *** Handle synchronous self-calls
@@ -948,7 +956,7 @@ mod ABS-MACHINE-BASICS is
   =
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
-  if N := eval(E, (S :: L), none, 0)
+  if N := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       [label mark] .
 
   --- Ignore superfluous $mark instructions -- these are generated for code
@@ -958,7 +966,7 @@ mod ABS-MACHINE-BASICS is
     < O : C | Cog: CG, Att: S, Pr: { L | $mark(E) ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if not eval(E, (S :: L), none, 0) :: Label
+  if not eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline])) :: Label
       [label ignored-mark] .
 
   --- free
@@ -973,7 +981,7 @@ mod ABS-MACHINE-BASICS is
     < N : Future | Name: Q, Completed: CO, 
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
-  if N := eval(E, (S :: L), none, 0)
+  if N := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       [label free] .
 
   --- Skip the $free instruction if the variable is uninitialized.  This helps
@@ -1001,7 +1009,7 @@ mod ABS-MACHINE-BASICS is
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, 0), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline])), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
   eq
@@ -1022,7 +1030,7 @@ mod ABS-MACHINE-BASICS is
   eq
     { < O : C | Cog: CG, Att: S, Pr: { L | assert(E) ; SL }, PrQ: W, Lcnt: F > CN  }
   =
-    { if eval(E, (S :: L), CN, 0) asBool then
+    { if eval(E, (S :: L), CN, ('time |-> "int"[0], 'deadline |-> L['.deadline])) asBool then
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
         < O : C | Cog: CG, Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
@@ -1041,6 +1049,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .
   vars MIN MAX : Nat .
+  var MAC : SSubst .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1058,7 +1067,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
-  if ready(SL, (S :: L), CN, T)
+  if ready(SL, (S :: L), CN, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       [label PrQ-ready] .
 
   --- Processes that end release the Cog.
@@ -1089,7 +1098,8 @@ mod ABS-MACHINE-BASICS-TIMED is
       CN
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label] /\ ready(SL1, (S1 :: L1), CN, T)
+  if  L[A] == L1['.label]
+      /\ ready(SL1, (S1 :: L1), CN, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
     [label schedule-cog] .
 
   *** Handle synchronous self-calls
@@ -1113,7 +1123,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: Q, Completed: CO, References: G + 1, Value: D >
     < T : Clock | Limit: LIM >
-  if N := eval(E, (S :: L), none, T)
+  if N := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       [label mark] .
 
   --- free
@@ -1130,7 +1140,7 @@ mod ABS-MACHINE-BASICS-TIMED is
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
     < T : Clock | Limit: LIM >
-  if N := eval(E, (S :: L), none, T)
+  if N := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       [label free] .
 
   --- Skip the $free instruction if the variable is uninitialized.  This helps
@@ -1160,7 +1170,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, T), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline])), L) | SL }, PrQ: W, Lcnt: F >
     [label $vardecl] .
 
   *** TODO: release labels that are going out of scope here.
@@ -1184,7 +1194,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       < T : Clock | Limit: LIM >
       CN  }
   =
-    { if eval(E, (S :: L), CN, T) asBool then
+    { if eval(E, (S :: L), CN, ('time |-> "int"[T], 'deadline |-> L['.deadline])) asBool then
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       else
         < O : C | Cog: CG, Att: S, Pr: { L | failure(E) ; SL }, PrQ: W, Lcnt: F >
@@ -1195,26 +1205,27 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   *** Clock advancement.
 
-  op noneready : MProc Subst Configuration Nat -> Bool .
-  eq noneready((W, { L | SL }), S, CN, T) =
-    not ready(SL, (S :: L), CN, T) and noneready(W, S, CN, T) .
-  eq noneready(noProc, S, CN, T) = true .
+  op noneready : MProc Subst Configuration SSubst -> Bool .
+  eq noneready((W, { L | SL }), S, CN, MAC) =
+    not ready(SL, (S :: L), CN, $insert('deadline, L['.deadline], MAC)) and noneready(W, S, CN, MAC) .
+  eq noneready(noProc, S, CN, MAC) = true .
 
-  op canAdvance : Configuration Nat -> Bool .
+  op canAdvance : Configuration SSubst -> Bool .
   *** Block clock if a method invocation is on its way.
-  eq canAdvance (m:Msg CN, T) = false .
+  eq canAdvance (m:Msg CN, MAC) = false .
   *** Block clock if object is idle but has processes that can be scheduled.
   eq canAdvance (
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > 
-      CN, T) =
-    noneready(W, S, CN, T) and canAdvance (CN, T) .
+      CN, MAC) =
+    noneready(W, S, CN, MAC) and canAdvance (CN, MAC) .
   *** Block clock if process is executing and can execute.
   eq canAdvance (
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-      CN, T)
+      CN, MAC)
   =
-    not(enabled(SL, (S :: L), CN, T)) and canAdvance(CN, T) .
-  eq canAdvance(CN, T) = true [owise] .
+    not(enabled(SL, (S :: L), CN, $insert('deadline, L['.deadline], MAC)))
+    and canAdvance(CN, MAC) .
+  eq canAdvance(CN, MAC) = true [owise] .
 
   *** Advance time by T steps: decrement durations in blocked processes and
   *** waiting processes.
@@ -1223,34 +1234,40 @@ mod ABS-MACHINE-BASICS-TIMED is
       < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
       CN, T)
   = 
-    < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN - T ; MAX - T ) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { reduceDeadline(L, T) | $duration( MIN - T ; MAX - T ) ; SL }, PrQ: advanceProcesses(W, S, T), Lcnt: F >
     advance(CN, T) .
   eq advance(
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, T)
   = 
-    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: advanceDelays(W, S, T), Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: advanceProcesses(W, S, T), Lcnt: F >
     advance(CN, T) .
   eq advance(CN, T) = CN [owise] .
-  
-  op advanceDelays : MProc Subst Nat -> MProc .
-  ceq advanceDelays((P, W), S, T) = 
-    advanceDelays(P, S, T), advanceDelays(W, S, T)
+
+  op reduceDeadline : Subst Nat -> Subst .
+  eq reduceDeadline(L, T) = update('.deadline, eval("ABS.StdLib.subtractFromDuration"((L['.deadline] :: "int"[T])), noSubst, none, noSubst), L) .
+
+  op advanceProcesses : MProc Subst Nat -> MProc .
+  ceq advanceProcesses((P, W), S, T) = 
+    advanceProcess(P, S, T), advanceProcesses(W, S, T)
   if W =/= noProc .
-  eq advanceDelays(noProc, S, T) = noProc .
+  eq advanceProcesses(P, S, T) = advanceProcess(P, S, T) .
+  eq advanceProcesses(noProc, S, T) = noProc .
 
-  op advanceDelays : Process Subst Nat -> Process .
-  eq advanceDelays({ L | await E ; SL }, S, T) =
-    { L | await advanceDelays(E, (S :: L), T) ; SL } .
-  eq advanceDelays(P, S, T) = P [owise] .
+  op advanceProcess : Process Subst Nat -> Process .
+  eq advanceProcess({ L | await E ; SL }, S, T) =
+    { reduceDeadline(L, T) | await advanceDelays(E, (S :: L), ('deadline |-> L['.deadline], 'time |-> "int"[T])) ; SL } .
+  eq advanceProcess({ L | SL }, S, T) = { reduceDeadline(L, T) | SL } [owise] .
 
-  op advanceDelays : Expr Subst Nat -> Expr .
-  eq advanceDelays("&&"(E :: E'), S, T) =
-    "&&"(advanceDelays(E, S, T) :: advanceDelays(E', S, T)) .
-  ceq advanceDelays(?duration(E ; E'), S, T) =
+  op advanceDelays : Expr Subst SSubst -> Expr .
+  eq advanceDelays("&&"(E :: E'), S, MAC) =
+    "&&"(advanceDelays(E, S, MAC) :: advanceDelays(E', S, MAC)) .
+  ceq advanceDelays(?duration(E ; E'), S, MAC) =
     ?duration("int"[MIN - T] ; "int"[MAX - T])
-  if MIN := eval(E, S, none, T) asInt /\ MAX := eval(E', S, none, T) asInt .
-  eq advanceDelays(E, S, T) = E [owise] .
+  if T := (MAC['time]) asInt
+      /\ MIN := eval(E, S, none, MAC) asInt
+      /\ MAX := eval(E', S, none, MAC) asInt .
+  eq advanceDelays(E, S, MAC) = E [owise] .
 
   *** Now advance the clock.
   crl
@@ -1258,7 +1275,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   =>
     { advance(CN, 1)
       < T + 1 : Clock | Limit: LIM >  }
-  if canAdvance (CN, T) and T < LIM
+  if canAdvance (CN, 'time |-> "int"[T]) and T < LIM
       [label tick] .
 
 endm
@@ -1315,7 +1332,7 @@ mod ABS-STMT-ASSIGN-RL is
     else
       < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
-    if D := eval(E, (S :: L), none, 0)
+    if D := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
     [label assignment] .
 
   *** Field assignment
@@ -1323,7 +1340,7 @@ mod ABS-STMT-ASSIGN-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none, 0)
+  if D := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
     [label field-assignment] .
 endm
 mod ABS-STMT-ASSIGN-EQ-TIMED is
@@ -1344,7 +1361,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
     else
       < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F > 
     fi
-    if D := eval(E, (S :: L), none, T)
+    if D := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
     [label assignment] .
 
   *** Field assignment.
@@ -1354,7 +1371,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   =
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if D := eval(E, (S :: L), none, T)
+  if D := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
     [label field-assignment] .
 endm
 
@@ -1369,7 +1386,7 @@ mod ABS-STMT-COND-RL is
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =>
-    if eval(E, (S :: L), none, 0) asBool then
+    if eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline])) asBool then
       < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -1388,7 +1405,7 @@ mod ABS-STMT-COND-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    if eval(E, (S :: L), none, T) asBool then
+    if eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline])) asBool then
       < O : C | Cog: CG, Att: S, Pr: { L | SL1 ; SL }, PrQ: W, Lcnt: F >
     else
       < O : C | Cog: CG, Att: S, Pr: { L | SL2 ; SL }, PrQ: W, Lcnt: F >
@@ -1495,8 +1512,8 @@ mod ABS-STMT-DURATION-EQ-TIMED is
   =
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
-  if MIN := (eval(E1, (S :: L), none, T) asNat)
-      /\ MAX := (eval(E2, (S :: L), none, T) asNat)
+  if MIN := (eval(E1, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline])) asNat)
+      /\ MAX := (eval(E2, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline])) asNat)
     [label duration] .
 
   ceq 
@@ -1524,7 +1541,7 @@ mod ABS-STMT-AWAIT-RL is
       < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
       CN  }
   =>
-    if enabled(await E, (S :: L), CN, 0) then
+    if enabled(await E, (S :: L), CN, ('time |-> "int"[0], 'deadline |-> L['.deadline])) then
       { < CG : Cog | Object: O >
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         CN  }
@@ -1549,7 +1566,7 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
       < T : Clock | Limit: LIM >
       CN  }
   =
-    if enabled(await E, (S :: L), CN, T) then
+    if enabled(await E, (S :: L), CN, ('time |-> "int"[T], 'deadline |-> L['.deadline])) then
       { < CG : Cog | Object: O >
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         < T : Clock | Limit: LIM >
@@ -1575,15 +1592,16 @@ mod ABS-CALLSTMTS-RL is
   var N : Label .              var DL : DataList .  var MS : MMtd .
   var SS : SSubst .
   var MIS : MMtd .             var P1 : Process .
+  var DE : Expr .
 
   --- async-call
   ---
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O1 := eval(E, (S :: L), none, 0)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
+      /\ O1 := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label async-call] .
 
@@ -1592,23 +1610,23 @@ mod ABS-CALLSTMTS-RL is
   --- Create a $cont at end of called process if both objects are in the same
   --- cog (CG == CG1)
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O1 := eval(E, (S :: L), none, 0)
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
+      /\ O1 := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label sync-call] .
 
   --- sync-selfcall
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, 0)
-      /\ O := eval(E, (S :: L), none, 0)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
+      /\ O := eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label sync-selfcall] .
 endm  
@@ -1623,17 +1641,18 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   var N : Label .              var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .           var SS : SSubst .     var MIS : MMtd .
   var P1 : Process .
+  var DE : Expr .
 
   --- async-call
   ---
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL ; DE) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, T)
-      /\ O1 := eval(E, (S :: L), none, T)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
+      /\ O1 := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label async-call] .
 
@@ -1643,26 +1662,26 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   --- cog (CG == CG1)
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL); SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1)) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
-  if DL :=  evalList(EL, (S :: L), none, T)
-      /\ O1 := eval(E, (S :: L), none, T)
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
+      /\ O1 := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label sync-call] .
 
   --- sync-selfcall
   ceq
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL) ; SL }, PrQ: W, Lcnt: F > 
+    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true) ; SL }, PrQ: W, Lcnt: (s F) > 
-  if DL :=  evalList(EL, (S :: L), none, T)
-      /\ O := eval(E, (S :: L), none, T)
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+  if DL :=  evalList(EL, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
+      /\ O := eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline]))
       /\ N := label(O, F)
       [label sync-selfcall] .
 
@@ -1689,11 +1708,11 @@ mod ABS-NEW-RL is
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp ; "InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                               createSubst(AL, evalList(EL, S :: L, none, ('time |-> "int"[0], 'deadline |-> L['.deadline])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
@@ -1701,12 +1720,12 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp ; "InfDuration"[ emp ]) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G), 
                              Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                               createSubst(AL, evalList(EL, S :: L, none, ('time |-> "int"[0], 'deadline |-> L['.deadline])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
@@ -1730,11 +1749,11 @@ mod ABS-NEW-EQ-TIMED is
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))); synccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; $free('.staticfuture); SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: CG, Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, 0))),
+                               createSubst(AL, evalList(EL, S :: L, none, ('time |-> "int"[T], 'deadline |-> L['.deadline])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
 
@@ -1744,12 +1763,12 @@ mod ABS-NEW-EQ-TIMED is
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp) ; $free('.staticfuture) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(newId(B, G))) ; asynccall('.staticfuture ; ob(newId(B, G)) ; ".init" ; emp ; "InfDuration"[ emp ]) ; $free('.staticfuture) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
     < ob(newId(B, G)) :  B | Cog: newId(B, G),
                              Att: ('this |-> ob(newId(B, G)), S1,
-                               createSubst(AL, evalList(EL, S :: L, none, T))),
+                               createSubst(AL, evalList(EL, S :: L, none, ('time |-> "int"[T], 'deadline |-> L['.deadline])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < newId(B, G) : Cog | Object: null >
     [label new-object-with-cog] .
@@ -1774,7 +1793,7 @@ mod ABS-STMT-RETURN-RL is
     *** compiler / type-checker to ascertain that there's one and only one
     *** return statement in each code branch.
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, 0) >
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, ('time |-> "int"[0], 'deadline |-> L['.deadline])) >
   if N == L['.label]
       [label return] .
 endm
@@ -1798,7 +1817,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
     *** return statement in each code branch.
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > 
-    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, T) >
+    < N : Future | Name: Q, Completed: true, References: G, Value: eval(E, (S :: L), none, ('time |-> "int"[T], 'deadline |-> L['.deadline])) >
   if N == L['.label]
       [label return] .
 endm
@@ -1888,7 +1907,7 @@ mod ABS-SIMULATOR-RL is
     { CN:Configuration
       < "main" : Cog | Object: ob("main") >
       < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '.staticfuture |-> null, 'x |-> null | new('x ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
@@ -1923,7 +1942,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
       < 0 : Clock | Limit: 100 >
       < "main" : Cog | Object: ob("main") >
       < ob("main") : "..." | Cog: "main", Att: noSubst, 
-        Pr: { 'var |-> null, '.staticfuture |-> null | new('var ; B:String ; DL:DataList) },
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '.staticfuture |-> null, 'x |-> null | new('x ; B:String ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.

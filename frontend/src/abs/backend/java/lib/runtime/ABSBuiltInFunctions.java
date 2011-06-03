@@ -25,4 +25,8 @@ public class ABSBuiltInFunctions {
     public static ABSInteger currentms() {
         return ABSInteger.fromLong(System.currentTimeMillis());
     }
+    
+    public static ABSInteger lowlevelDeadline() {
+        return ABSInteger.fromInt(-1);
+    }
 }

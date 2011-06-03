@@ -349,6 +349,24 @@ def Bool durationLessThan(Duration d1, Duration d2) =
       InfDuration => False;
   };
 
+// negative if no (i.e. infinite) deadline
+def Int lowlevelDeadline() = builtin;
+def Duration deadline() = 
+  case lowlevelDeadline() < 0 {
+      True => InfDuration;
+      False => Duration(lowlevelDeadline());
+  };
+
+def Duration subtractFromDuration(Duration d, Int v) =
+  case d {
+      InfDuration => InfDuration;
+      Duration(x) => Duration(x - v);
+  };
+
+// Annotation data type to express deadlines:
+// [Deadline: Duration(5)] o!m();
+type Deadline = Duration;
+
 /**
  * Annotation data type to define the type of annotations
  * currently only TypeAnnotation exists

@@ -4,19 +4,25 @@ Timed Model Simulation in Maude
 
   ABS models can be augmented with timing information and their
   execution simulated on the Maude backend.  The timed Maude backend
-  adds a model of a clock counting up from <<<0>>>.  This section
-  describes language features related to this clock.
+  adds a model of a clock counting up from 0.  This section describes
+  language features related to this clock.  Most of these features are
+  implemented on the Maude backend and ignored on the Java backend.
 
 * Language Elements
 
 ** Time
 
    The current value of the clock can be accessed with the <<<now()>>>
-   function, which returns a value of type <<<Time>>>.  The function
-   <<<currentms()>>> returns an integer value and is also available on
-   the Java backend, where it returns the system time.
+   function, which returns a value of type <<<Time>>>.  (<<<now()>>> is
+   implemented using the function <<<currentms()>>>, which returns an
+   integer value and is also available on the Java backend, where it
+   returns the system time.)
+
+   Note that <<<now>>> is not a real function, since its value changes
+   over time.
 
 +---
+data Time = Time(Int);  // this is part of the ABS standard library
 Time t = now();
 +---
 
@@ -53,3 +59,39 @@ Unit m() {
 }
 +---
 
+** Expressing deadlines
+
+   The deadline (remaining time to execute) for a process can be
+   accessed via the <<<deadline()>>> function, which returns a value of
+   type <<<Duration>>>.  Deadlines are relevant for timed Maude
+   simulations; a process can detect whether it missed its deadline by
+   inspecting the return value of <<<deadline()>>>.
+
+   Note that <<<deadline>>> is not a real function, since its value
+   changes over time.
+
++---
+// this datatype is part of the ABS standard library
+data Duration = Duration(Int) | InfDuration ;
+
+Duration time_to_complete = deadline(); // can be infinite
+if (deadline() == Duration(0)) {
+  // We missed the deadline ...
+}
++---
+
+   Deadlines are set at process creation time, i.e. at the calling site.
+   Synchronous and asynchronous method calls can be decorated with
+   <<<[Deadline: e]>>> annotations; the default deadline is
+   <<<InfDuration>>>.
+
++---
+// Give m 17 time units to execute
+[Deadline: Duration(17)] o!m();
+
+// Do not give a deadline; this is the default behavior
+[Deadline: InfDeadline] o.n();
++---
+
+   On the Java backend, at the moment deadline annotations are ignored
+   and <<<deadline()>>> always returns <<<InfDuration>>>.
