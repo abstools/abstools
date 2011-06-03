@@ -11,6 +11,13 @@ interface System {
 
 [Foreign] 
 class System implements System {
-	Unit outPrint(String s) { }
-	Unit outPrintln(String s) { }
+	List<String> histories = Nil;
+	
+	Unit outPrint(String s) { 
+		histories = appendright(histories,s); 
+	}
+	
+	Unit outPrintln(String s) { 
+		histories = appendright(histories,s); 
+	}
 }
