@@ -6,6 +6,7 @@ import * from ABS.FLI;
 import * from FLI.StreamUtils;
 
 interface Socket {
+	Unit put(Socket socket);
 	Feedback<Unit> connect(String server, Int port, Int timeout);
 	InputStream getInputStream();
 	OutputStream getOutputStream();
@@ -14,6 +15,7 @@ interface Socket {
 }
 
 interface ServerSocket {
+	Unit putServer(ServerSocket socket);
  	Feedback<Unit> bind(Int port);
 	Feedback<Socket> accept();
 	Bool isClosed();
@@ -21,16 +23,82 @@ interface ServerSocket {
 
 [Foreign]
 class Socket implements Socket {
-	Feedback<Unit> connect(String server, Int port, Int timeout) { return OK; }
-	InputStream getInputStream() { return null; }
-	OutputStream getOutputStream() { return null; }
-	Feedback<Unit> close() { return OK; }
-	Bool isConnected() { return False; }
+	Socket socket = null;
+	
+	Unit put(Socket socket) { 
+		this.socket = socket; 
+	}
+	
+	Feedback<Unit> connect(String server, Int port, Int timeout) { 
+		Feedback<Unit> r = OK;
+		if (socket != null) {
+			r = socket.connect(server,port,timeout);
+		}
+		return r;  
+	}
+	
+	InputStream getInputStream() { 
+		InputStream s = null;
+		if (socket != null) {
+			s = socket.getInputStream();
+		}
+		return s;
+	}
+	
+	OutputStream getOutputStream() { 
+		OutputStream s = null;
+		if (socket != null) {
+			s = socket.getOutputStream();
+		}	
+		return s; 
+	}
+	
+	Feedback<Unit> close() { 
+		Feedback<Unit> r = OK;
+		if (socket != null) {
+			r = socket.close();
+		}
+		return r;
+	}
+	
+	Bool isConnected() { 
+		Bool r = False;
+		if (socket != null) {
+			r = socket.isConnected();
+		}
+		return r;
+	}
 }
 
 [Foreign]
 class ServerSocket implements ServerSocket {
-	Feedback<Unit> bind(Int port) { return OK; }
-	Feedback<Socket> accept() { return OK; }
-	Bool isClosed() { return False; }
+	ServerSocket socket = null;
+	
+	Unit putServer(ServerSocket socket) {
+		this.socket = socket;
+	}
+	 
+	Feedback<Unit> bind(Int port) { 
+		Feedback<Unit> r = OK;
+		if (socket != null) {
+			r = socket.bind(port);
+		}
+		return r;
+	}
+	
+	Feedback<Socket> accept() { 
+		Feedback<Socket> r = OK;
+		if (socket != null) {
+			r = socket.accept();
+		}
+		return r;
+	}
+	
+	Bool isClosed() { 
+		Bool r = False;
+		if (socket != null) {
+			r = socket.isClosed();
+		}
+		return r;
+	}
 }
