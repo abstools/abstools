@@ -38,8 +38,18 @@ abstract class AbstractABSMojo extends AbstractMojo {
     public static final String VERSION_ATTRIBUTE = "ABS-Package-Version";
 
     /**
+     * @parameter expression="${abs.stdlib}" default-value=true
+     */
+    protected boolean stdlib;
+    
+    /**
+     * @parameter expression="${abs.verbose}" default-value=false
+     */
+    protected boolean verbose;
+    
+    /**
      * Product selection
-     * @parameter expression="${abs.maudeBackend.product}"
+     * @parameter expression="${abs.product}"
      */
     protected String productName;
     

@@ -38,7 +38,7 @@ public class MaudeTestMojo extends AbstractTestMojo {
     /**
      * The ABS Maude Backend output file.
      * 
-     * @parameter expression="${abs.maudeBackend.testOutput}"
+     * @parameter expression="${abs.maudetest.testOutput}"
      *            default-value="${project.build.directory}/abs/gen/maude/test.maude"
      */
     private File absMaudeBackendTestOutputFile;
@@ -57,12 +57,13 @@ public class MaudeTestMojo extends AbstractTestMojo {
      * 
      */
     private String[] deltaNames;
-
-    /**
-     * @parameter expression="${abs.maudetest.verbose}" default-value=false
-     */
-    private boolean verbose;
     
+    /**
+     * @parameter expression="${abs.maudetest.timed}" 
+     *            default-value=false
+     */
+    private boolean timed;
+   
     private static final Pattern termination = Pattern.compile("^.*\\[State\\]:.*$", Pattern.MULTILINE);
 
     @Override
@@ -86,8 +87,10 @@ public class MaudeTestMojo extends AbstractTestMojo {
                 args, 
                 absMaudeBackendTestOutputFile,
                 verbose, 
+                stdlib,
                 productName,
-                ABSTestRunnerGenerator.RUNNER_MAIN);
+                ABSTestRunnerGenerator.RUNNER_MAIN,
+                timed);
 
         // run maude
         final String maudeOutput = runMaude();

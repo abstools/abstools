@@ -15,14 +15,32 @@ import abs.backend.maude.MaudeCompiler;
  */
 public class MaudeGenerator {
 
+    /**
+     * 
+     * @param absfrontEnd
+     * @param absSrcFolder
+     * @param absArguments
+     * @param absMaudeBackendOutputFile
+     * @param verbose
+     * @param verbose2 
+     * @param productName
+     * @param mainBlock
+     *          sets the main block to execute
+     * @param timed 
+     *          generate code for timed interpreter
+     *          
+     * @throws MojoExecutionException
+     */
     void generateMaude(
     		File absfrontEnd, 
     		File absSrcFolder, 
     		List<String> absArguments, 
     		File absMaudeBackendOutputFile, 
     		boolean verbose, 
+    		boolean stdlib, 
     		String productName,
-    		String mainBlock) throws MojoExecutionException {
+    		String mainBlock, 
+    		boolean timed) throws MojoExecutionException {
     	
         if (!absMaudeBackendOutputFile.getParentFile().exists()) {
             if (!absMaudeBackendOutputFile.getParentFile().mkdirs()) {
@@ -45,6 +63,14 @@ public class MaudeGenerator {
         
         if (verbose) {
             args.add("-v");
+        }
+        
+        if (! stdlib) {
+            args.add("-nostdlib");
+        }
+        
+        if (timed) {
+            args.add("-timed");
         }
         
         if (mainBlock != null) {

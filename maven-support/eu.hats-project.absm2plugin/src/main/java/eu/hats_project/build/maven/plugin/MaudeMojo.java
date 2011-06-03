@@ -27,14 +27,15 @@ public class MaudeMojo extends AbstractABSMojo {
     private File absMaudeBackendOutputFile;
 
     /**
-     * @parameter expression="${abs.maudeBackend.verbose}" default-value=false
-     */
-    private boolean verbose;
-    
-    /**
      * @parameter expression="${abs.maudeBackend.mainBlock}"
      */
     private String mainBlock;
+    
+    /**
+     * @parameter expression="${abs.maudeBackend.timed}" 
+     *            default-value=false
+     */
+    private boolean timed;
 
     @Override
     protected void doExecute() throws Exception {
@@ -44,9 +45,11 @@ public class MaudeMojo extends AbstractABSMojo {
                 absSrcFolder, 
                 getABSArguments(), 
                 absMaudeBackendOutputFile, 
+                stdlib,
                 verbose,
                 productName,
-                mainBlock);
+                mainBlock,
+                timed);
     }
     
 }

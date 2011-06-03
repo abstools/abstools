@@ -26,20 +26,10 @@ public class JavaMojo extends AbstractABSMojo {
     private File absJavaBackendTargetFolder;
     
     /**
-     * @parameter expression="${abs.javaBackend.verbose}" default-value=false
-     */
-    private boolean verbose;
-
-    /**
      * @parameter expression="${abs.javaBackend.sourceOnly}" default-value=false
      */
     private boolean sourceOnly;
-    
-    /**
-     * @parameter expression="${abs.javaBackend.stdlib}" default-value=true
-     */
-    private boolean stdlib;
-    
+       
     protected void doExecute() throws Exception {
         
        JavaGenerator generator = new JavaGenerator();
