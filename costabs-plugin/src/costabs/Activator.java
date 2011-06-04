@@ -87,16 +87,16 @@ public class Activator extends AbstractUIPlugin {
 			}
 			else {				
 				// Extract the jar file in the Eclipse directory;
-				shell.executeCommand("jar xf " + pluginPlace + " pet_exe");
+				shell.executeCommand("jar xf " + pluginPlace + " costabs_exe");
 				
 				// Set the path to the executable
 				pluginPlace = jarFile.getParent();
-				CostabsShellCommand.COSTABS_EXECUTABLE_PATH = pluginPlace + "/pet_exe";
+				CostabsShellCommand.COSTABS_EXECUTABLE_PATH = pluginPlace + "/costabs_exe";
 				
 				// Move the executable in Eclipse directory to plugins directory
 				// and set permission to execute it
-				shell.executeCommand("mv pet_exe " + pluginPlace);
-				shell.executeCommand("chmod +x " + pluginPlace + "/pet_exe");
+				shell.executeCommand("mv costabs_exe " + pluginPlace);
+				shell.executeCommand("chmod +x " + pluginPlace + "/costabs_exe");
 			}
 
 		} catch (IOException e) {
