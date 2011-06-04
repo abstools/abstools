@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="costabs"
+      id="eu.hatsproject.costabs"
       label="COSTABS Eclipse Integration"
       version="0.0.0.VERSION_STRING"
       provider-name="HATS Project"
@@ -20,7 +20,7 @@
       <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.5" match="greaterOrEqual"/>
-	<import plugin="org.eclipse.ui.part" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.part" version="3.5" match="greaterOrEqual"/>
       <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
    </requires>
 
@@ -28,7 +28,6 @@
          id="costabs"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
 </feature>

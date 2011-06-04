@@ -18,12 +18,9 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-
-import costabs.handlers.CostabsContainer;
-import costabs.structures.ResultTracker;
-
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import eu.hatsproject.absplugin.navigator.ModulePath;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
@@ -737,7 +734,8 @@ public class ABSContentOutlineUtils {
 	public static void insertCostabsItems(ISelection sel) {
 		
 		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
-		CostabsContainer.SELECTED_ITEMS = new ResultTracker();
+		CostabsLink.SELECTED_ITEMS = new ArrayList<String>();
+		CostabsLink.LINE_ITEMS = new ArrayList<Integer>();
 		
 		for (int i = 0; (selectedItems != null) && (i < selectedItems.length); i++) {
 			InternalASTNode<?> node = (InternalASTNode<?>) selectedItems[i];
@@ -749,7 +747,8 @@ public class ABSContentOutlineUtils {
 				FunctionDecl del = (FunctionDecl) node.getASTNode();
 				callerName = del.getName();
 				line = FunctionDecl.getLine(del.getStart());
-				CostabsContainer.SELECTED_ITEMS.addResult(callerName, "", "", line);
+				CostabsLink.SELECTED_ITEMS.add(callerName);
+				CostabsLink.LINE_ITEMS.add(line);
 			} else if (node.getASTNode() instanceof MethodImpl) { 
 				MethodImpl del = (MethodImpl) node.getASTNode();
 				ASTNode<?> par = del.getContextDecl();
@@ -757,7 +756,8 @@ public class ABSContentOutlineUtils {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getMethodSig().getName();
 					line = MethodImpl.getLine(del.getStart());
-					CostabsContainer.SELECTED_ITEMS.addResult(callerName, "", "", line);
+					CostabsLink.SELECTED_ITEMS.add(callerName);
+					CostabsLink.LINE_ITEMS.add(line);
 				}
 			} else if (node.getASTNode() instanceof MethodSig) {
 				MethodSig del = (MethodSig) node.getASTNode();
@@ -766,7 +766,8 @@ public class ABSContentOutlineUtils {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getName();
 					line = MethodSig.getLine(del.getStart());
-					CostabsContainer.SELECTED_ITEMS.addResult(callerName, "",  "", line);
+					CostabsLink.SELECTED_ITEMS.add(callerName);
+					CostabsLink.LINE_ITEMS.add(line);
 				}
 			}
 	

@@ -30,10 +30,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.texteditor.SimpleMarkerAnnotation;
 
-import costabs.handlers.CostabsContainer;
-
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
+import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import eu.hatsproject.absplugin.editor.contentassist.ABSCompletionProcessor;
 
 /**
@@ -151,7 +150,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 						return markerannotation.getMarker().exists() 
 							&& ( markerannotation.getMarker().isSubtypeOf(MARKER_TYPE)
 									|| (markerannotation.getMarker().isSubtypeOf(LOCATION_TYPE_INFERENCE_MARKER_TYPE))
-									|| (markerannotation.getMarker().isSubtypeOf(CostabsContainer.MARKER_UB)));
+									|| (markerannotation.getMarker().isSubtypeOf(CostabsLink.MARKER_UB)));
 					} catch (CoreException e) {
 						e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
 					}
@@ -171,7 +170,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 						return markerannotation.getMarker().exists() 
 							&& ( markerannotation.getMarker().isSubtypeOf(MARKER_TYPE) 
 									|| (markerannotation.getMarker().isSubtypeOf(LOCATION_TYPE_INFERENCE_MARKER_TYPE))
-									|| (markerannotation.getMarker().isSubtypeOf(CostabsContainer.MARKER_UB)));
+									|| (markerannotation.getMarker().isSubtypeOf(CostabsLink.MARKER_UB)));
 					} catch (CoreException e) {
 						e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
 					}

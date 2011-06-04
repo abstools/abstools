@@ -7,6 +7,7 @@ import org.eclipse.core.resources.IFile;
 
 import costabs.markers.UBMarker;
 
+
 public class ResultTracker {
 
 	private HashMap<String, TrackerValue> results;
@@ -64,20 +65,33 @@ public class ResultTracker {
 		}
 
 	}
-	
+	/*
 	public void mergeLineContent(ResultTracker r) {
 
 		for (TrackerValue p : r.results.values()) {
-			// If the package doesn't exist in the actual structure, we add it
 			if (!results.containsKey(p.getCallName()))
 				results.put(p.getCallName(), p);
-			// Else, we merge their classes
 			else {
 				TrackerValue ourR = results.get(p.getCallName());
 				ourR.setLine(p.getLine());
 			}	
 		}
 
+	}*/
+	
+	public void mergeLineContent(ArrayList<String> names, ArrayList<Integer> lines) {
+
+		for (int i = 0; i < names.size(); i++) {
+			
+			if (!results.containsKey(names.get(i))) { 
+				TrackerValue p = new TrackerValue(names.get(i), "", "", lines.get(i));
+				results.put(names.get(i), p);
+			}
+			else {
+				TrackerValue ourR = results.get(names.get(i));
+				ourR.setLine(lines.get(i));
+			}	
+		}
 	}
 	
 	public ArrayList<String> getCalls() {

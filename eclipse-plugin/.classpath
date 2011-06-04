@@ -7,6 +7,5 @@
 	<classpathentry kind="lib" path="lib/mockito-all-1.8.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ABSFrontend"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/costabs"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

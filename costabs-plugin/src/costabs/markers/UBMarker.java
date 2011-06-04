@@ -5,9 +5,9 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
-import costabs.handlers.CostabsContainer;
-
 public class UBMarker {
+	
+	public static final String MARKER_UB = "CostabsPlugin.costabs.marker";
 
 	/**
 	 * Highlight a line in a source file, adding a marker.
@@ -19,7 +19,7 @@ public class UBMarker {
 
 		try {
 
-			IMarker marker = berf.createMarker(CostabsContainer.MARKER_UB);
+			IMarker marker = berf.createMarker(MARKER_UB);
 
 			
 			marker.setAttribute(IMarker.LINE_NUMBER, numLine);
@@ -40,7 +40,7 @@ public class UBMarker {
 	 */
 	public void removeAllMarkers(IFile berf) {
 		try {
-			berf.deleteMarkers(CostabsContainer.MARKER_UB, false, IResource.DEPTH_INFINITE);
+			berf.deleteMarkers(MARKER_UB, false, IResource.DEPTH_INFINITE);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}

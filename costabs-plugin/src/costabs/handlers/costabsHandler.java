@@ -22,10 +22,12 @@ import org.eclipse.ui.part.FileEditorInput;
 import costabs.console.ConsoleHandler;
 import costabs.console.CostabsShellCommand;
 import costabs.dialogs.OptionsDialog;
+import costabs.markers.*;
 import costabs.structures.ResultTracker;
 import costabs.structures.XMLParser;
 import costabs.utils.SourceUtils;
-import costabs.markers.*;
+
+import eu.hatsproject.absplugin.costabslink.CostabsLink;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -58,7 +60,7 @@ public class costabsHandler extends AbstractHandler {
 			File f = new File("//tmp//costabs//absPL");
 			f.mkdirs();
 			
-			if (CostabsContainer.SELECTED_ITEMS.size() <= 0) {
+			if (CostabsLink.SELECTED_ITEMS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
 			            "No functions or methods selected in the outline view.", null);
 				ErrorDialog.openError(shellEclipse, "Costabs Error", "Costabs can not analyze.", status);
@@ -74,7 +76,7 @@ public class costabsHandler extends AbstractHandler {
 				else {
 					// If analyze, get preferences and run
 					shell.generateProlog(absFile, false);
-					shell.analyze(absFile, CostabsContainer.SELECTED_ITEMS.getCalls());
+					shell.analyze(absFile, CostabsLink.SELECTED_ITEMS);
 					updateUpperBounds();
 					updateMarkers();
 				}
@@ -92,11 +94,13 @@ public class costabsHandler extends AbstractHandler {
 	
 	private void updateUpperBounds() {
 		
+		// First, get the results from costabs
 		XMLParser p = new XMLParser("//tmp//costabs//abs.xml");
 		ResultTracker r = p.read();
-		
 		CostabsContainer.STORAGE_UB.mergeUBContent(r);
-		CostabsContainer.STORAGE_UB.mergeLineContent(CostabsContainer.SELECTED_ITEMS);
+		
+		// and then add the line numbers from ABS Outline View
+		CostabsContainer.STORAGE_UB.mergeLineContent(CostabsLink.SELECTED_ITEMS, CostabsLink.LINE_ITEMS);
 	}
 	
 	private void updateMarkers() {

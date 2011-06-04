@@ -5,6 +5,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import costabs.Activator;
 
+
 /**
  * Class used to initialize default preference values.
  */

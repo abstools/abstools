@@ -38,6 +38,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import costabs.exceptions.CostabsException;
 
 
+
 /**
  * Class to interact with source files
  * @author groman

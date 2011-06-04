@@ -20,6 +20,7 @@ import costabs.console.ConsoleHandler;
 import costabs.preferences.CostabsOptions;
 import costabs.preferences.PreferenceConstants;
 
+
 public class OptionsDialog extends Dialog {
 
 	private Button[] costModelSelection;

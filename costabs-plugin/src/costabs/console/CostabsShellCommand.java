@@ -7,10 +7,12 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import costabs.Activator;
 import costabs.preferences.PreferenceConstants;
+
 import abs.backend.prolog.*;
 
 public class CostabsShellCommand {
 
+	public static String COSTABS_EXECUTABLE_PATH = "";
 
 	/**
 	 * Result of the last run.
