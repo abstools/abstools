@@ -5,6 +5,7 @@ export *;
 import * from ABS.FLI;
 import * from FLI.StreamUtils;
 
+[COG]
 interface Socket {
 	Unit put(Socket socket);
 	Feedback<Unit> connect(String server, Int port, Int timeout);
@@ -14,6 +15,7 @@ interface Socket {
 	Bool isConnected();
 }
 
+[COG]
 interface ServerSocket {
 	Unit putServer(ServerSocket socket);
  	Feedback<Unit> bind(Int port);
