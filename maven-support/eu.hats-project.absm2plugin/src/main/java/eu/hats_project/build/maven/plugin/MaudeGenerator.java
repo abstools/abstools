@@ -22,7 +22,7 @@ public class MaudeGenerator {
      * @param absArguments
      * @param absMaudeBackendOutputFile
      * @param verbose
-     * @param verbose2 
+     * @param stdlib 
      * @param productName
      * @param mainBlock
      *          sets the main block to execute

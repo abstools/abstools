@@ -45,8 +45,8 @@ public class MaudeMojo extends AbstractABSMojo {
                 absSrcFolder, 
                 getABSArguments(), 
                 absMaudeBackendOutputFile, 
-                stdlib,
                 verbose,
+                stdlib,
                 productName,
                 mainBlock,
                 timed);
