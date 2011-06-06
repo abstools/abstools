@@ -80,16 +80,16 @@ public class ClassDeclGenerator extends CodeGenerator {
 
     private void generateNewObjectMethods() {
         // Convenience method for new C
-        stream.print("   public static final "+className+" createNewObject");
+        stream.print("   public static final <T extends "+className+"> T createNewObject");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.print("{ ");
-        stream.print("return ");
+        stream.print("return (T)");
         stream.print(className + ".__ABS_createNewObject");
         JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
     
         // static constructor method for new C
-        stream.print("   public static final "+className+" __ABS_createNewObject");
+        stream.print("   public static final <T extends "+className+"> T __ABS_createNewObject");
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source", decl.getParams());
         stream.println(" {");
         generateObjectConstruction(ABSRuntime.class.getName()+".getCurrentRuntime()");
@@ -98,22 +98,22 @@ public class ClassDeclGenerator extends CodeGenerator {
             stream.println("          final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
-        stream.println("          return __ABS_result;");
+        stream.println("          return (T)__ABS_result;");
         stream.println("   }");
     }
 
     private void generateCreateNewCOGMethod() {
         // Convenience method for new cog C
-        stream.print("   public static final "+className+" createNewCOG");
+        stream.print("   public static final <T extends "+className+"> T createNewCOG");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
         stream.print("{ ");
-        stream.print("return ");
+        stream.print("return (T)");
         stream.print(className + ".__ABS_createNewCOG");
         JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
     
         // static constructor method for new cog C    
-        stream.print("   public static final "+className+" __ABS_createNewCOG");
+        stream.print("   public static final <T extends "+className+"> T __ABS_createNewCOG");
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",decl.getParams());
         stream.println(" {");
         stream.println("       final "+ABSRuntime.class.getName()+" __ABS_runtime = "+ABSRuntime.class.getName()+".getCurrentRuntime();");
@@ -132,7 +132,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         if (decl.isActiveClass()) {
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
-        stream.println("          return __ABS_result;");
+        stream.println("          return (T)__ABS_result;");
         stream.println("       } finally {");
         stream.println("           __ABS_thread.setCOG(__ABS_oldCOG);");
         stream.println("       }");
