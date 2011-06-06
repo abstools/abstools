@@ -53,9 +53,54 @@ aspect GenerateScala {
 		throw new RuntimeException("Should not happen: deltas should be gone by now");
 	}
 
-	public void FunctionDecl.generateScala(String prefix, PrintWriter output) {
+	protected String FunctionDecl.getGenerics() { return ""; }
+	public void FunctionDecl.generateScala(String prefix, PrintWriter writer) {
+		writer.format(prefix + "def %s%s(", getName(), getGenerics());
+		boolean f = false;
+		for (ParamDecl param: getParams()) {
+			if (f) writer.write(", ");
+			writer.write(param.getName());
+			writer.write(": "); 
+			param.getAccess().generateScala(prefix, writer);					
+			f = true;
+		}
+		writer.write("): ");
+		getTypeUse().generateScala(prefix, writer);
+		System.out.println(getName());
 		dump();
-		throw new RuntimeException("FunctionDecl");
+		getTypeUse().dump();
+		System.out.println("=====");
+		writer.println(" = ");
+		getFunctionDef().generateScala("\t" + prefix, writer);
+		writer.println();
+	}
+	
+	protected String ParametricFunctionDecl.getGenerics() {
+		StringBuilder builder = new StringBuilder();
+		boolean b = false;
+		for (TypeParameterDecl tp: getTypeParameters()) {
+			if (b) builder.append(", ");
+			builder.append(tp.getName());
+			b = true;
+		}
+		
+		if (builder.length() > 0)
+			return "[" + builder.toString() + "]";
+		else
+			return "";
+	}
+	
+	public abstract void FunctionDef.generateScala(String prefix, PrintWriter writer);
+	
+	public void BuiltinFunctionDef.generateScala(String prefix, PrintWriter writer) {
+		System.out.println("BuiltinFunctionDef");
+		dump();
+		//throw new RuntimeException("BuiltinFunctionDef");
+	}
+	
+	public void ExpFunctionDef.generateScala(String prefix, PrintWriter writer) {
+		writer.write(prefix);
+		getRhs().generateScala("\t" + prefix, writer);
 	}
 
 	public void TypeDecl.generateScala(String prefix, PrintWriter output) {
@@ -283,6 +328,9 @@ aspect GenerateScala {
 			return "ActorRef";
 		else if (getDecl().isDataType())
 			return getDecl().getName();
+		else if (getDecl().isTypeParameter())
+			// FIXME bit too naive
+			return getName();
 		else
 			// FIXME
 			throw new RuntimeException("Unimplemented decl type: " + getDecl().getClass().getName());
@@ -290,6 +338,28 @@ aspect GenerateScala {
 	public void DataTypeUse.generateScala(String prefix, PrintWriter writer) {
 		writer.write(getScalaType());
 	}
+	
+	
+	public String ParametricDataTypeUse.getScalaType() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getName());
+		if (getNumParam() > 0) {
+			builder.append("[");
+			boolean f = false;
+			for (DataTypeUse t: getParams()) {
+				if (f) builder.append(", ");
+				builder.append(t.getScalaType());
+				f = true;
+			}
+			builder.append("]");
+		}
+		
+		return builder.toString();
+	}
+	
+	//public void ParametricDataTypeUse.generateScala(String prefix, PrintWriter writer) {
+	//	
+	//}
 	
 	public String InterfaceTypeUse.getScalaType() {
 		throw new RuntimeException("FIXME: InterfaceTypeUse");
@@ -499,7 +569,7 @@ aspect GenerateScala {
 		getExpr().generateScala(prefix, writer);
 		writer.println(" match { ");
 		for (CaseBranch branch: getBranchs())
-			branch.generateScala(prefix + "\t", writer);
+			branch.generateScala("\t" + prefix, writer);
 		writer.print(prefix + "}");
 	}
 	
@@ -525,24 +595,72 @@ aspect GenerateScala {
 			for (Pattern p: getParams()) {
 				if (b) writer.write(", ");
 				p.generateScala(prefix, writer);
+				b = true;
 			}
 			writer.write(")");
 		}
 	}
 	
 	public void LiteralPattern.generateScala(String prefix, PrintWriter writer) {
-		dump();
-		throw new RuntimeException("LiteralPattern");
+		getLiteral().generateScala(prefix, writer);
+		//dump();
+		//throw new RuntimeException("LiteralPattern");
 	}
 	
 	public void PatternVar.generateScala(String prefix, PrintWriter writer) {
-		dump();
-		throw new RuntimeException("PatternVar");
+		writer.write(getVar().getName());
+		//getVar().generateScala(prefix, writer);
+		//dump();
+		//throw new RuntimeException("PatternVar");
 	}
 	
 	public void PatternVarUse.generateScala(String prefix, PrintWriter writer) {
-		dump();
-		throw new RuntimeException("FIXME: PatternVarUse");
+		//getVar().generateScala(prefix, writer);
+		writer.write(getName());
+		//dump();
+		//throw new RuntimeException("FIXME: PatternVarUse");
+	}
+	
+	protected abstract String Unary.getScalaOperator();
+	public final void Unary.generateScala(String prefix, PrintWriter writer) {
+		writer.write(getScalaOperator());
+		getOperand().generateScala(prefix, writer);
+	}
+	
+	protected final String NegExp.getScalaOperator() { return "!"; }
+	protected final String MinusExp.getScalaOperator() { return "-"; }
+	
+	protected abstract String Binary.getScalaOperator();
+	public final void Binary.generateScala(String prefix, PrintWriter writer) {
+		writer.write("(");
+		getLeft().generateScala(prefix, writer);
+		writer.format(") %s (", getScalaOperator());
+		getRight().generateScala(prefix, writer);
+		writer.write(")");
+	}
+	
+	protected final String AndBoolExp.getScalaOperator() { return "&&"; }
+	protected final String OrBoolExp.getScalaOperator() { return "||"; }
+	protected final String EqExp.getScalaOperator() { return "=="; }
+	protected final String NotEqExp.getScalaOperator() { return "!="; }
+	protected final String GTEQExp.getScalaOperator() { return ">="; }
+	protected final String GTExp.getScalaOperator() { return ">"; }
+	protected final String LTEQExp.getScalaOperator() { return "<="; }
+	protected final String LTExp.getScalaOperator() { return "<"; }
+	protected final String AddAddExp.getScalaOperator() { return "+"; }
+	protected final String SubAddExp.getScalaOperator() { return "-"; }
+	protected final String MultMultExp.getScalaOperator() { return "*"; }
+	protected final String DivMultExp.getScalaOperator() { return "/"; }
+	protected final String ModMultExp.getScalaOperator() { return "%"; }
+	
+	public void IntLiteral.generateScala(String prefix, PrintWriter writer) {
+		writer.write(getContent());
+	}
+	
+	public void StringLiteral.generateScala(String prefix, PrintWriter writer) {
+		writer.write("\"");
+		writer.write(getContent());
+		writer.write("\"");
 	}
 	
 	public void PureExp.generateScala(String prefix, PrintWriter writer) {
@@ -551,16 +669,23 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	protected abstract String EqualityExpr.getScalaComp();
-	public void EqualityExpr.generateScala(String prefix, PrintWriter writer) {
-		getLeft().generateScala(prefix, writer);
-		writer.format(" %s ", getScalaComp());
-		getRight().generateScala(prefix, writer);
+	public void FnApp.generateScala(String prefix, PrintWriter writer) {
+		writer.format("%s(", getName());
+		boolean f = false;
+		for (PureExp p: getParams()) {
+			if (f) writer.write(", ");
+			p.generateScala(prefix, writer);
+			f = true;
+		}
+		writer.write(")");
 	}
 	
-	protected String EqExp.getScalaComp() { return "=="; }
-	protected String NotEqExp.getScalaComp() { return "!="; }
-	
+	public void LetExp.generateScala(String prefix, PrintWriter writer) {
+		// FIXME
+		System.out.println("LetExp");
+		dump();
+	}
+		
 	// EffExp
 	public void NewExp.generateScala(String prefix, PrintWriter writer) {
 		System.out.println("NewExp");
