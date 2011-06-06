@@ -1,0 +1,105 @@
+module Example.Socket;
+
+import * from FLI.SocketUtils;
+import * from FLI.StreamUtils;
+import * from FLI.SystemUtils;
+
+interface SocketTest {
+	Unit setupServer();
+	Unit setupClient();
+	Unit communicate(Int i);
+}
+
+[COG]
+class SocketTestImpl(Int port) implements SocketTest {
+	
+	System sys = null;
+	ServerSocket server = null;
+	Socket client = null;
+	Socket socket = null;
+	
+	{
+		sys = new System();
+		server = new cog ServerSocket();
+		client = new cog Socket();
+	}
+	
+	Unit setupServer() { 
+		Fut<Feedback<Unit>> fu = server!bind(port); 
+		Feedback<Unit> u = fu.get;
+		if (isError(u)) {
+			sys.outPrintln("Cannot bind with port "+intToString(port));
+			sys.outPrintln("Reason: "+error(u));
+			assert False;
+		} else {
+			sys.outPrintln("bind at port "+intToString(port));
+		}
+		Fut<Feedback<Socket>> fs = server!accept(); await fs?;  
+		Feedback<Socket> s = fs.get;
+		if (isError(s)) {
+			sys.outPrintln("Cannot listen at port "+intToString(port));
+			sys.outPrintln("Reason: "+error(s));
+			assert False;
+		} else {
+			sys.outPrintln("accept connection at port "+intToString(port));
+		}
+		client = result(s);
+	}
+	
+	Unit setupClient() { 
+		socket = new cog Socket();
+		Fut<Feedback<Unit>> fu = socket!connect("localhost",port,0); await fu?; 
+		Feedback<Unit> u = fu.get;
+		if (isError(u)) {
+			sys.outPrintln("Cannot connect to port "+intToString(port));
+			sys.outPrintln("Reason: "+error(u));
+			assert False;
+		} else {
+			sys.outPrintln("connect to port "+intToString(port));
+		}
+	}
+	
+	Unit communicate(Int i) {
+		Fut<InputStream> fi; Fut<OutputStream> fo;
+	
+		fi = socket!getInputStream();
+		InputStream si = fi.get;
+		
+		fo = socket!getOutputStream();
+		OutputStream so = fo.get;
+		
+		fi = client!getInputStream();
+		InputStream ci = fi.get;
+		
+		fo = client!getOutputStream();
+		OutputStream co = fo.get;
+		
+		Fut<Feedback<Unit>> u = so!writeInt(i); 
+		Feedback<Unit> fb = u.get;
+		assert isOK(fb);
+		
+		Fut<Feedback<Int>> fr = ci!readInt(); 
+		Feedback<Int> r = fr.get;
+		assert isResult(r);
+		sys.outPrintln("Read: "+intToString(result(r)));
+		
+		u = co!writeInt(i);
+		fb = u.get;
+		assert isOK(fb);
+		
+		fr = si!readInt(); r = fr.get; 
+		assert isResult(r);
+		sys.outPrintln("Read: "+intToString(result(r)));
+	}
+}
+
+{
+	SocketTest test = new cog SocketTestImpl(8180);
+	Fut<Unit> sr = test!setupServer();
+	Fut<Unit> cr = test!setupClient();
+	
+	sr.get;
+	cr.get;
+	
+	test!communicate(3);	
+}

@@ -43,7 +43,7 @@ public class OutputStream extends OutputStream_c {
 
     public Feedback<ABSUnit> fli_writeInt(ABSInteger s) {
         try {
-            stream.write(s.toInt());
+            stream.writeInt(s.toInt());
             return new Feedback_OK<ABSUnit>();
         } catch (IOException e) {
             return new Feedback_Error<ABSUnit>(putil.convert(e.getMessage()));

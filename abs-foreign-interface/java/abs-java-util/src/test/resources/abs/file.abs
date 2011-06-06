@@ -13,13 +13,12 @@ interface FileTest {
 	Unit tidyUp();
 }
 
-class FileTestImpl implements FileTest {
+class FileTestImpl(List<String> lines) implements FileTest {
 
 	System sys = null;
 	FileHandler handler = null;
 	FileWriter writer = null;
 	FileReader reader = null;
-	List<String> lines = Nil;
 	String fullName = "";
 	
 	{
@@ -27,7 +26,6 @@ class FileTestImpl implements FileTest {
 		handler = new FileHandler();
 		writer = new FileWriter();
 		reader = new FileReader();
-		lines = list["This is line1","This is line2"];
 	}
 
 	Unit setup(String name) {
@@ -100,7 +98,7 @@ class FileTestImpl implements FileTest {
 }
 	
 {
-	FileTest test = new FileTestImpl();
+	FileTest test = new FileTestImpl(list["This is line1","This is line2"]);
 	test.setup("hello.txt");
 	test.create();
 	test.writeTo();

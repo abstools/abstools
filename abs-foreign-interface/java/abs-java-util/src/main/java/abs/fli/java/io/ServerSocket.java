@@ -12,6 +12,7 @@ import FLI.StreamUtils.Feedback_Result;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSUnit;
+import abs.fli.java.ABSFactory;
 import abs.fli.java.PrimitiveUtil;
 
 /**
@@ -39,12 +40,17 @@ public class ServerSocket extends ServerSocket_c {
     public Feedback<Socket_i> fli_accept() {
         try {
             java.net.Socket s = socket.accept();
-            Socket fli_s = new Socket();
+            Socket fli_s = ABSFactory.createNewCOG(this, "FLI.SocketUtils.Socket", 
+            			Socket.class.getConstructor()); 
             fli_s.setSocket(s);
             return new Feedback_Result<Socket_i>(fli_s);
         } catch (IOException e) {
             return new Feedback_Error<Socket_i>(putil.convert(e.getMessage()));
-        }
+        } catch (SecurityException e) {
+        	return new Feedback_Error<Socket_i>(putil.convert(e.getMessage()));
+		} catch (NoSuchMethodException e) {
+			return new Feedback_Error<Socket_i>(putil.convert(e.getMessage()));
+		}
     }
     
     @Override
