@@ -23,7 +23,7 @@ interface ServerSocket {
 
 [Foreign]
 class Socket implements Socket {
-	Socket socket = null;
+	[Far] Socket socket = null;
 	
 	Unit put(Socket socket) { 
 		this.socket = socket; 
@@ -32,7 +32,8 @@ class Socket implements Socket {
 	Feedback<Unit> connect(String server, Int port, Int timeout) { 
 		Feedback<Unit> r = OK;
 		if (socket != null) {
-			r = socket.connect(server,port,timeout);
+			Fut<Feedback<Unit>> fr = socket!connect(server,port,timeout);
+			r = fr.get;
 		}
 		return r;  
 	}
@@ -40,7 +41,8 @@ class Socket implements Socket {
 	InputStream getInputStream() { 
 		InputStream s = null;
 		if (socket != null) {
-			s = socket.getInputStream();
+			Fut<InputStream> fi = socket!getInputStream();
+			s = fi.get;
 		}
 		return s;
 	}
@@ -48,7 +50,8 @@ class Socket implements Socket {
 	OutputStream getOutputStream() { 
 		OutputStream s = null;
 		if (socket != null) {
-			s = socket.getOutputStream();
+			Fut<OutputStream> fo= socket!getOutputStream();
+			s = fo.get;
 		}	
 		return s; 
 	}
@@ -56,7 +59,8 @@ class Socket implements Socket {
 	Feedback<Unit> close() { 
 		Feedback<Unit> r = OK;
 		if (socket != null) {
-			r = socket.close();
+			Fut<Feedback<Unit>> fu = socket!close();
+			r = fu.get;
 		}
 		return r;
 	}
@@ -64,7 +68,8 @@ class Socket implements Socket {
 	Bool isConnected() { 
 		Bool r = False;
 		if (socket != null) {
-			r = socket.isConnected();
+			Fut<Bool> fb = socket!isConnected();
+			r = fb.get;
 		}
 		return r;
 	}
@@ -72,7 +77,7 @@ class Socket implements Socket {
 
 [Foreign]
 class ServerSocket implements ServerSocket {
-	ServerSocket socket = null;
+	[Far] ServerSocket socket = null;
 	
 	Unit putServer(ServerSocket socket) {
 		this.socket = socket;
@@ -81,7 +86,8 @@ class ServerSocket implements ServerSocket {
 	Feedback<Unit> bind(Int port) { 
 		Feedback<Unit> r = OK;
 		if (socket != null) {
-			r = socket.bind(port);
+			Fut<Feedback<Unit>> fr = socket!bind(port); 
+			r = fr.get;
 		}
 		return r;
 	}
@@ -89,7 +95,8 @@ class ServerSocket implements ServerSocket {
 	Feedback<Socket> accept() { 
 		Feedback<Socket> r = OK;
 		if (socket != null) {
-			r = socket.accept();
+			Fut<Feedback<Socket>> fs = socket!accept();  
+			r = fs.get;
 		}
 		return r;
 	}
@@ -97,7 +104,8 @@ class ServerSocket implements ServerSocket {
 	Bool isClosed() { 
 		Bool r = False;
 		if (socket != null) {
-			r = socket.isClosed();
+			Fut<Bool> fb = socket!isClosed(); 
+			r = fb.get;
 		}
 		return r;
 	}
