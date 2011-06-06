@@ -3,7 +3,6 @@ package abs.fli.java;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import FLI.SocketUtils.Socket_c;
 import abs.backend.java.lib.runtime.ABSInitObjectTask;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.ABSRuntime;
@@ -31,7 +30,7 @@ public class ABSFactory {
 			String ABSName, Constructor<T> constructor, Object...initargs) {
 
 		final ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
-		final COG cog = new COG(runtime, Socket_c.class);
+		final COG cog = new COG(runtime, constructor.getDeclaringClass());
 		final ABSThread thread = ABSRuntime.getCurrentThread();
 		final COG oldCOG = ABSRuntime.getCurrentCOG();
 		final Task<?> sendingTask = ABSRuntime.getCurrentTask();
@@ -44,9 +43,8 @@ public class ABSFactory {
 			}
 			runtime.cogCreated(result);
 			cog.getScheduler()
-					.addTask(
-							new ABSInitObjectTask<T>(sendingTask, from,
-									result));
+			   .addTask(new ABSInitObjectTask<T>(sendingTask, from,	result));
+			
 			return result;
 		} catch (InstantiationException e) {
 			e.printStackTrace();
