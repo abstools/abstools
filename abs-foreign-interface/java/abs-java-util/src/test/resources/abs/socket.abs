@@ -80,7 +80,7 @@ class SocketTestImpl(Int port) implements SocketTest {
 		
 		Fut<Feedback<Int>> fr = ci!readInt(); 
 		Feedback<Int> r = fr.get;
-		assert isResult(r);
+		assert isResult(r) && result(r) == i;
 		sys.outPrintln("Read: "+intToString(result(r)));
 		
 		u = co!writeInt(i);
@@ -88,8 +88,11 @@ class SocketTestImpl(Int port) implements SocketTest {
 		assert isOK(fb);
 		
 		fr = si!readInt(); r = fr.get; 
-		assert isResult(r);
+		assert isResult(r) && result(r) == i;
 		sys.outPrintln("Read: "+intToString(result(r)));
+		
+		u = socket!close(); u.get;
+		u = client!close(); u.get;
 	}
 }
 
