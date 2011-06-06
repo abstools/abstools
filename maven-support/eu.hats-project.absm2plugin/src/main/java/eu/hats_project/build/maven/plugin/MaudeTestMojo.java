@@ -89,7 +89,7 @@ public class MaudeTestMojo extends AbstractTestMojo {
                 verbose, 
                 stdlib,
                 productName,
-                ABSTestRunnerGenerator.RUNNER_MAIN,
+                (mainBlock == null) ? ABSTestRunnerGenerator.RUNNER_MAIN : mainBlock,
                 timed);
 
         // run maude

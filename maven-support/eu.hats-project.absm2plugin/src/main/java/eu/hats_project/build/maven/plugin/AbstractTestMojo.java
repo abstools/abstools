@@ -8,6 +8,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 import abs.backend.tests.ABSTestRunnerCompiler;
+import abs.backend.tests.ABSTestRunnerGenerator;
 
 /**
  * An abstract class for test goals
@@ -30,6 +31,13 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
      */
     protected File absTestRunnerFile;
     
+    /**
+     * Main block to execute
+     * 
+     * @parameter
+     */
+    protected String mainBlock;
+    
     protected final void doExecute() throws Exception {
         if (absTestSrcFolder == null) {
             getLog().warn("Test folder cannot be found. Skip tests");
@@ -37,6 +45,13 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
         } else if (!absTestSrcFolder.exists()) {
             getLog().warn(String.format("There is no test code at folder %s", absTestSrcFolder));
             return;
+        }
+        
+        if (generateRunner && mainBlock != null) {
+            throw new MojoExecutionException("Cannot generated test runner must reside in module "
+                    + ABSTestRunnerGenerator.RUNNER_MAIN);
+        } else if (! generateRunner && mainBlock == null) {
+            throw new MojoExecutionException("A main block has not been specified");
         }
         
         if (generateRunner) {

@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.apache.maven.plugin.MojoFailureException;
 
+import abs.backend.tests.ABSTestRunnerGenerator;
+
 /**
  * 
  * A Maven 2 plugin to execute ABS test code in Java
@@ -34,8 +36,6 @@ public class JavaTestMojo extends AbstractTestMojo {
      * @parameter expression="${abs.javaBackend.verbose}" default-value=false
      */
     private boolean verbose;
-    
-    private final String testMainClass = "AbsUnit.TestRunner.Main";
     
     /**
      * @parameter expression="${classpaths}"
@@ -104,7 +104,10 @@ public class JavaTestMojo extends AbstractTestMojo {
             List<String> args = new ArrayList<String>();
             args.add("java");
             args.addAll(Arrays.asList(jvmargs));
-            args.addAll(Arrays.asList("-cp", classpath, testMainClass));
+            
+            String main = ((mainBlock == null) ? ABSTestRunnerGenerator.RUNNER_MAIN : mainBlock) + ".Main";
+            args.addAll(Arrays.asList("-cp", classpath, main));
+            
             ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);
             Process p = pb.start();
