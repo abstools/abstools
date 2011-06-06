@@ -11,12 +11,13 @@ import FLI.SocketUtils.Socket_c;
 import FLI.StreamUtils.Feedback;
 import FLI.StreamUtils.Feedback_Error;
 import FLI.StreamUtils.Feedback_OK;
+import FLI.StreamUtils.InputStream_c;
+import FLI.StreamUtils.OutputStream_c;
 import abs.backend.java.lib.runtime.ABSAssertException;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
-import abs.fli.java.ABSFactory;
 import abs.fli.java.PrimitiveUtil;
 
 /**
@@ -49,18 +50,8 @@ public class Socket extends Socket_c {
 	}
 	
 	private void setupStream() {
-		try {
-			this.input = ABSFactory.createNewCOG(this,
-					"FLI.StreamUtils.InputStream",
-					InputStream.class.getConstructor());
-			this.output = ABSFactory.createNewCOG(this,
-					"FLI.StreamUtils.OutputStream",
-					OutputStream.class.getConstructor());
-		} catch (SecurityException e) {
-			throw new ABSAssertException(e.getLocalizedMessage());
-		} catch (NoSuchMethodException e) {
-			throw new ABSAssertException(e.getLocalizedMessage());
-		}
+		this.input = InputStream_c.createNewCOG(); 
+		this.output = OutputStream_c.createNewCOG();
 	}
 
 	@Override
@@ -68,8 +59,8 @@ public class Socket extends Socket_c {
 			ABSInteger timeout) {
 		try {
 			client_socket = new java.net.Socket();
-			SocketAddress serverAddress = new InetSocketAddress(
-					InetAddress.getByName(server.getString()), port.toInt());
+			SocketAddress serverAddress = 
+			    new InetSocketAddress(InetAddress.getByName(server.getString()), port.toInt());
 
 			client_socket.connect(serverAddress, timeout.toInt());
 			setupStream();
