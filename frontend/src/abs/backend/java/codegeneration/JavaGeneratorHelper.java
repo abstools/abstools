@@ -5,33 +5,18 @@
 package abs.backend.java.codegeneration;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-
-import beaver.Symbol;
 
 import abs.backend.java.JavaBackend;
-import abs.backend.java.debugging.DebugPosition;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSFut;
-import abs.backend.java.lib.runtime.ABSInitObjectTask;
-import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.ABSRunMethodTask;
 import abs.backend.java.lib.runtime.ABSRuntime;
-import abs.backend.java.lib.runtime.ABSThread;
-import abs.backend.java.lib.runtime.COG;
-import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Task;
-import abs.backend.java.lib.types.ABSClass;
-import abs.backend.java.lib.types.ABSDataType;
-import abs.backend.java.lib.types.ABSType;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.Decl;
-import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
@@ -44,10 +29,9 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
-import abs.frontend.typechecker.UnionType;
+import beaver.Symbol;
 
 public class JavaGeneratorHelper {
 
@@ -266,7 +250,7 @@ public class JavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.print(" protected ABSValue[] getArgs() { return new ABSValue[] { ");
+        stream.print(" protected "+ABSValue.class.getName()+"[] getArgs() { return new "+ABSValue.class.getName()+"[] { ");
            generateArgStringList(stream, n);
            stream.print(" }; } ");
     }

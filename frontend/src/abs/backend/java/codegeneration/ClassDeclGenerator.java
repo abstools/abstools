@@ -6,7 +6,6 @@ package abs.backend.java.codegeneration;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.lib.runtime.ABSInitObjectTask;
@@ -17,6 +16,7 @@ import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSClass;
+import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodImpl;
@@ -153,7 +153,7 @@ public class ClassDeclGenerator extends CodeGenerator {
     }
 
     private void generateGetFieldValueMethod() {
-        stream.println("   protected final ABSValue getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
+        stream.println("   protected final "+ABSValue.class.getName()+" getFieldValue(java.lang.String __ABS_fieldName) throws java.lang.NoSuchFieldException {");
             for (ParamDecl p : decl.getParams()) {
                 stream.println("   if (\""+p.getName()+"\".equals(__ABS_fieldName)) return "+JavaBackend.getVariableName(p.getName())+";");
             }
