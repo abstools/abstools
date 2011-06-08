@@ -149,9 +149,9 @@
 
 	<target name="build-all-plugins">
 		<ant antfile="${frontend.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
-		<ant antfile="${costabs.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
 		<ant antfile="${sdedit.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
 		<antcall target="build-eclipse-plugin"/>
+		<ant antfile="${costabs.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
     </target>
 	
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
