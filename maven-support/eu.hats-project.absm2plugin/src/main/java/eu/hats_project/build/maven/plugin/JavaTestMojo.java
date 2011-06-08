@@ -58,7 +58,7 @@ public class JavaTestMojo extends AbstractTestMojo {
         }
         args.addAll(getABSArguments());
         generator.generateJava(absfrontEnd, absTestSrcFolder, args, absJavaBackendTestTargetFolder,
-                verbose, false, true, productName);
+                verbose, false, true, loctype, productName);
 
         // run java
         StringBuilder result = runJava();

@@ -48,6 +48,11 @@ abstract class AbstractABSMojo extends AbstractMojo {
     protected boolean verbose;
     
     /**
+     * @parameter expression="${abs.loctype}" default-value=false
+     */
+    protected boolean loctype;
+    
+    /**
      * Product selection
      * @parameter expression="${abs.product}"
      */

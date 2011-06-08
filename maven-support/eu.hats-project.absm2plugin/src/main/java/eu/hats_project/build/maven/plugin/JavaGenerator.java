@@ -24,6 +24,7 @@ public class JavaGenerator {
      * @param verbose
      * @param sourceOnly
      * @param stdlib
+     * @param loctype 
      * @param productName
      * @throws MojoExecutionException
      */
@@ -34,6 +35,7 @@ public class JavaGenerator {
             boolean verbose, 
             boolean sourceOnly,
             boolean stdlib, 
+            boolean loctype, 
             String productName) throws MojoExecutionException {
         
         if (!absJavaBackendTargetFolder.exists()) {
@@ -57,6 +59,10 @@ public class JavaGenerator {
         
         if (! stdlib) {
             args.add("-nostdlib");
+        }
+        
+        if (loctype) {
+            args.add("-loctypes");
         }
         
         if (sourceOnly) {

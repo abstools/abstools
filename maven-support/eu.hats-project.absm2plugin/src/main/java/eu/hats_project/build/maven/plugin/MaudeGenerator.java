@@ -23,6 +23,7 @@ public class MaudeGenerator {
      * @param absMaudeBackendOutputFile
      * @param verbose
      * @param stdlib 
+     * @param loctype 
      * @param productName
      * @param mainBlock
      *          sets the main block to execute
@@ -38,6 +39,7 @@ public class MaudeGenerator {
     		File absMaudeBackendOutputFile, 
     		boolean verbose, 
     		boolean stdlib, 
+    		boolean loctype, 
     		String productName,
     		String mainBlock, 
     		boolean timed) throws MojoExecutionException {
@@ -67,6 +69,10 @@ public class MaudeGenerator {
         
         if (! stdlib) {
             args.add("-nostdlib");
+        }
+        
+        if (loctype) {
+            args.add("-loctypes");
         }
         
         if (timed) {

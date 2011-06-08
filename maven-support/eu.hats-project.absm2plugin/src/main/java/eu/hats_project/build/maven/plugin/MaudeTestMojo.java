@@ -88,6 +88,7 @@ public class MaudeTestMojo extends AbstractTestMojo {
                 absMaudeBackendTestOutputFile,
                 verbose, 
                 stdlib,
+                loctype,
                 productName,
                 (mainBlock == null) ? ABSTestRunnerGenerator.RUNNER_MAIN : mainBlock,
                 timed);
