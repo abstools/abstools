@@ -11,6 +11,7 @@
   <name>Maven Support for ABS</name>
 
   <modules>
+    <module>eu.hats-project.abs.parent</module>
     <module>eu.hats-project.parent</module>
     <module>eu.hats-project.absm2plugin</module>
     <module>../frontend</module>

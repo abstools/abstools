@@ -3,16 +3,19 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<artifactId>eu.hats-project.abs.parent</artifactId>
+		<groupId>eu.hats-project</groupId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../eu.hats-project.abs.parent/pom.xml</relativePath>
+	</parent>
+	
 	<groupId>eu.hats-project</groupId>
 	<artifactId>eu.hats-project.parent</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Parent pom for maven support</name>
-
-	<organization>
-		<name>The HATS Project</name>
-		<url>http://www.hats-project.eu</url>
-	</organization>
 
 	<build>
 		<plugins>
@@ -40,45 +43,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<issueManagement>
-		<system>Trac</system>
-		<url>https://trac.hats-project.eu/projects/ABSTools/</url>
-	</issueManagement>
-
-	<!-- Here we input dependencies/plugin management or anything that is to 
-		be inherited by all HATS maven projects -->
-
-	<repositories>
-		<repository>
-			<id>repos.hats-project.eu</id>
-			<url>http://tools.hats-project.eu/maven-repos/</url>
-		</repository>
-	</repositories>
-	
-	<pluginRepositories>
-		<pluginRepository>
-			<id>repos.hats-project.eu</id>
-			<url>http://tools.hats-project.eu/maven-repos/</url>
-		</pluginRepository>
-	</pluginRepositories>
-
-	<distributionManagement>
-		<!-- use the following if you're not using a snapshot version. -->
-		<repository>
-			<id>repos.hats-project.eu</id>
-			<url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
-		</repository>
-		<!-- use the following if you ARE using a snapshot version. -->
-		<snapshotRepository>
-			<id>repos.hats-project.eu</id>
-			<url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos</url>
-			<uniqueVersion>false</uniqueVersion>
-		</snapshotRepository>
-		<site>
-			<id>repos.hats-project.eu</id>
-			<url>scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/</url>
-		</site>
-	</distributionManagement>
 
 </project>
