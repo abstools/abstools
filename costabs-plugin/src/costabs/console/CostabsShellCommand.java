@@ -20,17 +20,35 @@ public class CostabsShellCommand {
 	private  String result = "";
 	private  String error = "";
 
+	/**
+	 * Create the communicator with costabs.
+	 */
 	public CostabsShellCommand() {
 	}
 
+	/**
+	 * Get the error message from the last execution of costabs.
+	 * @return
+	 */
 	public String getError() {
 		return error;
 	}
 
+	/**
+	 * Get the result from the last execution of costabs.
+	 * @return
+	 */
 	public String getResult() {
 		return result;
 	}
 
+	/**
+	 * This call will compile the abs file in a prolog format to be used
+	 * for costabs.
+	 * @param file The ABS source file to be compiled.
+	 * @param stdlib _Use of ABS standard library.
+	 * @throws Exception If some error in compilation.
+	 */
 	public void generateProlog(String file, boolean stdlib) throws Exception {
 
 		int numArgs;
@@ -44,27 +62,34 @@ public class CostabsShellCommand {
 		if (!stdlib) args[i++] = "-nostdlib";
 		args[i++] = file;
 
-		try {
-			PrologBackend.main(args); 
-		
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new Exception();
-		}
+		PrologBackend.main(args); 
 	}
 
+	/**
+	 * Call to costabs to execute with the actual preferences setup.
+	 * @param file ABS to be passed to costabs.
+	 * @param entries The names of methods / functions to use in costabs.
+	 */
 	public void analyze(String file, ArrayList<String> entries) {
 
 		executeCommand(buildCommand(entries));
 	}
 
+	/**
+	 * Auxiliar method, just to build the shell command with the entries and
+	 * preferences setup.
+	 * @param entries The entries to be used in costabs.
+	 * @return The string that has the shell command to use costabs.
+	 */
 	private String buildCommand(ArrayList<String> entries) {
 
 		StringBuffer command2 = new StringBuffer();
 
-		command2.append("costabs -mode analyze ");
-
+		command2.append(COSTABS_EXECUTABLE_PATH + " -mode analyze ");
+		
+		// This comment line is for use the installed costabs command shell
+		// command2.append("costabs -mode analyze ");
+		
 		// Build entries
 		command2.append("-entries ");
 		for (int i = 0; i < entries.size(); i++) {
@@ -79,6 +104,10 @@ public class CostabsShellCommand {
 		return command2.toString();
 	}
 
+	/**
+	 * Auxiliar method to add to a string the options checked in preferences.
+	 * @param command The String with the shell command to ABS.
+	 */
 	private void buildOptions(StringBuffer command) {
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
@@ -90,6 +119,11 @@ public class CostabsShellCommand {
 
 	}
 
+	/**
+	 * Create a process to execute the command given by argument in a shell.
+	 * @param command The shell command to be executed.
+	 * @return The state of finalization of the process.
+	 */
 	public boolean executeCommand(String command) {
 		StreamReaderThread outputThread;
 		StreamReaderThread errorThread;

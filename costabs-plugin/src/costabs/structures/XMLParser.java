@@ -49,10 +49,13 @@ public class XMLParser {
 
 			Element result = (Element) childList.item(i);
 			
-			// load the test case
 			TrackerValue r = loadResult(result);
 			
-			resultMap.addResult(r.getCallName(), r.getHeader(),r.getUb());
+			resultMap.addResult(r.getCallName(), 
+								r.getHeader(), 
+								r.getUb(), 
+								r.getTermin(), 
+								r.getLine());
 		}
 		
 		return resultMap;
@@ -73,20 +76,41 @@ public class XMLParser {
 				String header = resultNodes.item(i).getTextContent();
 				if (header != null) {
 					
-					value.setHeader(header);
+					if (header.contains("/")) {
+						
+						int end = header.indexOf("/");
+						
+						String name = "";
+						if (end >= 0) 
+							name = header.substring(0,end);
+						if (name!=null) {
+							String nameEscaped = name.replace("'", "");
+							value.setCallName(nameEscaped);		
+						}
+					}
+					else {
+						value.setHeader(header);
 					
-					int end = header.indexOf("(");
+						int end = header.indexOf("(");
 					
-					String name = "";
-					if (end >= 0) 
-						name = header.substring(0,end);
-					if (name!=null) value.setCallName(name);		
+						String name = "";
+						if (end >= 0) 
+							name = header.substring(0,end);
+						if (name!=null) {
+							String nameEscaped = name.replace("'", "");
+							value.setCallName(nameEscaped);		
+						}
+					}
 				}
 				
 			}
 			else if (nodeName.equals("ub")) {
 				String ub = resultNodes.item(i).getTextContent();
 				if (ub!=null) value.setUb(ub);		
+			}
+			else if (nodeName.equals("termin")) {
+				String termin = resultNodes.item(i).getTextContent();
+				if (termin != null) value.setTermin(termin);
 			}
 				
 		}		

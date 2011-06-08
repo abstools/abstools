@@ -3,12 +3,13 @@
     <property name="revision.prefix" value="1.0.5" />
 
 	<property name="frontend.dir" location="../frontend" />
+	<property name="absplugin.dir" location="../eclipse-plugin" />
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="build.dir" location="${basedir}/bin" />
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="ext.dir" location="${basedir}/lib" />
 	
-	<property name="plugin.name" value="costabs" />
+	<property name="plugin.name" value="eu.hatsproject.costabs" />
 	<property name="frontend.version" value="1.0.0" />
 
 	<taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
@@ -41,6 +42,7 @@
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
+	   <pathelement location="${absplugin.dir}/bin" />
         </path>
             
 		
@@ -84,6 +86,7 @@
 				<include name="icons/"/>
 				<include name="plugin.xml"/>
 				<include name="feature.xml"/>
+				<include name="costabs_exe"/>
 			</fileset>
 			<fileset dir="${build.dir}" />
 			<!-- <fileset dir="icons/" /> -->

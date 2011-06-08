@@ -24,7 +24,6 @@ import costabs.console.CostabsShellCommand;
 import costabs.dialogs.OptionsDialog;
 import costabs.markers.*;
 import costabs.structures.ResultTracker;
-import costabs.structures.XMLParser;
 import costabs.utils.SourceUtils;
 
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
@@ -36,6 +35,8 @@ import eu.hatsproject.absplugin.costabslink.CostabsLink;
  */
 public class costabsHandler extends AbstractHandler {
 
+	public static ResultTracker STORAGE_COSTABS = new ResultTracker();
+	
 	/**
 	 * The constructor.
 	 */
@@ -95,12 +96,10 @@ public class costabsHandler extends AbstractHandler {
 	private void updateUpperBounds() {
 		
 		// First, get the results from costabs
-		XMLParser p = new XMLParser("//tmp//costabs//abs.xml");
-		ResultTracker r = p.read();
-		CostabsContainer.STORAGE_UB.mergeUBContent(r);
+		STORAGE_COSTABS.addXMLResults();
 		
 		// and then add the line numbers from ABS Outline View
-		CostabsContainer.STORAGE_UB.mergeLineContent(CostabsLink.SELECTED_ITEMS, CostabsLink.LINE_ITEMS);
+		STORAGE_COSTABS.addLineNumbers(CostabsLink.SELECTED_ITEMS, CostabsLink.LINE_ITEMS);
 	}
 	
 	private void updateMarkers() {
@@ -117,8 +116,8 @@ public class costabsHandler extends AbstractHandler {
 		UBMarker ub = new UBMarker();
 		ub.removeAllMarkers(file);
 		
-		// Update filling with the actual markers
-		CostabsContainer.STORAGE_UB.fillMarkers(file);
+		// Update the editor filling with the actual markers
+		STORAGE_COSTABS.fillMarkers(file);
 		
 	}
 

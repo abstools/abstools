@@ -5,18 +5,22 @@ public class TrackerValue {
 	private String callName;
 	private String header;
 	private String ub;
+	private String termin;
 	private int line;
 	
 	public TrackerValue() {
 		callName = "";
+		header = "";
 		ub = "";
+		termin = "";
 		line = -1;
 	}
 	
-	public TrackerValue(String call, String header, String upperBound, int lineNumber) {
+	public TrackerValue(String call, String header, String upperBound, String termin, int lineNumber) {
 		setCallName(call);
 		setHeader(header);
 		setUb(upperBound);
+		setTermin(termin);
 		setLine(lineNumber);
 	}
 
@@ -34,6 +38,14 @@ public class TrackerValue {
 
 	public String getUb() {
 		return ub;
+	}
+	
+	public void setTermin(String termin) {
+		this.termin = termin;
+	}
+
+	public String getTermin() {
+		return termin;
 	}
 
 	public void setLine(int line) {
@@ -55,6 +67,14 @@ public class TrackerValue {
 
 	public String getHeader() {
 		return header;
+	}
+	
+	public boolean hasUB() {
+		return !ub.equals("");
+	}
+	
+	public boolean hasTermin() {
+		return !termin.equals("");
 	}
 	
 }
