@@ -67,6 +67,8 @@ public class ABSTestRunnerGenerator extends Main {
      * @param model
      */
     public ABSTestRunnerGenerator(Model model) {
+        assert model != null : "Model cannot be null!" ;
+        
         this.model = model;
 
         gatherABSUnitAnnotations();
