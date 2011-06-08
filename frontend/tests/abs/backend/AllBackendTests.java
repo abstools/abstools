@@ -15,8 +15,10 @@ import abs.backend.java.AllJavaTests;
 import abs.backend.java.JavaStmtTests;
 import abs.backend.java.JavaPrimitiveTests;
 import abs.backend.maude.MaudeTests;
+import abs.backend.tests.ABSTestRunnerGenerator;
+import abs.backend.tests.ABSTestRunnerGeneratorTest;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.class })
+@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.class, ABSTestRunnerGeneratorTest.class })
 public class AllBackendTests {
 }
