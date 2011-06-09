@@ -37,6 +37,16 @@ public class ServerSocket extends ServerSocket_c {
     }
     
     @Override
+    public Feedback<ABSUnit> fli_setSoTimeout(ABSInteger timeout){ 
+        try {
+            socket.setSoTimeout(timeout.toInt());
+            return new Feedback_OK<ABSUnit>();
+        } catch (IOException e) {
+            return new Feedback_Error<ABSUnit>(putil.convert(e.getMessage()));
+        }
+    }
+    
+    @Override
     public Feedback<Socket_i> fli_accept() {
         try {
             java.net.Socket s = socket.accept();

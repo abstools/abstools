@@ -18,6 +18,7 @@ interface Socket {
 [COG]
 interface ServerSocket {
 	Unit putServer(ServerSocket socket);
+	Feedback<Unit> setSoTimeout(Int timeout);
  	Feedback<Unit> bind(Int port);
 	Feedback<Socket> accept();
 	Bool isClosed();
@@ -83,6 +84,15 @@ class ServerSocket implements ServerSocket {
 	
 	Unit putServer(ServerSocket socket) {
 		this.socket = socket;
+	}
+	
+	Feedback<Unit> setSoTimeout(Int timeout) {
+		Feedback<Unit> r = OK;
+		if (socket != null) {
+			Fut<Feedback<Unit>> fr = socket!setSoTimeout(timeout); 
+			r = fr.get;
+		}
+		return r;
 	}
 	 
 	Feedback<Unit> bind(Int port) { 
