@@ -17,10 +17,11 @@
    <requires>
       <import plugin="org.eclipse.core.filesystem"/>
       <import plugin="org.eclipse.core.resources" version="3.6.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.5" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.ui.part" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
       <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
    </requires>
 
