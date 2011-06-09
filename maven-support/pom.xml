@@ -16,6 +16,8 @@
     <module>eu.hats-project.absm2plugin</module>
     <module>../frontend</module>
     <module>../mTVL</module>
+    <module>../abs-foreign-interface/abs-foreign-util</module>
+    <module>../abs-foreign-interface/java/abs-java-util</module>
   </modules>
   
 </project>
