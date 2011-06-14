@@ -141,6 +141,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void dataTypeDuplicateSelectorNames() {
+        assertTypeErrors("data Foo = Bar(X x) | Baz(X x) ;");
+    }
+
+    @Test
+    public void dataTypeSelectorNameLikeFunctionName() {
+        assertTypeErrors("data Foo = Bar(X x); def Bool x() = True; ");
+    }
+    
+    @Test
     public void interfaceDuplicateMethods() {
         assertTypeErrors("interface I { Unit m(); Unit m(); }");
     }

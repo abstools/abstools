@@ -58,6 +58,12 @@ public class TypeCheckerTest extends FrontendTest {
     public void dataTypeParamTest() {
         assertNoTypeErrorsNoLib("data Nop = Nop; data Foo<X> = Bar(X); { Foo<Nop> f = Bar(Nop); }");
     }
+
+    @Test
+    public void dataTypeSelectors() {
+        assertNoTypeErrorsNoLib("data Foo = Bar(Foo foo) | Baz; { Foo b = foo(Bar(Baz)); }");
+    }
+
     
     @Test
     public void negTestOk() {

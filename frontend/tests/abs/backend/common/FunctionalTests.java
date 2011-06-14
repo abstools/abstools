@@ -73,6 +73,14 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeSelector() {
+        assertEvalTrue("data Foo = Bar(Bool isTrue); " +
+        		"{ Bool testresult = False; " +
+        		"  Foo foo = Bar(True);  " +
+        		"  testresult = isTrue(foo); }");
+    }
+    
+    @Test
     public void letExp() {
         assertEvalTrue("def Bool f() = let (Bool x) = True in x;" + CALL_F);
     }

@@ -83,6 +83,10 @@ import java.io.IOException;
 	public ArrayList<ParserError> getErrors() {
 		return errors;
 	}
+	
+	public Object parse(Scanner source) throws IOException, Parser.Exception {
+		return new ASTPreProcessor().preprocess((CompilationUnit)super.parse(source));
+	}
 
 	public String getFileName() {
 		if (file != null)
