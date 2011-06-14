@@ -48,6 +48,7 @@ aspect Typing {
     eq ParametricDataTypeDecl.getType() { 
    	 return new DataTypeType(this, TypeCheckerHelper.getTypesFromTypeParamDecls(getTypeParameters())); 
     }
+    
     eq InterfaceDecl.getType() { 
         return new InterfaceType(this);
     }
@@ -59,6 +60,9 @@ aspect Typing {
     }
     
     eq UnknownDecl.getType() = UnknownType.INSTANCE;
+    
+    syn Type ConstructorArg.getType();
+    eq ConstructorArg.getType() = getDataTypeUse().getType();
     
     syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
     eq TypedVarOrFieldDecl.getType() = getAccess().getType();
@@ -73,6 +77,8 @@ aspect Typing {
     /* STMTS */
     syn Type Stmt.getType() = getModel().getUnitType();
     eq ReturnStmt.getType() = getRetExp().getType();
+    
+    
     
     /* EXPRESSIONS */
     
@@ -208,7 +214,7 @@ aspect Typing {
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
    	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
    	         return UnknownType.INSTANCE;
-   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromDataTypeUse(d.getConstructorArgs(),getParams());
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBinding(TypeCheckerHelper.getTypesFromConstructorArgs(d.getConstructorArgs()),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
    	 } else {
    		 return declaredResultType;

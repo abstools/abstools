@@ -25,6 +25,7 @@ import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
@@ -132,6 +133,11 @@ public class JavaBackend extends Main {
         return res;
     }
 
+    public static String getJavaType(ConstructorArg u) {
+        return getJavaType(u.getDataTypeUse());
+    }
+
+    
     public static String getJavaType(TypeUse absType) {
         return getQualifiedString(absType.getType());
     }

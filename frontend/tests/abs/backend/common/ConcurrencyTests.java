@@ -104,7 +104,7 @@ public class ConcurrencyTests extends SemanticTests {
     @Test
     public void initBlockCOG3() {
         assertEvalTrue(INTERFACE_I+CLASS_C
-                +"{List<Fut<Unit>> fs = Nil; Fut<Unit> f; I a = new cog C(); f = a!n(); fs = Cons(f,fs); f = a!n(); f = head(fs); f.get;}");
+                +"{ Bool testresult = False; List<Fut<Unit>> fs = Nil; Fut<Unit> f; I a = new cog C(); f = a!n(); fs = Cons(f,fs); f = a!n(); f = head(fs); f.get; testresult = True;}");
     }
     
     // ERROR Tests

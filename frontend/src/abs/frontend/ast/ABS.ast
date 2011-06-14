@@ -37,7 +37,7 @@ TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
 TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ;
 
-ConstructorArg  : DataTypeUse ::= [SelectorName:Name];
+ConstructorArg ::= DataTypeUse [SelectorName:Name];
 
 
 

@@ -349,8 +349,10 @@ List constructor_arg_list =
 	| constructor_arg_list.l COMMA constructor_arg.a   {: return l.add(a); :}
 	
 ConstructorArg constructor_arg =
-	  datatypeuse.u IDENTIFIER.id {: return new ConstructorArg(u.getName(),u.getAnnotations(),new Opt(new Name(id))); :}	
-	| datatypeuse.u {: return new ConstructorArg(u.getName(),u.getAnnotations(),new Opt()); :}  
+	   datatypeuse.u IDENTIFIER.id {:
+	   return new ConstructorArg(u, new Opt(new Name(id))); :}	
+	| datatypeuse.u {: 
+	   return new ConstructorArg(u, new Opt()); :}  
 
 List implement_interfaces =
     IMPLEMENTS ifname_list.i           {: return i; :}
@@ -376,10 +378,12 @@ InterfaceTypeUse ifname =
     ;
 
 DataTypeUse datatypeuse =
-	  annotation_list.l? type_name.n LT datatypeuse_list.p GT {: DataTypeUse res = new ParametricDataTypeUse(n.getName(),l, p);
-	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
-	| annotation_list.l? type_name.n {: DataTypeUse res = new DataTypeUse(n.getName(),l);
-	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+      annotation_list.l? type_name.n LT datatypeuse_list.p GT {: 
+            ParametricDataTypeUse res = new ParametricDataTypeUse(n.getName(),l, p);
+            res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+	| annotation_list.l? type_name.n {: 
+	       DataTypeUse res = new DataTypeUse(n.getName(),l);
+	       res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
     ;
 
 TypeParameterDecl datatypeparam =

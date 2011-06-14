@@ -286,4 +286,13 @@ public class TypeCheckerTest extends FrontendTest {
         
     }
     
+    @Test
+    public void ticket256() {
+        assertTypeOK("data D = Ticket256(Set<Int>);"
+                + "def Set<Int> ticket256(D d) ="
+                + "  case d {"
+                + "    Ticket256(ds) => ds;"
+                + "  };");
+    }
+    
 }

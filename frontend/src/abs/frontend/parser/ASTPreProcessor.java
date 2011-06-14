@@ -103,7 +103,7 @@ public class ASTPreProcessor {
             new FunctionDecl(
                     selName,    // function name
                     new List(), // annotations
-                    new DataTypeUse(ca.getName(), new List()), // type
+                    new DataTypeUse(ca.getDataTypeUse().getName(), new List()), // type
                     new List().add(new ParamDecl("data",new DataTypeUse(dtd.getName(), new List()),new List())), // parameters
                     funDef
                     );

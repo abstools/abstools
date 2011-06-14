@@ -392,9 +392,13 @@ aspect TypeChecker {
     }
     
     public void DataConstructor.typeCheck(SemanticErrorList e) {
-        for (DataTypeUse d : getConstructorArgs()) {
+        for (ConstructorArg d : getConstructorArgs()) {
             d.typeCheck(e);
         }
+    }
+    
+    public void ConstructorArg.typeCheck(SemanticErrorList e) {
+        getDataTypeUse().typeCheck(e);
     }
     
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
@@ -758,7 +762,7 @@ aspect TypeChecker {
    	       if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
    	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this,c.getConstructorArgs(),getParams());
    	       } else {
-   	           TypeCheckerHelper.typeCheckEqualDataTypeUses(e,this,c.getConstructorArgs(),getParams());
+   	           TypeCheckerHelper.typeCheckEqual(e,this,TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()),getParams());
    	       }
    	   }
    	 }

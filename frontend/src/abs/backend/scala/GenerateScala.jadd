@@ -309,10 +309,10 @@ aspect GenerateScala {
 		
 		if (getNumConstructorArg() > 0) {
 			writer.write("(");
-			for (DataTypeUse use: getConstructorArgs()) {
+			for (ConstructorArg arg: getConstructorArgs()) {
 				if (f)
 					writer.write(", ");
-				writer.format("i%d: ", ++i); use.generateScala(prefix, writer);
+				writer.format("i%d: ", ++i); arg.getDataTypeUse().generateScala(prefix, writer);
 				f = true;
 			}
 			writer.write(")");

@@ -50,7 +50,7 @@ aspect TypeCheckerExtension {
     
     refine Typing eq DataConstructor.getType() {
         Type t = Typing.DataConstructor.getType();        
-        for (DataTypeUse du : getConstructorArgs()) {
+        for (ConstructorArg du : getConstructorArgs()) {
             getModel().getTypeExt().annotateType(du.getType(),du,du);
         }
 //        getModel().getTypeExt().annotateType(t, this, this);

@@ -121,19 +121,27 @@ public class TypeCheckerHelper {
         typeCheckEqual(l, n, getTypes(params), args);
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<? extends DataTypeUse> params, List<PureExp> args) {        
-        Map<TypeParameter, Type> binding = getTypeParamBindingFromDataTypeUse(params, args);
-        java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(params));
-        typeCheckEqual(l, n, types, args);
+    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<? extends ConstructorArg> params, List<PureExp> args) {        
+        final java.util.List<Type> paramTypes = getTypesFromConstructorArgs(params);
+        final Map<TypeParameter, Type> binding = getTypeParamBinding(paramTypes, args);
+        typeCheckEqual(l, n, applyBinding(binding, paramTypes), args);
     }
 
     public static void typeCheckMatchingParamsPattern(SemanticErrorList l, ASTNode<?> n, DataConstructor decl,
             List<Pattern> args) {
         java.util.List<Type> patternTypes = getTypesFromPattern(args);
-        Map<TypeParameter, Type> binding = getTypeParamBinding(getTypesFromDataTypeUse(decl.getConstructorArgs()),
+        Map<TypeParameter, Type> binding = getTypeParamBinding(getTypesFromConstructorArgs(decl.getConstructorArgs()),
                 patternTypes);
-        java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(decl.getConstructorArgs()));
+        java.util.List<Type> types = applyBinding(binding, getTypesFromConstructorArgs(decl.getConstructorArgs()));
         typeCheckEqualPattern(l, n, types, args);
+    }
+
+    public static java.util.List<Type> getTypesFromConstructorArgs(List<? extends ConstructorArg> constructorArgs) {
+        java.util.List<Type> res = new ArrayList<Type>();
+        for (ConstructorArg arg : constructorArgs) {
+            res.add(arg.getType());
+        }
+        return res;
     }
 
     public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, ParametricFunctionDecl decl,
