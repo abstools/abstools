@@ -337,9 +337,16 @@ DataConstructor data_constructor =
 	;
 
 List data_constructor_params =
-	LPAREN datatypeuse_list.l? RPAREN     {: return l; :}
+	LPAREN constructor_arg_list.l? RPAREN     {: return l; :}
 	;
 
+List constructor_arg_list =
+	  constructor_arg.a                          {: return new List().add(a); :}
+	| constructor_arg_list.l COMMA constructor_arg.a   {: return l.add(a); :}
+	
+ConstructorArg constructor_arg =
+	  datatypeuse.u IDENTIFIER.id {: return new ConstructorArg(u.getName(),u.getAnnotations(),new Opt(new Name(id))); :}	
+	| datatypeuse.u {: return new ConstructorArg(u.getName(),u.getAnnotations(),new Opt()); :}  
 
 List implement_interfaces =
     IMPLEMENTS ifname_list.i           {: return i; :}

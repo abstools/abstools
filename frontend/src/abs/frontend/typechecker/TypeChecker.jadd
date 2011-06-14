@@ -722,7 +722,7 @@ aspect TypeChecker {
    	     b.typeCheck(e,(DataTypeType) et);
    	     Type t2 = b.getType();
    	     if (!t2.isAssignable(t)) {
-  		e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+  			e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
    	     }
    	 }
     } 
@@ -801,36 +801,7 @@ aspect TypeChecker {
     }
     
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
-   	 Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-   	 if (decl == null || !(decl instanceof DataConstructor)) {
-   		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
-   		 return;
-   	 }
-	DataConstructor c = (DataConstructor) decl;
-  	 if (c.getNumConstructorArg() != this.getNumParam()) {
-   		 e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_ARGS,c.getNumConstructorArg(),this.getNumParam()));
-   		 return;
-   	 }
-
-
-     Type myType = getType();
-     
-     if (myType == null || !(myType instanceof DataTypeType))
-         return;
-         
-  	 if (! (t instanceof DataTypeType)) {
-         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myType,t));
-         return;
-     }
-  	 
-	 DataTypeType myDType = (DataTypeType) myType;          
-  	 DataTypeType otherType = (DataTypeType) t;
-  	 if (!myDType.getDecl().equals(otherType.getDecl())) {
-         e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,myDType,t));
-         return;
-  	 }
-     
-  	 TypeCheckerHelper.typeCheckMatchingParamsPattern(e,this,c,getParams());
+	    TypeCheckerHelper.typeCheck(this,e,t);
     }
     
     

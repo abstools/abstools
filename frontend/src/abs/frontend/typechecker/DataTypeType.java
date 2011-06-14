@@ -50,6 +50,8 @@ public class DataTypeType extends Type {
     public DataTypeType(DataTypeDecl decl, Type... typeArgs) {
         this.decl = decl;
         for (Type t : typeArgs) {
+            if (t == null)
+                throw new IllegalArgumentException("Type argument was null");
             this.typeArgs.add(t);
         }
     }
@@ -74,6 +76,8 @@ public class DataTypeType extends Type {
     public DataTypeType withTypeArgs(Type... typeArgs) {
         DataTypeType copy = (DataTypeType) copy();
         copy.typeArgs.addAll(Arrays.asList(typeArgs));
+        if (copy.typeArgs.contains(null))
+            throw new IllegalArgumentException("One type argument was null");
         return copy;
     }
 
@@ -212,37 +216,40 @@ public class DataTypeType extends Type {
     
 
     public Type substituteTypeParams(Type t) {
-
         if (!hasTypeArgs())
             return t;
 
         if (!(t.isDataType() || t.isTypeParameter()))
             return t;
 
-        Map<TypeParameterDecl, Type> substitution = getSubstitutionMap();
+        Map<String, Type> substitution = getSubstitutionMap();
 
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
             List<Type> substitutedArgs = new ArrayList<Type>();
             for (Type arg : dt.getTypeArgs()) {
-                if (!arg.isTypeParameter())
+                if (!arg.isTypeParameter()) {
                     substitutedArgs.add(arg);
-
-                TypeParameter tp = (TypeParameter) arg;
-                substitutedArgs.add(substitution.get(tp.getDecl()));
+                } else {
+                    TypeParameter tp = (TypeParameter) arg;
+                    Type st = substitution.get(tp.getDecl().getName());
+                    if (st == null)
+                        throw new NullPointerException();
+                    substitutedArgs.add(st);
+                }
             }
             return new DataTypeType(dt.getDecl(), substitutedArgs.toArray(new Type[0]));
         } else {
             TypeParameter tp = (TypeParameter) t;
-            return substitution.get(tp.getDecl());
+            return substitution.get(tp.getDecl().getName());
         }
     }
 
-    private Map<TypeParameterDecl, Type> getSubstitutionMap() {
-        Map<TypeParameterDecl, Type> substitution = new HashMap<TypeParameterDecl, Type>();
+    private Map<String, Type> getSubstitutionMap() {
+        Map<String, Type> substitution = new HashMap<String, Type>();
         ParametricDataTypeDecl pd = (ParametricDataTypeDecl) decl;
         for (int i = 0; i < numTypeArgs(); i++) {
-            substitution.put(pd.getTypeParameter(i), getTypeArg(i));
+            substitution.put(pd.getTypeParameter(i).getName(), getTypeArg(i));
         }
 
         return substitution;

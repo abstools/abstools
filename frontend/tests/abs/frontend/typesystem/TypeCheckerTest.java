@@ -50,6 +50,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void dataTypeTest() {
+        assertNoTypeErrorsNoLib("data Foo = Bar; { Foo f = Bar; }");
+    }
+
+    @Test
+    public void dataTypeParamTest() {
+        assertNoTypeErrorsNoLib("data Nop = Nop; data Foo<X> = Bar(X); { Foo<Nop> f = Bar(Nop); }");
+    }
+    
+    @Test
     public void negTestOk() {
         assertTypeOK("{ Bool b = ~True; }");
     }

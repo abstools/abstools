@@ -15,10 +15,13 @@ import java.util.Set;
 import abs.common.Constants;
 import abs.common.ListUtils;
 import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Binary;
+import abs.frontend.ast.ConstructorArg;
+import abs.frontend.ast.ConstructorPattern;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
@@ -46,6 +49,48 @@ import abs.frontend.ast.VarDecl;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
+    public static void typeCheck(ConstructorPattern p, SemanticErrorList e, Type t) {
+        if (!t.isDataType())
+            return;
+
+        Decl decl = p.lookup(new KindedName(Kind.DATA_CONSTRUCTOR, p.getConstructor()));
+        if (decl == null || !(decl instanceof DataConstructor)) {
+            e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
+            return;
+        }
+        
+        DataConstructor c = (DataConstructor) decl;
+        if (c.getNumConstructorArg() != p.getNumParam()) {
+            e.add(new TypeError(p, ErrorMessage.WRONG_NUMBER_OF_ARGS, c.getNumConstructorArg(), p.getNumParam()));
+            return;
+        }
+        
+        DataTypeType dtt = (DataTypeType) t;
+        if (!dtt.getDecl().equals(c.getDataTypeDecl())) {
+            e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
+        }
+            
+
+        Type myType = p.getType();
+
+        if (myType == null || !(myType instanceof DataTypeType))
+            return;
+
+        if (!(t instanceof DataTypeType)) {
+            e.add(new TypeError(p, ErrorMessage.TYPE_MISMATCH, myType, t));
+            return;
+        }
+
+        DataTypeType myDType = (DataTypeType) myType;
+        DataTypeType otherType = (DataTypeType) t;
+        if (!myDType.getDecl().equals(otherType.getDecl())) {
+            e.add(new TypeError(p, ErrorMessage.TYPE_MISMATCH, myDType, t));
+            return;
+        }
+
+        TypeCheckerHelper.typeCheckMatchingParamsPattern(e, p, c, p.getParams());
+    }    
+    
     public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
         if (!e.getType().isAssignable(t)) {
             l.add(new TypeError(e, ErrorMessage.EXPECTED_TYPE, t, e.getType()));
@@ -76,7 +121,7 @@ public class TypeCheckerHelper {
         typeCheckEqual(l, n, getTypes(params), args);
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<DataTypeUse> params, List<PureExp> args) {        
+    public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<? extends DataTypeUse> params, List<PureExp> args) {        
         Map<TypeParameter, Type> binding = getTypeParamBindingFromDataTypeUse(params, args);
         java.util.List<Type> types = applyBinding(binding, getTypesFromDataTypeUse(params));
         typeCheckEqual(l, n, types, args);
@@ -124,7 +169,7 @@ public class TypeCheckerHelper {
         return t;
     }
 
-    public static void typeCheckEqualDataTypeUses(SemanticErrorList l, ASTNode<?> n, List<DataTypeUse> params,
+    public static void typeCheckEqualDataTypeUses(SemanticErrorList l, ASTNode<?> n, List<? extends DataTypeUse> params,
             List<PureExp> args) {
         java.util.List<Type> types = getTypesFromDataTypeUse(params);
         typeCheckEqual(l, n, types, args);
@@ -159,14 +204,15 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static java.util.List<Type> getTypesFromDataTypeUse(List<DataTypeUse> params) {
+    public static java.util.List<Type> getTypesFromDataTypeUse(List<? extends DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
-            res.add(u.getType());
+            Type t = u.getType();
+            res.add(t);
         }
         return res;
     }
-
+    
     public static java.util.List<Type> getTypesFromTypeParamDecls(List<TypeParameterDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (TypeParameterDecl u : params) {
@@ -207,7 +253,7 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBindingFromDataTypeUse(List<DataTypeUse> params,
+    public static Map<TypeParameter, Type> getTypeParamBindingFromDataTypeUse(List<? extends DataTypeUse> params,
             List<PureExp> args) {
         return getTypeParamBinding(getTypesFromDataTypeUse(params), args);
     }

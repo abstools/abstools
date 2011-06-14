@@ -134,6 +134,12 @@ public class ParserTest extends FrontendTest {
         assertParseOk("data IntList = IntNil | Cons(Int, IntList) ; ");
         assertParseOk("data IntList = IntNil | Cons(Prelude.Int, IntList) ; ");
     }
+    
+    @Test
+    public void dataTypeSelectors() {
+        assertParseOk("data Foo = Bla(Int i);");
+        assertParseOk("data Foo = X | Bla(Int i);");
+    }
 
     @Test
     public void testParametricDatatypeDecl() {
