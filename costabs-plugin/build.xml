@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="ABS Update Site" default="compile" basedir=".">
+<project name="COSTABS Plugin" default="compile" basedir=".">
     <property name="revision.prefix" value="1.0.6" />
 
 	<property name="frontend.dir" location="../frontend" />
@@ -19,7 +19,13 @@
 		</classpath>
 	</taskdef>	
 	
-	<target name="init">
+	<target name="download-costa-binary">
+	   <get src="http://clip.dia.fi.upm.es/~mzamalloa/costabs_exe" 
+		    dest="${basedir}"
+		    usetimestamp="true"/>
+	</target>
+	
+	<target name="init" depends="download-costa-binary">
 	   <mkdir dir="${dist.dir}" />
 	   <mkdir dir="${build.dir}" />
 	    <propertyfile file="eclipsehome.properties">
@@ -44,9 +50,6 @@
            <fileset refid="eclipse-plugin-jars" />
 	   <pathelement location="${absplugin.dir}/bin" />
         </path>
-            
-		
-		
 	</target>
     
 	<target name="exitIfEclipseHomeNotSet" if="eclipse.home.notset">
