@@ -153,7 +153,7 @@ public class JavaBackend extends Main {
                 return res;
             
             StringBuilder sb = new StringBuilder();
-            if (dt.hasTypeArgs() /*&& !containsUnboundedType(dt.getTypeArgs())*/) {
+            if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs())) {
                 sb.append("<"); 
                 boolean first = true; 
                 for (Type t : dt.getTypeArgs()) { 
@@ -193,6 +193,18 @@ public class JavaBackend extends Main {
         }
 
         throw new RuntimeException("Type " + absType.getClass().getName() + " not yet supported by Java backend");
+    }
+
+    private static boolean containsUnboundedType(List<Type> typeArgs) {
+        for (Type t : typeArgs) {
+            if (t.isBoundedType()) {
+                BoundedType bt = (BoundedType)t;
+                if (!bt.hasBoundType()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static String getQualifiedString(Decl decl) {
