@@ -24,6 +24,11 @@ public class JavaExprTests extends JavaBackendTest {
     }
 
     @Test
+    public void ticket253() {
+        assertValidStdLib("data F<A> = D(String) | E(A) ; def F<A> f<A,B>(F<B> d) = case d { D(x) => D(x); };");
+    }
+    
+    @Test
     public void getExpr() {
         assertValidStdLib("{ Fut<String> fu; fu.get; }");
     }
