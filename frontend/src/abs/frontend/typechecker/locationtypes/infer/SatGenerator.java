@@ -164,6 +164,7 @@ public class SatGenerator {
             }
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
+            opt.setTimeoutMs(1000);
             //parseNanos = System.nanoTime();
             //opt.setTimeout(arg0)
             if (opt.isSatisfiable()) {
