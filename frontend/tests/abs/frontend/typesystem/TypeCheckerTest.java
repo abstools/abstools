@@ -231,6 +231,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void covariantTypeArgs() {
+        assertTypeOK("interface I {} " +
+                     "interface J extends I {} " +
+                     "class C implements J {} " +
+                     "{ I i = new C(); " +
+                     "  Maybe<I> o = Just(i); }");
+    }
+    
+    
+    @Test
     public void testListArgs() {
         assertTypeOK(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
                 + "{ Database db; db = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
