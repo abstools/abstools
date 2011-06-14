@@ -5,7 +5,7 @@
 	<!-- this is needed to be able to call targets from maven -->
 	<property name="build.compiler" value="extJavac"/>
 
-	<property name="revision.prefix" value="1.0.5" />
+	<property name="revision.prefix" value="1.1" />
 
 	<property environment="env" />
 	<!-- include environment variables -->
