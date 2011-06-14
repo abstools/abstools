@@ -45,7 +45,7 @@ import eu.hatsproject.absplugin.builder.AbsNature;
  *
  */
 public class ABSCodeScanner implements ITokenScanner {
-	private static final boolean doDebug = true;
+	private static final boolean doDebug = false;
 	
 	protected static final int UNDEFINED = -1;
 	protected static final int EOF = -1;

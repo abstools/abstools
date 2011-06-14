@@ -203,7 +203,7 @@ public class ABSContentOutlineUtils {
 	 */
 	private static StyledString formatDataConstructor(DataConstructor dc) {
 		if (dc != null) {
-			List<DataTypeUse> constList = dc.getConstructorArgList();
+			List<ConstructorArg> constList = dc.getConstructorArgList();
 
 			StringBuilder sb = new StringBuilder();
 			sb.append(dc.getName());
