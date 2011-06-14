@@ -23,6 +23,8 @@
 	   <get src="http://clip.dia.fi.upm.es/~mzamalloa/costabs_exe" 
 		    dest="${basedir}"
 		    usetimestamp="true"/>
+	   <chmod perm="a+x" file="${basedir}/costabs_exe" />
+
 	</target>
 	
 	<target name="init" depends="download-costa-binary">
