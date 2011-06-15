@@ -62,5 +62,5 @@ class PongImpl implements Pong {
 
 {
     Pong pong = new cog PongImpl(); 
-    Ping ping = new cog PingImpl(pong); 
+    new cog PingImpl(pong); 
 }
