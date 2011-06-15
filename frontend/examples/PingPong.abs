@@ -4,42 +4,40 @@
  */
 module PingPong;
 
-data Msg = NoMsg 
-         | HelloPing 
+data PingMsg = Fine
+             | HelloPing 
+             | ByePing 
+             ;
+
+data PongMsg = NoMsg 
          | Hello(Ping)
          | HowAreYou
-         | Fine
-         | Bye 
+         | ByePong
          ;
 
 interface Ping {
-    Unit m(Msg m);
-    Unit run()	;
+    Unit ping(PingMsg m);
 }
 
 interface Pong {
     Unit hello(Ping ping);
-    Unit m(Msg m);
+    Unit pong(PongMsg m);
 }
 
 class PingImpl(Pong pong) implements Ping {
-
     Unit run(){
       pong!hello(this); 
     }
 
-    Unit m(Msg msg){
-      Msg reply = case msg {
+    Unit ping(PingMsg msg){
+      PongMsg reply = case msg {
          HelloPing => HowAreYou;
-         Fine => Bye; 
-         Bye => NoMsg;
+         Fine => ByePong; 
+         ByePing => NoMsg;
       };
       
-      Fut<Unit> fu;
-	  Unit u = Unit;
       if (reply != NoMsg) {
-         fu = pong!m(reply);
-      	 await fu?;
+         Fut<Unit> fu = pong!pong(reply);
       	 fu.get;
       }
      }
@@ -50,24 +48,19 @@ class PongImpl implements Pong {
 
     Unit hello(Ping ping) {
        this.ping = ping;
-       ping!m(HelloPing);
+       ping!ping(HelloPing);
     }
 
-    Unit m(Msg msg){
+    Unit pong(PongMsg msg){
        if (msg == HowAreYou)
-           ping!m(Fine);
+           ping!ping(Fine);
        else
-           ping!m(Bye);
+           ping!ping(ByePing);
     } 
 
 }
 
 {
-    Ping ping;
-    Pong pong;
-     
-    pong = new cog PongImpl(); 
-    ping = new cog PingImpl(pong); 
-
-    ping!run(); 
+    Pong pong = new cog PongImpl(); 
+    Ping ping = new cog PingImpl(pong); 
 }
