@@ -29,6 +29,8 @@
 	<property name="junit.jar" value="junit-4.8.1.jar" />
 	<property name="target.jar" value="${dist.dir}/absfrontend.jar" />
 	<property name="plugin.name" value="eu.hatsproject.abs.compiler" />
+	<property name="casestudies.dir" location="${base.dir}/../../../../../CaseStudies/models/" />
+
 
 	<!-- The package name of JastAdd generated files -->
 	<property name="ast.package" value="abs.frontend.ast" />
@@ -49,7 +51,36 @@
 		</classpath>
 	</taskdef>
 
-
+	<path id="common.classpath">
+	    <pathelement location="${ext.dir}/ecj-3.6.2.jar" />
+	    <pathelement location="${ext.dir}/org.sat4j.core.jar" />
+	    <pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
+	    <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
+	    <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
+	    <pathelement location="${ext.dir}/sat4j-pb.jar" />
+	</path>
+		
+	<path id="run.classpath">
+        <pathelement location="${build.dir}" />
+        <pathelement location="${ext.dir}/beaver-rt.jar" />
+        <pathelement location="${ext.dir}/beaver-rt-src.jar" />
+		<path refid="common.classpath"/>
+	</path>
+	
+	<path id="compile.classpath">
+	  <pathelement location="${ext.dir}/beaver.jar" />
+	  <pathelement location="${ext.dir}/jastadd2.jar" />
+	  <pathelement location="${ext.dir}/JastAddParser.jar" />
+	  <pathelement location="${ext.dir}/${junit.jar}" />
+        <path refid="common.classpath"/>
+	</path>
+	
+    <!-- test classpath -->
+    <path id="test.classpath">
+        <pathelement location="${ext.dir}/${junit.jar}" />
+        <path refid="run.classpath"/>
+    </path>
+	
 
 	<target name="prepare">
 		<mkdir dir="${gen.dir}" />
@@ -64,18 +95,7 @@
 
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
 		<javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off">
-			<classpath>
-				<pathelement location="${ext.dir}/ecj-3.6.2.jar" />
-				<pathelement location="${ext.dir}/beaver.jar" />
-				<pathelement location="${ext.dir}/jastadd2.jar" />
-				<pathelement location="${ext.dir}/JastAddParser.jar" />
-				<pathelement location="${ext.dir}/${junit.jar}" />
-				<pathelement location="${ext.dir}/org.sat4j.core.jar" />
-				<pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
-				<pathelement location="${ext.dir}/org.sat4j.pb.jar" />
-				<pathelement location="${ext.dir}/sat4j-maxsat.jar" />
-				<pathelement location="${ext.dir}/sat4j-pb.jar" />
-			</classpath>
+			<classpath refid="compile.classpath" />
 		</javac>
 	</target>
 
@@ -205,19 +225,6 @@
 	</target>
 
 
-	<!-- test classpath -->
-	<path id="test.classpath">
-		<pathelement location="${build.dir}" />
-		<pathelement location="${ext.dir}/${junit.jar}" />
-        <pathelement location="${ext.dir}/beaver-rt.jar" />
-		<pathelement location="${ext.dir}/beaver-rt-src.jar" />
-		<pathelement location="${ext.dir}/ecj-3.6.2.jar" />
-		<pathelement location="${ext.dir}/org.sat4j.core.jar" />
-		<pathelement location="${ext.dir}/org.sat4j.maxsat.jar" />
-		<pathelement location="${ext.dir}/org.sat4j.pb.jar" />
-		<pathelement location="${ext.dir}/sat4j-maxsat.jar" />
-		<pathelement location="${ext.dir}/sat4j-pb.jar" />
-	</path>
 
 	<!-- suite file -->
 	<property name="test.frontend.suite.name" value="abs.frontend.AllFrontendTests" />
@@ -241,6 +248,28 @@
 			<formatter type="plain" usefile="false" />
 			<classpath refid="test.classpath" />
 		</junit>
+	</target>
+
+	<target name="test-case-studies" depends="compile" description="typecheck all case studies">
+	    <antcall target="abs-typecheck">
+	    	<param name="absmodeldir" value="${casestudies.dir}/tradingsystem/absmodel/abs/tradingsystem"/>
+	     </antcall>		  
+
+        <antcall target="abs-typecheck">
+            <param name="absmodeldir" value="${casestudies.dir}/vof"/>
+         </antcall>       
+
+        <antcall target="abs-typecheck">
+            <param name="absmodeldir" value="${casestudies.dir}/fredhopper/replication/abs"/>
+         </antcall>       
+	</target>
+	
+	<target name="abs-typecheck">
+		<echo message="Typechecking ABS models in ${absmodeldir} ..." />
+        <java classname="abs.frontend.parser.Main">
+            <classpath refid="run.classpath"/>
+            <arg line="${absmodeldir}"/>
+        </java>
 	</target>
 
 	<target name="tests-frontend" depends="compile">
