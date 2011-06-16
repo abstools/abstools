@@ -76,7 +76,7 @@ public class costabsHandler extends AbstractHandler {
 				} 
 				else {
 					// If analyze, get preferences and run
-					shell.generateProlog(absFile, false);
+					shell.generateProlog(absFile, true);
 					shell.analyze(absFile, CostabsLink.SELECTED_ITEMS);
 					updateUpperBounds();
 					updateMarkers();
