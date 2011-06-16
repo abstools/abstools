@@ -46,17 +46,6 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.println(" {");
         incIndent();
 
-        /*
-        if (isForeign()) {
-            // TODO: currently a limitiation that only the first interface can be used
-            String fliInterface = JavaBackend.getQualifiedString(((UnionType)getType()).getTypes().get(0).getDecl());
-            stream.println("    private final "+fliInterface+" __ABS_foreignObject = ("+fliInterface+
-                    ") "+ABSRuntime.class.getName()+".getCurrentRuntime().getForeignObject(\""+this.qualifiedName()+"\");");
-        }
-        */
-        
-        //stream.println("    private static final "+AtomicLong.class.getName()+" __idCounter = new "+AtomicLong.class.getName()+"();");
-
         generateFieldNamesMethod();
         generateFields();
         generateConstructor();
@@ -127,8 +116,11 @@ public class ClassDeclGenerator extends CodeGenerator {
             
         stream.println(";");
         stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("          __ABS_cog.getScheduler().addTask(new "+
+        if (decl.hasInitBlock()) {
+            stream.println("          __ABS_cog.getScheduler().addTask(new "+
                 ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        }
+        
         if (decl.isActiveClass()) {
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
