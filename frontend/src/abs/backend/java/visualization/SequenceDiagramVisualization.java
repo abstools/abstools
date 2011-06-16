@@ -163,7 +163,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         return className;
     }
 
-    TaskBlockingObserver TASK_BLOCKING_OBSERVER = new TaskBlockingObserver();
+    private final TaskBlockingObserver TASK_BLOCKING_OBSERVER = new TaskBlockingObserver();
 
     class TaskBlockingObserver extends EmptyTaskObserver {
         @Override
@@ -512,11 +512,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         }
         
         public void write(String s) {
-            try {
-                buffer.put(s);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            buffer.offer(s);
         }
     }
 }
