@@ -4,17 +4,22 @@
  */
 package abs.backend.java.visualization;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.lib.types.ABSValue;
@@ -41,8 +46,6 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     final Map<COGView, Integer> objectIds = new HashMap<COGView, Integer>();
     final Map<String, AtomicInteger> idCounters = new HashMap<String, AtomicInteger>();
 
-    PrintWriter out;
-
     protected String getName() {
         return "Simulation";
     }
@@ -50,15 +53,16 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     protected boolean abstractEnvironment = false;
     boolean showStartMsg = true;
     boolean staticActors = false;
-    boolean withGUI = false;
 
     boolean firstMessage = true;
 
+    private Worker worker;
+
     @Override
     public synchronized void newCOGCreated(COGView cog, ObjectView initialObject) {
-        // out.println(initialObject.getClassName() + ":" +
+        // writeOut(initialObject.getClassName() + ":" +
         // initialObject.getClassName() + "[ap]");
-        // System.out.println(initialObject.getClassName());
+        // System.writeOut(initialObject.getClassName());
         String className = initialObject.getClassName();
         createdCOGClasses.put(cog,className);
         if (isObservedClass(className)) {
@@ -66,9 +70,9 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             if (!staticActors) {
                 if (!firstMessage) {
                     // special support for adding nodes later to a diagram
-                    out.print("#newobj ");
+                    writeOut("#newobj ");
                 }
-                out.println(getActorName(initialObject) + ":" + className + "[a]");
+                writeOutLn(getActorName(initialObject) + ":" + className + "[a]");
             }
         }
         
@@ -79,7 +83,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     @Override
     public synchronized void objectCreated(ObjectView o) {
 /*        if (!staticActors) {
-            out.println(getActorName(o) + ":" + o.getClassName() + "[a]");
+            writeOut(getActorName(o) + ":" + o.getClassName() + "[a]");
         }
 */        
         
@@ -88,7 +92,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     @Override
     public synchronized void objectInitialized(ObjectView o) {
 /*        if (!staticActors) {
-            out.println(getActorName(o) + ":" + o.getClassName() + "[a]");
+            writeOut(getActorName(o) + ":" + o.getClassName() + "[a]");
         }
 */        
         
@@ -116,41 +120,30 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     
     @Override
     public synchronized void systemStarted() {
-        try {
-            long startms= System.currentTimeMillis();
-            while (true) {
-                try {
-                    
-                    Socket skt = new Socket("localhost", 60001);
+        worker = new Worker();
+        worker.start();
+        writeOutLn(getName());
+        initializeActors();
+    }
+    
+    protected void writeOutLn(String s) {
+        writeOut(s + "\n");
+    }
 
-                    out = new PrintWriter(skt.getOutputStream(), true);
-                    out.println(getName());
+    protected void writeOut(String s) {
+        worker.write(s);
+    }
 
-                    initializeActors();
-
-                    return;
-                } catch (java.net.SocketException e) {
-                    try {
-                        System.out.println("Waiting for sdedit server on localhost:60001 ... "+((System.currentTimeMillis()-startms) / 1000)+"s");
-                        Thread.sleep(500);
-                    } catch (InterruptedException e2) {
-                        e2.printStackTrace();
-                    }
-                }
-            }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    protected void writeOutLn() {
+        writeOutLn("");
     }
 
     protected void initializeActors() {
         if (showStartMsg)
-            out.println("HiddenEnv:HiddenEnv[pe]");
+            writeOutLn("HiddenEnv:HiddenEnv[pe]");
 
         if (abstractEnvironment)
-            out.println("ENVIRONMENT:ENVIRONMENT[ap]");
+            writeOutLn("ENVIRONMENT:ENVIRONMENT[ap]");
     }
 
     public String getActorName(ObjectView v) {
@@ -180,10 +173,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     return;
                 waitingFutures.add(fut);
                 String actorName = getActorName(task.getTarget());
-                out.println("*" + fut.getID() + " " + actorName);
-                out.println("future get");
-                out.println("*" + fut.getID());
-                out.println("(" + fut.getID() + ") " + actorName);
+                writeOutLn("*" + fut.getID() + " " + actorName);
+                writeOutLn("future get");
+                writeOutLn("*" + fut.getID());
+                writeOutLn("(" + fut.getID() + ") " + actorName);
             }
         }
 
@@ -199,20 +192,20 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
                 TaskView futTask = fut.getResolvingTask();
                 String sourceClass = futTask.getTarget().getClassName();
-                out.print(getActorName(futTask.getTarget()));
+                writeOut(getActorName(futTask.getTarget()));
                 if (isSystemClass(sourceClass)) {
                     if (futTask.getID() != 1) // no main task
-                        out.print("[" + "Task" + futTask.getID() + "]");
-                    out.print(":>");
+                        writeOut("[" + "Task" + futTask.getID() + "]");
+                    writeOut(":>");
                 } else {
-                    out.print(":");
+                    writeOut(":");
                 }
                 String futTaskName = getActorName(task.getTarget()) + "[" + "FutTask" + futTask.getID() + "]";
-                out.print(futTaskName);
-                out.println(".future resolved\\:" + shorten(fut.getValue().toString()));
-                out.println(futTaskName + ":stop");
-                out.println("(" + fut.getID() + ") " + getActorName(task.getTarget()));
-                out.println(getActorName(futTask.getTarget())+ "[Task" + futTask.getID() + "]:stop");
+                writeOut(futTaskName);
+                writeOutLn(".future resolved\\:" + shorten(fut.getValue().toString()));
+                writeOutLn(futTaskName + ":stop");
+                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTarget()));
+                writeOutLn(getActorName(futTask.getTarget())+ "[Task" + futTask.getID() + "]:stop");
             }
         }
 
@@ -241,30 +234,30 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 source = source + "[" + "Task" + task.getSender().getID() + "]";
 
             if (firstMessage) {
-                out.println();
+                writeOutLn();
                 if (showStartMsg)
-                    out.println("HiddenEnv:Main_1[Task1].start()");
+                    writeOutLn("HiddenEnv:Main_1[Task1].start()");
                 firstMessage = false;
             }
 
             if (isObservedClass(targetClass))
                 task.registerTaskListener(TASK_BLOCKING_OBSERVER);
 
-            out.print(source);
-            out.print(msgAction);
+            writeOut(source);
+            writeOut(msgAction);
 
             /*
              * if (systemClasses.contains(task.getSource().getClassName())) {
-             * out.print(":>"); }
+             * writeOut(":>"); }
              */
-            out.print(getActorName(task.getTarget()));
+            writeOut(getActorName(task.getTarget()));
             if (isSystemClass(targetClass)) {
                 if (task.getID() != 1) // no main task
-                    out.print("[" + "Task" + task.getID() + "]");
+                    writeOut("[" + "Task" + task.getID() + "]");
             }
-            out.print(".");
-            out.print(task.getMethodName());
-            out.print("(");
+            writeOut(".");
+            writeOut(task.getMethodName());
+            writeOut("(");
             StringBuffer argString = new StringBuffer();
             boolean first = true;
             for (ABSValue v : task.getArgs()) {
@@ -275,8 +268,8 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 argString.append(""+v);
             }
 
-            out.print(shorten(argString.toString()));
-            out.println(")");
+            writeOut(shorten(argString.toString()));
+            writeOutLn(")");
             
         }
     }
@@ -309,18 +302,16 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     @Override
     public synchronized void taskFinished(TaskView task) {
-        System.out.println("Task Finished: "+task.getID());
-        
         if (!isObserved(task))
             return;
-        // out.println("Future " + task.getFuture().getID() + " resolved\\: " +
+        // writeOut("Future " + task.getFuture().getID() + " resolved\\: " +
         // task.getFuture().getValue());
         if (!waitingFutures.contains(task.getFuture())) {
             String taskName = getActorName(task.getTarget());
             if (task.getID() != 1) // no main task
                 taskName += "[" + "Task" + task.getID() + "]";
-            out.println(taskName + ":"); // do something to avoid empty tasks
-            out.println(taskName + ":stop");
+            writeOutLn(taskName + ":"); // do something to avoid empty tasks
+            writeOutLn(taskName + ":stop");
             resolvedFutures.add(task.getFuture());
         }
     }
@@ -330,7 +321,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (!isObserved(task))
             return;
         String target = task.getTarget().getClassName();
-        // out.println(target+"[" + "Task" + task.getID() + "]:<started>"); //
+        // writeOut(target+"[" + "Task" + task.getID() + "]:<started>"); //
         // do something to avoid empty tasks
 
     }
@@ -345,18 +336,18 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             if (isObserved(fut.getResolvingTask())) {
                 waitingFutures.add(fut);
                 String actorName = getActorName(task.getTarget());
-                out.println("*" + fut.getID() + " " + actorName);
-                // out.print("[" + "Task" + task.getID() + "]");
-                // out.print(":");
+                writeOutLn("*" + fut.getID() + " " + actorName);
+                // writeOut("[" + "Task" + task.getID() + "]");
+                // writeOut(":");
                 if (guard.isTrue()) {
-                    out.print("yielding");
+                    writeOut("yielding");
                 } else {
-                    out.print("waiting");
+                    writeOut("waiting");
                 }
-                // out.print(" on future "+fut.getID());
-                out.println();
-                out.println("*" + fut.getID());
-                out.println("(" + fut.getID() + ") " + actorName);
+                // writeOut(" on future "+fut.getID());
+                writeOutLn();
+                writeOutLn("*" + fut.getID());
+                writeOutLn("(" + fut.getID() + ") " + actorName);
             }
         }
     }
@@ -386,23 +377,23 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                     return;
                 resolvedFutures.add(fut);
 
-                out.print(getActorName(resolvingTask.getTarget()));
-                out.print("[" + "Task" + resolvingTask.getID() + "]");
-                out.print(":>");
-                out.print(getActorName(task.getTarget()));
-                out.print("[" + "Taskx" + resolvingTask.getID() + "]");
-                out.print(".resolved\\: ");
-                out.print(shorten(fut.getValue().toString()));
-                out.println();
-                out.print(getActorName(resolvingTask.getTarget()));
-                out.print("[" + "Task" + resolvingTask.getID() + "]");
-                out.print(":stop");
-                out.println();
-                out.print(getActorName(task.getTarget()));
-                out.print("[" + "Taskx" + resolvingTask.getID() + "]");
-                out.print(":stop");
-                out.println();
-                out.println("(" + fut.getID() + ") " + getActorName(task.getTarget()));
+                writeOut(getActorName(resolvingTask.getTarget()));
+                writeOut("[" + "Task" + resolvingTask.getID() + "]");
+                writeOut(":>");
+                writeOut(getActorName(task.getTarget()));
+                writeOut("[" + "Taskx" + resolvingTask.getID() + "]");
+                writeOut(".resolved\\: ");
+                writeOut(shorten(fut.getValue().toString()));
+                writeOutLn();
+                writeOut(getActorName(resolvingTask.getTarget()));
+                writeOut("[" + "Task" + resolvingTask.getID() + "]");
+                writeOut(":stop");
+                writeOutLn();
+                writeOut(getActorName(task.getTarget()));
+                writeOut("[" + "Taskx" + resolvingTask.getID() + "]");
+                writeOut(":stop");
+                writeOutLn();
+                writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTarget()));
             }
         }
     }
@@ -464,8 +455,68 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
 
     @Override
     public void systemFinished() {
-        // TODO Auto-generated method stub
-        
+        worker.stopMe();
     }
 
+    private static class Worker extends Thread {
+        private PrintWriter out;
+        volatile private boolean stopped = false;
+        
+        private final LinkedBlockingQueue<String> buffer = new LinkedBlockingQueue<String>();
+        private Worker() {
+            super("SDEdit Communication Thread");
+            super.setDaemon(true);
+        }
+        
+        @Override public void run() {
+            connect();
+            while(!stopped) {
+                 try {
+                     String msg = buffer.take();
+                     out.print(msg);
+                     out.flush();
+                 } catch (InterruptedException e) {
+                 }
+             }
+        }
+        
+        void stopMe() {
+            stopped = true;
+            interrupt();
+        }
+
+        private void connect() {
+            try {
+                long startms= System.currentTimeMillis();
+                while (true) {
+                    try {
+                        Socket sk = new Socket("localhost", 60001);
+                        out = new PrintWriter(sk.getOutputStream());
+                        
+                        
+                        return;
+                    } catch (java.net.SocketException e) {
+                        try {
+                            System.out.println("Waiting for sdedit server on localhost:60001 ... "+((System.currentTimeMillis()-startms) / 1000)+"s");
+                            Thread.sleep(500);
+                        } catch (InterruptedException e2) {
+                            e2.printStackTrace();
+                        }
+                    }
+                }
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        public void write(String s) {
+            try {
+                buffer.put(s);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

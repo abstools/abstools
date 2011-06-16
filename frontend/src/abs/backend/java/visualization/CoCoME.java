@@ -39,14 +39,14 @@ public class CoCoME extends SequenceDiagramVisualization {
 
         for (String s : getObservedClasses()) {
             if (!abstractEnvironment && getEnvironmentClasses().contains(s)) {
-                out.println(s + "_1:" + s + "[ap]");
+                writeOutLn(s + "_1:" + s + "[ap]");
             }
             if (getSystemClasses().contains(s)) {
-                out.println(s + "_1:" + s + "[a]");
+                writeOutLn(s + "_1:" + s + "[a]");
             }
         }
 
-        out.println();
+        writeOutLn();
     }
 
     @Override
