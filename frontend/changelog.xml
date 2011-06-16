@@ -14,20 +14,20 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
   </properties>
 
 <body>
-   <release version="1.1.1">
+   <release version="1.1.1" description="Important bug-fix release">
      <action def="jschaefer" type="fix" issue="256">Fixes a regression bug that was introduced by the selector feature</action>
   </release>
-  <release version="1.1.o">
+  <release version="1.1.0" description="New ABS language feature: selector functions">
 	<action dev="jschaefer" type="add">
-	   Implemented selectors for data type constructor arguments
+	   Implemented selector functions for data type constructor arguments
 	</action>
   </release>
-  <release version="1.0.5">
+  <release version="1.0.5" description="Changed ABS package format">
      <action dev="jschaefer" type="add">
         ABS packages now must have a header ABS-Package-Version in the MANIFEST
      </action>
   </release>
-  <release version="1.0.4">
+  <release version="1.0.4" description="Support for ABS packages">
      <action dev="jschaefer" type="add">
         Added functionality to handle ABS packages
      </action>
