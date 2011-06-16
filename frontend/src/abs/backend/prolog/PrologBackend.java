@@ -25,16 +25,16 @@ public class PrologBackend extends Main {
         PrologBackend prologBE = new PrologBackend();
         try {
             prologBE.absToPrologTerms(args);
-            //System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
+            if (Arrays.asList(args).contains("-v"))
+            	System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
         } catch (Exception e) {
-            //System.err.println("An error occurred during compilation: " + e.getMessage());
-
-            if (Arrays.asList(args).contains("-debug")) {
+            if (Arrays.asList(args).contains("-v")) {
+            	System.err.println("An error occurred during compilation: " + e.getMessage());
                 e.printStackTrace();
             }
             //System.exit(1);
         } finally {
-            prologBE.outStream.close();
+            if (prologBE.outStream != null) prologBE.outStream.close();
         }
     }
 

@@ -450,6 +450,11 @@ aspect GenerateProlog {
     public void Name.generateProlog(PrintStream s){
         s.print(quote(getName()));
     }
+    
+    public void ConstructorArg.generateProlog(PrintStream s){
+        getDataTypeUse().generateProlog(s);
+    }
+    
     public void ParamDecl.generatePrologField(PrintStream s){
         s.print("field(" + quote(getName()) + ",");
         getChild(0).generateProlog(s);
