@@ -130,7 +130,7 @@ public abstract class ABSObject implements ABSRef {
 
         @Override
         public void registerObjectObserver(ObjectObserver l) {
-            throw new RuntimeException("Not implemented yet");
+            // FIXME: implement
         }
 
         @Override

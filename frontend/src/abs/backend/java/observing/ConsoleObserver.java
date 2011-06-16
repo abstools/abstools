@@ -60,5 +60,10 @@ public class ConsoleObserver extends RegistratingObserver {
                 ")"+
                 ")");
     }
+    
+    @Override
+    public void systemFinished() {
+        show("System finished");
+    }
 
 }
