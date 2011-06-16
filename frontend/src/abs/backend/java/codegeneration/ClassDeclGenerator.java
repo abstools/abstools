@@ -116,10 +116,8 @@ public class ClassDeclGenerator extends CodeGenerator {
             
         stream.println(";");
         stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
-        if (decl.hasInitBlock()) {
-            stream.println("          __ABS_cog.getScheduler().addTask(new "+
-                ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
-        }
+        stream.println("          __ABS_cog.getScheduler().addTask(new "+
+             ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
         
         if (decl.isActiveClass()) {
             stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
