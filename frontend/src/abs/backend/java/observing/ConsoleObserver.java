@@ -16,7 +16,7 @@ import abs.backend.java.utils.StringUtil;
  * @author Jan Schäfer
  *
  */
-public class ConsoleObserver extends RegistratingObserver {
+public class ConsoleObserver extends RegistratingObserver implements FutObserver {
 
     PrintStream s = System.out;
     
@@ -59,11 +59,20 @@ public class ConsoleObserver extends RegistratingObserver {
                 "("+StringUtil.iterableToString(task.getArgs(), ",")+
                 ")"+
                 ")");
+
+        task.getFuture().registerFutObserver(this);
     }
     
     @Override
     public void systemFinished() {
         show("System finished");
     }
+
+    @Override
+    public void onResolved(FutView fut, ABSValue value) {
+        show("Future["+fut.getID()+"] resolved with value '"+value+"'");
+    }
+    
+    
 
 }
