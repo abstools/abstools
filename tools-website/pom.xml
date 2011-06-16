@@ -120,12 +120,10 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <target name = "frontend-dist">
+              <target name = "make jars">
                 <ant antfile="../frontend/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
                   <property name="target.jar" value="${basedir}/target/site/download/absfrontend.jar" /> 
                 </ant>
-              </target>
-              <target name = "mtvl-dist">
                 <ant antfile="../mTVL/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
                   <property name="target.jar" value="${basedir}/target/site/download/mtvl.jar" /> 
                 </ant>
