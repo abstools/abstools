@@ -22,35 +22,39 @@ public abstract class AbstractTaskSchedulerView implements TaskSchedulerView {
         getObservers().add(listener);
     }
 
-    protected synchronized List<TaskSchedulerObserver> getObservers() {
+    private synchronized List<TaskSchedulerObserver> getObservers() {
         if (observers == null) {
             observers = new ArrayList<TaskSchedulerObserver>(1);
         }
         return observers;
     }
 
-    synchronized void taskResumed(TaskView runningTask, ABSGuard g) {
-        for (TaskSchedulerObserver l : getObservers()) {
+    public void taskResumed(TaskView runningTask, ABSGuard g) {
+        for (TaskSchedulerObserver l : getObserverCopy()) {
             l.taskResumed(runningTask, g.getView());
         }
     }
 
-    public synchronized void taskSuspended(TaskView runningTask, ABSGuard g) {
-        for (TaskSchedulerObserver l : getObservers()) {
+    public void taskSuspended(TaskView runningTask, ABSGuard g) {
+        for (TaskSchedulerObserver l : getObserverCopy()) {
             l.taskSuspended(runningTask, g.getView());
         }
     }
 
-    public synchronized void taskAdded(TaskView view) {
-        for (TaskSchedulerObserver l : getObservers()) {
+    public void taskAdded(TaskView view) {
+        for (TaskSchedulerObserver l : getObserverCopy()) {
             l.taskCreated(view);
         }
     }
 
-    public synchronized void taskReady(TaskView view) {
-        for (TaskSchedulerObserver l : getObservers()) {
+    public void taskReady(TaskView view) {
+        for (TaskSchedulerObserver l : getObserverCopy()) {
             l.taskReady(view);
         }
+    }
+    
+    public synchronized List<TaskSchedulerObserver> getObserverCopy() {
+        return new ArrayList<TaskSchedulerObserver>(observers);
     }
     
 }

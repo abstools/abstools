@@ -132,7 +132,7 @@ public class DebugTreeStyledLabelProvider extends StyledCellLabelProvider implem
 			COGView cog = (COGView) element;
 			String s = "COG " + cog.getID() + " (" + getInitialObject(cog).getClassName() + " " + getInitialObject(cog).getID()+ ")"; 
 			//for color of the string, check if there is a task that can be stepped
-			if(((COGView)element).getScheduler().getSchedulableTasks().size() > 0){
+			if(cog.getScheduler().getSchedulableTasks().size() > 0){
 				return new StyledString(s, STYLER_BLACK);
 			} else{
 				return new StyledString(s, STYLER_GREY);

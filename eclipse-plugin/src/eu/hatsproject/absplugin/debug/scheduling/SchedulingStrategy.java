@@ -179,7 +179,7 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 	 * Updates the graphical display after a step. Refreshes the buttons enablement and
 	 * selects the next stepable task in the {@link DebugView}
 	 */
-	public synchronized void highlightNextStep() {
+	public void highlightNextStep() {
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {

@@ -68,7 +68,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 					public void run() {
 						updateEditorIcon(editorres);
 						// workaround for squiggly lines not vanishing after rebuild
-						refresh();
+						//refresh();
 						
 					}
 				});
@@ -96,16 +96,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 			}
 		};
 		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(propertyChangeListener);
-	}
-	
-	/**
-	 * refreshes the sourceviewer. Removes highlighting of removed annotation that has not vanished yet.
-	 */
-	public void refresh(){
-//		rememberSelection();
-//		reinitializeSourceViewer();
-//		restoreSelection();
-		getSourceViewer().invalidateTextPresentation();
 	}
 	
 	/**
@@ -137,16 +127,18 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 			IResource resource = (IResource)getEditorInput().getAdapter(IResource.class);
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_ZERO);
 			
-			if(getSourceViewer() instanceof SourceViewer){
-				SourceViewer sourceviewer = (SourceViewer)getSourceViewer();
-				refresh();
-				sourceviewer.setSelection(new TextSelection(lineOffset, 0), true);
-			}
+			getSourceViewer().invalidateTextPresentation();
 			
 			IMarker marker = resource.createMarker(Constants.CURRENT_IP_MARKER);
-			marker.setAttribute(IMarker.LINE_NUMBER, line);
-			marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
-			marker.setAttribute(IMarker.MESSAGE, "current instruction pointer");
+            marker.setAttribute(IMarker.LINE_NUMBER, line);
+            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+            marker.setAttribute(IMarker.MESSAGE, "current instruction pointer");
+            
+            if(getSourceViewer() instanceof SourceViewer){
+                SourceViewer sourceviewer = (SourceViewer)getSourceViewer();
+                sourceviewer.setSelection(new TextSelection(lineOffset, 0), true);
+                //sourceviewer.refresh();
+            }
 		} catch (CoreException e) {
 			standardExceptionHandling(e);
 		} catch (BadLocationException e) {
@@ -161,7 +153,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 		IResource resource = (IResource)getEditorInput().getAdapter(IResource.class);
 		try {
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_INFINITE);
-			refresh();
+			getSourceViewer().invalidateTextPresentation();
 		} catch (CoreException e) {
 			standardExceptionHandling(e);
 		}

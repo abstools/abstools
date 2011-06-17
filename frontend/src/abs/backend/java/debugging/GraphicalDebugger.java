@@ -89,6 +89,20 @@ public class GraphicalDebugger implements SystemObserver {
         // TODO Auto-generated method stub
         
     }
+    
+    public static Color getColor(TaskState ts) {
+        switch(ts) {
+        case READY: return (ColorUtils.setSaturation(Color.YELLOW, 0.5f));
+        case SUSPENDED: return (ColorUtils.setSaturation(Color.ORANGE, 0.5f));
+        case RUNNING: return ColorUtils.setSaturation(Color.GREEN, 0.5f);
+        case FINISHED: return (Color.LIGHT_GRAY);
+        case DEADLOCKED: return (Color.red);
+        case ASSERTION_FAILED: return (ColorUtils.PSYCHEDELIC_PURPLE);
+        case EXCEPTION: return (ColorUtils.PSYCHEDELIC_PURPLE);
+        case BLOCKED: return ColorUtils.setSaturation(Color.RED, 0.5f);
+        default: throw new IllegalArgumentException("Unknown Taskstate " + ts); 
+        }
+    }
 
 }
 
@@ -151,7 +165,7 @@ class SourceView extends JPanel implements DebugModelListener {
 
     private void createHighlightPainters() {
         for (TaskState s : TaskState.values()) {
-            highlightPainters.put(s, new DefaultHighlightPainter(s.color));
+            highlightPainters.put(s, new DefaultHighlightPainter(GraphicalDebugger.getColor(s)));
         }
     }
 
@@ -354,7 +368,7 @@ class TaskTable extends JPanel {
                 boolean hasFocus, int row, int column) {
             TaskInfo info = tableModel.rows.get(row);
 
-            setBackground(info.state.color);
+            setBackground(GraphicalDebugger.getColor(info.state));
             setText((String) value);
             return this;
         }
@@ -608,7 +622,7 @@ class COGTree extends JPanel {
                 lbl = new JLabel("Task " + taskInfo.task.getID() + " (" + taskInfo.task.getTarget() + "."
                         + taskInfo.task.getMethodName() + ")");
 
-                lbl.setBackground(taskInfo.state.color);
+                lbl.setBackground(GraphicalDebugger.getColor(taskInfo.state));
                 lbl.setOpaque(true);
 
             } else if (value == OBJECTS || value == TASKS || value == COGS) {

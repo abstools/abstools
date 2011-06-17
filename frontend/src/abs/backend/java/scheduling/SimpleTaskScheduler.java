@@ -189,7 +189,6 @@ public class SimpleTaskScheduler implements TaskScheduler {
         @Override
         public void run() {
             try {
-                View v = view;
                 active = true;
                 executingTask.task.run();
                 if (executingTask.task.isDeadlocked())
@@ -361,11 +360,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     private volatile View view;
 
+    private final Object viewCreatorLock = new Object();
+    
     @Override
-    public synchronized TaskSchedulerView getView() {
+    public TaskSchedulerView getView() {
+        synchronized (viewCreatorLock) {
         if (view == null)
             view = new View();
         return view;
+        }
     }
 
     @Override
