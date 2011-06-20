@@ -118,6 +118,30 @@ java -jar mtvl.jar
 
   {{{http://costa.ls.fi.upm.es/costabs}COSTABS Web Interface}}
 
+** Usage
+
+  Costabs works when an abs file is opened in the ABS Editor. In that case, functions and methods can be selected from the Outline View (to select multiples functions and methods keep pressed control key).
+
+  Once the selection is finished, the Costabs button from the Tools menu should be clicked to set the analysis options.
+
+** Costabs Options
+
+  Costabs allows the following options for the analysis:
+
+    * Cost models:
+
+    * Termination/...
+
+    * Cost centers:
+
+    * Size abstraction:
+
+    * Verbotity:
+
+** Viewing the Results
+
+  The results from the analysis are displayed in the console view and markers are added next to the definition of the method or function in the source file.
+
 * Dependency Management
 
   ABS is supported by {{{http://maven.apache.org}Maven}} dependency management system. 
