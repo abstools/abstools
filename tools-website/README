@@ -1,4 +1,7 @@
 In order to generate the documentation, Maven 2 is required.
+In addition, you have to install the HATS parent POM, by
+going to Tools/ABS/trunk/maven-support and typing mvn install.
+
 Then issue the following command:
 
   mvn site
