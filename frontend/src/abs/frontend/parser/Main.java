@@ -162,6 +162,9 @@ public class Main {
     private void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
         if (verbose)
             System.out.println("Analyzing Model...");
+        if (fullabs)
+            // apply deltas that correspond to given product
+            m.flattenForProduct(product);
         if (dump) {
             m.dump();
         }
@@ -182,13 +185,13 @@ public class Main {
                     System.err.flush();
                 }
             } else {
-                if (fullabs) {
-                    // apply deltas that correspond to given product
-                    m.flattenForProduct(product);
-                    
-                    if (dump)
-                        m.dump();
-                }
+//                if (fullabs) {
+//                    // apply deltas that correspond to given product
+//                    m.flattenForProduct(product);
+//
+//                    if (dump)
+//                        m.dump();
+//                }
                 typeCheckModel(m);
             }
         }

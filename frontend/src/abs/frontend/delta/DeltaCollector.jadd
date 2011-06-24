@@ -87,8 +87,7 @@ aspect DeltaCollector {
 
                             // search for delta symbol in the list of visible names
                             KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, c.getDeltaspec().getName());
-                            Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
-                            
+                            Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleDeltas();
                             if (visibleSymbols.containsKey(symbol)) {
                                 // found name of delta, now find the declaration...
                                 delta = (DeltaDecl) visibleSymbols.get(symbol).getDecl();
@@ -113,6 +112,27 @@ aspect DeltaCollector {
         // System.out.println(deltas.toString());
         return deltas;
     }
+
+    syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleDeltas() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getVisibleDeltas() {
+		return DeltaCollectorHelper.getVisibleDeltas(this);
+	}
+
+    syn Map<KindedName,ResolvedName> ModuleDecl.getExportedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getExportedDeltas() {
+		return DeltaCollectorHelper.getExportedDeltas(this);
+	}
+
+    syn Map<KindedName,ResolvedName> ModuleDecl.getImportedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getImportedDeltas() {
+		return DeltaCollectorHelper.getImportedDeltas(this);
+	}
+
+    syn Map<KindedName,ResolvedName> ModuleDecl.getDefinedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
+	eq ModuleDecl.getDefinedDeltas() {
+		return DeltaCollectorHelper.getDefinedDeltas(this);
+	}
+
 
     public abstract String Deltaparam.getName();
     public String FIDAID.getName()  { return getFeatName() + "." + getAttrName(); }

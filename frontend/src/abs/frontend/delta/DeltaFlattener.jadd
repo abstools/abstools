@@ -26,7 +26,7 @@ aspect Flattener {
 
         // resolve original() calls
         this.resolveOriginalCalls(deltas);
-        
+
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
@@ -90,7 +90,7 @@ aspect Flattener {
         ClassDecl cls = null;
 //        System.out.println("=== Delta " + module.getName() + "." + delta.getName() + " looking for ClassDecl: " + this.className());
         
-        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
+        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleDeltas();
         KindedName symbol = new KindedName(KindedName.Kind.CLASS, this.className());
 //        for (KindedName kn : visibleSymbols.keySet()) {
 //            System.out.println("visibleNames: " + kn.getKind() + " >>>> " + kn.getName());
