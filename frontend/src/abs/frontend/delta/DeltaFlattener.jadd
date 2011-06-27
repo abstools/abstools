@@ -68,7 +68,7 @@ aspect Flattener {
     }
 
     public void AddClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        ModuleDecl module = delta.getModule();
+        ModuleDecl module = findModuleForClass(); //delta.getModule();
         module.getDecls().addChild(this.getClassDecl().fullCopy());
     }
     
@@ -106,6 +106,23 @@ aspect Flattener {
                     + " wants to modify class " + this.className() + ", which was not found.");
         }
         return cls;
+    }
+
+    public ModuleDecl AddClassModifier.findModuleForClass() throws ASTNodeNotFoundException {
+        Name name = new Name(getClassDecl().getName());
+        ModuleDecl module = getModule();
+        String mn = module.getName();
+        if (!name.isSimple()) {
+            mn = name.getModuleName();
+            for (CompilationUnit c: module.getModel().getCompilationUnits())
+                for (ModuleDecl m: c.getModuleDecls())
+                    if (m.getName().equals(mn))
+                        return m;
+        }
+        else
+            return module;
+        throw new ASTNodeNotFoundException("Module " + mn + " was not found when creating class " +
+                    name.getString() + ".");
     }
     
     /**************************************************************************

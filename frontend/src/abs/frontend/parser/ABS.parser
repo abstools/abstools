@@ -314,9 +314,22 @@ List class_modifier_list =
 
 ClassModifier class_modifier =
     MODIFIES CLASS TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, fragments); :}
-  | ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+//  | ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+  | ADDS qualified_class_decl.classdecl {: return new AddClassModifier(classdecl); :}
   | REMOVES CLASS TYPE_IDENTIFIER.id {: return new RemoveClassModifier(id); :}
   ;
+
+ClassDecl qualified_class_decl =
+    annotation_list.annotations? CLASS simple_qual_name.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE
+  {: return new ClassDecl(id.getString(), annotations, params,  i, init_block, fields, methods); :}
+  // error recovery:
+  | annotation_list.annotations? CLASS simple_qual_name.id param_decls.params? implement_interfaces.i? LBRACE error
+  {: return new ClassDecl(id.getString(), annotations, params,  i, new Opt(), new List(), new List()); :}
+  ;
+
+Name simple_qual_name =
+    TYPE_IDENTIFIER.id {: return new Name(id); :}
+  | TYPE_IDENTIFIER.mod DOT TYPE_IDENTIFIER.id {: return new Name(mod+"."+id); :};
 
 List modifier_fragment_list =
     modifier_fragment.f {: return new List().add(f); :}
