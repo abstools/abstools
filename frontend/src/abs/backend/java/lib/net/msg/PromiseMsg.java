@@ -6,15 +6,12 @@ package abs.backend.java.lib.net.msg;
 
 import abs.backend.java.lib.runtime.ABSObject;
 
-public class CallMsg implements Msg {
+public class PromiseMsg implements Msg {
     public final ABSObject target;
-    public final ABSObject source;
     // public final Promise promise;
-    // public final String method;
-    // public final List<Value> args;
+    // public final Value value;
     
-    public CallMsg(ABSObject target, ABSObject source) {
+    public PromiseMsg(ABSObject target) {
         this.target = target;
-        this.source = source;
     }
 }
