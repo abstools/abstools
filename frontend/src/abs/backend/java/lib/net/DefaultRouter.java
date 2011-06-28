@@ -7,6 +7,7 @@ package abs.backend.java.lib.net;
 import java.util.HashMap;
 import java.util.Map;
 
+import abs.backend.java.lib.net.msg.Msg;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.COG;
 

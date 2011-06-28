@@ -4,6 +4,8 @@
  */
 package abs.backend.java.lib.net;
 
+import abs.backend.java.lib.net.msg.Msg;
+
 public interface Router {
     Node getNextNode(Msg m);
 }
