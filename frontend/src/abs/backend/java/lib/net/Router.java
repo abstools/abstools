@@ -4,6 +4,8 @@
  */
 package abs.backend.java.lib.net;
 
+import java.util.Set;
+
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.net.msg.Msg;
@@ -43,6 +45,11 @@ public interface Router {
      * Get the node a message should be routed to
      */
     public Node getNextNode(Msg m);
+
+    /**
+     * Get all route entries
+     */
+    public Set<RouteEntry> getRouteEntries();
 
 }
 
