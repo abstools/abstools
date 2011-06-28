@@ -79,8 +79,11 @@ public class MaudeCompiler extends Main {
 
     protected void printUsage() {
         super.printUsage();
-        System.out.println("Uppaal Backend:\n"
+        System.out.println("Maude Backend:\n"
+                + "  -main=<ModuleName> \n" 
+                + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
+                + "  -timed         generate code for timed interpreter"
         );
     }
 
