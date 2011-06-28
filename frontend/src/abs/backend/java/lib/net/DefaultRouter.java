@@ -19,4 +19,24 @@ public class DefaultRouter implements Router {
         return null;
     }
 
+    private static class RouteEntry {
+        private final Node nextNode;
+        private int hops = 1;
+        
+        public RouteEntry(Node nextNode) {
+            this.nextNode = nextNode;
+        }
+        
+        public int getHops() {
+            return hops;
+        }
+        
+        public void setHops(int i) {
+            hops = i;
+        }
+
+        public Node getNextNode() {
+            return nextNode;
+        }
+    }
 }
