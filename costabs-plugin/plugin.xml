@@ -35,12 +35,12 @@
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               label="Costabs"
+               label="Costa"
                id="costabs.menus.mainMenu">
             <command
                   commandId="costabs.commands.noStdCommand"
                   id="costabs.menus.noStdCommand"
-                  label="Analyze with Costabs">
+                  label="Analyze with Costa">
             </command>
          </menu>
       </menuContribution>
@@ -52,7 +52,7 @@
                   commandId="costabs.commands.noStdCommand"
                   icon="icons/palmtree16x16.png"
                   id="costabs.toolbars.noStdCommand"
-                  tooltip="Analyze with Costabs">
+                  tooltip="Analyze with Costa">
             </command>
          </toolbar>
       </menuContribution>
@@ -62,7 +62,7 @@
       <page
             class="costabs.preferences.CostabsPreferences"
             id="costabs.preferences.CostabsPreferences"
-            name="Costabs">
+            name="Costa">
       </page>
    </extension>
    <extension

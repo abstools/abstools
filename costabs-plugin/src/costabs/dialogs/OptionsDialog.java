@@ -154,7 +154,7 @@ public class OptionsDialog extends Dialog {
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("Select the preferences for costabs");
+		newShell.setText("Select the preferences for Costa");
 	}
 
 	@Override
