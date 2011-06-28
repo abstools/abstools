@@ -29,3 +29,6 @@ abs-packages   - demonstration and description of how to use ABS packages (with 
 
 abs-unit       - demonstration, description and initial ideas about the ABSUnit (a unit testing framework for ABS) (with Maven dependencies management)
 
+costabs-plugin - The COSTA plugin for ABS
+
+apet-plugin    - The aPET plugin for ABS
