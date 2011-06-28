@@ -50,7 +50,7 @@
                id="costabs.toolbars.mainToolbar">
             <command
                   commandId="costabs.commands.noStdCommand"
-                  icon="icons/costabsicon.jpeg"
+                  icon="icons/palmtree16x16.png"
                   id="costabs.toolbars.noStdCommand"
                   tooltip="Analyze with Costabs">
             </command>
