@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.types.ABSRef;
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;
@@ -60,7 +62,7 @@ public class ABSRuntime {
             Constructor<?> constr = mainClass.getConstructor(COG.class);
             ABSObject mainObject = (ABSObject) constr.newInstance(cog);
             cogCreated(mainObject);
-            asyncCall(new ABSMainTask(mainObject));
+            asyncCall(new ABSMainCall(mainObject));
             doNextStep();
         } catch (SecurityException e) {
             e.printStackTrace();
@@ -302,6 +304,10 @@ public class ABSRuntime {
         getCurrentCOG().getScheduler().await(g);
     }
 
+    public COG createCOG(Class<?> clazz) {
+        return new COG(this, clazz);
+    }
+
     public static COG getCurrentCOG() {
         final ABSThread thread = getCurrentThread();
         if (thread != null)
@@ -318,7 +324,8 @@ public class ABSRuntime {
             return null;
     }
 
-    public static ABSFut<?> asyncCall(Task<?> task) {
+    public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {
+        Task<T> task = new Task<T>(call);
         task.schedule();
         return task.getFut();
     }

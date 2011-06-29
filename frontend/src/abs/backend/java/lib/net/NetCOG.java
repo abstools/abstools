@@ -5,6 +5,7 @@
 package abs.backend.java.lib.net;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,12 +23,12 @@ import abs.backend.java.lib.types.ABSValue;
  *
  */
 public class NetCOG extends COG {
-    private NodeImpl node;
+    private NetNode node;
     private final Map<Promise, ABSValue> promises = new HashMap<Promise, ABSValue>();
     private final Map<Promise, Set<ABSFut<? super ABSValue>>> futureMap 
         = new HashMap<Promise, Set<ABSFut<? super ABSValue>>>();
 
-    public NetCOG(NodeImpl node, ABSRuntime runtime, Class<?> clazz) {
+    public NetCOG(NetNode node, ABSNetRuntime runtime, Class<?> clazz) {
         super(runtime, clazz);
         this.node = node;
     }
@@ -43,6 +44,8 @@ public class NetCOG extends COG {
             for (ABSFut<? super ABSValue> f : futureMap.get(pm.promise)) {
                 f.resolve(pm.value);
             }
+            // not needed anymore as resolved now
+            futureMap.remove(pm.promise);
         }
     }
 
@@ -50,9 +53,23 @@ public class NetCOG extends COG {
         this.node = node;
     }
     
-    @Override
-    public void addTask(Task<?> task) {
-        node.processMsg(new CallMsg(null, null));
+    public synchronized NetNode getNode() {
+        return node;
+    }
+
+    public synchronized void registerFuture(NetFut<? super ABSValue> fut) {
+        ABSValue v = promises.get(fut.getPromise());
+        if (v != null) {
+            fut.resolve(v);
+            return;
+        }
+        
+        Set<ABSFut<? super ABSValue>> set = futureMap.get(fut.getPromise());
+        if (set == null) {
+            set = new HashSet<ABSFut<? super ABSValue>>();
+            futureMap.put(fut.getPromise(), set);
+        }
+        set.add(fut);
     }
 
 }

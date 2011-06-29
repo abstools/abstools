@@ -4,9 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
-public class ABSMainTask extends Task<ABSObject> {
+public class ABSMainCall extends AbstractAsyncCall<ABSObject> {
 
-    public ABSMainTask(ABSObject target) {
+    public ABSMainCall(ABSObject target) {
         super(null, target);
     }
 

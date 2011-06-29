@@ -6,6 +6,7 @@ package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,26 +22,18 @@ import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskStackView;
 import abs.backend.java.observing.TaskView;
 
-public abstract class Task<T extends ABSRef> {
+public class Task<T extends ABSRef> {
     private final ABSFut<? super ABSValue> future;
-    protected final T target;
-    protected final ABSObject source;
-    protected final Task<?> sender;
     private final int id;
     private Thread executingThread;
     private ABSException exception;
     private final TaskStack stack;
+    private final AsyncCall<T> call;
 
-    public Task(ABSObject source, T target) {
-        this(ABSRuntime.getCurrentTask(), source, target);
-    }
-
-    public Task(Task<?> sender, ABSObject source, T target) {
-        this.sender = sender;
-        this.source = source;
-        this.target = target;
-        future = new ABSFut(this);
-        ABSRuntime runtime = ((ABSObject)target).__ABS_getRuntime();
+    public Task(AsyncCall<T> call) {
+        this.call = call;
+        future = new ABSTaskFut(this);
+        ABSRuntime runtime = ((ABSObject)call.getTarget()).__ABS_getRuntime();
         id = runtime.freshTaskID();
         if (runtime.debuggingEnabled()) {
             stack = new TaskStack(this);
@@ -76,7 +69,7 @@ public abstract class Task<T extends ABSRef> {
     }
 
     public COG getCOG() {
-        return ((ABSObject) target).getCOG();
+        return ((ABSObject)call.getTarget()).getCOG();
     }
 
     public void schedule() {
@@ -124,7 +117,7 @@ public abstract class Task<T extends ABSRef> {
 
         
         try {
-            ABSValue res = (ABSValue) execute();
+            ABSValue res = (ABSValue) call.execute();
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
@@ -142,12 +135,8 @@ public abstract class Task<T extends ABSRef> {
 
     }
 
-    public abstract Object execute();
-
-    public abstract String methodName();
-
     public String toString() {
-        return "Task (" + id + ") [" + getCOG() + ", Method: " + target.getClass().getSimpleName() + "." + methodName()
+        return "Task (" + id + ") [" + getCOG() + ", Method: " + call.getTarget().getClass().getSimpleName() + "." + call.methodName()
                 + "]";
     }
 
@@ -160,10 +149,16 @@ public abstract class Task<T extends ABSRef> {
         return view;
     }
 
-    protected ABSValue[] getArgs() {
-        return new ABSValue[0];
+    public synchronized Thread getExecutingThread() {
+        return executingThread;
     }
 
+
+    public AsyncCall<?> getCall() {
+        return call;
+    }
+
+    
     public synchronized void nextStep(String fileName, int line) {
         if (view != null)
             view.nextStep(fileName, line);
@@ -174,9 +169,9 @@ public abstract class Task<T extends ABSRef> {
 
         @Override
         public TaskView getSender() {
-            if (sender == null)
+            if (call.getSender() == null)
                 return null;
-            return sender.getView();
+            return call.getSender().getView();
         }
 
         public synchronized void localVariableChanged(Frame f,String name, ABSValue v) {
@@ -211,14 +206,14 @@ public abstract class Task<T extends ABSRef> {
 
         @Override
         public ObjectView getSource() {
-            if (source == null)
+            if (call.getSource() == null)
                 return null;
-            return source.getView();
+            return call.getSource().getView();
         }
 
         @Override
         public ObjectView getTarget() {
-            return ((ABSObject) target).getView();
+            return ((ABSObject)call.getTarget()).getView();
         }
 
         private synchronized List<TaskObserver> getObservers() {
@@ -246,12 +241,12 @@ public abstract class Task<T extends ABSRef> {
 
         @Override
         public String getMethodName() {
-            return Task.this.methodName();
+            return Task.this.call.methodName();
         }
 
         @Override
         public List<ABSValue> getArgs() {
-            return Arrays.asList(Task.this.getArgs());
+            return Task.this.call.getArgs();
         }
 
         @Override
@@ -289,10 +284,6 @@ public abstract class Task<T extends ABSRef> {
             return stack;
         }
 
-    }
-
-    public synchronized Thread getExecutingThread() {
-        return executingThread;
     }
 
 }

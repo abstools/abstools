@@ -4,9 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
-public class ABSInitObjectTask<T extends ABSObject> extends Task<T> {
+public class ABSInitObjectCall<T extends ABSObject> extends AbstractAsyncCall<T> {
 
-    public ABSInitObjectTask(Task<?> sender, ABSObject source, T target) {
+    public ABSInitObjectCall(Task<?> sender, ABSObject source, T target) {
         super(sender, source, target);
     }
 
@@ -18,7 +18,7 @@ public class ABSInitObjectTask<T extends ABSObject> extends Task<T> {
 
     @Override
     public String methodName() {
-        return "initialization block";
+        return "initialization";
     }
 
 }

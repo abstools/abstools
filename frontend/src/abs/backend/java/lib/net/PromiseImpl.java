@@ -4,12 +4,6 @@
  */
 package abs.backend.java.lib.net;
 
-import abs.backend.java.lib.net.msg.Msg;
-
-public interface NetNode {
-
-    void performStep();
-
-    void processMsg(Msg msg);
+public class PromiseImpl implements Promise {
 
 }

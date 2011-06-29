@@ -17,9 +17,11 @@ public interface AsyncCall<T extends ABSRef> {
     
     List<ABSValue> getArgs();
     
-    ABSObject getTarget();
+    T getTarget();
     
     ABSObject getSource();
+
+    Task<?> getSender();
     
 
 }

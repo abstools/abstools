@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import abs.backend.java.lib.runtime.ABSAndGuard;
 import abs.backend.java.lib.runtime.ABSFutureGuard;
 import abs.backend.java.lib.runtime.ABSGuard;
-import abs.backend.java.lib.runtime.ABSInitObjectTask;
+import abs.backend.java.lib.runtime.ABSInitObjectCall;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.ABSThreadManager;
@@ -156,7 +156,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         if (activeTask == null) {
             if (runtime.hasGlobalScheduler() &&
-                (task instanceof ABSInitObjectTask)) {
+                (task.getCall() instanceof ABSInitObjectCall)) {
                     runtime.addScheduleAction(new ActivateTask(cog,task) {
                         @Override
                         public void execute() {

@@ -8,9 +8,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import abs.backend.java.JavaBackend;
-import abs.backend.java.lib.runtime.ABSInitObjectTask;
+import abs.backend.java.lib.runtime.ABSInitObjectCall;
 import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.ABSRunMethodTask;
+import abs.backend.java.lib.runtime.ABSRunMethodCall;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
@@ -85,7 +85,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.println("        __ABS_result.__ABS_init();");
         if (decl.isActiveClass()) {
             stream.println("          final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
-            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+            stream.println("          "+ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(new "+ABSRunMethodCall.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
         stream.println("          return (T)__ABS_result;");
         stream.println("   }");
@@ -106,7 +106,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",decl.getParams());
         stream.println(" {");
         stream.println("       final "+ABSRuntime.class.getName()+" __ABS_runtime = "+ABSRuntime.class.getName()+".getCurrentRuntime();");
-        stream.println("       final "+COG.class.getName()+" __ABS_cog = new "+COG.class.getName()+"(__ABS_runtime,"+className+".class);");
+        stream.println("       final "+COG.class.getName()+" __ABS_cog = __ABS_runtime.createCOG("+className+".class);");
         stream.println("       final "+ABSThread.class.getName()+" __ABS_thread = "+ABSRuntime.class.getName()+".getCurrentThread();");
         stream.println("       final "+COG.class.getName()+" __ABS_oldCOG = "+ABSRuntime.class.getName()+".getCurrentCOG();");
         stream.println("       final "+Task.class.getName()+" __ABS_sendingTask = "+ABSRuntime.class.getName()+".getCurrentTask();");
@@ -116,11 +116,11 @@ public class ClassDeclGenerator extends CodeGenerator {
             
         stream.println(";");
         stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
-        stream.println("          __ABS_cog.getScheduler().addTask(new "+
-             ABSInitObjectTask.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result));");
+        stream.println("          __ABS_cog.getScheduler().addTask(new "+Task.class.getName()+"(new "+
+             ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
         
         if (decl.isActiveClass()) {
-            stream.println("          "+ABSRuntime.class.getName()+".asyncCall(new "+ABSRunMethodTask.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
+            stream.println("          __ABS_runtime.asyncCall(new "+ABSRunMethodCall.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
         stream.println("          return (T)__ABS_result;");
         stream.println("       } finally {");

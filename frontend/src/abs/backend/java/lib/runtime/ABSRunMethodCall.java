@@ -4,9 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
-public class ABSRunMethodTask<T extends ABSObject> extends Task<T> {
+public class ABSRunMethodCall<T extends ABSObject> extends AbstractAsyncCall<T> {
 
-    public ABSRunMethodTask(Task<?> sender, ABSObject source, T target) {
+    public ABSRunMethodCall(Task<?> sender, ABSObject source, T target) {
         super(sender, source, target);
     }
 

@@ -314,7 +314,7 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
             public ChooseTaskBtn(TaskInfo i) {
                 this.info = i;
                 this.addActionListener(this);
-                setText("Activate Task " + i.task.getID() + " (" + i.task.methodName() + ")");
+                setText("Activate Task " + i.task.getID() + " (" + i.task.getCall().methodName() + ")");
             }
 
             @Override

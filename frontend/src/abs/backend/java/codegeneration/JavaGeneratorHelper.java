@@ -10,6 +10,7 @@ import abs.backend.java.JavaBackend;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
@@ -200,9 +201,9 @@ public class JavaGeneratorHelper {
           final java.util.List<Type> paramTypes,
           final String method) 
     {
-        stream.print(ABSRuntime.class.getName()+".asyncCall(");
+        stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
-        stream.print("new "+Task.class.getName()+"<"+targetType+">(this,");
+        stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");
         stream.print(ABSRuntime.class.getName()+".checkForNull(");
         if (calleeString != null)
             stream.print(calleeString);
@@ -235,7 +236,7 @@ public class JavaGeneratorHelper {
 
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         int i;
-        stream.print("    public "+Task.class.getName()+"<?> init(");
+        stream.print("    public "+abs.backend.java.lib.runtime.AsyncCall.class.getName()+"<?> init(");
            i = 0;
            for (Type t : paramTypes) {
                if (i > 0) stream.print(",");
@@ -250,9 +251,9 @@ public class JavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.print(" protected "+ABSValue.class.getName()+"[] getArgs() { return new "+ABSValue.class.getName()+"[] { ");
+        stream.print(" public java.util.List<"+ABSValue.class.getName()+"> getArgs() { return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] { ");
            generateArgStringList(stream, n);
-           stream.print(" }; } ");
+           stream.print(" }); } ");
     }
 
     private static void generateArgStringList(PrintStream stream, final int n) {

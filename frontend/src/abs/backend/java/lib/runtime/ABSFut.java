@@ -1,4 +1,4 @@
-/** 
+/**
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
@@ -14,33 +14,51 @@ import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.FutObserver;
 import abs.backend.java.observing.FutView;
-import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskView;
 import abs.backend.java.scheduling.GuardWaiter;
-import abs.backend.java.scheduling.ScheduleTask;
-import abs.backend.java.scheduling.StepTask;
 
-public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
-    private static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
+public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
+    protected static final Logger log = Logger.getLogger(ABSRuntime.class.getName());
     private static final AtomicInteger counter = new AtomicInteger();
-    private final Task<?> resolvingTask;
-    private V value;
-    private boolean isResolved;
     private final int id = counter.incrementAndGet();
+    protected V value;
+    protected boolean isResolved;
 
-    public ABSFut(Task<?> task) {
-        this("Fut", task);
+    protected ABSFut() {
+        super("Fut");
     }
 
     public int getID() {
         return id;
     }
 
-    protected ABSFut(String constructorName, Task<?> task) {
-        super(constructorName);
-        resolvingTask = task;
+    
+    public abstract V get();
+    
+    public synchronized V getValue() {
+        return value;
     }
 
+    public synchronized boolean isResolved() {
+        return isResolved;
+    }
+
+    public synchronized void await() {
+        if (Logging.DEBUG)
+            log.finest("awaiting future");
+
+        while (!isResolved) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (Logging.DEBUG)
+            log.finest("future ready");
+    }
+    
+    private List<GuardWaiter> waitingThreads;
     public void resolve(final V o) {
         synchronized (this) {
             if (isResolved)
@@ -77,59 +95,7 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             s.checkGuard();
         }
     }
-
-    public synchronized V getValue() {
-        return value;
-    }
-
-    public synchronized boolean isResolved() {
-        return isResolved;
-    }
-
-    public synchronized void await() {
-        if (Logging.DEBUG)
-            log.finest("awaiting future");
-
-        while (!isResolved) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if (Logging.DEBUG)
-            log.finest("future ready");
-    }
-
-    @SuppressWarnings("unchecked")
-    public V get() {
-        synchronized (this) {
-            if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
-                throw new ABSDeadlockException();
-        }
-
-        final Task<?> t = ABSRuntime.getCurrentTask();
-        if (t != null) {
-            t.calledGetOnFut(this);
-        }
-
-        if (ABSRuntime.getCurrentRuntime().hasGlobalScheduler()) {
-            ABSRuntime.getCurrentRuntime().getGlobalScheduler().handleGet(this);
-        }
-
-        await();
-        if (Logging.DEBUG)
-            log.finest("future awaited");
-
-        if (t != null) {
-            t.futureReady(this);
-        }
-
-        if (Logging.DEBUG)
-            log.finest("continue after get");
-
-        return value;
-    }
+    
 
     @Override
     public ABSBool eq(ABSValue other) {
@@ -137,19 +103,30 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     }
 
     public synchronized String toString() {
-        return "Future of " + resolvingTask + " (" + (isResolved ? value : "unresolved") + ")";
+        return "Future (" + (isResolved ? value : "unresolved") + ")";
     }
 
-    private volatile View view;
+    public synchronized void addWaitingThread(GuardWaiter thread) {
+        if (waitingThreads == null)
+            waitingThreads = new ArrayList<GuardWaiter>(1);
+        waitingThreads.add(thread);
+    }
+    
+    
+    protected volatile View view;
 
     public synchronized FutView getView() {
         if (view == null) {
-            view = new View();
+            view = createView();
         }
         return view;
     }
 
-    private class View implements FutView {
+    protected View createView() {
+        return new View();
+    }
+    
+    protected class View implements FutView {
 
         private List<FutObserver> futObserver;
 
@@ -164,10 +141,11 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                 f.onResolved(this, v);
             }
         }
+        
 
         @Override
         public TaskView getResolvingTask() {
-            return resolvingTask.getView();
+            return null;
         }
 
         @Override
@@ -191,17 +169,5 @@ public class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         }
 
     }
-
-    public synchronized Task<?> getResolvingTask() {
-        return resolvingTask;
-    }
-
-    private List<GuardWaiter> waitingThreads;
-
-    public synchronized void addWaitingThread(GuardWaiter thread) {
-        if (waitingThreads == null)
-            waitingThreads = new ArrayList<GuardWaiter>(1);
-        waitingThreads.add(thread);
-    }
-
+    
 }
