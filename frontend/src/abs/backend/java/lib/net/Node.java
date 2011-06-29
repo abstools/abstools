@@ -18,12 +18,13 @@ import java.util.Random;
  */
 public class Node {
     private final int id;
-    private final Router router = new DefaultRouter();
+    private final Router router;
     private final Map<Node,Arc> outArcs = new HashMap<Node, Arc>();
     private final List<Arc> inArcs = new ArrayList<Arc>();
     
     public Node(int id) {
         this.id = id;
+	router = new DefaultRouter(this);
     }
     
     public void processNextMsg() {

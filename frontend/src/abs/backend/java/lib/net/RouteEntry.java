@@ -8,8 +8,6 @@ public interface RouteEntry {
 
     public int getHops();
         
-    public void setHops(int hops);
-
     public Node getNextNode();
 
 }

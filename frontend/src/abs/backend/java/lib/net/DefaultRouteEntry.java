@@ -7,7 +7,7 @@ package abs.backend.java.lib.net;
 public class DefaultRouteEntry implements RouteEntry {
     private static final int DEFAULT_HOPS = 1;
     private final Node nextNode;
-    private int hops;
+    private final int hops;
         
     public DefaultRouteEntry(Node nextNode) {
 	this.nextNode = nextNode;
@@ -24,11 +24,6 @@ public class DefaultRouteEntry implements RouteEntry {
 	return hops;
     }
         
-    @Override
-    public void setHops(int hops) {
-	this.hops = hops;
-    }
-
     @Override
     public Node getNextNode() {
 	return nextNode;

@@ -16,6 +16,12 @@ public class DefaultRouter implements Router {
     private final Map<ABSObject, RouteEntry> nodeForObject = new HashMap<ABSObject, RouteEntry>();
     private final Map<COG, RouteEntry> nodeForCOG = new HashMap<COG, RouteEntry>();
 
+    private final Node node;
+
+    public DefaultRouter(Node node) {
+	this.node = node;
+    }
+
     @Override 
     public void update(Router adjacentNodeRouter) {
 	// find new routes and replace if better than current ones  
@@ -47,7 +53,22 @@ public class DefaultRouter implements Router {
     }
 
     @Override
-    public Set<RouteEntry> getRouteEntries() {
+    public RouteEntry getRouteEntry(COG cog) {
+	return null;
+    }
+
+    @Override
+    public RouteEntry getRouteEntry(ABSObject object) {
+	return null;
+    }
+
+    @Override
+    public Set<ABSObject> getRegisteredObjects() {
+	return null;
+    }
+
+    @Override
+    public Set<COG> getRegisteredCOGs() {
 	return null;
     }
 

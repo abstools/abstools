@@ -21,21 +21,21 @@ public interface Router {
      * Register an object that is local to the node
      */
     public void register(ABSObject localObject);
-
+    
     /**
      * Register a COG that is local to the node
      */
     public void register(COG localCOG);
 
     /**
-     * Replace a route for a COG
+     * Replace a route for a COG or register it
      * @param nextNode the node that messages to the COG should be routed to; must be either the current node or a node adjacent to the current node
      * @param hops the number of hops needed to reach the object given that a message is routed to the given node 
      */
     public void replace(COG cog, Node nextNode, int hops);
 
     /**
-     * Replace a route for an object
+     * Replace a route for an object or register it
      * @param nextNode the node that messages to the object should be routed to; must be either the current node or a node adjacent to the current node
      * @param hops the number of hops needed to reach the object given that a message is routed to the given node 
      */     
@@ -47,9 +47,24 @@ public interface Router {
     public Node getNextNode(Msg m);
 
     /**
-     * Get all route entries
+     * Get the route entry for a cog
      */
-    public Set<RouteEntry> getRouteEntries();
+    public RouteEntry getRouteEntry(COG cog);
+
+    /**
+     * Get the (currently best) route entry for an object
+     */
+    public RouteEntry getRouteEntry(ABSObject object);
+
+    /**
+     * Get all objects tracked by the router
+     */
+    public Set<ABSObject> getRegisteredObjects();
+
+    /**
+     * Get all cogs tracked by the router
+     */
+    public Set<COG> getRegisteredCOGs();
 
 }
 
