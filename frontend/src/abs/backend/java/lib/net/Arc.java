@@ -13,21 +13,21 @@ import abs.backend.java.lib.net.msg.MsgQueue;
  *
  */
 public class Arc {
-    private final Node source;
-    private final Node target;
+    private final NetNode source;
+    private final NetNode target;
     private final MsgQueue queue;
     
-    public Arc(Node source, Node target, MsgQueue queue) {
+    public Arc(NetNode source, NetNode target, MsgQueue queue) {
         this.source = source;
         this.target = target;
         this.queue = queue;
     }
 
-    public Node getSource() {
+    public NetNode getSource() {
         return source;
     }
 
-    public Node getTarget() {
+    public NetNode getTarget() {
         return target;
     }
 

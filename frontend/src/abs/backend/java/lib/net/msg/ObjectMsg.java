@@ -4,15 +4,11 @@
  */
 package abs.backend.java.lib.net.msg;
 
+import abs.backend.java.lib.runtime.ABSObject;
 
-/**
- * A message queue
- * 
- * @author Jan Schäfer
- *
- */
-public interface MsgQueue {
-    void enqueue(Msg m);
-    Msg dequeue();
-    boolean isEmpty();
+public class ObjectMsg implements Msg {
+    public final ABSObject object;
+    public ObjectMsg(ABSObject o) {
+        this.object = o;
+    }
 }

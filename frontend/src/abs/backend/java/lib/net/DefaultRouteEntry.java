@@ -6,15 +6,15 @@ package abs.backend.java.lib.net;
 
 public class DefaultRouteEntry implements RouteEntry {
     private static final int DEFAULT_HOPS = 1;
-    private final Node nextNode;
+    private final NodeImpl nextNode;
     private final int hops;
         
-    public DefaultRouteEntry(Node nextNode) {
+    public DefaultRouteEntry(NodeImpl nextNode) {
 	this.nextNode = nextNode;
 	hops = DEFAULT_HOPS;
     }
 
-    public DefaultRouteEntry(Node nextNode, int hops) {
+    public DefaultRouteEntry(NodeImpl nextNode, int hops) {
 	this.nextNode = nextNode;
 	this.hops = hops;
     }
@@ -25,7 +25,7 @@ public class DefaultRouteEntry implements RouteEntry {
     }
         
     @Override
-    public Node getNextNode() {
+    public NodeImpl getNextNode() {
 	return nextNode;
     }
 }

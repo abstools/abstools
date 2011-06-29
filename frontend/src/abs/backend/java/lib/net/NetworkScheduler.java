@@ -4,10 +4,6 @@
  */
 package abs.backend.java.lib.net;
 
-public interface RouteEntry {
-
-    public int getHops();
-        
-    public NetNode getNextNode();
-
+public interface NetworkScheduler {
+    public void scheduleNext();
 }

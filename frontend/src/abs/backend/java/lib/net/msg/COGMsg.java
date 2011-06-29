@@ -4,15 +4,12 @@
  */
 package abs.backend.java.lib.net.msg;
 
+import abs.backend.java.lib.net.NetCOG;
 
-/**
- * A message queue
- * 
- * @author Jan Schäfer
- *
- */
-public interface MsgQueue {
-    void enqueue(Msg m);
-    Msg dequeue();
-    boolean isEmpty();
+public class COGMsg implements Msg {
+    public final NetCOG cog;
+    
+    public COGMsg(NetCOG cog) {
+        this.cog = cog;
+    }
 }

@@ -16,9 +16,9 @@ public class DefaultRouter implements Router {
     private final Map<ABSObject, RouteEntry> nodeForObject = new HashMap<ABSObject, RouteEntry>();
     private final Map<COG, RouteEntry> nodeForCOG = new HashMap<COG, RouteEntry>();
 
-    private final Node node;
+    private final NodeImpl node;
 
-    public DefaultRouter(Node node) {
+    public DefaultRouter(NodeImpl node) {
 	this.node = node;
     }
 
@@ -38,17 +38,17 @@ public class DefaultRouter implements Router {
     }
     
     @Override
-    public void replace(COG cog, Node nextNode, int hops) {
+    public void replace(COG cog, NodeImpl nextNode, int hops) {
 	// replace current route entry for cog with new entry 
     }
 
     @Override
-    public void replace(ABSObject object, Node nextNode, int hops) {
+    public void replace(ABSObject object, NodeImpl nextNode, int hops) {
 	// replace current route entry for object with new entry 
     }
     
     @Override
-    public Node getNextNode(Msg m) {
+    public NodeImpl getNextNode(Msg m) {
         return null;
     }
 

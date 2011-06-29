@@ -4,17 +4,20 @@
  */
 package abs.backend.java.lib.net.msg;
 
+import abs.backend.java.lib.net.Promise;
 import abs.backend.java.lib.runtime.ABSObject;
+import abs.backend.java.lib.runtime.AsyncCall;
 
 public class CallMsg implements Msg {
-    public final ABSObject target;
-    public final ABSObject source;
-    // public final Promise promise;
-    // public final String method;
-    // public final List<Value> args;
+    public final AsyncCall<?> call;
+    public final Promise promise;
+
+    public CallMsg(Promise promise, AsyncCall<?> call) {
+        this.call = call;
+        this.promise = promise;
+    }
     
-    public CallMsg(ABSObject target, ABSObject source) {
-        this.target = target;
-        this.source = source;
+    public ABSObject target() {
+        return call.getTarget();
     }
 }

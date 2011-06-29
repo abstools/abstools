@@ -27,4 +27,9 @@ public class UnboundedMsgQueue implements MsgQueue {
         return queue.remove();
     }
 
+    @Override
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
 }

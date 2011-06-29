@@ -4,10 +4,8 @@
  */
 package abs.backend.java.lib.net;
 
-public interface RouteEntry {
+public interface NetNode {
 
-    public int getHops();
-        
-    public NetNode getNextNode();
+    void performStep();
 
 }

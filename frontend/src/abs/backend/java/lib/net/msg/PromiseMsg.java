@@ -4,14 +4,22 @@
  */
 package abs.backend.java.lib.net.msg;
 
+import abs.backend.java.lib.net.Promise;
 import abs.backend.java.lib.runtime.ABSObject;
+import abs.backend.java.lib.types.ABSValue;
 
-public class PromiseMsg implements Msg {
+public class PromiseMsg implements ObjectTargetMsg {
     public final ABSObject target;
-    // public final Promise promise;
-    // public final Value value;
+    public final Promise promise;
+    public final ABSValue value;
     
-    public PromiseMsg(ABSObject target) {
+    public PromiseMsg(Promise p, ABSObject target, ABSValue value) {
+        this.promise = p;
         this.target = target;
+        this.value = value;
+    }
+    
+    public ABSObject getTarget() {
+        return target;
     }
 }

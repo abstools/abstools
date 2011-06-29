@@ -13,8 +13,8 @@ import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouterTest {
 
-    private Node node1;
-    private Node node2;
+    private NodeImpl node1;
+    private NodeImpl node2;
 
     private COG cog1;
     private COG cog2;
@@ -24,8 +24,8 @@ public class DefaultRouterTest {
 
     @Before 
     public void setUp() {
-	node1 = new Node(0);
-	node2 = new Node(1);
+	node1 = new NodeImpl(0);
+	node2 = new NodeImpl(1);
 	cog1 = null;
 	cog2 = null;
 	obj1 = null;
