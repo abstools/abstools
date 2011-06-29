@@ -40,6 +40,12 @@ TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ;
 ConstructorArg ::= DataTypeUse [SelectorName:Name];
 
 
+/*
+  TODO add supports for Add/Remove/Modifies Interface
+  
+  TODO ensures fix grammar to only allow add/remove method signatures for modifies Interface modifier.
+  Currently this is incorrect in the grammar shown in Figure 5.7 of D1.2.
+ */
 
 abstract          DeltaParamDecl;
 DeltaClassParam : DeltaParamDecl ::= <Name> HasCondition;
