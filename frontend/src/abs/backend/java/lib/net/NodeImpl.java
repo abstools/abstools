@@ -41,6 +41,10 @@ public class NodeImpl implements NetNode {
 	router = new DefaultRouter(this);
     }
     
+    public void setUpArcs(List<Arc> arcs) {
+        inArcs.addAll(arcs);
+    }
+    
     public synchronized boolean processNextMsg() {
         ArrayList<Arc> shuffledList = new ArrayList<Arc>(inArcs);
         Collections.shuffle(shuffledList);
