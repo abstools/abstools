@@ -5,11 +5,14 @@
 package abs.backend.java.lib.net;
 
 import abs.backend.java.lib.net.msg.Msg;
+import abs.backend.java.lib.runtime.ABSObject;
 
 public interface NetNode {
 
     void performStep();
 
     void processMsg(Msg msg);
+
+    void registerObject(ABSObject absObject);
 
 }

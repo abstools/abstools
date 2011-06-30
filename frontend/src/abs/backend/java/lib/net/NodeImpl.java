@@ -115,6 +115,13 @@ public class NodeImpl implements NetNode {
             return;
     }
 
+    @Override
+    public synchronized void registerObject(ABSObject absObject) {
+        objects.add(absObject);
+    }
+
+
+    
     private synchronized boolean migrateObject() {
         for (ABSObject o : objects) {
             NetCOG cog = (NetCOG)o.getCOG();
@@ -143,6 +150,5 @@ public class NodeImpl implements NetNode {
         
         return true;
     }
-
 
 }

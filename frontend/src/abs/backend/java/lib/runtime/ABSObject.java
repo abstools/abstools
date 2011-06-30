@@ -27,9 +27,15 @@ public abstract class ABSObject implements ABSRef {
     protected final long __id;
 
     public ABSObject() {
-        this.__cog = getCurrentCOG();
-        this.__id = getFreshID();
+        this(getCurrentCOG());
     }
+
+    protected ABSObject(COG cog) {
+        this.__cog = cog;
+        this.__id = getFreshID();
+        this.__cog.register(this);
+    }
+
 
     private long getFreshID() {
         return __ABS_getRuntime().getFreshObjectID(this.getClass());
@@ -40,11 +46,6 @@ public abstract class ABSObject implements ABSRef {
     }
 
     public abstract String getClassName();
-
-    protected ABSObject(COG cog) {
-        this.__cog = cog;
-        this.__id = getFreshID();
-    }
 
     public final ABSRuntime __ABS_getRuntime() {
         return getCOG().getRuntime();

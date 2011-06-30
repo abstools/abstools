@@ -143,4 +143,8 @@ public class COG {
 
     }
 
+    public void register(ABSObject absObject) {
+        // nothing to do
+    }
+
 }
