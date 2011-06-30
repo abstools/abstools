@@ -4,7 +4,7 @@
  */
 package abs.backend.java.lib.net;
 
-public interface RouteEntry {
+public interface RouteEntry extends Comparable<RouteEntry> {
 
     public int getHops();
         

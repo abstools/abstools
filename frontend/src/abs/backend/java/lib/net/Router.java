@@ -32,19 +32,19 @@ public interface Router {
      * @param nextNode the node that messages to the COG should be routed to; must be either the current node or a node adjacent to the current node
      * @param hops the number of hops needed to reach the object given that a message is routed to the given node 
      */
-    public void replace(COG cog, NodeImpl nextNode, int hops);
+    public void replace(COG cog, NetNode nextNode, int hops);
 
     /**
      * Replace a route for an object or register it
      * @param nextNode the node that messages to the object should be routed to; must be either the current node or a node adjacent to the current node
      * @param hops the number of hops needed to reach the object given that a message is routed to the given node 
      */     
-    public void replace(ABSObject object, NodeImpl nextNode, int hops);
+    public void replace(ABSObject object, NetNode nextNode, int hops);
 
     /**
      * Get the node a message should be routed to
      */
-    public NodeImpl getNextNode(Msg m);
+    public NetNode getNextNode(Msg m);
 
     /**
      * Get the route entry for a cog

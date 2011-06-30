@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ 
     DefaultRouterTest.class, 
+    DefaultRouteEntryTest.class,
     NodeTest.class})
 public class AllNetTests {
 

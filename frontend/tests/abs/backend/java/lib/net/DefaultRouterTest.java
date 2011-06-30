@@ -13,8 +13,9 @@ import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouterTest {
 
-    private NodeImpl node1;
-    private NodeImpl node2;
+    private NetNode node1;
+    private NetNode node2;
+    private NetNode node3;
 
     private COG cog1;
     private COG cog2;
@@ -26,6 +27,7 @@ public class DefaultRouterTest {
     public void setUp() {
 	node1 = new NodeImpl(0);
 	node2 = new NodeImpl(1);
+	node3 = new NodeImpl(2);
 	cog1 = null;
 	cog2 = null;
 	obj1 = null;
@@ -58,16 +60,25 @@ public class DefaultRouterTest {
 	Router otherRouter = new DefaultRouter(node2);
 
 	otherRouter.register(obj1);
-	currentRouter.replace(obj1, node2, 3);
+	currentRouter.replace(obj1, node3, 3);
 
 	currentRouter.update(otherRouter);
 
 	assertEquals("route to object must be 1 hop", 1, currentRouter.getRouteEntry(obj1).getHops());	
+	assertEquals("route must be other node", node2, currentRouter.getRouteEntry(obj1).getNextNode());
     }
 
     @Test
     public void updateWorse() {
+	Router currentRouter = new DefaultRouter(node1);
+	Router otherRouter = new DefaultRouter(node2);
 
+	otherRouter.replace(obj1, node2, 2);
+	currentRouter.replace(obj1, node3, 5);
+
+	currentRouter.update(otherRouter);
+
+	assertEquals("route to object must be 1 hop", 1, currentRouter.getRouteEntry(obj1).getHops());
     }
 
     @Test
