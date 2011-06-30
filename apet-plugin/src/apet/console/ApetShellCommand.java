@@ -70,7 +70,7 @@ public class ApetShellCommand {
 	 */
 	public void analyze(String file, ArrayList<String> entries) {
 
-		executeCommand(buildCommand(entries));
+		executeCommand(buildCommand(file,entries));
 	}
 
 	/**
@@ -79,14 +79,11 @@ public class ApetShellCommand {
 	 * @param entries The entries to be used in costabs.
 	 * @return The string that has the shell command to use costabs.
 	 */
-	private String buildCommand(ArrayList<String> entries) {
+	private String buildCommand(String file, ArrayList<String> entries) {
 
 		StringBuffer command2 = new StringBuffer();
 
-		command2.append(COSTABS_EXECUTABLE_PATH + " -mode analyze ");
-		
-		// This comment line is for use the installed costabs command shell
-		// command2.append("costabs -mode analyze ");
+		command2.append("apet "+file+" ");
 		
 		// Build entries
 		command2.append("-entries ");
@@ -109,11 +106,57 @@ public class ApetShellCommand {
 	private void buildOptions(StringBuffer command) {
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+
+		// -c CovCrit K: CovCrit:{dpk,bck} depth-k o block-k
+		command.append(" -c "
+				+store.getString(PreferenceConstants.PCOVERAGE_CRITERION)+" "
+				+store.getInt(PreferenceConstants.PCOVERAGE_CRITERION_NUM)+" ");
+		// -td NumOrC: NumOrC:{num,constraint}
+		command.append(" -td "
+				+store.getString(PreferenceConstants.PNUMERIC)+" ");
+		// -d none 
+		// -d Min Max: Rango de integers
+	
+		if(store.getString(PreferenceConstants.PNUMERIC).equals("num")){
+			command.append(" -d "
+					+store.getInt(PreferenceConstants.PRANGEMIN)+" "
+					+store.getInt(PreferenceConstants.PRANGEMAX)+" ");
+		}else{
+			command.append(" -d none ");
+		}
 		
-		command.append("-cost_model " + store.getString(PreferenceConstants.PCOST_MODEL) + " ");
-		command.append("-cost_centers " + store.getString(PreferenceConstants.PCOST_CENTER) + " ");
-		command.append("-size_abst " + store.getString(PreferenceConstants.PSIZE_ABST) + " ");
-		command.append("-verbosity " + store.getString(PreferenceConstants.PVERBOSITY) + " ");
+					
+		// -g: obtiene el generador de casos de prueba en un archivo
+		// -g no: para deshabilitar la creación del generador
+		if(store.getBoolean(PreferenceConstants.PTEST_CASE_GENERATION))
+			command.append(" -g ");
+		// -al: No sé que significa esta opción pero funciona como la anterior
+		// -al no: para deshabilitarlo
+		// if (AlYes) command.append("-al ");
+		if(store.getBoolean(PreferenceConstants.PREFERENCES_ALIASING))
+			command.append(" -al ");
+		// -l Labeling: donde Labeling: {ff,leftmost,min,max}
+		// Es el orden de etiquetado de las variables en las restricciones que usa pet
+		// if (Labeling == ff) command.append("-l ff ");
+		// else if (Labeling == leftmost) command.append("-l leftmost ");
+		// else if (Labeling == min) command.append("-l min ");
+		// else command.append("-l max ");
+		command.append(" -l "
+				+store.getString(PreferenceConstants.PLABELING)+" ");
+		// -v: Verbosity level (1 a 3)
+		// command.append("-v "+VerbosityLevel);
+		command.append(" -v "
+				+store.getString(PreferenceConstants.PVERBOSITY)+" ");
+		// -w: Obtiene el CLP decompilado
+		// if (WYes) command.append("-w ");
+		if(store.getBoolean(PreferenceConstants.PCLP))
+			command.append(" -w ");
+		// -tr Tracings: Tracings puede ser {statements,blocks}
+		// tenemos que incluir la opción de none
+		// if (Tracings == statements) command.append("-tr statements ");
+		// else if (Tracings == blocks) command.append("-tr blocks ");
+		if(!store.getString(PreferenceConstants.PTRACING).equals("none"))
+			command.append(" -tr "+store.getString(PreferenceConstants.PTRACING)+" ");
 
 	}
 

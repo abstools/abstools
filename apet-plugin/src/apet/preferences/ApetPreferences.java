@@ -2,6 +2,7 @@ package apet.preferences;
 
 
 
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.preference.*;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
@@ -26,35 +27,129 @@ import apet.Activator;
 public class ApetPreferences
 extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
-	RadioGroupFieldEditor sizeAbstraction;
-	RadioGroupFieldEditor tdPrecision;
-	BooleanFieldEditor enableSabu;
-	RadioGroupFieldEditor fieldAbstraction;
+	RadioGroupFieldEditor coverageCriterion;
+	IntegerFieldEditor coverage;
+	BooleanFieldEditor showJUnit;
+	IntegerFieldEditor minRange;
+	IntegerFieldEditor maxRange;
+	BooleanFieldEditor testCaseGenerator;
+	BooleanFieldEditor aliasing;
+	RadioGroupFieldEditor labelingStrategy;
 	RadioGroupFieldEditor verbosity;
-	BooleanFieldEditor stdLib;
+	BooleanFieldEditor clp;
+	RadioGroupFieldEditor tracing;
+	RadioGroupFieldEditor numeric;
 
-	RadioGroupFieldEditor generateJUnit;
 	public ApetPreferences() {
 		super(GRID);
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 	}
 
-	public void createFieldEditors() {
+	/**
+	 * Creates the field editors. Field editors are abstractions of
+	 * the common GUI blocks needed to manipulate various types
+	 * of preferences. Each field editor knows how to save and
+	 * restore itself.
+	 */
 
-		addField(new RadioGroupFieldEditor(PreferenceConstants.PCOST_MODEL,"Cost model:",
-				1,new String[][] { { "Termination", "termination" }, {"Steps", "steps" }, 
-				{"Memory", "memory" }, {"Objects", "objects" }, {"Task level", "task_level" }}, getFieldEditorParent()));
-		addField(new RadioGroupFieldEditor(PreferenceConstants.PCOST_CENTER,"Enable cost centers:",
-				1,new String[][] { { "Yes", "yes" }, {"No", "no" }}, getFieldEditorParent()));
-		addField(new RadioGroupFieldEditor(PreferenceConstants.PSIZE_ABST,"Size abstraction:",
-				1,new String[][] { { "Term size", "term_size" }, {"Term depth", "term_depth" }}, getFieldEditorParent()));
-		addField(new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
-				1,new String[][] { {"0", "0"}, {"1", "1"}, {"2", "2"}}, getFieldEditorParent()));
+	public boolean performOk() {
+		boolean success = true;
+
+		coverageCriterion.store();
+		coverage.store();
+		showJUnit.store();
+		minRange.store();
+		maxRange.store();
+		testCaseGenerator.store();
+		aliasing.store();
+		labelingStrategy.store();
+		verbosity.store();
+		clp.store();
+		tracing.store();
+
+		return success;
+	}
+
+	public void propertyChange(PropertyChangeEvent event) {
+		super.propertyChange(event);
+		if(numeric.equals(event.getSource())){
+			if(((String)event.getNewValue()).equals("num")){
+				minRange.setEnabled(true, this.getFieldEditorParent());
+				maxRange.setEnabled(true, this.getFieldEditorParent());
+			}else{
+				minRange.setEnabled(false, this.getFieldEditorParent());
+				maxRange.setEnabled(false, this.getFieldEditorParent());
+			}
+		}
 
 	}
 
 
+	public void createFieldEditors() {
+
+		coverageCriterion = new RadioGroupFieldEditor(PreferenceConstants.PCOVERAGE_CRITERION,"Coverage criterion:",
+				1,new String[][] { { "Block-k", "bck" }, {"Depth-k", "dpk" }}, getFieldEditorParent());
+		addField(coverageCriterion);
+
+		coverage = new IntegerFieldEditor(PreferenceConstants.PCOVERAGE_CRITERION_NUM, "Coverage:",getFieldEditorParent());
+		addField(coverage);
+
+		numeric = new RadioGroupFieldEditor(PreferenceConstants.PNUMERIC,"numeric test-cases or path-constraints:",
+				1,new String[][] { { "Numeric (In this case a range must be especified below) ", "num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
+
+		addField(numeric);
+		minRange=new IntegerFieldEditor(PreferenceConstants.PRANGEMIN, "From",getFieldEditorParent());
+		maxRange=new IntegerFieldEditor(PreferenceConstants.PRANGEMAX, "To",getFieldEditorParent());
+
+		minRange.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		minRange.setErrorMessage("The lower bound must be an integer");
+		addField(minRange);
+		maxRange.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		maxRange.setErrorMessage("The upper bound must be an integer");
+		addField(maxRange);
+
+		if(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.PNUMERIC).equals("num")){
+			minRange.setEnabled(true, this.getFieldEditorParent());
+			maxRange.setEnabled(true, this.getFieldEditorParent());
+		}else{
+			minRange.setEnabled(false, this.getFieldEditorParent());
+			maxRange.setEnabled(false, this.getFieldEditorParent());
+		}
+
+		testCaseGenerator = new BooleanFieldEditor(
+				PreferenceConstants.PTEST_CASE_GENERATION,
+				"Generate test-case generator",
+				getFieldEditorParent());
+		addField(testCaseGenerator);
+
+		aliasing = new BooleanFieldEditor(
+				PreferenceConstants.PREFERENCES_ALIASING,
+				"References aliasing",
+				getFieldEditorParent());
+		addField(aliasing);
+
+		labelingStrategy = new RadioGroupFieldEditor(PreferenceConstants.PLABELING,"Labeling strategy:",
+				4,new String[][] { { "ff", "ff" }, {"leftmost", "leftmost" }, {"min", "min" }, {"max", "max" }}, getFieldEditorParent());
+		addField(labelingStrategy);
+
+		verbosity = new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
+				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
+		addField(verbosity);
+
+		clp = new BooleanFieldEditor(
+				PreferenceConstants.PCLP,
+				"Save the intermediate CLP decompiled program",
+				getFieldEditorParent());
+		addField(clp);
+
+		tracing = new RadioGroupFieldEditor(PreferenceConstants.PTRACING,"Tracing:",
+				4,new String[][] { { "none", "none" }, {"statements", "statements" }, {"blocks", "blocks" }}, getFieldEditorParent());
+		addField(tracing);
+
+	}
+
 	public void init(IWorkbench workbench) {
+
 	}
 
 }

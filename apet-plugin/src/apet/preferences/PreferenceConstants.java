@@ -5,11 +5,24 @@ package apet.preferences;
  */
 public class PreferenceConstants {
 
-	public static final String PSIZE_ABST = "Size abstraction";
-	public static final String PCOST_MODEL = "Cost model";
-	public static final String PCOST_CENTER = "Cost center";
-	public static final String PVERBOSITY = "Verbosity";
-	public static final String PSTDLIB = "Standard Library";
-	//public static final String PROLOG_BACKEND = "Abs Prolog Backend path:";
+	public static final String PCOVERAGE_CRITERION = "coverage criterion";
+	public static final String PCOVERAGE_CRITERION_NUM = "coverage criterion number";
+	
+	public static final String PNUMERIC = "numeric";
+
+	public static final String PRANGEMIN = "numeric range minimun";
+	public static final String PRANGEMAX = "numeric range maximun";
+
+	public static final String PTEST_CASE_GENERATION = "test case generation";
+
+	public static final String PREFERENCES_ALIASING = "references aliasing";
+
+	public static final String PLABELING = "labeling";
+
+	public static final String PVERBOSITY = "verbosity";
+
+	public static final String PCLP = "clp";
+
+	public static final String PTRACING = "tracing";
 
 }

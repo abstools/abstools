@@ -7,7 +7,9 @@ Bundle-Activator: apet.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.views;bundle-version="3.5.0",
- org.eclipse.ui.editors;bundle-version="3.6.1"
+ org.eclipse.ui.editors;bundle-version="3.6.1",
+ eu.hatsproject.abs.compiler;bundle-version="0.0.0",
+ eu.hatsproject.absplugin;bundle-version="0.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: org.eclipse.core.filesystem,

@@ -1,7 +1,10 @@
 package apet.dialogs;
 
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
@@ -14,6 +17,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 import apet.Activator;
 import apet.console.ConsoleHandler;
@@ -23,10 +27,17 @@ import apet.preferences.PreferenceConstants;
 
 public class OptionsDialog extends Dialog {
 
-	private Button[] costModelSelection;
-	private Button[] costCentersSelection;
-	private Button[] sizeAbstractionSelection;
+	private Button[] coverageCriterionSelection;
+	private Text[] coverageText;
+	private Button[] numericPathConstraintsSelection;
+	private Text[] fromText;
+	private Text[] toText;
+	private Button[] genTestCheck;
+	private Button[] aliasingCheck;
+	private Button[] labelingSelection;
 	private Button[] verbositySelection;
+	private Button[] saveCLPCheck;
+	private Button[] tracingSelection;
 
 	public OptionsDialog(Shell parentShell) {
 		super(parentShell);
@@ -60,21 +71,49 @@ public class OptionsDialog extends Dialog {
 	
 	private void createOptionsPanel(Composite composite) {
 		
-		Composite costModelPanel = new Composite(composite,SWT.NONE);
-		costModelSelection = new Button[ApetOptions.COST_MODEL.length];
-		createOption(costModelPanel, costModelSelection, ApetOptions.COST_MODEL_TITLE, ApetOptions.COST_MODEL);
+		Composite coverageCriterionPanel = new Composite(composite,SWT.NONE);
+		coverageCriterionSelection = new Button[ApetOptions.COVERAGE_CRITERION_OPTS.length];
+		createOption(coverageCriterionPanel, coverageCriterionSelection, ApetOptions.COVERAGE_CRITERION_TITLE, ApetOptions.COVERAGE_CRITERION_OPTS);
 		
-		Composite costCentersPanel = new Composite(composite,SWT.NONE);
-		costCentersSelection = new Button[ApetOptions.COST_CENTERS.length];
-		createOption(costCentersPanel, costCentersSelection, ApetOptions.COST_CENTERS_TITLE, ApetOptions.COST_CENTERS);
+		Composite coverageBox = new Composite(composite,SWT.NONE);
+		coverageText = new Text[1];
+		createText(coverageBox,"Coverage",coverageText);
 		
-		Composite sizeAbstractionPanel = new Composite(composite,SWT.NONE);
-		sizeAbstractionSelection = new Button[ApetOptions.SIZE_ABSTRACTION.length];
-		createOption(sizeAbstractionPanel, sizeAbstractionSelection, ApetOptions.SIZE_ABSTRACTION_TITLE, ApetOptions.SIZE_ABSTRACTION);
+		Composite numPanel = new Composite(composite,SWT.NONE);
+		numericPathConstraintsSelection = new Button[ApetOptions.NUM_PATH_CONSTRAINTS_OPTS.length];
+		createOption(numPanel, numericPathConstraintsSelection, ApetOptions.NUM_PATH_CONSTRAINTS_TITLE, ApetOptions.NUM_PATH_CONSTRAINTS_OPTS);
+			
+		Composite fromBox = new Composite(composite,SWT.NONE);
+		fromText = new Text[1];
+		createText(fromBox,"From",fromText);
+		
+		Composite toBox = new Composite(composite,SWT.NONE);
+		toText = new Text[1];
+		createText(toBox,"To",toText);
+		
+		Composite genTestPanel = new Composite(composite,SWT.NONE);
+		genTestCheck = new Button[ApetOptions.GEN_TEST_OPTS.length];
+		createOptionCheck(genTestPanel, genTestCheck, ApetOptions.GEN_TEST_OPTS);
+		
+		Composite aliasingPanel = new Composite(composite,SWT.NONE);
+		aliasingCheck = new Button[ApetOptions.ALIASING_OPTS.length];
+		createOptionCheck(aliasingPanel, aliasingCheck, ApetOptions.ALIASING_OPTS);
+		
+		Composite labelingPanel = new Composite(composite,SWT.NONE);
+		labelingSelection = new Button[ApetOptions.LABELING_OPTS.length];
+		createOption(labelingPanel, labelingSelection, ApetOptions.LABELING_TITLE, ApetOptions.LABELING_OPTS);
 		
 		Composite verbosityPanel = new Composite(composite,SWT.NONE);
 		verbositySelection = new Button[ApetOptions.VERBOSITY.length];
 		createOption(verbosityPanel, verbositySelection, ApetOptions.VERBOSITY_TITLE, ApetOptions.VERBOSITY);
+		
+		Composite saveCLPPanel = new Composite(composite,SWT.NONE);
+		saveCLPCheck = new Button[ApetOptions.SAVE_CLP_OPTS.length];
+		createOptionCheck(saveCLPPanel, saveCLPCheck, ApetOptions.SAVE_CLP_OPTS);
+		
+		Composite tracingPanel = new Composite(composite,SWT.NONE);
+		tracingSelection = new Button[ApetOptions.TRACING_OPTS.length];
+		createOption(tracingPanel, tracingSelection, ApetOptions.TRACING_TITLE, ApetOptions.TRACING_OPTS);
 		
 	}
 	
@@ -96,19 +135,59 @@ public class OptionsDialog extends Dialog {
 		}
 	}
 	
+	private void createText(Composite c, String title, Text[] t) {
+		
+		RowLayout verticalLayout = new RowLayout();
+		verticalLayout.type = SWT.HORIZONTAL;
+		c.setLayout(verticalLayout);
+		
+		Label label = new Label (c, SWT.NULL);
+		label.setText(title + ":");
+		
+		t[0] = new Text(c, SWT.BORDER);
+	}
+	
+	private void createOptionCheck(Composite c, Button[] buttons, String[] options) {
+		
+		RowLayout verticalLayout = new RowLayout();
+		verticalLayout.type = SWT.VERTICAL;
+		c.setLayout(verticalLayout);
+		
+		Composite optionsPanel = new Composite(c,SWT.NONE);
+		optionsPanel.setLayout(new RowLayout());
+		
+		for (int i = 0; i < options.length; i++) {
+			buttons[i] = new Button(optionsPanel, SWT.CHECK);
+			buttons[i].setText(options[i]);
+		}
+	}
+	
 	private void createOptionsListeners() {
 		
-		for (int i = 0; i < costModelSelection.length; i++)
-			costModelSelection[i].addSelectionListener(new SelectCostModelChangeListener(this, i, costModelSelection[i]));
+		for (int i = 0; i < coverageCriterionSelection.length; i++)
+			coverageCriterionSelection[i].addSelectionListener(new SelectCoverageCriterionChangeListener(this, i, coverageCriterionSelection[i]));
 		
-		for (int i = 0; i < costCentersSelection.length; i++)
-			costCentersSelection[i].addSelectionListener(new SelectCostCentersChangeListener(this, i, costCentersSelection[i]));
+		for (int i = 0; i < numericPathConstraintsSelection.length; i++)
+			numericPathConstraintsSelection[i].addSelectionListener(new SelectNumPathConstraintsChangeListener(this, i, numericPathConstraintsSelection[i],fromText[0],toText[0]));
 		
-		for (int i = 0; i < sizeAbstractionSelection.length; i++)
-			sizeAbstractionSelection[i].addSelectionListener(new SelectSizeAbstractionChangeListener(this, i, sizeAbstractionSelection[i]));
+		for (int i = 0; i < genTestCheck.length; i++)
+			genTestCheck[i].addSelectionListener(new SelectGenTestChangeListener(this, i, genTestCheck[i]));
+		
+		for (int i = 0; i < aliasingCheck.length; i++)
+			aliasingCheck[i].addSelectionListener(new SelectAliasingChangeListener(this, i, aliasingCheck[i]));
+		
+		for (int i = 0; i < labelingSelection.length; i++)
+			labelingSelection[i].addSelectionListener(new SelectLabelingChangeListener(this, i, labelingSelection[i]));
 		
 		for (int i = 0; i < verbositySelection.length; i++)
 			verbositySelection[i].addSelectionListener(new SelectVerbosityChangeListener(this, i, verbositySelection[i]));
+		
+		for (int i = 0; i < saveCLPCheck.length; i++)
+			saveCLPCheck[i].addSelectionListener(new SelectSaveCLPChangeListener(this, i, saveCLPCheck[i]));
+		
+		for (int i = 0; i < tracingSelection.length; i++)
+			tracingSelection[i].addSelectionListener(new SelectTracingChangeListener(this, i, tracingSelection[i]));
+	
 	}
 	
 	private void setOptions() {
@@ -116,50 +195,127 @@ public class OptionsDialog extends Dialog {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		
 		String preferenceValue = "";
+		boolean booleanValue = false;
+		int integerValue = 0;
 		
-		preferenceValue = store.getString(PreferenceConstants.PCOST_MODEL);
-		for (int i = 0; i < ApetOptions.COST_MODEL_PROLOG.length; i++)			
-			costModelSelection[i].setSelection(preferenceValue.equals(ApetOptions.COST_MODEL_PROLOG[i]));
+		preferenceValue = store.getString(PreferenceConstants.PCOVERAGE_CRITERION);
+		for (int i = 0; i < ApetOptions.COVERAGE_CRITERION_PROLOG.length; i++)			
+			coverageCriterionSelection[i].setSelection(preferenceValue.equals(ApetOptions.COVERAGE_CRITERION_PROLOG[i]));
 		
-		preferenceValue = store.getString(PreferenceConstants.PCOST_CENTER);
-		for (int i = 0; i < ApetOptions.COST_CENTERS.length; i++)			
-			costCentersSelection[i].setSelection(preferenceValue.equals(ApetOptions.COST_CENTERS_PROLOG[i]));
+		integerValue = store.getInt(PreferenceConstants.PCOVERAGE_CRITERION_NUM);
+		coverageText[0].setText(String.valueOf(integerValue));
 		
-		preferenceValue = store.getString(PreferenceConstants.PSIZE_ABST);
-		for (int i = 0; i < ApetOptions.SIZE_ABSTRACTION.length; i++)			
-			sizeAbstractionSelection[i].setSelection(preferenceValue.equals(ApetOptions.SIZE_ABSTRACTION_PROLOG[i]));
+		preferenceValue = store.getString(PreferenceConstants.PNUMERIC);
+		for (int i = 0; i < ApetOptions.NUM_PATH_CONSTRAINTS_PROLOG.length; i++)			
+			numericPathConstraintsSelection[i].setSelection(preferenceValue.equals(ApetOptions.NUM_PATH_CONSTRAINTS_PROLOG[i]));
+		
+		integerValue = store.getInt(PreferenceConstants.PRANGEMIN);
+		fromText[0].setText(String.valueOf(integerValue));
+		
+		integerValue = store.getInt(PreferenceConstants.PRANGEMAX);
+		toText[0].setText(String.valueOf(integerValue));
+		
+		booleanValue = store.getBoolean(PreferenceConstants.PTEST_CASE_GENERATION);
+		for (int i = 0; i < ApetOptions.GEN_TEST_OPTS.length; i++)			
+			genTestCheck[i].setSelection(booleanValue);
+		
+		booleanValue = store.getBoolean(PreferenceConstants.PREFERENCES_ALIASING);
+		for (int i = 0; i < ApetOptions.ALIASING_OPTS.length; i++)			
+			aliasingCheck[i].setSelection(booleanValue);
+		
+		preferenceValue = store.getString(PreferenceConstants.PLABELING);
+		for (int i = 0; i < ApetOptions.LABELING_PROLOG.length; i++)			
+			labelingSelection[i].setSelection(preferenceValue.equals(ApetOptions.LABELING_PROLOG[i]));
 		
 		preferenceValue = store.getString(PreferenceConstants.PVERBOSITY);
 		for (int i = 0; i < ApetOptions.VERBOSITY.length; i++)			
 			verbositySelection[i].setSelection(preferenceValue.equals(ApetOptions.VERBOSITY[i]));
 		
+		booleanValue = store.getBoolean(PreferenceConstants.PCLP);
+		for (int i = 0; i < ApetOptions.SAVE_CLP_OPTS.length; i++)			
+			saveCLPCheck[i].setSelection(booleanValue);
+		
+		preferenceValue = store.getString(PreferenceConstants.PTRACING);
+		for (int i = 0; i < ApetOptions.TRACING_PROLOG.length; i++)			
+			tracingSelection[i].setSelection(preferenceValue.equals(ApetOptions.TRACING_PROLOG[i]));
+		
+		fromText[0].setEnabled(numericPathConstraintsSelection[0].getSelection());
+		toText[0].setEnabled(numericPathConstraintsSelection[0].getSelection());
 	}
 
-	public Button[] getCostModel() {
-		return costModelSelection;
+	public Button[] getCoverageCriterion() {
+		return coverageCriterionSelection;
 	}
 	
-	public Button[] getCostCenters() {
-		return costCentersSelection;
+	public Button[] getNumPathConstraints() {
+		return numericPathConstraintsSelection;
 	}
 	
-	public Button[] getSizeAbstraction() {
-		return sizeAbstractionSelection;
+	public Button[] getGenTest() {
+		return genTestCheck;
+	}
+	
+	public Button[] getAliasing() {
+		return aliasingCheck;
+	}
+	
+	public Button[] getLabeling() {
+		return labelingSelection;
 	}
 	
 	public Button[] getVerbosity() {
 		return verbositySelection;
 	}
-
+	
+	public Button[] getSaveCLP() {
+		return saveCLPCheck;
+	}
+	
+	public Button[] getTracing() {
+		return tracingSelection;
+	}
+	
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("Select the preferences for costabs");
+		newShell.setText("Select the preferences for jPET");
 	}
 
 	@Override
 	protected void okPressed() {
 
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		
+		try {
+			if (!coverageText[0].getText().isEmpty())
+				store.setValue(PreferenceConstants.PCOVERAGE_CRITERION_NUM, Integer.parseInt(coverageText[0].getText()));
+		}
+		catch (Exception e) {
+			Status status = new Status(IStatus.ERROR, "jpet", 0,
+		            "The number for coverage is not valid.", null);
+			ErrorDialog.openError(getParentShell(), "JPet Error", "The number for coverage is not valid.", status);
+		}
+		
+		try {
+			if (!fromText[0].getText().isEmpty())
+				store.setValue(PreferenceConstants.PRANGEMIN, Integer.parseInt(fromText[0].getText()));
+		}
+		catch (Exception e) {
+			Status status = new Status(IStatus.ERROR, "jpet", 0,
+		            "The number for the text field From is not valid.", null);
+			ErrorDialog.openError(getParentShell(), "JPet Error", "The number for the text field From is not valid.", status);
+		}
+		
+		try {
+			if (!toText[0].getText().isEmpty())
+				store.setValue(PreferenceConstants.PRANGEMAX, Integer.parseInt(toText[0].getText()));
+		}
+		catch (Exception e) {
+			Status status = new Status(IStatus.ERROR, "jpet", 0,
+		            "The number for the text field To is not valid.", null);
+			ErrorDialog.openError(getParentShell(), "JPet Error", "The number for the text field To is not valid.", status);
+		}
+		
 		this.close();
 	}
 
@@ -170,18 +326,18 @@ public class OptionsDialog extends Dialog {
 		parent.pack();
 
 		super.createButtonsForButtonBar(parent);
-		this.getButton(IDialogConstants.OK_ID).setText("Analyze");
+		this.getButton(IDialogConstants.OK_ID).setText("Generate");
 	}
 
 }
 
-class SelectCostModelChangeListener implements SelectionListener {
+class SelectCoverageCriterionChangeListener implements SelectionListener {
 
 	OptionsDialog dialog = null;
 	int index;
 	Button b;
 
-	public SelectCostModelChangeListener(OptionsDialog dialog, int i, Button b) {
+	public SelectCoverageCriterionChangeListener(OptionsDialog dialog, int i, Button b) {
 		this.dialog = dialog;
 		this.index = i;
 		this.b = b;
@@ -191,24 +347,57 @@ class SelectCostModelChangeListener implements SelectionListener {
 	}
 
 	public void widgetSelected(SelectionEvent e) {
-		for (int i = 0; i < this.dialog.getCostModel().length; i++) {
-			this.dialog.getCostModel()[i].setSelection(false);
+		for (int i = 0; i < this.dialog.getCoverageCriterion().length; i++) {
+			this.dialog.getCoverageCriterion()[i].setSelection(false);
 		}
 		b.setSelection(true);
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PCOST_MODEL, ApetOptions.COST_MODEL_PROLOG[index]);
+		store.setValue(PreferenceConstants.PCOVERAGE_CRITERION, ApetOptions.COVERAGE_CRITERION_PROLOG[index]);
 	}
 
 }
 
-class SelectCostCentersChangeListener implements SelectionListener {
+class SelectNumPathConstraintsChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+	Text from, to;
+
+	public SelectNumPathConstraintsChangeListener(OptionsDialog dialog, int i, Button b, Text f, Text t) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+		this.from = f;
+		this.to = t;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+		for (int i = 0; i < this.dialog.getNumPathConstraints().length; i++) {
+			this.dialog.getNumPathConstraints()[i].setSelection(false);
+		}
+		b.setSelection(true);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PNUMERIC, ApetOptions.NUM_PATH_CONSTRAINTS_PROLOG[index]);
+		
+		from.setEnabled(dialog.getNumPathConstraints()[0].getSelection());
+		to.setEnabled(dialog.getNumPathConstraints()[0].getSelection());
+	}
+
+}
+
+class SelectGenTestChangeListener implements SelectionListener {
 
 	OptionsDialog dialog = null;
 	int index;
 	Button b;
 
-	public SelectCostCentersChangeListener(OptionsDialog dialog, int i, Button b) {
+	public SelectGenTestChangeListener(OptionsDialog dialog, int i, Button b) {
 		this.dialog = dialog;
 		this.index = i;
 		this.b = b;
@@ -218,24 +407,20 @@ class SelectCostCentersChangeListener implements SelectionListener {
 	}
 
 	public void widgetSelected(SelectionEvent e) {
-		for (int i = 0; i < this.dialog.getCostCenters().length; i++) {
-			this.dialog.getCostCenters()[i].setSelection(false);
-		}
-		b.setSelection(true);
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PCOST_CENTER, ApetOptions.COST_CENTERS_PROLOG[index]);
+		store.setValue(PreferenceConstants.PTEST_CASE_GENERATION, b.getSelection());
 	}
 
 }
 
-class SelectSizeAbstractionChangeListener implements SelectionListener {
+class SelectAliasingChangeListener implements SelectionListener {
 
 	OptionsDialog dialog = null;
 	int index;
 	Button b;
 
-	public SelectSizeAbstractionChangeListener(OptionsDialog dialog, int i, Button b) {
+	public SelectAliasingChangeListener(OptionsDialog dialog, int i, Button b) {
 		this.dialog = dialog;
 		this.index = i;
 		this.b = b;
@@ -245,13 +430,36 @@ class SelectSizeAbstractionChangeListener implements SelectionListener {
 	}
 
 	public void widgetSelected(SelectionEvent e) {
-		for (int i = 0; i < this.dialog.getSizeAbstraction().length; i++) {
-			this.dialog.getSizeAbstraction()[i].setSelection(false);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PREFERENCES_ALIASING, b.getSelection());
+	}
+
+}
+
+class SelectLabelingChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+
+	public SelectLabelingChangeListener(OptionsDialog dialog, int i, Button b) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+		for (int i = 0; i < this.dialog.getLabeling().length; i++) {
+			this.dialog.getLabeling()[i].setSelection(false);
 		}
 		b.setSelection(true);
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PSIZE_ABST, ApetOptions.SIZE_ABSTRACTION_PROLOG[index]);
+		store.setValue(PreferenceConstants.PLABELING, ApetOptions.LABELING_PROLOG[index]);
 	}
 
 }
@@ -279,6 +487,56 @@ class SelectVerbosityChangeListener implements SelectionListener {
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		store.setValue(PreferenceConstants.PVERBOSITY, ApetOptions.VERBOSITY[index]);
+	}
+
+}
+
+class SelectSaveCLPChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+
+	public SelectSaveCLPChangeListener(OptionsDialog dialog, int i, Button b) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PCLP, b.getSelection());
+	}
+
+}
+
+class SelectTracingChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+
+	public SelectTracingChangeListener(OptionsDialog dialog, int i, Button b) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+		for (int i = 0; i < this.dialog.getTracing().length; i++) {
+			this.dialog.getTracing()[i].setSelection(false);
+		}
+		b.setSelection(true);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PTRACING, ApetOptions.TRACING_PROLOG[index]);
 	}
 
 }
