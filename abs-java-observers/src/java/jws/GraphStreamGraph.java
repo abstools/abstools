@@ -12,23 +12,33 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.graphstream.graph.Edge;
+import org.graphstream.graph.Element;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.stream.file.FileSink;
 import org.graphstream.stream.file.FileSinkDGS;
 import org.graphstream.stream.file.FileSinkGML;
+import org.graphstream.ui.j2dviewer.J2DGraphRenderer;
 import org.graphstream.ui.layout.Layout;
+import org.graphstream.ui.layout.LayoutListener;
 import org.graphstream.ui.layout.Layouts;
 import org.graphstream.ui.swingViewer.GraphRenderer;
 import org.graphstream.ui.swingViewer.Viewer;
 import org.graphstream.ui.swingViewer.Viewer.CloseFramePolicy;
+import org.graphstream.ui.swingViewer.ViewerPipe;
 import org.graphstream.ui.swingViewer.basicRenderer.SwingBasicGraphRenderer;
+
+import static org.graphstream.algorithm.Toolkit.*;
 
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectView;
 
 public class GraphStreamGraph extends AbstractObjectGraph {
+    static {
+       System.setProperty("gs.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+    }
+    
    final Graph graph = new MultiGraph("Tutorial 1",true,true);
    {
    	graph.addAttribute("ui.antialias");
@@ -39,39 +49,68 @@ public class GraphStreamGraph extends AbstractObjectGraph {
    			"graph {" +
    			"   padding:50;" +
    			"   fill-color:white;" +
-   			"}" +
+   			"}\n" +
    			"" +
    			"node { " +
-   			"	fill-color: darkgreen; " +
-   			"	stroke-color:blue; " +
-   			"	stroke-width:2; " +
-   			"	stroke-mode:plain;" +
-   			"  padding:20;" +
-   			"  size-mode: dyn-size;" +
-   			"  shadow-mode:gradient-radial;" +
-   			"  shadow-color:darkgray,gray;" +
-   			"  shadow-width:105%;" +
-   			"  shadow-offset:5;" +
-   			"  text-style:bold;" +
+   		            "       shape:rounded-box;" +
+   		            "       size-mode:fit;" +
+   	                     "      text-alignment:center;" +
+   			"  padding:5;" +
+//                        "  shadow-mode:gradient-radial;" +
+//                        "  shadow-color:gray;" +
+//                        "  shadow-width:105%;" +
+//                        "  shadow-offset:2, 2;" +
+                        "       stroke-color: gray;" +
+                        "  stroke-width:2; " +
+                        "  stroke-mode:plain;" +
+//   		            "fill-mode: plain; " +
    			"  text-color:black;" +
-   			"}" +
+   			"}\n" +
+ 	                "node.obj {" +
+                        "       stroke-color: darkgray;" +
+                        "  stroke-width:1; " +
+                          "   fill-color: lightgreen; " +
+ 	                "}\n"+
    			"" +
+   			"node.netnode {" +
+   			"  size-mode:dyn-size;"+
+   			"  size:100;" +
+   		        "  z-index:0;" +
+   			"  shape:box;" +
+   			"  stroke-color:black;" +
+   			"  fill-color:#eeeeee;" +
+   			"}\n" +
+   			""+
    			"node.cog {" +
-   			"	fill-color: darkred;" +
+   		            "  padding:8;" +
+   			"	fill-color: lightblue;" +
+   		            "  text-style:bold;" +
    			"" +
-   			"}" +
+   			"}\n" +
    			"" +
    			"edge {" +
    			"	fill-color:black;" +
    			"	size:1;" +
    			"  arrow-shape:arrow;" +
-   			"}" +
+   			"}\n" +
+   		            "edge.usage {" +
+   		            "  fill-color:darkred;" +
+   		            "  size:3;" +
+   		            "  arrow-shape:arrow;" +
+   		            "}\n" +
+   		            "" +
+   	                     "edge.nodeown {" +
+   	                     "  fill-color:#aa0000;" +
+   	                     "  size:4;" +
+   	                     "}\n" +
+   	                     "" +
    			"" +
    			"edge.cog {" +
-   			"	fill-color:darkgray;" +
+   			"	fill-color:lightgray;" +
    			"	size:8;" +
    			"  arrow-shape:none;" +
-   			"}");
+   			"}\n"
+   			);
 
    }
    
@@ -89,12 +128,13 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 		if (COG) {
 			n.addAttribute("layout.weight", 0.5f);
 			n.addAttribute("ui.class", "cog");
-			n.addAttribute("ui.size", "25");
+			//n.addAttribute("ui.size", "25");
 			n.addAttribute("Size", 20);
 			n.addAttribute("Color", "[0,255,0]");
 	      n.addAttribute("kind", "cog");
 		} else {
 			n.addAttribute("layout.weight", 0.5f);
+		        n.addAttribute("ui.class", "obj");
 			n.addAttribute("ui.size", "20");
 			n.addAttribute("Size", 10);
 			n.addAttribute("Color", "[255,0,0]");
@@ -109,25 +149,31 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 		if (!COG) {
 			addEdge(o,getCOGOwner(o), true);
 		}
-		
 	}
 
 	
 	final AtomicInteger edgeCounter = new AtomicInteger();
+   private Layout layout;
+   private Viewer viewer;
 	
 
 	@Override
-   public void addEdge(ObjectView source, ObjectView target, boolean cog) {
+   public synchronized void addEdge(ObjectView source, ObjectView target, boolean cog) {
 	   String edgeName = getID(source)+"-"+getID(target);
 	   Edge e = graph.getEdge(edgeName);
+
 	   
-	   if (e == null) {
+	   
+	   if (e == null || 
+	       (!cog && e.getAttribute("kind").equals("cog"))) {
 	      e = graph.addEdge(edgeName,getID(source),getID(target),true);
          e.addAttribute("count", 1);
 	      if (cog) {
+	            e.addAttribute("ui.class", "cog");
 	         e.addAttribute("kind", "cog");
 	         e.addAttribute("weight", 5);
 	      } else {
+                 e.addAttribute("ui.class", "usage");
 	         e.addAttribute("kind", "usage");
 	         e.addAttribute("weight", 1);
 	      }
@@ -139,18 +185,18 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 	}
 	
 	public Viewer display() {
-		Viewer viewer = new Viewer(graph,
+		viewer = new Viewer(graph,
 				Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
-				GraphRenderer renderer = new SwingBasicGraphRenderer();
+				GraphRenderer renderer = new J2DGraphRenderer();
 
 				viewer.addView(
 				String.format("defaultView_%d", (long) (Math.random() * 10000)),
 				renderer);
 
-				Layout layout = Layouts.newLayoutAlgorithm();
 				viewer.enableAutoLayout(layout);
 				viewer.setCloseFramePolicy(CloseFramePolicy.EXIT);
-				
+
+
 
 
 				return viewer;
@@ -159,11 +205,67 @@ public class GraphStreamGraph extends AbstractObjectGraph {
 	private String dgsFileName;
 	private String filePrefix;
 	private FileSink fileSink;
+   private Node netnode;
 	
 
+      class MyLayoutListener implements LayoutListener {
+
+         @Override
+         public void edgeChanged(String arg0, double[] arg1) {
+            // TODO Auto-generated method stub
+            
+         }
+
+         @Override
+         public void edgesChanged(Map<String, double[]> arg0) {
+            // TODO Auto-generated method stub
+            
+         }
+
+         @Override
+         public void nodeInfos(String arg0, double arg1, double arg2, double arg3) {
+             System.out.println("Node infos");
+         }
+
+         @Override
+         public void nodeMoved(String node, double arg1, double arg2, double arg3) {
+             Node n = graph.getNode(node);
+             double[] pos = nodePosition(n);
+             double[] netpos = nodePosition(netnode);
+             double size = netnode.getNumber("ui.size");
+             netnode.setAttribute("ui.size", ""+(size+10));
+             System.out.println("Node moved");
+         }
+
+         @Override
+         public void nodesMoved(Map<String, double[]> arg0) {
+            // TODO Auto-generated method stub
+            
+         }
+
+         @Override
+         public void stepCompletion(double arg0) {
+            // TODO Auto-generated method stub
+            
+         }
+          
+      }
+   
 	@Override
 	public void begin() {
-	   graph.display();
+           layout = Layouts.newLayoutAlgorithm();
+	   viewer = graph.display();
+	   viewer.enableAutoLayout(layout);
+	   netnode = graph.addNode("NetNode1");
+           netnode.addAttribute("ui.class", "netnode");
+           netnode.addAttribute("ui.label", "Node 1");
+           netnode.addAttribute("ui.size", "100");
+           layout.addListener(new MyLayoutListener());
+           layout.freezeNode("NetNode1", true);
+           
+           ViewerPipe fromViewer = viewer.newViewerPipe();
+//           fromViewer.addViewerListener(this);
+           fromViewer.addSink(graph);
 		fileSink = new FileSinkDGS();
 		graph.addSink(fileSink);
 		Random r = new Random();
