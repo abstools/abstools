@@ -406,3 +406,28 @@ export *;
 data FLIAnnotation = Foreign;
 
 
+/** 
+ * Deployment components
+ * Used to model aspects of hardware configurations and deployment.
+ */
+module ABS.DC;
+export *;
+
+data DCDataElement = URL(String)
+                   | CPUCapacity(Int)
+	               | Memory(Int);
+
+data DCData = DCData(Set<DCDataElement>);
+
+interface DeploymentComponent {
+    Unit setConfiguration(DCData configuration);
+    DCData getConfiguration();
+}
+
+class DeploymentComponent (String description, DCData configuration)
+implements DeploymentComponent {
+    Unit setConfiguration(DCData configuration) {
+        this.configuration = configuration;
+    }
+    DCData getConfiguration() { return configuration; }
+}
