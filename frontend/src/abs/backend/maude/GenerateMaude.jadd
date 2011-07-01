@@ -129,40 +129,6 @@ aspect GenerateMaude {
         boolean inlist = false;
         String effvar = var;
         PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
-        if (!var.equals("_")) {
-            // Invariant of asynchronous calls as right-hand side of an
-            // assignment: futures are freed before overwriting the
-            // variable's binding with the new future.
-            stream.print("$free('" + var + " ) ; ");
-        }
-        // All parameters of type Future get their reference count
-        // incremented here, and decremented at the end of the
-        // called method.
-        if (getNumParam() > 0) {
-            MethodSig sig = null;
-            Type calleetype = getCallee().getType();
-            if (calleetype instanceof UnionType) {
-                UnionType ut = (UnionType)calleetype;
-                sig = ut.lookupMethod(getMethod());
-                if (sig == null) {
-                    // It's a private method
-                    sig = ut.getOriginatingClass().lookupMethod(getMethod()).getMethodSig();
-                }
-            } else if (calleetype instanceof InterfaceType) {
-                InterfaceType it = (InterfaceType)calleetype;
-                sig = it.lookupMethod(getMethod());
-            }
-            for (int i = 0; i < getNumParam(); i++) {
-                // If we didn't find the method's signature (the call is
-                // in a delta, which are not type-checked), emit $mark
-                // just in case and let the runtime sort it out.
-                if (sig == null || sig.getParam(i).getType().isFutureType()) {
-                    stream.print("$mark( ");
-                    getParam(i).generateMaude(stream);
-                    stream.print(") ; ");
-                }
-            }
-        }
         stream.print("asynccall('"
                      + (var.equals("_") ? ".staticfuture" : var)
                      + " ; ");
@@ -182,15 +148,6 @@ aspect GenerateMaude {
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ");
-        if (var.equals("_")) {
-            // Invariant of async calls as statements (i.e. not as rhs
-            // of an assignment): .staticfuture is freed immediately
-            // after the call.  .staticfuture is shared with synchronous
-            // calls, which have the same behavior (except that
-            // synchronous calls synchronize and read the value of
-            // .staticfuture before freeing it).
-            stream.print("; $free('.staticfuture) ");
-        }
     }
 
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
@@ -468,25 +425,6 @@ aspect GenerateMaude {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            // Now release all labels
-            for (Stmt stmt : getBlock().getStmts()) {
-                if (stmt instanceof VarDeclStmt) {
-                    VarDeclStmt vardecl = (VarDeclStmt)stmt;
-                    Type t = vardecl.getVarDecl().getAccess().getType();
-                    if (t.isFutureType()) {
-                        if (inlist) stream.print("; "); else inlist = true;
-                        stream.print("$free('" 
-                                     + vardecl.getVarDecl().getName()
-                                     + ") ");
-                    }
-                }
-            }
-            // ... and all parameters
-            for (ParamDecl param : sig.getParams()) {
-                if (param.getType().isFutureType()) {
-                    stream.print("; $free('" + param.getName() + ") ");
-                }
-            }
             // KLUDGE (rs 2010-06-15): Emit this for "Unit" methods for
             // now, since we don't have an empty `return' statement
             // currently.  Ideally we should flow-analyze where to
@@ -551,23 +489,11 @@ aspect GenerateMaude {
 
     public void AssignStmt.generateMaude(PrintStream stream) {
         if (getValue() instanceof PureExp) {
-            Type t = getValue().getType();
-            if (t.isFutureType()) {
-                // Assigning one future to another.
-                stream.print("$free( ");
-                getVar().generateMaude(stream);
-                stream.print("); ");
-            }
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
             getValue().generateMaude(stream);
             stream.print(") ");
-            if (t.isFutureType()) {
-                stream.print("; $mark( ");
-                getVar().generateMaude(stream);
-                stream.print(") ");
-            }
         } else {
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
         }
@@ -575,11 +501,6 @@ aspect GenerateMaude {
 
     public void ReturnStmt.generateMaude(PrintStream stream) {
         if (getRetExp() instanceof PureExp) {
-            if (getRetExp().getType().isFutureType()) {
-                stream.print("$mark( ");
-                getRetExp().generateMaude(stream);
-                stream.print(") ; ");
-            }
             stream.print("return( ");
             getRetExp().generateMaude(stream);
             stream.print(") ");
@@ -703,17 +624,6 @@ aspect GenerateMaude {
         for (Stmt stmt : getStmts()) {
             stream.print("; ");
             stmt.generateMaude(stream);
-        }
-        // Now release all labels
-        for (Stmt stmt : getStmts()) {
-            if (stmt instanceof VarDeclStmt) {
-                VarDeclStmt vardecl = (VarDeclStmt)stmt;
-                Type t = vardecl.getVarDecl().getAccess().getType();
-                if (t.isFutureType()) {
-                    stream.print("; $free('" + vardecl.getVarDecl().getName()
-                                 + ") ");
-                }
-            }
         }
         stream.print("; $endscope ");
 	}
