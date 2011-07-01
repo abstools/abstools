@@ -1,0 +1,51 @@
+Simulating Resources in Maude
+
+* Introduction
+
+  ABS models can be augmented with resource information and their
+  execution simulated on the Maude backend.  Resources are contained in
+  <deployment components>, which provide a context in which concurrent
+  object groups and their objects execute.  Deployment components can be
+  used to model servers, virtual machines, nodes in a network, and
+  basically any entity that constrains execution of code running in its
+  context.
+
+  This section describes language features related to deployment
+  components.  Most of these features are implemented on the Maude
+  backend and ignored on the Java backend.
+
+* Language Elements
+
+** Resource Types
+
+   Resource types are, at the moment, cpu capacity and memory.
+   Additionally, a URL can be used to express the "location" of a
+   deployment component.
+
++---
+data DCDataElement = URL(String)
+                   | CPUCapacity(Int)
+                   | Memory(Int);
+
+data DCData = DCData(Set<DCDataElement>);
++---   
+
+** Deployment Components
+
+   Deployment components are modeled by an ABS class and interface
+   <<<DeploymentComponent>>> which is contained in the standard library.
+   They are initialized with resource data which can be used by the
+   simulator for expressing memory usage, cpu usage etc.
+
++---
+interface DeploymentComponent {
+    Unit setConfiguration(DCData configuration);
+    DCData getConfiguration();
+}
+
+class DeploymentComponent (String description, DCData configuration)
+implements DeploymentComponent {
+    ...
+}
++---
+
