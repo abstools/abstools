@@ -14,7 +14,6 @@ import abs.backend.java.lib.runtime.ABSObject;
 public class DefaultRouter implements Router {
     private final Map<ABSObject, RouteEntry> nodeForObject = new HashMap<ABSObject, RouteEntry>();
     private final Map<NetCOG, RouteEntry> nodeForCOG = new HashMap<NetCOG, RouteEntry>();
-
     private final NetNode node;
 
     public DefaultRouter(NetNode node) {
@@ -23,17 +22,19 @@ public class DefaultRouter implements Router {
 
     @Override 
     public void update(Router adjacentNodeRouter) {
-	// find new routes and replace if better than current ones  
+	// find new routes and replace if better than current ones
     }
 
     @Override
     public void register(ABSObject localObject) {
 	// register the object so that messages should be routed to the current node with 0 hops
+	// must throw IllegalArgumentException if localObject is already registered
     }
 
     @Override
     public void register(NetCOG localCOG) {
 	// register the COG so that messages should be routed to the current node with 0 hops
+	// must throw IllegalArgumentException if localCOG is already registered
     }
     
     @Override
@@ -53,22 +54,22 @@ public class DefaultRouter implements Router {
 
     @Override
     public RouteEntry getRouteEntry(NetCOG cog) {
-	return null;
+	return nodeForCOG.get(cog);
     }
 
     @Override
     public RouteEntry getRouteEntry(ABSObject object) {
-	return null;
+	return nodeForObject.get(object);
     }
 
     @Override
     public Set<ABSObject> getRegisteredObjects() {
-	return null;
+	return nodeForObject.keySet();
     }
 
     @Override
     public Set<NetCOG> getRegisteredCOGs() {
-	return null;
+	return nodeForCOG.keySet();
     }
 
 }

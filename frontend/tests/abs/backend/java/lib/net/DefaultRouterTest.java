@@ -7,8 +7,7 @@ package abs.backend.java.lib.net;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.*;
 
 import abs.backend.java.lib.runtime.ABSObject;
 
@@ -88,10 +87,22 @@ public class DefaultRouterTest {
 	router.register(obj1);
 	assertTrue("object must be among registered objects", router.getRegisteredObjects().contains(new DefaultRouteEntry(node1, 0)));
     }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void registerObjectAgain() {
+	Router router = new DefaultRouter(node1);
+	router.register(obj1);
+	router.register(obj1);
+    }
     
     @Test
     public void registerCOG() {
 	
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void registerCOGAgain() {
+
     }
 
     @Test

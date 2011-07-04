@@ -9,10 +9,12 @@ import abs.backend.java.lib.runtime.ABSObject;
 
 public interface NetNode {
 
-    void performStep();
+    public void performStep();
 
-    void processMsg(Msg msg);
+    public void processMsg(Msg msg);
 
-    void registerObject(ABSObject absObject);
+    public void registerObject(ABSObject absObject);
+
+    public int getId();
 
 }

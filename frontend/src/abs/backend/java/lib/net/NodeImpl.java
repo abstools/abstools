@@ -62,7 +62,7 @@ public class NodeImpl implements NetNode {
         
     }
     
-    
+    @Override
     public synchronized void processMsg(Msg m) {
         if (m instanceof ObjectTargetMsg) {
             ObjectTargetMsg otm = (ObjectTargetMsg) m;
@@ -103,7 +103,7 @@ public class NodeImpl implements NetNode {
         return null;
     }
 
-    
+    @Override
     public void performStep() {
         if (processNextMsg())
             return;
@@ -120,7 +120,10 @@ public class NodeImpl implements NetNode {
         objects.add(absObject);
     }
 
-
+    @Override
+    public int getId() {
+	return id;
+    }
     
     private synchronized boolean migrateObject() {
         for (ABSObject o : objects) {

@@ -12,7 +12,6 @@ import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouteEntryTest {
-
     private NetNode node1;
     private NetNode node2;
     private RouteEntry entry;
@@ -24,6 +23,17 @@ public class DefaultRouteEntryTest {
 	entry = new DefaultRouteEntry(node1, 2);
     }
 
+    @Test(expected=IllegalArgumentException.class)
+    public void negativeHops() {
+	RouteEntry other = new DefaultRouteEntry(node1, -1);
+    }
+
+    @Test
+    public void defaultHops() {
+	RouteEntry other = new DefaultRouteEntry(node1);
+	assertEquals("must be equal to default hops", DefaultRouteEntry.DEFAULT_HOPS, other.getHops());
+    }
+
     @Test
     public void getNextNode() {
 	assertEquals("must be equal to node", node1, entry.getNextNode());
@@ -31,7 +41,7 @@ public class DefaultRouteEntryTest {
 
     @Test
     public void getHops() {
-	assertEquals("must be equal to hops", 1, entry.getHops());
+	assertEquals("must be equal to hops", 2, entry.getHops());
     }
 
     @Test
@@ -62,14 +72,14 @@ public class DefaultRouteEntryTest {
     public void comparesToLess() {
 	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1);
 	assertTrue("must be less than other", entry.compareTo(other) < 0);
-	assertFalse("must be greater than entry", other.compareTo(entry) > 0);
+	assertTrue("must be greater than entry", other.compareTo(entry) > 0);
     }
 
     @Test
     public void comparesToGreater() {
 	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1);
 	assertTrue("must be less than other", other.compareTo(entry) > 0);
-	assertFalse("must be greater than entry", entry.compareTo(other) < 0);
+	assertTrue("must be greater than entry", entry.compareTo(other) < 0);
     }
 
     @Test
