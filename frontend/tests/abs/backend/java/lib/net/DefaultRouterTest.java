@@ -7,9 +7,10 @@ package abs.backend.java.lib.net;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.replay;
 
 import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouterTest {
 
@@ -17,8 +18,8 @@ public class DefaultRouterTest {
     private NetNode node2;
     private NetNode node3;
 
-    private COG cog1;
-    private COG cog2;
+    private NetCOG cog1;
+    private NetCOG cog2;
 
     private ABSObject obj1;
     private ABSObject obj2;
@@ -28,10 +29,10 @@ public class DefaultRouterTest {
 	node1 = new NodeImpl(0);
 	node2 = new NodeImpl(1);
 	node3 = new NodeImpl(2);
-	cog1 = null;
-	cog2 = null;
-	obj1 = null;
-	obj2 = null;
+	cog1 = createMock(NetCOG.class);
+	cog2 = createMock(NetCOG.class);
+	obj1 = createMock(ABSObject.class);
+	obj2 = createMock(ABSObject.class);
     }
 
     @Test

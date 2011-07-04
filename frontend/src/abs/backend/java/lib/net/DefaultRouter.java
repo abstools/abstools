@@ -10,11 +10,10 @@ import java.util.Set;
 
 import abs.backend.java.lib.net.msg.Msg;
 import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouter implements Router {
     private final Map<ABSObject, RouteEntry> nodeForObject = new HashMap<ABSObject, RouteEntry>();
-    private final Map<COG, RouteEntry> nodeForCOG = new HashMap<COG, RouteEntry>();
+    private final Map<NetCOG, RouteEntry> nodeForCOG = new HashMap<NetCOG, RouteEntry>();
 
     private final NetNode node;
 
@@ -33,12 +32,12 @@ public class DefaultRouter implements Router {
     }
 
     @Override
-    public void register(COG localCOG) {
+    public void register(NetCOG localCOG) {
 	// register the COG so that messages should be routed to the current node with 0 hops
     }
     
     @Override
-    public void replace(COG cog, NetNode nextNode, int hops) {
+    public void replace(NetCOG cog, NetNode nextNode, int hops) {
 	// replace current route entry for cog with new entry 
     }
 
@@ -53,7 +52,7 @@ public class DefaultRouter implements Router {
     }
 
     @Override
-    public RouteEntry getRouteEntry(COG cog) {
+    public RouteEntry getRouteEntry(NetCOG cog) {
 	return null;
     }
 
@@ -68,7 +67,7 @@ public class DefaultRouter implements Router {
     }
 
     @Override
-    public Set<COG> getRegisteredCOGs() {
+    public Set<NetCOG> getRegisteredCOGs() {
 	return null;
     }
 

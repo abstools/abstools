@@ -9,6 +9,7 @@ import org.junit.runners.Suite;
 
 import abs.backend.common.AllSemanticTests;
 import abs.backend.maude.MaudeTests;
+import abs.backend.java.lib.net.AllNetTests;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ JavaPrimitiveTests.class, 
@@ -16,7 +17,8 @@ import abs.backend.maude.MaudeTests;
     JavaExprTests.class, 
     JavaExamplesTests.class,
     JavaObservationTest.class,
-    JavaFLITest.class})
+    JavaFLITest.class,
+    AllNetTests.class})
 public class AllJavaTests {
 
 }
