@@ -45,12 +45,12 @@ Using Maven
 We have consequently developed a Maven plugin for ABS (abs-maven-plugin) that provides the 
 following functionalities 
 
-    * Generate Java from ABS (see {{{maven-support/genjava.html}genjava}} goal)
+    * Generate Java from ABS (see {{{./maven-support/genjava.html}genjava}} goal)
 
-    * Generate Maude from ABS (see {{{maven-support/genmaude.html}genmaude}} goal)
+    * Generate Maude from ABS (see {{{./maven-support/genmaude.html}genmaude}} goal)
   
-    * Execute (simulate) Java/Maude generated from ABS (see {{{maven-support/javatest.html}javatest}} and {{{maven-support/maudetest.html}maudetest}} goal)
+    * Execute (simulate) Java/Maude generated from ABS (see {{{./maven-support/javatest.html}javatest}} and {{{./maven-support/maudetest.html}maudetest}} goal)
     
-  In addition, Maven as a framework offers the functionalities to {{{maven-support/package.html}package}},
-  {{{maven-support/deploy.html}deploy artifacts}} to repositories and generate 
-  {{{eclipseplugin/packagedependencies.html}package dependencies}} for Eclipse integraton.
+  In addition, Maven as a framework offers the functionalities to {{{./maven-support/package.html}package}},
+  {{{./maven-support/deploy.html}deploy artifacts}} to repositories and generate 
+  {{{./eclipseplugin/packagedependencies.html}package dependencies}} for Eclipse integraton.
