@@ -412,6 +412,7 @@ data FLIAnnotation = Foreign;
  */
 module ABS.DC;
 export *;
+import * from ABS.StdLib;
 
 data DCDataElement = URL(String)
                    | CPUCapacity(Int)
