@@ -14,7 +14,10 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
   </properties>
 
 <body>
-   <release version="1.1.1" description="Important bug-fix release">
+   <release version="1.1.2" description="Important bug-fix release">
+     <action def="jschaefer" type="fix" >Fixed a bug in the new selector feature that resulted in wrong generated functions for constructors with more than one parameter</action>
+  </release>
+    <release version="1.1.1" description="Important bug-fix release">
      <action def="jschaefer" type="fix" issue="256">Fixes a regression bug that was introduced by the selector feature</action>
   </release>
   <release version="1.1.0" description="New ABS language feature: selector functions">

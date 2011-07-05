@@ -81,7 +81,7 @@ public class ASTPreProcessor {
         
         // the list of patterns, e.g. _,res,_
         List<Pattern> patternList = new List<Pattern>();
-        for (int i = 0; i < c.getNumChild(); i++) {
+        for (int i = 0; i < c.getNumConstructorArg(); i++) {
             if (i == numArg)
                 patternList.add(new PatternVar(new PatternVarDecl("res")));
             else
@@ -93,7 +93,7 @@ public class ASTPreProcessor {
             new ExpFunctionDef(
                 new CaseExp(
                     new VarUse("data"),
-                    new List().add(
+                    new List<CaseBranch>().add(
                         new CaseBranch(
                             new ConstructorPattern(c.getName(), patternList),
                             new VarUse("res")))));

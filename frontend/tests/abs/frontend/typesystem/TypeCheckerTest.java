@@ -64,6 +64,10 @@ public class TypeCheckerTest extends FrontendTest {
         assertNoTypeErrorsNoLib("data Foo = Bar(Foo foo) | Baz; { Foo b = foo(Bar(Baz)); }");
     }
 
+    @Test
+    public void dataTypeSelectors2() {
+        assertTypeOK("data User = User(String login, String passwordHash);");
+    }
     
     @Test
     public void negTestOk() {
