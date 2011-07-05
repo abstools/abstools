@@ -18,7 +18,8 @@ public class PromiseMsg implements ObjectTargetMsg {
         this.target = target;
         this.value = value;
     }
-    
+
+    @Override
     public ABSObject getTarget() {
         return target;
     }

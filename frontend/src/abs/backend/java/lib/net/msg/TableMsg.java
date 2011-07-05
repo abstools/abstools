@@ -4,8 +4,12 @@
  */
 package abs.backend.java.lib.net.msg;
 
-import abs.backend.java.lib.runtime.ABSObject;
+import abs.backend.java.lib.net.Router;
 
-public interface ObjectTargetMsg extends Msg {
-    public ABSObject getTarget();
+public class TableMsg implements Msg {
+    public final Router router;
+
+    public TableMsg(Router router) {
+        this.router = router;
+    }
 }

@@ -12,8 +12,8 @@ import abs.backend.java.lib.net.msg.Msg;
 import abs.backend.java.lib.runtime.ABSObject;
 
 public class DefaultRouter implements Router {
-    private final Map<ABSObject, RouteEntry> nodeForObject = new HashMap<ABSObject, RouteEntry>();
-    private final Map<NetCOG, RouteEntry> nodeForCOG = new HashMap<NetCOG, RouteEntry>();
+    private final Map<ABSObject, RouteEntry> routeForObject = new HashMap<ABSObject, RouteEntry>();
+    private final Map<NetCOG, RouteEntry> routeForCOG = new HashMap<NetCOG, RouteEntry>();
     private final NetNode node;
 
     public DefaultRouter(NetNode node) {
@@ -22,54 +22,58 @@ public class DefaultRouter implements Router {
 
     @Override 
     public void update(Router adjacentNodeRouter) {
-	// find new routes and replace if better than current ones
+	// TODO
     }
 
     @Override
     public void register(ABSObject localObject) {
-	// register the object so that messages should be routed to the current node with 0 hops
-	// must throw IllegalArgumentException if localObject is already registered
+	if (routeForObject.containsKey(localObject)) {
+	    throw new IllegalArgumentException("object " + localObject + " already registered");
+	}
+	routeForObject.put(localObject, new DefaultRouteEntry(node, 0));
     }
 
     @Override
     public void register(NetCOG localCOG) {
-	// register the COG so that messages should be routed to the current node with 0 hops
-	// must throw IllegalArgumentException if localCOG is already registered
+	if (routeForCOG.containsKey(localCOG)) {
+	    throw new IllegalArgumentException("COG " + localCOG + " already registered");
+	}
+	routeForCOG.put(localCOG, new DefaultRouteEntry(node, 0));
     }
     
     @Override
     public void replace(NetCOG cog, NetNode nextNode, int hops) {
-	// replace current route entry for cog with new entry 
+	routeForCOG.put(cog, new DefaultRouteEntry(nextNode, hops));
     }
 
     @Override
     public void replace(ABSObject object, NetNode nextNode, int hops) {
-	// replace current route entry for object with new entry 
+	routeForObject.put(object, new DefaultRouteEntry(nextNode, hops));
     }
     
     @Override
     public NetNode getNextNode(Msg m) {
-        return null;
+        return null; // TODO
     }
 
     @Override
     public RouteEntry getRouteEntry(NetCOG cog) {
-	return nodeForCOG.get(cog);
+	return routeForCOG.get(cog);
     }
 
     @Override
     public RouteEntry getRouteEntry(ABSObject object) {
-	return nodeForObject.get(object);
+	return routeForObject.get(object);
     }
 
     @Override
     public Set<ABSObject> getRegisteredObjects() {
-	return nodeForObject.keySet();
+	return routeForObject.keySet();
     }
 
     @Override
     public Set<NetCOG> getRegisteredCOGs() {
-	return nodeForCOG.keySet();
+	return routeForCOG.keySet();
     }
 
 }

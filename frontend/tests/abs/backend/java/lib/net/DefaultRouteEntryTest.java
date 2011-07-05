@@ -7,9 +7,9 @@ package abs.backend.java.lib.net;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.easymock.EasyMock.*;
 
 import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.COG;
 
 public class DefaultRouteEntryTest {
     private NetNode node1;
@@ -18,8 +18,8 @@ public class DefaultRouteEntryTest {
 
     @Before
     public void setUp() {
-	node1 = new NodeImpl(1);
-	node2 = new NodeImpl(2);
+	node1 = createMock(NetNode.class);
+	node2 = createMock(NetNode.class);
 	entry = new DefaultRouteEntry(node1, 2);
     }
 

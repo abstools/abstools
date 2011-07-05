@@ -9,7 +9,7 @@ import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.AsyncCall;
 import abs.backend.java.lib.types.ABSRef;
 
-public class CallMsg implements Msg {
+public class CallMsg implements ObjectTargetMsg {
     public final AsyncCall<? extends ABSRef> call;
     public final Promise promise;
 
@@ -18,7 +18,8 @@ public class CallMsg implements Msg {
         this.promise = promise;
     }
     
-    public ABSObject target() {
+    @Override
+    public ABSObject getTarget() {
         return (ABSObject)call.getTarget();
     }
 }

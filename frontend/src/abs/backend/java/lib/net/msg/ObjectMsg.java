@@ -5,10 +5,17 @@
 package abs.backend.java.lib.net.msg;
 
 import abs.backend.java.lib.runtime.ABSObject;
+import abs.backend.java.lib.net.NetCOG;
 
-public class ObjectMsg implements Msg {
+public class ObjectMsg implements COGTargetMsg {
     public final ABSObject object;
-    public ObjectMsg(ABSObject o) {
-        this.object = o;
+
+    public ObjectMsg(ABSObject object) {
+        this.object = object;
+    }
+
+    @Override
+    public NetCOG getTarget() {
+	return null;
     }
 }
