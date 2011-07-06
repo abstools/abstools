@@ -17,4 +17,6 @@ public interface NetNode {
 
     public int getId();
 
+    public NetNode defaultRoute();
+
 }

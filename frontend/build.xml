@@ -239,6 +239,7 @@
 	<property name="test.frontend.suite.name" value="abs.frontend.AllFrontendTests" />
 	<property name="test.backend.suite.name" value="abs.backend.AllBackendTests" />
 	<property name="test.backend.semantic.suite.name" value="abs.backend.common.AllSemanticTests" />
+	<property name="test.backend.java.lib.net.suite.name" value="abs.backend.java.lib.net.AllNetTests" />
 
 	<target name="tests-all" depends="tests-frontend, tests-backend, tests-backend-semantic" />
 
@@ -254,6 +255,14 @@
 	<target name="tests-backend" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
 			<test name="${test.backend.suite.name}" />
+			<formatter type="plain" usefile="false" />
+			<classpath refid="test.classpath" />
+		</junit>
+	</target>
+
+	<target name="tests-backend-net" depends="compile">
+		<junit fork="yes" haltonfailure="yes">
+			<test name="${test.backend.java.lib.net.suite.name}" />
 			<formatter type="plain" usefile="false" />
 			<classpath refid="test.classpath" />
 		</junit>

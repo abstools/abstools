@@ -9,11 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 import abs.backend.java.lib.net.msg.Msg;
+import abs.backend.java.lib.net.msg.ObjectTargetMsg;
+import abs.backend.java.lib.net.msg.COGTargetMsg;
 import abs.backend.java.lib.runtime.ABSObject;
 
 public class DefaultRouter implements Router {
-    private final Map<ABSObject, RouteEntry> routeForObject = new HashMap<ABSObject, RouteEntry>();
-    private final Map<NetCOG, RouteEntry> routeForCOG = new HashMap<NetCOG, RouteEntry>();
+    private final Map<ABSObject, DefaultRouteEntry> routeForObject = new HashMap<ABSObject, DefaultRouteEntry>();
+    private final Map<NetCOG, DefaultRouteEntry> routeForCOG = new HashMap<NetCOG, DefaultRouteEntry>();
     private final NetNode node;
 
     public DefaultRouter(NetNode node) {
@@ -21,8 +23,31 @@ public class DefaultRouter implements Router {
     }
 
     @Override 
-    public void update(Router adjacentNodeRouter) {
-	// TODO
+    public void update(NetNode adjacentNode, Router adjacentNodeRouter) {
+	for (ABSObject object : adjacentNodeRouter.getRegisteredObjects()) {
+	    RouteEntry otherEntry = adjacentNodeRouter.getRouteEntry(object);
+	    DefaultRouteEntry newEntry = new DefaultRouteEntry(adjacentNode, otherEntry.getHops() + 1, adjacentNode);
+	    if (routeForObject.containsKey(object)) {
+		DefaultRouteEntry currentEntry = routeForObject.get(object);
+		if (newEntry.getSourceNode() == currentEntry.getSourceNode() || newEntry.compareTo(currentEntry) < 0) { 
+		    routeForObject.put(object, newEntry);
+		}
+	    } else {
+		routeForObject.put(object, newEntry);
+	    }
+	}	
+	for (NetCOG cog : adjacentNodeRouter.getRegisteredCOGs()) {
+	    RouteEntry otherEntry = adjacentNodeRouter.getRouteEntry(cog);
+	    DefaultRouteEntry newEntry = new DefaultRouteEntry(adjacentNode, otherEntry.getHops() + 1, adjacentNode);
+	    if (routeForCOG.containsKey(cog)) {
+		DefaultRouteEntry currentEntry = routeForCOG.get(cog);
+		if (newEntry.getSourceNode() == currentEntry.getSourceNode() || newEntry.compareTo(currentEntry) < 0) { 
+		    routeForCOG.put(cog, newEntry);
+		}
+	    } else {
+		routeForCOG.put(cog, newEntry);
+	    }
+	}
     }
 
     @Override
@@ -30,7 +55,7 @@ public class DefaultRouter implements Router {
 	if (routeForObject.containsKey(localObject)) {
 	    throw new IllegalArgumentException("object " + localObject + " already registered");
 	}
-	routeForObject.put(localObject, new DefaultRouteEntry(node, 0));
+	routeForObject.put(localObject, new DefaultRouteEntry(node, node));
     }
 
     @Override
@@ -38,22 +63,40 @@ public class DefaultRouter implements Router {
 	if (routeForCOG.containsKey(localCOG)) {
 	    throw new IllegalArgumentException("COG " + localCOG + " already registered");
 	}
-	routeForCOG.put(localCOG, new DefaultRouteEntry(node, 0));
+	routeForCOG.put(localCOG, new DefaultRouteEntry(node, node));
     }
     
     @Override
     public void replace(NetCOG cog, NetNode nextNode, int hops) {
-	routeForCOG.put(cog, new DefaultRouteEntry(nextNode, hops));
+	routeForCOG.put(cog, new DefaultRouteEntry(nextNode, hops, node));
     }
 
     @Override
     public void replace(ABSObject object, NetNode nextNode, int hops) {
-	routeForObject.put(object, new DefaultRouteEntry(nextNode, hops));
+	routeForObject.put(object, new DefaultRouteEntry(nextNode, hops, node));
     }
     
     @Override
     public NetNode getNextNode(Msg m) {
-        return null; // TODO
+	if (m instanceof ObjectTargetMsg) {
+	    ObjectTargetMsg om = (ObjectTargetMsg) m;
+	    ABSObject target = om.getTarget();
+	    if (routeForObject.containsKey(target)) {
+		return routeForObject.get(target).getNextNode();
+	    } else {
+		return node.defaultRoute();
+	    }	    
+	} else if (m instanceof COGTargetMsg) {
+	    COGTargetMsg cm = (COGTargetMsg) m;
+	    NetCOG target = cm.getTarget();
+	    if (routeForCOG.containsKey(target)) {
+		return routeForCOG.get(target).getNextNode();
+	    } else {
+		return node.defaultRoute();
+	    }
+	} else {
+	    return node.defaultRoute();
+	}
     }
 
     @Override
@@ -75,5 +118,4 @@ public class DefaultRouter implements Router {
     public Set<NetCOG> getRegisteredCOGs() {
 	return routeForCOG.keySet();
     }
-
 }

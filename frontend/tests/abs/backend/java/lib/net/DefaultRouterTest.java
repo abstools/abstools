@@ -52,42 +52,60 @@ public class DefaultRouterTest {
 	currentRouter.register(obj1);
 	otherRouter.register(cog2);
 	otherRouter.register(obj2);
-	currentRouter.update(otherRouter);
+	currentRouter.update(node2, otherRouter);
 
-	assertEquals("cog must be at one hop distance", 1, currentRouter.getRouteEntry(cog1).getHops());
-	assertEquals("direction for cog must be other node", node2, currentRouter.getRouteEntry(cog1).getNextNode());
-	assertEquals("object must be at one hop distance", 1, currentRouter.getRouteEntry(obj1).getHops());
-	assertEquals("direction for cog must be at other node", node2, currentRouter.getRouteEntry(obj1).getNextNode());
+	assertEquals("cog1 must be at zero hop distance", 0, currentRouter.getRouteEntry(cog1).getHops());
+	assertEquals("cog2 must be at one hop distance", 1, currentRouter.getRouteEntry(cog2).getHops());
+	assertEquals("obj1 must be at zero hop distance", 0, currentRouter.getRouteEntry(obj1).getHops());
+	assertEquals("obj2 must be at one hop distance", 1, currentRouter.getRouteEntry(obj2).getHops());
+
+	
+	assertEquals("next node for cog1 must be current node", node1, currentRouter.getRouteEntry(cog1).getNextNode());	
+	assertEquals("next node for cog2 must be at other node", node2, currentRouter.getRouteEntry(cog2).getNextNode());
+	assertEquals("next node for obj1 must be current node", node1, currentRouter.getRouteEntry(obj1).getNextNode());	
+	assertEquals("next node for obj2 must be at other node", node2, currentRouter.getRouteEntry(obj2).getNextNode());
     }
 
     @Test
-    public void updateBetter() {
+    public void updateWithBetterAtSame() {
 	otherRouter.register(obj1);
 	currentRouter.replace(obj1, node3, 3);
-	currentRouter.update(otherRouter);
+	currentRouter.update(node2, otherRouter);
 
 	assertEquals("route to object must be 1 hop", 1, currentRouter.getRouteEntry(obj1).getHops());	
 	assertEquals("route must be other node", node2, currentRouter.getRouteEntry(obj1).getNextNode());
     }
+    
+    @Test
+    public void updateWithBetterAtOther() {
+	otherRouter.replace(obj1, node3, 1);
+	currentRouter.replace(obj1, node4, 3);
+	currentRouter.update(node2, otherRouter);
+	
+	assertEquals("route to obj1 must be 2 hops", 2, currentRouter.getRouteEntry(obj1).getHops());	
+	assertEquals("route must be node2", node2, currentRouter.getRouteEntry(obj1).getNextNode());
+    }
 
     @Test
-    public void updateWorse() {
-	otherRouter.replace(obj1, node2, 2);
-	currentRouter.replace(obj1, node3, 5);
-	currentRouter.update(otherRouter);
+    public void notUpdateWorse() {
+	otherRouter.replace(obj1, node4, 5);
+	currentRouter.replace(obj1, node3, 3);
+	currentRouter.update(node2, otherRouter);
 
-	assertEquals("route to object must be 1 hop", 1, currentRouter.getRouteEntry(obj1).getHops());
+	assertEquals("route to obj1 must be 3 hops", 3, currentRouter.getRouteEntry(obj1).getHops());
+	assertEquals("next node for obj1 must be node3", node3, currentRouter.getRouteEntry(obj1).getNextNode());
     }
 
     @Test
     public void updateWorseSameSource() {
 	otherRouter.register(obj1);
 	currentRouter.replace(obj1, node3, 3);
-	currentRouter.update(otherRouter);
+	currentRouter.update(node2, otherRouter);
 	otherRouter.replace(obj1, node4, 1);
-	currentRouter.update(otherRouter);
+	currentRouter.update(node2, otherRouter);
 
 	assertEquals("route to object must be 2 hops", 2, currentRouter.getRouteEntry(obj1).getHops());
+	assertEquals("next node t must be 2 hops", 2, currentRouter.getRouteEntry(obj1).getHops());
     }
 
     @Test
@@ -123,8 +141,8 @@ public class DefaultRouterTest {
     public void replaceExistingObject() {
 	currentRouter.register(obj1);
 	currentRouter.replace(obj1, node2, 1);
-	assertEquals("route to cog1 must be 1 hops", 1, currentRouter.getRouteEntry(cog1).getHops());
-	assertEquals("route to cog1 must node2", node2, currentRouter.getRouteEntry(cog1).getNextNode());
+	assertEquals("route to cog1 must be 1 hops", 1, currentRouter.getRouteEntry(obj1).getHops());
+	assertEquals("route to cog1 must node2", node2, currentRouter.getRouteEntry(obj1).getNextNode());
     }
 
     @Test 
@@ -184,7 +202,24 @@ public class DefaultRouterTest {
     @Test
     public void nextNodeIsDefaultNeighbour() {
 	Msg msg = createMock(Msg.class);
+	expect(node1.defaultRoute()).andReturn(node2);
+	replay(node1);
+	
 	assertEquals("next node must be node2", node2, currentRouter.getNextNode(msg));
+	verify(node1);
+    }
+
+    @Test
+    public void hasNoRoutEntryForTarget() {
+	ObjectTargetMsg msg = createMock(ObjectTargetMsg.class);
+	expect(msg.getTarget()).andReturn(obj1);
+	expect(node1.defaultRoute()).andReturn(node2);
+	replay(msg);
+	replay(node1);
+
+	assertEquals("next node must be node2", node2, currentRouter.getNextNode(msg));
+	verify(msg);
+	verify(node1);	
     }
 
     @Test
@@ -197,5 +232,4 @@ public class DefaultRouterTest {
 	assertEquals("next node must be node2", node2, currentRouter.getNextNode(msg));
 	verify(msg);
     }
-
 }

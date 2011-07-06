@@ -14,24 +14,24 @@ import abs.backend.java.lib.runtime.ABSObject;
 public class DefaultRouteEntryTest {
     private NetNode node1;
     private NetNode node2;
-    private RouteEntry entry;
+    private DefaultRouteEntry entry;
 
     @Before
     public void setUp() {
 	node1 = createMock(NetNode.class);
 	node2 = createMock(NetNode.class);
-	entry = new DefaultRouteEntry(node1, 2);
+	entry = new DefaultRouteEntry(node1, 2, node2);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void negativeHops() {
-	RouteEntry other = new DefaultRouteEntry(node1, -1);
+	RouteEntry other = new DefaultRouteEntry(node1, -1, node1);
     }
 
     @Test
-    public void defaultHops() {
-	RouteEntry other = new DefaultRouteEntry(node1);
-	assertEquals("must be equal to default hops", DefaultRouteEntry.DEFAULT_HOPS, other.getHops());
+    public void implicitZeroHops() {
+	RouteEntry other = new DefaultRouteEntry(node1, node1);
+	assertEquals("must be equal to zero hops", 0, other.getHops());
     }
 
     @Test
@@ -45,46 +45,57 @@ public class DefaultRouteEntryTest {
     }
 
     @Test
+    public void getSourceNode() {
+
+    }
+
+    @Test
     public void equalsSelf() {
 	assertEquals("must be equal to self", entry, entry);
     }
 
     @Test
     public void doesEqual() {
-	RouteEntry other = new DefaultRouteEntry(entry.getNextNode(), entry.getHops());
+	RouteEntry other = new DefaultRouteEntry(entry.getNextNode(), entry.getHops(), entry.getSourceNode());
 	assertEquals("must be equal to entry", entry, other);
 
     }
 
     @Test
     public void doesNotEqualNode() {
-	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops());
+	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops(), entry.getSourceNode());
 	assertFalse("must not be equal to entry", other.equals(entry));
     }
 
     @Test
     public void doesNotEqualHops() {
-	RouteEntry other = new DefaultRouteEntry(entry.getNextNode(), entry.getHops() + 1);
+	RouteEntry other = new DefaultRouteEntry(entry.getNextNode(), entry.getHops() + 1, entry.getSourceNode());
+	assertFalse("must not be equal to entry", other.equals(entry));
+    }
+
+    @Test
+    public void doesNotEqualSource() {
+	RouteEntry other = new DefaultRouteEntry(entry.getNextNode(), entry.getHops(), node1);
 	assertFalse("must not be equal to entry", other.equals(entry));
     }
 
     @Test
     public void comparesToLess() {
-	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1);
+	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1, entry.getSourceNode());
 	assertTrue("must be less than other", entry.compareTo(other) < 0);
 	assertTrue("must be greater than entry", other.compareTo(entry) > 0);
     }
 
     @Test
     public void comparesToGreater() {
-	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1);
+	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops() + 1, entry.getSourceNode());
 	assertTrue("must be less than other", other.compareTo(entry) > 0);
 	assertTrue("must be greater than entry", entry.compareTo(other) < 0);
     }
 
     @Test
     public void comparesToEqual() {
-	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops());
+	RouteEntry other = new DefaultRouteEntry(node2, entry.getHops(), entry.getSourceNode());
 	assertEquals("must be equal", 0, other.compareTo(entry));
 	assertEquals("must be equal", 0, entry.compareTo(other));
     }

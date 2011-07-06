@@ -14,7 +14,7 @@ public interface Router {
     /**
      * Update the router with routes from a router from an adjacent node
      */
-    public void update(Router adjacentNodeRouter);
+    public void update(NetNode adjacentNode, Router adjacentNodeRouter);
 
     /**
      * Register an object that is local to the node

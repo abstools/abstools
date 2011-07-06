@@ -94,12 +94,13 @@ public class NodeImpl implements NetNode {
     private NetNode getNextNode(Msg m) {
         NetNode node = router.getNextNode(m);
         if (node == null) {
-            node = defaultNode();
+            node = defaultRoute();
         }
         return node;
     }
 
-    private NetNode defaultNode() {
+    @Override
+    public NetNode defaultRoute() {
         return null;
     }
 

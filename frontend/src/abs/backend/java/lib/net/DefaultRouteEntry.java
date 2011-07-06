@@ -5,20 +5,22 @@
 package abs.backend.java.lib.net;
 
 public class DefaultRouteEntry implements RouteEntry {
-    public static final int DEFAULT_HOPS = 1;
     private final NetNode nextNode;
+    private final NetNode sourceNode;
     private final int hops;
         
-    public DefaultRouteEntry(NetNode nextNode) {
+    public DefaultRouteEntry(NetNode nextNode, NetNode sourceNode) {
 	this.nextNode = nextNode;
-	hops = DEFAULT_HOPS;
+	this.sourceNode = sourceNode;
+	hops = 0;
     }
 
-    public DefaultRouteEntry(NetNode nextNode, int hops) {
+    public DefaultRouteEntry(NetNode nextNode, int hops, NetNode sourceNode) {
 	if (hops < 0) {
 	    throw new IllegalArgumentException("hops " + hops + " less than 0");
 	}
-	this.nextNode = nextNode;	
+	this.nextNode = nextNode;
+	this.sourceNode = sourceNode;
 	this.hops = hops;
     }
 
@@ -41,11 +43,13 @@ public class DefaultRouteEntry implements RouteEntry {
     public boolean equals(Object o) {
 	if (o == this) {
 	    return true;
-	} else if (!(o instanceof RouteEntry)) {
+	} else if (!(o instanceof DefaultRouteEntry)) {
 	    return false;
 	} else {
-	    RouteEntry entry = (RouteEntry) o;
-	    return nextNode == entry.getNextNode() && hops == entry.getHops();
+	    DefaultRouteEntry entry = (DefaultRouteEntry) o;
+	    return nextNode == entry.getNextNode() && 
+		hops == entry.getHops() && 
+		sourceNode == entry.getSourceNode();
 	}
     }
     
@@ -54,6 +58,11 @@ public class DefaultRouteEntry implements RouteEntry {
 	int result = 17;
 	result = 31 * result + hops;
 	result = 31 * result + nextNode.getId();
+	result = 31 * result + sourceNode.getId();
 	return result;
+    }
+
+    public NetNode getSourceNode() {
+	return sourceNode;
     }
 }
