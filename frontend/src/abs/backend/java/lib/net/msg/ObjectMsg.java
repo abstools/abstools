@@ -7,15 +7,18 @@ package abs.backend.java.lib.net.msg;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.net.NetCOG;
 
-public class ObjectMsg implements COGTargetMsg {
-    public final ABSObject object;
+public class ObjectMsg implements Msg {
+    private final ABSObject object;
 
     public ObjectMsg(ABSObject object) {
         this.object = object;
     }
 
-    @Override
-    public NetCOG getTarget() {
-	return null;
+    public ABSObject getObject() {
+	return object;
+    }
+
+    public NetCOG getCOG() {
+	return (NetCOG) object.getCOG();
     }
 }

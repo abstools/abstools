@@ -11,7 +11,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({ 
     DefaultRouterTest.class, 
     DefaultRouteEntryTest.class,
-    NodeTest.class})
+    NodeImplTest.class})
 public class AllNetTests {
 
 }

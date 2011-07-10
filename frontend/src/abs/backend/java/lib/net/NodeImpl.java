@@ -40,13 +40,24 @@ public class NodeImpl implements NetNode {
         this.id = id;
 	router = new DefaultRouter(this);
     }
+
+    public NodeImpl(int id, Router router) {
+	this.id = id;
+	this.router = router;
+    }
     
-    public void setUpArcs(List<Arc> arcs) {
+    @Override
+    public void addInArcs(List<Arc> arcs) {
         inArcs.addAll(arcs);
+    }
+
+    @Override
+    public void addOutArcs(Map<NetNode, Arc> arcs) {
+	outArcs.putAll(arcs);
     }
     
     public synchronized boolean processNextMsg() {
-        ArrayList<Arc> shuffledList = new ArrayList<Arc>(inArcs);
+        List<Arc> shuffledList = new ArrayList<Arc>(inArcs);
         Collections.shuffle(shuffledList);
         for (Arc arc : shuffledList) {
             if (!arc.getQueue().isEmpty()) {
@@ -74,13 +85,15 @@ public class NodeImpl implements NetNode {
             }
         } else if (m instanceof COGMsg) {
             COGMsg cm = (COGMsg) m;
-            cm.cog.setNode(this);
-            cogs.add(cm.cog);
+	    NetCOG cog = cm.getCOG();
+            cog.setNode(this);
+            cogs.add(cog);
         } else if (m instanceof ObjectMsg) {
             ObjectMsg om = (ObjectMsg) m;
-            NetCOG cog = (NetCOG) om.object.getCOG();
+	    ABSObject object = om.getObject();
+            NetCOG cog = (NetCOG) object.getCOG();
             if (cogs.contains(cog)) {
-                objects.add(om.object);
+                objects.add(object);
             } else {
                 routeAway(m);
             }
@@ -119,6 +132,21 @@ public class NodeImpl implements NetNode {
     @Override
     public synchronized void registerObject(ABSObject absObject) {
         objects.add(absObject);
+    }
+
+    @Override
+    public synchronized void registerCOG(NetCOG cog) {
+        cogs.add(cog);
+    }
+
+    @Override
+    public Set<ABSObject> getRegisteredObjects() {
+	return objects;
+    }
+
+    @Override
+    public Set<NetCOG> getRegisteredCOGs() {
+	return cogs;
     }
 
     @Override

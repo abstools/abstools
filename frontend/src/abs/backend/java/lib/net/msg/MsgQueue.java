@@ -12,7 +12,7 @@ package abs.backend.java.lib.net.msg;
  *
  */
 public interface MsgQueue {
-    void enqueue(Msg m);
-    Msg dequeue();
-    boolean isEmpty();
+    public void enqueue(Msg m);    
+    public Msg dequeue();    
+    public boolean isEmpty();
 }

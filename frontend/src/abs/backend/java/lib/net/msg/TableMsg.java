@@ -7,9 +7,13 @@ package abs.backend.java.lib.net.msg;
 import abs.backend.java.lib.net.Router;
 
 public class TableMsg implements Msg {
-    public final Router router;
+    private final Router router;
 
     public TableMsg(Router router) {
         this.router = router;
+    }
+
+    public Router getRouter() {
+	return router;
     }
 }

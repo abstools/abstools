@@ -5,6 +5,7 @@
 package abs.backend.java.lib.net.msg;
 
 import abs.backend.java.lib.net.Promise;
+import abs.backend.java.lib.net.NetCOG;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.types.ABSValue;
 
@@ -22,5 +23,10 @@ public class PromiseMsg implements ObjectTargetMsg {
     @Override
     public ABSObject getTarget() {
         return target;
+    }
+
+    @Override
+    public NetCOG getCOG() {
+	return (NetCOG) getTarget().getCOG();
     }
 }

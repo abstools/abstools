@@ -5,6 +5,7 @@
 package abs.backend.java.lib.net.msg;
 
 import abs.backend.java.lib.net.Promise;
+import abs.backend.java.lib.net.NetCOG;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.runtime.AsyncCall;
 import abs.backend.java.lib.types.ABSRef;
@@ -20,6 +21,11 @@ public class CallMsg implements ObjectTargetMsg {
     
     @Override
     public ABSObject getTarget() {
-        return (ABSObject)call.getTarget();
+        return (ABSObject) call.getTarget();
+    }
+
+    @Override
+    public NetCOG getCOG() {
+	return (NetCOG) getTarget().getCOG();
     }
 }

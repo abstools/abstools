@@ -4,8 +4,10 @@
  */
 package abs.backend.java.lib.net.msg;
 
+import abs.backend.java.lib.net.NetCOG;
 import abs.backend.java.lib.runtime.ABSObject;
 
 public interface ObjectTargetMsg extends Msg {
     public ABSObject getTarget();
+    public NetCOG getCOG();
 }

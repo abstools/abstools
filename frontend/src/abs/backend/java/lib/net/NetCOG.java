@@ -50,7 +50,7 @@ public class NetCOG extends COG {
         }
     }
 
-    public synchronized void setNode(NodeImpl node) {
+    public synchronized void setNode(NetNode node) {
         this.node = node;
     }
     
