@@ -10,7 +10,7 @@ import java.util.Set;
 
 import abs.backend.java.lib.net.msg.Msg;
 import abs.backend.java.lib.net.msg.ObjectTargetMsg;
-import abs.backend.java.lib.net.msg.COGTargetMsg;
+import abs.backend.java.lib.net.msg.ObjectMsg;
 import abs.backend.java.lib.runtime.ABSObject;
 
 public class DefaultRouter implements Router {
@@ -86,9 +86,9 @@ public class DefaultRouter implements Router {
 	    } else {
 		return node.defaultRoute();
 	    }	    
-	} else if (m instanceof COGTargetMsg) {
-	    COGTargetMsg cm = (COGTargetMsg) m;
-	    NetCOG target = cm.getTarget();
+	} else if (m instanceof ObjectMsg) {
+	    ObjectMsg om = (ObjectMsg) m;
+	    NetCOG target = om.getCOG();
 	    if (routeForCOG.containsKey(target)) {
 		return routeForCOG.get(target).getNextNode();
 	    } else {

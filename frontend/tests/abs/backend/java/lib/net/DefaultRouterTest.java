@@ -12,7 +12,7 @@ import static org.easymock.EasyMock.*;
 import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.net.msg.Msg;
 import abs.backend.java.lib.net.msg.ObjectTargetMsg;
-import abs.backend.java.lib.net.msg.COGTargetMsg;
+import abs.backend.java.lib.net.msg.ObjectMsg;
 
 public class DefaultRouterTest {
     private NetNode node1;
@@ -224,9 +224,9 @@ public class DefaultRouterTest {
 
     @Test
     public void nextNodeBasedOnCOG() {
-	COGTargetMsg msg = createMock(COGTargetMsg.class);
+	ObjectMsg msg = createMock(ObjectMsg.class);
 	currentRouter.replace(cog1, node2, 1);
-	expect(msg.getTarget()).andReturn(cog1);
+	expect(msg.getCOG()).andReturn(cog1);
 	replay(msg);
 
 	assertEquals("next node must be node2", node2, currentRouter.getNextNode(msg));
