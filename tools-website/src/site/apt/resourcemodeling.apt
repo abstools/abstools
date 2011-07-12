@@ -2,13 +2,13 @@ Simulating Resources in Maude
 
 * Introduction
 
-  ABS models can be augmented with resource information and their
-  execution simulated on the Maude backend.  Resources are contained in
-  <deployment components>, which provide a context in which concurrent
-  object groups and their objects execute.  Deployment components can be
-  used to model servers, virtual machines, nodes in a network, and
-  basically any entity that constrains execution of code running in its
-  context.
+  ABS models can be augmented with resource information and the effects
+  of resources during execution can be simulated on the Maude backend.
+  Resources are contained in <deployment components>, which provide a
+  context in which concurrent object groups and their objects execute.
+  Deployment components can be used to model servers, virtual machines,
+  nodes in a network, and basically any entity that constrains execution
+  of code running in its context.
 
   This section describes language features related to deployment
   components.  Most of these features are implemented on the Maude
@@ -20,7 +20,9 @@ Simulating Resources in Maude
 
    Resource types are, at the moment, cpu capacity and memory.
    Additionally, a URL can be used to express the "location" of a
-   deployment component.
+   deployment component.  (In a distributed implementation of ABS, the
+   URL can be used to specify the location of a new cog and its first
+   object.)
 
 +---
 data DCDataElement = URL(String)
@@ -49,3 +51,40 @@ implements DeploymentComponent {
 }
 +---
 
+** Using Deployment Components
+
+   An optional annotation <<<[DC: x]>>> attached to a <<<new cog>>>
+   statement expresses that the new object's cog will run in the context
+   of deployment component <<<x>>>.  By default, a new cog runs in the
+   same context as the process that generates it.
+
++---
+interface Server { ... }
+
+class ServerImp implements Server { ... }
+
+{
+  DeploymentComponent remote = new DeploymentComponent("remote",
+      set[URL(http://192.168.50.12:6002/)]);
+  [DC: remote] Server x = new cog ServerImp();  // running in dc `remote'
+  Server y = new cog ServerImp();               // running in current dc
+}
++---
+
+** Accessing the Current Deployment Component
+
+   <<Note: this function is currently undefined in the Java backend and
+   will lead to a compile-time error.>>
+
++---
+def DeploymentComponent thisDC() = builtin;
++---
+
+   The <<<thisDC()>>> "function" returns the current deployment
+   component, i.e., the one that was given as annotation at the <<<new
+   cog>>> object instantiation.  <<<thisDC>>> returns <<<null>>> if no
+   deployment component was specified.
+
++---
+  DCData currentData = thisDC().getConfiguration();
++---

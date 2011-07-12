@@ -432,3 +432,8 @@ implements DeploymentComponent {
     }
     DCData getConfiguration() { return configuration; }
 }
+
+// abbreviation for [DC: foo] annotations
+type DC = DeploymentComponent;
+
+def DeploymentComponent thisDC() = builtin;

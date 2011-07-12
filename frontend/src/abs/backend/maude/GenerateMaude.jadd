@@ -196,14 +196,23 @@ aspect GenerateMaude {
         }
         stream.print("'" + var + " ; \"" + (((UnionType)getType()).getOriginatingClass()).qualifiedName() + "\" ; ");
         if (getNumParam() == 0) {
-            stream.print("emp");
+            stream.print("emp ");
         } else {
             stream.print("(");
             for (PureExp param : getParams()) {
                 if (inlist) stream.print(":: "); else inlist = true;
                 param.generateMaude(stream);
             }
-            stream.print(")");
+            stream.print(") ");
+        }
+        if (hasCog()) {
+            PureExp dc = MaudeCompilerHelper.getAnnotationValue(annotations, "DC");
+            stream.print("; ");
+            if (dc != null) {
+                dc.generateMaude(stream);
+            } else {
+                stream.print("'.comp ");
+            }
         }
         stream.print(") ");
     }
