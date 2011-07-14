@@ -581,6 +581,9 @@ aspect GenerateJava {
            stream.print("; }");
            stream.print("}.execute();");
        }
+       Position pos = new Position(this);
+       stream.print("throw new "+UnmatchedCaseException.class.getName()+"(\"");
+       stream.println(pos.getPositionString()+" value \"+__ABS_value+\" did not match any pattern.\");");
        stream.print("}}.of(");
        getCondExp().generateJava(stream);
        stream.print(")");
