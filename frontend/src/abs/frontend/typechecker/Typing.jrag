@@ -177,6 +177,13 @@ aspect Typing {
     eq ArithmeticExp.getType() = getModel().getIntType();
     eq BoolExp.getType() = getModel().getBoolType();
     eq RelationalExpr.getType() = getModel().getBoolType();
+    eq IfExp.getType() {
+        Type mostGeneralType = getThenExp().getType();
+        if (mostGeneralType.isAssignable(getElseExp().getType())) {
+            mostGeneralType = getElseExp().getType();
+        }
+        return mostGeneralType;
+    }
     eq CaseExp.getType() {
    	 Type mostGeneralType = null;
    	 for (CaseBranch b : getBranchs()) {
@@ -271,3 +278,7 @@ aspect Typing {
     }
 
 }
+
+// Local Variables:
+// mode: java
+// End:

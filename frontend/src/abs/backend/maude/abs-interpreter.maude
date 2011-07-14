@@ -733,6 +733,8 @@ mod ABS-EVAL is
   eq eval(let AL = EL in E, S, CN, MAC) = 
     eval(E, S :: createSubst(AL, evalList(EL, S, CN, MAC)), CN, MAC) .
 
+
+
   *** evaluate a case statement.  If the pattern matches, augment environment
   *** with the resulting bindings.
   sort MatchResult .

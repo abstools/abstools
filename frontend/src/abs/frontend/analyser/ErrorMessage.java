@@ -27,6 +27,8 @@ public enum ErrorMessage {
     MODULE_NOT_RESOLVABLE("Module %s cannot be resolved."),
     BRANCH_INCOMPARABLE_TYPE("Case branches with incomparable types, %s and %s."),
     CASE_NO_DATATYPE("Cases are only possible on data types, but found type %s."),
+    IF_NO_DATATYPE("If expressions are only possible on data types, but found type %s."),
+    IF_DIFFERENT_TYPE("If expression with incompatible result types, %s and %s."),
     EQUALITY_INCOMPARABLE_TYPE("Equality expression with incomparable types, %s and %s."),
     ADD_INCOMPARABLE_TYPE("Add expression with incomparable types, %s and %s."),
     WRONG_NUMBER_OF_ARGS("Wrong number of arguments. Expected %s, but found %s."),

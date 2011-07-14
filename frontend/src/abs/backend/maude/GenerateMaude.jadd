@@ -314,6 +314,16 @@ aspect GenerateMaude {
         getExp().generateMaude(stream);
     }
 
+    public void IfExp.generateMaude(PrintStream stream) {
+        stream.print("if ");
+        getCondExp().generateMaude(stream);
+        stream.print("th ");
+        getThenExp().generateMaude(stream);
+        stream.print("el ");
+        getElseExp().generateMaude(stream);
+        stream.print("fi ");
+    }
+
 	public void CaseExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
 		stream.print("case " );
