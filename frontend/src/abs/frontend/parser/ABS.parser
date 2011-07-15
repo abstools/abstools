@@ -487,7 +487,7 @@ PureExp pure_exp =
 	| constructor_exp
 	| fnapp_exp
     | fnapp_list_exp
-    | iif_exp
+    | if_exp
     | case_exp
     ;
 
@@ -509,8 +509,8 @@ DataConstructorExp constructor_exp =
 	| type_name.f {: return new DataConstructorExp(f.getName(), new List()) ; :}
     ;
 
-IfExp iif_exp =
-    IIF data_exp.e THEN data_exp.c ELSE data_exp.a {: return new IfExp(e,c,a) ; :}
+IfExp if_exp =
+    IF data_exp.e THEN data_exp.c ELSE data_exp.a {: return new IfExp(e,c,a) ; :}
     ;
 
 
@@ -716,7 +716,7 @@ Stmt stmt_without_annotations =
     |  RETURN exp.e        {: return new ReturnStmt(new List(),e) ; :}
 	|  var_decl.vd  {: return new VarDeclStmt(new List(),vd) ; :}
     |  ASSERT data_exp.e  {: return new AssertStmt(new List(), e) ; :}
-	|  exp.e    {: return new ExpressionStmt(new List(), e) ; :}
+	|  eff_exp.e    {: return new ExpressionStmt(new List(), e) ; :}
 	;
 
 Stmt compound_stmt =
