@@ -97,11 +97,18 @@ aspect TypeCheckerExtension {
         return t;
     }
 
+    refine Typing eq IfExp.getType() {
+        Type t = Typing.IfExp.getType().fullCopy();
+        getModel().getTypeExt().annotateType(t, this);
+        return t;
+    }
+    
     refine Typing eq CaseExp.getType() {
         Type t = Typing.CaseExp.getType().fullCopy();
         getModel().getTypeExt().annotateType(t, this);
         return t;
     }
+
     
     // STATEMENTS
     
@@ -276,7 +283,15 @@ aspect TypeCheckerExtension {
  
      }
     
-     refine TypeChecker public void CaseExp.typeCheck(SemanticErrorList e) {  
+    refine TypeChecker public void IfExp.typeCheck(SemanticErrorList e) {  
+        int size = e.size();
+        TypeChecker.IfExp.typeCheck(e);
+        if (e.size() > size) return;
+
+        getModel().getTypeExt().checkIfExp(this);
+   } 
+
+    refine TypeChecker public void CaseExp.typeCheck(SemanticErrorList e) {  
          int size = e.size();
          TypeChecker.CaseExp.typeCheck(e);
          if (e.size() > size) return;

@@ -9,6 +9,11 @@ import org.junit.Test;
 public class JavaExprTests extends JavaBackendTest {
 
     @Test
+    public void ifExp() {
+        assertValidStdLib("def Bool f(Bool x) = if x then True else False; ");
+    }
+
+    @Test
     public void caseTrue() {
         assertValidStdLib("def Bool f(Bool x) = case x { True => True; False => False; }; ");
     }

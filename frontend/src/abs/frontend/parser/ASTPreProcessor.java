@@ -19,9 +19,12 @@ import abs.frontend.ast.FunctionDef;
 import abs.frontend.ast.List;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PatternVar;
 import abs.frontend.ast.PatternVarDecl;
+import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnderscorePattern;
 import abs.frontend.ast.VarUse;
@@ -98,14 +101,20 @@ public class ASTPreProcessor {
                             new ConstructorPattern(c.getName(), patternList),
                             new VarUse("res")))));
         
+        List<TypeParameterDecl> typeParams = new List<TypeParameterDecl>();
+        if (dtd instanceof ParametricDataTypeDecl) {
+            typeParams = ((ParametricDataTypeDecl) dtd).getTypeParameterList();
+        }
+        
         // the complete function definition
         FunctionDecl fd = 
-            new FunctionDecl(
+            new ParametricFunctionDecl(
                     selName,    // function name
-                    new List(), // annotations
-                    new DataTypeUse(ca.getDataTypeUse().getName(), new List()), // type
+                    ca.getDataTypeUse().copy(), // type
                     new List().add(new ParamDecl("data",new DataTypeUse(dtd.getName(), new List()),new List())), // parameters
-                    funDef
+                    funDef,
+                    new List(), // annotations
+                    typeParams
                     );
         return fd;
     }

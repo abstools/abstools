@@ -66,6 +66,8 @@ IntLiteral = 0 | [1-9][0-9]*
 
 %% // Rules
 //Keywords 
+// Important: if a new keyword is added also add it to Keywords.java
+//            to get syntax highlighting in Eclipse
 <YYINITIAL> {
  "module"      { return sym(Terminals.MODULE); }
  "import"      { return sym(Terminals.IMPORT); }

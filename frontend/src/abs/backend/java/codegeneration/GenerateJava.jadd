@@ -555,38 +555,11 @@ aspect GenerateJava {
     }
 
     public void IfExp.generateJava(PrintStream stream) {
-       stream.print("new "+Case.class.getName());
-       String varType = JavaBackend.getQualifiedString(getCondExp().getType()); // always Boolean
-       String expType = JavaBackend.getQualifiedString(getType());
-       stream.println("() {");
-       stream.print("      public "+expType+" of(");
-       stream.println("final "+varType+" __ABS_value) { ");
-       {
-           String bindingName = "__ABS_binding0";
-           stream.println("final "+PatternBinding.class.getName()+" "+bindingName+" = new abs.backend.java.lib.expr.PatternConstructor(\"True\").match(__ABS_value);");
-           stream.print("if ("+bindingName+" != null) ");
-           stream.println("return new Object() {");
-           stream.print("  public "+expType+" execute() { return ");
-           getThenExp().generateJava(stream);
-           stream.print("; }");
-           stream.print("}.execute();");
-       }
-       {
-           String bindingName = "__ABS_binding1";
-           stream.println("final "+PatternBinding.class.getName()+" "+bindingName+" = new abs.backend.java.lib.expr.PatternConstructor(\"True\").match(__ABS_value);");
-           stream.print("if ("+bindingName+" != null) ");
-           stream.println("return new Object() {");
-           stream.print("  public "+expType+" execute() { return ");
-           getElseExp().generateJava(stream);
-           stream.print("; }");
-           stream.print("}.execute();");
-       }
-       Position pos = new Position(this);
-       stream.print("throw new "+UnmatchedCaseException.class.getName()+"(\"");
-       stream.println(pos.getPositionString()+" value \"+__ABS_value+\" did not match any pattern.\");");
-       stream.print("}}.of(");
        getCondExp().generateJava(stream);
-       stream.print(")");
+       stream.print(".toBoolean() ? ");
+       getThenExp().generateJava(stream);
+       stream.print(" : ");
+       getElseExp().generateJava(stream);
     }
 
     public void CaseExp.generateJava(PrintStream stream) {

@@ -68,6 +68,16 @@ public class TypeCheckerTest extends FrontendTest {
     public void dataTypeSelectors2() {
         assertTypeOK("data User = User(String login, String passwordHash);");
     }
+
+    @Test
+    public void dataTypeSelectorsParamType() {
+        assertTypeOK("data User = User(List<String> names);");
+    }
+
+    @Test
+    public void dataTypeSelectorsTypeParam() {
+        assertTypeOK("data User<A> = User(List<A> names); { User<String> s = User(list[\"sdasd\"]); List<String> names = names(s); } ");
+    }
     
     @Test
     public void negTestOk() {

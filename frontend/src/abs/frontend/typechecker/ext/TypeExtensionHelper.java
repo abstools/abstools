@@ -205,6 +205,10 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
     }
     
+    public void checkIfExp(IfExp e) {
+    }
+    
+    
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
         if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) { 
@@ -351,5 +355,6 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         obs = new ArrayList<TypeSystemExtension>(obs);
         obs.addAll(curr);
     }
+
 
 }
