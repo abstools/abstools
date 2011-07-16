@@ -480,6 +480,11 @@ MethodSig methodsig =
     ;
 
 PureExp pure_exp =
+      pure_exp_no_if
+    | if_exp
+;
+
+PureExp pure_exp_no_if =
 	  var_or_field_ref
     | THIS                {: return new ThisExp() ; :}
     | NULL                 {: return new NullExp() ; :}
@@ -487,7 +492,6 @@ PureExp pure_exp =
 	| constructor_exp
 	| fnapp_exp
     | fnapp_list_exp
-//    | if_exp
     | case_exp
     ;
 
@@ -509,11 +513,9 @@ DataConstructorExp constructor_exp =
 	| type_name.f {: return new DataConstructorExp(f.getName(), new List()) ; :}
     ;
 
-/*
 IfExp if_exp =
     IF data_exp.e THEN data_exp.c ELSE data_exp.a {: return new IfExp(e,c,a) ; :}
     ;
-*/
 
 CaseExp case_exp =
 	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}
@@ -648,8 +650,14 @@ Exp exp =
 	| data_exp.e  {: return e; :}
 	;
 
+PureExp pure_exp_prefix = 
+     pure_exp_no_if
+   | LPAREN if_exp.e RPAREN {: return e; :}
+
+;
+
 Exp eff_exp =
-    pure_exp.p DOT GET    {: return new GetExp(p) ; :}
+    pure_exp_prefix.p DOT GET    {: return new GetExp(p) ; :}
     | new_exp
 	| async_call
 	| sync_call
@@ -663,25 +671,25 @@ NewExp new_exp =
 
 AsyncCall async_call =
 	THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(new ThisExp(), method,params) ; :}
-	| pure_exp.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(callee,method,params) ; :}
+	| pure_exp_prefix.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(callee,method,params) ; :}
 	;
 
 SyncCall sync_call =
 	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(new ThisExp(),method,params) ; :}
-	| pure_exp.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :}
+	| pure_exp_prefix.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :}
 	;
 
 OriginalCall original_call = ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :} ;
 
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =
-      pure_exp.callee DOT.d {:
+      pure_exp_prefix.callee DOT.d {:
         if (!allowIncompleteExpr) {
            addSyntaxError("Missing method or field name",callee);
         }
         return new IncompleteSyncAccess(callee);
       :}
-    | pure_exp.callee BANG.b {:
+    | pure_exp_prefix.callee BANG.b {:
         if (!allowIncompleteExpr) {
             addSyntaxError("Missing method name",callee);
         }

@@ -68,6 +68,13 @@ public class ParserTest extends FrontendTest {
     public void testEmptyBlock() {
         assertParseOk("{ }"); // No decls.
     }
+    
+    @Test
+    public void ifExp() {
+        assertParseOk("{ (if True then x else x).get; }" ); 
+        assertParseError("{ if True then x else x.get; }" ); 
+    }
+    
 
     @Test
     public void testStmts() {
