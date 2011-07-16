@@ -34,7 +34,8 @@ public class ParserTest extends FrontendTest {
             "pair(x,y)",
             // case expression
             "case set { EmptyStringSet => False ; }", "case set { EmptyStringSet() => False ; }",
-            "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}" };
+            "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}",
+            "if True then 5 else 6"};
 
     private String[] effExp = { "new Foo()  ", "new Foo(a,b)  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
             "this!init(y,z)  ", "o.init(y,z,w)  ",
@@ -245,15 +246,15 @@ public class ParserTest extends FrontendTest {
     @Test
     public void testControlStmts() {
 
-        assertParseOk("{ if (x) y = true  ; }");
-        assertParseOk("{ if (x) y = true ; else y = false  ; }");
-        assertParseOk("{ if (x) { y = true ; z = false; }  else y = false  ; }");
+        assertParseOk("{ if (x) y = True  ; }");
+        assertParseOk("{ if (x) y = True ; else y = False  ; }");
+        assertParseOk("{ if (x) { y = True ; z = False; }  else y = False  ; }");
         assertParseOk("{ if (x) { if (y) skip ; else skip ; } else skip ; }");
         assertParseOk("{ if (x) if (y) skip ; else skip ; else skip ; }");
         assertParseOk("{ while (x) skip ;  }");
         assertParseOk("{ while (x) { x = y ; skip ; } }");
-        assertParseOk("{ if (x) y = true ; else y = false  ; }");
-        assertParseOk("{ if (x) { y = true ; z = false; }  else y = false  ; }");
+        assertParseOk("{ if (x) y = True ; else y = False  ; }");
+        assertParseOk("{ if (x) { y = True ; z = False; }  else y = False  ; }");
 
     }
 

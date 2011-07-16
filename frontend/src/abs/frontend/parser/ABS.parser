@@ -487,7 +487,7 @@ PureExp pure_exp =
 	| constructor_exp
 	| fnapp_exp
     | fnapp_list_exp
-    | if_exp
+//    | if_exp
     | case_exp
     ;
 
@@ -509,10 +509,11 @@ DataConstructorExp constructor_exp =
 	| type_name.f {: return new DataConstructorExp(f.getName(), new List()) ; :}
     ;
 
+/*
 IfExp if_exp =
     IF data_exp.e THEN data_exp.c ELSE data_exp.a {: return new IfExp(e,c,a) ; :}
     ;
-
+*/
 
 CaseExp case_exp =
 	CASE data_exp.caseterm LBRACE case_branch_list.branches? RBRACE {: return new CaseExp(caseterm, branches) ; :}

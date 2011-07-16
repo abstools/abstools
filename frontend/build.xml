@@ -198,7 +198,11 @@
 	<target name="genp2" depends="genp1">
 		<!-- generate the parser phase 2, translating .beaver to .java -->
 		<echo message="Parser phase" />
-		<beaver file="${parser.gen.dir}/ABSParser.beaver" terminalNames="yes" compress="no" useSwitch="yes" />
+		<beaver file="${parser.gen.dir}/ABSParser.beaver" 
+			terminalNames="yes" 
+			compress="no" 
+			useSwitch="yes"
+		   reportActions="yes"/>
 	</target>
 
 
