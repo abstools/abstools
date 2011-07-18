@@ -103,6 +103,10 @@
 	           <directory>../frontend/src/abs/backend/maude</directory>
 		   <includes><include>abs-interpreter.maude</include></includes>
                 </resource>
+                <resource>
+	           <directory>../../../../ABS_Documentation/ReferenceManual/</directory>
+		   <includes><include>absrefmanual.pdf</include></includes>
+                </resource>
               </resources>              
             </configuration>            
           </execution>
