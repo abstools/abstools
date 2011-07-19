@@ -188,7 +188,7 @@ public class InferMain extends Main {
             ASTNode<?> node = ltv.getNode();
             if (node == null) continue;
             CompilationUnit cu = node.getCompilationUnit();
-            if (cu.getName().equals("ABS.StdLib")) continue;
+            if (node.getModuleDecl().getName().startsWith("ABS.")) continue;
             List<LocationTypeVariable> list = m.get(cu);
             if (list == null) {
                 list = new ArrayList<LocationTypeVariable>();
