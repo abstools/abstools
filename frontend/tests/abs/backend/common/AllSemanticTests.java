@@ -8,8 +8,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ PrimitiveTypes.class, StmtTests.class, ObjectTests.class, FunctionalTests.class,
-        ConcurrencyTests.class, StdLibTests.class, ModuleSystemTests.class })
+@Suite.SuiteClasses({ 
+    ConcurrencyTests.class, 
+    DeltaTests.class, 
+    FunctionalTests.class,
+    ModuleSystemTests.class, 
+    ObjectTests.class, 
+    PrimitiveTypes.class, 
+    StdLibTests.class, 
+    StmtTests.class, 
+    TimeTests.class })
 public class AllSemanticTests {
 
 }
