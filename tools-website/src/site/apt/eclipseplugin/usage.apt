@@ -84,4 +84,4 @@ Using the ABS Eclipse IDE
 
   The ABS Eclipse IDE provides the facility to use external ABS packages (APK) in an ABS eclipse project as dependencies.
   
-  {{{./eclipse/packagedependencies.html}More information}} 
+  {{{./packagedependencies.html}More information}} 
