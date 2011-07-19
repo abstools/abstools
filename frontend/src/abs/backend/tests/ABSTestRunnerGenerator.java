@@ -35,7 +35,7 @@ import abs.frontend.typechecker.Type;
  * @author pwong
  * 
  */
-public class ABSTestRunnerGenerator extends Main {
+public class ABSTestRunnerGenerator {
     
     public static final String RUNNER_MAIN = "AbsUnit.TestRunner";
     
