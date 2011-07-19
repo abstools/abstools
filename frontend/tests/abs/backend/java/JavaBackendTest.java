@@ -16,6 +16,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,14 +112,14 @@ public class JavaBackendTest extends ABSTest {
     boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) {
         StringBuffer output = null;
         try {
-            String[] jvmArgs = new String[0];
+            List<String> jvmArgs = new ArrayList<String>();
+            jvmArgs.add("-Dabs.terminateOnException=true");
             if (useRandomScheduler) {
-                jvmArgs = new String[] { 
-                        "-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName(),
-                        "-Dabs.randomseed="+randomSeed};
+                jvmArgs.add("-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName());
+                jvmArgs.add("-Dabs.randomseed="+randomSeed);
             } 
             
-            output = runJava(javaCode, jvmArgs);
+            output = runJava(javaCode, jvmArgs.toArray(new String[0]));
             String s = output.toString() + "\n";
             String result = null;
             Pattern p = Pattern.compile(".*__ABS_TESTRESULT=([^\n]*)\n.*", Pattern.MULTILINE | Pattern.DOTALL);

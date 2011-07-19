@@ -50,6 +50,7 @@ public class Config {
     public static final ConfigOption LOGLEVEL_OPTION = newOption("abs.loglevel", "sets a logging level",
             OptionType.STRING);
     public static final ConfigOption DEBUG_OPTION = newOption("abs.debug", "enables debugging", OptionType.BOOLEAN);
+    public static final ConfigOption TERMINATE_ON_EXCEPTION = newOption("abs.terminateOnException", "terminates the system when an exception occurs", OptionType.BOOLEAN);
     public static final ConfigOption SYSTEM_OBSERVER_OPTION = newOption("abs.systemobserver",
             "sets a system observer class", OptionType.CLASS);
     public static final ConfigOption TOTAL_SCHEDULER_OPTION = newOption("abs.totalscheduler",
@@ -90,7 +91,7 @@ public class Config {
     
     public void loadProperties() {
         loadSystemObserver();
-        loadDebugging();
+        loadFlagOptions();
         loadRandomSeed();
         loadTotalSchedulingStrategy();
         loadTaskSchedulingStrategy();
@@ -110,8 +111,9 @@ public class Config {
         }
     }
 
-    public void loadDebugging() {
+    public void loadFlagOptions() {
         runtime.enableDebugging(System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true"));
+        runtime.terminateOnException(System.getProperty(TERMINATE_ON_EXCEPTION.propertyName, "false").equals("true"));
     }
 
     public static Object loadClassByProperty(String property, Object... args) {
@@ -187,6 +189,9 @@ public class Config {
         TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByProperty(TASK_SCHEDULER_STRATEGY_OPTION.propertyName);
         if (strat == null)
             return;
+        if (strat instanceof RandomSchedulingStrategy) {
+            ((RandomSchedulingStrategy) strat).setRandom(runtime.getRandom());
+        }
         configuredTaskScheduling = true;
 
         logger.config("Using task scheduling strategy defined by class " + strat.getClass().getName());

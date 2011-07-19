@@ -24,7 +24,6 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
 
 
 
-    @SuppressWarnings("unchecked")
     public V get() {
         synchronized (this) {
             if (!isResolved() && resolvingTask.getCOG() == ABSRuntime.getCurrentCOG())
@@ -51,6 +50,8 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
         if (Logging.DEBUG)
             log.finest("continue after get");
 
+        if (exception != null)
+            throw exception;
         return value;
     }
 

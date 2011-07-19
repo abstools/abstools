@@ -125,6 +125,9 @@ public class DefaultTaskScheduler implements TaskScheduler {
             if (Logging.DEBUG)
                 log.finest(runningTask + " AWAITING " + g);
             boolean couldBecomeFalse = g.await();
+            if (Thread.interrupted()) {
+                return;
+            }
 
             if (!couldBecomeFalse) {
                 if (Logging.DEBUG)
@@ -142,6 +145,7 @@ public class DefaultTaskScheduler implements TaskScheduler {
                             log.finest(runningTask + " WOKE UP...");
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        break;
                     }
                 }
                 thread = this;

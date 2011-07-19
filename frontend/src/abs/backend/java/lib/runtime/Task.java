@@ -121,7 +121,8 @@ public class Task<T extends ABSRef> {
             future.resolve(res);
         } catch (ABSException e) {
             this.exception = e;
-            System.err.println("Error in " + this + ":\n" + e.getMessage());
+            future.smash(e);
+            getCOG().getRuntime().handleABSException(this,e);
         } catch (SystemTerminatedException e) {
             
         } catch (Exception e) {

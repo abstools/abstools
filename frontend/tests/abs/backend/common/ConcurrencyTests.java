@@ -117,6 +117,13 @@ public class ConcurrencyTests extends SemanticTests {
         assertEvalFails(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET_DEADLOCK);
     }
 
+    static String CLASS_C_ASSERT_FAILS = "class C implements I { Unit n() { } Bool m() { assert False; return True; } } ";
+    
+    @Test
+    public void assertionFails() {
+        assertEvalFails(INTERFACE_I + CLASS_C_ASSERT_FAILS + COG_CALL_M_ASYNC);
+    }
+    
     @Test
     public void illegalSyncCall() {
         // Fails because a synchrous call to an object of a different COG is not

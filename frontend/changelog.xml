@@ -14,7 +14,7 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
   </properties>
 
 <body>
-	<release version="1.2.0" description="New ABS language feature: if-then-else expression">
+	<release version="1.2.0" date="2011-07-19" description="New ABS language feature: if-then-else expression">
 	  <action dev="rschlatte" type="add">
 		Added if-then-else expression
 	  </action>

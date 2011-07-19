@@ -89,7 +89,9 @@ public class GlobalScheduler {
                 logger.finest("Awaiting next step...");
                 wait();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.fine("was interrupted");
+                Thread.currentThread().interrupt();
+                break;
             }
         }
         logger.finest("Next step done");
@@ -129,6 +131,10 @@ public class GlobalScheduler {
                 try {
                     wait();
                 } catch (InterruptedException e) {
+                    if (Logging.DEBUG)
+                        logger.fine("receveid interrupt exception");
+                    Thread.currentThread().interrupt();
+                    break;
                 }
 
             }

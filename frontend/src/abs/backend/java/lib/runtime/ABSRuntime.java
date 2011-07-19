@@ -118,6 +118,7 @@ public class ABSRuntime {
     private TaskSchedulingStrategy taskSchedulingStrategy;
     private TaskSchedulerFactory taskSchedulerFactory = DefaultTaskScheduler.getFactory();
     private volatile boolean debugging = false;
+    private volatile boolean terminateOnException = false;
     private long randomSeed;
     private Random random;
 
@@ -142,6 +143,16 @@ public class ABSRuntime {
     
     public boolean debuggingEnabled() {
         return debugging;
+    }
+    
+    /** 
+     * Terminate the whole ABS runtime when an exception occurs
+     * when executing a task. 
+     * Default is false
+     * @param b whether to terminate or not
+     */
+    public void terminateOnException(boolean b) {
+        terminateOnException = b;
     }
 
     public synchronized void setRandomSeed(long seed) {
@@ -264,7 +275,7 @@ public class ABSRuntime {
     
     public void shutdown() {
         if (isShutdown)
-            throw new IllegalStateException("ABS Runtime was already shutdown");
+            return;
         isShutdown = true;
         if (hasGlobalScheduler())
             globalScheduler.shutdown();
@@ -465,6 +476,18 @@ public class ABSRuntime {
         
         return null;
      }
+
+    /**
+     * Defines what to do in case an ABSException is thrown in a task
+     * @param task the task that throwed the exception
+     * @param e the exception that was thrown
+     */
+    public void handleABSException(Task<?> task, ABSException e) {
+        System.err.println("Error in " + this + ":\n" + e.getMessage());
+        if (terminateOnException) {
+            shutdown();
+        }
+    }
      
      
 

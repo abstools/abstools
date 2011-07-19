@@ -22,6 +22,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
     private static final AtomicInteger counter = new AtomicInteger();
     private final int id = counter.incrementAndGet();
     protected V value;
+    protected ABSException exception;
     protected boolean isResolved;
 
     protected ABSFut() {
@@ -51,15 +52,26 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
             try {
                 wait();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.finest("was interruped during await");
+                Thread.currentThread().interrupt();
+                break;
             }
         }
+        
+        
+        if (exception != null)
+            throw exception;
+        
         if (Logging.DEBUG)
             log.finest("future ready");
     }
     
     private List<GuardWaiter> waitingThreads;
     public void resolve(final V o) {
+        resolve(o,null);
+    }
+    
+    protected void resolve(final V o, final ABSException e) {
         synchronized (this) {
             if (isResolved)
                 throw new IllegalStateException("Future is already resolved");
@@ -68,6 +80,7 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
                 log.finest(this + " is resolved to " + o);
 
             value = o;
+            exception = e;
             isResolved = true;
             notifyAll();
         }
@@ -77,8 +90,15 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         View v = view;
         if (v != null)
             v.onResolved(o);
+        
+    }
+    
+    public void smash(ABSException e) {
+        resolve(null,e);
     }
 
+    
+    
     private void informWaitingThreads() {
         if (Logging.DEBUG)
             log.finest(this + " inform awaiting threads...");
