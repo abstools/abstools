@@ -47,6 +47,11 @@ public class JavaTestMojo extends AbstractTestMojo {
      */
     private String[] dependencies;
     
+    /**
+     * @parameter expression="${abs.terminateOnException}" default-value=false
+     */
+    private Boolean terminateOnException;
+    
     @Override
     protected void makeTest() throws Exception {
 
@@ -61,7 +66,13 @@ public class JavaTestMojo extends AbstractTestMojo {
                 verbose, false, true, loctype, productName);
 
         // run java
-        StringBuilder result = runJava();
+        final StringBuilder result;
+        if (terminateOnException) {
+            result = runJava("-Dabs.terminateOnException=true");
+        } else {
+            result = runJava();
+        }
+         
 
         if (result.length() > 0) {
             getLog().error("Java Test fails.");
