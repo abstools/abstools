@@ -77,15 +77,20 @@ public class JavaTestMojo extends AbstractTestMojo {
             jvm = Arrays.copyOf(jvm,jvm.length+1);
             jvm[jvm.length-1] = "-Dabs.terminateOnException=true";
         }
-        final String result = runJava(jvm).toString();
-        if (result.length() > 0) {
-            getLog().error("Java Test fails.");
-            getLog().error(result);
-            throw new MojoFailureException("One or more Java tests have failed, see log information for details.");
+        
+        runJava(jvm);
+        
+        if (appender instanceof StringBuilder) {
+            final String result = appender.toString();
+            if (result.length() > 0) {
+                getLog().error("Java Test fails.");
+                getLog().error(result);
+                throw new MojoFailureException("One or more Java tests have failed, see log information for details.");
+            }
+            // only in debug
+            getLog().debug(result);
         }
 
-        // only in debug
-        getLog().debug(result);
     }
     
     protected void setJVMOptions(String[] opts) {
