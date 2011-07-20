@@ -51,6 +51,13 @@ public class JavaTestMojo extends AbstractTestMojo {
      * @parameter expression="${abs.terminateOnException}" default-value=false
      */
     private Boolean terminateOnException;
+
+    private String[] jvm = new String[0];
+    
+    /**
+     * Default output appender
+     */
+    private Appendable appender = new StringBuilder(); 
     
     @Override
     protected void makeTest() throws Exception {
@@ -66,14 +73,11 @@ public class JavaTestMojo extends AbstractTestMojo {
                 verbose, false, true, loctype, productName);
 
         // run java
-        final StringBuilder result;
         if (terminateOnException) {
-            result = runJava("-Dabs.terminateOnException=true");
-        } else {
-            result = runJava();
+            jvm = Arrays.copyOf(jvm,jvm.length+1);
+            jvm[jvm.length-1] = "-Dabs.terminateOnException=true";
         }
-         
-
+        final String result = runJava(jvm).toString();
         if (result.length() > 0) {
             getLog().error("Java Test fails.");
             getLog().error(result);
@@ -82,11 +86,17 @@ public class JavaTestMojo extends AbstractTestMojo {
 
         // only in debug
         getLog().debug(result);
-
+    }
+    
+    protected void setJVMOptions(String[] opts) {
+        this.jvm = opts;
+    }
+    
+    protected void setAppendable(Appendable appendable) {
+        this.appender = appendable;
     }
 
-    private StringBuilder runJava(String... jvmargs) throws MojoFailureException {
-        StringBuilder output = new StringBuilder();
+    private Appendable runJava(String... jvmargs) throws MojoFailureException {
 
         try {
             String classpath = absfrontEnd.getAbsolutePath() + ":" + absJavaBackendTestTargetFolder.getAbsolutePath();
@@ -128,9 +138,9 @@ public class JavaTestMojo extends AbstractTestMojo {
                 s = r.readLine();
                 if (s == null)
                     break;
-                output.append(s + "\n");
+                appender.append(s + "\n");
             }
-            return output;
+            return appender;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
