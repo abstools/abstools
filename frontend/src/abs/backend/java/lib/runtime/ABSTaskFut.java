@@ -66,7 +66,7 @@ public class ABSTaskFut<V extends ABSValue> extends ABSFut<V> {
 
     @Override
     protected abs.backend.java.lib.runtime.ABSFut.View createView() {
-        return null;
+        return new TaskFutView();
     }
     
     private class TaskFutView extends abs.backend.java.lib.runtime.ABSFut.View {
