@@ -15,6 +15,7 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
 
 <body>
 	<release version="1.2.1" date="2011-07-20" description="Refactoring of the Java Backend">
+	  <action def="jschaefer" type="fix">Fixed a bug that lead to NullPointerExceptions in the graphical debugger</action>
 	  <action dev="jschaefer" type="add">Refactored the option processing of the Java Backend.
 It is now possible to directly pass options to the generated Java program without using system properties. Also simplified the usage of the random scheduler. All possible options can be seen by using the -help option when executing a generated Java program</action>
 	</release>
