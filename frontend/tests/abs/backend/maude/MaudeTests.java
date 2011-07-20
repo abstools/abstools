@@ -48,7 +48,7 @@ public class MaudeTests extends ABSTest {
             Matcher matcher = pattern.matcher(maudeOutput);
             if (matcher.find()) {
                 String boolValue = matcher.group(1);
-                Assert.assertEquals(boolValue, expectedResult);
+                Assert.assertEquals(expectedResult, boolValue);
             } else {
                 System.out.println(maudeOutput);
                 Assert.fail("Did not find Maude \"testresult\" variable.");

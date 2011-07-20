@@ -43,7 +43,7 @@ public class ClassDeclGenerator extends CodeGenerator {
     }
     
     private void generateClassBody() {
-        stream.println(" {");
+        println("{");
         incIndent();
 
         generateFieldNamesMethod();
@@ -51,13 +51,13 @@ public class ClassDeclGenerator extends CodeGenerator {
         generateConstructor();
         generateGetFieldValueMethod();
 
-        stream.println("   public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
+        println("public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
 
         generateCreateNewCOGMethod();
         generateNewObjectMethods();
         generateMethods();
-        
-        stream.println("}");
+        decIndent();
+        println("}");
     }
 
     private void generateMethods() {

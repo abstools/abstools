@@ -30,7 +30,7 @@ public class NodeImplTest {
     private NetCOG cog;
     private Router currentRouter;
     private Router otherRouter;
-    private Arc arc;
+    private ArcImpl arc;
     private MsgQueue queue;
 
     @Before
@@ -41,13 +41,13 @@ public class NodeImplTest {
 	currentNode = new NodeImpl(0, currentRouter);
 	otherNode = new NodeImpl(1, otherRouter);
 
-	arc = createMock(Arc.class);
+	arc = createMock(ArcImpl.class);
 
-	Map<NetNode, Arc> outArcs = new HashMap<NetNode, Arc>();
+	Map<NetNode, ArcImpl> outArcs = new HashMap<NetNode, ArcImpl>();
 	outArcs.put(otherNode, arc);
 	currentNode.addOutArcs(outArcs);
 	
-	List<Arc> inArcs = new ArrayList<Arc>();
+	List<ArcImpl> inArcs = new ArrayList<ArcImpl>();
 	inArcs.add(arc);
 	otherNode.addInArcs(inArcs);
 

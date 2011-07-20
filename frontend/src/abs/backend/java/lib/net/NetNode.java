@@ -14,8 +14,8 @@ import abs.backend.java.lib.runtime.ABSObject;
 public interface NetNode {
     public void performStep();
     public void processMsg(Msg msg);
-    public void addInArcs(List<Arc> arcs);
-    public void addOutArcs(Map<NetNode, Arc> arcs);
+    public void addInArcs(List<ArcImpl> arcs);
+    public void addOutArcs(Map<NetNode, ArcImpl> arcs);
     public void registerObject(ABSObject absObject);
     public void registerCOG(NetCOG cog);
     public Set<ABSObject> getRegisteredObjects();

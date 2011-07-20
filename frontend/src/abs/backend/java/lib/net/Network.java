@@ -4,16 +4,16 @@
  */
 package abs.backend.java.lib.net;
 
-import abs.backend.java.lib.net.msg.MsgQueue;
 
 /**
- * Describes an Arc in a network
+ * Represents the whole network
  * 
  * @author Jan Schäfer
  *
  */
-public interface Arc {
-    public NetNode getSource();
-    public NetNode getTarget();
-    public MsgQueue getQueue();
+public interface Network {
+    public Iterable<NetNode> getAllNodes();
+    public Iterable<Arc> getAllArcs();
+    public NetNode getStartNode();
+    
 }

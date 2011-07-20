@@ -37,10 +37,10 @@ public class GlobalScheduler {
                 return;
             }
             if (options.isEmpty()) {
-                System.out.println("No steps left. Program finished");
-                System.out.println("Total number of global choices: " + totalNumChoices);
+                logger.info("No steps left. Program finished");
+                logger.info("Total number of global choices: " + totalNumChoices);
                 if (totalNumChoices == 0) {
-                    System.out.println("Program is deterministic!");
+                    logger.info("Program is deterministic!");
                 }
                 return;
             }
@@ -108,7 +108,7 @@ public class GlobalScheduler {
         Waker w = new Waker(this);
         fut.addWaitingThread(w);
         runtime.doNextStep();
-        System.out.println("future waiting");
+        logger.finest("future waiting");
         w.await();
 
     }

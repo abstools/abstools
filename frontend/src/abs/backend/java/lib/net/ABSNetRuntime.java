@@ -20,6 +20,12 @@ import abs.backend.java.lib.types.ABSValue;
  */
 public class ABSNetRuntime extends ABSRuntime {
     
+    private final Network network;
+
+    public ABSNetRuntime(Network network) {
+        this.network = network;
+    }
+
     @Override
     public COG createCOG(Class<?> clazz) {
         return createCOGAtNode(clazz, getCurrentNode());

@@ -398,7 +398,7 @@ data AtomicityAnnotation = Atomic;
 
 
 /**
- * Experimental foreign language interface (FLI) definitions
+ * Foreign language interface (FLI) definitions
  */
 module ABS.FLI;
 export *;

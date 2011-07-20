@@ -8,12 +8,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.RuntimeOptions.Option;
+import abs.backend.java.lib.runtime.RuntimeOptions.OptionType;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
-import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.RecordingSchedulerStrategy;
@@ -29,70 +29,27 @@ import abs.backend.java.scheduling.TotalSchedulingStrategy;
  * 
  */
 public class Config {
-    static enum OptionType {
-        BOOLEAN, STRING, CLASS, LONG
-    }
-
-    static class ConfigOption {
-        String propertyName;
-        String description;
-        OptionType type;
-
-        ConfigOption(String name, String desc, OptionType type) {
-            this.propertyName = name;
-            this.description = desc;
-            this.type = type;
-        }
-    }
-
-    private static final List<ConfigOption> options = new ArrayList<ConfigOption>();
-
-    public static final ConfigOption LOGLEVEL_OPTION = newOption("abs.loglevel", "sets a logging level",
-            OptionType.STRING);
-    public static final ConfigOption DEBUG_OPTION = newOption("abs.debug", "enables debugging", OptionType.BOOLEAN);
-    public static final ConfigOption TERMINATE_ON_EXCEPTION = newOption("abs.terminateOnException", "terminates the system when an exception occurs", OptionType.BOOLEAN);
-    public static final ConfigOption SYSTEM_OBSERVER_OPTION = newOption("abs.systemobserver",
-            "sets a system observer class", OptionType.CLASS);
-    public static final ConfigOption TOTAL_SCHEDULER_OPTION = newOption("abs.totalscheduler",
-            "sets a total scheduler class", OptionType.CLASS);
-    public static final ConfigOption GLOBAL_SCHEDULER_OPTION = newOption("abs.globalscheduler",
-            "sets a global scheduler class", OptionType.CLASS);
-    public static final ConfigOption TASK_SCHEDULER_STRATEGY_OPTION = newOption("abs.taskschedulerstrategy",
-            "sets a task scheduler strategy class", OptionType.CLASS);
-    public static final ConfigOption TASK_SCHEDULER_OPTION = newOption("abs.taskscheduler",
-            "sets the task scheduler to be used", OptionType.STRING);
-    public static final ConfigOption RECORD_TASK_SCHEDULER_OPTION = newOption("abs.recordtaskscheduler",
-            "enables recording of task scheduling", OptionType.BOOLEAN);
-    public static final ConfigOption RANDOM_SEED_OPTION = newOption("abs.randomseed",
-            "set the random seed used by schedulers", OptionType.LONG);
-
-    private static ConfigOption newOption(String name, String desc, OptionType type) {
-        ConfigOption o = new ConfigOption(name, desc, type);
-        options.add(o);
-        return o;
-    }
 
     private static final Logger logger = Logging.getLogger(Config.class.getName());
 
-    private boolean configuredTaskScheduling = false;
+    private final ABSRuntime runtime;
 
-    private ABSRuntime runtime;
+    private final RuntimeOptions options;
 
-    {
-        if (printHelp()) {
+    public Config(ABSRuntime runtime, RuntimeOptions options) {
+        this.runtime = runtime;
+        this.options = options;
+        if (options.help.isTrue()) {
+            printHelp();
             System.exit(1);
         }
+        
+        configureRuntime();
     }
     
-    public Config(ABSRuntime runtime) {
-        this.runtime = runtime;
-        loadProperties();
-    }
-    
-    public void loadProperties() {
+    public void configureRuntime() {
+        setSimpleOptions();
         loadSystemObserver();
-        loadFlagOptions();
-        loadRandomSeed();
         loadTotalSchedulingStrategy();
         loadTaskSchedulingStrategy();
         loadGlobalSchedulingStrategy();
@@ -100,42 +57,44 @@ public class Config {
     }
     
     public void loadSystemObserver() {
-        String observerString = System.getProperty(SYSTEM_OBSERVER_OPTION.propertyName);
-        if (observerString != null) {
-            String[] systemObservers = observerString.split(",");
-
-            for (String s : systemObservers) {
-                System.out.println(s);
+        if (options.systemObserver.wasSet()) {
+            for (String s : options.systemObserver.stringArrayValue()) {
                 runtime.addSystemObserver((SystemObserver) loadClassByName(s));
             }
         }
     }
 
-    public void loadFlagOptions() {
-        runtime.enableDebugging(System.getProperty(DEBUG_OPTION.propertyName, "false").equals("true"));
-        runtime.terminateOnException(System.getProperty(TERMINATE_ON_EXCEPTION.propertyName, "false").equals("true"));
-    }
-
-    public static Object loadClassByProperty(String property, Object... args) {
-        String s = System.getProperty(property);
-        if (s != null) {
-            return loadClassByName(s, args);
-        }
-        return null;
-    }
-
-    public static boolean printHelp() {
-        if (Boolean.parseBoolean(System.getProperty("abs.help", "false"))) {
-            System.err.println(" ABS Java Backend - Runtime Configuration Options");
-            System.err.println(" ================================================");
-            for (ConfigOption o : options) {
-                System.err.println(String.format("%36s\t%s", "-D" + o.propertyName + "=<"
-                        + o.type.toString().toLowerCase() + ">", o.description));
-            }
-            return true;
-        }
+    public void setSimpleOptions() {
+        runtime.enableDebugging(options.debug.isTrue());
+        runtime.terminateOnException(options.terminateOnException.isTrue());
         
-        return false;
+        
+        loadRandomSeed();
+    }
+
+    private void loadRandomSeed() {
+        runtime.setRandomSeed(options.randomSeed.longValue());
+        
+        if (options.printRandomSeed.isTrue()) {
+            System.out.println("random seed="+options.randomSeed.longValue());
+        }
+
+        if (options.useRandomScheduler.isTrue()) {
+            options.totalScheduler.setValue(RandomSchedulingStrategy.class.getName());
+        }
+    }
+
+    public void printHelp() {
+        System.err.println(" ABS Java Backend - Runtime Configuration Options");
+        System.err.println(" ================================================");
+        for (Option o : options.options) {
+            if (o.type != OptionType.BOOLEAN) {
+                System.err.println(String.format("%36s\t%s", "-"+o.name + "=<"
+                    + o.type.toString().toLowerCase() + ">", o.description));
+            } else {
+                System.err.println(String.format("%36s\t%s", "-"+o.name, o.description));
+            }
+        }
     }
 
     private static Object loadClassByName(String s, Object...args) {
@@ -147,80 +106,69 @@ public class Config {
                 }
             }
             return clazz.newInstance();
-        } catch (ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        } 
         return null;
     }
 
     
-    public void loadRandomSeed() {
-        long randomSeed = System.nanoTime();
-        String seedString = System.getProperty("abs.randomseed");
-        if (seedString != null) {
-            try {
-                randomSeed = Long.parseLong(seedString);
-            } catch (Exception e) {
-                System.err.println("Illegal random seed " + seedString);
-            }
-            runtime.setRandomSeed(randomSeed);
-        }
-
-    }
-
     public void loadTotalSchedulingStrategy() {
-        TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByProperty(TOTAL_SCHEDULER_OPTION.propertyName, runtime.getRandom());
-        if (strat != null) {
-            logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
-            configuredTaskScheduling = true;
-            runtime.setTotalSchedulingStrategy(strat);
+        if (options.totalScheduler.wasSet()) {
+            TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByName(options.totalScheduler.stringValue(), runtime.getRandom());
+            
+            if (strat != null) {
+                logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
+                runtime.setTotalSchedulingStrategy(strat);
+            } else {
+                logger.warning("Could not load total scheduler class "+options.totalScheduler.stringValue());
+            }
         }
     }
 
     public void loadTaskSchedulingStrategy() {
-        TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByProperty(TASK_SCHEDULER_STRATEGY_OPTION.propertyName);
-        if (strat == null)
-            return;
-        if (strat instanceof RandomSchedulingStrategy) {
-            ((RandomSchedulingStrategy) strat).setRandom(runtime.getRandom());
+        if (options.taskSchedulerStrategy.wasSet()) {
+            TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByName(options.taskSchedulerStrategy.stringValue());
+            if (strat == null) {
+                logger.warning("Could not load task scheduling strategy class "+options.taskSchedulerStrategy.stringValue());
+                return;
+            }
+
+            if (strat instanceof RandomSchedulingStrategy) {
+                ((RandomSchedulingStrategy) strat).setRandom(runtime.getRandom());
+            }
+
+            logger.config("Using task scheduling strategy defined by class " + strat.getClass().getName());
+
+            if (options.recordTaskScheduler.isTrue()) {
+                strat = new RecordingSchedulerStrategy(strat);
+                logger.config("Recording schedule");
+            }
+
+            runtime.setTaskSchedulingStrategy(strat);
         }
-        configuredTaskScheduling = true;
-
-        logger.config("Using task scheduling strategy defined by class " + strat.getClass().getName());
-
-        boolean recording = Boolean
-                .parseBoolean(System.getProperty(RECORD_TASK_SCHEDULER_OPTION.propertyName, "false"));
-        if (recording) {
-            strat = new RecordingSchedulerStrategy(strat);
-            logger.config("Recording schedule");
-        }
-
-        runtime.setTaskSchedulingStrategy(strat);
     }
 
     public void loadGlobalSchedulingStrategy() {
-        GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByProperty(GLOBAL_SCHEDULER_OPTION.propertyName);
-        if (strat != null)
-            runtime.setGlobalSchedulingStrategy(strat);
+        if (options.globalScheduler.wasSet()) {
+            GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByName(options.globalScheduler.stringValue());
+            if (strat != null)
+                runtime.setGlobalSchedulingStrategy(strat);
+            else    
+                logger.warning("Could not load task global strategy class "+options.globalScheduler.stringValue());
+        }
+            
     }
 
     private void loadSchedulerFactory() {
         
         TaskSchedulerFactory taskSchedulerFactory;
         // only the SimpleTaskScheduler supports configuring
-        if (configuredTaskScheduling) {
+        if (options.taskSchedulerStrategy.wasSet() || options.totalScheduler.wasSet()) {
             logger.config("Using simple task scheduler, because task scheduling is specified");
             taskSchedulerFactory = SimpleTaskScheduler.getFactory();
         } else {
-            String schedulerName = System.getProperty(TASK_SCHEDULER_OPTION.propertyName, "default");
+            String schedulerName = options.taskScheduler.stringValue();
             logger.config("Scheduler: " + schedulerName);
             if (schedulerName.equals("default")) {
                 taskSchedulerFactory = DefaultTaskScheduler.getFactory();

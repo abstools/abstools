@@ -30,8 +30,8 @@ import abs.backend.java.lib.runtime.ABSObject;
 public class NodeImpl implements NetNode {
     private final int id;
     private final Router router;
-    private final Map<NetNode,Arc> outArcs = new HashMap<NetNode, Arc>();
-    private final List<Arc> inArcs = new ArrayList<Arc>();
+    private final Map<NetNode,ArcImpl> outArcs = new HashMap<NetNode, ArcImpl>();
+    private final List<ArcImpl> inArcs = new ArrayList<ArcImpl>();
     private final Set<ABSObject> objects = new HashSet<ABSObject>();
     private final Set<NetCOG> cogs = new HashSet<NetCOG>();
     private final Random random = new Random();
@@ -47,19 +47,19 @@ public class NodeImpl implements NetNode {
     }
     
     @Override
-    public void addInArcs(List<Arc> arcs) {
+    public void addInArcs(List<ArcImpl> arcs) {
         inArcs.addAll(arcs);
     }
 
     @Override
-    public void addOutArcs(Map<NetNode, Arc> arcs) {
+    public void addOutArcs(Map<NetNode, ArcImpl> arcs) {
 	outArcs.putAll(arcs);
     }
     
     public synchronized boolean processNextMsg() {
-        List<Arc> shuffledList = new ArrayList<Arc>(inArcs);
+        List<ArcImpl> shuffledList = new ArrayList<ArcImpl>(inArcs);
         Collections.shuffle(shuffledList);
-        for (Arc arc : shuffledList) {
+        for (ArcImpl arc : shuffledList) {
             if (!arc.getQueue().isEmpty()) {
                 Msg m = arc.getQueue().dequeue();
                 processMsg(m);
@@ -177,7 +177,7 @@ public class NodeImpl implements NetNode {
         NetCOG cog = cogs.iterator().next();
         cogs.remove(cog);
         
-        Arc arc = outArcs.values().iterator().next();
+        ArcImpl arc = outArcs.values().iterator().next();
         arc.getQueue().enqueue(new COGMsg(cog));
         
         return true;

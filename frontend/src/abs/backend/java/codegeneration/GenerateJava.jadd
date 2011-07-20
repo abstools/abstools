@@ -37,9 +37,7 @@ aspect GenerateJava {
             Block block = getBlock();
             stream.println("public class Main extends "+ABSObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) throws Exception {");
-            stream.println("       "+ABSRuntime.class.getName()+" runtime = new "+ABSRuntime.class.getName()+"();");
-            stream.println("       new "+Config.class.getName()+"(runtime);");
-            stream.println("       runtime.start(Main.class);");
+            stream.println("       "+StartUp.class.getName()+".startup(args,Main.class);");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");

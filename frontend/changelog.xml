@@ -14,6 +14,11 @@ http://maven.apache.org/plugins/maven-changes-plugin/usage.html
   </properties>
 
 <body>
+	<release version="1.2.1" date="2011-07-20" description="Refactoring of the Java Backend">
+	  <action dev="jschaefer" type="add">Refactored the option processing of the Java Backend.
+It is now possible to directly pass options to the generated Java program without using system properties. Also simplified the usage of the random scheduler. All possible options can be seen by using the -help option when executing a generated Java program</action>
+	</release>
+
 	<release version="1.2.0" date="2011-07-19" description="New ABS language feature: if-then-else expression">
 	  <action dev="rschlatte" type="add">
 		Added if-then-else expression
