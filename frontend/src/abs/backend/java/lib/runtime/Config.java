@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import abs.backend.java.debugging.GraphicalDebugger;
 import abs.backend.java.lib.runtime.RuntimeOptions.Option;
 import abs.backend.java.lib.runtime.RuntimeOptions.OptionType;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
+import abs.backend.java.scheduling.InteractiveScheduler;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.RecordingSchedulerStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
@@ -48,6 +50,8 @@ public class Config {
     }
     
     public void configureRuntime() {
+        Logging.setLogLevel(options.logLevel.stringValue());
+        
         setSimpleOptions();
         loadSystemObserver();
         loadTotalSchedulingStrategy();
@@ -59,6 +63,7 @@ public class Config {
     public void loadSystemObserver() {
         if (options.systemObserver.wasSet()) {
             for (String s : options.systemObserver.stringArrayValue()) {
+                logger.finest("adding systemobserver "+s);
                 runtime.addSystemObserver((SystemObserver) loadClassByName(s));
             }
         }
@@ -68,8 +73,15 @@ public class Config {
         runtime.enableDebugging(options.debug.isTrue());
         runtime.terminateOnException(options.terminateOnException.isTrue());
         
+        if (options.graphicalDebug.isTrue()) {
+            runtime.enableDebugging(true);
+            options.totalScheduler.setValue(InteractiveScheduler.class.getName());
+            options.systemObserver.appendStringValue(GraphicalDebugger.class.getName());
+        }
+
         
         loadRandomSeed();
+        
     }
 
     private void loadRandomSeed() {

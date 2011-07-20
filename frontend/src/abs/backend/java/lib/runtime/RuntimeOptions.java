@@ -5,6 +5,7 @@
 package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static abs.backend.java.lib.runtime.RuntimeOptions.OptionType.*;
 
@@ -78,6 +79,12 @@ public class RuntimeOptions {
         public long longValue() {
             return (Long) value;
         }
+        public void appendStringValue(String name) {
+            String[] v = stringArrayValue();
+            v = Arrays.copyOf(v, v.length+1);
+            v[v.length-1] = name;
+            setValue(v);
+        }
         
     }
     
@@ -87,14 +94,14 @@ public class RuntimeOptions {
         addOption(BOOLEAN, "help", "shows help information", false);
     public final Option useNet = 
         addOption(BOOLEAN, "net", "enables the use of ABS-NET", false);
-    public final Option logLevel = 
-        addOption(STRING, "loglevel", "sets a logging level", "");
     public final Option debug = 
         addOption(BOOLEAN, "debug", "enables debugging", false);
+    public final Option graphicalDebug = 
+        addOption(BOOLEAN, "gdebug", "starts the graphical debugger", false);
     public final Option terminateOnException = 
         addOption(BOOLEAN, "terminateOnException", "terminates the system when an exception occurs", false);
     public final Option systemObserver = 
-        addOption(CLASSLIST, "systemobserver", "comma-separated list of system observer classes", "");
+        addOption(CLASSLIST, "systemobserver", "comma-separated list of system observer classes", new String[0]);
     public final Option totalScheduler = 
         addOption(CLASS, "totalscheduler", "sets a total scheduler class", null);
     public final Option globalScheduler = 
@@ -111,6 +118,10 @@ public class RuntimeOptions {
         addOption(BOOLEAN, "useRandomScheduler", "sets the random scheduler as the total scheduler", false);
     public final Option printRandomSeed = 
         addOption(BOOLEAN, "printrandomseed", "prints that used random seed to stdout", false);
+    public final Option logLevel = 
+        addOption(STRING, "loglevel", "sets the logging level", "warning");
+    public final Option loggedClasses = 
+        addOption(CLASSLIST, "loggedClasses", "comma-separated list of classes to be logged", new String[0]);
 
     public RuntimeOptions(String[] args) {
         evaluateSystemProperties();

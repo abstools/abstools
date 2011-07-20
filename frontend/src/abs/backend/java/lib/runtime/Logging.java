@@ -12,8 +12,12 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class Logging {
-    public static final Level LOGLEVEL = Level.parse(System.getProperty("abs.loglevel", "warning").toUpperCase());
+    public static Level LOGLEVEL = Level.parse(System.getProperty("abs.loglevel", "warning").toUpperCase());
     public static final boolean DEBUG = !LOGLEVEL.equals(Level.WARNING);
+
+    public static void setLogLevel(String name) {
+        LOGLEVEL = Level.parse(name.toUpperCase());
+    }
 
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
