@@ -38,6 +38,8 @@ import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
 public class ABSRuntime {
+    private static final String ABS_RUNSINOWNPROCESS_PROPERTY = "abs.runsinownprocess";
+
     private static final String FLI_CLASS_SUFFIX = "_fli";
 
     private static final String ABSFLI_PROPERTIES = "absfli.properties";
@@ -487,6 +489,14 @@ public class ABSRuntime {
         if (terminateOnException) {
             shutdown();
         }
+    }
+
+    public static boolean runsInOwnProcess() {
+        return Boolean.parseBoolean(System.getProperty(ABS_RUNSINOWNPROCESS_PROPERTY, "false"));
+    }
+
+    public static void setRunsInOwnProcess(boolean b) {
+        System.setProperty(ABS_RUNSINOWNPROCESS_PROPERTY, Boolean.toString(b));
     }
      
      

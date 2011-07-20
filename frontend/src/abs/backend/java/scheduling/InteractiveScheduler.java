@@ -848,7 +848,10 @@ class SchedulerGUI implements SchedulerGUISwing, SchedulingObserver {
     SchedulerGUI(InteractiveScheduler s) {
         scheduler = s;
         frame = new JFrame("ABS Interactive Scheduler");
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        if (ABSRuntime.runsInOwnProcess())
+            frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        else
+            frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         schedulerChoosePnl = new SchedulerChoosePnl(this);

@@ -39,6 +39,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
@@ -53,6 +54,7 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
 import abs.backend.java.observing.ObjectCreationObserver;
@@ -851,7 +853,10 @@ class DebugWindow implements DebugModelListener {
         this.model = model;
         frame = new JFrame("ABS Graphical Debugger");
         frame.setLayout(new BorderLayout());
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        if (ABSRuntime.runsInOwnProcess())
+           frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+       else
+           frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         tabs = new JTabbedPane();
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);

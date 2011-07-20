@@ -17,6 +17,7 @@ public class StartUp {
         } else {
             runtime = new ABSRuntime();
         }
+        ABSRuntime.setRunsInOwnProcess(true);
         new Config(runtime, options);
         runtime.start(mainClass);
     }
