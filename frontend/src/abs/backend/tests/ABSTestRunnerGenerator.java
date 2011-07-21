@@ -19,6 +19,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
@@ -26,7 +27,6 @@ import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
-import abs.frontend.parser.Main;
 import abs.frontend.typechecker.Type;
 
 /**
@@ -39,6 +39,7 @@ public class ABSTestRunnerGenerator {
     
     public static final String RUNNER_MAIN = "AbsUnit.TestRunner";
     
+    private static final String ignore = "AbsUnit.Ignored";
     private static final String test = "AbsUnit.Test";
     private static final String dataPoint = "AbsUnit.DataPoint";
     private static final String testClass = "AbsUnit.TestClass";
@@ -50,6 +51,7 @@ public class ABSTestRunnerGenerator {
     private static final String futs = "futs";
     private static final String fut = "fut";
 
+    private DataConstructor ignoreType;
     private DataConstructor testType;
     private DataConstructor dataPointType;
     private DataConstructor testClassType;
@@ -77,7 +79,8 @@ public class ABSTestRunnerGenerator {
          * Do not search for test class definitions if this model does not
          * contain the necessary ABSUnit annotations
          */
-        if (testType == null || dataPointType == null || testClassType == null || testClassImplType == null) {
+        if (ignoreType == null || testType == null || dataPointType == null || 
+                testClassType == null || testClassImplType == null) {
             return;
         }
 
@@ -166,7 +169,8 @@ public class ABSTestRunnerGenerator {
         for (InterfaceTypeUse inf : clazz.getImplementedInterfaceUseList()) {
             if (inf.getDecl() instanceof InterfaceDecl) {
                 InterfaceDecl decl = (InterfaceDecl) inf.getDecl();
-                if (hasTestAnnotation(decl.getAnnotations(), testClassType)) {
+                if (hasTestAnnotation(decl.getAnnotations(), testClassType) &&
+                    ! hasTestAnnotation(decl.getAnnotations(), ignoreType)) {
                     return decl;
                 }
             }
@@ -189,6 +193,8 @@ public class ABSTestRunnerGenerator {
                     testClassImplType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 } else if (decl.getType().getQualifiedName().equals(dataPoint)) {
                     dataPointType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                } else if (decl.getType().getQualifiedName().equals(ignore)) {
+                    ignoreType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 }
             }
         }
@@ -289,10 +295,17 @@ public class ABSTestRunnerGenerator {
                 main.append(dataType).append(" ").append(dataValue).append(" = snd(nt);\n");
                 main.append(dataPointSet).append(" = fst(nt);\n");
             }
-            main.append("//Test cases for method ").append(method.getName()).append("\n");
-            String objectRef = uncap(namePrefix) + instance;
-            main = newCog(main, inf, clazz, objectRef);
-            generateAsyncTestCall(main, objectRef, method);
+            
+            /*
+             * Add those methods that are not ignored
+             */
+            if (! isIgnored(clazz,method)) {
+                main.append("//Test cases for method ").append(method.getName()).append("\n");
+                String objectRef = uncap(namePrefix) + instance;
+                main = newCog(main, inf, clazz, objectRef);
+                generateAsyncTestCall(main, objectRef, method);
+            }
+            
             if (needdata) {
                 main.append("}\n"); // end while
             }
@@ -300,6 +313,15 @@ public class ABSTestRunnerGenerator {
         }
 
         return paramNames;
+    }
+    
+    private boolean isIgnored(ClassDecl clazz, MethodSig method) {
+        for (MethodImpl m : clazz.getMethodList()) {
+            if (m.getMethodSig().getName().equals(method.getName())) {
+                return hasTestAnnotation(m.getMethodSig().getAnnotationList(), ignoreType); 
+            }
+        }
+        return false;
     }
 
     /**
@@ -428,7 +450,11 @@ public class ABSTestRunnerGenerator {
     private Set<MethodSig> getTestMethods(InterfaceDecl inf) {
         Set<MethodSig> testmethods = new HashSet<MethodSig>();
         for (MethodSig meth : inf.getAllMethodSigs()) {
-            if (hasTestAnnotation(meth.getAnnotations(), testType)) {
+            /*
+             * Add those methods that are tests but are not ignored
+             */
+            if (hasTestAnnotation(meth.getAnnotations(), testType) && 
+                ! hasTestAnnotation(meth.getAnnotations(), ignoreType)) {
                 testmethods.add(meth);
             }
         }
