@@ -9,6 +9,13 @@ data Formula = Formula(Matcher) |
 			   AnyOf(Set<Formula>) |
 			   Not(Formula);
 
+//exclusive or
+def Formula xor(Formula a, Formula b) = And(Or(a,b),Not(And(a,b)));
+// implication
+def Formula impl(Formula a, Formula b) = Or(Not(a),b);
+// equivalence
+def Formula equiv(Formula a, Formula b) = And(impl(a,b),impl(b,a));
+
 def Formula fm(Matcher m) = Formula(m);
 def Matcher matcher(Formula f) = case f { Formula(m) => m; };
 
