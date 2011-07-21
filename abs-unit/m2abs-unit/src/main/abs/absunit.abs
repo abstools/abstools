@@ -16,6 +16,9 @@ data TestClass = TestClass; //test class
 [TypeAnnotation]
 data TestClassImpl = TestClassImpl; //test class implementation
 
+[TypeAnnotation]
+data Ignored = Ignored; // ignore test method
+
 interface Comparator { 
 	Int compare(); 
 }

@@ -14,6 +14,9 @@ interface AbsUnitTest {
 	[Test] Unit testAssertEquals(Pair<Int,Int> comp);
 	[Test] Unit testAssertNotEquals();
 	[Test] Unit testAssertThat();
+	
+	[Test] [Ignored] Unit testGiberrish1();
+	[Test] Unit testGiberrish2();
 }
 
 [TestClassImpl]
@@ -29,6 +32,18 @@ class AbsUnitTestClass implements AbsUnitTest {
 	
 	Set<Pair<Int,Int>> comparators() {
 		return comps;
+	}
+	
+	Unit testGiberrish1() {
+		assert False;	
+	}
+	
+	[Ignored] Unit testGiberrish2() {
+		assert False;	
+	}
+	
+	Unit testGiberrish3() {
+		assert False;
 	}
 	
 	Unit testAssertTrue() {
