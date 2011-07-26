@@ -889,7 +889,6 @@ mod ABS-MSG-TRANSPORT is
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)), Lcnt: F >
     < C : Class | Param: AL', Att: S1, 
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
-    < N : Future | Name: M, Completed: false, References: 1, Value: null >
     [label transport-imsg] .
 
   eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)
@@ -1643,7 +1642,8 @@ mod ABS-CALLSTMTS-RL is
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
@@ -1657,8 +1657,9 @@ mod ABS-CALLSTMTS-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
@@ -1668,7 +1669,8 @@ mod ABS-CALLSTMTS-RL is
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE); SL }, PrQ: W, Lcnt: F > 
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
@@ -1694,7 +1696,8 @@ mod ABS-CALLSTMTS-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; Q ; EL ; DE) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
@@ -1710,8 +1713,9 @@ mod ABS-CALLSTMTS-EQ-TIMED is
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; Q ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
@@ -1723,7 +1727,8 @@ mod ABS-CALLSTMTS-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; Q ; EL ; DE) ; SL }, PrQ: W, Lcnt: F > 
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { L | $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; assign(A ; N) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; Q ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))) ; SL }, PrQ: W, Lcnt: (s F) > 
+    < N : Future | Name: Q, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ O := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ N := label(O, F)
