@@ -2,9 +2,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-		<artifactId>eu.hats-project.parent</artifactId>
-		<groupId>eu.hats-project</groupId>
-		<version>1.0-SNAPSHOT</version>
+    <artifactId>eu.hats-project.parent</artifactId>
+    <groupId>eu.hats-project</groupId>
+    <version>1.0-SNAPSHOT</version>
   </parent>
   <groupId>eu.hats-project</groupId>
   <artifactId>tool-documentation</artifactId>
@@ -37,7 +37,7 @@
       </roles>
       <timezone>+1</timezone>
       <properties>
-		<picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
+    <picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
       </properties>
     </developer>
     <developer>
@@ -98,27 +98,40 @@
             </goals>
             <configuration>
               <outputDirectory>${basedir}/target/site/download</outputDirectory>
-              <resources>          
+              <resources>
                 <resource>
-	           <directory>../frontend/src/abs/backend/maude</directory>
-		   <includes><include>abs-interpreter.maude</include></includes>
+             <directory>../frontend/src/abs/backend/maude</directory>
+       <includes><include>abs-interpreter.maude</include></includes>
                 </resource>
                 <resource>
-	           <directory>../../../../ABS_Documentation/ReferenceManual/</directory>
-		   <includes><include>absrefmanual.pdf</include></includes>
+             <directory>../../../../ABS_Documentation/ReferenceManual/</directory>
+       <includes><include>absrefmanual.pdf</include></includes>
                 </resource>
-              </resources>              
-            </configuration>            
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>2.2</version>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>1.0-beta-7</version>
+              </dependency>
+            </dependencies>
+           </plugin>
 
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.6</version>
         <executions>
           <execution>
-	    <id>generate frontend jar</id>
+      <id>generate frontend jar</id>
             <phase>package</phase>
             <goals>
               <goal>run</goal>
@@ -126,29 +139,29 @@
             <configuration>
               <target name = "make jars">
                 <ant antfile="../frontend/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
-                  <property name="target.jar" value="${basedir}/target/site/download/absfrontend.jar" /> 
+                  <property name="target.jar" value="${basedir}/target/site/download/absfrontend.jar" />
                 </ant>
                 <ant antfile="../mTVL/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
-                  <property name="target.jar" value="${basedir}/target/site/download/mtvl.jar" /> 
+                  <property name="target.jar" value="${basedir}/target/site/download/mtvl.jar" />
                 </ant>
               </target>
             </configuration>
           </execution>
           <execution>
-	    <id>generate eclipse api doc</id>
-	  <phase>package</phase>
-	  <goals>
-	    <goal>run</goal>
-	  </goals>
-	  <configuration>
-	     <target name="eclipse-plugin-api">
+      <id>generate eclipse api doc</id>
+    <phase>package</phase>
+    <goals>
+      <goal>run</goal>
+    </goals>
+    <configuration>
+       <target name="eclipse-plugin-api">
                 <ant antfile="../eclipse-plugin/build.xml" useNativeBasedir="true" target="apidoc" inheritAll="false">
-                  <property name="doc.api.dir" value="${basedir}/target/site/eclipseplugin/devdocu/api/" /> 
+                  <property name="doc.api.dir" value="${basedir}/target/site/eclipseplugin/devdocu/api/" />
                 </ant>
-	     </target>
-	  </configuration>
-	  
-	  </execution>
+       </target>
+    </configuration>
+
+    </execution>
         </executions>
       </plugin>
 
@@ -210,7 +223,7 @@
   <!--   <execution> -->
   <!--     <phase>site</phase> -->
   <!--     <goals> -->
-  <!-- 	<goal>latex</goal> -->
+  <!--   <goal>latex</goal> -->
   <!--     </goals> -->
   <!--   </execution> -->
   <!--   </executions> -->
@@ -229,8 +242,8 @@
   <!--            <links> -->
   <!--              <link>http://download.oracle.com/javase/6/docs/api/</link> -->
   <!--            </links> -->
-  <!-- 	     <linksource>true</linksource> -->
-  <!-- 	    <sourcepath>/home/jan/svn/hats/Tools/ABS/branches/ABS-eclipse-new/eu.hatsproject.absplugin/src:/home/jan/svn/hats/Tools/ABS/trunk/frontend/src</sourcepath> -->
+  <!--        <linksource>true</linksource> -->
+  <!--       <sourcepath>/home/jan/svn/hats/Tools/ABS/branches/ABS-eclipse-new/eu.hatsproject.absplugin/src:/home/jan/svn/hats/Tools/ABS/trunk/frontend/src</sourcepath> -->
   <!--       </configuration> -->
  <!-- <reportSets> -->
  <!--          <reportSet> -->
@@ -251,10 +264,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-changes-plugin</artifactId>
         <version>2.4</version>
-	<configuration>
+  <configuration>
           <xmlPath>../frontend/changelog.xml</xmlPath>
         </configuration>
-	<reportSets>
+  <reportSets>
           <reportSet>
             <reports>
               <report>changes-report</report>
