@@ -5,9 +5,9 @@ import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.ResolvedName;
 
 aspect TypeResolution {
-  
+
     // Find the type declaration for a type use.
-  
+
     syn boolean Decl.isFunction() = false;
     syn boolean Decl.isClass() = false;
     syn boolean Decl.isDataType() = false;
@@ -16,7 +16,7 @@ aspect TypeResolution {
     syn boolean Decl.isTypeSyn() = false;
     syn boolean Decl.isTypeParameter() = false;
     syn boolean Decl.isFuture() = false;
-  
+
     eq ClassDecl.isClass() = true;
     eq FunctionDecl.isFunction() = true;
     eq InterfaceDecl.isInterface() = true;
@@ -26,57 +26,57 @@ aspect TypeResolution {
     eq TypeParameterDecl.isTypeParameter() = true;
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
-  
+
     syn Boolean Name.isSimple();
     eq Name.isSimple() = !getName().contains(".");
-    
+
     syn lazy String Name.getString() = getName();
     syn String Name.getSimpleName() {
-       if (isSimple())
-          return getName();
-       
-       return getName().substring(getName().lastIndexOf('.')+1);
+        if (isSimple())
+            return getName();
+
+        return getName().substring(getName().lastIndexOf('.')+1);
     }
     syn String Name.getModuleName() {
-       if (isSimple())
-       	  return null;
-       
-       return getName().substring(0,getName().lastIndexOf('.'));
+        if (isSimple())
+            return null;
+
+        return getName().substring(0,getName().lastIndexOf('.'));
     }
-    
+
     syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleNames() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getVisibleNames() {
-		return TypeCheckerHelper.getVisibleNames(this);
-	}
+    eq ModuleDecl.getVisibleNames() {
+        return TypeCheckerHelper.getVisibleNames(this);
+    }
 
-        syn Map<KindedName,ResolvedName> ModuleDecl.getExportedNames() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getExportedNames() {
-		return TypeCheckerHelper.getExportedNames(this);
-	}
+    syn Map<KindedName,ResolvedName> ModuleDecl.getExportedNames() circular [new HashMap<KindedName, ResolvedName>()];
+    eq ModuleDecl.getExportedNames() {
+        return TypeCheckerHelper.getExportedNames(this);
+    }
 
-        syn Map<KindedName,ResolvedName> ModuleDecl.getImportedNames() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getImportedNames() {
-		return TypeCheckerHelper.getImportedNames(this);
-	}
+    syn Map<KindedName,ResolvedName> ModuleDecl.getImportedNames() circular [new HashMap<KindedName, ResolvedName>()];
+    eq ModuleDecl.getImportedNames() {
+        return TypeCheckerHelper.getImportedNames(this);
+    }
 
-        syn Map<KindedName,ResolvedName> ModuleDecl.getDefinedNames() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getDefinedNames() {
-		return TypeCheckerHelper.getDefinedNames(this);
-	}
-	
-	syn lazy boolean ModuleDecl.exportsName(String name) {
-		return ! TypeCheckerHelper.getAllNames(name, this.getExportedNames()).isEmpty();
-	}
+    syn Map<KindedName,ResolvedName> ModuleDecl.getDefinedNames() circular [new HashMap<KindedName, ResolvedName>()];
+    eq ModuleDecl.getDefinedNames() {
+        return TypeCheckerHelper.getDefinedNames(this);
+    }
 
-	syn lazy boolean ModuleDecl.isVisible(String name) {
-		return ! TypeCheckerHelper.getAllNames(name, this.getVisibleNames()).isEmpty();
-	}
+    syn lazy boolean ModuleDecl.exportsName(String name) {
+        return ! TypeCheckerHelper.getAllNames(name, this.getExportedNames()).isEmpty();
+    }
+
+    syn lazy boolean ModuleDecl.isVisible(String name) {
+        return ! TypeCheckerHelper.getAllNames(name, this.getVisibleNames()).isEmpty();
+    }
 
     syn lazy Collection<ModuleDecl> Model.getModuleDecls() {
         ArrayList<ModuleDecl> res = new ArrayList<ModuleDecl>();
         for (CompilationUnit u : getCompilationUnits()) {
-        	for (ModuleDecl mdecl : u.getModuleDecls()) {
-               	res.add(mdecl);
+            for (ModuleDecl mdecl : u.getModuleDecls()) {
+                res.add(mdecl);
             }
         }
         return res;
@@ -84,19 +84,19 @@ aspect TypeResolution {
 
     syn lazy Collection<Decl> Model.getDecls() {
         ArrayList<Decl> res = new ArrayList<Decl>();
-       	for (ModuleDecl mdecl : getModuleDecls()) {
-           	for (Decl d : mdecl.getDecls()) {
-               	res.add(d);
-           	}
+        for (ModuleDecl mdecl : getModuleDecls()) {
+            for (Decl d : mdecl.getDecls()) {
+                res.add(d);
+            }
         }
         return res;
     }
-    
+
     syn lazy Collection<Product> Model.getProducts() {
         ArrayList<Product> res = new ArrayList<Product>();
-       	for (ModuleDecl mdecl : getModuleDecls()) {
+        for (ModuleDecl mdecl : getModuleDecls()) {
             for (Product p : mdecl.getProducts()) {
-               	res.add(p);
+                res.add(p);
             }
         }
         return res;
@@ -104,88 +104,88 @@ aspect TypeResolution {
 
     syn lazy Block Model.getMainBlock() {
         for (CompilationUnit u : getCompilationUnits()) {
-        	if (u.hasMainBlock())
-        		return u.getMainBlock();
+            if (u.hasMainBlock())
+                return u.getMainBlock();
         }
         return null;
     }
-    
+
     syn lazy Block Model.getMainBlock(String mainBlock) {
-    	for (CompilationUnit u : getCompilationUnits()) {
-        	if (u.hasMainBlock(mainBlock)) {
-        		return u.getMainBlock(mainBlock);
-        	}
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasMainBlock(mainBlock)) {
+                return u.getMainBlock(mainBlock);
+            }
         }
         return null;
     }
 
     syn lazy Block CompilationUnit.getMainBlock() {
         for (ModuleDecl m: getModuleDecls()) {
-        	if (m.hasBlock())
-        		return m.getBlock();
+            if (m.hasBlock())
+                return m.getBlock();
         }
         return null;
     }
-    
+
     syn lazy Block CompilationUnit.getMainBlock(String mainBlock) {
         for (ModuleDecl m : getModuleDecls()) {
-        	if (m.getName().equals(mainBlock) && m.hasBlock())
-        		return m.getBlock();
+            if (m.getName().equals(mainBlock) && m.hasBlock())
+                return m.getBlock();
         }
         return null;
     }
-    
+
     syn lazy boolean Model.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
     syn lazy boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean CompilationUnit.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
-    
+
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
     syn lazy Decl TypeUse.getDecl() = lookup(new KindedName(Kind.TYPE_DECL,getName()));
-    
-    
+
+
     syn lazy ModuleDecl Model.lookupModule(String name) {
-    	for (CompilationUnit u : getCompilationUnits()) {
-			for (ModuleDecl d : u.getModuleDecls()) {
-				if (d.getName().equals(name)) {
-					return d;
-				}
-			}    			
-    	}
-    	return null;
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                if (d.getName().equals(name)) {
+                    return d;
+                }
+            }    			
+        }
+        return null;
     }
-    
+
     inh ModuleDecl Decl.getModuleDecl();
     eq ModuleDecl.getDecl().getModuleDecl() = this;
-    
+
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;
-    
+
     inh ModuleDecl Import.lookupModule(String name);
     inh ModuleDecl Export.lookupModule(String name);
     inh ModuleDecl CompilationUnit.lookupModule(String name);
     inh ModuleDecl ModuleDecl.lookupModule(String name);
     eq CompilationUnit.getModuleDecl().lookupModule(String name) = lookupModule(name);
     eq Model.getCompilationUnit().lookupModule(String name) = lookupModule(name);
-    
-    
+
+
     syn lazy Decl Model.lookup(KindedName name) {
-    	for (CompilationUnit u : getCompilationUnits()) {
-			for (ModuleDecl d : u.getModuleDecls()) {
-				Decl decl = d.lookup(name);
-				if (!decl.equals(unknownDecl()))
-					return decl;
-			}    			
-    	}
-    	return unknownDecl();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                Decl decl = d.lookup(name);
+                if (!decl.equals(unknownDecl()))
+                    return decl;
+            }    			
+        }
+        return unknownDecl();
     }
-    
+
     eq ParametricDataTypeDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getFunctionDef().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getTypeUse().lookup(KindedName name) = localLookup(name);
     eq ParametricFunctionDecl.getParam().lookup(KindedName name) = localLookup(name);
-    
+
     // Expose *lookup* at various places in the AST
     inh Decl Exp.lookup(KindedName name);
     inh Decl Pattern.lookup(KindedName name);
@@ -199,20 +199,20 @@ aspect TypeResolution {
     inh Decl ParametricFunctionDecl.lookup(KindedName name);
     inh Decl ClassDecl.lookup(KindedName name);
     inh Decl InterfaceDecl.lookup(KindedName name);
-	eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
-	eq ModuleDecl.getBlock().lookup(KindedName name) = lookup(name);
-        eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
+    eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
+    eq ModuleDecl.getBlock().lookup(KindedName name) = lookup(name);
+    eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
 
-	syn lazy Decl ModuleDecl.lookup(KindedName name) {
-		ResolvedName r = TypeCheckerHelper.resolveName(this,name);
-		if (r != null) {			
-	    	return r.getDecl();
-	    } else {	
-	   		return getModel().unknownDecl();
-	    } 			
-	}	    
-    
-    
+    syn lazy Decl ModuleDecl.lookup(KindedName name) {
+        ResolvedName r = TypeCheckerHelper.resolveName(this,name);
+        if (r != null) {			
+            return r.getDecl();
+        } else {	
+            return getModel().unknownDecl();
+        } 			
+    }	    
+
+
     // look through local declarations in parametric datatype, or defer
     // to model
     syn lazy Decl ParametricDataTypeDecl.localLookup(KindedName name) {
@@ -229,57 +229,57 @@ aspect TypeResolution {
                 return d;
         return lookup(name);
     }
-    
+
     rewrite UnresolvedTypeUse {
         when (getDecl().isInterface())
-            to InterfaceTypeUse new InterfaceTypeUse(getName());
+        to InterfaceTypeUse new InterfaceTypeUse(getName());
         when (getDecl().isDataType()) 
-            to DataTypeUse new DataTypeUse(getName(), new List());
+        to DataTypeUse new DataTypeUse(getName(), new List());
         when (getDecl().isTypeSyn())
-            to DataTypeUse ((TypeSynDecl)getDecl()).getValue().copy();
+        to DataTypeUse ((TypeSynDecl)getDecl()).getValue().copy();
         when (getDecl().isTypeParameter())
-        	to TypeParameterUse new TypeParameterUse(getName());
+        to TypeParameterUse new TypeParameterUse(getName());
     }
-    
-    
+
+
     syn lazy Decl FnApp.getDecl() = lookup(new KindedName(Kind.FUN,getName()));
-    
+
     inh lazy DataTypeDecl DataConstructor.getDataTypeDecl();
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
     eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
-    
+
     syn lazy Decl DataConstructorExp.getDecl() {
         return this.getDataConstructor();
     }
 
     syn lazy DataConstructor DataConstructorExp.getDataConstructor() {
-		Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-		if (! (decl instanceof DataConstructor)) 
-			throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
-		return (DataConstructor) decl;    
+        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
+        if (! (decl instanceof DataConstructor)) 
+            throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
+        return (DataConstructor) decl;    
     }
-    
-    
+
+
     syn boolean Call.isAsync();
     eq SyncCall.isAsync() = false;
     eq Call.isAsync() = false;
-    
+
     syn lazy ModuleDecl ASTNode.getModuleDecl() = (ModuleDecl) calcContextNode(ModuleDecl.class);
     syn lazy Decl ASTNode.getContextDecl() = (Decl) calcContextNode(Decl.class);
     syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
     syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);
     syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
-    
+
 
     public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
         ASTNode<?> n = this;
         while (n != null) {
             ASTNode<?> parent = n.getParent();
-            
+
             if (clazz.isAssignableFrom(n.getClass())) {
                 if (parent == null)
                     return n;
-                                        
+
                 ASTNode<?> pn = parent.calcContextNode(clazz);
                 if (pn != null)
                     return pn;
@@ -293,30 +293,30 @@ aspect TypeResolution {
 
 
     syn lazy MethodImpl ClassDecl.lookupMethod(String name) {
-   	 for (MethodImpl m : getMethods()) {
-   		 if (m.getMethodSig().getName().equals(name))
-   			 return m;
-   	 }
-   	 return null;
+        for (MethodImpl m : getMethods()) {
+            if (m.getMethodSig().getName().equals(name))
+                return m;
+        }
+        return null;
     }
-    
+
     syn lazy MethodSig InterfaceDecl.lookupMethod(String name) {
         for (MethodSig d : getBodys()) {
             if (d.getName().equals(name))
                 return d;
         }
-        
+
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
             InterfaceDecl id = (InterfaceDecl) u.getDecl();
             MethodSig s = id.lookupMethod(name);
             if (s != null)
                 return s;
         }
-        
+
         return null;
     }
- 
- 
+
+
     syn lazy String CompilationUnit.getFileName() = getName();
 }
 
