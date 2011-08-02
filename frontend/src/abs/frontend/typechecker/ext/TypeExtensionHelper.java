@@ -296,6 +296,20 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkClassDecl(ClassDecl decl) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkClassDecl(decl);
+        }
+    }
+
+    @Override
+    public void checkMethodImpl(MethodImpl method) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkMethodImpl(method);
+        }
+    }
+
+    @Override
     public void checkAssertStmt(AssertStmt assertStmt) {
         for (TypeSystemExtension tse : obs) {
             tse.checkAssertStmt(assertStmt);

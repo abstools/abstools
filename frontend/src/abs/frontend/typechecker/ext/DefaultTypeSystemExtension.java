@@ -63,6 +63,12 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     public void finished() {}
 
     @Override
+    public void checkClassDecl(ClassDecl decl) {}
+
+    @Override
+    public void checkMethodImpl(MethodImpl method) {}
+
+    @Override
     public void checkReturnStmt(ReturnStmt s) {}
     
     @Override

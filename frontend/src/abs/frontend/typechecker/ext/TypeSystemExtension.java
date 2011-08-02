@@ -11,6 +11,7 @@ import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.GetExp;
 import abs.frontend.ast.IfStmt;
@@ -26,6 +27,10 @@ import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.AdaptDirection;
 
 public interface TypeSystemExtension {
+
+    void checkClassDecl(ClassDecl decl);
+
+    void checkMethodImpl(MethodImpl method);
 
     void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n);
 

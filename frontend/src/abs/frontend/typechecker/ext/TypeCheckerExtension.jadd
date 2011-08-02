@@ -237,7 +237,7 @@ aspect TypeCheckerExtension {
                 getModel().getTypeExt().checkOverride(ms,sig);
             }
         }
-
+		getModel().getTypeExt().checkClassDecl(this);
     }
     
     refine TypeChecker public void FunctionDecl.typeCheck(SemanticErrorList s) {
@@ -253,6 +253,10 @@ aspect TypeCheckerExtension {
         }
     }
     
+    refine TypeChecker public void MethodImpl.typeCheck(SemanticErrorList s) {
+        getModel().getTypeExt().checkMethodImpl(this);
+    }
+
     refine TypeChecker public void DataConstructor.typeCheck(SemanticErrorList s) {
         int size = s.size();
         TypeChecker.DataConstructor.typeCheck(s);
