@@ -74,6 +74,9 @@
 		<mkdir dir="${build}"/>
 		<mkdir dir="${doc}"/>
 		<mkdir dir="${lib}"/>
+		<mkdir dir="dist" />	
+		<mkdir dir="dist/plugins" />
+		<mkdir dir="dist/features" />
 	</target>
 
 	<target depends="init" description="compiles the project" name="compile">
@@ -166,7 +169,7 @@
 		</delete>
 	</target>
 
-	<target name="create-sdedit-jar" >
+	<target name="create-sdedit-jar" description="create the sdedit jar file" depends="compile">
         <jar jarfile="${jarfile}">
             <fileset dir="${build}" />
             <manifest>
