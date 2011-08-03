@@ -26,6 +26,8 @@
 	
 	<target name="init">
 	   <mkdir dir="${dist.dir}" />
+	   <mkdir dir="${dist.dir}/plugins" />
+	   <mkdir dir="${dist.dir}/features" />
 	   <mkdir dir="${build.dir}" />
 	    <propertyfile file="eclipsehome.properties">
 	    	<entry key="eclipse.home" default="PLEASE SPECIFY"/>
