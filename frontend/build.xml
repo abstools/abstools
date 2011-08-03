@@ -95,6 +95,8 @@
 		<mkdir dir="${gen.dir}" />
 		<mkdir dir="${gen.test.dir}" />
 		<mkdir dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}/plugins" />
+		<mkdir dir="${dist.dir}/features" />
 		<mkdir dir="${ast.gen.dir}" />
 		<mkdir dir="${parser.gen.dir}" />
 		<mkdir dir="${build.dir}" />

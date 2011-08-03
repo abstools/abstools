@@ -27,6 +27,12 @@ public class ABSNetRuntime extends ABSRuntime {
     }
 
     @Override
+    public void doNextStep() {
+        System.out.println("node: "+getCurrentNode().getId());
+        super.doNextStep();
+    }
+    
+    @Override
     public COG createCOG(Class<?> clazz) {
         return createCOGAtNode(clazz, getCurrentNode());
     }
@@ -36,19 +42,27 @@ public class ABSNetRuntime extends ABSRuntime {
     }
 
     public NetNode getCurrentNode() {
-        return ((NetCOG)getCurrentCOG()).getNode();
+        NetCOG cog = getCurrentNetCOG();
+        if (cog != null) {
+            return cog.getNode();
+        } else {
+            return network.getStartNode();
+        }
     }
     
     public NetCOG getCurrentNetCOG() {
         return (NetCOG) getCurrentCOG();
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T extends ABSRef> ABSFut<?> asyncCall(AsyncCall<T> call) {
         Promise p = new PromiseImpl();
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        NetFut<? super ABSValue> fut = new NetFut(p);
-        getCurrentNetCOG().registerFuture(fut);
+        NetFut<? super ABSValue> fut = null;
+        if (getCurrentNetCOG() != null) {
+            fut = new NetFut(p);
+            getCurrentNetCOG().registerFuture(fut);
+        }
         getCurrentNode().processMsg(new CallMsg(p,call));
         return fut;
     }

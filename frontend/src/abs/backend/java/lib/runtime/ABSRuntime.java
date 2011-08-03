@@ -59,7 +59,7 @@ public class ABSRuntime {
      */
     public void start(Class<?> mainClass) throws InstantiationException, IllegalAccessException {
         systemStarted();
-        COG cog = new COG(this,mainClass);
+        COG cog = createCOG(mainClass);
         try {
             Constructor<?> constr = mainClass.getConstructor(COG.class);
             ABSObject mainObject = (ABSObject) constr.newInstance(cog);

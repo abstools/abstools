@@ -27,5 +27,9 @@ public class NetworkImpl implements Network {
     public NetNode getStartNode() {
         return nodes.get(0);
     }
-
+    
+    public void addNode(NetNode n) {
+        nodes.add(n);
+    }
+    
 }

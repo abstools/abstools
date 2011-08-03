@@ -6,6 +6,7 @@ package abs.backend.java.lib.runtime;
 
 import abs.backend.java.lib.net.ABSNetRuntime;
 import abs.backend.java.lib.net.NetworkImpl;
+import abs.backend.java.lib.net.NodeImpl;
 
 public class StartUp {
     public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException {
@@ -13,6 +14,7 @@ public class StartUp {
         ABSRuntime runtime;
         if (options.useNet.isTrue()) {
             NetworkImpl network = new NetworkImpl();
+            network.addNode(new NodeImpl(0));
             runtime = new ABSNetRuntime(network);
         } else {
             runtime = new ABSRuntime();
