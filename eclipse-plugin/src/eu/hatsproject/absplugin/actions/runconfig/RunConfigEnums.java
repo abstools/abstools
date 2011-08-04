@@ -18,9 +18,9 @@ public class RunConfigEnums {
 	 * The user can choose one of them in the run configuration.
 	 */
 	public enum DebuggerObserver {
-		ECLIPSE(Debugger.class.getName(),"Eclipse observer", true),
-		GRAPHICAL(GraphicalDebugger.class.getName(), "Graphical observer", false),
-		UML (UMLSequenceChart.class.getName(), "UML observer", false);
+		ECLIPSE(Debugger.class.getName(),"Eclipse Debugger", true),
+		GRAPHICAL(GraphicalDebugger.class.getName(), "Graphical Debugger", false),
+		UML (UMLSequenceChart.class.getName(), "UML Sequence Diagram", false);
 		
 		private String className;
 		private String userReadableName;
@@ -100,10 +100,10 @@ public class RunConfigEnums {
 	 * The user can choose one of them in the run configuration.
 	 */
 	public enum DebuggerScheduler {
-		ECLIPSE(SchedulingStrategy.class.getName(),"Eclipse scheduler"),
-		INTERACTIVE (InteractiveScheduler.class.getName(), "Interactive scheduler"),
-		RANDOM (RandomSchedulingStrategy.class.getName(), "Random scheduler"),
-		DEFAULT("", "No scheduler");
+		ECLIPSE(SchedulingStrategy.class.getName(),"Eclipse Debugger"),
+		INTERACTIVE (InteractiveScheduler.class.getName(), "Interactive Debugger"),
+		RANDOM (RandomSchedulingStrategy.class.getName(), "Random Scheduler"),
+		DEFAULT("", "Default Scheduler");
 		
 		
 		private String className;
