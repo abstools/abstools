@@ -36,8 +36,11 @@ aspect ClassName {
     public String ModifyClassModifier.className() {
         return this.getName();
     }
+    public String AddInterfaceModifier.className() {
+        return this.getInterfaceDecl().getName();
+    }
     public String ClassOrIfaceModifier.className() {
-        return "ABSTRACT";
+        return "FIXME: add method for " + this.getClass().getName();
     }
     
     inh String ModifyMethodModifier.className();

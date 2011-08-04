@@ -44,7 +44,7 @@ aspect Flattener {
      */
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
-//            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
+            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
             cmod.apply(delta);
         }
     }
@@ -74,6 +74,11 @@ aspect Flattener {
 
     public void ModifyClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
         ClassDecl cls = this.findClassModifiedBy(delta);
+        
+        // reset the list of implemented interfaces
+        if (this.getImplementedInterfaceUseList().hasChildren()) 
+            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList());
+        
         // apply all modifiers
         for (Modifier mod : this.getModifiers()) {
             mod.applyTo(cls);
@@ -81,7 +86,8 @@ aspect Flattener {
     }
     
     public void AddInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        // TODO
+        ModuleDecl module = delta.getModule();
+        module.getDecls().addChild(this.getInterfaceDecl().fullCopy());
     }
 
     /*
@@ -125,8 +131,7 @@ aspect Flattener {
         }
         else
             return module;
-        throw new ASTNodeNotFoundException("Module " + mn + " was not found when creating class " +
-                    name.getString() + ".");
+        throw new ASTNodeNotFoundException("Module " + mn + " was not found when adding class " + name.getString() + ".");
     }
     
     /**************************************************************************

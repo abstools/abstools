@@ -14,7 +14,7 @@ import abs.frontend.ast.*;
 public class DeltaFlattenerTest extends FrontendTest {
     @Test
     public void removeClass() throws ASTNodeNotFoundException {
-        Model model = assertParseOk("module M; class C {} delta D { removes class C }");
+        Model model = assertParseOk("module M; class C {} delta D { removes class C; }");
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
@@ -120,6 +120,34 @@ public class DeltaFlattenerTest extends FrontendTest {
         ModifyClassModifier cm = (ModifyClassModifier) delta.getClassOrIfaceModifier(0);
         ModifyMethodModifier mm = (ModifyMethodModifier) cm.getModifier(0);
         assertTrue(cls.getMethod(0).toString().equals(mm.getMethodImpl().toString()));
+    }
+
+    @Test
+    public void addInterface() throws ASTNodeNotFoundException {
+        // TODO
+    }
+
+    @Test
+    public void modifyClass() throws ASTNodeNotFoundException {
+        // here we only test replacing the list of implemented interfaces
+        Model model = assertParseOk(
+                "module M; \n"
+                + "interface I1 { Int foo1(); } \n"
+                + "class C implements I1 { Int foo1() { return 1; } } \n"
+                + "delta D { \n"
+                + "adds interface I2 { Int foo2(); } \n"
+                + "modifies class C implements I2 { adds Int foo2() { return 2; } } \n"
+                + "}\n");
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertNotNull(cls);
+        InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I1");
+        assertNotNull(iface);
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+
+//        model.applyDelta(delta);
+
     }
 
     

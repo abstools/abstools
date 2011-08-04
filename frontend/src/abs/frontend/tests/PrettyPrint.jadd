@@ -128,7 +128,12 @@ aspect PrettyPrint {
         w.print(' ');
         super.prettyPrintChildren(w,f);   
     }
-    // TODO Add/Remove/Modify InterfaceModifiers
+
+    public void AddInterfaceModifier.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
+        w.print(getInterfaceDecl().getName());
+        w.print(' ');
+        super.prettyPrintChildren(w,f);   
+    }
     
     public void Value.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print("Const(" + this.getName() + ")");
