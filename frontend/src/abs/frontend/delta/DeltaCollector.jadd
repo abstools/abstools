@@ -263,20 +263,26 @@ aspect DeltaCollector {
 
     // apply a substitution to DeltaDecl
     public void DeltaDecl.applySubstitution(HashMap<String,Value> subst) {
-        for (ClassModifier d : getClassModifiers())
+        for (ClassOrIfaceModifier d : getClassOrIfaceModifiers())
             d.applySubstitution(subst);
     }
 
-    abstract public void ClassModifier.applySubstitution(HashMap<String,Value> subst);
-    public void ModifyClassModifier.applySubstitution(HashMap<String,Value> subst) {
-        for (Modifier m : getModifiers()) m.applySubstitution(subst);
-    }
+    // apply a substitution to ClassOrIfaceModifier
+    abstract public void ClassOrIfaceModifier.applySubstitution(HashMap<String,Value> subst);
+    
     public void AddClassModifier.applySubstitution(HashMap<String,Value> subst) {
         getClassDecl().applySubstitution(subst);
     }
     public void RemoveClassModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void ModifyClassModifier.applySubstitution(HashMap<String,Value> subst) {
+        for (Modifier m : getModifiers()) m.applySubstitution(subst);
+    }
+    // FIXME:
+    public void AddInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
 
+    // apply a substitution to Modifier
     abstract public void Modifier.applySubstitution(HashMap<String,Value> subst);
+  
     public void AddFieldModifier.applySubstitution(HashMap<String,Value> subst) {
         getFieldDecl().applySubstitution(subst);
     }
@@ -286,10 +292,10 @@ aspect DeltaCollector {
     public void AddMethodModifier.applySubstitution(HashMap<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
+    public void RemoveMethodModifier.applySubstitution(HashMap<String,Value> subst) {}
     public void ModifyMethodModifier.applySubstitution(HashMap<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
-    public void RemoveMethodModifier.applySubstitution(HashMap<String,Value> subst) {}
 
     public void ClassDecl.applySubstitution(HashMap<String,Value> subst) {
         HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();

@@ -27,7 +27,7 @@ aspect OriginalCallResolver {
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
 //        System.out.println("*** resolving in Delta: " + this.qualifiedName());
-        for (ClassModifier cm : this.getClassModifiers()) {
+        for (ClassOrIfaceModifier cm : this.getClassOrIfaceModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
                    if (m instanceof ModifyMethodModifier)
@@ -119,7 +119,7 @@ aspect OriginalCallResolver {
         // search in list of applied deltas
         for (DeltaDecl delta : deltas) {
 //            System.out.println("*** searching in delta " + delta.getName());
-            for (ClassModifier cm : delta.getClassModifiers()) {
+            for (ClassOrIfaceModifier cm : delta.getClassOrIfaceModifiers()) {
                 if (cm.className().equals(classid)) {
                     if (cm instanceof ModifyClassModifier) {
                         for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -176,7 +176,7 @@ aspect OriginalCallResolver {
         // TODO include the delta's name in the new method's name?
         methodCopy.getMethodSig().setName(methodCopyID); 
         cm.addModifier(new AddMethodModifier(methodCopy));
-        this.delta().addClassModifier(cm);
+        this.delta().addClassOrIfaceModifier(cm);
         return methodCopy;
     }
 

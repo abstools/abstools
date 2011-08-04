@@ -198,6 +198,7 @@ aspect MyDumpTree
     {
     	stream.print(this.getName());
     }
+    // TODO Add/Remove/Modify InterfaceModifiers
 
     protected void AddMethodModifier.printInfo(PrintStream stream)
     {

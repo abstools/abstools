@@ -2,13 +2,12 @@
 //
 
 // needed for lists of strings
-Name ::= <Name>;
+Name ::= <Name> ;
 
-Model                         ::= CompilationUnit*;
+Model ::= CompilationUnit* ;
 
 CompilationUnit ::= <Name> ModuleDecl* ;
-ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] Product*
-    [Block:MainBlock] ;
+ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] Product* [Block:MainBlock] ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -21,13 +20,13 @@ StarExport: Export ::= [ModuleName:Name];
 FromExport: Export ::= Name* <ModuleName>;
 // (see below for Blocks)
 
-abstract 				Decl ::= <Name>;
-abstract BehaviorDecl:	Decl ::= ; // Entities used in behavior expressions
-abstract TypeDecl:		Decl; // Entities used in type expressions
+abstract Decl ::= <Name>;
+abstract BehaviorDecl: Decl ::= ; // Entities used in behavior expressions
+abstract TypeDecl: Decl; // Entities used in type expressions
 
 UnknownDecl:    TypeDecl;		// Unknown declarations
 ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* ClassModifier*;
+DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* ClassOrIfaceModifier* ;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl  ::= <Name> ConstructorArg:ConstructorArg* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
@@ -41,8 +40,6 @@ ConstructorArg ::= DataTypeUse [SelectorName:Name];
 
 
 /*
-  TODO add supports for Add/Remove/Modifies Interface
-  
   TODO ensures fix grammar to only allow add/remove method signatures for modifies Interface modifier.
   Currently this is incorrect in the grammar shown in Figure 5.7 of D1.2.
  */
@@ -57,31 +54,32 @@ HasMethod    : HasCondition ::= MethodSig;
 HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract Modifier;
-abstract ClassModifier;
+abstract ClassOrIfaceModifier;
 
-ModifyClassModifier : ClassModifier  ::= <Name> Modifier*;
-AddClassModifier    : ClassModifier  ::= ClassDecl;
-RemoveClassModifier : ClassModifier  ::= <Name>;
+AddClassModifier     : ClassOrIfaceModifier  ::= ClassDecl;
+RemoveClassModifier  : ClassOrIfaceModifier  ::= <Name>;
+ModifyClassModifier  : ClassOrIfaceModifier  ::= <Name> ImplementedInterfaceUse:InterfaceTypeUse* Modifier*;
+AddInterfaceModifier : ClassOrIfaceModifier  ::= InterfaceDecl;
 
-AddFieldModifier: Modifier      ::= FieldDecl;
-RemoveFieldModifier: Modifier   ::= FieldDecl;
-AddMethodModifier : Modifier    ::= MethodImpl;
-ModifyMethodModifier : Modifier ::= MethodImpl;
+AddFieldModifier     : Modifier ::= FieldDecl;
+RemoveFieldModifier  : Modifier ::= FieldDecl;
+AddMethodModifier    : Modifier ::= MethodImpl;
 RemoveMethodModifier : Modifier ::= MethodSig;
+ModifyMethodModifier : Modifier ::= MethodImpl;
 
-abstract	VarOrFieldDecl  ::= <Name>;
+abstract VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
-VarDecl:	TypedVarOrFieldDecl ::= [InitExp:Exp];
-FieldDecl:	TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
-ParamDecl:	TypedVarOrFieldDecl ::= Annotation*;
+VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
+FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
+ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
 PatternVarDecl: VarOrFieldDecl;
 
 abstract FunctionDef;
 BuiltinFunctionDef: FunctionDef;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
-MethodSig	::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
-MethodImpl  ::= MethodSig Block;
+MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
+MethodImpl ::= MethodSig Block;
 
 
 // Uses of various identifiers

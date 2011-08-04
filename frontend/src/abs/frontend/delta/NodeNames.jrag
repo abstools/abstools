@@ -3,8 +3,8 @@ aspect ModuleName {
     inh String Decl.moduleName();
     eq ModuleDecl.getDecl().moduleName() = this.getName();
 
-    inh String ClassModifier.moduleName();
-    eq DeltaDecl.getClassModifier().moduleName() = this.moduleName();
+    inh String ClassOrIfaceModifier.moduleName();
+    eq DeltaDecl.getClassOrIfaceModifier().moduleName() = this.moduleName();
     
     inh String Product.moduleName();
     eq ModuleDecl.getProduct().moduleName() = this.getName();
@@ -18,8 +18,8 @@ aspect ModuleName {
 
 
 aspect DeltaName {
-    inh String ClassModifier.deltaName();
-    eq DeltaDecl.getClassModifier().deltaName() = this.getName();
+    inh String ClassOrIfaceModifier.deltaName();
+    eq DeltaDecl.getClassOrIfaceModifier().deltaName() = this.getName();
 
     inh String Modifier.deltaName();
     eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
@@ -36,7 +36,7 @@ aspect ClassName {
     public String ModifyClassModifier.className() {
         return this.getName();
     }
-    public String ClassModifier.className() {
+    public String ClassOrIfaceModifier.className() {
         return "ABSTRACT";
     }
     
@@ -65,7 +65,7 @@ aspect QualifiedName {
         return this.moduleName() + "." + this.getName();
     }
     
-    public String ClassModifier.qualifiedName() {
+    public String ClassOrIfaceModifier.qualifiedName() {
         return this.moduleName() + "." + this.className();
     }
 }

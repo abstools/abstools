@@ -40,21 +40,26 @@ aspect Flattener {
     
     /*
      * Apply delta to model
-     * i.e. apply each classModifier to its corresponding class
+     * i.e. apply each ClassOrIfaceModifier to its corresponding class or interface
      */
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
-        for (ClassModifier cmod : delta.getClassModifiers()) {
-//            System.out.println("*** applying ClassModifier " + cmod);
+        for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
+//            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
             cmod.apply(delta);
         }
     }
 
     /**************************************************************************
-     * Apply ClassModifiers, 
-     * that is, add/remove/modify classes
+     * Apply ClassOrIfaceModifiers, 
+     * that is, add/remove/modify classes or interfaces
      */
-    public abstract void ClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
+    abstract public void ClassOrIfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
 
+    public void AddClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        ModuleDecl module = findModuleForClass(); //delta.getModule();
+        module.getDecls().addChild(this.getClassDecl().fullCopy());
+    }
+    
     public void RemoveClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
         ClassDecl cls = this.findClassModifiedBy(delta);
         ModuleDecl module = delta.getModule();
@@ -67,11 +72,6 @@ aspect Flattener {
         }
     }
 
-    public void AddClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        ModuleDecl module = findModuleForClass(); //delta.getModule();
-        module.getDecls().addChild(this.getClassDecl().fullCopy());
-    }
-    
     public void ModifyClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
         ClassDecl cls = this.findClassModifiedBy(delta);
         // apply all modifiers
@@ -79,12 +79,16 @@ aspect Flattener {
             mod.applyTo(cls);
         }
     }
+    
+    public void AddInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        // TODO
+    }
 
     /*
      * helper method
      * find the ClassDecl which should be modified by the given delta
      */
-    public ClassDecl ClassModifier.findClassModifiedBy(DeltaDecl delta) throws ASTNodeNotFoundException {
+    public ClassDecl ClassOrIfaceModifier.findClassModifiedBy(DeltaDecl delta) throws ASTNodeNotFoundException {
         // find module where delta was defined
         ModuleDecl module = delta.getModule();
         ClassDecl cls = null;

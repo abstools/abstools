@@ -312,11 +312,12 @@ List class_modifier_list =
   | class_modifier_list.l class_modifier.m {: return l.add(m); :}
   ;
 
-ClassModifier class_modifier =
-    MODIFIES CLASS TYPE_IDENTIFIER.id LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, fragments); :}
-//  | ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
-  | ADDS qualified_class_decl.classdecl {: return new AddClassModifier(classdecl); :}
-  | REMOVES CLASS TYPE_IDENTIFIER.id {: return new RemoveClassModifier(id); :}
+ClassOrIfaceModifier class_modifier =
+//  ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+  ADDS qualified_class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+  | REMOVES CLASS TYPE_IDENTIFIER.id SEMICOLON {: return new RemoveClassModifier(id); :}
+  | MODIFIES CLASS TYPE_IDENTIFIER.id implement_interfaces.iface? LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, iface, fragments); :}
+  | ADDS interface_decl.ifacedecl {: return new AddInterfaceModifier(ifacedecl); :}
   ;
 
 ClassDecl qualified_class_decl =

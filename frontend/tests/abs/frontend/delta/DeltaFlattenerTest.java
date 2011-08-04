@@ -117,7 +117,7 @@ public class DeltaFlattenerTest extends FrontendTest {
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("myMethod"));
         
         // make sure the MethodImpl defined in the delta is now in the class
-        ModifyClassModifier cm = (ModifyClassModifier) delta.getClassModifier(0);
+        ModifyClassModifier cm = (ModifyClassModifier) delta.getClassOrIfaceModifier(0);
         ModifyMethodModifier mm = (ModifyMethodModifier) cm.getModifier(0);
         assertTrue(cls.getMethod(0).toString().equals(mm.getMethodImpl().toString()));
     }

@@ -1,7 +1,7 @@
-// inform ClassModifiers and Modifiers about the DeltaDecl where they were declared
+// inform ClassOrIfaceModifiers and Modifiers about the DeltaDecl where they were declared
 aspect Delta {
-    inh DeltaDecl ClassModifier.delta();
-    eq DeltaDecl.getClassModifier().delta() = this;
+    inh DeltaDecl ClassOrIfaceModifier.delta();
+    eq DeltaDecl.getClassOrIfaceModifier().delta() = this;
     
     inh DeltaDecl Modifier.delta();
     eq ModifyClassModifier.getModifier().delta() = this.delta();
@@ -13,8 +13,8 @@ aspect Module {
     inh ModuleDecl Decl.getModule();
     eq ModuleDecl.getDecl().getModule() = this;
 
-    inh ModuleDecl ClassModifier.getModule();
-    eq DeltaDecl.getClassModifier().getModule() = this.getModule();
+    inh ModuleDecl ClassOrIfaceModifier.getModule();
+    eq DeltaDecl.getClassOrIfaceModifier().getModule() = this.getModule();
 
     inh ModuleDecl Modifier.getModule();
     eq ModifyClassModifier.getModifier().getModule() = this.getModule();
