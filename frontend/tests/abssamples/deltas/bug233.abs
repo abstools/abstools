@@ -1,0 +1,37 @@
+// ******************************************************************
+module Test;
+
+interface Ifoo { Int foo(); }
+
+class C implements Ifoo {
+    Int foo() { return 1; }
+}
+
+delta D {
+    adds interface Ifoo2 {
+        Int foo2();
+    }
+
+    removes interface Ifoo;
+
+    modifies interface Ifoo2 {
+        removes Int foo2();
+        adds Int foo3();
+    }
+}
+
+// ******************************************************************
+
+productline ProductLine {
+  features F;
+  delta D when F;
+}
+
+product P1(F);
+
+{
+  Application app = new ApplicationImpl();
+  Int result = app.calculate(10);
+  assert result == 11;
+}
+
