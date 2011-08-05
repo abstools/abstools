@@ -171,7 +171,7 @@ aspect GenerateMaude {
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ; get( '.staticfuture ; '" + var + ") ");
-        stream.print("; $free('.staticfuture) ");
+        stream.print("; $release('.staticfuture) ");
     }
 
     public void OriginalCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
@@ -670,7 +670,7 @@ aspect GenerateMaude {
         stream.print("return(null) ");
         if (isActiveClass) {
             stream.print("; asynccall('.staticfuture ; 'this ; \"run\" ; emp ; \"InfDuration\"[ emp ]) ");
-            stream.print("; $free('.staticfuture) ");
+            stream.print("; $release('.staticfuture) ");
         }
         stream.print("> ");
     }
