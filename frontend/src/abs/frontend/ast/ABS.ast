@@ -255,4 +255,4 @@ CID: Deltaparam ::= <Name> ;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* MainBlock:Block ;
+Product ::= <Name> Feature* ;

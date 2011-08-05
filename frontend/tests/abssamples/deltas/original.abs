@@ -89,10 +89,7 @@ productline PL {
 
 //*****************************************************************
 
-product P (Stuff) {
-    Fruity fruit = new Fruit();
-    String name = fruit.get_name();
-}
+product P (Stuff);
 
 
 //*****************************************************************

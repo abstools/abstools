@@ -39,8 +39,8 @@ productline ProductLine {
     delta D2 when F2;
 }
 
-product P1(F1) {}
-product P2(F2) {}
+product P1(F1);
+product P2(F2);
 
 // ******************************************************************
 

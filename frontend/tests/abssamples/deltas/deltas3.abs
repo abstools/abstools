@@ -34,16 +34,10 @@ productline FruteConf {
 //************************************************************
 // Products (FSL)
 //************************************************************
-product P1 (F1 {stk=11}, F2, F3 {ff3=13}) {
-    new Application();
-}
+product P1 (F1 {stk=11}, F2, F3 {ff3=13});
 
-product P2 (F2) {
-    new Application();
-}
+product P2 (F2);
 
-product P3 (F3 {ff3=31} ) {
-    new Application();
-}
+product P3 (F3 {ff3=31} );
 
-product P4 (F4) {}
+product P4 (F4);

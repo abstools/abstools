@@ -46,9 +46,9 @@ productline ProductLine {
   delta D3 when F3;
 }
 
-product P1(F1) { }
-product P2(F2) { }
-product P3(F3) { }
+product P1(F1);
+product P2(F2);
+product P3(F3);
 
 {
   Application app = new ApplicationImpl();

@@ -8,8 +8,10 @@ class Greeter implements Greeting {
         return "Hello world";
     }
 }
+
 class Application {
     String s = "";
+    // active class
     Unit run() {
         Greeting bob;
         bob = new Greeter();
@@ -63,25 +65,18 @@ productline MultiLingualHelloWorld {
 }
 
 // basic product with no deltas
-product P1 (English) {
-    new Application();  // this runs the application
-}
+product P1 (English);
 
 // apply delta Fr
-product P2 (French) {
-    new Application();
-}
+product P2 (French);
 
 // apply deltas Fr and Repeat
-product P3 (French, Repeat{times=10}) {
-    new Application();
-}
+product P3 (French, Repeat{times=10});
 
 // apply deltas En and Repeat, but it should be refused because "times > 5"
-product P4 (English, Repeat{times=6}) {
-    new Application();
-}
+product P4 (English, Repeat{times=6});
 
 {
-    new Application();
+    // main block
+    new Application(); // this runs the application
 }
