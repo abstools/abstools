@@ -10,7 +10,7 @@ class C implements I1 {
 }
 
 // ******************************************************************
-// declaring two deltas, which should have the same effect (or not?)
+// declaring two deltas, which should have the same effect when applied
 
 delta D1 {
     adds interface I2 extends I1 {

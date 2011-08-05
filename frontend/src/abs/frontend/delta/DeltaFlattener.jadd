@@ -76,8 +76,7 @@ aspect Flattener {
         ClassDecl cls = this.findClassModifiedBy(delta);
         
         // reset the list of implemented interfaces
-        if (this.getImplementedInterfaceUseList().hasChildren()) 
-            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList());
+        cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
         
         // apply all modifiers
         for (Modifier mod : this.getModifiers()) {
