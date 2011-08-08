@@ -12,6 +12,7 @@ import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.DurationStmt;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.GetExp;
 import abs.frontend.ast.IfStmt;
@@ -59,6 +60,8 @@ public interface TypeSystemExtension {
     void checkSuspendStmt(SuspendStmt suspendStmt);
 
     void checkIfStmt(IfStmt ifStmt);
+
+    void checkDurationStmt(DurationStmt durationStmt);
 
     void checkExpressionStmt(ExpressionStmt expressionStmt);
 

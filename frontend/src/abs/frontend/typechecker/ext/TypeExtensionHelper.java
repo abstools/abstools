@@ -359,6 +359,13 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     @Override
+    public void checkDurationStmt(DurationStmt durationStmt) {
+        for (TypeSystemExtension tse : obs) {
+            tse.checkDurationStmt(durationStmt);
+        }
+    }
+
+    @Override
     public void checkWhileStmt(WhileStmt whileStmt) {
         for (TypeSystemExtension tse : obs) {
             tse.checkWhileStmt(whileStmt);
