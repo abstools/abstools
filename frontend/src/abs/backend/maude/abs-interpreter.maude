@@ -1271,7 +1271,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
       CN, T)
   = 
-    < O : C | Cog: CG, Att: S, Pr: { reduceDeadline(L, T) | $duration( MIN - T ; MAX - T ) ; SL }, PrQ: advanceProcesses(W, S, T), Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { reduceDeadline(L, T) | $duration( max(MIN - T, 0) ; max(MAX - T, 0) ) ; SL }, PrQ: advanceProcesses(W, S, T), Lcnt: F >
     advance(CN, T) .
   eq advance(
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
@@ -1300,7 +1300,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq advanceDelays("&&"(E :: E'), S, MAC) =
     "&&"(advanceDelays(E, S, MAC) :: advanceDelays(E', S, MAC)) .
   ceq advanceDelays(?duration(E ; E'), S, MAC) =
-    ?duration("int"[MIN - T] ; "int"[MAX - T])
+    ?duration("int"[max(MIN - T, 0)] ; "int"[max(MAX - T, 0)])
   if T := (MAC['.time]) asInt
       /\ MIN := eval(E, S, none, MAC) asInt
       /\ MAX := eval(E', S, none, MAC) asInt .
