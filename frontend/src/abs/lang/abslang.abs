@@ -360,7 +360,7 @@ def Duration deadline() =
 def Duration subtractFromDuration(Duration d, Int v) =
   case d {
       InfDuration => InfDuration;
-      Duration(x) => Duration(x - v);
+      Duration(x) => Duration(max(x - v, 0));
   };
 
 // Annotation data type to express deadlines:
