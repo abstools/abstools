@@ -472,7 +472,10 @@ public class ABSContentOutlineUtils {
 			return new StyledString("PL: " + ((ProductLine) element).getName(), STYLER_BLACK);
 		} else if (element instanceof Product) {
 			// FIXME Unfold ProductLine Definition
-			return new StyledString(((Product) element).getName(), STYLER_BLACK);
+			return new StyledString("Π "+((Product) element).getName(), STYLER_BLACK);
+		} else if (element instanceof DeltaDecl) {
+			// FIXME Unfold
+			return new StyledString("Δ "+ ((DeltaDecl) element).getName(), STYLER_BLACK);
 		} else if (element instanceof ClassDecl) {
 			return formatClassDecl((ClassDecl) element);
 		} else if (element instanceof TypedVarOrFieldDecl) {
