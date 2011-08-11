@@ -387,7 +387,7 @@ public class ProposalFactory{
 			ArrayList<ICompletionProposal> tempQual = new ArrayList<ICompletionProposal>();
 			ModuleDecl moddecl = (ModuleDecl)getSuperOfASTNode(node, ModuleDecl.class);
 			if(moddecl == null){
-				throw new IllegalArgumentException("Given ASTNode is not in a Module!");
+				return;
 			}
 			
 			try {
