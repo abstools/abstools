@@ -4,14 +4,18 @@ import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
 aspect Flattener {
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+	    flattenForProduct(prod);
+	}
+
     /* Configure a product
      * 
      * This is the top level method, which does everything:
      * finding the features of a given product, finding the sequence of 
      * associated deltas, and applying them.
      */
-    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
-        Product prod = this.findProduct(id);
+    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         System.out.println("--- configuring product: " + prod.qualifiedName());
 
         ArrayList<DeltaDecl> deltas = this.getSortedDeltas(prod);
