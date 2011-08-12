@@ -6,9 +6,7 @@ package eu.hatsproject.absplugin.actions.runconfig;
 
 import static eu.hatsproject.absplugin.actions.ActionUtils.getProject;
 import static eu.hatsproject.absplugin.actions.ActionUtils.saveDirtyEditors;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_EXECUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_PARTIAL_EXEC;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_STEPS;
+import static eu.hatsproject.absplugin.util.Constants.*;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -19,6 +17,7 @@ import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 
 import eu.hatsproject.absplugin.actions.MaudeJob;
 import eu.hatsproject.absplugin.actions.MaudeJobChangeListener;
+
 public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 
 	private IProject project;
@@ -35,6 +34,9 @@ public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 		} else{
 			maudeJob = new MaudeJob(project, realTime, configuration.getAttribute(RUNCONFIG_MAUDE_EXECUTE, false));
 		}
+		String product = configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
+		if (product != null)
+			maudeJob.setProduct(product);
 		maudeJob.addJobChangeListener(new MaudeJobChangeListener(project));
 		maudeJob.schedule();
 	}

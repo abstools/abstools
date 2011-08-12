@@ -38,7 +38,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.NoABSNatureException;
 import eu.hatsproject.absplugin.exceptions.ParseException;
@@ -55,6 +57,7 @@ public class MaudeJob extends Job{
 	
 	private boolean partialExec;
 	private int steps;
+	private String product;
 	
 	/**
 	 * MaudeJobs created with this constructor will generate a .maude file out of a given project and may execute
@@ -119,6 +122,10 @@ public class MaudeJob extends Job{
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has parse errors", e4);
 		} catch (TypeCheckerException e5) {
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has type errors", e5);
+		} catch (WrongProgramArgumentException e) {
+			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
+		} catch (ASTNodeNotFoundException e) {
+			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
 		} 
 		monitor.worked(5);
 		
@@ -185,8 +192,10 @@ public class MaudeJob extends Job{
 	 * @throws NoABSNatureException Is thrown, if a the project which is compiled is not an ABS project
 	 * @throws ParseException Is thrown, if the project which is compiled has parse errors
 	 * @throws TypeCheckerException Is thrown, if the project which is compiled has type errors
+	 * @throws ASTNodeNotFoundException 
+	 * @throws WrongProgramArgumentException 
 	 */
-	private void compileMaude() throws CoreException, IOException, NoABSNatureException, ParseException, TypeCheckerException {
+	private void compileMaude() throws CoreException, IOException, NoABSNatureException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
 		PrintStream ps = null;
 		//Check if project is an ABSProject
 		try{
@@ -211,6 +220,10 @@ public class MaudeJob extends Job{
 			Model model = nature.getCompleteModel();
 			if(model.hasParserErrors()){
 				throw new ParseException(model.getParserErrors());
+			}
+			if (getProduct() != null) {
+				model = model.copy(); // FIXME: fullCopy() necessary?
+				model.flattenForProduct(getProduct());
 			}
 			if(model.hasTypeErrors()){
 				throw new TypeCheckerException(model.typeCheck());
@@ -299,5 +312,13 @@ public class MaudeJob extends Job{
 	
 	private String convertToUnixPath(File destFile) {
 		return destFile.getAbsolutePath().replaceFirst(":", "").replace('\\', '/');
+	}
+
+	public String getProduct() {
+		return product;
+	}
+
+	public void setProduct(String product) {
+		this.product = product;
 	}
 }

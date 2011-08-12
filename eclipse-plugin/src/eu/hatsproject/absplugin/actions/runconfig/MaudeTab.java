@@ -63,7 +63,6 @@ public class MaudeTab extends AbstractTab {
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
 			initProject(configuration);
-			productDropDown.setEnabled(false); /* TODO: We're not doing anything yet with products here */
 			exec.setSelection(configuration.getAttribute(RUNCONFIG_MAUDE_EXECUTE, true));
 			
 			if(!exec.getSelection()){
