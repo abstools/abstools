@@ -144,7 +144,13 @@ public class JavaTab extends AbstractTab {
 	public String getName() {
 		return "ABS Java Backend";
 	}
-	
+
+	@Override
+	public boolean isValid(ILaunchConfiguration launchConfig) {
+		/* Don't try to start, you'll only get an exception immediately. */
+		return getErrorMessage() == null;
+	}
+
 	//---create methods------------------------
 	
 	private void createCheckButtons(TabListener myListener,
