@@ -13,7 +13,6 @@ import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_STEPS;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
@@ -29,7 +28,7 @@ public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 		project = getProject(configuration);
 		saveDirtyEditors(project);	
 		boolean realTime = false;
-		Job maudeJob;
+		MaudeJob maudeJob;
 		
 		if(configuration.getAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, false)){
 			maudeJob = new MaudeJob(project, realTime, true, configuration.getAttribute(RUNCONFIG_MAUDE_STEPS, 0));

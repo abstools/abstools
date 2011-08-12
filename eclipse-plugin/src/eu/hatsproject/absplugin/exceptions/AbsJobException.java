@@ -24,4 +24,8 @@ public class AbsJobException extends Exception {
 		super(message);
 	}
 
+	public AbsJobException(Exception e) {
+		super(e);
+	}
+
 }

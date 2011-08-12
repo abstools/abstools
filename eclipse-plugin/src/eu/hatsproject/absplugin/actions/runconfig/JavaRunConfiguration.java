@@ -15,14 +15,21 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 
+import abs.common.WrongProgramArgumentException;
+import abs.frontend.ast.Model;
+
 import eu.hatsproject.absplugin.actions.ActionUtils;
 import eu.hatsproject.absplugin.actions.JavaJob;
+import eu.hatsproject.absplugin.exceptions.AbsJobException;
+import eu.hatsproject.absplugin.util.Constants;
 
 
 public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
@@ -37,6 +44,17 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 	
 		ActionUtils.saveDirtyEditors(project);
 		JavaJob job = new JavaJob(JavaJob.RUN_JOB,action, project, file);
+		String product = configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
+		if (product != null) {
+			try {
+				Model model = JavaJob.getModelFromProject(project);
+				job.setProduct(model.findProduct(product));
+			} catch (WrongProgramArgumentException e) {
+				throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
+			} catch (AbsJobException e) {
+				throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
+			}
+		}
 		modifyDebuggerArguments(configuration, job);
 		job.schedule();
 	}

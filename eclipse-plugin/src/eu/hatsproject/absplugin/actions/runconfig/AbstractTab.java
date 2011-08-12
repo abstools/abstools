@@ -4,9 +4,10 @@
  */
 package eu.hatsproject.absplugin.actions.runconfig;
 
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PROJECT_NAME_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -24,11 +25,17 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
+import abs.frontend.ast.Model;
+import abs.frontend.ast.Product;
+
+import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.Constants;
+import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	protected Label projectLabel;	
 	protected Combo projectDropDown;
+	protected Combo productDropDown;
 
 	/**
 	 * A Listener updating the LaunchConfigurationDialog of the given tab
@@ -59,8 +66,31 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		projectDropDown.setLayoutData(gridData);
 		
 	    projectDropDown.addListener(SWT.Selection, myListener);
+	    /* Refresh products everytime the project is changed */
+	    projectDropDown.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				fillProductDropDownMenue(null);
+			}
+	    });
 	}
-	
+
+	/**
+	 * Must be called after createProjectDropDownMenu, since we need to figure out the selected project.
+	 * @author stolz
+	 */
+	protected void createProductDropDownMenu(TabListener myListener,
+			Composite comp) {
+		Group group = createGroup(comp, "ABS Product", 1, 1, GridData.FILL_HORIZONTAL);
+		
+	    productDropDown = new Combo(group, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+	    GridData gridData = new GridData();
+		gridData.widthHint = 200;
+		productDropDown.setLayoutData(gridData);
+		
+	    productDropDown.addListener(SWT.Selection, myListener);
+	}
+
 	
 	protected static Group createGroup(Composite parent, String text, int columns, int hspan, int fill) {
     	Group g = new Group(parent, SWT.NONE);
@@ -79,6 +109,8 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	protected void initProject(ILaunchConfiguration configuration) throws CoreException {
 		String name = configuration.getAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getDefaultProjectName());
 		fillProjectDropDownMenue(name);
+		name = configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
+		fillProductDropDownMenue(name);
 	}
 	
 	protected void fillProjectDropDownMenue(String name) {
@@ -95,6 +127,37 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		projectDropDown.select(selectedProjectName);
 	}
 	
+	/**
+	 * Lists all products in the current project's module, incl. a "<base>" product if
+	 * no particular product is selected.
+	 * @param preSelected The product that should be preselected, or null for <base>.
+	 */
+	protected void fillProductDropDownMenue(String preSelected) {
+		String projN = getProjectNames().get(projectDropDown.getSelectionIndex());
+		productDropDown.removeAll();
+		/* We use this entry at index 0 to indicate that no particular product is selected */
+		productDropDown.add("<base>");
+		IProject proj = ResourcesPlugin.getWorkspace().getRoot().getProject(projN);
+		assert proj != null;		
+		AbsNature n = UtilityFunctions.getAbsNature(proj);
+		Model m = n.getCompleteModel();
+		if (m == null)
+			return;
+		Collection<Product> prods = m.getProducts();
+		if (prods == null)
+			return;
+		int i = 1; /* base comes first */
+		int selected = 0;
+		for (Product p : prods) {
+			final String name = p.getModuleDecl().getName()+"."+p.getName();
+			productDropDown.add(name);
+			if (name.equals(preSelected)) {
+				selected = i;
+			}
+			i++;
+		}
+		productDropDown.select(selected);
+	}
 	
 	//---get and help functions----------------------------------
 	
@@ -124,6 +187,16 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	
 	protected String getSelectedProjectName() {
 		return projectDropDown.getItem(projectDropDown.getSelectionIndex());
+	}	
+
+	/**
+	 * @return the product name, or null if the base product is selected.
+	 */
+	protected String getSelectedProductName() {
+		final int index = productDropDown.getSelectionIndex();
+		if (index <= 0)
+			return null;
+		return productDropDown.getItem(index);
 	}	
 
 }

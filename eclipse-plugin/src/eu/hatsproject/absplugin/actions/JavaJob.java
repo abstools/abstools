@@ -33,10 +33,12 @@ import org.eclipse.ui.PartInitException;
 import org.osgi.framework.Bundle;
 
 import abs.backend.java.codegeneration.JavaCode;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
-import eu.hatsproject.absplugin.actions.JavaJob.SDEditProcess;
+import abs.frontend.ast.Product;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
 import eu.hatsproject.absplugin.builder.AbsNature;
@@ -54,6 +56,7 @@ public class JavaJob extends Job {
 	private IProject project;
 	private IProgressMonitor refreshProgressMonitor;
 	private IFile currentFile;
+	private Product product = null;
 
 	// job
 	private IAction action;
@@ -232,7 +235,8 @@ public class JavaJob extends Job {
 	}
 
 	/**
-	 * generates .java files (no .class files)
+	 * Generates .java files (no .class files).
+	 * If 'product' is set, will flatten accordingly.
 	 * 
 	 * @param path - where to add the modules / java-files
 	 * @param project - the ABS project
@@ -241,9 +245,24 @@ public class JavaJob extends Job {
 	 */
 	private void generateJavaCode(Path path, IProject project) throws AbsJobException, IOException {
 		Model model = getModelFromProject(project);
-	
 		if (debugMode) System.out.println("Creating java source files");
 	    JavaCode javaCode = new JavaCode(path.toFile());
+	    if (product != null) {
+	    	/* [stolz] Flattening for a product will mangle the model according to [ramus], so we get our own copy,
+	    	 * since the nature will hold on to the original model.
+	    	 * FIXME: Model.fullCopy will trigger an exception, so we have to see what we do about that.
+	    	 * For safety, we also pass the product by name.
+	    	 */
+	    	String productN = product.getModuleDecl().getName()+"."+product.getName();
+	    	model = model.copy();
+			try {
+				model.flattenForProduct(productN);
+			} catch (WrongProgramArgumentException e) {
+				throw new AbsJobException(e);
+			} catch (ASTNodeNotFoundException e) {
+				throw new AbsJobException(e);
+			}
+	    }
 	    model.generateJavaCode(javaCode);
 	    
 	    int countUnits=model.getNumCompilationUnit();
@@ -603,7 +622,7 @@ public class JavaJob extends Job {
 		new Thread(r).start();	
 	}
 
-	private Model getModelFromProject(IProject project) throws AbsJobException {
+	public static Model getModelFromProject(IProject project) throws AbsJobException {
 		AbsNature nature = UtilityFunctions.getAbsNature(project);
 		if(nature == null){
 			throw new AbsJobException("The file is not in an ABS project!");
@@ -804,7 +823,15 @@ public class JavaJob extends Job {
 		this.debuggerIsInDebugMode = b;
 	}
 
-   public void setExtraClassPaths(List<String> extraClassPaths) {
-      this.extraClassPaths = extraClassPaths;
-   }
+	public void setExtraClassPaths(List<String> extraClassPaths) {
+		this.extraClassPaths = extraClassPaths;
+	}
+
+	public Product getProduct() {
+		return product;
+	}
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
 }

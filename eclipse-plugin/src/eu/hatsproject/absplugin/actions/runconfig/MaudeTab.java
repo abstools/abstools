@@ -4,10 +4,7 @@
  */
 package eu.hatsproject.absplugin.actions.runconfig;
 
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_EXECUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_PARTIAL_EXEC;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_MAUDE_STEPS;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PROJECT_NAME_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.showErrorMessage;
 
@@ -40,6 +37,7 @@ public class MaudeTab extends AbstractTab {
 		setCompositeLayout(comp, 1);
 		
 		createProjectDropDownMenu(myListener, comp);
+		createProductDropDownMenu(myListener, comp);
 		
 		Group group = createGroup(comp, "Options", 1, 1, GridData.FILL_HORIZONTAL);
 		createExecutionButton(group);
@@ -55,6 +53,7 @@ public class MaudeTab extends AbstractTab {
 	@Override
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getDefaultProjectName());
+		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, false);
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, 0);
@@ -64,6 +63,7 @@ public class MaudeTab extends AbstractTab {
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
 			initProject(configuration);
+			productDropDown.setEnabled(false); /* TODO: We're not doing anything yet with products here */
 			exec.setSelection(configuration.getAttribute(RUNCONFIG_MAUDE_EXECUTE, true));
 			
 			if(!exec.getSelection()){
@@ -88,6 +88,7 @@ public class MaudeTab extends AbstractTab {
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
+		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, partialExec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, steps.getSelection());

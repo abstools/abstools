@@ -73,6 +73,7 @@ public class Constants {
 	
 	//Attribute Names
 	public static final String RUNCONFIG_PROJECT_NAME_ATTRIBUTE 			= "ProjectNames";
+	public static final String RUNCONFIG_PRODUCT_NAME_ATTRIBUTE 			= "ProductName";
 	public static final String RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE 		= "TotalScheduler";
 	public static final String RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE 		= "otherArgs";
 	public static final String RUNCONFIG_DEBUGGER_COMPILE_BEFORE 			= "compileBeforeDebugging";

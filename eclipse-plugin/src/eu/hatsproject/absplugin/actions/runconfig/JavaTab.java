@@ -49,6 +49,7 @@ public class JavaTab extends AbstractTab {
 
 	    setCompositeLayout(comp);
 	    createProjectDropDownMenu(myListener, comp);
+	    createProductDropDownMenu(myListener, comp);
 	    createObserverList(myListener, comp);
 	    createClassPathList(myListener, comp);
 	    Group schedulerGroup = createSchedulerDropDownMenu(myListener, comp);
@@ -64,6 +65,7 @@ public class JavaTab extends AbstractTab {
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) { 
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, "-Dabs.randomseed=0");
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getDefaultProjectName());
+		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
 		ArrayList<String> tempList = new ArrayList<String>();
 		for (DebuggerObserver observer : DebuggerObserver.values()) {
 			if(observer.getDefaultSelection()){
@@ -130,6 +132,7 @@ public class JavaTab extends AbstractTab {
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, observerClassNames);
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, classPathNames);
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
+		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, getSelectedScheduler());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, compileCheckButton.getSelection());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE, otherArgsText.getText());
