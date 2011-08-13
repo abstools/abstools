@@ -5,6 +5,7 @@
 package abs.backend.tests;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,8 +43,14 @@ public class ABSTestRunnerGenerator {
     private static final String ignore = "AbsUnit.Ignored";
     private static final String test = "AbsUnit.Test";
     private static final String dataPoint = "AbsUnit.DataPoint";
+    
+    @Deprecated
     private static final String testClass = "AbsUnit.TestClass";
+    @Deprecated
     private static final String testClassImpl = "AbsUnit.TestClassImpl";
+    
+    private static final String suite = "AbsUnit.Suite";
+    private static final String fixture = "AbsUnit.Fixture";
     private static final String absStdSet = "ABS.StdLib.Set";
     private static final String absStdLib = "ABS.StdLib";
 
@@ -54,8 +61,14 @@ public class ABSTestRunnerGenerator {
     private DataConstructor ignoreType;
     private DataConstructor testType;
     private DataConstructor dataPointType;
+    
+    @Deprecated
     private DataConstructor testClassType;
+    @Deprecated
     private DataConstructor testClassImplType;
+    
+    private DataConstructor suiteType;
+    private DataConstructor fixtureType;
 
     private Map<InterfaceDecl, Set<ClassDecl>> tests = new HashMap<InterfaceDecl, Set<ClassDecl>>();
 
@@ -80,7 +93,8 @@ public class ABSTestRunnerGenerator {
          * contain the necessary ABSUnit annotations
          */
         if (ignoreType == null || testType == null || dataPointType == null || 
-                testClassType == null || testClassImplType == null) {
+                testClassType == null || testClassImplType == null ||
+                suiteType == null || fixtureType == null) {
             return;
         }
 
@@ -154,11 +168,12 @@ public class ABSTestRunnerGenerator {
         tests.get(inf).add(clazz);
     }
 
-    private boolean hasTestAnnotation(List<Annotation> annotations, DataConstructor constructor) {
+    private boolean hasTestAnnotation(List<Annotation> annotations, DataConstructor... constructors) {
+        java.util.List<DataConstructor> cs = Arrays.asList(constructors);
         for (Annotation ta : annotations) {
             PureExp exp = ta.getValue();
             if (exp instanceof DataConstructorExp
-                    && ((DataConstructorExp) exp).getDataConstructor().equals(constructor)) {
+                    && cs.contains(((DataConstructorExp) exp).getDataConstructor())) {
                 return true;
             }
         }
@@ -169,7 +184,7 @@ public class ABSTestRunnerGenerator {
         for (InterfaceTypeUse inf : clazz.getImplementedInterfaceUseList()) {
             if (inf.getDecl() instanceof InterfaceDecl) {
                 InterfaceDecl decl = (InterfaceDecl) inf.getDecl();
-                if (hasTestAnnotation(decl.getAnnotations(), testClassType) &&
+                if (hasTestAnnotation(decl.getAnnotations(), testClassType, fixtureType) &&
                     ! hasTestAnnotation(decl.getAnnotations(), ignoreType)) {
                     return decl;
                 }
@@ -179,7 +194,7 @@ public class ABSTestRunnerGenerator {
     }
 
     private boolean isTestClassImpl(ClassDecl clazz) {
-        return hasTestAnnotation(clazz.getAnnotations(), testClassImplType);
+        return hasTestAnnotation(clazz.getAnnotations(), testClassImplType, suiteType);
     }
 
     private void gatherABSUnitAnnotations() {
@@ -191,6 +206,10 @@ public class ABSTestRunnerGenerator {
                     testClassType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 } else if (decl.getType().getQualifiedName().equals(testClassImpl)) {
                     testClassImplType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                } else if (decl.getType().getQualifiedName().equals(fixture)) {
+                    fixtureType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
+                } else if (decl.getType().getQualifiedName().equals(suite)) {
+                    suiteType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 } else if (decl.getType().getQualifiedName().equals(dataPoint)) {
                     dataPointType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 } else if (decl.getType().getQualifiedName().equals(ignore)) {
