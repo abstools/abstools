@@ -5,10 +5,7 @@
 package eu.hatsproject.absplugin.actions;
 
 import static eu.hatsproject.absplugin.util.Constants.*;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenceStore;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getMaudeCommand;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getProcessOutput;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,6 +13,7 @@ import java.util.ArrayList;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
+import org.osgi.framework.Bundle;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
@@ -26,7 +24,6 @@ import eu.hatsproject.absplugin.exceptions.*;
 public class MaudeJob extends Job{
 	private Process process;
 	private IProject project;
-	private File destFolder;
 	private File destFile;
 	private boolean exec;
 	private boolean realTime;
@@ -80,7 +77,7 @@ public class MaudeJob extends Job{
 		StringBuffer output = new StringBuffer();
 		AbsNature nature = getAbsNature(project);	
 		if(nature == null){
-			return new Status(IStatus.INFO, PLUGIN_ID, "Could not compile current selection. Project is not an ABS project");
+			return new Status(IStatus.INFO, PLUGIN_ID, "Could not compile current selection. Project is not an ABS project.");
 		}
 		
 		//Set title and totalWork of the process according to clicked button
@@ -93,15 +90,15 @@ public class MaudeJob extends Job{
 		//Compile Maude Code
 		monitor.subTask("Compiling ABS model to Maude");
 		try{
-			if(!abort) compileMaude(nature);
+			if(!abort) compileMaude(monitor,nature);
 		} catch(CoreException e1) {
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while compilig", e1);
+			return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while compilig", e1);
 		} catch (IOException e2) {
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while compilig", e2);
+			return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while compilig", e2);
 		} catch (ParseException e4) {
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has parse errors", e4);
+			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has parse errors.", e4);
 		} catch (TypeCheckerException e5) {
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has type errors", e5);
+			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has type errors.", e5);
 		} catch (WrongProgramArgumentException e) {
 			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
 		} catch (ASTNodeNotFoundException e) {
@@ -114,11 +111,11 @@ public class MaudeJob extends Job{
 		try{	
 			if(!abort) copyMaudeInterpreter(monitor,nature);
 		} catch(CoreException e1){
-			e1.printStackTrace();
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while copying Maude Interpreter", e1);
+			/* ERROR will also log the exception, so no need to print the stack trace */
+			return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while copying Maude Interpreter", e1);
 		} catch (IOException e2) {
-			e2.printStackTrace();
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while copying Maude Interpreter", e2);
+			/* This usually indicates a mistake in packaging the plugins/JARs correctly */ 
+			return new Status(IStatus.ERROR, PLUGIN_ID, "Couldn't find ABS Maude interpreter in plugin!", e2);
 		}
 		monitor.worked(1);
 		
@@ -130,7 +127,7 @@ public class MaudeJob extends Job{
 			} catch (IOException e1) {
 				return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR_MAUDE_PATH, "Encountered IOException while executing Maude (probably misconfigured location of maude executable)", e1);
 			} catch (InterruptedException e2) {
-				return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while executing Maude", e2);
+				return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while executing Maude", e2);
 			} finally{
 				if(!monitor.isCanceled()){
 					monitor.worked(5);
@@ -168,28 +165,24 @@ public class MaudeJob extends Job{
 	/**
 	 * Compiles an ABS project into a .maude file. If an ABS file is currently opened in the editor, the project containing this file
 	 * will be compiled, otherwise the project currently selected in the project explorer will be compiled.
-	 * @returns true, if successful, false else
-	 * @throws NoABSNatureException Is thrown, if a the project which is compiled is not an ABS project
 	 * @throws ParseException Is thrown, if the project which is compiled has parse errors
 	 * @throws TypeCheckerException Is thrown, if the project which is compiled has type errors
 	 * @throws ASTNodeNotFoundException 
 	 * @throws WrongProgramArgumentException 
 	 */
-	private void compileMaude(AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
+	private void compileMaude(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
 		PrintStream ps = null;
-		//Check if project is an ABSProject
+		FileInputStream fis = null;
 		try{
 			
 			String path = nature.getProjectPreferenceStore().getString(MAUDE_PATH);
-			destFolder  = project.getLocation().append(path).toFile();
-			destFile    = new File(destFolder, project.getName() + ".maude");
-			
-			if(!destFile.exists()){
-				destFolder.mkdirs();
-				destFile.createNewFile();
-			}
-			
-			ps = new PrintStream(destFile);
+			IFolder folder = project.getFolder(path);
+			prepareFolder(monitor, folder);
+			String fileName = project.getName()+".maude";
+			final IFile wspaceFile = folder.getFile(fileName);
+			/* generateMaude only knows how to fill PrintStreams */
+			final File tmpFile = File.createTempFile(fileName,null);
+			ps = new PrintStream(tmpFile);
 			
 			//Get model, check for errors and throw respective exception
 			Model model = nature.getCompleteModel();
@@ -212,10 +205,22 @@ public class MaudeJob extends Job{
 			} else{
                             model.generateMaude(ps, "ABS-SIMULATOR-RL", mb);
 			}
+			ps.close();
+			fis = new FileInputStream(tmpFile);
+			if (wspaceFile.exists())
+				wspaceFile.setContents(fis, true, false, monitor);
+			else
+				wspaceFile.create(fis, true, monitor);
+			fis.close();
+			tmpFile.delete();
+			destFile = new File(project.getLocation().append(path).toFile(),fileName);
 		} finally{
 			if (ps != null){
 				ps.flush();
 				ps.close();
+			}
+			if (fis != null) {
+				fis.close();
 			}
 		}
 	}
@@ -230,13 +235,26 @@ public class MaudeJob extends Job{
 		prepareFolder(monitor,folder);
 		IFile absint = folder.getFile("abs-interpreter.maude");
 		if (!absint.exists()) {
-			File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
-			File src = new File(bundle, BACKEND_MAUDE_INTERPRETER);
-			if (!src.exists()) {
-				src = new File(bundle, "src/"+BACKEND_MAUDE_INTERPRETER);
+			Bundle bundle = Platform.getBundle(ABSFRONTEND_PLUGIN_ID);
+			InputStream str;
+			/* Why do we look in two places? */
+			try {
+				Path srcPath = new Path(BACKEND_MAUDE_INTERPRETER);
+				str = FileLocator.openStream(bundle, srcPath, false);
+			} catch (IOException e) {
+				Path srcPath = new Path("src/"+BACKEND_MAUDE_INTERPRETER);
+				try {
+					str = FileLocator.openStream(bundle, srcPath, false);
+				} catch (IOException e2) {
+					throw new IOException("Couldn't find ABS Maude interpreter in plugin!");
+				}
 			}
-			assert src.exists();
-			absint.create(new FileInputStream(src), false, monitor);
+			assert str != null;
+			try {
+				absint.create(str, false, monitor);
+			} finally {
+				str.close();
+			}
 		}
 	}
 
