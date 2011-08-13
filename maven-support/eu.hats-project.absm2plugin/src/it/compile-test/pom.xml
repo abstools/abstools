@@ -25,6 +25,7 @@
 				<configuration>
 					<maudeInterpreter>../../../../../frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
 					<generateRunner>true</generateRunner>
+					<verbose>true</verbose>
 				</configuration>
 			</plugin>
 		</plugins>
