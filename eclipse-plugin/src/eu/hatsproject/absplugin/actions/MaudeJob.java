@@ -4,47 +4,24 @@
  */
 package eu.hatsproject.absplugin.actions;
 
-import static eu.hatsproject.absplugin.util.Constants.ABSFRONTEND_PLUGIN_ID;
-import static eu.hatsproject.absplugin.util.Constants.BACKEND_MAUDE_INTERPRETER;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_COMMAND;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_ERROR;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_ERROR_MAUDE;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_ERROR_MAUDE_PATH;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_EXEC_PATH;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_INFO;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_PATH;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_USER_ABORT;
 import static eu.hatsproject.absplugin.util.Constants.*;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.copyFile;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenceStore;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getMaudeCommand;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getProcessOutput;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import eu.hatsproject.absplugin.builder.AbsNature;
-import eu.hatsproject.absplugin.exceptions.NoABSNatureException;
-import eu.hatsproject.absplugin.exceptions.ParseException;
-import eu.hatsproject.absplugin.exceptions.TypeCheckerException;
+import eu.hatsproject.absplugin.exceptions.*;
 
 public class MaudeJob extends Job{
 	private Process process;
@@ -58,6 +35,7 @@ public class MaudeJob extends Job{
 	private boolean partialExec;
 	private int steps;
 	private String product;
+	private String mainBlock; /* may be null or empty */
 	
 	/**
 	 * MaudeJobs created with this constructor will generate a .maude file out of a given project and may execute
@@ -100,6 +78,10 @@ public class MaudeJob extends Job{
 		abort = false;
 		boolean failed = false;
 		StringBuffer output = new StringBuffer();
+		AbsNature nature = getAbsNature(project);	
+		if(nature == null){
+			return new Status(IStatus.INFO, PLUGIN_ID, "Could not compile current selection. Project is not an ABS project");
+		}
 		
 		//Set title and totalWork of the process according to clicked button
 		if(exec){
@@ -111,13 +93,11 @@ public class MaudeJob extends Job{
 		//Compile Maude Code
 		monitor.subTask("Compiling ABS model to Maude");
 		try{
-			if(!abort) compileMaude();
+			if(!abort) compileMaude(nature);
 		} catch(CoreException e1) {
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while compilig", e1);
 		} catch (IOException e2) {
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while compilig", e2);
-		} catch (NoABSNatureException e3) {
-			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Project is not an ABS project", e3);
 		} catch (ParseException e4) {
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has parse errors", e4);
 		} catch (TypeCheckerException e5) {
@@ -132,7 +112,7 @@ public class MaudeJob extends Job{
 		//Copy standard ABS-interpreter into gen folder
 		monitor.subTask("Copying Maude Interpreter");
 		try{	
-			if(!abort) copyMaudeInterpreter();
+			if(!abort) copyMaudeInterpreter(monitor,nature);
 		} catch(CoreException e1){
 			e1.printStackTrace();
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Fatal error while copying Maude Interpreter", e1);
@@ -195,15 +175,10 @@ public class MaudeJob extends Job{
 	 * @throws ASTNodeNotFoundException 
 	 * @throws WrongProgramArgumentException 
 	 */
-	private void compileMaude() throws CoreException, IOException, NoABSNatureException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
+	private void compileMaude(AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
 		PrintStream ps = null;
 		//Check if project is an ABSProject
 		try{
-			AbsNature nature = getAbsNature(project);
-		
-			if(nature == null){
-				throw new NoABSNatureException();
-			}
 			
 			String path = nature.getProjectPreferenceStore().getString(MAUDE_PATH);
 			destFolder  = project.getLocation().append(path).toFile();
@@ -228,12 +203,14 @@ public class MaudeJob extends Job{
 			if(model.hasTypeErrors()){
 				throw new TypeCheckerException(model.typeCheck());
 			}
-			
-			// FIXME: provide a dialog to choose the main block
+
+			String mb = getMainBlock();
+			if (mb != null && mb.isEmpty())
+				mb = null;
 			if(realTime){
-                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", null);
+                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", mb);
 			} else{
-                            model.generateMaude(ps, "ABS-SIMULATOR-RL", null);
+                            model.generateMaude(ps, "ABS-SIMULATOR-RL", mb);
 			}
 		} finally{
 			if (ps != null){
@@ -246,19 +223,35 @@ public class MaudeJob extends Job{
 	/**
 	 * Copies the default abs-interpreter.maude, which is necessary for all Maude executions, from the plugin to the Maude folder
 	 * of this project.
+	 * @param monitor 
 	 */
-	private void copyMaudeInterpreter() throws CoreException, IOException{
-		File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
-
-		File src = new File(bundle, BACKEND_MAUDE_INTERPRETER);
-		if (!src.exists()) {
-			src = new File(bundle, "src/"+BACKEND_MAUDE_INTERPRETER);
+	private void copyMaudeInterpreter(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException{
+		IFolder folder = project.getFolder(nature.getProjectPreferenceStore().getString(MAUDE_PATH));
+		prepareFolder(monitor,folder);
+		IFile absint = folder.getFile("abs-interpreter.maude");
+		if (!absint.exists()) {
+			File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
+			File src = new File(bundle, BACKEND_MAUDE_INTERPRETER);
+			if (!src.exists()) {
+				src = new File(bundle, "src/"+BACKEND_MAUDE_INTERPRETER);
+			}
+			assert src.exists();
+			absint.create(new FileInputStream(src), false, monitor);
 		}
-		copyFile(src, new File(destFolder, "abs-interpreter.maude"));
-		
-		project.refreshLocal(IProject.DEPTH_INFINITE, new NullProgressMonitor());
 	}
-	
+
+	/**
+	 * Eclipsism for recursively creating folder hierarchy.
+	 * @author stolz
+	 */
+	static void prepareFolder(IProgressMonitor monitor, IFolder folder) throws CoreException{
+	  IContainer parent = folder.getParent();
+	  if (parent instanceof IFolder)
+	    prepareFolder(monitor,(IFolder)parent);
+	  if (!folder.exists())
+	    folder.create(true,true,monitor);
+	}
+
 	/**
 	 * Runs configured Maude executable with the earlier generated .maude file in a separate process. Appends output of the process
 	 * to output String. Return value depends on which stream of the process was copied. If the error stream contains characters, this
@@ -320,5 +313,13 @@ public class MaudeJob extends Job{
 
 	public void setProduct(String product) {
 		this.product = product;
+	}
+
+	public void setMainBlock(String mainBlock) {
+		this.mainBlock = mainBlock;
+	}
+
+	public String getMainBlock() {
+		return mainBlock;
 	}
 }

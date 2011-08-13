@@ -20,13 +20,12 @@ import eu.hatsproject.absplugin.actions.MaudeJobChangeListener;
 
 public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 
-	private IProject project;
-	
 	@Override
 	public void launch(ILaunchConfiguration configuration, String mode,	ILaunch launch, IProgressMonitor monitor) throws CoreException {
-		project = getProject(configuration);
+		IProject project = getProject(configuration);
 		saveDirtyEditors(project);	
-		boolean realTime = false;
+		boolean realTime = configuration.getAttribute(RUNCONFIG_MAUDE_REALTIME, false);
+		String mainBlock = configuration.getAttribute(RUNCONFIG_MAUDE_MAINBLOCK, (String)null);
 		MaudeJob maudeJob;
 		
 		if(configuration.getAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, false)){
@@ -34,6 +33,8 @@ public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 		} else{
 			maudeJob = new MaudeJob(project, realTime, configuration.getAttribute(RUNCONFIG_MAUDE_EXECUTE, false));
 		}
+		if (mainBlock != null)
+			maudeJob.setMainBlock(mainBlock);
 		String product = configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
 		if (product != null)
 			maudeJob.setProduct(product);

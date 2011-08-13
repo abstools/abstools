@@ -23,12 +23,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 
 public class MaudeTab extends AbstractTab {
 
 	Button exec;
 	Button partialExec;
 	Spinner steps;
+	Button realtime;
+	Text mainBlock;
 	
 	@Override
 	public void createControl(Composite parent) {
@@ -42,6 +45,8 @@ public class MaudeTab extends AbstractTab {
 		Group group = createGroup(comp, "Options", 1, 1, GridData.FILL_HORIZONTAL);
 		createExecutionButton(group);
 	    createPartialExecButton(group);
+	    createRealtimeButton(group);
+	    createMainBlockChooser(group);
 	    
 		Composite stepContainer = new Composite(group, SWT.NONE);
 		setCompositeLayout(stepContainer, 2);
@@ -57,6 +62,8 @@ public class MaudeTab extends AbstractTab {
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, false);
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, 0);
+		configuration.setAttribute(RUNCONFIG_MAUDE_REALTIME, false);
+		configuration.setAttribute(RUNCONFIG_MAUDE_MAINBLOCK, "");
 	}
 
 	@Override
@@ -75,7 +82,9 @@ public class MaudeTab extends AbstractTab {
 				steps.setEnabled(false);
 			}
 			
+			realtime.setSelection(configuration.getAttribute(RUNCONFIG_MAUDE_REALTIME, false));
 			steps.setSelection(configuration.getAttribute(RUNCONFIG_MAUDE_STEPS, 0));
+			mainBlock.setText(configuration.getAttribute(RUNCONFIG_MAUDE_MAINBLOCK, ""));
 			
 			scheduleUpdateJob();
 		} catch (CoreException e) {
@@ -91,6 +100,8 @@ public class MaudeTab extends AbstractTab {
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, partialExec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, steps.getSelection());
+		configuration.setAttribute(RUNCONFIG_MAUDE_REALTIME, realtime.getSelection());
+		configuration.setAttribute(RUNCONFIG_MAUDE_MAINBLOCK, mainBlock.getText());
 	}
 
 	@Override
@@ -140,6 +151,35 @@ public class MaudeTab extends AbstractTab {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent event) {
 				widgetSelected(event);
+			}
+		});
+	}
+
+	private void createRealtimeButton(Composite comp) {
+		realtime = new Button(comp, SWT.CHECK);
+		realtime.setText("Realtime");
+		realtime.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateLaunchConfigurationDialog();				
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+			}
+		});
+	}
+
+	private void createMainBlockChooser(Composite comp) {
+		Label label = new Label(comp, SWT.NULL);
+		label.setText("Main block: ");
+		mainBlock = new Text(comp, SWT.SINGLE);
+		mainBlock.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				updateLaunchConfigurationDialog();
 			}
 		});
 	}

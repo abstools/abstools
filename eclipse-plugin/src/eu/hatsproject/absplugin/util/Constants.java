@@ -85,6 +85,8 @@ public class Constants {
 	public static final String RUNCONFIG_MAUDE_EXECUTE						= "executeMaude";
 	public static final String RUNCONFIG_MAUDE_PARTIAL_EXEC					= "partialExec";
 	public static final String RUNCONFIG_MAUDE_STEPS						= "maudeSteps";
+	public static final String RUNCONFIG_MAUDE_REALTIME						= "maudeRealtime";
+	public static final String RUNCONFIG_MAUDE_MAINBLOCK					= "maudeMain";
 	
 	//Default Values (see also RunConfigEnums)			
 	public static final String 	DEBUGGER_ARGS_OTHER_DEFAULT					= "";
