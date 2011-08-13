@@ -8,12 +8,24 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+	
+	<dependencies>
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>abs-unit</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>eu.hats-project</groupId>
 				<artifactId>abs-maven-plugin</artifactId>
+				<configuration>
+					<maudeInterpreter>../../../../../frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
+					<generateRunner>true</generateRunner>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

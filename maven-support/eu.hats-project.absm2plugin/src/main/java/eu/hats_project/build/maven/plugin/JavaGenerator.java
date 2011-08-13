@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 
 import abs.backend.java.JavaBackend;
 
@@ -26,6 +27,7 @@ public class JavaGenerator {
      * @param stdlib
      * @param loctype 
      * @param productName
+     * @param log 
      * @throws MojoExecutionException
      */
     void generateJava(File absfrontEnd, 
@@ -36,7 +38,8 @@ public class JavaGenerator {
             boolean sourceOnly,
             boolean stdlib, 
             boolean loctype, 
-            String productName) throws MojoExecutionException {
+            String productName, 
+            Log log) throws MojoExecutionException {
         
         if (!absJavaBackendTargetFolder.exists()) {
             if (!absJavaBackendTargetFolder.mkdirs()) {
@@ -75,6 +78,12 @@ public class JavaGenerator {
         
         args.addAll(absArguments);
         
-        JavaBackend.main(args.toArray(new String[args.size()]));
+        String[] argArray = args.toArray(new String[args.size()]);
+        log.debug("Generating Java Code -->");
+        for (String a : argArray) { 
+            log.debug(a);
+        }
+        
+        JavaBackend.main(argArray);
     }
 }

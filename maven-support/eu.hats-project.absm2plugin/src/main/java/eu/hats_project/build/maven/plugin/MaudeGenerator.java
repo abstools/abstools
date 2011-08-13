@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 
 import abs.backend.maude.MaudeCompiler;
 
@@ -42,7 +43,8 @@ public class MaudeGenerator {
     		boolean loctype, 
     		String productName,
     		String mainBlock, 
-    		boolean timed) throws MojoExecutionException {
+    		boolean timed,
+    		Log log) throws MojoExecutionException {
     	
         if (!absMaudeBackendOutputFile.getParentFile().exists()) {
             if (!absMaudeBackendOutputFile.getParentFile().mkdirs()) {
@@ -84,9 +86,15 @@ public class MaudeGenerator {
         }
         
         args.addAll(absArguments);
+        
+        String[] argArray = args.toArray(new String[args.size()]);
+        log.debug("Generating Maude Code -->");
+        for (String a : argArray) { 
+            log.debug(a);
+        }
 
         try {
-            MaudeCompiler.main(args.toArray(new String[0]));
+            MaudeCompiler.main(argArray);
         } catch (Exception e) {
             throw new MojoExecutionException("Could not generate Maude script", e);
         }

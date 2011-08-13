@@ -24,7 +24,7 @@ public class GenerateTestRunnerMojo extends AbstractABSMojo {
     protected void doExecute() throws Exception {
 
         TestRunnerGenerator generator = new TestRunnerGenerator();
-        generator.generateTestRunner(absfrontEnd, getABSArguments(), absTestRunnerFile);
+        generator.generateTestRunner(absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
 
     }
 }

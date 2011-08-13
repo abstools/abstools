@@ -50,7 +50,8 @@ public class MaudeMojo extends AbstractABSMojo {
                 loctype,
                 productName,
                 mainBlock,
-                timed);
+                timed,
+                getLog());
     }
     
 }

@@ -91,7 +91,8 @@ public class MaudeTestMojo extends AbstractTestMojo {
                 loctype,
                 productName,
                 (mainBlock == null) ? ABSTestRunnerGenerator.RUNNER_MAIN : mainBlock,
-                timed);
+                timed,
+                getLog());
 
         // run maude
         final String maudeOutput = runMaude();
@@ -128,6 +129,12 @@ public class MaudeTestMojo extends AbstractTestMojo {
 
         String[] cmd = { maude, "-no-banner", "-no-ansi-color", "-no-wrap", "-batch",
                 maudeInterpreter.getAbsolutePath() };
+        
+        getLog().debug("Executing Maude Code -->");
+        for (String a : cmd) { 
+            getLog().debug(a);
+        }
+        
         pb.command(cmd);
 
         // pb.redirectErrorStream(true);

@@ -70,7 +70,7 @@ public class JavaTestMojo extends AbstractTestMojo {
         }
         args.addAll(getABSArguments());
         generator.generateJava(absfrontEnd, absTestSrcFolder, args, absJavaBackendTestTargetFolder,
-                verbose, false, true, loctype, productName);
+                verbose, false, true, loctype, productName, getLog());
 
         // run java
         if (terminateOnException) {
@@ -133,6 +133,12 @@ public class JavaTestMojo extends AbstractTestMojo {
             
             String main = ((mainBlock == null) ? ABSTestRunnerGenerator.RUNNER_MAIN : mainBlock) + ".Main";
             args.addAll(Arrays.asList("-cp", classpath, main));
+            
+            String[] argArray = args.toArray(new String[args.size()]);
+            getLog().debug("Executing generated Java code -->");
+            for (String a : argArray) { 
+                getLog().debug(a);
+            }
             
             ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);

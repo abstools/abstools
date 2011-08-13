@@ -1,0 +1,40 @@
+module M.Test;
+
+export *;
+
+import * from AbsUnit;
+import * from M;
+
+[Fixture] interface IFixture {
+	[Test] Unit testGetN();
+	[Test] Unit testGetNMinusOne();
+}
+
+class IntComparator(Int expected, Int actual) implements Comparator {
+	Int compare() { 	
+		return expected - actual;	
+	}
+}
+
+[Suite] class CSuite implements IFixture {
+
+	ABSAssert helper;
+	
+	{
+		helper = new ABSAssertImpl(); 
+	} 
+
+	Unit testGetN() {
+		I u = new C(3);
+		Int result = u.getN();
+		Comparator cmp = new IntComparator(3,result);
+		helper.assertEquals(cmp);
+	}
+	
+	Unit testGetNMinusOne() {
+		I u = new C(3);
+		Int result = u.getNMinusOne();
+		Comparator cmp = new IntComparator(2,result);
+		helper.assertEquals(cmp);
+	}
+}

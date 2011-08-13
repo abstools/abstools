@@ -1,0 +1,17 @@
+module M;
+
+export *;
+
+interface I {
+	Int getN();
+	Int getNMinusOne();
+}
+
+class C(Int x) implements I {
+	Int getN() { return x; }
+	Int getNMinusOne() { return x - 1; } 
+}
+
+{
+  I i = new C(3);
+}

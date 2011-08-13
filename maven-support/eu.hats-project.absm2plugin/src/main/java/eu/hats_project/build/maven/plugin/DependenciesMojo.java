@@ -46,6 +46,7 @@ public class DependenciesMojo extends AbstractABSMojo {
 		}
 
 		Properties prop = new Properties();
+		getLog().debug("Generating ABS Dependencies -->");
 		setPackages(prop,resolveDependencyArtifacts(project));
 
 		FileOutputStream out = new FileOutputStream(dep);
@@ -62,8 +63,10 @@ public class DependenciesMojo extends AbstractABSMojo {
 		
 		for (Artifact a : as) {
 			if (a.getType().equals("jar") && isABSPackage(a.getFile())) {
-				prop.setProperty(a.getFile().getAbsolutePath(), "true");
-				setPackages(prop,resolveArtifactDependencies(a));
+			    String path = a.getFile().getAbsolutePath();
+			    getLog().debug(path);
+			    prop.setProperty(path, "true");
+			    setPackages(prop,resolveArtifactDependencies(a));
 			}
 		}
 	}

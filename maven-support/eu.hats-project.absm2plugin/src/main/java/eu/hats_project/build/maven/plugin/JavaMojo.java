@@ -42,7 +42,8 @@ public class JavaMojo extends AbstractABSMojo {
               sourceOnly, 
               stdlib,
               loctype,
-              productName);
+              productName,
+              getLog());
       
     }
     

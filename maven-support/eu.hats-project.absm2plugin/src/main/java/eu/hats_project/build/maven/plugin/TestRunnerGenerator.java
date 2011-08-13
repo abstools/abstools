@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 
 import abs.backend.tests.ABSTestRunnerCompiler;
 
@@ -14,7 +15,8 @@ public class TestRunnerGenerator {
     void generateTestRunner(
             File absfrontEnd, 
             List<String> absfiles, 
-            File absTestRunnerFile) throws Exception {
+            File absTestRunnerFile,
+            Log log) throws Exception {
 
         if (!absTestRunnerFile.exists() && !absTestRunnerFile.getParentFile().mkdirs()
                 && !absTestRunnerFile.createNewFile()) {
@@ -26,6 +28,12 @@ public class TestRunnerGenerator {
         args.add("-o");
         args.add(absTestRunnerFile.getAbsolutePath());
         args.addAll(absfiles);
+        
+        String[] argArray = args.toArray(new String[args.size()]);
+        log.debug("Generating Test Runner -->");
+        for (String a : argArray) { 
+            log.debug(a);
+        }
 
         try {
             ABSTestRunnerCompiler.main(args.toArray(new String[0]));
