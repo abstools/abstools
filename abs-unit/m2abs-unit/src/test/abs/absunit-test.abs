@@ -6,7 +6,7 @@ import * from AbsUnit;
 import * from AbsUnit.Hamcrest;
 import * from AbsUnit.Hamcrest.Core;
 
-[TestClass]
+[Fixture]
 interface AbsUnitTest { 
 	[DataPoint] Set<Pair<Int,Int>> comparators();
 	[Test] Unit testAssertTrue();
@@ -19,7 +19,7 @@ interface AbsUnitTest {
 	[Test] Unit testGiberrish2();
 }
 
-[TestClassImpl]
+[Suite]
 class AbsUnitTestClass implements AbsUnitTest {
 	
 	Set<Pair<Int,Int>> comps = EmptySet;

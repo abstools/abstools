@@ -11,13 +11,27 @@ data DataPoint = DataPoint; //data function
 data Test = Test; //test method
 
 [TypeAnnotation]
+data Fixture = Fixture; //fixture
+
+[TypeAnnotation]
+data Suite = Suite; //test suite
+
+// deprecated use Fixture
+[TypeAnnotation]
 data TestClass = TestClass; //test class
 
+// deprecated use TestImpl
 [TypeAnnotation]
 data TestClassImpl = TestClassImpl; //test class implementation
 
 [TypeAnnotation]
 data Ignored = Ignored; // ignore test method
+
+[TypeAnnotation]
+data Before = Before; // set up fixture
+
+[TypeAnnotation]
+data After = After; // tear down fixture
 
 interface Comparator { 
 	Int compare(); 
