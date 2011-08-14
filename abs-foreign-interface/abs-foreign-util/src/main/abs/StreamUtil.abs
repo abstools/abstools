@@ -19,12 +19,14 @@ def Int fromByte(Byte b) = case b { Byte(i) => i; };
 def Int fromLong(Long b) = case b { Long(i) => i; }; 
 
 interface InputStream {
+	Unit setInputStream([Near] InputStream s);
 	Feedback<String> readUTF();
 	Feedback<Int> readInt();
 	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len);
 }
 
 interface OutputStream {
+	Unit setOutputStream([Near] OutputStream s);
 	Feedback<Unit> writeUTF(String s);
 	Feedback<Unit> writeLong(Long s);
 	Feedback<Unit> writeInt(Int s);
@@ -38,15 +40,74 @@ interface RandomAccessFile {
 
 [Foreign]
 class InputStream implements InputStream {
-	Feedback<String> readUTF() { return OK; }
-	Feedback<Int> readInt() { return OK; }
-	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len) { return OK; }
+	[Near] InputStream stream;
+	
+	Unit setInputStream([Near] InputStream s) { 
+	    this.stream = s; 
+	} 
+	
+	Feedback<String> readUTF() {
+		Feedback<String> r = OK;
+		if (stream != null) {
+			r = stream.readUTF();
+		} 
+		return r;
+	}
+	
+	Feedback<Int> readInt() { 
+		Feedback<Int> r = OK;
+		if (stream != null) {
+			r = stream.readInt();
+		} 
+		return r;
+ 	}
+ 	
+	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len) {
+		Feedback<List<Byte>> r = OK;
+		if (stream != null) {
+			r = stream.read(b,off,len);
+		} 
+		return r; 
+	}
 }
 
 [Foreign]
 class OutputStream implements OutputStream {
-	Feedback<Unit> writeUTF(String s) { return OK; }
-	Feedback<Unit> writeLong(Long s) { return OK; }
-	Feedback<Unit> writeInt(Int s) { return OK; }
-	Feedback<Unit> write(List<Byte> b, Int off, Int len) { return OK; }
+	[Near] OutputStream stream;
+
+	Unit setOutputStream([Near] OutputStream s) {
+		this.stream = s;
+	}
+	
+	Feedback<Unit> writeUTF(String s) { 
+		Feedback<Unit> r = OK;
+		if (stream != null) {
+			r = stream.writeUTF(s);
+		}
+		return r; 
+	}
+	
+	Feedback<Unit> writeLong(Long s) { 
+		Feedback<Unit> r = OK;
+		if (stream != null) {
+			r = stream.writeLong(s);
+		}
+		return r; 
+	}
+	
+	Feedback<Unit> writeInt(Int s) { 
+		Feedback<Unit> r = OK;
+		if (stream != null) {
+			r = stream.writeInt(s);
+		}
+		return r; 
+	}
+	
+	Feedback<Unit> write(List<Byte> b, Int off, Int len) { 
+		Feedback<Unit> r = OK;
+		if (stream != null) {
+			r = stream.write(b,off,len);
+		}
+		return r; 
+	}
 }

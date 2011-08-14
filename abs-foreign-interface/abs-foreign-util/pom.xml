@@ -32,8 +32,11 @@
 						<id>abs-test</id>
 						<phase>test</phase>
 						<goals>
-							<goal>genjava</goal>
+							<goal>typecheck</goal>
 						</goals>
+						<configuration>
+							<verbose>true</verbose>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
