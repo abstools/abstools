@@ -254,6 +254,9 @@ aspect TypeCheckerExtension {
     }
     
     refine TypeChecker public void MethodImpl.typeCheck(SemanticErrorList s) {
+        int size = s.size();
+        TypeChecker.MethodImpl.typeCheck(s);
+        if (s.size() > size) return;
         getModel().getTypeExt().checkMethodImpl(this);
     }
 
