@@ -19,14 +19,14 @@ def Int fromByte(Byte b) = case b { Byte(i) => i; };
 def Int fromLong(Long b) = case b { Long(i) => i; }; 
 
 interface InputStream {
-	Unit setInputStream([Near] InputStream s);
+	Unit setInputStream(InputStream s);
 	Feedback<String> readUTF();
 	Feedback<Int> readInt();
 	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len);
 }
 
 interface OutputStream {
-	Unit setOutputStream([Near] OutputStream s);
+	Unit setOutputStream(OutputStream s);
 	Feedback<Unit> writeUTF(String s);
 	Feedback<Unit> writeLong(Long s);
 	Feedback<Unit> writeInt(Int s);
@@ -40,16 +40,17 @@ interface RandomAccessFile {
 
 [Foreign]
 class InputStream implements InputStream {
-	[Near] InputStream stream;
+	InputStream stream;
 	
-	Unit setInputStream([Near] InputStream s) { 
-	    this.stream = s; 
+	Unit setInputStream(InputStream s) { 
+	    stream = s; 
 	} 
 	
 	Feedback<String> readUTF() {
 		Feedback<String> r = OK;
 		if (stream != null) {
-			r = stream.readUTF();
+			Fut<Feedback<String>> fr = stream!readUTF();
+			r = fr.get;
 		} 
 		return r;
 	}
@@ -57,7 +58,8 @@ class InputStream implements InputStream {
 	Feedback<Int> readInt() { 
 		Feedback<Int> r = OK;
 		if (stream != null) {
-			r = stream.readInt();
+			Fut<Feedback<Int>> fr = stream!readInt();
+			r = fr.get;
 		} 
 		return r;
  	}
@@ -65,7 +67,8 @@ class InputStream implements InputStream {
 	Feedback<List<Byte>> read(List<Byte> b, Int off, Int len) {
 		Feedback<List<Byte>> r = OK;
 		if (stream != null) {
-			r = stream.read(b,off,len);
+			Fut<Feedback<List<Byte>>> fr = stream!read(b,off,len);
+			r = fr.get;
 		} 
 		return r; 
 	}
@@ -73,16 +76,17 @@ class InputStream implements InputStream {
 
 [Foreign]
 class OutputStream implements OutputStream {
-	[Near] OutputStream stream;
+	OutputStream stream;
 
-	Unit setOutputStream([Near] OutputStream s) {
-		this.stream = s;
+	Unit setOutputStream(OutputStream s) {
+		stream = s;
 	}
 	
 	Feedback<Unit> writeUTF(String s) { 
 		Feedback<Unit> r = OK;
 		if (stream != null) {
-			r = stream.writeUTF(s);
+			Fut<Feedback<Unit>> fr = stream!writeUTF(s); 
+			r = fr.get;
 		}
 		return r; 
 	}
@@ -90,7 +94,8 @@ class OutputStream implements OutputStream {
 	Feedback<Unit> writeLong(Long s) { 
 		Feedback<Unit> r = OK;
 		if (stream != null) {
-			r = stream.writeLong(s);
+			Fut<Feedback<Unit>> fr = stream!writeLong(s);
+			r = fr.get;
 		}
 		return r; 
 	}
@@ -98,7 +103,8 @@ class OutputStream implements OutputStream {
 	Feedback<Unit> writeInt(Int s) { 
 		Feedback<Unit> r = OK;
 		if (stream != null) {
-			r = stream.writeInt(s);
+			Fut<Feedback<Unit>> fr = stream!writeInt(s);
+			r = fr.get;
 		}
 		return r; 
 	}
@@ -106,7 +112,8 @@ class OutputStream implements OutputStream {
 	Feedback<Unit> write(List<Byte> b, Int off, Int len) { 
 		Feedback<Unit> r = OK;
 		if (stream != null) {
-			r = stream.write(b,off,len);
+			Fut<Feedback<Unit>> fr = stream!write(b,off,len);
+			r = fr.get;
 		}
 		return r; 
 	}
