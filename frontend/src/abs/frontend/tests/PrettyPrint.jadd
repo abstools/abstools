@@ -145,5 +145,11 @@ aspect PrettyPrint {
         w.print("IntLiteral(" + this.getContent() + ")");
     }
 
+    public void Name.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(this.getName());
+    }
+    public void FromImport.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print("FromImport(" + this.getNames() + " from " + this.getModuleName() + ")");
+    }
 
 }

@@ -114,24 +114,24 @@ aspect DeltaCollector {
     }
 
     syn Map<KindedName,ResolvedName> ModuleDecl.getVisibleDeltas() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getVisibleDeltas() {
-		return DeltaCollectorHelper.getVisibleDeltas(this);
-	}
+    eq ModuleDecl.getVisibleDeltas() {
+        return DeltaCollectorHelper.getVisibleDeltas(this);
+    }
 
     syn Map<KindedName,ResolvedName> ModuleDecl.getExportedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getExportedDeltas() {
-		return DeltaCollectorHelper.getExportedDeltas(this);
-	}
+    eq ModuleDecl.getExportedDeltas() {
+        return DeltaCollectorHelper.getExportedDeltas(this);
+    }
 
     syn Map<KindedName,ResolvedName> ModuleDecl.getImportedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getImportedDeltas() {
-		return DeltaCollectorHelper.getImportedDeltas(this);
-	}
+    eq ModuleDecl.getImportedDeltas() {
+        return DeltaCollectorHelper.getImportedDeltas(this);
+    }
 
     syn Map<KindedName,ResolvedName> ModuleDecl.getDefinedDeltas() circular [new HashMap<KindedName, ResolvedName>()];
-	eq ModuleDecl.getDefinedDeltas() {
-		return DeltaCollectorHelper.getDefinedDeltas(this);
-	}
+    eq ModuleDecl.getDefinedDeltas() {
+        return DeltaCollectorHelper.getDefinedDeltas(this);
+    }
 
 
     public abstract String Deltaparam.getName();

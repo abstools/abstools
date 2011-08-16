@@ -4,10 +4,6 @@ import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
 aspect Flattener {
-    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
-        Product prod = this.findProduct(id);
-	    flattenForProduct(prod);
-	}
 
     /* Configure a product
      * 
@@ -15,6 +11,10 @@ aspect Flattener {
      * finding the features of a given product, finding the sequence of 
      * associated deltas, and applying them.
      */
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod);
+    }
     public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         System.out.println("--- configuring product: " + prod.qualifiedName());
 
@@ -42,7 +42,7 @@ aspect Flattener {
      */
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
-            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
+//            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
             cmod.apply(delta);
         }
     }
@@ -73,6 +73,36 @@ aspect Flattener {
     public void ModifyClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
         ClassDecl cls = this.findClassModifiedBy(delta);
         
+        // make sure cls can see each of its implemented interfaces
+        
+        ModuleDecl clsmodule = cls.getModule();
+        Map<KindedName, ResolvedName> visibleSymbols = clsmodule.getVisibleNames();
+        
+//        for (KindedName n : visibleSymbols.keySet())
+//            System.out.println("****** Visible: " + n);
+//        for (Import imp : clsmodule.getImports())
+//            System.out.println("****** Import: " + imp);
+
+        for (InterfaceTypeUse iface : this.getImplementedInterfaceUseList()) {
+            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
+            
+            if (! visibleSymbols.containsKey(symbol)) {
+                // TODO distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
+                // if unqualified, need to find module where symbol was declared
+                
+                // make it visible by adding a FromImport statement
+                List<Name> names = new List<Name>();
+                names.add(new Name(iface.getName()));
+//                FromImport newimport = new FromImport(names, iface.getModule().getName());
+                NamedImport newimport = new NamedImport(names);
+                clsmodule.addImport(newimport);
+            }
+
+        }
+//        for (Import imp : clsmodule.getImports())
+//            System.out.println("****** Import: " + imp);
+        
+        
         // reset the list of implemented interfaces
         cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
         
@@ -80,9 +110,13 @@ aspect Flattener {
         for (Modifier mod : this.getModifiers()) {
             mod.applyTo(cls);
         }
+        // reset list of symbols visible from this module
+        // FIXME not very efficient to do this for every ModifyClassModifer... 
+        clsmodule.flushCache();
     }
     
     public void AddInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        // FIXME? only possible to add an interface inside the module where delta is declared
         ModuleDecl module = delta.getModule();
         module.getDecls().addChild(this.getInterfaceDecl().fullCopy());
     }
