@@ -13,7 +13,8 @@ object Runner {
   val currentRunner: ThreadLocal[Runner] = new ThreadLocal()
 }
 
-class Runner(private val cog: ActorRef, private val task: ActorRef, private val f: () => Any @suspendable, cogRemote: Array[Byte]) extends Actor {
+//class Runner(private val cog: ActorRef, private val task: ActorRef, private val f: () => Any @suspendable, cogRemote: Array[Byte]) extends Actor {
+class Runner(private val cog: Array[Byte], private val task: ActorRef, private val f: () => Any @suspendable) extends Actor {
   
   private var schedCont: Unit => Unit = null
   private var taskCont: Unit => Unit = null
@@ -35,7 +36,7 @@ class Runner(private val cog: ActorRef, private val task: ActorRef, private val 
   
   def await(fut: ActorRef): Unit @suspendable = {
     EventHandler.debug(this, "Runner awaiting")
-    fut ! new Task.Listen(cogRemote)
+    fut ! new Task.Listen(cog)
     task ! new Task.Await(() => fut !! Task.Get match {
       case None => false
       case Some(x) => x.asInstanceOf[Option[Any]] match {
@@ -99,7 +100,8 @@ class Runner(private val cog: ActorRef, private val task: ActorRef, private val 
 
 object Task {
   sealed abstract class TaskMessage
-  case class Run(cogRemote: Array[Byte]) extends TaskMessage
+  //case class Run(cogRemote: Array[Byte]) extends TaskMessage
+  case object Run extends TaskMessage
   case class Done(result: Any) extends TaskMessage
   case object Get extends TaskMessage
   case object CanRun extends TaskMessage
@@ -112,7 +114,8 @@ object Task {
   case object DONE extends State
 }
 
-class Task(private val cog: ActorRef, f: () => Any @suspendable) extends Actor with FSM[Task.State, Unit] {
+//class Task(private val cog: ActorRef, f: () => Any @suspendable) extends Actor with FSM[Task.State, Unit] {
+class Task(private val cogRef: Array[Byte], f: () => Any @suspendable) extends Actor with FSM[Task.State, Unit] {
   import FSM._
   import Task._
   
@@ -121,8 +124,9 @@ class Task(private val cog: ActorRef, f: () => Any @suspendable) extends Actor w
   private var result: Option[Any] = None
   
   private var guard: () => Boolean = (() => true)
-    
-  private var runner: ActorRef = null
+ 
+  private var cog: ActorRef = RemoteActorSerialization.fromBinaryToRemoteActorRef(cogRef.asInstanceOf[Array[Byte]]) 
+  private var runner: ActorRef = Actor.actorOf(new Runner(cogRef, self, f)).start
 
   self.id = self.uuid.toString
   
@@ -146,11 +150,17 @@ class Task(private val cog: ActorRef, f: () => Any @suspendable) extends Actor w
       listeners += RemoteActorSerialization.fromBinaryToRemoteActorRef(cog)
       stay
     
+    case Ev(Task.Run) =>
+      runner ! Runner.Run
+      goto(RUNNING)
+      
+      /*
     case Ev(Task.Run(cogRemote)) =>
       if (runner == null)
         runner = Actor.actorOf(new Runner(cog, self, f, cogRemote)).start
       runner ! Runner.Run
       goto(RUNNING)
+      */
   }
   
   when(RUNNING) {

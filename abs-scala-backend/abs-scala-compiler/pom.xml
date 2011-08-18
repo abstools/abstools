@@ -13,11 +13,10 @@
 
   <name>ABS Scala compiler</name>
 
-
   <properties>
     <scala.version>2.9.0</scala.version>
+    <mainClass>abs.backend.scala.ScalaCompiler</mainClass>
   </properties>
-
 
   <repositories>
     <repository>

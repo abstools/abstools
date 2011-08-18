@@ -1,28 +1,34 @@
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * This file is licensed under the terms of the Modified BSD License.
+ */
 package abs.backend.scala
 
 import java.io.File
 import abs.frontend.parser.Main
 import scala.collection.JavaConversions._
 
+/**
+ * 
+ * @author Andri Saar <andri@cs.ioc.ee>
+ */
 class ScalaCompiler extends Main {
-  private var targetDir: String = _
+  private var targetDir = {
+    val f = File.createTempFile("abs-scala", "")
+    f.delete()
+    f.getAbsolutePath()
+  }
   private var sourceOnly = false
   
-  val f = File.createTempFile("abs-scala", "")
-  f.delete()
-  targetDir = f.getAbsolutePath()
-  
-  /*
   private def generateFileList(f: File): List[String] =
     if (f.isDirectory())
-      f.listFiles().foldLeft(Nil)().flatten
+      f.listFiles().foldLeft(Nil: List[String])((xs, f) => generateFileList(f) ::: xs)
     else {
       if (f.getName().endsWith(".scala"))
         f.getAbsolutePath() :: Nil
       else
-          Nil
+        Nil
     }
-  */
   
   def compile(args: Array[String]) {
     val model = parse(args)
@@ -36,12 +42,10 @@ class ScalaCompiler extends Main {
       System.exit(1)
     }
     
-    model.generateScala(f);
+    model.generateScala(f)
     
-    if (!sourceOnly) {
-      
-      //scala.tools.nsc.Main.main();
-    }
+    if (!sourceOnly)
+      scala.tools.nsc.Main.main(("-d" :: f.getAbsolutePath() :: generateFileList(f)).toArray)
   }
   
   private def handleArgs(args: List[String]): List[String] = args match {
