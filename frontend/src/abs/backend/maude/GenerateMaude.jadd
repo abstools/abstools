@@ -670,7 +670,6 @@ aspect GenerateMaude {
         stream.print("return(null) ");
         if (isActiveClass) {
             stream.print("; asynccall('.staticfuture ; 'this ; \"run\" ; emp ; \"InfDuration\"[ emp ]) ");
-            stream.print("; $release('.staticfuture) ");
         }
         stream.print("> ");
     }
