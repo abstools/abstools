@@ -83,25 +83,24 @@ aspect Flattener {
 //        for (Import imp : clsmodule.getImports())
 //            System.out.println("****** Import: " + imp);
 
+        boolean doFlushCache = false;
         for (InterfaceTypeUse iface : this.getImplementedInterfaceUseList()) {
             KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
             
             if (! visibleSymbols.containsKey(symbol)) {
-                // TODO distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
+                // FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
                 // if unqualified, need to find module where symbol was declared
                 
-                // make it visible by adding a FromImport statement
+                // make it visible by adding Import
                 List<Name> names = new List<Name>();
                 names.add(new Name(iface.getName()));
 //                FromImport newimport = new FromImport(names, iface.getModule().getName());
                 NamedImport newimport = new NamedImport(names);
                 clsmodule.addImport(newimport);
+                doFlushCache = true;
             }
 
         }
-//        for (Import imp : clsmodule.getImports())
-//            System.out.println("****** Import: " + imp);
-        
         
         // reset the list of implemented interfaces
         cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
@@ -111,8 +110,8 @@ aspect Flattener {
             mod.applyTo(cls);
         }
         // reset list of symbols visible from this module
-        // FIXME not very efficient to do this for every ModifyClassModifer... 
-        clsmodule.flushCache();
+        if (doFlushCache)
+            clsmodule.flushCache();
     }
     
     public void AddInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {

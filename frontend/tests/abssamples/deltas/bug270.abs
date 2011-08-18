@@ -22,7 +22,7 @@ import * from M;
 import * from M2;
 
 delta D {
-    modifies class X implements M.I1, M2.I2 {
+    modifies class X implements I1, M2.I2 {
         adds Unit n() { }
     }
     
