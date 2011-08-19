@@ -30,19 +30,19 @@ public class FrontendTest extends ABSTest {
         return assertParse(s, WITH_STD_LIB);
     }
 
-    protected void assertParseFileOk(String fileName, boolean withStdLib) {
+    protected Model assertParseFileOk(String fileName, boolean withStdLib) {
         if (withStdLib) {
-            assertParseFileOk(fileName, WITH_STD_LIB);
-        } else { 
-            assertParseFileOk(fileName);
+            return assertParseFileOk(fileName, WITH_STD_LIB);
+        } else {
+            return assertParseFileOk(fileName);
         }
     }
 
-    protected void assertTypeCheckFileOk(String fileName, boolean withStdLib) {
+    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) {
         if (withStdLib) { 
-            assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
+            return assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
         } else {
-            assertParseFileOk(fileName, TYPE_CHECK);
+            return assertParseFileOk(fileName, TYPE_CHECK);
         }
     }
 
