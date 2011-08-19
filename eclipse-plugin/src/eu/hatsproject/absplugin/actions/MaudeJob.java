@@ -73,19 +73,22 @@ public class MaudeJob extends Job{
 	
 	@Override
 	public IStatus run(IProgressMonitor monitor){
+		//Set title and totalWork of the process according to clicked button
+		if(exec){
+			monitor.beginTask("Executing Maude", 11);
+		} else{
+			monitor.beginTask("Compiling Maude", 6);
+		}
+		return runJob(monitor);
+	}
+	
+	public IStatus runJob(IProgressMonitor monitor) {
 		abort = false;
 		boolean failed = false;
 		StringBuffer output = new StringBuffer();
 		AbsNature nature = getAbsNature(project);	
 		if(nature == null){
 			return new Status(IStatus.INFO, PLUGIN_ID, "Could not compile current selection. Project is not an ABS project.");
-		}
-		
-		//Set title and totalWork of the process according to clicked button
-		if(exec){
-			monitor.beginTask("Executing Maude", 11);
-		} else{
-			monitor.beginTask("Compiling Maude", 6);
 		}
 		
 		//Compile Maude Code
@@ -152,7 +155,7 @@ public class MaudeJob extends Job{
 			monitor.setCanceled(true);
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_USER_ABORT, null, null);
 		}
-	}	
+	}
 		
 	@Override
 	protected void canceling() {

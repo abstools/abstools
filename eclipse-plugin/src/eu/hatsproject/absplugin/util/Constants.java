@@ -87,6 +87,7 @@ public class Constants {
 	public static final String RUNCONFIG_MAUDE_STEPS						= "maudeSteps";
 	public static final String RUNCONFIG_MAUDE_REALTIME						= "maudeRealtime";
 	public static final String RUNCONFIG_MAUDE_MAINBLOCK					= "maudeMain";
+	public static final String RUNCONFIG_TEST_EXECUTION					= "testExecution";
 	
 	//Default Values (see also RunConfigEnums)			
 	public static final String 	DEBUGGER_ARGS_OTHER_DEFAULT					= "";
@@ -94,6 +95,20 @@ public class Constants {
 	public static final boolean RUNCONFIG_DEBUGGER_USE_EXTERNAL_DEFAULT		= false;
 	public static final boolean RUNCONFIG_DEBUGGER_DEBUG_MODE_DEFAULT		= true;	
 		
+	//-------------------- ABSUnit Test Execution -------------------------------------------------------------
+	/**
+	 * ABSUnit Test Execution terminated successfully (nothing will be printed)
+	 */
+	public static final int ABSUNIT_TEST_OK = 0;
+	/**
+	 * Denotes exceptions occurring during execution (status message will be shown in a dialog together with message of the occuring exception)
+	 */
+	public static final int ABSUNIT_TEST_ERROR = 48;
+	/**
+	 * Denotes an abort initiated by the user (will print a predefined String as error)
+	 */
+	public static final int ABSUNIT_TEST_USER_ABORT = 64;
+	
 	//-------------------- MAUDE JOB --------------------------------------------------------------------------
 	/**
 	 * Maude Job terminated successfully (nothing will be printed)
@@ -149,6 +164,7 @@ public class Constants {
 	public static final String MAUDE_PATH            = "maudePath";
 	public static final String DEFAULT_JAVA_PATH     = "gen/java";
 	public static final String DEFAULT_MAUDE_PATH    = "gen/maude";
+	public static final String DEFAULT_MAVEN_TARGET_ABS_PATH     = "target/abs/gen/abs";
 	public static final String DEFAULT_MAVEN_TARGET_JAVA_PATH     = "target/abs/gen/java";
 	public static final String DEFAULT_MAVEN_TARGET_MAUDE_PATH    = "target/abs/gen/maude";
 	

@@ -4,7 +4,21 @@
  */
 package eu.hatsproject.absplugin.actions.runconfig;
 
-import static eu.hatsproject.absplugin.util.Constants.*;
+import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_ARGS_OTHER_DEFAULT;
+import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_COMPILE_BEFORE_DEFAULT;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_CLASSPATH_LIST;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_COMPILE_BEFORE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_DEBUG_MODE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_DEBUG_MODE_DEFAULT;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_OBSERVER_LIST;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_RANDOMSEED;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_USE_EXTERNAL;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_USE_EXTERNAL_DEFAULT;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PRODUCT_NAME_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PROJECT_NAME_ATTRIBUTE;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_TEST_EXECUTION;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.showErrorMessage;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
@@ -21,7 +35,15 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
@@ -35,7 +57,8 @@ public class JavaTab extends AbstractTab {
 	private Button compileCheckButton;
 	private Button externalProcessCheckButton;
 	private Button debugModeCheckButton;
-	
+	private Button testExecutionButton;
+
 	private Text otherArgsText;
 	private Text seedNumber;
 	private Text historyText;
@@ -72,6 +95,7 @@ public class JavaTab extends AbstractTab {
 				tempList.add(observer.getClassName());
 			}
 		}
+		configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, false);
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, tempList);
 		
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, DEBUGGER_COMPILE_BEFORE_DEFAULT);
@@ -129,6 +153,7 @@ public class JavaTab extends AbstractTab {
         for (String string : classPathList.getItems()) {
             classPathNames.add(string);
         }
+        configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, testExecutionButton.getSelection());
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, observerClassNames);
 		configuration.setAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, classPathNames);
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
@@ -155,6 +180,11 @@ public class JavaTab extends AbstractTab {
 	
 	private void createCheckButtons(TabListener myListener,
 			Composite comp) {
+		
+		testExecutionButton = new Button(comp, SWT.CHECK);
+		testExecutionButton.setText("Execute ABSUnit tests");
+		testExecutionButton.addListener(SWT.Selection, myListener);
+		
 		debugModeCheckButton = new Button(comp, SWT.CHECK);
 		debugModeCheckButton.setText("Enable debug mode");
 		debugModeCheckButton.addListener(SWT.Selection, myListener);

@@ -77,6 +77,11 @@ public class AbsNature implements IProjectNature {
 	private MsgConsole defaultMaudeConsole = null;
 	
 	/**
+	 * The default console singleton used by getMaudeConsole()
+	 */
+	private MsgConsole defaultABSUnitTestExecutionConsole = null;
+	
+	/**
 	 * The default console singleton used by getMavenConsole()
 	 */
 	private MsgConsole defaultMavenConsole = null;
@@ -115,6 +120,18 @@ public class AbsNature implements IProjectNature {
 		}
 		
 		return defaultMaudeConsole;
+	}
+	
+	/**
+	 * Gives the default console for ABSUnit Test Execution Output
+	 * @return ABSUnit Test Execution Message Console
+	 */	
+	public MsgConsole getABSUnitTestExecutionConsole(){
+		if (defaultABSUnitTestExecutionConsole == null){
+			defaultABSUnitTestExecutionConsole = ConsoleManager.newConsole("ABSUnit Test Execution Output (" + getProject().getName() + ")");
+		}
+		
+		return defaultABSUnitTestExecutionConsole;
 	}
 	
 	/**

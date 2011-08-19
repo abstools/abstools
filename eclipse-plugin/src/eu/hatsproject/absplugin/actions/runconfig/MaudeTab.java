@@ -25,8 +25,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
+import abs.backend.tests.ABSTestRunnerGenerator;
+
 public class MaudeTab extends AbstractTab {
 
+	Button testExecution;
 	Button exec;
 	Button partialExec;
 	Spinner steps;
@@ -43,6 +46,7 @@ public class MaudeTab extends AbstractTab {
 		createProductDropDownMenu(myListener, comp);
 		
 		Group group = createGroup(comp, "Options", 1, 1, GridData.FILL_HORIZONTAL);
+		createTestRunnerGenerationButton(group);
 		createExecutionButton(group);
 	    createPartialExecButton(group);
 	    createRealtimeButton(group);
@@ -59,6 +63,7 @@ public class MaudeTab extends AbstractTab {
 	public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getDefaultProjectName());
 		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
+		configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, false);
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, false);
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, 0);
@@ -70,6 +75,7 @@ public class MaudeTab extends AbstractTab {
 	public void initializeFrom(ILaunchConfiguration configuration) {
 		try {
 			initProject(configuration);
+			testExecution.setSelection(configuration.getAttribute(RUNCONFIG_TEST_EXECUTION, false));
 			exec.setSelection(configuration.getAttribute(RUNCONFIG_MAUDE_EXECUTE, true));
 			
 			if(!exec.getSelection()){
@@ -97,7 +103,8 @@ public class MaudeTab extends AbstractTab {
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
 		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
-		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, true);
+		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, testExecution.getSelection());
+		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, exec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, partialExec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, steps.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_REALTIME, realtime.getSelection());
@@ -109,6 +116,30 @@ public class MaudeTab extends AbstractTab {
 		return "ABS Maude Backend";
 	}
 	
+	private void createTestRunnerGenerationButton(Composite comp) {
+		testExecution = new Button(comp, SWT.CHECK);
+		testExecution.setText("Execute ABSUnit tests");
+		testExecution.addSelectionListener(new SelectionListener() {
+	    	
+	    	@Override
+			public void widgetSelected(SelectionEvent event) {
+	    		updateLaunchConfigurationDialog();
+	    		if(testExecution.getSelection()){
+					mainBlock.setText(ABSTestRunnerGenerator.RUNNER_MAIN);
+					mainBlock.setEditable(false);
+				} else {
+					mainBlock.setText("");
+					mainBlock.setEditable(true);
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent event) {
+				widgetSelected(event);
+			}
+	    });
+	}
+	
 	private void createExecutionButton(Composite comp) {
 		exec = new Button(comp, SWT.CHECK);
 	    exec.setText("Execute generated .maude file");
@@ -117,7 +148,7 @@ public class MaudeTab extends AbstractTab {
 	    	@Override
 			public void widgetSelected(SelectionEvent event) {
 	    		updateLaunchConfigurationDialog();
-				if(exec.getSelection()){
+	    		if(exec.getSelection()){
 					partialExec.setEnabled(true);
 					steps.setEnabled(partialExec.getSelection());
 				} else{

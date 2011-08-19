@@ -33,6 +33,7 @@ import org.eclipse.ui.PartInitException;
 import org.osgi.framework.Bundle;
 
 import abs.backend.java.codegeneration.JavaCode;
+import abs.backend.tests.ABSTestRunnerGenerator;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
@@ -83,11 +84,16 @@ public class JavaJob extends Job {
    private SDEditProcess sdeditProcess;
 
    private List<String> extraClassPaths;
-   
-	
+
+   private final boolean absUnit;
+
    public static final String COMPILE_JOB = "ABS Java Code Generation";
    public static final String RUN_JOB = "ABS Java Execution";
 	
+   public JavaJob(String name, IAction action, IProject project, IFile file) {
+	   this(name,action,project,file,false);
+   }
+   
 	/**
 	 * creates a new job for an action. 
 	 * 
@@ -96,7 +102,7 @@ public class JavaJob extends Job {
 	 * @param project - ABS file
 	 * @param file - current opened file
 	 */
-	public JavaJob(String name, IAction action, IProject project, IFile file) {
+	public JavaJob(String name, IAction action, IProject project, IFile file, boolean absUnit) {
 		super(name);
 		this.action = action;
 		this.project = project;
@@ -104,12 +110,16 @@ public class JavaJob extends Job {
 		this.setUser(true);
 		useInternalDebugger = true;
 		debuggerIsInDebugMode = true;
+		this.absUnit = absUnit;
 	}
-
+	
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		monitor.beginTask("ABS Java Backend", 100);
-		
+		return runJob(monitor);
+	}
+	
+	public IStatus runJob(IProgressMonitor monitor) {
 		try{
 			//must be an ABS project
 			if (project == null || !project.exists()){
@@ -348,22 +358,24 @@ public class JavaJob extends Job {
 	 */
 	private void findAndExecuteMain(String absFrontendLocation) throws AbsJobException, IOException {
 		String info = null;
+		final String moduleName;
+		if (absUnit) {
+			moduleName = ABSTestRunnerGenerator.RUNNER_MAIN+".Main";
+		} else {
+			File mainFile = findMainJavaFile();
 
-      File mainFile = findMainJavaFile();
-
-		//Search for the main file if previous searching was not successful
-		if(mainFile == null){
-			mainFile = findMainInGeneratedJavaFiles(javaPath);
+			//Search for the main file if previous searching was not successful
 			if(mainFile == null){
-				throw new AbsJobException("No 'Main.java' file found.");
+				mainFile = findMainInGeneratedJavaFiles(javaPath);
+				if(mainFile == null){
+					throw new AbsJobException("No 'Main.java' file found.");
+				}
+				if(currentFile != null){
+					info = "No main file found for \""+currentFile.getName()+"\".\nBut there is a main file in the project:";
+				}
 			}
-			if(currentFile != null){
-				info = "No main file found for \""+currentFile.getName()+"\".\nBut there is a main file in the project:";
-			}
+			moduleName = findModuleName(mainFile);
 		}
-
-      String moduleName = findModuleName(mainFile);
-
 		debugAbsFiles(absFrontendLocation, javaPath, startSDE, moduleName, info);
 	}
 
