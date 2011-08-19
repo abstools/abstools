@@ -1,8 +1,8 @@
 package eu.hatsproject.absplugin.actions;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 
 
 public class ABSUnitTestMaudeExecutionJob extends ABSUnitTestExecutionJob {
@@ -12,7 +12,7 @@ public class ABSUnitTestMaudeExecutionJob extends ABSUnitTestExecutionJob {
 	private final boolean partialExec;
 	private final boolean execute;
 	private final int executeStep;
-
+	
 	public ABSUnitTestMaudeExecutionJob(IProject project,
 			boolean realTime, String mainBlock, boolean partialExec,
 			boolean execute, int executeStep, String productName) {
@@ -24,7 +24,7 @@ public class ABSUnitTestMaudeExecutionJob extends ABSUnitTestExecutionJob {
 		this.executeStep = executeStep;
 	}
 	
-	protected void executeTest(IProgressMonitor monitor) throws CoreException {
+	protected IStatus executeTest(IProgressMonitor monitor) {
 		final MaudeJob maudeJob;
 		if(partialExec){
 			maudeJob = new MaudeJob(project, realTime, true, executeStep);
@@ -38,8 +38,9 @@ public class ABSUnitTestMaudeExecutionJob extends ABSUnitTestExecutionJob {
 		if (productName != null)
 			maudeJob.setProduct(productName);
 		
-		maudeJob.runJob(monitor);
+		IStatus status = maudeJob.runJob(monitor);
 		monitor.worked(100);
+		return status;
 	}
 
 }

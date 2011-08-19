@@ -46,7 +46,6 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 	}
 	
 	protected IStatus run(IProgressMonitor monitor) {
-		StringBuffer output = new StringBuffer();
 		AbsNature nature = getAbsNature(project);	
 		if(nature == null){
 			return new Status(IStatus.INFO, PLUGIN_ID, "Could not compile current selection. Project is not an ABS project.");
@@ -71,8 +70,9 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 		monitor.worked(12);
 		
 		monitor.subTask("Executing ABSUnit tests");
+		IStatus status = null;
 		try {
-			executeTest(monitor);
+			status = executeTest(monitor);
 		} catch (CoreException e) {
 			return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while executing tests", e);
 		}
@@ -82,10 +82,10 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 			return new Status(IStatus.INFO, PLUGIN_ID, ABSUNIT_TEST_USER_ABORT, null, null);
 		}
 		
-		return new Status(IStatus.OK, PLUGIN_ID, ABSUNIT_TEST_OK, output.toString(), null);
+		return new Status(IStatus.OK, PLUGIN_ID, ABSUNIT_TEST_OK, status.getMessage(), null);
 	}
 	
-	protected abstract void executeTest(IProgressMonitor monitor) throws CoreException;
+	protected abstract IStatus executeTest(IProgressMonitor monitor) throws CoreException;
 
 	@Override
 	protected void canceling() {

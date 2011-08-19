@@ -22,6 +22,7 @@ import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 
 import eu.hatsproject.absplugin.actions.ABSUnitTestExecutionJob;
+import eu.hatsproject.absplugin.actions.ABSUnitTestExecutionJobListener;
 import eu.hatsproject.absplugin.actions.ABSUnitTestMaudeExecutionJob;
 import eu.hatsproject.absplugin.actions.MaudeJob;
 import eu.hatsproject.absplugin.actions.MaudeJobChangeListener;
@@ -42,6 +43,7 @@ public class MaudeRunConfiguration implements ILaunchConfigurationDelegate {
 		if (configuration.getAttribute(RUNCONFIG_TEST_EXECUTION, false)) {
 			ABSUnitTestExecutionJob testJob = new ABSUnitTestMaudeExecutionJob(
 					project,realTime,mainBlock,partialExec,execute,execStep,productName);
+			testJob.addJobChangeListener(new ABSUnitTestExecutionJobListener(project));
 			testJob.schedule();
 		} else {
 			MaudeJob maudeJob;

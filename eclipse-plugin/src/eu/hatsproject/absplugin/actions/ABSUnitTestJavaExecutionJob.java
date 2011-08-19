@@ -55,7 +55,7 @@ public class ABSUnitTestJavaExecutionJob extends ABSUnitTestExecutionJob {
 		this.debugMode = debugMode;
 	}
 
-	protected void executeTest(IProgressMonitor monitor) throws CoreException {
+	protected IStatus executeTest(IProgressMonitor monitor) throws CoreException {
 		JavaJob job = new JavaJob(JavaJob.RUN_JOB, action, project, file, true);
 		if (productName != null) {
 			try {
@@ -68,7 +68,7 @@ public class ABSUnitTestJavaExecutionJob extends ABSUnitTestExecutionJob {
 			}
 		}
 		modifyDebuggerArguments(job);
-		job.runJob(monitor);
+		return job.runJob(monitor);
 	}
 	
 	private void modifyDebuggerArguments(JavaJob job) {
