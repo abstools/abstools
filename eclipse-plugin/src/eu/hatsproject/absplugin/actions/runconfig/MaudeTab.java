@@ -103,7 +103,7 @@ public class MaudeTab extends AbstractTab {
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
 		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
-		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, testExecution.getSelection());
+		configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, testExecution.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_EXECUTE, exec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_PARTIAL_EXEC, partialExec.getSelection());
 		configuration.setAttribute(RUNCONFIG_MAUDE_STEPS, steps.getSelection());
