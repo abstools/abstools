@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 
+import abs.backend.maude.MaudeCompiler;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
@@ -201,9 +202,9 @@ public class MaudeJob extends Job{
 			if (mb != null && mb.isEmpty())
 				mb = null;
 			if(realTime){
-                            model.generateMaude(ps, "ABS-SIMULATOR-EQ-TIMED", mb);
+                            model.generateMaude(ps, MaudeCompiler.SIMULATOR_EQ_TIMED, mb);
 			} else{
-                            model.generateMaude(ps, "ABS-SIMULATOR-RL", mb);
+                            model.generateMaude(ps, MaudeCompiler.SIMULATOR_RL, mb);
 			}
 			ps.close();
 			fis = new FileInputStream(tmpFile);

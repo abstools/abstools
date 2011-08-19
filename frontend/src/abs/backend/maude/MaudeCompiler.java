@@ -14,7 +14,11 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class MaudeCompiler extends Main {
-    String module = "ABS-SIMULATOR-RL";
+    
+    public static String SIMULATOR_RL = "ABS-SIMULATOR-RL";
+    public static String SIMULATOR_EQ_TIMED = "ABS-SIMULATOR-EQ-TIMED";
+
+    String module = SIMULATOR_RL;
     private File outputfile;
     private String mainBlock;
     
@@ -40,7 +44,7 @@ public class MaudeCompiler extends Main {
         for (int i = 0; i < restArgs.size(); i++) {
             String arg = restArgs.get(i);
             if (arg.equals("-timed")) {
-                module = "ABS-SIMULATOR-EQ-TIMED";
+                module = SIMULATOR_EQ_TIMED;
             } else if (arg.equals("-o")) {
                 i++;
                 if (i == restArgs.size()) {

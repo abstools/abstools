@@ -4,14 +4,7 @@
  */
 package abs.backend.maude;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +13,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import abs.ABSTest;
-import abs.backend.java.JavaBackendConstants;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -42,7 +34,7 @@ public class MaudeTests extends ABSTest {
     void assertMaudeResult(String absCode, String expectedResult) {
         try {
             // TODO: test with other simulators (equational, timed) here as well
-            String generatedMaudeCode = getMaudeCode(absCode, "ABS-SIMULATOR-RL");
+            String generatedMaudeCode = getMaudeCode(absCode, MaudeCompiler.SIMULATOR_RL);
             String maudeOutput = getMaudeOutput(generatedMaudeCode);
             Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
             Matcher matcher = pattern.matcher(maudeOutput);
