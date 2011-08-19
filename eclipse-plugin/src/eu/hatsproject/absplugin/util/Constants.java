@@ -135,6 +135,7 @@ public class Constants {
 	//Maven Executable path
 	public static final String MAVEN_EXEC_PATH                = "MavenPath";
 	public static final String DEFAULT_MAVEN_EXEC_PATH        = "";
+	public static final String DEFAULT_MAVEN_POM_PATH        = "pom.xml";
 	
 	//Maude Executable path
 	public static final String MAUDE_EXEC_PATH                = "MaudePath";
@@ -148,6 +149,8 @@ public class Constants {
 	public static final String MAUDE_PATH            = "maudePath";
 	public static final String DEFAULT_JAVA_PATH     = "gen/java";
 	public static final String DEFAULT_MAUDE_PATH    = "gen/maude";
+	public static final String DEFAULT_MAVEN_TARGET_JAVA_PATH     = "target/abs/gen/java";
+	public static final String DEFAULT_MAVEN_TARGET_MAUDE_PATH    = "target/abs/gen/maude";
 	
 	//Java properties
 	public static final String SOURCE_ONLY           = "sourceOnly";

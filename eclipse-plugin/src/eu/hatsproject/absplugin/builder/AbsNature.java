@@ -507,8 +507,15 @@ public class AbsNature implements IProjectNature {
 		preferencestore.setDefault(LOCATION_TYPE_OVERLAY, true);
 		preferencestore.setDefault(DEFAULT_LOCATION_TYPE, DEFAULT_DEFAULT_LOCATION_TYPE);
 		preferencestore.setDefault(LOCATION_TYPE_PRECISION, DEFAULT_LOCATION_TYPE_PRECISION);
-		preferencestore.setDefault(MAUDE_PATH, DEFAULT_MAUDE_PATH);
-		preferencestore.setDefault(JAVA_SOURCE_PATH, DEFAULT_JAVA_PATH);
+		
+		if (project.getFile(DEFAULT_MAVEN_POM_PATH).exists()) {
+			preferencestore.setDefault(MAUDE_PATH, DEFAULT_MAVEN_TARGET_MAUDE_PATH);
+			preferencestore.setDefault(JAVA_SOURCE_PATH, DEFAULT_MAVEN_TARGET_JAVA_PATH);
+		} else {
+			preferencestore.setDefault(MAUDE_PATH, DEFAULT_MAUDE_PATH);
+			preferencestore.setDefault(JAVA_SOURCE_PATH, DEFAULT_JAVA_PATH);
+		}
+		
 		preferencestore.setDefault(NO_WARNINGS, true);
 		preferencestore.setDefault(SOURCE_ONLY, false);
 		preferencestore.setDefault(ALWAYS_COMPILE, true);
