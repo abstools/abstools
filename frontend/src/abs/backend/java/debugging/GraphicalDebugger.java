@@ -14,16 +14,23 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarEntry;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
@@ -125,7 +132,7 @@ class SourceView extends JPanel implements DebugModelListener {
     private final String fileName;
 
     SourceView(DebugModel model, String fileName) {
-        this.file = new File(fileName);
+        this.file = getFileFromName(fileName);
         this.fileName = fileName;
         this.model = model;
         JPanel content = new JPanel();
@@ -163,6 +170,56 @@ class SourceView extends JPanel implements DebugModelListener {
         fillArea();
 
         model.registerListener(this);
+    }
+    
+    /**
+     * Creates a {@link File} that has the file content referred by the 
+     * input file name. If the input file name points to an existing file this
+     * method just returns a {@link File} for this file, otherwise this
+     * method checks if the file name conforms to a {@link JarURLConnection} that 
+     * points to a package. If so, this method extract that particular 
+     * ABS file from that package to a temporary file and returns a {@link File}
+     * to that temporary file.
+     * 
+     * @param fileName
+     * @return
+     */
+    private File getFileFromName(String fileName) {
+        File file = new File(fileName);
+        if (file.exists()) {
+            return file; 
+        }
+        
+        try {
+            final URL jarURL = new URL(fileName);
+            
+            final JarURLConnection connection = 
+                (JarURLConnection) jarURL.openConnection();
+            
+            final JarEntry entry = connection.getJarEntry();
+
+            final InputStream input = 
+                connection.getJarFile().getInputStream(entry);
+            
+            final File tmp = 
+                File.createTempFile(entry.getName(),null);
+            
+            tmp.deleteOnExit();
+            
+            final OutputStream output = new FileOutputStream(tmp);
+            int read = 0;
+            byte[] bytes = new byte[1024];
+            while ((read = input.read(bytes)) != -1) {
+                output.write(bytes, 0, read);
+            }
+            input.close();
+            output.flush();
+            output.close();
+            return tmp;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+        
     }
 
     private void createHighlightPainters() {
