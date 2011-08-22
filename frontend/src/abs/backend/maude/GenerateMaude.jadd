@@ -171,7 +171,6 @@ aspect GenerateMaude {
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ; get( '.staticfuture ; '" + var + ") ");
-        stream.print("; $release('.staticfuture) ");
     }
 
     public void OriginalCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
