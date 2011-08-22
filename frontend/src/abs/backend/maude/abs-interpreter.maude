@@ -1043,10 +1043,11 @@ mod ABS-MACHINE-BASICS is
     [label $beginscope] .
 
   --- Introduce a new variable into the local scope.
-  eq
+  ceq
     < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label $vardecl] .
 
   eq
@@ -1203,12 +1204,13 @@ mod ABS-MACHINE-BASICS-TIMED is
     [label $beginscope] .
 
   --- Introduce a new variable into the local scope.
-  eq
+  ceq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: S, Pr: { insert(A, eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])), L) | SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+  if D := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label $vardecl] .
 
   eq
