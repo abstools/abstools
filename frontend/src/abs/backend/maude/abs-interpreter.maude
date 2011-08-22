@@ -1366,9 +1366,9 @@ mod ABS-STMT-ASSIGN-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F > 
   =>
     if hasMapping(L, Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ D' := (S :: L)[Q]
@@ -1378,7 +1378,7 @@ mod ABS-STMT-ASSIGN-RL is
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ D' := S[Q]
     [label field-assignment] .
@@ -1398,9 +1398,9 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   =
     < T : Clock | Limit: LIM >
     if hasMapping(L, Q) then
-      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
     else
-      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F > 
+      < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F > 
     fi
     if D := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ D' := (S :: L)[Q]
@@ -1412,7 +1412,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM >
-    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | freeFutures(D') ; markFutures(D) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       /\ D' := S[Q]
     [label field-assignment] .
