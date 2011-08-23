@@ -19,6 +19,8 @@
 	<property name="gen.dir" value="${basedir}/gen" />
 	<!-- temporal directory used during tests -->
 	<property name="gen.test.dir" value="${basedir}/gen" />
+	<!-- machine-readable JUnit output goes here: -->
+	<property name="test.data.dir" location="${gen.test.dir}/data"/>
 	<property name="ext.dir" value="${basedir}/lib" />
 	<property name="ast.src.dir" value="${src.dir}/abs/frontend/ast" />
 	<!-- TODO: about ast.gen.dir and JastAdd idiosyncrasies -->
@@ -94,6 +96,7 @@
 	<target name="prepare">
 		<mkdir dir="${gen.dir}" />
 		<mkdir dir="${gen.test.dir}" />
+		<mkdir dir="${test.data.dir}" />
 		<mkdir dir="${dist.dir}" />
 		<mkdir dir="${dist.dir}/plugins" />
 		<mkdir dir="${dist.dir}/features" />
@@ -251,8 +254,9 @@
 
 	<target name="tests-backend-semantic" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
-			<test name="${test.backend.semantic.suite.name}" />
+			<test name="${test.backend.semantic.suite.name}" todir="${test.data.dir}" />
 			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
 			<classpath refid="test.classpath" />
 		</junit>
 	</target>
@@ -260,16 +264,18 @@
 
 	<target name="tests-backend" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
-			<test name="${test.backend.suite.name}" />
+			<test name="${test.backend.suite.name}" todir="${test.data.dir}" />
 			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
 			<classpath refid="test.classpath" />
 		</junit>
 	</target>
 
 	<target name="tests-backend-net" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
-			<test name="${test.backend.java.lib.net.suite.name}" />
+			<test name="${test.backend.java.lib.net.suite.name}" todir="${test.data.dir}" />
 			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
 			<classpath refid="test.classpath" />
 		</junit>
 	</target>
@@ -298,8 +304,9 @@
 
 	<target name="tests-frontend" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
-			<test name="${test.frontend.suite.name}" />
+			<test name="${test.frontend.suite.name}" todir="${test.data.dir}" />
 			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
 			<classpath refid="test.classpath" />
 		</junit>
 	</target>
