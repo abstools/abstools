@@ -57,7 +57,10 @@ aspect TypeChecker {
     }
     
     public void CompilationUnit.typeCheck(SemanticErrorList e) {
+        Set<String> seenModules = new HashSet<String>();
         for (ModuleDecl d : getModuleDecls()) {
+            if (!seenModules.add(d.getName()))
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_MODULE_NAME,d.getName()));
             d.typeCheck(e);
         }
     }

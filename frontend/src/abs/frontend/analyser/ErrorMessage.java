@@ -41,6 +41,7 @@ public enum ErrorMessage {
     DUPLICATE_METHOD_NAME("Method %s is already defined."),
     DUPLICATE_PARAM_NAME("Parameter %s is already defined."),
     DUPLICATE_FIELD_NAME("Field %s is already defined."),
+    DUPLICATE_MODULE_NAME("Module %s is already defined."),
     ONLY_INTERFACE_EXTEND("Interfaces can only extend other interfaces, but %s is not an interface."),
     NO_METHOD_OVERRIDE("Method %s overrides an existing method of interface %s."),
     NO_METHOD_IMPL("Method %s does not exist in any implemented interface."),
