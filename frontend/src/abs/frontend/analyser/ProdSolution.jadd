@@ -10,6 +10,13 @@ aspect ProdSolution {
 //        return res;
 //    }
 
+    public boolean Model.getSolution(String product, Map<String,Integer> sol) {
+        boolean res = false;
+        for (CompilationUnit c : getCompilationUnits())
+            res = res || c.getSolution(product,sol);
+        return res;
+    }
+
     public boolean CompilationUnit.getSolution(String product, Map<String,Integer> sol) {
         boolean res = false;
         for (ModuleDecl m : getModuleDecls())

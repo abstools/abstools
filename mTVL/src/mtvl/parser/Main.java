@@ -11,20 +11,17 @@
 package mtvl.parser;
 
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.ArrayList;
 
+import java.util.Enumeration;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.jar.JarEntry;
 
+import abs.backend.java.lib.runtime.ABSAndGuard;
+import abs.frontend.parser.ABSPackageFile;
+import beaver.Parser;
 import mtvl.ast.CompilationUnit;
 import mtvl.ast.List;
 import mtvl.ast.Model;
@@ -81,23 +78,30 @@ public class Main {
             printErrorAndExit("Please provide at least on intput file");
         }
         
-        List<CompilationUnit> units = new List<CompilationUnit>();
-        abs.frontend.ast.CompilationUnit fsunit = null;
+        java.util.List<CompilationUnit> units   = new ArrayList<CompilationUnit>();
+        java.util.List<abs.frontend.ast.CompilationUnit> fsunits = new ArrayList<abs.frontend.ast.CompilationUnit>();
+        //abs.frontend.ast.CompilationUnit fsunit = null;
+        //fsunits.add(getStdLib());
+
                 
         boolean checkfst = check;
         String product = null;
-        
+
         for (String file : files){
             if (file.startsWith("-")) {
                 printErrorAndExit("Illegal option "+file);
             }
 
-            try{
+            if (isABSPackageFile(new File(file))) {
+                parseABSPackageFile(fsunits, units, new File(file));
+            }
+            else try{
                 if (checkfst && (product == null))
                   product = file;
                 else if (checkfst) {
                   System.out.println("parsing ABS file:  "+file);
-                  fsunit = parseFSUnit(new File(file));
+//                  fsunit = parseFSUnit(new File(file));
+                  fsunits.add(parseFSUnit(new File(file)));
                   checkfst = false;
                 }
                 else{
@@ -117,8 +121,20 @@ public class Main {
                 System.exit(1);
             }
         }
-        
-        Model m = new Model(units);
+
+        List<CompilationUnit> unitList =
+              new List<CompilationUnit>();
+        for (CompilationUnit u : units) {
+            unitList.add(u);
+        }
+        abs.frontend.ast.List<abs.frontend.ast.CompilationUnit> fsunitList =
+              new abs.frontend.ast.List<abs.frontend.ast.CompilationUnit>();
+        for (abs.frontend.ast.CompilationUnit u : fsunits) {
+            fsunitList.add(u);
+        }
+
+        Model m = new Model(unitList);
+        abs.frontend.ast.Model fsm = new abs.frontend.ast.Model(fsunitList);
         
         // Dump tree for debug
         if (verbose){ 
@@ -131,8 +147,8 @@ public class Main {
             System.out.println("feat: "+m.features());
             if (check) {
               System.out.println("### FSL Result:");
-              System.out.println(fsunit);
-              fsunit.dumpTree("  ", System.out);
+              System.out.println(fsm);
+              fsm.dumpTree("  ", System.out);
            }
         }
 
@@ -153,7 +169,7 @@ public class Main {
           if (check) {
             ChocoSolver s = m.getCSModel(verbose);
             Map<String,Integer> guess = new HashMap<String,Integer>();
-            if (fsunit.getSolution(product,guess))
+            if (fsm.getSolution(product,guess))
               System.out.println("checking solution: "+s.checkSolution(guess,m));
             else {
               System.out.println("Product '"+product+"' not found.");
@@ -182,6 +198,58 @@ public class Main {
         
         return m;
     }
+
+    private boolean isABSPackageFile(File f) throws IOException {
+       return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
+    }
+
+    private void parseABSPackageFile(java.util.List<abs.frontend.ast.CompilationUnit> fsunits, java.util.List<CompilationUnit> units, File file) throws IOException {
+        ABSPackageFile jarFile = new ABSPackageFile(file);
+        if (!jarFile.isABSPackage())
+           return;
+        Enumeration<JarEntry> e = jarFile.entries();
+        while (e.hasMoreElements()) {
+           JarEntry jarEntry = e.nextElement();
+            if (!jarEntry.isDirectory()) {
+              if (jarEntry.getName().endsWith(".abs")) {
+                  parseABSSourceFile(fsunits, "jar:"+file.toURI()+"!/"+jarEntry.getName(), jarFile.getInputStream(jarEntry));
+              }
+              else if (jarEntry.getName().endsWith(".mtvl")) {
+                  parseMTVLSourceFile(units, "jar:" + file.toURI() + "!/" + jarEntry.getName(), jarFile.getInputStream(jarEntry));
+              }
+            }
+        }
+    }
+
+    private void parseABSSourceFile(java.util.List<abs.frontend.ast.CompilationUnit> units, String name, InputStream inputStream) throws IOException {
+        parseABSSourceFile(units, new File(name), new InputStreamReader(inputStream, "UTF-8"));
+    }
+
+    private void parseABSSourceFile(java.util.List<abs.frontend.ast.CompilationUnit> units, File file) throws IOException {
+        parseABSSourceFile(units, file, getUTF8FileReader(file));
+    }
+
+    private void parseABSSourceFile(java.util.List<abs.frontend.ast.CompilationUnit> units, File file, Reader reader) throws IOException {
+        if (verbose)
+            System.out.println("Parsing file "+file.getAbsolutePath());
+        units.add(parseFSUnit(file, reader));
+    }
+
+    private void parseMTVLSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
+        parseMTVLSourceFile(units, new File(name), new InputStreamReader(inputStream, "UTF-8"));
+    }
+
+    private void parseMTVLSourceFile(java.util.List<CompilationUnit> units, File file) throws IOException {
+        parseMTVLSourceFile(units, file, getUTF8FileReader(file));
+    }
+
+    private void parseMTVLSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
+        if (verbose)
+            System.out.println("Parsing file "+file.getAbsolutePath());
+        units.add(parseUnit(file, reader));
+    }
+
+
 
     private void printErrorAndExit(String error) {
         System.err.println("\nCompilation failed:\n");
@@ -215,9 +283,16 @@ public class Main {
 
 
 
+    private BufferedReader getUTF8FileReader(File file) throws UnsupportedEncodingException, FileNotFoundException {
+        return new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+    }
 
     public static CompilationUnit parseUnit(File file) throws Exception {
-        Reader reader = new FileReader(file);
+        return parseUnit(file,new FileReader(file));
+    }
+
+    public static CompilationUnit parseUnit(File file, Reader reader) throws IOException {
+                //Reader reader = new FileReader(file);
         BufferedReader rd = null;
         //Set to true to print source before parsing 
         boolean dumpinput = false;
@@ -265,14 +340,21 @@ public class Main {
         return new Model(units);
     }
     
-    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader) throws Exception {
+    public static CompilationUnit parseUnit(File file, String sourceCode, Reader reader) throws IOException {
         try {
             MTVLParser parser = new MTVLParser();
             MTVLScanner scanner = new MTVLScanner(reader);
             parser.setSourceCode(sourceCode);
             parser.setFile(file);
             
-            CompilationUnit u = (CompilationUnit) parser.parse(scanner);
+            CompilationUnit u = null;
+
+            try {
+                u = (CompilationUnit) parser.parse(scanner);
+            } catch (Parser.Exception e) {
+                u = new CompilationUnit(new mtvl.ast.List(),new mtvl.ast.List());
+                //u.setParserErrors(parser.getErrors());
+            }
             return u;
         } finally {
             reader.close();
@@ -286,8 +368,13 @@ public class Main {
     
     // Parsing the FSL file
     public static abs.frontend.ast.CompilationUnit parseFSUnit(File file)
-    throws Exception {
-        Reader reader = new FileReader(file);
+    throws IOException {
+        return parseFSUnit(file, new FileReader(file));
+    }
+
+    public static abs.frontend.ast.CompilationUnit parseFSUnit(File file, Reader reader)
+    throws IOException {
+        //Reader reader = new FileReader(file);
         BufferedReader rd = null;
         //Set to true to print source before parsing 
         boolean dumpinput = false;
@@ -314,8 +401,13 @@ public class Main {
             parser.setSourceCode(null);
             parser.setFile(file);
             
-            abs.frontend.ast.CompilationUnit u =
-              (abs.frontend.ast.CompilationUnit) parser.parse(scanner);
+            abs.frontend.ast.CompilationUnit u = null;
+            try {
+                u = (abs.frontend.ast.CompilationUnit) parser.parse(scanner);
+            } catch (Parser.Exception e) {
+                u = new abs.frontend.ast.CompilationUnit(parser.getFileName(), new abs.frontend.ast.List());
+                u.setParserErrors(parser.getErrors());
+            }
             return u;
         } finally {
             reader.close();

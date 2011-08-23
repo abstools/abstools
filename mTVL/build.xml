@@ -75,7 +75,7 @@
   </target>
 
   <target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-    <javac srcdir="${src.dir}/mtvl:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
+    <javac srcdir="${src.dir}/mtvl:${gen.dir}" destdir="${build.dir}" deprecation="on" debug="on" depend="${build.depend}" optimize="off">
       <classpath>
         <pathelement location="${frontend.lib}/beaver.jar" />
         <pathelement location="${frontend.lib}/jastadd2.jar" />
