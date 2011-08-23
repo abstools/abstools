@@ -3,6 +3,7 @@ package eu.hats_project.build.maven.plugin;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public class DependenciesMojo extends AbstractABSMojo {
 
 		Properties prop = new Properties();
 		getLog().debug("Generating ABS Dependencies -->");
-		setPackages(prop,resolveDependencyArtifacts(project));
+		setPackages(new HashSet<Artifact>(),prop,resolveDependencyArtifacts(project));
 
 		FileOutputStream out = new FileOutputStream(dep);
 		try {
@@ -57,7 +58,8 @@ public class DependenciesMojo extends AbstractABSMojo {
 		}
 	}
 	
-	private void setPackages(Properties prop, Set<Artifact> as) throws Exception {
+	private void setPackages(Set<Artifact> added, 
+	        Properties prop, Set<Artifact> as) throws Exception {
 		if (as.isEmpty()) 
 			return;
 		
@@ -66,7 +68,12 @@ public class DependenciesMojo extends AbstractABSMojo {
 			    String path = a.getFile().getAbsolutePath();
 			    getLog().debug(path);
 			    prop.setProperty(path, "true");
-			    setPackages(prop,resolveArtifactDependencies(a));
+			    added.add(a);
+			    Set<Artifact> ra = resolveArtifactDependencies(a);
+			    if (added.containsAll(ra)) {
+			        continue;
+			    }
+			    setPackages(added,prop,ra);
 			}
 		}
 	}
