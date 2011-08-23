@@ -8,8 +8,9 @@ import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import abs.ABSTest;
@@ -17,6 +18,18 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
 public class MaudeTests extends ABSTest {
+
+    @BeforeClass
+    public static void checkMaude() {
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command("maude");
+        try {
+            Process p = pb.start();
+            p.destroy();
+        } catch (IOException e) {
+            Assume.assumeNoException(e);
+        }
+    }
 
     @Test
     public void simpleBlock() {

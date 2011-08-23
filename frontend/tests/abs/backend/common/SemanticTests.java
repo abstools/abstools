@@ -4,10 +4,10 @@
  */
 package abs.backend.common;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -24,9 +24,26 @@ public class SemanticTests {
         driver = d;
     }
 
+    public static boolean checkMaude() {
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command("maude");
+        try {
+            Process p = pb.start();
+            p.destroy();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     @Parameters
     public static Collection<?> data() {
-        Object[][] data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver() } };
+        final Object[][] data;
+        /* TODO: Mark Maude tests as ignored instead of just missing them */
+        if (checkMaude())
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver() } };
+        else
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } };
         return Arrays.asList(data);
     }
 

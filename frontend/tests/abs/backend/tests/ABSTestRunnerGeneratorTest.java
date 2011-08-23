@@ -179,7 +179,7 @@ public class ABSTestRunnerGeneratorTest {
     }
 
     @SuppressWarnings("unused")
-    @Test(expected=AssertionError.class)
+    @Test(expected=IllegalArgumentException.class)
     public final void testABSTestRunnerGeneratorNull() {
         new ABSTestRunnerGenerator(null);
     }

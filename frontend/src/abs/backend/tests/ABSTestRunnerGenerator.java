@@ -80,9 +80,11 @@ public class ABSTestRunnerGenerator {
      * The constructor takes a type checked {@link Model} of the ABS model
      * 
      * @param model
+     * @throws IllegalArgumentException if model is null
      */
     public ABSTestRunnerGenerator(Model model) {
-        assert model != null : "Model cannot be null!" ;
+        if (model == null)
+            throw new IllegalArgumentException("Model cannot be null!");
         
         this.model = model;
 
