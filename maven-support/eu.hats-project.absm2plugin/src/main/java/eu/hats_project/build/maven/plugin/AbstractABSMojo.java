@@ -281,15 +281,11 @@ abstract class AbstractABSMojo extends AbstractMojo {
         return project.getCompileDependencies();
     }
 
-    protected List<String> getAbsDependencies() throws Exception {
+    protected List<String> getAbsDependencies() {
         Set<File> absJars = new HashSet<File>();
-        for (Dependency d : getDependencies()) {
-            Artifact artifact = factory.createArtifact(d.getGroupId(), d.getArtifactId(), d.getVersion(),
-                    Artifact.SCOPE_RUNTIME, d.getType());
-            resolver.resolve(artifact, remoteRepos, localRepo);
-            absJars.add(artifact.getFile());
-            for (Artifact dep : resolveArtifactDependencies(artifact)) {
-                absJars.add(dep.getFile());
+        for (Object a : project.getArtifacts()) {
+            if (a instanceof Artifact) {
+                absJars.add(((Artifact) a).getFile());
             }
         }
         return getFileNames(absJars);
