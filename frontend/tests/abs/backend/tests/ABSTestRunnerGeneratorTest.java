@@ -48,14 +48,17 @@ public class ABSTestRunnerGeneratorTest {
     private final static String ABS_UNIT =
     		"module AbsUnit; export *;" +
     		"[TypeAnnotation] data DataPoint = DataPoint; " +
+    		"[TypeAnnotation] data Ignored = Ignored;" +
     		"[TypeAnnotation] data Test = Test; " +
     		"[TypeAnnotation] data TestClass = TestClass; " +
-    		"[TypeAnnotation] data TestClassImpl = TestClassImpl; ";
+    		"[TypeAnnotation] data TestClassImpl = TestClassImpl; " +
+    		"[TypeAnnotation] data Suite = Suite; " +
+    		"[TypeAnnotation] data Fixture = Fixture; ";
 
     private final static String TEST_CODE =
                 "module Test; import * from AbsUnit;" +
-                "[TestClass] interface T { [Test] Unit t(); }" +
-                "[TestClassImpl] class TI implements T { Unit t() { } }";
+                "[Fixture] interface T { [Test] Unit t(); }" +
+                "[Suite] class TI implements T { Unit t() { } }";
     
     private final static Iterable<Entry<InterfaceDecl, Set<ClassDecl>>> EMPTY_MAP = 
                 Collections.<InterfaceDecl, Set<ClassDecl>>emptyMap().entrySet();
