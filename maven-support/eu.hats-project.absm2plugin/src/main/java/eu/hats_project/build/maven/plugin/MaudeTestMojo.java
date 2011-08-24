@@ -83,9 +83,11 @@ public class MaudeTestMojo extends AbstractTestMojo {
         args.addAll(getABSArguments());
         generator.generateMaude(
                 absfrontEnd, 
+                mTVL,
                 absTestSrcFolder, 
                 args, 
                 absMaudeBackendTestOutputFile,
+                checkProductSelection,
                 verbose, 
                 stdlib,
                 loctype,
@@ -130,10 +132,7 @@ public class MaudeTestMojo extends AbstractTestMojo {
         String[] cmd = { maude, "-no-banner", "-no-ansi-color", "-no-wrap", "-batch",
                 maudeInterpreter.getAbsolutePath() };
         
-        getLog().debug("Executing Maude Code -->");
-        for (String a : cmd) { 
-            getLog().debug(a);
-        }
+        new DebugArgOutput().debug("Executing Maude Code", cmd, getLog());
         
         pb.command(cmd);
 

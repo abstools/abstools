@@ -14,7 +14,7 @@ import abs.backend.maude.MaudeCompiler;
  * @author pwong
  *
  */
-public class MaudeGenerator {
+public class MaudeGenerator extends MTVLParser {
 
     /**
      * 
@@ -34,10 +34,12 @@ public class MaudeGenerator {
      * @throws MojoExecutionException
      */
     void generateMaude(
-    		File absfrontEnd, 
-    		File absSrcFolder, 
+                File absfrontEnd, 
+                File mTVL,
+                File absSrcFolder, 
     		List<String> absArguments, 
     		File absMaudeBackendOutputFile, 
+    		boolean checkProductSelection,
     		boolean verbose, 
     		boolean stdlib, 
     		boolean loctype, 
@@ -62,6 +64,22 @@ public class MaudeGenerator {
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
         if (productName != null) {
+            
+            if (checkProductSelection) {
+                try {
+                    super.parseMTVL(mTVL, 
+                            absSrcFolder, 
+                            absArguments, 
+                            productName, 
+                            verbose, 
+                            false, 
+                            true, 
+                            log);
+                } catch (Exception e) {
+                    throw new MojoExecutionException("Could not parse mTVL model", e);
+                }   
+            }
+                
             args.add("-product="+productName);
         }
         
@@ -88,10 +106,7 @@ public class MaudeGenerator {
         args.addAll(absArguments);
         
         String[] argArray = args.toArray(new String[args.size()]);
-        log.debug("Generating Maude Code -->");
-        for (String a : argArray) { 
-            log.debug(a);
-        }
+        new DebugArgOutput().debug("Generating Maude Code", argArray, log);
 
         try {
             MaudeCompiler.main(argArray);

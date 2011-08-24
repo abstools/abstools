@@ -38,10 +38,7 @@ public class TypeCheckingMojo extends AbstractABSMojo {
         args.addAll(getABSArguments());
         
         String[] argArray = args.toArray(new String[args.size()]);
-        getLog().debug("Type checking ABS modules -->");
-        for (String a : argArray) { 
-            getLog().debug(a);
-        }
+        new DebugArgOutput().debug("Type checking ABS modules", argArray, getLog());
         
         Main.main(argArray);
         

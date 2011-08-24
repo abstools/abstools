@@ -42,9 +42,11 @@ public class MaudeMojo extends AbstractABSMojo {
         MaudeGenerator generator = new MaudeGenerator();
         generator.generateMaude(
                 absfrontEnd, 
+                mTVL,
                 absSrcFolder, 
                 getABSArguments(), 
-                absMaudeBackendOutputFile, 
+                absMaudeBackendOutputFile,
+                checkProductSelection,
                 verbose,
                 stdlib,
                 loctype,

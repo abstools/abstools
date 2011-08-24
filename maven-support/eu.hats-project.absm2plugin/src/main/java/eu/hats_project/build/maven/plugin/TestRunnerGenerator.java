@@ -30,10 +30,7 @@ public class TestRunnerGenerator {
         args.addAll(absfiles);
         
         String[] argArray = args.toArray(new String[args.size()]);
-        log.debug("Generating Test Runner -->");
-        for (String a : argArray) { 
-            log.debug(a);
-        }
+        new DebugArgOutput().debug("Generating Test Runner", argArray, log);
 
         try {
             ABSTestRunnerCompiler.main(args.toArray(new String[0]));

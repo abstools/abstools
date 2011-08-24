@@ -35,8 +35,14 @@ abstract class AbstractABSMojo extends AbstractMojo {
 
     public static final String ABS_GROUPID = "eu.hats-project";
     public static final String ABS_FRONTEND_ARTIFACTID = "absfrontend";
+    public static final String MTVL_ARTIFACTID = "mTVL";
     public static final String VERSION_ATTRIBUTE = "ABS-Package-Version";
 
+    /**
+     * @parameter expression="${abs.check.selection}" default-value=true
+     */
+    protected boolean checkProductSelection;
+    
     /**
      * @parameter expression="${abs.stdlib}" default-value=true
      */
@@ -193,10 +199,16 @@ abstract class AbstractABSMojo extends AbstractMojo {
      * ABS frontend jar
      */
     protected File absfrontEnd;
-
+    
+    /**
+     * mTVL jar
+     */
+    protected File mTVL;
+    
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
-            absfrontEnd = new File(getToolClassPath());
+            absfrontEnd = new File(getToolClassPath(ABS_FRONTEND_ARTIFACTID));
+            mTVL = new File(getToolClassPath(MTVL_ARTIFACTID));
             doExecute();
         } catch (MojoExecutionException exc) {
             throw exc;
@@ -263,8 +275,8 @@ abstract class AbstractABSMojo extends AbstractMojo {
         return resolveDependencyArtifacts(pomProject);
     }
 
-    protected String getToolClassPath() throws Exception {
-        return getClasspath(ABS_GROUPID, ABS_FRONTEND_ARTIFACTID, "1.0-SNAPSHOT");
+    protected String getToolClassPath(String artifactId) throws Exception {
+        return getClasspath(ABS_GROUPID, artifactId, "1.0-SNAPSHOT");
     }
 
     protected String getClasspath(String groupId, String artifactId, String version) throws Exception {
@@ -343,5 +355,5 @@ abstract class AbstractABSMojo extends AbstractMojo {
         return new JarFile(file).getManifest().getMainAttributes()
                         .getValue(VERSION_ATTRIBUTE) != null;
     }
-
+    
 }

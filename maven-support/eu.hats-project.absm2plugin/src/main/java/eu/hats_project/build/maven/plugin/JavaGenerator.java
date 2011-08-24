@@ -14,7 +14,7 @@ import abs.backend.java.JavaBackend;
  * @author pwong
  *
  */
-public class JavaGenerator {
+public class JavaGenerator extends MTVLParser {
     
     /**
      * 
@@ -28,12 +28,16 @@ public class JavaGenerator {
      * @param loctype 
      * @param productName
      * @param log 
+     * @param checkProductSelection 
+     * @param mTVL 
      * @throws MojoExecutionException
      */
     void generateJava(File absfrontEnd, 
+            File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
             File absJavaBackendTargetFolder, 
+            boolean checkProductSelection,
             boolean verbose, 
             boolean sourceOnly,
             boolean stdlib, 
@@ -57,6 +61,22 @@ public class JavaGenerator {
         args.add(absJavaBackendTargetFolder.getAbsolutePath());
         
         if (productName != null) {
+            
+            if (checkProductSelection) {
+                try {
+                    super.parseMTVL(mTVL, 
+                            absSrcFolder, 
+                            absArguments, 
+                            productName, 
+                            verbose, 
+                            false, 
+                            true, 
+                            log);
+                } catch (Exception e) {
+                    throw new MojoExecutionException("Could not parse mTVL model", e);
+                }   
+            }
+            
             args.add("-product="+productName);
         }
         
@@ -79,10 +99,7 @@ public class JavaGenerator {
         args.addAll(absArguments);
         
         String[] argArray = args.toArray(new String[args.size()]);
-        log.debug("Generating Java Code -->");
-        for (String a : argArray) { 
-            log.debug(a);
-        }
+        new DebugArgOutput().debug("Generating Java Code", argArray, log);
         
         JavaBackend.main(argArray);
     }

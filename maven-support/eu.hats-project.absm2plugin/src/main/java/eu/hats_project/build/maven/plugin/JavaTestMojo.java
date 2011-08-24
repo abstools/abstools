@@ -69,8 +69,9 @@ public class JavaTestMojo extends AbstractTestMojo {
             args.add(absTestRunnerFile.getAbsolutePath());
         }
         args.addAll(getABSArguments());
-        generator.generateJava(absfrontEnd, absTestSrcFolder, args, absJavaBackendTestTargetFolder,
-                verbose, false, true, loctype, productName, getLog());
+        generator.generateJava(
+                absfrontEnd, mTVL, absTestSrcFolder, args, absJavaBackendTestTargetFolder,
+                checkProductSelection, verbose, false, true, loctype, productName, getLog());
 
         // run java
         if (terminateOnException) {
@@ -135,10 +136,7 @@ public class JavaTestMojo extends AbstractTestMojo {
             args.addAll(Arrays.asList("-cp", classpath, main));
             
             String[] argArray = args.toArray(new String[args.size()]);
-            getLog().debug("Executing generated Java code -->");
-            for (String a : argArray) { 
-                getLog().debug(a);
-            }
+            new DebugArgOutput().debug("Executing generated Java code", argArray, getLog());
             
             ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);
