@@ -161,7 +161,7 @@ List constraint_list
   ;
 
 Constr constraint
-  = exp.e               {: return e; :}
+  = exp.e               {: return new IfIn(e); :} // hack to make IfIn implicit!
   | IFIN  COLON exp.e   {: return new IfIn(e); :}
   | IFOUT COLON exp.e   {: return new IfOut(e); :}
   | EXCLUDE COLON featvar.f {: return new Exclude(f); :}

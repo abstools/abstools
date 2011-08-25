@@ -58,17 +58,27 @@ public class ChocoSolver {
      * @param name - name of the variable to be added
      * @param from - lowerlimit of the domain of the variable
      * @param to - upper limit of the domain of the variable **/
-  public void addIntVar(String name, int from, int to) {
-    IntegerVariable v = Choco.makeIntVar(name, from, to);
+    public void addIntVar(String name, int from, int to) {
+      IntegerVariable v = Choco.makeIntVar(name, from, to);
+      vars.put(name,v);
+      defaultvals.put(name,from);
+      if (verbose) System.out.println("  adding var '"+name+"' (default -> "+from+")");
+      //m.addVariable(v);
+    }
+  public void addIntVar(String name, int fromto, boolean from) {
+    IntegerVariable v = Choco.makeIntVar(name);
+    if (from) addConstraint(Choco.geq(v,fromto));
+    else      addConstraint(Choco.leq(v,fromto));
     vars.put(name,v);
-    defaultvals.put(name,from);
-    if (verbose) System.out.println("  adding var "+name+" (default) -> "+from);
+    defaultvals.put(name,fromto);
+    if (verbose) System.out.println("  adding var '"+name+"' (default -> "+fromto+")");
     //m.addVariable(v);
   }
   public void addIntVar(String name) {
     IntegerVariable v = Choco.makeIntVar(name);
     vars.put(name,v);
     defaultvals.put(name,0);
+    if (verbose) System.out.println("  adding var '"+name+"' (default -> 0)");
     //m.addVariable(v);
   }
   /** add bool variable **/

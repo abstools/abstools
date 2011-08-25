@@ -23,7 +23,8 @@ aspect CSP {
     for (String st : ints().keySet()) {
       BoundaryInt b1 = ints().get(st)[0];
       BoundaryInt b2 = ints().get(st)[1];
-      s.addIntVar(st,getBoundary(b1,false),getBoundary(b2,true));
+      addBoundedVar(s,st,b1,b2);
+      //s.addIntVar(st,getBoundary(b1,false),getBoundary(b2,true));
     }
     for (String st : bools())
       s.addBoolVar(st);
@@ -36,13 +37,24 @@ aspect CSP {
     return s;
   }
   
-  private int Model.getBoundary(BoundaryInt b, Boolean positive) {
-    if (b instanceof Limit) {
-      if (positive) return Choco.MAX_UPPER_BOUND;
-      else          return Choco.MIN_LOWER_BOUND;
-    } else          return ((BoundaryVal) b).getValue();
+//  private int Model.getBoundary(BoundaryInt b, Boolean positive) {
+//    if (b instanceof Limit) {
+//      if (positive) return Choco.MAX_UPPER_BOUND;
+//      else          return Choco.MIN_LOWER_BOUND;
+//    } else          return ((BoundaryVal) b).getValue();
+//  }
+
+  private void Model.addBoundedVar(ChocoSolver s, String name, BoundaryInt b1, BoundaryInt b2) {
+    if (b1 instanceof Limit && b2 instanceof Limit)
+        s.addIntVar(name);
+    else if (b1 instanceof Limit)
+        s.addIntVar(name,((BoundaryVal) b2).getValue(),false);
+    else if (b2 instanceof Limit)
+        s.addIntVar(name,((BoundaryVal) b1).getValue(),true);
+    else
+        s.addIntVar(name,((BoundaryVal) b1).getValue(),((BoundaryVal) b2).getValue());
   }
-  
+
   // GENERAL NODE: propagate
   public Constraint ASTNode.collectConstraints(ChocoSolver s) {
 		for(int i = 0; i < getNumChild(); i++)
