@@ -91,6 +91,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 			} catch (AbsJobException e) {
 				setErrorMessage(e.getMessage());
 			}
+			getLaunchConfigurationDialog().updateMessage();
 		}
 	}
 
