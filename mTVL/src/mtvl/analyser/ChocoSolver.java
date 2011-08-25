@@ -29,15 +29,17 @@ public class ChocoSolver {
   public final CPSolver s;
   public boolean solved = false;
   public final Map<String,IntegerVariable> vars;
+  public final Map<String,Integer> defaultvals;
   private boolean verbose = false;
-  
-  
+
+
   public ChocoSolver() {
     // Build the model
     m = new CPModel();
     s = new CPSolver();
     ChocoLogging.setVerbosity(Verbosity.SILENT);
     vars = new HashMap<String,IntegerVariable>();
+    defaultvals = new HashMap<String,Integer>();
     ChocoLogging.setVerbosity(Verbosity.OFF);
 }
 
@@ -45,7 +47,7 @@ public class ChocoSolver {
     this();
     verbose = v;
     if (!verbose) ChocoLogging.setVerbosity(Verbosity.OFF);
-  }  
+  }
   public void setVerbose(boolean v) {
     verbose = v;
     if (!verbose) ChocoLogging.setVerbosity(Verbosity.OFF);
@@ -59,41 +61,46 @@ public class ChocoSolver {
   public void addIntVar(String name, int from, int to) {
     IntegerVariable v = Choco.makeIntVar(name, from, to);
     vars.put(name,v);
+    defaultvals.put(name,from);
+    if (verbose) System.out.println("  adding var "+name+" (default) -> "+from);
     //m.addVariable(v);
   }
   public void addIntVar(String name) {
     IntegerVariable v = Choco.makeIntVar(name);
     vars.put(name,v);
+    defaultvals.put(name,0);
     //m.addVariable(v);
   }
   /** add bool variable **/
   public void addBoolVar(String name) {
     IntegerVariable v = Choco.makeBooleanVar(name);
     vars.put(name,v);
+    defaultvals.put(name,0);
     //m.addVariable(v);
   }
   /** set a bool variable to true **/
   public void forceTrue(String name) {
     IntegerVariable v = Choco.makeIntVar(name,1,1);
     vars.put(name,v);
+    defaultvals.put(name,1);
     m.addVariable(v);
   }
   /** add choco constraint **/
   public void addConstraint(Constraint c) {
     m.addConstraint(c);
   }
-  
+
   public IntegerVariable getVar(String var) {
     return (IntegerVariable) vars.get(var);
   }
-  
+
   public boolean solve() {
     // show the problem
     if (verbose) {
       System.out.print("## The constraints:");
       System.out.println(m.pretty());
     }
-    
+
     // Read the model
     s.read(m);
     // Solve the model
@@ -104,9 +111,9 @@ public class ChocoSolver {
 
   public Map<String,Integer> getSolution() {
     if (!solved) solve();
-    
+
     HashMap<String,Integer> result = new HashMap<String,Integer>();
-    
+
     Iterator<IntegerVariable> it = m.getIntVarIterator();
     while (it.hasNext()) {
        IntegerVariable var = (IntegerVariable) it.next();
@@ -137,7 +144,7 @@ public class ChocoSolver {
   public boolean checkSolution(Map<String,Integer> solution) {
     return checkSolution(solution,null);
   }
-  
+
   public boolean checkSolution(Map<String,Integer> solution, Model model) {
     // Read the model
     CPSolver s = new CPSolver();
@@ -146,16 +153,16 @@ public class ChocoSolver {
 
     if (verbose)
       System.out.println("solution to check:\n"+solution);
-    
+
 //     HashMap<String,Integer> selection = new HashMap<String,Integer>();
-    
+
     Iterator<IntegerVariable> it = m.getIntVarIterator();
     try {
       // aux variables
       int val;
       Set<String> newFeatures = new HashSet<String>();
       Set<String> newParents  = new HashSet<String>();
-          
+
       if (verbose)
         System.out.println("Adding new values:");
       while (it.hasNext()) {
@@ -177,8 +184,8 @@ public class ChocoSolver {
       it = m.getIntVarIterator();
       while (it.hasNext()) {
         IntegerVariable var = (IntegerVariable) it.next();
-        
-        // If it is a parent to include, set 
+
+        // If it is a parent to include, set
         if (newParents.contains(var.getName())) {
           if (verbose)
             System.out.println("  "+var+" (parent) -> 1");
@@ -191,8 +198,12 @@ public class ChocoSolver {
             if (verbose) System.out.println("  "+var+" (default) -> 1");
             s.getVar(var).setVal(1);
           // By default, unrefered features & attributes are false
+          } else if (defaultvals.containsKey(var.getName())) {
+            int defval = defaultvals.get(var.getName());
+            if (verbose) System.out.println("  "+var.getName()+" (default) -> "+defval);
+            s.getVar(var).setVal(defval);
           } else {
-            if (verbose) System.out.println("  "+var+" (default) -> 0");
+            if (verbose) System.out.println("  "+var.getName()+" (default) -> 0");
             s.getVar(var).setVal(0);
           }
         }
@@ -219,7 +230,7 @@ public class ChocoSolver {
 //       }
 //       System.out.println("Trying:\n"+result);
 //     }
-  
+
     return s.checkSolution();
   }
 
@@ -242,7 +253,7 @@ public class ChocoSolver {
   /* *************
   Experiments with the constraint solver!
   ************* */
-  
+
   public static void main(final String[] args) throws Exception {
 
     CPModel m = new CPModel();
@@ -254,13 +265,13 @@ public class ChocoSolver {
     IntegerVariable i2 = Choco.makeIntVar("i2",-10,100); //m.addVariable(i2);
     IntegerVariable i3 = Choco.makeIntVar("i3",-10,100); //m.addVariable(i3);
     IntegerVariable i4 = Choco.makeIntVar("i4",-10,100); //m.addVariable(i4);
-    
+
     IntegerVariable b1 = Choco.makeBooleanVar("b1"); //m.addVariable(b1);
     IntegerVariable b2 = Choco.makeBooleanVar("b2"); //m.addVariable(b2);
     IntegerVariable b3 = Choco.makeBooleanVar("b3"); //m.addVariable(b3);
     IntegerVariable b4 = Choco.makeBooleanVar("b4"); //m.addVariable(b4);
     IntegerVariable b5 = Choco.makeBooleanVar("b5"); //m.addVariable(b5);
-    
+
     m.addConstraint(
 //      Choco.and(Choco.eq(i1, 1), Choco.TRUE)
       Choco.or(Choco.eq(b1,1),Choco.eq(b2,1)) // b1 && b2
@@ -271,7 +282,7 @@ public class ChocoSolver {
     // Build the solver
     CPSolver s = new CPSolver();
 
-    if (verbose) 
+    if (verbose)
       System.out.println("####" + s.getConfiguration().stringPropertyNames());
 
     // print the problem
@@ -292,7 +303,7 @@ public class ChocoSolver {
     catch (Exception e1) {
       // Catch-all
       System.err.println("$$$ Failed to check solution... $$$");
-//       e1.printStackTrace();      
+//       e1.printStackTrace();
     }
     if (verbose)
       System.out.println(s.pretty());
