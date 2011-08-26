@@ -103,7 +103,7 @@ aspect OriginalCallResolver {
         }
         // construct call and pass on the original params
         System.out.println("*** replaced original call with call to: " + method.getMethodSig());
-        return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams());
+        return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams().fullCopy());
     }
     
     
@@ -177,7 +177,6 @@ aspect OriginalCallResolver {
         methodCopy.getMethodSig().setName(methodCopyID); 
         cm.addModifier(new AddMethodModifier(methodCopy));
         this.delta().addClassOrIfaceModifier(cm);
-        System.out.println("*** added ClassModifier: " + cm);
         return methodCopy;
     }
 

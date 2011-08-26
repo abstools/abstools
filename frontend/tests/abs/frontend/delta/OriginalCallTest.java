@@ -4,9 +4,12 @@
  */
 package abs.frontend.delta;
 
+import org.junit.Test;
 import static org.junit.Assert.*;
 
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.*;
 
@@ -24,10 +27,15 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         assertTrue(cls.getMethods().getNumChild() == 1);
         
         DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertTrue(delta.getClassOrIfaceModifiers().getNumChild() == 1);
+        
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        assertTrue(delta.getClassOrIfaceModifiers().getNumChild() == 2);
+        
         model.applyDelta(delta);
         
-        // FIXME - there should be two methods now??
-        assertTrue(cls.getMethods().getNumChild() == 1);
+        // there should be two methods now: original and added-by-delta
+        assertTrue(cls.getMethods().getNumChild() == 2);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
 
     }
