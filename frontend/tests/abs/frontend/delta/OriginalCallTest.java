@@ -37,6 +37,7 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         // there should be two methods now: original and added-by-delta
         assertTrue(cls.getMethods().getNumChild() == 2);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().startsWith("m_Orig"));
 
     }
 
