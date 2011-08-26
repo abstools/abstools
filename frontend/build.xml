@@ -108,7 +108,7 @@
 	</target>
 
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-		<javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off">
+		<javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8">
 			<classpath refid="compile.classpath" />
 		</javac>
 	</target>
