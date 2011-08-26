@@ -26,6 +26,7 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
         model.applyDelta(delta);
         
+        // FIXME - there should be two methods now??
         assertTrue(cls.getMethods().getNumChild() == 1);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
 
