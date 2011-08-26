@@ -47,8 +47,9 @@ delta D3 {
 // when the method is remove, or the class where the method
 // was defined is removed, there should be an error when calling original()
 delta D3a {
-    removes class Fruit
+    removes class Fruit;
 }
+
 delta D3b {
     modifies class Fruit {
         removes String get_name();
@@ -81,7 +82,7 @@ productline PL {
     delta D2 after D1 when Stuff;
     delta DX when Stuff;
     delta D3 after D2,DX when Stuff;
-    delta D3b after D2 when Stuff;
+//    delta D3b after D2 when Stuff;
     delta D4 after D3 when Stuff;
     delta D5 after D4 when Stuff;
 

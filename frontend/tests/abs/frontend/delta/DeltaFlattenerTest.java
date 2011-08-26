@@ -200,7 +200,7 @@ public class DeltaFlattenerTest extends FrontendTest {
 
     
     // helper method: find a Decl node in given module
-    private Decl findDecl(Model model, String moduleName, String name) {
+    protected Decl findDecl(Model model, String moduleName, String name) {
         Decl decl = null;
         out: for (ModuleDecl m : model.getModuleDecls()) {
             for (Decl d : m.getDecls()) {
