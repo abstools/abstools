@@ -193,7 +193,7 @@ aspect GenerateMaude {
         } else {
             stream.print("new(");
         }
-        stream.print("'" + var + " ; \"" + (((UnionType)getType()).getOriginatingClass()).qualifiedName() + "\" ; ");
+        stream.print("'" + var + " ; '" + (((UnionType)getType()).getOriginatingClass()).qualifiedName() + " ; ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -384,7 +384,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-		stream.println("\n\n< \"" + qualifiedName() + "\" : Class | Param: ");
+		stream.println("\n\n< '" + qualifiedName() + " : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
         } else {
@@ -610,7 +610,7 @@ aspect GenerateMaude {
 
     public void MainBlock.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.println("\n\n< \".Start\" : Class | Param: noVid,");
+        stream.println("\n\n< '.Start : Class | Param: noVid,");
         stream.print("  Att: ");
         if (getNumVar() == 0) {
             stream.print("noSubst");

@@ -322,8 +322,8 @@ endfm
 ***
 mod ABS-CID is
   protecting CONFIGURATION .
-  protecting STRING .
-  subsort String < Cid .
+  protecting QID .
+  subsort Qid < Cid .
 
   op Class : -> Cid [ctor] .
   op None : -> Cid [ctor] .
@@ -345,7 +345,7 @@ mod ABS-OID is
   subsort Oid < Data .
 
   --- Constructor of object names
-  op ob : String Nat -> Oid [ctor] .
+  op ob : Cid Nat -> Oid [ctor] .
 endm
 
 view Oid from TRIV to ABS-OID is
@@ -465,8 +465,8 @@ mod ABS-STATEMENT is
   op await_ : Expr -> Stmt [ctor format (b o d)] .
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
-  op new(_;_;_) : Vid String ExprList -> Stmt [ctor format (b d o b o b o b o)] .
-  op newcog(_;_;_;_) : Vid String ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o)] .
+  op new(_;_;_) : Vid Cid ExprList -> Stmt [ctor format (b d o b o b o b o)] .
+  op newcog(_;_;_;_) : Vid Cid ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o)] .
   op asynccall(_;_;_;_;_) : Vid Expr String ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op synccall(_;_;_;_;_) : Vid Expr String ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op original(_;_) : Vid ExprList -> Stmt [ctor format (b d o b o b o)] .
@@ -648,8 +648,8 @@ mod ABS-CONFIGURATION is
   op <_: Cog | Object:_ > : String Data -> Cog
     [ctor format (cn o! o c d d o! c on ) ] .
   --- Create a new fresh name for a cog
-  op newId : String Nat -> String .
-  eq newId(B, F)  = B + "-" + string(F,10) .
+  op newId : Qid Nat -> String .
+  eq newId(C:Qid, F)  = string(C:Qid) + "-" + string(F,10) .
 
 
   *** Useful for real-time maude, and in general for accessing the whole
@@ -1958,13 +1958,13 @@ mod ABS-SIMULATOR-RL is
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
-      < "main" : Cog | Object: ob("main", 0) >
-      < ob("main", 0) : "..." | Cog: "main", Att:  '.comp |-> null, 
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; B:String ; DL:DataList) },
+      < "main" : Cog | Object: ob('main, 0) >
+      < ob('main, 0) : '... | Cog: "main", Att:  '.comp |-> null, 
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main", 0) : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -1993,13 +1993,13 @@ mod ABS-SIMULATOR-EQ-TIMED is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
-      < "main" : Cog | Object: ob("main", 0) >
-      < ob("main", 0) : "..." | Cog: "main", Att: '.comp |-> null,
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; B:String ; DL:DataList) },
+      < "main" : Cog | Object: ob('main, 0) >
+      < ob('main, 0) : '... | Cog: "main", Att: '.comp |-> null,
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob("main", 0) : "..." | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
