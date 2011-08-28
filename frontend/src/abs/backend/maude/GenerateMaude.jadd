@@ -133,7 +133,7 @@ aspect GenerateMaude {
                      + (var.equals("_") ? ".staticfuture" : var)
                      + " ; ");
         getCallee().generateMaude(stream);
-        stream.print(" ; \"" + getMethod() + "\" ; ");
+        stream.print(" ; '" + getMethod() + " ; ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -156,7 +156,7 @@ aspect GenerateMaude {
         PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
         stream.print("synccall('.staticfuture ; ");
         getCallee().generateMaude(stream);
-        stream.print("; \"" + getMethod() + "\" ; ");
+        stream.print("; '" + getMethod() + " ; ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -423,7 +423,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        stream.print("< \"" + sig.getName() + "\" : Method | Param: ");
+        stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");
         } else {
@@ -622,7 +622,7 @@ aspect GenerateMaude {
             }
         }
         stream.print(",\n  Mtds: ");
-        stream.print("< \".init\" : Method | Param: noVid,\n");
+        stream.print("< '.init : Method | Param: noVid,\n");
         stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
@@ -650,7 +650,7 @@ aspect GenerateMaude {
                                         List<FieldDecl> fields,
                                         boolean isActiveClass) {
         boolean inlist = false;
-        stream.print("< \".init\" : Method | Param: noVid,\n");
+        stream.print("< '.init : Method | Param: noVid,\n");
         stream.print("      Code: ");
         // Process field initializers here
         for (FieldDecl field : fields) {
@@ -668,7 +668,7 @@ aspect GenerateMaude {
         if (inlist) stream.print("; "); else inlist = true;
         stream.print("return(null) ");
         if (isActiveClass) {
-            stream.print("; asynccall('.staticfuture ; 'this ; \"run\" ; emp ; \"InfDuration\"[ emp ]) ");
+            stream.print("; asynccall('.staticfuture ; 'this ; 'run ; emp ; \"InfDuration\"[ emp ]) ");
         }
         stream.print("> ");
     }
