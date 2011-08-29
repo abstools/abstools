@@ -1,0 +1,27 @@
+module M;
+interface I { Unit m(); }
+
+class X implements I {
+    Unit m() { }
+}
+
+
+delta D {
+    modifies class X implements I {
+        modifies Unit m() {
+            original();
+        }
+    }
+}
+
+productline PL {
+  features F;
+  delta D when F;
+}
+
+product P(F);
+
+
+{
+    I i = new X();
+}

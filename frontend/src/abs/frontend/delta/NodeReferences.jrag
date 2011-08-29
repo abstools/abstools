@@ -26,3 +26,9 @@ aspect Model {
     eq ModifyClassModifier.getModifier().getModel() = this.getModule().getModel();
     
 }
+
+// inform Modifier about the ModifyClassModifier where it was declared
+aspect ModifyClassModifier {
+    inh ModifyClassModifier Modifier.getModifyClassModifier();
+    eq ModifyClassModifier.getModifier().getModifyClassModifier() = this;
+}

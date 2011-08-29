@@ -26,7 +26,7 @@ aspect OriginalCallResolver {
      */
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        System.out.println("*** resolving in Delta: " + this.qualifiedName());
+//        System.out.println("*** resolving in Delta: " + this.qualifiedName());
         for (ClassOrIfaceModifier cm : this.getClassOrIfaceModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -73,7 +73,7 @@ aspect OriginalCallResolver {
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
         
         // found; replace
-        System.out.println("*** found: " + this);
+//        System.out.println("*** found: " + this);
         EffExp call = mod.constructNewCall(this, deltas);
         ASTNode parent = getParent();
         int i = parent.getIndexOfChild(this);
@@ -95,14 +95,14 @@ aspect OriginalCallResolver {
         if (method == null) {
             // find original MethodImpl and copy it
             MethodImpl original = findOriginal(methodid, classid, deltas);
-            System.out.println("*** found original: " + original.getMethodSig());
+//            System.out.println("*** found original: " + original.getMethodSig());
 
             method = copyOriginal(original);
             this.OriginalMethodImpl = method;
-            System.out.println("*** copied original: " + method.getMethodSig());
+//            System.out.println("*** copied original: " + method.getMethodSig());
         }
         // construct call and pass on the original params
-        System.out.println("*** replaced original call with call to: " + method.getMethodSig());
+//        System.out.println("*** replaced original call with call to: " + method.getMethodSig());
         return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams().fullCopy());
     }
     
@@ -115,10 +115,10 @@ aspect OriginalCallResolver {
             String classid, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
         
-        System.out.println("*** searching for method " + classid + "." + methodid);
+//        System.out.println("*** searching for method " + classid + "." + methodid);
         // search in list of applied deltas
         for (DeltaDecl delta : deltas) {
-            System.out.println("*** searching in delta " + delta.getName());
+//            System.out.println("*** searching in delta " + delta.getName());
             for (ClassOrIfaceModifier cm : delta.getClassOrIfaceModifiers()) {
                 if (cm.className().equals(classid)) {
                     if (cm instanceof ModifyClassModifier) {
@@ -152,7 +152,7 @@ aspect OriginalCallResolver {
         Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
         if (visibleSymbols.containsKey(symbol)) {
             ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
-            System.out.println("*** searching in core class " + cls.getName());
+//            System.out.println("*** searching in core class " + cls.getName());
             for (MethodImpl method : cls.getMethods()) {
                 if (method.getMethodSig().getName().equals(methodid))
                     return method;
@@ -170,6 +170,7 @@ aspect OriginalCallResolver {
     public MethodImpl ModifyMethodModifier.copyOriginal(MethodImpl method) {
         ModifyClassModifier cm = new ModifyClassModifier();
         cm.setName(this.className());
+        cm.setImplementedInterfaceUseList(this.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
         MethodImpl methodCopy = method.fullCopy();
         String uid = Integer.toHexString(UUID.randomUUID().hashCode());
         String methodCopyID = method.getMethodSig().getName() + "_Orig" + uid;
