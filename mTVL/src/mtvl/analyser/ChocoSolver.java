@@ -28,6 +28,7 @@ public class ChocoSolver {
   public final CPModel m;
   public final CPSolver s;
   public boolean solved = false;
+  public boolean newsol = false;
   public final Map<String,IntegerVariable> vars;
   public final Map<String,Integer> defaultvals;
   private boolean verbose = false;
@@ -114,9 +115,30 @@ public class ChocoSolver {
     // Read the model
     s.read(m);
     // Solve the model
-    solved = s.solve();
-    //solved = true;
-    return solved;
+    newsol = s.solve();
+
+    solved = true;
+    return newsol;
+  }
+
+  public int countSolutions() {
+    if (verbose) {
+      System.out.print("## The constraints:");
+      System.out.println(m.pretty());
+    }
+
+    // Read the model
+    s.read(m);
+    // Solve the model
+    s.solveAll();
+
+    return s.getNbSolutions();
+  }
+
+  public boolean solveAgain() {
+    if (!solved) newsol = solve();
+    else         newsol = s.nextSolution();
+    return newsol;
   }
 
   public Map<String,Integer> getSolution() {
@@ -136,8 +158,8 @@ public class ChocoSolver {
   public String resultToString() {
     if (!solved) solve();
 
-    if (!solved)
-      return "-- No solution found --\n";
+    if (!newsol)
+      return "-- No (more) solutions --\n";
 
     String result = "";
 

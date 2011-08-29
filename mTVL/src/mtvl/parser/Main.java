@@ -44,7 +44,10 @@ public class Main {
 
     protected boolean verbose = false ;
     protected boolean solve = false ;
+    protected boolean solveall = false ;
     protected boolean check = false ;
+    protected boolean numbersol = false ;
+    protected boolean ignoreattr = false ;
 
     public static void main(final String[] args) throws Exception {
         new Main().parse(args);
@@ -52,14 +55,20 @@ public class Main {
 
     public java.util.List<String> parseArgs(String[] args) throws Exception {
         ArrayList<String> remaindingArgs = new ArrayList<String>();
-        
+
         for (String arg : args) {
             if (arg.equals("-v")) {
                 verbose = true;
             } else if (arg.equals("-s")) {
                 solve = true;
+            } else if (arg.equals("-S")) {
+                solveall = true;
             } else if (arg.equals("-c")) {
                 check = true;
+            } else if (arg.equals("-n")) {
+                numbersol = true;
+            } else if (arg.equals("-a")) {
+                ignoreattr = true;
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else {
@@ -135,7 +144,11 @@ public class Main {
 
         Model m = new Model(unitList);
         abs.frontend.ast.Model fsm = new abs.frontend.ast.Model(fsunitList);
-        
+
+        // drop attributes before calculating any attribute
+        if (ignoreattr)
+          m.dropAttributes();
+
         // Dump tree for debug
         if (verbose){ 
             System.out.println("### MTVL Result:");
@@ -166,6 +179,14 @@ public class Main {
             ChocoSolver s = m.getCSModel(verbose);
             System.out.print(s.resultToString());
           }
+          if (solveall) {
+            ChocoSolver s = m.getCSModel(verbose);
+            int i=1;
+            while(s.solveAgain()) {
+              System.out.println("------ "+(i++)+"------");
+              System.out.print(s.resultToString());
+            }
+          }
           if (check) {
             ChocoSolver s = m.getCSModel(verbose);
             Map<String,Integer> guess = new HashMap<String,Integer>();
@@ -177,6 +198,14 @@ public class Main {
                 System.out.println("Maybe you forgot the module name?");
             }
 
+          }
+          if (numbersol && !ignoreattr) {
+            ChocoSolver s = m.getCSModel(verbose);
+            System.out.println("Number of solutions found: "+s.countSolutions());
+          } else
+          if (numbersol && ignoreattr) {
+            ChocoSolver s = m.getCSModel(verbose);
+            System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
           }
 //           else {
 //             ChocoSolver s = m.getCSModel(verbose);

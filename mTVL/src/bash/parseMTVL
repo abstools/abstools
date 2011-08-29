@@ -23,8 +23,11 @@ function usage
     echo "  <mtvlfiles>    mTVL files to parse" 
     echo "Options:"
     echo "  -v            verbose output" 
-    echo "  -s            solve constraint satisfaction problem" 
+    echo "  -s            solve constraint satisfaction problem (CSP)" 
+    echo "  -S            get ALL solutions for the CSP" 
     echo "  -c            check satisfiability of a feature selection" 
+    echo "  -n            count the number of solutions" 
+    echo "  -a            ignore the attributes" 
     echo "  -h            print help message"
 
 }
@@ -46,14 +49,17 @@ function help
      exit 0
 }
 
-while getopts "h v s c" Option
+while getopts "h v s S c n a" Option
 #while getopts "h o: v t" Option	# Note: "o:" means "-o" takes an arg.
 do
   case $Option in
     h ) help;; 
     v ) verbose="-v";;
     s ) solve="-s";;
+    S ) solveall="-S";;
     c ) check="-c";;
+    n ) n="-n";;
+    a ) a="-a";;
 #    t ) typecheck="-t";;
 #    o ) outfile=$OPTARG;;
     * ) usage; exit 1;;
@@ -80,7 +86,7 @@ fi
 
 if [ -n "$1" ] ; then
     java -cp $BASEDIR/lib/beaver.jar:$BASEDIR/bin:$BASEDIR/lib/choco-solver-2.1.1.jar:$BASEDIR/../frontend/bin/ \
-        mtvl.parser.Main $verbose $solve $check $@
+        mtvl.parser.Main $verbose $solve $solveall $check $n $a $@
 else
     echo $progname: "No mTVL files specified"
 fi
