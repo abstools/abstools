@@ -76,6 +76,29 @@ public class AddRemoveInterfacesTest extends DeltaFlattenerTest {
     }
 
     @Test
+    public void addIface3() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I { Unit m() {} }"
+                + "delta D { "
+                + "adds interface J {}"
+                + "modifies class C implements I,J { modifies Unit m() {} } "
+                + "}"
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        model.applyDelta(delta);
+        
+        // make sure the class implements I and J
+        // FIXME!!!
+        assertTrue(cls.getImplementedInterfaceUseList().getNumChild() == 3);
+        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I"));
+        assertTrue(cls.getImplementedInterfaceUse(1).getName().equals("I"));
+        assertTrue(cls.getImplementedInterfaceUse(2).getName().equals("J"));
+    }
+
+    @Test
     public void keepIface() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
