@@ -13,6 +13,29 @@ import abs.frontend.delta.exceptions.*;
 public class AddRemoveInterfacesTest extends DeltaFlattenerTest {
 
     @Test
+    public void addIface() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I { Int fooi(); }"
+                + "delta D {"
+                + "adds interface J { Int fooj(); }"
+                + "}"
+        );
+
+        InterfaceDecl ifaceI = (InterfaceDecl) findDecl(model, "M", "I");
+        assertNotNull(ifaceI);
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertNotNull(delta);
+        InterfaceDecl ifaceJ = (InterfaceDecl) findDecl(model, "M", "J");
+        assertNull(ifaceJ);
+
+        model.applyDelta(delta);
+        ifaceJ = (InterfaceDecl) findDecl(model, "M", "J");
+        assertNotNull(ifaceJ);
+    }
+
+
+    @Test
     public void addIface1() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"

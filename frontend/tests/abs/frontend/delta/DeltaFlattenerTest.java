@@ -120,27 +120,6 @@ public class DeltaFlattenerTest extends FrontendTest {
         assertTrue(cls.getMethod(0).toString().equals(mm.getMethodImpl().toString()));
     }
 
-    @Test
-    public void addInterface() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M; \n"
-                + "interface I1 { Int foo1(); } \n"
-                + "delta D { \n"
-                + "adds interface I2 { Int foo2(); } \n"
-                + "}\n");
-
-        InterfaceDecl iface1 = (InterfaceDecl) findDecl(model, "M", "I1");
-        assertNotNull(iface1);
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertNotNull(delta);
-        InterfaceDecl iface2 = (InterfaceDecl) findDecl(model, "M", "I2");
-        assertNull(iface2);
-
-        model.applyDelta(delta);
-        iface2 = (InterfaceDecl) findDecl(model, "M", "I2");
-        assertNotNull(iface2);
-    }
-
     
     // helper method: find a Decl node in given module
     protected Decl findDecl(Model model, String moduleName, String name) {
