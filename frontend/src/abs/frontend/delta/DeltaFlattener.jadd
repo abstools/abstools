@@ -102,8 +102,10 @@ aspect Flattener {
 
         }
         
-        // reset the list of implemented interfaces
-        cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
+        // reset the list of implemented interfaces only if the ClassModifier explicitly has 'implements' statement
+        // FIXME this will become obsolote when we change the syntax to allow "modifies class X add/removes I"
+        if (this.getImplementedInterfaceUseList().hasChildren())
+            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
         
         // apply all modifiers
         for (Modifier mod : this.getModifiers()) {
