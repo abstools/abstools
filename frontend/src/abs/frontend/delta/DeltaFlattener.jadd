@@ -85,8 +85,10 @@ aspect Flattener {
 
         boolean doFlushCache = false;
         for (InterfaceTypeUse iface : this.getImplementedInterfaceUseList()) {
-            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
+            // add any new interfaces added by the ClassModifier
+            cls.addImplementedInterfaceUse(iface.fullCopy());
             
+            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
             if (! visibleSymbols.containsKey(symbol)) {
                 // FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
                 // if unqualified, need to find module where symbol was declared
@@ -104,8 +106,8 @@ aspect Flattener {
         
         // reset the list of implemented interfaces only if the ClassModifier explicitly has 'implements' statement
         // FIXME this will become obsolote when we change the syntax to allow "modifies class X add/removes I"
-        if (this.getImplementedInterfaceUseList().hasChildren())
-            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
+//        if (this.getImplementedInterfaceUseList().hasChildren())
+//            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
         
         // apply all modifiers
         for (Modifier mod : this.getModifiers()) {

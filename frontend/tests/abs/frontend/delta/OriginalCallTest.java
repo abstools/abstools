@@ -42,44 +42,4 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         assertTrue(cls.getMethod(1).getMethodSig().getName().startsWith("m_Orig"));
     }
 
-    @Test
-    public void keepIface() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} }"
-                + "delta D { "
-                + "modifies class C { modifies Unit m() {} } "
-                + "}"
-        );
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        model.applyDelta(delta);
-        
-        // make sure the class still implements interface I
-        assertTrue(cls.getImplementedInterfaceUseList().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I"));
-    }
-
-    @Test
-    public void redefineIface() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M;"
-                + "interface I {}"
-                + "class C implements I { Unit m() {} }"
-                + "delta D { "
-                + "adds interface J {}"
-                + "modifies class C implements I,J { modifies Unit m() {} } "
-                + "}"
-        );
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        model.applyDelta(delta);
-        
-        // make sure the class now implements interface J
-        assertTrue(cls.getImplementedInterfaceUseList().getNumChild() == 2);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I"));
-        assertTrue(cls.getImplementedInterfaceUse(1).getName().equals("J"));
-    }
-
 }

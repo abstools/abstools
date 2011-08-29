@@ -39,63 +39,6 @@ public class DeltaFlattenerTest extends FrontendTest {
     }
     
     @Test
-    public void modifyClass1() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M; \n"
-                + "interface I1 { Int foo1(); } \n"
-                + "class C implements I1 { Int foo1() { return 1; } } \n"
-                + "delta D { \n"
-                + "adds interface I2 { Int foo2(); } \n"
-                + "modifies class C implements I1,I2 { adds Int foo2() { return 2; } } \n"
-                + "}\n");
-
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertNotNull(cls);
-        InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I1");
-        assertNotNull(iface);
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertNotNull(delta);
-
-        assertTrue(cls.getMethods().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUses().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I1"));
-        
-        model.applyDelta(delta);
-        assertTrue(cls.getMethods().getNumChild() == 2);
-        assertTrue(cls.getImplementedInterfaceUses().getNumChild() == 2);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I1"));
-        assertTrue(cls.getImplementedInterfaceUse(1).getName().equals("I2"));
-    }
-
-    @Test
-    public void modifyClass2() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M; \n"
-                + "interface I1 { Int foo1(); } \n"
-                + "class C implements I1 { Int foo1() { return 1; } } \n"
-                + "delta D { \n"
-                + "adds interface I2 extends I1 { Int foo2(); } \n"
-                + "modifies class C implements I2 { adds Int foo2() { return 2; } } \n"
-                + "}\n");
-
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertNotNull(cls);
-        InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I1");
-        assertNotNull(iface);
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertNotNull(delta);
-
-        assertTrue(cls.getMethods().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUses().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I1"));
-        
-        model.applyDelta(delta);
-        assertTrue(cls.getMethods().getNumChild() == 2);
-        assertTrue(cls.getImplementedInterfaceUses().getNumChild() == 1);
-        assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I2"));
-    }
-
-    @Test
     public void addField() throws ASTNodeNotFoundException {
         Model model = assertParseOk("module M; class C {} delta D { modifies class C { adds String myField = \"hello\"; } }");
 
