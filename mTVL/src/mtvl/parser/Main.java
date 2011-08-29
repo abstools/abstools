@@ -101,23 +101,31 @@ public class Main {
                 printErrorAndExit("Illegal option "+file);
             }
 
-            if (isABSPackageFile(new File(file))) {
-                parseABSPackageFile(fsunits, units, new File(file));
-            }
             else try{
-                if (checkfst && (product == null))
-                  product = file;
-                else if (checkfst) {
-                  System.out.println("parsing ABS file:  "+file);
-//                  fsunit = parseFSUnit(new File(file));
-                  fsunits.add(parseFSUnit(new File(file)));
-                  checkfst = false;
+//                if (checkfst && (product == null))
+//                  product = file;
+//                else if (checkfst) {
+//                  System.out.println("parsing ABS file:  "+file);
+////                  fsunit = parseFSUnit(new File(file));
+//                  fsunits.add(parseFSUnit(new File(file)));
+//                  checkfst = false;
+//                }
+//                else{
+//                  System.out.println("parsing mTVL file: "+file);
+//                  units.add(parseUnit(new File(file)));
+//                }
+                if (checkfst && (product == null)) {
+                    product = file;
+                    checkfst = false;
                 }
-                else{
-                  System.out.println("parsing mTVL file: "+file);
-                  units.add(parseUnit(new File(file)));
-                }
-                
+                else if (file.endsWith(".abs"))
+                    fsunits.add(parseFSUnit(new File(file)));
+                else if(file.endsWith(".mtvl"))
+                    units.add(parseUnit(new File(file)));
+                else if (isABSPackageFile(new File(file)))
+                    parseABSPackageFile(fsunits, units, new File(file));
+
+
             } catch (FileNotFoundException e1) {
                 printErrorAndExit("File not found: " + file);
             } catch (ParseException pex) {
