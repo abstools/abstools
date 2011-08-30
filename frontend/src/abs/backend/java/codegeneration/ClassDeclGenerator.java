@@ -19,6 +19,7 @@ import abs.backend.java.lib.types.ABSClass;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.typechecker.InterfaceType;
@@ -235,9 +236,10 @@ public class ClassDeclGenerator extends CodeGenerator {
         if (!decl.isForeign())
             stream.print("final ");
         stream.print("class "+className+" extends "+ABSObject.class.getName()+" implements "+ABSClass.class.getName());
-        for (InterfaceType itype : ((UnionType)decl.getType()).getTypes()) {
-            String qualifiedName = JavaBackend.getQualifiedString(itype.getDecl());
-            stream.print(", "+qualifiedName);
+        
+        for (InterfaceTypeUse use : decl.getImplementedInterfaceUses()) {
+            String iname = JavaBackend.getQualifiedString(((InterfaceType)use.getType()).getDecl());
+            stream.print(", "+iname);
         }
     }
 
