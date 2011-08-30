@@ -54,4 +54,25 @@ public class AddImportsTest extends DeltaFlattenerTest {
         // the compiler needs to add an "import M2.I" to M1 
 
     }
+
+    @Test
+    public void donotAddImport() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M1; export *;"
+                + "class C {}"
+                
+                + "module M2; export *;"
+                + "interface I { Unit m(); }"
+                
+                + "module MD;"
+                + "import * from M1;"
+                + "delta D { "
+                + "modifies class C implements I { adds Unit m() {} } "
+                + "}"
+        );
+        
+        // the compiler should not add an import, because the delta cannot see I!
+
+    }
+
 }
