@@ -301,7 +301,7 @@ public class JavaJob extends Job {
 			if (debugMode) System.err.println("Not a absolute path of a directory: "+path.getAbsolutePath());
 			throw new AbsJobException("Path is not an absolute path of a directory");
 		}
-		String args = "-1.6 "+noWarn+" -classpath "+"\""+absFrontendLocation+"\""+" "+"\""+path.getAbsolutePath()+"\"";
+		String args = "-1.5 "+noWarn+" -classpath "+"\""+absFrontendLocation+"\""+" "+"\""+path.getAbsolutePath()+"\"";
 		if (debugMode) System.out.println("arguments: "+args);
 	
 		//console
