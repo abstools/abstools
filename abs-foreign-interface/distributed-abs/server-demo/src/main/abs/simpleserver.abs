@@ -1,0 +1,117 @@
+module SimpleServer;
+
+import * from FLI.SocketUtils;
+import * from FLI.StreamUtils;
+import * from FLI.SystemUtils;
+import * from ReplicationSystem.ReplicationSockets;
+
+interface ServerEnd {
+	Unit write(Int i);
+	Int read();
+}
+
+interface Server {
+	ServerEnd accept();
+}
+
+class Worker(InputStream input, OutputStream output) 
+implements ServerEnd {
+
+	Unit write(Int i) { 
+		await output != null;
+		Fut<Feedback<Unit>> fw = output!writeInt(i);
+		Feedback<Unit> result = fw.get; 
+		assert isOK(result);
+	}
+	
+	Int read() {
+		await input != null;
+		Fut<Feedback<Int>> f = input!readInt();
+		Feedback<Int> fb = f.get;
+		
+		Int r = -1;
+		if (isResult(fb)) {
+			r = result(fb);
+		}
+		
+		return r; 
+	}
+} 
+
+[COG] 
+class SimpleServer(String name, [Far] SocketProvider provider, Int port) 
+implements Server {
+
+	System sys = null;
+	ServerSocket serversocket = null;
+	Int timeout = 1000;
+
+	Unit run() {
+		sys = new System();
+		
+		Fut<ServerSocket> fs = provider!newServerSocket(); 
+		serversocket = fs.get;
+
+		Fut<Feedback<Unit>> fut = serversocket!bind(port);
+		Feedback<Unit> result = fut.get;
+		if (isError(result)) {
+			sys.outPrintln(error(result));
+			assert False;
+		}
+		
+		sys.outPrint("Server: "+name+" Binded to ");
+		sys.outPrintln(intToString(port));
+		
+		fut = serversocket!setSoTimeout(timeout);
+		result = fut.get;
+		if (isError(result)) {
+			sys.outPrintln(error(result));
+			assert False;
+		}
+		
+		sys.outPrint("Server: "+name+" Set timeout to ");
+		sys.outPrintln(intToString(timeout));
+
+	}
+	
+	ServerEnd accept() {
+		Fut<Feedback<Socket>> fut2 = serversocket!accept();
+		Feedback<Socket> result2 = fut2.get;
+		
+		while (isError(result2)) {
+			sys.outPrintln(error(result2));
+			fut2 = serversocket!accept();
+			result2 = fut2.get;
+		}
+		
+		sys.outPrintln("Server: "+name+" Accepted connection");
+		
+		Socket socket = result(result2);
+		Fut<InputStream> fis = socket!getInputStream();
+		sys.outPrintln("Server: "+name+" Obtain input stream");
+				 
+		Fut<OutputStream> fos = socket!getOutputStream();
+		sys.outPrintln("Server: "+name+" Obtain output stream"); 
+		
+		InputStream input = fis.get;
+		OutputStream output = fos.get;
+		ServerEnd node = new cog Worker(input,output);
+		return node;
+	}
+		
+}
+
+{
+	System sys = new System();
+	SocketProvider provider = new cog SocketProviderImpl();
+	Server server = new cog SimpleServer("server:20180",provider,20180);
+	Fut<ServerEnd> g = server!accept(); ServerEnd w1 = g.get;
+		
+	Fut<Int> r; 
+	Int c = 1;
+	while (c < 100) {
+		r = w1!read(); Int a1 = r.get;
+		sys.outPrintln(intToString(a1));
+		c = c + 1;
+	}
+}

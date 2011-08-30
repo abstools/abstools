@@ -1,0 +1,75 @@
+module SimpleClient;
+
+import * from FLI.SocketUtils;
+import * from FLI.StreamUtils;
+import * from FLI.SystemUtils;
+import * from ReplicationSystem.ReplicationSockets;
+
+interface Client {
+	Unit write(Int i);
+	Int read();
+}
+
+class SimpleClient(String name, [Far] SocketProvider provider, Int port) 
+implements Client {
+
+	System sys = null;
+	InputStream input = null;
+	OutputStream output = null;
+	Socket socket = null;
+
+	Unit run() {
+		sys = new System();
+		
+		Feedback<Unit> result = Error("Not done");
+		Fut<Socket> fs = provider!newSocket(); 
+		socket = fs.get;
+		while (isError(result)) {
+			Fut<Feedback<Unit>> fut = socket!connect("localhost",port,0);
+			result = fut.get;
+		}
+		
+		sys.outPrint("Client: "+name+" Connected to "); sys.outPrintln(intToString(port));
+		
+		Fut<InputStream> fis = socket!getInputStream(); input = fis.get;
+		sys.outPrintln("Client: "+name+" Obtain input stream");
+		
+		Fut<OutputStream> fos = socket!getOutputStream(); output = fos.get;
+		sys.outPrintln("Client: "+name+" Obtain output stream");
+	}
+	
+	Unit write(Int i) { 
+		await output != null;
+		Fut<Feedback<Unit>> fw = output!writeInt(i);
+		Feedback<Unit> result = fw.get; 
+		assert isOK(result);
+	}
+	
+	Int read() {
+		await input != null;
+		Fut<Feedback<Int>> f = input!readInt();
+		Feedback<Int> fb = f.get;
+		
+		Int r = -1;
+		if (isResult(fb)) {
+			r = result(fb);
+		}
+		
+		return r; 
+	} 
+	
+}
+
+{
+	System sys = new System();
+	SocketProvider provider = new cog SocketProviderImpl();
+	Client client = new cog SimpleClient("client1:20180",provider,20180);
+		
+	Fut<Unit> f;
+	Int c = 1; 
+	while (c < 100) {
+		f = client!write(c); f.get;
+		sys.outPrintln(intToString(c));
+		c = c + 1;
+	}
+}

@@ -1,0 +1,118 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>eu.hats-project</groupId>
+	<artifactId>server-demo</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<name>Distributed Server</name>
+	
+	<properties>
+		<encoding>UTF-8</encoding>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<abs.target>${project.build.directory}/generated-sources</abs.target>
+
+		<maven.version>2.2.1</maven.version>
+		<maven.compiler.source>1.6</maven.compiler.source>
+		<maven.compiler.target>1.6</maven.compiler.target>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>replication-system</groupId>
+			<artifactId>replication-connect</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<scope>compile</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>abs-java-utils</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>replication-system</groupId>
+			<artifactId>replication-connection-java</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>eu.hats-project</groupId>
+			<artifactId>absfrontend</artifactId>
+			<version>1.0-SNAPSHOT</version>
+			<type>jar</type>
+		</dependency>		
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<!-- copy properties -->
+					<execution>
+						<id>copy-properties</id>
+						<phase>process-sources</phase>
+						<configuration>
+							<target>
+								<copy file="${basedir}/src/main/resources/absfli-option.properties"
+									  todir="${abs.target}" />
+								<copy todir="${project.build.outputDirectory}" >
+									<fileset dir="${abs.target}"></fileset>
+							 	</copy>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>eu.hats-project</groupId>
+				<artifactId>abs-maven-plugin</artifactId>
+				<version>1.0-SNAPSHOT</version>
+				<executions>
+					<execution>
+						<id>generate-abs-test</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>genjava</goal>
+						</goals>
+						<configuration>
+							<absJavaBackendTargetFolder>${abs.target}</absJavaBackendTargetFolder>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.1</version>
+				<executions>
+					<execution>
+						<id>executes-abs-test</id>
+						<phase>test</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>java</executable>
+							<arguments>
+								<argument>-Dabs.fli.properties=absfli-option.properties</argument>
+								<argument>-classpath</argument>
+            					<classpath/>
+            					<argument>SimpleClient.Main</argument>
+							</arguments>						
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
