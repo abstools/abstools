@@ -114,7 +114,7 @@ public class AddRemoveInterfacesTest extends DeltaFlattenerTest {
         model.applyDelta(delta);
         
         // make sure the class implements I and J
-        // FIXME!!!
+        // FIXME?
         assertTrue(cls.getImplementedInterfaceUseList().getNumChild() == 3);
         assertTrue(cls.getImplementedInterfaceUse(0).getName().equals("I"));
         assertTrue(cls.getImplementedInterfaceUse(1).getName().equals("I"));

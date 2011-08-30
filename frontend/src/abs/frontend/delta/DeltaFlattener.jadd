@@ -76,7 +76,9 @@ aspect Flattener {
         // make sure cls can see each of its implemented interfaces
         
         ModuleDecl clsmodule = cls.getModule();
-        Map<KindedName, ResolvedName> visibleSymbols = clsmodule.getVisibleNames();
+        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
+        ModuleDecl thismodule = this.getModule();
+        Map<KindedName, ResolvedName> deltaVisibleSymbols = thismodule.getVisibleNames();
         
 //        for (KindedName n : visibleSymbols.keySet())
 //            System.out.println("****** Visible: " + n);
@@ -89,17 +91,21 @@ aspect Flattener {
             cls.addImplementedInterfaceUse(iface.fullCopy());
             
             KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
-            if (! visibleSymbols.containsKey(symbol)) {
-                // FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
-                // if unqualified, need to find module where symbol was declared
-                
-                // make it visible by adding Import
-                List<Name> names = new List<Name>();
-                names.add(new Name(iface.getName()));
-//                FromImport newimport = new FromImport(names, iface.getModule().getName());
-                NamedImport newimport = new NamedImport(names);
-                clsmodule.addImport(newimport);
-                doFlushCache = true;
+            if (deltaVisibleSymbols.containsKey(symbol)) {
+                if (! clsVisibleSymbols.containsKey(symbol)) {
+                    /* FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
+                   if unqualified, the challenge is to find the ModuleDecl where symbol was declared
+                   -> use the list of symbols visible from the delta
+                     */
+
+                    // make it visible by adding Import
+                    List<Name> names = new List<Name>();
+                    names.add(new Name(iface.getName()));
+                    //                FromImport newimport = new FromImport(names, iface.getModule().getName());
+                    NamedImport newimport = new NamedImport(names);
+                    clsmodule.addImport(newimport);
+                    doFlushCache = true;
+                }
             }
 
         }
