@@ -13,8 +13,27 @@ import org.apache.maven.plugin.logging.Log;
  * @author pwong
  */
 abstract class MTVLParser {
+    
+    protected void parseMTVL( File mTVL,
+            File absSrcFolder,
+            List<String> absArguments, 
+            String productName,
+            boolean verbose,
+            boolean checkProductSelection,
+            Log log) throws MojoExecutionException {
+        
+        try {
+            if (productName != null && checkProductSelection) {
+                parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, false, true, false, log);
+            } else {
+                parseMTVL(mTVL, absSrcFolder, absArguments, null, verbose, false, false, true, log);
+            }
+        } catch (Exception e) {
+            throw new MojoExecutionException("Could not parse mTVL model", e);
+        }
+    }
 
-    protected void parseMTVL(
+    private void parseMTVL(
             File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
@@ -22,6 +41,7 @@ abstract class MTVLParser {
             boolean verbose,
             boolean solve,
             boolean satifiability,
+            boolean solutions,
             Log log) throws Exception {
         
         if (productName == null && satifiability) {
@@ -50,6 +70,11 @@ abstract class MTVLParser {
         
         if (satifiability) {
             args.add("-c");
+        }
+        
+        if (solutions) {
+            args.add("-n");
+            args.add("-a"); // not sure what happens if attributes have infinite domain
         }
         
         if (productName != null) {

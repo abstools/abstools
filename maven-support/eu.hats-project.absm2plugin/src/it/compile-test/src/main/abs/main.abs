@@ -12,6 +12,44 @@ class C(Int x) implements I {
 	Int getNMinusOne() { return x - 1; } 
 }
 
-{
-  I i = new C(3);
+class Main {
+	Unit run() {
+		I i = new C(3);	
+	}
 }
+
+{
+  new Main();
+}
+
+module D; 
+export *; 
+import * from M;
+
+delta D {
+	//adds interface J {
+	//	Unit o();
+	//}
+
+	modifies class C { //implements J {
+		adds Unit o() { }
+	}
+	
+	modifies class Main {
+		modifies Unit run() {
+			original();
+			//J j = new C(4);
+		}
+	} 
+}
+
+module P;
+
+import * from D;
+
+productline PL {
+	features F;
+	delta D when F;
+}
+
+product P1(F);

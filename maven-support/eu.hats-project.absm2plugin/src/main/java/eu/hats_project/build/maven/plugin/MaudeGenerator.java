@@ -63,23 +63,8 @@ public class MaudeGenerator extends MTVLParser {
         args.add("-o");
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
+        super.parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, checkProductSelection, log);
         if (productName != null) {
-            
-            if (checkProductSelection) {
-                try {
-                    super.parseMTVL(mTVL, 
-                            absSrcFolder, 
-                            absArguments, 
-                            productName, 
-                            verbose, 
-                            false, 
-                            true, 
-                            log);
-                } catch (Exception e) {
-                    throw new MojoExecutionException("Could not parse mTVL model", e);
-                }   
-            }
-                
             args.add("-product="+productName);
         }
         

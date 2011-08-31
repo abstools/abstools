@@ -7,60 +7,35 @@ import java.util.List;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
-import abs.backend.java.JavaBackend;
+import abs.frontend.parser.Main;
 
 /**
- * 
+ * ABS Type Checker
  * @author pwong
  *
  */
-public class JavaGenerator extends MTVLParser {
-    
-    /**
-     * 
-     * @param absfrontEnd The frontend jar
-     * @param absSrcFolder 
-     * @param absArguments
-     * @param absJavaBackendTargetFolder
-     * @param verbose
-     * @param sourceOnly
-     * @param stdlib
-     * @param loctype 
-     * @param productName
-     * @param log 
-     * @param checkProductSelection 
-     * @param mTVL 
-     * @throws MojoExecutionException
-     */
-    void generateJava(File absfrontEnd, 
+public class TypeChecker extends MTVLParser {
+
+    void typeCheck(File absfrontEnd, 
             File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
-            File absJavaBackendTargetFolder, 
             boolean checkProductSelection,
-            boolean verbose, 
-            boolean sourceOnly,
+            boolean verbose,
             boolean stdlib, 
             boolean loctype, 
             String productName, 
             Log log) throws MojoExecutionException {
         
-        if (!absJavaBackendTargetFolder.exists()) {
-            if (!absJavaBackendTargetFolder.mkdirs()) {
-                throw new MojoExecutionException("Could not create target folder " + absJavaBackendTargetFolder);
-            }
-        }
-
         if (!absSrcFolder.exists()) {
             throw new MojoExecutionException("Source folder does not exist");
         }
-
+        
         List<String> args = new ArrayList<String>();
         System.setProperty("java.class.path",absfrontEnd.getAbsolutePath());
-        args.add("-d");
-        args.add(absJavaBackendTargetFolder.getAbsolutePath());
-        
+
         super.parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, checkProductSelection, log);
+        
         if (productName != null) {
             args.add("-product="+productName);
         }
@@ -73,10 +48,6 @@ public class JavaGenerator extends MTVLParser {
             args.add("-loctypes");
         }
         
-        if (sourceOnly) {
-            args.add("-sourceonly");
-        }
-        
         if (verbose) {
             args.add("-v");
         }
@@ -84,8 +55,10 @@ public class JavaGenerator extends MTVLParser {
         args.addAll(absArguments);
         
         String[] argArray = args.toArray(new String[args.size()]);
-        new DebugArgOutput().debug("Generating Java Code", argArray, log);
+        new DebugArgOutput().debug("Type checking ABS modules", argArray, log);
         
-        JavaBackend.main(argArray);
+        Main.main(argArray);
+        
     }
+    
 }

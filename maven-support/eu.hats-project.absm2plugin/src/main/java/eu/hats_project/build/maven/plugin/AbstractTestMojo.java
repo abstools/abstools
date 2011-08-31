@@ -47,8 +47,8 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
             return;
         }
         
-        if (generateRunner && mainBlock != null) {
-            throw new MojoExecutionException("Cannot generated test runner must reside in module "
+        if (generateRunner && ! (mainBlock == null || ABSTestRunnerGenerator.RUNNER_MAIN.equals(mainBlock))) {
+            throw new MojoExecutionException("Cannot generated test runner: Main block must reside in module "
                     + ABSTestRunnerGenerator.RUNNER_MAIN);
         } else if (! generateRunner && mainBlock == null) {
             throw new MojoExecutionException("A main block has not been specified");
