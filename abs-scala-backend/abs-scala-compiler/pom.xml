@@ -47,6 +47,11 @@
       <version>${scala.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.scala-lang.plugins</groupId>
+      <artifactId>continuations</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+    <dependency>
       <groupId>eu.hats-project</groupId>
       <artifactId>absfrontend</artifactId>
       <version>1.0-SNAPSHOT</version>

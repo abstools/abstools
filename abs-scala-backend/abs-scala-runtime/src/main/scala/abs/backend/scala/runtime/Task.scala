@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * This file is licensed under the terms of the Modified BSD License.
+ */
 package abs.backend.scala.runtime
 
 import akka.actor.FSM
@@ -10,16 +14,15 @@ object Runner {
   sealed abstract class Message
   case object Run extends Message
   
-  val currentRunner: ThreadLocal[Runner] = new ThreadLocal()
+  val currentRunner: ThreadLocal[Runner[_]] = new ThreadLocal()
 }
 
-//class Runner(private val cog: ActorRef, private val task: ActorRef, private val f: () => Any @suspendable, cogRemote: Array[Byte]) extends Actor {
-class Runner(private val cog: Array[Byte], private val task: ActorRef, private val f: () => Any @suspendable) extends Actor {
+class Runner[A](private val cog: Array[Byte], private val task: ActorRef, private val f: () => A @suspendable) extends Actor {
   
   private var schedCont: Unit => Unit = null
   private var taskCont: Unit => Unit = null
   
-  private var result: Any = _
+  private var result: A = _
   
   def await(cond: => Boolean): Unit @suspendable = {
     EventHandler.debug(this, "Runner awaiting")
@@ -28,8 +31,9 @@ class Runner(private val cog: Array[Byte], private val task: ActorRef, private v
     shift {
       k : (Unit => Unit) => {        
         taskCont = k
-        if (schedCont != null)
-          schedCont()
+        Runner.currentRunner.remove
+        //if (schedCont != null)
+        //  schedCont()
       }
     }
   }
@@ -48,8 +52,9 @@ class Runner(private val cog: Array[Byte], private val task: ActorRef, private v
     shift {
       k : (Unit => Unit) => {        
         taskCont = k
-        if (schedCont != null)
-          schedCont()
+        Runner.currentRunner.remove
+        //if (schedCont != null)
+        //  schedCont()
       }
     }
   }
@@ -58,11 +63,21 @@ class Runner(private val cog: Array[Byte], private val task: ActorRef, private v
     EventHandler.debug(this, "starting task")
     result = f()
     EventHandler.debug(this, "task done, retval: %s".format(result))
+    Runner.currentRunner.remove
     task ! Task.Done(result)
-    schedCont()
+    //schedCont()
   }
 
   private def work {
+    if (taskCont == null) {
+      EventHandler.debug(this, "task not started, starting")
+      start
+    }
+    else {
+      EventHandler.debug(this, "continuing suspended task")
+      taskCont()
+    }
+    /*
     reset {
       EventHandler.debug(this, "task working")
       Runner.currentRunner.set(this)
@@ -85,6 +100,7 @@ class Runner(private val cog: Array[Byte], private val task: ActorRef, private v
       EventHandler.debug(this, "work done")
       Runner.currentRunner.remove
     }
+    */
   }
     
   def receive = {
@@ -100,7 +116,6 @@ class Runner(private val cog: Array[Byte], private val task: ActorRef, private v
 
 object Task {
   sealed abstract class TaskMessage
-  //case class Run(cogRemote: Array[Byte]) extends TaskMessage
   case object Run extends TaskMessage
   case class Done(result: Any) extends TaskMessage
   case object Get extends TaskMessage
@@ -114,8 +129,7 @@ object Task {
   case object DONE extends State
 }
 
-//class Task(private val cog: ActorRef, f: () => Any @suspendable) extends Actor with FSM[Task.State, Unit] {
-class Task(private val cogRef: Array[Byte], f: () => Any @suspendable) extends Actor with FSM[Task.State, Unit] {
+class Task[A](private val cogRef: Array[Byte], f: () => A @suspendable) extends Actor with FSM[Task.State, Unit] {
   import FSM._
   import Task._
   
@@ -125,7 +139,7 @@ class Task(private val cogRef: Array[Byte], f: () => Any @suspendable) extends A
   
   private var guard: () => Boolean = (() => true)
  
-  private var cog: ActorRef = RemoteActorSerialization.fromBinaryToRemoteActorRef(cogRef.asInstanceOf[Array[Byte]]) 
+  private var cog: ActorRef = RemoteActorSerialization.fromBinaryToRemoteActorRef(cogRef) 
   private var runner: ActorRef = Actor.actorOf(new Runner(cogRef, self, f)).start
 
   self.id = self.uuid.toString
@@ -153,14 +167,6 @@ class Task(private val cogRef: Array[Byte], f: () => Any @suspendable) extends A
     case Ev(Task.Run) =>
       runner ! Runner.Run
       goto(RUNNING)
-      
-      /*
-    case Ev(Task.Run(cogRemote)) =>
-      if (runner == null)
-        runner = Actor.actorOf(new Runner(cog, self, f, cogRemote)).start
-      runner ! Runner.Run
-      goto(RUNNING)
-      */
   }
   
   when(RUNNING) {

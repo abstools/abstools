@@ -44,8 +44,35 @@ class ScalaCompiler extends Main {
     
     model.generateScala(f)
     
-    if (!sourceOnly)
-      scala.tools.nsc.Main.main(("-d" :: f.getAbsolutePath() :: generateFileList(f)).toArray)
+    if (!sourceOnly) {
+      // find continuations JAR from classpath (very crude, I know, sorry)
+      val contJar: String = System.getProperty("java.class.path").split(java.io.File.pathSeparator).find(_.matches(".*continuations[^/]*\\.jar")) match {
+        case None => 
+          System.err.println("Continuations plugin JAR not found in classpath")
+          System.exit(1)
+          null
+        case Some(x) =>
+          x
+      }
+      
+      val reporter = new scala.tools.nsc.reporters.ConsoleReporter(new scala.tools.nsc.Settings(System.err.println))
+      val compiler = new scala.tools.nsc.Global(reporter)
+
+      compiler.settings.classpath.append(System.getProperty("java.class.path"))
+      compiler.settings.bootclasspath.append(System.getProperty("java.class.path"))
+      compiler.settings.d.value = f.getAbsolutePath()
+      compiler.settings.plugin.appendToValue(contJar)
+      compiler.settings.require.appendToValue("continuations")
+      compiler.settings.pluginOptions.appendToValue("continuations:enable")
+
+      //compiler.settings.Ylogcp.value = true
+      val run = new compiler.Run()
+      run compile generateFileList(f)
+      reporter.printSummary()
+      
+      if (reporter.hasErrors)
+        System.exit(1)
+    }
   }
   
   private def handleArgs(args: List[String]): List[String] = args match {

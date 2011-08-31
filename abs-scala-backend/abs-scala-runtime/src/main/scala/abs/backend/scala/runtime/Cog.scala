@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * This file is licensed under the terms of the Modified BSD License.
+ */
 package abs.backend.scala.runtime
 
 import akka.actor.{Actor, ActorRef, FSM}
@@ -9,8 +13,7 @@ import scala.util.continuations._
 object Cog {
   sealed abstract class Message
   case class RemoteSelfRef(ref: Array[Byte]) extends Message
-  //case class Run(task: ActorRef) extends Message
-  case class Run(block: () => Unit @suspendable) extends Message
+  case class Run(block: () => Any @suspendable) extends Message
   case object Work extends Message
   case object Done extends Message
   case class New[T <: Actor](clazz: Class[T], args: Seq[Any]) extends Message

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * This file is licensed under the terms of the Modified BSD License.
+ */
 package abs.backend.scala.runtime
 
 import akka.actor.{Actor, ActorRef}
@@ -17,7 +21,7 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
   /**
    * Submits a new task to this object's COG and returns a remote actor reference to it.
    */
-  protected def submit(block: => Unit @suspendable) {
+  protected def submit(block: => Any @suspendable) {
     EventHandler.debug(this, "%s: Submitting block to COG".format(self))
 
     cog !! new Cog.Run(() => block) match {
@@ -38,6 +42,35 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
       k : (Unit => Unit) => k()
     }
 
+  def _new(clazz: Class[_ <: Actor], args: Any*) =
+    cog !! new Cog.New(clazz, args) match {
+      case None    => throw new RuntimeException("No reply from COG");
+	  case Some(x) => x.asInstanceOf[Array[Byte]]
+    }
+  
+  def _newcog(url: Option[String], clazz: Class[_ <: Actor], args: Any*) =
+    url map { url =>
+      val addr = url.split(":")
+      
+      // contact remote host
+      val remoteNode = Actor.remote.actorFor("nodeManager", addr(0), addr(1).toInt)
+    
+      val remoteCog = remoteNode !! NodeManager.NewCog match {
+      	case None    => throw new RuntimeException("No reply from remote node");
+      	case Some(x) => RemoteActorSerialization.fromBinaryToRemoteActorRef(x.asInstanceOf[Array[Byte]])
+      }
+    
+      remoteCog !! new Cog.New(clazz, args) match {
+      	case None    => throw new RuntimeException("No reply from remote COG");
+      	case Some(x) => x.asInstanceOf[Array[Byte]]
+      }
+    } getOrElse (
+      cog !! new Cog.NewCog(clazz, args) match {
+      	case None    => throw new RuntimeException("No reply from COG");
+      	case Some(x) => x.asInstanceOf[Array[Byte]]
+      }
+    )
+  
   def asyncCall(that: Array[Byte], msg: Any): ActorRef =
     asyncCall(RemoteActorSerialization.fromBinaryToRemoteActorRef(that), msg)
     
