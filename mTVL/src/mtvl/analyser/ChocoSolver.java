@@ -5,14 +5,17 @@
 
 package mtvl.analyser;
 
+import ast.AST.Id;
+import choco.cp.solver.constraints.global.automata.fast_multicostregular.valselector.MCRValSelector;
+import choco.kernel.model.constraints.ComponentConstraint;
+import choco.kernel.model.constraints.ConstraintType;
+import choco.kernel.model.constraints.MetaConstraint;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import mtvl.ast.Model;
 
 import java.text.MessageFormat;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
+
 import choco.Choco;
 import choco.cp.model.CPModel;
 import choco.kernel.model.variables.integer.IntegerVariable;
@@ -32,6 +35,7 @@ public class ChocoSolver {
   public final Map<String,IntegerVariable> vars;
   public final Map<String,Integer> defaultvals;
   private boolean verbose = false;
+  private List<Constraint> constraints = new ArrayList<Constraint>();
 
 
   public ChocoSolver() {
@@ -98,7 +102,8 @@ public class ChocoSolver {
   }
   /** add choco constraint **/
   public void addConstraint(Constraint c) {
-    m.addConstraint(c);
+    constraints.add(c);
+    //m.addConstraint(c);
   }
 
   public IntegerVariable getVar(String var) {
@@ -106,6 +111,13 @@ public class ChocoSolver {
   }
 
   public boolean solve() {
+    // add the constraints
+    if (!solved) {
+      for (Constraint c: constraints)
+        m.addConstraint(c);
+    }
+
+
     // show the problem
     if (verbose) {
       System.out.print("## The constraints:");
@@ -178,6 +190,56 @@ public class ChocoSolver {
   }
 
   public boolean checkSolution(Map<String,Integer> solution, Model model) {
+    boolean res = true;
+    for (Constraint c: constraints) {
+      CPModel m = new CPModel();
+      m.addConstraint(c);
+      boolean csol = checkSolution(solution,model,m);
+      res = res & csol;
+      //if (verbose)
+        if (!csol) System.out.println("Constraint failed: "+prettyConst(c));
+    }
+
+//    return res;
+    for (Constraint c: constraints)
+      m.addConstraint(c);
+    return checkSolution(solution,model,m);
+  }
+
+  private static String prettyConst(Constraint c){
+    if (c instanceof MetaConstraint) {
+      MetaConstraint mc = (MetaConstraint) c;
+      if (mc.getConstraintType() == ConstraintType.IMPLIES)
+        return "(" + prettyConst(mc.getConstraint(0))+") -> ("+prettyConst(mc.getConstraint(1))+")";
+      if (mc.getConstraintType() == ConstraintType.AND)
+        return "(" + prettyConst(mc.getConstraint(0))+") /\\ ("+prettyConst(mc.getConstraint(1))+")";
+      if (mc.getConstraintType() == ConstraintType.OR)
+        return "(" + prettyConst(mc.getConstraint(0))+") \\/ ("+prettyConst(mc.getConstraint(1))+")";
+        //System.out.println("I'm a imply!\nleft: "+mc.getConstraint(0).pretty());
+    }
+    if (c instanceof ComponentConstraint) {
+      ComponentConstraint cc = (ComponentConstraint) c;
+      //return cc.getVariable(0) + "[[]]";
+      if (c.getConstraintType() == ConstraintType.EQ)
+      //if (c.getConstraintType().getName().equals("eq")
+        if (c.pretty().endsWith("[0, 1], 1 } )"))
+            //cc.getVariable(0).getConstraint(1).pretty()=="1" && mc.getConstraint(0).pretty().endsWith("[0, 1]"))
+          return cc.getVariable(0).getName();
+        else return cc.getVariable(0).getName()+" = "+cc.getVariable(1).pretty();
+      if (c.getConstraintType() == ConstraintType.GEQ)
+        return cc.getVariable(0).getName()+" >= "+cc.getVariable(1).pretty();
+      if (c.getConstraintType() == ConstraintType.LEQ)
+        return cc.getVariable(0).getName()+" <= "+cc.getVariable(1).pretty();
+      if (c.getConstraintType() == ConstraintType.GT)
+        return cc.getVariable(0).getName()+" > "+cc.getVariable(1).pretty();
+      if (c.getConstraintType() == ConstraintType.LT)
+        return cc.getVariable(0).getName()+" < "+cc.getVariable(1).pretty();
+    }
+    return //"["+c.getClass()+"] "+c.pretty();
+        c.pretty();
+  }
+
+  public boolean checkSolution(Map<String,Integer> solution, Model model, CPModel m) {
     // Read the model
     CPSolver s = new CPSolver();
     s.read(m);
@@ -197,10 +259,10 @@ public class ChocoSolver {
 
       if (verbose)
         System.out.println("Adding new values:");
-      while (it.hasNext()) {
+      while (it.hasNext()) { // for all variables in the constraints (model): round 1
         IntegerVariable var = (IntegerVariable) it.next();
         // IF used variable is present in the solution, update it!
-        if (solution.containsKey(var.getName())) {
+        if (solution.containsKey  (var.getName())) {
           val = solution.get(var.getName());
           if (verbose)
             System.out.println("  "+var+" -> "+val);
@@ -209,12 +271,19 @@ public class ChocoSolver {
           if (val==1) newFeatures.add(var.getName());
         }
       }
+      // add parents of features from the solution that are not in the constraints (model)
+      for (Map.Entry<String,Integer> entry: solution.entrySet()) {
+        if (entry.getValue()==1)
+          if (!entry.getKey().contains("."))
+            newFeatures.add(entry.getKey());
+      }
+
       // collect parents of 'newFeatures'
       if (model != null)
         model.collectParents(newFeatures,newParents);
       // add newParents and default values to the solution
       it = m.getIntVarIterator();
-      while (it.hasNext()) {
+      while (it.hasNext()) { // for all variables in the constraints (model): round 2
         IntegerVariable var = (IntegerVariable) it.next();
 
         // If it is a parent to include, set
