@@ -10,9 +10,10 @@ import org.apache.maven.plugin.logging.Log;
 
 import abs.backend.tests.ABSTestRunnerCompiler;
 
-public class TestRunnerGenerator {
+public class TestRunnerGenerator extends MTVLParser {
 
-    void generateTestRunner(
+    List<String> generateTestRunner(
+            File mTVL,
             File absfrontEnd, 
             List<String> absfiles, 
             File absTestRunnerFile,
@@ -27,6 +28,8 @@ public class TestRunnerGenerator {
         System.setProperty("java.class.path", absfrontEnd.getAbsolutePath());
         args.add("-o");
         args.add(absTestRunnerFile.getAbsolutePath());
+        
+        absfiles = super.parseMTVL(mTVL, absfiles, null, true, false, log);
         args.addAll(absfiles);
         
         String[] argArray = args.toArray(new String[args.size()]);
@@ -37,6 +40,8 @@ public class TestRunnerGenerator {
         } catch (Exception e) {
             throw new MojoExecutionException("Could not generate ABSUnit test runner", e);
         }
+        
+        return args;
 
     }
 

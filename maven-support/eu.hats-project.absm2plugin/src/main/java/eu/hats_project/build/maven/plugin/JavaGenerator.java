@@ -30,9 +30,10 @@ public class JavaGenerator extends MTVLParser {
      * @param log 
      * @param checkProductSelection 
      * @param mTVL 
+     * @return 
      * @throws MojoExecutionException
      */
-    void generateJava(File absfrontEnd, 
+    List<String> generateJava(File absfrontEnd, 
             File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
@@ -60,7 +61,9 @@ public class JavaGenerator extends MTVLParser {
         args.add("-d");
         args.add(absJavaBackendTargetFolder.getAbsolutePath());
         
-        super.parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, checkProductSelection, log);
+        absArguments = 
+            super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+        
         if (productName != null) {
             args.add("-product="+productName);
         }
@@ -87,5 +90,7 @@ public class JavaGenerator extends MTVLParser {
         new DebugArgOutput().debug("Generating Java Code", argArray, log);
         
         JavaBackend.main(argArray);
+        
+        return absArguments;
     }
 }

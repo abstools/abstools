@@ -69,7 +69,8 @@ public class JavaTestMojo extends AbstractTestMojo {
             args.add(absTestRunnerFile.getAbsolutePath());
         }
         args.addAll(getABSArguments());
-        generator.generateJava(
+        
+        args = generator.generateJava(
                 absfrontEnd, mTVL, absTestSrcFolder, args, absJavaBackendTestTargetFolder,
                 checkProductSelection, verbose, false, true, loctype, productName, getLog());
 

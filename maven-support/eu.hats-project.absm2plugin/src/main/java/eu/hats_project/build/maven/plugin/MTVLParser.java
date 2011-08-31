@@ -9,13 +9,22 @@ import mtvl.parser.Main;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+
 /**
  * @author pwong
  */
 abstract class MTVLParser {
     
-    protected void parseMTVL( File mTVL,
-            File absSrcFolder,
+    private static final Predicate<String> LEGAL_ABS = 
+        new Predicate<String>() {
+        public boolean apply(String input) {
+            return input != null && ! input.endsWith(".mtvl");
+        }
+    };
+
+    protected List<String> parseMTVL( File mTVL,
             List<String> absArguments, 
             String productName,
             boolean verbose,
@@ -24,18 +33,19 @@ abstract class MTVLParser {
         
         try {
             if (productName != null && checkProductSelection) {
-                parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, false, true, false, log);
+                parseMTVL(mTVL, absArguments, productName, verbose, false, true, false, log);
             } else {
-                parseMTVL(mTVL, absSrcFolder, absArguments, null, verbose, false, false, true, log);
+                parseMTVL(mTVL, absArguments, null, verbose, false, false, true, log);
             }
         } catch (Exception e) {
             throw new MojoExecutionException("Could not parse mTVL model", e);
         }
+        
+        return new ArrayList<String>(Collections2.filter(absArguments,LEGAL_ABS));
     }
-
+    
     private void parseMTVL(
             File mTVL,
-            File absSrcFolder, 
             List<String> absArguments, 
             String productName,
             boolean verbose,
@@ -47,10 +57,6 @@ abstract class MTVLParser {
         if (productName == null && satifiability) {
             throw new MojoExecutionException("Cannot check satifiability " +
             		"without specifying a product name");
-        }
-        
-        if (!absSrcFolder.exists()) {
-            throw new MojoExecutionException("Source folder does not exist");
         }
         
         List<String> args = new ArrayList<String>();

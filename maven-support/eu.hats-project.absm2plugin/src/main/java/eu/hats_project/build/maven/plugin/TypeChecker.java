@@ -34,7 +34,8 @@ public class TypeChecker extends MTVLParser {
         List<String> args = new ArrayList<String>();
         System.setProperty("java.class.path",absfrontEnd.getAbsolutePath());
 
-        super.parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, checkProductSelection, log);
+        absArguments = 
+            super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
         
         if (productName != null) {
             args.add("-product="+productName);

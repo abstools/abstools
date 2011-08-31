@@ -30,10 +30,11 @@ public class MaudeGenerator extends MTVLParser {
      *          sets the main block to execute
      * @param timed 
      *          generate code for timed interpreter
+     * @return 
      *          
      * @throws MojoExecutionException
      */
-    void generateMaude(
+    List<String> generateMaude(
                 File absfrontEnd, 
                 File mTVL,
                 File absSrcFolder, 
@@ -63,7 +64,9 @@ public class MaudeGenerator extends MTVLParser {
         args.add("-o");
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
-        super.parseMTVL(mTVL, absSrcFolder, absArguments, productName, verbose, checkProductSelection, log);
+        absArguments = 
+            super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+        
         if (productName != null) {
             args.add("-product="+productName);
         }
@@ -98,6 +101,8 @@ public class MaudeGenerator extends MTVLParser {
         } catch (Exception e) {
             throw new MojoExecutionException("Could not generate Maude script", e);
         }
+        
+        return absArguments;
  
     }
     

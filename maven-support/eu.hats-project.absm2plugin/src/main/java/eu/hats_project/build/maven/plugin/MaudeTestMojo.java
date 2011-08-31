@@ -81,7 +81,8 @@ public class MaudeTestMojo extends AbstractTestMojo {
             args.add(absTestRunnerFile.getAbsolutePath());
         }
         args.addAll(getABSArguments());
-        generator.generateMaude(
+        
+        args = generator.generateMaude(
                 absfrontEnd, 
                 mTVL,
                 absTestSrcFolder, 

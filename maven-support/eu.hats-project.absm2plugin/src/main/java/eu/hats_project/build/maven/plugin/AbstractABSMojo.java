@@ -33,6 +33,8 @@ import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 
 abstract class AbstractABSMojo extends AbstractMojo {
 
+    public static final String[] ABS_EXTENSIONS = {".abs", ".mtvl"};
+    public static final String[] LEGAL_ABS = {".abs"};
     public static final String ABS_GROUPID = "eu.hats-project";
     public static final String ABS_FRONTEND_ARTIFACTID = "absfrontend";
     public static final String MTVL_ARTIFACTID = "mTVL";
@@ -331,8 +333,12 @@ abstract class AbstractABSMojo extends AbstractMojo {
                 if (f.isDirectory()) {
                     absFiles.addAll(getAbsFiles(f));
                 } else {
-                    if (f.getName().endsWith(".abs")) {
-                        absFiles.add(f);
+                    String name = f.getName();
+                    for (String ext : ABS_EXTENSIONS) {
+                        if (name.endsWith(ext)) {
+                            absFiles.add(f);
+                            break;
+                        }   
                     }
                 }
             }
@@ -342,7 +348,7 @@ abstract class AbstractABSMojo extends AbstractMojo {
     
     protected List<String> getABSArguments() throws Exception {
         List<String> args = new ArrayList<String>();
-        args.addAll(getFileNames(getAbsFiles(absSrcFolder)));        
+        args.addAll(getFileNames(getAbsFiles(absSrcFolder)));
         for (String dep : getAbsDependencies()) {
             if (isABSPackage(new File(dep))) {
                 args.add(dep);

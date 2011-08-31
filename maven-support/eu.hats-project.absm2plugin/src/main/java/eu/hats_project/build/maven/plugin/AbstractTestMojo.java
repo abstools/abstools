@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
-import abs.backend.tests.ABSTestRunnerCompiler;
 import abs.backend.tests.ABSTestRunnerGenerator;
 
 /**
@@ -61,17 +60,9 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
                 throw new MojoFailureException("Cannot write to file: "+absTestRunnerFile);
             }
             
-            List<String> args = new ArrayList<String>();
-            System.setProperty("java.class.path", absfrontEnd.getAbsolutePath());
-            args.add("-o");
-            args.add(absTestRunnerFile.getAbsolutePath());
-            args.addAll(getABSArguments());
-            
-            try {
-                ABSTestRunnerCompiler.main(args.toArray(new String[0]));
-            } catch (Exception e) {
-                throw new MojoExecutionException("Could not generate ABSUnit test runner", e);
-            }
+            TestRunnerGenerator generator = new TestRunnerGenerator();
+            generator.generateTestRunner(mTVL, 
+                    absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
         }
         
         makeTest();
