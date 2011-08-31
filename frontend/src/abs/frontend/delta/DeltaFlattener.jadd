@@ -91,29 +91,21 @@ aspect Flattener {
             cls.addImplementedInterfaceUse(iface.fullCopy());
             
             KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, iface.getName());
-            if (deltaVisibleSymbols.containsKey(symbol)) {
-                if (! clsVisibleSymbols.containsKey(symbol)) {
-                    /* FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
+            if (deltaVisibleSymbols.containsKey(symbol) && ! clsVisibleSymbols.containsKey(symbol)) {
+                /* FIXME distinguish between qualified (NamedImport) and unqualified (FromImport) symbols
                    if unqualified, the challenge is to find the ModuleDecl where symbol was declared
                    -> use the list of symbols visible from the delta
-                     */
+                 */
 
-                    // make it visible by adding Import
-                    List<Name> names = new List<Name>();
-                    names.add(new Name(iface.getName()));
-                    //                FromImport newimport = new FromImport(names, iface.getModule().getName());
-                    NamedImport newimport = new NamedImport(names);
-                    clsmodule.addImport(newimport);
-                    doFlushCache = true;
-                }
+                // make it visible by adding Import
+                List<Name> names = new List<Name>();
+                names.add(new Name(iface.getName()));
+                // FromImport newimport = new FromImport(names, iface.getModule().getName());
+                NamedImport newimport = new NamedImport(names);
+                clsmodule.addImport(newimport);
+                doFlushCache = true;
             }
-
         }
-        
-        // reset the list of implemented interfaces only if the ClassModifier explicitly has 'implements' statement
-        // FIXME this will become obsolote when we change the syntax to allow "modifies class X add/removes I"
-//        if (this.getImplementedInterfaceUseList().hasChildren())
-//            cls.setImplementedInterfaceUseList(this.getImplementedInterfaceUseList().fullCopy());
         
         // apply all modifiers
         for (Modifier mod : this.getModifiers()) {
@@ -168,8 +160,7 @@ aspect Flattener {
                 for (ModuleDecl m: c.getModuleDecls())
                     if (m.getName().equals(mn))
                         return m;
-        }
-        else
+        } else
             return module;
         throw new ASTNodeNotFoundException("Module " + mn + " was not found when adding class " + name.getString() + ".");
     }
