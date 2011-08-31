@@ -69,6 +69,35 @@ public class AddImportsTest extends DeltaFlattenerTest {
     }
 
     @Test
+    public void addQualImport3() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M; export *;"
+                + "interface I { Unit m(); }"
+                + "class C {}" 
+                
+                + "module D;"
+                + "import * from M;"
+                + "delta D { "
+                + "adds class C2 implements I { Unit m() {} }"
+                + "modifies class C { adds Unit n() { I obj = new D.C2(); } }"
+                + "}"
+        );
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
+        model.applyDelta(delta);
+        
+        // the compiler needs to add an "import D.C2" to M
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        ModuleDecl clsmodule = cls.getModule();
+        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
+        
+        // TODO
+//        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "D.C2");
+//        assertTrue(clsVisibleSymbols.containsKey(symbol));
+//        symbol = new KindedName(KindedName.Kind.TYPE_DECL, "C2");
+//        assertTrue(clsVisibleSymbols.containsKey(symbol));
+    }
+    
+    @Test
     public void addUnqualImport() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M1; export *;"
