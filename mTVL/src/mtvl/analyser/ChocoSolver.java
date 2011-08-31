@@ -120,8 +120,13 @@ public class ChocoSolver {
 
     // show the problem
     if (verbose) {
-      System.out.print("## The constraints:");
-      System.out.println(m.pretty());
+      System.out.println("## The constraints:");
+      //System.out.println(m.pretty());
+      for (Constraint c: constraints)  {
+        if (!c.pretty().startsWith("true"))
+          System.out.println(prettyConst(c));
+      }
+      System.out.println("-----");
     }
 
     // Read the model
@@ -225,15 +230,18 @@ public class ChocoSolver {
         if (c.pretty().endsWith("[0, 1], 1 } )"))
             //cc.getVariable(0).getConstraint(1).pretty()=="1" && mc.getConstraint(0).pretty().endsWith("[0, 1]"))
           return cc.getVariable(0).getName();
-        else return cc.getVariable(0).getName()+" = "+cc.getVariable(1).pretty();
+        else if (c.pretty().endsWith("[1, 1], 1 } )"))
+          //cc.getVariable(0).getConstraint(1).pretty()=="1" && mc.getConstraint(0).pretty().endsWith("[0, 1]"))
+        return cc.getVariable(0).getName()+"[true]";
+        else return cc.getVariable(0).pretty()+" = "+cc.getVariable(1).pretty();
       if (c.getConstraintType() == ConstraintType.GEQ)
-        return cc.getVariable(0).getName()+" >= "+cc.getVariable(1).pretty();
+        return cc.getVariable(0).pretty()+" >= "+cc.getVariable(1).pretty();
       if (c.getConstraintType() == ConstraintType.LEQ)
-        return cc.getVariable(0).getName()+" <= "+cc.getVariable(1).pretty();
+        return cc.getVariable(0).pretty()+" <= "+cc.getVariable(1).pretty();
       if (c.getConstraintType() == ConstraintType.GT)
-        return cc.getVariable(0).getName()+" > "+cc.getVariable(1).pretty();
+        return cc.getVariable(0).pretty()+" > "+cc.getVariable(1).pretty();
       if (c.getConstraintType() == ConstraintType.LT)
-        return cc.getVariable(0).getName()+" < "+cc.getVariable(1).pretty();
+        return cc.getVariable(0).pretty()+" < "+cc.getVariable(1).pretty();
     }
     return //"["+c.getClass()+"] "+c.pretty();
         c.pretty();
