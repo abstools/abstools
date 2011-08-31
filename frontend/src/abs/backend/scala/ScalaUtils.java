@@ -41,7 +41,7 @@ public class ScalaUtils {
      * @return Scala-safe name
      */
     public static String mangleName(String name) {
-        if (name.matches("^_*var$") || name.matches("^_*val$"))
+        if (name.matches("^_*var$") || name.matches("^_*val$") || name.matches("^_*abs$"))
             return "_" + name;
         
         return name;
@@ -73,7 +73,7 @@ public class ScalaUtils {
         }
     }
     
-    public static final void generateMessages(Iterable<MethodSig> methods, PrintWriter writer) {
+    public static final void generateMessages(Iterable<MethodSig> methods, PrintWriter writer, abs.frontend.ast.List<abs.frontend.ast.Annotation> annotations) {
         writer.println("\tsealed trait Message");
         for (MethodSig s : methods) {
                 // run method is special, that will be handled by MyObject.Run
@@ -92,7 +92,7 @@ public class ScalaUtils {
                         for (ParamDecl param: s.getParams()) {
                                 if (f)
                                         writer.write(", ");
-                                writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer);                                  
+                                writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer, annotations);                                  
                                 f = true;
                         }
                         
