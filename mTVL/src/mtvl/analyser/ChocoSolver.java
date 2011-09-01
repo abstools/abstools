@@ -144,6 +144,10 @@ public class ChocoSolver {
       System.out.println(m.pretty());
     }
 
+    //add the constraints
+    for (Constraint c: constraints)
+      m.addConstraint(c);
+
     // Read the model
     s.read(m);
     // Solve the model
