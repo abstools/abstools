@@ -9,7 +9,7 @@ aspect Flattener {
      * 
      * This is the top level method, which does everything:
      * finding the features of a given product, finding the sequence of 
-     * associated deltas, and applying them.
+     * associated deltas, resolving original() calls, and applying the deltas.
      */
     public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
         Product prod = this.findProduct(id);
@@ -26,7 +26,7 @@ aspect Flattener {
             System.out.print(delim + delta.qualifiedName());
             delim = " << ";
         }
-        System.out.println("");
+        System.out.println(" .");
 
         // resolve original() calls
         this.resolveOriginalCalls(deltas);
@@ -34,6 +34,13 @@ aspect Flattener {
         // apply the applicable deltas in the given order
         for (DeltaDecl delta : deltas)
             this.applyDelta(delta);
+        
+        for (CompilationUnit unit: this.getCompilationUnits())
+            for (ModuleDecl module: unit.getModuleDecls()) {
+//                System.out.println("Flushing cache for module: " + module.getName());
+                module.flushCache();
+            }
+
     }
     
     /*

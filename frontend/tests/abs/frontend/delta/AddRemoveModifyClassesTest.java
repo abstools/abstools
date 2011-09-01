@@ -14,7 +14,7 @@ import abs.frontend.ast.*;
 public class AddRemoveModifyClassesTest extends DeltaFlattenerTest {
     @Test
     public void addClass() throws ASTNodeNotFoundException {
-        Model model = assertParseOk("module M; delta D { adds class C {} }");
+        Model model = assertParseOk("module M; delta D { adds class C(String s) {} }");
         
         DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
         assertNotNull(delta);
@@ -22,6 +22,8 @@ public class AddRemoveModifyClassesTest extends DeltaFlattenerTest {
         model.applyDelta(delta);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertNotNull(cls);
+        
+        assertTrue(cls.getName().equals("C"));
     }
 
     @Test
