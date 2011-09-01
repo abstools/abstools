@@ -4,6 +4,8 @@
  */
 package abs.frontend.delta;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Test;
@@ -34,8 +36,8 @@ public class AddImportsTest extends DeltaFlattenerTest {
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
         DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
-        model.applyDelta(delta);
-
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        
         // the compiler needs to add an "import M2.I" to M1
         ModuleDecl clsmodule = cls.getModule();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
@@ -56,7 +58,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
                 + "}"
         );
         DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
-        model.applyDelta(delta);
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler doesn't need to add anything 
         ClassDecl cls = (ClassDecl) findDecl(model, "D", "C");
@@ -83,7 +85,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
                 + "}"
         );
         DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
-        model.applyDelta(delta);
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler needs to add an "import D.C2" to M
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
@@ -137,7 +139,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
         DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
-        model.applyDelta(delta);
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
 
         // the compiler should not add an import, because the delta cannot see I!
         ModuleDecl clsmodule = cls.getModule();

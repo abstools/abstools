@@ -32,21 +32,23 @@ aspect Flattener {
         this.resolveOriginalCalls(deltas);
 
         // apply the applicable deltas in the given order
-        for (DeltaDecl delta : deltas)
-            this.applyDelta(delta);
-        
-        for (CompilationUnit unit: this.getCompilationUnits())
-            for (ModuleDecl module: unit.getModuleDecls()) {
-//                System.out.println("Flushing cache for module: " + module.getName());
-                module.flushCache();
-            }
-
+        this.applyDeltas(deltas);
     }
+    
+    
     
     /*
      * Apply delta to model
      * i.e. apply each ClassOrIfaceModifier to its corresponding class or interface
      */
+    public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+        for (DeltaDecl delta : deltas)
+            this.applyDelta(delta);
+        for (CompilationUnit unit: this.getCompilationUnits())
+            for (ModuleDecl module: unit.getModuleDecls())
+                module.flushCache();
+    }
+
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
 //            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
@@ -92,7 +94,6 @@ aspect Flattener {
 //        for (Import imp : clsmodule.getImports())
 //            System.out.println("****** Import: " + imp);
 
-        boolean doFlushCache = false;
         for (InterfaceTypeUse iface : this.getImplementedInterfaceUseList()) {
             // add any new interfaces added by the ClassModifier
             cls.addImplementedInterfaceUse(iface.fullCopy());
@@ -110,7 +111,6 @@ aspect Flattener {
                 // FromImport newimport = new FromImport(names, iface.getModule().getName());
                 NamedImport newimport = new NamedImport(names);
                 clsmodule.addImport(newimport);
-                doFlushCache = true;
             }
         }
         
@@ -118,9 +118,6 @@ aspect Flattener {
         for (Modifier mod : this.getModifiers()) {
             mod.applyTo(cls);
         }
-        // reset list of symbols visible from this module
-        if (doFlushCache)
-            clsmodule.flushCache();
     }
     
     public void AddInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
