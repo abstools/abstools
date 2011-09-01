@@ -540,11 +540,25 @@ aspect GenerateProlog {
             }
         }
         s.print("],[");
+
         //here it starts the code of the method
+        boolean one=false;
+
+        //arguments assignation
+        n = parameterList.getNumChild();
+        ParamDecl parameter;
+        for (int i = 0; i < n; i++){
+            parameter=parameterList.getChild(i); 
+            if(one)
+                s.print(",");
+            one=true;
+            s.print("assignStmt("+fieldTransform(parameter.getName())+","+varTransform(parameter.getName())+")");
+
+        }
+
         //field initializer and argument initializers
         n = fieldsList.getNumChild();
         FieldDecl field;
-        boolean one=false;
         //field initializers
         for (int i = 0; i < n; i++){
             field=fieldsList.getChild(i); 
@@ -557,17 +571,7 @@ aspect GenerateProlog {
                 s.print(")");
             }
         }
-        //arguments assignation
-        n = parameterList.getNumChild();
-        ParamDecl parameter;
-        for (int i = 0; i < n; i++){
-            parameter=parameterList.getChild(i); 
-            if(one)
-                s.print(",");
-            one=true;
-            s.print("assignStmt("+fieldTransform(parameter.getName())+","+varTransform(parameter.getName())+")");
 
-        }
         //rest of the statements 
         List<?> stmts = (List<?>) getChild(1);
         n = stmts.getNumChild();
