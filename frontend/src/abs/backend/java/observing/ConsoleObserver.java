@@ -16,7 +16,7 @@ import abs.backend.java.utils.StringUtil;
  * @author Jan Schäfer
  *
  */
-public class ConsoleObserver extends RegistratingObserver implements FutObserver {
+public class ConsoleObserver extends RegistratingObserver implements FutObserver, TaskObserver {
 
     PrintStream s = System.out;
     
@@ -60,6 +60,7 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
                 ")"+
                 ")");
 
+        task.registerTaskListener(this);
         task.getFuture().registerFutObserver(this);
     }
     
@@ -71,6 +72,48 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
     @Override
     public void onResolved(FutView fut, ABSValue value) {
         show("Future["+fut.getID()+"] resolved with value '"+value+"'");
+    }
+
+    @Override
+    public void taskStarted(TaskView task) {
+        show("Task["+task.getID()+"] started");
+    }
+
+    @Override
+    public void taskFinished(TaskView task) {
+        show("Task["+task.getID()+"] finished");
+    }
+
+    @Override
+    public void taskBlockedOnFuture(TaskView task, FutView fut) {
+        show("Task["+task.getID()+"] blocked on Future["+fut.getID()+"]");
+    }
+
+    @Override
+    public void taskRunningAfterWaiting(TaskView task, FutView fut) {
+        show("Task["+task.getID()+"] continued running");
+    }
+
+    @Override
+    public void taskStep(TaskView task, String fileName, int line) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void taskDeadlocked(TaskView task) {
+        show("Task["+task.getID()+"] deadlocked");
+    }
+
+    @Override
+    public void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame) {
+        show("Task["+task.getID()+"] called "+stackFrame.getMethod().getClassView().getName()+"."+stackFrame.getMethod().getName());
+    }
+
+    @Override
+    public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+        // TODO Auto-generated method stub
+        
     }
     
     
