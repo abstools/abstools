@@ -67,7 +67,7 @@ implements Client {
 		
 	Fut<Unit> f;
 	Int c = 1; 
-	while (c < 100) {
+	while (c <= 100) {
 		f = client!write(c); f.get;
 		sys.outPrintln(intToString(c));
 		c = c + 1;

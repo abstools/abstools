@@ -3,9 +3,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.hats-project</groupId>
-	<artifactId>client-demo</artifactId>
+	<artifactId>server-demo</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<name>Distributed Client</name>
+	<name>Distributed Server</name>
 
 	<properties>
 		<encoding>UTF-8</encoding>

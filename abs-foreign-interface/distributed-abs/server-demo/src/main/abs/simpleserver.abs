@@ -109,7 +109,7 @@ implements Server {
 		
 	Fut<Int> r; 
 	Int c = 1;
-	while (c < 100) {
+	while (c <= 100) {
 		r = w1!read(); Int a1 = r.get;
 		sys.outPrintln(intToString(a1));
 		c = c + 1;
