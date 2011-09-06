@@ -632,7 +632,7 @@ mod ABS-CONFIGURATION is
   --- Terms of sort Object represent objects in the run-time configuration.
   ---
   op <_:_ | Cog:_, Att:_, Pr:_, PrQ:_, Lcnt:_> :
-    Oid Cid String Subst Process MProc Nat -> Object
+    Oid Cid Cogid Subst Process MProc Nat -> Object
     [ctor format (nr d d g ++r nir o  r ni o  r ni o  r ni o  r ni o--  r on)] .
 
   --- Terms that represent futures.
@@ -655,11 +655,13 @@ mod ABS-CONFIGURATION is
   *** currently active object) or null.  The first argument is a unique
   *** identifier - we use the string content of the Oid of the first object
   *** contained inside the cog (to evade the need for a global counter term).
-  op <_: Cog | Object:_ > : String Data -> Cog
+  sort Cogid .
+  subsort Qid < Cogid .
+  op <_: Cog | Object:_ > : Cogid Data -> Cog
     [ctor format (cn o! o c d d o! c on ) ] .
   --- Create a new fresh name for a cog
-  op newId : Qid Nat -> String .
-  eq newId(C:Qid, F)  = string(C:Qid) + "-" + string(F,10) .
+  op newId : Qid Nat -> Cogid .
+  eq newId(C:Qid, F)  = qid(string(C:Qid) + "-" + string(F,10)) .
 
 
   *** Useful for real-time maude, and in general for accessing the whole
@@ -864,7 +866,7 @@ mod ABS-MSG-TRANSPORT is
   protecting ABS-CONFIGURATION .
   protecting ABS-EVAL .
 
-  var CG : String .   var MIS : MMtd .              vars AL AL' : VidList .
+  var CG : Cogid .   var MIS : MMtd .              vars AL AL' : VidList .
   vars S S1 L : Subst .  var SL : StmtList .           var N : Label .
   var DL : DataList .    var C : Cid .
   vars F G : Nat .       vars O O1 : Oid .             var P : Process .
@@ -922,9 +924,10 @@ mod ABS-MACHINE-BASICS is
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
   var CN : Configuration .  var P : Process .    vars A A' : Vid .
   var E : Expr .            var AL : VidList .   var N : Label .
-  vars Q CG : String .      var MS : MMtd .      var CO : Bool .
+  var Q : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var M : Mid .
+  var CG : Cogid .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1092,12 +1095,13 @@ mod ABS-MACHINE-BASICS-TIMED is
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G : Nat .
   var CN : Configuration .  var P : Process .    vars A A' : Vid .
   vars E E' : Expr .        var AL : VidList .   var N : Label .
-  vars Q CG : String .      var MS : MMtd .      var CO : Bool .
+  var Q : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   vars T LIM : Nat .
   vars MIN MAX : Nat .
   var MAC : SSubst .
   var M : Mid .
+  var CG : Cogid .
 
   --- Schedule a new process for execution, if it is ready.
   ---
@@ -1337,7 +1341,7 @@ mod ABS-STMT-SKIP-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
@@ -1350,7 +1354,7 @@ mod ABS-STMT-SKIP-EQ is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
 
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
@@ -1369,7 +1373,7 @@ mod ABS-STMT-ASSIGN-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var CG : String .
+  var E : Expr .       var D : Data .   var CG : Cogid .
   var Q : Qid .
   var D' : Data .
 
@@ -1399,7 +1403,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   protecting ABS-EVAL .
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var E : Expr .       var D : Data .   var CG : String .
+  var E : Expr .       var D : Data .   var CG : Cogid .
   vars T LIM : Nat .   var Q : Qid .
   var D' : Data .
 
@@ -1436,7 +1440,7 @@ mod ABS-STMT-COND-RL is
 
   var O : Oid .                 var C : Cid .      vars S L : Subst .
   vars SL SL1 SL2 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .                var CG : String .
+  var E : Expr .                var CG : Cogid .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | if E th SL1 el SL2 fi ; SL }, PrQ: W, Lcnt: F >
@@ -1453,7 +1457,7 @@ mod ABS-STMT-COND-EQ-TIMED is
 
   var O : Oid .                 var C : Cid .       vars S L : Subst .
   vars SL SL1 SL2 : StmtList .  var W : MProc .     var F : Nat .
-  var E : Expr .                vars T LIM : Nat .  var CG : String .
+  var E : Expr .                vars T LIM : Nat .  var CG : Cogid .
 
   eq
     < T : Clock | Limit: LIM >
@@ -1473,7 +1477,7 @@ mod ABS-STMT-WHILE-RL is
   protecting ABS-EVAL .
   var O : Oid .             var C : Cid .      vars S L : Subst .
   vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .            var CG : String .
+  var E : Expr .            var CG : Cogid .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
@@ -1488,7 +1492,7 @@ mod ABS-STMT-WHILE-EQ is
 
   var O : Oid .             var C : Cid .      vars S L : Subst .
   vars SL SL1 : StmtList .  var W : MProc .    var F : Nat .
-  var E : Expr .            var CG : String .
+  var E : Expr .            var CG : Cogid .
 
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
@@ -1507,7 +1511,7 @@ mod ABS-STMT-SUSPEND-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
 
   rl
     < CG : Cog | Object: O >
@@ -1522,7 +1526,7 @@ mod ABS-STMT-SUSPEND-EQ is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
 
   eq
     < CG : Cog | Object: O >
@@ -1543,7 +1547,7 @@ mod ABS-STMT-DURATION-RL is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
   vars E1 E2 : Expr .
 
   rl
@@ -1557,7 +1561,7 @@ mod ABS-STMT-DURATION-EQ-TIMED is
 
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
-  var CG : String .
+  var CG : Cogid .
   vars E1 E2 : Expr .
   vars T LIM MIN MAX : Nat .
 
@@ -1589,7 +1593,8 @@ mod ABS-STMT-AWAIT-RL is
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   vars Q CG : String .
+  var CN : Configuration .  var E : Expr .   var Q : String .
+  var CG : Cogid .
 
   rl
     { < CG : Cog | Object: O >
@@ -1612,8 +1617,9 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
 
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
-  var CN : Configuration .  var E : Expr .   vars Q CG : String .
+  var CN : Configuration .  var E : Expr .   var Q : String .
   vars T LIM : Nat .
+  var CG : Cogid .
 
   eq
     { < CG : Cog | Object: O >
@@ -1642,13 +1648,14 @@ mod ABS-CALLSTMTS-RL is
 
   vars O O1 : Oid .            vars C C1 : Cid .    vars S S1 L : Subst .
   var SL : StmtList .          vars W W1 : MProc .  vars F F1 G : Nat .
-  var CN : Configuration .     var E : Expr .       vars Q CG CG1 : String .
+  var CN : Configuration .     var E : Expr .       var Q : String .
   var A : Vid .                var EL : ExprList .  var AL : VidList .
   var N : Label .              var DL : DataList .  var MS : MMtd .
   var SS : SSubst .
   var MIS : MMtd .             var P1 : Process .
   var DE : Expr .
   var M : Mid .
+  vars CG CG1 : Cogid .
 
   --- async-call
   ---
@@ -1695,13 +1702,14 @@ mod ABS-CALLSTMTS-EQ-TIMED is
 
   vars O O1 : Oid .            vars C C1 : Cid .     vars S S1 L : Subst .
   var SL : StmtList .          vars W W1 : MProc .   vars F F1 G : Nat .
-  var CN : Configuration .     var E : Expr .        vars Q CG CG1 : String .
+  var CN : Configuration .     var E : Expr .        vars Q : String .
   var A : Vid .                var EL : ExprList .   var AL : VidList .
   var N : Label .              var DL : DataList .   var MS : MMtd .
   vars T LIM : Nat .           var SS : SSubst .     var MIS : MMtd .
   var P1 : Process .
   var DE : Expr .
   var M : Mid .
+  vars CG CG1 : Cogid .
 
   --- async-call
   ---
@@ -1762,7 +1770,7 @@ mod ABS-NEW-RL is
   var SL : StmtList .  var W : MProc .   vars F G : Nat .
   var E : Expr .       var A : Vid .     var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
-  var CG : String .
+  var CG : Cogid .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
@@ -1801,7 +1809,7 @@ mod ABS-NEW-EQ-TIMED is
   var SL : StmtList .  var W : MProc .    vars F G : Nat .
   var E : Expr .       var A : Vid .      var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
-  vars T LIM : Nat .   var CG : String .
+  vars T LIM : Nat .   var CG : Cogid .
 
   eq
     < T : Clock | Limit: LIM >
@@ -1844,9 +1852,10 @@ mod ABS-STMT-RETURN-RL is
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  vars Q CG : String .  var N : Label .  var E : Expr .
+  var Q : String .  var N : Label .  var E : Expr .
   var D : Data .
   var M : Mid .
+  var CG : Cogid .
 
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F >
@@ -1867,10 +1876,11 @@ mod ABS-STMT-RETURN-EQ-TIMED is
 
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
-  vars Q CG : String .  var N : Label .  var E : Expr .
+  var Q : String .  var N : Label .  var E : Expr .
   vars T LIM : Nat .
   var D : Data .
   var M : Mid .
+  var CG : Cogid .
 
   ceq
     < T : Clock | Limit: LIM >
@@ -1900,9 +1910,10 @@ mod ABS-RECEIVE-RESULT is
 
   vars O O1 : Oid .            vars B C : Cid .     vars S S1 L L1 : Subst .
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
-  vars Q CG : String .      vars A A' : Vid .    var N : Label .
+  var Q : String .      vars A A' : Vid .    var N : Label .
   var D : Data .
   var M : Mid .
+  var CG : Cogid .
 
   --- receive-comp
   ---
@@ -1977,13 +1988,13 @@ mod ABS-SIMULATOR-RL is
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
-      < "main" : Cog | Object: ob('main, 0) >
-      < ob('main, 0) : '... | Cog: "main", Att:  '.comp |-> null,
+      < 'main : Cog | Object: ob('main, 0) >
+      < ob('main, 0) : '... | Cog: 'main, Att:  '.comp |-> null,
         Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -2012,13 +2023,13 @@ mod ABS-SIMULATOR-EQ-TIMED is
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
       < 0 : Clock | Limit: 100 >
-      < "main" : Cog | Object: ob('main, 0) >
-      < ob('main, 0) : '... | Cog: "main", Att: '.comp |-> null,
+      < 'main : Cog | Object: ob('main, 0) >
+      < ob('main, 0) : '... | Cog: 'main, Att: '.comp |-> null,
         Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: "main", Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
