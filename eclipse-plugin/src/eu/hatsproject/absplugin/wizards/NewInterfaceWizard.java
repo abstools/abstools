@@ -8,7 +8,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -46,7 +45,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 		interfaceInFilePage = new NewInterfaceInFileWizardPage(WIZARD_TITLE);
 		page = (IABSClassInterfaceWizardPage) interfaceInFilePage;
 		page.setInitialModule(mDecl);
-		page.setDescription(WIZARD_DESCRIPTION + mDecl.getASTNode().getName());
+		page.setDescription(WIZARD_DESCRIPTION + " " + mDecl.getASTNode().getName());
 		page.setTitle(WIZARD_TITLE);
 		addPage(page);		
 	}
@@ -70,7 +69,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 			return true;
 		} catch (BadLocationException e) {
 			e.printStackTrace();
-			MessageDialog.openError(Display.getDefault().getActiveShell(), ERROR_TITLE, ERROR_TEXT);
+			MessageDialog.openError(getShell(), ERROR_TITLE, ERROR_TEXT);
 			return false;
 		}
 	}

@@ -10,7 +10,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -104,12 +103,12 @@ public class NewModuleWizard extends ABSNewWizard implements INewWizard {
 					
 					return true;
 				} catch (BadLocationException e) {
-					MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", "Fatal error: The insertion position for the new module does not longer exist. Please save the target file and try again.");
+					MessageDialog.openError(getShell(), "Error", "Fatal error: The insertion position for the new module does not longer exist. Please save the target file and try again.");
 					e.printStackTrace();
 					return false;
 				}							
 			}else{
-					MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", "Fatal error: No file reference was passed by the wizard. Please try again to use the wizard and select a valid file.");
+					MessageDialog.openError(getShell(), "Error", "Fatal error: No file reference was passed by the wizard. Please try again to use the wizard and select a valid file.");
 					return false;
 			}
 	}

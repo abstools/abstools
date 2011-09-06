@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
@@ -75,7 +74,7 @@ public class NewABSProjectWizard extends Wizard implements INewWizard {
 			}
 			if(projectFile.exists()){
 				boolean overwrite = MessageDialog.
-					openQuestion(Display.getDefault().getActiveShell(), OVERWRITE_TITLE,OVERWRITE_TEXT);
+					openQuestion(getShell(), OVERWRITE_TITLE,OVERWRITE_TEXT);
 				if(overwrite)
 					projectFile.delete();
 				else

@@ -8,7 +8,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -78,7 +77,7 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 				return true;
 			} catch (BadLocationException e) {
 				e.printStackTrace();
-				MessageDialog.openError(Display.getDefault().getActiveShell(), "Error", "Fatal Error in wizard: The module declaration could not be found!");
+				MessageDialog.openError(getShell(), "Error", "Fatal Error in wizard: The module declaration could not be found!");
 				return false;
 			}
 	}
