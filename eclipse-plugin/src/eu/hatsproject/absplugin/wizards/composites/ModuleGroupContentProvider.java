@@ -73,7 +73,10 @@ public class ModuleGroupContentProvider implements ITreeContentProvider {
 							Collection<ModuleDecl> moduleDecls = model.getModuleDecls();
 
 							for (ModuleDecl m : moduleDecls) {
-								if (m.getName().equals(Constants.ABS_STDLIB_ID)) {
+								String name = m.getName();
+								/* Don't show internal resources which would be read-only anyway.
+								 * This is either the standard lib, or e.g. ABS.FLI, ABS.DC */
+								if (name.startsWith("ABS.")) {
 									continue;
 								}
 								decls.add(new InternalASTNode<ModuleDecl>(m,nature));
