@@ -63,8 +63,8 @@ public class costabsHandler extends AbstractHandler {
 			
 			if (CostabsLink.SELECTED_ITEMS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
-			            "No functions or methods selected in the outline view.", null);
-				ErrorDialog.openError(shellEclipse, "Costabs Error", "Costabs can not analyze.", status);
+			            "At least one function or method must be selected in the outline view.", null);
+				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);
 				
 			}
 			else {
