@@ -12,13 +12,8 @@ import scala.collection.JavaConversions._
  * 
  * @author Andri Saar <andri@cs.ioc.ee>
  */
-class ScalaCompiler extends Main {
-  private var targetDir = {
-    val f = File.createTempFile("abs-scala", "")
-    f.delete()
-    f.getAbsolutePath()
-  }
-  private var sourceOnly = false
+class ScalaCompiler extends ScalaBackend {
+  sourceOnly = false
   
   private def generateFileList(f: File): List[String] =
     if (f.isDirectory())
@@ -30,75 +25,34 @@ class ScalaCompiler extends Main {
         Nil
     }
   
-  def compile(args: Array[String]) {
-    val model = parse(args)
-    
-    if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-      return
-    
-    val f = new File(targetDir)
-    if (!f.mkdirs()) {
-      System.err.println("Unable to create output directory: " + targetDir)
-      System.exit(1)
-    }
-    
-    model.generateScala(f)
-    
-    if (!sourceOnly) {
-      // find continuations JAR from classpath (very crude, I know, sorry)
-      val contJar: String = System.getProperty("java.class.path").split(java.io.File.pathSeparator).find(_.matches(".*continuations[^/]*\\.jar")) match {
-        case None => 
-          System.err.println("Continuations plugin JAR not found in classpath")
-          System.exit(1)
-          null
-        case Some(x) =>
-          x
-      }
-      
-      val reporter = new scala.tools.nsc.reporters.ConsoleReporter(new scala.tools.nsc.Settings(System.err.println))
-      val compiler = new scala.tools.nsc.Global(reporter)
-
-      compiler.settings.classpath.append(System.getProperty("java.class.path"))
-      compiler.settings.bootclasspath.append(System.getProperty("java.class.path"))
-      compiler.settings.d.value = f.getAbsolutePath()
-      compiler.settings.plugin.appendToValue(contJar)
-      compiler.settings.require.appendToValue("continuations")
-      compiler.settings.pluginOptions.appendToValue("continuations:enable")
-
-      //compiler.settings.Ylogcp.value = true
-      val run = new compiler.Run()
-      run compile generateFileList(f)
-      reporter.printSummary()
-      
-      if (reporter.hasErrors)
+  override def compileSources() {
+    // find continuations JAR from classpath (very crude, I know, sorry)
+    val contJar: String = System.getProperty("java.class.path").split(java.io.File.pathSeparator).find(_.matches(".*continuations[^/]*\\.jar")) match {
+      case None =>
+        System.err.println("Continuations plugin JAR not found in classpath")
         System.exit(1)
+        null
+      case Some(x) =>
+        x
     }
-  }
-  
-  private def handleArgs(args: List[String]): List[String] = args match {
-    case Nil => Nil
-    case "-d" :: Nil =>
-      System.err.println("Please specify output directory")
+      
+    val reporter = new scala.tools.nsc.reporters.ConsoleReporter(new scala.tools.nsc.Settings(System.err.println))
+    val compiler = new scala.tools.nsc.Global(reporter)
+
+    compiler.settings.classpath.append(System.getProperty("java.class.path"))
+    compiler.settings.bootclasspath.append(System.getProperty("java.class.path"))
+    compiler.settings.d.value = outputDir.getAbsolutePath()
+    compiler.settings.plugin.appendToValue(contJar)
+    compiler.settings.require.appendToValue("continuations")
+    compiler.settings.pluginOptions.appendToValue("continuations:enable")
+
+    //compiler.settings.Ylogcp.value = true
+    val run = new compiler.Run()
+    run compile generateFileList(outputDir)
+    reporter.printSummary()
+      
+    if (reporter.hasErrors)
       System.exit(1)
-      Nil
-    case "-d" :: dir :: tl =>
-      targetDir = dir
-      handleArgs(tl)
-    case "-sourceonly" :: tl =>
-      sourceOnly = true
-      handleArgs(tl)
-    case s :: tl =>
-      s :: handleArgs(tl)
-  }
-  
-  override def parseArgs(args: Array[String]): java.util.List[String] =
-    handleArgs(args.toList).reverse
-    
-  override protected def printUsage() {
-    super.printUsage()
-    System.out.println("Scala backend:")
-    System.out.println("  -d <dir>       outputs generated files to given directory")
-    System.out.println("  -sourceonly    do not compile generated class files")
   }
 }
 
