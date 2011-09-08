@@ -310,10 +310,11 @@ public class ABSRuntime {
     }
 
     public static void suspend() {
-        await(new ABSTrueGuard());
+        getCurrentCOG().getScheduler().await(new ABSTrueGuard());
     }
 
     public static void await(ABSGuard g) {
+        if (g.isTrue()) return; // special case in the semantics
         getCurrentCOG().getScheduler().await(g);
     }
 
