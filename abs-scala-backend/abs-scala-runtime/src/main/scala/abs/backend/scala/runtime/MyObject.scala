@@ -35,7 +35,8 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
     Runner.currentRunner.get.await(fut)
   
   protected def await(cond: => Boolean) = 
-    Runner.currentRunner.get.await(cond)
+    if (!cond)
+      Runner.currentRunner.get.await(cond)
   
   def noop: Unit @suspendable = 
     shift {

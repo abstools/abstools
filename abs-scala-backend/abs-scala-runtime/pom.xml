@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>eu.hats-project</groupId>
+  <!--  groupId>eu.hats-project</groupId -->
   <artifactId>abs-scala-runtime</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <!--  version>1.0-SNAPSHOT</version -->
 
   <parent>
     <groupId>eu.hats-project</groupId>
@@ -16,12 +16,11 @@
   <inceptionYear>2011</inceptionYear>
 
   <properties>
-    <maven.compiler.source>1.5</maven.compiler.source>
-    <maven.compiler.target>1.5</maven.compiler.target>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
     <encoding>UTF-8</encoding>
     <scala.version>2.9.0</scala.version>
     <akka.version>1.1.3</akka.version>
-    <mainClass></mainClass>
   </properties>
 
 

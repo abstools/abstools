@@ -627,7 +627,6 @@ aspect GenerateScala {
 		
 		boolean r = false;
 		for (Stmt stmt: getStmts()) {
-			System.out.println("next:"); stmt.dump();
 			boolean r2 = stmt.generateScala(prefix + "\t", writer); 
 			r =  r || r2; 
 		}
@@ -658,9 +657,11 @@ aspect GenerateScala {
 	}
 	
 	public boolean WhileStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("WhileStmt");
-		dump();
-		return false;
+		writer.print(prefix + "while (");
+		boolean b = getCondition().generateScala(prefix, writer, getAnnotations());
+		writer.println(")");
+		boolean b2 = getBody().generateScala(prefix + "\t", writer);
+		return b || b2;
 	}
 	
 	public boolean VarDeclStmt.generateScala(String prefix, PrintWriter writer) {
@@ -907,7 +908,11 @@ aspect GenerateScala {
 	protected abstract String Unary.getScalaOperator();
 	public final boolean Unary.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.write(getScalaOperator());
-		return getOperand().generateScala(prefix, writer, annotations);
+		writer.write("(");
+		boolean b = getOperand().generateScala(prefix, writer, annotations);
+		writer.write(")");
+		
+		return b;
 	}
 	
 	protected final String NegExp.getScalaOperator() { return "!"; }
@@ -1075,7 +1080,9 @@ aspect GenerateScala {
 	}
 	
 	public boolean NullExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		throw new NotImplementedYetException(this);
+		writer.write("null");
+		return false;
+		//throw new NotImplementedYetException(this);
 	}
 	
 	// Call
