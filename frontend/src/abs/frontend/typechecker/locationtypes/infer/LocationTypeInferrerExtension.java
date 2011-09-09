@@ -19,6 +19,7 @@ import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.Model;
@@ -100,16 +101,16 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     }
     
     private LocationTypeVariable addNewVar(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
-        LocationTypeExtension.getLocationTypeFromAnnotations(t); // check consistency of annotations
+        LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode); // check consistency of annotations
         LocationTypeVariable ltv = getLV(t);
         if (ltv != null) 
             return ltv;
-        LocationType lt = getLocationTypeOrDefault(t);
+        LocationType lt = getLocationTypeOrDefault(t, originatingNode);
         LocationTypeVariable tv;
         if (lt.isInfer()) {
-            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t));
+            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode));
         } else if (lt.isFar() && precision != LocationTypingPrecision.BASIC){
-            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t));
+            tv = LocationTypeVariable.newVar(constraints, typeNode, true, getFarTypes(originatingNode), LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode));
             @SuppressWarnings("unchecked")
             MultiListIterable<LocationType> fars = new MultiListIterable<LocationType>(Arrays.asList(LocationType.FAR), getFarTypes(originatingNode));
             constraints.add(Constraint.constConstraint(tv, fars , Constraint.MUST_HAVE));
@@ -169,8 +170,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         }
     }
     
-    private LocationType getLocationTypeOrDefault(Type t) {
-        LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t);
+    private LocationType getLocationTypeOrDefault(Type t, ASTNode<?> originatingNode) {
+        LocationType lt = LocationTypeExtension.getLocationTypeFromAnnotations(t, originatingNode);
         if (lt == null) {
             return defaultType;
         }

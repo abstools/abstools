@@ -11,6 +11,7 @@ import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Call;
+import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.NewExp;
@@ -81,14 +82,14 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         if (origNode instanceof NullExp) {
             setLocationType(t, LocationType.BOTTOM);
         } else if (t.isReferenceType()) {
-            setAnnotatedType(t);
+            setAnnotatedType(t, origNode);
         }
         
     }
 
-    private void setAnnotatedType(Type t) {
+    private void setAnnotatedType(Type t, ASTNode<?> origNode) {
         try {
-            LocationType lt = getLocationTypeFromAnnotations(t);
+            LocationType lt = getLocationTypeFromAnnotations(t, origNode);
             if (lt == null)
                 lt = defaultType;
             setLocationType(t, lt);
@@ -98,6 +99,10 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
     }
     
     public static LocationType getLocationTypeFromAnnotations(Type t) {
+        return getLocationTypeFromAnnotations(t, null);
+    }
+    
+    public static LocationType getLocationTypeFromAnnotations(Type t, ASTNode<?> originatingNode) {
         LocationType res = null;
         for (TypeAnnotation an : t.getTypeAnnotations()) {
             if (an.getType().getQualifiedName().equals("ABS.StdLib.LocationType")) {
@@ -109,6 +114,13 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
                     res = LocationType.createFromName(name); 
                 }
             }
+        }
+        if (originatingNode != null && originatingNode instanceof ConstructorArg) {
+            if (res == null || !res.isSomewhere()) {
+                throw new LocationTypeCheckerException(new TypeError(originatingNode,ErrorMessage.LOCATION_TYPE_DATACONSTR_MUST_BE_SOMEWHERE, new String[0]));
+            }/* else {
+                res = LocationType.SOMEWHERE;
+            }*/
         }
         return res;
     }
