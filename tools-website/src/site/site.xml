@@ -58,6 +58,7 @@
       <item name="Getting Started" href="maven-support/getting-started.html"/>
       <item name="Generating Java" href="maven-support/genjava.html"/>
       <item name="Generating Maude" href="maven-support/genmaude.html"/>
+      <item name="Generating Scala" href="maven-support/genscala.html" />
       <item name="Testing in Java" href="maven-support/javatest.html"/>
       <item name="Testing in Maude" href="maven-support/maudetest.html"/>
       <item name="Packaging ABS artifact" href="maven-support/package.html"/>

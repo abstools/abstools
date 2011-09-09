@@ -59,25 +59,10 @@ public class ScalaGenerator extends MTVLParser {
         args.add("-d");
         args.add(targetFolder.getAbsolutePath());
         
-        if (productName != null) {
-            
-            if (checkProductSelection) {
-                try {
-                    super.parseMTVL(mTVL, 
-                            absSrcFolder, 
-                            absArguments, 
-                            productName, 
-                            verbose, 
-                            false, 
-                            true, 
-                            log);
-                } catch (Exception e) {
-                    throw new MojoExecutionException("Could not parse mTVL model", e);
-                }   
-            }
-            
+        absArguments = super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+        
+        if (productName != null)
             args.add("-product="+productName);
-        }
         
         if (! stdlib) {
             args.add("-nostdlib");

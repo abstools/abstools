@@ -11,18 +11,17 @@ import java.io.File;
  * A Maven 2 plugin for the ABS To Scala compiler
  * 
  * @goal genscala
- * @requiresDependencyResolution compile
  * @phase generate-sources
  */
 public class ScalaMojo extends AbstractABSMojo {
 	/**
-     * The ABS Scala Backend target directory.
+     * The ABS Scala Backend output directory.
      * 
-     * @parameter expression="${abs.javaBackend.targetFolder}"
-     *            default-value="${project.build.directory}/generated-sources/abs2scala"
+     * @parameter expression="${abs.scalaBackend.outputDirectory}"
+     *            default-value="${project.build.directory}/generated-sources/abs"
      * @required
      */
-    private File absScalaBackendTargetFolder;
+    private File outputDirectory;
     
 	@Override
 	protected void doExecute() throws Exception {
@@ -32,13 +31,15 @@ public class ScalaMojo extends AbstractABSMojo {
                 mTVL,
                 absSrcFolder, 
                 getABSArguments(), 
-                absScalaBackendTargetFolder,
+                outputDirectory,
                 checkProductSelection,
                 verbose,
                 stdlib,
                 loctype,
                 productName,
                 getLog());
+        
+        project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
 	}
 
 }
