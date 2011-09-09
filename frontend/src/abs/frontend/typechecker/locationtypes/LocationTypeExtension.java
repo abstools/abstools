@@ -115,13 +115,12 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
                 }
             }
         }
+        /*
         if (originatingNode != null && originatingNode instanceof ConstructorArg) {
             if (res == null || !res.isSomewhere()) {
                 throw new LocationTypeCheckerException(new TypeError(originatingNode,ErrorMessage.LOCATION_TYPE_DATACONSTR_MUST_BE_SOMEWHERE, new String[0]));
-            }/* else {
-                res = LocationType.SOMEWHERE;
-            }*/
-        }
+            }
+        }*/
         return res;
     }
     
