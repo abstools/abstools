@@ -20,13 +20,14 @@ public class ObjectCreationObserver implements abs.backend.java.observing.Object
 	
 	@Override
 	public void objectCreated(final ObjectView o) {
+	    Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                getDebugger().getObjects(o.getCOG()).addObject(o);  
+            }
+        });
+        
 		if(DebugUtils.highlightStep){
-			Display.getDefault().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					getDebugger().getObjects(o.getCOG()).addObject(o);	
-				}
-			});
 			refreshDebugViewer();
 		}
 	}
