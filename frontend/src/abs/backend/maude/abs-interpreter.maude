@@ -204,7 +204,6 @@ fmod ABS-DATA-INT is
   extending ABS-DATA-FLOAT .
 
   protecting INT .
-  protecting RANDOM .
   protecting CONVERSION .
 
   op _[_] : String Int -> Data [ctor prec 12 format (! o d d d)] .
@@ -915,10 +914,87 @@ endm
 
 
 *** Some common functionality: scheduling, trivial statements that are always
-*** equations, etc.
-mod ABS-MACHINE-BASICS is
+*** equations, etc.  This is split into a common part (time-neutral) and some
+*** machinery that depends on timed behavior.
+mod ABS-MACHINE-BASICS-COMMON is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
+
+  vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
+  vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
+  var CN : Configuration .  var P : Process .    vars A A' : Vid .
+  var E : Expr .            var AL : VidList .   var N : Label .
+  var Q : String .      var MS : MMtd .      var CO : Bool .
+  var D : Data .            var DL : DataList .  var S2 : SSubst .
+  var M : Mid .
+  var CG : Cogid .
+
+  --- Process teardown: first release all futures, then release the Cog.  (We
+  --- assume correct beginscope / endscope statements).
+  ceq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { L | noStmt }, PrQ: W, Lcnt: F >
+  =
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { noSubst | freeFutures(L) }, PrQ: W, Lcnt: F >
+  if L =/= noSubst
+    [label Process-terminate-1] .
+
+  eq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { noSubst | noStmt }, PrQ: W, Lcnt: F >
+  =
+    < CG : Cog | Object: null >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+    [label Process-terminate-2] .
+
+  *** Handle synchronous self-calls
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    *** L[A] because synchronous calls are always handled via ".staticfuture"
+  if  L[A] == L1['.label]
+    [label schedule-self] .
+
+  --- Skip the $release instruction if the variable is uninitialized.  This
+  --- helps the code generator.
+  ceq
+    < O : C | Cog: CG, Att: S, Pr: { L | $release(A) ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+  if null = (S :: L)[A]
+      [label free-uninitialized] .
+
+  --- Completed futures without references can be removed.
+  ---
+  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
+
+  --- Create a new environment.  This is for supporting local declarations in
+  --- blocks etc.
+  eq
+    < O : C | Cog: CG, Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
+    [label $beginscope] .
+
+  eq
+    < O : C | Cog: CG, Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { L | freeFutures(S2) ; SL }, PrQ: W, Lcnt: F >
+    [label $endscope-1] .
+  eq
+    < O : C | Cog: CG, Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
+  =
+    *** Shouldn't happen, but can't harm
+    < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
+    [label $endscope-2] .
+
+endm
+mod ABS-MACHINE-BASICS-RL is
+  protecting ABS-EVAL .
+  protecting ABS-MSG-TRANSPORT .
+  protecting ABS-MACHINE-BASICS-COMMON .
 
   vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
@@ -944,25 +1020,6 @@ mod ABS-MACHINE-BASICS is
   if ready(SL, (S :: L), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       [label PrQ-ready] .
 
-  --- Process teardown: first release all futures, then release the Cog.  (We
-  --- assume correct beginscope / endscope statements).
-  ceq
-    < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { L | noStmt }, PrQ: W, Lcnt: F >
-  =
-    < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { noSubst | freeFutures(L) }, PrQ: W, Lcnt: F >
-  if L =/= noSubst
-    [label Process-terminate-1] .
-
-  eq
-    < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { noSubst | noStmt }, PrQ: W, Lcnt: F >
-  =
-    < CG : Cog | Object: null >
-    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
-    [label Process-terminate-2] .
-
 
   *** Handle synchronous calls within cogs.
   ***
@@ -984,15 +1041,6 @@ mod ABS-MACHINE-BASICS is
   if  L[A] == L1['.label]
       /\ ready(SL1, (S1 :: L1), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label schedule-cog] .
-
-  *** Handle synchronous self-calls
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
-    *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label]
-    [label schedule-self] .
 
   --- mark
   ---
@@ -1033,27 +1081,6 @@ mod ABS-MACHINE-BASICS is
   if N := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp]))
       [label free] .
 
-  --- Skip the $release instruction if the variable is uninitialized.  This helps
-  --- the code generator.
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | $release(A) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if null = (S :: L)[A]
-      [label free-uninitialized] .
-
-  --- Completed futures without references can be removed.
-  ---
-  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
-
-  --- Create a new environment.  This is for supporting local declarations in
-  --- blocks etc.
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
-    [label $beginscope] .
-
   --- Introduce a new variable into the local scope.
   ceq
     < O : C | Cog: CG, Att: S, Pr: { L | $vardecl( A ; E ) ; SL}, PrQ: W, Lcnt: F >
@@ -1061,19 +1088,6 @@ mod ABS-MACHINE-BASICS is
     < O : C | Cog: CG, Att: S, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label $vardecl] .
-
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | freeFutures(S2) ; SL }, PrQ: W, Lcnt: F >
-    [label $endscope-1] .
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    *** Shouldn't happen, but can't harm
-    < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
-    [label $endscope-2] .
-
 
   --- assert
   ---
@@ -1090,6 +1104,7 @@ endm
 mod ABS-MACHINE-BASICS-TIMED is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
+  protecting ABS-MACHINE-BASICS-COMMON .
 
   vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G : Nat .
@@ -1122,15 +1137,6 @@ mod ABS-MACHINE-BASICS-TIMED is
   if ready(SL, (S :: L), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
       [label PrQ-ready] .
 
-  --- Processes that end release the Cog.
-  eq
-    < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { L | noStmt }, PrQ: W, Lcnt: F >
-  =
-    < CG : Cog | Object: null >
-    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
-    [label Process-terminate] .
-
   *** Handle synchronous calls within cogs.
   ***
   *** Only schedule the process if it is ready - so we have to capture the
@@ -1153,15 +1159,6 @@ mod ABS-MACHINE-BASICS-TIMED is
   if  L[A] == L1['.label]
       /\ ready(SL1, (S1 :: L1), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label schedule-cog] .
-
-  *** Handle synchronous self-calls
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
-    *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label]
-    [label schedule-self] .
 
   --- mark
   ---
@@ -1196,27 +1193,6 @@ mod ABS-MACHINE-BASICS-TIMED is
   if N := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp]))
       [label free] .
 
-  --- Skip the $release instruction if the variable is uninitialized.  This helps
-  --- the code generator.
-  ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | $release(A) ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-  if null = (S :: L)[A]
-      [label free-uninitialized] .
-
-  --- Completed futures without references can be removed.
-  ---
-  eq < N : Future | Name: M, Completed: true, References: 0, Value: D > = none .
-
-  --- Create a new environment.  This is for supporting local declarations in
-  --- blocks etc.
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L | $beginscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L :: noSubst | SL }, PrQ: W, Lcnt: F >
-    [label $beginscope] .
-
   --- Introduce a new variable into the local scope.
   ceq
     < T : Clock | Limit: LIM >
@@ -1226,19 +1202,6 @@ mod ABS-MACHINE-BASICS-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { insert(A, D, L) | markFutures(D) ; SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label $vardecl] .
-
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { L :: S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    < O : C | Cog: CG, Att: S, Pr: { L | freeFutures(S2) ; SL }, PrQ: W, Lcnt: F >
-    [label $endscope-1] .
-  eq
-    < O : C | Cog: CG, Att: S, Pr: { S2 | $endscope ; SL }, PrQ: W, Lcnt: F >
-  =
-    *** Shouldn't happen, but can't harm
-    < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
-    [label $endscope-2] .
-
 
   --- assert
   ---
@@ -1967,7 +1930,7 @@ endm
 
 mod ABS-SIMULATOR-RL is
   --- A machine using rewrite rules.
-  protecting ABS-MACHINE-BASICS .
+  protecting ABS-MACHINE-BASICS-RL .
   protecting ABS-STMT-SKIP-RL .
   protecting ABS-STMT-ASSIGN-RL .
   protecting ABS-STMT-COND-RL .
