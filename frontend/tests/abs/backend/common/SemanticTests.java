@@ -14,6 +14,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.backend.BackendTestDriver;
 import abs.backend.java.JavaTestDriver;
+import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
 
 @RunWith(Parameterized.class)
@@ -41,7 +42,7 @@ public class SemanticTests {
         final Object[][] data;
         /* TODO: Mark Maude tests as ignored instead of just missing them */
         if (checkMaude())
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver() } };
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_EQ_TIMED) } };
         else
             data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } };
         return Arrays.asList(data);

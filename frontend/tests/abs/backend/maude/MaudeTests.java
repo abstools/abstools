@@ -19,6 +19,25 @@ import abs.frontend.parser.Main;
 
 public class MaudeTests extends ABSTest {
 
+    final String mode;
+
+    public  MaudeTests(String mode) {
+        this.mode = mode;
+    }
+
+    /* These two are direct entry-points for JUnit */
+    public static class MaudeEqTests extends MaudeTests {
+        public MaudeEqTests() {
+            super(MaudeCompiler.SIMULATOR_EQ_TIMED);
+        }
+    }
+
+    public static class MaudeRlTests extends MaudeTests {
+        public MaudeRlTests() {
+            super(MaudeCompiler.SIMULATOR_RL);
+        }
+    }
+
     @BeforeClass
     public static void checkMaude() {
         ProcessBuilder pb = new ProcessBuilder();
@@ -46,8 +65,7 @@ public class MaudeTests extends ABSTest {
 
     void assertMaudeResult(String absCode, String expectedResult) {
         try {
-            // TODO: test with other simulators (equational, timed) here as well
-            String generatedMaudeCode = getMaudeCode(absCode, MaudeCompiler.SIMULATOR_RL);
+            String generatedMaudeCode = getMaudeCode(absCode, mode);
             String maudeOutput = getMaudeOutput(generatedMaudeCode);
             Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
             Matcher matcher = pattern.matcher(maudeOutput);

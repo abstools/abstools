@@ -19,6 +19,6 @@ import abs.backend.tests.ABSTestRunnerGenerator;
 import abs.backend.tests.ABSTestRunnerGeneratorTest;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.class, ABSTestRunnerGeneratorTest.class })
+@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class, MaudeTests.MaudeRlTests.class, ABSTestRunnerGeneratorTest.class })
 public class AllBackendTests {
 }

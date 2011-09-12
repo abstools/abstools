@@ -8,7 +8,11 @@ import abs.backend.BackendTestDriver;
 
 public class MaudeTestDriver extends BackendTestDriver {
 
-    MaudeTests maude = new MaudeTests();
+    final MaudeTests maude;
+
+    public MaudeTestDriver(String mode) {
+        maude = new MaudeTests(mode);
+    }
 
     @Override
     public void assertEvalEquals(String absCode, boolean value) {
