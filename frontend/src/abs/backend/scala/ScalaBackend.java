@@ -27,7 +27,7 @@ public class ScalaBackend extends Main {
         throw new UnsupportedOperationException();
     }
     
-    final int compile(String[] args) throws Exception {
+    public final int compile(String[] args) throws Exception {
         final Model model = parse(args);
         
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
