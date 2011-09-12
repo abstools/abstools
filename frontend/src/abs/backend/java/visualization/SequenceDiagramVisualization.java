@@ -194,7 +194,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 String sourceClass = futTask.getTarget().getClassName();
                 writeOut(getActorName(futTask.getTarget()));
                 if (isSystemClass(sourceClass)) {
-                    if (futTask.getID() != 1) // no main task
+                    //if (futTask.getID() != 1) // no main task
                         writeOut("[" + "Task" + futTask.getID() + "]");
                     writeOut(":>");
                 } else {
@@ -252,7 +252,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
              */
             writeOut(getActorName(task.getTarget()));
             if (isSystemClass(targetClass)) {
-                if (task.getID() != 1) // no main task
+                //if (task.getID() != 1) // no main task
                     writeOut("[" + "Task" + task.getID() + "]");
             }
             writeOut(".");
@@ -308,7 +308,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         // task.getFuture().getValue());
         if (!waitingFutures.contains(task.getFuture())) {
             String taskName = getActorName(task.getTarget());
-            if (task.getID() != 1) // no main task
+            //if (task.getID() != 1) // no main task
                 taskName += "[" + "Task" + task.getID() + "]";
             writeOutLn(taskName + ":"); // do something to avoid empty tasks
             writeOutLn(taskName + ":stop");
