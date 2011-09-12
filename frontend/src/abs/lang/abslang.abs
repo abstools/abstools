@@ -309,6 +309,11 @@ def String substr(String str, Int start, Int length) = builtin;
  */
 def Int strlen(String str) = builtin;
 
+/**
+ * Returns a random number between 0 (inclusive) and below (exclusive).
+ */
+def Int random(Int below) = builtin;
+
 
 // Time and Duration datatypes.
 

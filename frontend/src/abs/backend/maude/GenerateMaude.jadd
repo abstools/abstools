@@ -101,13 +101,20 @@ aspect GenerateMaude {
     }
 
     abstract public void Exp.generateMaude(PrintStream stream);
+    abstract public int Exp.numberOfRandom();
 
     public void IncompleteExp.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
+    public int IncompleteExp.numberOfRandom() {
+        return 0;
+    }
     
     public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+    }
+    public int Access.numberOfRandom() {
+        return 0;
     }
 
     abstract public void Exp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations);
@@ -149,6 +156,13 @@ aspect GenerateMaude {
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ");
     }
+    public int AsyncCall.numberOfRandom() {
+        int result = 0;
+        for (PureExp param : getParams()) {
+            result += param.numberOfRandom();
+        }
+        return result;
+    }
 
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
@@ -172,17 +186,31 @@ aspect GenerateMaude {
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ; get( '.staticfuture ; '" + var + ") ");
     }
+    public int SyncCall.numberOfRandom() {
+        int result = 0;
+        for (PureExp param : getParams()) {
+            result += param.numberOfRandom();
+        }
+        return result;
+    }
 
     public void OriginalCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         stream.println("--- Hey, you forgot to flatten your model!");
     }
+    public int OriginalCall.numberOfRandom() {
+        return 0;
+    }
+
 
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         stream.print("get(");
         getPureExp().generateMaude(stream);
         stream.print(" ; '" + var + ") ");
+    }
+    public int GetExp.numberOfRandom() {
+        return 0;
     }
 
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
@@ -215,8 +243,18 @@ aspect GenerateMaude {
         }
         stream.print(") ");
     }
+    public int NewExp.numberOfRandom() {
+        int result = 0;
+        for (PureExp param : getParams()) {
+            result += param.numberOfRandom();
+        }
+        return result;
+    }
 
     abstract public void LiteralExp.generateMaude(PrintStream stream);
+    public int LiteralExp.numberOfRandom() {
+        return 0;
+    }
 
     public void StringLiteral.generateMaude(PrintStream stream) {
         stream.print("\"str\"[\"" + getContent() + "\"] ");
@@ -233,6 +271,9 @@ aspect GenerateMaude {
         stream.print("\"" + maudePrefixOperator() + "\"( ");
         getOperand().generateMaude(stream);
         stream.print(") ");
+    }
+    public int Unary.numberOfRandom() {
+        return getOperand().numberOfRandom();
     }
 
     syn String Binary.maudeInfixOperator();
@@ -256,13 +297,22 @@ aspect GenerateMaude {
         getRight().generateMaude(stream);
         stream.print(") ");
     }
+    public int Binary.numberOfRandom() {
+        return getLeft().numberOfRandom() + getRight().numberOfRandom();
+    }
 
     public void ThisExp.generateMaude(PrintStream stream) {
         stream.print("'this ");
     }
+    public int ThisExp.numberOfRandom() {
+        return 0;
+    }
 
     public void NullExp.generateMaude(PrintStream stream) {
         stream.print("null ");
+    }
+    public int NullExp.numberOfRandom() {
+        return 0;
     }
 
     public void DataConstructorExp.generateMaude(PrintStream stream) {
@@ -277,6 +327,13 @@ aspect GenerateMaude {
            }
        }
        stream.print("] ");
+    }
+    public int DataConstructorExp.numberOfRandom() {
+        int result = 0;
+        for (PureExp param : getParams()) {
+            result += param.numberOfRandom();
+        }
+        return result;
     }
 
     public void VarOrFieldUse.generateMaude(PrintStream stream) {
@@ -293,7 +350,8 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("\"" + getDecl().getModuleDecl().getName() + "." + getName() + "\"( ");
+        String fnName = getDecl().getModuleDecl().getName() + "." + getName();
+        stream.print("\"" + fnName + "\"( ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
@@ -301,8 +359,28 @@ aspect GenerateMaude {
                 if (inlist) stream.print(":: "); else inlist = true;
                 param.generateMaude(stream);
             }
+            if (fnName.equals("ABS.StdLib.random")) {
+                stream.print(":: '.random :: \"int\"[0] ");
+            }
         }
         stream.print(") ");
+    }
+    public int FnApp.numberOfRandom() {
+        int result = 0;
+        String fnName = getDecl().getModuleDecl().getName() + "." + getName();
+        if (fnName.equals("ABS.StdLib.random")) {
+            result = 1;
+        } else {
+            FunctionDef def = ((FunctionDecl)getDecl()).getFunctionDef();
+            if (def instanceof ExpFunctionDef) {
+                PureExp rhs = ((ExpFunctionDef)def).getRhs();
+                result += rhs.numberOfRandom();
+            }
+            for (PureExp param : getParams()) {
+                result += param.numberOfRandom();
+            }
+        }
+        return result;
     }
 
     public void LetExp.generateMaude(PrintStream stream) {
@@ -311,6 +389,9 @@ aspect GenerateMaude {
         getVal().generateMaude(stream);
         stream.print("in ");
         getExp().generateMaude(stream);
+    }
+    public int LetExp.numberOfRandom() {
+        return getVal().numberOfRandom() + getExp().numberOfRandom();
     }
 
     public void IfExp.generateMaude(PrintStream stream) {
@@ -321,6 +402,9 @@ aspect GenerateMaude {
         stream.print("el ");
         getElseExp().generateMaude(stream);
         stream.print("fi ");
+    }
+    public int IfExp.numberOfRandom() {
+        return getCondExp().numberOfRandom() + java.lang.Math.max(getThenExp().numberOfRandom(), getElseExp().numberOfRandom());
     }
 
 	public void CaseExp.generateMaude(PrintStream stream) {
@@ -334,6 +418,13 @@ aspect GenerateMaude {
 		}
 		stream.print("} ");
 	}
+    public int CaseExp.numberOfRandom() {
+        int acc = 0;
+        for (CaseBranch branch : getBranchs()) {
+            acc = java.lang.Math.max(acc, branch.numberOfRandom());
+        }
+        return getExpr().numberOfRandom() + acc;
+    }
 	
 	public void CaseBranch.generateMaude(PrintStream stream) {
 		getLeft().generateMaude(stream);
@@ -341,6 +432,9 @@ aspect GenerateMaude {
         getRight().generateMaude(stream);
         stream.print(") ");
 	}
+    public int CaseBranch.numberOfRandom() {
+        return getRight().numberOfRandom();
+    }
 	
 	abstract public void Pattern.generateMaude(PrintStream stream);
 
@@ -473,6 +567,8 @@ aspect GenerateMaude {
         VarDecl var = getVarDecl();
         if (inMainBlock) {
             if (var.hasInitExp()) {
+                int randomcount = var.getInitExp().numberOfRandom();
+                MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
                     stream.print("assign( @ '" + var.getName() + " ; ");
                     var.getInitExp().generateMaude(stream);
@@ -480,23 +576,31 @@ aspect GenerateMaude {
                 } else {
                     var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
                 }
+                MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
             } else {
                 // nothing to do in this case, since the variable has
                 // been converted into an object attribute.
                 stream.print("noStmt ");
             }
         } else {
-            if (!var.hasInitExp() || var.getInitExp() instanceof PureExp) {
-                stream.print("$vardecl( '" + var.getName() + " ; ");
-                if (var.hasInitExp()) {
-                    var.getInitExp().generateMaude(stream);
+            if (var.hasInitExp()) {
+                int randomcount = var.getInitExp().numberOfRandom();
+                MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
+                if (var.getInitExp() instanceof PureExp) {
+                    stream.print("$vardecl( '" + var.getName() + " ; ");
+                    if (var.hasInitExp()) {
+                        var.getInitExp().generateMaude(stream);
+                    } else {
+                        stream.print("null ");
+                    }
+                    stream.print(") ");
                 } else {
-                    stream.print("null ");
+                    stream.print("$vardecl( '" + var.getName() + " ; null ) ; ");
+                    var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
                 }
-                stream.print(") ");
+                MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
             } else {
-                stream.print("$vardecl( '" + var.getName() + " ; null ); ");
-                var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
+                stream.print("$vardecl( '" + var.getName() + " ; null ) ");
             }
         }
     }
@@ -506,15 +610,20 @@ aspect GenerateMaude {
     }
 
     public void AssignStmt.generateMaude(PrintStream stream) {
+        int randomcount = getValue().numberOfRandom();
+        MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
+            stream.print("$pushrandom ; ");
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
             getValue().generateMaude(stream);
             stream.print(") ");
+            stream.print("; $poprandom ");
         } else {
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
         }
+        MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
     }
 
     public void ReturnStmt.generateMaude(PrintStream stream) {
@@ -671,5 +780,9 @@ aspect GenerateMaude {
             stream.print("; asynccall('.staticfuture ; 'this ; 'run ; emp ; \"InfDuration\"[ emp ]) ");
         }
         stream.print("> ");
+    }
+
+    public int TypeUse.numberOfRandom() {
+        return 0; // bogus
     }
 }

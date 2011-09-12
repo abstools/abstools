@@ -231,7 +231,6 @@ fmod ABS-DATA-INT is
   eq fdefn("%") = $builtin("%") .
 
   *** eq "**" ("int"[I] :: "int"[I']) = "int"[I ^ I'] .
-  *** eq "random" ("int"[I]) = "int"[random(I)] .
   *** eq "real_of_int" ("int"[I]) = "float"[float(I)] .
 
   eq fparams("<") = 'I1, 'I2 .
@@ -242,6 +241,13 @@ fmod ABS-DATA-INT is
   eq fdefn(">") = $builtin(">") .
   eq fparams(">=") = 'I1, 'I2 .
   eq fdefn(">=") = $builtin(">=") .
+
+  *** We're punning here: random has one argument, but the code generator adds
+  *** a second one that gets one of the pre-generated random numbers.  Random
+  *** numbers are stored in '.random and modified via $pushrandom /
+  *** $poprandom.
+  eq fparams("ABS.StdLib.random") = 'Range, 'List, 'Position .
+  eq fdefn("ABS.StdLib.random") = $builtin("random") .
 
 endfm
 
@@ -491,6 +497,9 @@ mod ABS-STATEMENT is
   op $vardecl(_;_) : Vid Expr -> Stmt [ctor format (r d o r o r o) ] .
   op $endscope : -> Stmt [ctor format(r o)] .
 
+  op $pushrandom : -> Stmt [ctor format (r o)] .
+  op $poprandom : -> Stmt [ctor format (r o)] .
+
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It
   --- stops evaluation of the executing object at that point.
@@ -678,6 +687,8 @@ endm
 mod ABS-EVAL is
   protecting ABS-CONFIGURATION .
   protecting ABS-DATA-VID .
+  protecting COUNTER .
+  protecting RANDOM .
 
   vars L L' : Label .
   vars E E' E'' : Expr .
@@ -825,6 +836,10 @@ mod ABS-EVAL is
   eq eval($builtin("<="), S, CN, MAC) = ((S['I1]) asInt <= (S['I2]) asInt) asAbsBool .
   eq eval($builtin(">"), S, CN, MAC) = ((S['I1]) asInt > (S['I2]) asInt) asAbsBool .
   eq eval($builtin(">="), S, CN, MAC) = ((S['I1]) asInt >= (S['I2]) asInt) asAbsBool .
+
+  --- 4294967296 == 2^32
+  ceq eval($builtin("random"), S, CN, MAC) = "int"[ trunc(((S['Range]) asInt) * (N:Int / 4294967296)) ]
+  if N:Int := eval("ABS.StdLib.nth"('List :: 'Position), S, CN, MAC) asInt .
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]
   if "str"[I1:String] := S['I1] /\ "str"[I2:String] := S['I2] .
@@ -902,7 +917,7 @@ mod ABS-MSG-TRANSPORT is
 
   eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)
   =
-    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
 endm
 
@@ -919,6 +934,8 @@ endm
 mod ABS-MACHINE-BASICS-COMMON is
   protecting ABS-EVAL .
   protecting ABS-MSG-TRANSPORT .
+  protecting RANDOM .
+  protecting COUNTER .
 
   vars O O1 : Oid .         vars C B : Cid .     vars S S1 L L1 : Subst .
   vars SL SL1 : StmtList .  vars W W1 : MProc .  vars F G X : Nat .
@@ -989,6 +1006,17 @@ mod ABS-MACHINE-BASICS-COMMON is
     *** Shouldn't happen, but can't harm
     < O : C | Cog: CG, Att: S, Pr: { S2 | SL }, PrQ: W, Lcnt: F >
     [label $endscope-2] .
+
+  *** must be a rewrite rule since we use counter.
+  rl
+    < O : C | Cog: CG, Att: S, Pr: { S2 | $pushrandom ; SL }, PrQ: W, Lcnt: F >
+  =>
+    < O : C | Cog: CG, Att: S, Pr: { S2 | assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
+
+  eq
+    < O : C | Cog: CG, Att: S, Pr: { S2 | $poprandom ; SL }, PrQ: W, Lcnt: F >
+  =
+    < O : C | Cog: CG, Att: S, Pr: { S2 | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
 
 endm
 mod ABS-MACHINE-BASICS-RL is

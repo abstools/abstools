@@ -10,6 +10,8 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypedAnnotation;
 
+import java.io.PrintStream;
+
 public class MaudeCompilerHelper {
     public static PureExp getAnnotationValue(List<Annotation> annotations, String annotationName) {
         for (Annotation a : annotations) {
@@ -20,5 +22,16 @@ public class MaudeCompilerHelper {
             }
         }
         return null;
+    }
+
+    public static void emitPushRandomInst(PrintStream stream, int count) {
+        for (int x = 0; x < count; x++) {
+            stream.print("$pushrandom ; ");
+        }
+    }
+    public static void emitPopRandomInst(PrintStream stream, int count) {
+        for (int x = 0; x < count; x++) {
+            stream.print("; $poprandom ");
+        }
     }
 }
