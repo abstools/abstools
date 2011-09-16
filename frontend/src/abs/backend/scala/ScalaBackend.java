@@ -6,7 +6,6 @@ package abs.backend.scala;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import abs.frontend.ast.Model;
@@ -21,7 +20,7 @@ import abs.frontend.parser.Main;
  */
 public class ScalaBackend extends Main {
     protected File outputDir = null;
-    protected boolean sourceOnly = true;
+    protected boolean sourceOnly = false;
 
     protected void compileSources() {
         throw new UnsupportedOperationException();
@@ -82,19 +81,5 @@ public class ScalaBackend extends Main {
         System.out.println("Scala backend:");
         System.out.println("  -d <dir>       outputs generated files to given directory");
         System.out.println("  -sourceonly    do not compile generated class files");
-    }
-    
-    public static void main(final String... args) {
-        try {
-            new ScalaBackend().compile(args);
-        } catch (Exception e) {
-            System.err.println("An error occurred during compilation: " + e.getMessage());
-
-            if (Arrays.asList(args).contains("-debug")) {
-                e.printStackTrace();
-            }
-
-            System.exit(1);
-        }
     }
 }

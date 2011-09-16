@@ -189,6 +189,12 @@ aspect GenerateScala {
 				return false;
 			}
 			
+			if (decl.getName().equals("random")) {
+				// FIXME this should be slightly more random
+				writer.write("0");
+				return false;
+			}
+			
 			// unsupported ones that we nonetheless handle by providing default values
 			if (decl.getName().equals("lowlevelDeadline")) {
 				writer.write("0");
