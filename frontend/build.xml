@@ -343,14 +343,14 @@
 		<delete dir="${basedir}/${plugin.name}_${frontend.version}"/>
 	</target>
 
-	<target name="findbugs" depends="dist">
+	<target name="findbugs" depends="compile">
 	    <findbugs home="${findbugs.home}"
 	              output="xml"
-	              outputFile="frontend-src-findbugs.xml"
+	              outputFile="${gen.dir}/frontend-src-findbugs.xml"
 	    		  jvmargs="-Xmx512m"
 	    	      quietErrors="true" >
 	      <sourcePath path="${basedir}/src" />
-	      <class location="${target.jar}" />
+	      <class location="${build.dir}/abs" />
 	    </findbugs>
 	  </target>
 
