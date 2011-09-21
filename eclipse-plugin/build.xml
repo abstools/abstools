@@ -40,7 +40,7 @@
         <path id="build.classpath">
            <pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
            <pathelement location="${frontend.dir}/bin" />
-	   <pathelement location="${costabs.dir}/bin" />
+	       <pathelement location="${costabs.dir}/bin" />
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
@@ -119,7 +119,7 @@
 
 	<target name="compile" depends="init" description="Compiles all java files in the source directory.">
 		<mkdir dir="${build.dir}"/>
-		<javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off">
+		<javac srcdir="${src.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" failonerror="true" optimize="off" encoding="utf-8">
 			<classpath refid="build.classpath" />
 		</javac>
 	</target>
