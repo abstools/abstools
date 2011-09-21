@@ -26,7 +26,7 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
   
   def await(cond: => Boolean): Unit @suspendable = {
     EventHandler.debug(this, "Runner awaiting")
-    task ! new Task.Await(() => cond)
+    task ! new Task.Await(() => cond, false)
 
     shift {
       k : (Unit => Unit) => {        
@@ -38,8 +38,9 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
     }
   }
   
-  def await(fut: ActorRef): Unit @suspendable = {
-    EventHandler.debug(this, "Runner awaiting")
+  def await(fut: ActorRef, blocked: Boolean = false): Unit @suspendable = {
+    EventHandler.debug(this, "Runner %s".format(if (blocked) "blocked" else "waiting"))
+    
     fut ! new Task.Listen(cog)
     task ! new Task.Await(() => fut !! Task.Get match {
       case None => false
@@ -47,14 +48,12 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
         case None => false
         case Some(_) => true
       }
-    })
+    }, blocked)
 
     shift {
       k : (Unit => Unit) => {        
         taskCont = k
         Runner.currentRunner.remove
-        //if (schedCont != null)
-        //  schedCont()
       }
     }
   }
@@ -77,30 +76,6 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
       EventHandler.debug(this, "continuing suspended task")
       taskCont()
     }
-    /*
-    reset {
-      EventHandler.debug(this, "task working")
-      Runner.currentRunner.set(this)
-			
-	  shift {
-        k : (Unit => Unit) => {
-          schedCont = k
-          
-          if (taskCont == null) {
-            EventHandler.debug(this, "task not started, starting")
-            start
-          }
-          else {
-            EventHandler.debug(this, "continuing suspended task")
-            taskCont()
-          }
-        }
-      }
-      
-      EventHandler.debug(this, "work done")
-      Runner.currentRunner.remove
-    }
-    */
   }
     
   def receive = {
@@ -121,7 +96,7 @@ object Task {
   case object Get extends TaskMessage
   case object CanRun extends TaskMessage
   case class Listen(task: Array[Byte]) extends TaskMessage
-  case class Await(guard: () => Boolean) extends TaskMessage
+  case class Await(guard: () => Boolean, blocked: Boolean) extends TaskMessage
   
   sealed trait State
   case object IDLE extends State
@@ -149,63 +124,77 @@ class Task[A](private val cogRef: Array[Byte], f: () => A @suspendable) extends 
   
   when(IDLE) {
     case Ev(CanRun) =>
-      if (guard != null)
+      EventHandler.debug(this, "[%s] checking guard".format(self))
+      if (guard != null) {
+        val b = guard()
+        EventHandler.debug(this, "[%s] guard = %s".format(self, b))
         self reply_? guard()
+      }
       else
         self reply_? false
       stay
       
     case Ev(Get) =>
+      EventHandler.debug(this, "[%s] get while task not complete".format(self))
       self reply_? None
       stay
       
     case Ev(Listen(cog)) =>
-      EventHandler.debug(this, "listen request from %s".format(cog))
+      EventHandler.debug(this, "[%s] listen request from %s".format(self, cog))
       listeners += RemoteActorSerialization.fromBinaryToRemoteActorRef(cog)
       stay
     
     case Ev(Task.Run) =>
+      EventHandler.debug(this, "[%s] running".format(self))
       runner ! Runner.Run
       goto(RUNNING)
   }
   
   when(RUNNING) {
     case Ev(CanRun) =>
+      EventHandler.debug(this, "[%s] CanRun while already running".format(self))
       self reply_? false
       stay 
       
     case Ev(Get) =>
+      EventHandler.debug(this, "[%s] get while task not complete".format(self))
       self reply_? None
       stay
     
     case Ev(Listen(cog)) =>
-      EventHandler.debug(this, "listen request from %s".format(cog))
+      EventHandler.debug(this, "[%s] listen request from %s".format(self, cog))
       listeners += RemoteActorSerialization.fromBinaryToRemoteActorRef(cog)
       stay
         
     case Ev(Done(result)) =>
-      EventHandler.debug(this, "Task done, result = %s".format(result))
+      EventHandler.debug(this, "[%s] Task done, result = %s".format(self, result))
       this.result = Some(result)
       listeners foreach (_ ! Cog.Work)
-      cog ! Cog.Done
+      cog ! Cog.Done(true)
       goto(DONE)
       
-    case Ev(Task.Await(guard)) =>
+    case Ev(Task.Await(guard, blocked)) =>
+      EventHandler.debug(this, "[%s] Task blocked".format(self))
       this.guard = guard
-      cog ! Cog.Done
+      
+      cog ! (if (blocked) Cog.Blocked else Cog.Done(false))
+      
       goto(IDLE)
   }
   
   when(DONE) {
     case Ev(CanRun) =>
+      EventHandler.debug(this, "[%s] CanRun when task finished".format(self))
       self reply_? false
       stay
       
     case Ev(Get) => 
+      EventHandler.debug(this, "[%s] get".format(self))
       self reply_? result
       stay
       
     case Ev(Listen(cog)) =>
+      EventHandler.debug(this, "[%s] listen while task complete".format(self))
       RemoteActorSerialization.fromBinaryToRemoteActorRef(cog) ! Cog.Work
       stay
   }

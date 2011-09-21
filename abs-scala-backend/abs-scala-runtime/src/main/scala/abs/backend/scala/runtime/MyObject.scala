@@ -22,10 +22,10 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
    * Submits a new task to this object's COG and returns a remote actor reference to it.
    */
   protected def submit(block: => Any @suspendable) {
-    EventHandler.debug(this, "%s: Submitting block to COG".format(self))
+    EventHandler.debug(this, "[%s] Submitting block to COG %s".format(self, cog))
 
     cog !! new Cog.Run(() => block) match {
-      case None => throw new RuntimeException("No reply from cog")
+      case None => throw new RuntimeException("[%s] No reply from cog %s".format(self, cog))
       case Some(x) => 
         self reply_? x
     }
@@ -45,7 +45,7 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
 
   def _new(clazz: Class[_ <: Actor], args: Any*) =
     cog !! new Cog.New(clazz, args) match {
-      case None    => throw new RuntimeException("No reply from COG");
+      case None    => throw new RuntimeException("[%s] No reply from COG %s".format(self, cog));
 	  case Some(x) => x.asInstanceOf[Array[Byte]]
     }
   
@@ -57,17 +57,17 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
       val remoteNode = Actor.remote.actorFor("nodeManager", addr(0), addr(1).toInt)
     
       val remoteCog = remoteNode !! NodeManager.NewCog match {
-      	case None    => throw new RuntimeException("No reply from remote node");
+      	case None    => throw new RuntimeException("[%s] No reply from remote node %s".format(self, remoteNode));
       	case Some(x) => RemoteActorSerialization.fromBinaryToRemoteActorRef(x.asInstanceOf[Array[Byte]])
       }
     
       remoteCog !! new Cog.New(clazz, args) match {
-      	case None    => throw new RuntimeException("No reply from remote COG");
+      	case None    => throw new RuntimeException("[%s] No reply from remote COG %s".format(self, remoteCog));
       	case Some(x) => x.asInstanceOf[Array[Byte]]
       }
     } getOrElse (
       cog !! new Cog.NewCog(clazz, args) match {
-      	case None    => throw new RuntimeException("No reply from COG");
+      	case None    => throw new RuntimeException("[%s] No reply from COG %s".format(self, cog));
       	case Some(x) => x.asInstanceOf[Array[Byte]]
       }
     )
@@ -76,21 +76,23 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
     asyncCall(RemoteActorSerialization.fromBinaryToRemoteActorRef(that), msg)
     
   def asyncCall(that: ActorRef, msg: Any): ActorRef = {
-    EventHandler.debug(this, "Invoking async call (recipient %s)".format(that.toString()))
+    EventHandler.debug(this, "[%s] Invoking async call %s (recipient %s)".format(self, msg.toString, that))
     
     that !! msg match {
-      case None => throw new RuntimeException("Didn't get task reference from other actor due to timeout")
+      case None => throw new RuntimeException("%s didn't get task reference from other actor %s due to timeout".format(self, that))
       case Some(x) => RemoteActorSerialization.fromBinaryToRemoteActorRef(x.asInstanceOf[Array[Byte]])
     }
   }
  
   protected def getFuture(fut: ActorRef): Any @suspendable = {
-    // if the future is not ready we get to await on it
     fut !! Task.Get match {
-      case None => throw new RuntimeException("No response from future")
+      case None => throw new RuntimeException("%s: No response from future %s".format(self, fut))
       case Some(x) => x.asInstanceOf[Option[Any]] match {
         case Some(x) => x
-        case None => await(fut); getFuture(fut)
+        case None =>
+          // block the whole COG until the future gets resolved
+          await(fut) 
+          getFuture(fut)
       }
     }
   }
