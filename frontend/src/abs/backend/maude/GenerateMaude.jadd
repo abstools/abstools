@@ -1,5 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 import java.io.PrintStream;
+import java.util.Set;
+import java.util.TreeSet;
 import abs.backend.maude.MaudeCompilerHelper;
 
 aspect GenerateMaude {
@@ -101,19 +103,19 @@ aspect GenerateMaude {
     }
 
     abstract public void Exp.generateMaude(PrintStream stream);
-    abstract public int Exp.numberOfRandom();
+    abstract public int Exp.numberOfRandom(Set<String> visitedFunctions);
 
     public void IncompleteExp.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
-    public int IncompleteExp.numberOfRandom() {
+    public int IncompleteExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
     
     public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
     }
-    public int Access.numberOfRandom() {
+    public int Access.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -156,10 +158,10 @@ aspect GenerateMaude {
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ");
     }
-    public int AsyncCall.numberOfRandom() {
+    public int AsyncCall.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
-            result += param.numberOfRandom();
+            result += param.numberOfRandom(visitedFunctions);
         }
         return result;
     }
@@ -186,10 +188,10 @@ aspect GenerateMaude {
         else stream.print("\"InfDuration\"[ emp ]");
         stream.print(") ; get( '.staticfuture ; '" + var + ") ");
     }
-    public int SyncCall.numberOfRandom() {
+    public int SyncCall.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
-            result += param.numberOfRandom();
+            result += param.numberOfRandom(visitedFunctions);
         }
         return result;
     }
@@ -198,7 +200,7 @@ aspect GenerateMaude {
     {
         stream.println("--- Hey, you forgot to flatten your model!");
     }
-    public int OriginalCall.numberOfRandom() {
+    public int OriginalCall.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -209,7 +211,7 @@ aspect GenerateMaude {
         getPureExp().generateMaude(stream);
         stream.print(" ; '" + var + ") ");
     }
-    public int GetExp.numberOfRandom() {
+    public int GetExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -243,16 +245,16 @@ aspect GenerateMaude {
         }
         stream.print(") ");
     }
-    public int NewExp.numberOfRandom() {
+    public int NewExp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
-            result += param.numberOfRandom();
+            result += param.numberOfRandom(visitedFunctions);
         }
         return result;
     }
 
     abstract public void LiteralExp.generateMaude(PrintStream stream);
-    public int LiteralExp.numberOfRandom() {
+    public int LiteralExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -272,8 +274,8 @@ aspect GenerateMaude {
         getOperand().generateMaude(stream);
         stream.print(") ");
     }
-    public int Unary.numberOfRandom() {
-        return getOperand().numberOfRandom();
+    public int Unary.numberOfRandom(Set<String> visitedFunctions) {
+        return getOperand().numberOfRandom(visitedFunctions);
     }
 
     syn String Binary.maudeInfixOperator();
@@ -297,21 +299,21 @@ aspect GenerateMaude {
         getRight().generateMaude(stream);
         stream.print(") ");
     }
-    public int Binary.numberOfRandom() {
-        return getLeft().numberOfRandom() + getRight().numberOfRandom();
+    public int Binary.numberOfRandom(Set<String> visitedFunctions) {
+        return getLeft().numberOfRandom(visitedFunctions) + getRight().numberOfRandom(visitedFunctions);
     }
 
     public void ThisExp.generateMaude(PrintStream stream) {
         stream.print("'this ");
     }
-    public int ThisExp.numberOfRandom() {
+    public int ThisExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
     public void NullExp.generateMaude(PrintStream stream) {
         stream.print("null ");
     }
-    public int NullExp.numberOfRandom() {
+    public int NullExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
     }
 
@@ -328,10 +330,10 @@ aspect GenerateMaude {
        }
        stream.print("] ");
     }
-    public int DataConstructorExp.numberOfRandom() {
+    public int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         for (PureExp param : getParams()) {
-            result += param.numberOfRandom();
+            result += param.numberOfRandom(visitedFunctions);
         }
         return result;
     }
@@ -365,19 +367,23 @@ aspect GenerateMaude {
         }
         stream.print(") ");
     }
-    public int FnApp.numberOfRandom() {
+    public int FnApp.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
         String fnName = getDecl().getModuleDecl().getName() + "." + getName();
         if (fnName.equals("ABS.StdLib.random")) {
             result = 1;
         } else {
-            FunctionDef def = ((FunctionDecl)getDecl()).getFunctionDef();
-            if (def instanceof ExpFunctionDef) {
-                PureExp rhs = ((ExpFunctionDef)def).getRhs();
-                result += rhs.numberOfRandom();
-            }
             for (PureExp param : getParams()) {
-                result += param.numberOfRandom();
+                result += param.numberOfRandom(visitedFunctions);
+            }
+            if (!visitedFunctions.contains(fnName)) {
+                visitedFunctions.add(fnName);
+                FunctionDef def = ((FunctionDecl)getDecl()).getFunctionDef();
+                if (def instanceof ExpFunctionDef) {
+                    PureExp rhs = ((ExpFunctionDef)def).getRhs();
+                    result += rhs.numberOfRandom(visitedFunctions);
+                }
+                visitedFunctions.remove(fnName);
             }
         }
         return result;
@@ -390,8 +396,9 @@ aspect GenerateMaude {
         stream.print("in ");
         getExp().generateMaude(stream);
     }
-    public int LetExp.numberOfRandom() {
-        return getVal().numberOfRandom() + getExp().numberOfRandom();
+    public int LetExp.numberOfRandom(Set<String> visitedFunctions) {
+        return getVal().numberOfRandom(visitedFunctions)
+            + getExp().numberOfRandom(visitedFunctions);
     }
 
     public void IfExp.generateMaude(PrintStream stream) {
@@ -403,8 +410,10 @@ aspect GenerateMaude {
         getElseExp().generateMaude(stream);
         stream.print("fi ");
     }
-    public int IfExp.numberOfRandom() {
-        return getCondExp().numberOfRandom() + java.lang.Math.max(getThenExp().numberOfRandom(), getElseExp().numberOfRandom());
+    public int IfExp.numberOfRandom(Set<String> visitedFunctions) {
+        return getCondExp().numberOfRandom(visitedFunctions)
+            + java.lang.Math.max(getThenExp().numberOfRandom(visitedFunctions),
+                                 getElseExp().numberOfRandom(visitedFunctions));
     }
 
 	public void CaseExp.generateMaude(PrintStream stream) {
@@ -418,12 +427,12 @@ aspect GenerateMaude {
 		}
 		stream.print("} ");
 	}
-    public int CaseExp.numberOfRandom() {
+    public int CaseExp.numberOfRandom(Set<String> visitedFunctions) {
         int acc = 0;
         for (CaseBranch branch : getBranchs()) {
-            acc = java.lang.Math.max(acc, branch.numberOfRandom());
+            acc = java.lang.Math.max(acc, branch.numberOfRandom(visitedFunctions));
         }
-        return getExpr().numberOfRandom() + acc;
+        return acc + getExpr().numberOfRandom(visitedFunctions);
     }
 	
 	public void CaseBranch.generateMaude(PrintStream stream) {
@@ -432,8 +441,8 @@ aspect GenerateMaude {
         getRight().generateMaude(stream);
         stream.print(") ");
 	}
-    public int CaseBranch.numberOfRandom() {
-        return getRight().numberOfRandom();
+    public int CaseBranch.numberOfRandom(Set<String> visitedFunctions) {
+        return getRight().numberOfRandom(visitedFunctions);
     }
 	
 	abstract public void Pattern.generateMaude(PrintStream stream);
@@ -567,7 +576,7 @@ aspect GenerateMaude {
         VarDecl var = getVarDecl();
         if (inMainBlock) {
             if (var.hasInitExp()) {
-                int randomcount = var.getInitExp().numberOfRandom();
+                int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
                     stream.print("assign( @ '" + var.getName() + " ; ");
@@ -584,7 +593,7 @@ aspect GenerateMaude {
             }
         } else {
             if (var.hasInitExp()) {
-                int randomcount = var.getInitExp().numberOfRandom();
+                int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
                     stream.print("$vardecl( '" + var.getName() + " ; ");
@@ -610,7 +619,7 @@ aspect GenerateMaude {
     }
 
     public void AssignStmt.generateMaude(PrintStream stream) {
-        int randomcount = getValue().numberOfRandom();
+        int randomcount = getValue().numberOfRandom(new TreeSet<String>());
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
             stream.print("$pushrandom ; ");
@@ -782,7 +791,7 @@ aspect GenerateMaude {
         stream.print("> ");
     }
 
-    public int TypeUse.numberOfRandom() {
+    public int TypeUse.numberOfRandom(Set<String> visitedFunctions) {
         return 0; // bogus
     }
 }
