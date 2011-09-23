@@ -1009,14 +1009,14 @@ mod ABS-MACHINE-BASICS-COMMON is
 
   *** must be a rewrite rule since we use counter.
   rl
-    < O : C | Cog: CG, Att: S, Pr: { S2 | $pushrandom ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $pushrandom ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { S2 | assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
+    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
 
   eq
-    < O : C | Cog: CG, Att: S, Pr: { S2 | $poprandom ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | $poprandom ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: S, Pr: { S2 | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
+    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
 
 endm
 mod ABS-MACHINE-BASICS-RL is
