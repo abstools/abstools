@@ -120,7 +120,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     protected void taskDeadlocked() {
-        logger.finest("Task deadlocked");
+        logger.warning("Task "+activeTask+" deadlocked");
         runtime.doNextStep();
 
     }
@@ -224,12 +224,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
         }
         
-        public void setGuard(ABSGuard g) {
+        synchronized void setGuard(ABSGuard g) {
             logger.finest(executingTask + " awaiting " + g);
-            synchronized (this) {
-                active = false;
-                this.guard = g;
-            }
+            active = false;
+            this.guard = g;
 
             logger.finest(executingTask + " registering at threads...");
             boolean wasAdded = registerAtThreads(g);
@@ -239,7 +237,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
         }
 
-        public void await(ABSGuard g) {
+        void await(ABSGuard g) {
             
             logger.finest(executingTask + " next step done going into monitor");
             synchronized (this) {
@@ -257,18 +255,17 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
 
         private boolean registerAtThreads(ABSGuard g) {
+            boolean wasAdded = false;
             if (g instanceof ABSFutureGuard) {
                 ABSFutureGuard fg = (ABSFutureGuard) g;
-                boolean wasAdded = fg.fut.addWaitingThread(this);
+                wasAdded = fg.fut.addWaitingThread(this);
                 logger.finest(executingTask + " was "+(wasAdded ? "" :"NOT ")+"added to " + fg.fut);
-                return wasAdded;
             } else if (g instanceof ABSAndGuard) {
                 ABSAndGuard ag = (ABSAndGuard) g;
-                boolean wasAdded = registerAtThreads(ag.getLeftGuard());
+                wasAdded = registerAtThreads(ag.getLeftGuard());
                 wasAdded |= registerAtThreads(ag.getRightGuard());
-                return wasAdded;
             }
-            return false;
+            return wasAdded;
         }
 
         public synchronized void awake() {
