@@ -202,25 +202,29 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
         }
 
-        public synchronized void checkGuard() {
-            logger.finest(executingTask + " checking guard");
-            if (guard.isTrue() && guard.staysTrue()) {
-                synchronized (SimpleTaskScheduler.this) {
-                    logger.finest(executingTask + " got monitor");
-                    suspendedTasks.remove(executingTask);
-                    readyTasks.add(executingTask);
-                    executingTask.makeReady();
-                    if (view != null)
-                        view.taskReady(executingTask.task.getView());
-                    if (activeTask == null) {
-                        logger.finest(executingTask + " scheduling myself");
-                        schedule();
+        public void checkGuard() {
+            // have to take locks in that order to prevent deadlocks
+            // because schedule might get called
+            synchronized (SimpleTaskScheduler.this) {
+                synchronized (this) {
+                    logger.finest(executingTask + " checking guard");
+                    if (guard.isTrue() && guard.staysTrue()) {
+                        logger.finest(executingTask + " got monitor");
+                        suspendedTasks.remove(executingTask);
+                        readyTasks.add(executingTask);
+                        executingTask.makeReady();
+                        if (view != null)
+                            view.taskReady(executingTask.task.getView());
+                        if (activeTask == null) {
+                            logger.finest(executingTask + " scheduling myself");
+                            schedule();
+                        }
                     }
                 }
             }
         }
-
-        public void await(ABSGuard g) {
+        
+        public void setGuard(ABSGuard g) {
             logger.finest(executingTask + " awaiting " + g);
             synchronized (this) {
                 active = false;
@@ -228,8 +232,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
 
             logger.finest(executingTask + " registering at threads...");
-            registerAtThreads(g);
+            boolean wasAdded = registerAtThreads(g);
 
+            if (!wasAdded) {
+                logger.fine(this+" was not added to guard "+g);
+            }
+        }
+
+        public void await(ABSGuard g) {
+            
             logger.finest(executingTask + " next step done going into monitor");
             synchronized (this) {
                 try {
@@ -245,16 +256,19 @@ public class SimpleTaskScheduler implements TaskScheduler {
             }
         }
 
-        private void registerAtThreads(ABSGuard g) {
+        private boolean registerAtThreads(ABSGuard g) {
             if (g instanceof ABSFutureGuard) {
                 ABSFutureGuard fg = (ABSFutureGuard) g;
-                fg.fut.addWaitingThread(this);
-                logger.finest(executingTask + " added to " + fg.fut);
+                boolean wasAdded = fg.fut.addWaitingThread(this);
+                logger.finest(executingTask + " was "+(wasAdded ? "" :"NOT ")+"added to " + fg.fut);
+                return wasAdded;
             } else if (g instanceof ABSAndGuard) {
                 ABSAndGuard ag = (ABSAndGuard) g;
-                registerAtThreads(ag.getLeftGuard());
-                registerAtThreads(ag.getRightGuard());
+                boolean wasAdded = registerAtThreads(ag.getLeftGuard());
+                wasAdded |= registerAtThreads(ag.getRightGuard());
+                return wasAdded;
             }
+            return false;
         }
 
         public synchronized void awake() {
@@ -285,16 +299,12 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     private void doSchedule() {
-        List<TaskInfo> choices;
-        synchronized (this) {
-            logger.finest("Executing doSchedule...");
+        logger.finest("Executing doSchedule...");
 
-            choices = getSchedulableTasks();
+        List<TaskInfo> choices = getSchedulableTasks();
             
-            if (logger.isLoggable(Level.INFO))
-                logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
-
-        }
+        if (logger.isLoggable(Level.INFO))
+            logger.info("COG " + cog.getID() + " scheduling choices: " + choices);
 
         if (choices.isEmpty()) {
             logger.info("Choices are empty!");
@@ -393,12 +403,16 @@ public class SimpleTaskScheduler implements TaskScheduler {
             if (view != null)
                 view.taskSuspended(currentTask.task.getView(), g);
 
+            thread.setGuard(g);
+
             if (g.isTrue() || (suspendedTasks.size() + readyTasks.size()) > 1) {
                 logger.fine("issuing a schedule");
                 schedule();
             }
+             
         }
 
+        
         runtime.doNextStep();
 
         synchronized (this) {
@@ -407,7 +421,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
         if (newTask != currentTask) {
             thread.await(g);
-        }
+        } 
 
         if (view != null)
             view.taskResumed(currentTask.task.getView(), g);

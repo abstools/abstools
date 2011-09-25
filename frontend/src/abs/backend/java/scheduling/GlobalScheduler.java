@@ -4,6 +4,7 @@
  */
 package abs.backend.java.scheduling;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.runtime.ABSFut;
@@ -17,6 +18,7 @@ public class GlobalScheduler {
     private final GlobalSchedulingStrategy strategy;
     private final ABSRuntime runtime;
     private volatile boolean isShutdown;
+    private final AtomicInteger counter = new AtomicInteger();
 
     public GlobalScheduler(ABSRuntime runtime, GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
@@ -27,12 +29,13 @@ public class GlobalScheduler {
 
     public void doNextScheduleStep() {
         if (isShutdown) return;
-        logger.finest("Do next step...");
+        int i = counter.incrementAndGet();
+        logger.finest("==="+i+": Do next step...");
         ScheduleAction next = null;
         synchronized (this) {
             if (ignoreNextStep) {
                 ignoreNextStep = false;
-                logger.finest("Ignored step");
+                logger.finest("==="+i+": Ignored step");
                 notify();
                 return;
             }
@@ -47,17 +50,20 @@ public class GlobalScheduler {
 
             totalNumChoices += options.numOptions() - 1;
 
-            logger.finest("Choose next action...");
+            logger.finest("==="+i+" Choose next action...");
             next = strategy.choose(options);
-            logger.finest("Action " + next + " choosen");
+            logger.finest("==="+i+" Action " + next + " choosen");
             options.removeOption(next);
-            logger.finest("Executing Action " + next);
+            logger.finest("==="+i+" Executing Action " + next);
 
 
         }
         if (isShutdown) return;
         next.execute();
-        logger.finest("Action " + next + " was executed.");
+        int j = counter.intValue();
+        if (i != j)
+            logger.fine("#### Interleaving detected "+i+" != "+j);
+        logger.finest("==="+i+" Action " + next + " was executed.");
     }
 
     public void stepTask(Task<?> task) throws InterruptedException {
@@ -79,11 +85,15 @@ public class GlobalScheduler {
 
     private boolean ignoreNextStep;
 
-    public synchronized void ignoreNextStep() {
+    private synchronized void ignoreNextStep() {
         ignoreNextStep = true;
     }
 
-    public synchronized void awaitNextStep() {
+    /**
+     * Wait until the next step that should be ignored
+     * has been executed
+     */
+    private synchronized void awaitIgnoredStep() {
         while (ignoreNextStep) {
             try {
                 logger.finest("Awaiting next step...");
@@ -97,6 +107,36 @@ public class GlobalScheduler {
         logger.finest("Next step done");
     }
 
+    /**
+     * Handling a get in the global scheduler is pretty tricky.
+     * The following is going on here:
+     * the current task does a .get on the given future.
+     * 2 Cases:
+     * 
+     * 1. Future is ready, that is easy, we just continue
+     * 
+     * 2. Future is not ready
+     * 
+     * this case is difficult, because we have to 
+     *  1. block the current thread
+     *  2. schedule some other task that is ready by choosing one by the
+     *     global scheduler 
+     *  3. when the future is resolved the blocked thread must be awaked,
+     *     BUT we must ensure that only one thread is calling the
+     *     doNextScheduleStep method. 
+     *     For this reason there is an ignoreNextStep field that
+     *     can be set to ignore the next call to doNextScheduleStep
+     *     
+     *     
+     *  what we do now is to create a Waker object
+     *  this waker object is added to the future we are waiting for, so 
+     *  that this future can inform us when it is resolved.
+     *  we then schedule the next task by calling runtime.doNextStep()
+     *  and after that we suspend the thread to be awaked later by the
+     *  future, see Waker class for further docu
+     * 
+     * @param fut
+     */
     public void handleGet(ABSFut<?> fut) {
         // note that this code does only work in the presence of global
         // scheduling,
@@ -113,7 +153,7 @@ public class GlobalScheduler {
 
     }
 
-    static class Waker implements GuardWaiter {
+    private static class Waker implements GuardWaiter {
         boolean awaked;
         final GlobalScheduler globalScheduler;
         public Waker(GlobalScheduler scheduler) {
@@ -147,11 +187,21 @@ public class GlobalScheduler {
             if (Logging.DEBUG)
                 logger.finest("checking guard...");
 
+            // the awaked thread will do a call to
+            // doNextScheduleStep, however, we have
+            // to ignore this call as this thread will 
+            // do the call already
             globalScheduler.ignoreNextStep();
+            
             awake();
+            
             if (Logging.DEBUG)
                 logger.finest("await next step");
-            globalScheduler.awaitNextStep();
+
+            // we are now waiting for the awaked thread to do the
+            // call to doNextScheduleStep, so that there are no
+            // two parallel threads running
+            globalScheduler.awaitIgnoredStep();
         }
     }
 
