@@ -63,7 +63,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.backend.java.utils.ColorUtils;
 
 public class InteractiveScheduler implements TotalSchedulingStrategy {
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
     private final SchedulerGUI gui;
     private final SchedulerGUISwing guiSwingWrapper;
     private final SchedulingObserver obs;
@@ -78,7 +78,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
     }
 
     public synchronized void setDirectScheduler(TotalSchedulingStrategy s) {
-        System.out.println("SETTING DIRECT SCHEDULER");
         directScheduler = s;
     }
 
@@ -97,7 +96,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
         if (ds != null) {
             a = ds.choose(options);
         } else {
-            System.out.println("Using GUI WRAPPER");
             guiSwingWrapper.showOptions(options);
             debug("awaiting GUI action...");
             a = awaitGUIAction();
@@ -140,7 +138,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
 
     @Override
     public TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> scheduableTasks) {
-        System.out.println("Scheduling TASKS");
 
         TotalSchedulingStrategy ds = getDirectScheduler();
         TaskInfo task = null;
@@ -148,7 +145,6 @@ public class InteractiveScheduler implements TotalSchedulingStrategy {
         if (ds != null) {
             task = ds.schedule(scheduler, scheduableTasks);
         } else {
-            System.out.println("Using GUI WRAPPER for TASKS");
             guiSwingWrapper.chooseTask(scheduler, scheduableTasks);
             task = awaitGUITaskChoose();
         }
@@ -396,7 +392,6 @@ class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
             ScheduleAction a = action;
             action = null;
             updateBtn();
-            System.out.println("Pressed Button with action " + a);
             chooseBtnPressed(a);
         }
     }
@@ -593,7 +588,6 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
     @Override
     public synchronized void showOptions(ScheduleOptions options) {
-        System.out.println("Replay: showOptions");
         this.options = options;
     }
 
@@ -665,7 +659,7 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     private long seed = System.nanoTime();
     private final Random r = new Random(seed);
     private final RandomSchedulingStrategy globalStrat = new RandomSchedulingStrategy(r);
-    private final RandomSchedulingStrategy taskStrat = new RandomSchedulingStrategy(r);
+    private final RandomSchedulingStrategy taskStrat = globalStrat;
     private final InteractiveScheduler scheduler;
     private TaskInfo nextTask;
     private GridBagLayout gridBagLayout;
@@ -781,7 +775,6 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
         ScheduleAction a = nextAction();
         if (a != null) {
-            System.out.println("Random scheduler SET DIRECT SCHEDULER");
             scheduler.setDirectScheduler(this);
             scheduler.setNextAction(a);
         }
@@ -818,7 +811,6 @@ class RandomOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
     public synchronized ScheduleAction choose(ScheduleOptions options) {
         ScheduleAction a = nextAction();
         if (remaindingSteps == 0 && !isRunning) {
-            System.out.println("Random scheduler RESET DIRECT SCHEDULER");
             scheduler.setDirectScheduler(null);
         }
 

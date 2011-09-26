@@ -4,7 +4,10 @@
  */
 package abs.backend.java.scheduling;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.runtime.ABSFut;
@@ -20,6 +23,13 @@ public class GlobalScheduler {
     private volatile boolean isShutdown;
     private final AtomicInteger counter = new AtomicInteger();
 
+    /**
+     * Holds a list of threads that wait for other threads to complete
+     * their next step
+     * protected by lock of this
+     */
+    private final ArrayList<SimpleLock> nextStepWaitStack = new ArrayList<SimpleLock>();
+
     public GlobalScheduler(ABSRuntime runtime, GlobalSchedulingStrategy strategy) {
         this.strategy = strategy;
         this.runtime = runtime;
@@ -33,10 +43,10 @@ public class GlobalScheduler {
         logger.finest("==="+i+": Do next step...");
         ScheduleAction next = null;
         synchronized (this) {
-            if (ignoreNextStep) {
-                ignoreNextStep = false;
-                logger.finest("==="+i+": Ignored step");
-                notify();
+            if (nextStepWaitStack.size() > 0) {
+                SimpleLock l = nextStepWaitStack.remove(nextStepWaitStack.size()-1);
+                logger.finest("==="+i+": Ignored step, awaking thread ");
+                l.unlock();
                 return;
             }
             if (options.isEmpty()) {
@@ -59,10 +69,10 @@ public class GlobalScheduler {
 
         }
         if (isShutdown) return;
-        next.execute();
         int j = counter.intValue();
         if (i != j)
-            logger.fine("#### Interleaving detected "+i+" != "+j);
+            logger.warning("#### Interleaving detected "+i+" != "+j);
+        next.execute();
         logger.finest("==="+i+" Action " + next + " was executed.");
     }
 
@@ -83,30 +93,32 @@ public class GlobalScheduler {
         options.addOption(action);
     }
 
-    private boolean ignoreNextStep;
-
-    private synchronized void ignoreNextStep() {
-        ignoreNextStep = true;
+    private synchronized void ignoreNextStep(SimpleLock l) {
+        nextStepWaitStack.add(l);
     }
 
-    /**
-     * Wait until the next step that should be ignored
-     * has been executed
-     */
-    private synchronized void awaitIgnoredStep() {
-        while (ignoreNextStep) {
-            try {
-                logger.finest("Awaiting next step...");
-                wait();
-            } catch (InterruptedException e) {
-                logger.fine("was interrupted");
-                Thread.currentThread().interrupt();
-                break;
+    static class SimpleLock {
+        private boolean locked;
+        synchronized void unlock() {
+            locked = false;
+            notifyAll();
+        }
+        
+        synchronized void awaitUnlocked() {
+            while (locked) {
+                try {
+                    logger.finest("Awaiting next step...");
+                    wait();
+                } catch (InterruptedException e) {
+                    logger.fine("was interrupted");
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
-        logger.finest("Next step done");
+        
     }
-
+    
     /**
      * Handling a get in the global scheduler is pretty tricky.
      * The following is going on here:
@@ -187,11 +199,8 @@ public class GlobalScheduler {
             if (Logging.DEBUG)
                 logger.finest("checking guard...");
 
-            // the awaked thread will do a call to
-            // doNextScheduleStep, however, we have
-            // to ignore this call as this thread will 
-            // do the call already
-            globalScheduler.ignoreNextStep();
+            SimpleLock l = new SimpleLock();
+            globalScheduler.ignoreNextStep(l);
             
             awake();
             
@@ -201,7 +210,7 @@ public class GlobalScheduler {
             // we are now waiting for the awaked thread to do the
             // call to doNextScheduleStep, so that there are no
             // two parallel threads running
-            globalScheduler.awaitIgnoredStep();
+            l.awaitUnlocked();
         }
     }
 

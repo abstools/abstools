@@ -31,7 +31,7 @@ import abs.backend.java.observing.TaskView;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 /**
- * A very simple scheduler that is not the most efficient one, but is easy to
+ * A simple scheduler that is not the most efficient one, but is easy to
  * understand and also makes it easy to override the scheduling behavior
  * 
  * @author Jan Schäfer
