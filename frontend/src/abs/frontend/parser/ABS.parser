@@ -845,7 +845,7 @@ Deltaparam deltaparam =
     | TYPE_IDENTIFIER.c {: // hack...
         if (c=="True") return new Const(new BoolVal(true));
         else if (c == "False") return new Const(new BoolVal(false));
-	else return new CID(c); :}
+	else return new FID(c); :}
     ;
 
 List when_condition = WHEN application_condition.dl {: return dl; :};

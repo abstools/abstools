@@ -136,6 +136,7 @@ aspect DeltaCollector {
 
     public abstract String Deltaparam.getName();
     public String FIDAID.getName()  { return getFeatName() + "." + getAttrName(); }
+    public String FID.getName()  { return getFeatName(); }
     public String Const.getName()   { return getValue().getName(); }
     public abstract String Value.getName();
     public String IntVal.getName()  { return "" + getValue(); }
@@ -215,6 +216,14 @@ aspect DeltaCollector {
     }
 
     public Value CID.calcValue(List<Feature> feats) {
+        for (Feature f : feats) {
+            if (f.getName().equals(getName()))
+                return new BoolVal(true);
+        }
+        return new BoolVal(false);
+    }
+    
+    public Value FID.calcValue(List<Feature> feats) {
         for (Feature f : feats) {
             if (f.getName().equals(getName()))
                 return new BoolVal(true);
