@@ -252,6 +252,7 @@ BoolVal: Value ::= <Value:Boolean>;
 Deltaspec ::= <Name> Deltaparam* ;
 abstract Deltaparam;
 CID: Deltaparam ::= <Name> ;
+FID: Deltaparam ::= <Name> ;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
