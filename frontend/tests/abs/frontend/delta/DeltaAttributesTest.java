@@ -4,28 +4,48 @@
  */
 package abs.frontend.delta;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
-import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.Model;
+import abs.common.WrongProgramArgumentException;
+import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 
 public class DeltaAttributesTest extends DeltaFlattenerTest {
 
     @Test
-    public void addFeatureAsAttribute() throws ASTNodeNotFoundException {
+    public void passFeatureAsBoolean1() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
-                "module M; " +
-                "delta D(Boolean b) {}" +
-                "productline PL { features F1, F2; delta D(F2) when F1; } " +
-                "product P1(F1); " +
-                "product P2(F1,F2);"
+                "module M; " 
+                + "delta D(Boolean f) {adds class C { Boolean myField = f; } }" 
+                + "productline PL { features F, G; delta D(F) when F; delta D(F) when G; } "
+                + "product P1(F); "
+                + "product P2(G);"
         );
         
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        model.applyDelta(delta);
+        // flatten for P1 - f is true
+        model.flattenForProduct("M.P1");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("myField"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals("True()"));
+    }
+
+    @Test
+    public void passFeatureAsBoolean2() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M; " 
+                + "delta D(Boolean f) {adds class C { Boolean myField = f; } }" 
+                + "productline PL { features F, G; delta D(F) when F; delta D(F) when G; } "
+                + "product P1(F); "
+                + "product P2(G);"
+        );
         
-        
+        // flatten for P2 - f is false
+        model.flattenForProduct("M.P2");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("myField"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals("False()"));
     }
 }
