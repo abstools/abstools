@@ -1,103 +1,50 @@
 // test the original() call substitution
 module HowOriginal;
 
-
-interface Fruity {
-	String get_name();
-}
-
-class Fruit implements Fruity {
-    String name = "fruit";
-    String get_name() { return name; }
-}
-
-/* MOD class - MOD method
- *
- * I seems that calling original() only makes sense in a delta
- * that modifies an existing class by modifying a method in that class.
- */
 delta D1 {
-    modifies class Fruit {
-        modifies String get_name() {
-            return original(); // ReturnStmt
-        }
-    }
+	adds class Foo {
+		Unit bar() {}
+	}
 }
 
-delta D2 {
-    modifies class Fruit {
-        modifies String get_name() {
-            String o = original(); // VarDeclStmt
-            return "D2." + o;
-        }
-    }
+delta D2a {
+	modifies class Foo {
+		modifies Unit bar() { original(); }
+	}
+}
+
+delta D2b {
+	modifies class Foo {
+		modifies Unit bar() { D1.original(); }
+	}
 }
 
 delta D3 {
-    modifies class Fruit {
-        modifies String get_name() {
-            original(); // ExpressionStmt
-            String o = "";
-            o = original(); // AssignStmt
-            return "D3." + o;
-        }
-    }
+	modifies class Foo {
+		modifies Unit bar() { D2a.original(); D2b.original(); }
+	}
 }
 
-// when the method is remove, or the class where the method
-// was defined is removed, there should be an error when calling original()
-delta D3a {
-    removes class Fruit;
-}
-
-delta D3b {
-    modifies class Fruit {
-        removes String get_name();
-    }
-}
-
-delta D4 {
-    modifies class Fruit {
-        modifies String get_name() {
-            String o = original(); // VarDeclStmt
-            return "D4." + o;
-        }
-    }
-}
-
-delta DX {}
-
-delta D5 {
-    adds class XXX {
-        Unit hello() {}
-        Unit bye() { this.hello(); }
-    }
-}
 
 //*****************************************************************
 
 productline PL {
-    features Stuff;
-    delta D1 when Stuff;
-    delta D2 after D1 when Stuff;
-    delta DX when Stuff;
-    delta D3 after D2,DX when Stuff;
-//    delta D3b after D2 when Stuff;
-    delta D4 after D3 when Stuff;
-    delta D5 after D4 when Stuff;
-
+    features F;
+    
+    delta D1 when F;
+    delta D2a after D1 when F;
+//    delta D2b after D1 when F;
+//    delta D3 after D2a, D2b when F; 
 }
 
 //*****************************************************************
 
-product P (Stuff);
-
+product P(F);
 
 //*****************************************************************
 
 // MainBlock
 {
-	Fruity fruit = new Fruit();
-	String n = fruit.get_name();
+	
 }
 
