@@ -4,21 +4,7 @@
  */
 package eu.hatsproject.absplugin.actions.runconfig;
 
-import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_ARGS_OTHER_DEFAULT;
-import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_COMPILE_BEFORE_DEFAULT;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_CLASSPATH_LIST;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_COMPILE_BEFORE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_DEBUG_MODE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_DEBUG_MODE_DEFAULT;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_OBSERVER_LIST;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_RANDOMSEED;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_USE_EXTERNAL;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_DEBUGGER_USE_EXTERNAL_DEFAULT;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PRODUCT_NAME_ATTRIBUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PROJECT_NAME_ATTRIBUTE;
-import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_TEST_EXECUTION;
+import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.showErrorMessage;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
@@ -64,6 +50,8 @@ public class JavaTab extends AbstractTab {
 	private Text historyText;
 	private org.eclipse.swt.widgets.List observerList;
 	private org.eclipse.swt.widgets.List classPathList;
+
+    private Long seed;
 
 	@Override
 	public void createControl(Composite parent) {
@@ -131,38 +119,51 @@ public class JavaTab extends AbstractTab {
 
 	@Override
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
-		String seedString = seedNumber.getText();
-		long seed;
-		try{
-			if(getSelectedScheduler()!=null && getSelectedScheduler().equals(DebuggerScheduler.RANDOM)){
-				seed = Long.valueOf(seedString);
-				if (seed < 0) throw new NumberFormatException();
-				if (seed > 0){
-					configuration.setAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, getSeedCommand(seed));
-				}
-			}
-		} catch (NumberFormatException e){
-			showErrorMessage("Seed is invalid - must be a positive number / long value");
-		}
-		
-		ArrayList<String> observerClassNames = new ArrayList<String>();
-		for (String string : observerList.getItems()) {
-			observerClassNames.add(getObserverClassName(string));
-		}
-		ArrayList<String> classPathNames = new ArrayList<String>();
-        for (String string : classPathList.getItems()) {
-            classPathNames.add(string);
-        }
-        configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, testExecutionButton.getSelection());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, observerClassNames);
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, classPathNames);
-		configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
-		configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, getSelectedScheduler());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, compileCheckButton.getSelection());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE, otherArgsText.getText());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_DEBUG_MODE, debugModeCheckButton.getSelection());
-		configuration.setAttribute(RUNCONFIG_DEBUGGER_USE_EXTERNAL, externalProcessCheckButton.getSelection());
+	    final String sched = getSelectedScheduler();
+	    if(sched!=null && DebuggerScheduler.valueOf(sched).equals(DebuggerScheduler.RANDOM) && validateSeed()){
+	        configuration.setAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, getSeedCommand(getSeed()));
+	    }
+
+	    ArrayList<String> observerClassNames = new ArrayList<String>();
+	    for (String string : observerList.getItems()) {
+	        observerClassNames.add(getObserverClassName(string));
+	    }
+	    ArrayList<String> classPathNames = new ArrayList<String>();
+	    for (String string : classPathList.getItems()) {
+	        classPathNames.add(string);
+	    }
+	    configuration.setAttribute(RUNCONFIG_TEST_EXECUTION, testExecutionButton.getSelection());
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, observerClassNames);
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, classPathNames);
+	    configuration.setAttribute(RUNCONFIG_PROJECT_NAME_ATTRIBUTE, getSelectedProjectName());
+	    configuration.setAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, getSelectedProductName());
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, sched);
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, compileCheckButton.getSelection());
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE, otherArgsText.getText());
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_DEBUG_MODE, debugModeCheckButton.getSelection());
+	    configuration.setAttribute(RUNCONFIG_DEBUGGER_USE_EXTERNAL, externalProcessCheckButton.getSelection());
+	}
+
+	private long getSeed() {
+            String seedString = seedNumber.getText();
+            long seed = Long.valueOf(seedString);
+            if (seed <= 0) throw new NumberFormatException();
+            return seed;
+	}
+
+	private boolean validateSeed() {
+	    final String sched = getSelectedScheduler();
+	    try{
+	        if(sched!=null && DebuggerScheduler.valueOf(sched).equals(DebuggerScheduler.RANDOM)){
+	            seed = getSeed();
+	            if (seed > 0){
+	                return true;
+	            }
+	        }
+	    } catch (NumberFormatException e){
+	        setErrorMessage("Seed is invalid - must be a positive number / long value");
+	    }
+	    return false;
 	}
 
 	@Override
@@ -173,7 +174,12 @@ public class JavaTab extends AbstractTab {
 	@Override
 	public boolean isValid(ILaunchConfiguration launchConfig) {
 		/* Don't try to start, you'll only get an exception immediately. */
-		return getErrorMessage() == null;
+	        boolean res = super.isValid(launchConfig);
+	        res &= validateSeed();
+	        if (res) {
+	            setErrorMessage(null);
+	        }
+		return res;
 	}
 
 	//---create methods------------------------

@@ -80,8 +80,10 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 
 	/**
 	 * Don't recommend to start projects which have errors.
+	 * TODO: manipulating the error message here does not cooperate well with isValid().
 	 */
-	protected void updateErrors() {
+	protected boolean updateErrors() {
+	        boolean res = true;
 		String projectName = getSelectedProjectName();
 		if (projectName != null) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
@@ -90,9 +92,18 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 				setErrorMessage(null);
 			} catch (AbsJobException e) {
 				setErrorMessage(e.getMessage());
+				res = false;
 			}
 			getLaunchConfigurationDialog().updateMessage();
 		}
+		return res;
+	}
+
+	@Override
+	public boolean isValid(ILaunchConfiguration launchConfig) {
+	    boolean res = super.isValid(launchConfig);
+	    res &= updateErrors();
+	    return res;
 	}
 
 	/**
