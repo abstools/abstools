@@ -25,6 +25,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new FinalAnnotationTypeExtension(m));
         register(new AtomicityChecker(m));
         register(new DeploymentComponentChecker(m));
+        register(new DeadlineChecker(m));
     }
     
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {

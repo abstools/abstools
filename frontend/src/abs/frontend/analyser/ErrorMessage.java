@@ -76,7 +76,8 @@ public enum ErrorMessage {
     EXPECTED_BOOL("Inferred type Int for %s, expected Bool."),
     EXPECTED_INT("Inferred type Bool for %s, expected Int."),
     DUPLICATE_FEATURE("Feature %s is already defined."),
-    DUPLICATE_VARIABLE("Variable %s is already defined.")
+    DUPLICATE_VARIABLE("Variable %s is already defined."),
+    WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration")
     ;
 
     private String pattern;
