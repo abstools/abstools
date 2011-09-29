@@ -656,7 +656,7 @@ mod ABS-CONFIGURATION is
     Cid VidList Subst MMtd Nat -> Class
     [ctor format (ng ! og o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
 
-  op <_: Clock | Limit:_> : Nat Nat -> Clock
+  op <_: Clock | Limit:_> : Int Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
 
   *** Cogs.  The second argument is of type Data since it can be an Oid (the
