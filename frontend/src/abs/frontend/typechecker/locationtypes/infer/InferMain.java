@@ -69,14 +69,14 @@ public class InferMain extends Main {
             if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
-                    new WrongProgramArgumentException("Please provide a destination directory");
+                    throw new WrongProgramArgumentException("Please provide a destination directory");
                 } else {
                     destDir = new File(args[i]);
                 }
             } if (arg.startsWith("-locinferwritebackscope=")) {
                 String[] s = arg.split("=");
                 if (s.length < 2) {
-                    new WrongProgramArgumentException("Please provide a scope");
+                    throw new WrongProgramArgumentException("Please provide a scope");
                 } else {
                     readScopeArg(s[1]);
                 }
