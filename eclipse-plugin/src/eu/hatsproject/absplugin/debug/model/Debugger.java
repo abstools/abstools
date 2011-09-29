@@ -68,7 +68,22 @@ public class Debugger implements SystemObserver{
         if(DebugUtils.getSchedulerRef() != null) 
         	DebugUtils.getSchedulerRef().updateScheduler();
 	}
-	
+
+	@SuppressWarnings("serial")
+	public static class InvalidRandomSeedException extends Exception {
+		public InvalidRandomSeedException(NumberFormatException e) {
+			super(e);
+		}
+	}
+
+	public static long getSeed(String seedString) throws InvalidRandomSeedException {
+    	try {
+    		return Long.valueOf(seedString);
+    	} catch (NumberFormatException e) {
+    		throw new InvalidRandomSeedException(e);
+    	}
+	}
+
 	/**
 	 * Used to start the ABS Runtime. If an earlier Runtime is present, it is shut down first.
 	 * 
@@ -79,10 +94,11 @@ public class Debugger implements SystemObserver{
 	 * @param debuggerArgsTotalScheduler
 	 * @param debuggerIsInDebugMode
 	 * @param debuggerArgsRandomSeed
+	 * @throws InvalidRandomSeedException 
 	 */
 	public static void startABSRuntime(final String projectName,
 			final String mainClassName, final Path genPath, String debuggerArgsSystemObserver,
-			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed) {
+			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed) throws InvalidRandomSeedException {
 		
 		if(DO_DEBUG) System.out.println("start internal debugger");
 		
@@ -94,7 +110,7 @@ public class Debugger implements SystemObserver{
         
         if(debuggerArgsRandomSeed != null && !debuggerArgsRandomSeed.isEmpty()){
         	String seedString = debuggerArgsRandomSeed.replace("-Dabs.randomseed=", "");
-        	Long seedNumber = Long.valueOf(seedString);
+        	Long seedNumber = getSeed(seedString);
         	r.setRandomSeed(seedNumber);
         }
 

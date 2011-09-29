@@ -46,6 +46,7 @@ import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.debug.model.Debugger;
+import eu.hatsproject.absplugin.debug.model.Debugger.InvalidRandomSeedException;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -376,7 +377,11 @@ public class JavaJob extends Job {
 			}
 			moduleName = findModuleName(mainFile);
 		}
-		debugAbsFiles(absFrontendLocation, javaPath, startSDE, moduleName, info);
+		try {
+			debugAbsFiles(absFrontendLocation, javaPath, startSDE, moduleName, info);
+		} catch (InvalidRandomSeedException e) {
+			throw new AbsJobException(e);
+		}
 	}
 
    private String findModuleName(File mainFile) throws AbsJobException {
@@ -489,7 +494,7 @@ public class JavaJob extends Job {
 
 	private void debugAbsFiles(String absFrontendLocation, final Path javaPath,
 			boolean useBothObserver, final String moduleName, String info)
-			throws IOException {
+			throws IOException, InvalidRandomSeedException {
 		setDebuggerArgumentsIfNull(useBothObserver);
 
 		if(useInternalDebugger){
@@ -568,7 +573,7 @@ public class JavaJob extends Job {
 	}
 
 	private void executeABSSystem(final Path javaPath,
-			final String moduleName) {
+			final String moduleName) throws InvalidRandomSeedException {
 		Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
 				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
 				debuggerIsInDebugMode, debuggerArgsRandomSeed);

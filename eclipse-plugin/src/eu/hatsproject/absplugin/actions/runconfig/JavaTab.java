@@ -33,6 +33,8 @@ import org.eclipse.swt.widgets.Text;
 
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
+import eu.hatsproject.absplugin.debug.model.Debugger;
+import eu.hatsproject.absplugin.debug.model.Debugger.InvalidRandomSeedException;
 
 /**
  * Representing a LaunchConfigurationTab to run / debug generated Java files
@@ -50,8 +52,6 @@ public class JavaTab extends AbstractTab {
 	private Text historyText;
 	private org.eclipse.swt.widgets.List observerList;
 	private org.eclipse.swt.widgets.List classPathList;
-
-    private Long seed;
 
 	@Override
 	public void createControl(Composite parent) {
@@ -121,7 +121,12 @@ public class JavaTab extends AbstractTab {
 	public void performApply(ILaunchConfigurationWorkingCopy configuration) {
 	    final String sched = getSelectedScheduler();
 	    if(sched!=null && DebuggerScheduler.valueOf(sched).equals(DebuggerScheduler.RANDOM) && validateSeed()){
-	        configuration.setAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, getSeedCommand(getSeed()));
+	        try {
+	            configuration.setAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, getSeedCommand(getSeed()));
+	        } catch (InvalidRandomSeedException e) {
+	            /* Shouldn't really happen since we validate the input */
+	            standardExceptionHandling(e);
+	        }
 	    }
 
 	    ArrayList<String> observerClassNames = new ArrayList<String>();
@@ -144,24 +149,23 @@ public class JavaTab extends AbstractTab {
 	    configuration.setAttribute(RUNCONFIG_DEBUGGER_USE_EXTERNAL, externalProcessCheckButton.getSelection());
 	}
 
-	private long getSeed() {
-            String seedString = seedNumber.getText();
-            long seed = Long.valueOf(seedString);
-            if (seed <= 0) throw new NumberFormatException();
-            return seed;
+	private long getSeed() throws InvalidRandomSeedException {
+	    String seedString = seedNumber.getText();
+	    return Debugger.getSeed(seedString);
 	}
 
 	private boolean validateSeed() {
 	    final String sched = getSelectedScheduler();
 	    try{
 	        if(sched!=null && DebuggerScheduler.valueOf(sched).equals(DebuggerScheduler.RANDOM)){
-	            seed = getSeed();
-	            if (seed > 0){
-	                return true;
-	            }
+	            @SuppressWarnings("unused")
+	            long seed = getSeed();
+	            return true;
 	        }
 	    } catch (NumberFormatException e){
-	        setErrorMessage("Seed is invalid - must be a positive number / long value");
+	        setErrorMessage("Seed is invalid - must be a long value");
+	    } catch (InvalidRandomSeedException e) {
+	        setErrorMessage("Seed is invalid - must be a long value");
 	    }
 	    return false;
 	}
