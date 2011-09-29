@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
@@ -261,9 +262,10 @@ public class ProposalFactory{
 			}
 			Map<KindedName, ResolvedName> visibleNames = moddecl.getVisibleNames();
 			
-			for(KindedName kname : visibleNames.keySet()){
+			for(Entry<KindedName, ResolvedName> kentry : visibleNames.entrySet()){
+			        KindedName kname = kentry.getKey();
 				if(qualifierIsPrefixOf(kname.getName()) && kname.getKind()==Kind.CLASS){
-					CompletionProposal proposal = makeVisibleNameProposal(visibleNames.get(kname), kname);
+					CompletionProposal proposal = makeVisibleNameProposal(kentry.getValue(), kname);
 					if(isQualified(kname)){
 						tempQual.add(proposal);
 					} else {
@@ -393,9 +395,10 @@ public class ProposalFactory{
 			try {
 				Map<KindedName, ResolvedName> visibleNames = moddecl.getVisibleNames();
 				
-				for(KindedName kname : visibleNames.keySet()){
+				for(Entry<KindedName, ResolvedName> kentry : visibleNames.entrySet()){
+				        KindedName kname = kentry.getKey();
 					if(qualifierIsPrefixOf(kname.getName())){
-						CompletionProposal proposal = makeVisibleNameProposal(visibleNames.get(kname), kname);
+						CompletionProposal proposal = makeVisibleNameProposal(kentry.getValue(), kname);
 						if(isQualified(kname)){
 							tempQual.add(proposal);
 						} else {
