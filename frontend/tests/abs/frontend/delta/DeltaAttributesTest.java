@@ -20,8 +20,8 @@ public class DeltaAttributesTest extends DeltaFlattenerTest {
         Model model = assertParseOk(
                 "module M; " 
                 + "delta D(Boolean f) {adds class C { Boolean myField = f; } }" 
-                + "productline PL { features F, G; delta D(F) when F; delta D(F) when G; } "
-                + "product P1(F); "
+                + "productline PL { features F, G; delta D(F) when G; } "
+                + "product P1(F, G); "
                 + "product P2(G);"
         );
         Model model2 = model.fullCopy();
