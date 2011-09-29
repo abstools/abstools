@@ -23,7 +23,6 @@ public class GenerateTestRunnerMojo extends AbstractABSMojo {
 
     protected void doExecute() throws Exception {
         TestRunnerGenerator generator = new TestRunnerGenerator();
-        generator.generateTestRunner(mTVL, 
-                absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
+        generator.generateTestRunner(absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
     }
 }

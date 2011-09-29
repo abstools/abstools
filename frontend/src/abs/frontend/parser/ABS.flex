@@ -113,6 +113,26 @@ IntLiteral = 0 | [1-9][0-9]*
  "type"        { return sym(Terminals.TYPE); }
  "assert"      { return sym(Terminals.ASSERT); }
  "builtin"     { return sym(Terminals.BUILTIN); }
+ //
+ "root"      { return sym(Terminals.ROOT); }
+ "extension" { return sym(Terminals.EXTENSION); }
+ "group"     { return sym(Terminals.GROUP); }
+ "opt"       { return sym(Terminals.OPT); }
+ "oneof"     { return sym(Terminals.ONEOF); }
+ "allof"     { return sym(Terminals.ALLOF); }
+ //"Int"       { return sym(Terminals.INT); }
+ //"Bool"      { return sym(Terminals.BOOL); }
+ //"in"        { return sym(Terminals.IN); }
+ "ifin"      { return sym(Terminals.IFIN); }
+ "ifout"     { return sym(Terminals.IFOUT); }
+ "exclude"   { return sym(Terminals.EXCLUDE); }
+ "require"   { return sym(Terminals.REQUIRE); }
+ //"excludes"  { return sym(Terminals.EXCLUDE); }
+ //"requires"  { return sym(Terminals.REQUIRE); }
+ //"true"      { return sym(Terminals.TRUE); }
+ //"tt"        { return sym(Terminals.TRUE); }
+ //"false"     { return sym(Terminals.FALSE); }
+ //"ff"        { return sym(Terminals.FALSE); }
 }
 
 //Separators
@@ -131,6 +151,7 @@ IntLiteral = 0 | [1-9][0-9]*
 //Operators
 <YYINITIAL> { 
  "?"           { return sym(Terminals.QMARK); }
+ ".."          { return sym(Terminals.UNTIL); }
  "."           { return sym(Terminals.DOT); }
  "!"           { return sym(Terminals.BANG); }
  "="           { return sym(Terminals.ASSIGN); }
@@ -138,6 +159,8 @@ IntLiteral = 0 | [1-9][0-9]*
  "=="          { return sym(Terminals.EQEQ); }
  "!="          { return sym(Terminals.NOTEQ); }
  "=>"          { return sym(Terminals.RARROW); }
+ "->"          { return sym(Terminals.IMPLIES); }
+ "<->"         { return sym(Terminals.EQUIV); }
   "+"	       { return sym(Terminals.PLUS); }
   "-"          { return sym(Terminals.MINUS); }
   "*"          { return sym(Terminals.MULT); }

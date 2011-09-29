@@ -84,7 +84,6 @@ public class MaudeTestMojo extends AbstractTestMojo {
         
         args = generator.generateMaude(
                 absfrontEnd, 
-                mTVL,
                 absTestSrcFolder, 
                 args, 
                 absMaudeBackendTestOutputFile,

@@ -17,7 +17,6 @@ import abs.frontend.parser.Main;
 public class TypeChecker extends MTVLParser {
 
     void typeCheck(File absfrontEnd, 
-            File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
             boolean checkProductSelection,
@@ -35,7 +34,7 @@ public class TypeChecker extends MTVLParser {
         System.setProperty("java.class.path",absfrontEnd.getAbsolutePath());
 
         absArguments = 
-            super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+            super.parseMTVL(absfrontEnd, absArguments, productName, verbose, checkProductSelection, log);
         
         if (productName != null) {
             args.add("-product="+productName);

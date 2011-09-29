@@ -108,8 +108,10 @@ aspect DeltaCollector {
             }
         }
         // DEBUG
-        // System.out.println("## Collected deltas:");
-        // System.out.println(deltas.toString());
+        if (debug) {
+        	println("## Collected deltas:");
+        	println(deltas.toString());
+        }
         return deltas;
     }
 

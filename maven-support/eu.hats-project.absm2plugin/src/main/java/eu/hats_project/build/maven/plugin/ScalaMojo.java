@@ -28,7 +28,6 @@ public class ScalaMojo extends AbstractABSMojo {
         ScalaGenerator generator = new ScalaGenerator();
         generator.generateScala(
                 absfrontEnd, 
-                mTVL,
                 absSrcFolder, 
                 getABSArguments(), 
                 outputDirectory,

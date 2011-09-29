@@ -82,6 +82,7 @@
 	  <pathelement location="${ext.dir}/${easymock.jar}" />
 	  <pathelement location="${ext.dir}/${cglib.jar}" />
 	  <pathelement location="${ext.dir}/${objenesis.jar}" />
+      <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
         <path refid="common.classpath"/>
 	</path>
 	
@@ -236,6 +237,7 @@
 			<zipfileset src="${ext.dir}/org.sat4j.core.jar" />
 			<zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
 			<zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
+            <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
 			<manifest>
 				<attribute name="Main-Class" value="abs.frontend.parser.Main"/>
 				<attribute name="Implementation-Version" value="${frontend.version}"/>

@@ -10,6 +10,9 @@ aspect ErrorCheck {
     }
     
   public SemanticErrorList Model.getErrors() {
+    // update "repeated" info of variables and features and compile lazy attributes
+    ints(); bools(); features();
+    
     SemanticErrorList s = new SemanticErrorList();
     collectErrors(s);
     return s;

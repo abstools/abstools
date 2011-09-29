@@ -14,6 +14,9 @@ aspect Typing {
     
     inh Model ModuleDecl.getModel();
     inh Model Decl.getModel();
+    
+//    inh Model FeatureDecl.getModel();
+//    inh Model FExt.getModel();
 
     inh Model CompilationUnit.getModel();
     eq Model.getCompilationUnit().getModel() = this;

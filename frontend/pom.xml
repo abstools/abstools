@@ -27,7 +27,6 @@
 		<bash.dir>${src.dir}/bash</bash.dir>
 		<bash.build.dir>${basedir}/bin/bash</bash.build.dir>
 
-
 		<dist.dir>${basedir}/dist</dist.dir>
 
 		<parser.src.dir>${src.dir}/abs/frontend/parser</parser.src.dir>
@@ -41,7 +40,7 @@
 		<!-- need to bundle this as resource -->
 		<maude.interpreter>${src.dir}/abs/backend/maude/</maude.interpreter>
 
-		<revision.prefix>1.0.5</revision.prefix>
+		<revision.prefix>1.2.2</revision.prefix>
 		<plugin.name>eu.hatsproject.abs.compiler</plugin.name>
 		
 		<maven.compiler.source>1.6</maven.compiler.source>
@@ -97,6 +96,12 @@
 			<artifactId>sat4j-maxsat</artifactId>
 			<version>1.0</version>
 		</dependency>
+		
+		 <dependency>
+		 	<groupId>eu.hats-project</groupId>
+		 	<artifactId>choco-solver</artifactId>
+		 	<version>1.0</version>
+		 </dependency>
 	</dependencies>
 
 	<build>
@@ -150,6 +155,8 @@
 							<target>
 								<mkdir dir="${project.build.testOutputDirectory}" />
 								<mkdir dir="${dist.dir}" />
+								<mkdir dir="${dist.dir}/plugins" />
+								<mkdir dir="${dist.dir}/features" />
 								<mkdir dir="${ast.gen.dir}" />
 								<mkdir dir="${parser.gen.dir}" />
 								<mkdir dir="${project.build.outputDirectory}" />
@@ -228,7 +235,7 @@
 								<taskdef name="beaver" classname="beaver.comp.run.AntTask"
 									classpathref="maven.plugin.classpath" />
 								<beaver file="${parser.gen.dir}/ABSParser.beaver"
-									terminalNames="yes" compress="no" useSwitch="yes" />
+									terminalNames="yes" compress="no" useSwitch="yes" reportActions="yes" />
 							</target>
 						</configuration>
 						<goals>
@@ -379,6 +386,12 @@
 					<test>AllFrontendTests</test>
 					<forkMode>never</forkMode>
 				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+          		<artifactId>findbugs-maven-plugin</artifactId>
+          		<version>2.3.2</version>
 			</plugin>
 
 			<plugin>

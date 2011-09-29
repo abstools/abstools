@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,7 +17,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.jar.JarEntry;
+
+import abs.frontend.mtvl.ChocoSolver;
 
 import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
@@ -28,6 +31,8 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.FeatureDecl;
+import abs.frontend.ast.FExt;
 import abs.frontend.ast.StarImport;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -49,6 +54,13 @@ public class Main {
     protected String product;
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
+    // mTVL options
+    protected boolean solve = false ;
+    protected boolean solveall = false ;
+    protected boolean check = false ;
+    protected boolean numbersol = false ;
+    protected boolean ignoreattr = false ;
+
 
     public static void main(final String... args)  {
        new Main().mainMethod(args);
@@ -103,6 +115,19 @@ public class Main {
             } else if (arg.startsWith("-locscope=")) {
                 String def = arg.split("=")[1];
                 locationTypeScope = LocationTypingPrecision.valueOf(def);
+            } else if (arg.equals("-solve")) {
+                solve = true;
+            } else if (arg.equals("-solveall")) {
+                solveall = true;
+            } else if (arg.equals("-sat")) {
+                check = true;
+            } else if (arg.startsWith("-check=")) {
+                check = true;
+                product = arg.split("=")[1];
+            } else if (arg.equals("-nsol")) {
+                numbersol = true;
+            } else if (arg.equals("-noattr")) {
+                ignoreattr = true;
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
@@ -160,13 +185,26 @@ public class Main {
     }
 
     private void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
-        if (verbose)
+        m.verbose = verbose;
+        m.debug = dump;
+        
+        // drop attributes before calculating any attribute
+        if (ignoreattr)
+            m.dropAttributes();
+        if (verbose) {
             System.out.println("Analyzing Model...");
-        if (fullabs)
-            // apply deltas that correspond to given product
-            m.flattenForProduct(product);
+        }
+        // flatten before checking error, to avoid calculating *wrong* attributes
+        if (fullabs) {
+            if (typecheck)
+                // apply deltas that correspond to given product
+                m.flattenForProduct(product);
+            else
+                m.flattenForProductUnsafe(product);
+        }
         if (dump) {
             m.dump();
+            m.dumpMVars();
         }
 
         if (m.hasParserErrors()) {
@@ -193,6 +231,44 @@ public class Main {
 //                        m.dump();
 //                }
                 typeCheckModel(m);
+                if (m.hasMTVL()) {
+                    if (solve) {
+                        if (verbose)
+                            System.out.println("Searching for solutions for the feature model...");
+                        ChocoSolver s = m.getCSModel();
+                        System.out.print(s.resultToString());
+                    }
+                    if (solveall) {
+                        if (verbose)
+                            System.out.println("Searching for all solutions for the feature model...");
+                        ChocoSolver s = m.getCSModel();
+                        int i=1;
+                        while(s.solveAgain()) {
+                          System.out.println("------ "+(i++)+"------");
+                          System.out.print(s.resultToString());
+                        }
+                    }
+                    if (check) {
+                        ChocoSolver s = m.getCSModel();
+                        Map<String,Integer> guess = new HashMap<String,Integer>();
+                        if (m.getSolution(product,guess))
+                            System.out.println("checking solution: "+s.checkSolution(guess,m));
+                        else {
+                            System.out.println("Product '"+product+"' not found.");
+                            if (!product.contains("."))
+                                System.out.println("Maybe you forgot the module name?");
+                        }
+                    }
+                    if (numbersol && !ignoreattr) {
+                        ChocoSolver s = m.getCSModel();
+                        System.out.println("Number of solutions found: "+s.countSolutions());
+                      }
+                    else if (numbersol && ignoreattr) {
+                        ChocoSolver s = m.getCSModel();
+                        System.out.println("Number of solutions found (without attributes): "+s.countSolutions());
+                    }
+
+                }
             }
         }
     }
@@ -279,7 +355,7 @@ public class Main {
     }
 
     private boolean isABSSourceFile(File f) {
-        return f.getName().endsWith(".abs");
+        return f.getName().endsWith(".abs") || f.getName().endsWith(".mtvl");
     }
 
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, String name, InputStream inputStream) throws IOException {
@@ -292,7 +368,7 @@ public class Main {
     
     private void parseABSSourceFile(java.util.List<CompilationUnit> units, File file, Reader reader) throws IOException {
         if (verbose)
-            System.out.println("Parsing file "+file.getAbsolutePath());
+            System.out.println("Parsing file "+file.getPath());//getAbsolutePath());
         units.add(parseUnit(file, null, reader));
     }
 
@@ -342,6 +418,11 @@ public class Main {
                 + "                 sets the location aliasing scope to <scope>\n"
                 + "                 where <scope> in " + Arrays.toString(LocationTypingPrecision.values()) + "\n"
                 + "  -dump          dump AST to standard output \n" 
+                + "  -solve         solve constraint satisfaction problem (CSP) for the feature model\n"
+                + "  -solveall      get ALL solutions for the CSP\n"
+                + "  -nsol          count the number of solutions\n"
+                + "  -noattr        ignore the attributes\n"
+                + "  -check=<PID>   check satisfiability of a product with qualified name PID\n" 
                 + "  -h             print this message\n");
     }
 
@@ -440,7 +521,7 @@ public class Main {
             try {
                 u = (CompilationUnit) parser.parse(scanner);
             } catch (Parser.Exception e) {
-                u = new CompilationUnit(parser.getFileName(), new List());
+                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<FeatureDecl>(), new List<FExt>());
                 u.setParserErrors(parser.getErrors());
             }
             if (stdlib) {

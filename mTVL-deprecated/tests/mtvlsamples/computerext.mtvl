@@ -1,0 +1,3 @@
+extension GraphicsCard {
+  minMem >= 126;
+} 

@@ -14,7 +14,6 @@ public class TypeCheckingMojo extends AbstractABSMojo {
 
         TypeChecker checker = new TypeChecker();
         checker.typeCheck(
-                mTVL, 
                 absfrontEnd, 
                 absSrcFolder, 
                 getABSArguments(), 

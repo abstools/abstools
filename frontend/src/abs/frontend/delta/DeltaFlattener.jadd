@@ -15,18 +15,38 @@ aspect Flattener {
         Product prod = this.findProduct(id);
         flattenForProduct(prod);
     }
+    public void Model.flattenForProduct(String id,boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod,check);
+    }
     public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
-        System.out.println("--- configuring product: " + prod.qualifiedName());
+    	flattenForProduct(prod,true);
+    }
+    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        if (verbose)
+        	System.out.println("--- configuring product: " + prod.qualifiedName());
+        
+        if (check && hasMTVL()) {
+            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(getSolution(prod),this);
+            if (!errors.isEmpty()) {
+            	String msg = "Product '"+prod.getName()+"' does not belong to the feature model. Constraints failed:";
+            	for (String s: errors)
+            		msg = msg+"\n- "+s;
+            	throw new WrongProgramArgumentException(msg);
+            }
+        }
 
         ArrayList<DeltaDecl> deltas = this.getSortedDeltas(prod);
 
-        System.out.print("--- applying deltas to core << ");
-        String delim = "";
-        for (DeltaDecl delta : deltas) {
-            System.out.print(delim + delta.qualifiedName());
-            delim = " << ";
+        if (verbose) {
+        	System.out.print("--- applying deltas to core << ");
+	        String delim = "";
+	        for (DeltaDecl delta : deltas) {
+	            print(delim + delta.qualifiedName());
+	            delim = " << ";
+	        }
+	        println(" .");
         }
-        System.out.println(" .");
 
         // resolve original() calls
         this.resolveOriginalCalls(deltas);
@@ -34,8 +54,17 @@ aspect Flattener {
         // apply the applicable deltas in the given order
         this.applyDeltas(deltas);
     }
-    
-    
+
+
+    /*
+     * Apply delta to model without checking if the product is valid wrt the feature model
+     * i.e. apply each ClassOrIfaceModifier to its corresponding class or interface
+     */
+    public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod,false);
+    }
+
     
     /*
      * Apply delta to model

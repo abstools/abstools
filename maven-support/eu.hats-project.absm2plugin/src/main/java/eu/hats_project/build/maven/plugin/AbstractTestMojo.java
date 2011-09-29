@@ -61,8 +61,7 @@ abstract class AbstractTestMojo extends AbstractABSMojo {
             }
             
             TestRunnerGenerator generator = new TestRunnerGenerator();
-            generator.generateTestRunner(mTVL, 
-                    absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
+            generator.generateTestRunner(absfrontEnd, getABSArguments(), absTestRunnerFile, getLog());
         }
         
         makeTest();

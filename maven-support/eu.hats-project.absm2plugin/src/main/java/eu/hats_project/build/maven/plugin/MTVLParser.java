@@ -4,27 +4,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import mtvl.parser.Main;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
+import abs.frontend.parser.Main;
 
 /**
  * @author pwong
  */
 abstract class MTVLParser {
     
-    private static final Predicate<String> LEGAL_ABS = 
-        new Predicate<String>() {
-        public boolean apply(String input) {
-            return input != null && ! input.endsWith(".mtvl");
-        }
-    };
-
-    protected List<String> parseMTVL( File mTVL,
+    protected List<String> parseMTVL(File absFrontend,
             List<String> absArguments, 
             String productName,
             boolean verbose,
@@ -33,19 +23,19 @@ abstract class MTVLParser {
         
         try {
             if (productName != null && checkProductSelection) {
-                parseMTVL(mTVL, absArguments, productName, verbose, false, true, false, log);
+                parseMTVL(absFrontend, absArguments, productName, verbose, false, true, false, log);
             } else {
-                parseMTVL(mTVL, absArguments, null, verbose, false, false, true, log);
+                parseMTVL(absFrontend, absArguments, null, verbose, false, false, true, log);
             }
         } catch (Exception e) {
             throw new MojoExecutionException("Could not parse mTVL model", e);
         }
         
-        return new ArrayList<String>(Collections2.filter(absArguments,LEGAL_ABS));
+        return absArguments;
     }
     
     private void parseMTVL(
-            File mTVL,
+    		File absFrontend,
             List<String> absArguments, 
             String productName,
             boolean verbose,
@@ -62,29 +52,25 @@ abstract class MTVLParser {
         List<String> args = new ArrayList<String>();
         String prop = System.getProperty("java.class.path");
         if (prop == null)
-            System.setProperty("java.class.path",mTVL.getAbsolutePath());
+            System.setProperty("java.class.path",absFrontend.getAbsolutePath());
         else 
-            System.setProperty("java.class.path",prop+":"+mTVL.getAbsolutePath());
+            System.setProperty("java.class.path",prop+":"+absFrontend.getAbsolutePath());
 
         if (verbose) {
             args.add("-v");
         }
         
         if (solve) {
-            args.add("-s");
+            args.add("-solve");
         }
         
-        if (satifiability) {
-            args.add("-c");
+        if (satifiability && productName != null) {
+            args.add("-check="+productName);
         }
         
         if (solutions) {
-            args.add("-n");
-            args.add("-a"); // not sure what happens if attributes have infinite domain
-        }
-        
-        if (productName != null) {
-            args.add(productName);
+            args.add("-nsol");
+            args.add("-noattr"); // not sure what happens if attributes have infinite domain
         }
         
         args.addAll(absArguments);

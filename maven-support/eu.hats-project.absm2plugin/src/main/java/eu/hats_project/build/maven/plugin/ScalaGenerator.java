@@ -33,7 +33,6 @@ public class ScalaGenerator extends MTVLParser {
      * @throws MojoExecutionException
      */
     void generateScala(File absfrontEnd, 
-            File mTVL,
             File absSrcFolder, 
             List<String> absArguments, 
             File targetFolder, 
@@ -59,7 +58,7 @@ public class ScalaGenerator extends MTVLParser {
         args.add("-d");
         args.add(targetFolder.getAbsolutePath());
         
-        absArguments = super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+        absArguments = super.parseMTVL(absfrontEnd, absArguments, productName, verbose, checkProductSelection, log);
         
         if (productName != null)
             args.add("-product="+productName);

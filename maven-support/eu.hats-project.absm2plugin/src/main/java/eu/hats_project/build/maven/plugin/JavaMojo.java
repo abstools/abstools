@@ -35,7 +35,6 @@ public class JavaMojo extends AbstractABSMojo {
        JavaGenerator generator = new JavaGenerator();
        generator.generateJava(
               absfrontEnd, 
-              mTVL,
               absSrcFolder, 
               getABSArguments(), 
               absJavaBackendTargetFolder,

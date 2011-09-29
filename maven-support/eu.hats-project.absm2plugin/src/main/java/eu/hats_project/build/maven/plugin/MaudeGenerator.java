@@ -36,7 +36,6 @@ public class MaudeGenerator extends MTVLParser {
      */
     List<String> generateMaude(
                 File absfrontEnd, 
-                File mTVL,
                 File absSrcFolder, 
     		List<String> absArguments, 
     		File absMaudeBackendOutputFile, 
@@ -65,7 +64,7 @@ public class MaudeGenerator extends MTVLParser {
         args.add(absMaudeBackendOutputFile.getAbsolutePath());
 
         absArguments = 
-            super.parseMTVL(mTVL, absArguments, productName, verbose, checkProductSelection, log);
+            super.parseMTVL(absfrontEnd, absArguments, productName, verbose, checkProductSelection, log);
         
         if (productName != null) {
             args.add("-product="+productName);

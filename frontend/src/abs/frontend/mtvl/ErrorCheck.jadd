@@ -1,0 +1,120 @@
+import java.util.Collection;
+import java.util.ArrayList;
+import abs.frontend.analyser.*;
+
+
+/**
+Checks type errors, and if all variables are properly declared.
+**/
+
+
+aspect ErrorCheck {
+  // need to update "repeated" info of variables and features and compile lazy attributes
+  // ints(); bools(); features();
+
+  // checks if the feature name is repeated and for type errors of the constraints.
+  public void FeatureDecl.collectErrors(SemanticErrorList c) {  
+    super.collectErrors(c);
+    if (isRepeated)
+      c.add(new SemanticError(this,ErrorMessage.DUPLICATE_FEATURE,getName()));
+    AttrConstraints acl = getAttrConstraints();
+    for(int i = 0; i < acl.getNumConstr(); i++)
+      acl.getConstr(i).checkType(Types.BOOL,c);
+  }
+  public void FExt.collectErrors(SemanticErrorList c) {
+    super.collectErrors(c);
+    AttrConstraints acl = getAttrConstraints();
+    for(int i = 0; i < acl.getNumConstr(); i++)
+      acl.getConstr(i).checkType(Types.BOOL,c);
+  }
+  public void ASTNode.checkType(short type, SemanticErrorList c) {
+//    System.out.println("spreading check in constraint from...");
+    for(int i = 0; i < getNumChild(); i++)
+      getChild(i).checkType(type,c);
+  }
+  
+  // check if variable is already defined.
+  public void Attribute.collectErrors(SemanticErrorList c) {
+    super.collectErrors(c);
+    if (isRepeated)
+      c.add(new SemanticError(this, ErrorMessage.DUPLICATE_VARIABLE, pname()+"."+getName()));
+  }
+  
+  // type of negation
+  public void MNegExp.checkType(short type,SemanticErrorList c) {
+    super.checkType(Types.BOOL,c);
+    //getOperand().checkType(Types.BOOL,c);
+    if (type != Types.BOOL)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,"NEGATION"));
+  }
+  // type of negative sign
+  public void MMinusExp.checkType(short type,SemanticErrorList c) {
+    super.checkType(Types.INT,c);
+    if (type != Types.INT)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,"NEGATIVE"));
+  }
+  // check type of values
+  public void IntVal.checkType(short type,SemanticErrorList c) {
+    if (type != Types.INT)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,""+getValue()));
+  }
+  public void BoolVal.checkType(short type,SemanticErrorList c) {
+    if (type != Types.BOOL)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,""+getValue()));
+  }
+  // check type of boolean operators
+  public void MBoolExp.checkType(short type, SemanticErrorList c) {
+    super.checkType(Types.BOOL,c);
+    if (type != Types.BOOL)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
+  }
+  // check type of int relations
+  public void MRelationalExpr.checkType(short type, SemanticErrorList c) {
+    super.checkType(Types.INT,c);
+    if (type != Types.BOOL)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
+  }
+  // check type of equality operators (assuming boolean or int)
+  public boolean MEqualityExpr.isInt  = false;
+  public boolean MEqualityExpr.isBool = false;
+  public void MEqualityExpr.checkType(short type, SemanticErrorList c) {
+    SemanticErrorList lint  = new SemanticErrorList();
+    SemanticErrorList lbool = new SemanticErrorList();
+    getLeft().checkType(Types.INT,lint);
+    if (lint.size() == 0) {
+      isInt = true;
+      getRight().checkType(Types.INT,c);
+    }
+    else {
+      isBool = true;
+      getLeft().checkType(Types.BOOL,c);
+      getRight().checkType(Types.BOOL,c);
+    }
+  }
+  //check type of arithmetic expressions
+  public void MArithmeticExpr.checkType(short type, SemanticErrorList c) {
+    super.checkType(Types.INT,c);
+    if (type != Types.INT)
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,toString()));
+  }
+  
+
+  
+  
+  static public class Types {
+		static public final short BOOL = 0;
+		static public final short INT = 1;
+  }
+
+  // type of variables
+  public void Variable.checkType(short type, SemanticErrorList c) {
+    if (!isBool() && !isInt()) {
+      c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getFullName()));
+    }
+    else if(isBool() && type!=Types.BOOL) 
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,getFullName()));
+    else if(isInt() && type!=Types.INT) 
+      c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,getFullName()));
+  }
+
+}

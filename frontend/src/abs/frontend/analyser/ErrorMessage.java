@@ -71,7 +71,12 @@ public enum ErrorMessage {
     ATOMIC_METHOD_CONTAINS_ILLEGAL_CODE("Cannot use %s in atomic method %s"), 
     ATOMIC_METHOD_WRONG_OVERRIDE("Method %s has not the same atomicity annotation from the method %s defined in interface %s"),
     WRONG_CONSTRUCTOR("Data type %s has no constructor with name %s"),
-    WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation")
+    WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation"),
+    UNDECLARED_VARIABLE("Unknown variable: %s."),
+    EXPECTED_BOOL("Inferred type Int for %s, expected Bool."),
+    EXPECTED_INT("Inferred type Bool for %s, expected Int."),
+    DUPLICATE_FEATURE("Feature %s is already defined."),
+    DUPLICATE_VARIABLE("Variable %s is already defined.")
     ;
 
     private String pattern;

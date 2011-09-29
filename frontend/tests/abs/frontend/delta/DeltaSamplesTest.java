@@ -14,24 +14,28 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_P2P_P1() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P1");
     }
 
     @Test
     public void test_P2P_P2() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P2");
     }
 
     @Test
     public void test_P2P_P3() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P3");
     }
 
     @Test
     public void test_P2P_P4() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P4");
     }
 }

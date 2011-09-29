@@ -10,6 +10,15 @@ aspect ProdSolution {
 //        return res;
 //    }
 
+    
+    // Nullable: if it fails to get a possible solution returns null.
+    public Map<String,Integer> Model.getSolution(String product)  {
+        Map<String,Integer> guess = new HashMap<String,Integer>();
+        boolean res = getSolution(product,guess);
+        if (res) return guess;
+        else return null;
+    }
+    
     public boolean Model.getSolution(String product, Map<String,Integer> sol) {
         boolean res = false;
         for (CompilationUnit c : getCompilationUnits())
@@ -38,6 +47,19 @@ aspect ProdSolution {
 //            System.out.println("Wrong module "+product+" - "+getName());
 //        }
         return false;
+    }
+
+    // simpler version: product already found
+    public boolean Model.getSolution(Product product, Map<String,Integer> sol) {
+    	for(Feature f : product.getFeatures())
+    		f.getSolution(true,sol);
+    	return true;
+    }
+    public Map<String,Integer> Model.getSolution(Product product) {
+        Map<String,Integer> sol= new HashMap<String,Integer>();
+        for(Feature f : product.getFeatures())
+    		f.getSolution(true,sol);
+    	return sol;
     }
 
 

@@ -202,15 +202,9 @@ abstract class AbstractABSMojo extends AbstractMojo {
      */
     protected File absfrontEnd;
     
-    /**
-     * mTVL jar
-     */
-    protected File mTVL;
-    
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             absfrontEnd = new File(getToolClassPath(ABS_FRONTEND_ARTIFACTID));
-            mTVL = new File(getToolClassPath(MTVL_ARTIFACTID));
             doExecute();
         } catch (MojoExecutionException exc) {
             throw exc;

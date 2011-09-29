@@ -100,15 +100,17 @@ import java.io.IOException;
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
   | error {:
-		CompilationUnit u = new CompilationUnit(getFileName(),new List());
+		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new List());
 		u.setParserErrors(getErrors());
 		return u;
 	:}
   ;
 
 CompilationUnit compilation_unit =
-	module_decl_list.m? {:
-		CompilationUnit u = new CompilationUnit(getFileName(),m);
+	module_decl_list.m? rootfeature_list.r fextension_list.ext {:
+        CompilationUnit u = new CompilationUnit(getFileName(),m,r,ext);
+//  module_decl_list.m? {:
+//        CompilationUnit u = new CompilationUnit(getFileName(),m,new List(), new List());
 		u.setParserErrors(getErrors());
 		return u;
 		:}
@@ -866,7 +868,179 @@ Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMIC
     {: return new Product(id, l); :} ;
 
 
+/////////////////////////////////////////
+// mTVL language: roots and extensions //
+/////////////////////////////////////////
 
+List fextension_list =
+    {: return new List(); :}
+  | fextension_list.l fextension.ext {: return l.add(ext); :}
+  ;
+
+FExt fextension = EXTENSION TYPE_IDENTIFIER.f LBRACE attribute_constraint_list.acl RBRACE
+             {: return new FExt(f, acl); :} ;
+
+List rootfeature_list =
+    {: return new List(); :}
+  | rootfeature_list.l ROOT feature_decl.f {: return l.add(f); :}
+  ;
+
+FeatureDecl feature_decl =
+    TYPE_IDENTIFIER.f
+        {: return new FeatureDecl(f,new Opt(),new AttrConstraints(new List(),new List())); :}
+  | TYPE_IDENTIFIER.f LBRACE group.g? attribute_constraint_list.acl RBRACE
+        {: return new FeatureDecl(f, g,acl); :}
+  ;
+
+Group group = GROUP cardinality.c LBRACE fnode_list.fs RBRACE
+        {: return new Group (c,fs); :} ;
+
+List fnode_list =
+    fnode.f                    {: return new List().add(f); :}
+  | fnode_list.l COMMA fnode.f {: return l.add(f); :}
+  |                            {: return new List(); :}
+  ;
+
+FNode fnode
+  = feature_decl.f     {: return new MandFeat(f); :} 
+  | OPT feature_decl.f {: return new OptFeat(f); :}
+  ;
+
+Cardinality cardinality
+  = ONEOF  {: return new CRange(1,1); :}
+  | ALLOF  {: return new AllOf(); :}
+  | LBRACKET INTLITERAL.i UNTIL MULT RBRACKET
+           {: return new Minim(Integer.parseInt(i)); :}
+  | LBRACKET INTLITERAL.i1 UNTIL INTLITERAL.i2 RBRACKET
+           {: return new CRange(Integer.parseInt(i1)
+                               ,Integer.parseInt(i2)); :}
+  ;
+
+BoundaryInt boundary_int
+  = MULT          {: return new Limit(); :}
+  | INTLITERAL.i  {: return new BoundaryVal(Integer.parseInt(i)); :}
+  | MINUS INTLITERAL.i
+                  {: return new BoundaryVal((-1)*Integer.parseInt(i)); :}
+  ;
+
+
+
+
+// need to merge attributes and constraints, to distinguish between the cases when first
+// TYPE_IDENTIFIER is a type (attribute) and a feature (constraint)  
+AttrConstraints attribute_constraint_list
+  =   {: return new AttrConstraints(new List(),new List()); :}
+  /* Attributes */
+  | attribute_constraint_list.acl 
+    TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET SEMICOLON
+      {: Symbol curr_sym = _symbols[offset + 1];
+         if (!(t.equals("Int"))) {
+           addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
+         }
+         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List cl = acl.getConstrs();
+         return new AttrConstraints(al,cl);
+         //return new Attribute(id,new IntType(b1,b2));      
+       :}
+  | attribute_constraint_list.acl 
+    TYPE_IDENTIFIER.t LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET IDENTIFIER.id SEMICOLON
+      {: Symbol curr_sym = _symbols[offset + 1];
+         if (!(t.equals("Int"))) {
+           addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
+         }
+         List al = acl.getAttributes().add(new Attribute(id,new IntType(b1,b2)));
+         List cl = acl.getConstrs();
+         return new AttrConstraints(al,cl);
+         //return new Attribute(id,new IntType(b1,b2));
+      :}
+  | attribute_constraint_list.acl 
+    TYPE_IDENTIFIER.t IDENTIFIER.id SEMICOLON
+      {: Symbol curr_sym = _symbols[offset + 1];
+         List al = acl.getAttributes();
+         List cl = acl.getConstrs();
+         if (t.equals("Int")) {
+            al = al.add(new Attribute(id,new IntType(new Limit(), new Limit())));
+            //return new Attribute(id,new IntType(new Limit(), new Limit()));
+         }
+         else if (t.equals("Bool")) {
+            al = al.add(new Attribute(id, new BoolType()));
+            //return new Attribute(id, new BoolType());
+         }
+         else {
+            addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
+            //return new Attribute(id,new BoolType());
+         }
+         return new AttrConstraints(al,cl);
+       :}
+  /* Constraints */     
+  | attribute_constraint_list.acl IFIN  COLON mexp.e SEMICOLON 
+      {: return new AttrConstraints(acl.getAttributes(),acl.getConstrs().add(new IfIn(e))); :}
+  | attribute_constraint_list.acl IFOUT COLON mexp.e SEMICOLON
+      {: return new AttrConstraints(acl.getAttributes(),acl.getConstrs().add(new IfOut (e))); :}
+  | attribute_constraint_list.acl EXCLUDE COLON featvar.f SEMICOLON
+      {: return new AttrConstraints(acl.getAttributes(),acl.getConstrs().add(new Exclude(f))); :}
+  | attribute_constraint_list.acl REQUIRE COLON featvar.f SEMICOLON
+      {: return new AttrConstraints(acl.getAttributes(),acl.getConstrs().add(new Require(f))); :}
+  | attribute_constraint_list.acl mexp.e SEMICOLON 
+      {: return new AttrConstraints(acl.getAttributes(),acl.getConstrs().add(new IfIn(e))); :}
+  ;
+
+
+
+FeatVar featvar = TYPE_IDENTIFIER.f {: return new FeatVar(f); :} ;
+
+MExp mexp
+  = mand_exp
+  | mexp.e1 OROR mand_exp.e2 {: return new MOrBoolExp(e1,e2); :};
+
+MExp mand_exp
+  = mimpl_exp
+  | mand_exp.e1 ANDAND mimpl_exp.e2 {: return new MAndBoolExp(e1,e2); :};
+
+MExp mimpl_exp
+  = meq_exp
+  | mimpl_exp.e1 IMPLIES meq_exp.e2{: return new MImpliesExp(e1,e2); :}
+  | mimpl_exp.e1 EQUIV   meq_exp.e2{: return new MEquivExp(e1,e2); :};
+
+MExp meq_exp
+  = mrel_exp
+  | meq_exp.e1 EQEQ  mrel_exp.e2 {: return new MEqExp(e1,e2); :}
+  | meq_exp.e1 NOTEQ mrel_exp.e2 {: return new MNotEqExp(e1,e2); :};
+
+MExp mrel_exp
+  = madd_exp
+  | mrel_exp.e1 LT     madd_exp.e2 {: return new MLTExp(e1,e2); :}
+  | mrel_exp.e1 GT     madd_exp.e2 {: return new MGTExp(e1,e2); :}
+  | mrel_exp.e1 LTEQ   madd_exp.e2 {: return new MLTEQExp(e1,e2); :}
+  | mrel_exp.e1 GTEQ   madd_exp.e2 {: return new MGTEQExp(e1,e2); :};
+
+MExp madd_exp
+  = mmult_exp.e {: return e; :}
+  | madd_exp.e1 PLUS   mmult_exp.e2 {: return new MAddAddExp(e1,e2); :}
+  | madd_exp.e1 MINUS  mmult_exp.e2 {: return new MSubAddExp(e1,e2); :};
+
+MExp mmult_exp
+  = mfactor_exp.e {: return e; :}
+  | mmult_exp.e1 MULT   mfactor_exp.e2 {: return new MMultMultExp(e1,e2); :}
+  | mmult_exp.e1 DIV    mfactor_exp.e2 {: return new MDivMultExp(e1,e2); :}
+  | mmult_exp.e1 MOD    mfactor_exp.e2 {: return new MModMultExp(e1,e2); :};
+
+MExp mfactor_exp
+  = mlit_exp
+  | NEGATION mfactor_exp.e  {: return new MNegExp(e); :}
+  | MINUS    mfactor_exp.e  {: return new MMinusExp(e); :}
+  | LPAREN mexp.e  RPAREN   {: return e; :};
+
+MExp mlit_exp
+  = INTLITERAL.i        {: return new MValue(new IntVal(Integer.parseInt(i))); :}
+  | IDENTIFIER.id       {: return new AttVar(id); :}
+  | TYPE_IDENTIFIER.f DOT IDENTIFIER.a      {: return new FAVar(f,a); :}
+  | TYPE_IDENTIFIER.id  {: if      (id.equals("True"))  return new MValue(new BoolVal(true));
+                           else if (id.equals("False")) return new MValue(new BoolVal(false));
+                           else                         return new FeatVar(id); :}
+  ;
+  
+  
 // Local Variables:
 // tab-width: 4
 // End:
