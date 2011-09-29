@@ -26,7 +26,7 @@ Unit Testing in ABS
   The following elements must be included in an ABSUnit project:
 
   * An ABS <test interface> which will be implemented by the ABS test
-    class.  This is annotated with <<<[TestClass]>>>.
+    class.  This is annotated with <<<[Fixture]>>>.
 
   * A number of <test methods> returning <<<Unit>>> in the test interface
     that should be called by the test driver; each one is annotated with
@@ -38,8 +38,8 @@ Unit Testing in ABS
     from the return value of this method.
 
   * An ABS <test class> that defines the test cases and implements the
-    above test methods and data method.  The test class is annotated
-    with <<<[TestClassImpl]>>>.
+    above test methods and data method. The test class is annotated
+    with <<<[Suite]>>>.
 
 ** Test Assertions and Failures
 
@@ -60,7 +60,7 @@ import * from AbsUnit;
 import * from AbsUnit.Hamcrest;
 import * from AbsUnit.Hamcrest.Core;
 
-[TestClass]
+[Fixture]
 interface AbsUnitTest { 
 	[DataPoint] Set<Pair<Int,Int>> comparators();
 	[Test] Unit testAssertTrue();
@@ -70,7 +70,7 @@ interface AbsUnitTest {
 	[Test] Unit testAssertThat();
 }
 
-[TestClassImpl]
+[Suite]
 class AbsUnitTestClass implements AbsUnitTest {
 	
 	Set<Pair<Int,Int>> comps = EmptySet;
