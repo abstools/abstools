@@ -151,7 +151,9 @@ aspect OriginalCallResolver {
         }
         
         try {
+        	deltas.add(0, this.delta());
         	method = findOriginal(methodid + "_Orig_" + original.getDelta(), classid, deltas).getMethod();
+        	deltas.remove(0);
         } catch(ASTNodeNotFoundException e) {
 	        method = copyOriginal(original.getMethod(), original.getDelta());
 	        System.out.println("*** copied original: " + method.getMethodSig());

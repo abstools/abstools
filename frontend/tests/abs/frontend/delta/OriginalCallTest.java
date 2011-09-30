@@ -68,7 +68,7 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         assertTrue(cls.getMethods().getNumChild() == 2);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_D1"));
-//        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));
+       // assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));
         
     }
 }
