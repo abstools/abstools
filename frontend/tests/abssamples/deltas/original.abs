@@ -14,14 +14,23 @@ class IO implements IO {
    }
 }
 
-
 // test the original() call substitution
 module HowOriginal;
 import * from Env;
 
+interface FooI {
+	Unit bar();
+}
+
+class Foo(IO io) implements FooI {
+	Unit bar() {
+		io.println("core");
+	}
+}
+
 delta D1 {
-	adds class Foo(IO io) {
-		Unit bar() {
+	modifies class Foo {
+		modifies Unit bar() {
 			io.println("D1");
 		}
 	}
@@ -57,23 +66,37 @@ delta D3 {
 	}
 }
 
+class Application(IO io) {
+	Unit run() {
+		FooI foo = new Foo(io);
+		foo.bar();
+	}
+}
+
+
 //*****************************************************************
 
 productline PL {
-    features F;
+    features Core, F1, F2;
 
-    delta D1 when F;
-    delta D2a after D1 when F;
-    delta D2b after D1 when F;
-    delta D3 after D2a, D2b when F; 
+    delta D1 when Core;
+    delta D2a after D1 when F1;
+    delta D2b after D1 when F2;
+    delta D3 after D2a, D2b when F1 && F2; 
 }
 
 //*****************************************************************
 
-product P(F);
+product P1(Core, F1);
+product P2(Core, F2);
+product P12(Core, F1, F2);
 
 //*****************************************************************
 
 // MainBlock
-{}
+{
+	IO io = new IO();
+	io.println("HEEELP!!");
+    new Application(io);
+}
 
