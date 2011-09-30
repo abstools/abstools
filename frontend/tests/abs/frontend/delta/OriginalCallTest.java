@@ -23,23 +23,41 @@ public class OriginalCallTest extends DeltaFlattenerTest {
                 + "interface I {}"
                 + "class C implements I { Unit m() {} }"
                 + "delta D { modifies class C { modifies Unit m() { original(); } } }"
+                + "delta D2 { modifies class C { modifies Unit m() { original(); } } }"
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
         
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertTrue(delta.getNumClassOrIfaceModifier() == 1);
-        assertTrue(((ModifyClassModifier) delta.getClassOrIfaceModifier(0)).getNumModifier() == 1);
+        DeltaDecl delta1 = (DeltaDecl) findDecl(model, "M", "D");
+        assertTrue(delta1.getNumClassOrIfaceModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta1.getClassOrIfaceModifier(0)).getNumModifier() == 1);
         
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        assertTrue(delta.getNumClassOrIfaceModifier() == 2);
+        DeltaDecl delta2 = (DeltaDecl) findDecl(model, "M", "D2");
+        assertTrue(delta2.getNumClassOrIfaceModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta2.getClassOrIfaceModifier(0)).getNumModifier() == 1);
+
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
+        assertTrue(delta1.getNumClassOrIfaceModifier() == 2);
+        assertTrue(delta2.getNumClassOrIfaceModifier() == 2);
         
-        model.applyDelta(delta);
+
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         
         // there should be two methods now: the original one and the one added by the delta
-        assertTrue(cls.getMethods().getNumChild() == 2);
+        assertTrue(cls.getMethods().getNumChild() == 3);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().startsWith("m_Orig"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D"));
     }
 
+    public void targetedOriginalCall() {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I {}"
+                + "delta D1 { modifies class C { adds Unit m() {} } }"
+                + "delta D2 { modifies class C { modifies Unit m() { D1.original(); } } }"
+        );
+        
+    }
 }

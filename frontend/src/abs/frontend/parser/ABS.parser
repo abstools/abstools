@@ -682,7 +682,10 @@ SyncCall sync_call =
 	| pure_exp_prefix.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(callee,method,params) ; :}
 	;
 
-OriginalCall original_call = ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :} ;
+OriginalCall original_call =
+	ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :}
+	| TYPE_IDENTIFIER.delta DOT ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID(delta), params); :}
+	| COREFEATURES DOT ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID("core"), params); :};
 
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =

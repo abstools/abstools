@@ -71,11 +71,14 @@ aspect Flattener {
      * i.e. apply each ClassOrIfaceModifier to its corresponding class or interface
      */
     public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        for (DeltaDecl delta : deltas)
+    	// TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
+    	//             to flush the correct cache at the same time (or avoid flushing at all?)
+        for (DeltaDecl delta : deltas) {
             this.applyDelta(delta);
-        for (CompilationUnit unit: this.getCompilationUnits())
-            for (ModuleDecl module: unit.getModuleDecls())
-                module.flushCache();
+            for (CompilationUnit unit: this.getCompilationUnits())
+            	for (ModuleDecl module: unit.getModuleDecls())
+            		module.flushCache();
+        }
     }
 
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
@@ -90,7 +93,10 @@ aspect Flattener {
      * that is, add/remove/modify classes or interfaces
      */
     abstract public void ClassOrIfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
-
+    
+    // FIXME: A delta is passed to ClassOrIfaceModifier.apply as a parameter. This is redundant, since
+    //        ClassOrIfaceModifier and subclasses can just get this delta with this.delta().
+    
     public void AddClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
         ModuleDecl module = findModuleForClass(); //delta.getModule();
         module.getDecls().addChild(this.getClassDecl().fullCopy());

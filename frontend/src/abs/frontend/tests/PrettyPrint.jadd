@@ -151,5 +151,8 @@ aspect PrettyPrint {
     public void FromImport.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print("FromImport(" + this.getNames() + " from " + this.getModuleName() + ")");
     }
-
+    
+    public void DeltaID.prettyPrint(PrintWriter w, ABSFormatter f) {
+    	w.print("DeltaID(\"" + this.getName() + "\")");
+    }
 }

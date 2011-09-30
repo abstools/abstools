@@ -3,6 +3,7 @@
 
 // needed for lists of strings
 Name ::= <Name> ;
+DeltaID ::= <Name>;
 
 Model ::= CompilationUnit* ;
 
@@ -193,6 +194,7 @@ SyncCall: Call;
 AsyncCall: Call;
 GetExp: EffExp			::= PureExp;
 OriginalCall: EffExp    ::= Param:PureExp*;
+TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp*;
 
 abstract Unary : PureExp ::= Operand:PureExp;
 
@@ -241,7 +243,6 @@ ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause
 // to true, then the delta is applied.
 DeltaClause ::= Deltaspec DeltaID* Feature* ;
 
-DeltaID ::= <Name>;
 Feature ::= <Name> AttrAssignment*;
 
 AttrAssignment ::= <Name:String> Value ;

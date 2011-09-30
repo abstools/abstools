@@ -7,28 +7,9 @@ delta D1 {
 	}
 }
 
-delta D2a {
+delta D2 {
 	modifies class Foo {
-		modifies Unit bar() {
-			D1.original();
-		}
-	}
-}
-
-delta D2b {
-	modifies class Foo {
-		modifies Unit bar() {
-			D1.original();
-		}
-	}
-}
-
-delta D3 {
-	modifies class Foo {
-		modifies Unit bar() {
-			D2a.original();
-			D2b.original();
-		}
+		modifies Unit bar() { }
 	}
 }
 
@@ -38,9 +19,7 @@ productline PL {
     features F;
     
     delta D1 when F;
-    delta D2a after D1 when F;
-    delta D2b after D1 when F;
-    delta D3 after D2a, D2b when F; 
+    delta D2 after D1 when F;
 }
 
 //*****************************************************************
