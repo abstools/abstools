@@ -50,14 +50,25 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D"));
     }
 
-    public void targetedOriginalCall() {
+    @Test
+    public void targetedOriginalCall() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
-                + "interface I {}"
-                + "class C implements I {}"
+                + "class C {}"
                 + "delta D1 { modifies class C { adds Unit m() {} } }"
-                + "delta D2 { modifies class C { modifies Unit m() { D1.original(); } } }"
+                + "delta D2 { modifies class C { modifies Unit m() { original(); D1.original(); } } }"
         );
+        
+        DeltaDecl d1 = (DeltaDecl) findDecl(model, "M", "D1");
+        DeltaDecl d2 = (DeltaDecl) findDecl(model, "M", "D2");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getMethods().getNumChild() == 2);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_D1"));
+//        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));
         
     }
 }
