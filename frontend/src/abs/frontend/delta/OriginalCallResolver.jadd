@@ -150,16 +150,12 @@ aspect OriginalCallResolver {
             System.out.println("*** found original: " + original.getMethod().getMethodSig() + " in " + original.getDelta());
         }
         
-        method = copyOriginal(original.getMethod(), original.getDelta());
-        System.out.println("*** copied original: " + method.getMethodSig());
-        
-//        if (oc instanceof TargetedOriginalCall) {
-//        	TargetedOriginalCall toc = (TargetedOriginalCall)oc;
-//        	String originalMethodName = methodid + "_Orig_" + toc.getTarget().getName();
-//        	deltas.add(0, this.delta());
-//       		method = findOriginal(originalMethodName, classid, deltas).getMethod();
-//       		deltas.remove(0);
-//        }
+        try {
+        	method = findOriginal(methodid + "_Orig_" + original.getDelta(), classid, deltas).getMethod();
+        } catch(ASTNodeNotFoundException e) {
+	        method = copyOriginal(original.getMethod(), original.getDelta());
+	        System.out.println("*** copied original: " + method.getMethodSig());
+        }
         
         // construct call and pass on the original params
         System.out.println("*** replaced original call with call to: " + method.getMethodSig());
@@ -177,8 +173,24 @@ aspect OriginalCallResolver {
         for (DeltaDecl delta : deltas) {
             System.out.println("*** searching in delta " + delta.getName());
             mad = findOriginalInDelta(methodid, classid, delta);
+            if (mad != null)
+            	return mad;
         }
-        return mad;
+        // search in core classes
+        KindedName symbol = new KindedName(KindedName.Kind.CLASS, classid);
+        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
+        if (visibleSymbols.containsKey(symbol)) {
+            ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
+            System.out.println("*** searching in core class " + cls.getName());
+            for (MethodImpl method : cls.getMethods()) {
+                if (method.getMethodSig().getName().equals(methodid)) {
+                    return new MethodAndDelta(method, "core");
+                }
+            }
+        }
+        // give up
+        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid 
+                + "." + methodid);
     }
     
     /* find first MethodImpl that matches classid and methodid 
@@ -216,20 +228,7 @@ aspect OriginalCallResolver {
                 }
             }
         }
-        // search in core classes
-        KindedName symbol = new KindedName(KindedName.Kind.CLASS, classid);
-        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
-        if (visibleSymbols.containsKey(symbol)) {
-            ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
-            System.out.println("*** searching in core class " + cls.getName());
-            for (MethodImpl method : cls.getMethods()) {
-                if (method.getMethodSig().getName().equals(methodid))
-                    return new MethodAndDelta(method, "core");
-            }
-        }
-        // give up
-        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid 
-                + "." + methodid);
+        return null;
     }   
     
 

@@ -1,9 +1,29 @@
+module Env;
+export *;
+import Foreign from ABS.FLI;
+
+interface IO {
+   Unit println(String s);
+}
+
+[Foreign]
+class IO implements IO {
+   List<String> history = Nil;
+   Unit println(String s) { 
+          history = appendright(history,s);
+   }
+}
+
+
 // test the original() call substitution
 module HowOriginal;
+import * from Env;
 
 delta D1 {
-	adds class Foo {
-		Unit bar() {}
+	adds class Foo(IO io) {
+		Unit bar() {
+			io.println("D1");
+		}
 	}
 }
 
@@ -11,6 +31,7 @@ delta D2a {
 	modifies class Foo {
 		modifies Unit bar() {
 			D1.original();
+			io.println("D2a");
 		}
 	}
 }
@@ -18,7 +39,8 @@ delta D2a {
 delta D2b {
 	modifies class Foo {
 		modifies Unit bar() {
-//			D1.original();
+			D1.original();
+			io.println("D2b");
 		}
 	}
 }
@@ -26,8 +48,11 @@ delta D2b {
 delta D3 {
 	modifies class Foo {
 		modifies Unit bar() {
+			io.println("-----");
 			D2a.original();
+			io.println("-----");
 			D2b.original();
+			io.println("-----");
 		}
 	}
 }
