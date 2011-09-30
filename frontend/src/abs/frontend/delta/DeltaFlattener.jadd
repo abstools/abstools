@@ -83,7 +83,7 @@ aspect Flattener {
 
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
         for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
-//            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
+            System.out.println("*** applying ClassOrIfaceModifier " + cmod);
             cmod.apply(delta);
         }
     }
@@ -169,7 +169,7 @@ aspect Flattener {
         // find module where delta was defined
         ModuleDecl module = delta.getModule();
         ClassDecl cls = null;
-//        System.out.println("=== Delta " + module.getName() + "." + delta.getName() + " looking for ClassDecl: " + this.className());
+        System.out.println("=== Delta " + module.getName() + "." + delta.getName() + " looking for ClassDecl: " + this.className());
         
         Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleDeltas();
         KindedName symbol = new KindedName(KindedName.Kind.CLASS, this.className());
@@ -180,7 +180,7 @@ aspect Flattener {
         // find the class to which the delta applies 
         if (visibleSymbols.containsKey(symbol)) {
             cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
-//            System.out.println("=== found ClassDecl: " + module.getName() + "." + cls.getName());
+            System.out.println("=== found ClassDecl: " + module.getName() + "." + cls.getName());
         } else {
             // class not found
             throw new ASTNodeNotFoundException("Delta " + module.getName() + "." + delta.getName() 

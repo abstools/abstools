@@ -17,7 +17,7 @@ delta D2 {
 
 productline PL {
     features F;
-    
+
     delta D1 when F;
     delta D2 after D1 when F;
 }

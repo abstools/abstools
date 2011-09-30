@@ -18,7 +18,7 @@ delta D2a {
 delta D2b {
 	modifies class Foo {
 		modifies Unit bar() {
-			D1.original();
+//			D1.original();
 		}
 	}
 }
@@ -36,7 +36,7 @@ delta D3 {
 
 productline PL {
     features F;
-    
+
     delta D1 when F;
     delta D2a after D1 when F;
     delta D2b after D1 when F;
