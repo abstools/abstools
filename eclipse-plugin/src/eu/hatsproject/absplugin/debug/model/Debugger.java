@@ -114,7 +114,9 @@ public class Debugger implements SystemObserver{
         	r.setRandomSeed(seedNumber);
         }
 
-        final Thread debuggerRunner = new Thread(new Runnable(){
+        final ThreadGroup tg = new ThreadGroup("ABS "+mainClassName);
+        tg.setDaemon(true);
+        final Thread debuggerRunner = new Thread(tg, new Runnable(){
         	@Override
 			public void run() {
 				try {

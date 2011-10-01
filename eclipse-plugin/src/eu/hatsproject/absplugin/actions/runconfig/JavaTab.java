@@ -161,7 +161,8 @@ public class JavaTab extends AbstractTab {
 	            @SuppressWarnings("unused")
 	            long seed = getSeed();
 	            return true;
-	        }
+	        } else
+	            return true;
 	    } catch (NumberFormatException e){
 	        setErrorMessage("Seed is invalid - must be a long value");
 	    } catch (InvalidRandomSeedException e) {
