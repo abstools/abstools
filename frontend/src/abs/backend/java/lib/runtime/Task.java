@@ -142,12 +142,16 @@ public class Task<T extends ABSRef> {
     }
 
     private volatile View view;
+    
+    private Object viewCreationLock = new Object();
 
-    public synchronized TaskView getView() {
+    public TaskView getView() {
+        synchronized(viewCreationLock) {
         if (view == null) {
             view = new View();
         }
         return view;
+        }
     }
 
     public synchronized Thread getExecutingThread() {
