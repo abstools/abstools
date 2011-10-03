@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -186,7 +187,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 if (!isObserved(task))
                     return;
 
-                if (resolvedFutures.contains(fut))
+                if (!waitingFutures.contains(fut) || resolvedFutures.contains(fut))
                     return;
                 resolvedFutures.add(fut);
 
@@ -275,7 +276,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     }
 
     private String escapeColons(String s) {
-        return s.replaceAll("\\:", "\\\\:");
+        return s.replaceAll(":", "\\:");
     }
 
     private String getClassName(ObjectView obj) {
@@ -373,7 +374,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
             TaskView resolvingTask = fut.getResolvingTask();
             if (isObserved(resolvingTask)) {
 
-                if (resolvedFutures.contains(fut))
+                if (!waitingFutures.contains(fut) || resolvedFutures.contains(fut))
                     return;
                 resolvedFutures.add(fut);
 
@@ -462,7 +463,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         private PrintWriter out;
         volatile private boolean stopped = false;
         
-        private final LinkedBlockingQueue<String> buffer = new LinkedBlockingQueue<String>();
+        private final ArrayBlockingQueue<String> buffer = new ArrayBlockingQueue<String>(10000000,true);
         private Worker() {
             super("SDEdit Communication Thread");
             super.setDaemon(true);
@@ -470,12 +471,13 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         
         @Override public void run() {
             connect();
-            while(!stopped) {
+            while(!stopped || !buffer.isEmpty()) {
                  try {
                      String msg = buffer.take();
                      out.print(msg);
                      out.flush();
                  } catch (InterruptedException e) {
+                     e.printStackTrace();
                  }
              }
         }
@@ -512,7 +514,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         }
         
         public void write(String s) {
-            buffer.offer(s);
+            boolean f = false;
+            while(!f) {
+                f = buffer.offer(s);
+            }
         }
     }
 }
