@@ -79,7 +79,7 @@ public class Receiver implements Runnable
                 return delay;
             }
 
-            protected void perform() {
+            protected synchronized void perform() {
                 editor.getUI().appendText(tabTitle, appendBuffer.toString());
                 appendBuffer.setLength(0);
             }
