@@ -5,7 +5,7 @@
     <artifactId>eu.hats-project.parent</artifactId>
     <groupId>eu.hats-project</groupId>
     <version>1.0-SNAPSHOT</version>
-	<relativePath>../maven-support/eu.hats-project.parent/pom.xml</relativePath>
+  <relativePath>../maven-support/eu.hats-project.parent/pom.xml</relativePath>
   </parent>
   <groupId>eu.hats-project</groupId>
   <artifactId>tool-documentation</artifactId>
@@ -142,9 +142,9 @@
                 <ant antfile="../frontend/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
                   <property name="target.jar" value="${basedir}/target/site/download/absfrontend.jar" />
                 </ant>
-                <ant antfile="../mTVL/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
+                <!-- <ant antfile="../mTVL/build.xml" useNativeBasedir="true" target="dist" inheritAll="false">
                   <property name="target.jar" value="${basedir}/target/site/download/mtvl.jar" />
-                </ant>
+                </ant> -->
               </target>
             </configuration>
           </execution>
