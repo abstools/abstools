@@ -203,7 +203,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 }
                 String futTaskName = getActorName(task.getTarget()) + "[" + "FutTask" + futTask.getID() + "]";
                 writeOut(futTaskName);
-                writeOutLn(".future resolved\\:" + shorten(fut.getValue().toString()));
+                writeOutLn(".future resolved\\:" + shorten(String.valueOf(fut.getValue())));
                 writeOutLn(futTaskName + ":stop");
                 writeOutLn("(" + fut.getID() + ") " + getActorName(task.getTarget()));
                 writeOutLn(getActorName(futTask.getTarget())+ "[Task" + futTask.getID() + "]:stop");
@@ -269,14 +269,14 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 argString.append(""+v);
             }
 
-            writeOut(shorten(argString.toString()));
+            writeOut(shorten(String.valueOf(argString.toString())));
             writeOutLn(")");
             
         }
     }
 
     private String escapeColons(String s) {
-        return s.replaceAll(":", "\\:");
+        return s.replaceAll(":", "\\\\:");
     }
 
     private String getClassName(ObjectView obj) {
@@ -384,7 +384,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 writeOut(getActorName(task.getTarget()));
                 writeOut("[" + "Taskx" + resolvingTask.getID() + "]");
                 writeOut(".resolved\\: ");
-                writeOut(shorten(fut.getValue().toString()));
+                writeOut(shorten(String.valueOf(fut.getValue())));
                 writeOutLn();
                 writeOut(getActorName(resolvingTask.getTarget()));
                 writeOut("[" + "Task" + resolvingTask.getID() + "]");
@@ -477,7 +477,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                      out.print(msg);
                      out.flush();
                  } catch (InterruptedException e) {
-                     e.printStackTrace();
+                     // terminate after buffer is empty
                  }
              }
         }
