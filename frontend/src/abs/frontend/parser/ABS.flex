@@ -1,4 +1,4 @@
-//$Id$ 
+//$Id$
 package abs.frontend.parser;
 
 import beaver.Symbol;
@@ -42,20 +42,20 @@ WhiteSpace = {LineTerminator} | [ \t\f]
 
 //Comments
 Comment = {TraditionalComment}	| {EndOfLineComment}
-	
+
 TraditionalComment = "/*" [^*] ~"*/" | "/*" "*"+ "/" | "/*" "*"+ [^/*] ~"*/"
 EndOfLineComment = "//" {InputCharacter}* {LineTerminator}?
 
 
-//Identifiers defined using character classes 
+//Identifiers defined using character classes
 // BoolLiteral = [Tt]rue | [Ff]alse
 
-Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*																 
-TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*																 
+Identifier  = [:lowercase:] ([:letter:] | [:digit:] | "_")*
+TypeIdentifier  = [:uppercase:] ([:letter:] | [:digit:] | "_")*
 IntLiteral = 0 | [1-9][0-9]*
 
 
-//Alternative, explicit definition 
+//Alternative, explicit definition
 //Alpha = [a-zA-Z]
 //Identifier = {Alpha}({Alpha} | [:digit:] | "_")*
 //ID       [a-z][a-z0-9]*
@@ -65,7 +65,7 @@ IntLiteral = 0 | [1-9][0-9]*
 
 
 %% // Rules
-//Keywords 
+//Keywords
 // Important: if a new keyword is added also add it to Keywords.java
 //            to get syntax highlighting in Eclipse
 <YYINITIAL> {
@@ -88,7 +88,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "hasInterface" { return sym(Terminals.HASINTERFACE); }
  "productline" { return sym(Terminals.PRODUCTLINE); }
  "features"    { return sym(Terminals.OPTFEATURES); }
- "core"        { return sym(Terminals.COREFEATURES); }
  "after"       { return sym(Terminals.AFTER); }
  "when"        { return sym(Terminals.WHEN); }
  "product"     { return sym(Terminals.PRODUCT); }
@@ -105,7 +104,9 @@ IntLiteral = 0 | [1-9][0-9]*
  "duration"    { return sym(Terminals.DURATION); }
  "new"         { return sym(Terminals.NEW); }
  "this"        { return sym(Terminals.THIS); }
+ "core"        { return sym(Terminals.CORE); }
  "original"    { return sym(Terminals.ORIGINAL); }
+ ".original"    { return sym(Terminals.DOTORIGINAL); }
  "case"        { return sym(Terminals.CASE); }
  "let"         { return sym(Terminals.LET); }
  "in"          { return sym(Terminals.IN); }
@@ -149,7 +150,7 @@ IntLiteral = 0 | [1-9][0-9]*
 }
 
 //Operators
-<YYINITIAL> { 
+<YYINITIAL> {
  "?"           { return sym(Terminals.QMARK); }
  ".."          { return sym(Terminals.UNTIL); }
  "."           { return sym(Terminals.DOT); }
@@ -196,8 +197,8 @@ IntLiteral = 0 | [1-9][0-9]*
 
 
 <STRING> {
- \"            { yybegin(YYINITIAL); 
-                 return sym(Terminals.STRINGLITERAL, 
+ \"            { yybegin(YYINITIAL);
+                 return sym(Terminals.STRINGLITERAL,
                  string.toString()); }
  [^\n\r\"\\]+  { string.append( yytext() ); }
  \\t           { string.append('\t'); }

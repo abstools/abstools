@@ -43,7 +43,7 @@ public class OriginalCallTest extends DeltaFlattenerTest {
 
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         
-        // there should be two methods now: the original one and the one added by the delta
+        // there should be 3 methods now: the original one and those added by the two deltas
         assertTrue(cls.getMethods().getNumChild() == 3);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_core"));
