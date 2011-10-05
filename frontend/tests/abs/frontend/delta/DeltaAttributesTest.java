@@ -6,37 +6,67 @@ package abs.frontend.delta;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
-
+@RunWith(Parameterized.class)
 public class DeltaAttributesTest extends DeltaFlattenerTest {
-
+    private String product;
+    private String expected;
+    public DeltaAttributesTest(String p, String x) {
+        this.product = p;
+        this.expected = x;
+    }
+    
+    @Parameters
+    public static java.util.Collection<?> data() {
+        final Object[][] data = new String[][] {
+                {"M.P1", "True()"},
+                {"M.P2", "False()"}
+        };
+        return Arrays.asList(data);
+    }
+    
     @Test
     public void passFeatureAsBoolean() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
-                "module M; " 
-                + "delta D(Boolean f) {adds class C { Boolean myField = f; } }" 
-                + "productline PL { features F, G; delta D(F) when G; } "
-                + "product P1(F, G); "
+                "module M;"
+                + "delta D(Boolean f) { adds class C { Boolean myField = f; } }" 
+                + "productline PL { features F, G; delta D(F) when G; }"
+                + "product P1(F, G);"
                 + "product P2(G);"
         );
-        Model model2 = model.fullCopy();
         
-        // flatten for P1 - f is true
-        model.flattenForProduct("M.P1");
+        model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals("True()"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+    }
 
-        // flatten for P2 - f is false
-        model2.flattenForProduct("M.P2");
-        cls = (ClassDecl) findDecl(model2, "M", "C");
+    @Test
+    public void passBooleanFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Boolean attr) { adds class C { Boolean myField = attr; } }"
+                + "productline PL { features F; delta D(F.a) when F; }"
+                + "product P1(F{a=True});"
+                + "product P2(F{a=False});"
+        );
+        
+        model.flattenForProduct(product);
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals("False()"));
+        System.out.println("******** " + expected + " *** " + cls.getField(0).getInitExp().value.toString());
+
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
 
 }
