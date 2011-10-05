@@ -39,7 +39,7 @@ public class DeltaAttributesTest extends DeltaFlattenerTest {
     public void passFeatureAsBoolean() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Boolean f) { adds class C { Boolean myField = f; } }" 
+                + "delta D(Bool f) { adds class C { Bool myField = f; } }" 
                 + "productline PL { features F, G; delta D(F) when G; }"
                 + "product P1(F, G);"
                 + "product P2(G);"
@@ -55,7 +55,7 @@ public class DeltaAttributesTest extends DeltaFlattenerTest {
     public void passBooleanFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Boolean attr) { adds class C { Boolean myField = attr; } }"
+                + "delta D(Bool attr) { adds class C { Bool myField = attr; } }"
                 + "productline PL { features F; delta D(F.a) when F; }"
                 + "product P1(F{a=True});"
                 + "product P2(F{a=False});"
