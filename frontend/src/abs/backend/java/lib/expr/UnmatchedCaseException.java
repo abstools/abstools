@@ -4,11 +4,18 @@
  */
 package abs.backend.java.lib.expr;
 
-public class UnmatchedCaseException extends RuntimeException {
+import abs.backend.java.lib.runtime.ABSException;
+
+public class UnmatchedCaseException extends ABSException {
     private static final long serialVersionUID = 1L;
 
     public UnmatchedCaseException(String msg) {
         super(msg);
+    }
+
+    @Override
+    public String getName() {
+        return "Unmatched Case in Pattern Matching";
     }
 
 }

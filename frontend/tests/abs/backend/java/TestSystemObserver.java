@@ -4,6 +4,7 @@
  */
 package abs.backend.java;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
@@ -101,6 +102,12 @@ public class TestSystemObserver implements SystemObserver, ObjectCreationObserve
     @Override
     public void systemFinished() {
         System.out.println("SYSTEM FINISHED");
+    }
+
+    @Override
+    public void systemError(ABSException e) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
@@ -184,6 +185,12 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
     @Override
     public void systemFinished() {
         System.out.println(name+" system finished");
+    }
+
+    @Override
+    public void systemError(ABSException e) {
+        // TODO Auto-generated method stub
+        
     }
 
 }

@@ -487,6 +487,9 @@ public class ABSRuntime {
      */
     public void handleABSException(Task<?> task, ABSException e) {
         System.err.println("Error in " + this + ":\n" + e.getMessage());
+        for (SystemObserver obs : systemObserver) {
+            obs.systemError(e);
+        }
         if (terminateOnException) {
             shutdown();
         }

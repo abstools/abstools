@@ -6,6 +6,7 @@ package abs.backend.java.observing;
 
 import java.util.List;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSValue;
 
 public class EmptyCompleteObserver implements CompleteObserver {
@@ -56,5 +57,9 @@ public class EmptyCompleteObserver implements CompleteObserver {
 
     @Override
     public void systemFinished() {
+    }
+
+    @Override
+    public void systemError(ABSException e) {
     }
 }

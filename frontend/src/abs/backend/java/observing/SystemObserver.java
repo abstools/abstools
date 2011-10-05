@@ -4,6 +4,8 @@
  */
 package abs.backend.java.observing;
 
+import abs.backend.java.lib.runtime.ABSException;
+
 /**
  * An interface to observer global system behavior
  * 
@@ -14,6 +16,8 @@ public interface SystemObserver {
     void systemStarted();
 
     void newCOGCreated(COGView cog, ObjectView initialObject);
+    
+    void systemError(ABSException e);
     
     void systemFinished();
 }

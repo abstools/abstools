@@ -38,6 +38,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -61,6 +62,7 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
@@ -111,6 +113,24 @@ public class GraphicalDebugger implements SystemObserver {
         case BLOCKED: return ColorUtils.setSaturation(Color.RED, 0.5f);
         default: throw new IllegalArgumentException("Unknown Taskstate " + ts); 
         }
+    }
+
+    @Override
+    public void systemError(final ABSException e) {
+        /*SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                e.getMessage();
+                // TODO Auto-generated method stub
+                
+            }
+        
+        });*/
+        JOptionPane.showMessageDialog(window.frame,
+                e.getMessage(),
+                e.getName(),
+                JOptionPane.ERROR_MESSAGE);
     }
 
 }

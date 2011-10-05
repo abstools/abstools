@@ -6,8 +6,6 @@ package abs.backend.java.scheduling;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.runtime.ABSFut;
@@ -50,6 +48,8 @@ public class GlobalScheduler {
                 return;
             }
             if (options.isEmpty()) {
+                // TODO: check for deadlocks here 
+                
                 logger.info("No steps left. Program finished");
                 logger.info("Total number of global choices: " + totalNumChoices);
                 if (totalNumChoices == 0) {

@@ -19,6 +19,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.FutView;
@@ -178,6 +179,12 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
 
     @Override
     public void systemFinished() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void systemError(ABSException e) {
         // TODO Auto-generated method stub
         
     }

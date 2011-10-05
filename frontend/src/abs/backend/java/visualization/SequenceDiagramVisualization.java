@@ -23,6 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.EmptyTaskObserver;
@@ -519,5 +520,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
                 f = buffer.offer(s);
             }
         }
+    }
+
+    @Override
+    public void systemError(ABSException e) {
+        // do nothing
     }
 }
