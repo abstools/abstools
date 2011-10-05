@@ -208,10 +208,8 @@ aspect DeltaCollector {
 
 
 
-    // undested!
     // calculate the concrete value of a Deltaparam given a feature selection.
-    abstract public Value Deltaparam.calcValue(List<Feature> feats)
-    throws WrongProgramArgumentException;
+    abstract public Value Deltaparam.calcValue(List<Feature> feats) throws WrongProgramArgumentException;
 
     public Value Const.calcValue(List<Feature> feats)  {
         return (Value) getValue().fullCopy();
@@ -233,10 +231,9 @@ aspect DeltaCollector {
         return new BoolVal(false);
     }
 
-    public Value FIDAID.calcValue(List<Feature> feats)
-    throws WrongProgramArgumentException {
-        for (Feature f : feats) {
-            if (f.getName().equals(getFeatName())) // found feature
+    public Value FIDAID.calcValue(List<Feature> features) throws WrongProgramArgumentException {
+        for (Feature f : features) {
+            if (f.getName().equals(this.getFeatName())) // found feature
                 for (AttrAssignment attr : f.getAttrAssignments()) {
                     if (attr.getName().equals(getAttrName()))   // found attribute
                         return (Value) attr.getValue().fullCopy();
@@ -246,8 +243,7 @@ aspect DeltaCollector {
     }
 
     // collect the substitution to be applied in a DeltaDecl given the parameters and the feature selection
-    public HashMap<String,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats)
-    throws WrongProgramArgumentException
+    public HashMap<String,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats) throws WrongProgramArgumentException
     {
         HashMap<String,Value> res = new HashMap<String,Value>();
         for (int i = 0; i < dparams.getNumChild(); i++) {
@@ -263,8 +259,7 @@ aspect DeltaCollector {
     }
 
     // This is the main function that should be used!
-    public DeltaDecl DeltaDecl.substituteDeltaParams(List<Deltaparam> dparams, List<Feature> feats)
-    throws WrongProgramArgumentException
+    public DeltaDecl DeltaDecl.substituteDeltaParams(List<Deltaparam> dparams, List<Feature> feats) throws WrongProgramArgumentException
     {
         DeltaDecl d;
         d = this.fullCopy();

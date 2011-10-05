@@ -69,4 +69,19 @@ public class DeltaAttributesTest extends DeltaFlattenerTest {
         assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
 
+    @Test
+    public void passIntegerFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Int attr) { adds class C { Int myField = attr; } }"
+                + "productline PL { features F; delta D(F.a) when F; }"
+                + "product P1(F{a=99});"
+        );
+        
+        model.flattenForProduct("M.P1");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("myField"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals("IntLiteral(99)"));
+    }
+
 }

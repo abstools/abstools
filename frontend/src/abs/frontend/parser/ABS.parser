@@ -808,9 +808,10 @@ List attr_assignment_list  = attr_assignment.a {: return new List().add(a); :}
     | attr_assignment_list.l COMMA attr_assignment.a {: return l.add(a); :}
     ;
 
-AttrAssignment attr_assignment = IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
+AttrAssignment attr_assignment = 
+    IDENTIFIER.n ASSIGN INTLITERAL.i  {: return new AttrAssignment(n, new IntVal(Integer.parseInt((String)i))); :}
     | IDENTIFIER.n ASSIGN TYPE_IDENTIFIER.c {: // hack...
-        if (c=="True") return new AttrAssignment(n, new BoolVal(true));
+        if (c.equals("True")) return new AttrAssignment(n, new BoolVal(true));
         else return new AttrAssignment(n, new BoolVal(false)); :}
     ;
 
