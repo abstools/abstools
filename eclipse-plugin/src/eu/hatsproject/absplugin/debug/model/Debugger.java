@@ -319,6 +319,7 @@ public class Debugger implements SystemObserver{
                 showErrorMessage(e.getMessage());
             }
         });
+        shutdown();
     }
 
 }
