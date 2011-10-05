@@ -63,6 +63,12 @@ public class GlobalScheduler {
                             suspendedTasks.add(t);
                         }
                     }
+                    // Need to filter out currentTask (that is finishing)
+                    Thread tt = Thread.currentThread();
+                    if (tt instanceof SimpleSchedulerThread) {
+                        Task<?> currT = ((SimpleSchedulerThread)tt).getExecutingTask().task;
+                        suspendedTasks.remove(currT);
+                    }
                     if (!suspendedTasks.isEmpty()) {
                         ABSException ex = new ABSDeadlockException();
                         for (Task<?> t : suspendedTasks) {
