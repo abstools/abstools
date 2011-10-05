@@ -5,13 +5,19 @@
 package abs.backend.java.scheduling;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
+import abs.backend.java.lib.runtime.ABSDeadlockException;
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.lib.runtime.Task;
+import abs.backend.java.scheduling.SimpleTaskScheduler.SimpleSchedulerThread;
 
 public class GlobalScheduler {
     private static Logger logger = Logging.getLogger(GlobalScheduler.class.getName());
@@ -47,8 +53,25 @@ public class GlobalScheduler {
                 l.unlock();
                 return;
             }
-            if (options.isEmpty()) {
-                // TODO: check for deadlocks here 
+            if (options.isEmpty()) { 
+                List<SimpleSchedulerThread> activeThreads = runtime.getThreadManager().getAllCopyOf(SimpleSchedulerThread.class);
+                if (!activeThreads.isEmpty()) {
+                    Set<Task<?>> suspendedTasks = new HashSet<Task<?>>();
+                    for (SimpleSchedulerThread st : activeThreads) {
+                        Task<?> t = st.getExecutingTask().task;
+                        if (t != null) {
+                            suspendedTasks.add(t);
+                        }
+                    }
+                    if (!suspendedTasks.isEmpty()) {
+                        ABSException ex = new ABSDeadlockException();
+                        for (Task<?> t : suspendedTasks) {
+                            t.setException(ex);
+                        }
+                        runtime.handleABSException(suspendedTasks.iterator().next(), ex);
+                        return;
+                    }
+                }
                 
                 logger.info("No steps left. Program finished");
                 logger.info("Total number of global choices: " + totalNumChoices);

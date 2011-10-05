@@ -17,12 +17,12 @@ public class ABSThreadManager {
         runtime = r;
     }
     
-    synchronized void addThread(ABSThread t) {
+    public synchronized void addThread(ABSThread t) {
         threads.add(t);
         if (logger.isLoggable(Level.FINEST)) logger.finest("Added thread "+t);
     }
     
-    synchronized void removeThread(ABSThread t) {
+    public synchronized void removeThread(ABSThread t) {
         threads.remove(t);
         if (logger.isLoggable(Level.FINEST)) logger.finest("Removed thread "+t);
         if (threads.isEmpty()) {
@@ -30,9 +30,19 @@ public class ABSThreadManager {
         }
     }
     
-    synchronized void shutdownAllThreads() {
+    public synchronized void shutdownAllThreads() {
         for (ABSThread t : threads) {
             t.shutdown();
         }
+    }
+    
+    public synchronized <T> List<T> getAllCopyOf(Class<T> clazz) {
+        List<T> result = new ArrayList<T>();
+        for (ABSThread t : threads) {
+            if (t.getClass().equals(clazz)) {
+                result.add((T)t);
+            }
+        }
+        return result;
     }
 }

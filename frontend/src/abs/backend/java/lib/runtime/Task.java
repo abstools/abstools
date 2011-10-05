@@ -27,6 +27,7 @@ public class Task<T extends ABSRef> {
     private final int id;
     private Thread executingThread;
     private ABSException exception;
+    
     private final TaskStack stack;
     private final AsyncCall<T> call;
 
@@ -66,6 +67,11 @@ public class Task<T extends ABSRef> {
 
     public synchronized ABSException getException() {
         return exception;
+    }
+    
+    // not synchronized as only called when task is locked
+    public void setException(ABSException exception) {
+        this.exception = exception;
     }
 
     public COG getCOG() {

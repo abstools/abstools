@@ -288,6 +288,10 @@ public class ABSRuntime {
         return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager);
     }
 
+    public ABSThreadManager getThreadManager() {
+        return threadManager;
+    }
+
     public TaskSchedulingStrategy getTaskSchedulingStrategy() {
         return taskSchedulingStrategy;
     }

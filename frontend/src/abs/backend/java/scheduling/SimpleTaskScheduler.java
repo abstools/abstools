@@ -175,6 +175,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     class SimpleSchedulerThread extends ABSThread implements GuardWaiter {
 
         private final TaskInfo executingTask;
+        
         private boolean active;
 
         private ABSGuard guard;
@@ -184,6 +185,18 @@ public class SimpleTaskScheduler implements TaskScheduler {
             this.executingTask = activeTask;
             setName("ABS Scheduler Thread of " + cog.toString());
             setCOG(cog);
+        }
+
+        public TaskInfo getExecutingTask() {
+            return executingTask;
+        }
+        
+        public List<Task<?>> getSuspendedTasks() {
+            List<Task<?>> result = new ArrayList<Task<?>>();
+            for (TaskInfo ti : suspendedTasks) {
+                result.add(ti.task);
+            }
+            return result;
         }
 
         @Override
