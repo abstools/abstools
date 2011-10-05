@@ -210,7 +210,7 @@ aspect Typing {
    	 Type declaredResultType = ((FunctionDecl)d).getType();
    	 if (d instanceof ParametricFunctionDecl) {
    		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(d,funDecl.getParams(),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
    	 } else {
    		 return declaredResultType;
@@ -224,7 +224,7 @@ aspect Typing {
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
    	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
    	         return UnknownType.INSTANCE;
-   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBinding(TypeCheckerHelper.getTypesFromConstructorArgs(d.getConstructorArgs()),getParams());
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBinding(d,TypeCheckerHelper.getTypesFromConstructorArgs(d.getConstructorArgs()),getParams());
    		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
    	 } else {
    		 return declaredResultType;

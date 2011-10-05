@@ -18,34 +18,7 @@ import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Binary;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.ConstructorPattern;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.Exp;
-import abs.frontend.ast.Export;
-import abs.frontend.ast.FromExport;
-import abs.frontend.ast.FromImport;
-import abs.frontend.ast.Import;
-import abs.frontend.ast.List;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Name;
-import abs.frontend.ast.NamedExport;
-import abs.frontend.ast.NamedImport;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricFunctionDecl;
-import abs.frontend.ast.Pattern;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.StarExport;
-import abs.frontend.ast.StarImport;
-import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.ast.TypedVarOrFieldDecl;
-import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
@@ -123,14 +96,14 @@ public class TypeCheckerHelper {
 
     public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, List<? extends ConstructorArg> params, List<PureExp> args) {        
         final java.util.List<Type> paramTypes = getTypesFromConstructorArgs(params);
-        final Map<TypeParameter, Type> binding = getTypeParamBinding(paramTypes, args);
+        final Map<TypeParameter, Type> binding = getTypeParamBinding(n, paramTypes, args);
         typeCheckEqual(l, n, applyBinding(binding, paramTypes), args);
     }
 
     public static void typeCheckMatchingParamsPattern(SemanticErrorList l, ASTNode<?> n, DataConstructor decl,
             List<Pattern> args) {
         java.util.List<Type> patternTypes = getTypesFromPattern(args);
-        Map<TypeParameter, Type> binding = getTypeParamBinding(getTypesFromConstructorArgs(decl.getConstructorArgs()),
+        Map<TypeParameter, Type> binding = getTypeParamBinding(n, getTypesFromConstructorArgs(decl.getConstructorArgs()),
                 patternTypes);
         java.util.List<Type> types = applyBinding(binding, getTypesFromConstructorArgs(decl.getConstructorArgs()));
         typeCheckEqualPattern(l, n, types, args);
@@ -146,7 +119,7 @@ public class TypeCheckerHelper {
 
     public static void typeCheckMatchingParams(SemanticErrorList l, ASTNode<?> n, ParametricFunctionDecl decl,
             List<PureExp> args) {
-        Map<TypeParameter, Type> binding = getTypeParamBindingFromParamDecl(decl.getParams(), args);
+        Map<TypeParameter, Type> binding = getTypeParamBindingFromParamDecl(n, decl.getParams(), args);
         java.util.List<Type> types = applyBinding(binding, getTypes(decl.getParams()));
         typeCheckEqual(l, n, types, args);
     }
@@ -261,27 +234,29 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBindingFromDataTypeUse(List<? extends DataTypeUse> params,
+    public static Map<TypeParameter, Type> getTypeParamBindingFromDataTypeUse(ASTNode<?> node, List<? extends DataTypeUse> params,
             List<PureExp> args) {
-        return getTypeParamBinding(getTypesFromDataTypeUse(params), args);
+        return getTypeParamBinding(node, getTypesFromDataTypeUse(params), args);
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBindingFromParamDecl(List<ParamDecl> params, List<PureExp> args) {
-        return getTypeParamBinding(getTypes(params), args);
+    public static Map<TypeParameter, Type> getTypeParamBindingFromParamDecl(ASTNode<?> node, List<ParamDecl> params, List<PureExp> args) {
+        return getTypeParamBinding(node, getTypes(params), args);
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBinding(java.util.List<Type> params, List<PureExp> args) {
-        return getTypeParamBinding(params, getTypesFromExp(args));
+    public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, java.util.List<Type> params, List<PureExp> args) {
+        return getTypeParamBinding(node, params, getTypesFromExp(args));
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBinding(java.util.List<Type> params, java.util.List<Type> args) {
+    public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, java.util.List<Type> params, java.util.List<Type> args) {
         Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
-        addTypeParamBinding(binding, params, args);
+        addTypeParamBinding(node, binding, params, args);
         return binding;
     }
 
-    public static void addTypeParamBinding(Map<TypeParameter, Type> binding, java.util.List<Type> params,
+    public static void addTypeParamBinding(ASTNode<?> node, Map<TypeParameter, Type> binding, java.util.List<Type> params,
             java.util.List<Type> args) {
+        if (params.size() != args.size())
+            throw new TypeCheckerException(new TypeError(node, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(),args.size()));
         for (int i = 0; i < params.size(); i++) {
             Type paramType = params.get(i);
             Type argType = args.get(i);
@@ -299,7 +274,7 @@ public class TypeCheckerHelper {
                 DataTypeType paramdt = (DataTypeType) paramType;
                 DataTypeType argdt = (DataTypeType) argType;
                 if (paramdt.numTypeArgs() == argdt.numTypeArgs()) {
-                    addTypeParamBinding(binding, paramdt.getTypeArgs(), argdt.getTypeArgs());
+                    addTypeParamBinding(node, binding, paramdt.getTypeArgs(), argdt.getTypeArgs());
                 }
             }
         }

@@ -674,7 +674,7 @@ aspect GenerateJava {
      Type declaredResultType = d.getTypeUse().getType();
      if (d instanceof ParametricFunctionDecl) {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-         Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl.getParams(),getParams());
+         Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(d,funDecl.getParams(),getParams());
 
          /*
          StringBuffer buf = new StringBuffer();
