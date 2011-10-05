@@ -18,10 +18,10 @@ import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 @RunWith(Parameterized.class)
-public class DeltaAttributesTest extends DeltaFlattenerTest {
-    private String product;
-    private String expected;
-    public DeltaAttributesTest(String p, String x) {
+public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
+    protected String product;
+    protected String expected;
+    public DeltaAttributesBooleanTest(String p, String x) {
         this.product = p;
         this.expected = x;
     }
@@ -64,24 +64,6 @@ public class DeltaAttributesTest extends DeltaFlattenerTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        System.out.println("******** " + expected + " *** " + cls.getField(0).getInitExp().value.toString());
-
         assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
-
-    @Test
-    public void passIntegerFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
-        Model model = assertParseOk(
-                "module M;"
-                + "delta D(Int attr) { adds class C { Int myField = attr; } }"
-                + "productline PL { features F; delta D(F.a) when F; }"
-                + "product P1(F{a=99});"
-        );
-        
-        model.flattenForProduct("M.P1");
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals("IntLiteral(99)"));
-    }
-
 }

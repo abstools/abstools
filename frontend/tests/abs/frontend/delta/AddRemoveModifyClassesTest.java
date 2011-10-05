@@ -68,7 +68,7 @@ public class AddRemoveModifyClassesTest extends DeltaFlattenerTest {
 
         model.applyDelta(delta);
         // FIXME!!
-//        assertTrue(cls.getFields().getNumChild() == 0);
+        assertTrue(cls.getFields().getNumChild() == 0);
     }
     
     @Test
