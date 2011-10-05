@@ -20,6 +20,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 
 import abs.backend.java.debugging.DebugModel;
+import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectView;
@@ -309,5 +310,15 @@ public class Debugger implements SystemObserver{
 	public String getProjectName(){
 		return projectName;
 	}
+
+    @Override
+    public void systemError(final ABSException e) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                showErrorMessage(e.getMessage());
+            }
+        });
+    }
 
 }
