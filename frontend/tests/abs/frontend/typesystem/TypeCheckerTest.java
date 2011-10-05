@@ -308,5 +308,9 @@ public class TypeCheckerTest extends FrontendTest {
                 + "    Ticket256(ds) => ds;"
                 + "  };");
     }
-    
+
+    @Test
+    public void ticket296() {
+        assertTypeErrors("module FunArgsTypeCheckBug; def Int f(Map<Int,Int> m) = lookupDefault(m, 42);");
+    }
 }
