@@ -1,3 +1,0 @@
-module FSL;
-
-product P1 (F { speed = 1001 }, Lit, Eval) {}

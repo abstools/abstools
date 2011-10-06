@@ -1,8 +1,0 @@
-module Computer;
-
-product P1 (  
-    Computer { maxRam = 2048 },
-    Motherboard,
-    CPU,
-    GraphicsCard { minMem = 64 }
-) {}
