@@ -1,14 +1,14 @@
 module PeerToPeer;
 
-//type synonyms  
+//type synonyms
 
 type Filename = String ;
 type Filenames = Set<String> ;
 type Packet = String ;
 type File = List<Packet> ;
 type Catalog = List<Pair<Peer, Filenames> > ;
- 
- 
+
+
 interface Server {
   Filenames enquire();
   Int getLength(Filename fId);
@@ -16,7 +16,7 @@ interface Server {
 }
 
 
-interface Peer extends Client, Server { 
+interface Peer extends Client, Server {
    Unit setAdmin(Network admin);
    Unit run();
 }
@@ -47,7 +47,7 @@ class DataBaseImpl(Map<Filename, File> db) implements DataBase {
 
   Unit storeFile(Filename fId, File file) {
     db = InsertAssoc(Pair(fId,file), db);
-  } 
+  }
 
   Filenames listFiles() {
     return keys(db);
@@ -68,11 +68,11 @@ class Node(DataBase db, Filename file) implements Peer {
     }
     return s;
   }
-  
+
   Unit run() {
-    Fut<Catalog> c ; 
+    Fut<Catalog> c ;
     Fut<List<Peer>> f;
-    Server server ; 
+    Server server ;
 
     await admin != null;
     f = admin!getNeighbors(this);   // Asynchronous call to admin
@@ -91,15 +91,15 @@ class Node(DataBase db, Filename file) implements Peer {
     this.admin = admin;
   }
 
-  Filenames enquire() { 
-    Fut<Filenames> f ;  
+  Filenames enquire() {
+    Fut<Filenames> f ;
     f = db!listFiles();
     await f?;
     return f.get;
   }
 
   Int getLength(Filename fId) {
-    Fut<Int> length ; 
+    Fut<Int> length ;
     length = db!getLength(fId);
     await length?;
     return length.get;
@@ -116,9 +116,9 @@ class Node(DataBase db, Filename file) implements Peer {
 
   Catalog availFiles (List<Peer> sList) {
     Catalog cat = Nil;
-    Filenames fNames = EmptySet; 
+    Filenames fNames = EmptySet;
     Fut<Filenames> fN;
-    Catalog catList = Nil; 
+    Catalog catList = Nil;
     Fut<Catalog> cL;
 
     if (sList != Nil) {
@@ -127,9 +127,9 @@ class Node(DataBase db, Filename file) implements Peer {
       await fN? & cL?;
       catList = cL.get;
       fNames = fN.get;
-      cat = appendright(catList, Pair(head(sList), fNames)); 
+      cat = appendright(catList, Pair(head(sList), fNames));
     }
-    return cat; 
+    return cat;
   }
 
   Unit reqFile(Server sId, Filename fId) {
@@ -141,14 +141,14 @@ class Node(DataBase db, Filename file) implements Peer {
 
     l1 = sId!getLength(fId);
     await l1?;
-    lth = l1.get; 
+    lth = l1.get;
     while (lth > 0) {
       lth = lth - 1;            // indexing is zero-based
       l2 = sId!getPack(fId, lth);
       await l2?;
       pack = l2.get ;
-      file = Cons(pack, file); 
-    } 
+      file = Cons(pack, file);
+    }
     db!storeFile(fId, file);
   }
 }
@@ -203,9 +203,7 @@ product P2 (FileFilter);
 product P3 (ParentalControl);
 product P4 (FileFilter, ParentalControl);
 
-
-
-{ 
+{
   // Map<Filename, File>
   DataBase db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
   DataBase db1 = new cog DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
@@ -219,4 +217,17 @@ product P4 (FileFilter, ParentalControl);
   node1!setAdmin(admin);
   node2!setAdmin(admin);
   node3!setAdmin(admin);
+}
+
+// Feature Model
+root Peer2Peer {
+    group oneof {
+        Basic,
+        Extended {
+            group [0..2] {
+                FileFilter,
+                ParentalControl { require: FileFilter; }
+            }
+        }
+    }
 }
