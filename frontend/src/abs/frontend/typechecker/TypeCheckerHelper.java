@@ -359,7 +359,7 @@ public class TypeCheckerHelper {
                 StarImport si = (StarImport) i;
                 ModuleDecl md = mod.lookupModule(si.getModuleName());
                 if (md == null) {
-                    if (!si.getModuleName().equals(Constants.STDLIB_NAME))
+                    if (!Constants.STDLIB_NAME.equals(si.getModuleName()))
                         throw new TypeCheckerException(new TypeError(si, ErrorMessage.MODULE_NOT_RESOLVABLE,
                                 si.getModuleName()));
                 } else {
@@ -370,7 +370,7 @@ public class TypeCheckerHelper {
                 for (Name n : ni.getNames()) {
                     ModuleDecl md = mod.lookupModule(n.getModuleName());
                     if (md == null) {
-                        if (!n.getModuleName().equals(Constants.STDLIB_NAME))
+                        if (!Constants.STDLIB_NAME.equals(n.getModuleName()))
                             throw new TypeCheckerException(new TypeError(n, ErrorMessage.MODULE_NOT_RESOLVABLE,
                                     n.getModuleName()));
                     }

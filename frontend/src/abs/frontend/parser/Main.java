@@ -526,7 +526,7 @@ public class Main {
             }
             if (stdlib) {
                 for (ModuleDecl d : u.getModuleDecls()) {
-                    if (!d.getName().equals(Constants.STDLIB_NAME))
+                    if (!Constants.STDLIB_NAME.equals(d.getName()))
                         d.getImports().add(new StarImport(Constants.STDLIB_NAME));
                 }
             }
