@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.eclipse.core.commands.State;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Composite;
@@ -145,7 +146,15 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 
 		CompilationUnit cu = nature.getCompilationUnit(file);
 		if (cu == null) {
-			throw new IllegalArgumentException("Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
+		    // Band-aid for ticket #299:
+		    try {
+		        nature.parseABSFile(file);
+		        cu = nature.getCompilationUnit(file);
+		        if (cu == null)
+		            throw new IllegalArgumentException("Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
+		    } catch (CoreException e) {
+		        throw new RuntimeException(e);
+		    }
 		}
 		
 		// Update the input of the tree viewer to reflect the new outline of the AST
