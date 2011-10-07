@@ -5,24 +5,13 @@
 package abs.backend.java.lib.runtime;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 import abs.backend.java.debugging.GraphicalDebugger;
 import abs.backend.java.lib.runtime.RuntimeOptions.Option;
 import abs.backend.java.lib.runtime.RuntimeOptions.OptionType;
 import abs.backend.java.observing.SystemObserver;
-import abs.backend.java.scheduling.DefaultTaskScheduler;
-import abs.backend.java.scheduling.GlobalSchedulingStrategy;
-import abs.backend.java.scheduling.InteractiveScheduler;
-import abs.backend.java.scheduling.RandomSchedulingStrategy;
-import abs.backend.java.scheduling.RecordingSchedulerStrategy;
-import abs.backend.java.scheduling.SimpleTaskScheduler;
-import abs.backend.java.scheduling.TaskSchedulerFactory;
-import abs.backend.java.scheduling.TaskSchedulingStrategy;
-import abs.backend.java.scheduling.TotalSchedulingStrategy;
+import abs.backend.java.scheduling.*;
 
 /**
  * Evaluates system properties
@@ -64,7 +53,7 @@ public class Config {
         if (options.systemObserver.wasSet()) {
             for (String s : options.systemObserver.stringArrayValue()) {
                 logger.finest("adding systemobserver "+s);
-                runtime.addSystemObserver((SystemObserver) loadClassByName(s));
+                runtime.addSystemObserver(loadClassByName(SystemObserver.class,s));
             }
         }
     }
@@ -79,9 +68,7 @@ public class Config {
             options.systemObserver.appendStringValue(GraphicalDebugger.class.getName());
         }
 
-        
         loadRandomSeed();
-        
     }
 
     private void loadRandomSeed() {
@@ -109,25 +96,28 @@ public class Config {
         }
     }
 
-    private static Object loadClassByName(String s, Object...args) {
+    private static <T> T loadClassByName(Class<T> expected, String s, Object...args) {
         try {
             Class<?> clazz = Config.class.getClassLoader().loadClass(s);
+            if (!expected.isAssignableFrom(clazz)) {
+                throw new IllegalArgumentException("Can't use "+s+" as an instance for "+expected.getCanonicalName());
+            }
             for (Constructor<?> c : clazz.getConstructors()) {
                 if (c.getParameterTypes().length == args.length) {
-                    return c.newInstance(args);
+                    // Safe cast.
+                    return (T) c.newInstance(args);
                 }
             }
-            return clazz.newInstance();
+            throw new IllegalArgumentException("Couldn't find a constructor in class "+s+" with "+args.length+" arguments");
         } catch (Exception e) {
             e.printStackTrace();
         } 
         return null;
     }
-
     
     public void loadTotalSchedulingStrategy() {
         if (options.totalScheduler.wasSet()) {
-            TotalSchedulingStrategy strat = (TotalSchedulingStrategy) loadClassByName(options.totalScheduler.stringValue(), runtime.getRandom());
+            TotalSchedulingStrategy strat = loadClassByName(TotalSchedulingStrategy.class, options.totalScheduler.stringValue(), runtime.getRandom());
             
             if (strat != null) {
                 logger.config("Using total scheduling strategy defined by class " + strat.getClass().getName());
@@ -140,7 +130,7 @@ public class Config {
 
     public void loadTaskSchedulingStrategy() {
         if (options.taskSchedulerStrategy.wasSet()) {
-            TaskSchedulingStrategy strat = (TaskSchedulingStrategy) loadClassByName(options.taskSchedulerStrategy.stringValue());
+            TaskSchedulingStrategy strat = loadClassByName(TaskSchedulingStrategy.class, options.taskSchedulerStrategy.stringValue());
             if (strat == null) {
                 logger.warning("Could not load task scheduling strategy class "+options.taskSchedulerStrategy.stringValue());
                 return;
@@ -163,13 +153,12 @@ public class Config {
 
     public void loadGlobalSchedulingStrategy() {
         if (options.globalScheduler.wasSet()) {
-            GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByName(options.globalScheduler.stringValue());
+            GlobalSchedulingStrategy strat = (GlobalSchedulingStrategy) loadClassByName(GlobalSchedulingStrategy.class, options.globalScheduler.stringValue());
             if (strat != null)
                 runtime.setGlobalSchedulingStrategy(strat);
             else    
                 logger.warning("Could not load task global strategy class "+options.globalScheduler.stringValue());
         }
-            
     }
 
     private void loadSchedulerFactory() {
