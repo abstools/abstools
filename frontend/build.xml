@@ -19,6 +19,11 @@
 	<property name="gen.dir" value="${basedir}/gen" />
 	<!-- temporal directory used during tests -->
 	<property name="gen.test.dir" value="${basedir}/gen" />
+	<!-- How many junit targets from tests-all are executed in parallel.
+	Note that this does not influence the number of concurrent tests INSIDE
+	a JUnit test class (yet).
+	-->
+	<property name="threadCount" value="2" />
 	<!-- machine-readable JUnit output goes here: -->
 	<property name="test.data.dir" location="${gen.test.dir}/data"/>
 	<property name="ext.dir" value="${basedir}/lib" />
@@ -111,7 +116,7 @@
 	</target>
 
 	<target name="compile" depends="prepare, gen" description="Compiles all java files in the source directory.">
-		<javac srcdir="${src.dir}/abs:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8">
+		<javac srcdir="${src.dir}:${src.dir}:${gen.dir}:${tests.dir}" destdir="${build.dir}" deprecation="on" debug="on" includeantruntime="false" depend="${build.depend}" optimize="off" encoding="utf-8">
 			<classpath refid="compile.classpath" />
 		</javac>
 	</target>
@@ -254,7 +259,14 @@
 	<property name="test.backend.semantic.suite.name" value="abs.backend.common.AllSemanticTests" />
 	<property name="test.backend.java.lib.net.suite.name" value="abs.backend.java.lib.net.AllNetTests" />
 
-	<target name="tests-all" depends="tests-frontend, tests-backend, tests-backend-semantic" />
+	<!-- invoke 'compile' once up front, so that the sub-tasks see the updated build. -->
+	<target name="tests-all" depends="compile">
+		<parallel threadCount="${threadCount}">
+			<antcall target="tests-frontend" />
+			<antcall target="tests-backend" />
+			<antcall target="tests-backend-semantic" />
+		</parallel>
+	</target>
 
 	<target name="tests-backend-semantic" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
