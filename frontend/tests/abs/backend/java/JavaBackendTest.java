@@ -4,19 +4,8 @@
  */
 package abs.backend.java;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,7 +54,7 @@ public class JavaBackendTest extends ABSTest {
 
     void assertValidJava(JavaCode javaCode) {
         try {
-            javaCode.compile("-classpath", "bin", "-d", "gen/test");
+            javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
             System.out.println(javaCode);
             Assert.fail(e.getMessage());
@@ -84,12 +73,12 @@ public class JavaBackendTest extends ABSTest {
         StringBuffer output = new StringBuffer();
 
         try {
-            javaCode.compile("-classpath", "bin", "-d", "gen/test");
+            javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 
             ArrayList<String> args = new ArrayList<String>();
             args.add("java");
             args.addAll(Arrays.asList(jvmargs));
-            args.addAll(Arrays.asList("-cp", "bin:gen/test", javaCode.getFirstMainClass()));
+            args.addAll(Arrays.asList("-cp", "bin:"+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
             ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
             pb.redirectErrorStream(true);
             Process p = pb.start();
@@ -136,7 +125,7 @@ public class JavaBackendTest extends ABSTest {
             if (expectFail) {
                 throw e;
             } else {
-                System.out.println(output.toString());
+                System.err.println(output.toString());
                 //System.out.println(javaCode);
                 Assert.fail(e.getMessage());
                 return false;
@@ -217,7 +206,7 @@ public class JavaBackendTest extends ABSTest {
     public void assertEvalEquals(String absCode, boolean value) {
         JavaCode javaCode = getJavaCode(absCode, true);
         if (DEBUG)
-            System.out.println(javaCode);
+            System.err.println(javaCode);
         boolean res = runJavaAndTestResult(javaCode, false);
         if (value != res) {
             //System.out.println(javaCode);
@@ -229,7 +218,7 @@ public class JavaBackendTest extends ABSTest {
         JavaCode javaCode = getJavaCode(absCode, true);
         try {
             runJavaAndTestResult(javaCode, true);
-            System.out.println(javaCode);
+            System.err.println(javaCode);
             Assert.fail("Expected that Java run failed, but did not.");
         } catch (NoTestResultFoundException e) {
             // OK
