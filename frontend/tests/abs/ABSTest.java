@@ -7,6 +7,7 @@ package abs;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -95,7 +96,7 @@ public class ABSTest {
                 }
             }
         } catch (Exception t) {
-            throw new RuntimeException(t);
+            throw new RuntimeException(t); // TODO: remove
         }
         return p;
     }
@@ -104,16 +105,11 @@ public class ABSTest {
         return assertParse(absCode, EXPECT_PARSE_ERROR);
     }
     
-    protected Model assertParseFileOk(String fileName, Config... config) {
+    protected Model assertParseFileOk(String fileName, Config... config) throws IOException {
         Model m = null;
-        try {
-            Main main = new Main();
-            main.setWithStdLib(isSet(WITH_STD_LIB,config));
-            m = main.parseFiles(resolveFileName(fileName));
-        } catch (Throwable e) {
-            e.printStackTrace();
-            fail("Failed to parse: " + fileName + "\n" + e.getMessage());
-        }
+        Main main = new Main();
+        main.setWithStdLib(isSet(WITH_STD_LIB,config));
+        m = main.parseFiles(resolveFileName(fileName));
         if (m != null) {
             int numSemErrs = m.getErrors().size();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");

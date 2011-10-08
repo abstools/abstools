@@ -12,12 +12,12 @@ public class JavaFLITest extends JavaBackendTest {
     "[Foreign] class A implements I { Unit foo(String s) { } } { Bool testresult = True; I i = new A(); i.foo(\"test\"); } ";
     
     @Test
-    public void foreignClass() {
+    public void foreignClass() throws Exception {
         assertValidStdLib(EXAMPLE_CODE);
     }
     
     @Test
-    public void foreignClass2() {
+    public void foreignClass2() throws Exception {
         assertEvalTrue("module BackendTest; " + EXAMPLE_CODE);
         
     }

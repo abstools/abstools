@@ -19,13 +19,12 @@ import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import static abs.ABSTest.Config.*;
 
-
 public class JavaBackendTest extends ABSTest {
 
     private static final boolean DEBUG = false;
     private long randomSeed;
     private boolean useRandomScheduler = false;
-    
+
     public JavaBackendTest() {
     }
 
@@ -33,31 +32,26 @@ public class JavaBackendTest extends ABSTest {
         this.randomSeed = randomSeed;
         this.useRandomScheduler = true;
     }
-    
-    void assertValidStdLib(String absCode) {
+
+    void assertValidStdLib(String absCode) throws Exception {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, true));
     }
 
-    void assertValid(String absCode) {
+    void assertValid(String absCode) throws Exception {
         assertValidJava(getJavaCode("module JavaUnitTest; " + absCode, false));
     }
 
-    protected void assertValidJavaFile(String absFile, boolean useStdLib) {
+    protected void assertValidJavaFile(String absFile, boolean useStdLib) throws Exception {
         Model m = assertParseFileOk(absFile, WITH_STD_LIB, TYPE_CHECK);
-        try {
-            assertValidJava(getJavaCode(m));
-        } catch (IOException e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        assertValidJava(getJavaCode(m));
     }
 
-    void assertValidJava(JavaCode javaCode) {
+    void assertValidJava(JavaCode javaCode) throws Exception {
         try {
             javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
             System.out.println(javaCode);
-            Assert.fail(e.getMessage());
+            throw e;
         } finally {
             javaCode.deleteCode();
         }
@@ -69,36 +63,31 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
-    StringBuffer runJava(JavaCode javaCode, String... jvmargs) {
+    StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws IOException {
         StringBuffer output = new StringBuffer();
 
-        try {
-            javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+        javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 
-            ArrayList<String> args = new ArrayList<String>();
-            args.add("java");
-            args.addAll(Arrays.asList(jvmargs));
-            args.addAll(Arrays.asList("-cp", "bin:"+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
-            ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
-            pb.redirectErrorStream(true);
-            Process p = pb.start();
-            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            while (true) {
-                String s;
-                s = r.readLine();
-                if (s == null)
-                    break;
-                output.append(s + "\n");
-            }
-            return output;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+        ArrayList<String> args = new ArrayList<String>();
+        args.add("java");
+        args.addAll(Arrays.asList(jvmargs));
+        args.addAll(Arrays.asList("-cp", "bin:"+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
+        ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        while (true) {
+            String s;
+            s = r.readLine();
+            if (s == null)
+                break;
+            output.append(s + "\n");
         }
-
+        r.close();
+        return output;
     }
 
-    boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) {
+    boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) throws Exception {
         StringBuffer output = null;
         try {
             List<String> jvmArgs = new ArrayList<String>();
@@ -127,8 +116,7 @@ public class JavaBackendTest extends ABSTest {
             } else {
                 System.err.println(output.toString());
                 //System.out.println(javaCode);
-                Assert.fail(e.getMessage());
-                return false;
+                throw e;
             }
         } catch (Exception e) {
             if (output != null)
@@ -136,51 +124,33 @@ public class JavaBackendTest extends ABSTest {
             else
                 System.err.println("NO OUTPUT");
             //System.err.println(javaCode);
-            Assert.fail(e.getMessage());
-            e.printStackTrace();
-            return false;
+            throw e;
         }
     }
 
-    protected JavaCode getJavaCode(String absCode, boolean withStdLib) {
-        try {
-            Model model = null;
-            String code = null;
-            try {
-                code = absCode;
-                // if (withStdLib)
-                // code =
-                // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
-                // + code;
-                model = Main.parseString(code, withStdLib);
-                if (model.hasErrors()) {
-                    Assert.fail(model.getErrors().get(0).getHelpMessage());
-                } else {
-                    SemanticErrorList el = model.typeCheck();
-                    if (!el.isEmpty()) {
-                        Assert.fail(el.get(0).getMsg());
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                Assert.fail(e.getClass().getSimpleName() + ":" + e.getMessage());
-                return null;
+    protected JavaCode getJavaCode(String absCode, boolean withStdLib) throws Exception {
+        Model model = null;
+        String code = null;
+        code = absCode;
+        // if (withStdLib)
+        // code =
+        // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
+        // + code;
+        model = Main.parseString(code, withStdLib);
+        if (model.hasErrors()) {
+            Assert.fail(model.getErrors().get(0).getHelpMessage());
+        } else {
+            SemanticErrorList el = model.typeCheck();
+            if (!el.isEmpty()) {
+                Assert.fail(el.get(0).getMsg());
             }
+        }
 
-            if (model.hasErrors()) {
-                Assert.fail(model.getErrors().getFirst().getHelpMessage());
-                return null;
-            }
-            return getJavaCode(model);
-        } catch (NumberFormatException e) {
-            Assert.fail(e.getMessage());
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
+        if (model.hasErrors()) {
+            Assert.fail(model.getErrors().getFirst().getHelpMessage());
             return null;
         }
+        return getJavaCode(model);
     }
 
     private JavaCode getJavaCode(Model model) throws IOException {
@@ -195,15 +165,14 @@ public class JavaBackendTest extends ABSTest {
         p.print(testCode);
         p.close();
         tmpFile.deleteOnExit();
-
         return tmpFile;
     }
 
-    void assertEvalTrue(String absCode) {
+    void assertEvalTrue(String absCode) throws Exception {
         assertEvalEquals(absCode, true);
     }
 
-    public void assertEvalEquals(String absCode, boolean value) {
+    public void assertEvalEquals(String absCode, boolean value) throws Exception {
         JavaCode javaCode = getJavaCode(absCode, true);
         if (DEBUG)
             System.err.println(javaCode);
@@ -214,7 +183,7 @@ public class JavaBackendTest extends ABSTest {
         Assert.assertEquals(value, res);
     }
 
-    public void assertEvalFails(String absCode) {
+    public void assertEvalFails(String absCode) throws Exception {
         JavaCode javaCode = getJavaCode(absCode, true);
         try {
             runJavaAndTestResult(javaCode, true);
@@ -223,7 +192,6 @@ public class JavaBackendTest extends ABSTest {
         } catch (NoTestResultFoundException e) {
             // OK
         }
-
     }
 
 }

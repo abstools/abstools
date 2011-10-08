@@ -20,12 +20,20 @@ public class JavaTestDriver extends BackendTestDriver {
     
     @Override
     public void assertEvalEquals(String absCode, boolean value) {
-        javaTest.assertEvalEquals(absCode, value);
+        try {
+            javaTest.assertEvalEquals(absCode, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // TODO: throw
+        }
     }
 
     @Override
     public void assertEvalFails(String absCode) {
-        javaTest.assertEvalFails(absCode);
+        try {
+            javaTest.assertEvalFails(absCode);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // TODO: throw
+        }
     }
 
 }

@@ -7,8 +7,6 @@ package abs.backend.java;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import abs.backend.common.AllSemanticTests;
-import abs.backend.maude.MaudeTests;
 import abs.backend.java.lib.net.AllNetTests;
 
 @RunWith(Suite.class)

@@ -9,72 +9,72 @@ import org.junit.Test;
 public class JavaExprTests extends JavaBackendTest {
 
     @Test
-    public void ifExp() {
+    public void ifExp() throws Exception {
         assertValidStdLib("def Bool f(Bool x) = if x then True else False; ");
     }
 
     @Test
-    public void caseTrue() {
+    public void caseTrue() throws Exception {
         assertValidStdLib("def Bool f(Bool x) = case x { True => True; False => False; }; ");
     }
 
     @Test
-    public void casePatternVar() {
+    public void casePatternVar() throws Exception {
         assertValidStdLib("data Foo = Bar(Bool); def Bool f(Foo x) = case x { Bar(y) => y; }; ");
     }
 
     @Test
-    public void appendright() {
+    public void appendright() throws Exception {
         assertValidStdLib("def List<A> appendrightTest<A>(List<A> list, A p) = concatenate(list, Cons(p, Nil));");
     }
 
     @Test
-    public void ticket253() {
+    public void ticket253() throws Exception {
         assertValidStdLib("data F<A> = D(String) | E(A) ; def F<A> f<A,B>(F<B> d) = case d { D(x) => D(x); };");
     }
     
     @Test
-    public void getExpr() {
+    public void getExpr() throws Exception {
         assertValidStdLib("{ Fut<String> fu; fu.get; }");
     }
 
     @Test
-    public void useofJavaKeywordsVariable() {
+    public void useofJavaKeywordsVariable() throws Exception {
         assertValidStdLib("{ Bool continue = False; }");
     }
 
     @Test
-    public void useofJavaKeywordsField() {
+    public void useofJavaKeywordsField() throws Exception {
         assertValidStdLib("class C(Bool continue) { Unit m() { Bool goto = continue; }}");
     }
 
     @Test
-    public void useofJavaKeywordsMethod() {
+    public void useofJavaKeywordsMethod() throws Exception {
         assertValidStdLib("class C() { Unit continue() { this.continue(); }}");
     }
 
     @Test
-    public void useofJavaKeywordsMethodInterface() {
+    public void useofJavaKeywordsMethodInterface() throws Exception {
         assertValidStdLib("interface I { Unit continue(); } { I i; i.continue(); }");
     }
 
     @Test
-    public void useofJavaKeywordsFunction() {
+    public void useofJavaKeywordsFunction() throws Exception {
         assertValidStdLib("def Unit continue() = Unit; { Unit u = continue(); }");
     }
 
     @Test
-    public void useofJavaKeywordsPattern() {
+    public void useofJavaKeywordsPattern() throws Exception {
         assertValidStdLib("def Bool continue(Bool break) = case break { false => break; };");
     }
 
     @Test
-    public void useOfVariablesInsideCase() {
+    public void useOfVariablesInsideCase() throws Exception {
         assertValidStdLib("{ Bool b = True; Bool c = case b { _ => b; }; }");
     }
 
     @Test
-    public void useOfVariablesInsideLet() {
+    public void useOfVariablesInsideLet() throws Exception {
         assertValidStdLib("{ Bool b = True; Bool c = let (Bool x) = True in b; }");
     }
 

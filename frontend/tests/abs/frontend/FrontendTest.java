@@ -30,7 +30,7 @@ public class FrontendTest extends ABSTest {
         return assertParse(s, WITH_STD_LIB);
     }
 
-    protected Model assertParseFileOk(String fileName, boolean withStdLib) {
+    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws Exception {
         if (withStdLib) {
             return assertParseFileOk(fileName, WITH_STD_LIB);
         } else {
@@ -38,7 +38,7 @@ public class FrontendTest extends ABSTest {
         }
     }
 
-    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) {
+    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws Exception {
         if (withStdLib) { 
             return assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
         } else {

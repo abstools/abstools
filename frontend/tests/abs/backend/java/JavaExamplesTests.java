@@ -6,38 +6,35 @@ package abs.backend.java;
 
 import org.junit.Test;
 
-import abs.frontend.FrontendTest;
-import abs.frontend.ast.Model;
-
 public class JavaExamplesTests extends JavaBackendTest {
 
     private static final String EXAMPLEDIR = "examples/"; 
     
     @Test
-    public void pingPong() {
+    public void pingPong() throws Exception {
         assertValidJavaFile(EXAMPLEDIR+"PingPong.abs", true);
     }
 
     @Test
-    public void peerToPeer() {
+    public void peerToPeer() throws Exception {
         assertValidJavaFile(EXAMPLEDIR+"PeerToPeer.abs", true);
     }
 
     @Test
-    public void boundedBuffer() {
+    public void boundedBuffer() throws Exception {
         assertValidJavaFile(EXAMPLEDIR+"BoundedBuffer.abs", true);
     }
 
     @Test
-    public void randomBool() {
+    public void randomBool() throws Exception {
         assertValidJavaExample("RandomBool.abs");
     }
 
-    private void assertValidJavaExample(String fileName) {
+    private void assertValidJavaExample(String fileName) throws Exception {
         assertValidExample(fileName, true);
     }
 
-    private void assertValidExample(String fileName, boolean withStdLib) {
+    private void assertValidExample(String fileName, boolean withStdLib) throws Exception {
         String dir = "tests/abssamples/";
         assertValidJavaFile(dir + fileName, withStdLib);
     }

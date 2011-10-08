@@ -49,10 +49,14 @@ public class SemanticTests {
     }
 
     public void assertEvalTrue(String absCode) {
-        driver.assertEvalTrue("module BackendTest; " + absCode);
+        try {
+            driver.assertEvalTrue("module BackendTest; " + absCode);
+        } catch (Exception e) {
+            throw new RuntimeException(e); // TODO: remove; too many too handle now.
+        }
     }
 
-    public void assertEvalFails(String absCode) {
+    public void assertEvalFails(String absCode) throws Exception {
         driver.assertEvalFails("module BackendTest; " + absCode);
     }
 

@@ -158,7 +158,7 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
-    public void assertStmtFails() {
+    public void assertStmtFails() throws Exception {
         assertEvalFails("{ assert False; Bool testresult = True; }");
     }
 }

@@ -4,8 +4,7 @@
  */
 package abs.backend.java;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import abs.backend.java.codegeneration.JavaCode;
@@ -13,33 +12,33 @@ import abs.backend.java.codegeneration.JavaCode;
 public class JavaObservationTest extends JavaBackendTest {
 
     @Test
-    public void systemStarted() {
+    public void systemStarted() throws Exception {
         assertOutputContains("{ }", "SYSTEM STARTED");
     }
 
     @Test
-    public void mainTerminated() {
+    public void mainTerminated() throws Exception {
         assertOutputContains("{ }", "MAIN TERMINATED");
     }
 
     @Test
-    public void systemTerminated() {
+    public void systemTerminated() throws Exception {
         assertOutputContains("{ }", "SYSTEM FINISHED");
     }
     
     @Test
-    public void objectCreated() {
+    public void objectCreated() throws Exception {
         assertOutputContains("class C { } { new C(); }", "OBJECT CREATED: C");
     }
 
     @Test
-    public void fieldValue() {
+    public void fieldValue() throws Exception {
         assertOutputContains("class FieldClass { String field = \"HELLO WORLD\"; } { new FieldClass(); }",
                 "FIELD VALUE=HELLO WORLD");
     }
 
     @Test
-    public void fieldValue2() {
+    public void fieldValue2() throws Exception {
         assertOutputContains("class FieldClass(String field) { } { new FieldClass(\"HELLO WORLD\"); }",
                 "FIELD VALUE=HELLO WORLD");
     }
@@ -48,30 +47,27 @@ public class JavaObservationTest extends JavaBackendTest {
             + " class C implements I { Unit m() { } Unit n(String s) { } Unit k(Foo m) { }}";
 
     @Test
-    public void taskCreation() {
+    public void taskCreation() throws Exception {
         assertOutputContains(I_AND_C + " { I i; i = new C(); i!m();}", "TASK CREATED");
     }
 
     @Test
-    public void taskCreation2() {
+    public void taskCreation2() throws Exception {
         assertOutputContains(I_AND_C + " { I i; i = new C(); i!m(); i!n(\"HALLO\"); }", "TASK CREATED");
     }
 
     @Test
-    public void taskCreation3() {
+    public void taskCreation3() throws Exception {
         assertOutputContains(I_AND_C + "  { I i; i = new C(); i!m(); i!k(Bar(\"HALLO\",\"Welt\")); }", "TASK CREATED");
     }
 
     static final String STDDATA = "data Foo = Bar(String,String);";
 
-    private void assertOutputContains(String absCode, String expectedOutput) {
+    private void assertOutputContains(String absCode, String expectedOutput) throws Exception {
         JavaCode code = getJavaCode("module JavaTest;" + STDDATA + absCode, true);
         // System.out.println(java);
         String output = runJava(code, "-Dabs.systemobserver=" + TestSystemObserver.class.getName()).toString().trim();
-        if (output.contains(expectedOutput))
-            Assert.assertTrue(true);
-        else
-            Assert.assertTrue("Expected to find " + expectedOutput + ", but output was:\n" + output, false);
+        Assert.assertTrue("Expected to find " + expectedOutput + ", but output was:\n" + output, output.contains(expectedOutput));
     }
 
 }

@@ -13,44 +13,44 @@ public class ExamplesTypeChecking extends FrontendTest {
     private static final String EXAMPLEDIR = "examples/"; 
     
     @Test
-    public void abslang() {
+    public void abslang() throws Exception {
         assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
     }
 
     @Test
-    public void pingPong() {
+    public void pingPong() throws Exception {
         assertTypeCheckExampleFileOk("PingPong.abs");
     }
 
     @Test
-    public void peerToPeer() {
+    public void peerToPeer() throws Exception {
         assertTypeCheckExampleFileOk("PeerToPeer.abs");
     }
 
     @Test
-    public void boundedBuffer() {
+    public void boundedBuffer() throws Exception {
         assertTypeCheckExampleFileOk("BoundedBuffer.abs");
     }
 
     @Test
-    public void randomBool() {
+    public void randomBool() throws Exception {
         assertTypeCheckTestFileOk("RandomBool.abs");
     }
 
     @Test
-    public void lizeth() {
+    public void lizeth() throws Exception {
         assertTypeCheckTestFileOk("lizeth.abs", false);
     }
 
-    private void assertTypeCheckExampleFileOk(String fileName) {
-        assertTypeCheckFileOk("examples/"+fileName, true);
+    private void assertTypeCheckExampleFileOk(String fileName) throws Exception {
+        assertTypeCheckFileOk(EXAMPLEDIR+fileName, true);
     }
     
-    private void assertTypeCheckTestFileOk(String fileName) {
+    private void assertTypeCheckTestFileOk(String fileName) throws Exception {
         assertTypeCheckTestFileOk(fileName, true);
     }
 
-    private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) {
+    private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) throws Exception {
         String dir = "tests/abssamples/";
         assertTypeCheckFileOk(dir + fileName, true);
     }

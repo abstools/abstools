@@ -8,82 +8,82 @@ import org.junit.Test;
 
 public class JavaPrimitiveTests extends JavaBackendTest {
     @Test
-    public void testNullLit() {
+    public void testNullLit() throws Exception {
         assertValid("interface I { } { I i; i = null; }");
     }
 
     @Test
-    public void testBoolLit() {
+    public void testBoolLit() throws Exception {
         assertValidStdLib(" { Bool b = True; b = False; }");
     }
 
     @Test
-    public void testBoolNeg() {
+    public void testBoolNeg() throws Exception {
         assertValidStdLib(" { Bool b = ~True; }");
     }
 
     @Test
-    public void testBoolAnd() {
+    public void testBoolAnd() throws Exception {
         assertValidStdLib(" { Bool b = True && False; }");
     }
 
     @Test
-    public void testBoolOr() {
+    public void testBoolOr() throws Exception {
         assertValidStdLib(" { Bool b = True || False; }");
     }
 
     @Test
-    public void testBoolEq() {
+    public void testBoolEq() throws Exception {
         assertValidStdLib(" { Bool b = True == False; }");
     }
 
     @Test
-    public void testBoolNotEq() {
+    public void testBoolNotEq() throws Exception {
         assertValidStdLib(" { Bool b = True != False; }");
     }
 
     @Test
-    public void testIntLit() {
+    public void testIntLit() throws Exception {
         assertValidStdLib(" { Int i = 5; }");
     }
 
     @Test
-    public void testNegativeIntLit() {
+    public void testNegativeIntLit() throws Exception {
         assertValidStdLib(" { Int i = -7; }");
     }
 
     @Test
-    public void testLongIntLit() {
+    public void testLongIntLit() throws Exception {
         assertValidStdLib(" { Int i = 534023840238420394820394823094; }");
     }
 
     @Test
-    public void testIntAddOps() {
+    public void testIntAddOps() throws Exception {
         assertValidStdLib(" { Int i = 5 + -7; }");
     }
 
     @Test
-    public void testIntSubtractOps() {
+    public void testIntSubtractOps() throws Exception {
         assertValidStdLib(" { Int i = 7 - 5; }");
     }
 
     @Test
-    public void testIntMultiplyOps() {
+    public void testIntMultiplyOps() throws Exception {
         assertValidStdLib(" { Int i = 7 * 5; }");
     }
 
     @Test
-    public void testIntDivideOps() {
+    public void testIntDivideOps() throws Exception {
         assertValidStdLib(" { Int i = 7 / 5; }");
     }
 
     @Test
-    public void testIntModOps() {
+    public void testIntModOps() throws Exception {
         assertValidStdLib(" { Int i = 7 % 5; }");
     }
 
     @Test
-    public void testIntCompareOps() {
+    public void testIntCompareOps() throws Exception {
         assertValidStdLib("{ Bool b = 7 == 5; }");
         assertValidStdLib("{ Bool b = 7 != 5; }");
         assertValidStdLib("{ Bool b = 7 > 5; }");
@@ -93,12 +93,12 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     }
 
     @Test
-    public void testStringLit() {
+    public void testStringLit() throws Exception {
         assertValidStdLib("{ String s = \"Test\"; }");
     }
 
     @Test
-    public void testStringCompareOps() {
+    public void testStringCompareOps() throws Exception {
         assertValidStdLib("{ Bool b = \"Test\" == \"Test\"; }");
         assertValidStdLib("{ Bool b = \"Test\" != \"Test\"; }");
     }

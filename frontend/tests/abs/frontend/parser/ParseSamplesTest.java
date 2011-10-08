@@ -11,7 +11,7 @@ import abs.frontend.FrontendTest;
 public class ParseSamplesTest extends FrontendTest {
 
     @Test
-    public void testSamples() {
+    public void testSamples() throws Exception {
         String dir = "examples/";
         String[] files = { "PeerToPeer.abs", "PingPong.abs", "BoundedBuffer.abs"};
         for (int i = 0; i < files.length; i++) {

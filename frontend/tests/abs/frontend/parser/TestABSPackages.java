@@ -11,7 +11,7 @@ import abs.frontend.FrontendTest;
 public class TestABSPackages extends FrontendTest {
 
     @Test
-    public void leaderElectionPackage() {
+    public void leaderElectionPackage() throws Exception {
        assertParseFileOk("tests/abssamples/leaderelection.jar", true);
     }
 }

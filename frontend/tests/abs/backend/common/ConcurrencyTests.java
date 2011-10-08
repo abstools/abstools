@@ -112,7 +112,7 @@ public class ConcurrencyTests extends SemanticTests {
     static String CALL_M_ASYNC_GET_DEADLOCK = "{ Bool testresult = False; I i; i = new C(); Fut<Bool> fut; fut = i!m(); testresult = fut.get; }";
 
     @Test
-    public void futGetDeadlock() {
+    public void futGetDeadlock() throws Exception {
         // Fails because a deadlock occurs
         assertEvalFails(INTERFACE_I + CLASS_C + CALL_M_ASYNC_GET_DEADLOCK);
     }
@@ -120,12 +120,12 @@ public class ConcurrencyTests extends SemanticTests {
     static String CLASS_C_ASSERT_FAILS = "class C implements I { Unit n() { } Bool m() { assert False; return True; } } ";
     
     @Test
-    public void assertionFails() {
+    public void assertionFails() throws Exception {
         assertEvalFails(INTERFACE_I + CLASS_C_ASSERT_FAILS + COG_CALL_M_ASYNC);
     }
     
     @Test
-    public void illegalSyncCall() {
+    public void illegalSyncCall() throws Exception {
         // Fails because a synchrous call to an object of a different COG is not
         // allowed
         assertEvalFails(INTERFACE_I + CLASS_C

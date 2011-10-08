@@ -6,11 +6,11 @@ package abs.backend;
 
 public abstract class BackendTestDriver {
 
-    public abstract void assertEvalEquals(String absCode, boolean value);
+    public abstract void assertEvalEquals(String absCode, boolean value) throws Exception;
 
-    public abstract void assertEvalFails(String absCode);
+    public abstract void assertEvalFails(String absCode) throws Exception;
 
-    public void assertEvalTrue(String absCode) {
+    public void assertEvalTrue(String absCode) throws Exception {
         assertEvalEquals(absCode, true);
     }
 }

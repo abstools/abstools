@@ -6,11 +6,7 @@ package abs.frontend.typesystem;
 
 import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
 import org.junit.Test;
 
@@ -26,7 +22,6 @@ import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.InferMain;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import static abs.ABSTest.Config.*;
-
 
 public class LocationTypeTests extends FrontendTest {
     
@@ -259,7 +254,7 @@ public class LocationTypeTests extends FrontendTest {
     }
     
     @Test
-    public void writeBackTest() throws IOException {
+    public void writeBackTest() throws Exception {
         String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
         //System.out.println(s);
         // TODO: Do something later (2010+)
@@ -386,7 +381,7 @@ public class LocationTypeTests extends FrontendTest {
         return m;
     }
     
-    private String writeBackSolutions(String code) throws IOException {
+    private String writeBackSolutions(String code) throws Exception {
         File f = File.createTempFile("test", ".abs");
         FileWriter fw = new FileWriter(f);
         fw.write(code);
