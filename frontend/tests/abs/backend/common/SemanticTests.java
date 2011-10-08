@@ -18,8 +18,8 @@ import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
 
 @RunWith(Parameterized.class)
-public class SemanticTests {
-    private BackendTestDriver driver;
+public abstract class SemanticTests {
+    final private BackendTestDriver driver;
 
     public SemanticTests(BackendTestDriver d) {
         driver = d;
@@ -41,10 +41,18 @@ public class SemanticTests {
     public static Collection<?> data() {
         final Object[][] data;
         /* TODO: Mark Maude tests as ignored instead of just missing them */
+        /* TODO: For the Java backend, we just use different RUNTIME options, not code-gen options.
+         * So we could actually just compile the code to Java once, and then run it with the different options.
+         */
+        /* Append new tests to the end, so that we can aggregate relative differences in CI */
         if (checkMaude())
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_EQ_TIMED) } };
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }, { new MaudeTestDriver(MaudeCompiler.SIMULATOR_RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_EQ_TIMED) }
+            // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simplex");}} }
+            };
         else
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) } };
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }
+            //, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
+            };
         return Arrays.asList(data);
     }
 
@@ -52,7 +60,7 @@ public class SemanticTests {
         try {
             driver.assertEvalTrue("module BackendTest; " + absCode);
         } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: remove; too many too handle now.
+            throw new RuntimeException(e); // TODO: remove; too many too handle for now.
         }
     }
 

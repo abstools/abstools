@@ -22,15 +22,18 @@ import static abs.ABSTest.Config.*;
 public class JavaBackendTest extends ABSTest {
 
     private static final boolean DEBUG = false;
-    private long randomSeed;
-    private boolean useRandomScheduler = false;
 
-    public JavaBackendTest() {
-    }
+    final protected List<String> jvmArgs = new ArrayList<String>() {{ add("-Dabs.terminateOnException=true"); }};
+    /**
+     * Additional arguments when running the compiled ABS program.
+     */
+    final protected List<String> absArgs = new ArrayList<String>();
+
+    public JavaBackendTest() {}
 
     public JavaBackendTest(long randomSeed) {
-        this.randomSeed = randomSeed;
-        this.useRandomScheduler = true;
+        jvmArgs.add("-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName());
+        jvmArgs.add("-Dabs.randomseed="+randomSeed);
     }
 
     void assertValidStdLib(String absCode) throws Exception {
@@ -63,15 +66,15 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
-    StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws IOException {
+    StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
-
         javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 
         ArrayList<String> args = new ArrayList<String>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
         args.addAll(Arrays.asList("-cp", "bin:"+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
+        args.addAll(absArgs);
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
         pb.redirectErrorStream(true);
         Process p = pb.start();
@@ -84,19 +87,13 @@ public class JavaBackendTest extends ABSTest {
             output.append(s + "\n");
         }
         r.close();
+        javaCode.deleteCode();
         return output;
     }
 
     boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) throws Exception {
         StringBuffer output = null;
         try {
-            List<String> jvmArgs = new ArrayList<String>();
-            jvmArgs.add("-Dabs.terminateOnException=true");
-            if (useRandomScheduler) {
-                jvmArgs.add("-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName());
-                jvmArgs.add("-Dabs.randomseed="+randomSeed);
-            } 
-            
             output = runJava(javaCode, jvmArgs.toArray(new String[0]));
             String s = output.toString() + "\n";
             String result = null;
@@ -116,7 +113,7 @@ public class JavaBackendTest extends ABSTest {
             } else {
                 System.err.println(output.toString());
                 //System.out.println(javaCode);
-                throw e;
+                return false;
             }
         } catch (Exception e) {
             if (output != null)

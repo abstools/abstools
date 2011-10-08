@@ -6,7 +6,7 @@ package abs.backend.maude;
 
 import abs.backend.BackendTestDriver;
 
-public class MaudeTestDriver extends BackendTestDriver {
+public class MaudeTestDriver implements BackendTestDriver {
 
     final MaudeTests maude;
 
@@ -15,7 +15,7 @@ public class MaudeTestDriver extends BackendTestDriver {
     }
 
     @Override
-    public void assertEvalEquals(String absCode, boolean value) {
+    public void assertEvalEquals(String absCode, boolean value) throws Exception {
         if (value)
             maude.assertTrueMaude(absCode);
         else
@@ -27,4 +27,8 @@ public class MaudeTestDriver extends BackendTestDriver {
         maude.assertFails(absCode);
     }
 
+    @Override
+    public void assertEvalTrue(String absCode) throws Exception {
+        assertEvalEquals(absCode, true);
+    }
 }

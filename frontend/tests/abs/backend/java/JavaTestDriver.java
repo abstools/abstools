@@ -6,9 +6,9 @@ package abs.backend.java;
 
 import abs.backend.BackendTestDriver;
 
-public class JavaTestDriver extends BackendTestDriver {
+public class JavaTestDriver implements BackendTestDriver {
 
-    JavaBackendTest javaTest;
+    final JavaBackendTest javaTest;
 
     public JavaTestDriver(long randomSeed) {
         javaTest = new JavaBackendTest(randomSeed);
@@ -28,12 +28,13 @@ public class JavaTestDriver extends BackendTestDriver {
     }
 
     @Override
-    public void assertEvalFails(String absCode) {
-        try {
-            javaTest.assertEvalFails(absCode);
-        } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: throw
-        }
+    public void assertEvalFails(String absCode) throws Exception {
+        javaTest.assertEvalFails(absCode);
+    }
+
+    @Override
+    public void assertEvalTrue(String absCode) throws Exception {
+        assertEvalEquals(absCode, true);
     }
 
 }

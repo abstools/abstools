@@ -51,60 +51,50 @@ public class MaudeTests extends ABSTest {
     }
 
     @Test
-    public void simpleBlock() {
+    public void simpeBlock() throws Exception {
         assertTrueMaude("module Test; { Bool testresult = True;}");
     }
 
-    public void assertTrueMaude(String absCode) {
+    public void assertTrueMaude(String absCode) throws Exception {
         assertMaudeResult(absCode, "True");
     }
 
-    public void assertFalseMaude(String absCode) {
+    public void assertFalseMaude(String absCode) throws Exception {
         assertMaudeResult(absCode, "False");
     }
 
-    void assertMaudeResult(String absCode, String expectedResult) {
-        try {
-            String generatedMaudeCode = getMaudeCode(absCode, mode);
-            String maudeOutput = getMaudeOutput(generatedMaudeCode);
-            Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
-            Matcher matcher = pattern.matcher(maudeOutput);
-            if (matcher.find()) {
-                String boolValue = matcher.group(1);
-                Assert.assertEquals(expectedResult, boolValue);
-            } else {
-                System.out.println(maudeOutput);
-                Assert.fail("Did not find Maude \"testresult\" variable.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
+    void assertMaudeResult(String absCode, String expectedResult) throws IOException, InterruptedException {
+        String generatedMaudeCode = getMaudeCode(absCode, mode);
+        String maudeOutput = getMaudeOutput(generatedMaudeCode);
+        Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
+        Matcher matcher = pattern.matcher(maudeOutput);
+        if (matcher.find()) {
+            String boolValue = matcher.group(1);
+            Assert.assertEquals(expectedResult, boolValue);
+        } else {
+            System.out.println(maudeOutput);
+            Assert.fail("Did not find Maude \"testresult\" variable.");
         }
     }
 
     protected String getMaudeCode(String absCode, String module) {
+        Model model = null;
         try {
-            Model model = null;
-            try {
-                model = Main.parseString(absCode, true);
-            } catch (Exception e) {
-                Assert.fail(e.getMessage());
-                return null;
-            }
-
-            if (model.hasErrors()) {
-                Assert.fail(model.getErrors().getFirst().getHelpMessage());
-                return null;
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            // TODO: handle delta generation / testing / flattening
-            model.generateMaude(new PrintStream(out), module);
-            String res = out.toString();
-            return res;
-        } catch (NumberFormatException e) {
+            model = Main.parseString(absCode, true);
+        } catch (Exception e) {
             Assert.fail(e.getMessage());
             return null;
         }
+
+        if (model.hasErrors()) {
+            Assert.fail(model.getErrors().getFirst().getHelpMessage());
+            return null;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        // TODO: handle delta generation / testing / flattening
+        model.generateMaude(new PrintStream(out), module);
+        String res = out.toString();
+        return res;
     }
 
     protected String getMaudeOutput(String maudeCode) throws IOException, InterruptedException {
