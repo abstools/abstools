@@ -97,7 +97,7 @@ public class ConcurrencyTests extends SemanticTests {
     @Test
     public void runMethodCOG() {
         assertEvalTrue(INTERFACE_I
-                + "class C implements I { Bool b = False; Unit run() { b = True; } Unit n() { } Bool m() { return b; }} "
+                + "class C implements I { Bool b = False; Unit run() { b = True; } Unit n() { } Bool m() { await b == True; return b; }} "
                 + COG_CALL_M_ASYNC);
     }
     
