@@ -362,7 +362,7 @@ aspect GenerateMaude {
                 param.generateMaude(stream);
             }
             if (fnName.equals("ABS.StdLib.random")) {
-                stream.print(":: '.random :: \"int\"[0] ");
+                stream.print(" :: \"int\"[0] ");
             }
         }
         stream.print(") ");
