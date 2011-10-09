@@ -532,14 +532,19 @@ endm
 
 
 mod ABS-PROCESS is
-
   protecting ABS-STM-LIST .
+
+  var L : Subst .
+  var SL : StmtList .
 
   sort Process .
 
   op idle : -> Process [ctor format (!b o)] .
   op notFound : -> Process [ctor format (!b o)] .
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] .
+
+  op liftProcess : Process -> Data .
+  eq liftProcess({ L | SL }) = "ABS.StdLib.Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "num"[0] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "num"[0] fi ] .
 
 endm
 
@@ -553,11 +558,31 @@ endv
 mod ABS-PROCESS-POOL is
   protecting ABS-PROCESS .
 
+  var P : Process .
+  var W : MProc .
+  var N : Label .
+  var L : SSubst .
+  var S : Subst .
+  var SL : StmtList .
+
   sort MProc .
   subsort Process < MProc .
   op noProc : -> MProc [ctor] .
   op _,_ : MProc MProc -> MProc
     [ctor assoc comm id: noProc prec 41 format (d r os d)] .
+
+  op _minus_ : MProc Process -> MProc .
+  eq (P, W) minus P = W .
+  eq W minus idle = W .
+
+
+  op liftMProc : MProc -> Data .
+  eq liftMProc(noProc) = "Nil"[emp] .
+  eq liftMProc(P, W) = "Cons"[liftProcess(P) :: liftMProc(W)] .
+
+  op findProcess : MProc Label -> Process .
+  eq findProcess(({ '.label |-> N, L | SL}, W), N) = { '.label |-> N, L | SL} .
+  eq findProcess(({ ('.label |-> N, L) :: S | SL}, W), N) = { ('.label |-> N, L) :: S | SL} .
 
 endm
 
@@ -629,7 +654,13 @@ mod ABS-CONFIGURATION is
     [ctor format (b d o  b so  b so  b so  b so  b so b on)] .
 
   --- Process creation in target object:
-  op makeProcess(_,_,_,_,_) : Method Label DataList Bool Data -> Process .
+  --- M: the method.
+  --- N: the future (label).
+  --- DL: the parameters (already evaluated by the caller).
+  --- B: whether to continue at caller or not.
+  --- DE: deadline.
+  --- T: arrival time
+  op makeProcess(_,_,_,_,_,_) : Method Label DataList Bool Data Nat -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -652,9 +683,9 @@ mod ABS-CONFIGURATION is
   --- Define Classes.
   --- Class declaration.
   ---
-  op <_: Class | Param:_, Att:_, Mtds:_, Ocnt:_> :
-    Cid VidList Subst MMtd Nat -> Class
-    [ctor format (ng ! og o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
+  op <_: Class | Param:_, Att:_, Sched:_, Mtds:_, Ocnt:_> :
+    Cid VidList Subst Expr MMtd Nat -> Class
+    [ctor format (ng ! og o d  sg o d  sg o d  sg o d  sg++ o o  gni o-- g on)] .
 
   op <_: Clock | Limit:_> : Int Nat -> Clock
     [ctor format(nb m! ob b b b m! b n)] .
@@ -715,6 +746,7 @@ mod ABS-EVAL is
   var B : Bool .
   vars MIN MAX : Nat .
   var MAC : SSubst .
+  var W : MProc .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
@@ -874,6 +906,14 @@ mod ABS-EVAL is
   eq freeFutures(noSubst) = noStmt .
   eq freeFutures((A |-> D, SS)) = freeFutures(D) ; freeFutures(SS) .
 
+  op filterReady : MProc Subst Configuration SSubst -> MProc .
+  eq filterReady(noProc, S, CN, MAC) = noProc .
+  eq filterReady(({ S' | SL }, W), S, CN, MAC) =
+    if ready(SL, (S :: S'), CN, (MAC, '.deadline |-> S'['.deadline]))
+    then { S' | SL }, filterReady(W, S, CN, MAC)
+    else filterReady(W, S, CN, MAC)
+    fi .
+
 endm
 
 mod ABS-MSG-TRANSPORT is
@@ -889,6 +929,8 @@ mod ABS-MSG-TRANSPORT is
   var SS : SSubst .
   var DE : Data .
   var M : Mid .
+  var SC : Expr .
+  vars T LIM : Nat .
 
   --- message generation
   eq
@@ -905,19 +947,27 @@ mod ABS-MSG-TRANSPORT is
   --- this a rule -- scheduling is done elsewhere.
   ---
   eq
+    < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL', Att: S1,
+    < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
     invoc(O, N, M, DL, B, DE)
   =
-    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)), Lcnt: F >
-    < C : Class | Param: AL', Att: S1,
+    < T : Clock | Limit: LIM >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE, T)), Lcnt: F >
+    < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Code: SL >), Ocnt: G >
     [label transport-imsg] .
 
-  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE)
+  eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE, T)
   =
-    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["num"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+
+  op recordStartTime : Process Nat -> Process .
+  *** This will only ever be evaluated with a simple substitution SS.
+  eq recordStartTime({ SS | SL}, T:Nat) =
+  if $hasMapping(SS, '.s) then { SS | SL }
+  else { $insert('.s, "Time"["num"[T:Nat]], SS) | SL } fi .
 
 endm
 
@@ -1032,20 +1082,28 @@ mod ABS-MACHINE-BASICS-RL is
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var M : Mid .
   var CG : Cogid .
+  var MAC : SSubst .
+  var SC : Expr .
 
   --- Schedule a new process for execution, if it is ready.
   ---
   --- Must be a rule to preserve confluence.
   ---
   --- We capture the entire state here since the condition E can depend on the
-  --- state of Futures contained in CN.
+  --- state of Futures contained in CN.  The scheduler of the class is called
+  --- to determine the process to be run.
   crl
     { < CG : Cog | Object: null >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F > CN  }
+      < C : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN  }
   =>
     { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN  }
-  if ready(SL, (S :: L), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
+      < C : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+      < O : C | Cog: CG, Att: S, Pr: P, PrQ: W minus P, Lcnt: F > CN  }
+  if W1 := filterReady(W, S, CN, ('.time |-> "int"[-1], '.comp |-> S['.comp]))
+    /\ W1 =/= noProc
+    /\ "ABS.StdLib.Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), S), none, ('.time |-> "int"[-1], '.comp |-> S['.comp]))
+    /\ P := findProcess(W1, N)
       [label PrQ-ready] .
 
 
@@ -1762,17 +1820,18 @@ mod ABS-NEW-RL is
   var E : Expr .       var A : Vid .     var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
   var CG : Cogid .
+  var SC : Expr .
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
@@ -1780,11 +1839,11 @@ mod ABS-NEW-RL is
 
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
                              Att: ('this |-> ob(B, G), '.comp |-> eval(E, S :: L, none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])), S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])))),
@@ -1801,11 +1860,12 @@ mod ABS-NEW-EQ-TIMED is
   var E : Expr .       var A : Vid .      var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
   vars T LIM : Nat .   var CG : Cogid .
+  var SC : Expr .
 
   eq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
@@ -1813,7 +1873,7 @@ mod ABS-NEW-EQ-TIMED is
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
@@ -1822,12 +1882,12 @@ mod ABS-NEW-EQ-TIMED is
   eq
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
     < T : Clock | Limit: LIM >
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; SL }, PrQ: W,
               Lcnt: (s F) >
-    < B : Class | Param: AL, Att: S1, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
                              Att: ('this |-> ob(B, G), '.comp |-> eval(E, S :: L, none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])), S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])))),
@@ -1979,6 +2039,7 @@ mod ABS-SIMULATOR-RL is
   op main : Configuration String DataList -> State .
   eq main(CN:Configuration, B:String, DL:DataList) =
     { CN:Configuration
+      < -1 : Clock | Limit: 100 >
       < 'main : Cog | Object: ob('main, 0) >
       < ob('main, 0) : '... | Cog: 'main, Att:  '.comp |-> null,
         Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },

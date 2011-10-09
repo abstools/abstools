@@ -487,6 +487,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
+        PureExp scheduler = MaudeCompilerHelper.getAnnotationValue(this.getAnnotationList(), "Scheduler");
 		stream.println("\n\n< '" + qualifiedName() + " : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -508,6 +509,9 @@ aspect GenerateMaude {
                 stream.print("'" + field.getName() + " |-> null ");
             }
         }
+        stream.print(",\n  Sched: ");
+        if (scheduler != null) scheduler.generateMaude(stream);
+        else stream.print("\"ABS.StdLib.defaultscheduler\"('queue)");
         stream.print(",\n  Mtds: ");
         if (hasInitBlock()) {
             getInitBlock().generateMaude(stream, getFields(), isActiveClass());
@@ -739,6 +743,7 @@ aspect GenerateMaude {
                 stream.print("'" + var.getName() + " |-> null ");
             }
         }
+        stream.print(",\n  Sched: \"ABS.StdLib.defaultscheduler\"('queue)");
         stream.print(",\n  Mtds: ");
         stream.print("< '.init : Method | Param: noVid,\n");
         stream.print("      Code: ");

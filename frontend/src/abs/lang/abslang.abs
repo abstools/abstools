@@ -401,6 +401,24 @@ data FinalAnnotation = Final;
  */ 
 data AtomicityAnnotation = Atomic;
 
+/**
+ * Custom schedulers
+ */
+
+data Scheduler;
+
+// The Process datatype, passed to custom schedulers.
+// 
+// Pid has no constructor, so this datastructure can't be generated
+// within Abs
+data Pid;
+data Process = Process(Pid pid, String method, Time arrival,
+    Duration cost, Duration procdeadline, Time start, Time finish, Bool crit,
+    Int value);
+
+def Process defaultscheduler(List<Process> queue) = head(queue);
+
+def Process randomscheduler(List<Process> queue) = nth(queue, random(length(queue)));
 
 /**
  * Foreign language interface (FLI) definitions
