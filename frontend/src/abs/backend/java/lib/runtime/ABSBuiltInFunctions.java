@@ -29,4 +29,15 @@ public class ABSBuiltInFunctions {
     public static ABSInteger lowlevelDeadline() {
         return ABSInteger.fromInt(-1);
     }
+    
+    public static ABSInteger random(ABSInteger i) {
+        ABSRuntime rt = ABSRuntime.getCurrentRuntime();
+        /* [stolz] Several issues:
+         * - there's no builtin nextLong(range)
+         * - if we'd use nextLong(), we'd need to spin until finding a value in range.
+         * So let's do with just ints for now.
+         */
+        int rnd = rt.getRandom().nextInt(i.toInt()); // FIXME: i can be a BigInteger!
+        return ABSInteger.fromInt(rnd);
+    }
 }
