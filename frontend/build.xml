@@ -264,7 +264,6 @@
 		<parallel threadCount="${threadCount}">
 			<antcall target="tests-frontend" />
 			<antcall target="tests-backend" />
-			<antcall target="tests-backend-semantic" />
 		</parallel>
 	</target>
 

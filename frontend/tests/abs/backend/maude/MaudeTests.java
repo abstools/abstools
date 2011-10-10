@@ -17,11 +17,15 @@ import abs.ABSTest;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
+/**
+ * Note that this class doesn't have a nullary constructor and can't be run
+ * as a JUnit test itself!
+ */
 public class MaudeTests extends ABSTest {
 
     final String mode;
 
-    public  MaudeTests(String mode) {
+    public MaudeTests(String mode) {
         this.mode = mode;
     }
 
@@ -63,7 +67,7 @@ public class MaudeTests extends ABSTest {
         assertMaudeResult(absCode, "False");
     }
 
-    void assertMaudeResult(String absCode, String expectedResult) throws IOException, InterruptedException {
+    void assertMaudeResult(String absCode, String expectedResult) throws Exception {
         String generatedMaudeCode = getMaudeCode(absCode, mode);
         String maudeOutput = getMaudeOutput(generatedMaudeCode);
         Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
@@ -77,14 +81,8 @@ public class MaudeTests extends ABSTest {
         }
     }
 
-    protected String getMaudeCode(String absCode, String module) {
-        Model model = null;
-        try {
-            model = Main.parseString(absCode, true);
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-            return null;
-        }
+    protected String getMaudeCode(String absCode, String module) throws Exception {
+        Model model = Main.parseString(absCode, true);
 
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
@@ -124,21 +122,15 @@ public class MaudeTests extends ABSTest {
             result.append(in.readLine());
         }
         out.println(maudeCode);
-        out.flush();
-        while (in.ready()) {
-            result.append(in.readLine());
-        }
+        // Shouldn't block here
         out.println("rew start .");
-        out.flush();
-        while (in.ready()) {
-            result.append(in.readLine() + "\n");
-        }
         out.println("quit");
         out.flush();
-        p.waitFor();
-        while (in.ready()) {
-            result.append(in.readLine() + "\n");
+        String l;
+        while ((l = in.readLine()) != null) {
+            result.append(l + "\n");
         }
+        p.waitFor();
         return result.toString();
     }
 
