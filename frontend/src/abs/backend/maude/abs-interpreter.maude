@@ -569,7 +569,7 @@ mod ABS-PROCESS-POOL is
   subsort Process < MProc .
   op noProc : -> MProc [ctor] .
   op _,_ : MProc MProc -> MProc
-    [ctor assoc comm id: noProc prec 41 format (d r os d)] .
+    [ctor assoc comm id: noProc prec 41 format (d r osni d)] .
 
   op _minus_ : MProc Process -> MProc .
   eq (P, W) minus P = W .
@@ -1087,6 +1087,9 @@ mod ABS-MACHINE-BASICS-COMMON is
   --- We capture the entire state here since the condition E can depend on the
   --- state of Futures contained in CN.  The scheduler of the class is called
   --- to determine the process to be run.
+  --- 
+  --- We also consume a random value, just to be on the safe side -- the
+  --- scheduling function might use random().
   crl
     { < CG : Cog | Object: null >
       < C : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
@@ -1373,7 +1376,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     { CN < T : Clock | Limit: LIM, Random: RAND > }
   =>
     { advance(CN, 1)
-      < T + 1 : Clock | Limit: LIM >  }
+      < T + 1 : Clock | Limit: LIM, Random: RAND >  }
   if canAdvance (CN, '.time |-> "int"[T]) and T < LIM
       [label tick] .
 
