@@ -1276,7 +1276,7 @@ mod ABS-MACHINE-BASICS-TIMED is
                    Value: D >
     < T : Clock | Limit: LIM, Random: RAND >
     *** HACK: L can be noSubst, so we might not be able to look up the deadline
-  if N := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp], '.random |-> L['.random]))
+  if N := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp]))
       [label free] .
 
   --- Introduce a new variable into the local scope.
