@@ -32,16 +32,30 @@ public class CostabsOptions {
 		"no"
 	};
 	
-	public static final String SIZE_ABSTRACTION_TITLE = "Size abstraction";
+	public static final String SIZE_NORM_TITLE = "Size norm";
 	
-	public static final String[] SIZE_ABSTRACTION = {
+	public static final String[] SIZE_NORM = {
 		"Term size",
 		"Term depth"
 	};
 	
-	public static final String[] SIZE_ABSTRACTION_PROLOG = {
+	public static final String[] SIZE_NORM_PROLOG = {
 		"term_size",
 		"term_depth"
+	};
+	
+	public static final String DEBUG_MODE_TITLE = "Debugging mode";
+	
+	public static final String[] DEBUG_MODE = {
+		"yes",
+		"no"
+	};
+	
+	public static final String ASYMPTOTIC_TITLE = "Asymptotic bounds";
+	
+	public static final String[] ASYMPTOTIC = {
+		"yes",
+		"no"
 	};
 	
 	public static final String VERBOSITY_TITLE = "Verbosity";

@@ -26,7 +26,10 @@ public class OptionsDialog extends Dialog {
 	private Button[] costModelSelection;
 	private Button[] costCentersSelection;
 	private Button[] sizeAbstractionSelection;
+	private Button[] debugModeSelection;
+	private Button[] asymptoticSelection;
 	private Button[] verbositySelection;
+
 
 	public OptionsDialog(Shell parentShell) {
 		super(parentShell);
@@ -69,8 +72,16 @@ public class OptionsDialog extends Dialog {
 		createOption(costCentersPanel, costCentersSelection, CostabsOptions.COST_CENTERS_TITLE, CostabsOptions.COST_CENTERS);
 		
 		Composite sizeAbstractionPanel = new Composite(composite,SWT.NONE);
-		sizeAbstractionSelection = new Button[CostabsOptions.SIZE_ABSTRACTION.length];
-		createOption(sizeAbstractionPanel, sizeAbstractionSelection, CostabsOptions.SIZE_ABSTRACTION_TITLE, CostabsOptions.SIZE_ABSTRACTION);
+		sizeAbstractionSelection = new Button[CostabsOptions.SIZE_NORM.length];
+		createOption(sizeAbstractionPanel, sizeAbstractionSelection, CostabsOptions.SIZE_NORM_TITLE, CostabsOptions.SIZE_NORM);
+		
+		Composite debugModePanel = new Composite(composite,SWT.NONE);
+		debugModeSelection = new Button[CostabsOptions.DEBUG_MODE.length];
+		createOption(debugModePanel, debugModeSelection, CostabsOptions.DEBUG_MODE_TITLE, CostabsOptions.DEBUG_MODE);
+		
+		Composite asymptoticPanel = new Composite(composite,SWT.NONE);
+		asymptoticSelection = new Button[CostabsOptions.ASYMPTOTIC.length];
+		createOption(asymptoticPanel, asymptoticSelection, CostabsOptions.ASYMPTOTIC_TITLE, CostabsOptions.ASYMPTOTIC);
 		
 		Composite verbosityPanel = new Composite(composite,SWT.NONE);
 		verbositySelection = new Button[CostabsOptions.VERBOSITY.length];
@@ -126,8 +137,8 @@ public class OptionsDialog extends Dialog {
 			costCentersSelection[i].setSelection(preferenceValue.equals(CostabsOptions.COST_CENTERS_PROLOG[i]));
 		
 		preferenceValue = store.getString(PreferenceConstants.PSIZE_ABST);
-		for (int i = 0; i < CostabsOptions.SIZE_ABSTRACTION.length; i++)			
-			sizeAbstractionSelection[i].setSelection(preferenceValue.equals(CostabsOptions.SIZE_ABSTRACTION_PROLOG[i]));
+		for (int i = 0; i < CostabsOptions.SIZE_NORM.length; i++)			
+			sizeAbstractionSelection[i].setSelection(preferenceValue.equals(CostabsOptions.SIZE_NORM_PROLOG[i]));
 		
 		preferenceValue = store.getString(PreferenceConstants.PVERBOSITY);
 		for (int i = 0; i < CostabsOptions.VERBOSITY.length; i++)			
@@ -251,7 +262,7 @@ class SelectSizeAbstractionChangeListener implements SelectionListener {
 		b.setSelection(true);
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PSIZE_ABST, CostabsOptions.SIZE_ABSTRACTION_PROLOG[index]);
+		store.setValue(PreferenceConstants.PSIZE_ABST, CostabsOptions.SIZE_NORM_PROLOG[index]);
 	}
 
 }

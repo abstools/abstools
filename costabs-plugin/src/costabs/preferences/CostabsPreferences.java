@@ -26,7 +26,7 @@ import costabs.Activator;
 public class CostabsPreferences
 extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
-	RadioGroupFieldEditor sizeAbstraction;
+	RadioGroupFieldEditor sizeNorm;
 	RadioGroupFieldEditor tdPrecision;
 	BooleanFieldEditor enableSabu;
 	RadioGroupFieldEditor fieldAbstraction;
@@ -46,8 +46,15 @@ implements IWorkbenchPreferencePage {
 				{"Memory", "memory" }, {"Objects", "objects" }, {"Task level", "task_level" }}, getFieldEditorParent()));
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PCOST_CENTER,"Enable cost centers:",
 				1,new String[][] { { "Yes", "yes" }, {"No", "no" }}, getFieldEditorParent()));
-		addField(new RadioGroupFieldEditor(PreferenceConstants.PSIZE_ABST,"Size abstraction:",
+		addField(new RadioGroupFieldEditor(PreferenceConstants.PSIZE_ABST,"Size norm:",
 				1,new String[][] { { "Term size", "term_size" }, {"Term depth", "term_depth" }}, getFieldEditorParent()));
+		
+		addField(new RadioGroupFieldEditor(PreferenceConstants.PDEBUG_MODE,"Debugging mode:",
+				1,new String[][] { { "Yes", "yes" }, {"No", "no" }}, getFieldEditorParent()));
+		
+		addField(new RadioGroupFieldEditor(PreferenceConstants.PASYMPTOTIC,"Asymptotic bounds:",
+				1,new String[][] { { "Yes", "yes" }, {"No", "no" }}, getFieldEditorParent()));
+		
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
 				1,new String[][] { {"0", "0"}, {"1", "1"}, {"2", "2"}}, getFieldEditorParent()));
 
