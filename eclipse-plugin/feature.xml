@@ -3,8 +3,7 @@
       id="eu.hatsproject.absplugin"
       label="ABS Eclipse Integration"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project"
-      os="linux,macosx,win32">
+      provider-name="HATS Project">
 
    <description url="http://hats-project.eu">
       This feature adds a new ABS perspective for ABS development.
