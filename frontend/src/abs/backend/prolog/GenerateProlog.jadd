@@ -651,9 +651,18 @@ aspect GenerateProlog {
         this.getInitExpOpt().generateProlog(s);
         s.print(")");
     }
-    //statements
+    
+    //Statements
     public void AwaitStmt.generateProlog(PrintStream s) {
         s.print("awaitStmt(" + PrologBackend.awaitId++ + ",");
+        List<Annotation> anns = getAnnotations();
+        int n = anns.getNumChild();
+        s.print("[");
+        for (int i = 0; i < n; i++){
+            anns.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("],");
         getGuard().generateProlog(s);
         s.print(")");
     }
