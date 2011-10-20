@@ -110,37 +110,126 @@ java -jar mtvl.jar
 
 * COSTABS
 
-  COSTABS is a research prototype which performs automatic program analysis and which is able to infer cost and termination information about ABS programs (more information on ABS can be found here). The system receives as input an ABS program and a cost model chosen from a selection of resource descriptions and tries to bound the resource consumption of the program with respect to the cost model. COSTABS provides several notions of resource: number of instructions, size of functional data, number of concurrent objects and number of spawned tasks.
+  COSTABS is a research prototype which performs automatic program
+  analysis and which is able to infer cost and termination information
+  about ABS programs. The system receives as input an ABS program and
+  a cost model chosen from a selection of resource descriptions and
+  tries to bound the resource consumption of the program with respect
+  to the cost model. COSTABS provides several notions of resource:
+  number of instructions, size of functional data, number of
+  concurrent objects and number of spawned tasks.
 
-  When performing cost analysis, COSTABS produces a cost equation system, which is an extended form of recurrence relations. In order to obtain a closed (i.e., non-recursive) form for such recurrence relations which represents an upper bound, COSTABS includes a dedicated solver called PUBS. An interesting feature of COSTABS is that it uses pretty much the same machinery for inferring upper bounds on cost as for proving termination (which also implies the boundedness of any resource consumption).
+  When performing cost analysis, COSTABS produces a cost equation
+  system, which is an extended form of recurrence relations. In order
+  to obtain a closed (i.e., non-recursive) form for such recurrence
+  relations which represents an upper bound, COSTABS includes a
+  dedicated solver called PUBS (more information
+  {{{http://costa.ls.fi.upm.es/~costa/pubs}here}}). An interesting
+  feature of COSTABS is that it uses pretty much the same machinery
+  for inferring upper bounds on cost as for proving termination (which
+  also implies the boundedness of any resource consumption). See
+  chapter 3 of
+  {{{http://www.cse.chalmers.se/research/hats/sites/default/files/Deliverable42.pdf}deliverable
+  4.2}}
 
-  The COSTABS web interface allows users to try out the system on a set of representative examples, and also to upload their own programs.
+  COSTABS has three different interfaces: a command-line interface, a
+  web interface and an Eclipse plugin. The command-line interface
+  allows using COSTABS as a standalone application, which provides a
+  layer from which more advanced interfaces can be easily built. The
+  web interface allows users to try out the system, without installing
+  it. In addition, it provides a set of representative examples of ABS
+  programs, and allows users to upload their own ABS programs. The
+  most advanced (and highly recommended) interface is the Eclipse
+  plugin, which is fully integrated into the main ABS tool suite, and
+  thus allows the programmer to use COSTABS during the development
+  process of ABS applications.
 
-  {{{http://costa.ls.fi.upm.es/costabs}COSTABS Web Interface}}
+** Installation and usage instructions
 
-** Usage
+*** Command-line interface
 
-  Costabs works when an abs file is opened in the ABS Editor. In that case, functions and methods can be selected from the Outline View (to select multiples functions and methods keep pressed control key).
+  The COSTABS command-line tool can be downloaded from the (<Download>
+  tab at the) {{{http://costa.ls.fi.upm.es/costabs}COSTABS web site}}
+  (currently only available for Linux systems). Detailed instructions
+  on how to install and use it are available in the README file which
+  is downloaded. Typing the command <<<costabs -h>>> displays some
+  usage information.
 
-  Once the selection is finished, the Costabs button from the Tools menu should be clicked to set the analysis options.
+*** Web interface
 
-** Costabs Options
+  Just go to the web interface tab at the
+  {{{http://costa.ls.fi.upm.es/costabs}COSTABS web site}} and follow
+  the steps there provided.
 
-  Costabs allows the following options for the analysis:
+*** The Eclipse plugin
 
-    * Cost models:
+  The COSTABS Eclipse plugin is completely integrated into the ABS
+  tool suite. It is therefore installed by default when installing the
+  ABS tool suite (follow the instructions
+  {{{./eclipseplugin/installation.html}here}}).
 
-    * Termination/...
+  In order the use the COSTABS Eclipse plugin follow these
+  instructions:
 
-    * Cost centers:
+  * First, the functions and/or methods to be analyzed must be
+  selected in the outline view (assuming and ABS source file is
+  opened). To select multiple functions and/or methods keep pressed
+  the control and/or the Caps key.
 
-    * Size abstraction:
+  * To invoke COSTABS we click on the <palm-tree> button in the tool
+  bar (or alternatively select the option <Analyze with Costa> from
+  the <Costa> menu). We now see the COSTABS preferences window where
+  we can set the parameters of COSTABS (see below for details).
 
-    * Verbotity:
+  * Once the parameters have been set we click the <Analyze>
+  button. This will launch the actual analysis. The results of the
+  analysis are displayed in the Eclipse <COSTABS console window> (at
+  the bottom). Additionally, the interface produces square markers
+  associated to the analyzed methods/functions in the source
+  file. Moving the mouse over such markers we can see a pop-up window
+  where the corresponding upper-bound is displayed.
 
-** Viewing the Results
+** COSTABS parameters
 
-  The results from the analysis are displayed in the console view and markers are added next to the definition of the method or function in the source file.
+    * <<Cost model>>: Briefly, a cost model is a function that maps
+each instruction to the amount of resources consumed when executing
+it. COSTABS provides the following cost models: <termination>,
+<steps>, <memory>, <objects> and <task-level>.
+
+    * <<Cost centers>>: Enabling this feature COSTABS will obtain the
+cost per component (also called <cost-centers>) rather than a single
+cost expression. The current implementation of COSTABS assumes that
+objects of the same type belong to the same cost center, i.e., they
+share the processor.
+
+    * <<Size norm>>: When a program manipulates numerical data, its
+cost often depends on the initial (integer) values of the
+corresponding variables. However, when it manipulates terms (i.e.,
+data-structures), its cost usually depends on the sizes of the inputs.
+A <size norm> is a function that maps terms to numerical values that
+represent their sizes. The following size norms are available in
+COSTABS: <term-size>, which corresponds to the number of type
+constructors in a given term, and, <term-depth>, which corresponds to
+the length of the longest path in the term.
+
+    * <<Debugging mode>>: The debugging mode produces on-screen
+detailed information of the different phases and generates files with
+some useful intermediate information such as the <rule-based
+representation> (an intermediate representation for ABS programs) and
+the <cost-relation system>.
+   
+    * <<Asymptotic bounds>>: Enabling this feature COSTABS obtains
+asymptotic upper-bounds rather than concrete upper-bounds.
+
+    * <<Verbosity>>: COSTABS allows setting three verbosity levels,
+      named 0 (the least verbose) to 2 (the most verbose).
+
+   For more details on the meaning of the COSTABS parameters go to
+   chapter 3 of
+   {{{http://www.cse.chalmers.se/research/hats/sites/default/files/Deliverable42.pdf}deliverable
+   4.2}}.
+
+
 
 * Dependency Management
 
