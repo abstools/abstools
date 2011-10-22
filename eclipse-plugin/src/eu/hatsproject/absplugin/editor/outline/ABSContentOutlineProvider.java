@@ -4,10 +4,7 @@
  */
 package eu.hatsproject.absplugin.editor.outline;
 
-import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.getNatureForObject;
-import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isExportList;
-import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isImportList;
-import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.isStandardLibImport;
+import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.*;
 import static eu.hatsproject.absplugin.util.Constants.ABS_FILE_EXTENSION;
 import static eu.hatsproject.absplugin.util.Constants.EMPTY_OBJECT_ARRAY;
 
@@ -24,25 +21,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.Export;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.Import;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.List;
-import abs.frontend.ast.MainBlock;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.Constants;
@@ -165,7 +146,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 					return null;
 				}
 			} catch (CoreException e) {
-				MessageDialog.openError(Display.getDefault().getActiveShell(),
+				MessageDialog.openError(null,
 						"Error", "Error in Content outline. Could not check project natures for project."
 						+ file.getProject().getName() +
 						"\n Maybe the project does not exist anymore or the project is not accessible!");
@@ -405,14 +386,23 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 
 	@Override
 	public void dispose() {
-		//no-op
+		baseProvider.dispose();
 	}
 
 	@Override
 	public Object getParent(Object element) {
 		if (element instanceof InternalASTNode<?> && element != null) {
 			InternalASTNode<?> node = (InternalASTNode<?>) element;
-			return InternalASTNode.wrapASTNode(node.getASTNode().getParent(),node.getNature());
+			
+			AbsNature nature = node.getNature();
+			ASTNode<?> parent = node.getASTNode().getParent();
+			assert nature != null;
+			/* Root nodes don't have parents, so there's nothing to wrap (ABSTools #301) */
+			if (parent == null) {
+				assert node.getASTNode() instanceof Model : element;
+				return null;
+			}
+			return InternalASTNode.wrapASTNode(parent,nature);
 		}
 		return null;
 	}
