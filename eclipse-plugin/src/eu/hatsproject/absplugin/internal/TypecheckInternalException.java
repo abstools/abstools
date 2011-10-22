@@ -10,6 +10,7 @@ public class TypecheckInternalException extends Exception {
 	private Exception wrappedException;
 	
 	public TypecheckInternalException(Exception wrapped){
+		super(wrapped);
 		wrappedException = wrapped;
 	}
 	
