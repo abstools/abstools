@@ -765,8 +765,8 @@ mod ABS-EVAL is
   *** `Configuration' and other parameters `SSubst' (time, deadline).
   op eval : Expr Subst Configuration SSubst -> Data .
   op evalList : ExprList Subst Configuration SSubst -> DataList [strat (1 4 0)] .
-  op enabled : StmtList Subst Configuration SSubst -> Bool .
-  op ready : StmtList Subst Configuration SSubst -> Bool .
+  op executable : StmtList Subst Configuration SSubst -> Bool .
+  op schedulable : StmtList Subst Configuration SSubst -> Bool .
 
   eq eval(D, S, CN, MAC) = D .
 
@@ -840,20 +840,22 @@ mod ABS-EVAL is
   eq evalList(E :: NeEL, S, CN, MAC) =
     eval(E, S, CN, MAC) :: evalList(NeEL, S, CN, MAC) .
 
-  --- Enabledness
-  eq enabled(await E ; SL, S, CN, MAC) = eval(E, S, CN, MAC) asBool .
-  eq enabled($duration(MIN ; MAX) ; SL, S, CN, MAC) = MIN <= 0 .
-  eq enabled(SL, S, CN, MAC) = true [owise] .
+  --- Executableness
+  eq executable(await E ; SL, S, CN, MAC) = eval(E, S, CN, MAC) asBool .
+  *** Note that "get" is always deemed to be executable, so that it can block
+  *** the cog properly (this is intentional).
+  eq executable($duration(MIN ; MAX) ; SL, S, CN, MAC) = MIN <= 0 .
+  eq executable(SL, S, CN, MAC) = true [owise] .
 
-  --- The ready predicate holds, if a statement is ready for execution,
+  --- The schedulable predicate holds, if a statement is schedulable for execution,
   --- i.e., the corresponding process may be waken up.
-  eq ready(get(QID ; A') ; SL , S, CN, MAC) = completed(S[QID], CN) .
-  eq ready(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = completed(SS[QID], CN) .
-  eq ready(get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
+  eq schedulable(get(QID ; A') ; SL , S, CN, MAC) = completed(S[QID], CN) .
+  eq schedulable(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = completed(SS[QID], CN) .
+  eq schedulable(get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
   *** This is only for the untimed case -- in the timed interpreter, duration
   *** is reduced to $duration via an equation.
-  eq ready(duration(E ; E') ; SL, S, CN, MAC) = true .
-  eq ready(SL, S, CN, MAC) = enabled(SL, S, CN, MAC) [owise] .
+  eq schedulable(duration(E ; E') ; SL, S, CN, MAC) = true .
+  eq schedulable(SL, S, CN, MAC) = executable(SL, S, CN, MAC) [owise] .
 
   *** Evaluate various builtin functions.
 
@@ -914,12 +916,12 @@ mod ABS-EVAL is
   eq freeFutures(noSubst) = noStmt .
   eq freeFutures((A |-> D, SS)) = freeFutures(D) ; freeFutures(SS) .
 
-  op filterReady : MProc Subst Configuration SSubst -> MProc .
-  eq filterReady(noProc, S, CN, MAC) = noProc .
-  eq filterReady(({ S' | SL }, W), S, CN, MAC) =
-    if ready(SL, (S :: S'), CN, (MAC, '.deadline |-> S'['.deadline]))
-    then { S' | SL }, filterReady(W, S, CN, MAC)
-    else filterReady(W, S, CN, MAC)
+  op getSchedulableProcesses : MProc Subst Configuration SSubst -> MProc .
+  eq getSchedulableProcesses(noProc, S, CN, MAC) = noProc .
+  eq getSchedulableProcesses(({ S' | SL }, W), S, CN, MAC) =
+    if schedulable(SL, (S :: S'), CN, (MAC, '.deadline |-> S'['.deadline]))
+    then { S' | SL }, getSchedulableProcesses(W, S, CN, MAC)
+    else getSchedulableProcesses(W, S, CN, MAC)
     fi .
 
 endm
@@ -1080,7 +1082,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   =
     < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
 
-  --- Schedule a new process for execution, if it is ready.
+  --- Schedule a new process for execution, if it is schedulable.
   ---
   --- Must be a rule to preserve confluence.
   ---
@@ -1102,11 +1104,11 @@ mod ABS-MACHINE-BASICS-COMMON is
       < O : C | Cog: CG, Att: S, Pr: P, PrQ: W minus P, Lcnt: F >
       < T : Clock | Limit: LIM >
       CN  }
-  if W1 := filterReady(W, S, CN, ('.time |-> "int"[T], '.comp |-> S['.comp]))
+  if W1 := getSchedulableProcesses(W, S, CN, ('.time |-> "int"[T], '.comp |-> S['.comp]))
     /\ W1 =/= noProc
     /\ "ABS.StdLib.Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]] , S), none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))
     /\ P := findProcess(W1, N)
-      [label PrQ-ready] .
+      [label PrQ-schedulable] .
 
 endm
 mod ABS-MACHINE-BASICS-RL is
@@ -1127,7 +1129,7 @@ mod ABS-MACHINE-BASICS-RL is
 
   *** Handle synchronous calls within cogs.
   ***
-  *** Only schedule the process if it is ready - so we have to capture the
+  *** Only schedule the process if it is schedulable - so we have to capture the
   *** entire state here as well.
   ceq
     { < CG : Cog | Object: O >
@@ -1143,7 +1145,7 @@ mod ABS-MACHINE-BASICS-RL is
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
   if  L[A] == L1['.label]
-      /\ ready(SL1, (S1 :: L1), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
+      /\ schedulable(SL1, (S1 :: L1), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label schedule-cog] .
 
   --- mark
@@ -1225,7 +1227,7 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   *** Handle synchronous calls within cogs.
   ***
-  *** Only schedule the process if it is ready - so we have to capture the
+  *** Only schedule the process if it is schedulable - so we have to capture the
   *** entire state here as well.
   ceq
     { < CG : Cog | Object: O >
@@ -1243,7 +1245,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     }
     *** L[A] because synchronous calls are always handled via ".staticfuture"
   if  L[A] == L1['.label]
-      /\ ready(SL1, (S1 :: L1), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
+      /\ schedulable(SL1, (S1 :: L1), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
     [label schedule-cog] .
 
   --- mark
@@ -1307,10 +1309,10 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   *** Clock advancement.
 
-  op noneready : MProc Subst Configuration SSubst -> Bool .
-  eq noneready((W, { L | SL }), S, CN, MAC) =
-    not ready(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) and noneready(W, S, CN, MAC) .
-  eq noneready(noProc, S, CN, MAC) = true .
+  op noneSchedulable : MProc Subst Configuration SSubst -> Bool .
+  eq noneSchedulable((W, { L | SL }), S, CN, MAC) =
+    not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) and noneSchedulable(W, S, CN, MAC) .
+  eq noneSchedulable(noProc, S, CN, MAC) = true .
 
   op canAdvance : Configuration SSubst -> Bool .
   *** Block clock if a method invocation is on its way.
@@ -1319,13 +1321,13 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq canAdvance (
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, MAC) =
-    noneready(W, S, CN, MAC) and canAdvance (CN, MAC) .
+    noneSchedulable(W, S, CN, MAC) and canAdvance (CN, MAC) .
   *** Block clock if process is executing and can execute.
   eq canAdvance (
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       CN, MAC)
   =
-    not(enabled(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)))
+    not(executable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)))
     and canAdvance(CN, MAC) .
   eq canAdvance(CN, MAC) = true [owise] .
 
@@ -1639,7 +1641,7 @@ endm
 
 *** These rules capture the entire state CN since the condition E can depend
 *** on the state of Futures (and therefore CN needs to be passed to
-*** "enabled").
+*** "executable").
 mod ABS-STMT-AWAIT-RL is
   protecting ABS-EVAL .
 
@@ -1653,7 +1655,7 @@ mod ABS-STMT-AWAIT-RL is
       < O : C | Cog: CG, Att: S, Pr: { L | await E ; SL }, PrQ: W, Lcnt: F >
       CN  }
   =>
-    if enabled(await E, (S :: L), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])) then
+    if executable(await E, (S :: L), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp])) then
       { < CG : Cog | Object: O >
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         CN  }
@@ -1680,7 +1682,7 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
       < T : Clock | Limit: LIM, Random: RAND >
       CN  }
   =
-    if enabled(await E, (S :: L), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])) then
+    if executable(await E, (S :: L), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp])) then
       { < CG : Cog | Object: O >
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
         < T : Clock | Limit: LIM, Random: RAND >
