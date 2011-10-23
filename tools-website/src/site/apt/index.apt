@@ -231,35 +231,35 @@ asymptotic upper-bounds rather than concrete upper-bounds.
 
 ** Helping the analyzer with class invariants
 
-COSTABS provides a way to incorporate <class invariants> on the
-analyzed ABS code. Those invariants can provide, e.g., guarantees on
-the global states when the process is resumed after an await
-statement. Annotations can be written right before await statements
-(currently this is the only place where they can be needed) in ABS
-format (with the special function 'old') between []'s.
+  COSTABS provides a way to incorporate <class invariants> on the
+  analyzed ABS code. Those invariants can provide, e.g., guarantees on
+  the global states when the process is resumed after an await
+  statement. Annotations can be written right before await statements
+  (currently this is the only place where they can be needed) in ABS
+  format (with the special function 'old') between []'s.
 
-For example, if we add the following invariant
+  For example, if we add the following invariant
 
-<<<[old(f) == f && f > 0]>>>
+  <<<[old(f) == f && f > 0]>>>
 
-right before an await instruction then we state that it is guaranteed
-that when the process resumes, the value of field <<<f>>> will be the
-same as when the process has been suspended, and also that it is
-always positive. This kind of invariants are sometimes needed in order
-for the analyzer to bound the number of iterations on loops.
+  right before an await instruction then we state that it is
+  guaranteed that when the process resumes, the value of field <<<f>>>
+  will be the same as when the process has been suspended, and also
+  that it is always positive. This kind of invariants are sometimes
+  needed in order for the analyzer to bound the number of iterations
+  on loops.
 
-See more details on chapter 3 of
-{{{http://www.cse.chalmers.se/research/hats/sites/default/files/Deliverable42.pdf}deliverable
-4.2}}
+  See more details on chapter 3 of
+  {{{http://www.cse.chalmers.se/research/hats/sites/default/files/Deliverable42.pdf}deliverable
+  4.2}}
 
-Note: In the previous version of COSTABS invariants were written in
-a pseudo-JML format. E.g., the one above was written 
+  Note: In the previous version of COSTABS invariants were written in
+  a pseudo-JML format. E.g., the one above was written
 
-<<<//@invariant \old(f) == f >>>
+  <<<//@invariant \old(f) == f >>>
 
-This syntax is not valid anymore since we are now adhering to the ABS
-annotations format.
-
+  This syntax is not valid anymore since we are now adhering to the
+  ABS annotations format.
 
 
 * Dependency Management
