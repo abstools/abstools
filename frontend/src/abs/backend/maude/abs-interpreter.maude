@@ -1322,12 +1322,15 @@ mod ABS-MACHINE-BASICS-TIMED is
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, MAC) =
     noneSchedulable(W, S, CN, MAC) and canAdvance (CN, MAC) .
-  *** Block clock if process is executing and can execute.
+  *** Block clock if process is executing and can execute. "can execute" means
+  *** "schedulable" in this case since a get-operation should not block time
+  *** advance, even though it _is_ allowed to block the cog (which is the
+  *** difference between executable and schedulable)
   eq canAdvance (
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       CN, MAC)
   =
-    not(executable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)))
+    not(schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)))
     and canAdvance(CN, MAC) .
   eq canAdvance(CN, MAC) = true [owise] .
 
