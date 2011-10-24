@@ -544,7 +544,7 @@ mod ABS-PROCESS is
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] .
 
   op liftProcess : Process -> Data .
-  eq liftProcess({ L | SL }) = "ABS.StdLib.Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "num"[0] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "num"[0] fi ] .
+  eq liftProcess({ L | SL }) = "ABS.StdLib.Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["num"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "num"[0] fi ] .
 
 endm
 
