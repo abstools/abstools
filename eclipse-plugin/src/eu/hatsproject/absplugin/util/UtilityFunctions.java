@@ -464,8 +464,6 @@ public class UtilityFunctions {
 		return MAUDE_COMMAND1 + '[' + (steps < 0 ? 0 : steps) + ']' + MAUDE_COMMAND2 + MAUDE_COMMAND_QUIT;
 	}
 
-
-
 	/**
 	 * Highlights the given {@link ASTNode} in the editor.<br/>
 	 * Only one ASTNode at a time can be highlighted (This is a restriction of {@link ITextEditor}}).<br/><br/>
@@ -596,7 +594,7 @@ public class UtilityFunctions {
 		    try {
 		        return (ABSEditor)IDE.openEditorOnFileStore(getActiveWorkbenchPage(), fileStore);
 		    } catch (PartInitException e) {
-		        
+		    	standardExceptionHandling(e);
 		    }
 		} else if (path.segment(0).equals("jar:file:")) {
 			// a jar file
@@ -607,7 +605,7 @@ public class UtilityFunctions {
 				String pname = (project != null) ? project.getName() : null;
 				return openABSEditorForFile(getPackageAbsFile(pak, entry, pname));
 			} catch (URISyntaxException e) {
-				e.printStackTrace();
+				standardExceptionHandling(e);
 			}
 		}
 		return null;
@@ -694,32 +692,29 @@ public class UtilityFunctions {
 		return false;
 	}	
 	
-	public static boolean isABSPackage(File file) {
-		try {
-			return file.exists() && new ABSPackageFile(file).isABSPackage();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}		
+	public static boolean isABSPackage(File file) throws IOException {
+		return file.exists() && new ABSPackageFile(file).isABSPackage();
 	}
 
 	// assumes file != null
 	public static boolean isABSPackage(IFile file) {
-      if (! "jar".equals(file.getFileExtension()))
-         return false;
+		if (! "jar".equals(file.getFileExtension()))
+			return false;
 
-      return isABSPackage(file.getLocation().toFile());
-   }
-
-   /**
-	 * If plug-in in debug mode, then print exception stack trace.
-	 * @param e
-	 */
-	public static void standardExceptionHandling(Exception e){
-		if(DO_DEBUG){
-			e.printStackTrace();
+		try {
+			return isABSPackage(file.getLocation().toFile());
+		} catch (IOException e) {
+			standardExceptionHandling(e);
+			return false;
 		}
 	}
 
+   /**
+	 * Always log exceptions in the Error Log.
+	 * @param e
+	 */
+	public static void standardExceptionHandling(Exception e){
+		Activator.logException(e);
+	}
 	
 }

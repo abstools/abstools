@@ -25,6 +25,7 @@ import org.eclipse.ui.model.BaseWorkbenchContentProvider;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
@@ -89,14 +90,14 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 				return results.toArray();
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Activator.logException(e);
 		}
 		return EMPTY_OBJECT_ARRAY;
 	}
 
 	private Object[] getChildrenOf(IProject project) {
 		if (project.isOpen()) {
-			AbsNature nature = getNatureForObject(project);
+			AbsNature nature = UtilityFunctions.getAbsNature(project);
 			java.util.List<Object> children = new ArrayList<Object>();
 			children.add(nature.getPackages());
 			children.addAll(Arrays.asList(baseProvider.getChildren(project)));
@@ -150,7 +151,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 						"Error", "Error in Content outline. Could not check project natures for project."
 						+ file.getProject().getName() +
 						"\n Maybe the project does not exist anymore or the project is not accessible!");
-				e.printStackTrace();
+				Activator.logException(e);
 				return null;
 			}
 				

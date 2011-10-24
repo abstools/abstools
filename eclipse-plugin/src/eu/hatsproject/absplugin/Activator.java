@@ -4,58 +4,15 @@
  */
 package eu.hatsproject.absplugin;
 
-import static eu.hatsproject.absplugin.util.Constants.DEFAULT_MAUDE_EXEC_PATH;
-import static eu.hatsproject.absplugin.util.Constants.DEFAULT_MAUDE_EXEC_PATH_LINUX;
-import static eu.hatsproject.absplugin.util.Constants.DEFAULT_MAUDE_EXEC_PATH_MACOSX;
-import static eu.hatsproject.absplugin.util.Constants.DEFAULT_MAUDE_EXEC_PATH_WIN32;
-import static eu.hatsproject.absplugin.util.Constants.MAUDE_EXEC_PATH;
-import static eu.hatsproject.absplugin.util.Constants.NATURE_ID;
-import static eu.hatsproject.absplugin.util.Constants.REBUILD_ABS_MODEL_JOB_NAME;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_BLACK;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_BLACK_RGB;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_GREY;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_GREY_RGB;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_TYPES;
-import static eu.hatsproject.absplugin.util.Constants.STYLER_COLOR_TYPES_RGB;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_BOLD;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_COLOR;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_COMMENT;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_CONSTRUCTOR;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_DATATYPE;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_FIELD;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_FUNCTION;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_INTERFACE;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_ITALIC;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_KEYWORD;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_PARAM;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_COMMENT;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_CONSTRUCTOR;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_DATATYPE;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_FIELD;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_FUNCTION;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_INTERFACE;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_KEYWORD;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_PARAM;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_STRING;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_RGB_VAR;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_STRIKETHROUGH;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_STRING;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_UNDERLINE;
-import static eu.hatsproject.absplugin.util.Constants.SYNTAXCOLOR_VAR;
+import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenceStore;
 
+import java.io.File;
 import java.util.ArrayList;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.resources.WorkspaceJob;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -67,10 +24,12 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
+import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 
@@ -181,6 +140,12 @@ public class Activator extends AbstractUIPlugin {
 				proj.build(IncrementalProjectBuilder.FULL_BUILD, null);
 			}
 		}
+		Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
+		assert seditbundle != null;
+		File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
+		assert jarFile != null;
+		if (!new File(jarFile,"sdedit.jar").exists())
+			getLog().log(new Status(IStatus.INFO, Constants.PLUGIN_ID,"SDEdit plugin is missing the necessary JAR file---are you running within Eclipse and forgot to invoke the ANT script?"));
 	}
 	
 	private void setDefaultValue(String name, RGB value){
@@ -299,4 +264,7 @@ public class Activator extends AbstractUIPlugin {
 		return plugin;
 	}
 
+	public static void logException(Exception e) {
+		getDefault().getLog().log(new Status(IStatus.ERROR, Constants.PLUGIN_ID, e.getMessage(), e));
+	}
 }

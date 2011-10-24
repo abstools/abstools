@@ -36,6 +36,7 @@ import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 import beaver.Symbol;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
@@ -366,6 +367,8 @@ public class AbsNature implements IProjectNature {
 			//ignore
 			return;
 		} catch (TypecheckInternalException e) {
+			/* Internal error caught. Log, and turn into an error marker */
+			Activator.logException(e);
 			createMarker(e);
 			return;
 		}

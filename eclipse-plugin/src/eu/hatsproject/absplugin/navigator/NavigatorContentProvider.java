@@ -7,7 +7,6 @@ package eu.hatsproject.absplugin.navigator;
 import java.util.ArrayList;
 import java.util.List;
 
-import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.getNatureForObject;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.getChildrenOf;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.Constants.EMPTY_OBJECT_ARRAY;
@@ -22,15 +21,17 @@ import org.eclipse.jface.viewers.Viewer;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineProvider;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
+import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 public class NavigatorContentProvider implements ITreeContentProvider {
 	
-	ABSContentOutlineProvider outlineProvider = new ABSContentOutlineProvider();
+	final ABSContentOutlineProvider outlineProvider = new ABSContentOutlineProvider();
 	
 	@Override
 	public Object[] getChildren(Object parentElement) {
@@ -39,7 +40,8 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 			return outlineProvider.getChildren(((InternalASTNode<?>) parentElement));
 		} else if (parentElement instanceof IProject) {
 			if (((IProject) parentElement).isOpen()) {
-				AbsNature nature = getNatureForObject(parentElement);
+				AbsNature nature = UtilityFunctions.getAbsNature((IProject)parentElement);
+				assert nature != null;
 				return ModulePath.getRootHierarchy(nature).toArray();
 			}
 		} else if (parentElement instanceof ModulePath) {
@@ -114,6 +116,7 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 				}
 			}
 		} catch (CoreException e) {
+			Activator.logException(e);
 			return false;
 		}
 

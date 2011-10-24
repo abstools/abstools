@@ -29,8 +29,8 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.parser.ParserError;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
-import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.navigator.ModulePath;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
@@ -79,7 +79,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 				}
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			Activator.logException(e);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 	}
 
 	private void checkModuleDecl(IDecoration decoration, InternalASTNode<ModuleDecl> modDecl) {
-		AbsNature nature = ABSContentOutlineUtils.getNatureForObject(modDecl);
+		AbsNature nature = modDecl.getNature();
 		if (nature != null && hasModuleDeclErrors(modDecl.getASTNode(), modDecl.getNature())) {
 			addErrorOverlay(decoration);
 		}
