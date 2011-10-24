@@ -1851,7 +1851,9 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; SL }, PrQ: W,
+    *** we synchronize with the call to .init because otherwise another call
+    *** immediately afterwards might overtake the call to .init
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
@@ -1895,8 +1897,10 @@ mod ABS-NEW-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
+    *** we synchronize with the call to .init because otherwise another call
+    *** immediately afterwards might overtake the call to .init
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
