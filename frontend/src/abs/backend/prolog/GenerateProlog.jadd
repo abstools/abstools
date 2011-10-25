@@ -528,6 +528,9 @@ aspect GenerateProlog {
         //the class of the init method
         s.print(","+quotedClass+",");
 
+		// We set an empty list of annotations -> we do not consider annots for init methods)
+		s.print("[],");
+		
         //like a normal block we have the vars declaration part first
         Collection<VarDecl> vars =this.getVars();
         Iterator<VarDecl> it=vars.iterator();
@@ -608,14 +611,22 @@ aspect GenerateProlog {
     }
 
     public void MethodImpl.generateProlog(PrintStream s,String quotedClass){
-        //generates "methodImpl(methodSig,className,block)."
+        //generates "methodImpl(methodSig,className,annotationsList,block)."
         s.print("methodImpl(");
         getChild(0).generateProlog(s);
         s.print(","+quotedClass+",");
-        //s.print("This,");
+        
+        List<Annotation> anns = ((MethodSig) getChild(0)).getAnnotations();
+        int n = anns.getNumChild();
+        s.print("[");
+        for (int i = 0; i < n; i++){
+            anns.getChild(i).generateProlog(s);
+            if (i != n-1) s.print(",");
+        }
+        s.print("],");
+        
         getChild(1).generateProlog(s);
-        s.println(").");
-
+        s.println(").");        
     }
 
     // Main block (This is like the main in Pascal, I think ...)
