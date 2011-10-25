@@ -235,19 +235,22 @@ asymptotic upper-bounds rather than concrete upper-bounds.
   analyzed ABS code. Those invariants can provide, e.g., guarantees on
   the global states when the process is resumed after an await
   statement. Annotations can be written right before await statements
-  (currently this is the only place where they can be needed) in ABS
-  format (with the special function 'old') between []'s.
+  or right before method definitions (currently those are the only
+  places where they can be needed). The are written in ABS format,
+  each annotation between []'s, with the special functions 'old',
+  'max' and 'min'. See the annotations in the ABS examples at the
+  {{{http://costa.ls.fi.upm.es/costabs}COSTABS web site}}.
 
   For example, if we add the following invariant
 
-  <<<[old(f) == f && f > 0]>>>
+  <<<[old(f) == f][f <= max(f)][f > 0]>>>
 
   right before an await instruction then we state that it is
   guaranteed that when the process resumes, the value of field <<<f>>>
-  will be the same as when the process has been suspended, and also
-  that it is always positive. This kind of invariants are sometimes
-  needed in order for the analyzer to bound the number of iterations
-  on loops.
+  will be the same as when the process was suspended, and also that f
+  is bounded by var max(f) and it is always positive. This kind of
+  invariants are sometimes needed in order for the analyzer to bound
+  the number of iterations on loops.
 
   See more details on chapter 3 of
   {{{http://www.cse.chalmers.se/research/hats/sites/default/files/Deliverable42.pdf}deliverable
