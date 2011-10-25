@@ -544,7 +544,7 @@ mod ABS-PROCESS is
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] .
 
   op liftProcess : Process -> Data .
-  eq liftProcess({ L | SL }) = "ABS.StdLib.Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["num"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "num"[0] fi ] .
+  eq liftProcess({ L | SL }) = "Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["int"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "int"[0] fi ] .
 
 endm
 
@@ -972,13 +972,13 @@ mod ABS-MSG-TRANSPORT is
 
   eq makeProcess(< M : Method | Param: AL, Code: SL >, N, DL, B, DE, T)
   =
-    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["num"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { '.deadline |-> DE, '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["int"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
 
   op recordStartTime : Process Nat -> Process .
   *** This will only ever be evaluated with a simple substitution SS.
   eq recordStartTime({ SS | SL}, T:Nat) =
   if $hasMapping(SS, '.s) then { SS | SL }
-  else { $insert('.s, "Time"["num"[T:Nat]], SS) | SL } fi .
+  else { $insert('.s, "Time"["int"[T:Nat]], SS) | SL } fi .
 
 endm
 
@@ -1106,7 +1106,7 @@ mod ABS-MACHINE-BASICS-COMMON is
       CN  }
   if W1 := getSchedulableProcesses(W, S, CN, ('.time |-> "int"[T], '.comp |-> S['.comp]))
     /\ W1 =/= noProc
-    /\ "ABS.StdLib.Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]] , S), none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))
+    /\ "Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]] , S), none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))
     /\ P := findProcess(W1, N)
       [label PrQ-schedulable] .
 
