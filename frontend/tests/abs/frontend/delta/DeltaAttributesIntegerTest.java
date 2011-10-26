@@ -50,7 +50,7 @@ public class DeltaAttributesIntegerTest extends DeltaFlattenerTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().value.toString());
+//        System.out.println("******** expected: " + expected + " *** found: " + cls.getField(0).getInitExp().value.toString());
 
         assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
