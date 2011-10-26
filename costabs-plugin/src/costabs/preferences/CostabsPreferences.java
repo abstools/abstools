@@ -26,7 +26,7 @@ import costabs.Activator;
 public class CostabsPreferences
 extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
-	RadioGroupFieldEditor sizeNorm;
+	//RadioGroupFieldEditor sizeNorm;
 	RadioGroupFieldEditor tdPrecision;
 	BooleanFieldEditor enableSabu;
 	RadioGroupFieldEditor fieldAbstraction;
@@ -57,11 +57,9 @@ implements IWorkbenchPreferencePage {
 		
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
 				1,new String[][] { {"0", "0"}, {"1", "1"}, {"2", "2"}}, getFieldEditorParent()));
-
 	}
-
 
 	public void init(IWorkbench workbench) {
 	}
-
+	
 }

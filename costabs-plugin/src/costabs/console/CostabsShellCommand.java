@@ -115,6 +115,8 @@ public class CostabsShellCommand {
 		command.append("-cost_model " + store.getString(PreferenceConstants.PCOST_MODEL) + " ");
 		command.append("-cost_centers " + store.getString(PreferenceConstants.PCOST_CENTER) + " ");
 		command.append("-norm " + store.getString(PreferenceConstants.PSIZE_ABST) + " ");
+		if (store.getString(PreferenceConstants.PASYMPTOTIC) == "yes") command.append("-a ");
+		if (store.getString(PreferenceConstants.PDEBUG_MODE) == "yes") command.append("-debug ");
 		command.append("-verbosity " + store.getString(PreferenceConstants.PVERBOSITY) + " ");
 
 	}

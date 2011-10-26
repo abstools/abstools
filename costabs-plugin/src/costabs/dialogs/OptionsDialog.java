@@ -30,7 +30,6 @@ public class OptionsDialog extends Dialog {
 	private Button[] asymptoticSelection;
 	private Button[] verbositySelection;
 
-
 	public OptionsDialog(Shell parentShell) {
 		super(parentShell);
 	}
@@ -39,9 +38,7 @@ public class OptionsDialog extends Dialog {
 
 
 		Composite composite = (Composite)super.createDialogArea(parent);
-
 		try {
-			
 			RowLayout verticalLayout = new RowLayout();
 			verticalLayout.type = SWT.VERTICAL;
 			verticalLayout.marginWidth = 10;
@@ -55,7 +52,6 @@ public class OptionsDialog extends Dialog {
 		}
 		catch (Exception e) {
 			ConsoleHandler.write("Error creating Dialog ");
-
 		}
 
 		return composite;
@@ -118,6 +114,12 @@ public class OptionsDialog extends Dialog {
 		for (int i = 0; i < sizeAbstractionSelection.length; i++)
 			sizeAbstractionSelection[i].addSelectionListener(new SelectSizeAbstractionChangeListener(this, i, sizeAbstractionSelection[i]));
 		
+		for (int i = 0; i < asymptoticSelection.length; i++)
+			asymptoticSelection[i].addSelectionListener(new SelectAsymptoticChangeListener(this, i, asymptoticSelection[i]));
+		
+		for (int i = 0; i < debugModeSelection.length; i++)
+			debugModeSelection[i].addSelectionListener(new SelectDebugModeChangeListener(this, i, debugModeSelection[i]));
+		
 		for (int i = 0; i < verbositySelection.length; i++)
 			verbositySelection[i].addSelectionListener(new SelectVerbosityChangeListener(this, i, verbositySelection[i]));
 	}
@@ -140,6 +142,14 @@ public class OptionsDialog extends Dialog {
 		for (int i = 0; i < CostabsOptions.SIZE_NORM.length; i++)			
 			sizeAbstractionSelection[i].setSelection(preferenceValue.equals(CostabsOptions.SIZE_NORM_PROLOG[i]));
 		
+		preferenceValue = store.getString(PreferenceConstants.PASYMPTOTIC);
+		for (int i = 0; i < CostabsOptions.ASYMPTOTIC.length; i++)			
+			asymptoticSelection[i].setSelection(preferenceValue.equals(CostabsOptions.ASYMPTOTIC[i]));
+		
+		preferenceValue = store.getString(PreferenceConstants.PDEBUG_MODE);
+		for (int i = 0; i < CostabsOptions.DEBUG_MODE.length; i++)			
+			debugModeSelection[i].setSelection(preferenceValue.equals(CostabsOptions.DEBUG_MODE[i]));
+		
 		preferenceValue = store.getString(PreferenceConstants.PVERBOSITY);
 		for (int i = 0; i < CostabsOptions.VERBOSITY.length; i++)			
 			verbositySelection[i].setSelection(preferenceValue.equals(CostabsOptions.VERBOSITY[i]));
@@ -158,6 +168,14 @@ public class OptionsDialog extends Dialog {
 		return sizeAbstractionSelection;
 	}
 	
+	public Button[] getAsymptotic() {
+		return asymptoticSelection;
+	}
+	
+	public Button[] getDebugMode() {
+		return debugModeSelection;
+	}
+	
 	public Button[] getVerbosity() {
 		return verbositySelection;
 	}
@@ -170,7 +188,6 @@ public class OptionsDialog extends Dialog {
 
 	@Override
 	protected void okPressed() {
-
 		this.close();
 	}
 
@@ -264,7 +281,58 @@ class SelectSizeAbstractionChangeListener implements SelectionListener {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		store.setValue(PreferenceConstants.PSIZE_ABST, CostabsOptions.SIZE_NORM_PROLOG[index]);
 	}
+}
 
+class SelectAsymptoticChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+
+	public SelectAsymptoticChangeListener(OptionsDialog dialog, int i, Button b) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+		for (int i = 0; i < this.dialog.getAsymptotic().length; i++) {
+			this.dialog.getAsymptotic()[i].setSelection(false);
+		}
+		b.setSelection(true);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PASYMPTOTIC, CostabsOptions.ASYMPTOTIC[index]);
+	}
+}
+
+class SelectDebugModeChangeListener implements SelectionListener {
+
+	OptionsDialog dialog = null;
+	int index;
+	Button b;
+
+	public SelectDebugModeChangeListener(OptionsDialog dialog, int i, Button b) {
+		this.dialog = dialog;
+		this.index = i;
+		this.b = b;
+	}
+
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	public void widgetSelected(SelectionEvent e) {
+		for (int i = 0; i < this.dialog.getDebugMode().length; i++) {
+			this.dialog.getDebugMode()[i].setSelection(false);
+		}
+		b.setSelection(true);
+		
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		store.setValue(PreferenceConstants.PDEBUG_MODE, CostabsOptions.DEBUG_MODE[index]);
+	}
 }
 
 class SelectVerbosityChangeListener implements SelectionListener {
@@ -291,5 +359,4 @@ class SelectVerbosityChangeListener implements SelectionListener {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 		store.setValue(PreferenceConstants.PVERBOSITY, CostabsOptions.VERBOSITY[index]);
 	}
-
 }

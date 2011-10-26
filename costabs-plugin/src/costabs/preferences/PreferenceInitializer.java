@@ -23,7 +23,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.PCOST_MODEL, "steps");
 		store.setDefault(PreferenceConstants.PCOST_CENTER, "no");
 		store.setDefault(PreferenceConstants.PDEBUG_MODE, "no");
-		store.setDefault(PreferenceConstants.PASYMPTOTIC, "2");
+		store.setDefault(PreferenceConstants.PASYMPTOTIC, "no");
 		store.setDefault(PreferenceConstants.PVERBOSITY, "2");
 		store.setDefault(PreferenceConstants.PSTDLIB, true);
 	}
