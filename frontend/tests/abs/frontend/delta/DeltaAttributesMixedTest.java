@@ -39,5 +39,39 @@ public class DeltaAttributesMixedTest extends DeltaFlattenerTest {
         assertTrue(cls.getField(3).getInitExp().value.toString().equals("IntLiteral(999)"));
     }
 
+    @Test
+    public void passBooleanFeatureAttributes1() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool a1, Bool a2) { adds class C { Bool first = a1; Bool second= a2; } }"
+                + "productline PL { features F; delta D(F.a, F.b) when F; }"
+                + "product P1(F{a=True, b=False});"
+        );
+        
+        model.flattenForProduct("M.P1");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("first"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals("True()"));
+        assertTrue(cls.getField(1).getName().equals("second"));
+        assertTrue(cls.getField(1).getInitExp().value.toString().equals("False()"));
+    }
+
+   
+    @Test
+    public void passBooleanFeatureAttributes2() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool a1, Bool a2) { adds class C { Bool a1 = a1; Bool a2 = a2; } }"
+                + "productline PL { features F; delta D(F.a, F.b) when F; }"
+                + "product P1(F{a=True, b=False});"
+        );
+        
+        model.flattenForProduct("M.P1");
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("a1"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals("True()"));
+        assertTrue(cls.getField(1).getName().equals("a2"));
+        assertTrue(cls.getField(1).getInitExp().value.toString().equals("False()"));
+    }
 
 }
