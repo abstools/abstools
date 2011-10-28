@@ -60,7 +60,7 @@ public class DeltaAttributesMixedTest extends DeltaFlattenerTest {
     public void passBooleanFeatureAttributes2() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr) { adds class C { Bool attr = attr; } }"
+                + "delta D(Bool attr) { adds class C { Bool attr = attr; Unit m() {Bool x = attr;} } }"
                 + "productline PL { features F; delta D(F.a) when F; }"
                 + "product P1(F{a=True});"
         );
@@ -69,6 +69,8 @@ public class DeltaAttributesMixedTest extends DeltaFlattenerTest {
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("attr"));
         assertTrue(cls.getField(0).getInitExp().value.toString().equals("True()"));
+        
+        //TODO test the value of x
     }
 
     @Test
