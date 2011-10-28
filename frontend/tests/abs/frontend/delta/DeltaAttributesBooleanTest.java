@@ -66,4 +66,21 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
         assertTrue(cls.getField(0).getName().equals("myField"));
         assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
+
+    @Test
+    public void passBooleanConstant() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                + "delta D(Bool attr) { adds class C { Bool myField = attr; } }"
+                + "productline PL { features A,B; delta D(True) when A; delta D(False) when B; }"
+                + "product P1(A);"
+                + "product P2(B);"
+        );
+        
+        model.flattenForProduct(product);
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("myField"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+    }
+
 }
