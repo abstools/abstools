@@ -314,19 +314,18 @@ aspect DeltaCollector {
             m.applySubstitution(subst2);
     }
     public void FieldDecl.applySubstitution(HashMap<String,Value> subst) {
-        // Removal should not be necessary with well-typed deltas
-        // and it breaks substitution...
-        // subst.remove(getName());
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
         for (Annotation a : getAnnotations()) 
             a.applySubstitution(subst);
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
     }
     public void VarDecl.applySubstitution(HashMap<String,Value> subst) {
-        // Removal should not be necessary with well-typed deltas
-        // subst.remove(getName());
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
     }
     public void ParamDecl.updateSubstitution(HashMap<String,Value> subst) {
         subst.remove(getName());
