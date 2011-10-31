@@ -11,6 +11,7 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHa
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -745,17 +746,31 @@ public class JavaJob extends Job {
 
 	      ArrayList<String> args = new ArrayList<String>();
 
+	      /* Directly run on the extracted Eclipse plugin:
+	       * classes are in bin, and dependencies in lib.
+	       * No need to build SDEdit.jar!
+	       */
 	      args.add("java");
 	      args.add("-cp");
-	      args.add(jarFile.getAbsolutePath());
-	      args.add("-jar");
-	      args.add(new File(jarFile,"sdedit.jar").getAbsolutePath());
+	      StringBuffer cps = new StringBuffer();
+	      cps.append("bin/");
+	      File lib = new File(jarFile,"lib");
+	      assert lib.exists();
+	      for (String f : lib.list(new FilenameFilter() {
 
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".jar");
+			}})) {
+	    	  cps.append(":lib/"+f);
+	      }
+	      args.add(cps.toString());
+	      args.add("net.sf.sdedit.Main");
 	      args.add("-s");
 	      args.add(String.valueOf(PORT));
-	      System.out.println(args);
 	      
          ProcessBuilder pb = new ProcessBuilder(args);
+         pb.directory(jarFile); /* Shorter classpaths */
          process = pb.start();
          return process;
 	   }

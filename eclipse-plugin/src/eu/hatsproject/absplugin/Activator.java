@@ -7,12 +7,10 @@ package eu.hatsproject.absplugin;
 import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenceStore;
 
-import java.io.File;
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -24,14 +22,12 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
-
 
 /**
  * The activator class controls the plug-in life cycle
@@ -140,12 +136,6 @@ public class Activator extends AbstractUIPlugin {
 				proj.build(IncrementalProjectBuilder.FULL_BUILD, null);
 			}
 		}
-		Bundle seditbundle = Platform.getBundle(SDEDIT_PLUGIN_ID);
-		assert seditbundle != null;
-		File jarFile = FileLocator.getBundleFile(seditbundle).getAbsoluteFile();
-		assert jarFile != null;
-		if (!new File(jarFile,"sdedit.jar").exists())
-			getLog().log(new Status(IStatus.INFO, Constants.PLUGIN_ID,"SDEdit plugin is missing the necessary JAR file---are you running within Eclipse and forgot to invoke the ANT script?"));
 	}
 	
 	private void setDefaultValue(String name, RGB value){
