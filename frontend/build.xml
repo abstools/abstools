@@ -233,7 +233,8 @@
 	<target name="dist" depends="clean,compile,versionstamp" description="create distribution files">
 		<jar jarfile="${target.jar}">
 			<fileset dir="${build.dir}" includes="abs/**" />
-			<fileset dir="${src.dir}" includes="abs/**" />
+			<!-- abslang has already been copied into build.dir -->
+			<fileset dir="${src.dir}" includes="abs/**" excludes="abs/lang/abslang.abs" />
 			<zipfileset src="${ext.dir}/jastadd2.jar" />
             <zipfileset src="${ext.dir}/beaver-rt.jar" />
 			<zipfileset src="${ext.dir}/beaver-rt-src.jar" />
