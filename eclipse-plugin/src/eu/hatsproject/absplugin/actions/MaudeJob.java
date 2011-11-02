@@ -204,10 +204,11 @@ public class MaudeJob extends Job{
 			String mb = getMainBlock();
 			if (mb != null && mb.isEmpty())
 				mb = null;
+            // KLUDGE: use default value for clock limit for now
 			if(realTime){
-                            model.generateMaude(ps, MaudeCompiler.SIMULATOR_EQ_TIMED, mb);
+                model.generateMaude(ps, MaudeCompiler.SIMULATOR_EQ_TIMED, mb, 100);
 			} else{
-                            model.generateMaude(ps, MaudeCompiler.SIMULATOR_RL, mb);
+                model.generateMaude(ps, MaudeCompiler.SIMULATOR_RL, mb, 100);
 			}
 			ps.close();
 			fis = new FileInputStream(tmpFile);
