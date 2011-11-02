@@ -15,28 +15,11 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Call;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FromExport;
-import abs.frontend.ast.FromImport;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.Name;
-import abs.frontend.ast.NewExp;
-import abs.frontend.ast.StarExport;
-import abs.frontend.ast.StarImport;
-import abs.frontend.ast.TypeUse;
-import abs.frontend.ast.UnknownDecl;
-import abs.frontend.ast.VarOrFieldDecl;
-import abs.frontend.ast.VarOrFieldUse;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.Type;
@@ -80,13 +63,15 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 				path = packageFile.getAbsoluteFilePath();
 			} else {
 				IFile file = (IFile)abseditor.getEditorInput().getAdapter(IFile.class);
+				if (file == null)
+					return; /* TODO: We were looking at a "virtual" file like abslang.abs. #306 */
 				nature = UtilityFunctions.getAbsNature(file);
 				project = file.getProject();
 				path = file.getLocation().toFile().getAbsolutePath();
 			}
 			
 			if(nature==null){
-				MessageDialog.openError(Display.getCurrent().getActiveShell(), "No ABSProject", "The file is not in an ABS project!");
+				MessageDialog.openError(abseditor.getSite().getShell(), "No ABSProject", "The file is not in an ABS project!");
 				return;
 			}
 			
@@ -115,7 +100,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 					ABSEditor targeteditor = 
 						UtilityFunctions.openABSEditorForFile(pos.getPath(),project);
 					if(targeteditor==null){
-						MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "File not found!",
+						MessageDialog.openInformation(abseditor.getSite().getShell(), "File not found!",
 								"Could not find file "+pos.getPath().toOSString());
 						return;
 					}
@@ -125,11 +110,11 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 				}
 			}
 		} catch(BadLocationException ex){
-			ex.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
+			eu.hatsproject.absplugin.Activator.logException(ex);
 		}
 	}
 
-	public static EditorPosition getPosition(CompilationUnit cu, ASTNode<?> node) {
+	EditorPosition getPosition(CompilationUnit cu, ASTNode<?> node) {
 		ASTNode<?> decl = null;
 		if(node instanceof Decl){
 			decl = (Decl)node;
@@ -181,7 +166,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 		}
 		
 		if(decl == null || decl instanceof UnknownDecl){
-			MessageDialog.openInformation(Display.getCurrent().getActiveShell(), "Declaration not found!", "Declaration for symbol under cursor not found!");
+			MessageDialog.openInformation(editor.getSite().getShell(), "Declaration not found!", "Declaration for symbol under cursor not found!");
 			return null;
 		}
 		
@@ -196,13 +181,11 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 	@Override
 	public void selectionChanged(IAction action, ISelection selection) {
 		//nothing
-
 	}
 
 	@Override
 	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
 		this.editor = targetEditor;
-
 	}
 
 }
