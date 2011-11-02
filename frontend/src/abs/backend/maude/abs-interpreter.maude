@@ -2051,9 +2051,10 @@ mod ABS-SIMULATOR-RL is
   --- generate an operator "start" in the generated module that reduces to
   --- this, with an instantiation of the anonymous class implementing the
   --- block.  Still, this operator is useful by itself to create any active
-  --- object by itself.
-  op main : Configuration String DataList -> State .
-  eq main(CN:Configuration, B:String, DL:DataList) =
+  --- object by itself.  The fourth (Int) operator is not used in the untimed
+  --- case.
+  op main : Configuration String DataList Int -> State .
+  eq main(CN:Configuration, B:String, DL:DataList, LIM:Int) =
     { CN:Configuration
       < -1 : Clock | Limit: 100 >
       < 'main : Cog | Object: ob('main, 0) >
@@ -2086,11 +2087,11 @@ mod ABS-SIMULATOR-EQ-TIMED is
   --- this, with an instantiation of the anonymous class implementing the
   --- block.  Still, this operator is useful by itself to create any active
   --- object by itself.  This version also creates the global clock, with a
-  --- limit arbitrarily chosen to be 100.
-  op main : Configuration String DataList -> State .
-  eq main(CN:Configuration, B:String, DL:DataList) =
+  --- limit given by the 4th argument.
+  op main : Configuration String DataList Int -> State .
+  eq main(CN:Configuration, B:String, DL:DataList, LIM:Int) =
     { CN:Configuration
-      < 0 : Clock | Limit: 100 >
+      < 0 : Clock | Limit: LIM:Int >
       < 'main : Cog | Object: ob('main, 0) >
       < ob('main, 0) : '... | Cog: 'main, Att: '.comp |-> null,
         Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },

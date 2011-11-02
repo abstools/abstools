@@ -9,11 +9,11 @@ aspect GenerateMaude {
     // New rule!  Everyone can expect sufficient whitespace to be set
     // up, but has to leave whitespace at the end if needed.
 
-    public void Model.generateMaude(PrintStream stream, String module) {
-    	generateMaude(stream,module,null);
+    public void Model.generateMaude(PrintStream stream, String module, int clocklimit) {
+    	generateMaude(stream,module,null, clocklimit);
     }
 
-    public void Model.generateMaude(PrintStream stream, String module, String mainBlock) {
+    public void Model.generateMaude(PrintStream stream, String module, String mainBlock, int clocklimit) {
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
                        + module + " .\n");
@@ -47,7 +47,7 @@ aspect GenerateMaude {
         stream.println();
         stream.println("--- Start the main block with 'rew start .'");
         stream.println("op start : -> State .");
-        stream.println("eq start = main(classes, \".Start\", emp) .");
+        stream.println("eq start = main(classes, \".Start\", emp, " + Integer.toString(clocklimit) + ") .");
         stream.println("\nendm");
     }
 

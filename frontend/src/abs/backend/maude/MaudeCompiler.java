@@ -21,6 +21,7 @@ public class MaudeCompiler extends Main {
     String module = SIMULATOR_RL;
     private File outputfile;
     private String mainBlock;
+    private int clocklimit = 100;
     
     public static void main(final String... args) {
         try {
@@ -55,6 +56,8 @@ public class MaudeCompiler extends Main {
                 }
             } else if (arg.startsWith("-main=")) {
                 mainBlock = arg.split("=")[1];
+            } else if (arg.startsWith("-limit=")) {
+                clocklimit = Integer.parseInt(arg.split("=")[1]);
             } else {
                 remainingArgs.add(arg);
             }
@@ -78,7 +81,7 @@ public class MaudeCompiler extends Main {
             stream = new PrintStream(outputfile);
         }
         
-        model.generateMaude(stream, module, mainBlock);
+        model.generateMaude(stream, module, mainBlock, clocklimit);
     }
 
     protected void printUsage() {
@@ -87,7 +90,8 @@ public class MaudeCompiler extends Main {
                 + "  -main=<ModuleName> \n" 
                 + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
-                + "  -timed         generate code for timed interpreter"
+                + "  -timed         generate code for timed interpreter\n"
+                + "  -limit=n       set clock limit for timed interpreter to n (default 100)"
         );
     }
 
