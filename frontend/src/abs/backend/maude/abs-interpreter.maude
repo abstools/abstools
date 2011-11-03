@@ -653,8 +653,7 @@ mod ABS-CONFIGURATION is
   --- DL: The actual arguments.
   --- S: Flag indicating whether the call was made synchronously, i.e. whether
   ---    a $cont statement should be generated at the end.
-  --- AUX: additional process variables, currently .deadline (deadline) and .c
-  ---    (cost)
+  --- AUX: additional process variables, currently .deadline (deadline)
   op invoc(_,_,_,_,_,_) : Oid Label Mid DataList Bool SSubst -> Msg
     [ctor format (b d o  b so  b so  b so  b so  b so b on)] .
 
@@ -663,10 +662,10 @@ mod ABS-CONFIGURATION is
   --- N: the future (label).
   --- DL: the parameters (already evaluated by the caller).
   --- B: whether to continue at caller or not.
-  --- AUX: additional process variables, currently .deadline (deadline) and .c
-  ---    (cost)
+  --- AUX: additional process variables, currently .deadline (deadline)
   --- T: arrival time
-  op makeProcess(_,_,_,_,_,_) : Method Label DataList Bool SSubst Nat -> Process .
+  --- S: the object state, needed for calculation of method cost
+  op makeProcess(_,_,_,_,_,_,_) : Method Label DataList Bool SSubst Nat Subst -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
@@ -947,35 +946,13 @@ mod ABS-MSG-TRANSPORT is
   var CO : Expr .
   var AUX : SSubst .
 
-  --- message generation (non-selfcall)
+  --- message generation
   eq
-    < T : Clock | Limit: LIM, Random: RAND >
     < O1 : C1 | Cog: CG, Att: S, Pr: { L | $call(N ; O ; M ; DL ; B ; DE) ; SL }, PrQ: W, Lcnt: F >
-    < O : C | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
-    < C : Class | Param: AL', Att: S2:Subst, Sched: SC,
-                  Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL1 >), Ocnt: G >
   =
-    < T : Clock | Limit: LIM, Random: RAND >
     < O1 : C1 | Cog: CG, Att: S, Pr: { L | markFutures(DL) ; SL }, PrQ: W, Lcnt: (s F) >
-    < O : C | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
-    < C : Class | Param: AL', Att: S2:Subst, Sched: SC,
-                  Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL1 >), Ocnt: G >
-    invoc(O, N, M, DL, B, ('.deadline |-> DE, '.c |-> eval(CO, S :: L, none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))))
+    invoc(O, N, M, DL, B, ('.deadline |-> DE))
       [label call-internal] .
-
-  --- message generation (non-selfcall)
-  eq
-    < T : Clock | Limit: LIM, Random: RAND >
-    < O1 : C | Cog: CG, Att: S, Pr: { L | $call(N ; O1 ; M ; DL ; B ; DE) ; SL }, PrQ: W, Lcnt: F >
-    < C : Class | Param: AL', Att: S2:Subst, Sched: SC,
-                  Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL1 >), Ocnt: G >
-  =
-    < T : Clock | Limit: LIM, Random: RAND >
-    < O1 : C | Cog: CG, Att: S, Pr: { L | markFutures(DL) ; SL }, PrQ: W, Lcnt: (s F) >
-    < C : Class | Param: AL', Att: S2:Subst, Sched: SC,
-                  Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL1 >), Ocnt: G >
-    invoc(O1, N, M, DL, B, ('.deadline |-> DE, '.c |-> eval(CO, S :: L, none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))))
-      [label selfcall-internal] .
 
 
   --- transport
@@ -991,14 +968,15 @@ mod ABS-MSG-TRANSPORT is
     invoc(O, N, M, DL, B, AUX)
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T)), Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T, S)), Lcnt: F >
     < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL >), Ocnt: G >
     [label transport-imsg] .
 
-  eq makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T)
+  ceq makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T, S)
   =
-    { AUX, '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["int"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, createSubst(AL, DL) | SL ; if B then $cont(N) else noStmt fi } .
+    { AUX, '.c |-> eval(CO, S :: L, none, ('.time |-> "int"[T])), '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["int"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, L | SL ; if B then $cont(N) else noStmt fi }
+  if L := createSubst(AL, DL) .
 
   op recordStartTime : Process Nat -> Process .
   *** This will only ever be evaluated with a simple substitution SS.
