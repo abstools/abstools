@@ -530,6 +530,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
+        PureExp cost = MaudeCompilerHelper.getAnnotationValue(sig.getAnnotationList(), "Cost");
         stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");
@@ -541,7 +542,12 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
-        stream.print(",\n      Cost: \"Duration\"[\"int\"[0]]");
+        stream.print(",\n      Cost: ");
+        if (cost == null) {
+            stream.print("\"Duration\"[\"int\"[0]] ");
+        } else {
+            cost.generateMaude(stream);
+        }
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
             stream.print("return( null ) ");
