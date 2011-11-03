@@ -404,6 +404,8 @@ data AtomicityAnnotation = Atomic;
 /**
  * Custom schedulers
  */
+module ABS.Scheduler;
+export *;
 
 data Scheduler;
 
