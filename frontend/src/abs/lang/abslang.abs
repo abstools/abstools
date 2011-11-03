@@ -406,6 +406,7 @@ data AtomicityAnnotation = Atomic;
  */
 module ABS.Scheduler;
 export *;
+import * from ABS.StdLib;
 
 data Scheduler;
 
