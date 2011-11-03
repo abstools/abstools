@@ -462,3 +462,6 @@ implements DeploymentComponent {
 type DC = DeploymentComponent;
 
 def DeploymentComponent thisDC() = builtin;
+
+// Annotation for method definitions: runtime cost specification
+type Cost = Duration;
