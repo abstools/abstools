@@ -541,6 +541,7 @@ aspect GenerateMaude {
             }
             stream.print(")");
         }
+        stream.print(",\n      Cost: \"Duration\"[\"int\"[0]]");
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
             stream.print("return( null ) ");
@@ -746,6 +747,7 @@ aspect GenerateMaude {
         stream.print(",\n  Sched: \"ABS.Scheduler.defaultscheduler\"('queue)");
         stream.print(",\n  Mtds: ");
         stream.print("< '.init : Method | Param: noVid,\n");
+        stream.print("      Cost: \"Duration\"[\"int\"[0]],\n");
         stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
@@ -774,6 +776,7 @@ aspect GenerateMaude {
                                         boolean isActiveClass) {
         boolean inlist = false;
         stream.print("< '.init : Method | Param: noVid,\n");
+        stream.print("      Cost: \"Duration\"[\"int\"[0]],\n");
         stream.print("      Code: ");
         // Process field initializers here
         for (FieldDecl field : fields) {
