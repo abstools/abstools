@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <project name="ABS Update Site" default="compile" basedir=".">
     <property name="revision.prefix" value="1.0.7" />
-
+	
+	<property file="eclipsehome.properties"/>
 	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
 	<property name="costabs.dir" location="../costabs-plugin" /> 
