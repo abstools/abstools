@@ -232,7 +232,7 @@ public class JavaBackend extends Main {
     }
 
     public static String getConstructorName(DataTypeDecl dataType, String name) {
-        return dataType.getName() + "_" + name;
+        return truncate(dataType.getName() + "_" + name);
     }
 
     public static String getConstructorName(DataConstructor decl) {
@@ -240,15 +240,15 @@ public class JavaBackend extends Main {
     }
 
     public static String getInterfaceName(String name) {
-        return name + "_i";
+        return truncate(name + "_i");
     }
     
     public static String getClassName(String name) {
-        return name + "_c";
+        return truncate(name + "_c");
     }
 
     public static String getFunctionName(String name) {
-        return escapeReservedWords(name) + "_f";
+        return truncate(escapeReservedWords(name) + "_f");
     }
 
     public static String getMethodName(String name) {
@@ -268,17 +268,31 @@ public class JavaBackend extends Main {
     }
 
     public static String getJavaName(Decl decl) {
+        String result;
         if (decl instanceof FunctionDecl) {
-            return getFunctionName(decl.getName());
+            result = getFunctionName(decl.getName());
         } else if (decl instanceof DataConstructor) {
-            return getConstructorName((DataConstructor) decl);
+            result = getConstructorName((DataConstructor) decl);
         } else if (decl instanceof ClassDecl) {
-            return getClassName(decl.getName());
+            result = getClassName(decl.getName());
         } else if (decl instanceof InterfaceDecl) {
-            return getInterfaceName(decl.getName());
+            result = getInterfaceName(decl.getName());
+        } else {
+            result = truncate(decl.getName());
         }
-
-        return decl.getName();
+        return result;
+    }
+   
+    // Shorten name to 255 chars as files with these names are created    
+    private static String truncate(String s) {
+        int maxlength = 200;
+        if (s.length() < maxlength) {
+            return s;
+        } else {
+            String prefix = s.substring(0, maxlength);
+            int suffix = s.hashCode(); // We do not consider collisions as highly unlikely
+            return prefix + suffix;
+        }
     }
 
 }
