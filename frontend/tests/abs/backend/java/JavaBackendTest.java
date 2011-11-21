@@ -73,7 +73,7 @@ public class JavaBackendTest extends ABSTest {
         ArrayList<String> args = new ArrayList<String>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
-        args.addAll(Arrays.asList("-cp", "bin:"+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
+        args.addAll(Arrays.asList("-cp", "bin"+getPathSeperator()+javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
         args.addAll(absArgs);
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
         pb.redirectErrorStream(true);
@@ -89,6 +89,13 @@ public class JavaBackendTest extends ABSTest {
         r.close();
         javaCode.deleteCode();
         return output;
+    }
+
+    /**
+     * @return the string to separate classpath values for the current operation system
+     */
+    private String getPathSeperator() {
+       return System.getProperty("path.separator");
     }
 
     boolean runJavaAndTestResult(JavaCode javaCode, boolean expectFail) throws Exception {
