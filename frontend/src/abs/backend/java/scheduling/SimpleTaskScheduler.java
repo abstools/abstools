@@ -115,7 +115,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public SimpleTaskScheduler(COG cog, ABSRuntime runtime, ABSThreadManager m) {
         this.threadManager = m;
         this.cog = cog;
-        this.schedulingStrategy = runtime.getTaskSchedulingStrategy();
+        TaskSchedulingStrategy strat = runtime.getTaskSchedulingStrategy();
+        if (strat == null) {
+            // use random scheduling strategy as a fallback
+            this.schedulingStrategy = new RandomSchedulingStrategy(runtime.getRandom());
+        } else {
+            this.schedulingStrategy = strat;
+        }
         this.runtime = runtime;
     }
 
