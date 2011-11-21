@@ -517,4 +517,18 @@ public class TypeCheckerHelper {
             }
         }
     }
+    
+    /**
+     * check a list of compilation units for duplicate module names
+     */
+    public static void checkForDuplicateModules(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+        Set<String> seenModules = new HashSet<String>();
+        for (CompilationUnit u : compilationUnits) {
+            for (ModuleDecl module : u.getModuleDecls()) {
+                if (!seenModules.add(module.getName())) {
+                    errors.add(new TypeError(module, ErrorMessage.DUPLICATE_MODULE_NAME,module.getName()));
+                }
+            }
+        }
+    }
 }
