@@ -25,7 +25,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 	private NewInterfaceInFileWizardPage interfaceInFilePage;
 
 	private final String WIZARD_TITLE = "New ABS interface"; 
-	private final String WIZARD_DESCRIPTION = "Create a new ABS Interface within ABS module";
+	private final String WIZARD_DESCRIPTION = "Create a new ABS Interface within an ABS module";
 	
 	private final String ERROR_TITLE = "Error";
 	private final String ERROR_TEXT  = "Fatal Error in wizard: The module declaration could not be found!";
@@ -45,7 +45,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 		interfaceInFilePage = new NewInterfaceInFileWizardPage(WIZARD_TITLE);
 		page = (IABSClassInterfaceWizardPage) interfaceInFilePage;
 		page.setInitialModule(mDecl);
-		page.setDescription(WIZARD_DESCRIPTION + " " + mDecl.getASTNode().getName());
+		page.setDescription(WIZARD_DESCRIPTION);
 		page.setTitle(WIZARD_TITLE);
 		addPage(page);		
 	}

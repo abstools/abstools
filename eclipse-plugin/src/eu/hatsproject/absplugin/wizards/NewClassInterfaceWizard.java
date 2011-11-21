@@ -59,7 +59,7 @@ public abstract class NewClassInterfaceWizard extends ABSNewWizard implements IN
 	public abstract void addPages();
 
 	protected void findModuleDecl() {
-		if (!mDecl.equals(page.getResultModule())){
+	    if (mDecl == null || !mDecl.equals(page.getResultModule())){
 			mDecl = page.getResultModule();
 		}
 	}
