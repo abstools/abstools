@@ -190,6 +190,7 @@
 				<include name="META-INF/"/>
 				<include name="feature.xml"/>
 				<include name="lib/**"/>
+				<include name="bin/**"/>
 			</fileset>
 		</copy>
 		<manifest file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF" mode="update">
