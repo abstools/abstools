@@ -407,7 +407,7 @@ aspect GenerateProlog {
     public void ParametricDataTypeUse.generateProlog(PrintStream s){
         //generates "parametricType(typeName,parametersList)"
         s.print("parametricType(" + quote(getName()) + ",[");
-        List<?> parameterList = (List<?>) getChild(0);
+        List<?> parameterList = (List<?>) getChild(1);
         int n = parameterList.getNumChild();
         for (int i = 0; i < n; i++){
             parameterList.getChild(i).generateProlog(s); 
