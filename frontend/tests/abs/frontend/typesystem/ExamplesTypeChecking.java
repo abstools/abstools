@@ -41,6 +41,11 @@ public class ExamplesTypeChecking extends FrontendTest {
     public void lizeth() throws Exception {
         assertTypeCheckTestFileOk("lizeth.abs", false);
     }
+    
+    @Test
+    public void fredhopper() throws Exception {
+        assertTypeCheckTestFileOk("ReplicationSystem.abs");
+    }
 
     private void assertTypeCheckExampleFileOk(String fileName) throws Exception {
         assertTypeCheckFileOk(EXAMPLEDIR+fileName, true);
@@ -52,7 +57,7 @@ public class ExamplesTypeChecking extends FrontendTest {
 
     private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) throws Exception {
         String dir = "tests/abssamples/";
-        assertTypeCheckFileOk(dir + fileName, true);
+        assertTypeCheckFileOk(dir + fileName, withStdLib);
     }
 
 }
