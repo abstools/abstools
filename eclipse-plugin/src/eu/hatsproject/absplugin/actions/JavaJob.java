@@ -762,7 +762,7 @@ public class JavaJob extends Job {
 			public boolean accept(File dir, String name) {
 				return name.endsWith(".jar");
 			}})) {
-	    	  cps.append(":lib/"+f);
+	    	  cps.append(File.pathSeparator + "lib/"+f);
 	      }
 	      args.add(cps.toString());
 	      args.add("net.sf.sdedit.Main");
