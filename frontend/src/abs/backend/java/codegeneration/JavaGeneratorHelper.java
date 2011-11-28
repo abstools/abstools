@@ -4,6 +4,7 @@
  */
 package abs.backend.java.codegeneration;
 
+import java.io.File;
 import java.io.PrintStream;
 
 import abs.backend.java.JavaBackend;
@@ -317,5 +318,27 @@ public class JavaGeneratorHelper {
         generateMethodSig(indent, stream, m.getMethodSig(), false, "", FLI_METHOD_PREFIX);
         generateMethodBody(indent,stream,m, true);
     }
-    
+
+    /**
+     * removes the gen folder and all its contents
+     * @param code
+     */
+    public static void cleanGenFolder(JavaCode code) {
+        File genDir = code.getSrcDir(); 
+        cleanGenFolderRecursively(genDir);
+    }
+
+    private static void cleanGenFolderRecursively(File dir) {
+        if (dir == null) throw new IllegalArgumentException();
+        if (!dir.exists()) return;
+        for (File f : dir.listFiles()) {
+            if (f.isDirectory()) {
+                cleanGenFolderRecursively(f);
+            } else {
+                f.delete();
+            }
+        }
+        dir.delete();
+    }
+
 }

@@ -12,6 +12,7 @@ import abs.frontend.ast.*;
 aspect GenerateJava {
 
     public void Model.generateJavaCode(JavaCode code) throws IOException {
+      JavaGeneratorHelper.cleanGenFolder(code);
       for (ModuleDecl decl : getModuleDecls()) {
         decl.generateJavaCode(code);
       }
