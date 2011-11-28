@@ -474,4 +474,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void overloadingOfImplementedInterfacesInInterface() {
         assertTypeErrors("module Test; interface A { Unit m(); } interface B { Unit m(Int x); } interface I extends A, B { }");
     }
+    
+    @Test 
+    public void uninitializedVariable() {
+        assertTypeErrors(" { Int x = x; }");
+    }
 }

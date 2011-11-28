@@ -152,6 +152,24 @@ public class ModuleSystemTests extends FrontendTest {
     public void invisibleExportFrom() {
         assertTypeErrors("module A; export X from B; ");
     }
+    
+    @Test
+    public void ambigiousUse() {
+        // see bug #271
+        assertTypeErrors("module A; export I; interface I{}" +
+        		"module B; export I; interface I{}" +
+        		"module C; import I from A; import I from B; class C implements I {} ");
+    }
+    
+    @Test
+    public void shadowImportedNames() {
+        // see bug #271
+        // the definition of interface I in B should shadow the imported interface 
+        assertTypeOK("module A; export I; interface I{ Unit a(); }" +
+                        "module B; import I from A; " +
+                        "interface I { Unit b();}" +
+                        "class C implements I { Unit b() {} } ");
+    }
 
     @Test
     public void circularDefinition() {
@@ -159,7 +177,7 @@ public class ModuleSystemTests extends FrontendTest {
     }
     
     protected void assertTypeOK(String absCode) {
-        assertTypeErrors(absCode);
+        assertTypeErrors(absCode, NONE);
     }
 
     protected void assertTypeErrors(String absCode) {

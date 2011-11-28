@@ -45,8 +45,8 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testInterfaceType() {
-        Model m = assertParseOk("interface I { } { I i = i; }");
-        assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(), getTypeOfFirstAssignment(m));
+        Model m = assertParseOk("interface I { } class C {} { I i = new C(); I i2 = i; }");
+        assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(), getTypeOfNthAssignment(m, 2));
 
     }
 

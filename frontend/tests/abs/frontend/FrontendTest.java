@@ -130,20 +130,32 @@ public class FrontendTest extends ABSTest {
     }
 
     protected Type getTypeOfFirstAssignment(Model m) {
+        return getTypeOfNthAssignment(m, 1);
+    }
+
+    protected Type getTypeOfNthAssignment(Model m, int n) {
+        int count = 0;
         for (Stmt s : m.getMainBlock().getStmts()) {
+            Type t = null;
             if (s instanceof AssignStmt) {
                 AssignStmt as = (AssignStmt) s;
-                return as.getValue().getType();
+                t = as.getValue().getType();
             } else if (s instanceof VarDeclStmt) {
                 VarDeclStmt vd = (VarDeclStmt) s;
                 if (vd.getVarDecl().hasInitExp()) {
-                    return vd.getVarDecl().getInitExp().getType();
+                    t = vd.getVarDecl().getInitExp().getType();
+                }
+            }
+            if (t != null) {
+                count++;
+                if (count == n) {
+                    return t;
                 }
             }
         }
         return null;
     }
-
+    
     protected void assertNoTypeErrorsNoLib(String absCode) {
         assertTypeErrors(absCode, new Config[0]);
     }

@@ -33,7 +33,7 @@ import abs.frontend.typechecker.KindedName.Kind;
 public class VarResolutionTest extends FrontendTest {
     @Test
     public void testLocalVar() {
-        Exp e = getFirstExp("interface I { } { I i = i; }");
+        Exp e = getSecondExp("interface I { } { I i = null; i = i; }");
         VarUse u = (VarUse) e;
         VarDecl decl = (VarDecl) u.getDecl();
         assertEquals("i", decl.getName());
