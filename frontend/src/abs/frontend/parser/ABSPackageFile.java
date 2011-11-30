@@ -43,14 +43,14 @@ public class ABSPackageFile extends JarFile {
 
     /**
      * Returns whether this JAR file is an ABS package as defined above.
+     * JARs without a manifest can never be packages.
      * @return whether this JAR file is an ABS package as defined above
      * @throws IOException if this JAR file cannot be read at all
      */
     public boolean isABSPackage() throws IOException {
-        return getVersion() != null; 
+        return getManifest() != null && getVersion() != null;
     }
 
-    
     /**
      * Returns the version of this ABS package as defined in the MANIFEST file.
      * @return the version of this ABS package as defined in the MANIFEST file.
@@ -58,6 +58,7 @@ public class ABSPackageFile extends JarFile {
      * @throws NullPointerException if there is no ABS section in the MANIFEST file
      */
     public String getVersion() throws IOException {
+        assert getManifest() != null;
         return getManifest().getMainAttributes().getValue(VERSION_ATTRIBUTE);
     }
     
