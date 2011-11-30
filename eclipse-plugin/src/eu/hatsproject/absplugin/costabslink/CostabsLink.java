@@ -20,7 +20,7 @@ public class CostabsLink {
 	
 	/**
 	 * Costabs uses the Outline view from ABS editor to take the methods
-	 * and functions selected. This methods and funcionts are stored in this
+	 * and functions selected. This methods and functions are stored in these
 	 * arrays with the line number in the source code. That way, we can put 
 	 * a marker next to the method/function.
 	 */
