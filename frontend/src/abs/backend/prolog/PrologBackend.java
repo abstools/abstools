@@ -19,10 +19,21 @@ public class PrologBackend extends Main {
     protected PrintStream outStream;
     private String outFilename = "abs.pl";
     public static int awaitId = 0;
+    private Model model;
 
+    
+    public PrologBackend(Model m){
+        model = m;
+    }
+    
     public static void main(final String[] args) {
+        main(args,null);
+    }
+    
+    public static void main(final String[] args, Model m) {
     	awaitId = 0;
-        PrologBackend prologBE = new PrologBackend();
+        PrologBackend prologBE = new PrologBackend(m);
+        // If a model is provided it is used and the files in args are ignored
         try {
             prologBE.absToPrologTerms(args);
             if (Arrays.asList(args).contains("-v"))
@@ -38,6 +49,7 @@ public class PrologBackend extends Main {
         }
     }
 
+    
     protected void printUsage() {
         super.printUsage();
         System.out.println("Prolog Backend:");
@@ -75,7 +87,8 @@ public class PrologBackend extends Main {
     }
 
     public void absToPrologTerms(String[] args) throws Exception {
-        final Model model = parse(args); // This parses the ABS producing an AST
+        if (model == null) model = parse(args); // This parses the ABS producing an AST
+        else parseArgs(args);
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
