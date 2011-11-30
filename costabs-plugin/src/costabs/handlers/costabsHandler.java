@@ -1,5 +1,6 @@
 package costabs.handlers;
 
+
 import java.io.File;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -22,11 +23,11 @@ import org.eclipse.ui.part.FileEditorInput;
 import costabs.console.ConsoleHandler;
 import costabs.console.CostabsShellCommand;
 import costabs.dialogs.OptionsDialog;
-import costabs.markers.*;
+import costabs.markers.UBMarker;
 import costabs.structures.ResultTracker;
 import costabs.utils.SourceUtils;
-
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
+
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -92,7 +93,7 @@ public class costabsHandler extends AbstractHandler {
 
 		return null;
 	}
-	
+		
 	private void updateUpperBounds() {
 		
 		// First, get the results from costabs

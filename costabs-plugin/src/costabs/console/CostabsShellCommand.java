@@ -3,12 +3,20 @@ package costabs.console;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 
 import costabs.Activator;
 import costabs.preferences.PreferenceConstants;
+import eu.hatsproject.absplugin.actions.ActionUtils;
+import eu.hatsproject.absplugin.actions.JavaJob;
 
 import abs.backend.prolog.*;
+import abs.frontend.ast.Model;
 
 public class CostabsShellCommand {
 
@@ -62,9 +70,19 @@ public class CostabsShellCommand {
 		if (!stdlib) args[i++] = "-nostdlib";
 		args[i++] = file;
 
-		PrologBackend.main(args); 
+		//Model model = getCurrentABSModel();
+		//PrologBackend.main(args,model);
+		PrologBackend.main(args);
 	}
 
+	private Model getCurrentABSModel() throws Exception{
+		IWorkbench iworkbench = PlatformUI.getWorkbench();
+		IWorkbenchWindow window = iworkbench.getActiveWorkbenchWindow();
+		IEditorPart editorPart = window.getActivePage().getActiveEditor();
+		IProject project = ActionUtils.getCurrentProject(window, editorPart);
+		return JavaJob.getModelFromProject(project);
+	}
+	
 	/**
 	 * Call to costabs to execute with the actual preferences setup.
 	 * @param file ABS to be passed to costabs.
