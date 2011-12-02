@@ -3,20 +3,10 @@ package costabs.console;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 
 import costabs.Activator;
 import costabs.preferences.PreferenceConstants;
-import eu.hatsproject.absplugin.actions.ActionUtils;
-import eu.hatsproject.absplugin.actions.JavaJob;
-
-import abs.backend.prolog.*;
-import abs.frontend.ast.Model;
 
 public class CostabsShellCommand {
 
@@ -50,40 +40,6 @@ public class CostabsShellCommand {
 		return result;
 	}
 
-	/**
-	 * This call will compile the abs file in a prolog format to be used
-	 * for costabs.
-	 * @param file The ABS source file to be compiled.
-	 * @param stdlib _Use of ABS standard library.
-	 * @throws Exception If some error in compilation.
-	 */
-	public void generateProlog(String file, boolean stdlib) throws Exception {
-
-		int numArgs;
-		if (!stdlib) 
-			numArgs = 4;
-		else numArgs = 3;
-		String[] args = new String[numArgs];
-		int i = 0;
-		args[i++] = "-d";
-		args[i++] = "/tmp/costabs/absPL";
-		if (!stdlib) args[i++] = "-nostdlib";
-		args[i++] = file;
-
-		PrologBackend.runFromShell(args);
-		// Miky
-		//Model model = getCurrentABSModel();
-		//PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",null);
-	}
-
-	private Model getCurrentABSModel() throws Exception{
-		IWorkbench iworkbench = PlatformUI.getWorkbench();
-		IWorkbenchWindow window = iworkbench.getActiveWorkbenchWindow();
-		IEditorPart editorPart = window.getActivePage().getActiveEditor();
-		IProject project = ActionUtils.getCurrentProject(window, editorPart);
-		return JavaJob.getModelFromProject(project);
-	}
-	
 	/**
 	 * Call to costabs to execute with the actual preferences setup.
 	 * @param file ABS to be passed to costabs.

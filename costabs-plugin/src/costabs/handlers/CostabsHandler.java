@@ -20,6 +20,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 
+import abs.backend.prolog.PrologBackend;
 import costabs.console.ConsoleHandler;
 import costabs.console.CostabsShellCommand;
 import costabs.dialogs.OptionsDialog;
@@ -34,14 +35,14 @@ import eu.hatsproject.absplugin.costabslink.CostabsLink;
  * @see org.eclipse.core.commands.IHandler
  * @see org.eclipse.core.commands.AbstractHandler
  */
-public class costabsHandler extends AbstractHandler {
+public class CostabsHandler extends AbstractHandler {
 
 	public static ResultTracker STORAGE_COSTABS = new ResultTracker();
 	
 	/**
 	 * The constructor.
 	 */
-	public costabsHandler() {
+	public CostabsHandler() {
 	}
 
 	/**
@@ -62,7 +63,7 @@ public class costabsHandler extends AbstractHandler {
 			File f = new File("//tmp//costabs//absPL");
 			f.mkdirs();
 			
-			if (CostabsLink.SELECTED_ITEMS.size() <= 0) {
+			if (CostabsLink.ENTRIES_STRINGS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
 			            "At least one function or method must be selected in the outline view.", null);
 				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);
@@ -77,8 +78,8 @@ public class costabsHandler extends AbstractHandler {
 				} 
 				else {
 					// If analyze, get preferences and run
-					shell.generateProlog(absFile, true);
-					shell.analyze(absFile, CostabsLink.SELECTED_ITEMS);
+					callPrologBackend(absFile);
+					shell.analyze(absFile, CostabsLink.ENTRIES_STRINGS);
 					updateUpperBounds();
 					updateMarkers();
 				}
@@ -93,6 +94,28 @@ public class costabsHandler extends AbstractHandler {
 
 		return null;
 	}
+
+	private void callPrologBackend(String filename) throws Exception {
+		int numArgs = 3;
+		String[] args = new String[numArgs];
+		int i = 0;
+		args[i++] = "-d";
+		args[i++] = "/tmp/costabs/absPL";
+		args[i++] = filename;
+
+		PrologBackend.runFromShell(args);
+		//Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
+		//PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+	}
+	
+	/*
+	private Model getCurrentABSModel() throws Exception{
+		IWorkbench iworkbench = PlatformUI.getWorkbench();
+		IWorkbenchWindow window = iworkbench.getActiveWorkbenchWindow();
+		IEditorPart editorPart = window.getActivePage().getActiveEditor();
+		IProject project = ActionUtils.getCurrentProject(window, editorPart);
+		return JavaJob.getModelFromProject(project);
+	}*/
 		
 	private void updateUpperBounds() {
 		
@@ -100,7 +123,7 @@ public class costabsHandler extends AbstractHandler {
 		STORAGE_COSTABS.addXMLResults();
 		
 		// and then add the line numbers from ABS Outline View
-		STORAGE_COSTABS.addLineNumbers(CostabsLink.SELECTED_ITEMS, CostabsLink.LINE_ITEMS);
+		STORAGE_COSTABS.addLineNumbers(CostabsLink.ENTRIES_STRINGS, CostabsLink.LINE_ITEMS);
 	}
 	
 	private void updateMarkers() {

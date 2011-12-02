@@ -56,7 +56,7 @@ public class PrologBackend extends Main {
             prologBE = new PrologBackend(m,dir,fn,entries);
             prologBE.generateProlog();
         } catch (Exception e) {
-            System.err.println("Error in prolog backend: " + e.getMessage());
+            System.err.println("Error in Prolog backend: " + e.getMessage());
         } finally {
             if (prologBE.outStream != null) prologBE.outStream.close();
         }
@@ -95,7 +95,6 @@ public class PrologBackend extends Main {
     }
     
     private void generateProlog(){
-        // Miky
         /*if (entries != null){ // mode with entries
             entriesMode = true;
             //collectReachableCode(entries);
