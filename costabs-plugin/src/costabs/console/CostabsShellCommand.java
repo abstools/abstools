@@ -70,9 +70,10 @@ public class CostabsShellCommand {
 		if (!stdlib) args[i++] = "-nostdlib";
 		args[i++] = file;
 
+		PrologBackend.runFromShell(args);
+		// Miky
 		//Model model = getCurrentABSModel();
-		//PrologBackend.main(args,model);
-		PrologBackend.main(args);
+		//PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",null);
 	}
 
 	private Model getCurrentABSModel() throws Exception{
