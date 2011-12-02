@@ -2,6 +2,9 @@ package eu.hatsproject.absplugin.costabslink;
 
 import java.util.ArrayList;
 
+import abs.frontend.ast.ASTNode;
+import eu.hatsproject.absplugin.builder.AbsNature;
+
 /**
  * This class is used by Costabs plugin in the case it is installed.
  * Costabs check this class to take info from the ABS editor.
@@ -18,13 +21,17 @@ public class CostabsLink {
 	 */
 	public static String MARKER_UB = "CostabsPlugin.costabs.marker";
 	
+	public static AbsNature ABS_NATURE;
+	
 	/**
 	 * Costabs uses the Outline view from ABS editor to take the methods
-	 * and functions selected. This methods and functions are stored in these
+	 * and functions selected. This methods and functions are stored in these 
 	 * arrays with the line number in the source code. That way, we can put 
 	 * a marker next to the method/function.
 	 */
-	public static ArrayList<String> SELECTED_ITEMS = new ArrayList<String>();
+	public static ArrayList<String> ENTRIES_STRINGS = new ArrayList<String>();
+	
+	public static ArrayList<ASTNode<?>> ENTRIES_NODES = new ArrayList<ASTNode<?>>();
 	
 	public static ArrayList<Integer> LINE_ITEMS = new ArrayList<Integer>();
 	

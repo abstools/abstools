@@ -737,43 +737,45 @@ public class ABSContentOutlineUtils {
 	public static void insertCostabsItems(ISelection sel) {
 		
 		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
-		CostabsLink.SELECTED_ITEMS = new ArrayList<String>();
+		CostabsLink.ENTRIES_STRINGS = new ArrayList<String>();
+		CostabsLink.ENTRIES_NODES = new ArrayList<ASTNode<?>>();
 		CostabsLink.LINE_ITEMS = new ArrayList<Integer>();
+		if (selectedItems.length > 0)
+			CostabsLink.ABS_NATURE = ((InternalASTNode<?>) selectedItems[0]).getNature();
 		
 		for (int i = 0; (selectedItems != null) && (i < selectedItems.length); i++) {
-			InternalASTNode<?> node = (InternalASTNode<?>) selectedItems[i];
-
+			ASTNode<?> node = ((InternalASTNode<?>) selectedItems[i]).getASTNode();
+			CostabsLink.ENTRIES_NODES.add(node);
 			String callerName;
 			int line;
 			
-			if (node.getASTNode() instanceof FunctionDecl) {
-				FunctionDecl del = (FunctionDecl) node.getASTNode();
+			if (node instanceof FunctionDecl) {
+				FunctionDecl del = (FunctionDecl) node;
 				callerName = del.getName();
 				line = FunctionDecl.getLine(del.getStart());
-				CostabsLink.SELECTED_ITEMS.add(callerName);
+				CostabsLink.ENTRIES_STRINGS.add(callerName);
 				CostabsLink.LINE_ITEMS.add(line);
-			} else if (node.getASTNode() instanceof MethodImpl) { 
-				MethodImpl del = (MethodImpl) node.getASTNode();
+			} else if (node instanceof MethodImpl) { 
+				MethodImpl del = (MethodImpl) node;
 				ASTNode<?> par = del.getContextDecl();
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getMethodSig().getName();
 					line = MethodImpl.getLine(del.getStart());
-					CostabsLink.SELECTED_ITEMS.add(callerName);
+					CostabsLink.ENTRIES_STRINGS.add(callerName);
 					CostabsLink.LINE_ITEMS.add(line);
 				}
-			} else if (node.getASTNode() instanceof MethodSig) {
-				MethodSig del = (MethodSig) node.getASTNode();
+			} else if (node instanceof MethodSig) {
+				MethodSig del = (MethodSig) node;
 				ASTNode<?> par = del.getContextDecl();
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getName();
 					line = MethodSig.getLine(del.getStart());
-					CostabsLink.SELECTED_ITEMS.add(callerName);
+					CostabsLink.ENTRIES_STRINGS.add(callerName);
 					CostabsLink.LINE_ITEMS.add(line);
 				}
-			}
-	
+			}	
 		}
 	}
 }

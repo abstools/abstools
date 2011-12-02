@@ -28,4 +28,5 @@ Bundle-ClassPath: .,
  lib/mockito-all-1.8.5.jar
 Bundle-Vendor: HATS Project
 Export-Package: eu.hatsproject.absplugin.actions,
+ eu.hatsproject.absplugin.builder,
  eu.hatsproject.absplugin.costabslink
