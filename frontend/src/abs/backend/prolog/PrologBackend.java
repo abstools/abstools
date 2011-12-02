@@ -8,6 +8,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
@@ -18,29 +19,28 @@ public class PrologBackend extends Main {
     protected File outFile;
     protected PrintStream outStream;
     private String outFilename = "abs.pl";
-    public static int awaitId = 0;
     private Model model;
+    ArrayList<ASTNode<?>> entries = null;
+
+    public static int awaitId = 0;
+    public static boolean entriesMode = false;
 
     
-    public PrologBackend(Model m){
-        model = m;
-    }
-    
     public static void main(final String[] args) {
-        main(args,null);
+        runFromShell(args);
     }
     
-    public static void main(final String[] args, Model m) {
-    	awaitId = 0;
-        PrologBackend prologBE = new PrologBackend(m);
-        // If a model is provided it is used and the files in args are ignored
+    public static void runFromShell(final String[] args){
+        awaitId = 0;
+        PrologBackend prologBE = null;
         try {
-            prologBE.absToPrologTerms(args);
+            prologBE = new PrologBackend(args);
+            prologBE.generateProlog();
             if (Arrays.asList(args).contains("-v"))
-            	System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
+                System.out.println("ABS file parsed to Prolog terms in " + prologBE.outFile.getAbsolutePath());
         } catch (Exception e) {
             if (Arrays.asList(args).contains("-v")) {
-            	System.err.println("An error occurred during compilation: " + e.getMessage());
+                System.err.println("An error occurred during compilation: " + e.getMessage());
                 e.printStackTrace();
             }
             //System.exit(1);
@@ -48,13 +48,62 @@ public class PrologBackend extends Main {
             if (prologBE.outStream != null) prologBE.outStream.close();
         }
     }
-
     
-    protected void printUsage() {
-        super.printUsage();
-        System.out.println("Prolog Backend:");
-        System.out.println("  -d <dir>     generate files to <dir>");
-        System.out.println("  -fn <dir>    output file name");
+    public static void runFromPlugin(Model m,String dir,String fn,ArrayList<ASTNode<?>> entries){
+        awaitId = 0;
+        PrologBackend prologBE = null;
+        try {
+            prologBE = new PrologBackend(m,dir,fn,entries);
+            prologBE.generateProlog();
+        } catch (Exception e) {
+            System.err.println("Error in prolog backend: " + e.getMessage());
+        } finally {
+            if (prologBE.outStream != null) prologBE.outStream.close();
+        }
+    }
+    
+    // This is the constructor used from runFromShell
+    public PrologBackend(String[] args) throws Exception {
+        // This parses the args and the ABS program producing the AST whose root is model
+        model = parse(args); 
+        initOutStreamEtc();
+    }
+    
+    // This is the constructor used from runFromPlugin
+    public PrologBackend(Model m,String dir,String fn,ArrayList<ASTNode<?>> es) throws Exception {
+        model = m;
+        destDir = new File(dir);
+        entries = es;
+        initOutStreamEtc();
+    }
+    
+    private void initOutStreamEtc() throws Exception {
+        if (!destDir.exists()) {
+            System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
+            System.exit(1);
+        }
+        if (!destDir.canWrite()) {
+            System.err.println("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
+            System.exit(1);
+        }
+        if (verbose)
+            printAST(model, 0);
+        outFile = new File(destDir, outFilename);
+        // destDir and outFilename are initialized either in the constructor or in parseArgs, 
+        // which is called from parse
+        outStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile)));
+    }
+    
+    private void generateProlog(){
+        // Miky
+        /*if (entries != null){ // mode with entries
+            entriesMode = true;
+            //collectReachableCode(entries);
+            ListIterator<ASTNode<?>> entriesIt = entries.listIterator();
+            while(entriesIt.hasNext())
+                entriesIt.next().generateProlog(outStream);
+        }*/
+        model.generateProlog(outStream);
     }
 
     public List<String> parseArgs(String[] args) throws Exception {
@@ -86,28 +135,13 @@ public class PrologBackend extends Main {
         return remainingArgs;
     }
 
-    public void absToPrologTerms(String[] args) throws Exception {
-        if (model == null) model = parse(args); // This parses the ABS producing an AST
-        else parseArgs(args);
-        if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-            return;
-
-        if (!destDir.exists()) {
-            System.err.println("Destination directory " + destDir.getAbsolutePath() + " does not exist!");
-            System.exit(1);
-        }
-
-        if (!destDir.canWrite()) {
-            System.err.println("Destination directory " + destDir.getAbsolutePath() + " cannot be written to!");
-            System.exit(1);
-        }
-        if (verbose)
-            printAST(model, 0);
-        outFile = new File(destDir, outFilename);
-        outStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile)));
-        model.generateProlog(outStream);
+    protected void printUsage() {
+        super.printUsage();
+        System.out.println("Prolog Backend:");
+        System.out.println("  -d <dir>     generate files to <dir>");
+        System.out.println("  -fn <dir>    output file name");
     }
-
+    
     private void printAST(ASTNode<?> ast, int level) {
         if (ast != null) {
             printTab(level);
