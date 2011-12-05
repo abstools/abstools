@@ -18,7 +18,7 @@
          point="org.eclipse.ui.handlers">
       <handler
             commandId="costabs.commands.noStdCommand"
-            class="costabs.handlers.costabsHandler">
+            class="costabs.handlers.CostabsHandler">
       </handler>
    </extension>
    <extension
