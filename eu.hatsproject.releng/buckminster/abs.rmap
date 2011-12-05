@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rm:rmap xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns:xi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:rm="http://www.eclipse.org/buckminster/RMap-1.0" xmlns:psf="http://www.eclipse.org/buckminster/PSFProvider-1.0">
+  <rm:locator pattern="eu.hatsproject.abs.compiler" searchPathRef="ABSFrontend"/>
+  <rm:locator pattern="eu.hatsproject.sdedit" searchPathRef="sdedit"/>
+  <rm:locator pattern="eu.hatsproject.absplugin" searchPathRef="by-component"/>
+  <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
+  <rm:searchPath name="ABSFrontend">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/ABSFrontend/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="costabs">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/costabs/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="sdedit">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/sdedit-for-abs/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="by-component">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/{1}/">
+        <bc:propertyRef key="workspace.root"/>
+        <bc:propertyRef key="buckminster.component"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="repo">
+     <rm:provider readerType="svn" componentTypes="eclipse.feature" mutable="false" source="true">
+     	<rm:uri format="https://repos.hats-project.eu:444/svn/hats/Tools/ABS/trunk/frontend" />
+     </rm:provider>     	  
+  </rm:searchPath>
+  <rm:searchPath name="org.eclipse.platform">
+		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
+			<rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
+		</rm:provider>
+  </rm:searchPath>
+  <rm:locator searchPathRef="org.eclipse.platform"/>
+</rm:rmap>
