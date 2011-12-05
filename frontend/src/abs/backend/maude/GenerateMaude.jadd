@@ -656,6 +656,10 @@ aspect GenerateMaude {
             // AsyncCall discards its Future immediately if result
             // assigned to dummy variable _
             if (getRetExp() instanceof AsyncCall) var = ".staticfuture";
+            if (getRetExp() instanceof NewExp) {
+                var = ".result";
+                stream.print("$vardecl( '.result ; null ) ; " );
+            }
             getRetExp().generateMaudeAsStatement(stream, var, getAnnotations());
             stream.print("; return('" + var + ") " );
         }
