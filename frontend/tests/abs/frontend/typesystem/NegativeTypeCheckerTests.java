@@ -479,4 +479,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void uninitializedVariable() {
         assertTypeErrors(" { Int x = x; }");
     }
+    
+    @Test 
+    public void wrongInitOrder() {
+        assertTypeErrors(" class C { Int x = y + 1; Int y = 1; }");
+    }
 }

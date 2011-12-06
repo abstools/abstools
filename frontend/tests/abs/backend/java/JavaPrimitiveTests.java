@@ -96,11 +96,22 @@ public class JavaPrimitiveTests extends JavaBackendTest {
     public void testStringLit() throws Exception {
         assertValidStdLib("{ String s = \"Test\"; }");
     }
+    
+    @Test
+    public void testStringLitEscaped() throws Exception {
+        assertValidStdLib("{ String s = \"Teee\\\"est\"; }");
+    }
 
     @Test
     public void testStringCompareOps() throws Exception {
         assertValidStdLib("{ Bool b = \"Test\" == \"Test\"; }");
         assertValidStdLib("{ Bool b = \"Test\" != \"Test\"; }");
+    }
+    
+    @Test
+    public void testModuleNamedMain() throws Exception {
+        // see bug #272
+        assertValidStdLib("module Main; interface I { Unit m(); } class C implements I { Unit m() { }  } { }");
     }
 
 }

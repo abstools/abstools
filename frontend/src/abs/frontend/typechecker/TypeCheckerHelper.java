@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import beaver.Symbol;
+
 import abs.common.Constants;
 import abs.common.ListUtils;
 import abs.frontend.analyser.ErrorMessage;
@@ -363,7 +365,7 @@ public class TypeCheckerHelper {
                         throw new TypeCheckerException(new TypeError(si, ErrorMessage.MODULE_NOT_RESOLVABLE,
                                 si.getModuleName()));
                 } else {
-                    res.putAll(md.getExportedNames());
+                    addAllNamesNoHiding(md.getExportedNames(), res);
                 }
             } else if (i instanceof NamedImport) {
                 NamedImport ni = (NamedImport) i;
@@ -391,8 +393,8 @@ public class TypeCheckerHelper {
                 if (md != null) {
                     Map<KindedName, ResolvedName> en = md.getExportedNames();
                     for (Name n : fi.getNames()) {
-                        putKindedNames(n.getString(), en, res);
-                        putKindedNames(fi.getModuleName() + "." + n.getString(), en, res);
+                        putKindedNamesNoHiding(n.getString(), en, res);
+                        putKindedNamesNoHiding(fi.getModuleName() + "." + n.getString(), en, res);
                     }
                 }
             }
@@ -402,11 +404,35 @@ public class TypeCheckerHelper {
 
     public static Map<KindedName, ResolvedName> getVisibleNames(ModuleDecl mod) {
         HashMap<KindedName, ResolvedName> res = new HashMap<KindedName, ResolvedName>();
-        res.putAll(mod.getDefinedNames());
+        // add imported names:
         res.putAll(mod.getImportedNames());
+        // defined names hide imported names:
+        res.putAll(mod.getDefinedNames());      
         return res;
     }
 
+    /**
+     * add all entries from one map to an other. 
+     * when there is a duplicate key, the ResolvedName is not overridden, but replaced 
+     * by an instance of ResolvedAmbigiousName
+     * 
+     * @param source
+     * @param target
+     */
+    private static void addAllNamesNoHiding(Map<KindedName, ResolvedName> source, Map<KindedName, ResolvedName> target) {
+        for (Entry<KindedName, ResolvedName> e : source.entrySet()) {
+            KindedName kindedName = e.getKey();
+            ResolvedName resolvedName = e.getValue();
+            ResolvedName prev = target.put(kindedName, resolvedName);
+            if (prev != null && !(prev.equals(resolvedName))) {
+                // name is ambigious
+                target.put(kindedName, new ResolvedAmbigiousName(prev, resolvedName));
+            }
+        }
+    }
+
+    
+    
     public static Map<KindedName, ResolvedName> getAllNames(String name, Map<KindedName, ResolvedName> sourceMap) {
         HashMap<KindedName, ResolvedName> map = new HashMap<KindedName, ResolvedName>();
         for (Kind k : Kind.values()) {
@@ -422,6 +448,11 @@ public class TypeCheckerHelper {
     public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap,
             Map<KindedName, ResolvedName> targetMap) {
         targetMap.putAll(getAllNames(name, sourceMap));
+    }
+    
+    public static void putKindedNamesNoHiding(String name, Map<KindedName, ResolvedName> sourceMap,
+            Map<KindedName, ResolvedName> targetMap) {
+        addAllNamesNoHiding(getAllNames(name, sourceMap), targetMap);
     }
 
     public static boolean isQualified(String name) {
@@ -531,4 +562,42 @@ public class TypeCheckerHelper {
             }
         }
     }
+
+    /**
+     * checks if a declaration is unknown and adds an appropriate error message to the semantic error list
+     * @param use the use of the declaration (this is where the error will be shown)
+     * @param decl the declaration which is referenced by the use
+     * @param e the semantic error list
+     * @param errorMessage the error message for unknown declarations 
+     * @param name the name of the declaration (used in the error message)
+     * @return
+     */
+    public static boolean checkDecl(ASTNode<?> use, Decl decl, SemanticErrorList e, ErrorMessage errorMessage, String name) {
+        if (decl.isUnknown()) {
+            if (decl instanceof AmbiguousDecl) {
+                AmbiguousDecl ambigiousDecl = (AmbiguousDecl) decl;
+                e.add(new TypeError(use, ErrorMessage.AMBIGIOUS_USE, name, getAlternativesAsString(ambigiousDecl)));
+            } else {
+                e.add(new TypeError(use, errorMessage, name));
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * get all the alternative declarations of an ambiguous declaration formated as a list
+     * which can be used in error messages
+     * @param a
+     * @return
+     */
+    public static String getAlternativesAsString(AmbiguousDecl a) {
+        String result = "";
+        for (Decl alternative : a.getAlternative()) {
+            result += "\n * " + alternative.qualifiedName() +  " (defined in " + 
+                    alternative.getFileName() + ", line " + Symbol.getLine(alternative.getStart()) + ")";
+        }
+        return result;
+    }
+
 }

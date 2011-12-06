@@ -154,26 +154,95 @@ public class ModuleSystemTests extends FrontendTest {
     }
     
     @Test
-    public void ambigiousUse() {
-        // see bug #271
+    public void ambigiousUseInterface() {
+        // see bug #271, the reference to interface I is ambigious and should not compile
         assertTypeErrors("module A; export I; interface I{}" +
         		"module B; export I; interface I{}" +
         		"module C; import I from A; import I from B; class C implements I {} ");
     }
     
     @Test
+    public void ambigiousUseInterfaceFix() {
+        // same as above but with qualified use. This should work
+        assertTypeOK("module A; export I; interface I{}" +
+                        "module B; export I; interface I{}" +
+                        "module C; import I from A; import I from B; class C implements A.I {} ");
+    }
+    
+    @Test
+    public void ambigiousUseData() {
+        assertTypeErrors("module A; export I; data I = I;" +
+                        "module B; export I; data I = I;" +
+                        "module C; import I from A; import I from B; data J = J(I mmy); ");
+    }
+    
+    @Test
+    public void ambigiousUseClass() {
+        assertTypeErrors("module A; export *; interface I {} class K implements I {}" +
+                     "module B; export *; interface J {} class K implements J {}" +
+                     "module C; import * from A; import * from B; { I k = new K(); } ");
+    }
+    
+    @Test
+    public void ambigiousUseFunction() {
+        assertTypeErrorsWithStdLib("module A; export *; def Int foo() = 3;" +
+                     "module B; export *; def Int foo() = 4;" +
+                     "module C; import * from A; import * from B; {Int x = foo(); } ");
+    }
+    
+    @Test
     public void shadowImportedNames() {
         // see bug #271
         // the definition of interface I in B should shadow the imported interface 
-        assertTypeOK("module A; export I; interface I{ Unit a(); }" +
-                        "module B; import I from A; " +
-                        "interface I { Unit b();}" +
-                        "class C implements I { Unit b() {} } ");
+        assertTypeOKWithStdLib("module A; export I;\n" +
+        		"interface I{ Unit a(); }\n" +
+        		"\n" +
+                        "module B; import I from A; \n" +
+                        "interface I { Unit b();}\n" +
+                        "class C implements I { Unit b() {} } \n");
     }
-
+    
+    @Test 
+    public void importSameDefinitionMultipleTimes() {
+        // Interface I is imported via M2 and via M3 but as it is the same interface this should compile
+        assertTypeOK(
+                    "module M;" +
+                    "export *;" +
+                    "interface I {}" +
+                    
+                    "module M2;" +
+                    "export I;" +
+                    "import I from M;" +
+                    
+                    "module M3;" +
+                    "export I;" +
+                    "import I from M;" +
+                    
+                    "module Test;" +
+                    "import * from M2;" +
+                    "import * from M3;" +
+                    
+                    "class C implements I {} ");
+    }
+    
+    @Test
+    public void selfImport() {
+        // see bug #94
+        assertTypeOK("module M; export X from M; import X from M; data X;");
+    }
+    
+    
     @Test
     public void circularDefinition() {
         assertTypeErrors("module A; export X; import X from B; module B; export X; import X from A; ");
+    }
+    
+    protected void assertTypeOKWithStdLib(String absCode) {
+        assertTypeErrors(absCode, NONE, WITH_STD_LIB);
+    }
+
+    protected void assertTypeErrorsWithStdLib(String absCode) {
+        assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
     }
     
     protected void assertTypeOK(String absCode) {

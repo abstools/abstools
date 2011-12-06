@@ -609,14 +609,11 @@ aspect TypeChecker {
     public void Exp.typeCheck(SemanticErrorList e) { }
     
     public void TypeUse.typeCheck(SemanticErrorList e) {
-   	 if (getType().isUnknownType()) {
-   		 e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
-   	 }
+        TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName());
     }
 
     public void DataTypeUse.typeCheck(SemanticErrorList e) {
-        if (getType().isUnknownType()) {
-            e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
+        if (!TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
             return;
         }
 
@@ -659,11 +656,13 @@ aspect TypeChecker {
     }
     
     public void NewExp.typeCheck(SemanticErrorList e) {
-        Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
-        if (d == null || !d.isClass()) {
+        Decl decl = lookup(new KindedName(Kind.CLASS,getClassName()));
+        if (!TypeCheckerHelper.checkDecl(this, decl, e, ErrorMessage.NO_CLASS_DECL, getClassName())) {
+            return;
+        } else if (!decl.isClass()) {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
         } else {
-            ClassDecl cd = (ClassDecl) d;
+            ClassDecl cd = (ClassDecl) decl;
             TypeCheckerHelper.typeCheckEqualParams(e,this,cd.getParams(),getParams());
         }
     }
@@ -754,7 +753,9 @@ aspect TypeChecker {
     
     public void FnApp.typeCheck(SemanticErrorList e) {
         Decl d = getDecl();
-        if (!d.isFunction()) {
+        if (!TypeCheckerHelper.checkDecl(this, d, e, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName())) {
+            return;
+        } else if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
         } else {
       	   if (d instanceof ParametricFunctionDecl) {

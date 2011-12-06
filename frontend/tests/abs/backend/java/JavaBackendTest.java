@@ -13,6 +13,7 @@ import junit.framework.Assert;
 
 import abs.ABSTest;
 import abs.backend.java.codegeneration.JavaCode;
+import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
@@ -150,7 +151,7 @@ public class JavaBackendTest extends ABSTest {
         return getJavaCode(model);
     }
 
-    private JavaCode getJavaCode(Model model) throws IOException {
+    private JavaCode getJavaCode(Model model) throws IOException, JavaCodeGenerationException {
         JavaCode code = new JavaCode();
         model.generateJavaCode(code);
         return code;
