@@ -4,7 +4,18 @@
  */
 package eu.hatsproject.absplugin.actions;
 
-import static eu.hatsproject.absplugin.util.Constants.*;
+import static eu.hatsproject.absplugin.util.Constants.ABSFRONTEND_PLUGIN_ID;
+import static eu.hatsproject.absplugin.util.Constants.ACTION_DEBUG_ID;
+import static eu.hatsproject.absplugin.util.Constants.ACTION_START_SDE;
+import static eu.hatsproject.absplugin.util.Constants.ALWAYS_COMPILE;
+import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_ARGS_OTHER_DEFAULT;
+import static eu.hatsproject.absplugin.util.Constants.DO_DEBUG;
+import static eu.hatsproject.absplugin.util.Constants.JAVA_SOURCE_PATH;
+import static eu.hatsproject.absplugin.util.Constants.NATURE_ID;
+import static eu.hatsproject.absplugin.util.Constants.NO_WARNINGS;
+import static eu.hatsproject.absplugin.util.Constants.PLUGIN_ID;
+import static eu.hatsproject.absplugin.util.Constants.SDEDIT_PLUGIN_ID;
+import static eu.hatsproject.absplugin.util.Constants.SOURCE_ONLY;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
@@ -19,12 +30,20 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
@@ -33,7 +52,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.osgi.framework.Bundle;
 
+import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCode;
+import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.tests.ABSTestRunnerGenerator;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.CompilationUnit;
@@ -197,6 +218,8 @@ public class JavaJob extends Job {
 
 		} catch (AbsJobException e) {
 			return showErrorMessage(e.getLocalizedMessage());
+		} catch (JavaCodeGenerationException e) {
+		    return showErrorMessage(e.getLocalizedMessage());
 		} catch (Exception e) {
 			//do not kill the plug-in, if something goes wrong
 			return showErrorMessage("Fatal error!", e);
@@ -235,7 +258,7 @@ public class JavaJob extends Job {
 	}
 	
 	private void executeCompiler(String absFrontendLocation) throws AbsJobException,
-			CoreException, IOException {
+			CoreException, IOException, JavaCodeGenerationException {
 		// generate .java files
 		generateJavaCode(javaPath, project);
 	
@@ -254,8 +277,9 @@ public class JavaJob extends Job {
 	 * @param project - the ABS project
 	 * @throws IOException, if unable to create java files 
 	 * @throws AbsJobException, if unable to generate java files 
+	 * @throws JavaCodeGenerationException, if unable to generate java files  
 	 */
-	private void generateJavaCode(Path path, IProject project) throws AbsJobException, IOException {
+	private void generateJavaCode(Path path, IProject project) throws AbsJobException, IOException, JavaCodeGenerationException {
 		Model model = getModelFromProject(project);
 		if (debugMode) System.out.println("Creating java source files");
 	    JavaCode javaCode = new JavaCode(path.toFile());
@@ -317,11 +341,15 @@ public class JavaJob extends Job {
 		//compile with jdt-BatchCompiler
 		CompilationProgress progress = null;
 		OutputStream os = javaConsole.getOutputStream(ConsoleManager.MessageType.MESSAGE_ERROR);
-		BatchCompiler.compile(
+		boolean compilationSuccessful = BatchCompiler.compile(
 				args,
 				new PrintWriter(os),
 				new PrintWriter(os),
 				progress);
+		if (!compilationSuccessful) {
+		    throw new AbsJobException("Sorry, there seems to be a bug in the java backend. The generated java " +
+		    		"files could not be compiled correctly.");
+		}
 	}
 
 	private void executeJavaMain(String absFrontendLocation) throws AbsJobException,
@@ -360,24 +388,28 @@ public class JavaJob extends Job {
 	 */
 	private void findAndExecuteMain(String absFrontendLocation) throws AbsJobException, IOException {
 		String info = null;
-		final String moduleName;
+		ModuleDecl module;
 		if (absUnit) {
-			moduleName = ABSTestRunnerGenerator.RUNNER_MAIN+".Main";
+		    module = getModuleByName(ABSTestRunnerGenerator.RUNNER_MAIN);
 		} else {
-			File mainFile = findMainJavaFile();
+			module = searchForMainBlockInCurrentFile();
 
 			//Search for the main file if previous searching was not successful
-			if(mainFile == null){
-				mainFile = findMainInGeneratedJavaFiles(javaPath);
-				if(mainFile == null){
-					throw new AbsJobException("No 'Main.java' file found.");
+			if(module == null){
+			    List<ModuleDecl> modules = getAllModulesWithMainInCurrentProject();
+				
+				if(modules.size() == 0){
+					throw new AbsJobException("No Module with main block found.");
+				} else {
+				    module = modules.get(0);
 				}
 				if(currentFile != null){
 					info = "No main file found for \""+currentFile.getName()+"\".\nBut there is a main file in the project:";
 				}
 			}
-			moduleName = findModuleName(mainFile);
+			
 		}
+		String moduleName = JavaBackend.getFullJavaNameForMainBlock(module);
 		try {
 			debugAbsFiles(absFrontendLocation, javaPath, startSDE, moduleName, info);
 		} catch (InvalidRandomSeedException e) {
@@ -385,113 +417,104 @@ public class JavaJob extends Job {
 		}
 	}
 
-   private String findModuleName(File mainFile) throws AbsJobException {
-      String moduleName = null;
-		//Find the module name
-			moduleName = "Main";
-			File dir = new File(mainFile.getAbsolutePath());
-			while(!javaPath.toFile().equals(dir)){
-				if(dir.isDirectory()){
-					moduleName = dir.getName() + "." + moduleName;
-				}
-				dir = dir.getParentFile();
-				if (dir == null){
-					if(debugMode) System.err.println("module name for "+mainFile.getAbsolutePath()+" not found");
-					throw new AbsJobException("Module name not found");
-				}
-			}
-      return moduleName;
-   }
+   
+    /**
+     * finds a module with a given name in the current
+     * @param moduleName
+     * @return
+     * @throws AbsJobException
+     */
+	private ModuleDecl getModuleByName(String moduleName) throws AbsJobException {
+	    AbsNature nature = UtilityFunctions.getAbsNature(project);
+	    if(nature == null){
+	        throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
+	    }
+	    synchronized (nature.modelLock) {
+	        Model model = nature.getCompleteModel();
+	        ModuleDecl result = model.lookupModule(moduleName);
+	        if (result == null) {
+	            throw new AbsJobException("Could not find a module with name " + moduleName + ".");
+	        }
+            return result ;
+	    }
+	}
 
-   private File findMainJavaFile() throws AbsJobException {
-      File mainFile = null;
-		if (currentFile != null) {
-		   //Search for a main file in the model of the current abs file
-		   if(UtilityFunctions.isABSFile(currentFile)){
-		      searchForMainInModel(null, null);
-		   } else if(currentFile.getName().equals("Main.java")){
-		      if (currentFile.getLocation().isAbsolute()) {
-		         mainFile = currentFile.getLocation().toFile();
-		      } else {
-		         mainFile = project.getLocation().append(currentFile.getLocation()).toFile();
-		      }
-		   }
-		}
-      return mainFile;
+   private List<ModuleDecl> getAllModulesWithMainInCurrentProject() throws AbsJobException {
+       AbsNature nature = UtilityFunctions.getAbsNature(project);
+       if(nature == null){
+           throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
+       }
+       synchronized (nature.modelLock) {
+           Model model = nature.getCompleteModel();
+           return getAllModulesWithMain(model);
+       }
    }
+   
+   /**
+    * searches a model for modules with a main block
+    * @param model
+    * @return a list of all modules which have a main block
+    */
+   private List<ModuleDecl> getAllModulesWithMain(Model model) {
+       List<ModuleDecl> result = new LinkedList<ModuleDecl>();
+       for (CompilationUnit cu : model.getCompilationUnits()) {
+           result.addAll(findModulesWithMain(cu));
+       }
+       return result;
+   }
+	
 
-	private void searchForMainInModel(String moduleName, File mainFile) throws AbsJobException{
+   /**
+    * 
+    * @return a module with a main block from the current file or null if no such module was found
+    * @throws AbsJobException
+    */
+    private ModuleDecl searchForMainBlockInCurrentFile() throws AbsJobException{
+        if (currentFile == null) {
+            return null;
+        }
 		AbsNature nature = UtilityFunctions.getAbsNature(project);
 		if(nature == null){
 			throw new AbsJobException("Could not start the debugger, because selected file (" + currentFile.getName() +  ") is not in an ABS project!");
 		}
 		synchronized (nature.modelLock) {
 			CompilationUnit unit = nature.getCompilationUnit(currentFile);
-			if(unit != null){
-				int countModules = unit.getNumModuleDecl();
-				int i = 0;
-				while(i<countModules){
-					ModuleDecl module = unit.getModuleDecl(countModules-1);
-					moduleName = module.getName(); 
-	        
-					if(moduleName != null && moduleName.length() > 0){
-						if(moduleName.contentEquals("\\.")) moduleName = moduleName.replaceAll("\\.", File.separator);
-						IPath temp = javaPath.append(moduleName);
-						temp = temp.append("Main.java");
-						mainFile = temp.toFile();
-						if(mainFile.exists()){
-							//file found
-							moduleName += ".Main";
-							break;
-						}
-					} 		        				
-					//go to next model
-					mainFile = null;
-					moduleName = null;
-					i++;
-				}
+			List<ModuleDecl> modules = findModulesWithMain(unit);
+			if (modules.size() == 0) {
+			    return null;
+			} else {
+			    return modules.get(0);
 			}
 		}
 	}
+
+    
+    
+    
+    /**
+     * searches a compilation unit for modules with a main block
+     * @param unit
+     * @return a list of all modules which have a main block
+     */
+    private List<ModuleDecl> findModulesWithMain(CompilationUnit unit) {
+        List<ModuleDecl> result = new LinkedList<ModuleDecl>();
+        if(unit != null){
+        	int countModules = unit.getNumModuleDecl();
+        	int i = 0;
+        	while(i<countModules){
+        		ModuleDecl module = unit.getModuleDecl(i);
+        		if (module.hasBlock()) {
+        		    result.add(module);
+        		}
+        		//go to next module
+        		i++;
+        	}
+        }
+        return result;
+    }
 	
-	/**
-	 * Searches for a "Main.java" file in the generated files
-	 * 
-	 * @param javaPath - where to find the generated files
-	 * @return file with main block
-	 * @throws AbsJobException 
-	 */
-	private File findMainInGeneratedJavaFiles(Path javaPath) throws AbsJobException{
-		File mainFile = null;
-		List<File> mainFiles = null;
-		File javaDir = javaPath.toFile();
-		File[] genDirs = javaDir.listFiles();
-		
-		if(genDirs != null){
-			ArrayList<File> modules = new ArrayList<File>(Arrays.asList(genDirs));
-			mainFiles = new ArrayList<File>();
-			for (int i = 0; i<modules.size(); i++) {
-				File file = modules.get(i);
-				if(file.isDirectory()){
-					//add all subdirs and files to List
-					modules.addAll(Arrays.asList(file.listFiles()));
-				}
-				if(file.isFile() && file.getName().equals("Main.java")){
-					//Main.java found
-					mainFiles.add(file);
-				}
-			}
-		}
-		
-		//get the first one
-		if(mainFiles == null || mainFiles.size()==0){
-			throw new AbsJobException("No 'Main.java' file found");
-		} else {
-			mainFile = mainFiles.get(0);
-		}
-		
-		return mainFile;
-	}
+	
+
 
 	private void debugAbsFiles(String absFrontendLocation, final Path javaPath,
 			boolean useBothObserver, final String moduleName, String info)

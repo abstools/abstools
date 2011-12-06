@@ -136,10 +136,15 @@ public class Debugger implements SystemObserver{
 				}
 			}
         	
-        	private void exceptionHandling(Exception e){
+        	private void exceptionHandling(final Exception e){
 				standardExceptionHandling(e);
-				showErrorMessage("Not able to start ABSRuntime");
-        		
+				Display.getDefault().asyncExec(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        showErrorMessage("Not able to start ABSRuntime.\n" + e.getMessage());
+                    }
+                });
         	}
         });
         
@@ -316,7 +321,7 @@ public class Debugger implements SystemObserver{
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                showErrorMessage(e.getMessage());
+                showErrorMessage(e.getMessageWithStackTrace());
             }
         });
         shutdown();
