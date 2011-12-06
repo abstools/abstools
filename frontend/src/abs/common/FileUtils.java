@@ -8,20 +8,33 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 
 public class FileUtils {
+    
+    
+    private static String fileToString(File f) throws IOException {
+        InputStream in = new FileInputStream(f);
+
+        byte[] b = new byte[(int) f.length()];
+        int len = b.length;
+        int total = 0;
+
+        while (total < len) {
+            int result = in.read(b, total, len - total);
+            if (result == -1) {
+                break;
+            }
+            total += result;
+        }
+
+        return new String(b, Charset.defaultCharset());
+    }
+    
     public static StringBuilder fileToStringBuilder(File f) throws IOException {
-        FileInputStream stream = new FileInputStream(f);
-        FileChannel fc = stream.getChannel();
-        MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-          /* Instead of using default, pass in a decoder. */
-        String res = Charset.defaultCharset().decode(bb).toString();
-        stream.close();
-        return new StringBuilder(res);
+        return new StringBuilder(fileToString(f));
     }
     
     public static void writeStringBuilderToFile(StringBuilder sb, File f) throws IOException {
