@@ -7,10 +7,13 @@ package abs.backend.prolog;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 
 import abs.frontend.ast.*;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.parser.Main;
 
 public class PrologBackend extends Main {
@@ -20,6 +23,7 @@ public class PrologBackend extends Main {
     protected PrintStream outStream;
     private String outFilename = "abs.pl";
     private Model model;
+    private ReachabilityInformation reachInfo=null;
     ArrayList<ASTNode<?>> entries = null;
 
     public static int awaitId = 0;
@@ -95,14 +99,25 @@ public class PrologBackend extends Main {
     }
     
     private void generateProlog(){
-        /*if (entries != null){ // mode with entries
+        if (entries != null){ // mode with entries
             entriesMode = true;
-            //collectReachableCode(entries);
-            ListIterator<ASTNode<?>> entriesIt = entries.listIterator();
-            while(entriesIt.hasNext())
-                entriesIt.next().generateProlog(outStream);
-        }*/
-        model.generateProlog(outStream);
+            collectReachableCode(entries);
+        }
+        model.generateProlog(outStream,reachInfo);
+    }
+
+    private void collectReachableCode(ArrayList<ASTNode<?>> entries) {
+       reachInfo=new ReachabilityInformation(entries);
+     
+        while(reachInfo.changed()){
+           try{
+            model.collectReachableCode(reachInfo);
+           }catch(Exception e){
+               e.printStackTrace();
+           }
+           
+        }
+      System.out.println(reachInfo.toString());  
     }
 
     public List<String> parseArgs(String[] args) throws Exception {
