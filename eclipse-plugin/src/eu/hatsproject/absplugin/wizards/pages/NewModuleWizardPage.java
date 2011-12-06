@@ -66,7 +66,9 @@ public class NewModuleWizardPage extends WizardPage{
         
 		resourceGroup = new ResourceGroup(composite, changeListener);
 		if (initialFile == null){
-			resourceGroup.setSelectedResource(proj);
+		    if (proj != null) {
+		        resourceGroup.setSelectedResource(proj);
+		    }
 		}else{
 			resourceGroup.setSelectedResource(initialFile);
 		}
