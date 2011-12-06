@@ -413,16 +413,7 @@ public class ProposalFactory{
 				Collections.sort(tempQual, comp);
 				proposals.addAll(tempQual);
 			} catch (TypeCheckerException e ) {
-				/*
-				 * XXX It seems invoking 
-				 * abs.frontend.ast.ModuleDecl.getVisibleNames() always throws 
-				 * a TypeCheckerException if the ast node is an Import.
-				 * This exception is suppressed for now until further
-				 * investigation
-				 */
-				if (! (node instanceof Import)) {
-					throw e;
-				}
+			    // ignore all type check exceptions
 			}
 		}
 
