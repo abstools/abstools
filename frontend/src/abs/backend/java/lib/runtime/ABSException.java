@@ -43,5 +43,25 @@ public abstract class ABSException extends RuntimeException {
     }
 
     public abstract String getName();
+    
+    /**
+     * gets the message and a stack trace as string
+     * the stack trace is the java stack trace but without the elements from the backend 
+     */
+    public String getMessageWithStackTrace() {
+        String result = getMessage();
+        StackTraceElement[] trace = getStackTrace();
+        for (StackTraceElement te : trace) {
+           String className = te.getClassName();
+           if (className.startsWith("abs.backend.java")) {
+               break; // does not belong to the abs module
+           }
+           String methodName = te.getMethodName();
+           className = className.replaceFirst("_(c|i)$", "");
+           result += "\n  at " + className + "." + methodName;
+        }
+        return result;
+        
+    }
 
 }

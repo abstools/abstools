@@ -11,14 +11,14 @@ import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
-    public void Model.generateJavaCode(JavaCode code) throws IOException {
+    public void Model.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
       JavaGeneratorHelper.cleanGenFolder(code);
       for (ModuleDecl decl : getModuleDecls()) {
         decl.generateJavaCode(code);
       }
     }
 
-    public void ModuleDecl.generateJavaCode(JavaCode code) throws IOException {
+    public void ModuleDecl.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
       String packageName = getName();
       JavaCode.Package p = code.createPackage(packageName);
         for (Decl decl : getDecls()) {
@@ -27,23 +27,25 @@ aspect GenerateJava {
 
 
         if (hasBlock()) {
-          p.addMainClass("Main");
-      File file = p.createJavaFile("Main");
+          Block block = getBlock();
+            
+          String mainName = JavaBackend.getJavaNameForMainBlock();
+          p.addMainClass(mainName);
+          File file = p.createJavaFile(mainName);
       PrintStream stream = null;
       try {
       stream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
       stream.println("package "+p.packageName+";");
           //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
-            Block block = getBlock();
-            stream.println("public class Main extends "+ABSObject.class.getName()+" {");
+            stream.println("public class "+mainName+" extends "+ABSObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) throws Exception {");
-            stream.println("       "+StartUp.class.getName()+".startup(args,Main.class);");
+            stream.println("       "+StartUp.class.getName()+".startup(args,"+mainName+".class);");
             stream.println("   }");
 
             stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
             stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public Main("+COG.class.getName()+" cog) { super(cog); }");
+            stream.println("   public "+mainName+"("+COG.class.getName()+" cog) { super(cog); }");
 
             // main block
             stream.println("   public "+ABSUnit.class.getName()+" run() {");
@@ -61,7 +63,7 @@ aspect GenerateJava {
 
     }
 
-  public void Decl.generateJavaCode(JavaCode.Package pkg) throws IOException {
+  public void Decl.generateJavaCode(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
     PrintStream s = null;
     try {
       String name = JavaBackend.getJavaName(this);
@@ -79,7 +81,7 @@ aspect GenerateJava {
 
   }
 
-  public void DataTypeDecl.generateJavaCode(JavaCode.Package pkg) throws IOException {
+  public void DataTypeDecl.generateJavaCode(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
     super.generateJavaCode(pkg);
     for (DataConstructor c : getDataConstructors()) {
       c.generateJavaCode(pkg);

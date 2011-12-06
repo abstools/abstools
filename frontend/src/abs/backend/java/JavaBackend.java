@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import abs.backend.java.codegeneration.JavaCode;
+import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSInteger;
@@ -33,6 +34,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.parser.Main;
@@ -113,7 +115,7 @@ public class JavaBackend extends Main {
 
     }
 
-    private void compile(Model m, File destDir) throws IOException {
+    private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
         JavaCode javaCode = new JavaCode(destDir);
         m.generateJavaCode(javaCode);
         if (!sourceOnly) {
@@ -293,6 +295,20 @@ public class JavaBackend extends Main {
             int suffix = s.hashCode(); // We do not consider collisions as highly unlikely
             return prefix + suffix;
         }
+    }
+
+    /**
+     * get the java name main blocks
+     */
+    public static String getJavaNameForMainBlock() {
+        return "Main";
+    }
+
+    /**
+     * get the fully qualified java name for the main block of a given module 
+     */
+    public static String getFullJavaNameForMainBlock(ModuleDecl module) {
+        return module.getName() + "." + getJavaNameForMainBlock();
     }
 
 }

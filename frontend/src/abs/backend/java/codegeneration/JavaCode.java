@@ -49,14 +49,25 @@ public class JavaCode {
     public class Package {
         public final String packageName;
         public final File packageDir;
+        private String firstPackagePart;
 
         public Package(String packageName) {
             this.packageName = packageName;
             this.packageDir = new File(srcDir, packageName.replace('.', File.separatorChar));
+            this.firstPackagePart = packageName.split("\\.")[0];
             packageDir.mkdirs();
         }
 
-        public File createJavaFile(String name) throws IOException {
+        public File createJavaFile(String name) throws IOException, JavaCodeGenerationException {
+            if (name.equals(firstPackagePart)) {
+                if (name.equals("Main")) {
+                    throw new JavaCodeGenerationException("The Java backend does not support main blocks in " +
+                    		"modules with name 'Main'. Please try to use a different name.");
+                }
+                throw new JavaCodeGenerationException("The Java backend does not support using the name " + 
+                      name + " as module name, because it collides with a generated classname. " +
+                      		"Please try to use a different name.");
+            }
             File file = new File(packageDir, name + ".java");
             addFile(file);
             file.createNewFile();
@@ -87,15 +98,15 @@ public class JavaCode {
         dir.delete();
     }
 
-    public void compile() {
+    public void compile() throws JavaCodeGenerationException {
         compile(srcDir);
     }
 
-    public void compile(File destDir) {
+    public void compile(File destDir) throws JavaCodeGenerationException {
         compile("-classpath", System.getProperty("java.class.path"), "-d", destDir.getAbsolutePath());
     }
 
-    public void compile(String... args) {
+    public void compile(String... args) throws JavaCodeGenerationException {
         ArrayList<String> args2 = new ArrayList<String>();
         args2.addAll(Arrays.asList(args));
         args2.addAll(Arrays.asList(getFileNames()));

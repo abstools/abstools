@@ -133,6 +133,11 @@ public class Task<T extends ABSRef> {
             
         } catch (Exception e) {
             e.printStackTrace();
+            ABSException absException = new ABSAssertException("Sorry, this is a bug in the java backend of abs: " +
+                        "Unexpected expception: " + e); 
+            // TODO new subclass for internal error
+            absException.setStackTrace(e.getStackTrace());
+            getCOG().getRuntime().handleABSException(this, absException );
         }
 
         synchronized (this) {
