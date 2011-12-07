@@ -55,12 +55,21 @@ aspect CSP {
   }
 
   public void FeatureDecl.dropAttributes() {
-    setAttrConstraints(new AttrConstraints(new List<Attribute>(),new List<Constr>()));
-    if (hasGroup())
-      for (FNode f: getGroup().getFNodes())
-        f.getFeat().dropAttributes();
+	  List<Constr> constrs = getAttrConstraints().getConstrs();
+	  for (int i = constrs.getNumChildNoTransform()-1; i>=0; i--) {
+		  if (constrs.getChild(i).hasAttributes())
+			  constrs.removeChild(i);
+		  }
+	  }
+//    setAttrConstraints(new AttrConstraints(new List<Attribute>(),new List<Constr>()));
+	  if (hasGroup())
+		  for (FNode f: getGroup().getFNodes())
+			  f.getFeat().dropAttributes();
   }
 
+  public boolean Constr.hasAttributes() { return true; }
+  public boolean Exclude.hasAttributes() { return false; }
+  public boolean Require.hasAttributes() { return false; }
   
 //  private int Model.getBoundary(BoundaryInt b, Boolean positive) {
 //    if (b instanceof Limit) {
