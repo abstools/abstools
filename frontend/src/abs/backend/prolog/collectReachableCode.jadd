@@ -53,7 +53,12 @@ public void ClassDecl.collectReachableCode(ReachabilityInformation reachInfo){
      		super.collectReachableCode(reachInfo);
      }
   }   
-
+ public void InitBlock.collectReachableCode(ReachabilityInformation reachInfo){
+       if(reachInfo.isReachable(this)){
+     	if(reachInfo.setProcessed(this))
+     		super.collectReachableCode(reachInfo);
+     }
+  }
 
 	public void FnApp.collectReachableCode(ReachabilityInformation reachInfo){
 	if(this.getDecl() instanceof FunctionDecl)
@@ -77,15 +82,39 @@ public void ClassDecl.collectReachableCode(ReachabilityInformation reachInfo){
         }
     
   public void Call.collectReachableCode(ReachabilityInformation reachInfo){
-    ArrayList<InterfaceType> interfaces=new ArrayList<InterfaceType>();
     
+    if(this.getCallee() instanceof ThisExp){
+        reachInfo.addReachability((ClassDecl)this.getContextDecl(),this.getMethodSig());
+    }else{
+    ArrayList<InterfaceType> interfaces=new ArrayList<InterfaceType>();
     generateInterfacesList(this.getCallee().getType(),interfaces);
       for(InterfaceType inter: interfaces){
           reachInfo.addReachability(inter,this.getMethodSig());
           reachInfo.addReachability(inter);
       }
+    }
     super.collectReachableCode(reachInfo);
   }
+     private void NewExp.generateInterfacesList(Type type,ArrayList<InterfaceType> interfaces) {
+        if(type.isUnionType()){
+            UnionType unionType=(UnionType)type;
+            Iterator<InterfaceType> it=unionType.getTypes().iterator();
+            while(it.hasNext()){
+                generateInterfacesList(it.next(),interfaces);
+ 
+            }
+        }else
+            if(type.isInterfaceType()){
+                interfaces.add((InterfaceType)type);
+            }   
+        } 
     
-
+ public void NewExp.collectReachableCode(ReachabilityInformation reachInfo){
+    ClassDecl clazz=((UnionType)this.getType()).getOriginatingClass();
+    reachInfo.addReachability(clazz,this);
+    reachInfo.addReachability(clazz);
+    
+   super.collectReachableCode(reachInfo);
+ }
+ 
 }
