@@ -6,12 +6,14 @@ package abs.backend.prolog;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.InterfaceTypeUse;
+import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParametricFunctionDecl;
@@ -20,10 +22,10 @@ import abs.frontend.typechecker.InterfaceType;
 public class ReachabilityInformation {
     private HashSet<String> reachableMethods;
     private HashSet<String> reachableInterfaces;
-    private HashSet<ASTNode<?>> reachableFuncts;
+    private Hashtable<ASTNode<?>,Boolean> reachableFuncts;
+    private Hashtable<MainBlock,Boolean> reachableMainBlocks;
     
     private HashSet<String> processedMethods;
-    private HashSet<ASTNode<?>> processedFuncts;
     
     private boolean changed;
    
@@ -31,10 +33,11 @@ public class ReachabilityInformation {
      //Sets creation
      reachableMethods=new HashSet<String>();
      reachableInterfaces=new HashSet<String>();
-     reachableFuncts=new HashSet<ASTNode<?>>();
+     reachableFuncts=new Hashtable<ASTNode<?>,Boolean>();
+     reachableMainBlocks=new Hashtable<MainBlock,Boolean>();
      
      processedMethods=new HashSet<String>();
-     processedFuncts=new HashSet<ASTNode<?>>();
+
      
      ClassDecl ownerClass;
      abs.frontend.ast.List<InterfaceTypeUse> interfaces;
@@ -50,8 +53,10 @@ public class ReachabilityInformation {
                      reachableMethods.add(getMethodId(inter,((MethodImpl)entry).getMethodSig()));
                  }
              }
-         } else
-             reachableFuncts.add(entry);
+         } else if(entry instanceof MainBlock){
+             reachableMainBlocks.put((MainBlock)entry, Boolean.FALSE);
+         }else
+             reachableFuncts.put(entry, Boolean.FALSE);
      }
      
      changed=true;
@@ -94,10 +99,13 @@ public boolean changed(){
 }
 
 public boolean isReachable(FunctionDecl funct){
-    return reachableFuncts.contains(funct);
+    return reachableFuncts.containsKey(funct);
 }
 public boolean isReachable(ParametricFunctionDecl funct){
-    return reachableFuncts.contains(funct);
+    return reachableFuncts.containsKey(funct);
+}
+public boolean isReachable(MainBlock mBlock){
+    return reachableMainBlocks.containsKey(mBlock);
 }
 public boolean isReachable(ClassDecl clazz){
     boolean reachable=false;
@@ -123,12 +131,16 @@ public boolean isReachable(MethodImpl method){
     }else
         return false;
   }
-
+// True is returned if it was not processed before
+//that is, if the boolean value was false
 public boolean setProcessed(FunctionDecl funct){
-    return processedFuncts.add(funct);
+    return !reachableFuncts.put(funct, Boolean.TRUE);
 }
 public boolean setProcessed(ParametricFunctionDecl funct){
-    return processedFuncts.add(funct);
+    return !reachableFuncts.put(funct, Boolean.TRUE);
+}
+public boolean setProcessed(MainBlock mBlock){
+    return !reachableMainBlocks.put(mBlock, Boolean.TRUE);
 }
 public boolean setProcessed(MethodImpl method){
     ClassDecl clazz=ObtainOwnerClass(method);
@@ -140,7 +152,16 @@ public boolean setProcessed(MethodImpl method){
 
 
 public boolean addReachability(FunctionDecl funct){
-    if(reachableFuncts.add(funct)){
+    if(!reachableFuncts.containsKey(funct)){
+        reachableFuncts.put(funct, Boolean.FALSE);
+        changed=true;
+        return true;
+    }
+    return false;
+}
+public boolean addReachability(ParametricFunctionDecl funct){
+    if(!reachableFuncts.containsKey(funct)){
+        reachableFuncts.put(funct, Boolean.FALSE);
         changed=true;
         return true;
     }

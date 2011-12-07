@@ -654,24 +654,26 @@ aspect GenerateProlog {
         //generates mainBlock(localVariablesDeclarationList,statementsList)
         //note: the local variables declarations are also in statements 
         //it is like a normal block but with a different name and out of any class
-        Collection<VarDecl> vars =this.getVars();
-        Iterator<VarDecl> it=vars.iterator();
-        s.print("mainBlock([");
-        if(it.hasNext()){
-            it.next().generateProlog(s,reachInfo);
-            while(it.hasNext()){
-                s.print(",");
-                it.next().generateProlog(s,reachInfo);
-            }
+        if(reachInfo==null || reachInfo.isReachable(this)){
+	        Collection<VarDecl> vars =this.getVars();
+	        Iterator<VarDecl> it=vars.iterator();
+	        s.print("mainBlock([");
+	        if(it.hasNext()){
+	            it.next().generateProlog(s,reachInfo);
+	            while(it.hasNext()){
+	                s.print(",");
+	                it.next().generateProlog(s,reachInfo);
+	            }
+	        }
+	        s.print("],[");
+	        List<?> stmts = (List<?>) getChild(1);
+	        int n = stmts.getNumChild();
+	        for (int i = 0; i < n; i++){
+	            stmts.getChild(i).generateProlog(s,reachInfo);
+	            if (i != n-1) s.print(",");
+	        }
+	        s.println("]).");
         }
-        s.print("],[");
-        List<?> stmts = (List<?>) getChild(1);
-        int n = stmts.getNumChild();
-        for (int i = 0; i < n; i++){
-            stmts.getChild(i).generateProlog(s,reachInfo);
-            if (i != n-1) s.print(",");
-        }
-        s.println("]).");
     }
 
     public void VarDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){

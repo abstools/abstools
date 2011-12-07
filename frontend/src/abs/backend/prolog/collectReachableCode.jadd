@@ -30,6 +30,13 @@ aspect collectReachableCode {
    		}
    	 }
    }
+   public void MainBlock.collectReachableCode(ReachabilityInformation reachInfo){
+     if(reachInfo.isReachable(this)){
+    	if(reachInfo.setProcessed(this)){
+        	super.collectReachableCode(reachInfo);
+   		}
+   	 }
+   }
    
 public void ClassDecl.collectReachableCode(ReachabilityInformation reachInfo){
          if(reachInfo.isReachable(this))
