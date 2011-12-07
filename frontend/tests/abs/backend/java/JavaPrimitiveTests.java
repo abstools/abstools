@@ -6,6 +6,8 @@ package abs.backend.java;
 
 import org.junit.Test;
 
+import abs.backend.java.codegeneration.JavaCodeGenerationException;
+
 public class JavaPrimitiveTests extends JavaBackendTest {
     @Test
     public void testNullLit() throws Exception {
@@ -108,7 +110,7 @@ public class JavaPrimitiveTests extends JavaBackendTest {
         assertValidStdLib("{ Bool b = \"Test\" != \"Test\"; }");
     }
     
-    @Test
+    @Test(expected=JavaCodeGenerationException.class)
     public void testModuleNamedMain() throws Exception {
         // see bug #272
         assertValidStdLib("module Main; interface I { Unit m(); } class C implements I { Unit m() { }  } { }");

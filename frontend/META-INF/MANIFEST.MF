@@ -6,7 +6,6 @@ Bundle-Version: 0.0.0.qualifier
 Bundle-Vendor: HATS Project
 Bundle-ClassPath: .,
  bin,
- lib/antlr-3.2.jar,
  lib/beaver-rt-src.jar,
  lib/beaver.jar,
  lib/ecj-3.6.2.jar,
