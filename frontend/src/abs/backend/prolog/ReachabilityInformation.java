@@ -12,6 +12,7 @@ import java.util.Iterator;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.MethodImpl;
@@ -112,11 +113,24 @@ public boolean isReachable(ClassDecl clazz){
     abs.frontend.ast.List<InterfaceTypeUse> interfaces=clazz.getImplementedInterfaceUseList();
     Iterator<InterfaceTypeUse> it=interfaces.iterator();
     
-    while(!reachable && it.hasNext())
-        reachable=reachableInterfaces.contains(getInterfaceId(it.next()));
-    
+    while(!reachable && it.hasNext()){
+        reachable=isReachable(it.next());
+    }
     return reachable;
 
+}
+private boolean isReachable(InterfaceTypeUse inter){
+    boolean reachable=false;
+    reachable=reachableInterfaces.contains(getInterfaceId(inter));
+    if(!reachable){
+        InterfaceDecl a;
+        abs.frontend.ast.List<InterfaceTypeUse> interfaces=((InterfaceDecl) inter.getDecl()).getExtendedInterfaceUseList();
+        Iterator<InterfaceTypeUse> it=interfaces.iterator();
+        while(!reachable && it.hasNext()){
+            reachable=isReachable(it.next());
+        }
+    }
+    return reachable;
 }
 public boolean isReachable(MethodImpl method){
     ClassDecl clazz=ObtainOwnerClass(method);
@@ -126,11 +140,25 @@ public boolean isReachable(MethodImpl method){
         abs.frontend.ast.List<InterfaceTypeUse> interfaces=clazz.getImplementedInterfaceUseList();
         Iterator<InterfaceTypeUse> it=interfaces.iterator();
         while(!reachable && it.hasNext())
-                reachable=reachableMethods.contains(getMethodId(it.next(),method.getMethodSig()));
+                reachable=isReachable(it.next(),method.getMethodSig());
         return reachable;        
     }else
         return false;
   }
+
+private boolean isReachable(InterfaceTypeUse inter,MethodSig method){
+    boolean reachable=false;
+    reachable=reachableMethods.contains(getMethodId(inter,method));
+    if(!reachable){
+        InterfaceDecl a;
+        abs.frontend.ast.List<InterfaceTypeUse> interfaces=((InterfaceDecl) inter.getDecl()).getExtendedInterfaceUseList();
+        Iterator<InterfaceTypeUse> it=interfaces.iterator();
+        while(!reachable && it.hasNext()){
+            reachable=isReachable(it.next(),method);
+        }
+    }
+    return reachable;
+}
 // True is returned if it was not processed before
 //that is, if the boolean value was false
 public boolean setProcessed(FunctionDecl funct){
