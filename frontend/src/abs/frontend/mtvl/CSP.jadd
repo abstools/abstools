@@ -59,7 +59,6 @@ aspect CSP {
 	  for (int i = constrs.getNumChildNoTransform()-1; i>=0; i--) {
 		  if (constrs.getChild(i).hasAttributes())
 			  constrs.removeChild(i);
-		  }
 	  }
 //    setAttrConstraints(new AttrConstraints(new List<Attribute>(),new List<Constr>()));
 	  if (hasGroup())
