@@ -23,7 +23,7 @@ public class PrologBackend extends Main {
     protected PrintStream outStream;
     private String outFilename = "abs.pl";
     private Model model;
-    private ReachabilityInformation reachInfo=null;
+    private ReachabilityInformation reachInfo = null;
     ArrayList<ASTNode<?>> entries = null;
 
     public static int awaitId = 0;
@@ -107,17 +107,16 @@ public class PrologBackend extends Main {
     }
 
     private void collectReachableCode(ArrayList<ASTNode<?>> entries) {
-       reachInfo=new ReachabilityInformation(entries);
+        reachInfo = new ReachabilityInformation(entries);
      
-        while(reachInfo.changed()){
-           try{
-            model.collectReachableCode(reachInfo);
-           }catch(Exception e){
+        while (reachInfo.changed()) {
+           try {
+               model.collectReachableCode(reachInfo);
+           } catch (Exception e){
                e.printStackTrace();
-           }
-           
+           }          
         }
-      System.out.println(reachInfo.toString());  
+        //System.out.println(reachInfo.toString());  
     }
 
     public List<String> parseArgs(String[] args) throws Exception {

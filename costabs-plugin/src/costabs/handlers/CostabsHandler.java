@@ -97,17 +97,18 @@ public class CostabsHandler extends AbstractHandler {
 	}
 
 	private void callPrologBackend(String filename) throws Exception {
-    	int numArgs = 3;
+    	/*
+		int numArgs = 3;
 		String[] args = new String[numArgs];
 		int i = 0;
 		args[i++] = "-d";
 		args[i++] = "/tmp/costabs/absPL";
 		args[i++] = filename;
-
 		PrologBackend.runFromShell(args);
+		*/
 		
-		//Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
-		//PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+		Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
+		PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
 	}
 	
 	/*
