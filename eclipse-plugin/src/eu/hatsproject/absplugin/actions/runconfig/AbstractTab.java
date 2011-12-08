@@ -18,19 +18,18 @@ import org.eclipse.debug.ui.AbstractLaunchConfigurationTab;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.*;
 
+import abs.common.WrongProgramArgumentException;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 import eu.hatsproject.absplugin.actions.JavaJob;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
+import eu.hatsproject.absplugin.exceptions.TypeCheckerException;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -88,9 +87,27 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		if (projectName != null) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 			try {
-				JavaJob.getModelFromProject(project);
+				Model model = JavaJob.getModelFromProject(project);
+				assert model != null;				
+				/* Check product if any */
+				String prod = getSelectedProductName();
+				if (prod != null) {
+					// XXX: [vs] Without the following line flattening and checking doesn't seem to work!
+					model = model.copy();
+					model.flattenForProduct(prod);
+					/* Type check again */
+					SemanticErrorList errs = model.typeCheck();
+					if (errs != null && !errs.isEmpty())
+						throw new AbsJobException(new TypeCheckerException(errs));
+				}
 				setErrorMessage(null);
 			} catch (AbsJobException e) {
+				setErrorMessage(e.getMessage());
+				res = false;
+			} catch (WrongProgramArgumentException e) {
+				setErrorMessage(e.getMessage());
+				res = false;
+			} catch (ASTNodeNotFoundException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
 			}
