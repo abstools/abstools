@@ -172,7 +172,7 @@ aspect GenerateProlog {
         s.print(fieldTransform(getName()));
     }
     public void AndBoolExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        s.print("and(");
+        s.print("and_op(");
         getChild(0).generateProlog(s,reachInfo);
         s.print(",");
         getChild(1).generateProlog(s,reachInfo);
