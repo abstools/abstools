@@ -169,10 +169,16 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 			} else if (node instanceof DeltaClause) {
 				DeltaClause d = (DeltaClause) node;
 				String dName = d.getDeltaspec().getName();
+				/* XXX: [stolz] Is 'm' ALWAYS the right scope to lookup in? */
 				ModuleDecl m = d.getModuleDecl();
 				ResolvedName res = m.resolveName(new KindedName(Kind.TYPE_DECL, dName));
 				if (res != null)
 					decl = res.getDecl();
+			} else if (node instanceof ModifyClassModifier) {
+				ModifyClassModifier cm = (ModifyClassModifier) node;
+				String mName = cm.moduleName();
+				ModuleDecl dm = cu.lookupModule(mName);
+				decl = dm.lookup(new KindedName(Kind.CLASS, cm.className()));
 			} else if (node instanceof List) {
 				/* [stolz] Happens e.g. when selecting a delta in a productline */
 				List<?> l = (List<?>) node;
