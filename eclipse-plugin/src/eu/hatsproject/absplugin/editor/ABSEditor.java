@@ -10,6 +10,7 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHa
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.BadLocationException;
@@ -257,5 +258,13 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 		CoreControlUnit.removeResourceBuildListener(builtListener);
 		Activator.getDefault().getPreferenceStore().removePropertyChangeListener(propertyChangeListener);
 		super.dispose();
+	}
+
+	public void openInformation(String title, String message) {
+		MessageDialog.openInformation(getSite().getShell(), title, message);
+	}
+
+	public void openError(String title, String message) {
+		MessageDialog.openError(getSite().getShell(), title, message);
 	}
 }

@@ -204,8 +204,11 @@ aspect TypeResolution {
     eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
 //    eq ModuleDecl.getDeltaDecl(int i).getInterfaceModifier().lookup(KindedName name) = lookup(name);
 
+    /**
+     * @throws TypeCheckerException
+     */
     syn lazy Decl ModuleDecl.lookup(KindedName name) {
-        ResolvedName r = TypeCheckerHelper.resolveName(this,name);
+        ResolvedName r = resolveName(name);
         if (r != null) {			
             return r.getDecl();
         } else {	
@@ -319,6 +322,13 @@ aspect TypeResolution {
 
 
     syn lazy String CompilationUnit.getFileName() = getName();
+
+    /**
+     * @throws TypeCheckerException
+     */    
+    public ResolvedName ModuleDecl.resolveName(KindedName name) {
+        return getVisibleNames().get(name);
+    }
 }
 
 // Local Variables:

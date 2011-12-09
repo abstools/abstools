@@ -10,7 +10,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.TextSelection;
@@ -22,8 +21,11 @@ import org.eclipse.ui.IEditorPart;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
+import abs.frontend.typechecker.ResolvedName;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeCheckerException;
 import beaver.Symbol;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
@@ -71,7 +73,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 			}
 			
 			if(nature==null){
-				MessageDialog.openError(abseditor.getSite().getShell(), "No ABSProject", "The file is not in an ABS project!");
+				abseditor.openError("No ABSProject", "The file is not in an ABS project!");
 				return;
 			}
 			
@@ -80,7 +82,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 				
 				CompilationUnit compunit = nature.getCompilationUnit(path);
 				if(compunit==null){
-					MessageDialog.openInformation(abseditor.getSite().getShell(),"Error", "AST not set!");
+					abseditor.openInformation("Error", "AST not set!");
 					return;
 				}
 				
@@ -100,7 +102,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 					ABSEditor targeteditor = 
 						UtilityFunctions.openABSEditorForFile(pos.getPath(),project);
 					if(targeteditor==null){
-						MessageDialog.openInformation(abseditor.getSite().getShell(), "File not found!",
+						abseditor.openInformation("File not found!",
 								"Could not find file "+pos.getPath().toOSString());
 						return;
 					}
@@ -110,66 +112,83 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 				}
 			}
 		} catch(BadLocationException ex){
-			eu.hatsproject.absplugin.Activator.logException(ex);
+			Activator.logException(ex);
 		}
 	}
 
 	EditorPosition getPosition(CompilationUnit cu, ASTNode<?> node) {
 		ASTNode<?> decl = null;
-		if(node instanceof Decl){
-			decl = (Decl)node;
-		} else if(node instanceof FnApp){
-			FnApp fnapp = (FnApp)node;
-			String name = fnapp.getName();
-			decl = fnapp.lookup(new KindedName(Kind.FUN, name));
-		} else if(node instanceof VarOrFieldUse){
-			VarOrFieldUse vofu = (VarOrFieldUse)node;
-			String name = vofu.getName();
-			decl = vofu.lookupVarOrFieldName(name,false);
-		} else if(node instanceof Call){
-			Call call = (Call)node;
-			String mname = call.getMethod();
-			Type type = call.getCallee().getType();
-			decl = type.lookupMethod(mname);
-		} else if(node instanceof DataConstructorExp){
-			DataConstructorExp exp = (DataConstructorExp)node;
-			decl = exp.getDecl();
-		} else if(node instanceof VarOrFieldDecl){
-			decl = node;
-		} else if(node instanceof MethodSig){
-			decl = node;
-		} else if(node instanceof TypeUse){
-			TypeUse tu = (TypeUse)node;
-			decl = tu.getDecl();
-		} else if(node instanceof NewExp){
-			NewExp newexp = (NewExp)node;
-			String classname = newexp.getClassName();
-			decl = newexp.lookup(new KindedName(Kind.CLASS, classname));
-		} else if(node instanceof FromImport){
-			FromImport fimport = (FromImport)node;
-			String moduleName = fimport.getModuleName();
-			decl = fimport.lookupModule(moduleName);
-		} else if(node instanceof StarImport){
-			StarImport fimport = (StarImport)node;
-			String moduleName = fimport.getModuleName();
-			decl = fimport.lookupModule(moduleName);
-		} else if(node instanceof FromExport){
-			FromExport fexport = (FromExport)node;
-			decl = fexport.getModuleDecl();
-		} else if(node instanceof StarExport){
-			StarExport fexport = (StarExport)node;
-			decl = fexport.getModuleDecl();
-		} else if(node instanceof Name){
-			Name name = (Name)node;
-			String simpleName = name.getString();
-			decl = cu.lookupModule(simpleName);
+		try {
+			if(node instanceof Decl){
+				decl = (Decl)node;
+			} else if(node instanceof FnApp){
+				FnApp fnapp = (FnApp)node;
+				String name = fnapp.getName();
+				decl = fnapp.lookup(new KindedName(Kind.FUN, name));
+			} else if(node instanceof VarOrFieldUse){
+				VarOrFieldUse vofu = (VarOrFieldUse)node;
+				String name = vofu.getName();
+				decl = vofu.lookupVarOrFieldName(name,false);
+			} else if(node instanceof Call){
+				Call call = (Call)node;
+				String mname = call.getMethod();
+				Type type = call.getCallee().getType();
+				decl = type.lookupMethod(mname);
+			} else if(node instanceof DataConstructorExp){
+				DataConstructorExp exp = (DataConstructorExp)node;
+				decl = exp.getDecl();
+			} else if(node instanceof VarOrFieldDecl){
+				decl = node;
+			} else if(node instanceof MethodSig){
+				decl = node;
+			} else if(node instanceof TypeUse){
+				TypeUse tu = (TypeUse)node;
+				decl = tu.getDecl();
+			} else if(node instanceof NewExp){
+				NewExp newexp = (NewExp)node;
+				String classname = newexp.getClassName();
+				decl = newexp.lookup(new KindedName(Kind.CLASS, classname));
+			} else if(node instanceof FromImport){
+				FromImport fimport = (FromImport)node;
+				String moduleName = fimport.getModuleName();
+				decl = fimport.lookupModule(moduleName);
+			} else if(node instanceof StarImport){
+				StarImport fimport = (StarImport)node;
+				String moduleName = fimport.getModuleName();
+				decl = fimport.lookupModule(moduleName);
+			} else if(node instanceof FromExport){
+				FromExport fexport = (FromExport)node;
+				decl = fexport.getModuleDecl();
+			} else if(node instanceof StarExport){
+				StarExport fexport = (StarExport)node;
+				decl = fexport.getModuleDecl();
+			} else if(node instanceof Name){
+				Name name = (Name)node;
+				String simpleName = name.getString();
+				decl = cu.lookupModule(simpleName);
+			} else if (node instanceof DeltaClause) {
+				DeltaClause d = (DeltaClause) node;
+				String dName = d.getDeltaspec().getName();
+				ModuleDecl m = d.getModuleDecl();
+				ResolvedName res = m.resolveName(new KindedName(Kind.TYPE_DECL, dName));
+				if (res != null)
+					decl = res.getDecl();
+			} else if (node instanceof List) {
+				/* [stolz] Happens e.g. when selecting a delta in a productline */
+				List<?> l = (List<?>) node;
+				if (l.hasChildren())				
+					return getPosition(cu, l.getChild(0));
+			}
+		} catch (TypeCheckerException e) {
+			// Nada - may come from resolveName() on broken models.
+			Activator.logException(e);
 		}
-		
+
 		if(decl == null || decl instanceof UnknownDecl){
-			MessageDialog.openInformation(editor.getSite().getShell(), "Declaration not found!", "Declaration for symbol under cursor not found!");
+			((ABSEditor)editor).openInformation("Declaration not found!", "Declaration for symbol under cursor not found!");
 			return null;
 		}
-		
+
 		CompilationUnit declcu = UtilityFunctions.getCompilationUnitOfASTNode(decl);
 		
 		int start = decl.getStartPos();

@@ -293,8 +293,11 @@ public class TypeCheckerHelper {
 
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
 
+    /**
+     * @deprecated
+     */
     public static ResolvedName resolveName(ModuleDecl mod, KindedName name) {
-        return mod.getVisibleNames().get(name);
+        return mod.resolveName(name);
     }
 
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticErrorList errors) {
