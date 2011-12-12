@@ -97,7 +97,7 @@ VarUse:					VarOrFieldUse;
 FieldUse:				VarOrFieldUse;        // this.f
 
 // Used for the IDE to provide auto-completion:
-abstract IncompleteExp:     Exp;
+abstract IncompleteExp:     PureExp;
 abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
 IncompleteSyncAccess:       IncompleteAccess; // something like "x."
 IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"

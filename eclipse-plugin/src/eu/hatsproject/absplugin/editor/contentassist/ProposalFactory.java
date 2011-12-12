@@ -187,19 +187,12 @@ public class ProposalFactory{
 		 * @see abs.frontend.parser.Keywords
 		 */
 		public void computeStructureProposals() { 
-			//Loop through keywords
-			for(String s : abs.frontend.parser.Keywords.getKeywords()){
-				if(qualifierIsPrefixOf(s)){
-					CompletionProposal proposal = new CompletionProposal(s, documentOffset, qualifier.length(),
-							s.length(), NO_IMAGE, s, null, "");
-					proposals.add(proposal);
-				}
-			}
 			
-			Collections.sort(proposals, new ProposalComparator());
 			
-			if(cu==null)
+			if(cu==null) {
+			    addKeywordProposals();
 				return;
+			}
 			
 			try {
 				ASTNode<?> node = getASTNodeOfOffset(doc, cu, documentOffset);
@@ -215,7 +208,10 @@ public class ProposalFactory{
 					addIncompleteAccessProposals(accessNode); 
 				} else if(accessNode instanceof IncompleteNewExp){
 					addClassProposals(node);
+				} else if (accessNode instanceof FieldUse) {
+				    addFieldUseProposals((FieldUse)accessNode);
 				} else {
+				    addKeywordProposals();
 					addToplevelProposals(node);
 					addClassFieldProposals(node);
 				}
@@ -225,6 +221,31 @@ public class ProposalFactory{
 		}
 
 		/**
+		 * adds the abs keywords to the list of proposals
+		 */
+        private void addKeywordProposals() {
+            //Loop through keywords
+			for(String s : abs.frontend.parser.Keywords.getKeywords()){
+				if(qualifierIsPrefixOf(s)){
+					CompletionProposal proposal = new CompletionProposal(s, documentOffset, qualifier.length(),
+							s.length(), NO_IMAGE, s, null, "");
+					proposals.add(proposal);
+				}
+			}
+			
+			Collections.sort(proposals, new ProposalComparator());
+        }
+
+		private void addFieldUseProposals(FieldUse accessNode) {
+		    if(accessNode == null){
+                throw new IllegalArgumentException("AccessNode may not be null!");
+            }
+            
+            Type type = accessNode.getContextDecl().getType();
+            addMethodProposal(type);
+        }
+
+        /**
 		 * add the variables of the main block
 		 * @param node the node under the cursor
 		 */
@@ -292,10 +313,20 @@ public class ProposalFactory{
 				throw new IllegalArgumentException("AccessNode may not be null!");
 			}
 			
-			ArrayList<ICompletionProposal> temp = new ArrayList<ICompletionProposal>();
 			IncompleteAccess ia = (IncompleteAccess)accessNode;
 			PureExp target = ia.getTarget();
 			Type type = target.getType();
+			addMethodProposal(type);
+		}
+
+        private void addMethodProposal(Type type) {
+            if (type.isFutureType()) {
+                proposals.clear();
+                String name = "get";
+                proposals.add( new CompletionProposal(name, documentOffset, qualifier.length(),
+                        name.length(), null, name, null, null));
+            }
+            ArrayList<ICompletionProposal> temp = new ArrayList<ICompletionProposal>();
 			for(MethodSig methodSig : type.getAllMethodSigs()){
 				String name = methodSig.getName();
 				if(qualifierIsPrefixOf(name)){
@@ -422,16 +453,25 @@ public class ProposalFactory{
 			String name = kname.getName();
 			
 			String visibleName = name;
-			String replacement;
-			int cursorposition;
-			if(kname.getKind()==Kind.DATA_CONSTRUCTOR){
-				replacement = name;
-				cursorposition = name.length();
-			} else {
-				replacement = name+"()";
-				cursorposition = name.length()+1;
+			String replacement = name;
+			int cursorposition = name.length();
+			switch (kname.getKind()) {
+			     case DATA_CONSTRUCTOR:
+			     case FUN:
+			         replacement = name+"()";
+		             cursorposition = name.length()+1;
+		             break;
+			     case TYPE_DECL:
+			         if (decl instanceof ParametricDataTypeDecl) {
+			             ParametricDataTypeDecl parametricDataTypeDecl = (ParametricDataTypeDecl) decl;
+			             if (parametricDataTypeDecl.getTypeParameterList().getNumChild() > 0) {
+    			             replacement = name+"<>";
+    	                     cursorposition = name.length()+1;
+			             }
+			         }
+			         break;
 			}
-			CompletionProposal proposal = new CompletionProposal(replacement, documentOffset, qualifier.length(),
+            CompletionProposal proposal = new CompletionProposal(replacement, documentOffset, qualifier.length(),
 					cursorposition, getImageForASTNode(decl), visibleName, null, getAdditionalProposalInfo(decl));
 			return proposal;
 		}

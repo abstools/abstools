@@ -188,6 +188,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 		assistant.setInformationControlCreator(getInformationControlCreator(sourceViewer));
 		assistant.enableAutoActivation(true);
 		assistant.enableAutoInsert(true);
+		assistant.setAutoActivationDelay(0);
 		return assistant;
 	}
 	

@@ -501,6 +501,19 @@ PureExp pure_exp_no_if =
 VarOrFieldUse var_or_field_ref =
 	  THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
     | IDENTIFIER.n {: return new VarUse(n); :}
+ // for auto completion:
+    | THIS.callee DOT.d {: 
+        if (!allowIncompleteExpr) {
+           addSyntaxError("Missing method or field name", new ThisExp());
+        }
+        return new FieldUse("");
+      :}
+    | THIS.callee BANG.b IDENTIFIER.method? {:
+        if (!allowIncompleteExpr) {
+            addSyntaxError("Missing method arguments.",new ThisExp());
+        }
+        return new IncompleteAsyncAccess(new ThisExp());
+        :}
 	;
 
 FnApp fnapp_list_exp =
@@ -690,15 +703,15 @@ OriginalCall original_call =
 
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =
-      pure_exp_prefix.callee DOT.d {:
+      pure_exp_prefix.callee DOT.d IDENTIFIER.method? {:
         if (!allowIncompleteExpr) {
-           addSyntaxError("Missing method or field name",callee);
+           addSyntaxError("Missing method call.",callee);
         }
         return new IncompleteSyncAccess(callee);
       :}
-    | pure_exp_prefix.callee BANG.b {:
+    | pure_exp_prefix.callee BANG.b IDENTIFIER.method? {:
         if (!allowIncompleteExpr) {
-            addSyntaxError("Missing method name",callee);
+            addSyntaxError("Missing method call.",callee);
         }
         return new IncompleteAsyncAccess(callee);
         :}
