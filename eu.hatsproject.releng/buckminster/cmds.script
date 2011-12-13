@@ -5,7 +5,7 @@ import "${WORKSPACE}/eu.hatsproject.releng/buckminster/costabs.cquery"
 build
 emma -l ABSFrontend/junit-frontend.launch -o out/junit-frontend.xml --stdout --stderr --xml out/coverage-frontend.xml
 emma -l eu.hatsproject.absplugin/junit-plugin.launch -o out/junit-plugin.xml --stdout --stderr --xml out/coverage-plugin.xml
-emma -l eu.hatsproject.absplugin/junit-SchedulingTest.launch -o out/junit-SchedulingTest.xml --stdout --stderr --xml out/coverage-SchedulingTest.xml
+junit -l eu.hatsproject.absplugin/junit-SchedulingTest.launch -o out/junit-SchedulingTest.xml --stdout --stderr
 perform -Dqualifier.replacement.*=generator:lastRevision eu.hatsproject.abs.compiler:eclipse.feature#site.p2
 perform -Dqualifier.replacement.*=generator:lastRevision eu.hatsproject.sdedit:eclipse.feature#site.p2
 perform -Dqualifier.replacement.*=generator:lastRevision eu.hatsproject.absplugin:eclipse.feature#site.p2

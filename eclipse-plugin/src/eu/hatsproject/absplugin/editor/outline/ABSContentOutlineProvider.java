@@ -321,7 +321,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		} else if (element instanceof PackageEntry) {
 			return getChildrenOf((PackageEntry) element).length > 0;
 		} else if (element instanceof PackageAbsFile) {
-			return getChildrenOf((PackageAbsFile) element).length > 0;
+			Object[] children = getChildrenOf((PackageAbsFile) element);
+			return children != null && children.length > 0;
 		}
 		return false;
 
