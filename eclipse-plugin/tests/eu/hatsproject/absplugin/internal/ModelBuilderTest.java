@@ -5,7 +5,6 @@
 package eu.hatsproject.absplugin.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.StringReader;
@@ -18,8 +17,6 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
-import eu.hatsproject.absplugin.internal.NoModelException;
-import eu.hatsproject.absplugin.internal.TypecheckInternalException;
 
 public class ModelBuilderTest {
 	private IncrementalModelBuilder modelbuilder;
@@ -232,27 +229,20 @@ public class ModelBuilderTest {
 			"  node3!run();\n"+
 			"}\n";
 
-      Main absParser = new Main();
+		Main absParser = new Main();
 		CompilationUnit testcu = absParser.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText));
 		assertEquals(0, testcu.getParserErrors().size());
-		try{
-			modelbuilder.addCompilationUnit(testcu);
-			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-			assertEquals(2, testel.size()); //Why 2? Module not resolved gets inserted 2 times.
-		} catch(RuntimeException e){
-			fail("Runtime Exception on typecheck: "+e.toString());
-		} catch(NoModelException e){
-			fail("No model while setting compilation unit.");
-		} catch(TypecheckInternalException e){
-			fail("Exception while typechecking!" + e.toString());
-		}
+		modelbuilder.addCompilationUnit(testcu);
+		SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		assertEquals(2, testel.size()); //Why 2? Module not resolved gets inserted 2 times.
+
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
-			modelbuilder.addCompilationUnit(importTestCU);
-			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-			assertEquals(0, testel.size());
-			modelbuilder.removeCompilationUnit(importTestCU);
-			SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-			assertEquals(2, testel2.size()); //Why 2? Module not resolved gets inserted 2 times.
+		modelbuilder.addCompilationUnit(importTestCU);
+		SemanticErrorList testel1 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		assertEquals(0, testel1.size());
+		modelbuilder.removeCompilationUnit(importTestCU);
+		SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		assertEquals(2, testel2.size()); //Why 2? Module not resolved gets inserted 2 times.
 	}
 }
