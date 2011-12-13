@@ -8,7 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 
 import org.junit.Before;
@@ -31,7 +30,7 @@ public class ModelBuilderTest {
 	}
 	
 	@Test
-	public void testTypecheck() throws IOException{
+	public void testTypecheck() throws Exception{
 		String moduleText = 
 			"//$id: Peertopeer.abs 5108 2010-07-17 20:14:12Z jschaefer $ \n"+
 			"\n"+
@@ -249,27 +248,11 @@ public class ModelBuilderTest {
 		}
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
-		try{
 			modelbuilder.addCompilationUnit(importTestCU);
 			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
 			assertEquals(0, testel.size());
-		} catch(RuntimeException e){
-			fail("Runtime Exception on typecheck: "+e.toString());
-		} catch(NoModelException e){
-			fail("No model while setting compilation unit.");
-		} catch(TypecheckInternalException e){
-			fail("Exception while typechecking!" + e.toString());
-		}
-		try{
 			modelbuilder.removeCompilationUnit(importTestCU);
-			SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-			assertEquals(2, testel.size()); //Why 2? Module not resolved gets inserted 2 times.
-		} catch(RuntimeException e){
-			fail("Runtime Exception on typecheck: "+e.toString());
-		} catch(NoModelException e){
-			fail("No model while setting compilation unit.");
-		} catch(TypecheckInternalException e){
-			fail("Exception while typechecking!" + e.toString());
-		}
+			SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+			assertEquals(2, testel2.size()); //Why 2? Module not resolved gets inserted 2 times.
 	}
 }
