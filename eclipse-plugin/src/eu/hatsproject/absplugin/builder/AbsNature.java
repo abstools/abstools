@@ -20,7 +20,9 @@ import java.util.Set;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
@@ -236,18 +238,14 @@ public class AbsNature implements IProjectNature {
 		if(declfile==null)
 			return;
 		
-		try {
-			IMarker marker = declfile.createMarker(markerType);
-			marker.setAttribute(IMarker.MESSAGE, message);
-			marker.setAttribute(IMarker.SEVERITY, severity);
-			marker.setAttribute(START_LINE, Symbol.getLine(start)-1);
-			marker.setAttribute(START_COLUMN, Symbol.getColumn(start)-1);
-			marker.setAttribute(END_LINE, Symbol.getLine(end)-1);
-			marker.setAttribute(END_COLUMN, Symbol.getColumn(end));
-			marker.setAttribute(IMarker.LINE_NUMBER, Symbol.getLine(start));
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		IMarker marker = declfile.createMarker(markerType);
+		marker.setAttribute(IMarker.MESSAGE, message);
+		marker.setAttribute(IMarker.SEVERITY, severity);
+		marker.setAttribute(START_LINE, Symbol.getLine(start)-1);
+		marker.setAttribute(START_COLUMN, Symbol.getColumn(start)-1);
+		marker.setAttribute(END_LINE, Symbol.getLine(end)-1);
+		marker.setAttribute(END_COLUMN, Symbol.getColumn(end));
+		marker.setAttribute(IMarker.LINE_NUMBER, Symbol.getLine(start));
    }
 	
 	/**
@@ -294,7 +292,6 @@ public class AbsNature implements IProjectNature {
 			   }
 				builder.addCompilationUnits(units);
 				
-				
 				for (CompilationUnit cu : units) {
 				   if(cu.hasParserErrors()){
 				      for(ParserError err : cu.getParserErrors()){
@@ -305,7 +302,7 @@ public class AbsNature implements IProjectNature {
 			} catch(NoModelException e){
 				//ignore
 			}catch (Exception e) {
-				e.printStackTrace();
+				throw new CoreException(new Status(IStatus.ERROR, PLUGIN_ID, "Parsing failed.", e));
 			}
 		}
 	}
@@ -356,7 +353,7 @@ public class AbsNature implements IProjectNature {
 	public void typeCheckModel() throws CoreException{
 		getProject().deleteMarkers(TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 		getProject().deleteMarkers(LOCATION_TYPE_INFERENCE_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-		SemanticErrorList typeerrors;
+		final SemanticErrorList typeerrors;
 		boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
 		String defaultlocationtype = getProjectPreferenceStore().getString(DEFAULT_LOCATION_TYPE);
 		String defaultlocationtypeprecision = getProjectPreferenceStore().getString(LOCATION_TYPE_PRECISION);
@@ -385,8 +382,9 @@ public class AbsNature implements IProjectNature {
 	
 	/**
 	 * Add ABS package dependencies to {@link AbsNature#modelbuilder} for type checking 
+	 * @throws TypecheckInternalException 
 	 */
-	private void addPackagesForTypeChecking() {
+	private void addPackagesForTypeChecking() throws TypecheckInternalException {
 		try {
 			Main m = new Main();
 			m.setWithStdLib(true);
@@ -400,13 +398,12 @@ public class AbsNature implements IProjectNature {
 			}
 			modelbuilder.addCompilationUnits(units);
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new TypecheckInternalException(e);
 		} catch (NoModelException e) {
 			//ignore
 		}
 	}
-	
-	
+
 	/**
 	 * retrieves the result of the type inference from the modelbuilders
 	 * @return the result of the type inference or <b>null</b> if type inference is off or
@@ -568,13 +565,11 @@ public class AbsNature implements IProjectNature {
 				}
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			Activator.logException(e);
 		}
 	}
-	
+
 	public PackageContainer getPackages() {
 		return packageContainer;
 	}
-	
-	
 }
