@@ -78,4 +78,8 @@ public class JavaExprTests extends JavaBackendTest {
         assertValidStdLib("{ Bool b = True; Bool c = let (Bool x) = True in b; }");
     }
 
+    @Test
+    public void test_thisDC_ticket318() throws Exception {
+        assertValidJava(getJavaCode("module M; import * from ABS.DC; { DeploymentComponent dc = thisDC(); }", true));
+    }
 }
