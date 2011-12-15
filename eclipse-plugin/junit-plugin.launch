@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.pde.ui.JunitLaunchConfig">
-<setAttribute key="additional_plugins"/>
+<setAttribute key="additional_plugins">
+<setEntry value="org.junit4:4.8.1.v20100525:default:true"/>
+</setAttribute>
 <booleanAttribute key="append.args" value="true"/>
 <booleanAttribute key="askclear" value="false"/>
 <booleanAttribute key="automaticAdd" value="false"/>
