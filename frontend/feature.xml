@@ -13,11 +13,14 @@
       <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
    </url>
 
+   <requires>
+      <import plugin="org.eclipse.jdt.core"/>
+   </requires>
+
    <plugin
          id="eu.hatsproject.abs.compiler"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="true"/>
+         version="0.0.0"/>
 
 </feature>
