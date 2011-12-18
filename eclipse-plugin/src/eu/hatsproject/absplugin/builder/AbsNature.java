@@ -280,7 +280,7 @@ public class AbsNature implements IProjectNature {
 			   
 			   Main m = new Main();
 			   m.setWithStdLib(true);
-			   m.setAllowIncompleteExpr(true);
+			   m.setAllowIncompleteExpr(withincomplete);
 
 			   List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 			   if (isABSPackage(file)) {
