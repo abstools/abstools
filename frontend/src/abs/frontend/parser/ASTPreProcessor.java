@@ -4,6 +4,7 @@
  */
 package abs.frontend.parser;
 
+import abs.frontend.ast.Annotation;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
 import abs.frontend.ast.CompilationUnit;
@@ -20,12 +21,12 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PatternVar;
 import abs.frontend.ast.PatternVarDecl;
 import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnderscorePattern;
 import abs.frontend.ast.VarUse;
 
@@ -101,21 +102,38 @@ public class ASTPreProcessor {
                             new ConstructorPattern(c.getName(), patternList),
                             new VarUse("res")))));
         
-        List<TypeParameterDecl> typeParams = new List<TypeParameterDecl>();
+        // the type parameters of the function
+        List<TypeParameterDecl> typeParams;
+        // the type of the parameter of the function
+        DataTypeUse paramType;
         if (dtd instanceof ParametricDataTypeDecl) {
-            typeParams = ((ParametricDataTypeDecl) dtd).getTypeParameterList();
+            ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
+            typeParams = pdtd.getTypeParameterList();
+            List<DataTypeUse> typeParams2 = new List<DataTypeUse>();
+            for (TypeParameterDecl p : typeParams) {
+                typeParams2.add(new DataTypeUse(p.getName(), new List<Annotation>()));
+            }
+            paramType = new ParametricDataTypeUse(dtd.getName(), new List<Annotation>(), typeParams2);
+        } else {
+            typeParams = new List<TypeParameterDecl>();
+            paramType = new DataTypeUse(dtd.getName(), new List<Annotation>());
         }
         
+        
+        
+        List<ParamDecl> parameters = new List<ParamDecl>()
+                .add(new ParamDecl("data",paramType,new List<Annotation>()));
         // the complete function definition
         FunctionDecl fd = 
             new ParametricFunctionDecl(
                     selName,    // function name
                     ca.getDataTypeUse().copy(), // type
-                    new List().add(new ParamDecl("data",new DataTypeUse(dtd.getName(), new List()),new List())), // parameters
+                    parameters, // parameters
                     funDef,
-                    new List(), // annotations
+                    new List<Annotation>(), // annotations
                     typeParams
                     );
+        fd.setPosition(ca.getStartPos(), ca.getEndPos());
         return fd;
     }
 }

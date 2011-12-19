@@ -414,9 +414,6 @@ aspect TypeChecker {
     
     
     public void Block.typeCheck(SemanticErrorList e) {
-        
-        TypeCheckerHelper.checkForDuplicates(e,getVars());
-
         for (Stmt s : getStmts()) {
             s.typeCheck(e);
         }
@@ -429,10 +426,6 @@ aspect TypeChecker {
    	 sig.typeCheck(e);
    	 b.typeCheck(e);
 
-	 if (e.size() == nerrors) {
-	     TypeCheckerHelper.checkForDuplicates(e,this);
-	 }
-	 	
    	 Type lastType = getModel().getUnitType();
    	 ASTNode<?> errorNode = this;
    	 if (b.getNumStmt() > 0) {
@@ -503,6 +496,7 @@ aspect TypeChecker {
     
     public void VarDeclStmt.typeCheck(SemanticErrorList e) {
        getVarDecl().typeCheck(e); 
+       TypeCheckerHelper.checkForDuplicatesOfVarDecl(e, this);
     }
     
     public void AssignStmt.typeCheck(SemanticErrorList e) {
@@ -616,22 +610,7 @@ aspect TypeChecker {
         if (!TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
             return;
         }
-
-        if (! (getType() instanceof DataTypeType))
-            return;
-        DataTypeType type = (DataTypeType) getType();
-        if (type.getDecl() instanceof ParametricDataTypeDecl) {
-            int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
-            if (expected != type.numTypeArgs()) {
-                e.add(new TypeError(this,ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+type.numTypeArgs()));
-            } else {
-            	if (this instanceof ParametricDataTypeUse) {
-            		for (DataTypeUse du : ((ParametricDataTypeUse)this).getParams()) {
-            			du.typeCheck(e);
-            		}
-            	} 
-            }
-        }
+        TypeCheckerHelper.checkDataTypeUse(e, this);
     }
 
     public void UnresolvedTypeUse.typeCheck(SemanticErrorList e) {
@@ -639,10 +618,7 @@ aspect TypeChecker {
     }
     
     public void VarUse.typeCheck(SemanticErrorList e) {
-    	if (getType().isUnknownType()) {
-	        e.add(new TypeError(this,ErrorMessage.NAME_NOT_RESOLVABLE,getName()));
-    	}
-    	
+        TypeCheckerHelper.checkVarUse(e, this);
     }
     
     public void Call.typeCheck(SemanticErrorList e) {

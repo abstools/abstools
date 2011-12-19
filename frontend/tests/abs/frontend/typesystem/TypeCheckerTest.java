@@ -80,6 +80,12 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void dataTypeSelectorsTypeParam2() {
+        assertTypeOK("data Foo<A> = Foo(A f);");
+    }
+    
+    
+    @Test
     public void negTestOk() {
         assertTypeOK("{ Bool b = ~True; }");
     }

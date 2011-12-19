@@ -69,9 +69,10 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void parametericDataTypeNoTypeArgs() {
-        assertTypeErrors("data Foo<A> = Bar(A) | Nil; { Foo f = Nil; }");
+        assertTypeErrors("data Foo<A> = Bar(A) | Nul; { Foo f = Nul; }");
     }
-
+    
+    
     @Test
     public void parametericDataTypeNoTypeArgs2() {
         assertTypeErrors("class Test { { Pair p = Pair(5,Pair(4,5)); } }");
@@ -82,7 +83,19 @@ public class NegativeTypeCheckerTests extends FrontendTest {
         assertTypeOK("type Euro = Int; type Cent = Int; type Money = Pair<Euro,Cent>;"
                 + "def Money createMoney(Euro e, Cent c) = Pair(e,c); ");
     }
+    
+    @Test
+    public void parametericDataTypeNoTypeArgs4() {
+        assertTypeErrors("data Foo<A> = Bar(A) | Nul; type Foo2 = Foo; { Foo2 f = Nul; }");
+    }
 
+    @Test
+    public void parametericDataTypeIndirect() {
+        assertTypeErrors("data Foo<A> = Bar(A); type Foo2 = Foo<String>; { Foo2 f = Bar(2); }");
+    }
+
+    
+    
     @Test
     public void testClassError() {
         assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }");
@@ -483,5 +496,52 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test 
     public void wrongInitOrder() {
         assertTypeErrors(" class C { Int x = y + 1; Int y = 1; }");
+    }
+    
+    @Test 
+    public void wrongInitOrder2() {
+        assertTypeErrors(" class C { Int x = x + 1; }");
+    }
+    
+    @Test 
+    public void rightInitOrder() {
+        assertTypeOK(" class C { Int y = 1; Int x = y + 1; }");
+    }
+    
+
+    @Test 
+    public void localVariableHiding() {
+        assertTypeErrors(" class C { Unit foo() { Int x = 1; if (True) { Int x = 2; }} }");
+    }
+    
+    @Test 
+    public void localVariableHiding2() {
+        assertTypeErrors(" class C { Unit foo(Int x) { if (True) { Int x = 2; } } }");
+    }
+    
+    
+    @Test 
+    public void localVariableHiding3() {
+        assertTypeErrors(" class C {{ Int x = 1; if (True) { Int x = 2; }}}");
+    }
+    
+    @Test 
+    public void localVariableHidingOk() {
+        assertTypeOK(" class C { Unit foo() { if (True) { Int x = 1; } if (True) { Int x = 2; }} }");
+    }
+    
+    @Test 
+    public void localVariableHidingOk2() {
+        assertTypeOK(" class C { Unit foo() { if (True) { Int x = 2; } Int x = 1; } }");
+    }
+    
+    @Test 
+    public void localVariableHidingOk3() {
+        assertTypeOK(" class C {  Int x = 1; Unit foo() { if (True) { Int x = 2; } } }");
+    }
+    
+    @Test 
+    public void localVariableHidingOk4() {
+        assertTypeOK(" class C {  Int x = 1; { Int x = 2; } }");
     }
 }

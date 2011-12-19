@@ -516,23 +516,23 @@ public class TypeCheckerHelper {
         
     }
     
-    public static void checkForDuplicates(SemanticErrorList e, MethodImpl m) {
-        java.util.List<TypedVarOrFieldDecl> l = new ArrayList<TypedVarOrFieldDecl>();
-        l.addAll(m.getBlock().getVars());
-        l.addAll(ListUtils.toJavaList(m.getMethodSig().getParams()));
-        checkForDuplicates(e,l);
-    }
-    
-    public static <A extends TypedVarOrFieldDecl> void checkForDuplicates(SemanticErrorList e, Collection<A> decls) {
-        Set<String> varNames = new HashSet<String>();
-        for (TypedVarOrFieldDecl v : decls) {
-            if (varNames.contains(v.getName())) {
-                e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED,v.getName()));
-            } else {
-                varNames.add(v.getName());
-            }
+    /**
+     * checks whether the local variable v was already defined in the current function
+     */
+    public static void checkForDuplicatesOfVarDecl(SemanticErrorList e, VarDeclStmt v) {
+        String varName = v.getVarDecl().getName();
+        VarOrFieldDecl otherVar = v.lookupVarOrFieldName(varName , false);
+        if (otherVar != null && inSameMethodOrBlock(v, otherVar)) {
+            e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName));
         }
-        
+    }
+
+    /**
+     * checks whether the two elements are defined in the same method or block
+     */
+    private static boolean inSameMethodOrBlock(ASTNode<?> a, ASTNode<?> b) {
+        return a.getContextMethod() != null && b.getContextMethod() == a.getContextMethod()
+            || a.getContextBlock()  != null && b.getContextBlock() == a.getContextBlock();
     }
     
     
@@ -601,6 +601,42 @@ public class TypeCheckerHelper {
                     alternative.getFileName() + ", line " + Symbol.getLine(alternative.getStart()) + ")";
         }
         return result;
+    }
+
+    public static void checkDataTypeUse(SemanticErrorList e, DataTypeUse use) {
+        if (! (use.getType() instanceof DataTypeType))
+            return;
+        
+        DataTypeType type = (DataTypeType) use.getType();
+        if (type.getDecl() instanceof ParametricDataTypeDecl) {
+            int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
+            if (expected != type.numTypeArgs()) {
+                e.add(new TypeError(use, ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+type.numTypeArgs()));
+            } else if (expected > 0) {
+                if (use instanceof ParametricDataTypeUse) {
+                        for (DataTypeUse du : ((ParametricDataTypeUse)use).getParams()) {
+                                du.typeCheck(e);
+                        }
+                } else if (use.getDecl() instanceof TypeSynDecl) {
+                    // nothing to check as this is already checked at the TypeSynDecl
+                } else {
+                    e.add(new TypeError(use, ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,"0"));
+                }
+            }
+        }
+    }
+
+    public static void checkVarUse(SemanticErrorList e, VarUse use) {
+        if (use.getType().isUnknownType()) {
+            e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
+        } else {
+            // check that fields are not used before they are defined:
+            boolean isUsedInFieldDecl = use.getContextFieldDecl() != null;
+            if (isUsedInFieldDecl && use.getDecl().getEndPos() > use.getStartPos()) {
+                e.add(new TypeError(use,ErrorMessage.VAR_USE_BEFORE_DEFINITION, use.getName()));
+            }
+        }
+        
     }
 
 }

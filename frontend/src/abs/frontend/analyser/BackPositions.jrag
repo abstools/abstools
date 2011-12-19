@@ -12,4 +12,9 @@ aspect BackPositions {
 		return getEnd();
 	}
 	
+	// set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
+	public void ASTNode.setPosition(int startPos, int endPos) {
+	    start = startPos;
+	    end = endPos;
+	}
 }
