@@ -26,7 +26,7 @@ module D;
 export *; 
 import * from M;
 
-delta D {
+delta Delta {
 	//adds interface J {
 	//	Unit o();
 	//}
@@ -49,7 +49,7 @@ import * from D;
 
 productline PL {
 	features F;
-	delta D when F;
+	delta Delta when F;
 }
 
 product P1(F);
