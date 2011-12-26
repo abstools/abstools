@@ -55,7 +55,7 @@ public class apetHandler extends AbstractHandler {
 			File f = new File("//tmp//costabs//absPL");
 			f.mkdirs();
 			
-			if (CostabsLink.SELECTED_ITEMS.size() <= 0) {
+			if (CostabsLink.ENTRIES_STRINGS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
 			            "No functions or methods selected in the outline view.", null);
 				ErrorDialog.openError(shellEclipse, "Costabs Error", "Costabs can not analyze.", status);
@@ -71,7 +71,7 @@ public class apetHandler extends AbstractHandler {
 				else {
 					// If analyze, get preferences and run
 					shell.generateProlog(absFile, true);
-					shell.analyze(absFile, CostabsLink.SELECTED_ITEMS);
+					shell.analyze(absFile, CostabsLink.ENTRIES_STRINGS);
 				}
 				
 				// Execute shell commands

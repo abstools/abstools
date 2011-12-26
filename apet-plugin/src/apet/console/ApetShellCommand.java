@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
+import abs.backend.prolog.PrologBackend;
 import apet.Activator;
 import apet.preferences.PreferenceConstants;
 
@@ -60,7 +61,7 @@ public class ApetShellCommand {
 		if (!stdlib) args[i++] = "-nostdlib";
 		args[i++] = file;
 
-		//PrologBackend.main(args); 
+		PrologBackend.main(args); 
 	}
 
 	/**
@@ -104,8 +105,9 @@ public class ApetShellCommand {
 	 * @param command The String with the shell command to ABS.
 	 */
 	private void buildOptions(StringBuffer command) {
-
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		
+		command.append("-xml /tmp/pet/pruebaFooEclipse.xml");
+/*		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
 		// -c CovCrit K: CovCrit:{dpk,bck} depth-k o block-k
 		command.append(" -c "
@@ -158,7 +160,7 @@ public class ApetShellCommand {
 		if(!store.getString(PreferenceConstants.PTRACING).equals("none"))
 			command.append(" -tr "+store.getString(PreferenceConstants.PTRACING)+" ");
 
-	}
+	*/}
 
 	/**
 	 * Create a process to execute the command given by argument in a shell.

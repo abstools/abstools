@@ -53,6 +53,14 @@
                   icon="icons/palmtree16x16.png"
                   id="costabs.toolbars.noStdCommand"
                   tooltip="Analyze with Costa">
+           <!--<visibleWhen>
+					<test
+						property="activeWorkbenchWindow.activePerspective"
+						value="*">
+					</test>
+					<equals activeWorkbenchWindow.activePerspective="ABS"/>
+               	</visibleWhen>-->
+                  
             </command>
          </toolbar>
       </menuContribution>

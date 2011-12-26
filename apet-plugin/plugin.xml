@@ -5,13 +5,13 @@
    <extension
          point="org.eclipse.ui.commands">
       <category
-            name="%category.name"
+            name="Apet Category"
             id="apet.commands.category">
       </category>
       <command
-            name="%command.name"
             categoryId="apet.commands.category"
-            id="apet.commands.noStdCommand">
+            id="apet.commands.noStdCommand"
+            name="Apet Command">
       </command>
    </extension>
    <extension
@@ -38,7 +38,7 @@
                label="Pet"
                id="apet.menus.mainMenu">
             <command
-                  commandId="costabs.commands.noStdCommand"
+                  commandId="apet.commands.noStdCommand"
                   id="apet.menus.noStdCommand"
                   label="Generate test-cases with Pet">
             </command>
@@ -52,7 +52,7 @@
                   commandId="apet.commands.noStdCommand"
                   icon="icons/costabsicon.jpeg"
                   id="apet.toolbars.noStdCommand"
-                  tooltip="Generate test-cases with Pet">
+                  tooltip="Generate test-cases with aPet">
             </command>
          </toolbar>
       </menuContribution>
