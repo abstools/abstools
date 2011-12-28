@@ -138,6 +138,7 @@ aspect GenerateMaude {
         boolean inlist = false;
         String effvar = var;
         PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations);
         stream.print("asynccall('"
                      + (var.equals("_") ? ".staticfuture" : var)
                      + " ; ");
@@ -170,6 +171,7 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations);
         stream.print("synccall('.staticfuture ; ");
         getCallee().generateMaude(stream);
         stream.print("; '" + getMethod() + " ; ");
@@ -186,7 +188,9 @@ aspect GenerateMaude {
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"InfDuration\"[ emp ]");
-        stream.print(") ; get( '.staticfuture ; '" + var + ") ");
+        stream.print(") ; ");
+        MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
+        stream.print("get( '.staticfuture ; '" + var + ") ");
     }
     public int SyncCall.numberOfRandom(Set<String> visitedFunctions) {
         int result = 0;
@@ -207,6 +211,7 @@ aspect GenerateMaude {
 
     public void GetExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations);
         stream.print("get(");
         getPureExp().generateMaude(stream);
         stream.print(" ; '" + var + ") ");
@@ -218,6 +223,7 @@ aspect GenerateMaude {
     public void NewExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations);
         if (hasCog()) {
             stream.print("newcog(");
         } else {
@@ -550,6 +556,7 @@ aspect GenerateMaude {
         }
         stream.print(",\n      Code: ");
         if (getBlock().getNumStmt() == 0) {
+            MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
             stream.print("return( null ) ");
         } else {
             inlist = false;    // value valid for statement emission as well
@@ -567,7 +574,9 @@ aspect GenerateMaude {
             if (returnType instanceof IdUse
                 && ((IdUse)returnType).getName().equals("Unit"))
             {
-                stream.print("; return( null ) ");
+                stream.print("; ");
+                MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
+                stream.print("return( null ) ");
             }
         }
         stream.print("> ");
@@ -590,6 +599,7 @@ aspect GenerateMaude {
                 int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
+                    MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
                     stream.print("assign( @ '" + var.getName() + " ; ");
                     var.getInitExp().generateMaude(stream);
                     stream.print(") ");
@@ -626,6 +636,7 @@ aspect GenerateMaude {
     }
     
     public void SkipStmt.generateMaude(PrintStream stream) {
+        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
         stream.print("skip ");
     }
 
@@ -634,6 +645,7 @@ aspect GenerateMaude {
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
             stream.print("$pushrandom ; ");
+            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
@@ -641,6 +653,7 @@ aspect GenerateMaude {
             stream.print(") ");
             stream.print("; $poprandom ");
         } else {
+            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
         }
         MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
@@ -648,6 +661,7 @@ aspect GenerateMaude {
 
     public void ReturnStmt.generateMaude(PrintStream stream) {
         if (getRetExp() instanceof PureExp) {
+            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
             stream.print("return( ");
             getRetExp().generateMaude(stream);
             stream.print(") ");
@@ -661,7 +675,9 @@ aspect GenerateMaude {
                 stream.print("$vardecl( '.result ; null ) ; " );
             }
             getRetExp().generateMaudeAsStatement(stream, var, getAnnotations());
-            stream.print("; return('" + var + ") " );
+            stream.print("; ");
+            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
+            stream.print("return('" + var + ") " );
         }
     }
 
@@ -694,10 +710,12 @@ aspect GenerateMaude {
     }
 
     public void SuspendStmt.generateMaude(PrintStream stream) {
+        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
         stream.print("suspend ");
     }
 
     public void DurationStmt.generateMaude(PrintStream stream) {
+        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
         stream.print("duration(");
         getMin().generateMaude(stream);
         stream.print("; ");
@@ -761,13 +779,16 @@ aspect GenerateMaude {
         stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
+            MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
             stream.print("return(null) ");
         } else {
             for (Stmt stmt : getStmts()) {
                 if (inlist) stream.print("; "); else inlist = true;
                 stmt.generateMaude(stream);
             }
-            stream.print("; return(null) ");
+            stream.print("; ");
+            MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
+            stream.print("return(null) ");
         }
         stream.print(">,\n  Ocnt: 0 > ");
     }
@@ -792,6 +813,7 @@ aspect GenerateMaude {
         for (FieldDecl field : fields) {
             if (field.hasInitExp()) {
                 if (inlist) stream.print("; "); else inlist = true;
+                MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList());
                 stream.print("assign( @ '" + field.getName() + " ; ");
                 field.getInitExp().generateMaude(stream);
                 stream.print(") ");
@@ -802,9 +824,12 @@ aspect GenerateMaude {
             stmt.generateMaude(stream);
         }
         if (inlist) stream.print("; "); else inlist = true;
+        MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
         stream.print("return(null) ");
         if (isActiveClass) {
-            stream.print("; asynccall('.staticfuture ; 'this ; 'run ; emp ; \"InfDuration\"[ emp ]) ");
+            stream.print("; ");
+            MaudeCompilerHelper.emitCostAnnotation(stream, new List<Annotation>());
+            stream.print("asynccall('.staticfuture ; 'this ; 'run ; emp ; \"InfDuration\"[ emp ]) ");
         }
         stream.print("> ");
     }

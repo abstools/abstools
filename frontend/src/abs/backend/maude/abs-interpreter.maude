@@ -471,6 +471,9 @@ mod ABS-STATEMENT is
 
   sort Stmt .
 
+  *** Cost expression wrapper for statements.
+  op [_]_ : Expr Stmt -> Stmt [ctor prec 40 format (b o b o o)] .
+
   op skip : -> Stmt [ctor format (b o)] .
   op suspend : -> Stmt [ctor format (b o)] .
   op duration(_;_) : Expr Expr -> Stmt [ctor format (b d o b o b o)] .
@@ -756,6 +759,7 @@ mod ABS-EVAL is
   vars MIN MAX : Nat .
   var MAC : SSubst .
   var W : MProc .
+  var COST : Expr .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
@@ -850,12 +854,12 @@ mod ABS-EVAL is
 
   --- The schedulable predicate holds, if a statement is schedulable for execution,
   --- i.e., the corresponding process may be waken up.
-  eq schedulable(get(QID ; A') ; SL , S, CN, MAC) = completed(S[QID], CN) .
-  eq schedulable(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = completed(SS[QID], CN) .
-  eq schedulable(get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
+  eq schedulable([COST]get(QID ; A') ; SL , S, CN, MAC) = completed(S[QID], CN) .
+  eq schedulable([COST]get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = completed(SS[QID], CN) .
+  eq schedulable([COST]get(L ; A') ; SL , S, CN, MAC) = completed(L, CN) .
   *** This is only for the untimed case -- in the timed interpreter, duration
   *** is reduced to $duration via an equation.
-  eq schedulable(duration(E ; E') ; SL, S, CN, MAC) = true .
+  eq schedulable([COST]duration(E ; E') ; SL, S, CN, MAC) = true .
   eq schedulable(SL, S, CN, MAC) = executable(SL, S, CN, MAC) [owise] .
 
   *** Evaluate various builtin functions.
@@ -1013,6 +1017,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   var T : Int .
   vars LIM RAND : Nat .
   var SC : Expr .
+  var COST : Expr .
 
   --- Process teardown: first release all futures, then release the Cog.  (We
   --- assume correct beginscope / endscope statements).
@@ -1035,9 +1040,9 @@ mod ABS-MACHINE-BASICS-COMMON is
 
   *** Handle synchronous self-calls
   ceq
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]get(A ; A') ; SL }, PrQ: W, {L1 | SL1}, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: {L1 | SL1}, PrQ: W, { L | [COST]get(A ; A') ; SL }, Lcnt: F >
     *** L[A] because synchronous calls are always handled via ".staticfuture"
   if  L[A] == L1['.label]
     [label schedule-self] .
@@ -1079,12 +1084,12 @@ mod ABS-MACHINE-BASICS-COMMON is
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | $pushrandom ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
 
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | $poprandom ; SL }, PrQ: W, Lcnt: F >
   =
-    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign('.random ; "ABS.StdLib.tail"('.random)) ; SL }, PrQ: W, Lcnt: F > .
 
   --- Schedule a new process for execution, if it is schedulable.
   ---
@@ -1130,6 +1135,7 @@ mod ABS-MACHINE-BASICS-RL is
   var CG : Cogid .
   var MAC : SSubst .
   var SC : Expr .
+  var COST : Expr .
 
   *** Handle synchronous calls within cogs.
   ***
@@ -1137,13 +1143,13 @@ mod ABS-MACHINE-BASICS-RL is
   *** entire state here as well.
   ceq
     { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | [COST]get(A ; A') ; SL }, PrQ: W, Lcnt: F >
       < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
       CN
     }
   =
     { < CG : Cog | Object: O1 >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | [COST]get(A ; A') ; SL }, Lcnt: F >
       < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
       CN
     }
@@ -1228,6 +1234,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var MAC : SSubst .
   var M : Mid .
   var CG : Cogid .
+  var COST : Expr .
 
   *** Handle synchronous calls within cogs.
   ***
@@ -1235,14 +1242,14 @@ mod ABS-MACHINE-BASICS-TIMED is
   *** entire state here as well.
   ceq
     { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: { L | [COST]get(A ; A') ; SL }, PrQ: W, Lcnt: F >
       < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
       < T : Clock | Limit: LIM, Random: RAND >
       CN
     }
   =
     { < CG : Cog | Object: O1 >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | [COST]get(A ; A') ; SL }, Lcnt: F >
       < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
       < T : Clock | Limit: LIM, Random: RAND >
       CN
@@ -1404,9 +1411,10 @@ mod ABS-STMT-SKIP-RL is
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
+  var COST : Expr .
 
   rl
-    < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]skip ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
@@ -1417,9 +1425,10 @@ mod ABS-STMT-SKIP-EQ is
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
+  var COST : Expr .
 
   eq
-    < O : C | Cog: CG, Att: S, Pr: { L | skip ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]skip ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label skip] .
@@ -1438,10 +1447,11 @@ mod ABS-STMT-ASSIGN-RL is
   var E : Expr .       var D : Data .   var CG : Cogid .
   var Q : Qid .
   var D' : Data .
+  var COST : Expr .
 
   *** Variable or field assignment
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]assign(Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
     if hasMapping(L, Q) then
       < O : C | Cog: CG, Att: S, Pr: { update(Q, D, L) |  markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
@@ -1454,7 +1464,7 @@ mod ABS-STMT-ASSIGN-RL is
 
   *** Field assignment
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
   if D := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1469,11 +1479,12 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   var T : Int .        var Q : Qid .
   var D' : Data .
   vars LIM RAND : Nat .
+  var COST : Expr .
 
   *** Variable or field assignment.
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]assign(Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM, Random: RAND >
     if hasMapping(L, Q) then
@@ -1488,7 +1499,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   *** Field assignment.
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]assign(@ Q ; E) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: insert(Q, D, S), Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W, Lcnt: F >
@@ -1562,7 +1573,7 @@ mod ABS-STMT-WHILE-EQ is
     < O : C | Cog: CG, Att: S, Pr: { L | while E do SL1 od ; SL }, PrQ: W, Lcnt: F >
   =
     < O : C | Cog: CG, Att: S,
-              Pr: { L | if E th (SL1 ; while E do SL1 od) el skip fi ; SL },
+              Pr: { L | if E th (SL1 ; while E do SL1 od) el ["int"[0]]skip fi ; SL },
               PrQ: W, Lcnt: F >
     [label while] .
 endm
@@ -1576,10 +1587,11 @@ mod ABS-STMT-SUSPEND-RL is
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
+  var COST : Expr .
 
   rl
     < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]suspend ; SL }, PrQ: W, Lcnt: F >
   =>
     < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
@@ -1591,10 +1603,11 @@ mod ABS-STMT-SUSPEND-EQ is
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
+  var COST : Expr .
 
   eq
     < CG : Cog | Object: O >
-    < O : C | Cog: CG, Att: S, Pr: { L | suspend ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]suspend ; SL }, PrQ: W, Lcnt: F >
   =
     < CG : Cog | Object: null >
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W , { L | SL }, Lcnt: F >
@@ -1613,9 +1626,10 @@ mod ABS-STMT-DURATION-RL is
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
   vars E1 E2 : Expr .
+  var COST : Expr .
 
   rl
-    < O : C | Cog: CG, Att: S, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
   =>
     < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
     [label duration] .
@@ -1629,10 +1643,11 @@ mod ABS-STMT-DURATION-EQ-TIMED is
   vars E1 E2 : Expr .
   var T : Int .
   vars LIM RAND MIN MAX : Nat .
+  var COST : Expr .
 
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]duration( E1 ; E2 ) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
@@ -1722,13 +1737,14 @@ mod ABS-CALLSTMTS-RL is
   var DE : Expr .
   var M : Mid .
   vars CG CG1 : Cogid .
+  var COST : Expr .
 
   --- async-call
   ---
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]asynccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1740,10 +1756,10 @@ mod ABS-CALLSTMTS-RL is
   --- Create a $cont at end of called process if both objects are in the same
   --- cog (CG == CG1)
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1753,9 +1769,9 @@ mod ABS-CALLSTMTS-RL is
 
   --- sync-selfcall
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
       /\ O := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1777,15 +1793,16 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   var M : Mid .
   vars CG CG1 : Cogid .
   vars LIM RAND : Nat .
+  var COST : Expr .
 
   --- async-call
   ---
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | asynccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]asynccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O1 ; M ; DL ; false ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
       /\ O1 := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1798,11 +1815,11 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   --- cog (CG == CG1)
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]synccall(A ; E ; M ; EL ; DE); SL }, PrQ: W, Lcnt: F >
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O1 ; M ; DL ; (CG == CG1) ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < O1 : C1 | Cog: CG1, Att: S1, Pr: P1, PrQ: W1, Lcnt: F1 >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1813,10 +1830,10 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   --- sync-selfcall
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | synccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]synccall(A ; E ; M ; EL ; DE) ; SL }, PrQ: W, Lcnt: F >
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; N) ; $call(N ; O ; M ; DL ; true ; eval(DE, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))) ; SL }, PrQ: W, Lcnt: (s F) >
     < N : Future | Name: M, Completed: false, References: 1, Value: null >
   if DL :=  evalList(EL, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
       /\ O := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
@@ -1839,15 +1856,16 @@ mod ABS-NEW-RL is
   var AL : VidList .   var MS : MMtd .
   var CG : Cogid .
   var SC : Expr .
+  var COST : Expr .
 
   rl
-    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; ob(B, G)); ["int"[0]]synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp]) ; ["int"[0]]get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
@@ -1856,12 +1874,12 @@ mod ABS-NEW-RL is
     [label new-object] .
 
   rl
-    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =>
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; ob(B, G)) ; ["int"[0]]asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; ["int"[0]]get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
@@ -1882,17 +1900,18 @@ mod ABS-NEW-EQ-TIMED is
   var T : Int .        var CG : Cogid .
   var SC : Expr .
   vars LIM RAND : Nat .
+  var COST : Expr .
 
   eq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]new(A ; B ; EL); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; ob(B, G)); ["int"[0]]synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; ["int"[0]]get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
@@ -1902,13 +1921,13 @@ mod ABS-NEW-EQ-TIMED is
 
   eq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]newcog(A ; B ; EL ; E); SL }, PrQ: W, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
   =
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A ; ob(B, G)) ; ["int"[0]]asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; ["int"[0]]get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
@@ -1930,9 +1949,10 @@ mod ABS-STMT-RETURN-RL is
   var D : Data .
   var M : Mid .
   var CG : Cogid .
+  var COST : Expr .
 
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]return(E); SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: M, Completed: false, References: G, Value: null >
    =>
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
@@ -1956,10 +1976,11 @@ mod ABS-STMT-RETURN-EQ-TIMED is
   var D : Data .
   var M : Mid .
   var CG : Cogid .
+  var COST : Expr .
 
   ceq
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | return(E); SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]return(E); SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: M, Completed: false, References: G, Value: null >
    =
     *** NOTE (rs 2010-06-15) Note that a second return statement will deadlock
@@ -1989,6 +2010,7 @@ mod ABS-RECEIVE-RESULT is
   var D : Data .
   var M : Mid .
   var CG : Cogid .
+  var COST : Expr .
 
   --- receive-comp
   ---
@@ -1996,10 +2018,10 @@ mod ABS-RECEIVE-RESULT is
   --- multiple completion messages with the same label but different return
   --- values in the queue.
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | [COST]get(A ; A') ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: M, Completed: true, References: G, Value: D >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: { L | ["int"[0]]assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
     < N : Future | Name: M, Completed: true, References: G, Value: D >
   if N = (S :: L)[A]
     [label receive-comp-var] .
@@ -2014,12 +2036,12 @@ mod ABS-RECEIVE-RESULT is
   --- checker, because there might be two processes in PrQ which await a
   --- reply to the label.
   crl
-    < O : C | Cog: CG, Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | get(A ; A') ; SL1},
+    < O : C | Cog: CG, Att: S, Pr: { L | $cont N }, PrQ: W , { L1 | [COST]get(A ; A') ; SL1},
               Lcnt: F >
   =>
     *** HACK: the process with bindings L is unceremoniously dumped, so
     *** freeing the futures it holds is left to the target process
-    < O : C | Cog: CG, Att: S, Pr: { L1 | freeFutures(L) ; get(A ; A') ; SL1 }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L1 | freeFutures(L) ; [COST]get(A ; A') ; SL1 }, PrQ: W,
               Lcnt: F >
   if N == L1[A]
     [label continue-self] .
@@ -2027,14 +2049,14 @@ mod ABS-RECEIVE-RESULT is
   crl
     < O : C | Cog: CG, Att: S, Pr: { L | $cont label( O1 , X) }, PrQ: W, Lcnt: F >
     < CG : Cog | Object: O >
-    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | get(A ; A') ; SL1},
+    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | [COST]get(A ; A') ; SL1},
                Lcnt: G >
   =>
     *** HACK: the process with bindings L is unceremoniously dumped, so
     *** freeing the futures it holds is left to the target process
     < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
     < CG : Cog | Object: O1 >
-    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | freeFutures(L) ; get(A ; A') ; SL1}, PrQ: W1 , Lcnt: G >
+    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | freeFutures(L) ; [COST]get(A ; A') ; SL1}, PrQ: W1 , Lcnt: G >
     *** not (S1 :: L1)[A] since synchronous calls always use .staticfuture to store the label.
   if label( O1 , X) == L1[A]
     [label continue-cog] .
@@ -2067,7 +2089,7 @@ mod ABS-SIMULATOR-RL is
       < -1 : Clock | Limit: 100 >
       < 'main : Cog | Object: ob('main, 0) >
       < ob('main, 0) : '... | Cog: 'main, Att:  '.comp |-> null,
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | ["int"[0]]new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
@@ -2102,7 +2124,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
       < 0 : Clock | Limit: LIM:Int >
       < 'main : Cog | Object: ob('main, 0) >
       < ob('main, 0) : '... | Cog: 'main, Att: '.comp |-> null,
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; qid(B:String) ; DL:DataList) },
+        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | ["int"[0]]new('x ; qid(B:String) ; DL:DataList) },
         PrQ: noProc, Lcnt: 0 > } .
 
   --- The initial object commits suicide after it did its job.
