@@ -350,7 +350,7 @@ mod ABS-OID is
   subsort Oid < Data .
 
   --- Constructor of object names
-  op ob : Cid Nat -> Oid [ctor] .
+  op ob : Cid Int -> Oid [ctor] .
 endm
 
 view Oid from TRIV to ABS-OID is
@@ -1119,6 +1119,21 @@ mod ABS-MACHINE-BASICS-COMMON is
     /\ P := findProcess(W1, N)
       [label PrQ-schedulable] .
 
+    *** A common initial configuration.  The timed version differs in that the
+    *** clock has value 0 instead of -1.
+  op initConf : Configuration Cid DataList Int Int -> Configuration .
+  eq initConf(CN:Configuration, CID:Cid, DL:DataList, INIT:Int, LIM:Int) =
+    CN:Configuration
+    < INIT:Int : Clock | Limit: LIM:Int >
+    < 'main : Cog | Object: ob('main, 0) >
+    < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
+      Cog: 'main,
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'description |-> "str"["Environment"], 'this |-> ob('ABS.DC.DeploymentComponent, -1),
+      Pr: idle, PrQ: noProc, Lcnt: 0 >
+    < ob('main, 0) : '... | Cog: 'main,
+      Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
+      Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | ["int"[0]]new('x ; CID:Cid ; DL:DataList) },
+      PrQ: noProc, Lcnt: 0 > .
 endm
 mod ABS-MACHINE-BASICS-RL is
   protecting ABS-EVAL .
@@ -2085,12 +2100,7 @@ mod ABS-SIMULATOR-RL is
   --- case.
   op main : Configuration String DataList Int -> State .
   eq main(CN:Configuration, B:String, DL:DataList, LIM:Int) =
-    { CN:Configuration
-      < -1 : Clock | Limit: 100 >
-      < 'main : Cog | Object: ob('main, 0) >
-      < ob('main, 0) : '... | Cog: 'main, Att:  '.comp |-> null,
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | ["int"[0]]new('x ; qid(B:String) ; DL:DataList) },
-        PrQ: noProc, Lcnt: 0 > } .
+    { initConf(CN:Configuration, qid(B:String), DL:DataList, -1, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
   eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
@@ -2120,12 +2130,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   --- limit given by the 4th argument.
   op main : Configuration String DataList Int -> State .
   eq main(CN:Configuration, B:String, DL:DataList, LIM:Int) =
-    { CN:Configuration
-      < 0 : Clock | Limit: LIM:Int >
-      < 'main : Cog | Object: ob('main, 0) >
-      < ob('main, 0) : '... | Cog: 'main, Att: '.comp |-> null,
-        Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | ["int"[0]]new('x ; qid(B:String) ; DL:DataList) },
-        PrQ: noProc, Lcnt: 0 > } .
+    { initConf(CN:Configuration, qid(B:String), DL:DataList, 0, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
   eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =

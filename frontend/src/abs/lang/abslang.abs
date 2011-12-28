@@ -440,23 +440,20 @@ module ABS.DC;
 export *;
 import * from ABS.StdLib;
 
-data DCDataElement = URL(String)
-                   | CPUCapacity(Int)
-	               | Memory(Int);
-
-data DCData = DCData(Set<DCDataElement>);
+data DCData = URL(String)
+            | CPUCapacity(Int);
 
 interface DeploymentComponent {
-    Unit setConfiguration(DCData configuration);
-    DCData getConfiguration();
+    Unit setConfiguration(Set<DCData> configuration);
+    Set<DCData> getConfiguration();
 }
 
-class DeploymentComponent (String description, DCData configuration)
+class DeploymentComponent (String description, Set<DCData> configuration)
 implements DeploymentComponent {
-    Unit setConfiguration(DCData configuration) {
+    Unit setConfiguration(Set<DCData> configuration) {
         this.configuration = configuration;
     }
-    DCData getConfiguration() { return configuration; }
+    Set<DCData> getConfiguration() { return configuration; }
 }
 
 // abbreviation for [DC: foo] annotations
