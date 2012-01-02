@@ -22,6 +22,7 @@ public class MaudeCompiler extends Main {
     private File outputfile;
     private String mainBlock;
     private int clocklimit = 100;
+    private int defaultResources = 0;
     
     public static void main(final String... args) {
         try {
@@ -58,7 +59,9 @@ public class MaudeCompiler extends Main {
                 mainBlock = arg.split("=")[1];
             } else if (arg.startsWith("-limit=")) {
                 clocklimit = Integer.parseInt(arg.split("=")[1]);
-            } else {
+            } else if (arg.startsWith("-defaultcost=")) {
+                defaultResources = Integer.parseInt(arg.split("=")[1]);
+            }else {
                 remainingArgs.add(arg);
             }
         }
@@ -81,7 +84,7 @@ public class MaudeCompiler extends Main {
             stream = new PrintStream(outputfile);
         }
         
-        model.generateMaude(stream, module, mainBlock, clocklimit);
+        model.generateMaude(stream, module, mainBlock, clocklimit, defaultResources);
     }
 
     protected void printUsage() {
@@ -92,6 +95,7 @@ public class MaudeCompiler extends Main {
                 + "  -o <file>      write output to <file> instead of standard output\n"
                 + "  -timed         generate code for timed interpreter\n"
                 + "  -limit=n       set clock limit for timed interpreter to n (default 100)"
+                + "  -defaultcost=n set default statement execution cost (default 0)"
         );
     }
 

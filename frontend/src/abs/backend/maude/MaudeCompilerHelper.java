@@ -25,13 +25,19 @@ public class MaudeCompilerHelper {
     }
 
     public static void emitCostAnnotation(PrintStream stream,
-                                          List<Annotation> annotations)
+                                          List<Annotation> annotations,
+                                          int defaultValue)
     {
         PureExp cost = getAnnotationValue(annotations, "Cost");
-        stream.print("[");
-        if (cost == null) stream.print("\"int\"[0]");
-        else cost.generateMaude(stream);
-        stream.print("]");
+        if (cost != null || defaultValue > 0) {
+            stream.print("[");
+            if (cost == null) {
+                stream.print("\"int\"[" + Integer.toString(defaultValue) + "]");
+            } else {
+                cost.generateMaude(stream);
+            }
+            stream.print("]");
+        }
     }
 
     public static void emitPushRandomInst(PrintStream stream, int count) {

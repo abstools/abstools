@@ -90,7 +90,7 @@ public class MaudeTests extends ABSTest {
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         // TODO: handle delta generation / testing / flattening
-        model.generateMaude(new PrintStream(out), module, 100);
+        model.generateMaude(new PrintStream(out), module, 100, 0);
         String res = out.toString();
         return res;
     }
