@@ -122,6 +122,19 @@ def DeploymentComponent thisDC() = builtin;
    DC does not contain enough resources, the process will <block> until
    the next time unit.
 
+** Default statement costs
+
+   By default, statement execution costs nothing (i.e., the machine is
+   infinitely fast), which preserves the normal semantics of timed ABS
+   where only explicit <<<duration>>> or <<<await duration>>> statements
+   advance the clock.  By compiling ABS models with the command-line
+   parameter <<<-defaultcost=n>>>, all statements without an explicit
+   <<<[Cost: x]>>> annotation will take <<<n>>> resources to execute.
+   This approximates "normal" CPU behavior a bit more closely, but still
+   disregards the cost of evaluating expressions (assignment of a
+   complex expression will take more time on a real machine than
+   assignment of a constant).
+
 ** Bugs / TODO
 
    * The <<<thisDC>>> function is currently undefined in the Java
