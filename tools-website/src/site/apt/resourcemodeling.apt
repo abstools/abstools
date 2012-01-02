@@ -2,6 +2,10 @@ Simulating Resources in Maude
 
 * Introduction
 
+  This section describes language features related to deployment
+  components.  Most of these features are implemented on the Maude
+  backend and ignored on the Java backend.
+
   ABS models can be augmented with resource information and the effects
   of resources during execution can be simulated on the Maude backend.
   Resources are contained in <deployment components>, which provide a
@@ -10,53 +14,78 @@ Simulating Resources in Maude
   nodes in a network, and basically any entity that constrains execution
   of code running in its context.
 
-  This section describes language features related to deployment
-  components.  Most of these features are implemented on the Maude
-  backend and ignored on the Java backend.
+  At the moment we only model CPU capacity.  A deployment component (DC)
+  can contain a certain "CPU capacity", which provides an abstract model
+  of speed relative to other DCs.  I.e., a cpu capacity of 50 is "twice
+  as fast" as 25.
+
+  Executing statements costs a certain number of resources, which are
+  refilled in each time interval -- since CPU speed is related to
+  performance and hence time, simulations involving performance
+  characteristics must be done using the {{{./timedmodeling.html}timed
+  interpreter}}.
 
 * Language Elements
 
+  All identifiers described in the following are contained in the module
+  <<<ABS.DC>>>.
+
 ** Resource Types
 
-   Resource types are, at the moment, cpu capacity and memory.
-   Additionally, a URL can be used to express the "location" of a
+   Deployment components are created with a set of resources, which are
+   of type <<<DCData>>>.  At the moment, this can be a cpu capacity and
+   an associated URL that can be used to express the "location" of a
    deployment component.  (In a distributed implementation of ABS, the
    URL can be used to specify the location of a new cog and its first
    object.)
 
 +---
-data DCDataElement = URL(String)
-                   | CPUCapacity(Int)
-                   | Memory(Int);
-
-data DCData = DCData(Set<DCDataElement>);
+data DCData = URL(String)
+            | CPUCapacity(Int);
 +---   
 
 ** Deployment Components
 
    Deployment components are modeled by an ABS class and interface
    <<<DeploymentComponent>>> which is contained in the standard library.
-   They are initialized with resource data which can be used by the
-   simulator for expressing memory usage, cpu usage etc.
+   DCs are initialized with resource data which can be used by the Maude
+   backend to simulate cpu usage and performance behavior of models.
 
 +---
 interface DeploymentComponent {
-    Unit setConfiguration(DCData configuration);
-    DCData getConfiguration();
+    Set<DCData> getConfiguration();
+    Int available(Resourcename resourcename);
+    Int load(Resourcename resourcename, Int periods);
+    Int total(Resourcename resourcename);
 }
 
-class DeploymentComponent (String description, DCData configuration)
+class DeploymentComponent (String description, Set<DCData> configuration)
 implements DeploymentComponent {
     ...
 }
 +---
+
+   Some methods of <<<DeploymentComponent>>> use an argument of type
+   <<<Resourcename>>>, which is (at the moment) a string.  The only
+   meaningful value at the moment is <<<"CPU">>>.
+
+   * The call <<<available("CPU")>>> returns the number of currently
+     available resources.  (The value will change during execution.)
+
+   * The call <<<load("CPU", n)>>> returns the <average load> for the
+     last n time periods as an integer between 0 and 100.
+
+   * the method <<<total("CPU")>>> returns the number of resources per
+     time unit.
+
 
 ** Using Deployment Components
 
    An optional annotation <<<[DC: x]>>> attached to a <<<new cog>>>
    statement expresses that the new object's cog will run in the context
    of deployment component <<<x>>>.  By default, a new cog runs in the
-   same context as the process that generates it.
+   same context as the process that generates it.  The main block runs
+   in a DC with no resource limits.
 
 +---
 interface Server { ... }
@@ -73,9 +102,6 @@ class ServerImp implements Server { ... }
 
 ** Accessing the Current Deployment Component
 
-   <<Note: this function is currently undefined in the Java backend and
-   will lead to a compile-time error.>>
-
 +---
 def DeploymentComponent thisDC() = builtin;
 +---
@@ -88,3 +114,18 @@ def DeploymentComponent thisDC() = builtin;
 +---
   DCData currentData = thisDC().getConfiguration();
 +---
+
+** Expressing statement costs
+
+   The annotation <<<[Cost: x] s>>> expresses that executing the
+   statement <<<s>>> will consume <<<x>>> CPU resources.  If the current
+   DC does not contain enough resources, the process will <block> until
+   the next time unit.
+
+** Bugs / TODO
+
+   * The <<<thisDC>>> function is currently undefined in the Java
+     backend and will lead to a compile-time error.
+
+   * The <<<[DC: dc]>>> and <<<[Cost: x]>>> annotations are not
+     currently type-checked.
