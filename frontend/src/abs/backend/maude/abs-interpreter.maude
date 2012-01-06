@@ -1183,13 +1183,13 @@ mod ABS-MACHINE-BASICS-COMMON is
     < O : C | Cog: CG, Att: S, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE, S1,
+      Att: 'internalState |-> STATE, 'initialized |-> "True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   => < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE':Data, S1,
+      Att: 'internalState |-> STATE':Data, 'initialized |-> "True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
       /\ STATE':Data := consumeDCResource(STATE, "CPU", COSTNAT)

@@ -515,10 +515,13 @@ interface DeploymentComponent {
 
 class DeploymentComponent (String description, Set<DCData> configuration)
 implements DeploymentComponent {
-    Map<String, Int> internalState = createDCInternalsMap(configuration);
     Map<String, List<Int>> history = createDCHistory(configuration);
     Map<String, Int> totals = createTotals(configuration);
-
+    Map<String, Int> internalState = createDCInternalsMap(configuration);
+    Bool initialized = False;
+    {
+        this.initialized = True;
+    }
     Set<DCData> getConfiguration() { return configuration; }
 
     Int available(String resourcename) {
