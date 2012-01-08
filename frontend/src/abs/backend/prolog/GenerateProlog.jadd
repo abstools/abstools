@@ -1,6 +1,7 @@
 // -*- mode: java; tab-width: 4; -*-
 
 import java.io.*;
+
 import abs.backend.prolog.*;
 import abs.frontend.ast.*;
 
@@ -354,8 +355,8 @@ aspect GenerateProlog {
         s.print(")");        
     }
 
-
-    // Case expressions
+    
+    // Case and if expressions
 
     public void CaseExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print("case(");
@@ -379,7 +380,17 @@ aspect GenerateProlog {
         s.print(")"); // This closes the "casebranch" term
     }
 
-
+    public void IfExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
+        // an if expr is compiled into a case with two branches (with 'True' and 'False')
+        s.print("case(");
+        getCondExp().generateProlog(s,reachInfo);
+        s.print(",[branch('True',");
+        getThenExp().generateProlog(s,reachInfo);
+        s.print("),branch('False',");
+        getElseExp().generateProlog(s,reachInfo);
+        s.print(")])");
+    }
+    
     // Patterns
 
     public void PatternVarDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
