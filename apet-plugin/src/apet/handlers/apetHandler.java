@@ -22,7 +22,6 @@ import abs.backend.prolog.PrologBackend;
 import abs.frontend.ast.Model;
 
 import apet.console.ApetShellCommand;
-import apet.structures.ResultTracker;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -31,7 +30,6 @@ import apet.structures.ResultTracker;
  */
 public class apetHandler extends AbstractHandler {
 
-	public static ResultTracker STORAGE_COSTABS = new ResultTracker();
 	
 	/**
 	 * The constructor.
@@ -69,7 +67,7 @@ public class apetHandler extends AbstractHandler {
 				} else {
 					// If analyze, get preferences and run
 					callPrologBackend(absFile);
-					shell.callAPet(absFile, CostabsLink.ENTRIES_STRINGS);
+					shell.callAPet(CostabsLink.ENTRIES_STRINGS);
 				}	
 				// Execute shell commands
 				ConsoleHandler.write(shell.getResult());

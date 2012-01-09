@@ -16,8 +16,8 @@ public class ApetShellCommand {
 	/**
 	 * Result of the last run.
 	 */
-	private  String result = "";
-	private  String error = "";
+	private String result = "";
+	private String error = "";
 
 	/**
 	 * Create the communicator with costabs.
@@ -40,44 +40,19 @@ public class ApetShellCommand {
 	public String getResult() {
 		return result;
 	}
-
+	
 	/**
-	 * This call will compile the abs file in a prolog format to be used
-	 * for costabs.
-	 * @param file The ABS source file to be compiled.
-	 * @param stdlib _Use of ABS standard library.
-	 * @throws Exception If some error in compilation.
+	 * This builds the apet comand and executes it
+	 * @param entries The names of methods/functions to generate test-cases for.
 	 */
-	public void generateProlog(String file, boolean stdlib) throws Exception {
-
-		int numArgs;
-		if (!stdlib) 
-			numArgs = 4;
-		else numArgs = 3;
-		String[] args = new String[numArgs];
-		int i = 0;
-		args[i++] = "-d";
-		args[i++] = "/tmp/costabs/absPL";
-		if (!stdlib) args[i++] = "-nostdlib";
-		args[i++] = file;
-
-		PrologBackend.main(args); 
-	}
-
-	/**
-	 * Call to costabs to execute with the actual preferences setup.
-	 * @param file ABS to be passed to costabs.
-	 * @param entries The names of methods / functions to use in costabs.
-	 */
-	public void callAPet(String file, ArrayList<String> entries) {
+	public void callAPet(ArrayList<String> entries) {
 		executeCommand(buildCommand(entries));
 	}
 
 	/**
-	 * Auxiliary method, just to build the shell command with the entries and
-	 * preferences setup.
-	 * @param entries The entries to be used in costabs.
-	 * @return The string that has the shell command to use costabs.
+	 * Auxiliary method to build the shell command.
+	 * @param entries The names of methods/functions to generate test-cases for.
+	 * @return The string with the actual shell command.
 	 */
 	private String buildCommand(ArrayList<String> entries) {
 
@@ -105,7 +80,7 @@ public class ApetShellCommand {
 	 */
 	private void buildOptions(StringBuffer command) {
 		
-		command.append("-xmlpath /tmp/pet/ABSTestCases.xml");
+		command.append("-xmlpath /tmp/pet/abs_testcases.xml");
 /*		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
 		// -c CovCrit K: CovCrit:{dpk,bck} depth-k o block-k
