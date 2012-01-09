@@ -18,6 +18,8 @@ import apet.console.ConsoleHandler;
 import apet.dialogs.OptionsDialog;
 import apet.utils.SourceUtils;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
+import abs.backend.prolog.PrologBackend;
+import abs.frontend.ast.Model;
 
 import apet.console.ApetShellCommand;
 import apet.structures.ResultTracker;
@@ -42,46 +44,55 @@ public class apetHandler extends AbstractHandler {
 	 * from the application context.
 	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		final Shell shellEclipse= HandlerUtil.getActiveWorkbenchWindowChecked(event).getShell();
 		
+		final Shell shellEclipse= HandlerUtil.getActiveWorkbenchWindowChecked(event).getShell();
 		ApetShellCommand shell = new ApetShellCommand();
-
+		
 		try {
 			ConsoleHandler.defaultConsole = ConsoleHandler.findCostabsConsole();
-
 			String absFile = SourceUtils.extractResource(SourceUtils.obtainActiveEditor()).getLocation().toString();
 
-			// Do costabs directory
+			// Creating the costabs tmp directory
 			File f = new File("//tmp//costabs//absPL");
 			f.mkdirs();
 			
 			if (CostabsLink.ENTRIES_STRINGS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
-			            "No functions or methods selected in the outline view.", null);
-				ErrorDialog.openError(shellEclipse, "Costabs Error", "Costabs can not analyze.", status);
-				
-			}
-			else {
+			            "At least one function or method must be selected in the outline view.", null);
+				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);		
+			} else {
 				OptionsDialog mDialog = new OptionsDialog (shellEclipse);
 				mDialog.open();
 				
 				if (mDialog.getReturnCode() == OptionsDialog.CANCEL) {
 					ConsoleHandler.write("Don't do anything, cancelled by the user");
-				} 
-				else {
+				} else {
 					// If analyze, get preferences and run
-					shell.generateProlog(absFile, true);
-					shell.analyze(absFile, CostabsLink.ENTRIES_STRINGS);
-				}
-				
+					callPrologBackend(absFile);
+					shell.callAPet(absFile, CostabsLink.ENTRIES_STRINGS);
+				}	
 				// Execute shell commands
 				ConsoleHandler.write(shell.getResult());
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			ConsoleHandler.write(shell.getError());
 		}
-			
+
 		return null;
+	}
+	
+	private void callPrologBackend(String filename) throws Exception {
+    	/*
+		int numArgs = 3;
+		String[] args = new String[numArgs];
+		int i = 0;
+		args[i++] = "-d";
+		args[i++] = "/tmp/costabs/absPL";
+		args[i++] = filename;
+		PrologBackend.runFromShell(args);
+		*/
+		
+		Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
+		PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
 	}
 }

@@ -69,44 +69,43 @@ public class ApetShellCommand {
 	 * @param file ABS to be passed to costabs.
 	 * @param entries The names of methods / functions to use in costabs.
 	 */
-	public void analyze(String file, ArrayList<String> entries) {
-
-		executeCommand(buildCommand(file,entries));
+	public void callAPet(String file, ArrayList<String> entries) {
+		executeCommand(buildCommand(entries));
 	}
 
 	/**
-	 * Auxiliar method, just to build the shell command with the entries and
+	 * Auxiliary method, just to build the shell command with the entries and
 	 * preferences setup.
 	 * @param entries The entries to be used in costabs.
 	 * @return The string that has the shell command to use costabs.
 	 */
-	private String buildCommand(String file, ArrayList<String> entries) {
+	private String buildCommand(ArrayList<String> entries) {
 
 		StringBuffer command2 = new StringBuffer();
 
-		command2.append("apet "+file+" ");
+		// byMZ: Here I have to take the path of the apet binary executable instead of apet
+		command2.append("apet ");
 		
 		// Build entries
 		command2.append("-entries ");
-		for (int i = 0; i < entries.size(); i++) {
+		for (int i = 0; i < entries.size(); i++)
 			command2.append("'"+entries.get(i)+"' ");
-		}
 
 		// Build options checking preferences
 		buildOptions(command2);
-
+		
 		ConsoleHandler.write(command2.toString());
 
 		return command2.toString();
 	}
 
 	/**
-	 * Auxiliar method to add to a string the options checked in preferences.
+	 * Auxiliary method to add to a string the options checked in preferences.
 	 * @param command The String with the shell command to ABS.
 	 */
 	private void buildOptions(StringBuffer command) {
 		
-		command.append("-xml /tmp/pet/pruebaFooEclipse.xml");
+		command.append("-xmlpath /tmp/pet/ABSTestCases.xml");
 /*		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
 		// -c CovCrit K: CovCrit:{dpk,bck} depth-k o block-k
@@ -159,8 +158,8 @@ public class ApetShellCommand {
 		// else if (Tracings == blocks) command.append("-tr blocks ");
 		if(!store.getString(PreferenceConstants.PTRACING).equals("none"))
 			command.append(" -tr "+store.getString(PreferenceConstants.PTRACING)+" ");
-
-	*/}
+ 	*/
+	}
 
 	/**
 	 * Create a process to execute the command given by argument in a shell.
