@@ -51,45 +51,38 @@ public class CostabsHandler extends AbstractHandler {
 	 * from the application context.
 	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		
 		final Shell shellEclipse= HandlerUtil.getActiveWorkbenchWindowChecked(event).getShell();
-		
 		CostabsShellCommand shell = new CostabsShellCommand();
-		
 		try {
 			ConsoleHandler.defaultConsole = ConsoleHandler.findCostabsConsole();
-
 			String absFile = SourceUtils.extractResource(SourceUtils.obtainActiveEditor()).getLocation().toString();
 
-			// Do costabs directory
+			// Creating the costabs tmp directory
 			File f = new File("//tmp//costabs//absPL");
 			f.mkdirs();
 			
 			if (CostabsLink.ENTRIES_STRINGS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
 			            "At least one function or method must be selected in the outline view.", null);
-				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);
-				
-			}
-			else {
+				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);		
+			} else {
 				OptionsDialog mDialog = new OptionsDialog (shellEclipse);
 				mDialog.open();
 				
 				if (mDialog.getReturnCode() == OptionsDialog.CANCEL) {
 					ConsoleHandler.write("Don't do anything, cancelled by the user");
-				} 
-				else {
+				} else {
 					// If analyze, get preferences and run
 					callPrologBackend(absFile);
 					shell.analyze(absFile, CostabsLink.ENTRIES_STRINGS);
 					updateUpperBounds();
 					updateMarkers();
-				}
-				
+				}	
 				// Execute shell commands
 				ConsoleHandler.write(shell.getResult());
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			ConsoleHandler.write(shell.getError());
 		}
 
