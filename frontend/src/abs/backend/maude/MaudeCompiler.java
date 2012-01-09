@@ -94,8 +94,8 @@ public class MaudeCompiler extends Main {
                 + "                 sets the main block to execute\n"
                 + "  -o <file>      write output to <file> instead of standard output\n"
                 + "  -timed         generate code for timed interpreter\n"
-                + "  -limit=n       set clock limit for timed interpreter to n (default 100)"
-                + "  -defaultcost=n set default statement execution cost (default 0)"
+                + "  -limit=n       set clock limit for timed interpreter to n (default 100)\n"
+                + "  -defaultcost=n set default statement execution cost (default 0)\n"
         );
     }
 
