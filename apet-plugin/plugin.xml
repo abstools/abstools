@@ -50,7 +50,7 @@
                id="apet.toolbars.mainToolbar">
             <command
                   commandId="apet.commands.noStdCommand"
-                  icon="icons/costabsicon.jpeg"
+                  icon="icons/petIconToolbar.gif"
                   id="apet.toolbars.noStdCommand"
                   tooltip="Generate test-cases with aPet">
             </command>
