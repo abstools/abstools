@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-
-import abs.backend.prolog.PrologBackend;
-import apet.Activator;
 import apet.preferences.PreferenceConstants;
 
 public class ApetShellCommand {

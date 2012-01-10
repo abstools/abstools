@@ -115,7 +115,7 @@ public class ClasspathUtils {
 	 * @return a String with all libraries defined in build path
 	 * @throws Exception If the project is no valid
 	 */
-	public static String getStringClasspath (IJavaProject javaProject) throws Exception {
+	public static String getStringClasspath(IJavaProject javaProject) throws Exception {
 
 		IClasspathEntry[] entries = javaProject.getResolvedClasspath(true);
 		String wsPath = javaProject.getProject().getLocation().toPortableString();

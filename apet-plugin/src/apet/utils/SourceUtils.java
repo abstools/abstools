@@ -23,10 +23,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
@@ -48,38 +46,18 @@ import apet.exceptions.ApetException;
 public class SourceUtils {
 
 	
-	
-	public static IMethod[] getMethodsFromJavaFile (IJavaElement element) throws Exception{
-		try {
-			ICompilationUnit unit = (ICompilationUnit)element;
-			IJavaElement elements[] = unit.getChildren();
-			for (int i = 0; i < elements.length; i ++) {
-				//LogUtils.debug(elements[i].getClass());
-				if (elements[i] instanceof org.eclipse.jdt.internal.core.SourceType) {
-					SourceType source = (SourceType) elements[i];
-
-					return source.getMethods();
-				}
-			}
-			throw new Exception ("No methods found in file ");
-
-		}
-		catch (Exception e) {
-			throw new Exception ("Cannot find the methods from Java file");
-		}
-
-	}
-	
 	public static IResource extractResource(IEditorPart editor) {
 		IEditorInput input = editor.getEditorInput();
 		if (!(input instanceof FileEditorInput))
 			return null;
 		return ((FileEditorInput)input).getFile();
 	}
+	
 	private static IJavaProject obtainJavaProjectFromResource(IResource jresource){
 		IProject project = jresource.getProject();
 		return JavaCore.create(project);
 	}
+	
 	public static IProject obtainCurrProject()throws ApetException{
 		IEditorPart ieditorpart;
 		ClassLoader loader;		
@@ -95,6 +73,7 @@ public class SourceUtils {
 		
 		return jresource.getProject();
 	}
+	
 	public static Class ObtainCurrentlyEditingClass()throws ApetException{
 		IEditorPart ieditorpart;
 		ClassLoader loader;		
@@ -132,16 +111,15 @@ public class SourceUtils {
 		
 		fileEvaluations(javaFile);
 		return getClassFromResource((ICompilationUnit)javaFile,loader);
-
-	
-
 	}
+	
 	public static IEditorPart obtainActiveEditor()throws NullPointerException{
 		IWorkbench iworkbench = PlatformUI.getWorkbench();
 		IWorkbenchWindow iworkbenchwindow = iworkbench.getActiveWorkbenchWindow();
 		IWorkbenchPage iworkbenchpage = iworkbenchwindow.getActivePage();
 		return iworkbenchpage.getActiveEditor();
 	}
+	
 	private static void fileEvaluations (IJavaElement javaFile) throws ApetException {
 		try {
 			if (javaFile.getElementType() != IJavaElement.COMPILATION_UNIT) {
