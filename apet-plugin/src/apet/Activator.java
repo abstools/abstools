@@ -1,8 +1,17 @@
 package apet;
 
+import java.io.File;
+
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+
+import apet.console.ApetShellCommand;
+
+import apet.console.ApetShellCommand;
 
 
 /**
@@ -29,6 +38,12 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+		Bundle petbundle = Platform.getBundle(PLUGIN_ID); 
+		File dir = FileLocator.getBundleFile(petbundle);
+		assert dir.isDirectory() : dir;
+		File exe = new File(dir,"apet_exe");
+		assert exe.exists() : dir;
+		ApetShellCommand.APET_EXECUTABLE_PATH = exe.getAbsolutePath();	
 	}
 
 	/*

@@ -1,5 +1,6 @@
 package apet.console;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -56,11 +57,13 @@ public class ApetShellCommand {
 
 		StringBuffer command2 = new StringBuffer();
 
-		// byMZ: Here I have to take the path of the apet binary executable instead of apet
-		command2.append("apet ");
+		if ((new File(APET_EXECUTABLE_PATH)).exists())
+				command2.append(APET_EXECUTABLE_PATH);
+		else
+			command2.append("apet");
 		
 		// Build entries
-		command2.append("-entries ");
+		command2.append(" -entries ");
 		for (int i = 0; i < entries.size(); i++)
 			command2.append("'"+entries.get(i)+"' ");
 

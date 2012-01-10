@@ -13,7 +13,7 @@ public class ConsoleHandler {
 
 	public static MessageConsole defaultConsole = null;
 
-		public static final String ID_CONSOLE_VIEW = "CostabsConsole";
+		public static final String ID_CONSOLE_VIEW = "aPETConsole";
 
 		public static MessageConsole findCostabsConsole() {
 		      ConsolePlugin plugin = ConsolePlugin.getDefault();

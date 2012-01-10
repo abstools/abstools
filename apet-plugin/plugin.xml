@@ -35,12 +35,12 @@
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               label="Pet"
+               label="aPET"
                id="apet.menus.mainMenu">
             <command
                   commandId="apet.commands.noStdCommand"
                   id="apet.menus.noStdCommand"
-                  label="Generate test-cases with Pet">
+                  label="Generate test-cases with aPET">
             </command>
          </menu>
       </menuContribution>
@@ -52,7 +52,7 @@
                   commandId="apet.commands.noStdCommand"
                   icon="icons/petIconToolbar.gif"
                   id="apet.toolbars.noStdCommand"
-                  tooltip="Generate test-cases with aPet">
+                  tooltip="Generate test-cases with aPET">
             </command>
          </toolbar>
       </menuContribution>
@@ -62,7 +62,7 @@
       <page
             class="apet.preferences.ApetPreferences"
             id="apetpreferences.ApetPreferences"
-            name="Pet">
+            name="aPET">
       </page>
    </extension>
    <extension

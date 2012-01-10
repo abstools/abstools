@@ -19,7 +19,7 @@
 		</classpath>
 	</taskdef>	
 	
-	<target name="download-costa-binary">
+	<target name="download-apet-binary">
 	   <get src="http://clip.dia.fi.upm.es/~mzamalloa/apet_exe" 
 		    dest="${basedir}"
 		    usetimestamp="true"/>
@@ -27,7 +27,7 @@
 
 	</target>
 	
-	<target name="init" depends="download-costa-binary">
+	<target name="init" depends="download-apet-binary">
 	   <mkdir dir="${dist.dir}" />
 	   <mkdir dir="${build.dir}" />
 	    <propertyfile file="eclipsehome.properties">
