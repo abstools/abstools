@@ -6,6 +6,7 @@
 	<property name="update-site.dir" location="${basedir}/update-site" />
 	<property name="frontend.dir" location="../frontend" />
 	<property name="costabs.dir" location="../costabs-plugin" /> 
+	<property name="apet.dir" location="../apet-plugin" /> 
 	<property name="sdedit.dir" location="../sdedit-for-abs" />
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="build.dir" location="${basedir}/bin" />
@@ -41,7 +42,8 @@
         <path id="build.classpath">
            <pathelement location="${ext.dir}/mockito-all-1.8.5.jar" />
            <pathelement location="${frontend.dir}/bin" />
-	       <pathelement location="${costabs.dir}/bin" />
+	   <pathelement location="${costabs.dir}/bin" />
+	   <pathelement location="${apet.dir}/bin" />
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
@@ -71,6 +73,7 @@
 			<fileset dir="${dist.dir}" />
 			<fileset dir="${frontend.dir}/dist" />
 			<fileset dir="${costabs.dir}/dist" />
+			<fileset dir="${apet.dir}/dist" />
 			<fileset dir="${sdedit.dir}/dist" />
 			<fileset dir="${basedir}">
 				<include name="site.xml"/>
@@ -141,6 +144,7 @@
 		<ant antfile="${sdedit.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
 		<antcall target="build-eclipse-plugin"/>
 		<ant antfile="${costabs.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
+		<!-- <ant antfile="${apet.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/> -->
     </target>
 	
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
