@@ -72,7 +72,7 @@ public class TestCase {
 	
 	private void parseCell(Element item, HashMap<ABSRef, ABSObject> heap) throws Exception {
 		NodeList refList = item.getElementsByTagName("ref");
-		if (refList.getLength() != 1) throw new Exception();
+		// There can be more refs inside. Here we just take the first one
 		Element refElem = (Element) refList.item(0);
 		ABSRef ref = new ABSRef(refElem);
 	
@@ -95,7 +95,7 @@ public class TestCase {
 		this.heapOut = new HashMap<ABSRef,ABSObject>();
 		NodeList heapOutList = elem.getElementsByTagName("heap_out");
 		Element heapOutElem;
-		if (heapOutList.getLength()!=1) throw new Exception();
+		if (heapOutList.getLength() != 1) throw new Exception();
 		heapOutElem = (Element) heapOutList.item(0);
 		
 		NodeList cellList = heapOutElem.getElementsByTagName("cell");
