@@ -29,14 +29,10 @@ extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
 	RadioGroupFieldEditor coverageCriterion;
 	IntegerFieldEditor coverage;
-	BooleanFieldEditor showJUnit;
 	IntegerFieldEditor minRange;
 	IntegerFieldEditor maxRange;
-	BooleanFieldEditor testCaseGenerator;
 	BooleanFieldEditor aliasing;
-	RadioGroupFieldEditor labelingStrategy;
 	RadioGroupFieldEditor verbosity;
-	BooleanFieldEditor clp;
 	RadioGroupFieldEditor tracing;
 	RadioGroupFieldEditor numeric;
 
@@ -54,29 +50,23 @@ implements IWorkbenchPreferencePage {
 
 	public boolean performOk() {
 		boolean success = true;
-
 		coverageCriterion.store();
 		coverage.store();
-		showJUnit.store();
 		minRange.store();
 		maxRange.store();
-		testCaseGenerator.store();
 		aliasing.store();
-		labelingStrategy.store();
 		verbosity.store();
-		clp.store();
 		tracing.store();
-
 		return success;
 	}
 
 	public void propertyChange(PropertyChangeEvent event) {
 		super.propertyChange(event);
 		if(numeric.equals(event.getSource())){
-			if(((String)event.getNewValue()).equals("num")){
+			if (((String)event.getNewValue()).equals("num")){
 				minRange.setEnabled(true, this.getFieldEditorParent());
 				maxRange.setEnabled(true, this.getFieldEditorParent());
-			}else{
+			} else{
 				minRange.setEnabled(false, this.getFieldEditorParent());
 				maxRange.setEnabled(false, this.getFieldEditorParent());
 			}
@@ -94,8 +84,8 @@ implements IWorkbenchPreferencePage {
 		coverage = new IntegerFieldEditor(PreferenceConstants.PCOVERAGE_CRITERION_NUM, "Coverage:",getFieldEditorParent());
 		addField(coverage);
 
-		numeric = new RadioGroupFieldEditor(PreferenceConstants.PNUMERIC,"numeric test-cases or path-constraints:",
-				1,new String[][] { { "Numeric (In this case a range must be especified below) ", "num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
+		numeric = new RadioGroupFieldEditor(PreferenceConstants.PNUMERIC,"Concrete test-cases or path-constraints:",
+				1,new String[][] { { "Concrete (In this case a range must be especified below) ", "num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
 
 		addField(numeric);
 		minRange=new IntegerFieldEditor(PreferenceConstants.PRANGEMIN, "From",getFieldEditorParent());
@@ -108,44 +98,27 @@ implements IWorkbenchPreferencePage {
 		maxRange.setErrorMessage("The upper bound must be an integer");
 		addField(maxRange);
 
-		if(Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.PNUMERIC).equals("num")){
+		if (Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.PNUMERIC).equals("num")){
 			minRange.setEnabled(true, this.getFieldEditorParent());
 			maxRange.setEnabled(true, this.getFieldEditorParent());
-		}else{
+		} else{
 			minRange.setEnabled(false, this.getFieldEditorParent());
 			maxRange.setEnabled(false, this.getFieldEditorParent());
 		}
 
-		testCaseGenerator = new BooleanFieldEditor(
-				PreferenceConstants.PTEST_CASE_GENERATION,
-				"Generate test-case generator",
-				getFieldEditorParent());
-		addField(testCaseGenerator);
-
 		aliasing = new BooleanFieldEditor(
-				PreferenceConstants.PREFERENCES_ALIASING,
+				PreferenceConstants.REFERENCES_ALIASING,
 				"References aliasing",
 				getFieldEditorParent());
 		addField(aliasing);
-
-		labelingStrategy = new RadioGroupFieldEditor(PreferenceConstants.PLABELING,"Labeling strategy:",
-				4,new String[][] { { "ff", "ff" }, {"leftmost", "leftmost" }, {"min", "min" }, {"max", "max" }}, getFieldEditorParent());
-		addField(labelingStrategy);
 
 		verbosity = new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(verbosity);
 
-		clp = new BooleanFieldEditor(
-				PreferenceConstants.PCLP,
-				"Save the intermediate CLP decompiled program",
-				getFieldEditorParent());
-		addField(clp);
-
 		tracing = new RadioGroupFieldEditor(PreferenceConstants.PTRACING,"Tracing:",
-				4,new String[][] { { "none", "none" }, {"statements", "statements" }, {"blocks", "blocks" }}, getFieldEditorParent());
+				4,new String[][] { { "no", "none" }, {"yes", "statements" }}, getFieldEditorParent());
 		addField(tracing);
-
 	}
 
 	public void init(IWorkbench workbench) {

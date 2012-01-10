@@ -20,23 +20,17 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
 
 		store.setDefault(PreferenceConstants.PCOVERAGE_CRITERION, "bck");
-		store.setDefault(PreferenceConstants.PCOVERAGE_CRITERION_NUM, 3);
-		store.setDefault(PreferenceConstants.PNUMERIC, "constraint");
+		store.setDefault(PreferenceConstants.PCOVERAGE_CRITERION_NUM, 2);
+		store.setDefault(PreferenceConstants.PNUMERIC, "num");
 
-		store.setDefault(PreferenceConstants.PRANGEMIN, -10);
+		store.setDefault(PreferenceConstants.PRANGEMIN, 0);
 		store.setDefault(PreferenceConstants.PRANGEMAX, 10);
 
-		store.setDefault(PreferenceConstants.PTEST_CASE_GENERATION, false);
-
-		store.setDefault(PreferenceConstants.PREFERENCES_ALIASING, false);
-
-		store.setDefault(PreferenceConstants.PLABELING, "max");
+		store.setDefault(PreferenceConstants.REFERENCES_ALIASING, false);
 
 		store.setDefault(PreferenceConstants.PVERBOSITY, "2");
 
-		store.setDefault(PreferenceConstants.PCLP,false);
-
-		store.setDefault(PreferenceConstants.PTRACING,"statements");
+		store.setDefault(PreferenceConstants.PTRACING,"none");
 
 	}
 

@@ -32,11 +32,8 @@ public class OptionsDialog extends Dialog {
 	private Button[] numericPathConstraintsSelection;
 	private Text[] fromText;
 	private Text[] toText;
-	private Button[] genTestCheck;
 	private Button[] aliasingCheck;
-	private Button[] labelingSelection;
 	private Button[] verbositySelection;
-	private Button[] saveCLPCheck;
 	private Button[] tracingSelection;
 
 	public OptionsDialog(Shell parentShell) {
@@ -91,25 +88,13 @@ public class OptionsDialog extends Dialog {
 		toText = new Text[1];
 		createText(toBox,"To",toText);
 		
-		Composite genTestPanel = new Composite(composite,SWT.NONE);
-		genTestCheck = new Button[ApetOptions.GEN_TEST_OPTS.length];
-		createOptionCheck(genTestPanel, genTestCheck, ApetOptions.GEN_TEST_OPTS);
-		
 		Composite aliasingPanel = new Composite(composite,SWT.NONE);
 		aliasingCheck = new Button[ApetOptions.ALIASING_OPTS.length];
 		createOptionCheck(aliasingPanel, aliasingCheck, ApetOptions.ALIASING_OPTS);
 		
-		Composite labelingPanel = new Composite(composite,SWT.NONE);
-		labelingSelection = new Button[ApetOptions.LABELING_OPTS.length];
-		createOption(labelingPanel, labelingSelection, ApetOptions.LABELING_TITLE, ApetOptions.LABELING_OPTS);
-		
 		Composite verbosityPanel = new Composite(composite,SWT.NONE);
 		verbositySelection = new Button[ApetOptions.VERBOSITY.length];
 		createOption(verbosityPanel, verbositySelection, ApetOptions.VERBOSITY_TITLE, ApetOptions.VERBOSITY);
-		
-		Composite saveCLPPanel = new Composite(composite,SWT.NONE);
-		saveCLPCheck = new Button[ApetOptions.SAVE_CLP_OPTS.length];
-		createOptionCheck(saveCLPPanel, saveCLPCheck, ApetOptions.SAVE_CLP_OPTS);
 		
 		Composite tracingPanel = new Composite(composite,SWT.NONE);
 		tracingSelection = new Button[ApetOptions.TRACING_OPTS.length];
@@ -170,21 +155,12 @@ public class OptionsDialog extends Dialog {
 		for (int i = 0; i < numericPathConstraintsSelection.length; i++)
 			numericPathConstraintsSelection[i].addSelectionListener(new SelectNumPathConstraintsChangeListener(this, i, numericPathConstraintsSelection[i],fromText[0],toText[0]));
 		
-		for (int i = 0; i < genTestCheck.length; i++)
-			genTestCheck[i].addSelectionListener(new SelectGenTestChangeListener(this, i, genTestCheck[i]));
-		
 		for (int i = 0; i < aliasingCheck.length; i++)
 			aliasingCheck[i].addSelectionListener(new SelectAliasingChangeListener(this, i, aliasingCheck[i]));
-		
-		for (int i = 0; i < labelingSelection.length; i++)
-			labelingSelection[i].addSelectionListener(new SelectLabelingChangeListener(this, i, labelingSelection[i]));
-		
+	
 		for (int i = 0; i < verbositySelection.length; i++)
 			verbositySelection[i].addSelectionListener(new SelectVerbosityChangeListener(this, i, verbositySelection[i]));
-		
-		for (int i = 0; i < saveCLPCheck.length; i++)
-			saveCLPCheck[i].addSelectionListener(new SelectSaveCLPChangeListener(this, i, saveCLPCheck[i]));
-		
+			
 		for (int i = 0; i < tracingSelection.length; i++)
 			tracingSelection[i].addSelectionListener(new SelectTracingChangeListener(this, i, tracingSelection[i]));
 	
@@ -214,26 +190,15 @@ public class OptionsDialog extends Dialog {
 		
 		integerValue = store.getInt(PreferenceConstants.PRANGEMAX);
 		toText[0].setText(String.valueOf(integerValue));
-		
-		booleanValue = store.getBoolean(PreferenceConstants.PTEST_CASE_GENERATION);
-		for (int i = 0; i < ApetOptions.GEN_TEST_OPTS.length; i++)			
-			genTestCheck[i].setSelection(booleanValue);
-		
-		booleanValue = store.getBoolean(PreferenceConstants.PREFERENCES_ALIASING);
+			
+		booleanValue = store.getBoolean(PreferenceConstants.REFERENCES_ALIASING);
 		for (int i = 0; i < ApetOptions.ALIASING_OPTS.length; i++)			
 			aliasingCheck[i].setSelection(booleanValue);
 		
-		preferenceValue = store.getString(PreferenceConstants.PLABELING);
-		for (int i = 0; i < ApetOptions.LABELING_PROLOG.length; i++)			
-			labelingSelection[i].setSelection(preferenceValue.equals(ApetOptions.LABELING_PROLOG[i]));
-		
+	
 		preferenceValue = store.getString(PreferenceConstants.PVERBOSITY);
 		for (int i = 0; i < ApetOptions.VERBOSITY.length; i++)			
 			verbositySelection[i].setSelection(preferenceValue.equals(ApetOptions.VERBOSITY[i]));
-		
-		booleanValue = store.getBoolean(PreferenceConstants.PCLP);
-		for (int i = 0; i < ApetOptions.SAVE_CLP_OPTS.length; i++)			
-			saveCLPCheck[i].setSelection(booleanValue);
 		
 		preferenceValue = store.getString(PreferenceConstants.PTRACING);
 		for (int i = 0; i < ApetOptions.TRACING_PROLOG.length; i++)			
@@ -251,24 +216,12 @@ public class OptionsDialog extends Dialog {
 		return numericPathConstraintsSelection;
 	}
 	
-	public Button[] getGenTest() {
-		return genTestCheck;
-	}
-	
 	public Button[] getAliasing() {
 		return aliasingCheck;
 	}
 	
-	public Button[] getLabeling() {
-		return labelingSelection;
-	}
-	
 	public Button[] getVerbosity() {
 		return verbositySelection;
-	}
-	
-	public Button[] getSaveCLP() {
-		return saveCLPCheck;
 	}
 	
 	public Button[] getTracing() {
@@ -391,29 +344,6 @@ class SelectNumPathConstraintsChangeListener implements SelectionListener {
 
 }
 
-class SelectGenTestChangeListener implements SelectionListener {
-
-	OptionsDialog dialog = null;
-	int index;
-	Button b;
-
-	public SelectGenTestChangeListener(OptionsDialog dialog, int i, Button b) {
-		this.dialog = dialog;
-		this.index = i;
-		this.b = b;
-	}
-
-	public void widgetDefaultSelected(SelectionEvent e) {
-	}
-
-	public void widgetSelected(SelectionEvent e) {
-		
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PTEST_CASE_GENERATION, b.getSelection());
-	}
-
-}
-
 class SelectAliasingChangeListener implements SelectionListener {
 
 	OptionsDialog dialog = null;
@@ -432,37 +362,11 @@ class SelectAliasingChangeListener implements SelectionListener {
 	public void widgetSelected(SelectionEvent e) {
 		
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PREFERENCES_ALIASING, b.getSelection());
+		store.setValue(PreferenceConstants.REFERENCES_ALIASING, b.getSelection());
 	}
 
 }
 
-class SelectLabelingChangeListener implements SelectionListener {
-
-	OptionsDialog dialog = null;
-	int index;
-	Button b;
-
-	public SelectLabelingChangeListener(OptionsDialog dialog, int i, Button b) {
-		this.dialog = dialog;
-		this.index = i;
-		this.b = b;
-	}
-
-	public void widgetDefaultSelected(SelectionEvent e) {
-	}
-
-	public void widgetSelected(SelectionEvent e) {
-		for (int i = 0; i < this.dialog.getLabeling().length; i++) {
-			this.dialog.getLabeling()[i].setSelection(false);
-		}
-		b.setSelection(true);
-		
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PLABELING, ApetOptions.LABELING_PROLOG[index]);
-	}
-
-}
 
 class SelectVerbosityChangeListener implements SelectionListener {
 
@@ -491,28 +395,6 @@ class SelectVerbosityChangeListener implements SelectionListener {
 
 }
 
-class SelectSaveCLPChangeListener implements SelectionListener {
-
-	OptionsDialog dialog = null;
-	int index;
-	Button b;
-
-	public SelectSaveCLPChangeListener(OptionsDialog dialog, int i, Button b) {
-		this.dialog = dialog;
-		this.index = i;
-		this.b = b;
-	}
-
-	public void widgetDefaultSelected(SelectionEvent e) {
-	}
-
-	public void widgetSelected(SelectionEvent e) {
-
-		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setValue(PreferenceConstants.PCLP, b.getSelection());
-	}
-
-}
 
 class SelectTracingChangeListener implements SelectionListener {
 
