@@ -83,7 +83,7 @@ public class apetHandler extends AbstractHandler {
 	}
 	
 	private void callPrologBackend(String filename) throws Exception {
-    	/*
+    	
 		int numArgs = 3;
 		String[] args = new String[numArgs];
 		int i = 0;
@@ -91,9 +91,10 @@ public class apetHandler extends AbstractHandler {
 		args[i++] = "/tmp/costabs/absPL";
 		args[i++] = filename;
 		PrologBackend.runFromShell(args);
-		*/		
-		Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
+				
+		/*Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
 		PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+		*/
 	}
 	
 	private void callXMLParser(){
