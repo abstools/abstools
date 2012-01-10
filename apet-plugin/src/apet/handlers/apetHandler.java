@@ -16,6 +16,8 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import apet.console.ConsoleHandler;
 import apet.dialogs.OptionsDialog;
+import apet.testCases.ApetTestSuite;
+import apet.testCases.XMLParser;
 import apet.utils.SourceUtils;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import abs.backend.prolog.PrologBackend;
@@ -57,7 +59,7 @@ public class apetHandler extends AbstractHandler {
 			if (CostabsLink.ENTRIES_STRINGS.size() <= 0) {
 				Status status = new Status(IStatus.ERROR, "costabs", 0,
 			            "At least one function or method must be selected in the outline view.", null);
-				ErrorDialog.openError(shellEclipse, "Costa Error", "Costa cannot analyze.", status);		
+				ErrorDialog.openError(shellEclipse, "aPET Error", "aPET cannot be run.", status);		
 			} else {
 				OptionsDialog mDialog = new OptionsDialog (shellEclipse);
 				mDialog.open();
@@ -68,6 +70,7 @@ public class apetHandler extends AbstractHandler {
 					// If analyze, get preferences and run
 					callPrologBackend(absFile);
 					shell.callAPet(CostabsLink.ENTRIES_STRINGS);
+					callXMLParser();
 				}	
 				// Execute shell commands
 				ConsoleHandler.write(shell.getResult());
@@ -88,9 +91,19 @@ public class apetHandler extends AbstractHandler {
 		args[i++] = "/tmp/costabs/absPL";
 		args[i++] = filename;
 		PrologBackend.runFromShell(args);
-		*/
-		
+		*/		
 		Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
 		PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+	}
+	
+	private void callXMLParser(){
+		// TODO The xml filename should be a constant
+		XMLParser parser = new XMLParser(ApetShellCommand.XML_FILE_PATH);
+		try {
+			ApetTestSuite suite = parser.read();
+			System.out.println("Test cases parsed from the xml file and stored in the APetTestSuite");
+		} catch (Exception e) {
+			System.out.println("aPET error: Error parsing the XML file");
+		}
 	}
 }

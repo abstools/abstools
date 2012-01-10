@@ -8,7 +8,8 @@ import apet.preferences.PreferenceConstants;
 
 public class ApetShellCommand {
 
-	public static String COSTABS_EXECUTABLE_PATH = "";
+	public static String APET_EXECUTABLE_PATH = "";
+	public static String XML_FILE_PATH = "/tmp/pet/abs_testcases.xml";
 
 	/**
 	 * Result of the last run.
