@@ -1,5 +1,6 @@
 package costabs.console;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -15,8 +16,8 @@ public class CostabsShellCommand {
 	/**
 	 * Result of the last run.
 	 */
-	private  String result = "";
-	private  String error = "";
+	private String result = "";
+	private String error = "";
 
 	/**
 	 * Create the communicator with costabs.
@@ -59,12 +60,14 @@ public class CostabsShellCommand {
 	private String buildCommand(ArrayList<String> entries) {
 
 		StringBuffer command2 = new StringBuffer();
-
-		command2.append(COSTABS_EXECUTABLE_PATH + " -mode analyze ");
 		
-		// This comment line is for use the installed costabs command shell
-		// command2.append("costabs -mode analyze ");
+		if ((new File(COSTABS_EXECUTABLE_PATH)).exists())
+			command2.append(COSTABS_EXECUTABLE_PATH);
+		else // In case the executable is not there we try with the costabs command	
+			command2.append("costabs");
 		
+		command2.append(" -mode analyze ");
+				
 		// Build entries
 		command2.append("-entries ");
 		for (int i = 0; i < entries.size(); i++) {
