@@ -4,6 +4,7 @@
   <rm:locator pattern="eu.hatsproject.sdedit" searchPathRef="sdedit"/>
   <rm:locator pattern="eu.hatsproject.absplugin" searchPathRef="by-component"/>
   <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
+  <rm:locator pattern="eu.hatsproject.apet" searchPathRef="apet"/>
   <rm:searchPath name="ABSFrontend">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/ABSFrontend/">
@@ -14,6 +15,13 @@
   <rm:searchPath name="costabs">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/costabs/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="apet">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/eu.hatsproject.apet/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
