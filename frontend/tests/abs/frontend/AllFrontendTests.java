@@ -28,5 +28,6 @@ import org.junit.runners.Suite;
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
         ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
+        BackPositionTest.class, IncompleteExpTests.class,
         TestABSPackages.class})
 public class AllFrontendTests {}

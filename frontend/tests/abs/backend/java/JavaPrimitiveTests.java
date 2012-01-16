@@ -104,6 +104,12 @@ public class JavaPrimitiveTests extends JavaBackendTest {
         assertValidStdLib("{ String s = \"Teee\\\"est\"; }");
     }
 
+
+    @Test
+    public void testStringLitEscaped2() throws Exception {
+        assertValidStdLib("{ String s = \"line1\\nline2\\t\\n\\r\\\"\\\\\"; }");
+    }
+    
     @Test
     public void testStringCompareOps() throws Exception {
         assertValidStdLib("{ Bool b = \"Test\" == \"Test\"; }");

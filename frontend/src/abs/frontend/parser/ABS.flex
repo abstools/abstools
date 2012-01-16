@@ -29,6 +29,10 @@ import abs.frontend.parser.ABSParser.Terminals;
   private ABSSymbol sym(short id, String text) {
     return new ABSSymbol(id, yyline + 1, yycolumn + 1, text.length(), yychar, text);
   }
+  
+  private ABSSymbol symString(String text) {
+      return new ABSSymbol(Terminals.STRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
+  }
 %}
 
 
@@ -198,8 +202,7 @@ IntLiteral = 0 | [1-9][0-9]*
 
 <STRING> {
  \"            { yybegin(YYINITIAL);
-                 return sym(Terminals.STRINGLITERAL,
-                 string.toString()); }
+                 return symString(string.toString()); }
  [^\n\r\"\\]+  { string.append( yytext() ); }
  \\t           { string.append('\t'); }
  \\n           { string.append('\n'); }
@@ -209,5 +212,5 @@ IntLiteral = 0 | [1-9][0-9]*
 }
 
 
-.|\n          { throw new ParseException(new LexicalError("Illegal character \""+yytext()+"\"",yyline,yycolumn)); }
+.|\n          { return sym(Terminals.INVALID_CHARACTER); }
 <<EOF>>       { return sym(Terminals.EOF); }

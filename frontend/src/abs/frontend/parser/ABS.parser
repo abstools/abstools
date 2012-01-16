@@ -99,7 +99,7 @@ import java.io.IOException;
 
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
-  | error {:
+  | error INVALID_CHARACTER? {: // adding dummy-token-type "INVALID_CHARACTER" for the lexer
 		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new List());
 		u.setParserErrors(getErrors());
 		return u;
@@ -1058,7 +1058,7 @@ MExp mlit_exp
                            else                         return new FeatVar(id); :}
   ;
   
-  
+
 // Local Variables:
 // tab-width: 4
 // End:

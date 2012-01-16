@@ -202,7 +202,7 @@
 
 	<target name="genp1" depends="genflex, genast">
 		<echo message="Parser phase1" />
-		<!-- generate the parser phase 1, translating .lalr to .beaver -->
+		<!-- generate the parser phase 1, translating .parser to .beaver -->
 		<java fork="true" dir="${parser.src.dir}" classpath="${ext.dir}/JastAddParser.jar:${ext.dir}/beaver-rt-src.jar" classname="Main">
 			<arg line="ABS.parser '${parser.gen.dir}/ABSParser.beaver'" />
 		</java>

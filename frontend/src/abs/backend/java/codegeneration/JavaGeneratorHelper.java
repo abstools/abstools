@@ -341,4 +341,38 @@ public class JavaGeneratorHelper {
         dir.delete();
     }
 
+    public static void printEscapedString(PrintStream stream, String content) {
+        for (int i=0; i<content.length(); i++) {
+            char c = content.charAt(i);
+            switch (c) {
+            case '\t':
+                stream.append('\\').append('t');
+                break;
+            case '\b':
+                stream.append('\\').append('b');
+                break;
+            case '\n':
+                stream.append('\\').append('n');
+                break;
+            case '\r':
+                stream.append('\\').append('r');
+                break;
+            case '\f':
+                stream.append('\\').append('f');
+                break;
+            case '\'':
+                stream.append('\\').append('\'');
+                break;
+            case '\"':
+                stream.append('\\').append('\"');
+                break;
+            case '\\':
+                stream.append('\\').append('\\');
+                break;
+            default:
+                stream.append(c);
+            }
+        }
+    }
+
 }

@@ -785,7 +785,7 @@ aspect GenerateJava {
     public void StringLiteral.generateJava(PrintStream stream) {
         stream.print(ABSString.class.getName());
         stream.print(".fromString(\"");
-        stream.print(getContent());
+        JavaGeneratorHelper.printEscapedString(stream, getContent());
         stream.print("\")");
     }
 
