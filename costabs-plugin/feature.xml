@@ -3,7 +3,8 @@
       id="eu.hatsproject.costabs"
       label="COSTABS Eclipse Integration"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project">
+      provider-name="HATS Project"
+      os="linux">
 
    <description url="http://hats-project.eu">
       This feature adds the Costabs plugin.
