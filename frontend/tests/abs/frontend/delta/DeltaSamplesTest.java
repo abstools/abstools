@@ -4,8 +4,12 @@
  */
 package abs.frontend.delta;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import org.junit.Test;
 
+import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
 
@@ -37,5 +41,15 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P4");
+    }
+
+    @Test
+    public void test_ticket280() throws Exception {
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug280.abs", true);
+        m.setNullPrintStream();
+        m.flattenForProduct("D.P");
+        /* Run Maude gen (from the ticket), although it's not relevant. */
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        m.generateMaude(new PrintStream(out), null, 100, 0);
     }
 }
