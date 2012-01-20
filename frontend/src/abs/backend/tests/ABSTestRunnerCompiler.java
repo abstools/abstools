@@ -71,9 +71,18 @@ public class ABSTestRunnerCompiler extends Main {
         if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
             return;
 
-        PrintStream stream = System.out;
+        final PrintStream stream;
+        final String loc; 
         if (outputfile != null) {
             stream = new PrintStream(outputfile);
+            loc = outputfile.getAbsolutePath();
+        } else {
+            stream = System.out;
+            loc = "Standard Output Stream";
+        }
+        
+        if (verbose) {
+            System.out.println("Generating Test Runner to "+loc+"...");
         }
         
         ABSTestRunnerGenerator gen = new ABSTestRunnerGenerator(model);
