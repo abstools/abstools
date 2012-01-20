@@ -4,21 +4,27 @@
  */
 package abs.backend.java.codegeneration;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStream;
 import java.io.PrintStream;
 
 import abs.backend.java.JavaBackend;
+import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
+import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
+import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.List;
@@ -31,6 +37,9 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.TypedVarOrFieldDecl;
+import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.VarUse;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
 import beaver.Symbol;
@@ -374,5 +383,80 @@ public class JavaGeneratorHelper {
             }
         }
     }
+
+    public static void generateExprGuard(ExpGuard expGuard, PrintStream beforeAwaitStream, PrintStream stream) {
+        PureExp expr = expGuard.getPureExp();
+        
+        replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
+        
+        stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
+        expGuard.getPureExp().generateJava(stream);
+        stream.print("; }}");
+        
+    }
+
+    
+    
+    /**
+     * replace all uses of local variables and parameters by a use of a newly introduced
+     * temporary final local variable 
+     */
+    private static void replaceLocalVariables(ASTNode<?> astNode, PrintStream beforeAwaitStream) {
+        if (isLocalVarUse(astNode)) {
+            VarUse v = (VarUse) astNode;
+            replaceVarUse(beforeAwaitStream, v, (TypedVarOrFieldDecl) v.getDecl());                
+        } else {
+            // process children:
+            for (int i=0; i < astNode.getNumChild(); i++) {
+                if (astNode.getChild(i) instanceof PureExp) {
+                    replaceLocalVariables(astNode.getChild(i), beforeAwaitStream);
+                }
+            }
+        }
+    }
+
+    /***
+     * checks if astNode is a use of a local variable or parameter
+     */
+    private static boolean isLocalVarUse(ASTNode<?> astNode) {
+        if (astNode instanceof VarUse) {
+            VarUse v = (VarUse) astNode;
+            if (v.getDecl() instanceof VarDecl || v.getDecl() instanceof ParamDecl) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    
+    private static long tempCounter = 0;
+    
+    /**
+     * replaces a varUse v of the local variable vDecl by a new temporary variable, which will be
+     * written to beforeAwaitStream      
+     */
+    private static void replaceVarUse(PrintStream beforeAwaitStream, VarUse v, TypedVarOrFieldDecl vDecl) {
+        String name = JavaBackend.getVariableName(vDecl.getName());
+        String tempName = "temp$"+tempCounter+"$"+name;
+        tempCounter = Math.max(tempCounter++, 0);
+        // copy value of variable to temporary, final variable
+        beforeAwaitStream.print("final ");
+        vDecl.getAccess().generateJava(beforeAwaitStream);
+        beforeAwaitStream.print(" " + tempName+" = "+name+";");
+        // replace variable name with name of temporary variable
+        v.setName(tempName);
+    }
+
+    public static void generateAwaitStmt(AwaitStmt awaitStmt, String indent, PrintStream stream) {
+        OutputStream exprOStream = new ByteArrayOutputStream();
+        PrintStream exprStream = new PrintStream(exprOStream);
+        // Necessary temporary variables are written to "stream" and the 
+        // await-expression is written to exprStream
+        awaitStmt.getGuard().generateJavaGuard(stream, exprStream);
+        stream.print(indent+JavaBackendConstants.ABSRUNTIME+".await(");
+        stream.print(exprOStream.toString());
+        stream.println(");");
+    }
+
 
 }

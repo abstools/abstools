@@ -384,9 +384,7 @@ aspect GenerateJava {
 
     public void AwaitStmt.generateJava(String indent, PrintStream stream) {
       super.generateJava(indent,stream);
-      stream.print(indent+JavaBackendConstants.ABSRUNTIME+".await(");
-      getGuard().generateJava(stream);
-      stream.println(");");
+      JavaGeneratorHelper.generateAwaitStmt(this, indent, stream);
     }
 
     public void ExpressionStmt.generateJava(String indent, PrintStream stream) {
@@ -453,29 +451,27 @@ aspect GenerateJava {
      * GUARDS
      */
 
-    public abstract void Guard.generateJava(PrintStream stream);
+    public abstract void Guard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream);
 
-    public void AndGuard.generateJava(PrintStream stream) {
+    public void AndGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
       stream.print("new "+JavaBackendConstants.ANDGUARD+"(");
-      getLeft().generateJava(stream);
+      getLeft().generateJavaGuard(beforeAwaitStream, stream);
       stream.print(",");
-      getRight().generateJava(stream);
+      getRight().generateJavaGuard(beforeAwaitStream, stream);
       stream.print(")");
     }
 
-    public void ClaimGuard.generateJava(PrintStream stream) {
+    public void ClaimGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
       stream.print("new "+JavaBackendConstants.CLAIMGUARD+"(");
       getVar().generateJava(stream);
       stream.print(")");
     }
 
-    public void ExpGuard.generateJava(PrintStream stream) {
-      stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
-      getPureExp().generateJava(stream);
-      stream.print("; }}");
+    public void ExpGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
+        JavaGeneratorHelper.generateExprGuard(this, beforeAwaitStream, stream);
     }
 
-    public void DurationGuard.generateJava(PrintStream stream) {
+    public void DurationGuard.generateJavaGuard(PrintStream beforeAwaitStream, PrintStream stream) {
       stream.print("new "+JavaBackendConstants.EXPGUARD+
               "() { public "+ABSBool.class.getName()+
               " evaluateExp() { return "+

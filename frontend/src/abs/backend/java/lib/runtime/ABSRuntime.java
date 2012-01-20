@@ -490,6 +490,10 @@ public class ABSRuntime {
      * @param e the exception that was thrown
      */
     public void handleABSException(Task<?> task, ABSException e) {
+        if (isShutdown) {
+            // ignore errors during shutdown
+            return;
+        }
         System.err.println("Error in " + this + ":\n" + e.getMessage());
         for (SystemObserver obs : systemObserver) {
             obs.systemError(e);

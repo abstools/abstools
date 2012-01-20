@@ -411,6 +411,10 @@ public class SimpleTaskScheduler implements TaskScheduler {
         TaskInfo currentTask = null;
 
         synchronized (this) {
+            if (activeTask == null) {
+                // while shutting down the activeTask might bee null
+                return;
+            }
             currentTask = activeTask;
             thread = currentTask.thread;
             currentTask.suspend(g);
