@@ -23,6 +23,8 @@ aspect ErrorCheck {
   }
   public void FExt.collectErrors(SemanticErrorList c) {
     super.collectErrors(c);
+    if (!getCFeatures().contains(getName()))
+      c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getName()));
     AttrConstraints acl = getAttrConstraints();
     for(int i = 0; i < acl.getNumConstr(); i++)
       acl.getConstr(i).checkType(Types.BOOL,c);
