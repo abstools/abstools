@@ -4,7 +4,7 @@
  */
 package abs.frontend.delta;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -80,7 +80,7 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getField(0).getName().equals("myField"));
-        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+        assertEquals(expected,cls.getField(0).getInitExp().value.toString());
     }
 
 }

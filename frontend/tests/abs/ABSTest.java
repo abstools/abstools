@@ -70,9 +70,8 @@ public class ABSTest {
             preamble = preamble + " import * from ABS.StdLib;";
         if (!isSet(WITHOUT_MODULE_NAME, config))
             s = preamble + s;
-        Model p = null;
         try {
-            p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(ALLOW_INCOMPLETE_EXPR, config));
+            Model p = Main.parseString(s, isSet(WITH_STD_LIB, config), isSet(ALLOW_INCOMPLETE_EXPR, config));
 
             if (isSet(EXPECT_PARSE_ERROR,config)) {
                 if (!p.hasParserErrors())
@@ -95,21 +94,23 @@ public class ABSTest {
                     }                    
                 }
             }
+            return p;
         } catch (Exception t) {
             throw new RuntimeException(t); // TODO: remove
         }
-        return p;
     }
 
     protected Model assertParseError(String absCode) {
         return assertParse(absCode, EXPECT_PARSE_ERROR);
     }
     
+    /**
+     * Note: does not handle EXPECT_*.
+     */
     protected Model assertParseFileOk(String fileName, Config... config) throws IOException {
-        Model m = null;
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
-        m = main.parseFiles(resolveFileName(fileName));
+        Model m = main.parseFiles(resolveFileName(fileName));
         if (m != null) {
             int numSemErrs = m.getErrors().size();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
@@ -123,7 +124,6 @@ public class ABSTest {
                     for (SemanticError error : l)
                         errs = errs.append(error.getHelpMessage() + "\n");
                     fail("Failed to typecheck: " + fileName + "\n" + errs.toString());
-
                 }
             }
         }

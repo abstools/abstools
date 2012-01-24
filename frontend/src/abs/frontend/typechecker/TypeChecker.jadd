@@ -51,7 +51,10 @@ aspect TypeChecker {
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }
-        
+
+        if (hasProductLine())
+          getProductLine().typeCheck(e);
+
         if (hasBlock()) {
             getBlock().typeCheck(e);
         }
@@ -314,6 +317,21 @@ aspect TypeChecker {
     public void DeltaDecl.typeCheck(SemanticErrorList e) {
         // TODO type-checking goes here
     }
+
+    public void ProductLine.typeCheck(SemanticErrorList e) {
+       // TODO: check for undeclared features?
+       for (DeltaClause dc : getDeltaClauses()) {
+         dc.typeCheck(e);
+       }
+    }
+
+    public void DeltaClause.typeCheck(SemanticErrorList e) {
+         final String name = getDeltaspec().getName();
+         KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, name);
+         if (!getModuleDecl().getVisibleDeltas().containsKey(symbol)) {
+             e.add(new TypeError(this,ErrorMessage.NAME_NOT_RESOLVABLE, name));
+         }
+     }
 
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.typeCheckParamList(e,getParams());

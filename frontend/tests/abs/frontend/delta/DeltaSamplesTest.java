@@ -12,7 +12,9 @@ import org.junit.Test;
 
 import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.Model;
 
 public class DeltaSamplesTest extends FrontendTest {
@@ -57,9 +59,22 @@ public class DeltaSamplesTest extends FrontendTest {
     
     @Test
     public void test_ticket329() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug329.abs", true);
+        Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
         SemanticErrorList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        Assert.assertFalse(errs.isEmpty());
+        Assert.assertTrue(errs.getFirst() instanceof TypeError);
+        TypeError te = (TypeError) errs.getFirst();
+        Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
+    }
+
+    @Test
+    public void test_ticket329_missingLineNo() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
+        SemanticErrorList errs = m.typeCheck();
+        /* We are expecting a missing delta in product M.PL: */
+        Assert.assertTrue(errs.getFirst() instanceof TypeError);
+        TypeError te = (TypeError) errs.getFirst();
+        Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
+        Assert.assertEquals(10, te.getLine());
     }
 }
