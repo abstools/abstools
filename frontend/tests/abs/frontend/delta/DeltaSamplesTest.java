@@ -7,10 +7,12 @@ package abs.frontend.delta;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 
 public class DeltaSamplesTest extends FrontendTest {
@@ -51,5 +53,13 @@ public class DeltaSamplesTest extends FrontendTest {
         /* Run Maude gen (from the ticket), although it's not relevant. */
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         m.generateMaude(new PrintStream(out), null, 100, 0);
+    }
+    
+    @Test
+    public void test_ticket329() throws Exception {
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug329.abs", true);
+        SemanticErrorList errs = m.typeCheck();
+        /* We are expecting a missing delta in product M.PL: */
+        Assert.assertFalse(errs.isEmpty());
     }
 }
