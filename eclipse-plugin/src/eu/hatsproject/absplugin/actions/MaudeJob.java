@@ -194,7 +194,6 @@ public class MaudeJob extends Job{
 				throw new ParseException(model.getParserErrors());
 			}
 			if (getProduct() != null) {
-				model = model.copy(); // FIXME: fullCopy() necessary?
 				model.flattenForProduct(getProduct());
 			}
 			if(model.hasTypeErrors()){

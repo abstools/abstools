@@ -4,29 +4,11 @@
  */
 package eu.hatsproject.absplugin.actions;
 
-import static eu.hatsproject.absplugin.util.Constants.ABSFRONTEND_PLUGIN_ID;
-import static eu.hatsproject.absplugin.util.Constants.ACTION_DEBUG_ID;
-import static eu.hatsproject.absplugin.util.Constants.ACTION_START_SDE;
-import static eu.hatsproject.absplugin.util.Constants.ALWAYS_COMPILE;
-import static eu.hatsproject.absplugin.util.Constants.DEBUGGER_ARGS_OTHER_DEFAULT;
-import static eu.hatsproject.absplugin.util.Constants.DO_DEBUG;
-import static eu.hatsproject.absplugin.util.Constants.JAVA_SOURCE_PATH;
-import static eu.hatsproject.absplugin.util.Constants.NATURE_ID;
-import static eu.hatsproject.absplugin.util.Constants.NO_WARNINGS;
-import static eu.hatsproject.absplugin.util.Constants.PLUGIN_ID;
-import static eu.hatsproject.absplugin.util.Constants.SDEDIT_PLUGIN_ID;
-import static eu.hatsproject.absplugin.util.Constants.SOURCE_ONLY;
+import static eu.hatsproject.absplugin.util.Constants.*;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -35,15 +17,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
@@ -286,11 +260,9 @@ public class JavaJob extends Job {
 	    if (product != null) {
 	    	/* [stolz] Flattening for a product will mangle the model according to [ramus], so we get our own copy,
 	    	 * since the nature will hold on to the original model.
-	    	 * FIXME: Model.fullCopy will trigger an exception, so we have to see what we do about that.
 	    	 * For safety, we also pass the product by name.
 	    	 */
 	    	String productN = product.getModuleDecl().getName()+"."+product.getName();
-	    	model = model.copy();
 			try {
 				model.flattenForProduct(productN);
 			} catch (WrongProgramArgumentException e) {
@@ -663,6 +635,11 @@ public class JavaJob extends Job {
 		new Thread(r).start();	
 	}
 
+	/**
+	 * @Deprecated According to Yannick, you need to hold {@link AbsNature#modelLock} to safely do anything with the model,
+	 * which means you need the nature first, and then this helper is just a fancy wrapper around {@link AbsNature#getCompleteModel()}...
+	 * @see AbsNature#getCompleteModel()
+	 */
 	public static Model getModelFromProject(IProject project) throws AbsJobException {
 		AbsNature nature = UtilityFunctions.getAbsNature(project);
 		if(nature == null){

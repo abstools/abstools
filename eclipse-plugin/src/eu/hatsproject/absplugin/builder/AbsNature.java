@@ -235,9 +235,17 @@ public class AbsNature implements IProjectNature {
 			node = node.getParent();
 		}
 		declfile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(((CompilationUnit)node).getFileName()));
-		if(declfile==null)
+		/* [stolz] I had a situation where I had the ABSFrontend in the workspace, and then closed it:
+			org.eclipse.core.internal.resources.ResourceException: Resource '/ABSFrontend/src/abs/lang/abslang.abs' does not exist.
+				at org.eclipse.core.internal.resources.Resource.checkExists(Resource.java:320)
+				at org.eclipse.core.internal.resources.Resource.checkAccessible(Resource.java:194)
+				at org.eclipse.core.internal.resources.Resource.createMarker(Resource.java:711)
+				at eu.hatsproject.absplugin.builder.AbsNature.createMarker(AbsNature.java:241)
+			FIXME: We shouldn't have picked that one up in the first place, I guess, but better be safe than sorry.
+		 */
+		if(declfile==null || !declfile.isAccessible())
 			return;
-		
+		assert declfile.isAccessible();
 		IMarker marker = declfile.createMarker(markerType);
 		marker.setAttribute(IMarker.MESSAGE, message);
 		marker.setAttribute(IMarker.SEVERITY, severity);

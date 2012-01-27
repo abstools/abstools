@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -26,7 +27,6 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
-import eu.hatsproject.absplugin.actions.JavaJob;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.exceptions.TypeCheckerException;
@@ -87,18 +87,23 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		if (projectName != null) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 			try {
-				Model model = JavaJob.getModelFromProject(project);
-				assert model != null;				
-				/* Check product if any */
-				String prod = getSelectedProductName();
-				if (prod != null) {
-					// XXX: [vs] Without the following line flattening and checking doesn't seem to work!
-					model = model.copy();
-					model.flattenForProduct(prod);
-					/* Type check again */
-					SemanticErrorList errs = model.typeCheck();
-					if (errs != null && !errs.isEmpty())
-						throw new AbsJobException(new TypeCheckerException(errs));
+				AbsNature nat = UtilityFunctions.getAbsNature(project);
+				assert nat != null;
+				synchronized (nat.modelLock) {
+					Model model = nat.getCompleteModel();
+					assert model != null;
+					/* Check product if any */
+					String prod = getSelectedProductName();
+					if (prod != null) {
+						model.flattenForProduct(prod);
+						/* Type check again */
+						SemanticErrorList errs = model.typeCheck();
+						// #332: trigger fresh build
+						nat.cleanModel();
+						project.build(IncrementalProjectBuilder.FULL_BUILD, null);
+						if (errs != null && !errs.isEmpty())
+							throw new AbsJobException(new TypeCheckerException(errs));
+					}
 				}
 				setErrorMessage(null);
 			} catch (AbsJobException e) {
@@ -108,6 +113,9 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 				setErrorMessage(e.getMessage());
 				res = false;
 			} catch (ASTNodeNotFoundException e) {
+				setErrorMessage(e.getMessage());
+				res = false;
+			} catch (CoreException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
 			}
