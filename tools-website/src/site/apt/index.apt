@@ -265,6 +265,18 @@ asymptotic upper-bounds rather than concrete upper-bounds.
   ABS annotations format.
 
 
+* JMS2ABS: Automated Extraction of ABS Models from JMS Applications
+
+  {{{http://clip.dia.fi.upm.es/~jmrojas/jms2abs.zip}JMS2ABS}} is a
+  research prototype tool that automatically extracts ABS models from
+  JMS programs in bytecode form. In the
+  {{{http://clip.dia.fi.upm.es/~jmrojas/jms2abs.zip}zipped file}} you
+  will find an executable binary named <<<jms2abs>>>, prepared to run
+  on 32-bit Linux systems, a <<<README>>> file with usage instructions
+  and contact information for support, and two directories:
+  <<<sources>>> and <<<examples>>>.
+
+
 * Dependency Management
 
   ABS is supported by {{{http://maven.apache.org}Maven}} dependency management system. 
