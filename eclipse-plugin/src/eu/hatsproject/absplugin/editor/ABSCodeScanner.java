@@ -296,7 +296,10 @@ public class ABSCodeScanner implements ITokenScanner {
       fTokenOffset = fOffset;
 
 		int c = read();
-		if (c != ICharacterScanner.EOF && fDetector.isWordStart((char) c)) {
+		if (c == ICharacterScanner.EOF) {
+		    return Token.EOF;
+		}
+		if (fDetector.isWordStart((char) c)) {
 			fBuffer.setLength(0);
 			// read a complete word
 			do {
@@ -316,22 +319,17 @@ public class ABSCodeScanner implements ITokenScanner {
 			} else {
 				token = matchRegex();
 			}
-			if(!token.isUndefined())
+			if (!token.isUndefined()) {
 				return token;
-		} else {
-			//jump to next identifier
-			while(c != ICharacterScanner.EOF && !fDetector.isWordStart((char) c)){
-				c = read();
+			} else if (c == ICharacterScanner.EOF) {
+			    return Token.EOF;
 			}
-			unread();
-			if (c == EOF)
-				return Token.EOF;
+		} 
+		//jump to next identifier
+		while(c != ICharacterScanner.EOF && !fDetector.isWordStart((char) c)){
+			c = read();
 		}
-
 		unread();
-		
-		if (read() == EOF)
-			return Token.EOF;
 		return DEFAULT_RETURN_TOKEN;
    }
 

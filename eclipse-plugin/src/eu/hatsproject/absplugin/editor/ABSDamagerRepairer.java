@@ -31,15 +31,7 @@ public class ABSDamagerRepairer extends DefaultDamagerRepairer {
 					return partition;
 				}
 			} else{
-				try{
-					int startline = doc.getLineOfOffset(e.getOffset());
-					int startoffset = doc.getLineOffset(startline);
-					int endline = doc.getLineOfOffset(e.getOffset() + e.getLength());
-					int endoffset = doc.getLineOffset(endline) + doc.getLineLength(endline);
-					return new Region(startoffset, endoffset - startoffset);
-				} catch (BadLocationException ex){
-					return partition;
-				}
+				return super.getDamageRegion(partition, e, documentPartitioningChanged);
 			}
 		}
 		return partition;
