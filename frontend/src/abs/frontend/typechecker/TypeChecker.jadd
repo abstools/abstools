@@ -305,12 +305,20 @@ aspect TypeChecker {
    		  }
    	  }
    	  
-   	  for (MethodSig s : sigs.values()) {
-   	      if (!methodImpls.containsKey(s.getName())) {
-             InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
-             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));              
-   	      }
-   	  }
+      for (MethodSig s : sigs.values()) {
+          if (!methodImpls.containsKey(s.getName())) {
+              ASTNode<?> location = this;
+              InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+              // find the location where the error should be marked:
+              for (InterfaceTypeUse implementedInterface : getImplementedInterfaceUses()) {
+                  if (implementedInterface.getDecl().getType().isAssignable(d.getType())) {
+                      location = implementedInterface;
+                      break;
+                  }
+              }
+              e.add(new TypeError(location, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));
+          }
+      }
    	  
     }
 
