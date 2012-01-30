@@ -24,8 +24,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import eu.hatsproject.absplugin.console.ConsoleManager;
-import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -36,7 +34,7 @@ public class Activator extends AbstractUIPlugin {
 
 	private IResourceChangeListener resourceChangeTracker;
 	
-	private class AddRemoveTracker implements IResourceChangeListener{
+	private static class AddRemoveTracker implements IResourceChangeListener{
 		private final class RebuildAbsModelJob extends WorkspaceJob {
 			private final ArrayList<IResourceDelta> added;
 
@@ -45,6 +43,11 @@ public class Activator extends AbstractUIPlugin {
 				this.added = added;
 			}
 
+			/*
+			 * TODO: Review--This code looks strange:
+			 * The changeset can refer to different projects, but apparently only a build on the last
+			 * delta's project is triggered? Also note that there's probably a break missing in the loop.
+			 */
 			@Override
 			public IStatus runInWorkspace(IProgressMonitor monitor)
 					throws CoreException {
@@ -52,18 +55,13 @@ public class Activator extends AbstractUIPlugin {
 				boolean absFileWasAdded = false;
 				for(IResourceDelta r : added){
 					project = r.getResource().getProject();
-					try {
-						if(project.isAccessible() && project.hasNature(NATURE_ID)){
-							if (UtilityFunctions.isABSFile(r.getResource()))
-								absFileWasAdded = true;
-						}
-					} catch (CoreException e) {
-						e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
+					if(project.isAccessible() && project.hasNature(NATURE_ID)){
+						if (UtilityFunctions.isABSFile(r.getResource()))
+							absFileWasAdded = true;
 					}
 				}
 				if (absFileWasAdded)
 					project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
-					
 				
 				return Status.OK_STATUS;
 			}
@@ -93,7 +91,7 @@ public class Activator extends AbstractUIPlugin {
 					}
 				});
 			} catch (CoreException e1) {
-				e1.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
+				logException(e1);
 			}
 			if(removed.size()>0){
 				new RebuildAbsModelJob(removed).schedule();
@@ -130,7 +128,7 @@ public class Activator extends AbstractUIPlugin {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IProject[] projects = workspace.getRoot().getProjects();
 		resourceChangeTracker = new AddRemoveTracker();
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(resourceChangeTracker,IResourceChangeEvent.POST_CHANGE);
+		workspace.addResourceChangeListener(resourceChangeTracker,IResourceChangeEvent.POST_CHANGE);
 		for(IProject proj : projects){
 			if(proj.isAccessible() && proj.hasNature(NATURE_ID)){
 				proj.build(IncrementalProjectBuilder.FULL_BUILD, null);

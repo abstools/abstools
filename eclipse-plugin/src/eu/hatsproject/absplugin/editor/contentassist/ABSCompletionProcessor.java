@@ -32,7 +32,7 @@ public class ABSCompletionProcessor implements IContentAssistProcessor {
 	 * The Qualifier is the part of the string the user entered before hitting Ctrl-Space
 	 * @author mweber
 	 */
-	private class Qualifier{
+	private static class Qualifier{
 		private int offset;
 		private String qualifier;
 		

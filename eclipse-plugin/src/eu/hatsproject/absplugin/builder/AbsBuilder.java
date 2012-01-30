@@ -30,8 +30,8 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
  *
  */
 public class AbsBuilder extends IncrementalProjectBuilder {
-	class SampleDeltaVisitor implements IResourceDeltaVisitor {
-		private HashSet<String> changedFiles;
+	static class SampleDeltaVisitor implements IResourceDeltaVisitor {
+		final private HashSet<String> changedFiles;
 
 		public SampleDeltaVisitor(HashSet<String> changedFiles){
 			this.changedFiles = changedFiles;

@@ -366,13 +366,11 @@ public class UtilityFunctions {
 	    return (Model) getSuperOfASTNode((ASTNode<?>) element, Model.class);
 	}
 	
-	@Deprecated
 	/**
 	 * Looks for the first project with an ABSNature that contains this file
 	 * 
-	 * Deprecated! This method does not work with linked files that are members of multiple projects.
-	 * 
 	 * @return The ABSNature for a file with the given IPath. If the file is not in a project with an ABS nature null will be returned.
+	 * @deprecated This method does not work with linked files that are members of multiple projects.
 	 *  
 	 */
 	public static AbsNature getNatureForPath(IPath path) {
@@ -421,7 +419,7 @@ public class UtilityFunctions {
 				return (AbsNature)project.getNature(Constants.NATURE_ID);
 			}
 		} catch (CoreException e) {
-			e.printStackTrace();
+			standardExceptionHandling(e);
 			return null;
 		}
 		
@@ -439,7 +437,7 @@ public class UtilityFunctions {
 		try {
 			prefstore.save();
 		} catch (IOException e) {
-			e.printStackTrace();
+			standardExceptionHandling(e);
 		}
 	}
 
@@ -626,7 +624,6 @@ public class UtilityFunctions {
 	
 	public static boolean saveEditors(IProject project, boolean withConfirmation){
 		IEditorPart[] dirtyEditors = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getDirtyEditors();
-		IFile editorFile;
 		if(dirtyEditors.length>0 && withConfirmation){
 			boolean doit = MessageDialog.openQuestion(Display.getDefault().getActiveShell(), "Save modified files", "Should the modified files be saved?");
 			if(!doit)
@@ -634,7 +631,7 @@ public class UtilityFunctions {
 		}
 		boolean allsaved = true;
 		for(IEditorPart iep : dirtyEditors){
-			editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
+			IFile editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
 			if(editorFile!=null && editorFile.getProject().equals(project)){
 				allsaved = allsaved && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().saveEditor(iep, false);
 			}
@@ -642,16 +639,15 @@ public class UtilityFunctions {
 		try {
 			project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
 		} catch (CoreException e) {
-			e.printStackTrace();
+			standardExceptionHandling(e);
 		}
 		return allsaved;
 	}
 	
 	public static boolean saveEditor(IFile file, boolean withConfirmation){
 		IEditorPart[] dirtyEditors = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getDirtyEditors();
-		IFile editorFile;
 		for(IEditorPart iep : dirtyEditors){
-			editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
+			IFile editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
 			if(editorFile!=null && editorFile.equals(file)){
 				return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().saveEditor(iep, withConfirmation);
 			}

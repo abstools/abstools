@@ -42,8 +42,8 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	 * A Listener updating the LaunchConfigurationDialog of the given tab
 	 * when an event occurs.
 	 */
-	class TabListener implements Listener {
-		AbstractTab tab;
+	static class TabListener implements Listener {
+		final private AbstractTab tab;
 
 		public TabListener(AbstractTab tab){
 			this.tab=tab;

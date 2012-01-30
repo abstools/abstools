@@ -85,6 +85,7 @@ public class FileAddLocationHandler extends AbstractHandler  {
 					try {
 						file.refreshLocal(IResource.DEPTH_INFINITE, null);
 					} catch (CoreException e) {
+						Activator.logException(e);
 					}
 				} catch (IOException e) {
 					MessageDialog.openError(Display.getDefault().getActiveShell(), "Error while inserting locations", 

@@ -50,7 +50,7 @@ import eu.hatsproject.absplugin.util.UtilityFunctions;
  * @author mweber, tfischer
  */
 public class ProposalFactory{
-		private final class ProposalComparator implements
+		private static final class ProposalComparator implements
 				Comparator<ICompletionProposal> {
 			@Override
 			public int compare(ICompletionProposal o1, ICompletionProposal o2) {
