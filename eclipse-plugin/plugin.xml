@@ -283,7 +283,7 @@
        </actionSet>
     </extension>
     <extension
-          point="org.eclipse.core.runtime.contentTypes">
+          point="org.eclipse.core.contenttype.contentTypes">
        <content-type
              base-type="org.eclipse.core.runtime.text"
              describer="eu.hatsproject.absplugin.editor.ABSContentTypeDescriptor"
@@ -1778,12 +1778,5 @@
        </command>
     </extension>
 <!-- adding resource factories -->
-
-
-
-
-
-	<!-- Quick Outline -->
-   <!-- quickfix marker resolution generator -->
 
 </plugin>
