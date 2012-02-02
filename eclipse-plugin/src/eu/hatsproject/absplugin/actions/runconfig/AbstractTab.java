@@ -97,6 +97,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 					if (prod != null) {
 						model.flattenForProduct(prod);
 						/* Type check again */
+						model.flushCache(); // #335
 						SemanticErrorList errs = model.typeCheck();
 						// #332: trigger fresh build
 						nat.cleanModel();
