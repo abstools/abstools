@@ -4,19 +4,9 @@
  */
 package abs.frontend;
 
-import abs.frontend.analyser.DuplicateCheckTest;
-import abs.frontend.analyser.InterfaceDeclarationTest;
-import abs.frontend.analyser.OtherAnalysisTests;
-import abs.frontend.analyser.VarResolutionTest;
+import abs.frontend.analyser.*;
 import abs.frontend.parser.*;
-import abs.frontend.typesystem.AnnotationTests;
-import abs.frontend.typesystem.AtomicityTests;
-import abs.frontend.typesystem.ClassKindTests;
-import abs.frontend.typesystem.ExamplesTypeChecking;
-import abs.frontend.typesystem.LocationTypeTests;
-import abs.frontend.typesystem.NegativeTypeCheckerTests;
-import abs.frontend.typesystem.TypeCheckerTest;
-import abs.frontend.typesystem.TypingTest;
+import abs.frontend.typesystem.*;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -29,5 +19,5 @@ import org.junit.runners.Suite;
         ExamplesTypeChecking.class, AnnotationTests.class,
         ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
         BackPositionTest.class, IncompleteExpTests.class,
-        TestABSPackages.class})
+        TestABSPackages.class, CaseStudyTypeChecking.class})
 public class AllFrontendTests {}
