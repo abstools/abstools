@@ -70,6 +70,7 @@
 	    <pathelement location="${ext.dir}/org.sat4j.pb.jar" />
 	    <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
 	    <pathelement location="${ext.dir}/sat4j-pb.jar" />
+		<pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
 	</path>
 		
 	<path id="run.classpath">
@@ -323,6 +324,7 @@
 
 	<target name="tests-frontend" depends="compile">
 		<junit fork="yes" haltonfailure="yes">
+			<sysproperty key="abs.junit.casestudies" value="${casestudies.dir}/" />
 			<assertions><enable package="abs"/></assertions>
 			<test name="${test.frontend.suite.name}" todir="${test.data.dir}" />
 			<formatter type="plain" usefile="false" />

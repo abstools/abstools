@@ -29,7 +29,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
     /**
      * Use a property to be able to point JUnit in the right direction and override the default:
      */
-    private final static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/"); 
+    private static String CASESTUDY_DIR = System.getProperty("abs.junit.casestudies", "../../../../CaseStudies/models/"); 
 
     /**
      * Check if the casestudies are available (see {@link MaudeTests}). Again, BeforeClass
@@ -39,8 +39,9 @@ public class CaseStudyTypeChecking extends FrontendTest {
     @BeforeClass
     public static void checkExists() {
         File srcFolderF = new File(CASESTUDY_DIR);
-        assertTrue(CASESTUDY_DIR.endsWith("/"));
         assumeTrue(srcFolderF.exists());
+        if (!CASESTUDY_DIR.endsWith("/"))
+            CASESTUDY_DIR += "/";
     }
 
     @Test
