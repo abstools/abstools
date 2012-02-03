@@ -126,14 +126,8 @@ public class Activator extends AbstractUIPlugin {
 		initializePreferenceStore();
 		initializeColors();
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IProject[] projects = workspace.getRoot().getProjects();
 		resourceChangeTracker = new AddRemoveTracker();
 		workspace.addResourceChangeListener(resourceChangeTracker,IResourceChangeEvent.POST_CHANGE);
-		for(IProject proj : projects){
-			if(proj.isAccessible() && proj.hasNature(NATURE_ID)){
-				proj.build(IncrementalProjectBuilder.FULL_BUILD, null);
-			}
-		}
 	}
 	
 	private void setDefaultValue(String name, RGB value){
