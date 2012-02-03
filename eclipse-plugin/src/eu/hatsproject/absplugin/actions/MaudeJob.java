@@ -21,6 +21,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.*;
+import eu.hatsproject.absplugin.internal.NoModelException;
 
 public class MaudeJob extends Job{
 	private Process process;
@@ -107,6 +108,8 @@ public class MaudeJob extends Job{
 			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
 		} catch (ASTNodeNotFoundException e) {
 			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
+		} catch (NoModelException e) {
+			return new Status(IStatus.INFO, PLUGIN_ID, "No ABS model in project");
 		} 
 		monitor.worked(5);
 		
@@ -173,8 +176,9 @@ public class MaudeJob extends Job{
 	 * @throws TypeCheckerException Is thrown, if the project which is compiled has type errors
 	 * @throws ASTNodeNotFoundException 
 	 * @throws WrongProgramArgumentException 
+	 * @throws NoModelException 
 	 */
-	private void compileMaude(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException {
+	private void compileMaude(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException, NoModelException {
 		PrintStream ps = null;
 		FileInputStream fis = null;
 		try{
@@ -190,6 +194,8 @@ public class MaudeJob extends Job{
 			
 			//Get model, check for errors and throw respective exception
 			Model model = nature.getCompleteModel();
+			if (model == null)
+				throw new NoModelException();
 			if(model.hasParserErrors()){
 				throw new ParseException(model.getParserErrors());
 			}

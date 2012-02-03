@@ -44,6 +44,8 @@ import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.debug.model.Debugger;
 import eu.hatsproject.absplugin.debug.model.Debugger.InvalidRandomSeedException;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
+import eu.hatsproject.absplugin.internal.NoModelException;
+import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 public class JavaJob extends Job {
@@ -118,8 +120,8 @@ public class JavaJob extends Job {
 	public IStatus runJob(IProgressMonitor monitor) {
 		try{
 			//must be an ABS project
-			if (project == null || !project.exists()){
-				return showErrorMessage("The project does not exist.");
+			if (project == null || !project.exists() || !project.isOpen()){
+				return showErrorMessage("The project does not exist/is not open.");
 			} else if (!project.hasNature(NATURE_ID)){
 				return showErrorMessage("Chosen project '"+project.getName()+"' is not an ABS project.");
 			}			
@@ -133,7 +135,7 @@ public class JavaJob extends Job {
 			loadPropertyOptions();
 			monitor.worked(14);
 		} catch (AbsJobException e) {
-			return showErrorMessage(e.getLocalizedMessage());
+			return showErrorMessage("ABS Java Job failed",e);
 		}
 		
 		return executeJob(monitor); 
@@ -174,7 +176,7 @@ public class JavaJob extends Job {
 			monitor.worked(40);
 			
 			if (compileCode && !isCanceled) {
-				executeCompiler(absFrontendLocation);
+				executeCompiler(monitor,absFrontendLocation);
 			}
 			monitor.worked(12);
 
@@ -190,9 +192,11 @@ public class JavaJob extends Job {
 			return createStatus();
 
 		} catch (AbsJobException e) {
-			return showErrorMessage(e.getLocalizedMessage());
+			return showErrorMessage("ABS Java Job failed",e);
 		} catch (JavaCodeGenerationException e) {
-		    return showErrorMessage(e.getLocalizedMessage());
+			return showErrorMessage("ABS Java Job failed",e);
+		} catch (NoModelException e) {
+			return showInfoMessage("No ABS model in project");
 		} catch (Exception e) {
 			//do not kill the plug-in, if something goes wrong
 			return showErrorMessage("Fatal error!", e);
@@ -230,14 +234,14 @@ public class JavaJob extends Job {
 		}
 	}
 	
-	private void executeCompiler(String absFrontendLocation) throws AbsJobException,
-			CoreException, IOException, JavaCodeGenerationException {
+	private void executeCompiler(IProgressMonitor monitor, String absFrontendLocation) throws AbsJobException,
+			CoreException, IOException, JavaCodeGenerationException, NoModelException {
 		// generate .java files
-		generateJavaCode(javaPath, project);
+		generateJavaCode(monitor, javaPath, project);
 	
 		// generate class files
 		if (!sourceOnly && !isCanceled) {
-			generateJavaClassFiles(absFrontendLocation, javaPath.toFile(),
+			generateJavaClassFiles(monitor, absFrontendLocation, javaPath.toFile(),
 					noWarnings);
 		}
 	}
@@ -245,47 +249,56 @@ public class JavaJob extends Job {
 	/**
 	 * Generates .java files (no .class files).
 	 * If 'product' is set, will flatten accordingly.
-	 * 
+	 * @param monitor - must not be null
 	 * @param path - where to add the modules / java-files
 	 * @param project - the ABS project
 	 * @throws IOException, if unable to create java files 
 	 * @throws AbsJobException, if unable to generate java files 
 	 * @throws JavaCodeGenerationException, if unable to generate java files  
+	 * @throws CoreException 
+	 * @throws NoModelException 
 	 */
-	private void generateJavaCode(Path path, IProject project) throws AbsJobException, IOException, JavaCodeGenerationException {
-		Model model = getModelFromProject(project);
-		if (debugMode) System.out.println("Creating java source files");
-	    JavaCode javaCode = new JavaCode(path.toFile());
-	    if (product != null) {
-	    	/* [stolz] Flattening for a product will mangle the model according to [ramus], so we get our own copy,
-	    	 * since the nature will hold on to the original model.
-	    	 * For safety, we also pass the product by name.
-	    	 */
-	    	String productN = product.getModuleDecl().getName()+"."+product.getName();
-			try {
-				model.flattenForProduct(productN);
-			} catch (WrongProgramArgumentException e) {
-				throw new AbsJobException(e);
-			} catch (ASTNodeNotFoundException e) {
-				throw new AbsJobException(e);
+	private void generateJavaCode(IProgressMonitor monitor, Path path, IProject project) throws AbsJobException, IOException, JavaCodeGenerationException, CoreException, NoModelException {
+		assert monitor != null;
+		monitor.subTask("Creating java source files");
+		AbsNature nat = (AbsNature) project.getNature(Constants.NATURE_ID);
+		synchronized (nat.modelLock) {
+			Model model = nat.getCompleteModel();
+			if (model == null)
+				throw new NoModelException();
+			JavaCode javaCode = new JavaCode(path.toFile());
+			if (product != null) {
+				/* [stolz] Flattening for a product will mangle the model according to [ramus], so we get our own copy,
+				 * since the nature will hold on to the original model.
+				 * For safety, we also pass the product by name.
+				 */
+				String productN = product.getModuleDecl().getName()+"."+product.getName();
+				try {
+					model.flattenForProduct(productN);
+				} catch (WrongProgramArgumentException e) {
+					throw new AbsJobException(e);
+				} catch (ASTNodeNotFoundException e) {
+					throw new AbsJobException(e);
+				}
 			}
-	    }
-	    model.generateJavaCode(javaCode);
-	    
-	    int countUnits=model.getNumCompilationUnit();
-	    if(countUnits==0) throw new AbsJobException("No compilation unit found");
+			model.generateJavaCode(javaCode);
+
+			int countUnits=model.getNumCompilationUnit();
+			if(countUnits==0) throw new AbsJobException("No compilation unit found");
+		}
 	}
 
 	/**
 	 * generates .class files (needs .java files)
+	 * @param monitor 
 	 * 
 	 * @param absFrontendLocation -where to find the absfrontend
 	 * @param path - directory with java files
 	 * @param noWarnings - do not show any compile warnings
 	 * @throws AbsJobException 
 	 */
-	private void generateJavaClassFiles(String absFrontendLocation, File path, boolean noWarnings) throws AbsJobException {
-		if (debugMode) System.out.println("Creating class files");
+	private void generateJavaClassFiles(IProgressMonitor monitor, String absFrontendLocation, File path, boolean noWarnings) throws AbsJobException {
+		monitor.subTask("Creating class files");
 		
 		//args
 		String noWarn;
@@ -451,16 +464,10 @@ public class JavaJob extends Job {
 		synchronized (nature.modelLock) {
 			CompilationUnit unit = nature.getCompilationUnit(currentFile);
 			List<ModuleDecl> modules = findModulesWithMain(unit);
-			if (modules.size() == 0) {
-			    return null;
-			} else {
-			    return modules.get(0);
-			}
+			// TODO: is the module still valid once you have returned the lock?
+			return modules.size() == 0 ? null : modules.get(0);
 		}
 	}
-
-    
-    
     
     /**
      * searches a compilation unit for modules with a main block
@@ -483,9 +490,6 @@ public class JavaJob extends Job {
         }
         return result;
     }
-	
-	
-
 
 	private void debugAbsFiles(String absFrontendLocation, final Path javaPath,
 			boolean useBothObserver, final String moduleName, String info)
@@ -508,7 +512,7 @@ public class JavaJob extends Job {
       args.add(absFrontendLocation+File.pathSeparator+javaPath+getExtraClassPathString());
       
       if(debuggerIsInDebugMode){
-         addIfNotNullOrEmpty(args,"-Dabs.debug=true");
+         args.add("-Dabs.debug=true");
       }
       addIfNotNullOrEmpty(args,debuggerArgsOther);
       addIfNotNullOrEmpty(args,debuggerArgsSystemObserver);
@@ -561,7 +565,7 @@ public class JavaJob extends Job {
 		}
 	}
 
-	private void addIfNotNullOrEmpty(ArrayList<String> args,
+	private static void addIfNotNullOrEmpty(ArrayList<String> args,
 			String s) {
 		if (s != null && !s.isEmpty())
 			args.add(s);
@@ -804,14 +808,18 @@ public class JavaJob extends Job {
 		super.canceling();
 	}
 
+	private IStatus showInfoMessage(String errorMessage){
+		return new Status(Status.INFO, PLUGIN_ID, errorMessage);
+	}
+
 	private IStatus showErrorMessage(String errorMessage){
 		if (debugMode) System.err.println(errorMessage);
 		return new Status(Status.ERROR, PLUGIN_ID, errorMessage);
 	}
 
 	private IStatus showErrorMessage(String errorMessage, Exception e){
-		standardExceptionHandling(e);
-		return new Status(Status.ERROR, PLUGIN_ID, errorMessage, e);
+		// Errors are automatically logged by Eclipse
+		return new Status(Status.ERROR, PLUGIN_ID, errorMessage+"\n"+e.getLocalizedMessage(), e);
 	}
 
 	public void setDebuggerArgsOther(String debuggerArgsOther) {
