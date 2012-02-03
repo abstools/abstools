@@ -617,6 +617,7 @@ aspect GenerateMaude {
                 int randomcount = var.getInitExp().numberOfRandom(new TreeSet<String>());
                 MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
                 if (var.getInitExp() instanceof PureExp) {
+                    MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(), getModel().defaultResources);
                     stream.print("$vardecl( '" + var.getName() + " ; ");
                     if (var.hasInitExp()) {
                         var.getInitExp().generateMaude(stream);
@@ -626,6 +627,7 @@ aspect GenerateMaude {
                     stream.print(") ");
                 } else {
                     stream.print("$vardecl( '" + var.getName() + " ; null ) ; ");
+                    MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(), getModel().defaultResources);
                     var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
                 }
                 MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
