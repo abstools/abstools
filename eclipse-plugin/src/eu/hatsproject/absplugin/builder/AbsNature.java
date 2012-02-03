@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
@@ -257,33 +258,20 @@ public class AbsNature implements IProjectNature {
    }
 	
 	/**
-	 * {@link #parseABSFile(IResource, IncrementalModelBuilder, boolean)}
-	 */
-	public void parseABSFile(IResource resource) throws CoreException{
-		parseABSFile(resource, false);
-	}
-	
-	/**
-	 * {@link #parseABSFile(IResource, IncrementalModelBuilder, boolean)}
-	 */
-	public void parseABSFile(IResource resource, boolean withincomplete) throws CoreException{
-		parseABSFile(resource, modelbuilder, withincomplete);
-	}
-	
-	/**
 	 * parses the given resource with the given model builder. The resource is only parsed if it is an abs file
 	 * @param resource the abs file
 	 * @param builder the builder to use
 	 * @param withincomplete include incomplete expressions into the AST?
+	 * @param monitor 
 	 * @throws CoreException @{@link IResource#deleteMarkers(String, boolean, int)} 
 	 */
-	public static void parseABSFile(IResource resource, IncrementalModelBuilder builder, boolean withincomplete) throws CoreException {
+	public void parseABSFile(IResource resource, boolean withincomplete, IProgressMonitor monitor) throws CoreException {
 		if (isABSFile(resource)) {
 			IFile file = (IFile) resource;
 			file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO);
 			try {
 			   if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
-			      file.refreshLocal(IResource.DEPTH_ZERO, null);
+			      file.refreshLocal(IResource.DEPTH_ZERO, monitor);
 			   }
 			   
 			   Main m = new Main();
@@ -298,7 +286,7 @@ public class AbsNature implements IProjectNature {
 			      cu.setName(file.getLocation().toFile().getAbsolutePath());
 			      units.add(cu);
 			   }
-				builder.addCompilationUnits(units);
+				modelbuilder.addCompilationUnits(units);
 				
 				for (CompilationUnit cu : units) {
 				   if(cu.hasParserErrors()){

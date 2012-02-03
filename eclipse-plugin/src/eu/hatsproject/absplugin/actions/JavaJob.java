@@ -52,7 +52,6 @@ public class JavaJob extends Job {
 
 	private MsgConsole javaConsole;
 	private IProject project;
-	private IProgressMonitor refreshProgressMonitor;
 	private IFile currentFile;
 	private Product product = null;
 
@@ -186,7 +185,7 @@ public class JavaJob extends Job {
 			monitor.worked(12);
 
 			// refresh project tree
-			project.refreshLocal(IProject.DEPTH_INFINITE, refreshProgressMonitor);
+			project.refreshLocal(IProject.DEPTH_INFINITE, monitor);
 
 			return createStatus();
 

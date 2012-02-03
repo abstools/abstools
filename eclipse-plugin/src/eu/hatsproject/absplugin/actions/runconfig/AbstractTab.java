@@ -91,16 +91,15 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 				assert nat != null;
 				synchronized (nat.modelLock) {
 					Model model = nat.getCompleteModel();
-					assert model != null;
+					assert model != null : projectName;
 					/* Check product if any */
 					String prod = getSelectedProductName();
 					if (prod != null) {
 						model.flattenForProduct(prod);
 						/* Type check again */
-						model.flushCache(); // #335
+						model.flushCache(); // #335, see IncrementalModelBuilder#flushAll()
 						SemanticErrorList errs = model.typeCheck();
 						// #332: trigger fresh build
-						nat.cleanModel();
 						project.build(IncrementalProjectBuilder.FULL_BUILD, null);
 						if (errs != null && !errs.isEmpty())
 							throw new AbsJobException(new TypeCheckerException(errs));
@@ -147,7 +146,6 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 
 		productDropDown.addListener(SWT.Selection, myListener);
 	}
-
 
 	protected static Group createGroup(Composite parent, String text, int columns, int hspan, int fill) {
 		Group g = new Group(parent, SWT.NONE);

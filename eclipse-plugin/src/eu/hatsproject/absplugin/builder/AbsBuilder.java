@@ -32,9 +32,11 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.isABSFile;
 public class AbsBuilder extends IncrementalProjectBuilder {
 	static class SampleDeltaVisitor implements IResourceDeltaVisitor {
 		final private HashSet<String> changedFiles;
+		final private IProgressMonitor monitor;
 
-		public SampleDeltaVisitor(HashSet<String> changedFiles){
+		public SampleDeltaVisitor(HashSet<String> changedFiles, IProgressMonitor monitor){
 			this.changedFiles = changedFiles;
+			this.monitor = monitor;
 		}
 		
 		/**
@@ -50,7 +52,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 			case IResourceDelta.ADDED:
 				// handle added resource
 				if (nature.toIncludeInScope(resource)) {
-					nature.parseABSFile(resource);
+					nature.parseABSFile(resource,false,monitor);
 					changedFiles.add(resource.getFullPath().toString());
 				}
 				break;
@@ -60,7 +62,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 			case IResourceDelta.CHANGED:
 				// handle changed resource
 				if (nature.toIncludeInScope(resource)) {
-					nature.parseABSFile(resource);
+					nature.parseABSFile(resource,false,monitor);
 					changedFiles.add(resource.getFullPath().toString());
 				}
 				break;
@@ -75,9 +77,11 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 	 * @author mweber
 	 *
 	 */
-	class SampleResourceVisitor implements IResourceVisitor {
-		private HashSet<String> changedFiles;
-		public SampleResourceVisitor(HashSet<String> changedFiles){
+	static class SampleResourceVisitor implements IResourceVisitor {
+		private final HashSet<String> changedFiles;
+		private final IProgressMonitor monitor;
+		public SampleResourceVisitor(IProgressMonitor monitor, HashSet<String> changedFiles){
+			this.monitor = monitor;
 			this.changedFiles = changedFiles;
 		}
 		
@@ -85,7 +89,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		public boolean visit(IResource resource) throws CoreException{
 			AbsNature nature = getAbsNature(resource.getProject());
 			if(isABSFile(resource) && nature.toIncludeInScope(resource)){
-				nature.parseABSFile(resource);
+				nature.parseABSFile(resource,false,monitor);
 				changedFiles.add(resource.getFullPath().toString());
 			}
 			return true;
@@ -110,7 +114,8 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 			
 			nature.typeCheckModel();
 			notifyBuildListener(changedFiles);
-			monitor.done();
+			if (monitor != null)
+				monitor.done();
 			return null;
 		}
 	}
@@ -135,7 +140,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 			String maudePathString = nature.getProjectPreferenceStore().getString(MAUDE_PATH);
 			cleanGeneratedFiles(maudePathString);
 			
-			getProject().refreshLocal(IProject.DEPTH_INFINITE, null);
+			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		}
 	}
 
@@ -158,12 +163,12 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 	protected void fullBuild(final IProgressMonitor monitor, HashSet<String> changedFiles)
 			throws CoreException {
 		// the visitor does the work.
-		getProject().accept(new SampleResourceVisitor(changedFiles));
+		getProject().accept(new SampleResourceVisitor(monitor,changedFiles));
 	}
 
 	protected void incrementalBuild(IResourceDelta delta,
 			IProgressMonitor monitor, HashSet<String> changedFiles) throws CoreException {
 		// the visitor does the work.
-		delta.accept(new SampleDeltaVisitor(changedFiles));
+		delta.accept(new SampleDeltaVisitor(changedFiles, monitor));
 	}
 }

@@ -148,7 +148,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		if (cu == null) {
 		    // Band-aid for ticket #299:
 		    try {
-		        nature.parseABSFile(file);
+		        nature.parseABSFile(file, false, null);
 		        cu = nature.getCompilationUnit(file);
 		        if (cu == null)
 		            throw new IllegalArgumentException("Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());

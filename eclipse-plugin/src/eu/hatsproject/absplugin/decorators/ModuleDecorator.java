@@ -46,7 +46,6 @@ import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
 public class ModuleDecorator extends LabelProvider implements ILightweightLabelDecorator {
 
 	private final static ImageDescriptor ERROR_MARKER_DESCRIPTOR = DecorationOverlayIcon.createFromImage(ERROR_MARKER);
-	
 
 	/**
 	 * {@inheritDoc}
@@ -93,7 +92,6 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 							addErrorOverlay(decoration);
 							return;
 						}
-					
 				}
 			}
 		}
@@ -138,10 +136,8 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 				int startLine = pos.getLinestart();
 				int endLine = pos.getLineend();
 
-				SemanticErrorList list = new SemanticErrorList();
 				List<ParserError> parserErrors = cu.getParserErrors();
-
-				list = cu.getModel().getTypeErrors();
+				SemanticErrorList list = cu.getModel().getTypeErrors();
 				
 				if (checkParserErrorRange(startLine, endLine, parserErrors)){
 					return true;
