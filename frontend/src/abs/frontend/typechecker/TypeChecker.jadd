@@ -55,6 +55,15 @@ aspect TypeChecker {
         if (hasProductLine())
           getProductLine().typeCheck(e);
 
+        { // duplicate products #340
+            List<Product> products = getProducts();
+            Set<String> seen = new HashSet<String>();
+            for (Product p : products) {
+                if (!seen.add(p.getName()))
+                    e.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
+            }
+        }
+
         if (hasBlock()) {
             getBlock().typeCheck(e);
         }
