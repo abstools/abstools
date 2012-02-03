@@ -266,8 +266,9 @@ public class AbsNature implements IProjectNature {
 	 * @throws CoreException @{@link IResource#deleteMarkers(String, boolean, int)} 
 	 */
 	public void parseABSFile(IResource resource, boolean withincomplete, IProgressMonitor monitor) throws CoreException {
-		if (isABSFile(resource)) {
+		if (resource.exists() && isABSFile(resource)) {
 			IFile file = (IFile) resource;
+			assert file.exists();
 			file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO);
 			try {
 			   if (!file.isSynchronized(IResource.DEPTH_ZERO)) {

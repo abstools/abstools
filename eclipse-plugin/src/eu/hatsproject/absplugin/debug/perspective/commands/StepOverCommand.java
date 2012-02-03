@@ -18,7 +18,7 @@ public class StepOverCommand extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		if(executeSingleStep.isEnabled()){
+		if(executeSingleStep != null && executeSingleStep.isEnabled()){
 			executeSingleStep.run();
 		}
 		return null;

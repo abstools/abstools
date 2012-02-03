@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentPartitioner;
 import org.eclipse.jface.text.rules.FastPartitioner;
@@ -18,11 +20,15 @@ import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.editors.text.FileDocumentProvider;
 
+import eu.hatsproject.absplugin.util.Constants;
+
 public class ABSDocumentProvider extends FileDocumentProvider{
-	private static boolean doDebug = true;
 	
 	@Override
 	protected IDocument createDocument(Object element) throws CoreException {
+		// Avoid ResourceException if you open a file that has disappeared.
+		if (isDeleted(element))
+			return super.createEmptyDocument();
 		IDocument document = super.createDocument(element);
 		if(document == null){
 			if(element instanceof IURIEditorInput){
@@ -33,15 +39,13 @@ public class ABSDocumentProvider extends FileDocumentProvider{
 					is = ei.getURI().toURL().openStream();
 					setDocumentContent(document, is, getEncoding(element));
 				} catch(IOException ex){
-					if(doDebug)
-						ex.printStackTrace();
+					throw new CoreException(new Status(IStatus.ERROR,Constants.PLUGIN_ID,"ABS Editor",ex));
 				} finally{
 					if(is != null){
 						try{
 							is.close();
 						} catch(IOException ex){
-							if(doDebug)
-								ex.printStackTrace();
+							throw new CoreException(new Status(IStatus.ERROR,Constants.PLUGIN_ID,"ABS Editor",ex));
 						}
 					}
 				}

@@ -138,6 +138,8 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 
 	private void setInput() {
 		IFile file = (IFile)editor.getEditorInput().getAdapter(IFile.class);
+		if (!file.exists())
+			return;
 		// Tries to get the ABS ProjectNature in order to get the AST
 		AbsNature nature = UtilityFunctions.getAbsNature(file);
 		if (nature == null) {

@@ -18,7 +18,7 @@ public class ResumeCommandHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		if(resume.isEnabled()){
+		if(resume != null && resume.isEnabled()){
 			resume.run();
 		}
 		return null;
