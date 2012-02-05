@@ -102,8 +102,7 @@ aspect Typing {
     }
 
     eq OriginalCall.getType() {
-        // FIXME: look up current method, return its return type
-        return UnknownType.INSTANCE;
+        return getContextMethod().getType();
     }
     
     syn lazy Type MethodSig.getType() {

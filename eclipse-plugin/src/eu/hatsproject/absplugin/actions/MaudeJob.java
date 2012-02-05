@@ -224,6 +224,18 @@ public class MaudeJob extends Job{
 			fis.close();
 			tmpFile.delete();
 			destFile = new File(project.getLocation().append(path).toFile(),fileName);
+		} catch (CoreException e) {
+			throw e;
+		} catch (IOException e) {
+			throw e;
+		} catch (TypeCheckerException e) {
+			throw e;
+		} catch (WrongProgramArgumentException e) {
+			throw e;
+		} catch (ASTNodeNotFoundException e) {
+			throw e;
+		} catch (NoModelException e) {
+			throw e;
 		} finally{
 			if (ps != null){
 				ps.flush();

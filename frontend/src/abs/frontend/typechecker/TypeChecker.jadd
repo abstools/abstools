@@ -453,6 +453,12 @@ aspect TypeChecker {
             s.typeCheck(e);
         }
     }
+
+    /**
+     * Proxy.
+     * @see {@link MethodImpl#getType()}
+     */
+    public Type MethodImpl.getType() { return getMethodSig().getType(); }
     
     public void MethodImpl.typeCheck(SemanticErrorList e) {
    	 Block b = getBlock();
