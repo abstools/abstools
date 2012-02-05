@@ -208,7 +208,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		int i = 1; /* base comes first */
 		int selected = 0;
 		for (Product p : prods) {
-			final String name = p.getModuleDecl().getName()+"."+p.getName();
+			final String name = p.qualifiedName();
 			productDropDown.add(name);
 			if (name.equals(preSelected)) {
 				selected = i;

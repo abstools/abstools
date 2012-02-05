@@ -200,6 +200,7 @@ public class MaudeJob extends Job{
 			}
 			if (getProduct() != null) {
 				model.flattenForProduct(getProduct());
+				model.flushCache(); // #335
 			}
 			if(model.hasTypeErrors()){
 				throw new TypeCheckerException(model.typeCheck());

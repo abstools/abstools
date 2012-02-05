@@ -27,13 +27,11 @@ import org.eclipse.jface.action.IAction;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 
-import eu.hatsproject.absplugin.actions.ABSUnitTestExecutionJob;
 import eu.hatsproject.absplugin.actions.ABSUnitTestJavaExecutionJob;
 import eu.hatsproject.absplugin.actions.ActionUtils;
 import eu.hatsproject.absplugin.actions.JavaJob;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.util.Constants;
-
 
 public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 

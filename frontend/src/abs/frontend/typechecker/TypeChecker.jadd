@@ -12,8 +12,9 @@ import java.util.HashMap;
 aspect TypeChecker {
     
     private SemanticErrorList Model.typeErrors;
-    
-    syn lazy boolean Model.hasTypeErrors() = !typeCheck().isEmpty();
+
+    /* typeCheck() is already cached, no need to cache this simple getter. */
+    public boolean Model.hasTypeErrors() { return !typeCheck().isEmpty(); }
     
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
