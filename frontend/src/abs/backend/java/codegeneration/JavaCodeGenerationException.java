@@ -10,4 +10,8 @@ public class JavaCodeGenerationException extends Exception {
     public JavaCodeGenerationException(String message) {
         super(message);
     }
+
+    public JavaCodeGenerationException(Throwable t) {
+        super(t);
+    }
 }

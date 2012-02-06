@@ -13,9 +13,11 @@ aspect GenerateJava {
 
     public void Model.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
       JavaGeneratorHelper.cleanGenFolder(code);
-      for (ModuleDecl decl : getModuleDecls()) {
-        decl.generateJavaCode(code);
-      }
+      try {
+        for (ModuleDecl decl : getModuleDecls()) {
+          decl.generateJavaCode(code);
+        }
+      } catch (NotImplementedYetException e) { throw new JavaCodeGenerationException(e); }
     }
 
     public void ModuleDecl.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
@@ -72,8 +74,6 @@ aspect GenerateJava {
       s.println("package "+pkg.packageName+";");
           //s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
       generateJava(s);
-      } catch (IOException e) {
-        e.printStackTrace();
       } finally {
         if (s != null)
           s.close();
@@ -501,7 +501,7 @@ aspect GenerateJava {
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
-        // TODO: implement me
+        throw new NotImplementedYetException(this); // TODO: implement me
     }
 
     public void GetExp.generateJava(PrintStream stream) {
