@@ -344,11 +344,7 @@ aspect TypeChecker {
     }
 
     public void DeltaClause.typeCheck(SemanticErrorList e) {
-         final String name = getDeltaspec().getName();
-         KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, name);
-         if (!getModuleDecl().getVisibleDeltas().containsKey(symbol)) {
-             e.add(new TypeError(this,ErrorMessage.NAME_NOT_RESOLVABLE, name));
-         }
+    	TypeCheckerHelper.typeCheckDeltaClause(this,e);
      }
 
     public void FunctionDecl.typeCheck(SemanticErrorList e) {

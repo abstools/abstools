@@ -15,7 +15,6 @@ import java.util.Set;
 import beaver.Symbol;
 
 import abs.common.Constants;
-import abs.common.ListUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -187,6 +186,37 @@ public class TypeCheckerHelper {
         }
     }
 
+    public static void typeCheckDeltaClause(DeltaClause dc, SemanticErrorList e) {
+        { /* Does the Delta exist ? */
+            final String name = dc.getDeltaspec().getName();
+            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, name); // TODO: idiom
+            if (!dc.getModuleDecl().getVisibleDeltas().containsKey(symbol)) {
+                e.add(new TypeError(dc.getDeltaspec(),ErrorMessage.NAME_NOT_RESOLVABLE, name));
+            }
+        }
+        assert dc.getModuleDecl().hasProductLine(); // otherwise we wouldn't be here...
+        ProductLine p = dc.getModuleDecl().getProductLine();
+        /* Do the referenced features exist? */
+        for (Feature f : dc.getFeatures()) {
+            boolean found = false;
+            for (Feature cf : p.getOptionalFeatures()) {
+                if (cf.getName().equals(f.getName())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                e.add(new TypeError(f,ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
+        }
+        /* What about 'after ...' clauses? */
+        for (DeltaID d : dc.getDeltaIDs()) {
+            KindedName kn = new KindedName(KindedName.Kind.TYPE_DECL, d.getName());
+            if (!dc.getModuleDecl().getVisibleDeltas().containsKey(kn)) {
+                e.add(new TypeError(d,ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
+            }                 
+        }
+     }
+    
     public static java.util.List<Type> getTypesFromDataTypeUse(List<? extends DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (DataTypeUse u : params) {
