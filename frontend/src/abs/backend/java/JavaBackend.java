@@ -4,46 +4,18 @@
  */
 package abs.backend.java;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.lib.runtime.ABSFut;
-import abs.backend.java.lib.types.ABSBool;
-import abs.backend.java.lib.types.ABSInteger;
-import abs.backend.java.lib.types.ABSString;
-import abs.backend.java.lib.types.ABSUnit;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Name;
-import abs.frontend.ast.TypeUse;
+import abs.backend.java.lib.types.*;
+import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
-import abs.frontend.typechecker.BoundedType;
-import abs.frontend.typechecker.DataTypeType;
-import abs.frontend.typechecker.InterfaceType;
-import abs.frontend.typechecker.Type;
-import abs.frontend.typechecker.TypeParameter;
-import abs.frontend.typechecker.UnionType;
+import abs.frontend.typechecker.*;
 
 public class JavaBackend extends Main {
 
@@ -81,11 +53,12 @@ public class JavaBackend extends Main {
                 }
             } else if (arg.equals("-sourceonly")) {
                 this.sourceOnly = true;
+            } else if (arg.equals("-debug")) {
+                /* Print stacktrace on exception, used in main(), must be removed from remaining args. */
             } else {
                 remainingArgs.add(arg);
             }
         }
-
         return remainingArgs;
     }
 
@@ -93,6 +66,7 @@ public class JavaBackend extends Main {
         super.printUsage();
         System.out.println("Java Backend:\n"
                 + "  -d <dir>       generate files to <dir>\n"
+                + "  -debug         print stacktrace on exception\n"
                 + "  -sourceonly    do not generate class files\n");
     }
 
@@ -112,7 +86,6 @@ public class JavaBackend extends Main {
         }
 
         compile(model, destDir);
-
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
@@ -138,7 +111,6 @@ public class JavaBackend extends Main {
     public static String getJavaType(ConstructorArg u) {
         return getJavaType(u.getDataTypeUse());
     }
-
     
     public static String getJavaType(TypeUse absType) {
         return getQualifiedString(absType.getType());
