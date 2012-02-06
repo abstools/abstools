@@ -10,7 +10,6 @@ import java.io.PrintStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -76,5 +75,21 @@ public class DeltaSamplesTest extends FrontendTest {
         TypeError te = (TypeError) errs.getFirst();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
         Assert.assertEquals(10, te.getLine());
+    }
+
+    @Test
+    public void test_ticket324_A() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
+        m.flattenForProduct("C.A");
+        m.flushCache();
+        Assert.assertTrue(!m.hasTypeErrors());
+    }
+
+    @Test
+    public void test_ticket324_B() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
+        m.flattenForProduct("C.B");
+        m.flushCache();
+        m.typeCheck();
     }
 }
