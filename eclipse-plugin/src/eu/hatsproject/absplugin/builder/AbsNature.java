@@ -51,7 +51,7 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 public class AbsNature implements IProjectNature {
 	private IProject project;
-	IncrementalModelBuilder modelbuilder = new IncrementalModelBuilder();
+	private final IncrementalModelBuilder modelbuilder = new IncrementalModelBuilder();
 	
 	public static final String PACKAGE_DEPENDENCIES = ".dependencies";
 	public static final String READONLY_PACKAGE_SUFFIX = "-readonly";
@@ -62,7 +62,7 @@ public class AbsNature implements IProjectNature {
 	 * the lock for access to the model. Should always be synchronized with when accessing the 
 	 * model in the model builder in some way
 	 */
-	public volatile Object modelLock = new Object();
+	public volatile Object modelLock = new Object(); // TODO: Should probably be final, but then the mocks fail.
 	private ScopedPreferenceStore preferencestore;
 	
 	/**
@@ -224,7 +224,7 @@ public class AbsNature implements IProjectNature {
 	 * @param markerType the id of the marker that should be created
 	 * @throws CoreException {@link IMarker#setAttribute(String, boolean)} {@link IMarker#getAttribute(String, int)}
 	 */
-	private void createMarker( ASTNode<?> node, String message, int severity, String markerType) throws CoreException {
+	private static void createMarker( ASTNode<?> node, String message, int severity, String markerType) throws CoreException {
 		if (node == null)
 			return; 
 		
@@ -232,9 +232,7 @@ public class AbsNature implements IProjectNature {
 		int end         = node.getEnd();
 				
 	   IFile declfile;
-		while(!(node instanceof CompilationUnit)){
-			node = node.getParent();
-		}
+	   node = node.getCompilationUnit();
 		declfile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(((CompilationUnit)node).getFileName()));
 		/* [stolz] I had a situation where I had the ABSFrontend in the workspace, and then closed it:
 			org.eclipse.core.internal.resources.ResourceException: Resource '/ABSFrontend/src/abs/lang/abslang.abs' does not exist.
@@ -305,6 +303,8 @@ public class AbsNature implements IProjectNature {
 	}
 	
 	public boolean toIncludeInScope(IResource resource) {
+		if (project == null)
+			return false;
 		IFolder target = project.getFolder("target");
 		if (! target.exists()) {
 			return true;
@@ -347,35 +347,34 @@ public class AbsNature implements IProjectNature {
 	 * @throws CoreException {@link IResource#deleteMarkers(String, boolean, int)} does not handle exceptions thrown by
 	 * #createMarker(SemanticError) and #createMarker(TypecheckInternalException)
 	 */
-	public void typeCheckModel() throws CoreException{
-		getProject().deleteMarkers(TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-		getProject().deleteMarkers(LOCATION_TYPE_INFERENCE_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-		final SemanticErrorList typeerrors;
-		boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
-		String defaultlocationtype = getProjectPreferenceStore().getString(DEFAULT_LOCATION_TYPE);
-		String defaultlocationtypeprecision = getProjectPreferenceStore().getString(LOCATION_TYPE_PRECISION);
-		try {
-			addPackagesForTypeChecking();
-			typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision);
-		} catch (NoModelException e) {
-			//ignore
-			return;
-		} catch (TypecheckInternalException e) {
-			/* Internal error caught. Log, and turn into an error marker */
-			Activator.logException(e);
-			createMarker(e);
-			return;
-		}
-		if(typeerrors.size() > 0){
-			for(SemanticError error : typeerrors){
-				createMarker(error);
-			}
-		}
-		
-		if (dolocationtypecheck) {
-			createLocationTypeInferenceMarker();
-		}
-	}
+   public void typeCheckModel() throws CoreException{
+	   getProject().deleteMarkers(TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+	   getProject().deleteMarkers(LOCATION_TYPE_INFERENCE_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
+	   boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
+	   String defaultlocationtype = getProjectPreferenceStore().getString(DEFAULT_LOCATION_TYPE);
+	   String defaultlocationtypeprecision = getProjectPreferenceStore().getString(LOCATION_TYPE_PRECISION);
+	   try {
+		   addPackagesForTypeChecking();
+		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision);
+		   if(typeerrors.size() > 0){
+			   for(SemanticError error : typeerrors){
+				   createMarker(error);
+			   }
+		   }
+
+		   if (dolocationtypecheck) {
+			   createLocationTypeInferenceMarker();
+		   }
+	   } catch (NoModelException e) {
+		   //ignore
+		   return;
+	   } catch (TypecheckInternalException e) {
+		   /* Internal error caught. Log, and turn into an error marker */
+		   Activator.logException(e);
+		   createMarker(e);
+		   return;
+	   }
+   }
 	
 	/**
 	 * Add ABS package dependencies to {@link AbsNature#modelbuilder} for type checking 
@@ -461,7 +460,7 @@ public class AbsNature implements IProjectNature {
 		exceptionMarker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 	}
 	
-	public void removeCompilationUnit(IFile file){
+	public void removeCompilationUnit(IResource file){
 		CompilationUnit cu = getCompilationUnit(file);
 		try {
 			modelbuilder.removeCompilationUnit(cu);
@@ -476,7 +475,8 @@ public class AbsNature implements IProjectNature {
 	 * @param curFile
 	 * @return the comilationUnit for the file or <b>null</b> if the model is not (yet) parsed
 	 */
-	public CompilationUnit getCompilationUnit(IFile curFile){
+	public CompilationUnit getCompilationUnit(IResource curFile){
+		assert curFile != null;
 		return getCompilationUnit(curFile.getLocation().toFile().getAbsolutePath());
 	}
 	
@@ -516,7 +516,7 @@ public class AbsNature implements IProjectNature {
 	/**
 	 * Set the defaults for the properties in the project property pages
 	 */
-	public void initProjectDefaults(){
+	private void initProjectDefaults(){
 		preferencestore.setDefault(LOCATION_TYPECHECK, true);
 		preferencestore.setDefault(LOCATION_TYPE_OVERLAY, true);
 		preferencestore.setDefault(DEFAULT_LOCATION_TYPE, DEFAULT_DEFAULT_LOCATION_TYPE);
@@ -568,5 +568,12 @@ public class AbsNature implements IProjectNature {
 
 	public PackageContainer getPackages() {
 		return packageContainer;
+	}
+
+	/**
+	 * @author stolz
+	 */
+	public void emptyModel() {
+		modelbuilder.addCompilationUnit(null); // Hack to get stdlib
 	}
 }

@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -357,7 +357,7 @@ public class ABSCodeScanner implements ITokenScanner {
 		IDocument doc = fEditor.getDocumentProvider().getDocument(fEditor.getEditorInput());
 		
 		try {
-			IFile file = (IFile)fEditor.getEditorInput().getAdapter(IFile.class);
+			IResource file = fEditor.getResource();
 			AbsNature nature = getAbsNature(file);
 			if (nature == null)
 			   return token;

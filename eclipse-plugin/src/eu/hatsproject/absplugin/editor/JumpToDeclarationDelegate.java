@@ -6,8 +6,9 @@ package eu.hatsproject.absplugin.editor;
 
 import java.io.PrintStream;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.BadLocationException;
@@ -17,6 +18,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IURIEditorInput;
 
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.KindedName;
@@ -49,8 +51,8 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 			IEditorInput input = editor.getEditorInput();
 			ABSEditor abseditor = (ABSEditor)editor;
 			AbsNature nature;
-			String path;
-			IProject project;
+			final String path;
+			IProject project; // may be null
 			if (input instanceof PackageAbsFileEditorInput) {
 				/*
 				 * XXX This solution only works if 
@@ -64,18 +66,28 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 				nature = UtilityFunctions.getAbsNature(packageFile.getProject());
 				path = packageFile.getAbsoluteFilePath();
 			} else {
-				IFile file = (IFile)abseditor.getEditorInput().getAdapter(IFile.class);
-				if (file == null)
-					return; /* TODO: We were looking at a "virtual" file like abslang.abs. #306 */
-				nature = UtilityFunctions.getAbsNature(file);
-				project = file.getProject();
-				path = file.getLocation().toFile().getAbsolutePath();
+				IResource file = abseditor.getResource();
+				if (file == null) {
+					/* We might be looking at a "virtual" file like abslang.abs. #306 */
+					IURIEditorInput ei = (IURIEditorInput) abseditor.getEditorInput().getAdapter(IURIEditorInput.class);
+					if (ei == null)
+						return; // Huh.
+					project = null;
+					nature = new AbsNature();
+					nature.emptyModel();
+					path = ei.getURI().getPath();
+				} else {
+					project = file.getProject();
+					nature = UtilityFunctions.getAbsNature(project);
+					path = file.getLocation().toFile().getAbsolutePath();
+				}
 			}
 			
 			if(nature==null){
 				abseditor.openError("No ABSProject", "The file is not in an ABS project!");
 				return;
 			}
+			Assert.isNotNull(path);
 			
 			synchronized (nature.modelLock) {
 				IDocument doc = abseditor.getDocumentProvider().getDocument(abseditor.getEditorInput());
@@ -195,7 +207,7 @@ public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 			return null;
 		}
 
-		CompilationUnit declcu = UtilityFunctions.getCompilationUnitOfASTNode(decl);
+		CompilationUnit declcu = decl.getCompilationUnit();
 		
 		int start = decl.getStartPos();
 		int end = decl.getEndPos();

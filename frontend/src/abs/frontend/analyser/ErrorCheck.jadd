@@ -67,6 +67,11 @@ aspect ErrorCheck {
     }
   }
 
+  public void DeltaDecl.collectErrors(SemanticErrorList c) {
+    /* FIXME: Don't collect in here, the name resolution mechanism doesn't seem to know about all the details,
+     * e.g. how to resolve datatypes just added.
+     */ 
+  }
 }
 
 // Local Variables:

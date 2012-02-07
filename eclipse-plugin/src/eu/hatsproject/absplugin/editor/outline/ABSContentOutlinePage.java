@@ -13,23 +13,26 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.State;
-import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.RegistryToggleState;
 import org.eclipse.ui.services.IServiceScopes;
 import org.eclipse.ui.texteditor.IDocumentProvider;
-import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 
 import abs.frontend.ast.CompilationUnit;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.util.CoreControlUnit;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
@@ -46,13 +49,13 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	/**
 	 * The text editor associated with this content outline page instance
 	 */
-	private ITextEditor editor = null;
+	private final ABSEditor editor;
 	
-	ResourceBuildListener builtListener = null;
+	private final ResourceBuildListener builtListener;
 	/**
 	 * The ITreeContentProvider delivers the elements that should be shown in the outline
 	 */
-	private ITreeContentProvider coProv = null;
+	private final ITreeContentProvider coProv;
 	/**
 	 * Internal Tree viewer of the Content Outline Page
 	 */
@@ -62,7 +65,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 */
 	private ICommandService commandService;
 
-	public ABSContentOutlinePage(IDocumentProvider docProvider,	ITextEditor editor) {
+	public ABSContentOutlinePage(IDocumentProvider docProvider,	ABSEditor editor) {
 		this.editor = editor;
 		coProv = new ABSContentOutlineProvider();
 		// When the project is built this listener is responsible for updating the input
@@ -118,7 +121,6 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 			filter.put(IServiceScopes.WINDOW_SCOPE, editor.getSite().getPage().getWorkbenchWindow());
 			commandService.refreshElements(SORT_COMMAND_ID, filter);
 		}
-
 	}
 	
 	private boolean getValueOfCommand(String commandID){
@@ -137,28 +139,45 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	private void setInput() {
-		IFile file = (IFile)editor.getEditorInput().getAdapter(IFile.class);
-		if (!file.exists())
-			return;
-		// Tries to get the ABS ProjectNature in order to get the AST
-		AbsNature nature = UtilityFunctions.getAbsNature(file);
-		if (nature == null) {
-			return;
+		final AbsNature nature;
+		CompilationUnit cu;
+		IResource file = editor.getResource();
+		if (file == null) {
+			/* We're looking e.g. at abslang.abs which only exists in memory.
+			 */
+			IURIEditorInput fi = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
+			if (fi == null)
+				return;
+			nature = new AbsNature();
+			nature.emptyModel();
+			final String path = fi.getURI().getPath();
+			cu = nature.getCompilationUnit(path);
+			if (cu == null) {
+				Activator.logException(new IllegalArgumentException("Can't find "+path));
+				return;
+			}
+		} else {
+			if (!file.exists())
+				return;
+			// Tries to get the ABS ProjectNature in order to get the AST
+			nature = UtilityFunctions.getAbsNature(file);
+			Assert.isNotNull(nature);
+			if (nature == null) {
+				return;
+			}
+			cu = nature.getCompilationUnit(file);
+			if (cu == null) {
+				// Band-aid for ticket #299:
+				try {
+					nature.parseABSFile(file, false, null);
+					cu = nature.getCompilationUnit(file);
+					Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
+				} catch (CoreException e) {
+					Activator.logException(e);
+				}
+			}
 		}
 
-		CompilationUnit cu = nature.getCompilationUnit(file);
-		if (cu == null) {
-		    // Band-aid for ticket #299:
-		    try {
-		        nature.parseABSFile(file, false, null);
-		        cu = nature.getCompilationUnit(file);
-		        if (cu == null)
-		            throw new IllegalArgumentException("Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
-		    } catch (CoreException e) {
-		        throw new RuntimeException(e);
-		    }
-		}
-		
 		// Update the input of the tree viewer to reflect the new outline of the AST
 		tw.setInput(new InternalASTNode<CompilationUnit>(cu,nature));
 	}
@@ -187,7 +206,6 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		});
 	}
 	
-	
 	/**
 	 * Returns the internal TreeViewer component of the Content Outline Page.
 	 * (Useful for setting filters, sorters or other TreeViewer properties)
@@ -212,14 +230,13 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		 */
 		@Override
 		public void resourceBuilt(ResourceBuiltEvent builtevent) {
-			final IFile eres = (IFile) editor.getEditorInput()
-			.getAdapter(IFile.class);
-			if (builtevent.hasChanged(eres)) {
+			IResource eres = editor.getResource();
+			if (builtevent.hasChanged(eres )) {
 				refreshInput(eres);
 			}
 		}
 
-		private void refreshInput(final IFile eres) {
+		private void refreshInput(final IResource eres) {
 		    Display.getDefault().asyncExec(new Runnable() {
 		    	@Override
 				public void run() {

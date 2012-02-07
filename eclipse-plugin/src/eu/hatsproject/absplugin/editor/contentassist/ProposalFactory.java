@@ -115,7 +115,7 @@ public class ProposalFactory{
 		 * @return a set of {@link CompilationUnit} of package dependencies.  
 		 * @throws IOException
 		 */
-		private Set<CompilationUnit> parseDependencies(IFile file) throws IOException {
+		private Set<CompilationUnit> parseDependencies(IResource file) throws IOException {
 			//iterate over package dependencies
 			AbsNature nature = UtilityFunctions.getAbsNature(file);
 			Set<CompilationUnit> units = new HashSet<CompilationUnit>();  
@@ -130,7 +130,7 @@ public class ProposalFactory{
 		 */
 		private void parseProject() {
 			final IncrementalModelBuilder builder = new IncrementalModelBuilder();
-			final IFile file = (IFile)editor.getEditorInput().getAdapter(IFile.class);
+			final IResource file = editor.getResource();
 			try {
 				file.getProject().accept(new IResourceVisitor() {
 					

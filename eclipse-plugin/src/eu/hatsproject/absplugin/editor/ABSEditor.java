@@ -125,7 +125,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 		try {
 			lineOffset = doc.getLineOffset(line);
 			
-			IResource resource = (IResource)getEditorInput().getAdapter(IResource.class);
+			IResource resource = getResource();
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_ZERO);
 			
 			getSourceViewer().invalidateTextPresentation();
@@ -151,7 +151,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 	 * removes the the highlighting set by {@link #highlightLine(int)}.
 	 */
 	public void removeHighlighting(){
-		IResource resource = (IResource)getEditorInput().getAdapter(IResource.class);
+		IResource resource = getResource();
 		try {
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_INFINITE);
 			getSourceViewer().invalidateTextPresentation();
@@ -217,7 +217,11 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 		super.doSetInput(input);
 		outlinePage = new ABSContentOutlinePage(this.getDocumentProvider(),this);
 	}
-	
+
+	public IResource getResource() {
+		return (IResource)getEditorInput().getAdapter(IResource.class);
+	}
+
 	/**
 	 * Throws a {@link SWTException} if the display is disposed
 	 * @param editorres the resource of the editor input

@@ -362,7 +362,7 @@ public class UtilityFunctions {
 	 * @return The corresponding AbsNature of the file is returned, or null if
 	 *         file is null
 	 */
-	public static AbsNature getAbsNature(IFile file){
+	public static AbsNature getAbsNature(IResource file){
 		if(file==null)
 			return null;
 		return getAbsNature(file.getProject());
@@ -593,7 +593,7 @@ public class UtilityFunctions {
 		}
 		boolean allsaved = true;
 		for(IEditorPart iep : dirtyEditors){
-			IFile editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
+			IResource editorFile = (IResource)iep.getEditorInput().getAdapter(IResource.class);
 			if(editorFile!=null && editorFile.getProject().equals(project)){
 				allsaved = allsaved && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().saveEditor(iep, false);
 			}
@@ -609,7 +609,7 @@ public class UtilityFunctions {
 	public static boolean saveEditor(IFile file, boolean withConfirmation){
 		IEditorPart[] dirtyEditors = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getDirtyEditors();
 		for(IEditorPart iep : dirtyEditors){
-			IFile editorFile = (IFile)iep.getEditorInput().getAdapter(IFile.class);
+			IResource editorFile = (IResource)iep.getEditorInput().getAdapter(IResource.class);
 			if(editorFile!=null && editorFile.equals(file)){
 				return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().saveEditor(iep, withConfirmation);
 			}
@@ -627,7 +627,7 @@ public class UtilityFunctions {
 		return null;
 	}
 	
-	public static boolean hasABSFileExtension(IFile file){
+	public static boolean hasABSFileExtension(IResource file){
 		if (file != null){
 			return ABS_FILE_EXTENSION.equals(file.getFileExtension());
 		}
@@ -636,13 +636,13 @@ public class UtilityFunctions {
 	}
 	
 	public static boolean isABSSourceFile(IResource file){
-	    if (file != null && file instanceof IFile)
+	    if (file != null && file instanceof IFile) // TODO: IResource?
 	       return hasABSFileExtension((IFile)file);
 	    return false;
 	}
 
 	public static boolean isABSFile(IResource file){
-		if (file != null && file instanceof IFile){
+		if (file != null && file instanceof IFile){ // TODO: IResource?
 			return hasABSFileExtension((IFile)file) || isABSPackage((IFile)file);
 		}
 		

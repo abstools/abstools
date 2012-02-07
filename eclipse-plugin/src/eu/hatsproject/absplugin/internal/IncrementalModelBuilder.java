@@ -12,6 +12,8 @@ import java.util.Iterator;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 
+import eu.hatsproject.absplugin.Activator;
+
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
@@ -45,18 +47,29 @@ public class IncrementalModelBuilder {
        }
     }
     
-	public synchronized void addCompilationUnit(CompilationUnit cu) throws IOException, NoModelException  {
+	/**
+	 * Creates an empty model with only the stdlib when you pass null.
+	 */
+	public synchronized void addCompilationUnit(CompilationUnit cu) {
 		if(model == null){
 			model = new Model();
 			
 			model.addCompilationUnit(getStdLibCompilationUnit());
-			model.addCompilationUnit(cu);
+			if (cu != null) // just give us the stdlib
+				model.addCompilationUnit(cu);
 			return;
 		}
+		if (cu == null)
+			return;
 		String filename  = cu.getFileName();
 		assert filename != null;
 		
-		CompilationUnit cuold = getCompilationUnit(filename);
+		CompilationUnit cuold = null;
+		try {
+			cuold = getCompilationUnit(filename);
+		} catch (NoModelException e) {
+			// we're pretty sure there's a model.
+		}
 		List<CompilationUnit> culist = model.getCompilationUnitList();
 		int cindex = culist.getIndexOfChild(cuold);
 		if(cindex>0){
@@ -69,17 +82,25 @@ public class IncrementalModelBuilder {
 		flushAll(model);
 	}
 
-   private CompilationUnit getStdLibCompilationUnit() throws IOException {
-      CompilationUnit stdLib = new Main().getStdLib();
-      File bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
+	private CompilationUnit getStdLibCompilationUnit() {
+		CompilationUnit stdLib;
+		File bundle;
+		try {
+			stdLib = new Main().getStdLib();
+			bundle = FileLocator.getBundleFile(Platform.getBundle(ABSFRONTEND_PLUGIN_ID));
+		} catch (IOException e) {
+			Activator.logException(e);
+			// Your plugin is probably busted.
+			return null;
+		}
 
-      File src = new File(bundle, stdLib.getFileName());
-      if (!src.exists()) {
-      	src = new File(bundle, "src/"+stdLib.getFileName());
-      }
-      stdLib.setName(src.getAbsolutePath());
-      return stdLib;
-   }
+		File src = new File(bundle, stdLib.getFileName());
+		if (!src.exists()) {
+			src = new File(bundle, "src/"+stdLib.getFileName());
+		}
+		stdLib.setName(src.getAbsolutePath());
+		return stdLib;
+	}
 	
 	public synchronized void removeCompilationUnit(CompilationUnit cu) throws NoModelException{
 		if(model == null)
