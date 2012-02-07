@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -92,7 +93,7 @@ public class WizardUtil {
 			return informationString;
 		}
 	}
-	
+
 	/**
 	 * Enumeration for determining the strings that have to be inserted on the creation of new 
 	 * <ul>
@@ -106,11 +107,11 @@ public class WizardUtil {
 		INSERT_MODULE("\nmodule ",";\n\t",11),
 		INSERT_CLASS("\n class ","\n { \n\t \n }\n",14),
 		INSERT_INTERFACE("\n interface ","\n { \n\t \n }\n",18);
-		
+
 		String insertBN;
 		String insertAN;
 		private int    insertOff;
-				
+
 		InsertType(String insertBeforeName, String insertAfterName, int insertOffset){
 			insertBN  = insertBeforeName;
 			insertAN  = insertAfterName;
@@ -120,30 +121,30 @@ public class WizardUtil {
 		public int getInsertOffset() {
 			return insertOff;
 		}
-		
+
 		public int getInsertOffset(String name) {
 			return (name == null) ? getInsertOffset() : insertOff + name.length();
 		}
-	
+
 		public String getInsertBeforeName() {
 			return insertBN;
 		}
-		
+
 		public String getInsertAfterName() {
 			return insertAN;
 		}
-		
+
 		public String getInsertionString(String name){
 			return insertBN + name + insertAN;
 		}
 	}
-	
+
 	private static final List<String> keywordList = Arrays.asList(abs.frontend.parser.Keywords.getKeywords());
-	
+
 	private static final boolean isKeyword(String str){		
 		return keywordList.contains(str);
 	}
-	
+
 	/**
 	 * Method for validating a module name.<p>
 	 * <br/>
@@ -163,13 +164,13 @@ public class WizardUtil {
 	 * @see eu.hatsproject.absplugin.wizards.WizardUtil.ErrorType
 	 */
 	public static ErrorType validateModule(String name) {
-		
+
 		if ("".equals(name)) {
 			return ErrorType.ERROR_NO_NAME;
 		}
 
 		boolean matches = name.matches("[A-Z a-z _ \\.]*");
-		
+
 		if (WizardUtil.isKeyword(name)) {
 			return ErrorType.ERROR_KEYWORD;
 		}else if (name.length() > 1 && name.charAt(name.length() - 1) == '.') {
@@ -179,10 +180,10 @@ public class WizardUtil {
 		}else if (!matches) {
 			return ErrorType.ERROR_INVALID_NAME;
 		}
-		
+
 		return ErrorType.NO_ERROR;
 	}
-	
+
 	/**
 	 * Method for validating a class or interface name.<p>
 	 * 
@@ -209,7 +210,7 @@ public class WizardUtil {
 		char[] charName = name.toCharArray();
 
 		for (int i = 0; i < charName.length; i++) {
-			 if (!Character.isLetterOrDigit(charName[i])) {
+			if (!Character.isLetterOrDigit(charName[i])) {
 				return ErrorType.ERROR_INVALID_NAME;
 			} else if (i == 0 && !Character.isUpperCase(charName[i])) {
 				return ErrorType.ERROR_NO_UPPER_CASE;
@@ -219,7 +220,7 @@ public class WizardUtil {
 
 		return ErrorType.NO_ERROR;
 	}
-	
+
 	/**
 	 * Same as {@link #validate(String)} but additionally checks, whether the specified
 	 * class name already exists in the given module declaration
@@ -244,7 +245,7 @@ public class WizardUtil {
 		}
 		return validate(text);
 	}
-	
+
 	/**
 	 * Same as {@link #validate(String)} but additionally checks, whether the specified
 	 * interface name already exists in the given module declaration
@@ -284,36 +285,33 @@ public class WizardUtil {
 	 * @throws BadLocationException
 	 *             if the location of the module declaration or the respective
 	 *             main block could not be found
-	 * @throws NullPointerException
-	 *             if m or d is null
 	 */
-	public static int getInsertionPosition(IDocument d, InternalASTNode<ModuleDecl> astNode) throws BadLocationException, NullPointerException {
-		ModuleDecl m = null;
+	public static int getInsertionPosition(IDocument d, InternalASTNode<ModuleDecl> astNode) throws BadLocationException {
+		Assert.isNotNull(d);
+		Assert.isNotNull(astNode);
+		final ModuleDecl m = astNode.getASTNode();
+		Assert.isNotNull(m,"ModuleDecl argument is null!");
 
-		if (astNode != null) {
-			m = astNode.getASTNode();
-		}
-		EditorPosition position;
-		if (m != null && d != null) {
-			if (!m.hasBlock()) {
-
-				position = UtilityFunctions.getPosition(m);
-				return d.getLineOffset(position.getLineend()) + position.getColend();
-
-			} else {
+		final EditorPosition position;
+		/* Classes and interfaces go before product lines / products in the grammar.
+		 * We don't want to generate invalid input for the user.
+		 */
+		if (m.hasProductLine()) {
+			position = UtilityFunctions.getPosition(m.getProductLine());
+			return d.getLineOffset(position.getLinestart());
+		} else {
+			if (m.getProducts().hasChildren()) {
+				position = UtilityFunctions.getPosition(m.getProducts());
+				return d.getLineOffset(position.getLinestart());
+			}else if (m.hasBlock()) {
 				MainBlock block = m.getBlock();
 				position = UtilityFunctions.getPosition(block);
 				return d.getLineOffset(position.getLinestart()) + position.getColstart();
+			} else {
+				position = UtilityFunctions.getPosition(m);
+				return d.getLineOffset(position.getLineend()) + position.getColend();
 			}
-
 		}
-		if (m == null) {
-			throw new NullPointerException("ModuleDecl argument is null!");
-		}
-		if (d == null) {
-			throw new NullPointerException("ModuleDecl argument is null!");
-		}
-		return -1;
 	}
 
 	/**
@@ -339,7 +337,7 @@ public class WizardUtil {
 		if (err == ErrorType.ERROR_DUPLICATE_NAME){
 			errorMessage += err.getInformationString();				
 		}
-		
+
 		return errorMessage;
 	}
 
@@ -363,7 +361,7 @@ public class WizardUtil {
 			IPath path = UtilityFunctions.getPathOfModuleDecl(m);
 			return (ABSEditor) UtilityFunctions.openABSEditorForFile(path);
 		}
-	
+
 		return null;
 	}
 
@@ -375,11 +373,11 @@ public class WizardUtil {
 	 */
 	protected static IDocument getDocumentForModuleDecl(InternalASTNode<ModuleDecl> m) {
 		ABSEditor editor = getEditorForModuleDecl(m);
-	
+
 		if (editor != null) {
 			return editor.getDocumentProvider().getDocument(editor.getEditorInput());
 		}
-	
+
 		return null;
 	}
 }
