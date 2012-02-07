@@ -256,7 +256,10 @@ aspect TypeResolution {
         return this.getDataConstructor();
     }
 
-    syn lazy DataConstructor DataConstructorExp.getDataConstructor() throws TypeCheckerException {
+/** 
+ * @throws TypeCheckerException
+ */
+    syn lazy DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (! (decl instanceof DataConstructor)) 
             throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));

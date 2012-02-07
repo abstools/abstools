@@ -91,7 +91,9 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 				assert nat != null;
 				synchronized (nat.modelLock) {
 					Model model = nat.getCompleteModel();
-					assert model != null : projectName;
+					/* E.g. errors in the project */
+					if (model == null)
+						return false;
 					/* Check product if any */
 					String prod = getSelectedProductName();
 					if (prod != null) {
