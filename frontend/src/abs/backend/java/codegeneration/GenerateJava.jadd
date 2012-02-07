@@ -501,7 +501,7 @@ aspect GenerateJava {
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
-        throw new NotImplementedYetException(this); // TODO: implement me
+//        throw new NotImplementedYetException(this); // TODO: implement me
     }
 
     public void GetExp.generateJava(PrintStream stream) {

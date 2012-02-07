@@ -303,17 +303,17 @@ Require: Constr ::= FeatVar;
 abstract            MExp: Constr;
 abstract SimpleExp: MExp;
 abstract MUnary:    MExp ::= Operand: MExp;
-abstract MBinary:   MExp ::= Left:MExp  Right:MExp; 
+abstract MBinary:   MExp ::= Left:MExp  Right:MExp;
 
 ////// some intersection with frontend PureExp
-//Booleans 
+//Booleans
 MNegExp: MUnary ;
 
 abstract     MBoolExp: MBinary ;
-MAndBoolExp: MBoolExp ; 
-MOrBoolExp:  MBoolExp ; 
+MAndBoolExp: MBoolExp ;
+MOrBoolExp:  MBoolExp ;
 MImpliesExp: MBoolExp ;  // not in PureExp
-MEquivExp:   MBoolExp ;  // not in PureExp 
+MEquivExp:   MBoolExp ;  // not in PureExp
 
 abstract MRelationalExpr: MBinary;
 MLTExp:   MRelationalExpr ;
@@ -326,11 +326,11 @@ MEqExp:    MEqualityExpr ;
 MNotEqExp: MEqualityExpr ;
 
 //Integers
-MMinusExp : MUnary ;  
+MMinusExp : MUnary ;
 
-abstract MArithmeticExpr : MBinary ; 
+abstract MArithmeticExpr : MBinary ;
 
-abstract      MMultExp: MArithmeticExpr ;   
+abstract      MMultExp: MArithmeticExpr ;
 MMultMultExp: MMultExp ;
 MDivMultExp:  MMultExp ;
 MModMultExp:  MMultExp ;
@@ -342,7 +342,7 @@ MSubAddExp: MAddExp ;
 //// end of intersection with PureExp
 
 
-// Variables and values 
+// Variables and values
 abstract Variable: SimpleExp;
 MValue : SimpleExp ::= Value;
 //BoolVal: SimpleExp ::= <Value:Boolean>;

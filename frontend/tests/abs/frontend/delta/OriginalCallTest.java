@@ -51,6 +51,28 @@ public class OriginalCallTest extends DeltaFlattenerTest {
     }
 
     @Test
+    public void oneDeltaMultipleCalls() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
+                + "delta D { modifies class C {"
+                    + "modifies Unit m() { original(); }" 
+                    + "modifies Unit n() { original(); }"
+                + "} }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertEquals(1, delta.getNumClassOrIfaceModifier());
+
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        assertEquals(3, delta.getNumClassOrIfaceModifier());
+
+    }
+    
+    
+    @Test
     public void targetedOriginalCall() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"

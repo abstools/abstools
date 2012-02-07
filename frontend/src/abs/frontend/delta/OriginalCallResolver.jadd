@@ -50,7 +50,7 @@ aspect OriginalCallResolver {
      */
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        System.out.println("*** resolving in Delta: " + this.qualifiedName());
+        System.out.println("*** processing original() calls in delta: " + this.qualifiedName());
         for (ClassOrIfaceModifier cm : this.getClassOrIfaceModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -104,20 +104,20 @@ aspect OriginalCallResolver {
         parent.setChild(call, i);
     }
     
-    /* Replace this targeted original call with a newly constructed call to 
-     * the copy of the original method implementation
-     */
-    public void TargetedOriginalCall.resolveOriginalCalls(
-            ModifyMethodModifier mod, 
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        
-        // found; replace
-        System.out.println("*** found: " + this);
-        EffExp call = mod.constructNewCall(this, deltas);
-        ASTNode parent = getParent();
-        int i = parent.getIndexOfChild(this);
-        parent.setChild(call, i);
-    }
+//    /* Replace this targeted original call with a newly constructed call to 
+//     * the copy of the original method implementation
+//     */
+//    public void TargetedOriginalCall.resolveOriginalCalls(
+//            ModifyMethodModifier mod, 
+//            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+//        
+//        // found; replace
+//        System.out.println("*** found: " + this);
+//        EffExp call = mod.constructNewCall(this, deltas);
+//        ASTNode parent = getParent();
+//        int i = parent.getIndexOfChild(this);
+//        parent.setChild(call, i);
+//    }
 
     
     /* Find the original method implementation, copy it to current delta,
@@ -151,9 +151,9 @@ aspect OriginalCallResolver {
         }
         
         try {
-        	deltas.add(0, this.delta());
+//        	deltas.add(0, this.delta());
         	method = findOriginal(methodid + "_Orig_" + original.getDelta(), classid, deltas).getMethod();
-        	deltas.remove(0);
+//        	deltas.remove(0);
         } catch(ASTNodeNotFoundException e) {
 	        method = copyOriginal(original.getMethod(), original.getDelta());
 	        System.out.println("*** copied original: " + method.getMethodSig());
@@ -234,8 +234,12 @@ aspect OriginalCallResolver {
     }   
     
 
-    /* copy given MethodImpl to current delta
-     * and rename it
+    /* An OriginalCall inside a delta is replaced by a normal SyncCall that points to the 'original' method.
+     * This 'original' version of the method needs to be added to the class under a unique name.
+     * This is done by constructing a new ModifyClassModifier that contains an AddMethodModifier 
+     * that contains the method implementation. This generated ModifyClassModifier is added to the delta, 
+     * so that it will be applied later during the regular Modifier application process.
+     * 
      */
     public MethodImpl ModifyMethodModifier.copyOriginal(MethodImpl method, String deltaName) {
         ModifyClassModifier cm = new ModifyClassModifier();
@@ -249,6 +253,7 @@ aspect OriginalCallResolver {
         methodCopy.getMethodSig().setName(methodCopyID); 
         cm.addModifier(new AddMethodModifier(methodCopy));
         this.delta().addClassOrIfaceModifier(cm);
+        System.out.println("*** Added new ClassOrIfaceModifier to delta " + delta().getName());
         return methodCopy;
     }
 
