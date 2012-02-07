@@ -38,8 +38,7 @@ public class IncrementalModelBuilder {
 		}
 		node.flushCache();
 	}
-	
-    
+
     public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {
        for (CompilationUnit u : units) {
           addCompilationUnit(u);
@@ -120,7 +119,6 @@ public class IncrementalModelBuilder {
 //			throw new TypecheckInternalException(new Exception("Model has parser errors!"));
 //		model.flushCache();
 		flushAll(model);
-		SemanticErrorList typeerrors = new SemanticErrorList();
 		if (locationTypeChecking) {
 			LocationType defaultLocType = LocationType.createFromName(defaultloctype);
 			LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(model);
@@ -130,8 +128,11 @@ public class IncrementalModelBuilder {
 	        model.registerTypeSystemExtension(ltie);
 		} 
 		try {
-			typeerrors = model.typeCheck();
-			return typeerrors;
+			SemanticErrorList semerrors = model.getErrors();
+			SemanticErrorList typeerrors = model.typeCheck();
+			// We don't want to spam the typeerrors (it's cached):
+			semerrors.addAll(typeerrors);
+			return semerrors;
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw new TypecheckInternalException(e);

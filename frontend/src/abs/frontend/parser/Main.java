@@ -214,11 +214,12 @@ public class Main {
                 System.err.flush();
             }
         } else {
-            int numSemErrs = m.getErrors().size();
+            final SemanticErrorList semErrs = m.getErrors();
+            int numSemErrs = semErrs.size();
 
             if (numSemErrs > 0) {
                 System.err.println("Semantic errors: " + numSemErrs);
-                for (SemanticError error : m.getErrors()) {
+                for (SemanticError error : semErrs) {
                     System.err.println(error.getHelpMessage());
                     System.err.flush();
                 }

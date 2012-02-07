@@ -4,7 +4,10 @@ import abs.frontend.analyser.*;
 import abs.frontend.typechecker.*;
 
 aspect ErrorCheck {
-    
+
+    /**
+     * TODO: doesn't cache intermediate results, use with care.
+     */
     public boolean Model.hasErrors() {
         return !getErrors().isEmpty();
     }
@@ -54,10 +57,14 @@ aspect ErrorCheck {
   }
 
   public void DataConstructorExp.collectErrors(SemanticErrorList c) {
+    try {
       super.collectErrors(c);
       if (getDecl() == null) {
           c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATACONSTRUCTOR,getConstructor()));
       }
+    } catch (TypeCheckerException e) {
+      c.add(e.getTypeError());
+    }
   }
 
 }
