@@ -25,6 +25,8 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
@@ -43,6 +45,7 @@ import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
+import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
@@ -138,9 +141,9 @@ public class ProposalFactory{
 								parseABSFile(builder, resource);
 							}
 						} catch(IOException ex){
-							standardExceptionHandling(ex);
+							throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, ex.getLocalizedMessage(), ex));
 						} catch (NoModelException e) {
-							standardExceptionHandling(e);
+							throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, e.getLocalizedMessage(), e));
 						}
 						return true;
 					}
@@ -187,7 +190,6 @@ public class ProposalFactory{
 		 * @see abs.frontend.parser.Keywords
 		 */
 		public void computeStructureProposals() { 
-			
 			
 			if(cu==null) {
 			    addKeywordProposals();
@@ -252,7 +254,7 @@ public class ProposalFactory{
 		private void addMainblockProposals(ASTNode<?> node) {
 			ProposalComparator comp = new ProposalComparator();
 			ArrayList<ICompletionProposal> temp = new ArrayList<ICompletionProposal>();
-			MainBlock mainblock = (MainBlock)getSuperOfASTNode(node, MainBlock.class);
+			MainBlock mainblock = (MainBlock)node.calcContextNode(MainBlock.class);
 			
 			if(mainblock!=null){
 				for(VarDecl vardecl : mainblock.getVars()){
@@ -277,7 +279,7 @@ public class ProposalFactory{
 			ProposalComparator comp = new ProposalComparator();
 			ArrayList<ICompletionProposal> tempNonqual = new ArrayList<ICompletionProposal>();
 			ArrayList<ICompletionProposal> tempQual = new ArrayList<ICompletionProposal>();
-			ModuleDecl moddecl = (ModuleDecl)getSuperOfASTNode(node, ModuleDecl.class);
+			ModuleDecl moddecl = node.getModuleDecl();
 			if(moddecl == null){
 				throw new IllegalArgumentException("Node is not in a Module!");
 			}
@@ -382,7 +384,7 @@ public class ProposalFactory{
 		 */
 		private void addClassFieldProposals(ASTNode<?> node) {
 			ArrayList<ICompletionProposal> temp = new ArrayList<ICompletionProposal>();
-			MethodImpl methodimpl = (MethodImpl)getSuperOfASTNode(node, MethodImpl.class);
+			MethodImpl methodimpl = node.getContextMethod();
 			
 			if(methodimpl!=null){
 				for(VarDecl varDecl : methodimpl.getBlock().getVars()){
@@ -395,7 +397,7 @@ public class ProposalFactory{
 				}
 			}
 			
-			ClassDecl classdecl = (ClassDecl)getSuperOfASTNode(node, ClassDecl.class);
+			ClassDecl classdecl = (ClassDecl)node.calcContextNode(ClassDecl.class);
 			if(classdecl!=null){
 				for(FieldDecl fieldDecl : classdecl.getType().getAllFieldDecls()){
 					String name = fieldDecl.getName();
@@ -418,7 +420,7 @@ public class ProposalFactory{
 			ProposalComparator comp = new ProposalComparator();
 			ArrayList<ICompletionProposal> tempNonqual = new ArrayList<ICompletionProposal>();
 			ArrayList<ICompletionProposal> tempQual = new ArrayList<ICompletionProposal>();
-			ModuleDecl moddecl = (ModuleDecl)getSuperOfASTNode(node, ModuleDecl.class);
+			ModuleDecl moddecl = node.getModuleDecl();
 			if(moddecl == null){
 				return;
 			}

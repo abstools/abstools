@@ -4,8 +4,6 @@
  */
 package abs.backend.java.lib.runtime;
 
-import abs.backend.java.observing.GuardView;
-
 public class ABSAndGuard extends ABSGuard {
     public final ABSGuard left;
     public final ABSGuard right;

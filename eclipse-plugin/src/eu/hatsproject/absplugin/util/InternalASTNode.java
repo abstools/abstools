@@ -7,6 +7,10 @@ package eu.hatsproject.absplugin.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+
 import abs.frontend.ast.ASTNode;
 import eu.hatsproject.absplugin.builder.AbsNature;
 
@@ -18,9 +22,8 @@ import eu.hatsproject.absplugin.builder.AbsNature;
  */
 public class InternalASTNode<T extends ASTNode<?>> {
 	
-	
-	private AbsNature nature;
-	private T node;
+	private final AbsNature nature;
+	private final T node;
 	
 	public InternalASTNode(T node, AbsNature nature){
 		this.node = node;
@@ -92,7 +95,11 @@ public class InternalASTNode<T extends ASTNode<?>> {
 		
 		return new InternalASTNode<T>(node, nature);
 	}
-	
+
+	public IPath getFileName() {
+		return new Path(getASTNode().getCompilationUnit().getFileName());
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
@@ -135,8 +142,11 @@ public class InternalASTNode<T extends ASTNode<?>> {
 		return result;
 	}
 
-	
-	
-	
-
+	/**
+	 * Returns the project of the given node 
+	 * @return the respective IProject the node is located in.
+	 */
+	public IProject getProject(){
+		return getNature().getProject();
+	}
 }

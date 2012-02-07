@@ -169,7 +169,7 @@ public class ModuleGroup extends CompositeGroup {
 			List<Object> itemsToExpand = new ArrayList<Object>();
 			itemsToExpand.add(0, container);
 
-			IProject proj = WizardUtil.getProjectOfModuleDecl(container);
+			IProject proj = container.getProject();
 
 			itemsToExpand.add(1, proj);
 			treeViewer.setExpandedElements(itemsToExpand.toArray());

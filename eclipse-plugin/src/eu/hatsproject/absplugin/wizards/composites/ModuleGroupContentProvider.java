@@ -94,13 +94,12 @@ public class ModuleGroupContentProvider implements ITreeContentProvider {
 		return EMPTY_OBJECT_ARRAY;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object getParent(Object element) {
         if (element instanceof IResource) {
 			return ((IResource) element).getParent();
-		}else if (element instanceof InternalASTNode && InternalASTNode.hasASTNodeOfType((InternalASTNode<?>) element, ModuleDecl.class)){
-			return WizardUtil.getProjectOfModuleDecl((InternalASTNode<ModuleDecl>) element);
+		}else if (element instanceof InternalASTNode){
+			return ((InternalASTNode<?>) element).getProject();
 		}
         return null;
 	}

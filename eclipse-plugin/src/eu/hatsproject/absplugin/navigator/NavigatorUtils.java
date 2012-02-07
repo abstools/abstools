@@ -4,23 +4,17 @@
  */
 package eu.hatsproject.absplugin.navigator;
 
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.getCompilationUnitOfASTNode;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.highlightInEditor;
-import static eu.hatsproject.absplugin.util.UtilityFunctions.openABSEditorForFile;
+import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.editors.text.TextEditor;
 
-import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.ModuleDecl;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
@@ -33,9 +27,7 @@ import eu.hatsproject.absplugin.util.InternalASTNode;
  */
 public class NavigatorUtils {
 
-	private NavigatorUtils(){
-		
-	}
+	private NavigatorUtils(){}
 	
 	/**
 	 * Opens the file in an editor that corresponds to the given
@@ -68,7 +60,7 @@ public class NavigatorUtils {
 	}
 
 	private static void openAndHighlightEditor(InternalASTNode<?> node) throws PartInitException {
-		IEditorPart editorPart = openABSEditorForFile(getFileName(node));
+		IEditorPart editorPart = openABSEditorForFile(node.getFileName());
 		if (editorPart instanceof TextEditor){
 			TextEditor texteditor = ((TextEditor) editorPart);
 			highlightInEditor(texteditor, node);
@@ -110,22 +102,6 @@ public class NavigatorUtils {
 		return null;
 	}
 
-	/**
-	 * Retrieves the Path of an ASTNode's Compilation Unit
-	 * 
-	 * @param node
-	 * @return The path of the compilation unit or null if the
-	 *         compilation unit could not retrieved,
-	 */
-	private static IPath getFileName(InternalASTNode<?> node) {
-		CompilationUnit cu = getCompilationUnitOfASTNode(node.getASTNode());
-		if (cu != null) {
-			return new Path(cu.getFileName());
-		} else {
-			return null;
-		}
-	}	
-	
 	/**
 	 * Returns a regex used for finding module structures.
 	 * <br/>

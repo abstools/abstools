@@ -423,7 +423,7 @@ public class ABSCodeScanner implements ITokenScanner {
 	public ASTNode<?> resolveTypeUse(TypeUse tu, Model typeCheckedModel) {
 		try {
 			String tuname = tu.getName();
-			ModuleDecl moduleDecl = (ModuleDecl)getSuperOfASTNode(tu, ModuleDecl.class);
+			ModuleDecl moduleDecl = tu.getModuleDecl();
 			ModuleDecl typecheckedMDecl = typeCheckedModel.lookupModule(moduleDecl.getName());
 			if(typecheckedMDecl == null)
 				return tu;

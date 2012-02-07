@@ -7,7 +7,6 @@ package eu.hatsproject.absplugin.wizards;
 import java.util.Arrays;
 import java.util.List;
 
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.BadLocationException;
@@ -311,19 +310,6 @@ public class WizardUtil {
 				position = UtilityFunctions.getPosition(m);
 				return d.getLineOffset(position.getLineend()) + position.getColend();
 			}
-		}
-	}
-
-	/**
-	 * Returns the project of the given module declaration 
-	 * @param m the target module declaration
-	 * @return the respective IProject the module declaration is located in.
-	 */
-	public static IProject getProjectOfModuleDecl(InternalASTNode<ModuleDecl> m){
-		if (m != null){
-			return m.getNature().getProject();
-		}else{
-			return null;
 		}
 	}
 

@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.wizards.WizardUtil.InsertType;
 import eu.hatsproject.absplugin.wizards.pages.IABSClassInterfaceWizardPage;
@@ -22,12 +23,12 @@ import eu.hatsproject.absplugin.wizards.pages.NewClassInFileWizardPage;
  *
  */
 public class NewClassWizard extends NewClassInterfaceWizard implements INewWizard {
-	
+
 	private NewClassInFileWizardPage classInFilePage;
 
 	private final String WIZARD_TITLE = "New ABS class"; 
 	private final String WIZARD_DESCRIPTION = "Create a new ABS Class within an ABS module";
-	
+
 	public NewClassWizard() {		
 		insertType = InsertType.INSERT_CLASS;
 	}
@@ -36,9 +37,8 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		super.init(workbench, selection);
 		setWindowTitle("New ABS class");
-					
 	}
-	
+
 	@Override
 	public void addPages(){
 		classInFilePage = new NewClassInFileWizardPage(WIZARD_TITLE);
@@ -47,39 +47,38 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 		page.setDescription(WIZARD_DESCRIPTION);
 		page.setTitle(WIZARD_TITLE);
 		addPage(page);
-		
 	}
 
 	@Override
 	public boolean performFinish() {
 		this.findModuleDecl();
-		
+
 		IDocument document = WizardUtil.getDocumentForModuleDecl(mDecl);
 		ABSEditor editor = WizardUtil.getEditorForModuleDecl(mDecl);
-		
-			try {
-				int off = WizardUtil.getInsertionPosition(document,mDecl);
-				final String insertString = insertType.getInsertionString(page.getNewName());
-				
-				switch (classInFilePage.getResultType()){
-				case TYPE_UNDEFINED:
-					document.replace(off, 0, insertString);
-					break;
-				default:
-					document.replace(off, 0, "\n " + classInFilePage.getResultType().getAnnotationString() + insertString);
-					break;
-				}
-				
-				off += insertType.getInsertOffset(page.getNewName()) + classInFilePage.getResultType().getAnnotationLength();
-				
-				WizardUtil.saveEditorAndGotoOffset(editor, off);
-				
-				return true;
-			} catch (BadLocationException e) {
-				e.printStackTrace();
-				MessageDialog.openError(getShell(), "Error", "Fatal Error in wizard: The module declaration could not be found!");
-				return false;
+
+		try {
+			int off = WizardUtil.getInsertionPosition(document,mDecl);
+			final String insertString = insertType.getInsertionString(page.getNewName());
+
+			switch (classInFilePage.getResultType()){
+			case TYPE_UNDEFINED:
+				document.replace(off, 0, insertString);
+				break;
+			default:
+				document.replace(off, 0, "\n " + classInFilePage.getResultType().getAnnotationString() + insertString);
+				break;
 			}
+
+			off += insertType.getInsertOffset(page.getNewName()) + classInFilePage.getResultType().getAnnotationLength();
+
+			WizardUtil.saveEditorAndGotoOffset(editor, off);
+
+			return true;
+		} catch (BadLocationException e) {
+			Activator.logException(e);
+			MessageDialog.openError(getShell(), "Error", "Fatal Error in wizard: The module declaration could not be found!");
+			return false;
+		}
 	}
 
 }

@@ -6,7 +6,6 @@ package abs.common;
 
 import beaver.Symbol;
 import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.CompilationUnit;
 
 public class Position {
     private final int col;
@@ -17,20 +16,12 @@ public class Position {
         line = Symbol.getLine(node.getStart());
         col = Symbol.getColumn(node.getStart());
         fileName = calcFileName(node);
+        assert fileName != null;
     }
 
     private String calcFileName(ASTNode<?> node) {
-        ASTNode<?> parent = node;
-        while (!(parent instanceof CompilationUnit)) {
-            parent = parent.getParent();
-            if (parent == null)
-                return "<could not find filename>";
-        }
-        CompilationUnit u = (CompilationUnit) parent;
-        String name = u.getName();
-        if (name == null)
-            return "<unkown>";
-        return name;
+        String res = node.getCompilationUnit().getFileName();
+        return "".equals(res) ? "<unkown>" : res;
     }
 
     public String getPositionString() {

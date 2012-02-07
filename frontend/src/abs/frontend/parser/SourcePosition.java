@@ -9,8 +9,8 @@ import abs.frontend.ast.Opt;
 import beaver.Symbol;
 
 public class SourcePosition {
-    private int pos;
-    private ASTNode<?> contextNode;
+    private final int pos;
+    private final ASTNode<?> contextNode;
 
     SourcePosition(ASTNode<?> node, int pos) {
         this.pos = pos;

@@ -4,7 +4,6 @@
  */
 package eu.hatsproject.absplugin.util;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -42,8 +41,8 @@ import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
-import eu.hatsproject.absplugin.util.UtilityFunctions;
-import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
+
+import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
 /**
  * @author Christian
@@ -62,7 +61,6 @@ public class UtilityFunctionsTest {
 	public void setUp() throws Exception {
 		natureMock = mock(AbsNature.class,Mockito.RETURNS_DEEP_STUBS);
 		natureMock.modelLock = new Object();
-		
 	}
 	
 	@Test
@@ -97,9 +95,9 @@ public class UtilityFunctionsTest {
 		when(fis1.read(any(byte[].class))).thenAnswer(answer);		
 		
 		try {
-			UtilityFunctions.copyFile(null, file2);
-			UtilityFunctions.copyFile(file1,null);
-			UtilityFunctions.copyFile((File) null, null);
+			copyFile(null, file2);
+			copyFile(file1,null);
+			copyFile((File) null, null);
 			fail();
 		}catch(NullPointerException npe){
 			//right behaviour
@@ -107,34 +105,31 @@ public class UtilityFunctionsTest {
 			
 		}
 		
-		UtilityFunctions.copyFile(fis1, fis2);
+		copyFile(fis1, fis2);
 		verify(fis2, atLeastOnce()).write(any(byte[].class), anyInt(), anyInt());
 		
 		Mockito.doThrow(new IOException()).when(fis2).write(any(byte[].class), anyInt(), anyInt());
 
 
 		try{
-			UtilityFunctions.copyFile(fis1, fis2);
+			copyFile(fis1, fis2);
 			fail();
 		}catch(IOException io){
 			//right behaviour...
 		}
-		
-		
-		
 	}
 	
 	@Test
 	public void testGetMaudeCommand(){
 		//pass
-		assertEquals(UtilityFunctions.getMaudeCommand(0), Constants.MAUDE_COMMAND1 + '[' + 0 + ']' + Constants.MAUDE_COMMAND2 + Constants.MAUDE_COMMAND_QUIT);
-		String maudeCommand = UtilityFunctions.getMaudeCommand(5);
+		assertEquals(getMaudeCommand(0), Constants.MAUDE_COMMAND1 + '[' + 0 + ']' + Constants.MAUDE_COMMAND2 + Constants.MAUDE_COMMAND_QUIT);
+		String maudeCommand = getMaudeCommand(5);
 		String maudeCommand2 = Constants.MAUDE_COMMAND1 + '[' + 5 + ']' + Constants.MAUDE_COMMAND2 + Constants.MAUDE_COMMAND_QUIT;
 		
 		assertEquals(maudeCommand, maudeCommand2);
 		
 		//fail
-		if(UtilityFunctions.getMaudeCommand(-5).equals(Constants.MAUDE_COMMAND1 + '[' + -5 + ']' + Constants.MAUDE_COMMAND2 + Constants.MAUDE_COMMAND_QUIT)){
+		if(getMaudeCommand(-5).equals(Constants.MAUDE_COMMAND1 + '[' + -5 + ']' + Constants.MAUDE_COMMAND2 + Constants.MAUDE_COMMAND_QUIT)){
 			fail ("Negative number of steps mak no sense");
 		}
 	}
@@ -149,12 +144,11 @@ public class UtilityFunctionsTest {
 		when(cd.getFileName()).thenReturn("C:/test.abs");
 		when(md.getCompilationUnit()).thenReturn(cd);
 		
-		IPath pathOfModuleDecl = UtilityFunctions.getPathOfModuleDecl(internalASTNode);
+		IPath pathOfModuleDecl = getPathOfModuleDecl(internalASTNode);
 		
-		assertEquals(pathOfModuleDecl.toString(),"C:/test.abs");
+		assertEquals("C:/test.abs",pathOfModuleDecl.toString());
 		
-		assertSame(UtilityFunctions.getPathOfModuleDecl(null),null);
-		
+		assertSame(getPathOfModuleDecl(null),null);
 	}
 	
 	@Test
@@ -171,13 +165,12 @@ public class UtilityFunctionsTest {
 			when(md.getStart()).thenReturn(Symbol.makePosition(a, b));
 			when(md.getEnd()).thenReturn(Symbol.makePosition(c, d));
 			
-			EditorPosition position = UtilityFunctions.getPosition(md);
+			EditorPosition position = getPosition(md);
 			
 			assertTrue(position.getLinestart() == a-1);
 			assertTrue(position.getLineend() == c-1);
 			assertTrue(position.getColstart() == b-1);
 			assertTrue(position.getColend() == d);
-			
 		}
 	}
 	
@@ -196,14 +189,14 @@ public class UtilityFunctionsTest {
 		ClassDecl classMockPlain = mock(ClassDecl.class);
 		when(classMockPlain.getAnnotationList()).thenReturn(plainAnnotationList);
 		
-		assertTrue(!UtilityFunctions.hasClassAnnotation(classMock, AnnotationType.COG_ANNOTATION));
-		assertTrue(!UtilityFunctions.hasClassAnnotation(classMock, AnnotationType.PLAIN_ANNOTATION));
+		assertTrue(!hasClassAnnotation(classMock, AnnotationType.COG_ANNOTATION));
+		assertTrue(!hasClassAnnotation(classMock, AnnotationType.PLAIN_ANNOTATION));
 
-		assertTrue(!(UtilityFunctions.hasClassAnnotation(classMockPlain, AnnotationType.COG_ANNOTATION)));
-		assertTrue((UtilityFunctions.hasClassAnnotation(classMockPlain, AnnotationType.PLAIN_ANNOTATION)));
+		assertTrue(!(hasClassAnnotation(classMockPlain, AnnotationType.COG_ANNOTATION)));
+		assertTrue((hasClassAnnotation(classMockPlain, AnnotationType.PLAIN_ANNOTATION)));
 
-		assertTrue((UtilityFunctions.hasClassAnnotation(classMockCOG, AnnotationType.COG_ANNOTATION)));
-		assertTrue(!(UtilityFunctions.hasClassAnnotation(classMockCOG, AnnotationType.PLAIN_ANNOTATION)));
+		assertTrue((hasClassAnnotation(classMockCOG, AnnotationType.COG_ANNOTATION)));
+		assertTrue(!(hasClassAnnotation(classMockCOG, AnnotationType.PLAIN_ANNOTATION)));
 		
 		
 		
@@ -220,20 +213,18 @@ public class UtilityFunctionsTest {
 		when(proj2.getNature(Constants.NATURE_ID)).thenReturn(natureMock).thenReturn(null).thenThrow(new CoreException(mock(IStatus.class)));
 		when(proj2.isAccessible()).thenReturn(true,false,true);
 				
-		assertSame(UtilityFunctions.getAbsNature(proj), natureMock);
-		assertSame(UtilityFunctions.getAbsNature(proj), null);
-		assertSame(UtilityFunctions.getAbsNature(proj), null);
-		assertSame(UtilityFunctions.getAbsNature(proj), null);
+		assertSame(getAbsNature(proj), natureMock);
+		assertSame(getAbsNature(proj), null);
+		assertSame(getAbsNature(proj), null);
+		assertSame(getAbsNature(proj), null);
 
 		
 		when(file.getProject()).thenReturn(proj2);
 		
-		assertSame(UtilityFunctions.getAbsNature(file), natureMock);
-		assertSame(UtilityFunctions.getAbsNature(file), null);	
-		assertSame(UtilityFunctions.getAbsNature(proj), null);
-		assertSame(UtilityFunctions.getAbsNature(proj), null);
-
-		
+		assertSame(getAbsNature(file), natureMock);
+		assertSame(getAbsNature(file), null);	
+		assertSame(getAbsNature(proj), null);
+		assertSame(getAbsNature(proj), null);
 	}
 	
 	@Test
@@ -244,9 +235,9 @@ public class UtilityFunctionsTest {
 		when(file.getFileExtension()).thenReturn("java");
 		when(absFile.getFileExtension()).thenReturn("abs");
 		
-		assertTrue(UtilityFunctions.hasABSFileExtension(absFile));
-		assertTrue(!UtilityFunctions.hasABSFileExtension(file));
-		assertTrue(!UtilityFunctions.hasABSFileExtension(null));
+		assertTrue(hasABSFileExtension(absFile));
+		assertTrue(!hasABSFileExtension(file));
+		assertTrue(!hasABSFileExtension(null));
 	}
 	
 	@Test
@@ -260,21 +251,20 @@ public class UtilityFunctionsTest {
 		when(md.getParent()).thenReturn(cu);
 		when(cu.getParent()).thenReturn(null);
 		
-		assertSame(UtilityFunctions.getSuperOfASTNode(cd, ClassDecl.class), cd);
-		assertSame(UtilityFunctions.getSuperOfASTNode(cd, ModuleDecl.class), md);
-		assertSame(UtilityFunctions.getSuperOfASTNode(cd, CompilationUnit.class), cu);
-		assertSame(UtilityFunctions.getSuperOfASTNode(cd, TypedVarOrFieldDecl.class), null);
+		assertSame(getSuperOfASTNode(cd, ClassDecl.class), cd);
+		assertSame(getSuperOfASTNode(cd, ModuleDecl.class), md);
+		assertSame(getSuperOfASTNode(cd, CompilationUnit.class), cu);
+		assertSame(getSuperOfASTNode(cd, TypedVarOrFieldDecl.class), null);
 		
-		assertSame(UtilityFunctions.getSuperOfASTNode(md, ModuleDecl.class), md);
-		assertSame(UtilityFunctions.getSuperOfASTNode(md, CompilationUnit.class), cu);
-		assertSame(UtilityFunctions.getSuperOfASTNode(md, TypedVarOrFieldDecl.class), null);
+		assertSame(getSuperOfASTNode(md, ModuleDecl.class), md);
+		assertSame(getSuperOfASTNode(md, CompilationUnit.class), cu);
+		assertSame(getSuperOfASTNode(md, TypedVarOrFieldDecl.class), null);
 		
 
-		assertSame(UtilityFunctions.getSuperOfASTNode(cu, CompilationUnit.class), cu);
-		assertSame(UtilityFunctions.getSuperOfASTNode(cu, TypedVarOrFieldDecl.class), null);
+		assertSame(getSuperOfASTNode(cu, CompilationUnit.class), cu);
+		assertSame(getSuperOfASTNode(cu, TypedVarOrFieldDecl.class), null);
 		
-		assertSame(UtilityFunctions.getSuperOfASTNode(null, CompilationUnit.class),null);
-		
+		assertSame(getSuperOfASTNode(null, CompilationUnit.class),null);	
 	}
 	
 	@Test
@@ -288,15 +278,11 @@ public class UtilityFunctionsTest {
 		when(md.getParent()).thenReturn(cu);
 		when(cu.getParent()).thenReturn(null);
 		
-		assertSame(UtilityFunctions.getCompilationUnitOfASTNode(cd),cu);
-		assertSame(UtilityFunctions.getCompilationUnitOfASTNode(cdwocomp),null);
-		assertSame(UtilityFunctions.getCompilationUnitOfASTNode(md),cu);
-		assertSame(UtilityFunctions.getCompilationUnitOfASTNode(cu),cu);
-		assertSame(UtilityFunctions.getCompilationUnitOfASTNode(null),null);	
+		assertSame(cu,cd.getCompilationUnit());
+		assertSame(null,cdwocomp.getCompilationUnit());
+		assertSame(cu,md.getCompilationUnit());
+		assertSame(cu,cu.getCompilationUnit());
 	}
-	
-	
-	
 	
 	@SuppressWarnings("rawtypes")
 	private static List<Annotation> setUpAnnotationList(AnnotationType type){
@@ -334,6 +320,8 @@ public class UtilityFunctionsTest {
 		return annotationList;
 	}
 	
-	
-
+	private static ASTNode<?> getSuperOfASTNode(ASTNode<?> node,
+			Class<? extends ASTNode<?>> c) {
+		return node.calcContextNode(c);
+	}
 }

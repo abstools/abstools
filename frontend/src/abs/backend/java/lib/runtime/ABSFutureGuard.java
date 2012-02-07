@@ -5,9 +5,9 @@
 package abs.backend.java.lib.runtime;
 
 public class ABSFutureGuard extends ABSGuard {
-    public final ABSFut fut;
+    public final ABSFut<?> fut;
 
-    public ABSFutureGuard(ABSFut f) {
+    public ABSFutureGuard(ABSFut<?> f) {
         this.fut = f;
     }
 

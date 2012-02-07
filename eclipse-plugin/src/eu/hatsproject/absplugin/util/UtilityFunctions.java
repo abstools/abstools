@@ -35,13 +35,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.texteditor.ITextEditor;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Annotation;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
 import abs.frontend.parser.SourcePosition;
 import beaver.Symbol;
@@ -53,6 +47,7 @@ import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
+
 /**
  * Collection of project-wide utility functions
  * @author cseise, tfischer
@@ -323,47 +318,14 @@ public class UtilityFunctions {
 	}
 	
 	/**
-	 * Returns a super-ordinated node of a specific class from an
-	 * <code>{@link ASTNode}</code>
-	 * 
-	 * @param node
-	 *            The base ASTNode (the start node of the lookup)
-	 * @param c
-	 *            the class of the super-ordinated node that should be returned
-	 * @return The super-ordinated node of class <code>c</code> of the
-	 *         <code>ASTNode</code> or null if no such node could be found.
-	 */
-	public static ASTNode<?> getSuperOfASTNode(ASTNode<?> node,
-			Class<? extends ASTNode<?>> c) {
-		ASTNode<?> tmpNode = node;
-		while (tmpNode != null && (!c.isInstance(tmpNode))) {
-			tmpNode = tmpNode.getParent();
-		}
-
-		return tmpNode;
-	}
-	
-	/**
 	 * Calls <code>getSuperOfASTNode(node, CompilationUnit.class)</code> and
 	 * returns its results
 	 * 
-	 * @see #getSuperOfASTNode(ASTNode, Class)
+	 * @see ASTNode#getCompilationUnit()
+	 * @deprecated
 	 */
 	public static CompilationUnit getCompilationUnitOfASTNode(ASTNode<?> node) {
-		return (CompilationUnit) getSuperOfASTNode(node, CompilationUnit.class);
-	}
-	
-	/**
-	 * Returns the super-ordinated Model node from an
-	 * <code>{@link ASTNode}</code>
-	 * 
-	 * @param element
-	 *            The base ASTNode (the start node of the lookup)
-	 * @return The super-ordinated node of class <code>Model</code> of the
-	 *         <code>ASTNode</code> or null if no such node could be found.
-	 */	
-	public static Model getModelFromASTNode(ASTNode<?> element) {
-	    return (Model) getSuperOfASTNode((ASTNode<?>) element, Model.class);
+		return node.getCompilationUnit();
 	}
 	
 	/**
@@ -657,8 +619,7 @@ public class UtilityFunctions {
 
 	public static IFile getFileOfModuleDecl(ModuleDecl m) {
 		if (m != null) {
-			CompilationUnit compilationUnitOfASTNode = getCompilationUnitOfASTNode(m);
-			Path path = new Path(compilationUnitOfASTNode.getFileName());
+			Path path = new Path(m.getFileName());
 			path.makeRelative();
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path);
 			return file;
