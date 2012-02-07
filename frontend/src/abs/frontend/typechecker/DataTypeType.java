@@ -11,13 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.*;
 
 public class DataTypeType extends Type {
     private final DataTypeDecl decl;

@@ -9,8 +9,6 @@ import java.util.List;
 
 import abs.frontend.ast.AmbiguousDecl;
 import abs.frontend.ast.Decl;
-import abs.frontend.ast.UnknownDecl;
-import beaver.Symbol;
 
 public class ResolvedAmbigiousName extends ResolvedName {
 
