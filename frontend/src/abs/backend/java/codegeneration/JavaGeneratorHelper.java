@@ -344,7 +344,10 @@ public class JavaGeneratorHelper {
             if (f.isDirectory()) {
                 cleanGenFolderRecursively(f);
             } else {
-                f.delete();
+                if (f.getAbsolutePath().endsWith(".java")
+                        || f.getAbsolutePath().endsWith(".class")) {
+                    f.delete();
+                }
             }
         }
         dir.delete();

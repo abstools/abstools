@@ -33,7 +33,7 @@ public class JavaBackend extends Main {
         }
     }
 
-    private File destDir = new File(".");
+    private File destDir = new File("gen/");
     private boolean sourceOnly = false;
 
     @Override
