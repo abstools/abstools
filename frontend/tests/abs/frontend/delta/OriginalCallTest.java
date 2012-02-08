@@ -13,7 +13,6 @@ import java.util.Arrays;
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.*;
 
-
 public class OriginalCallTest extends DeltaFlattenerTest {
 
     @Test
@@ -40,7 +39,6 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         assertTrue(delta1.getNumClassOrIfaceModifier() == 2);
         assertTrue(delta2.getNumClassOrIfaceModifier() == 2);
         
-
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         
         // there should be 3 methods now: the original one and those added by the two deltas
@@ -68,7 +66,6 @@ public class OriginalCallTest extends DeltaFlattenerTest {
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         assertEquals(3, delta.getNumClassOrIfaceModifier());
-
     }
     
     
@@ -87,10 +84,9 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertTrue(cls.getMethods().getNumChild() == 2);
-        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_D1"));
-       // assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));
-        
+        assertEquals(cls.getMethods().toString(),2,cls.getMethods().getNumChild());
+        assertEquals("m",cls.getMethod(0).getMethodSig().getName());
+        assertEquals("m_Orig_D1",cls.getMethod(1).getMethodSig().getName());
+       // assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));       
     }
 }
