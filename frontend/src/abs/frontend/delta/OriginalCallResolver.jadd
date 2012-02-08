@@ -246,7 +246,7 @@ aspect OriginalCallResolver {
      */
     public MethodImpl ModifyMethodModifier.copyMethod(MethodImpl method, String nameSuffix) {
         MethodImpl methodCopy = method.fullCopy();
-        methodCopy.getMethodSig().setName(method.getMethodSig().getName() + "_COPIEDFROM_" + nameSuffix); 
+        methodCopy.getMethodSig().setName(method.getMethodSig().getName() + "$ORIGIN_" + nameSuffix); 
         return methodCopy;
     }
     

@@ -44,8 +44,8 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         // there should be 3 methods now: the original one and those added by the two deltas
         assertEquals(3, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_COPIEDFROM_core"));
-        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_COPIEDFROM_D"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D"));
     }
 
     @Test
@@ -108,6 +108,6 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(cls.getMethods().getNumChild(), 2);
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_COPIEDFROM_D1"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
 }
