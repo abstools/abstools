@@ -7,7 +7,15 @@ aspect VarResolution {
 	/* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different */
     rewrite VarUse {
        when (getDecl() instanceof FieldDecl)
-       to FieldUse new FieldUse(getName());
+       to FieldUse {
+        FieldUse fu=new FieldUse(getName());
+        /* Patch position to cover original range.
+         * The InitChecker was using those, I am
+         * not sure if they are used for absolute
+         * addressing the source anywhere. */
+        fu.setPosition(getStartPos(), getEndPos());
+        return fu;
+       }
     }
 
     syn lazy int Block.getNumVar() = getVars().size();

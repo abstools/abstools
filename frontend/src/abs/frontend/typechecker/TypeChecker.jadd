@@ -655,10 +655,10 @@ aspect TypeChecker {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
     
-    public void VarUse.typeCheck(SemanticErrorList e) {
-        TypeCheckerHelper.checkVarUse(e, this);
+    public void VarOrFieldUse.typeCheck(SemanticErrorList e) {
+        TypeCheckerHelper.checkDefBeforeUse(e, this);
     }
-    
+
     public void Call.typeCheck(SemanticErrorList e) {
         Type t = getType();
         getCallee().typeCheck(e);

@@ -656,17 +656,17 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void checkVarUse(SemanticErrorList e, VarUse use) {
+    public static void checkDefBeforeUse(SemanticErrorList e, VarOrFieldUse use) {
         if (use.getType().isUnknownType()) {
             e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
         } else {
             // check that fields are not used before they are defined:
             boolean isUsedInFieldDecl = use.getContextFieldDecl() != null;
             if (isUsedInFieldDecl && use.getDecl().getEndPos() > use.getStartPos()) {
-                e.add(new TypeError(use,ErrorMessage.VAR_USE_BEFORE_DEFINITION, use.getName()));
+                e.add(new TypeError(use,
+                        use instanceof VarUse ? ErrorMessage.VAR_USE_BEFORE_DEFINITION
+                                              : ErrorMessage.FIELD_USE_BEFORE_DEFINITION , use.getName()));
             }
         }
-        
     }
-
 }

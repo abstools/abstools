@@ -22,6 +22,7 @@ public enum ErrorMessage {
     EXPECTED_ADDABLE_TYPE("Expected numeric or string type for operator '+', but found type %s instead."),
     NAME_NOT_RESOLVABLE("Name %s cannot be resolved."),
     VAR_USE_BEFORE_DEFINITION("Variable %s cannot be used before it was defined."),
+    FIELD_USE_BEFORE_DEFINITION("Field %s cannot be used before it was defined."),
     TYPE_NOT_RESOLVABLE("Type %s cannot be resolved."),
     CONSTRUCTOR_NOT_RESOLVABLE("Data constructor %s cannot be resolved."),
     FUNCTION_NOT_RESOLVABLE("Function %s cannot be resolved."),

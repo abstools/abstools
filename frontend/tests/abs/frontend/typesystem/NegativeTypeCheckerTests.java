@@ -497,7 +497,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void wrongInitOrder() {
         assertTypeErrors(" class C { Int x = y + 1; Int y = 1; }");
     }
-    
+
+    @Test 
+    public void wrongInitOrder1() {
+        assertTypeErrors(" class C { Int x = this.y + 1; Int y = 1; }");
+    }
+
     @Test 
     public void wrongInitOrder2() {
         assertTypeErrors(" class C { Int x = x + 1; }");
