@@ -4,30 +4,6 @@ import java.util.UUID;
 import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
 
-/*
- * Sorry for this one. Quick fix for some code below.
- * If you know a better way to return two values in Java,
- * please remove this class, and do it the proper way below.
- */
-public final class MethodAndDelta {
-	
-	public final MethodImpl method;
-	public final String     delta;
-	
-	public MethodAndDelta(MethodImpl first, String second) {
-		this.method = first;
-		this.delta = second;
-	}
-	
-	public MethodImpl getMethod() {
-		return method;
-	}
-	
-	public String getDelta() {
-		return delta;
-	}
-}
-
 aspect OriginalCallResolver {
 
     /* Walk list of deltas in order of application and resolve original() calls.
@@ -50,7 +26,7 @@ aspect OriginalCallResolver {
      */
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        System.out.println("*** processing original() calls in delta: " + this.qualifiedName());
+        System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
         for (ClassOrIfaceModifier cm : this.getClassOrIfaceModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -62,13 +38,15 @@ aspect OriginalCallResolver {
     
     /* This field is used to save/cache the original MethodImpl
      * once it has been found.
+     * 
+     * TODO use it...
      */
     private MethodImpl ModifyMethodModifier.OriginalMethodImpl = null;
-
     
+
     /*
      * resolve OriginalCalls within the body of the method defined
-     * inside this
+     * inside this ModifyMethodModifier
      */
     public void ModifyMethodModifier.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
@@ -77,128 +55,126 @@ aspect OriginalCallResolver {
             stmt.resolveOriginalCalls(this, deltas);
     }
     
-
     /* 
      * traverse AST in search of OriginalCalls
      */
     public void ASTNode.resolveOriginalCalls(
             ModifyMethodModifier mod, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+        
         for(int i = 0; i < getNumChild(); i++) {
             getChildNoTransform(i).resolveOriginalCalls(mod, deltas);
         }
     }
-    
+
     /* Replace this original call with a newly constructed call to 
-     * the copy of the original method implementation
+     * the copy of the original method implementation.
+     * 
+     * An OriginalCall inside a delta is replaced by a normal SyncCall that points to the original method.
+     * This original version of the method needs to be added to the class under a unique name.
+     * This is done by constructing a new ModifyClassModifier that contains an AddMethodModifier 
+     * that contains the method implementation. This generated ModifyClassModifier is added to the delta, 
+     * so that it will be applied later during the regular Modifier application process.
      */
     public void OriginalCall.resolveOriginalCalls(
             ModifyMethodModifier mod, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
         
-        // found; replace
+        // found OriginalCall
         System.out.println("*** found: " + this);
-        EffExp call = mod.constructNewCall(this, deltas);
+        
+        // find and copy original method matching this OriginalCall
+        MethodImpl originalMethodCopy = mod.findOriginalMethod(this, deltas);
+        
+        // Add the copied method to the delta in which this OriginalCall occured
+        ModifyClassModifier cm = new ModifyClassModifier();
+        cm.setName(mod.className());
+        cm.setImplementedInterfaceUseList(mod.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
+        cm.addModifier(new AddMethodModifier(originalMethodCopy));
+        mod.delta().addClassOrIfaceModifier(cm);
+        System.out.println("*** copied original method to delta " + mod.delta().getName() + " as " + originalMethodCopy.getMethodSig());
+
+        // replace OriginalCall with a normal call to the copied method
+        EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().fullCopy());
         ASTNode parent = getParent();
         int i = parent.getIndexOfChild(this);
         parent.setChild(call, i);
+        System.out.println("*** replaced " + this + " with call to: " + originalMethodCopy.getMethodSig() + "\n");
     }
     
-//    /* Replace this targeted original call with a newly constructed call to 
-//     * the copy of the original method implementation
-//     */
-//    public void TargetedOriginalCall.resolveOriginalCalls(
-//            ModifyMethodModifier mod, 
-//            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-//        
-//        // found; replace
-//        System.out.println("*** found: " + this);
-//        EffExp call = mod.constructNewCall(this, deltas);
-//        ASTNode parent = getParent();
-//        int i = parent.getIndexOfChild(this);
-//        parent.setChild(call, i);
-//    }
-
-    
-    /* Find the original method implementation, copy it to current delta,
-     * and construct a call to it.
+    /* Given an OriginalCall (targeted or untargeted), find original method.
+     * 
      */
-    public EffExp ModifyMethodModifier.constructNewCall(
+    public MethodImpl ModifyMethodModifier.findOriginalMethod(
             OriginalCall oc, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
-        
+
         String classid = this.className();
         String methodid = this.getMethodImpl().getMethodSig().getName();
-        MethodImpl method;
-        MethodAndDelta original = null;
+        MethodImpl originalMethodCopy;
         
         if (oc instanceof TargetedOriginalCall) {
             String targetDeltaID = ((TargetedOriginalCall) oc).getTarget().getName();
-            for (DeltaDecl delta : deltas) {
-                if (delta.getName().equals(targetDeltaID)) {
-                    original = findOriginalInDelta(methodid, classid, delta);
-                    System.out.println("*** found original: " + original.getMethod().getMethodSig() + " in " + original.getDelta());
-                    break;
+
+            if ("core".equals(targetDeltaID)) {
+                originalMethodCopy = findOriginalInCore(methodid, classid);
+                return originalMethodCopy;
+            } else {
+                for (DeltaDecl delta : deltas) {
+                    if (delta.getName().equals(targetDeltaID)) {
+                        originalMethodCopy = findOriginalInDelta(methodid, classid, delta);
+                        return originalMethodCopy;
+                    }
                 }
+                throw new ASTNodeNotFoundException("Delta " + targetDeltaID 
+                        + " is target of an original call, but has not yet been applied");
             }
-            //TODO throw error
-            //throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
-            //   + " -- in delta " + targetDeltaID);
+            
         } else {
-            // find original MethodImpl and copy it
-            original = findOriginal(methodid, classid, deltas);
-            System.out.println("*** found original: " + original.getMethod().getMethodSig() + " in " + original.getDelta());
+            // untargeted OriginalCall
+            originalMethodCopy = findOriginalInAppliedDeltasAndCore(methodid, classid, deltas);
+            return originalMethodCopy;
         }
-        
-        try {
-//        	deltas.add(0, this.delta());
-        	method = findOriginal(methodid + "_Orig_" + original.getDelta(), classid, deltas).getMethod();
-//        	deltas.remove(0);
-        } catch(ASTNodeNotFoundException e) {
-	        method = copyOriginal(original.getMethod(), original.getDelta());
-	        System.out.println("*** copied original: " + method.getMethodSig());
-        }
-        
-        // construct call and pass on the original params
-        System.out.println("*** replaced original call with call to: " + method.getMethodSig());
-        return new SyncCall(new ThisExp(), method.getMethodSig().getName(), oc.getParams().fullCopy());
     }
+
     
-    public MethodAndDelta ModifyMethodModifier.findOriginal(            
+    /* 
+     * Given a method's name and class,
+     * find original method implementation by searching in the applied deltas and, finally, in the core.
+     * This is for untargeted original calls; for targeted OCs, we call findOriginalInDelta/findOriginalInCore directly.
+     */
+    public MethodImpl ModifyMethodModifier.findOriginalInAppliedDeltasAndCore(            
             String methodid,
             String classid, 
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
 
         System.out.println("*** searching for method " + classid + "." + methodid);
+        
         // search in list of applied deltas
-        MethodAndDelta mad = null;
         for (DeltaDecl delta : deltas) {
             System.out.println("*** searching in delta " + delta.getName());
-            mad = findOriginalInDelta(methodid, classid, delta);
-            if (mad != null)
-            	return mad;
-        }
-        // search in core classes
-        KindedName symbol = new KindedName(KindedName.Kind.CLASS, classid);
-        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
-        if (visibleSymbols.containsKey(symbol)) {
-            ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
-            System.out.println("*** searching in core class " + cls.getName());
-            for (MethodImpl method : cls.getMethods()) {
-                if (method.getMethodSig().getName().equals(methodid)) {
-                    return new MethodAndDelta(method, "core");
-                }
+            try {
+                return findOriginalInDelta(methodid, classid, delta);
+            } catch(ASTNodeNotFoundException e) {
+                // continue search in next delta, then core
+                continue;
             }
         }
-        // give up
-        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid 
-                + "." + methodid);
+        
+        // search in core classes
+        try {
+            return findOriginalInCore(methodid, classid);
+        } catch (ASTNodeNotFoundException e) {
+            // give up
+            throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid 
+                    + "." + methodid);
+        }
     }
     
-    /* find first MethodImpl that matches classid and methodid 
-     * in given deltas and core
+    /* In given delta:
+     * return first MethodImpl that matches classid and methodid
      */
-    public MethodAndDelta ModifyMethodModifier.findOriginalInDelta(            
+    public MethodImpl ModifyMethodModifier.findOriginalInDelta(            
             String methodid,
             String classid, 
             DeltaDecl delta) throws ASTNodeNotFoundException {
@@ -210,11 +186,11 @@ aspect OriginalCallResolver {
                         if (m instanceof AddMethodModifier) {
                             MethodImpl method = ((AddMethodModifier)m).getMethodImpl();
                             if (method.getMethodSig().getName().equals(methodid))
-                                return new MethodAndDelta(method, delta.getName());
+                                return copyMethod(method, delta.getName());
                         } else if (m instanceof ModifyMethodModifier) {
                             MethodImpl method = ((ModifyMethodModifier)m).getMethodImpl();
                             if (method.getMethodSig().getName().equals(methodid))
-                                return new MethodAndDelta(method, delta.getName());
+                                return copyMethod(method, delta.getName());
                         } else if (m instanceof RemoveMethodModifier) {
                             if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
                                 throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
@@ -223,38 +199,56 @@ aspect OriginalCallResolver {
                 } else if (cm instanceof AddClassModifier) {
                     for (MethodImpl method : ((AddClassModifier)cm).getClassDecl().getMethods())
                         if (method.getMethodSig().getName().equals(methodid))
-                            return new MethodAndDelta(method, delta.getName());
+                            return copyMethod(method, delta.getName());
                 } else if (cm instanceof RemoveClassModifier) {
                     throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
                             + " -- it was removed by delta " + delta.getName());
                 }
             }
         }
-        return null;
-    }   
-    
+        // not found
+        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                + " in delta " + delta.getName());
+    }
 
-    /* An OriginalCall inside a delta is replaced by a normal SyncCall that points to the 'original' method.
-     * This 'original' version of the method needs to be added to the class under a unique name.
-     * This is done by constructing a new ModifyClassModifier that contains an AddMethodModifier 
-     * that contains the method implementation. This generated ModifyClassModifier is added to the delta, 
-     * so that it will be applied later during the regular Modifier application process.
-     * 
+    /* In core:
+     * find first MethodImpl that matches classid and methodid
+     * return a copy with changed name
      */
-    public MethodImpl ModifyMethodModifier.copyOriginal(MethodImpl method, String deltaName) {
-        ModifyClassModifier cm = new ModifyClassModifier();
-        cm.setName(this.className());
-        cm.setImplementedInterfaceUseList(this.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
+    public MethodImpl ModifyMethodModifier.findOriginalInCore(            
+            String methodid,
+            String classid) throws ASTNodeNotFoundException {
+
+        KindedName symbol = new KindedName(KindedName.Kind.CLASS, classid);
+        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
+        if (visibleSymbols.containsKey(symbol)) {
+            ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
+            System.out.println("*** searching in core class " + cls.getName());
+            for (MethodImpl method : cls.getMethods()) {
+                if (method.getMethodSig().getName().equals(methodid))
+                    return copyMethod(method, "core");
+            }
+        }
+        // not found
+        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                + " in the core.");
+
+    }
+    
+    /* Return a copy of given MethodImpl (changed name)
+     * 
+     * FIXME 
+     * We're leaving out the randomness in the name for now, since we need to find an original method by delta-name
+     * This breaks potential multiple application of the same delta
+     * 
+     * String uid = Integer.toHexString(UUID.randomUUID().hashCode());
+     * String methodCopyID = method.getMethodSig().getName() + "_Orig" + uid;
+     */
+    public MethodImpl ModifyMethodModifier.copyMethod(MethodImpl method, String nameSuffix) {
         MethodImpl methodCopy = method.fullCopy();
-        // We're leaving out the randomness in the name for now, since we need to find an original method by delta-name
-        //String uid = Integer.toHexString(UUID.randomUUID().hashCode());
-        //String methodCopyID = method.getMethodSig().getName() + "_Orig" + uid;
-        String methodCopyID = method.getMethodSig().getName() + "_Orig_" + deltaName;
-        methodCopy.getMethodSig().setName(methodCopyID); 
-        cm.addModifier(new AddMethodModifier(methodCopy));
-        this.delta().addClassOrIfaceModifier(cm);
-        System.out.println("*** Added new ClassOrIfaceModifier to delta " + delta().getName());
+        methodCopy.getMethodSig().setName(method.getMethodSig().getName() + "_COPIEDFROM_" + nameSuffix); 
         return methodCopy;
     }
+    
 
 }

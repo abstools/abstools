@@ -42,10 +42,10 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         
         // there should be 3 methods now: the original one and those added by the two deltas
-        assertTrue(cls.getMethods().getNumChild() == 3);
+        assertEquals(3, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_Orig_core"));
-        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_COPIEDFROM_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_COPIEDFROM_D"));
     }
 
     @Test
@@ -67,6 +67,27 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         assertEquals(3, delta.getNumClassOrIfaceModifier());
     }
+
+    @Test
+    public void multipleCallsToSameMethod() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I { Unit m() {} }"
+                + "delta D { modifies class C {"
+                    + "modifies Unit m() { original(); original(); }" 
+                + "} }"
+        );
+
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        assertEquals(1, delta.getNumClassOrIfaceModifier());
+
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
+        
+        // TODO make sure the original method is copied only once, even with multiple original calls
+        assertEquals(2, delta.getNumClassOrIfaceModifier());
+    }
     
     
     @Test
@@ -83,10 +104,10 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         
+        // TODO make sure the original method is copied only once, even with multiple original calls
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals(cls.getMethods().toString(),2,cls.getMethods().getNumChild());
-        assertEquals("m",cls.getMethod(0).getMethodSig().getName());
-        assertEquals("m_Orig_D1",cls.getMethod(1).getMethodSig().getName());
-       // assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m_Orig_D1"));       
+        assertEquals(cls.getMethods().getNumChild(), 2);
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m_COPIEDFROM_D1"));
     }
 }
