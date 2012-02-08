@@ -241,11 +241,25 @@ def Set<A> keys<A, B>(Map<A, B> map) =
     
 /**
  * Returns the value associated with key 'k' in map 'ms'.
+ * WILL FAIL if the key is not in the map.
+ * NEW CODE should use lookupMaybe, or lookupUnsafe if you like driving
+ *   with your hands free. OLD CODE should be adapted.
+ * The SIGNATURE of this FUNCTION WILL CHANGE in the near future (see ticket #342).
  */
-def B lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+def B lookup<A, B>(Map<A, B> ms, A k) = lookupUnsafe(ms, k);
+
+/**
+ * Returns the value associated with key 'k' in map 'ms',
+ * or fails if not present.
+ */
+def B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  fromJust(lookupMaybe(ms,k));
+
+def Maybe<B> lookupMaybe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
   case ms {
-     InsertAssoc(Pair(k, y), _) => y;
-     InsertAssoc(_, tm) => lookup(tm, k);
+     InsertAssoc(Pair(k, y), _) => Just(y);
+     InsertAssoc(_, tm) => lookupMaybe(tm, k);
+     EmptyMap => Nothing;
   };
   
 /**
@@ -493,7 +507,7 @@ def Map<Resourcename, List<Int>> createDCHistory(Set<DCData> datas) =
 def Map<Resourcename, Int> updateDCInternalsForTimeAdvance(Map<Resourcename, Int> internalState, Map<Resourcename, Int> totals) =
   case internalState {
       EmptyMap => EmptyMap;
-      InsertAssoc(Pair(name, _), rest) => InsertAssoc(Pair(name, lookup(totals, name)), updateDCInternalsForTimeAdvance(rest, totals));
+      InsertAssoc(Pair(name, _), rest) => InsertAssoc(Pair(name, lookupUnsafe(totals, name)), updateDCInternalsForTimeAdvance(rest, totals));
   };
 
 // Internal function, called by the Maude interpreter: update
@@ -502,7 +516,7 @@ def Map<Resourcename, List<Int>> updateDCHistoryForTimeAdvance(Map<Resourcename,
   case internalState {
       EmptyMap => history;
       InsertAssoc(Pair(name, available), rest) =>
-          updateDCHistoryForTimeAdvance(put(history, name, Cons(lookup(totals, name) - available, lookupDefault(history, name, Nil))), rest, totals);
+          updateDCHistoryForTimeAdvance(put(history, name, Cons(lookupUnsafe(totals, name) - available, lookupDefault(history, name, Nil))), rest, totals);
   };
 
 
