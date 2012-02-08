@@ -1,17 +1,12 @@
 import java.util.Set;
 
 aspect VarUsage {
-	
 
 	syn lazy Set<String> Exp.getFreeVars();
 	
-	eq Exp.getFreeVars() = new HashSet<String>(0); 
+	eq Exp.getFreeVars() = Collections.emptySet(); 
 	
-	eq VarUse.getFreeVars() {
-		HashSet<String> res = new HashSet<String>(1);
-		res.add(getName());
-		return res;
-	}
+	eq VarUse.getFreeVars() = Collections.singleton(getName());
 	
 	eq Binary.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
@@ -95,21 +90,15 @@ aspect VarUsage {
 
 	syn lazy Collection<String> Pattern.getFreeVars();
 	
-	eq Pattern.getFreeVars() = new HashSet<String>(0);
+	eq Pattern.getFreeVars() = Collections.emptySet();
 	
-	eq PatternVarUse.getFreeVars() {
-		HashSet<String> res = new HashSet<String>(1);
-		res.add(getName());
-		return res;		
-	}
-	
+	eq PatternVarUse.getFreeVars() = Collections.singleton(getName());
+
 	eq ConstructorPattern.getFreeVars() {
 		HashSet<String> res = new HashSet<String>(1);
 		for (Pattern p : getParams()) {
 			res.addAll(p.getFreeVars());
 		}
 		return res;		
-	}
-	
-	
+	}	
 }
