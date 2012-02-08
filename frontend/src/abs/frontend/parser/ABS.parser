@@ -552,10 +552,12 @@ PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
  {: {
         DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
         DataConstructorExp current = result;
-        for (Object e : l) {
+        /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
+        for (int i = 0; i < l.getNumChildNoTransform(); i++) {
+            Object e = l.getChildNoTransform(i);
             DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
-            current.addParamNoTransform((PureExp)e);
-            current.addParamNoTransform(next);
+            current.addParam((PureExp)e);
+            current.addParam(next);
             current = next;
         }
         current.setConstructor("Nil");

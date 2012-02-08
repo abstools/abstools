@@ -4,6 +4,12 @@ aspect VarResolution {
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
+	/* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different */
+    rewrite VarUse {
+       when (getDecl() instanceof FieldDecl)
+       to FieldUse new FieldUse(getName());
+    }
+
     syn lazy int Block.getNumVar() = getVars().size();
     
     syn lazy Collection<VarDecl> Block.getVars() {
@@ -17,7 +23,6 @@ aspect VarResolution {
         }
         return res;
     }
-
     
     syn lazy PatternVarDecl Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly);
     eq Pattern.locallookupVarOrFieldName(String name, boolean fieldOnly) = null;
@@ -147,7 +152,7 @@ aspect VarResolution {
             return getVar();
         return lookupVarOrFieldName(name, fieldOnly);
     }
-    
+
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
@@ -158,7 +163,6 @@ aspect VarResolution {
         when (lookupVarOrFieldName(getName(),false) == null)
             to PatternVar new PatternVar(new PatternVarDecl(getName()));
     }
-    
 }
 
 // Local Variables:
