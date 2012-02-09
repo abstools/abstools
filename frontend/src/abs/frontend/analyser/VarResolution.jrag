@@ -143,8 +143,9 @@ aspect VarResolution {
     
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) 
         = null;
+    // The -1 case happened within deltas (#346)...
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
+        = i == -1 ? null : getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
 
     eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
      if (!fieldOnly) {
