@@ -24,6 +24,7 @@ aspect FieldUsage {
      */    
     public class FieldUseInfo {
        final public Collection<FieldUse> fields = new HashSet<FieldUse>();
+       public Collection<FunctionDef> seenDefs = new HashSet<FunctionDef>();
        public boolean usesBuiltin = false;
 
 	   FieldUseInfo(){};
@@ -35,6 +36,10 @@ aspect FieldUsage {
        FieldUseInfo(FieldUseInfo f) {
          fields.addAll(f.fields);
          usesBuiltin = f.usesBuiltin;
+       }
+
+       FieldUseInfo(Collection<FunctionDef> seen) {
+         seenDefs = seen;
        }
 
        FieldUseInfo merge(PureExp e) {
@@ -107,10 +112,13 @@ aspect FieldUsage {
     syn lazy boolean FunctionDef.usesBuiltin(Collection<FunctionDef> seen);
     eq BuiltinFunctionDef.usesBuiltin(Collection<FunctionDef> seen) = true;
     eq ExpFunctionDef.usesBuiltin(Collection<FunctionDef> seen) {
-      seen.add(this);
-      FieldUseInfo info = getRhs().getFields();
-      seen.remove(this);
-      return info.usesBuiltin;
+      if (seen.add(this)) {      
+        FieldUseInfo info = getRhs().getFields(new FieldUseInfo(seen));
+        boolean a = seen.remove(this);
+        assert a;
+        return info.usesBuiltin;
+      } else
+        return false; // OK since it gets ORed
     }
 
 	eq FnApp.getFields(FieldUseInfo fui) {
@@ -119,7 +127,7 @@ aspect FieldUsage {
 		if (getDecl() instanceof FunctionDecl) {
 		  FunctionDecl d = (FunctionDecl)getDecl();
 		  FunctionDef def = d.getFunctionDef();
-		  fui.usesBuiltin |= def.usesBuiltin();
+		  fui.usesBuiltin |= def.usesBuiltin(fui.seenDefs);
 		}
 		return new FieldUseInfo(fui);
 	}

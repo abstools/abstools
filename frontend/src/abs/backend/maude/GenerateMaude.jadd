@@ -103,6 +103,7 @@ aspect GenerateMaude {
     }
     public void BuiltinFunctionDef.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+        throw new NotImplementedYetException(this); // TODO
     }
 
     abstract public void Exp.generateMaude(PrintStream stream);
@@ -110,6 +111,7 @@ aspect GenerateMaude {
 
     public void IncompleteExp.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+        throw new NotImplementedYetException(this); // TODO
     }
     public int IncompleteExp.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
@@ -117,6 +119,7 @@ aspect GenerateMaude {
     
     public void Access.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+        throw new NotImplementedYetException(this); // TODO
     }
     public int Access.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
@@ -135,6 +138,7 @@ aspect GenerateMaude {
 
     public void EffExp.generateMaude(PrintStream stream) {
         stream.println("--- Hey, you used a side-effecting expression as a normal one! " + getClass().toString());
+        throw new NotImplementedYetException(this); // TODO - typecheck failure?
     }
     public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
@@ -205,6 +209,7 @@ aspect GenerateMaude {
     public void OriginalCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         stream.println("--- Hey, you forgot to flatten your model!");
+        throw new NotImplementedYetException(this); // TODO
     }
     public int OriginalCall.numberOfRandom(Set<String> visitedFunctions) {
         return 0;
@@ -348,6 +353,7 @@ aspect GenerateMaude {
 
     public void VarOrFieldUse.generateMaude(PrintStream stream) {
         stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
+        throw new NotImplementedYetException(this); // TODO
     }
 
 	public void VarUse.generateMaude(PrintStream stream) {

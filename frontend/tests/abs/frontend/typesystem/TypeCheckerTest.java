@@ -172,6 +172,18 @@ public class TypeCheckerTest extends FrontendTest {
     public void testAwaitTooPure1OK() {
         assertTypeOK("{ await timeval(now()) > 0; }");
     }
+    
+    @Test
+    public void testAwaitTooPure2OK() {
+        // recursive def!
+        assertTypeOK("{ await lookupDefault(insert(EmptyMap, Pair(1,timeval(now()))),1,0) > 0; }");
+    }
+
+    @Test
+    public void testAwaitTooPure3() {
+        // recursive def!
+        assertTypeErrors("{ await lookupDefault(insert(EmptyMap, Pair(1,timeval(Time(0)))),1,0) > 0; }");
+    }
 
     @Test
     public void syncCallMethodThis() {

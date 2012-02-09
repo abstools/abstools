@@ -19,12 +19,8 @@ public class JavaTestDriver implements BackendTestDriver {
     }
     
     @Override
-    public void assertEvalEquals(String absCode, boolean value) {
-        try {
-            javaTest.assertEvalEquals(absCode, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e); // TODO: throw
-        }
+    public void assertEvalEquals(String absCode, boolean value) throws Exception {
+        javaTest.assertEvalEquals(absCode, value);
     }
 
     @Override
