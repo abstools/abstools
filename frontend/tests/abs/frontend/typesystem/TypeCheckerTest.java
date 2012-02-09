@@ -12,8 +12,6 @@ import java.util.Collection;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
-import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
@@ -83,8 +81,7 @@ public class TypeCheckerTest extends FrontendTest {
     public void dataTypeSelectorsTypeParam2() {
         assertTypeOK("data Foo<A> = Foo(A f);");
     }
-    
-    
+
     @Test
     public void negTestOk() {
         assertTypeOK("{ Bool b = ~True; }");
@@ -144,7 +141,6 @@ public class TypeCheckerTest extends FrontendTest {
     public void methodInSuperType() {
         assertTypeOK("interface I { Bool m(Bool b);} interface J extends I { }"
                 + "class C implements J { Bool m(Bool b) { J j; j = this; return j.m(True); } }");
-
     }
 
     @Test
@@ -164,12 +160,17 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void testAwaitBoolOk() {
-        assertTypeOK("{ Bool b = False; await b; }");
+        assertTypeErrors("{ Bool b = False; await b; }");
     }
 
     @Test
     public void testAwaitAndOk() {
-        assertTypeOK("{ await False && True; }");
+        assertTypeErrors("{ await False && True; }");
+    }
+
+    @Test
+    public void testAwaitTooPure1OK() {
+        assertTypeOK("{ await timeval(now()) > 0; }");
     }
 
     @Test
@@ -259,12 +260,10 @@ public class TypeCheckerTest extends FrontendTest {
                      "  Maybe<I> o = Just(i); }");
     }
     
-    
     @Test
     public void testListArgs() {
         assertTypeOK(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
                 + "{ Database db; db = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
-
     }
 
     @Test
@@ -284,7 +283,6 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void classParams() {
         assertTypeOK("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
-
     }
 
     @Test
@@ -298,12 +296,11 @@ public class TypeCheckerTest extends FrontendTest {
         ModuleDecl module = m.getCompilationUnit(1).getModuleDecl(0);
         InterfaceDecl d = (InterfaceDecl) module.getDecl(2);
         ArrayList<MethodSig> list = new ArrayList<MethodSig>(d.getAllMethodSigs());
-        assertEquals(3,list.size());
+        assertEquals(list.toString(),3,list.size());
         
         VarDeclStmt stmt = (VarDeclStmt) module.getBlock().getStmt(0);
         Collection<MethodSig> sigs = stmt.getVarDecl().getAccess().getType().getAllMethodSigs();
-        assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());
-        
+        assertArrayEquals(sigs.toArray(),d.getAllMethodSigs().toArray());     
     }
     
     @Test

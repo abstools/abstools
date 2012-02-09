@@ -1,3 +1,4 @@
+/* $Id$ */
 import abs.common.*;
 
 import abs.frontend.analyser.ErrorMessage;
@@ -7,7 +8,6 @@ import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.TypeCheckerHelper;
 
 import java.util.HashMap;
-
 
 aspect TypeChecker {
     
@@ -624,8 +624,10 @@ aspect TypeChecker {
    	 }
     }
     public void ExpGuard.typeCheck(SemanticErrorList e) { 
-   	 getPureExp().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
+      	 PureExp exp = getPureExp();
+       	 exp.typeCheck(e);
+       	 TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
+       	 hasFieldAccess(e); // check for visible change/builtin
     }
     public void DurationGuard.typeCheck(SemanticErrorList e) {
         getMin().typeCheck(e);
@@ -633,8 +635,6 @@ aspect TypeChecker {
         TypeCheckerHelper.assertHasType(e, getMin(), getModel().getIntType());
         TypeCheckerHelper.assertHasType(e, getMax(), getModel().getIntType());
     }
-    
-    
     
     // EXPRESSIONS
     

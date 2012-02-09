@@ -82,6 +82,7 @@ public enum ErrorMessage {
     DUPLICATE_VARIABLE("Variable %s is already defined."),
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration"),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s")
+    , AWAIT_TOO_PURE("You're not checking for anything observable in AWAIT.")
     ;
 
     private String pattern;
