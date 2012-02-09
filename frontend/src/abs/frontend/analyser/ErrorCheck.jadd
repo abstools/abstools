@@ -63,7 +63,7 @@ aspect ErrorCheck {
           c.add(new SemanticError(this,ErrorMessage.UNKOWN_DATACONSTRUCTOR,getConstructor()));
       }
     } catch (TypeCheckerException e) {
-      c.add(e.getTypeError());
+      c.add(e);
     }
   }
 

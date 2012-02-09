@@ -20,6 +20,7 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
+import abs.frontend.typechecker.TypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -154,6 +155,8 @@ public class IncrementalModelBuilder {
 			// We don't want to spam the typeerrors (it's cached):
 			semerrors.addAll(typeerrors);
 			return semerrors;
+	    } catch (TypeCheckerException e) {
+	        return new SemanticErrorList(e);
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw new TypecheckInternalException(e);

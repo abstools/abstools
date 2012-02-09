@@ -8,16 +8,7 @@ import java.util.Map;
 
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AsyncCall;
-import abs.frontend.ast.Call;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.NewExp;
-import abs.frontend.ast.NullExp;
-import abs.frontend.ast.SyncCall;
-import abs.frontend.ast.ThisExp;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeAnnotation;
 import abs.frontend.typechecker.ext.DefaultTypeSystemExtension;
@@ -59,7 +50,6 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
                 errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
             }
         }
-        
     }
 
     @Override

@@ -234,7 +234,7 @@ public class ModelBuilderTest {
 		assertEquals(0, testcu.getParserErrors().size());
 		modelbuilder.addCompilationUnit(testcu);
 		SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-		assertEquals(2, testel.size()); //Why 2? Module not resolved gets inserted 2 times.
+		assertEquals(testel.toString(),1, testel.size());
 
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));

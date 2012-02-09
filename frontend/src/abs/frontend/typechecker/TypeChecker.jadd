@@ -34,7 +34,7 @@ aspect TypeChecker {
                 u.typeCheck(errors);
             }
         } catch (TypeCheckerException e) {
-            errors.add(e.getTypeError());
+            errors.add(e);
         }
     }
 
