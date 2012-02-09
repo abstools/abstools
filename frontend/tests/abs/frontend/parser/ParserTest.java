@@ -4,12 +4,6 @@
  */
 package abs.frontend.parser;
 
-//import junit.framework.*;
-import static org.junit.Assert.fail;
-
-import java.io.Reader;
-import java.io.StringReader;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,8 +14,6 @@ public class ParserTest extends FrontendTest {
     // private String emptyblock ;
     private String bbclass;
     // private String ms1, ms2, meth1, meth2 , fields, comment, comment2 ;
-
-    private static boolean verbose = false;
 
     private String[] pureExp = { " x ", " this.x ",
             "null",
@@ -343,8 +335,7 @@ public class ParserTest extends FrontendTest {
                "   _ => foo() // Note missing semicolon\n"+
                "}; \n" +
              "} \n" +
-          "} \n");
-          
+          "} \n");         
     }
     
     
@@ -353,4 +344,8 @@ public class ParserTest extends FrontendTest {
         assertParseError("def Bool g() = f(s a, s b);");
     }
     
+    @Test
+    public void ticket238() throws Exception{
+        assertParseOk("module T238; delta D {} productline P { features F,G; delta D when F && (~ G); }");
+    }
 }
