@@ -79,8 +79,8 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
         
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertTrue(cls.getField(0).getName().equals("myField"));
-        assertEquals(expected,cls.getField(0).getInitExp().value.toString());
+        assertEquals("myField",cls.getField(0).getName());
+        assertEquals("Product "+product,expected,cls.getField(0).getInitExp().value.toString());
     }
 
 }

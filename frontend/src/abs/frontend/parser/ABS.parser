@@ -865,8 +865,8 @@ Deltaparam deltaparam =
       TYPE_IDENTIFIER.fid DOT IDENTIFIER.aid {: return new FIDAID(fid, aid); :}
     | INTLITERAL.i {: return new Const(new IntVal(Integer.parseInt((String)i))); :}
     | TYPE_IDENTIFIER.c {: // hack...
-        if (c=="True") return new Const(new BoolVal(true));
-        else if (c == "False") return new Const(new BoolVal(false));
+        if (c.equals("True")) return new Const(new BoolVal(true));
+        else if (c.equals("False")) return new Const(new BoolVal(false));
 	else return new FID(c); :}
     ;
 
