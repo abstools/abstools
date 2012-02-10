@@ -7,6 +7,8 @@ import java.io.InputStream;
 import org.eclipse.core.internal.resources.VirtualFileStore;
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import eu.hatsproject.absplugin.Activator;
+
 import abs.frontend.parser.ABSPackageFile;
 
 @SuppressWarnings("restriction")
@@ -22,14 +24,14 @@ public class PackageAbsFileStore extends VirtualFileStore {
 	public String getName() {
 		return file.getAbsoluteFilePath();
 	}
-	
-	@SuppressWarnings("unused")
+
+	@Override
 	public InputStream openInputStream(int options, IProgressMonitor monitor) {
 		try {
 			ABSPackageFile pak = new ABSPackageFile(new File(file.getParent().getPath()));
 			return pak.getInputStream(pak.getJarEntry(file.getName()));
 		} catch (IOException e) {
-			e.printStackTrace();
+			Activator.logException(e);
 		}
 		return null;
 	}

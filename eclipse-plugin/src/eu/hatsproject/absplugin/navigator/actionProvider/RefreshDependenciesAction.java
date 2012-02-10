@@ -8,12 +8,7 @@ import static eu.hatsproject.absplugin.navigator.NavigatorUtils.updateDependenci
 import static eu.hatsproject.absplugin.util.Constants.MODULE_DECORATOR_ID;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.viewers.IBaseLabelProvider;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.IShellProvider;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;

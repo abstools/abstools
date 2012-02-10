@@ -43,7 +43,6 @@ public class MavenAction extends RefreshDependenciesAction {
 			final IProject project = getProject((TreeSelection)selection);
 			new Job("Maven") {
 				
-				@SuppressWarnings("unused")
 				protected IStatus run(IProgressMonitor monitor) {
 					final MavenJob mavenJob = new MavenJob(project);
 					mavenJob.setUser(true);

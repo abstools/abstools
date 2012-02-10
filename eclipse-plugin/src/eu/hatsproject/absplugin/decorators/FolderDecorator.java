@@ -21,7 +21,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.LabelProviderChangedEvent;
 import org.eclipse.ui.PlatformUI;
 
-import eu.hatsproject.absplugin.util.Constants;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
@@ -49,8 +49,7 @@ public class FolderDecorator extends LabelProvider implements ILightweightLabelD
 		      decoration.addOverlay(MARKER_DESCRIPTOR);				
 		      //}
 		   }
-		}
-		
+		}		
 	}
 	
 	private boolean hasABSFiles(IFolder folder) {
@@ -70,20 +69,15 @@ public class FolderDecorator extends LabelProvider implements ILightweightLabelD
 					}
 				}
 			} catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Activator.logException(e);
 				return false;
 			}
 		}
-
 		return false;
 	}
 
-	private boolean checkFile(IResource member) {
-		if (UtilityFunctions.isABSSourceFile(member)) {
-			return true;
-		}
-		return false;
+	private static boolean checkFile(IResource member) {
+		return UtilityFunctions.isABSSourceFile(member);
 	}
 
 	private static ArrayList<IFolder> getFolders(IResource[] members) {

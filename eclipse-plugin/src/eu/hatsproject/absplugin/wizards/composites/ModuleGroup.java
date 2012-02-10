@@ -23,7 +23,6 @@ import org.eclipse.ui.part.DrillDownComposite;
 
 import abs.frontend.ast.ModuleDecl;
 import eu.hatsproject.absplugin.util.InternalASTNode;
-import eu.hatsproject.absplugin.wizards.WizardUtil;
 
 public class ModuleGroup extends CompositeGroup {
 

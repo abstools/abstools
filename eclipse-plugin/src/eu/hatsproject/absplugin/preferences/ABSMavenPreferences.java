@@ -26,8 +26,7 @@ public class ABSMavenPreferences extends PreferencePage implements
 		IWorkbenchPreferencePage {
 
 	private DirectoryFieldEditor mavenPath;
-	
-	@SuppressWarnings("unused")
+
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(getDefaultPreferenceStore());		
 		setDescription("Choose Maven preferences here");

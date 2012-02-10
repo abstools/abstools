@@ -22,7 +22,6 @@ import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
-import eu.hatsproject.absplugin.wizards.WizardUtil;
 
 public class ModuleGroupContentProvider implements ITreeContentProvider {
 
