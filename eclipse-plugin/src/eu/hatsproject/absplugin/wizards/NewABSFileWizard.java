@@ -38,7 +38,6 @@ import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.navigator.ModulePath;
 import eu.hatsproject.absplugin.util.InternalASTNode;
-import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
  * New Wizard for creating a new module in a new file
@@ -145,7 +144,7 @@ public class NewABSFileWizard extends Wizard implements INewWizard {
 			folders.add(project);
 
 			if (m != null) {
-				CompilationUnit compilationUnit = UtilityFunctions.getCompilationUnitOfASTNode(m.getASTNode());
+				CompilationUnit compilationUnit = m.getASTNode().getCompilationUnit();
 				IPath path = new Path(compilationUnit.getFileName());
 				path = path.makeRelativeTo(project.getLocation());
 

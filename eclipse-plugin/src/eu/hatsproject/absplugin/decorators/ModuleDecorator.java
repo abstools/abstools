@@ -69,7 +69,6 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 
 	private void checkProject(IProject project, IDecoration decoration) {
 		try {
-
 			if (project.isAccessible()) {
 				IMarker[] markers = getABSErrorMarkers(project);
 
@@ -131,7 +130,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 	public boolean hasModuleDeclErrors(ModuleDecl m, AbsNature nature) {
 		synchronized (nature.modelLock) {
 			if (m != null) {
-				CompilationUnit cu = UtilityFunctions.getCompilationUnitOfASTNode((ModuleDecl) m);
+				CompilationUnit cu = m.getCompilationUnit();
 				EditorPosition pos = UtilityFunctions.getPosition(m);
 				int startLine = pos.getLinestart();
 				int endLine = pos.getLineend();
@@ -168,7 +167,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 					for (SemanticError err : list) {
 						ASTNode<?> node = err.getNode();
 						int line = err.getLine();
-						CompilationUnit cu = UtilityFunctions.getCompilationUnitOfASTNode(node);
+						CompilationUnit cu = node.getCompilationUnit();
 						if (c == cu && checkLine(line, startLine, endLine)) {
 							return true;
 						}
@@ -191,11 +190,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 	}
 
 	private boolean checkLine(int line, int startLine, int endLine) {
-		if (startLine <= line && endLine >= line) {
-			return true;
-		}
-		
-		return false;
+		return startLine <= line && endLine >= line;
 	}
 
 }

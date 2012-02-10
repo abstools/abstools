@@ -316,18 +316,7 @@ public class UtilityFunctions {
 		}
 		return success;
 	}
-	
-	/**
-	 * Calls <code>getSuperOfASTNode(node, CompilationUnit.class)</code> and
-	 * returns its results
-	 * 
-	 * @see ASTNode#getCompilationUnit()
-	 * @deprecated
-	 */
-	public static CompilationUnit getCompilationUnitOfASTNode(ASTNode<?> node) {
-		return node.getCompilationUnit();
-	}
-	
+
 	/**
 	 * Looks for the first project with an ABSNature that contains this file
 	 * 
