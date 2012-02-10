@@ -57,10 +57,6 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 */
 	private final ITreeContentProvider coProv;
 	/**
-	 * Internal Tree viewer of the Content Outline Page
-	 */
-	private TreeViewer tw = null;
-	/**
 	 * ICommandService for retrieving the states of the filter buttons
 	 */
 	private ICommandService commandService;
@@ -91,7 +87,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 
 		commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
 		boolean value = getValueOfCommand(SORT_COMMAND_ID);
-
+		TreeViewer tw = getTreeViewer();
 		if (tw != null) {
 			if (value) {
 				tw.setComparator(ABSContentOutlineFiltersAndComparators.getAlphabeticalASTNodeComparator());
@@ -130,7 +126,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	private void initTreeViewer() {
-		tw = getTreeViewer();
+		TreeViewer tw = getTreeViewer();
 		tw.setContentProvider(coProv);
 		// The label provider is responsible for converting ASTNodes into their String representations
 		tw.setLabelProvider(new ABSContentOutlineStyledLabelProvider());
@@ -179,12 +175,12 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		}
 
 		// Update the input of the tree viewer to reflect the new outline of the AST
-		tw.setInput(new InternalASTNode<CompilationUnit>(cu,nature));
+		getTreeViewer().setInput(new InternalASTNode<CompilationUnit>(cu,nature));
 	}
 
 	private void addSelectionListener() {
 		// Handle selection changes in the outline
-		tw.addSelectionChangedListener(new ISelectionChangedListener() {
+		getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 			
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -201,7 +197,6 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 							.getFirstElement());
 					UtilityFunctions.highlightInEditor(editor, t);
 				}
-				
 			}
 		});
 	}
@@ -231,30 +226,29 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		@Override
 		public void resourceBuilt(ResourceBuiltEvent builtevent) {
 			IResource eres = editor.getResource();
-			if (builtevent.hasChanged(eres )) {
+			if (builtevent.hasChanged(eres)) {
 				refreshInput(eres);
 			}
 		}
 
 		private void refreshInput(final IResource eres) {
-		    Display.getDefault().asyncExec(new Runnable() {
-		    	@Override
-				public void run() {
-		    		AbsNature nature = UtilityFunctions.getAbsNature(eres.getProject());
-		    		if(nature == null){
-		    			return;
-		    		}
-		    		CompilationUnit cu = nature.getCompilationUnit(eres);
-		    		if (cu != null) {
-		    			ViewerFilter[] vf = getTreeViewer().getFilters();
-		    			ViewerComparator sort = getTreeViewer().getComparator();
-		    			getTreeViewer().setInput(new InternalASTNode<CompilationUnit>(cu, nature));
-		    			getTreeViewer().setFilters(vf);
-		    			getTreeViewer().setComparator(sort);
-		    			editor.getSelectionProvider().setSelection(editor.getSelectionProvider().getSelection());
-		    		}
-		    	}
-		    });
+			final AbsNature nature = UtilityFunctions.getAbsNature(eres);
+			if(nature == null)
+				return;
+			final CompilationUnit cu = nature.getCompilationUnit(eres);
+			if (cu != null) {
+				Display.getDefault().asyncExec(new Runnable() {
+					@Override
+					public void run() {
+						ViewerFilter[] vf = getTreeViewer().getFilters();
+						ViewerComparator sort = getTreeViewer().getComparator();
+						getTreeViewer().setInput(new InternalASTNode<CompilationUnit>(cu, nature));
+						getTreeViewer().setFilters(vf);
+						getTreeViewer().setComparator(sort);
+						editor.getSelectionProvider().setSelection(editor.getSelectionProvider().getSelection());
+					}
+				});
+			}
 		}
 	}
 }

@@ -368,7 +368,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 			return hasChildren(makeABSPackage(file));
 		}
 		
-		AbsNature nature = UtilityFunctions.getAbsNature(file.getProject());
+		AbsNature nature = UtilityFunctions.getAbsNature(file);
 		if(nature != null){
 			CompilationUnit cu = nature.getCompilationUnit(file);
 			if(cu != null)

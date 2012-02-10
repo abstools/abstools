@@ -4,8 +4,7 @@
  */
 package eu.hatsproject.absplugin.editor.outline;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +17,7 @@ import org.mockito.Mockito;
 
 import abs.frontend.ast.*;
 import eu.hatsproject.absplugin.builder.AbsNature;
-import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
+import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils.*;
 import eu.hatsproject.absplugin.navigator.ModulePath;
 
 public class ABSContentOutlineUtilsTest {
@@ -35,8 +34,6 @@ public class ABSContentOutlineUtilsTest {
 	private AbsNature natureMock;
 	private TypeUse   tu;
 	private ParametricDataTypeUse pdtu;
-	
-	
 	
 	@Before
 	public void setUp() throws Exception {
@@ -78,7 +75,7 @@ public class ABSContentOutlineUtilsTest {
 		DataTypeUse dtu = mock(DataTypeUse.class);
 		when(dtu.getName()).thenReturn("Parametric");
 		dtuL.add(dtu);
-		when(pdtu.getParamListNoTransform()).thenReturn(dtuL);
+		when(pdtu.getParamList()).thenReturn(dtuL);
 	}
 
 	@After
@@ -91,15 +88,15 @@ public class ABSContentOutlineUtilsTest {
 		Import imp = mock(Import.class);
 		list.add(imp);
 		
-		assertTrue(ABSContentOutlineUtils.isImportList(list));
-		assertTrue(!ABSContentOutlineUtils.isExportList(list));
+		assertTrue(isImportList(list));
+		assertFalse(isExportList(list));
 		
 		List<Export> list2 = new List<Export>();
 		Export exp = mock(Export.class);
 		list2.add(exp);		
 		
-		assertTrue(!ABSContentOutlineUtils.isImportList(list2));			
-		assertTrue(ABSContentOutlineUtils.isExportList(list2));	
+		assertFalse(isImportList(list2));			
+		assertTrue(isExportList(list2));	
 	}
 	
 	@Test
@@ -111,24 +108,24 @@ public class ABSContentOutlineUtilsTest {
 		ParamDecl pd1 = mock(ParamDecl.class);
 		ParamDecl pd2 = mock(ParamDecl.class);
 			
-		when(pd1.getAccessNoTransform()).thenReturn(tu);
-		when(pd2.getAccessNoTransform()).thenReturn(pdtu);
+		when(pd1.getAccess()).thenReturn(tu);
+		when(pd2.getAccess()).thenReturn(pdtu);
 		
 		paramDeclL.add(pd1);
 		paramDeclL.add(pd2);
 		
-		when(sigMock.getParamListNoTransform()).thenReturn(paramDeclL);
+		when(sigMock.getParamList()).thenReturn(paramDeclL);
 		
-		assertEquals(ABSContentOutlineUtils.formatMethodSig(sigMock).toString(),"methodName(Int, Int<Parametric>)");
+		assertEquals("methodName(Int, Int<Parametric>)",formatMethodSig(sigMock).toString());
 		
 		MethodSig sigMock2 = mock(MethodSig.class);
 		when(sigMock2.getName()).thenReturn("methodName");
 		
 		List<ParamDecl> paramDeclL2 = new List<ParamDecl>();
 		
-		when(sigMock.getParamListNoTransform()).thenReturn(paramDeclL2);
+		when(sigMock.getParamList()).thenReturn(paramDeclL2);
 		
-		assertEquals(ABSContentOutlineUtils.formatMethodSig(sigMock).toString(),"methodName()");		
+		assertEquals("methodName()",formatMethodSig(sigMock).toString());		
 		
 	}
 	
@@ -137,20 +134,20 @@ public class ABSContentOutlineUtilsTest {
 		
 		TypedVarOrFieldDecl tvofd1 = mock(TypedVarOrFieldDecl.class);
 		when(tvofd1.getName()).thenReturn("Field1");
-		when(tvofd1.getAccessNoTransform()).thenReturn(tu);
+		when(tvofd1.getAccess()).thenReturn(tu);
 		
 		TypedVarOrFieldDecl tvofd2 = mock(TypedVarOrFieldDecl.class);
 		when(tvofd2.getName()).thenReturn("Field2");
-		when(tvofd2.getAccessNoTransform()).thenReturn(pdtu);		
+		when(tvofd2.getAccess()).thenReturn(pdtu);		
 		
-		assertEquals(ABSContentOutlineUtils.formatTypedVarOrFieldDecl(tvofd1).toString(),"Field1 : Int");
-		assertEquals(ABSContentOutlineUtils.formatTypedVarOrFieldDecl(tvofd2).toString(),"Field2 : Int<Parametric>");
-		assertTrue(ABSContentOutlineUtils.formatTypedVarOrFieldDecl(null) == null);
+		assertEquals("Field1 : Int",formatTypedVarOrFieldDecl(tvofd1).toString());
+		assertEquals("Field2 : Int<Parametric>",formatTypedVarOrFieldDecl(tvofd2).toString());
+		assertTrue(formatTypedVarOrFieldDecl(null) == null);
 	}
 	
 	@Test
 	public void testGetChildrenOf(){			
-		ArrayList<ASTNode<?>> chld = ABSContentOutlineUtils.getChildrenOf(moduleMock);
+		ArrayList<ASTNode<?>> chld = getChildrenOf(moduleMock);
 		
 		assertTrue(chld.contains(impL));
 		assertTrue(chld.contains(expL));
@@ -174,10 +171,10 @@ public class ABSContentOutlineUtilsTest {
 		ModulePath moduleMock3 = mock(ModulePath.class);
 		when(moduleMock3.getModulePath()).thenReturn("");
 		
-		assertEquals(ABSContentOutlineUtils.getLabel(moduleMock0).toString(),"B");
-		assertEquals(ABSContentOutlineUtils.getLabel(moduleMock1).toString(),"A");
-		assertEquals(ABSContentOutlineUtils.getLabel(moduleMock2).toString(),"A");
-		assertEquals(ABSContentOutlineUtils.getLabel(moduleMock3).toString(),"");
+		assertEquals("B",getLabel(moduleMock0).toString());
+		assertEquals("A",getLabel(moduleMock1).toString());
+		assertEquals("A",getLabel(moduleMock2).toString());
+		assertEquals("",getLabel(moduleMock3).toString());
 	}
 
 }

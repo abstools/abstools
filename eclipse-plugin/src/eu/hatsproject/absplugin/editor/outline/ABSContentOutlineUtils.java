@@ -78,14 +78,13 @@ public class ABSContentOutlineUtils {
 	 */
 	private static void formatParam(StringBuilder sb, ParamDecl p) {
 		if (p != null) {
-			Access acc = ((TypeUse) p.getAccessNoTransform());
+			Access acc = ((TypeUse) p.getAccess());
 			if (acc instanceof ParametricDataTypeUse) {
 				ParametricDataTypeUse ptd = ((ParametricDataTypeUse) acc);
-				sb.append(ptd.getName());
 				formatParametricDataTypeUse(sb, ptd);
 
 			} else if (acc instanceof TypeUse) {
-				sb.append(((TypeUse) p.getAccessNoTransform()).getName());
+				sb.append(((TypeUse) p.getAccess()).getName());
 			}
 		}
 	}
@@ -239,7 +238,6 @@ public class ABSContentOutlineUtils {
 	private static String formatAccess(TypeUse tu) {
 		if (tu != null) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(tu.getName());
 
 			// If the TypeUse comes from a Parametric datatype...
 			if (tu instanceof ParametricDataTypeUse) {
@@ -247,7 +245,8 @@ public class ABSContentOutlineUtils {
 				ParametricDataTypeUse ptu = (ParametricDataTypeUse) tu;
 				// ...add existing type parameter values
 				formatParametricDataTypeUse(sb, ptu);
-			}
+			} else
+				sb.append(tu.getName());
 
 			return sb.toString();
 		} else {
@@ -270,16 +269,7 @@ public class ABSContentOutlineUtils {
 	private static void formatParametricDataTypeUse(StringBuilder sb,
 			ParametricDataTypeUse ptu) {
 		if (sb != null && ptu != null) {
-			if (ptu.getNumParam() > 0) {
-				sb.append(OUTLINE_TYPE_PARAM_OPEN_PARENTHESIS);
-				for (DataTypeUse tDecl : ptu.getParamListNoTransform()) {
-					sb.append(tDecl.getName());
-					sb.append(OUTLINE_DELIMITER);
-				}
-				// cleaning up
-				deleteLastCharacter(sb);
-				sb.append(OUTLINE_TYPE_PARAM_CLOSE_PARENTHESIS);
-			}
+				sb.append(ptu.toString()); // #314
 		}
 	}
 	
@@ -332,14 +322,7 @@ public class ABSContentOutlineUtils {
 	 *         instance of {@link Import} or <code>null</code>
 	 */
 	public static boolean isImportList(List<?> list) {
-		if (list != null) {
-			if (list.getNumChild() > 0) {
-				if (list.getChild(0) instanceof Import) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return list != null && list.getNumChild() > 0 && list.getChild(0) instanceof Import;
 	}
 	
 	/**
@@ -396,11 +379,8 @@ public class ABSContentOutlineUtils {
 	 * @return True if the import is an ABS.StdLib import, False if not
 	 */
 	static boolean isStandardLibImport(Import imp){
-		if ((imp instanceof StarImport)
-				&& ABS_STDLIB_ID.equals(((StarImport) imp).getModuleName())) {
-			return true;
-		}
-		return false;
+		return ((imp instanceof StarImport)
+				&& ABS_STDLIB_ID.equals(((StarImport) imp).getModuleName()));
 	}	
 	
 	/**
@@ -417,14 +397,7 @@ public class ABSContentOutlineUtils {
 	 *         instance of {@link Export} or <code>null</code>
 	 */
 	public static boolean isExportList(List<?> list) {
-		if (list != null) {
-			if (list.getNumChild() > 0) {
-				if (list.getChild(0) instanceof Export) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return list != null && list.getNumChild() > 0 && list.getChild(0) instanceof Export;
 	}	
 	
 	/**
@@ -597,7 +570,7 @@ public class ABSContentOutlineUtils {
 			StyledString sb = new StyledString();
 			addWithNormalStyler(sb, element.getName());
 			sb.append(TYPE_DELIMITER_STYLED_STRING);
-			sb.append(formatAccess(((TypeUse) element.getAccessNoTransform())), STYLER_TYPES);
+			sb.append(formatAccess(((TypeUse) element.getAccess())), STYLER_TYPES);
 			return sb;
 		}
 		return null;
@@ -614,7 +587,7 @@ public class ABSContentOutlineUtils {
 		if (element != null) {
 			StyledString sb = new StyledString();
 			addWithNormalStyler(sb, element.getName());
-			sb.append(formatParams(element.getParamListNoTransform()));
+			sb.append(formatParams(element.getParamList()));
 
 			Access ac = element.getReturnType();
 			if (ac instanceof TypeUse) {
@@ -632,7 +605,7 @@ public class ABSContentOutlineUtils {
 	    	StyledString sb = new StyledString();
 	    
 	    	sb.append(element.getName());
-	    	sb.append(ABSContentOutlineUtils.formatParams(element.getParamList()));
+	    	sb.append(formatParams(element.getParamList()));
 	    	return sb;
 	    }
 	    
@@ -650,9 +623,9 @@ public class ABSContentOutlineUtils {
 	    	addWithNormalStyler(sb, formatParametricTypes(pfDecl.getTypeParameterList()));		
 	    } 
 	    	
-	    sb.append(formatParams(fDecl.getParamsNoTransform()));
+	    sb.append(formatParams(fDecl.getParams()));
 	    sb.append(TYPE_DELIMITER_STYLED_STRING);
-	    sb.append(formatAccess(fDecl.getTypeUseNoTransform()), STYLER_TYPES);
+	    sb.append(formatAccess(fDecl.getTypeUse()), STYLER_TYPES);
 	    
 	    return sb;
 	}
@@ -690,7 +663,7 @@ public class ABSContentOutlineUtils {
 			if (element instanceof InternalASTNode) {
 				nature = ((InternalASTNode<?>) element).getNature();
 			} else if (element instanceof IFile) {
-				nature = UtilityFunctions.getAbsNature(((IFile) element).getProject());
+				nature = UtilityFunctions.getAbsNature((IFile)element);
 			} else if (element instanceof IProject) {
 				if (((IProject) element).isOpen()) {
 					return UtilityFunctions.getAbsNature((IProject) element);
