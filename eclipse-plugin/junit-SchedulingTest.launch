@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.junit.launchconfig">
 <stringAttribute key="bad_container_name" value="/eu.hatsproject.absplugin/junit-scheduler.launch"/>
+<listAttribute key="com.mountainminds.eclemma.core.SCOPE_IDS">
+<listEntry value="=eu.hatsproject.absplugin/src"/>
+<listEntry value="=ABSFrontend/gen"/>
+<listEntry value="=ABSFrontend/src"/>
+</listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/eu.hatsproject.absplugin/tests/eu/hatsproject/absplugin/debug/scheduling/SchedulingTest.java"/>
 </listAttribute>
