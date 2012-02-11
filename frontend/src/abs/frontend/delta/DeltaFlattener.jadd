@@ -268,7 +268,7 @@ aspect Flattener {
             }
         }
         if (found >= 0)
-            cd.getFields().setChild(this.getFieldDecl().fullCopy(), found);
+            cd.getFields().removeChild(found);
         else
             throw new ASTNodeNotFoundException("Delta " + this.delta().getModule().getName() + "." + this.delta().getName() 
                     + " wants to remove field " + cd.qualifiedName() + "." + myfield + ", which was not found.");
