@@ -119,6 +119,7 @@ public class AddRemoveModifyClassesTest extends DeltaFlattenerTest {
         // make sure the MethodImpl defined in the delta is now in the class
         ModifyClassModifier cm = (ModifyClassModifier) delta.getClassOrIfaceModifier(0);
         ModifyMethodModifier mm = (ModifyMethodModifier) cm.getModifier(0);
+        // It's a bit of apples (FieldUse) vs. oranges (VarUse), but the strings look the same.
         assertEquals(cls.getMethod(0).toString(),mm.getMethodImpl().toString());
     }
 }

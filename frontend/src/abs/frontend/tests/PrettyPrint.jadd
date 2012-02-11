@@ -39,7 +39,7 @@ aspect PrettyPrint {
         w.print(getName());
     }
 
-    public void VarUse.prettyPrint(PrintWriter w, ABSFormatter f) {
+    public void VarOrFieldUse.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(getName());
     }
     
