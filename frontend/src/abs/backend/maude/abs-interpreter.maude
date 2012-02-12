@@ -1180,18 +1180,19 @@ mod ABS-MACHINE-BASICS-COMMON is
   var ODC : Oid .    var CG1 : Cogid . var STATE : Data .
   var P1 : Process . var F1 : Nat .    var COSTNAT : Nat .
   crl < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
       Att: 'internalState |-> STATE, 'initialized |-> "True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   => < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
       Att: 'internalState |-> STATE':Data, 'initialized |-> "True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
-  if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+  if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random]))
+      /\ hasEnoughResources(STATE, "CPU", COSTNAT)
       /\ STATE':Data := consumeDCResource(STATE, "CPU", COSTNAT)
   [label consume-resources] .
   
