@@ -8,19 +8,17 @@ import abs.frontend.FrontendTest;
 import abs.frontend.ast.*;
 
 public class DeltaFlattenerTest extends FrontendTest {
-    
+
     // helper method: find a Decl node in given module
-    protected Decl findDecl(Model model, String moduleName, String name) {
-        Decl decl = null;
-        out: for (ModuleDecl m : model.getModuleDecls()) {
-            for (Decl d : m.getDecls()) {
-                if (m.getName().equals(moduleName) && d.getName().equals(name)) {
-                    decl = d;
-                    break out;
+    static protected Decl findDecl(Model model, String moduleName, String name) {
+        for (ModuleDecl m : model.getModuleDecls()) {
+            if (m.getName().equals(moduleName))
+                for (Decl d : m.getDecls()) {
+                    if (d.getName().equals(name))
+                        return d;
                 }
-            }
         }
-        return decl;
+        return null;
     }
 
 }

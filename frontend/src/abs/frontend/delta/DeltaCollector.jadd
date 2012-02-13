@@ -45,7 +45,7 @@ aspect DeltaCollector {
     //propagate
     public void ASTNode.collectDeltas(HashMap<String, DeltaDecl> deltas) {
         for(int i = 0; i < getNumChild(); i++) {
-            getChildNoTransform(i).collectDeltas(deltas);
+            getChild(i).collectDeltas(deltas);
         }
     }
 
