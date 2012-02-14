@@ -10,6 +10,7 @@ import static eu.hatsproject.absplugin.util.Constants.MAUDE_PATH;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.deleteRecursive;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -17,7 +18,12 @@ import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
+
+import eu.hatsproject.absplugin.util.Constants;
 
 import static eu.hatsproject.absplugin.util.CoreControlUnit.notifyBuildListener;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature;
@@ -106,16 +112,29 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 	@Override
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor)
 			throws CoreException {
-		AbsNature nature = getAbsNature(getProject());
+		final AbsNature nature = getAbsNature(getProject());
 		synchronized (nature.modelLock) {
-			HashSet<String> changedFiles = new HashSet<String>();
 			nature.cleanModel();
-			fullBuild(monitor, changedFiles);
-			
-			nature.typeCheckModel();
-			notifyBuildListener(changedFiles);
-			if (monitor != null)
-				monitor.done();
+			try {
+				new WorkspaceModifyOperation() {
+
+					@Override
+					protected void execute(IProgressMonitor monitor) throws CoreException,
+					InvocationTargetException, InterruptedException {
+
+						HashSet<String> changedFiles = new HashSet<String>();
+						fullBuild(monitor, changedFiles);
+
+						nature.typeCheckModel();
+						notifyBuildListener(changedFiles);
+						if (monitor != null)
+							monitor.done();
+					}
+				}.run(monitor);
+			} catch (InvocationTargetException e) {
+				throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Build", e));
+			} catch (InterruptedException e) {
+			}
 			return null;
 		}
 	}

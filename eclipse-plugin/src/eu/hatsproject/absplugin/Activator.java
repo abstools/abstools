@@ -61,7 +61,7 @@ public class Activator extends AbstractUIPlugin {
 					}
 				}
 				if (absFileWasAdded)
-					project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
+					project.build(IncrementalProjectBuilder.FULL_BUILD, monitor);
 				
 				return Status.OK_STATUS;
 			}
@@ -126,8 +126,17 @@ public class Activator extends AbstractUIPlugin {
 		initializePreferenceStore();
 		initializeColors();
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IProject[] projects = workspace.getRoot().getProjects();
 		resourceChangeTracker = new AddRemoveTracker();
 		workspace.addResourceChangeListener(resourceChangeTracker,IResourceChangeEvent.POST_CHANGE);
+		/* Need to trigger a build so that the nature is correctly configured.
+		 * Conflicts with Java-builder on the same project, see #337. [stolz]
+		 */
+		for(IProject proj : projects){ 
+			if(proj.isAccessible() && proj.hasNature(NATURE_ID)){
+				proj.build(IncrementalProjectBuilder.FULL_BUILD, null); 
+			} 
+		}
 	}
 	
 	private void setDefaultValue(String name, RGB value){

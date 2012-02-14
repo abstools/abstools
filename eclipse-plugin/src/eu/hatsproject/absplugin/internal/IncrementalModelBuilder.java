@@ -70,6 +70,7 @@ public class IncrementalModelBuilder {
 			cuold = getCompilationUnit(filename);
 		} catch (NoModelException e) {
 			// we're pretty sure there's a model.
+			assert false;
 		}
 		List<CompilationUnit> culist = model.getCompilationUnitList();
 		int cindex = culist.getIndexOfChild(cuold);
@@ -151,14 +152,13 @@ public class IncrementalModelBuilder {
 		} 
 		try {
 			SemanticErrorList semerrors = model.getErrors();
-			SemanticErrorList typeerrors = model.typeCheck();
-			// We don't want to spam the typeerrors (it's cached):
-			semerrors.addAll(typeerrors);
+			/* Don't typecheck with semerrors, it might trip up. */
+			if (semerrors.isEmpty())
+				semerrors = model.typeCheck();
 			return semerrors;
 	    } catch (TypeCheckerException e) {
 	        return new SemanticErrorList(e);
 		} catch (RuntimeException e) {
-			e.printStackTrace();
 			throw new TypecheckInternalException(e);
 		}
 	}

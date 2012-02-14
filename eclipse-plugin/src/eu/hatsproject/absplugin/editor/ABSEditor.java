@@ -230,7 +230,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 		try {
 			int sev = editorres.findMaxProblemSeverity(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 			if(sev == IMarker.SEVERITY_INFO){
-				setTitleImage(ABSEditor.this.getEditorInput().getImageDescriptor().createImage());
+				setTitleImage(getEditorInput().getImageDescriptor().createImage());
 				return;
 			}
 			ISharedImages simages = PlatformUI.getWorkbench().getSharedImages();
@@ -245,13 +245,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 			}
 			Image resourceImage = getEditorInput().getImageDescriptor().createImage();
 			final DecorationOverlayIcon icon = new DecorationOverlayIcon(resourceImage, overlayIcon, IDecoration.BOTTOM_LEFT);
-			
-			Display.getDefault().asyncExec(new Runnable() {
-				 @Override
-				public void run() {
-					 ABSEditor.this.setTitleImage(icon.createImage());
-				 }
-			});
+			setTitleImage(icon.createImage());
 		} catch (CoreException e) {
 			standardExceptionHandling(e);
 		}

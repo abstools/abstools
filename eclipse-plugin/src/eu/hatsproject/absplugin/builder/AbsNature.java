@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
+import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import abs.frontend.analyser.SemanticError;
@@ -261,47 +263,64 @@ public class AbsNature implements IProjectNature {
 	 * @param builder the builder to use
 	 * @param withincomplete include incomplete expressions into the AST?
 	 * @param monitor 
-	 * @throws CoreException @{@link IResource#deleteMarkers(String, boolean, int)} 
 	 */
-	public void parseABSFile(IResource resource, boolean withincomplete, IProgressMonitor monitor) throws CoreException {
+	public void parseABSFile(IResource resource, final boolean withincomplete, IProgressMonitor monitor) {
 		if (resource.exists() && isABSFile(resource)) {
-			IFile file = (IFile) resource;
+			final IFile file = (IFile) resource;
 			assert file.exists();
-			file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO);
 			try {
-			   if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
-			      file.refreshLocal(IResource.DEPTH_ZERO, monitor);
-			   }
-			   
-			   Main m = new Main();
-			   m.setWithStdLib(true);
-			   m.setAllowIncompleteExpr(withincomplete);
+				// Markers modify the workspace:
+				new WorkspaceModifyOperation() {
 
-			   List<CompilationUnit> units = new ArrayList<CompilationUnit>();
-			   if (isABSPackage(file)) {
-			      units.addAll(m.parseABSPackageFile(file.getLocation().toFile()));
-			   } else {
-			      CompilationUnit cu = m.parseUnit(file.getLocation().toFile(), null, new InputStreamReader(file.getContents()));
-			      cu.setName(file.getLocation().toFile().getAbsolutePath());
-			      units.add(cu);
-			   }
-				modelbuilder.addCompilationUnits(units);
-				
-				for (CompilationUnit cu : units) {
-				   if(cu.hasParserErrors()){
-				      for(ParserError err : cu.getParserErrors()){
-				         addMarker(file, err);
-				      }
-				   }
-				}
-			} catch(NoModelException e){
-				//ignore
-			}catch (Exception e) {
-				throw new CoreException(new Status(IStatus.ERROR, PLUGIN_ID, "Parsing failed.", e));
+					@Override
+					protected void execute(IProgressMonitor monitor) throws CoreException,
+					InvocationTargetException, InterruptedException {
+						/* Only delete PARSE-markers first: if we've just been launched,
+						 * we don't want to erase persistent markers, since type-errors etc.
+						 * only come back through an explicit build, which doesn't happen
+						 * on launching Eclipse even with auto-build. [stolz] 
+						 */
+						file.deleteMarkers(PARSE_MARKER_TYPE, true, IResource.DEPTH_ZERO);
+						try {
+							if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
+								file.refreshLocal(IResource.DEPTH_ZERO, monitor);
+							}
+
+							Main m = new Main();
+							m.setWithStdLib(true);
+							m.setAllowIncompleteExpr(withincomplete);
+
+							List<CompilationUnit> units = new ArrayList<CompilationUnit>();
+							if (isABSPackage(file)) {
+								units.addAll(m.parseABSPackageFile(file.getLocation().toFile()));
+							} else {
+								CompilationUnit cu = m.parseUnit(file.getLocation().toFile(), null, new InputStreamReader(file.getContents()));
+								cu.setName(file.getLocation().toFile().getAbsolutePath());
+								units.add(cu);
+							}
+							modelbuilder.addCompilationUnits(units);
+
+							for (CompilationUnit cu : units) {
+								if(cu.hasParserErrors()){
+									for(ParserError err : cu.getParserErrors()){
+										addMarker(file, err);
+									}
+								}
+							}
+						} catch(NoModelException e){
+							//ignore
+						}catch (Exception e) {
+							throw new CoreException(new Status(IStatus.ERROR, PLUGIN_ID, "Parsing failed.", e));
+						}
+					}
+				}.run(monitor);
+			} catch (InvocationTargetException e) {
+				Activator.logException(e);
+			} catch (InterruptedException e) {
 			}
 		}
 	}
-	
+
 	public boolean toIncludeInScope(IResource resource) {
 		if (project == null)
 			return false;
