@@ -15,7 +15,6 @@ import java.util.Map;
 import org.eclipse.core.commands.State;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Composite;
@@ -164,13 +163,9 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 			cu = nature.getCompilationUnit(file);
 			if (cu == null) {
 				// Band-aid for ticket #299:
-				try {
-					nature.parseABSFile(file, false, null);
-					cu = nature.getCompilationUnit(file);
-					Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
-				} catch (CoreException e) {
-					Activator.logException(e);
-				}
+				nature.parseABSFile(file, false, null);
+				cu = nature.getCompilationUnit(file);
+				Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
 			}
 		}
 
