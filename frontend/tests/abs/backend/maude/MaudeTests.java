@@ -134,8 +134,13 @@ public class MaudeTests extends ABSTest {
         return result.toString();
     }
 
-    public void assertFails(String absCode) {
-        // TODO: implement
-        Assert.fail("Not implemented in Maude Test Backend yet");
+    public void assertFails(String absCode) throws Exception {
+        String generatedMaudeCode = getMaudeCode(absCode, mode);
+        String maudeOutput = getMaudeOutput(generatedMaudeCode);
+        Pattern pattern = Pattern.compile("\\| failure");
+        Matcher matcher = pattern.matcher(maudeOutput);
+        if (!matcher.find()) {
+            Assert.fail("Did not find ANY indication of failure...");
+        }
     }
 }

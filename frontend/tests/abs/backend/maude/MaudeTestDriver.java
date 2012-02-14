@@ -23,7 +23,7 @@ public class MaudeTestDriver implements BackendTestDriver {
     }
 
     @Override
-    public void assertEvalFails(String absCode) {
+    public void assertEvalFails(String absCode) throws Exception {
         maude.assertFails(absCode);
     }
 
