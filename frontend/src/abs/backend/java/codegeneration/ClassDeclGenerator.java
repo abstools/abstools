@@ -23,7 +23,6 @@ import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.typechecker.InterfaceType;
-import abs.frontend.typechecker.UnionType;
 
 public class ClassDeclGenerator extends CodeGenerator {
 

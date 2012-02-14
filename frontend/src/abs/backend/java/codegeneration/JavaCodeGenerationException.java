@@ -14,4 +14,8 @@ public class JavaCodeGenerationException extends Exception {
     public JavaCodeGenerationException(Throwable t) {
         super(t);
     }
+
+    public JavaCodeGenerationException(String m, Throwable t) {
+        super(m,t);
+    }
 }

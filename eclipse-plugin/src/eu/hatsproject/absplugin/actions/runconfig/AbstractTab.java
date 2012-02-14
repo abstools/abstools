@@ -100,12 +100,14 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 						model.flattenForProduct(prod);
 						/* Type check again */
 						model.flushCache(); // #335, see IncrementalModelBuilder#flushAll()
-						SemanticErrorList errs = model.typeCheck();
-						// #332: trigger fresh build
-						project.build(IncrementalProjectBuilder.FULL_BUILD, null);
-						if (errs != null && !errs.isEmpty())
-							throw new AbsJobException(new TypeCheckerException(errs));
 					}
+					if (model.hasErrors())
+						throw new AbsJobException(new TypeCheckerException(model.getErrors()));
+					SemanticErrorList errs = model.typeCheck();
+					// #332: trigger fresh build
+					project.build(IncrementalProjectBuilder.FULL_BUILD, null);
+					if (errs != null && !errs.isEmpty())
+						throw new AbsJobException(new TypeCheckerException(errs));
 				}
 				setErrorMessage(null);
 			} catch (AbsJobException e) {
