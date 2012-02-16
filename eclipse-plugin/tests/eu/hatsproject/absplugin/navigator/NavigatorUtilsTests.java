@@ -110,10 +110,10 @@ public class NavigatorUtilsTests {
 	 */
 	@Test
 	public void testHasSubModulesInternalASTNodeOfModuleDecl() {
-		assertTrue(NavigatorUtils.hasSubModules(InternalASTNode.wrapASTNode(moduleDecl1, natureMock)));
-		assertTrue(NavigatorUtils.hasSubModules(InternalASTNode.wrapASTNode(moduleDecl2, natureMock)));
-		assertTrue(NavigatorUtils.hasSubModules(InternalASTNode.wrapASTNode(moduleDecl3, natureMock)));
-		assertTrue(!NavigatorUtils.hasSubModules(InternalASTNode.wrapASTNode(moduleDecl4, natureMock)));
+		assertTrue(NavigatorUtils.hasSubModules(new InternalASTNode<ModuleDecl>(moduleDecl1, natureMock)));
+		assertTrue(NavigatorUtils.hasSubModules(new InternalASTNode<ModuleDecl>(moduleDecl2, natureMock)));
+		assertTrue(NavigatorUtils.hasSubModules(new InternalASTNode<ModuleDecl>(moduleDecl3, natureMock)));
+		assertTrue(!NavigatorUtils.hasSubModules(new InternalASTNode<ModuleDecl>(moduleDecl4, natureMock)));
 	}
 
 }

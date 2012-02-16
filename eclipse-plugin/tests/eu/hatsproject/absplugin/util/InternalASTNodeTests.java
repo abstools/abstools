@@ -83,10 +83,9 @@ public class InternalASTNodeTests {
 	public void testHasASTNodeOfType() {
 		InternalASTNode<ModuleDecl> internalASTNode = new InternalASTNode<ModuleDecl>(moduleDecl1, natureMock);
 		
-		assertTrue(InternalASTNode.hasASTNodeOfType(internalASTNode, ModuleDecl.class));
-		assertTrue(!InternalASTNode.hasASTNodeOfType(null, ModuleDecl.class));
-		assertTrue(!InternalASTNode.hasASTNodeOfType(internalASTNode, CompilationUnit.class));
-		assertTrue(!InternalASTNode.hasASTNodeOfType(internalASTNode, ClassDecl.class));
+		assertTrue(internalASTNode.hasASTNodeOfType(ModuleDecl.class));
+		assertTrue(!internalASTNode.hasASTNodeOfType(CompilationUnit.class));
+		assertTrue(!internalASTNode.hasASTNodeOfType(ClassDecl.class));
 		
 	}
 
@@ -105,10 +104,10 @@ public class InternalASTNodeTests {
 
 	@Test
 	public void testWrapASTNode() {
-		InternalASTNode<ModuleDecl> wrapASTNode1 = InternalASTNode.wrapASTNode(moduleDecl1, natureMock);
+		InternalASTNode<ModuleDecl> wrapASTNode1 = new InternalASTNode<ModuleDecl>(moduleDecl1, natureMock);
 		
 		assertTrue(wrapASTNode1 instanceof InternalASTNode<?>);
-		assertTrue(InternalASTNode.hasASTNodeOfType(wrapASTNode1, ModuleDecl.class));
+		assertTrue(wrapASTNode1.hasASTNodeOfType(ModuleDecl.class));
 	}
 
 }
