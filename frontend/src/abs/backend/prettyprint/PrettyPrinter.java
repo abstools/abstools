@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
+import abs.frontend.tests.ABSFormatter;
 
 public class PrettyPrinter {
 
@@ -26,6 +27,8 @@ public class PrettyPrinter {
         System.exit(0);
     }
 
+    //Code below this line is to be removed!
+    
     public static void prettyPrint(ModuleDecl m, PrintWriter stream, ABSFormatter formatter) {
         stream.println("module " + m.getName() + ";");
         formatter.afterStmt();

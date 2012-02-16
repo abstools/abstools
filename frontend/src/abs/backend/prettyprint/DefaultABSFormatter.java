@@ -6,6 +6,8 @@ package abs.backend.prettyprint;
 
 import java.io.PrintWriter;
 
+import abs.frontend.tests.ABSFormatter;
+
 
 public class DefaultABSFormatter implements ABSFormatter {
 
