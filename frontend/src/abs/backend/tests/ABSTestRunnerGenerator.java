@@ -12,22 +12,44 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import abs.frontend.ast.Access;
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.AssignStmt;
+import abs.frontend.ast.AsyncCall;
+import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.Cog;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.Exp;
+import abs.frontend.ast.ExpressionStmt;
+import abs.frontend.ast.FnApp;
+import abs.frontend.ast.FromImport;
+import abs.frontend.ast.GetExp;
+import abs.frontend.ast.Import;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.Name;
+import abs.frontend.ast.NewExp;
+import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.SyncCall;
+import abs.frontend.ast.TypeUse;
+import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.VarDeclStmt;
+import abs.frontend.ast.VarUse;
+import abs.frontend.ast.WhileStmt;
 import abs.frontend.typechecker.Type;
 
 /**
@@ -73,7 +95,7 @@ public class ABSTestRunnerGenerator {
     private Map<InterfaceDecl, Set<ClassDecl>> tests = new HashMap<InterfaceDecl, Set<ClassDecl>>();
 
     private final Model model;
-
+    
     private boolean isEmpty = true;
 
     /**
@@ -146,6 +168,18 @@ public class ABSTestRunnerGenerator {
         stream.print(TestRunnerScriptBuilder.NEWLINE);
         stream.print("}");
         stream.print(TestRunnerScriptBuilder.NEWLINE);
+    }
+    
+    public void generateTestRunnerAST(PrintStream stream) {
+        ModuleDecl module = new ModuleDecl();
+        module.setName(RUNNER_MAIN);
+        module.setImportList(generateImportsAST());
+        module.setBlock(generateMainBlockAST(module.getImportList()));
+        
+        //ABSFormatterNew formatter = new DefaultABSFormatter();
+        //PrintWriter writer = new PrintWriter(stream, true);
+        //formatter.setPrintWriter(writer);
+        //module.prettyPrint(writer, formatter);
     }
 
     private String uncap(String word) {
@@ -242,6 +276,21 @@ public class ABSTestRunnerGenerator {
         }
         return builder;
     }
+    
+    private List<Import> generateImportsAST() {
+        List<Import> imports = new List<Import>();
+        for (InterfaceDecl key : tests.keySet()) {
+            if (! absStdLib.equals(key.getModule().getName())) {
+                imports.add(generateImportAST(key));
+            }
+            for (ClassDecl clazz : tests.get(key)) {
+                if (! absStdLib.equals(clazz.getModule().getName())) {
+                    imports.add(generateImportAST(clazz));
+                }
+            }
+        }
+        return imports;
+    }
 
     /**
      * Append a line of the form "import n from m;" to builder where n is the
@@ -255,6 +304,10 @@ public class ABSTestRunnerGenerator {
     private TestRunnerScriptBuilder generateImport(TestRunnerScriptBuilder builder, Decl decl) {
         return generateImport(builder, decl.getName(), decl.getModuleDecl().getName());
     }
+    
+    private Import generateImportAST(Decl decl) {
+        return generateImportAST(decl.getName(), decl.getModuleDecl().getName());
+    }
 
     private TestRunnerScriptBuilder generateImports(TestRunnerScriptBuilder builder, Set<Type> types) {
         for (Type type : types) {
@@ -262,12 +315,39 @@ public class ABSTestRunnerGenerator {
         }
         return builder;
     }
+    
+    private Set<Import> generateImportsAST(Set<TypeUse> typeUses) {
+        Set<Import> imports = new HashSet<Import>();
+        for (TypeUse type : typeUses) {
+            if (type instanceof DataTypeUse) {
+                imports.addAll(generateImportAST((DataTypeUse) type));
+            } else {
+                imports.add(generateImportAST(type.getName(), type.getModuleDecl().getName()));
+            }
+        }
+        return imports;
+    }
+    
+    private Set<Import> generateImportAST(DataTypeUse t) {
+        Set<Import> imports = new HashSet<Import>();
+        imports.add(generateImportAST(t.getName(), t.getModuleDecl().getName()));
+        if (t instanceof ParametricDataTypeUse) {
+            for (DataTypeUse st : ((ParametricDataTypeUse) t).getParams()) {
+                imports.addAll(generateImportAST(t));
+            }
+        }
+        return imports;
+    }
 
     private TestRunnerScriptBuilder generateImport(TestRunnerScriptBuilder builder, String name, String module) {
         if (module.equals(absStdLib)) {
             return builder;
         }
         return builder.append("import ").append(name).append(" from ").append(module).append(";").newLine();
+    }
+    
+    private Import generateImportAST(String name, String module) {
+        return new FromImport(new List<Name>().add(new Name(name)), module);
     }
 
     private TestRunnerScriptBuilder generateMainBlock(TestRunnerScriptBuilder imports) {
@@ -288,6 +368,58 @@ public class ABSTestRunnerGenerator {
         return builder;
     }
     
+    private DataTypeUse getType(String n, DataTypeUse... types) {
+        if (types.length > 0) {
+            ParametricDataTypeUse set = new ParametricDataTypeUse(); 
+            set.setName(n);
+            for (DataTypeUse d : types) {
+                set.addParam(d);
+            }
+            return set;
+        } else {
+            DataTypeUse set = new DataTypeUse();
+            set.setName(n);
+            return set;
+        }
+        
+    }
+    private DataTypeUse getFutUnitType() {
+        return getType("Fut", getType("Unit"));
+    }
+    
+    private VarDeclStmt getVarDecl(String name, Access a, Exp exp) {
+        Opt<Exp> opt = new Opt<Exp>(); 
+        if (exp != null) {
+            opt.setChild(exp, 0);
+        }
+        return new VarDeclStmt(new List<Annotation>(),new VarDecl(name,a,opt));
+    }
+    
+    private MainBlock generateMainBlockAST(List<Import> list) {
+        final MainBlock block = new MainBlock();
+        
+        DataConstructorExp empty = new DataConstructorExp("EmptySet",new List<PureExp>());
+        VarDeclStmt futsStatement = getVarDecl(futs, getType("Set", getFutUnitType()), empty);
+        block.addStmt(futsStatement);
+        
+        VarDeclStmt futStatement = getVarDecl(fut, getFutUnitType(), null);
+        block.addStmt(futStatement);
+        
+        Set<TypeUse> use = new HashSet<TypeUse>();
+        for (InterfaceDecl key : tests.keySet()) {
+            for (ClassDecl clazz : tests.get(key)) {
+                use.addAll(generateTestClassImplAST(key, clazz, block));
+            }
+        }
+        
+        block.addStmt(generateWaitSyncAST());
+        for (Import i : generateImportsAST(use)) {
+            list.add(i);
+        }
+        
+        return block;
+    }
+    
     private TestRunnerScriptBuilder generateWaitSync(TestRunnerScriptBuilder builder) {
         return 
           builder
@@ -299,7 +431,42 @@ public class ABSTestRunnerGenerator {
             .append(fut).append(".get;").newLine()
             .decreaseIndent().append("}").newLine(); // end while
     }
-
+    
+    private FnApp getFnApp(String fn, PureExp...exps) {
+        List<PureExp> ps = new List<PureExp>();
+        for (PureExp p : exps) {
+            ps.add(p);
+        }
+        return new FnApp(fn, ps);
+    }
+    
+    private AssignStmt getVAssign(String v, Exp exp) {
+        AssignStmt s = new AssignStmt();
+        s.setVar(new VarUse(v));
+        s.setValue(exp);
+        return s;
+    }
+    
+    private ExpressionStmt getExpStmt(Exp exp) {
+        ExpressionStmt ex = new ExpressionStmt();
+        ex.setExp(exp);
+        return ex;
+    }
+    
+    private WhileStmt generateWaitSyncAST() {
+        WhileStmt ws = new WhileStmt();
+        ws.setCondition(getFnApp("hasNext",new VarUse(futs)));
+        Block body = new Block();
+        ws.setBody(body);
+        DataTypeUse u = getType("Pair", getType("Set", 
+                getType("Fut", getType("Unit"))),getType("Fut", getType("Unit")));
+        body.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(futs))));
+        body.addStmt(getVAssign(fut, getFnApp("snd",new VarUse("nt"))));
+        body.addStmt(getVAssign(futs, getFnApp("fst",new VarUse("nt"))));
+        body.addStmt(getExpStmt(new GetExp(new VarUse("fut"))));
+        return ws;
+    }
+    
     private Set<Type> generateTestClassImpl(InterfaceDecl inf, ClassDecl clazz, TestRunnerScriptBuilder main) {
         Set<Type> paramNames = new HashSet<Type>();
         Type dataType = generateDataPoints(inf, clazz, paramNames, main);
@@ -339,6 +506,54 @@ public class ABSTestRunnerGenerator {
         }
 
         return paramNames;
+    }
+    
+    private Set<TypeUse> generateTestClassImplAST(
+            InterfaceDecl inf, ClassDecl clazz, MainBlock block) {
+        Set<TypeUse> accesses = new HashSet<TypeUse>();
+        DataTypeUse dataType = generateDataPointsAST(inf, clazz, accesses, block);
+        
+        String namePrefix = clazz.getName();
+        int instance = 0;
+        for (MethodSig method : getTestMethods(inf)) {
+            Block thisBlock = block;
+            WhileStmt ws = null;
+            
+            if (method.getNumParam() > 0) {
+                if (dataType == null) {
+                    throw new IllegalStateException("Test method requires arguments but test class defines no data point");
+                } 
+                /*
+                 * a while loop over all data points
+                 */
+                String dataPointSet = dataPointSetName(clazz);
+                ws = new WhileStmt();
+                ws.setCondition(getFnApp("hasNext",new VarUse(dataPointSet)));
+                Block body = new Block();
+                ws.setBody(body);
+                thisBlock = body;
+                DataTypeUse u = getType("Pair", getType("Set", dataType.copy()), dataType.copy()); 
+                thisBlock.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(dataPointSet))));
+                thisBlock.addStmt(getVarDecl(dataValue, dataType.copy(), getFnApp("snd",new VarUse("nt"))));
+                thisBlock.addStmt(getVAssign(dataPointSet, getFnApp("fst",new VarUse("nt"))));
+            }
+            
+            /*
+             * Add those methods that are not ignored
+             */
+            if (! isIgnored(clazz,method)) {
+                String objectRef = uncap(namePrefix) + instance;
+                thisBlock.addStmt(newObj(inf, clazz, objectRef, true));
+                generateAsyncTestCallAST(thisBlock, objectRef, method);
+            }
+            
+            if (ws != null) {
+               block.addStmt(ws);
+            }
+            instance++;
+        }
+
+        return accesses;
     }
     
     private boolean isIgnored(ClassDecl clazz, MethodSig method) {
@@ -392,6 +607,39 @@ public class ABSTestRunnerGenerator {
 
         return data;
     }
+    
+    private DataTypeUse generateDataPointsAST(InterfaceDecl key, ClassDecl clazz, 
+            Set<TypeUse> use, MainBlock block) {
+        MethodSig dataPoint = findDataPoints(key);
+        if (dataPoint == null) {
+            return null;
+        }
+        
+        Access rt = dataPoint.getReturnType();
+        if (!(rt instanceof ParametricDataTypeUse)) {
+            return null;
+        }
+        
+        ParametricDataTypeUse prt = (ParametricDataTypeUse) rt;
+        if (! prt.getName().equals("Set")) {
+            return null;
+        }
+        
+        //Set has only one type parameter
+        DataTypeUse u = prt.getParam(0).copy();
+        use.add(u);
+        
+        String objName = uncap(clazz.getName()) + "dataPoint";
+        String dataSet = dataPointSetName(clazz);
+        block.addStmt(newObj(key, clazz, objName, false));
+        block.addStmt(getVarDecl(dataSet, prt.copy(), 
+             new SyncCall(new VarUse(objName), dataPoint.getName(), new List<PureExp>())));
+        
+        return u;
+    }
+
+    
+
 
     private String dataPointSetName(ClassDecl clazz) {
         return uncap(clazz.getName()) + "dataPointSet";
@@ -440,6 +688,15 @@ public class ABSTestRunnerGenerator {
         }
         main.append(futs).append("= Insert(").append(fut).append(",").append(futs).append(");").newLine();
     }
+    
+    private void generateAsyncTestCallAST(Block block, String objectRef, MethodSig method) {
+        List<PureExp> args = new List<PureExp>();
+        if (method.getNumParam() > 0) {
+            args.add(new VarUse(dataValue));
+        }
+        block.addStmt(getVAssign(fut, new AsyncCall(new VarUse(objectRef), method.getName(), args)));
+        block.addStmt(getVAssign(futs, getFnApp("Insert", new VarUse(fut), new VarUse(futs))));
+    }
 
     /**
      * Write the line of the form {@code inf name = new cog clazz();} to
@@ -471,6 +728,15 @@ public class ABSTestRunnerGenerator {
     private TestRunnerScriptBuilder newObj(TestRunnerScriptBuilder main, InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
         return main.append(inf.getName()).append(" ").append(name).append((cog) ? " = new cog " : " = new ")
                 .append(clazz.getName()).append("();").newLine();
+    }
+    
+    private VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
+        NewExp ne = new NewExp();
+        ne.setClassName(clazz.getName());
+        if (cog) {
+            ne.setCog(new Cog());
+        }
+        return getVarDecl(name, new InterfaceTypeUse(inf.getName()), ne);
     }
 
     private Set<MethodSig> getTestMethods(InterfaceDecl inf) {
