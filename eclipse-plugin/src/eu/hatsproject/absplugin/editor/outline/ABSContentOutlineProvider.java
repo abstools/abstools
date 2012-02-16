@@ -404,7 +404,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 				assert node.getASTNode() instanceof Model : element;
 				return null;
 			}
-			return InternalASTNode.wrapASTNode(parent,nature);
+			return new InternalASTNode<ASTNode<?>>(parent,nature);
 		}
 		return null;
 	}

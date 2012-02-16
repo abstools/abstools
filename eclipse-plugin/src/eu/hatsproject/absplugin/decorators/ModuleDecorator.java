@@ -55,7 +55,7 @@ public class ModuleDecorator extends LabelProvider implements ILightweightLabelD
 	public void decorate(Object element, IDecoration decoration) {
 		if (element instanceof InternalASTNode<?>) {
 			InternalASTNode<?> node = (InternalASTNode<?>) element;
-			if (InternalASTNode.hasASTNodeOfType(node, ModuleDecl.class)){
+			if (node.hasASTNodeOfType(ModuleDecl.class)){
 				checkModuleDecl(decoration, (InternalASTNode<ModuleDecl>) node);	
 			}
 		} else if (element instanceof ModulePath) {

@@ -68,7 +68,7 @@ public class NewModuleWizard extends ABSNewWizard implements INewWizard {
 			}
 		}else if (firstSelection instanceof InternalASTNode<?>){
 			InternalASTNode<?> node = (InternalASTNode<?>) firstSelection;
-			if (InternalASTNode.hasASTNodeOfType(node, ModuleDecl.class)){
+			if (node.hasASTNodeOfType(ModuleDecl.class)){
 				ModuleDecl m = (ModuleDecl) node.getASTNode();
 				page.setInitialValue(m.getName() + ".");
 				IFile file = UtilityFunctions.getFileOfModuleDecl(m);
@@ -78,7 +78,7 @@ public class NewModuleWizard extends ABSNewWizard implements INewWizard {
 			ModulePath mp = (ModulePath) firstSelection;
 			page.setInitialValue(mp.getModulePath() + ".");
 			InternalASTNode<ModuleDecl> moduleDecl = mp.getModuleDecl();
-			if (InternalASTNode.hasASTNodeOfType(moduleDecl, ModuleDecl.class)){
+			if (moduleDecl.hasASTNodeOfType(ModuleDecl.class)){
 				IFile fileOfModuleDecl = UtilityFunctions.getFileOfModuleDecl((ModuleDecl)mp.getModuleDecl().getASTNode());
 				page.setInitialFileResource(fileOfModuleDecl);
 			}

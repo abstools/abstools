@@ -113,7 +113,7 @@ public class ABSContentOutlineFiltersAndComparators {
 			if (element instanceof InternalASTNode<?>) {
 				InternalASTNode<?> node = (InternalASTNode<?>) element;
 			
-				if (InternalASTNode.hasASTNodeOfType(node, TypedVarOrFieldDecl.class)) {
+				if (node.hasASTNodeOfType(TypedVarOrFieldDecl.class)) {
 					return false;
 				} else {
 					return true;
@@ -138,7 +138,7 @@ public class ABSContentOutlineFiltersAndComparators {
 			if (element instanceof InternalASTNode<?>){
 				InternalASTNode<?> node = (InternalASTNode<?>) element;
 			
-				if (InternalASTNode.hasASTNodeOfType(node, Import.class)) {
+				if (node.hasASTNodeOfType(Import.class)) {
 					return false;
 				} else if (node.getASTNode() instanceof List<?>) {
 					if (ABSContentOutlineUtils.isImportList((List<?>) node.getASTNode())) {
@@ -166,7 +166,7 @@ public class ABSContentOutlineFiltersAndComparators {
 
 				InternalASTNode<?> node = (InternalASTNode<?>) element;
 
-				if (InternalASTNode.hasASTNodeOfType(node, Export.class)) {
+				if (node.hasASTNodeOfType(Export.class)) {
 					return false;
 				} else if (node.getASTNode() instanceof List<?>) {
 					if (ABSContentOutlineUtils.isExportList((List<?>) node.getASTNode())) {

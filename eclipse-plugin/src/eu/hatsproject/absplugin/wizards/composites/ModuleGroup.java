@@ -99,7 +99,7 @@ public class ModuleGroup extends CompositeGroup {
 	protected void resourceSelectionChanged(Object o) {		
 		if (o instanceof InternalASTNode<?>){
 			InternalASTNode<?> node = (InternalASTNode<?>)o;
-			if (InternalASTNode.hasASTNodeOfType(node, ModuleDecl.class)){
+			if (node.hasASTNodeOfType(ModuleDecl.class)){
 				selectedModuleDecl = (InternalASTNode<ModuleDecl>)o;
 			}
 			fireSelectionChangedEvent();

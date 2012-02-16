@@ -48,14 +48,9 @@ public class InternalASTNode<T extends ASTNode<?>> {
 	 * @return true if node is not null and contains an ASTNode with the
 	 *         specified class, false otherwise
 	 */
-	public static boolean  hasASTNodeOfType(InternalASTNode<?> node, Class<? extends ASTNode<?>> clazz) {
-		if (node != null) {
-			Object astNode = node.getASTNode();
-			
-			return (clazz.isInstance(astNode));
-		}
-		
-		return false;
+	public boolean hasASTNodeOfType(Class<? extends ASTNode<?>> clazz) {
+		Object astNode = getASTNode();
+		return (clazz.isInstance(astNode));
 	}
 	
 	/**
@@ -79,30 +74,11 @@ public class InternalASTNode<T extends ASTNode<?>> {
 		
 		return nodes;
 	}
-	
-	/**
-	 * Wraps an ASTNode<?> into a InternalASTNode with the specified AbsNature
-	 * @param <T> The type of ASTNodes 
-	 * @param node The ASTNode
-	 * @param nature The nature used for wrapping
-	 * @return An InternalASTNode
-	 * @throws IllegalArgumentException if node or nature is null
-	 */	
-	public static <T extends ASTNode<?>> InternalASTNode<T> wrapASTNode(T node, AbsNature nature) throws IllegalArgumentException{
-		if (node == null || nature == null){
-			throw new IllegalArgumentException("Null argument not allowed here.");
-		}
-		
-		return new InternalASTNode<T>(node, nature);
-	}
 
 	public IPath getFileName() {
 		return new Path(getASTNode().getCompilationUnit().getFileName());
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -130,9 +106,6 @@ public class InternalASTNode<T extends ASTNode<?>> {
 		return "InternalASTNode: " + getASTNode().toString();
 	}
 	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;

@@ -44,6 +44,7 @@ import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.MsgConsole;
+import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
@@ -260,7 +261,6 @@ public class AbsNature implements IProjectNature {
 	/**
 	 * parses the given resource with the given model builder. The resource is only parsed if it is an abs file
 	 * @param resource the abs file
-	 * @param builder the builder to use
 	 * @param withincomplete include incomplete expressions into the AST?
 	 * @param monitor 
 	 */
@@ -363,10 +363,11 @@ public class AbsNature implements IProjectNature {
 	/**
 	 * takes the properties from the project preference store for location type checking and location type precision. Typeckecks
 	 * the current model in the current model builder.
+	 * Note that your model must be sufficiently "complete" and not have any semantic errors .
 	 * @throws CoreException {@link IResource#deleteMarkers(String, boolean, int)} does not handle exceptions thrown by
 	 * #createMarker(SemanticError) and #createMarker(TypecheckInternalException)
 	 */
-   public void typeCheckModel() throws CoreException{
+    void typeCheckModel() throws CoreException{
 	   getProject().deleteMarkers(TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 	   getProject().deleteMarkers(LOCATION_TYPE_INFERENCE_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 	   boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
@@ -594,5 +595,23 @@ public class AbsNature implements IProjectNature {
 	 */
 	public void emptyModel() {
 		modelbuilder.addCompilationUnit(null); // Hack to get stdlib
+	}
+
+	public void parseABSFile(PackageAbsFile file, boolean withincomplete,
+			Object monitor) {
+		Main m = new Main();
+		m.setWithStdLib(true);
+		m.setAllowIncompleteExpr(withincomplete);
+
+		List<CompilationUnit> units = new ArrayList<CompilationUnit>();
+		try {
+			final File f = new File(file.getAbsoluteFilePath());
+			assert f.exists();
+			units.addAll(m.parseABSPackageFile(f));
+			modelbuilder.addCompilationUnits(units);
+		} catch (IOException e) {
+			Activator.logException(e);
+		} catch (NoModelException e) {
+		}
 	}
 }

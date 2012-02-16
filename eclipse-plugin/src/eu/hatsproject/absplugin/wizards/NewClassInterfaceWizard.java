@@ -47,7 +47,7 @@ public abstract class NewClassInterfaceWizard extends ABSNewWizard implements IN
 			} else if (firstSelection instanceof InternalASTNode<?>) {
 				InternalASTNode<?> internalASTNode = (InternalASTNode<?>) firstSelection;
 
-				if (InternalASTNode.hasASTNodeOfType(internalASTNode, ModuleDecl.class))
+				if (internalASTNode.hasASTNodeOfType(ModuleDecl.class))
 					//Suppress warnings as we have checked that the internal ASTNode
 					//contains a module declaration
 					mDecl = (InternalASTNode<ModuleDecl>) internalASTNode;

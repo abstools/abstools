@@ -7,6 +7,7 @@ package eu.hatsproject.absplugin.testexpressions.navigator;
 import org.eclipse.core.expressions.PropertyTester;
 
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.Product;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**
@@ -17,6 +18,7 @@ import eu.hatsproject.absplugin.util.InternalASTNode;
 public class InternalASTNodeTester extends PropertyTester {
 
 	private static final String IS_MODULE_NODE_PROPERTY = "isModuleNode";
+	private static final String IS_PRODUCT_NODE_PROPERTY = "isProductNode";
 	
 	@Override
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
@@ -27,8 +29,14 @@ public class InternalASTNodeTester extends PropertyTester {
 				//If there is no expected value assume true, else assume the value of expected value
 				return expectedValue == null ? isModuleDecl : ((Boolean) expectedValue) == isModuleDecl;
 			}
+		} else if (IS_PRODUCT_NODE_PROPERTY.equals(property)) {
+			if (receiver instanceof InternalASTNode<?>) {
+				Object astNode = ((InternalASTNode<?>) receiver).getASTNode();
+				boolean isProductDecl = astNode instanceof Product;
+				//If there is no expected value assume true, else assume the value of expected value
+				return expectedValue == null ? isProductDecl : ((Boolean) expectedValue) == isProductDecl;
+			}
 		}
 		return false;
 	}
-
 }

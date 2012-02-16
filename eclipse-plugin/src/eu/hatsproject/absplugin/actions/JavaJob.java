@@ -45,7 +45,6 @@ import eu.hatsproject.absplugin.debug.model.Debugger;
 import eu.hatsproject.absplugin.debug.model.Debugger.InvalidRandomSeedException;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.internal.NoModelException;
-import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 public class JavaJob extends Job {
@@ -261,20 +260,20 @@ public class JavaJob extends Job {
 	private void generateJavaCode(IProgressMonitor monitor, Path path, IProject project) throws AbsJobException, IOException, JavaCodeGenerationException, CoreException, NoModelException {
 		assert monitor != null;
 		monitor.subTask("Creating java source files");
-		AbsNature nat = (AbsNature) project.getNature(Constants.NATURE_ID);
+		AbsNature nat = UtilityFunctions.getAbsNature(project);
 		synchronized (nat.modelLock) {
 			Model model = nat.getCompleteModel();
 			if (model == null)
 				throw new NoModelException();
 			JavaCode javaCode = new JavaCode(path.toFile());
 			if (product != null) {
-				/* [stolz] Flattening for a product will mangle the model according to [ramus], so we get our own copy,
-				 * since the nature will hold on to the original model.
-				 * For safety, we also pass the product by name.
+				/* [stolz] Flattening for a product will mangle the model according to [ramus]...
 				 */
 				String productN = product.getModuleDecl().getName()+"."+product.getName();
 				try {
 					model.flattenForProduct(productN);
+					model.flushCache();
+					Assert.isTrue(!model.hasErrors() && !model.hasTypeErrors());
 				} catch (WrongProgramArgumentException e) {
 					throw new AbsJobException(e);
 				} catch (ASTNodeNotFoundException e) {
@@ -653,7 +652,7 @@ public class JavaJob extends Job {
 		if (model == null){
 			throw new AbsJobException("No ABS model found");
 		}
-		if (model.hasTypeErrors() || model.hasParserErrors()){
+		if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors()) {
 			// just to be sure
 			throw new AbsJobException("An ABS file in the project has type or parser errors");
 		}

@@ -58,7 +58,7 @@ public class LinkHelper implements ILinkHelper {
 		
 			ModuleDecl md = getModuleDeclAtCurrentCursor(file, nature, editor);
 
-			return buildTreeSelection(project, InternalASTNode.wrapASTNode(md,nature));
+			return buildTreeSelection(project, new InternalASTNode<ModuleDecl>(md,nature));
 		}
 		return null;
 	}
