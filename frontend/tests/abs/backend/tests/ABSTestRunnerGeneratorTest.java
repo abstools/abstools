@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -32,11 +33,14 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 
+import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.parser.Main;
+import abs.frontend.parser.ParserError;
 
 /**
  * Unit tests for {@link ABSTestRunnerGenerator}
@@ -50,13 +54,11 @@ public class ABSTestRunnerGeneratorTest {
     		"[TypeAnnotation] data DataPoint = DataPoint; " +
     		"[TypeAnnotation] data Ignored = Ignored;" +
     		"[TypeAnnotation] data Test = Test; " +
-    		"[TypeAnnotation] data TestClass = TestClass; " +
-    		"[TypeAnnotation] data TestClassImpl = TestClassImpl; " +
     		"[TypeAnnotation] data Suite = Suite; " +
     		"[TypeAnnotation] data Fixture = Fixture; ";
 
     private final static String TEST_CODE =
-                "module Test; import * from AbsUnit;" +
+                "module Test; export *; import * from AbsUnit;" +
                 "[Fixture] interface T { [Test] Unit t(); }" +
                 "[Suite] class TI implements T { Unit t() { } }";
     
@@ -163,8 +165,8 @@ public class ABSTestRunnerGeneratorTest {
             Model model,
             Matcher<Object> testType, 
             Matcher<Object> dataPointType,
-            Matcher<Object> testClassType,
-            Matcher<Object> testClassImplType,
+            Matcher<Object> fixtureType,
+            Matcher<Object> suiteType,
             Matcher<Iterable<Entry<InterfaceDecl, Set<ClassDecl>>>> tests,
             Boolean isEmpty,
             ABSTestRunnerGenerator aut) {
@@ -172,8 +174,8 @@ public class ABSTestRunnerGeneratorTest {
         assertSame(model,getField(aut, "model"));
         assertThat(getField(aut, "testType"),testType);
         assertThat(getField(aut, "dataPointType"),dataPointType);
-        assertThat(getField(aut, "testClassType"),testClassType);
-        assertThat(getField(aut, "testClassImplType"),testClassImplType);
+        assertThat(getField(aut, "fixtureType"),fixtureType);
+        assertThat(getField(aut, "suiteType"),suiteType);
         
         Map<InterfaceDecl, Set<ClassDecl>> actual = 
             (Map<InterfaceDecl, Set<ClassDecl>>) getField(aut, "tests");
@@ -232,31 +234,58 @@ public class ABSTestRunnerGeneratorTest {
         generator = setField(generator, "isEmpty", Boolean.FALSE);
         assertTrue(generator.hasUnitTest());
     }
-
+    
     @Test
     public final void testGenerateTestRunner() {
-        Model model = new Model();
-        ABSTestRunnerGenerator generator = 
-            new ABSTestRunnerGenerator(model);
-        
+        final Model model;
         try {
             model = Main.parseString(ABS_UNIT + TEST_CODE, true);
         } catch (Exception e) {
             throw new IllegalStateException("Cannot parse test code",e);
         }
         
+        ABSTestRunnerGenerator generator = new ABSTestRunnerGenerator(model);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         PrintStream print = new PrintStream(stream); 
-        generator.generateTestRunner(print);
+        generator.generateTestRunnerAST(print);
         String runner = stream.toString();
         
         try {
-            model = Main.parseString(ABS_UNIT + TEST_CODE + runner, true);
-            assertFalse("Generated code must not have parse error",model.hasParserErrors());
-            assertFalse("Generated code must not have type error",model.hasTypeErrors());
+            Model result = Main.parseString(ABS_UNIT + TEST_CODE + runner, true);
+            
+            StringBuilder parseErrors = new StringBuilder();
+            if (result.hasParserErrors()) {
+                parseErrors.append("Syntactic errors: ");
+                List<ParserError> es = result.getParserErrors();
+                parseErrors.append(es.size());
+                parseErrors.append("\n");
+                for (ParserError e : es) {
+                    parseErrors.append(e.getHelpMessage());
+                    parseErrors.append("\n");
+                }
+            }
+            
+            assertFalse("Generated code must not have parse error: "+parseErrors,result.hasParserErrors());
+            
+            StringBuilder errors = new StringBuilder();
+            if (result.hasErrors()) {
+                SemanticErrorList el = result.getErrors();
+                errors.append("Semantic errors: ");
+                errors.append(el.size());
+                errors.append("\n");
+                for (SemanticError error : el) {
+                    errors.append(error.getHelpMessage());
+                    errors.append("\n");
+                }
+            }
+            
+            assertFalse("Generated code must not have semantic error: "+errors,result.hasErrors());
+
+            result.typeCheck();
+            assertFalse("Generated code must not have type error",result.hasTypeErrors());
            
             assertThat("Has one module that has the name 'AbsUnit.TestRunner' and a main block",
-                        model.getModuleDecls(),hasItem(new ModuleMatcher()));
+                        result.getModuleDecls(),hasItem(new ModuleMatcher()));
             
         } catch (Exception e) {
             fail("Cannot throw an exception ");

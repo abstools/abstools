@@ -5,6 +5,7 @@
 package abs.backend.tests;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import abs.backend.prettyprint.DefaultABSFormatter;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AssignStmt;
@@ -50,6 +52,7 @@ import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.ast.VarUse;
 import abs.frontend.ast.WhileStmt;
+import abs.frontend.tests.ABSFormatter;
 import abs.frontend.typechecker.Type;
 
 /**
@@ -65,12 +68,7 @@ public class ABSTestRunnerGenerator {
     private static final String ignore = "AbsUnit.Ignored";
     private static final String test = "AbsUnit.Test";
     private static final String dataPoint = "AbsUnit.DataPoint";
-    
-    @Deprecated
-    private static final String testClass = "AbsUnit.TestClass";
-    @Deprecated
-    private static final String testClassImpl = "AbsUnit.TestClassImpl";
-    
+        
     private static final String suite = "AbsUnit.Suite";
     private static final String fixture = "AbsUnit.Fixture";
     private static final String absStdSet = "ABS.StdLib.Set";
@@ -83,11 +81,6 @@ public class ABSTestRunnerGenerator {
     private DataConstructor ignoreType;
     private DataConstructor testType;
     private DataConstructor dataPointType;
-    
-    @Deprecated
-    private DataConstructor testClassType;
-    @Deprecated
-    private DataConstructor testClassImplType;
     
     private DataConstructor suiteType;
     private DataConstructor fixtureType;
@@ -117,8 +110,7 @@ public class ABSTestRunnerGenerator {
          * contain the necessary ABSUnit annotations
          */
         if (ignoreType == null || testType == null || dataPointType == null || 
-                testClassType == null || testClassImplType == null ||
-                suiteType == null || fixtureType == null) {
+            suiteType == null || fixtureType == null) {
             return;
         }
 
@@ -176,10 +168,10 @@ public class ABSTestRunnerGenerator {
         module.setImportList(generateImportsAST());
         module.setBlock(generateMainBlockAST(module.getImportList()));
         
-        //ABSFormatterNew formatter = new DefaultABSFormatter();
-        //PrintWriter writer = new PrintWriter(stream, true);
-        //formatter.setPrintWriter(writer);
-        //module.prettyPrint(writer, formatter);
+        ABSFormatter formatter = new DefaultABSFormatter();
+        PrintWriter writer = new PrintWriter(stream, true);
+        formatter.setPrintWriter(writer);
+        module.doPrettyPrint(writer, formatter);
     }
 
     private String uncap(String word) {
@@ -224,7 +216,7 @@ public class ABSTestRunnerGenerator {
         for (InterfaceTypeUse inf : clazz.getImplementedInterfaceUseList()) {
             if (inf.getDecl() instanceof InterfaceDecl) {
                 InterfaceDecl decl = (InterfaceDecl) inf.getDecl();
-                if (hasTestAnnotation(decl.getAnnotations(), testClassType, fixtureType) &&
+                if (hasTestAnnotation(decl.getAnnotations(), fixtureType) &&
                     ! hasTestAnnotation(decl.getAnnotations(), ignoreType)) {
                     return decl;
                 }
@@ -234,25 +226,22 @@ public class ABSTestRunnerGenerator {
     }
 
     private boolean isTestClassImpl(ClassDecl clazz) {
-        return hasTestAnnotation(clazz.getAnnotations(), testClassImplType, suiteType);
+        return hasTestAnnotation(clazz.getAnnotations(), suiteType);
     }
 
     private void gatherABSUnitAnnotations() {
         for (Decl decl : this.model.getDecls()) {
             if (decl instanceof ParametricDataTypeDecl) {
-                if (decl.getType().getQualifiedName().equals(test)) {
+                String name = decl.getType().getQualifiedName(); 
+                if (test.equals(name)) {
                     testType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(testClass)) {
-                    testClassType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(testClassImpl)) {
-                    testClassImplType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(fixture)) {
+                } else if (fixture.equals(name)) {
                     fixtureType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(suite)) {
+                } else if (suite.equals(name)) {
                     suiteType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(dataPoint)) {
+                } else if (dataPoint.equals(name)) {
                     dataPointType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
-                } else if (decl.getType().getQualifiedName().equals(ignore)) {
+                } else if (ignore.equals(name)) {
                     ignoreType = ((ParametricDataTypeDecl) decl).getDataConstructor(0);
                 }
             }
@@ -333,7 +322,7 @@ public class ABSTestRunnerGenerator {
         imports.add(generateImportAST(t.getName(), t.getModuleDecl().getName()));
         if (t instanceof ParametricDataTypeUse) {
             for (DataTypeUse st : ((ParametricDataTypeUse) t).getParams()) {
-                imports.addAll(generateImportAST(t));
+                imports.addAll(generateImportAST(st));
             }
         }
         return imports;
