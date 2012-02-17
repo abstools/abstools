@@ -296,8 +296,9 @@ aspect doPrettyPrinter {
     }
 
     public void IfStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("if ");
+        stream.print("if ( ");
         getCondition().doPrettyPrint(stream, formatter);
+        stream.print(" )");
         getThen().doPrettyPrint(stream, formatter);
         if (hasElse()) {
             stream.print(" else ");
@@ -340,8 +341,9 @@ aspect doPrettyPrinter {
     }
     
     public void WhileStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        stream.print("while ");
+        stream.print("while (");
         getCondition().doPrettyPrint(stream, formatter);
+        stream.print(") ");
         getBody().doPrettyPrint(stream, formatter);
     }
     
