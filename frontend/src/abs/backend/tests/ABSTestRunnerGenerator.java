@@ -40,12 +40,14 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
+import abs.frontend.ast.NamedImport;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.StarImport;
 import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.VarDecl;
@@ -211,7 +213,7 @@ public class ABSTestRunnerGenerator {
         }
         return false;
     }
-
+    
     private InterfaceDecl getTestClass(ClassDecl clazz) {
         for (InterfaceTypeUse inf : clazz.getImplementedInterfaceUseList()) {
             if (inf.getDecl() instanceof InterfaceDecl) {
@@ -266,18 +268,50 @@ public class ABSTestRunnerGenerator {
         return builder;
     }
     
-    private List<Import> generateImportsAST() {
-        List<Import> imports = new List<Import>();
-        for (InterfaceDecl key : tests.keySet()) {
-            if (! absStdLib.equals(key.getModule().getName())) {
-                imports.add(generateImportAST(key));
-            }
-            for (ClassDecl clazz : tests.get(key)) {
-                if (! absStdLib.equals(clazz.getModule().getName())) {
-                    imports.add(generateImportAST(clazz));
+    private void getImportsFrom(Set<String> mn, Set<String> qn, ModuleDecl m) {
+        mn.add(m.getName());
+        for (Import i : m.getImportList()) {
+            if (i instanceof NamedImport) {
+                for (Name n : ((NamedImport) i).getNameList()) {
+                    qn.add(n.getName());
                 }
+            } else if (i instanceof FromImport) {
+                mn.add(((FromImport) i).getModuleName());
+            } else if (i instanceof StarImport) {
+                mn.add(((StarImport) i).getModuleName());
             }
         }
+    }
+    
+    private List<Import> generateImportsAST() {
+        List<Import> imports = new List<Import>();
+        Set<String> mn = new HashSet<String>();
+        Set<String> qn = new HashSet<String>();
+        for (InterfaceDecl key : tests.keySet()) {
+            getImportsFrom(mn, qn, key.getModule());
+//            if (! absStdLib.equals(key.getModule().getName())) {
+//                imports.add(generateImportAST(key));
+//            }
+            for (ClassDecl clazz : tests.get(key)) {
+                getImportsFrom(mn, qn, clazz.getModule());
+//                if (! absStdLib.equals(clazz.getModule().getName())) {
+//                    imports.add(generateImportAST(clazz));
+//                }
+            }
+        }
+        
+        for (String m : mn) {
+            imports.add(new StarImport(m));
+        }
+        
+        if (!qn.isEmpty()) {
+            List<Name> names = new List<Name>(); 
+            for (String q : qn) {
+                names.add(new Name(q));
+            }
+            imports.add(new NamedImport(names));
+        }
+        
         return imports;
     }
 
@@ -402,9 +436,9 @@ public class ABSTestRunnerGenerator {
         }
         
         block.addStmt(generateWaitSyncAST());
-        for (Import i : generateImportsAST(use)) {
-            list.add(i);
-        }
+        //for (Import i : generateImportsAST(use)) {
+        //    list.add(i);
+        //}
         
         return block;
     }
