@@ -14,6 +14,17 @@ aspect doPrettyPrinter {
         }
 	}
 	
+	public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+		if (getNumChild() > 0) {
+            getChild(0).doPrettyPrint(stream, formatter);
+            for (int i = 1; i < getNumChild(); i++) {
+            	stream.println();
+                formatter.afterStmt();
+                getChild(i).doPrettyPrint(stream, formatter);
+            }
+        }
+	}
+	
 	public void ASTNode.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
 	}
 	
@@ -28,6 +39,7 @@ aspect doPrettyPrinter {
     
     public void ModuleDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
     	stream.println("module " + getName() + ";");
+    	stream.println();
         formatter.afterStmt();
 
         for (Export e : getExportList()) {
@@ -35,12 +47,18 @@ aspect doPrettyPrinter {
             stream.println();
             formatter.afterStmt();
         }
+        
+        stream.println();
+		formatter.afterStmt();
 
         for (Import i : getImportList()) {
             i.doPrettyPrint(stream, formatter);
             stream.println();
             formatter.afterStmt();
         }
+
+        stream.println();
+		formatter.afterStmt();
 
         for (Decl decl : getDecls()) {
             decl.doPrettyPrint(stream, formatter);
@@ -55,11 +73,17 @@ aspect doPrettyPrinter {
             formatter.afterStmt();
         }
 
+        stream.println();
+		formatter.afterStmt();
+
         for (Product p : getProductList()) {
             p.doPrettyPrint(stream, formatter);
             stream.println();
             formatter.afterStmt();
         }
+
+        stream.println();
+		formatter.afterStmt();
 
         if (hasBlock()) {
             getBlock().doPrettyPrint(stream, formatter);
@@ -113,11 +137,7 @@ aspect doPrettyPrinter {
         stream.println(";");
         formatter.afterStmt();
 
-        for (DeltaClause dc : getDeltaClauseList()) {
-            dc.doPrettyPrint(stream, formatter);
-            stream.println(";");
-            formatter.afterStmt();
-        }
+		getDeltaClauseList().doPrettyPrint(stream, formatter);
 
         formatter.beforeCloseBrace();
         stream.print("}");
@@ -162,12 +182,10 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
         formatter.afterStmt();
-        for (Stmt s : getStmtList()) {
-            s.doPrettyPrint(stream, formatter);
-            stream.println();
-            formatter.afterStmt();
-        }
+        getStmtList().doPrettyPrint(stream, formatter);
+        stream.println();
         formatter.beforeCloseBrace();
+        formatter.afterStmt();
         stream.print("}");
         formatter.afterCloseBrace();
     }
@@ -351,11 +369,12 @@ aspect doPrettyPrinter {
     
     public void NamedExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("export ");
-        stream.print(getName(0).getName());
-        for (int i = 1; i < getNumName(); i++) {
-            stream.print(", " + getName(i).getName());
-        }
+        getNames().doPrettyPrint(stream, formatter, ",");
         stream.print(";");
+    }
+    
+    public void Name.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+    	stream.print(getName());
     }
 
     public void StarExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -369,10 +388,7 @@ aspect doPrettyPrinter {
 
     public void FromExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("export ");
-        stream.print(getName(0).getName());
-        for (int i = 1; i < getNumName(); i++) {
-            stream.print(", " + getName(i).getName());
-        }
+        getNames().doPrettyPrint(stream, formatter, ",");
         stream.print(" from ");
         stream.print(getModuleName());
         stream.print(";");
@@ -380,10 +396,7 @@ aspect doPrettyPrinter {
     
     public void NamedImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("import ");
-        stream.print(getName(0).getName());
-        for (int i = 1; i < getNumName(); i++) {
-            stream.print(", " + getName(i).getName());
-        }
+        getNames().doPrettyPrint(stream, formatter, ",");
         stream.print(";");
 
     }
@@ -396,10 +409,7 @@ aspect doPrettyPrinter {
 
     public void FromImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("import ");
-        stream.print(getName(0).getName());
-        for (int i = 1; i < getNumName(); i++) {
-            stream.print(", " + getName(i).getName());
-        }
+        getNames().doPrettyPrint(stream, formatter, ",");
         stream.print(" from ");
         stream.print(getModuleName());
         stream.print(";");
@@ -461,13 +471,11 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
 
-        for (ClassOrIfaceModifier m : getClassOrIfaceModifierList()) {
-            m.doPrettyPrint(stream, formatter);
-            stream.println();
-            formatter.afterStmt();
-        }
+	    getClassOrIfaceModifierList().doPrettyPrint(stream, formatter);
+        stream.println();
 
         formatter.beforeCloseBrace();
+        formatter.afterStmt();
         stream.print("}");
         formatter.afterCloseBrace();
     }
@@ -491,11 +499,7 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
 
-        for (Modifier d : getModifierList()) {
-            d.doPrettyPrint(stream, formatter);
-            stream.println();
-            formatter.afterStmt();
-        }
+		getModifierList().doPrettyPrint(stream, formatter);
 
         formatter.beforeCloseBrace();
         stream.print("}");
@@ -593,11 +597,7 @@ aspect doPrettyPrinter {
         formatter.afterOpenBrace();
         formatter.afterStmt();
         
-        for (MethodSig m : getAllMethodSigs()) {
-            m.doPrettyPrint(stream, formatter);
-            stream.println(";");
-            formatter.afterStmt();
-        }
+        getBodys().doPrettyPrint(stream, formatter);
 
         formatter.beforeCloseBrace();
         stream.print("}");
@@ -637,11 +637,7 @@ aspect doPrettyPrinter {
         formatter.afterOpenBrace();
         formatter.afterStmt();
 
-        for (FieldDecl m : getFieldList()) {
-            m.doPrettyPrint(stream, formatter);
-            stream.println();
-            formatter.afterStmt();
-        }
+		getFieldList().doPrettyPrint(stream, formatter);
 
         stream.println();
         formatter.afterStmt();
@@ -655,13 +651,8 @@ aspect doPrettyPrinter {
         stream.println();
         formatter.afterStmt();
         
-        for (MethodImpl m : getMethodList()) {
-            m.doPrettyPrint(stream, formatter);
-            stream.println();
-            stream.println();
-            formatter.afterStmt();
-        }
-
+        getMethodList().doPrettyPrint(stream, formatter);
+        
         formatter.beforeCloseBrace();
         stream.print("}");
         formatter.afterCloseBrace();
