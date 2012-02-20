@@ -14,6 +14,12 @@ public class JavaExprTests extends JavaBackendTest {
     }
 
     @Test
+    public void ifInLetExp() throws Exception {
+        // see bug 343
+        assertValidStdLib("def Int f(Int x) = let (Int y) = 3 in if x == y then 42 else 41; ");
+    }
+    
+    @Test
     public void caseTrue() throws Exception {
         assertValidStdLib("def Bool f(Bool x) = case x { True => True; False => False; }; ");
     }

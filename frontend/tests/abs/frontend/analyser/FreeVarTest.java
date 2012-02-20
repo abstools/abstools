@@ -127,6 +127,13 @@ public class FreeVarTest extends FrontendTest {
         assertEquals(e.getFreeVars(), "b");
     }
 
+
+    @Test
+    public void IfExpr() {
+        Exp e = getExp("{ Int x = 3; Int y = 4; Int z = 5; Int a = if x == 3 then y else z; }", 3);
+        assertEquals(e.getFreeVars(), "x", "y", "z");
+    }
+    
     public void assertEquals(Set<String> actual, String... expected) {
         Assert.assertEquals(new HashSet<String>(Arrays.asList(expected)), actual);
 

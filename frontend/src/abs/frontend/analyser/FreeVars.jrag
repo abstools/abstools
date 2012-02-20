@@ -29,6 +29,14 @@ aspect VarUsage {
 		return res;				
 	}
 	
+    eq IfExp.getFreeVars() {
+        HashSet<String> res = new HashSet<String>();
+        res.addAll(getCondExp().getFreeVars());
+        res.addAll(getThenExp().getFreeVars());
+        res.addAll(getElseExp().getFreeVars());
+        return res;             
+    }
+	
 	eq CaseExp.getFreeVars() {
 		HashSet<String> res = new HashSet<String>();
 		res.addAll(getExpr().getFreeVars());
