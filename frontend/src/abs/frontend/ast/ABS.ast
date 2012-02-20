@@ -28,7 +28,7 @@ abstract TypeDecl: Decl; // Entities used in type expressions
 UnknownDecl:    TypeDecl;		// Unknown declarations
 AmbiguousDecl:	UnknownDecl 		::= <Alternative:java.util.List<Decl>>;
 ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
-DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* ClassOrIfaceModifier* ;
+DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* TypeSynModifier* DataTypeModifier* FunctionModifier* ClassOrIfaceModifier* ;
 FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
 DataConstructor : BehaviorDecl  ::= <Name> ConstructorArg:ConstructorArg* ;
 ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
@@ -56,7 +56,14 @@ HasMethod    : HasCondition ::= MethodSig;
 HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract Modifier;
+abstract TypeSynModifier;
+abstract DataTypeModifier;
+abstract FunctionModifier;
 abstract ClassOrIfaceModifier;
+
+AddTypeSynModifier  : TypeSynModifier  ::= TypeSynDecl;
+AddDataTypeModifier  : DataTypeModifier  ::= DataTypeDecl;
+AddFunctionModifier  : FunctionModifier  ::= FunctionDecl;
 
 AddClassModifier     : ClassOrIfaceModifier  ::= ClassDecl;
 RemoveClassModifier  : ClassOrIfaceModifier  ::= <Name>;

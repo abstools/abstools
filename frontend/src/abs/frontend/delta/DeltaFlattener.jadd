@@ -82,6 +82,21 @@ aspect Flattener {
     }
 
     public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
+    	for (TypeSynModifier tmod : delta.getTypeSynModifierList()) {
+            System.out.println("*** applying TypeSynModifier " + tmod);
+            tmod.apply(delta);
+        }
+        
+        for (DataTypeModifier dmod : delta.getDataTypeModifierList()) {
+            System.out.println("*** applying DataTypeModifier " + dmod);
+            dmod.apply(delta);
+        }
+    	
+    	for (FunctionModifier fmod : delta.getFunctionModifierList()) {
+            System.out.println("*** applying FunctionModifier " + fmod);
+            fmod.apply(delta);
+        }
+    
         for (ClassOrIfaceModifier cmod : delta.getClassOrIfaceModifiers()) {
             System.out.println("*** applying ClassOrIfaceModifier " + cmod);
             cmod.apply(delta);
@@ -160,7 +175,31 @@ aspect Flattener {
         ModuleDecl module = delta.getModule();
         module.getDecls().addChild(this.getInterfaceDecl().fullCopy());
     }
+    
+    abstract public void FunctionModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
+    
+    public void AddFunctionModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+    	// FIXME? only possible to add a function inside the module where delta is declared
+        ModuleDecl module = delta.getModule();
+        module.getDecls().addChild(this.getFunctionDecl().fullCopy());
+    }
+    
+    abstract public void DataTypeModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
+    
+    public void AddDataTypeModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+    	// FIXME? only possible to add a data type inside the module where delta is declared
+        ModuleDecl module = delta.getModule();
+        module.getDecls().addChild(this.getDataTypeDecl().fullCopy());
+    }
+    
+    abstract public void TypeSynModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
 
+    public void AddTypeSynModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+    	// FIXME? only possible to add a type synonym inside the module where delta is declared
+        ModuleDecl module = delta.getModule();
+        module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
+    }
+    
     /*
      * helper method
      * find the ClassDecl which should be modified by the given delta

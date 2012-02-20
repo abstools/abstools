@@ -281,8 +281,8 @@ ClassDecl class_decl =
   ;
 
 DeltaDecl delta_decl =
-    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id delta_param_decls.params? LBRACE class_modifier_list.modifiers? RBRACE
-    {: return new DeltaDecl(id, annotations, params, modifiers); :} ;
+    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id delta_param_decls.params? LBRACE typesyn_modifier_list.tsmodifiers? datatype_modifier_list.dtmodifiers? function_modifier_list.fnmodifiers? class_modifier_list.modifiers? RBRACE
+    {: return new DeltaDecl(id, annotations, params, tsmodifiers, dtmodifiers, fnmodifiers, modifiers); :} ;
 
 
 List delta_param_decls =
@@ -308,6 +308,32 @@ HasCondition has_condition =
            return res; :}
   ;
 
+List typesyn_modifier_list =
+    typesyn_modifier.m {: return new List().add(m); :}
+  | typesyn_modifier_list.l typesyn_modifier.m {: return l.add(m); :}
+  ;
+
+TypeSynModifier typesyn_modifier =
+  ADDS typesyn_decl.typesyndecl {: return new AddTypeSynModifier(typesyndecl); :}
+  ;
+
+List datatype_modifier_list =
+    datatype_modifier.m {: return new List().add(m); :}
+  | datatype_modifier_list.l datatype_modifier.m {: return l.add(m); :}
+  ;
+  
+DataTypeModifier datatype_modifier =
+  ADDS datatype_decl.datatypedecl {: return new AddDataTypeModifier(datatypedecl); :}
+  ;
+  
+List function_modifier_list =
+    function_modifier.m {: return new List().add(m); :}
+  | function_modifier_list.l function_modifier.m {: return l.add(m); :}
+  ;
+  
+FunctionModifier function_modifier =
+  ADDS function_decl.functiondecl {: return new AddFunctionModifier(functiondecl); :}
+  ;
 
 List class_modifier_list =
     class_modifier.m {: return new List().add(m); :}
