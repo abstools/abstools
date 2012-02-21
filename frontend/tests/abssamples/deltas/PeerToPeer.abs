@@ -169,11 +169,11 @@ implements Network
 
 delta DFileFilter() {
     modifies class Node {
-        modifies Peer findServer(Filename fId, Catalog catalog) {
+        modifies Peer findServer(Filename file, Catalog catalog) {
             Peer p = null;
-            Bool valid = this.isValid(fId);
+            Bool valid = this.isValid(file);
             if (valid) {
-                p = original(fId, catalog);
+                p = original(file, catalog);
 //                original();
             }
             return p;
