@@ -72,6 +72,18 @@ aspect PrettyPrint {
         w.print(getName());
         if (hasInitExp()) w.print(" = "+getInitExp());
     }
+    public void VarDecl.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+        if (hasInitExp()) w.print(" = "+getInitExp());
+    }
+    public void ParamDecl.prettyPrint(PrintWriter w, ABSFormatter f) {
+        w.print(getAccess());
+        w.print(' ');
+        w.print(getName());
+    }
+    
 
     public void ClassDecl.prettyPrintChildren(PrintWriter w, ABSFormatter f) {
         w.print(getName());
