@@ -7,6 +7,8 @@ package eu.hatsproject.absplugin.editor.outline;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.FILTER_COMMANDS;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.SORT_COMMAND_ID;
 
+import java.io.File;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -145,7 +147,8 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 				return;
 			nature = new AbsNature();
 			nature.emptyModel();
-			final String path = fi.getURI().getPath();
+			File f = new File(fi.getURI());
+			String path = f.getAbsolutePath();
 			cu = nature.getCompilationUnit(path);
 			if (cu == null) {
 				Activator.logException(new IllegalArgumentException("Can't find "+path));
