@@ -165,7 +165,11 @@ aspect Flattener {
         ModuleDecl module = delta.getModule();
         module.getDecls().addChild(this.getInterfaceDecl().fullCopy());
     }
-    
+
+    public void ModifyInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
+        // TODO D53
+    }
+  
     abstract public void FunctionalModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
     
     public String AddFunctionModifier.toString() {
@@ -197,7 +201,7 @@ aspect Flattener {
         ModuleDecl module = delta.getModule();
         module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
     }
-    
+
     /*
      * helper method
      * find the ClassDecl which should be modified by the given delta
@@ -314,4 +318,12 @@ aspect Flattener {
     public void AddFieldModifier.applyTo(ClassDecl cd) {
         cd.addField(this.getFieldDecl().fullCopy());
     }
+    
+    public void AddMethodSigModifier.applyTo(ClassDecl cd) {
+        // TODO D53
+    }
+    public void RemoveMethodSigModifier.applyTo(ClassDecl cd) {
+        // TODO D53
+    }
+    
 }

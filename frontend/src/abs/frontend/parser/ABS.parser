@@ -330,6 +330,7 @@ ClassOrIfaceModifier class_modifier =
   | REMOVES CLASS TYPE_IDENTIFIER.id SEMICOLON {: return new RemoveClassModifier(id); :}
   | MODIFIES CLASS TYPE_IDENTIFIER.id implement_interfaces.iface? LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, iface, fragments); :}
   | ADDS interface_decl.ifacedecl {: return new AddInterfaceModifier(ifacedecl); :}
+  | MODIFIES INTERFACE TYPE_IDENTIFIER.id LBRACE inf_modifier_fragment_list.fragments? RBRACE {: return new ModifyInterfaceModifier(id, fragments); :}
   ;
 
 ClassDecl qualified_class_decl =
@@ -343,6 +344,16 @@ ClassDecl qualified_class_decl =
 Name simple_qual_name =
     TYPE_IDENTIFIER.id {: return new Name(id); :}
   | TYPE_IDENTIFIER.mod DOT TYPE_IDENTIFIER.id {: return new Name(mod+"."+id); :};
+  
+List inf_modifier_fragment_list =
+    inf_modifier_fragment.f {: return new List().add(f); :}
+  | inf_modifier_fragment_list.l inf_modifier_fragment.f {: return l.add(f); :}
+  ;
+  
+ModifyInterfaceModifier inf_modifier_fragment =
+  ADDS methodsig.ms SEMICOLON {: return new AddMethodSigModifier(ms); :}
+  | REMOVES methodsig.ms SEMICOLON {: return new RemoveMethodSigModifier(ms); :}
+  ;
 
 List modifier_fragment_list =
     modifier_fragment.f {: return new List().add(f); :}

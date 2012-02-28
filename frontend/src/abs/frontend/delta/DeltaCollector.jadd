@@ -282,8 +282,9 @@ aspect DeltaCollector {
         for (Modifier m : getModifiers()) 
             m.applySubstitution(subst);
     }
-    // FIXME:
+    // TODO D53
     public void AddInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void ModifyInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
 
     // apply a substitution to Modifier
     abstract public void Modifier.applySubstitution(HashMap<String,Value> subst);
@@ -301,6 +302,10 @@ aspect DeltaCollector {
     public void ModifyMethodModifier.applySubstitution(HashMap<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
+    
+    // TODO D53
+    public void AddMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void RemoveMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
 
     public void ClassDecl.applySubstitution(HashMap<String,Value> subst) {
         HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();

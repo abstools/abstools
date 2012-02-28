@@ -55,27 +55,31 @@ HasField     : HasCondition ::= FieldDecl;
 HasMethod    : HasCondition ::= MethodSig;
 HasInterface : HasCondition ::= InterfaceTypeUse;
 
+abstract ClassOrIfaceModifier;
 abstract Modifier;
+abstract MethodSigModifier : Modifier;
 abstract FunctionalModifier;
 abstract TypeSynModifier  : FunctionalModifier;
 abstract DataTypeModifier : FunctionalModifier;
 abstract FunctionModifier : FunctionalModifier;
-abstract ClassOrIfaceModifier;
 
-AddTypeSynModifier  : TypeSynModifier  ::= TypeSynDecl;
+AddTypeSynModifier   : TypeSynModifier   ::= TypeSynDecl;
 AddDataTypeModifier  : DataTypeModifier  ::= DataTypeDecl;
 AddFunctionModifier  : FunctionModifier  ::= FunctionDecl;
 
-AddClassModifier     : ClassOrIfaceModifier  ::= ClassDecl;
-RemoveClassModifier  : ClassOrIfaceModifier  ::= <Name>;
-ModifyClassModifier  : ClassOrIfaceModifier  ::= <Name> ImplementedInterfaceUse:InterfaceTypeUse* Modifier*;
-AddInterfaceModifier : ClassOrIfaceModifier  ::= InterfaceDecl;
+AddClassModifier     	: ClassOrIfaceModifier  ::= ClassDecl;
+RemoveClassModifier  	: ClassOrIfaceModifier  ::= <Name>;
+ModifyClassModifier  	: ClassOrIfaceModifier  ::= <Name> ImplementedInterfaceUse:InterfaceTypeUse* Modifier*;
+AddInterfaceModifier 	: ClassOrIfaceModifier  ::= InterfaceDecl;
+ModifyInterfaceModifier : ClassOrIfaceModifier  ::= <Name> MethodSigModifier*;
 
-AddFieldModifier     : Modifier ::= FieldDecl;
-RemoveFieldModifier  : Modifier ::= FieldDecl;
-AddMethodModifier    : Modifier ::= MethodImpl;
-RemoveMethodModifier : Modifier ::= MethodSig;
-ModifyMethodModifier : Modifier ::= MethodImpl;
+AddFieldModifier        : Modifier ::= FieldDecl;
+RemoveFieldModifier     : Modifier ::= FieldDecl;
+AddMethodModifier       : Modifier ::= MethodImpl;
+RemoveMethodModifier    : Modifier ::= MethodSig;
+ModifyMethodModifier    : Modifier ::= MethodImpl;
+AddMethodSigModifier    : MethodSigModifier ::= MethodSig;
+RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 
 abstract VarOrFieldDecl  ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;

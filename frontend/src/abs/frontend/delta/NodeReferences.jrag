@@ -5,7 +5,7 @@ aspect Delta {
     
     inh DeltaDecl Modifier.delta();
     eq ModifyClassModifier.getModifier().delta() = this.delta();
-
+    eq ModifyInterfaceModifier.getMethodSigModifier().delta() = this.delta();
 }
 
 //inform nodes about the Module where they were declared
@@ -24,7 +24,7 @@ aspect Module {
 aspect Model {
     inh Model Modifier.getModel();
     eq ModifyClassModifier.getModifier().getModel() = this.getModule().getModel();
-    
+    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getModule().getModel();
 }
 
 // inform Modifier about the ModifyClassModifier where it was declared

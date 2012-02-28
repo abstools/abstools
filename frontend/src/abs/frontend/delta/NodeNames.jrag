@@ -42,16 +42,25 @@ aspect ClassName {
     public String ClassOrIfaceModifier.className() {
         return "FIXME: add method for " + this.getClass().getName();
     }
+//    public String ModifyInterfaceModifier.className() {
+//        return this.getMethodSigModifier().getMethodSig().getName();
+//    }
     
     inh String ModifyMethodModifier.className();
     eq ModifyClassModifier.getModifier().className() = this.className();
+
+  
     
+//    inh String ModifyMethodSigModifier.className();
+//    eq ModifyInterfaceModifier.className() = this.className();
+        
 //    inh String Stmt.className();
 //    eq ModifyMethodModifier.getMethodImpl().getBlock().getStmt().className() = this.className();
 //    
 //    inh String Exp.className();
 //    eq ExpressionStmt.getExp().className() = this.className();
 }
+
 
 
 // qualify node names with the name of the module where they were defined
