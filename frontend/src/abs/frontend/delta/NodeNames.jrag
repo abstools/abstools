@@ -42,9 +42,9 @@ aspect ClassName {
     public String ClassOrIfaceModifier.className() {
         return "FIXME: add method for " + this.getClass().getName();
     }
-//    public String ModifyInterfaceModifier.className() {
-//        return this.getMethodSigModifier().getMethodSig().getName();
-//    }
+    public String ModifyInterfaceModifier.className() {
+        return this.getName();
+    }
     
     inh String ModifyMethodModifier.className();
     eq ModifyClassModifier.getModifier().className() = this.className();
