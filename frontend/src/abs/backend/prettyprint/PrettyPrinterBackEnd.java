@@ -17,6 +17,7 @@ import abs.frontend.tests.ABSFormatter;
 
 public class PrettyPrinterBackEnd extends Main {
     private File outputfile;
+    private boolean force = false;
     
     public static void main(final String... args) {
         try {
@@ -50,7 +51,8 @@ public class PrettyPrinterBackEnd extends Main {
                         outputfile.delete();
                     }
                 }
-                
+            } else if (arg.equals("-f"))  {
+                force = true;
             } else {
                 remainingArgs.add(arg);
             }
@@ -65,8 +67,9 @@ public class PrettyPrinterBackEnd extends Main {
      */
     public void compile(String[] args) throws Exception {
         final Model model = parse(args);
-        //if (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())
-        //   return;
+        if (! force && (model.hasParserErrors() || model.hasErrors() || model.hasTypeErrors())) {
+            return;
+        }
 
         final PrintStream stream;
         final String loc; 
@@ -86,6 +89,14 @@ public class PrettyPrinterBackEnd extends Main {
         ABSFormatter formatter = new DefaultABSFormatter();
         formatter.setPrintWriter(writer);
         model.doPrettyPrint(writer, formatter);
+    }
+    
+    protected void printUsage() {
+        super.printUsage();
+        System.out.println("ABS Pretty Printer:\n"
+                + "  -f             force pretty printing even if there are type errors\n"
+                + "  -o <file>      write output to <file> instead of standard output\n"
+        );
     }
     
 }
