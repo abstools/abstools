@@ -64,7 +64,7 @@ public class ASTPreProcessor {
             }
         }
     }
-
+    
     /**
      * Creates for a selector a corresponding function, e.g.
      * 
@@ -80,7 +80,7 @@ public class ASTPreProcessor {
      *     };
      * <pre>
      */
-    private FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
+    public FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
         String selName = ca.getSelectorName().getName();
         
         // the list of patterns, e.g. _,res,_
@@ -108,7 +108,7 @@ public class ASTPreProcessor {
         DataTypeUse paramType;
         if (dtd instanceof ParametricDataTypeDecl) {
             ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
-            typeParams = pdtd.getTypeParameterList();
+            typeParams = pdtd.getTypeParameterList().fullCopy();
             List<DataTypeUse> typeParams2 = new List<DataTypeUse>();
             for (TypeParameterDecl p : typeParams) {
                 typeParams2.add(new DataTypeUse(p.getName(), new List<Annotation>()));

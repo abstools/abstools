@@ -2,6 +2,7 @@ import java.util.Map;
 import java.util.HashMap;
 import abs.frontend.delta.*;
 import abs.frontend.delta.exceptions.*;
+import abs.frontend.parser.*;
 
 aspect Flattener {
 
@@ -189,7 +190,18 @@ aspect Flattener {
     public void AddDataTypeModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
     	// FIXME? only possible to add a data type inside the module where delta is declared
         ModuleDecl module = delta.getModule();
-        module.getDecls().addChild(this.getDataTypeDecl().fullCopy());
+        
+        DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
+        module.getDecls().addChild(dtd);
+        for (DataConstructor c : dtd.getDataConstructors()) {
+        	int i = 0;
+            for (ConstructorArg ca : c.getConstructorArgs()) {
+            	if (ca.hasSelectorName()) {
+            		module.getDecls().addChild(new ASTPreProcessor().createSelectorFunction(dtd, c, ca, i));
+            	}
+            	i++;
+            }
+        }
     }
     
     public String AddTypeSynModifier.toString() {
