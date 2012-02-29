@@ -13,7 +13,6 @@ aspect OriginalCallResolver {
      */
     public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
         ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
-        
         for (DeltaDecl delta : deltas) {
             delta.resolveOriginalCalls(prevdeltas);
             prevdeltas.add(0, delta);
@@ -37,20 +36,14 @@ aspect OriginalCallResolver {
     }
     
     
-    /* This field is used to cache the names of original MethodImpls that have been copied,
-     * so we don't need to copy them multiple times (which can result in type errors)
+    /* This field is used to save/cache the original MethodImpl
+     * once it has been found.
+     * 
+     * TODO use it...
      */
-    private HashSet<String> Model.originalMethodsCache = new HashSet<String>();
-    public void Model.cacheOriginalMethod(String id) {
-        originalMethodsCache.add(id);
-    }
-    public boolean Model.containsCachedOriginalMethod(String id) {
-        if (originalMethodsCache.contains(id))
-            return true;
-        else
-            return false;
-    }
+    private MethodImpl ModifyMethodModifier.OriginalMethodImpl = null;
     
+
     /*
      * resolve OriginalCalls within the body of the method defined
      * inside this ModifyMethodModifier
@@ -94,20 +87,13 @@ aspect OriginalCallResolver {
         MethodImpl originalMethodCopy = mod.findOriginalMethod(this, deltas);
         
         // Add the copied method to the delta in which this OriginalCall occured
-        // - omit if the method is already cached
-        String methodId = mod.className() + "." + originalMethodCopy.getMethodSig().getName();
-        if (! mod.getModel().containsCachedOriginalMethod(methodId)) {
-            ModifyClassModifier cm = new ModifyClassModifier();
-            cm.setName(mod.className());
-            cm.setImplementedInterfaceUseList(mod.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
-            cm.addModifier(new AddMethodModifier(originalMethodCopy));
-            mod.delta().addClassOrIfaceModifier(cm);
-            mod.getModel().cacheOriginalMethod(methodId);
-            System.out.println("*** copied original method to delta " + mod.delta().getName() + " as " + originalMethodCopy.getMethodSig().getName());
-        } else {
-            System.out.println("*** original method already cached as " + methodId);
-        }
-        
+        ModifyClassModifier cm = new ModifyClassModifier();
+        cm.setName(mod.className());
+        cm.setImplementedInterfaceUseList(mod.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
+        cm.addModifier(new AddMethodModifier(originalMethodCopy));
+        mod.delta().addClassOrIfaceModifier(cm);
+        System.out.println("*** copied original method to delta " + mod.delta().getName() + " as " + originalMethodCopy.getMethodSig());
+
         // replace OriginalCall with a normal call to the copied method
         EffExp call = new SyncCall(new ThisExp(), originalMethodCopy.getMethodSig().getName(), this.getParams().fullCopy());
         ASTNode parent = getParent();

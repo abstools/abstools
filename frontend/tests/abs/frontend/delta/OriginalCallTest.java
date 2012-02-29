@@ -85,6 +85,7 @@ public class OriginalCallTest extends DeltaFlattenerTest {
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
+        // TODO make sure the original method is copied only once, even with multiple original calls
         assertEquals(delta.getClassOrIfaceModifiers().toString(),2, delta.getNumClassOrIfaceModifier());
     }
     
@@ -103,32 +104,10 @@ public class OriginalCallTest extends DeltaFlattenerTest {
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         
+        // TODO make sure the original method is copied only once, even with multiple original calls
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals(cls.getMethods().toString(), 2, cls.getMethods().getNumChild());
+        assertEquals(cls.getMethods().toString(),2,cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
-
-    @Test
-    public void multipleTargetedOriginalCalls() throws ASTNodeNotFoundException {
-        Model model = assertParseOk(
-                "module M;"
-                + "class C { }"
-                + "delta D { modifies class C { adds Unit m() {} } }"
-                + "delta D1 { modifies class C { modifies Unit m() { D.original(); } } }"
-                + "delta D2 { modifies class C { modifies Unit m() { D.original(); } } }"
-        );
-        
-        DeltaDecl d = (DeltaDecl) findDecl(model, "M", "D");
-        DeltaDecl d1 = (DeltaDecl) findDecl(model, "M", "D1");
-        DeltaDecl d2 = (DeltaDecl) findDecl(model, "M", "D2");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d,d1,d2)));
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d,d1,d2)));
-        
-        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals(cls.getMethods().toString(), 2, cls.getMethods().getNumChild());
-        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_D"));
-    }
-
 }
