@@ -56,13 +56,17 @@ public class ASTPreProcessor {
                     int i = 0;
                     for (ConstructorArg ca : c.getConstructorArgs()) {
                         if (ca.hasSelectorName()) {
-                            moduleDecl.addDeclNoTransform(createSelectorFunction(dtd, c, ca, i));
+                            moduleDecl.addDeclNoTransform(createSelectorFunction(dtd, c, ca, i, false));
                         }
                         i++;
                     }
                 }
             }
         }
+    }
+    
+    public FunctionDecl createSelectorFunctionForDeltaApplication(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
+        return createSelectorFunction(dtd, c, ca, numArg, true);
     }
     
     /**
@@ -80,7 +84,7 @@ public class ASTPreProcessor {
      *     };
      * <pre>
      */
-    public FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg) {
+    private FunctionDecl createSelectorFunction(DataTypeDecl dtd, DataConstructor c, ConstructorArg ca, int numArg, boolean delta) {
         String selName = ca.getSelectorName().getName();
         
         // the list of patterns, e.g. _,res,_
@@ -108,7 +112,7 @@ public class ASTPreProcessor {
         DataTypeUse paramType;
         if (dtd instanceof ParametricDataTypeDecl) {
             ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
-            typeParams = pdtd.getTypeParameterList().fullCopy();
+            typeParams = (delta) ? pdtd.getTypeParameterList().fullCopy() : pdtd.getTypeParameterList();
             List<DataTypeUse> typeParams2 = new List<DataTypeUse>();
             for (TypeParameterDecl p : typeParams) {
                 typeParams2.add(new DataTypeUse(p.getName(), new List<Annotation>()));

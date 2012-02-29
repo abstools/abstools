@@ -197,7 +197,7 @@ aspect Flattener {
         	int i = 0;
             for (ConstructorArg ca : c.getConstructorArgs()) {
             	if (ca.hasSelectorName()) {
-            		module.getDecls().addChild(new ASTPreProcessor().createSelectorFunction(dtd, c, ca, i));
+            		module.getDecls().addChild(new ASTPreProcessor().createSelectorFunctionForDeltaApplication(dtd, c, ca, i));
             	}
             	i++;
             }
