@@ -290,22 +290,32 @@ aspect Flattener {
 
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
         MethodSig mysig = this.getMethodImpl().getMethodSig();
-
+        
+        // for keep track the annotation of the original method.
+        List<Annotation> annotations = new List<Annotation>(); 
+        
         // in given ClassDecl: find MethodDecl that matches sig
         int found = -1;
         for (int i = 0; i < cd.getNumMethod(); i++) {
             MethodSig sig = cd.getMethod(i).getMethodSig();
             if (sig.matches(mysig)) {
                 found = i;
+                //Get annotations from the original methods
+                annotations = sig.getAnnotationList().fullCopy();
                 break;
             }
         }
-        if (found >= 0)
-            // replace MethodImpl
-            cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
-        else
+        if (found >= 0) {
+            // clone a copy MethodImpl
+            MethodImpl method = this.getMethodImpl().fullCopy();
+            // apply annotations from the original methods
+            method.getMethodSig().setAnnotationList(annotations);
+            // replace that method
+            cd.getMethods().setChild(method, found);
+        } else {
             throw new ASTNodeNotFoundException("Delta " + this.delta().getModule().getName() + "." + this.delta().getName() 
                     + " wants to modify method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
+        }
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
