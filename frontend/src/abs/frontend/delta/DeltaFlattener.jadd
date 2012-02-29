@@ -300,8 +300,11 @@ aspect Flattener {
             MethodSig sig = cd.getMethod(i).getMethodSig();
             if (sig.matches(mysig)) {
                 found = i;
-                //Get annotations from the original methods
-                annotations = sig.getAnnotationList().fullCopy();
+                //Get annotations from the original methods 
+                //if and only if the new one does not specify this.
+                if (mysig.getNumAnnotation() == 0) {
+                    annotations = sig.getAnnotationList().fullCopy();
+                }
                 break;
             }
         }
