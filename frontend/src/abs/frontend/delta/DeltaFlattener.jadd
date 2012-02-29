@@ -312,7 +312,9 @@ aspect Flattener {
             // clone a copy MethodImpl
             MethodImpl method = this.getMethodImpl().fullCopy();
             // apply annotations from the original methods
-            method.getMethodSig().setAnnotationList(annotations);
+            if (annotations.getNumChild() > 0) {
+                method.getMethodSig().setAnnotationList(annotations);
+            }
             // replace that method
             cd.getMethods().setChild(method, found);
         } else {
