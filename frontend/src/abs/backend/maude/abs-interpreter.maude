@@ -1168,7 +1168,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < 'main : Cog | Object: ob('main, 0) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: 'main,
-      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'description |-> "str"["Environment"], 'history |-> "Nil"[emp], 'initialized |-> "True"[ emp ], 'internalState |-> "EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "EmptyMap"[emp],
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'creationTime |-> "Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "Nil"[emp], 'initialized |-> "True"[ emp ], 'internalState |-> "EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "EmptyMap"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: 'main,
       Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
