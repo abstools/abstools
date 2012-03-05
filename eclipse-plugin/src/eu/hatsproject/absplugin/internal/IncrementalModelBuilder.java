@@ -124,13 +124,28 @@ public class IncrementalModelBuilder {
 		if(model == null)
 			throw new NoModelException();
 		Iterator<CompilationUnit> iter = model.getCompilationUnits().iterator();
+		// normalize representation:
+		fileName = normalizePath(fileName);
 		while(iter.hasNext()){
 			CompilationUnit cu = iter.next();
-			if(fileName.equals(cu.getFileName())){
+			String cuFileName = cu.getFileName();
+			// normalize representation:
+			cuFileName = normalizePath(cuFileName);
+			if(fileName.equals(cuFileName)){
 				return cu;
 			}
 		}
 		return null;
+	}
+
+	private String normalizePath(String fileName) {
+		fileName = fileName.replace('\\', '/');
+		if (fileName.matches("^/[a-zA-Z]+:/.*$")) {
+			// a path like /C:/....
+			// remove the slash from the beginning
+			fileName = fileName.substring(1);
+		}
+		return fileName;
 	}
 	
 	public synchronized SemanticErrorList typeCheckModel(boolean locationTypeChecking, String defaultloctype, String locationTypePrecision) throws NoModelException, TypecheckInternalException{

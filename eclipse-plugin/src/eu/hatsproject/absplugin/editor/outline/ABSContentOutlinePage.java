@@ -140,19 +140,39 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		CompilationUnit cu;
 		IResource file = editor.getResource();
 		if (file == null) {
-			/* We're looking e.g. at abslang.abs which only exists in memory.
-			 */
-			IURIEditorInput fi = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
-			if (fi == null)
-				return;
-			nature = new AbsNature();
-			nature.emptyModel();
-			File f = new File(fi.getURI());
-			String path = f.getAbsolutePath();
-			cu = nature.getCompilationUnit(path);
-			if (cu == null) {
-				Activator.logException(new IllegalArgumentException("Can't find "+path));
-				return;
+			// we are looking at abslang.abs or a file inside a jar-package
+			
+			IURIEditorInput uriInput = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
+			
+			if (uriInput != null) {
+				// We're looking e.g. at abslang.abs which only exists in memory.
+				
+				// create an empty model which only contains abslang.abs:
+				nature = new AbsNature();
+				nature.emptyModel();
+				File f = new File(uriInput.getURI());
+				String path = f.getAbsolutePath();
+				cu = nature.getCompilationUnit(path);
+				if (cu == null) {
+					Activator.logException(new IllegalArgumentException("Can't find "+path));
+					return;
+				}
+			} else {
+				PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
+				if (storageInput != null) {
+					// we are looking at a file inside a jar package
+
+					nature = UtilityFunctions.getAbsNature(storageInput.getFile().getProject());
+					String path = storageInput.getFile().getAbsoluteFilePath();
+					cu = nature.getCompilationUnit(path);
+					if (cu == null) {
+						Activator.logException(new IllegalArgumentException("Can't find "+path));
+						return;
+					}
+				} else {
+					Activator.logException(new IllegalArgumentException("Cannot get editor input."));
+					return;
+				}
 			}
 		} else {
 			if (!file.exists())

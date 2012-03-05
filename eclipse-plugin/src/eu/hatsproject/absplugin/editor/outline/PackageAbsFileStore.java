@@ -22,7 +22,7 @@ public class PackageAbsFileStore extends VirtualFileStore {
 	}
 	
 	public String getName() {
-		return file.getAbsoluteFilePath();
+		return file.getName();
 	}
 
 	@Override

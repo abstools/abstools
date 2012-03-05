@@ -545,7 +545,7 @@ public class UtilityFunctions {
 		    } catch (PartInitException e) {
 		    	standardExceptionHandling(e);
 		    }
-		} else if (path.segment(0).equals("jar:file:")) {
+		} else if (path.toPortableString().startsWith("jar:file:")) {
 			// a jar file
 			try {
 				String parts = new URI(path.toString()).getRawSchemeSpecificPart();
