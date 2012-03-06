@@ -545,7 +545,9 @@ public class UtilityFunctions {
 		    } catch (PartInitException e) {
 		    	standardExceptionHandling(e);
 		    }
-		} else if (path.toPortableString().startsWith("jar:file:")) {
+		} else if (path.toPortableString().startsWith("jar:file:") // works for windows systems
+				|| path.segment(0).equals("jar:file:")) { // works for linux systems
+			// TODO make conditions above cross platform.
 			// a jar file
 			try {
 				String parts = new URI(path.toString()).getRawSchemeSpecificPart();
