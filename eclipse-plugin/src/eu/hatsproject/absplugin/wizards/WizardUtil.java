@@ -352,18 +352,9 @@ public class WizardUtil {
 	}
 
 	/**
-	 * Returns the IDocument connected with an ABSEditor for the given InternalASTNode&lt;ModuleDecl&gt;
-	 * @param m 
-	 * @return the document corresponding to the ModuleDecl
-	 * @see #getEditorForModuleDecl(InternalASTNode)
+	 * Returns the current IDocument. ONLY WORKS BECAUSE WE JUST OPENED IT!
 	 */
-	protected static IDocument getDocumentForModuleDecl(InternalASTNode<ModuleDecl> m) {
-		ABSEditor editor = getEditorForModuleDecl(m);
-
-		if (editor != null) {
-			return editor.getDocumentProvider().getDocument(editor.getEditorInput());
-		}
-
-		return null;
+	protected static IDocument getDocumentForModuleDecl(ABSEditor editor) {
+		return editor.getDocumentProvider().getDocument(editor.getEditorInput());
 	}
 }

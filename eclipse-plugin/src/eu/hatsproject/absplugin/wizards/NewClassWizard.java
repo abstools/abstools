@@ -53,9 +53,10 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 	public boolean performFinish() {
 		this.findModuleDecl();
 
-		IDocument document = WizardUtil.getDocumentForModuleDecl(mDecl);
 		ABSEditor editor = WizardUtil.getEditorForModuleDecl(mDecl);
-
+		if (editor == null)
+			return false;
+		IDocument document = WizardUtil.getDocumentForModuleDecl(editor);
 		try {
 			int off = WizardUtil.getInsertionPosition(document,mDecl);
 			final String insertString = insertType.getInsertionString(page.getNewName());

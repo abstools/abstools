@@ -55,8 +55,9 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 		this.findModuleDecl();
 
 		ABSEditor editor = WizardUtil.getEditorForModuleDecl(mDecl);
-		IDocument document = WizardUtil.getDocumentForModuleDecl(mDecl);
-
+		if (editor == null)
+			return false;
+		IDocument document = WizardUtil.getDocumentForModuleDecl(editor);
 		try {
 			int off = WizardUtil.getInsertionPosition(document, mDecl);
 
