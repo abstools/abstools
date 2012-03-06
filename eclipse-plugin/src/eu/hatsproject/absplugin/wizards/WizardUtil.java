@@ -351,10 +351,20 @@ public class WizardUtil {
 		return null;
 	}
 
+	static class EditorData {
+		ABSEditor editor;
+		IDocument document;
+	}
+
 	/**
 	 * Returns the current IDocument. ONLY WORKS BECAUSE WE JUST OPENED IT!
 	 */
-	protected static IDocument getDocumentForModuleDecl(ABSEditor editor) {
-		return editor.getDocumentProvider().getDocument(editor.getEditorInput());
+	static EditorData getDocumentForModuleDecl(InternalASTNode<ModuleDecl> m) {
+		assert m != null;
+		EditorData data = new EditorData();
+		data.editor = getEditorForModuleDecl(m);
+		if (data.editor != null)
+			data.document = data.editor.getDocumentProvider().getDocument(data.editor.getEditorInput());
+		return data;
 	}
 }

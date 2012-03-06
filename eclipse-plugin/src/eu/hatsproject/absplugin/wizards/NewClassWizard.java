@@ -12,7 +12,7 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
 import eu.hatsproject.absplugin.Activator;
-import eu.hatsproject.absplugin.editor.ABSEditor;
+import eu.hatsproject.absplugin.wizards.WizardUtil.EditorData;
 import eu.hatsproject.absplugin.wizards.WizardUtil.InsertType;
 import eu.hatsproject.absplugin.wizards.pages.IABSClassInterfaceWizardPage;
 import eu.hatsproject.absplugin.wizards.pages.NewClassInFileWizardPage;
@@ -53,10 +53,10 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 	public boolean performFinish() {
 		this.findModuleDecl();
 
-		ABSEditor editor = WizardUtil.getEditorForModuleDecl(mDecl);
-		if (editor == null)
+		EditorData d = WizardUtil.getDocumentForModuleDecl(mDecl);
+		if (d.editor == null || d.document == null)
 			return false;
-		IDocument document = WizardUtil.getDocumentForModuleDecl(editor);
+		IDocument document = d.document;
 		try {
 			int off = WizardUtil.getInsertionPosition(document,mDecl);
 			final String insertString = insertType.getInsertionString(page.getNewName());
@@ -72,7 +72,7 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 
 			off += insertType.getInsertOffset(page.getNewName()) + classInFilePage.getResultType().getAnnotationLength();
 
-			WizardUtil.saveEditorAndGotoOffset(editor, off);
+			WizardUtil.saveEditorAndGotoOffset(d.editor, off);
 
 			return true;
 		} catch (BadLocationException e) {

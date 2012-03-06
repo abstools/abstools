@@ -11,7 +11,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
-import eu.hatsproject.absplugin.editor.ABSEditor;
+import eu.hatsproject.absplugin.wizards.WizardUtil.EditorData;
 import eu.hatsproject.absplugin.wizards.WizardUtil.InsertType;
 import eu.hatsproject.absplugin.wizards.pages.IABSClassInterfaceWizardPage;
 import eu.hatsproject.absplugin.wizards.pages.NewInterfaceInFileWizardPage;
@@ -54,10 +54,10 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 	public boolean performFinish() {
 		this.findModuleDecl();
 
-		ABSEditor editor = WizardUtil.getEditorForModuleDecl(mDecl);
-		if (editor == null)
+		EditorData d = WizardUtil.getDocumentForModuleDecl(mDecl);
+		if (d.editor == null || d.document == null)
 			return false;
-		IDocument document = WizardUtil.getDocumentForModuleDecl(editor);
+		IDocument document = d.document;
 		try {
 			int off = WizardUtil.getInsertionPosition(document, mDecl);
 
@@ -65,7 +65,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 
 			off += insertType.getInsertOffset(page.getNewName());
 			
-			WizardUtil.saveEditorAndGotoOffset(editor, off);
+			WizardUtil.saveEditorAndGotoOffset(d.editor, off);
 
 			return true;
 		} catch (BadLocationException e) {
