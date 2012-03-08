@@ -3,6 +3,7 @@
   <rm:locator pattern="eu.hatsproject.abs.compiler" searchPathRef="ABSFrontend"/>
   <rm:locator pattern="eu.hatsproject.sdedit" searchPathRef="sdedit"/>
   <rm:locator pattern="eu.hatsproject.absplugin" searchPathRef="by-component"/>
+  <rm:locator pattern="eu.hatsproject.absplugin.tests" searchPathRef="by-component"/>
   <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="eu.hatsproject.apet" searchPathRef="apet"/>
   <rm:searchPath name="ABSFrontend">
