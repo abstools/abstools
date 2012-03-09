@@ -24,8 +24,9 @@ import abs.frontend.typechecker.Type;
 /**
  * 
  * @author pwong
- *
+ * @deprecated use {@link ASTBasedABSTestRunnerGenerator}
  */
+@Deprecated
 public class StringBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerator {
     
     public StringBasedABSTestRunnerGenerator(Model model) {
