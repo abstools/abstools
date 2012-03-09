@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="eu.hatsproject.absplugin.tests"
+      label="ABS Eclipse Integration"
+      version="0.0.0.VERSION_STRING"
+      provider-name="HATS Project">
+
+   <description url="http://hats-project.eu">
+      This feature adds a new ABS perspective for ABS development.
+   </description>
+
+   <url>
+      <update label="ABS Update Site"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.swtbot.eclipse.finder"/>
+      <import plugin="org.eclipse.swtbot.go"/>
+      <import plugin="org.apache.log4j"/>
+      <import plugin="eu.hatsproject.absplugin"/>
+   </requires>
+
+   <plugin
+         id="eu.hatsproject.absplugin.tests"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+</feature>

@@ -6,8 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: HATS Project
 Fragment-Host: eu.hatsproject.absplugin;bundle-version="0.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: org.eclipse.swtbot.eclipse.ui,
- org.eclipse.swtbot.eclipse.finder,
+Require-Bundle: org.eclipse.swtbot.eclipse.finder,
  org.eclipse.swtbot.go,
  org.apache.log4j
 Eclipse-RegisterBuddy: org.apache.log4j

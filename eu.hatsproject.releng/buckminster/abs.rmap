@@ -6,6 +6,8 @@
   <rm:locator pattern="eu.hatsproject.absplugin.tests" searchPathRef="by-component"/>
   <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="eu.hatsproject.apet" searchPathRef="apet"/>
+  <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
+  <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
   <rm:searchPath name="ABSFrontend">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/ABSFrontend/">
@@ -52,5 +54,11 @@
 			<rm:uri format="http://download.eclipse.org/releases/indigo/?importType=binary"/>
 		</rm:provider>
   </rm:searchPath>
+  <rm:searchPath name="SWTBot">
+		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
+			<rm:uri format="http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site/?importType=binary"/>
+		</rm:provider>
+  </rm:searchPath>
+  <!-- Default -->
   <rm:locator searchPathRef="org.eclipse.platform"/>
 </rm:rmap>
