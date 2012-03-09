@@ -85,9 +85,9 @@ public class ABSTestRunnerCompiler extends Main {
             System.out.println("Generating Test Runner to "+loc+"...");
         }
         
-        ABSTestRunnerGenerator gen = new ABSTestRunnerGenerator(model);
+        ABSTestRunnerGenerator gen = new ASTBasedABSTestRunnerGenerator(model);
         if (gen.hasUnitTest()) {
-            gen.generateTestRunnerAST(stream);
+            gen.generateTestRunner(stream);
         } else {
             throw new IllegalStateException("Cannot generate test runner");
         }

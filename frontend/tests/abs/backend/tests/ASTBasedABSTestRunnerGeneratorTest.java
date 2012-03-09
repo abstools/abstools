@@ -43,11 +43,11 @@ import abs.frontend.parser.Main;
 import abs.frontend.parser.ParserError;
 
 /**
- * Unit tests for {@link ABSTestRunnerGenerator}
+ * Unit tests for {@link ASTBasedABSTestRunnerGenerator}
  * @author woner
  *
  */
-public class ABSTestRunnerGeneratorTest {
+public class ASTBasedABSTestRunnerGeneratorTest {
 
     private final static String ABS_UNIT =
     		"module AbsUnit; export *;" +
@@ -146,7 +146,7 @@ public class ABSTestRunnerGeneratorTest {
         public boolean matches(Object arg0) {
             if (arg0 instanceof ModuleDecl) {
                 ModuleDecl module = (ModuleDecl) arg0;
-                if (module.getName().equals(ABSTestRunnerGenerator.RUNNER_MAIN)) {
+                if (module.getName().equals(ASTBasedABSTestRunnerGenerator.RUNNER_MAIN)) {
                     return module.hasBlock();
                 }
             }
@@ -171,29 +171,29 @@ public class ABSTestRunnerGeneratorTest {
             Boolean isEmpty,
             ABSTestRunnerGenerator aut) {
         
-        assertSame(model,getField(aut, "model"));
-        assertThat(getField(aut, "testType"),testType);
-        assertThat(getField(aut, "dataPointType"),dataPointType);
-        assertThat(getField(aut, "fixtureType"),fixtureType);
-        assertThat(getField(aut, "suiteType"),suiteType);
+        assertSame(model,getField(aut, AbstractABSTestRunnerGenerator.class, "model"));
+        assertThat(getField(aut, AbstractABSTestRunnerGenerator.class, "testType"),testType);
+        assertThat(getField(aut, AbstractABSTestRunnerGenerator.class, "dataPointType"),dataPointType);
+        assertThat(getField(aut, AbstractABSTestRunnerGenerator.class, "fixtureType"),fixtureType);
+        assertThat(getField(aut, AbstractABSTestRunnerGenerator.class, "suiteType"),suiteType);
         
         Map<InterfaceDecl, Set<ClassDecl>> actual = 
-            (Map<InterfaceDecl, Set<ClassDecl>>) getField(aut, "tests");
+            (Map<InterfaceDecl, Set<ClassDecl>>) getField(aut, AbstractABSTestRunnerGenerator.class, "tests");
         assertThat(actual.entrySet(),tests);
-        assertEquals(isEmpty,getField(aut, "isEmpty"));
+        assertEquals(isEmpty,getField(aut, AbstractABSTestRunnerGenerator.class, "isEmpty"));
     }
 
     @SuppressWarnings("unused")
     @Test(expected=IllegalArgumentException.class)
     public final void testABSTestRunnerGeneratorNull() {
-        new ABSTestRunnerGenerator(null);
+        new ASTBasedABSTestRunnerGenerator(null);
     }
     
     @Test
     public final void testABSTestRunnerGenerator() {
         Model model = new Model();
         ABSTestRunnerGenerator generator = 
-            new ABSTestRunnerGenerator(model);
+            new ASTBasedABSTestRunnerGenerator(model);
         
         assertMatches(model, 
                 nullValue(), nullValue(), nullValue(), nullValue(), 
@@ -202,7 +202,7 @@ public class ABSTestRunnerGeneratorTest {
         
         try {
             model = Main.parseString(ABS_UNIT, true);
-            generator = new ABSTestRunnerGenerator(model);
+            generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
                     notNullValue(), notNullValue(), notNullValue(), notNullValue(), 
@@ -210,7 +210,7 @@ public class ABSTestRunnerGeneratorTest {
                     generator);
             
             model = Main.parseString(ABS_UNIT + TEST_CODE, true);
-            generator = new ABSTestRunnerGenerator(model);
+            generator = new ASTBasedABSTestRunnerGenerator(model);
             
             assertMatches(model, 
                     notNullValue(), notNullValue(), notNullValue(), notNullValue(), 
@@ -227,11 +227,11 @@ public class ABSTestRunnerGeneratorTest {
     public final void testHasUnitTest() {
         Model model = new Model();
         ABSTestRunnerGenerator generator = 
-            new ABSTestRunnerGenerator(model);
+            new ASTBasedABSTestRunnerGenerator(model);
         
-        generator = setField(generator, "isEmpty", Boolean.TRUE);
+        generator = setField(generator, AbstractABSTestRunnerGenerator.class, "isEmpty", Boolean.TRUE);
         assertFalse(generator.hasUnitTest());
-        generator = setField(generator, "isEmpty", Boolean.FALSE);
+        generator = setField(generator, AbstractABSTestRunnerGenerator.class, "isEmpty", Boolean.FALSE);
         assertTrue(generator.hasUnitTest());
     }
     
@@ -244,10 +244,10 @@ public class ABSTestRunnerGeneratorTest {
             throw new IllegalStateException("Cannot parse test code",e);
         }
         
-        ABSTestRunnerGenerator generator = new ABSTestRunnerGenerator(model);
+        ABSTestRunnerGenerator generator = new ASTBasedABSTestRunnerGenerator(model);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         PrintStream print = new PrintStream(stream); 
-        generator.generateTestRunnerAST(print);
+        generator.generateTestRunner(print);
         String runner = stream.toString();
         
         try {

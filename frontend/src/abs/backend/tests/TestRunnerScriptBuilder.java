@@ -5,7 +5,7 @@
 package abs.backend.tests;
 
 /**
- * A printer for {@link ABSTestRunnerGenerator}
+ * A printer for {@link ASTBasedABSTestRunnerGenerator}
  * @author pwong
  *
  */

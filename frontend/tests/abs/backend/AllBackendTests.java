@@ -10,9 +10,9 @@ import org.junit.runners.Suite;
 import abs.backend.common.*;
 import abs.backend.java.*;
 import abs.backend.maude.MaudeTests;
-import abs.backend.tests.ABSTestRunnerGeneratorTest;
+import abs.backend.tests.ASTBasedABSTestRunnerGeneratorTest;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class, MaudeTests.MaudeRlTests.class, ABSTestRunnerGeneratorTest.class })
+@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class, MaudeTests.MaudeRlTests.class, ASTBasedABSTestRunnerGeneratorTest.class })
 public class AllBackendTests {
 }
