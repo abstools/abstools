@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import org.eclipse.ui.handlers.HandlerUtil;
 
+import apet.absunit.ABSUnitTestCaseTranslator;
 import apet.console.ConsoleHandler;
 import apet.dialogs.OptionsDialog;
 import apet.testCases.ApetTestSuite;
@@ -22,6 +23,7 @@ import apet.utils.SourceUtils;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import abs.backend.prolog.PrologBackend;
 import abs.frontend.ast.Model;
+import abs.frontend.parser.Main;
 
 import apet.console.ApetShellCommand;
 
@@ -32,6 +34,11 @@ import apet.console.ApetShellCommand;
  */
 public class apetHandler extends AbstractHandler {
 
+	/**
+	 * This false dictates if test cases are to be translated into ABSUnit
+	 * Currently only modify manually during development
+	 */
+	private boolean translate = false;
 	
 	/**
 	 * The constructor.
@@ -70,7 +77,11 @@ public class apetHandler extends AbstractHandler {
 					// If analyze, get preferences and run
 					callPrologBackend(absFile);
 					shell.callAPet(CostabsLink.ENTRIES_STRINGS);
-					callXMLParser();
+					ApetTestSuite suite = callXMLParser();
+					if (translate) {
+					  Model m = getABSModel(absFile);
+					  generateABSUnitTests(m,suite);
+					}
 				}	
 				// Execute shell commands
 				ConsoleHandler.write(shell.getResult());
@@ -80,6 +91,41 @@ public class apetHandler extends AbstractHandler {
 		}
 
 		return null;
+	}
+	
+	/**
+	 * Connection to ABSUnit translator -- WORK IN PROGRESS
+	 * @param model
+	 * @param suite
+	 */
+	private void generateABSUnitTests(Model model, ApetTestSuite suite) {
+		
+		if (suite == null) {
+			System.out.println("aPET error: Error generating ABSUnit test suite");
+			return;
+		}
+		
+		File g = new File("//tmp//absunit");
+		g.mkdirs();
+		ABSUnitTestCaseTranslator generator = new ABSUnitTestCaseTranslator(model, g); 
+		
+		if (! generator.hasABSUnit()) {
+			System.out.println("aPET error: cannot find ABSUnit packages");
+			return;
+		}
+		
+		generator.generateABSUnitTests(suite);
+	}
+	
+	private Model getABSModel(String filename) throws Exception {
+		int numArgs = 2;
+		String[] args = new String[numArgs];
+		int i = 0;
+		args[i++] = "-v";
+		args[i++] = filename;
+		
+		Main main = new Main();
+		return main.parse(args);
 	}
 	
 	private void callPrologBackend(String filename) throws Exception {
@@ -97,14 +143,16 @@ public class apetHandler extends AbstractHandler {
 		*/
 	}
 	
-	private void callXMLParser(){
+	private ApetTestSuite callXMLParser(){
 		// TODO The xml filename should be a constant
 		XMLParser parser = new XMLParser(ApetShellCommand.XML_FILE_PATH);
+		ApetTestSuite suite = null;
 		try {
-			ApetTestSuite suite = parser.read();
+			suite = parser.read();
 			System.out.println("Test cases parsed from the xml file and stored in the APetTestSuite");
 		} catch (Exception e) {
 			System.out.println("aPET error: Error parsing the XML file");
 		}
+		return suite;
 	}
 }
