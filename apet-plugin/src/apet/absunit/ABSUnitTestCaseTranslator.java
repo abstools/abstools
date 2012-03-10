@@ -10,8 +10,10 @@ import static apet.testCases.ABSTestCaseExtractor.getABSData;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import abs.backend.tests.AbsASTBuilderUtil;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
@@ -29,8 +31,11 @@ import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.Export;
+import abs.frontend.ast.Feature;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.Import;
@@ -38,7 +43,6 @@ import abs.frontend.ast.InitBlock;
 import abs.frontend.ast.IntLiteral;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
-import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
@@ -98,7 +102,7 @@ public class ABSUnitTestCaseTranslator {
 
 		this.model = model;
 		this.output = new ModuleDecl();
-		this.output.setName("ABSUnitTest");
+		this.output.setName(MAIN);
 
 		gatherABSUnitAnnotations();
 
@@ -126,25 +130,39 @@ public class ABSUnitTestCaseTranslator {
 	public void generateABSUnitTests(ApetTestSuite suite) {
 		abs.frontend.ast.List<Export> exports = new abs.frontend.ast.List<Export>();
 		abs.frontend.ast.List<Import> imports = new abs.frontend.ast.List<Import>();
-		abs.frontend.ast.List<Decl> decls = new abs.frontend.ast.List<Decl>();
-			
+		
 		for (String key : suite.keySet()) {
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
+		Set<String> dn = new HashSet<String>(); 
+		for (Decl d : output.getDeclList()) {
+			if (d instanceof DeltaDecl) {
+				dn.add(d.getName());
+			}
+		}
+		
 		ProductLine productline = new ProductLine();
-		abs.frontend.ast.List<Product> products = new abs.frontend.ast.List<Product>();
+		productline.setName("ABSUnitConfiguration");
+		Feature feature = new Feature();
+		feature.setName("F");
+		productline.addOptionalFeature(feature);
 		
-		ModuleDecl module = new ModuleDecl(
-								MAIN, 
-								exports, 
-								imports, 
-								decls,
-								new Opt<ProductLine>(productline), 
-								products, 
-								new Opt<MainBlock>());
+		for (String d : dn) {
+			DeltaClause clause = new DeltaClause();
+			Deltaspec spec = new Deltaspec();
+			spec.setName(d);
+			clause.setDeltaspec(spec);
+			clause.addFeature(feature);
+			productline.addDeltaClause(clause);
+		}
 		
-		//output.getCompilationUnit().addModuleDecl(module);
+		Product product = new Product();
+		product.setName("ABSUnitProduct");
+		product.addFeature(feature);
+		
+		output.setProductLine(productline);
+		output.addProduct(product);
 	}
 	
 	private Annotation getTestAnnotation(DataConstructor c) {
@@ -304,7 +322,7 @@ public class ABSUnitTestCaseTranslator {
 		return null;
 	}
 	
-	public void getOrCreateTestSuiteForClassMethod(
+	private void getOrCreateTestSuiteForClassMethod(
 			List<TestCase> cs,
 			InterfaceDecl testInterface, 
 			String className,
