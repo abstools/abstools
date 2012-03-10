@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 import abs.backend.tests.ABSTestRunnerGenerator;
+import abs.backend.tests.ASTBasedABSTestRunnerGenerator;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
@@ -132,7 +133,7 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 			}
 
 			String mb = abs.backend.tests.ABSTestRunnerGenerator.RUNNER_MAIN;
-			ABSTestRunnerGenerator gen = new ABSTestRunnerGenerator(model);
+			ABSTestRunnerGenerator gen = new ASTBasedABSTestRunnerGenerator(model);
 			gen.generateTestRunner(ps);
 			ps.close();
 			fis = new FileInputStream(tmpFile);
