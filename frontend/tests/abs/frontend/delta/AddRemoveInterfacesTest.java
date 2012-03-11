@@ -11,9 +11,9 @@ import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.*;
 
 public class AddRemoveInterfacesTest extends DeltaFlattenerTest {
-
+    
     @Test
-    public void addIface() throws ASTNodeNotFoundException {
+    public void addIfaceDecl() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I { Int fooi(); }"
@@ -34,6 +34,48 @@ public class AddRemoveInterfacesTest extends DeltaFlattenerTest {
         assertNotNull(ifaceJ);
     }
 
+    @Test
+    public void modifyIfaceDeclAddMethodSig() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I { Int a(); }"
+                + "delta D {"
+                + "modifies interface I { adds Unit b(); }"
+                + "}"
+        );
+        InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
+        assertEquals(1, iface.getBodys().getNumChild());
+        assertEquals("a", iface.getBody(0).getName());
+        
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        model.applyDelta(delta);
+        
+        assertEquals(2, iface.getBodys().getNumChild());
+        assertEquals("a", iface.getBody(0).getName());
+        assertEquals("b", iface.getBody(1).getName());
+    }
+
+    @Test
+    public void modifyIfaceDeclRemoveMethodSig() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I { Int a(); Unit b(); }"
+                + "delta D {"
+                + "modifies interface I { removes Int a(); }"
+                + "}"
+        );
+        InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
+        assertEquals(2, iface.getBodys().getNumChild());
+        assertEquals("a", iface.getBody(0).getName());
+        assertEquals("b", iface.getBody(1).getName());
+        
+        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
+        model.applyDelta(delta);
+
+        assertEquals(1, iface.getBodys().getNumChild());
+        assertEquals("b", iface.getBody(0).getName());
+    }
+        
 
     @Test
     public void addIface1() throws ASTNodeNotFoundException {

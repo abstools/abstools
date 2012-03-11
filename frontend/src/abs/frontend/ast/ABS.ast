@@ -57,7 +57,7 @@ HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract ClassOrIfaceModifier;
 abstract Modifier;
-abstract MethodSigModifier : Modifier;
+abstract MethodSigModifier;
 abstract FunctionalModifier;
 abstract TypeSynModifier  : FunctionalModifier;
 abstract DataTypeModifier : FunctionalModifier;

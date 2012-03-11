@@ -350,7 +350,7 @@ List inf_modifier_fragment_list =
   | inf_modifier_fragment_list.l inf_modifier_fragment.f {: return l.add(f); :}
   ;
   
-ModifyInterfaceModifier inf_modifier_fragment =
+MethodSigModifier inf_modifier_fragment =
   ADDS methodsig.ms SEMICOLON {: return new AddMethodSigModifier(ms); :}
   | REMOVES methodsig.ms SEMICOLON {: return new RemoveMethodSigModifier(ms); :}
   ;

@@ -5,7 +5,9 @@ aspect Delta {
     
     inh DeltaDecl Modifier.delta();
     eq ModifyClassModifier.getModifier().delta() = this.delta();
-    eq ModifyInterfaceModifier.getMethodSigModifier().delta() = this.delta();
+
+    inh DeltaDecl MethodSigModifier.getDelta();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getDelta() = this.delta();
 }
 
 //inform nodes about the Module where they were declared

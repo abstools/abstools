@@ -109,7 +109,7 @@ aspect Flattener {
     }
     
     public void RemoveClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        ClassDecl cls = this.findClassModifiedBy(delta);
+        ClassDecl cls = this.findClass();
         ModuleDecl module = delta.getModule();
         for (int i = 0; i < module.getNumDecl(); i++) {
             if (module.getDecl(i) == cls) {
@@ -121,7 +121,7 @@ aspect Flattener {
     }
 
     public void ModifyClassModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        ClassDecl cls = this.findClassModifiedBy(delta);
+        ClassDecl cls = this.findClass();
         
         // make sure cls can see each of its implemented interfaces
         
@@ -168,7 +168,12 @@ aspect Flattener {
     }
 
     public void ModifyInterfaceModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException {
-        // TODO D53
+        InterfaceDecl iface = this.findInterface();
+
+        // apply all modifiers
+        for (MethodSigModifier mod : this.getMethodSigModifiers()) {
+            mod.applyTo(iface);
+        }
     }
   
     abstract public void FunctionalModifier.apply(DeltaDecl delta) throws ASTNodeNotFoundException;
@@ -216,15 +221,15 @@ aspect Flattener {
 
     /*
      * helper method
-     * find the ClassDecl which should be modified by the given delta
+     * find the ClassDecl that this ClassOrIfaceModifier applies to
      */
-    public ClassDecl ClassOrIfaceModifier.findClassModifiedBy(DeltaDecl delta) throws ASTNodeNotFoundException {
+    public ClassDecl ClassOrIfaceModifier.findClass() throws ASTNodeNotFoundException {
         // find module where delta was defined
-        ModuleDecl module = delta.getModule();
+        ModuleDecl module = this.delta().getModule();
         ClassDecl cls = null;
-        System.out.println("=== Delta " + module.getName() + "." + delta.getName() + " looking for ClassDecl: " + this.className());
+        System.out.println("=== Delta " + module.getName() + "." + this.delta().getName() + " looking for ClassDecl: " + this.className());
         
-        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleDeltas();
+        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
         KindedName symbol = new KindedName(KindedName.Kind.CLASS, this.className());
 //        for (KindedName kn : visibleSymbols.keySet()) {
 //            System.out.println("visibleNames: " + kn.getKind() + " >>>> " + kn.getName());
@@ -236,12 +241,40 @@ aspect Flattener {
             System.out.println("=== found ClassDecl: " + module.getName() + "." + cls.getName());
         } else {
             // class not found
-            throw new ASTNodeNotFoundException("Delta " + module.getName() + "." + delta.getName() 
+            throw new ASTNodeNotFoundException("Delta " + module.getName() + "." + this.delta().getName() 
                     + " wants to modify class " + this.className() + ", which was not found.");
         }
         return cls;
     }
 
+    /*
+     * helper method
+     * find the InterfaceDecl that this ClassOrIfaceModifier applies to
+     */
+    public InterfaceDecl ClassOrIfaceModifier.findInterface() throws ASTNodeNotFoundException {
+        ModuleDecl module = this.delta().getModule();
+        InterfaceDecl iface = null;
+        System.out.println("=== Delta " + module.getName() + "." + this.delta().getName() + " looking for InterfaceDecl: " + this.className());
+
+        Map<KindedName, ResolvedName> visibleSymbols = module.getVisibleNames();
+        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, this.className());
+//        for (KindedName kn : visibleSymbols.keySet()) {
+//            System.out.println("visibleNames: " + kn.getKind() + " >>>> " + kn.getName());
+//        }
+
+        // find the interface to which *this* applies 
+        if (visibleSymbols.containsKey(symbol)) {
+            iface = (InterfaceDecl) visibleSymbols.get(symbol).getDecl();
+            System.out.println("=== found InterfaceDecl: " + module.getName() + "." + iface.getName());
+        } else {
+            // not found
+            throw new ASTNodeNotFoundException("Delta " + module.getName() + "." + this.delta().getName() 
+                    + " wants to modify interface " + this.className() + ", which was not found.");
+        }
+        return iface;
+    }
+    
+    
     public ModuleDecl AddClassModifier.findModuleForClass() throws ASTNodeNotFoundException {
         Name name = new Name(getClassDecl().getName());
         ModuleDecl module = getModule();
@@ -346,11 +379,34 @@ aspect Flattener {
         cd.addField(this.getFieldDecl().fullCopy());
     }
     
-    public void AddMethodSigModifier.applyTo(ClassDecl cd) {
-        // TODO D53
+    /**************************************************************************
+     * MethodSigModifiers are applied to Interfaces
+     * - add/remove method signatures
+     */
+    public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException;
+
+    public void AddMethodSigModifier.applyTo(InterfaceDecl iface) {
+        iface.addBody(this.getMethodSig().fullCopy());
     }
-    public void RemoveMethodSigModifier.applyTo(ClassDecl cd) {
-        // TODO D53
+
+    public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodSig();
+
+        // in given InterfaceDecl: find MethodSig that matches mysig
+        int found = -1;
+        for (int i = 0; i < iface.getNumBody(); i++) {
+            MethodSig sig = iface.getBody(i);
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // remove MethodSig
+            iface.getBodys().removeChild(found);
+        else
+            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getModule().getName() + "." + this.getDelta().getName() 
+                    + " wants to remove method signature " + iface.qualifiedName() + "." + mysig + ", which was not found.");
     }
     
 }

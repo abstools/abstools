@@ -282,7 +282,6 @@ aspect DeltaCollector {
         for (Modifier m : getModifiers()) 
             m.applySubstitution(subst);
     }
-    // TODO D53
     public void AddInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
     public void ModifyInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
 
@@ -303,7 +302,6 @@ aspect DeltaCollector {
         getMethodImpl().applySubstitution(subst);
     }
     
-    // TODO D53
     public void AddMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
     public void RemoveMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
 
