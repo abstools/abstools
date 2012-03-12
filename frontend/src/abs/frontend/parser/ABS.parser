@@ -249,14 +249,19 @@ TypeSynDecl  typesyn_decl =
 
 FunctionDecl  function_decl =
 	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new BuiltinFunctionDef(), al, p); :}
-    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new ExpFunctionDef(ef), al, p); :}
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON 
+    			{: return new ParametricFunctionDecl(fn, t, l, ef, al, p); :}
 	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new FunctionDecl(fn, al, t, l, new BuiltinFunctionDef()); :}
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN data_exp.ef SEMICOLON
-	  {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(ef)); :}
+	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON
+	  {: return new FunctionDecl(fn, al, t, l, ef); :}
 	// error recovery:
 	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN error
 	  {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(new NullExp())); :}
 	;
+	
+ExpFunctionDef exp_function_def =
+	data_exp.ef {: return new ExpFunctionDef(ef); :}
+;
 
 InterfaceDecl interface_decl =
     annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE
@@ -574,13 +579,17 @@ PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
         DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
         DataConstructorExp current = result;
         /* DO NOT use the iterator here -- it interferes with rewriting [stolz] */
-        for (int i = 0; i < l.getNumChildNoTransform(); i++) {
-            Object e = l.getChildNoTransform(i);
-            DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
-            current.addParamNoTransform((PureExp)e);
-            current.addParamNoTransform(next);
-            current = next;
-        }
+        if (l.getNumChildNoTransform() > 0) {
+	        PureExp last = (PureExp) l.getChildNoTransform(l.getNumChildNoTransform()-1);
+	        for (int i = 0; i < l.getNumChildNoTransform(); i++) {
+	            PureExp e = (PureExp) l.getChildNoTransform(i);
+	            DataConstructorExp next = new DataConstructorExp("Cons", new List<PureExp>());
+	            next.setPosition(e.getStartPos(), last.getEndPos());
+	            current.addParamNoTransform(e);            
+	            current.addParamNoTransform(next);
+	            current = next;
+	        }
+	    }
         current.setConstructor("Nil");
         return result ; }
  :}
@@ -720,10 +729,14 @@ SyncCall sync_call =
 
 OriginalCall original_call =
         ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :}
-        | TYPE_IDENTIFIER.delta DOTORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID(delta), params); :}
+        | delta_id.delta DOTORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(delta, params); :}
         | CORE DOT ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID("core"), params); :}
         ;
 
+DeltaID delta_id =
+	TYPE_IDENTIFIER.delta {: return new DeltaID(delta); :}
+;
+        
 // Needed to support auto-completion in the Eclipse IDE
 IncompleteExp incomplete_exp =
       pure_exp_prefix.callee DOT.d IDENTIFIER.method? {:
@@ -852,9 +865,14 @@ AttrAssignment attr_assignment =
     ;
 
 List deltaclause_list = {: return new List(); :}
-    | deltaclause_list.l DELTA deltaspec.d after_condition.a? when_condition.w?
-      SEMICOLON {: return l.add(new DeltaClause(d, a, w)); :};
+    | deltaclause_list.l delta_clause.dc
+      SEMICOLON {: return l.add(dc); :};
 
+DeltaClause delta_clause = 
+	DELTA deltaspec.d after_condition.a? when_condition.w?
+			{: return new DeltaClause(d, a, w); :}
+;
+      
 /*| deltaclause_list.l DELTA deltaspec.d when_condition.w?
       SEMICOLON {: return l.add(new DeltaClause(d, new List(), w)); :};
     | deltaclause_list.l DELTA deltaspec.d after_condition.a when_condition.w?

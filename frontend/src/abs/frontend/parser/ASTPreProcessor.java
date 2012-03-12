@@ -4,6 +4,7 @@
  */
 package abs.frontend.parser;
 
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.CaseBranch;
 import abs.frontend.ast.CaseExp;
@@ -137,7 +138,20 @@ public class ASTPreProcessor {
                     new List<Annotation>(), // annotations
                     typeParams
                     );
-        fd.setPosition(ca.getStartPos(), ca.getEndPos());
+        setPosition(fd, ca.getStartPos(), ca.getEndPos());
         return fd;
+    }
+
+    /**
+     * recursively set the position of this ast node and its childs 
+     */
+    private void setPosition(ASTNode<?> node, int startPos, int endPos) {
+        node.setPosition(startPos, endPos);
+        for (int i=0; i < node.getNumChildNoTransform(); i++) {
+            Object child = node.getChildNoTransform(i);
+            if (child instanceof ASTNode<?>) {
+                setPosition((ASTNode<?>) child, startPos, endPos);
+            }
+        }
     }
 }

@@ -20,6 +20,8 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DataTypeUse;
+import abs.frontend.ast.DeltaID;
+import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.MainBlock;
@@ -29,6 +31,7 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarDeclStmt;
+import abs.frontend.ast.VarUse;
 
 public class BackPositionTest extends FrontendTest {
     @Test
@@ -79,7 +82,36 @@ public class BackPositionTest extends FrontendTest {
         assertNodeAtPos("module M; interface I {} { I i; i = null;    }", 1, 45, Block.class);
     }
 
+    @Test
+    public void testListFunction() {
+        assertNodeAtPos("module M; { Int abc = 2; List<Int> ints = list[1, abc, 3]; }", 1, 51, VarUse.class);
+    }
+    
+
+    @Test
+    public void testFuncDef() {
+        assertNodeAtPos("module M; def Int foo(Int abc) = abc + 1;", 1, 34, VarUse.class);
+    }
+    
+    @Test
+    public void testDeltaId() {
+        assertNodeAtPos("module M;\n" +
+        		"class C {}\n" +
+        		"delta D1 { modifies class C { adds Unit m() {} } }\n" +
+        		"delta D2 { modifies class C { modifies Unit m() { original(); D1.original(); } } }", 4, 63, DeltaID.class);
+    }
+    
+    @Test
+    public void testDeltaClause() {
+        assertNodeAtPos("module Bla; productline PL { features X; delta KX when X; }", 1, 48, Deltaspec.class);
+    }
+    
+    
+    
+    
+    
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
+        assertParseOk(absCode, WITH_STD_LIB);
         Model m = null;
         try {
             m = Main.parseString(absCode, false, true);

@@ -170,8 +170,15 @@ aspect VarResolution {
     // replace unbound pattern variables with var decls
     rewrite PatternVarUse {
         when (lookupVarOrFieldName(getName(),false) == null)
-            to PatternVar new PatternVar(new PatternVarDecl(getName()));
+            to PatternVar {
+            	PatternVarDecl decl = new PatternVarDecl(getName());
+		        decl.setPosition(getStartPos(), getEndPos());
+		        PatternVar v = new PatternVar(decl);
+		        v.setPosition(getStartPos(), getEndPos());
+		        return v;
+            }
     }
+    
 }
 
 // Local Variables:

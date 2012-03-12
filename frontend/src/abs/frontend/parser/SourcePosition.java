@@ -5,6 +5,7 @@
 package abs.frontend.parser;
 
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.List;
 import abs.frontend.ast.Opt;
 import beaver.Symbol;
 
@@ -38,8 +39,9 @@ public class SourcePosition {
             ASTNode<?> foundNode = node;
             for (int i = 0; i < node.getNumChild(); i++) {
                 SourcePosition pos = findPosition(node.getChild(i), searchPos);
-                if (pos != null)
+                if (pos != null) {
                     return pos;
+                }
             }
             return new SourcePosition(node, searchPos);
         }
@@ -55,13 +57,32 @@ public class SourcePosition {
             } else {
                 return false;
             }
+        } else if (node instanceof List<?>) {
+            if (node.getNumChild() == 0) {
+                return false;
+            } else if (node.getEnd() == 0) {
+                // if position is not set, check children
+                if (node.getNumChild() == 0) {
+                    return false;
+                }
+                if (smaller(pos, node.getChild(0).getStart()) || larger(pos, node.getChild(node.getNumChild()-1).getEnd())) {
+                    return false;
+                }
+                return true;
+            }
         }
-        int col = Symbol.getColumn(node.getStart());
-        int line = Symbol.getLine(node.getStart());
-        int endcol = Symbol.getColumn(node.getEnd());
-        int endline = Symbol.getLine(node.getEnd());
-        int posCol = Symbol.getColumn(pos);
-        int posLine = Symbol.getLine(pos);
+//        int col = Symbol.getColumn(node.getStart());
+//        int line = Symbol.getLine(node.getStart());
+//        int endcol = Symbol.getColumn(node.getEnd());
+//        int endline = Symbol.getLine(node.getEnd());
+//        int posCol = Symbol.getColumn(pos);
+//        int posLine = Symbol.getLine(pos);
+//        
+//        System.out.println("in node " + node.getParent().hashCode() + " > " + node.hashCode() + " " + node.getClass() + " " + node);
+//        System.out.println("    start: " + line + ":" + col);
+//        System.out.println("    pos:   " + posLine + ":" + posCol);
+//        System.out.println("    end:   " + endline + ":" + endcol);
+        
         if (smaller(pos, node.getStart()) || larger(pos, node.getEnd()))
             return false;
         return true;
