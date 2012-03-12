@@ -13,6 +13,7 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.*;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
+import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
 import org.eclipse.jface.text.rules.*;
@@ -208,6 +209,13 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 				};
 			return new DefaultInformationControl(parent, presenter);
 			}
+		};
+	}
+	
+	@Override
+	public IHyperlinkDetector[] getHyperlinkDetectors(ISourceViewer sourceViewer) {
+		return new IHyperlinkDetector[] {
+				new AbsHyperlinkDetector(editor)
 		};
 	}
 }

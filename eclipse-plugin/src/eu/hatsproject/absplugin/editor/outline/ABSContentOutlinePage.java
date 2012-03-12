@@ -135,68 +135,10 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	private void setInput() {
-		final AbsNature nature;
-		CompilationUnit cu;
-		IResource file = editor.getResource();
-		if (file == null) {
-			// we are looking at abslang.abs or a file inside a jar-package
-			
-			IURIEditorInput uriInput = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
-			
-			if (uriInput != null) {
-				// We're looking e.g. at abslang.abs which only exists in memory.
-				
-				// create an empty model which only contains abslang.abs:
-				nature = new AbsNature();
-				nature.emptyModel();
-				File f = new File(uriInput.getURI());
-				String path = f.getAbsolutePath();
-				cu = nature.getCompilationUnit(path);
-				if (cu == null) {
-					Activator.logException(new IllegalArgumentException("Can't find "+path));
-					return;
-				}
-			} else {
-				PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
-				if (storageInput != null) {
-					// we are looking at a file inside a jar package
-
-					nature = UtilityFunctions.getAbsNature(storageInput.getFile().getProject());
-					String path = storageInput.getFile().getAbsoluteFilePath();
-					if (nature == null) {
-						Activator.logException(new IllegalArgumentException("Can't find nature on "+path));
-						return;
-					}
-					cu = nature.getCompilationUnit(path);
-					if (cu == null) {
-						Activator.logException(new IllegalArgumentException("Can't find "+path));
-						return;
-					}
-				} else {
-					Activator.logException(new IllegalArgumentException("Can't get editor input."));
-					return;
-				}
-			}
-		} else {
-			if (!file.exists())
-				return;
-			// Tries to get the ABS ProjectNature in order to get the AST
-			nature = UtilityFunctions.getAbsNature(file);
-			Assert.isNotNull(nature);
-			if (nature == null) {
-				return;
-			}
-			cu = nature.getCompilationUnit(file);
-			if (cu == null) {
-				// Band-aid for ticket #299:
-				nature.parseABSFile(file, false, null);
-				cu = nature.getCompilationUnit(file);
-				Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
-			}
-		}
-
+		InternalASTNode<CompilationUnit> cu = UtilityFunctions.getCompilationUnit(editor); 
+		
 		// Update the input of the tree viewer to reflect the new outline of the AST
-		getTreeViewer().setInput(new InternalASTNode<CompilationUnit>(cu,nature));
+		getTreeViewer().setInput(cu);
 	}
 
 	private void addSelectionListener() {

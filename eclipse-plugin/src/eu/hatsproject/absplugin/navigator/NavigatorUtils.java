@@ -60,7 +60,7 @@ public class NavigatorUtils {
 	}
 
 	private static void openAndHighlightEditor(InternalASTNode<?> node) throws PartInitException {
-		IEditorPart editorPart = openABSEditorForFile(node.getFileName());
+		IEditorPart editorPart = openABSEditorForFile(node.getFileName(), node.getProject());
 		if (editorPart instanceof TextEditor){
 			TextEditor texteditor = ((TextEditor) editorPart);
 			highlightInEditor(texteditor, node);

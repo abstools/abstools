@@ -49,8 +49,9 @@ public class PackageAbsFileInputFactory implements IElementFactory {
 		String pak = memento.getString(ABS_PACKAGE);
 		String entry = memento.getString(ABS_PACKAGE_ENTRY);
 		String name = memento.getString(ABS_PROJECT);
+		IProject proj = UtilityFunctions.getAbsProjectFromWorkspace(name);
 		return new PackageAbsFileEditorInput(
-				UtilityFunctions.getPackageAbsFile(pak,entry,name));
+				UtilityFunctions.getPackageAbsFile(proj , pak,entry));
 	}
 	
 }

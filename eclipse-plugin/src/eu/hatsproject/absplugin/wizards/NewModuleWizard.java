@@ -89,7 +89,7 @@ public class NewModuleWizard extends ABSNewWizard implements INewWizard {
 	public boolean performFinish() {
 			IFile resultFile = page.getResultFile();
 			if (resultFile != null){
-				ABSEditor editor = UtilityFunctions.openABSEditorForFile(resultFile.getLocation());
+				ABSEditor editor = UtilityFunctions.openABSEditorForFile(resultFile.getLocation(), resultFile.getProject());
 				IDocument document = editor.getDocumentProvider().getDocument(editor.getEditorInput());
 				
 				//modules are always added the the end of the document

@@ -1777,6 +1777,28 @@
              name="command for resume">
        </command>
     </extension>
+    
+    <!-- Hyperlink support -->
+    
+    <extension
+	  point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
+	  <target
+	    id="eu.hatsproject.absplugin.absCode"
+	    name="Abs Editor">
+	    <context type="eu.hatsproject.absplugin.editor.ABSEditor"/>
+	  </target>
+	</extension>
+    
+    <extension
+  		point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
+  	<hyperlinkDetector
+         class="eu.hatsproject.absplugin.editor.AbsHyperlinkDetector"
+         id="eu.hatsproject.absplugin.editor.AbsHyperlinkDetector"
+         name="Abs Hyperlink Detector"
+         targetId="eu.hatsproject.absplugin.absCode">
+	  </hyperlinkDetector>
+	</extension>
+    
 <!-- adding resource factories -->
 
 </plugin>

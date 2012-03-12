@@ -345,7 +345,7 @@ public class WizardUtil {
 	protected static ABSEditor getEditorForModuleDecl(InternalASTNode<ModuleDecl> m) {
 		if (m != null) {
 			IPath path = UtilityFunctions.getPathOfModuleDecl(m);
-			return (ABSEditor) UtilityFunctions.openABSEditorForFile(path);
+			return (ABSEditor) UtilityFunctions.openABSEditorForFile(path, m.getProject());
 		}
 
 		return null;

@@ -136,7 +136,8 @@ public class DebugUtils {
 			
 			@Override
 			public void run() {
-				ABSEditor editor = UtilityFunctions.openABSEditorForFile(path);
+			    // TODO this will open an editor without a project (==> missing outline etc.)
+				ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, null);
 				editor.highlightLine(n);
 			}
 		});
@@ -169,7 +170,8 @@ public class DebugUtils {
 			
 			@Override
 			public void run() {
-				ABSEditor editor = UtilityFunctions.openABSEditorForFile(path);
+			    // TODO this will open an editor without a project (==> missing outline etc.)
+			    ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, null);
 				editor.removeHighlighting();
 			}
 		});

@@ -126,6 +126,10 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 			lineOffset = doc.getLineOffset(line);
 			
 			IResource resource = getResource();
+			if (resource == null) {
+			    // can be null for files inside jars
+				return;
+			}
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_ZERO);
 			
 			getSourceViewer().invalidateTextPresentation();
@@ -152,6 +156,10 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 	 */
 	public void removeHighlighting(){
 		IResource resource = getResource();
+		if (resource == null) {
+		    // can be null for files inside jars
+			return;
+		}
 		try {
 			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_INFINITE);
 			getSourceViewer().invalidateTextPresentation();

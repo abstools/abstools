@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -29,6 +30,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -378,6 +380,78 @@ public class UtilityFunctions {
 	}
 	
 	/**
+	 * returns the compilation unit for a given editor
+	 * @param editor 
+	 */
+	public static InternalASTNode<CompilationUnit> getCompilationUnit(ABSEditor editor) {
+		AbsNature nature;
+		CompilationUnit cu;
+		IResource file = editor.getResource();
+		if (file == null) {
+			// we are looking at abslang.abs or a file inside a jar-package
+			
+			IURIEditorInput uriInput = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
+			
+			if (uriInput != null) {
+				// We're looking e.g. at abslang.abs which only exists in memory.
+				
+				// create an empty model which only contains abslang.abs:
+				nature = new AbsNature();
+				nature.emptyModel();
+				File f = new File(uriInput.getURI());
+				String path = f.getAbsolutePath();
+				cu = nature.getCompilationUnit(path);
+				if (cu == null) {
+					Activator.logException(new IllegalArgumentException("Can't find "+path));
+					return null;
+				}
+			} else {
+				PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
+				if (storageInput != null) {
+					// we are looking at a file inside a jar package
+					IProject project = UtilityFunctions.getProject(editor);
+					if (project == null) {
+						Activator.logException(new IllegalArgumentException("Can't get project"));
+						return null;
+					} else {
+						nature = UtilityFunctions.getAbsNature(project);
+					}
+					String path = storageInput.getFile().getAbsoluteFilePath();
+					if (nature == null) {
+						Activator.logException(new IllegalArgumentException("Can't find nature on "+path));
+						return null;
+					}
+					cu = nature.getCompilationUnit(path);
+					if (cu == null) {
+						Activator.logException(new IllegalArgumentException("Can't find "+path));
+						return null;
+					}
+				} else {
+					Activator.logException(new IllegalArgumentException("Can't get editor input."));
+					return null;
+				}
+			}
+		} else {
+			if (!file.exists())
+				return null;
+			// Tries to get the ABS ProjectNature in order to get the AST
+			nature = UtilityFunctions.getAbsNature(file);
+			if (nature == null) {
+			    return null;
+			}
+			cu = nature.getCompilationUnit(file);
+			if (cu == null) {
+				// Band-aid for ticket #299:
+				nature.parseABSFile(file, false, null);
+				cu = nature.getCompilationUnit(file);
+				Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
+			}
+		}
+		
+		return new InternalASTNode<CompilationUnit>(cu, nature);
+	}
+	
+	/**
 	 * Convenience method showing an error dialog with the given error message.
 	 */
 	public static void showErrorMessage(final String errorMessage){
@@ -466,28 +540,22 @@ public class UtilityFunctions {
 		return null;
 	}
 	
-	public static PackageAbsFile getPackageAbsFile(String pak, String entry) {
-		return getPackageAbsFile(pak,entry,null);
-	}
 
 	/**
 	 * A convenient method to reconstruct a {@link PackageAbsFile} from the absolute
 	 * path to the ABS package and the name to the specific entry in the package.
+	 * @param proj the project which the package belongs to
 	 * @param pak
 	 * @param entry
-	 * @param name name of the project this ABS package is from. 
 	 * @return 
 	 */
-	public static PackageAbsFile getPackageAbsFile(String pak, String entry,
-			String name) {
+	public static PackageAbsFile getPackageAbsFile(IProject proj, String pak, String entry) {
 		File file = new File(pak);
 		try {
 			if (new ABSPackageFile(file).isABSPackage()) {
 				
-				PackageContainer container = null;
 				PackageEntry pentry = null;
-				if (name != null) {
-					IProject proj = getAbsProjectFromWorkspace(name);
+				if (proj != null) {
 					AbsNature nature = getAbsNature(proj);
 					for (PackageEntry e : nature.getPackages().getPackages()) {
 						if (e.getPath().equals(file.getAbsolutePath())) {
@@ -495,13 +563,12 @@ public class UtilityFunctions {
 							break;
 						}
 					}
-					if (pentry == null) {
-						container = new PackageContainer();
-						container.setProject(proj);
-					}
 				}
 				
 				if (pentry == null) {
+					PackageContainer container = new PackageContainer();
+					container.setProject(proj);
+					
 					pentry = new PackageEntry(
 								container, 
 								file.getName(), 
@@ -517,13 +584,15 @@ public class UtilityFunctions {
 		return null;
 	}
 	
-	private static IProject getAbsProjectFromWorkspace(String name) {
+	public static IProject getAbsProjectFromWorkspace(String name) {
 		IProject p = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
 		if (getAbsNature(p) != null) {
 			return p;
 		}
 		return null;
 	}
+	
+	
 	
 	/**
 	 * Get the current active {@link IWorkbenchPage}.
@@ -533,9 +602,6 @@ public class UtilityFunctions {
 		return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 	}
 	
-	public static ABSEditor openABSEditorForFile(IPath path) {
-		return openABSEditorForFile(path, null);
-	}
 	
 	public static ABSEditor openABSEditorForFile(IPath path, IProject project){
 		IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
@@ -553,8 +619,7 @@ public class UtilityFunctions {
 				String parts = new URI(path.toString()).getRawSchemeSpecificPart();
 				String pak = new URI(parts.split("!/")[0]).getSchemeSpecificPart();
 				String entry = parts.split("!/")[1];
-				String pname = (project != null) ? project.getName() : null;
-				return openABSEditorForFile(getPackageAbsFile(pak, entry, pname));
+				return openABSEditorForFile(getPackageAbsFile(project, pak, entry));
 			} catch (URISyntaxException e) {
 				standardExceptionHandling(e);
 			}
@@ -664,5 +729,22 @@ public class UtilityFunctions {
 	public static void standardExceptionHandling(Exception e){
 		Activator.logException(e);
 	}
+
+	/**
+	 * returns the project for a given editor 
+	 */
+	public static IProject getProject(IEditorPart editor) {
+		IProject project = (IProject) editor.getAdapter(IProject.class);
+		if (project == null) {
+			PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
+			if (storageInput != null) {
+				// we are looking at a file inside a jar package
+				project = storageInput.getFile().getProject();
+			}
+		}
+		return project;
+	}
+
+	
 	
 }
