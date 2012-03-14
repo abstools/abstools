@@ -1,13 +1,7 @@
 package apet.absunit;
 
-import static abs.backend.tests.AbsASTBuilderUtil.getDecl;
-import static abs.backend.tests.AbsASTBuilderUtil.getExpStmt;
-import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
-import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
-import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
-import static abs.backend.tests.AbsASTBuilderUtil.newObj;
-import static apet.testCases.ABSTestCaseExtractor.getABSData;
-import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
+import static abs.backend.tests.AbsASTBuilderUtil.*;
+import static apet.testCases.ABSTestCaseExtractor.*;
 
 import java.io.File;
 import java.util.HashSet;
@@ -128,9 +122,7 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	public void generateABSUnitTests(ApetTestSuite suite) {
-		abs.frontend.ast.List<Export> exports = new abs.frontend.ast.List<Export>();
-		abs.frontend.ast.List<Import> imports = new abs.frontend.ast.List<Import>();
-		
+
 		for (String key : suite.keySet()) {
 			generateABSUnitTest(suite.get(key), key);
 		}
@@ -337,7 +329,7 @@ public class ABSUnitTestCaseTranslator {
 		
 		//find method under test.
 		MethodImpl mut = findMethodImpl(cut, new MethodNamePredicate(methodName));
-
+		
 		//find interface of class under test.
 		InterfaceDecl inf = null;
 		for (InterfaceTypeUse iu : cut.getImplementedInterfaceUseList()) {
@@ -350,23 +342,31 @@ public class ABSUnitTestCaseTranslator {
 			}
 		}
 		
-		String out = "objectUnderTest";
+		//add imports of class/interface under test
+		output.addImport(generateImportAST(cut));
+		output.addImport(generateImportAST(inf));
+		
 		String minf = "ModifierFieldsOf"+className+"ForTest";
 		
 		for (int i=0; i<cs.size(); i++) {
 			TestCase c = cs.get(i);
+
+			//initial arg
+			List<ABSData> ia = ABSTestCaseExtractor.getInputArgs(c);
 			Block block = testClass.getMethod(i).getBlock();
+			
+			//first initial arg is the reference of sut
+			String out = ABSTestCaseExtractor.getABSData(ia.get(0));
 			block.addStmt(newObj(inf, cut, out, false));
 			
 			//TODO initial states' heap contains more than one object.
 			Map<ABSRef,ABSObject> is = ABSTestCaseExtractor.getInitialState(c);
 			assert is.size() == 1;
 			for (ABSRef r : is.keySet()) {
-				block.addStmt(getVarDecl(getABSData(r), new InterfaceTypeUse(minf), new VarUse(out)));
 				makeSetStatements(r, is.get(r), block);
 			}
 			
-			List<ABSData> ia = ABSTestCaseExtractor.getInputArgs(c);
+			//test execution
 			SyncCall test = makeTestExecutionForMethod(mut.getMethodSig(), ia);
 			
 			Access access = mut.getMethodSig().getReturnType();
@@ -384,6 +384,12 @@ public class ABSUnitTestCaseTranslator {
 			Map<ABSRef,ABSObject> af = ABSTestCaseExtractor.getAfterState(c);
 		}
 		
+		output.addDecl(testClass);
+	}
+	
+	private void updateDelta(ClassDecl clazz) {
+		String className = clazz.getName();
+		
 		DeltaDecl dd = getDecl(output, DeltaDecl.class, 
 				new DeclNamePredicate<DeltaDecl>(className + DELTA_SUFFIX));
 		
@@ -396,7 +402,7 @@ public class ABSUnitTestCaseTranslator {
 			InterfaceDecl ai = new InterfaceDecl();
 			ai.setName("ModifierFieldsOf"+className+"ForTest");
 			mcm.addImplementedInterfaceUse(new InterfaceTypeUse(ai.getName()));
-			for (FieldDecl fd : cut.getFieldList()) {
+			for (FieldDecl fd : clazz.getFieldList()) {
 				AddMethodModifier smm = addSetter(fd.getName(), fd.getAccess());
 				AddMethodModifier gmm = addGetter(fd.getName(), fd.getAccess());
 				mcm.addModifier(smm);
@@ -410,8 +416,6 @@ public class ABSUnitTestCaseTranslator {
 			
 			output.addDecl(dd);
 		}
-		
-		output.addDecl(testClass);
 	}
 	
 	private void makeSetStatements(ABSRef ref, ABSObject state, Block block) {
@@ -431,6 +435,13 @@ public class ABSUnitTestCaseTranslator {
 			
 			block.addStmt(getExpStmt(syncCall));
 		}
+		
+		updateDelta(getDecl(output, ClassDecl.class, 
+				new DeclNamePredicate<ClassDecl>(getABSObjectType(state))));
+		
+//		block.addStmt(getVarDecl(getABSData(r), new InterfaceTypeUse(minf), 
+//				new VarUse(out)));
+		
 	}
 	
 	private SyncCall makeTestExecutionForMethod(MethodSig method, List<ABSData> inArgs) {
@@ -458,8 +469,8 @@ public class ABSUnitTestCaseTranslator {
 			if (d instanceof ABSRef) {
 				exp = new VarUse(sv);
 			} else if (d instanceof ABSTerm) {
-				Access type = method.getParam(i).getAccess();
 				//TODO need to differentiate terms
+				//Access type = method.getParam(i).getAccess();
 				exp = new IntLiteral(sv);
 			} else {
 				throw new IllegalStateException("");
