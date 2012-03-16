@@ -10,8 +10,6 @@ import abs.frontend.typechecker.TypeCheckerHelper;
 import java.util.HashMap;
 
 aspect TypeChecker {
-    
-    private SemanticErrorList Model.typeErrors;
 
     /* typeCheck() is already cached, no need to cache this simple getter. */
     public boolean Model.hasTypeErrors() { return !typeCheck().isEmpty(); }
@@ -19,12 +17,14 @@ aspect TypeChecker {
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
         typeCheck(res);
-        typeErrors = res;
         return res;
     }
     
+    /**
+     * @see #typeCheck()
+     */
     public SemanticErrorList Model.getTypeErrors() {
-        return typeErrors;
+        return typeCheck();
     }
     
     public void Model.typeCheck(SemanticErrorList errors) {

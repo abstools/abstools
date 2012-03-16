@@ -157,4 +157,29 @@ public class DeltaSamplesTest extends FrontendTest {
         assertFalse(m.hasTypeErrors());
     }
 
+    @Test
+    public void test_ticket332_base() throws Exception {
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", true);
+        assertFalse(m.hasParserErrors());
+        assertFalse(m.hasErrors());
+        assertTrue(m.typeCheck().isEmpty());
+    }
+
+    @Test
+    public void test_ticket332_parse() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/ticket332.abs", false);
+        m.flushCache();
+        m.flattenForProduct("DE.C");
+        m.flushCache();
+        assertTrue(m.typeCheck().isEmpty());
+    }
+
+    @Test
+    public void test_ticket332_check() throws Exception {
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", false);
+        m.flushCache();
+        m.flattenForProduct("DE.C");
+        m.flushCache();
+        assertTrue(m.typeCheck().isEmpty());
+    }
 }

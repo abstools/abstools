@@ -1,0 +1,17 @@
+module M1;
+export C;
+class C { }
+module M2;
+export *;
+interface I { }
+module M3;
+import * from M1;
+import * from M2;
+delta D {
+ modifies class C implements M2.I { }
+}
+productline PL {
+ features F;
+ delta D when F;
+}
+product P(F);
