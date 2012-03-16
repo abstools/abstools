@@ -22,17 +22,27 @@ import abs.frontend.ast.Model;
 public class DeltaSamplesTest extends FrontendTest {
 
     @Test
+    public void test_P2P_tc() throws Exception {
+        /* Base case, check for valid input */
+        assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+    }
+
+    @Test
     public void test_P2P_P1() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P1");
+        m.flushCache();
+        assertTrue(m.typeCheck().isEmpty());
     }
 
     @Test
     public void test_P2P_P2() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P2");
+        m.flushCache();
+        assertTrue(m.typeCheck().isEmpty());
     }
 
     @Test
@@ -44,9 +54,13 @@ public class DeltaSamplesTest extends FrontendTest {
 
     @Test
     public void test_P2P_P4() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
+        Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
         m.flattenForProduct("PeerToPeer.P4");
+        m.flushCache();
+        SemanticErrorList res = m.typeCheck();
+        if (!res.isEmpty())
+            fail(res.toString());
     }
 
     @Test
@@ -127,4 +141,20 @@ public class DeltaSamplesTest extends FrontendTest {
         InterfaceDecl j = (InterfaceDecl) DeltaFlattenerTest.findDecl(m, "M", "J");
         assertNull(j);
     }
+    
+    @Test
+    public void test_ticket361_base() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
+        assertFalse(m.hasErrors());
+        assertFalse(m.hasTypeErrors());
+    }
+    @Test
+    public void test_ticket361_P() throws Exception {
+        Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
+        m.flattenForProduct("M3.P");
+        m.flushCache();
+        assertFalse(m.hasErrors());
+        assertFalse(m.hasTypeErrors());
+    }
+
 }
