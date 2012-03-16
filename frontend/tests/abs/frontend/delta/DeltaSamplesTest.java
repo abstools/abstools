@@ -167,7 +167,7 @@ public class DeltaSamplesTest extends FrontendTest {
 
     @Test
     public void test_ticket332_parse() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/ticket332.abs", false);
+        Model m = assertParseFileOk("tests/abssamples/deltas/ticket332.abs", true);
         m.flushCache();
         m.flattenForProduct("DE.C");
         m.flushCache();
@@ -176,7 +176,7 @@ public class DeltaSamplesTest extends FrontendTest {
 
     @Test
     public void test_ticket332_check() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", false);
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", true);
         m.flushCache();
         m.flattenForProduct("DE.C");
         m.flushCache();
