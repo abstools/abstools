@@ -248,15 +248,23 @@ public class ChocoSolver {
       return errors.isEmpty();
   }  
   
+  // Adds parenthesis for readability if there are *spaces* in the string.
+  private static String mbParenthesis(String s) {
+      if (s.contains(" "))
+        return "(" + s + ")";
+      else
+        return s;
+  }
+  
   private static String prettyConst(Constraint c){
     if (c instanceof MetaConstraint) {
       MetaConstraint mc = (MetaConstraint) c;
       if (mc.getConstraintType() == ConstraintType.IMPLIES)
-        return "(" + prettyConst(mc.getConstraint(0))+") -> ("+prettyConst(mc.getConstraint(1))+")";
+        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" -> ("+prettyConst(mc.getConstraint(1))+")";
       if (mc.getConstraintType() == ConstraintType.AND)
-        return "(" + prettyConst(mc.getConstraint(0))+") /\\ ("+prettyConst(mc.getConstraint(1))+")";
+        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" /\\ ("+prettyConst(mc.getConstraint(1))+")";
       if (mc.getConstraintType() == ConstraintType.OR)
-        return "(" + prettyConst(mc.getConstraint(0))+") \\/ ("+prettyConst(mc.getConstraint(1))+")";
+        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" \\/ "+mbParenthesis(prettyConst(mc.getConstraint(1)));
         //output.println("I'm a imply!\nleft: "+mc.getConstraint(0).pretty());
     }
     if (c instanceof ComponentConstraint) {
