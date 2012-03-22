@@ -19,6 +19,7 @@ import abs.frontend.ast.Access;
 import abs.frontend.ast.AddInterfaceModifier;
 import abs.frontend.ast.AddMethodModifier;
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.AssertStmt;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
@@ -28,6 +29,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Deltaspec;
+import abs.frontend.ast.EqExp;
 import abs.frontend.ast.Export;
 import abs.frontend.ast.Feature;
 import abs.frontend.ast.FieldDecl;
@@ -86,6 +88,8 @@ public class ABSUnitTestCaseTranslator {
 
 	private DataConstructor suiteType;
 	private DataConstructor fixtureType;
+	
+	private ClassDecl absAssertImpl;
 
 	private final Model model;
 	private final ModuleDecl output;
@@ -115,6 +119,14 @@ public class ABSUnitTestCaseTranslator {
 		if (! outputDir.exists())
 			outputDir.mkdirs();
 		
+		
+		this.absAssertImpl = 
+			getDecl(model, ClassDecl.class, 
+				new DeclNamePredicate<ClassDecl>("ABSAssertImpl"));
+		
+		if (this.absAssertImpl == null) 
+			throw new IllegalArgumentException("Cannot find ABSAssertImpl");
+
 	}
 	
 	public boolean hasABSUnit() {
@@ -122,7 +134,7 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	public void generateABSUnitTests(ApetTestSuite suite) {
-
+		
 		for (String key : suite.keySet()) {
 			generateABSUnitTest(suite.get(key), key);
 		}
@@ -373,18 +385,36 @@ public class ABSUnitTestCaseTranslator {
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
 				block.addStmt(getExpStmt(test)); //no return value
+				assert ABSTestCaseExtractor.getReturnData(c) == null;
 			} else {
 				block.addStmt(getVarDecl("returnValue", access, test));
 			}
 			
 			//check return value
 			ABSData rd = ABSTestCaseExtractor.getReturnData(c);
+			if (rd != null) {
+				makeOracle("returnValue", access, rd, block);
+			}
 			
 			//check return value
 			Map<ABSRef,ABSObject> af = ABSTestCaseExtractor.getAfterState(c);
+			assert af.size() == 1;
+			for (ABSRef r : af.keySet()) {
+				makeGetAndAssertStatements(r, af.get(r), block);
+			}
 		}
 		
 		output.addDecl(testClass);
+	}
+	
+	private void makeOracle(String actual, Access access, ABSData data, Block block) {
+		AssertStmt stmt =
+			new AssertStmt(
+				new abs.frontend.ast.List<Annotation>(),
+				new EqExp(new VarUse(actual), 
+						  new IntLiteral(getABSData(data))));
+		
+		block.addStmt(stmt);
 	}
 	
 	private void updateDelta(ClassDecl clazz) {
@@ -436,12 +466,33 @@ public class ABSUnitTestCaseTranslator {
 			block.addStmt(getExpStmt(syncCall));
 		}
 		
+		//ADD getter and setter
 		updateDelta(getDecl(output, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>(getABSObjectType(state))));
 		
 //		block.addStmt(getVarDecl(getABSData(r), new InterfaceTypeUse(minf), 
 //				new VarUse(out)));
 		
+	}
+	
+	private void makeGetAndAssertStatements(ABSRef ref, ABSObject state, Block block) {
+		String rn = getABSData(ref); 
+		
+		Map<String,ABSData> fields = getABSObjectFields(state);
+		for (String fn : fields.keySet()) {
+			SyncCall syncCall = new SyncCall();
+			syncCall.setCallee(new VarUse(rn));
+			syncCall.setMethod(GETTER_PREFIX+fn);
+			ABSData d = fields.get(fn);
+
+			//TODO references!
+			if (d instanceof ABSTerm) {
+				String expected = getABSData(d);
+			}
+			
+			block.addStmt(getVAssign(GETTER_PREFIX+fn+"Var", syncCall));
+			makeOracle(GETTER_PREFIX+fn+"Var",null,d,block);
+		}
 	}
 	
 	private SyncCall makeTestExecutionForMethod(MethodSig method, List<ABSData> inArgs) {
@@ -480,7 +531,7 @@ public class ABSUnitTestCaseTranslator {
 		return syncCall;
 	}
 	
-	public InterfaceDecl getOrCreateTestFixtureForClassMethod(int testCaseSize, String className, 
+	private InterfaceDecl getOrCreateTestFixtureForClassMethod(int testCaseSize, String className, 
 			String methodName) {
 		
 		String cm = StringUtils.capitalize(methodName);
