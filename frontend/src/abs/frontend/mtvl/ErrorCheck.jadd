@@ -20,6 +20,9 @@ aspect ErrorCheck {
     AttrConstraints acl = getAttrConstraints();
     for(int i = 0; i < acl.getNumConstr(); i++)
       acl.getConstr(i).checkType(Types.BOOL,c);
+    // mark as a (non-)leaf
+    if (hasGroup())
+        getNonLeafs().add(getName());
   }
   public void FExt.collectErrors(SemanticErrorList c) {
     super.collectErrors(c);
@@ -28,6 +31,13 @@ aspect ErrorCheck {
     AttrConstraints acl = getAttrConstraints();
     for(int i = 0; i < acl.getNumConstr(); i++)
       acl.getConstr(i).checkType(Types.BOOL,c);
+    // check leafs
+    if (hasGroup()) {
+        Set<String> nonLeafs = getNonLeafs();
+        if (nonLeafs.contains(getName())) {
+            c.add(new SemanticError(this,ErrorMessage.NOT_A_LEAF,getName()));
+        }
+    }
   }
   public void ASTNode.checkType(short type, SemanticErrorList c) {
 //    System.out.println("spreading check in constraint from...");

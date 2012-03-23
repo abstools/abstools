@@ -1,0 +1,37 @@
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+Given a set of features, collect in "newParents" all of its parents.
+**/
+
+
+aspect VerifyLeafs {
+
+  private Set<String> Model.nonLeafs = new HashSet<String>();
+
+  public Set<String> Model.getNonLeafs() {
+    return nonLeafs;
+  }
+
+//  public boolean FeatureDecl.isLeaf() {
+//    return hasGroup();
+//  }
+//  public boolean FExt.isLeaf() {
+//    return hasGroup();
+//  }
+
+
+  inh Set<String> CompilationUnit.getNonLeafs();
+  inh Set<String> FeatureDecl.getNonLeafs();
+  inh Set<String> FExt.getNonLeafs();
+
+  eq Model.getCompilationUnit(int i).getNonLeafs()
+          = getNonLeafs();
+  eq CompilationUnit.getFeatureDecl(int i).getNonLeafs()
+          = getNonLeafs();
+  eq CompilationUnit.getFExt(int i).getNonLeafs()
+          = getNonLeafs();
+}
+
+

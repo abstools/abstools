@@ -260,9 +260,9 @@ public class ChocoSolver {
     if (c instanceof MetaConstraint) {
       MetaConstraint mc = (MetaConstraint) c;
       if (mc.getConstraintType() == ConstraintType.IMPLIES)
-        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" -> ("+prettyConst(mc.getConstraint(1))+")";
+        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" -> "+mbParenthesis(prettyConst(mc.getConstraint(1)));
       if (mc.getConstraintType() == ConstraintType.AND)
-        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" /\\ ("+prettyConst(mc.getConstraint(1))+")";
+        return mbParenthesis(prettyConst(mc.getConstraint(0)))+" /\\ "+mbParenthesis(prettyConst(mc.getConstraint(1)));
       if (mc.getConstraintType() == ConstraintType.OR)
         return mbParenthesis(prettyConst(mc.getConstraint(0)))+" \\/ "+mbParenthesis(prettyConst(mc.getConstraint(1)));
         //output.println("I'm a imply!\nleft: "+mc.getConstraint(0).pretty());

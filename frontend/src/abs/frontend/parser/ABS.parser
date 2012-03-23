@@ -936,8 +936,8 @@ List fextension_list =
   | fextension_list.l fextension.ext {: return l.add(ext); :}
   ;
 
-FExt fextension = EXTENSION TYPE_IDENTIFIER.f LBRACE attribute_constraint_list.acl RBRACE
-             {: return new FExt(f, acl); :} ;
+FExt fextension = EXTENSION TYPE_IDENTIFIER.f LBRACE group.g? attribute_constraint_list.acl RBRACE
+             {: return new FExt(f, g, acl); :} ;
 
 List rootfeature_list =
     {: return new List(); :}

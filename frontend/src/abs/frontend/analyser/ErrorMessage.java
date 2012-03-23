@@ -75,6 +75,7 @@ public enum ErrorMessage {
     WRONG_CONSTRUCTOR("Data type %s has no constructor with name %s"),
     WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation"),
     UNDECLARED_VARIABLE("Unknown variable: %s."),
+    NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
     EXPECTED_BOOL("Inferred type Int for %s, expected Bool."),
     EXPECTED_INT("Inferred type Bool for %s, expected Int."),
     DUPLICATE_FEATURE("Feature %s is already defined."),

@@ -279,7 +279,7 @@ Product ::= <Name> Feature* ;
 /////////////////////////////////
 
 
-FExt ::= <Name> AttrConstraints;
+FExt ::= <Name> [Group] AttrConstraints;
 
 FeatureDecl ::= <Name> [Group] AttrConstraints;
 

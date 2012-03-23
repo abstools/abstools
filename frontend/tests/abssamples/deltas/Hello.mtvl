@@ -10,6 +10,8 @@ root MultiLingualHelloWorld {
   } 
 }
 extension English {
+  group oneof { UK, US }
+  // 'ifin' can be omited (implicitly assumed)
   ifin: Repeat ->
         (Repeat.times >= 2 && Repeat.times <= 5);
 }
