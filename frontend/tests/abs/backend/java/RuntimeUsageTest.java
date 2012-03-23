@@ -193,4 +193,10 @@ public class RuntimeUsageTest implements SystemObserver, ObjectCreationObserver,
         
     }
 
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
