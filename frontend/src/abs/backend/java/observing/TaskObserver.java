@@ -50,10 +50,17 @@ public interface TaskObserver {
     void stackFrameCreated(TaskView task, TaskStackFrameView stackFrame);
 
     /**
+     * Called when a stack frame is popped.
+     * @param oldFrame the removed stack frame
+     */
+    void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame);
+
+    /**
      * Called when the value of a local variable has changed.
      * Note that this is also called for the initial value of a variable
      * @param name the name of the variable
      * @param v the new value
      */
     void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v);
+
 }

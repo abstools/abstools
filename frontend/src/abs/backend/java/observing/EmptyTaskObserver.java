@@ -45,4 +45,8 @@ public class EmptyTaskObserver implements TaskObserver {
     public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
         
     }
+
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {        
+    }
 }

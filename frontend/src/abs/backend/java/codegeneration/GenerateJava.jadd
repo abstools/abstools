@@ -326,6 +326,9 @@ aspect GenerateJava {
 
         if (addReturn) {
         stream.println(indent+JavaGeneratorHelper.getDebugString(this, this.getEnd()));
+        
+        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
+        stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
 
              stream.println(indent+"return "+JavaBackendConstants.UNITVALUE+";");
          }
@@ -411,6 +414,9 @@ aspect GenerateJava {
 
     public void ReturnStmt.generateJava(String indent, PrintStream stream) {
       super.generateJava(indent,stream);
+        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");      
+        stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        
         stream.print(indent+"return ");
         getRetExp().generateJava(stream);
         stream.println(";");

@@ -230,7 +230,7 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
     
     public List<TaskView> getTasks(COGView cog){
         List<TaskView> tasks = new ArrayList<TaskView>();
-        for(TaskInfo taskInfo : getTaskInfos(cog)){
+        for(TaskInfo taskInfo : getTaskInfos(cog)) {
             tasks.add(taskInfo.getTaskView());
         }
         return tasks;
@@ -244,6 +244,12 @@ public class DebugModel implements TaskObserver, TaskSchedulerObserver {
 
     @Override
     public void localVariableChanged(TaskStackFrameView stackFrame, String name, ABSValue v) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
         // TODO Auto-generated method stub
         
     }

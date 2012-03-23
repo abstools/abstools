@@ -5,10 +5,7 @@
 package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import abs.backend.java.lib.runtime.TaskStack.Frame;
 import abs.backend.java.lib.types.ABSRef;
@@ -16,7 +13,6 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ClassView;
 import abs.backend.java.observing.FutView;
-import abs.backend.java.observing.MethodView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.TaskObserver;
 import abs.backend.java.observing.TaskStackView;
@@ -100,6 +96,15 @@ public class Task<T extends ABSRef> {
             v.futureReady(someFut);
     }
 
+    public void popStackFrame() {
+        if (stack != null) {
+            Frame oldFrame = stack.popFrame();
+            if (view != null) {
+                view.stackFrameRemoved(oldFrame);
+            }
+        }
+    }
+    
     public void newStackFrame(ABSObject target, String methodName) {
         if (stack != null) {
             
@@ -188,6 +193,12 @@ public class Task<T extends ABSRef> {
             if (call.getSender() == null)
                 return null;
             return call.getSender().getView();
+        }
+
+        public void stackFrameRemoved(Frame oldFrame) {
+            for (TaskObserver l : getObservers()) {
+                l.stackFrameRemoved(this, oldFrame);
+            }            
         }
 
         public synchronized void localVariableChanged(Frame f,String name, ABSValue v) {

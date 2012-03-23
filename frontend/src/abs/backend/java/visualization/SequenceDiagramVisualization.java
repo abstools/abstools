@@ -526,4 +526,10 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
     public void systemError(ABSException e) {
         // do nothing
     }
+
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
+        // TODO Auto-generated method stub
+        
+    }
 }

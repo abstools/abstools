@@ -115,6 +115,10 @@ public class ConsoleObserver extends RegistratingObserver implements FutObserver
         // TODO Auto-generated method stub
         
     }
+
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
+    }
     
     
 

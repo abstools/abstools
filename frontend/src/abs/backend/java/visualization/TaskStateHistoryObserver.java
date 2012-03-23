@@ -189,6 +189,12 @@ public class TaskStateHistoryObserver implements SystemObserver,TaskSchedulerObs
         
     }
 
+    @Override
+    public void stackFrameRemoved(TaskView task, TaskStackFrameView oldFrame) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
 
 class TaskHistoryViewer {
