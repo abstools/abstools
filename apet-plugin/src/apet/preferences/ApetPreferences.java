@@ -27,14 +27,17 @@ import apet.Activator;
 public class ApetPreferences
 extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
-	RadioGroupFieldEditor coverageCriterion;
-	IntegerFieldEditor coverage;
-	IntegerFieldEditor minRange;
-	IntegerFieldEditor maxRange;
+	IntegerFieldEditor kl;
+	IntegerFieldEditor ks;
+	IntegerFieldEditor min;
+	IntegerFieldEditor max;
+	IntegerFieldEditor maxPrior;
 	BooleanFieldEditor aliasing;
+	RadioGroupFieldEditor pruning;
+	RadioGroupFieldEditor maxQL;
+	RadioGroupFieldEditor sched;
 	RadioGroupFieldEditor verbosity;
-	RadioGroupFieldEditor tracing;
-	RadioGroupFieldEditor numeric;
+	RadioGroupFieldEditor numOrConst;
 
 	public ApetPreferences() {
 		super(GRID);
@@ -50,16 +53,21 @@ implements IWorkbenchPreferencePage {
 
 	public boolean performOk() {
 		boolean success = true;
-		coverageCriterion.store();
-		coverage.store();
-		minRange.store();
-		maxRange.store();
+		kl.store();
+		ks.store();
+		pruning.store();
+		maxPrior.store();
+		maxQL.store();
+		sched.store();
+		numOrConst.store();
+		min.store();
+		max.store();
 		aliasing.store();
 		verbosity.store();
-		tracing.store();
 		return success;
 	}
 
+	/*
 	public void propertyChange(PropertyChangeEvent event) {
 		super.propertyChange(event);
 		if(numeric.equals(event.getSource())){
@@ -71,54 +79,58 @@ implements IWorkbenchPreferencePage {
 				maxRange.setEnabled(false, this.getFieldEditorParent());
 			}
 		}
-
 	}
-
+	 */
 
 	public void createFieldEditors() {
+		kl = new IntegerFieldEditor(PreferenceConstants.KL, "Limit on loop iterations:",getFieldEditorParent());
+		addField(kl);
+		ks = new IntegerFieldEditor(PreferenceConstants.KS, "Limit on task switchings per object:",getFieldEditorParent());
+		addField(ks);
+		
+		numOrConst = new RadioGroupFieldEditor(PreferenceConstants.NUM_OR_CONST,"Concrete test-cases or path-constraints:",
+				4,new String[][] { { "Concrete","num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
+		addField(numOrConst);
+		
+		min=new IntegerFieldEditor(PreferenceConstants.DOM_MIN, "Integer domain minimum:",getFieldEditorParent());
+		max=new IntegerFieldEditor(PreferenceConstants.DOM_MAX, "Integer domain maximum:",getFieldEditorParent());
+		min.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		min.setErrorMessage("The domain minimum must be an integer");
+		addField(min);
+		max.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+		max.setErrorMessage("The domain maximum must be an integer");
+		addField(max);
 
-		coverageCriterion = new RadioGroupFieldEditor(PreferenceConstants.PCOVERAGE_CRITERION,"Coverage criterion:",
-				1,new String[][] { { "Block-k", "bck" }, {"Depth-k", "dpk" }}, getFieldEditorParent());
-		addField(coverageCriterion);
-
-		coverage = new IntegerFieldEditor(PreferenceConstants.PCOVERAGE_CRITERION_NUM, "Coverage:",getFieldEditorParent());
-		addField(coverage);
-
-		numeric = new RadioGroupFieldEditor(PreferenceConstants.PNUMERIC,"Concrete test-cases or path-constraints:",
-				1,new String[][] { { "Concrete (In this case a range must be especified below) ", "num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
-
-		addField(numeric);
-		minRange=new IntegerFieldEditor(PreferenceConstants.PRANGEMIN, "From",getFieldEditorParent());
-		maxRange=new IntegerFieldEditor(PreferenceConstants.PRANGEMAX, "To",getFieldEditorParent());
-
-		minRange.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
-		minRange.setErrorMessage("The lower bound must be an integer");
-		addField(minRange);
-		maxRange.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
-		maxRange.setErrorMessage("The upper bound must be an integer");
-		addField(maxRange);
-
-		if (Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.PNUMERIC).equals("num")){
-			minRange.setEnabled(true, this.getFieldEditorParent());
-			maxRange.setEnabled(true, this.getFieldEditorParent());
-		} else{
-			minRange.setEnabled(false, this.getFieldEditorParent());
-			maxRange.setEnabled(false, this.getFieldEditorParent());
+		if (Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.NUM_OR_CONST).equals("num")){
+			min.setEnabled(true, this.getFieldEditorParent());
+			max.setEnabled(true, this.getFieldEditorParent());
+		} else {
+			min.setEnabled(false, this.getFieldEditorParent());
+			max.setEnabled(false, this.getFieldEditorParent());
 		}
+		
+		maxQL = new RadioGroupFieldEditor(PreferenceConstants.MAXQL,"Number of task interleavings:",
+				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
+		addField(maxQL);
 
-		aliasing = new BooleanFieldEditor(
-				PreferenceConstants.REFERENCES_ALIASING,
-				"References aliasing",
-				getFieldEditorParent());
-		addField(aliasing);
+		pruning = new RadioGroupFieldEditor(PreferenceConstants.PRUNING,"Pruning in task interleavings:",
+				4,new String[][] { { "3", "3" }, {"2", "2" }, {"1", "1" }}, getFieldEditorParent());
+		addField(pruning);
+		
+		sched = new RadioGroupFieldEditor(PreferenceConstants.SCHED_POLICY,"Scheduling policy:",
+				4,new String[][] { { "fifo", "fifo" }, {"lifo", "lifo" }, {"prior", "prior" }}, getFieldEditorParent());
+		addField(sched);
 
-		verbosity = new RadioGroupFieldEditor(PreferenceConstants.PVERBOSITY,"Verbosity:",
+		maxPrior = new IntegerFieldEditor(PreferenceConstants.MAX_PRIOR, "Number of priorites:",getFieldEditorParent());
+		addField(maxPrior);
+						
+		/*aliasing = new BooleanFieldEditor(PreferenceConstants.ALIASING,
+				"References aliasing", getFieldEditorParent());
+		addField(aliasing);*/
+
+		verbosity = new RadioGroupFieldEditor(PreferenceConstants.VERBOSITY,"Verbosity:",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(verbosity);
-
-		tracing = new RadioGroupFieldEditor(PreferenceConstants.PTRACING,"Tracing:",
-				4,new String[][] { { "no", "none" }, {"yes", "statements" }}, getFieldEditorParent());
-		addField(tracing);
 	}
 
 	public void init(IWorkbench workbench) {

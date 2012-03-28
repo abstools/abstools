@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+
+import apet.Activator;
 import apet.preferences.PreferenceConstants;
 
 public class ApetShellCommand {
@@ -80,61 +82,21 @@ public class ApetShellCommand {
 	 * @param command The String with the shell command to ABS.
 	 */
 	private void buildOptions(StringBuffer command) {
-		
-		command.append("-xmlpath /tmp/pet/abs_testcases.xml");
-/*		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-
-		// -c CovCrit K: CovCrit:{dpk,bck} depth-k o block-k
-		command.append(" -c "
-				+store.getString(PreferenceConstants.PCOVERAGE_CRITERION)+" "
-				+store.getInt(PreferenceConstants.PCOVERAGE_CRITERION_NUM)+" ");
-		// -td NumOrC: NumOrC:{num,constraint}
-		command.append(" -td "
-				+store.getString(PreferenceConstants.PNUMERIC)+" ");
-		// -d none 
-		// -d Min Max: Rango de integers
-	
-		if(store.getString(PreferenceConstants.PNUMERIC).equals("num")){
-			command.append(" -d "
-					+store.getInt(PreferenceConstants.PRANGEMIN)+" "
-					+store.getInt(PreferenceConstants.PRANGEMAX)+" ");
-		}else{
-			command.append(" -d none ");
+		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
+		if (store.getString(PreferenceConstants.NUM_OR_CONST) == "constraint") command.append("-constr ");
+		else {
+			command.append(" -dom " + store.getString(PreferenceConstants.DOM_MIN) + " " + 
+						   store.getString(PreferenceConstants.DOM_MAX) + " ");
 		}
+		command.append("-kl " + store.getString(PreferenceConstants.KL) + " ");
+		command.append("-ks " + store.getString(PreferenceConstants.KS) + " ");
+		command.append("-mp " + store.getString(PreferenceConstants.MAX_PRIOR) + " ");
+		command.append("-sc " + store.getString(PreferenceConstants.SCHED_POLICY) + " ");
+		command.append("-pr " + store.getString(PreferenceConstants.PRUNING) + " ");
+		command.append("-ql " + store.getString(PreferenceConstants.MAXQL) + " ");
+		command.append("-verbosity " + store.getString(PreferenceConstants.VERBOSITY) + " ");
 		
-					
-		// -g: obtiene el generador de casos de prueba en un archivo
-		// -g no: para deshabilitar la creación del generador
-		if(store.getBoolean(PreferenceConstants.PTEST_CASE_GENERATION))
-			command.append(" -g ");
-		// -al: No sé que significa esta opción pero funciona como la anterior
-		// -al no: para deshabilitarlo
-		// if (AlYes) command.append("-al ");
-		if(store.getBoolean(PreferenceConstants.PREFERENCES_ALIASING))
-			command.append(" -al ");
-		// -l Labeling: donde Labeling: {ff,leftmost,min,max}
-		// Es el orden de etiquetado de las variables en las restricciones que usa pet
-		// if (Labeling == ff) command.append("-l ff ");
-		// else if (Labeling == leftmost) command.append("-l leftmost ");
-		// else if (Labeling == min) command.append("-l min ");
-		// else command.append("-l max ");
-		command.append(" -l "
-				+store.getString(PreferenceConstants.PLABELING)+" ");
-		// -v: Verbosity level (1 a 3)
-		// command.append("-v "+VerbosityLevel);
-		command.append(" -v "
-				+store.getString(PreferenceConstants.PVERBOSITY)+" ");
-		// -w: Obtiene el CLP decompilado
-		// if (WYes) command.append("-w ");
-		if(store.getBoolean(PreferenceConstants.PCLP))
-			command.append(" -w ");
-		// -tr Tracings: Tracings puede ser {statements,blocks}
-		// tenemos que incluir la opción de none
-		// if (Tracings == statements) command.append("-tr statements ");
-		// else if (Tracings == blocks) command.append("-tr blocks ");
-		if(!store.getString(PreferenceConstants.PTRACING).equals("none"))
-			command.append(" -tr "+store.getString(PreferenceConstants.PTRACING)+" ");
- 	*/
+		command.append("-xmlpath /tmp/pet/abs_testcases.xml");	
 	}
 
 	/**

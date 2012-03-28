@@ -24,7 +24,7 @@ import apet.console.ConsoleHandler;
 import apet.preferences.ApetOptions;
 import apet.preferences.PreferenceConstants;
 
-
+/*
 public class OptionsDialog extends Dialog {
 
 	private Button[] coverageCriterionSelection;
@@ -422,3 +422,4 @@ class SelectTracingChangeListener implements SelectionListener {
 	}
 
 }
+*/
