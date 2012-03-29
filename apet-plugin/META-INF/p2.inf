@@ -1,0 +1,2 @@
+instructions.install=chmod(targetDir:@artifact,targetFile:apet_exe,permissions:755);
+instructions.install.import=org.eclipse.equinox.p2.touchpoint.eclipse.chmod
