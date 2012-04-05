@@ -21,6 +21,7 @@ public class RunTargetModule implements RunTarget {
 
     @Override
     public void setConfig(JavaLaunchConfig cfg) {
+    	cfg.setTestExecution(false);
         cfg.setRunTarget(module.getName());        
     }
 }
