@@ -160,6 +160,7 @@ public class Task<T extends ABSRef> {
     private volatile View view;
     
     private Object viewCreationLock = new Object();
+    private boolean finished = false;
 
     public TaskView getView() {
         synchronized(viewCreationLock) {
@@ -311,6 +312,14 @@ public class Task<T extends ABSRef> {
             return stack;
         }
 
+    }
+
+    public synchronized boolean isFinished() {
+        return finished;
+    }
+
+    public synchronized void setFinished(boolean b) {
+       finished = b;        
     }
 
 }

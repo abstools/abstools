@@ -84,6 +84,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         public String toString() {
             return "Task " + task.getID();
         }
+
     }
 
     protected final TaskSchedulingStrategy schedulingStrategy;
@@ -137,6 +138,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         synchronized (this) {
             logger.finest("got monitor");
             finishedTask = activeTask;
+            finishedTask.task.setFinished(true);
             activeTask = null;
             if (suspendedTasks.size() + readyTasks.size() > 0) {
                 logger.finest("calling schedule...");

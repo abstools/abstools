@@ -59,7 +59,7 @@ public class GlobalScheduler {
                     Set<Task<?>> suspendedTasks = new HashSet<Task<?>>();
                     for (SimpleSchedulerThread st : activeThreads) {
                         Task<?> t = st.getExecutingTask().task;
-                        if (t != null) {
+                        if (t != null && !t.isFinished()) {
                             suspendedTasks.add(t);
                         }
                     }
