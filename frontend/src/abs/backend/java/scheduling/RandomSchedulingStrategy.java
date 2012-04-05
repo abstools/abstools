@@ -22,7 +22,7 @@ import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
  * @author Jan Schäfer
  * 
  */
-public class RandomSchedulingStrategy implements TotalSchedulingStrategy {
+public class RandomSchedulingStrategy implements TotalSchedulingStrategy, UsesRandomSeed {
     private final static Logger logger = Logging.getLogger(RandomSchedulingStrategy.class.getName());
 
     private Random random;

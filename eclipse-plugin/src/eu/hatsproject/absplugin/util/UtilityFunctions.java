@@ -43,6 +43,9 @@ import abs.frontend.parser.SourcePosition;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.console.ConsoleManager;
+import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
+import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
@@ -458,6 +461,18 @@ public class UtilityFunctions {
 		MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", errorMessage);
 	}
 
+	/**
+	 * shows an error dialog using asyncExec
+	 */
+	public static void showErrorMessageAsync(final String errorMessage){
+	    Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", errorMessage);
+            }
+	    });
+    }
+	
 	public static void syncPreferenceStore(IPersistentPreferenceStore prefstore) {
 		try {
 			prefstore.save();
@@ -745,6 +760,24 @@ public class UtilityFunctions {
 		return project;
 	}
 
-	
+    /**
+     * checks if a string is formatted as a number
+     */
+	public static boolean isNumber(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    /**
+     * prints a message to the default console
+     */
+	public static void printToConsole(String msg) {
+	    MsgConsole c = ConsoleManager.getDefault();
+	    c.println(msg, MessageType.MESSAGE_INFO);
+	}
 	
 }

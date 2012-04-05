@@ -5,7 +5,6 @@
 package eu.hatsproject.absplugin.debug.perspective;
 
 import static eu.hatsproject.absplugin.debug.DebugUtils.getSchedulerRef;
-import static eu.hatsproject.absplugin.debug.DebugUtils.scheduler;
 import static eu.hatsproject.absplugin.util.Images.DEBUGGER_INTERACTIVE;
 import static eu.hatsproject.absplugin.util.Images.DEBUGGER_RANDOM;
 
@@ -15,6 +14,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
@@ -28,10 +28,8 @@ import org.eclipse.ui.IViewPart;
 
 import eu.hatsproject.absplugin.debug.DebugUtils;
 import eu.hatsproject.absplugin.util.Constants.Scheduler;
+import eu.hatsproject.absplugin.util.Images;
 
-//import eu.hatsproject.absplugin.debug.DebugUtils;
-//import eu.hatsproject.absplugin.util.Constants.Scheduler;
-//import eu.hatsproject.absplugin.util.Images;
 
 /**
  * Class handling clicks on the selectScheduler button.
@@ -42,12 +40,14 @@ public class SchedulerChoiceDelegate implements	IViewActionDelegate, IActionDele
 	private Menu schedulerMenu;
 	private MenuItem interactiveItem;
 	private MenuItem randomItem;
+	private MenuItem historyItem;
 	
 	@Override
 	public void dispose() {
 		if(schedulerMenu != null){
 			interactiveItem.dispose();
 			randomItem.dispose();
+			historyItem.dispose();
 			schedulerMenu.dispose();
 		}
 	}
@@ -68,45 +68,41 @@ public class SchedulerChoiceDelegate implements	IViewActionDelegate, IActionDele
 	public Menu getMenu(Control parent) {
 		if(schedulerMenu == null){
 			schedulerMenu = new Menu(parent);
-
-			interactiveItem = new MenuItem(schedulerMenu, SWT.RADIO);
-			interactiveItem.setText("&Interactive Scheduler");
-			interactiveItem.setImage(DEBUGGER_INTERACTIVE);
-			interactiveItem.setSelection(true);
-			interactiveItem.addSelectionListener(new SelectionListener() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					scheduler = Scheduler.interactive;
-					if(getSchedulerRef() != null)
-						getSchedulerRef().updateScheduler();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e) {
-				}
-			});
 			
-			randomItem = new MenuItem(schedulerMenu, SWT.RADIO);
-			randomItem.setText("&Random Scheduler");
-			randomItem.setImage(DEBUGGER_RANDOM);
-			randomItem.setSelection(false);
-			randomItem.addSelectionListener(new SelectionListener() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					scheduler = Scheduler.random;
-					if(getSchedulerRef() != null)
-						getSchedulerRef().updateScheduler();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e) {
-				}
-			});
+			interactiveItem = newSchedulerChoiceMenuItem(schedulerMenu, "&Interactive Scheduler",
+                    Images.DEBUGGER_INTERACTIVE, Scheduler.interactive); 
+			
+			randomItem = newSchedulerChoiceMenuItem(schedulerMenu, "&Random Scheduler",
+                    Images.DEBUGGER_RANDOM, Scheduler.random); 
+            
+			historyItem = newSchedulerChoiceMenuItem(schedulerMenu, "Replay &History",
+                    Images.DEBUGGER_HISTORY, Scheduler.replay); 
+            
 		}
 		return schedulerMenu;
 	}
 
-	@Override
+	private MenuItem newSchedulerChoiceMenuItem(Menu schedulerMenu, String text, Image img, final Scheduler schedulerType) {
+	    final MenuItem item = new MenuItem(schedulerMenu, SWT.RADIO);
+        item.setText(text);
+        item.setImage(img);
+        item.setSelection(DebugUtils.getScheduler() == schedulerType);
+        item.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                if (item.getSelection()) {
+                    DebugUtils.setScheduler(schedulerType);
+                }
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+            }
+        });
+        return item;
+    }
+
+    @Override
 	public void selectionChanged(IAction action, ISelection selection) {
 
 	}
@@ -134,5 +130,13 @@ public class SchedulerChoiceDelegate implements	IViewActionDelegate, IActionDele
 	public void run(IAction action) {
 		
 	}
+
+    public void setSelection(Scheduler scheduler) {
+        if(schedulerMenu != null){
+            interactiveItem.setSelection(scheduler == Scheduler.interactive);
+            randomItem.setSelection(scheduler == Scheduler.random);
+            historyItem.setSelection(scheduler == Scheduler.replay);
+        }
+    }
 
 }

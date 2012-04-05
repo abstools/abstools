@@ -10,7 +10,9 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHa
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,13 +40,17 @@ import abs.frontend.ast.Product;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
+import eu.hatsproject.absplugin.actions.runconfig.java.EclipseScheduler;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.console.ConsoleManager;
+import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.console.MsgConsole;
+import eu.hatsproject.absplugin.debug.DebugUtils;
 import eu.hatsproject.absplugin.debug.model.Debugger;
 import eu.hatsproject.absplugin.debug.model.Debugger.InvalidRandomSeedException;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.internal.NoModelException;
+import eu.hatsproject.absplugin.util.Constants.Scheduler;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 public class JavaJob extends Job {
@@ -83,6 +89,21 @@ public class JavaJob extends Job {
    private List<String> extraClassPaths;
 
    private final boolean absUnit;
+   
+   // module to be executed
+   private String runTarget = null;
+
+   private Scheduler scheduler = DEFAULT_SCHEDULER;
+
+   private boolean runAutomatically = false;
+
+   private String historyFile = "";
+
+   private List<URL> fliClassPath = new ArrayList<URL>();
+
+   private boolean ignoreMissingFLIClasses;
+   
+   
 
    public static final String COMPILE_JOB = "ABS Java Code Generation";
    public static final String RUN_JOB = "ABS Java Execution";
@@ -374,6 +395,8 @@ public class JavaJob extends Job {
 		ModuleDecl module;
 		if (absUnit) {
 		    module = getModuleByName(ABSTestRunnerGenerator.RUNNER_MAIN);
+		} else if (runTarget != null) {
+		    module = getModuleByName(runTarget);
 		} else {
 			module = searchForMainBlockInCurrentFile();
 
@@ -495,6 +518,10 @@ public class JavaJob extends Job {
 			throws IOException, InvalidRandomSeedException {
 		setDebuggerArgumentsIfNull(useBothObserver);
 
+		DebugUtils.setScheduler(scheduler);
+		DebugUtils.setRunAutomatically(runAutomatically);
+		DebugUtils.setHistoryFile(historyFile);
+		
 		if(useInternalDebugger){
 			executeABSSystem(javaPath, moduleName);	
 		} else {
@@ -572,9 +599,12 @@ public class JavaJob extends Job {
 
 	private void executeABSSystem(final Path javaPath,
 			final String moduleName) throws InvalidRandomSeedException {
-		Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
-				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
-				debuggerIsInDebugMode, debuggerArgsRandomSeed);
+	    PrintStream outStream = javaConsole.getPrintStream(MessageType.MESSAGE_INFO);
+        PrintStream errStream = javaConsole.getPrintStream(MessageType.MESSAGE_ERROR);
+        Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
+    				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
+    				debuggerIsInDebugMode, debuggerArgsRandomSeed, fliClassPath,
+    				outStream, errStream, ignoreMissingFLIClasses);
 	}
 
 	/**
@@ -872,4 +902,51 @@ public class JavaJob extends Job {
 	public void setProduct(Product product) {
 		this.product = product;
 	}
+
+    public void setRunTarget(String runTarget) {
+       this.runTarget = runTarget;
+    }
+    
+    public void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    public void setScheduler(EclipseScheduler s) {
+        setScheduler(convertScheduler(s));
+    }
+
+    private Scheduler convertScheduler(EclipseScheduler s) {
+        switch (s) {
+            case HISTORY    : return Scheduler.replay;
+            case MANUAL     : return Scheduler.interactive;
+            case RANDOM     : return Scheduler.random;
+            default         : throw new Error("unhandled case " + s);
+        }
+    }
+
+    public void setRunAutomatically(boolean runAutomatically) {
+        this.runAutomatically = runAutomatically;
+    }
+
+    public void setHistoryFile(String historyFile) {
+        this.historyFile = historyFile;
+        
+    }
+
+    public void setFLIClassPath(List<String> debuggerClassPathList) {
+        fliClassPath = new ArrayList<URL>();
+        for (String path : debuggerClassPathList) {
+            File f = new File(path);
+            try {
+                fliClassPath.add(f.toURI().toURL());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+    }
+
+    public void setIgnoreMissingFLIClasses(boolean ignoreMissingFLIClasses) {
+        this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
+    }
 }

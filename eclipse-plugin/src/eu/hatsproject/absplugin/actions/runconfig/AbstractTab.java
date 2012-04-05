@@ -37,12 +37,15 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	protected Label projectLabel;	
 	protected Combo projectDropDown;
 	protected Combo productDropDown;
+    private String lastProjectName = "";
+    private String lastProd = "";
+    private boolean lastResult;
 
 	/**
 	 * A Listener updating the LaunchConfigurationDialog of the given tab
 	 * when an event occurs.
 	 */
-	static class TabListener implements Listener {
+	public static class TabListener implements Listener {
 		final private AbstractTab tab;
 
 		public TabListener(AbstractTab tab){
@@ -77,13 +80,23 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		});
 	}
 
+	
+	
 	/**
 	 * Don't recommend to start projects which have errors.
 	 * TODO: manipulating the error message here does not cooperate well with isValid().
 	 */
 	protected boolean updateErrors() {
-	        boolean res = true;
+	    boolean res = true;
 		String projectName = getSelectedProjectName();
+		String prod = getSelectedProductName();
+		if (this.lastProjectName != null && this.lastProd != null &&
+		        this.lastProjectName.equals(projectName) && this.lastProd.equals(prod)) {
+		    // use result from last time, so that we do not have to do a full typecheck
+		    // every time something changes in the run configuration dialog
+		    return lastResult;
+		}
+		
 		if (projectName != null) {
 			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
 			try {
@@ -95,7 +108,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 					if (model == null)
 						return false;
 					/* Check product if any */
-					String prod = getSelectedProductName();
+					
 					if (prod != null) {
 						model.flattenForProduct(prod);
 						/* Type check again */
@@ -125,6 +138,10 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 			}
 			getLaunchConfigurationDialog().updateMessage();
 		}
+		// cache the result
+		lastProd = prod;
+		lastProjectName = projectName;
+		lastResult = res;
 		return res;
 	}
 
@@ -194,14 +211,11 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 	 */
 	protected void fillProductDropDownMenue(String preSelected) {
 		productDropDown.removeAll();
-		final int idx = projectDropDown.getSelectionIndex();
-		if (idx == -1)
-			return;
-		String projN = getProjectNames().get(idx);
-		/* We use this entry at index 0 to indicate that no particular product is selected */
 		productDropDown.add("<base>");
-		IProject proj = ResourcesPlugin.getWorkspace().getRoot().getProject(projN);
-		assert proj != null;		
+		IProject proj = getSelectedProject();
+		if (proj == null) {
+		    return;
+		}
 		AbsNature n = UtilityFunctions.getAbsNature(proj);
 		Model m = n.getCompleteModel();
 		if (m == null)
@@ -221,6 +235,15 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		}
 		productDropDown.select(selected);
 	}
+
+    protected IProject getSelectedProject() {
+        final int idx = projectDropDown.getSelectionIndex();
+		if (idx == -1)
+			return null;
+		String projN = getProjectNames().get(idx);
+		IProject proj = ResourcesPlugin.getWorkspace().getRoot().getProject(projN);
+        return proj;
+    }
 
 	//---get and help functions----------------------------------
 

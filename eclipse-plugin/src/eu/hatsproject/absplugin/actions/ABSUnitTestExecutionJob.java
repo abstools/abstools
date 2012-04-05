@@ -14,6 +14,7 @@ import java.io.PrintStream;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -70,6 +71,14 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 		} 
 		monitor.worked(12);
 		
+		
+        try {
+            // make sure the generated testrunner file is parsed:
+            project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null);
+        } catch (CoreException e) {
+            return new Status(IStatus.ERROR, PLUGIN_ID, "Fatal error while compiling tests", e);
+        }
+        
 		monitor.subTask("Executing ABSUnit tests");
 		IStatus status = null;
 		try {

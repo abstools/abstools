@@ -73,7 +73,9 @@ public class Constants {
 	
 	//Attribute Names
 	public static final String RUNCONFIG_PROJECT_NAME_ATTRIBUTE 			= "ProjectNames";
-	public static final String RUNCONFIG_PRODUCT_NAME_ATTRIBUTE 			= "ProductName";
+	public static final String RUNCONFIG_PRODUCT_NAME_ATTRIBUTE             = "ProductName";
+	public static final String RUNCONFIG_RUNTARGET_ATTRIBUTE                = "Runtarget";
+	public static final String RUNCONFIG_ECLIPSE_SCHEDULER_ATTRIBUTE        = "EclipseScheduler";
 	public static final String RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE 		= "TotalScheduler";
 	public static final String RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE 		= "otherArgs";
 	public static final String RUNCONFIG_DEBUGGER_COMPILE_BEFORE 			= "compileBeforeDebugging";
@@ -87,7 +89,10 @@ public class Constants {
 	public static final String RUNCONFIG_MAUDE_STEPS						= "maudeSteps";
 	public static final String RUNCONFIG_MAUDE_REALTIME						= "maudeRealtime";
 	public static final String RUNCONFIG_MAUDE_MAINBLOCK					= "maudeMain";
-	public static final String RUNCONFIG_TEST_EXECUTION					= "testExecution";
+	public static final String RUNCONFIG_TEST_EXECUTION					   = "testExecution";
+	public static final String RUNCONFIG_HISTORY_FILE                      = "historyFile";
+	public static final String RUNCONFIG_RUN_AUTOMATICALLY                 = "runAutomatically";
+	public static final String RUNCONFIG_FLI_IGNORE_MISSING_CLASSES        = "fliIgnoreMissingClasses";
 	
 	//Default Values (see also RunConfigEnums)			
 	public static final String 	DEBUGGER_ARGS_OTHER_DEFAULT					= "";

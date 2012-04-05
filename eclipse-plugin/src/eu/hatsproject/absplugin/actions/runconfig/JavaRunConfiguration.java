@@ -30,72 +30,61 @@ import abs.frontend.ast.Model;
 import eu.hatsproject.absplugin.actions.ABSUnitTestJavaExecutionJob;
 import eu.hatsproject.absplugin.actions.ActionUtils;
 import eu.hatsproject.absplugin.actions.JavaJob;
+import eu.hatsproject.absplugin.actions.runconfig.java.JavaLaunchConfig;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
 import eu.hatsproject.absplugin.util.Constants;
 
 public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 
 	@Override
-	public void launch(ILaunchConfiguration configuration, String mode,
+	public void launch(ILaunchConfiguration config, String mode,
 			ILaunch launch, IProgressMonitor monitor) throws CoreException {
 		
-		IAction action = createNewAction(configuration);
-		IProject project = getProject(configuration);
+	    JavaLaunchConfig launchConfig = new JavaLaunchConfig(config);
+	    
+		IAction action = createNewAction(launchConfig);
+		IProject project = ActionUtils.getProject(config);
 		IFile file = null;
 	
 		ActionUtils.saveDirtyEditors(project);
+
+		JavaJob job = new JavaJob(JavaJob.RUN_JOB,action, project, file);
+		String product = launchConfig.getProductName();
+		if (product != null) {
+		    try {
+		        Model model = JavaJob.getModelFromProject(project);
+		        job.setProduct(model.findProduct(product));
+		    } catch (WrongProgramArgumentException e) {
+		        throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
+		    } catch (AbsJobException e) {
+		        throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
+		    }
+		}
 		
-		if (configuration.getAttribute(RUNCONFIG_TEST_EXECUTION, false)) {
-			Job testJob = getABSUnitTestExecutionJob(project,action,file,configuration);
-			testJob.schedule();
+		modifyDebuggerArguments(launchConfig, job);
+		
+		if (launchConfig.getTestExecution()) {
+		    // execution of unit tests
+		    Job testJob = new ABSUnitTestJavaExecutionJob(project, product, job);
+		    testJob.schedule();
 		} else {
-			JavaJob job = new JavaJob(JavaJob.RUN_JOB,action, project, file);
-			String product = configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null);
-			if (product != null) {
-				try {
-					Model model = JavaJob.getModelFromProject(project);
-					job.setProduct(model.findProduct(product));
-				} catch (WrongProgramArgumentException e) {
-					throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
-				} catch (AbsJobException e) {
-					throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
-				}
-			}
-			modifyDebuggerArguments(configuration, job);
-			job.schedule();
+		    // normal execution
+		    job.schedule();
 		}
 	}
 	
-	private Job getABSUnitTestExecutionJob(IProject project, 
-			IAction action, IFile file, ILaunchConfiguration configuration) throws CoreException {
-		return new ABSUnitTestJavaExecutionJob(
-			project,
-			configuration.getAttribute(RUNCONFIG_PRODUCT_NAME_ATTRIBUTE, (String)null),
-			action,
-			file,
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE, DEBUGGER_ARGS_OTHER_DEFAULT),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, ""),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, DEBUGGER_COMPILE_BEFORE_DEFAULT),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, new ArrayList<String>()),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, new ArrayList<String>()),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, DebuggerScheduler.getDefaultScheduler().toString()),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_USE_EXTERNAL, RUNCONFIG_DEBUGGER_USE_EXTERNAL_DEFAULT),
-			configuration.getAttribute(RUNCONFIG_DEBUGGER_DEBUG_MODE, RUNCONFIG_DEBUGGER_DEBUG_MODE_DEFAULT)
-		);
-	}
 
-	private void modifyDebuggerArguments(ILaunchConfiguration configuration,
+	private void modifyDebuggerArguments(JavaLaunchConfig launchConfig,
 			JavaJob job) throws CoreException {
 		
-		job.setDebuggerArgsOther(configuration.getAttribute(RUNCONFIG_DEBUGGER_OTHER_ARGS_ATTRIBUTE, DEBUGGER_ARGS_OTHER_DEFAULT));
-		job.setArgsDebuggerRandomSeed(configuration.getAttribute(RUNCONFIG_DEBUGGER_RANDOMSEED, ""));
+		job.setDebuggerArgsOther(launchConfig.getOtherArgs());
+		job.setArgsDebuggerRandomSeed(launchConfig.getRandomSeedString());
 		
-		boolean compile = configuration.getAttribute(RUNCONFIG_DEBUGGER_COMPILE_BEFORE, DEBUGGER_COMPILE_BEFORE_DEFAULT);
+		boolean compile = launchConfig.getCompileBefore();
 		job.setDebuggerCompileFirst(compile);
 		
 		String observerArgs = "";
-		@SuppressWarnings("unchecked") //setAttribute(Attribute, List) only accepts List<String>
-		List<String> observerStrings = configuration.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, new ArrayList<String>());
+		List<String> observerStrings = launchConfig.getDebuggerObserverList();
 			for (String observerClassName : observerStrings) {
 				if(!observerClassName.isEmpty()){
 					if (observerArgs.equals("")){
@@ -107,25 +96,31 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 			}
 		job.setDebuggerArgsSystemObserver(observerArgs);
 		
-		job.setExtraClassPaths(configuration.getAttribute(RUNCONFIG_DEBUGGER_CLASSPATH_LIST, new ArrayList<String>()));
+		job.setExtraClassPaths(launchConfig.getDebuggerClassPathList());
 		
-		String schedulerString = configuration.getAttribute(RUNCONFIG_DEBUGGER_SCHEDULER_ATTRIBUTE, DebuggerScheduler.getDefaultScheduler().toString());
+		String schedulerString = launchConfig.getDebuggerScheduler();
 		job.setDebuggerArgsTotalScheduler(DebuggerScheduler.valueOf(schedulerString).getCommand());
 		
-		job.setInternalDebugger(!configuration.getAttribute(RUNCONFIG_DEBUGGER_USE_EXTERNAL, RUNCONFIG_DEBUGGER_USE_EXTERNAL_DEFAULT));
+		job.setInternalDebugger(!launchConfig.getUseExternal());
 		
-		job.setDebuggerDebugMode(configuration.getAttribute(RUNCONFIG_DEBUGGER_DEBUG_MODE, RUNCONFIG_DEBUGGER_DEBUG_MODE_DEFAULT));
+		job.setDebuggerDebugMode(launchConfig.getDebugMode());
+		
+		job.setRunTarget(launchConfig.getRunTarget());
+        job.setScheduler(launchConfig.getScheduler());
+        job.setRunAutomatically(launchConfig.getRunAutomatically());
+        job.setHistoryFile(launchConfig.getHistoryFile());
+        job.setFLIClassPath(launchConfig.getDebuggerClassPathList());
+        job.setIgnoreMissingFLIClasses(launchConfig.getIgnoreMissingFLIClasses());
 	}
 
-	private IAction createNewAction(ILaunchConfiguration configuration)
+	private IAction createNewAction(JavaLaunchConfig launchConfig)
 			throws CoreException {
 		IAction action = new Action() {
 			//nothing
 		}; 
 		
 		boolean startSDE = false;
-		@SuppressWarnings("unchecked")
-		List<String> observerStrings = configuration.getAttribute(RUNCONFIG_DEBUGGER_OBSERVER_LIST, new ArrayList<String>());
+		List<String> observerStrings = launchConfig .getDebuggerObserverList();
 		for (String observerClassName : observerStrings) {
 			DebuggerObserver observer = DebuggerObserver.valueOfClassName(observerClassName);
 			if(observer!=null){

@@ -30,3 +30,5 @@ Bundle-Vendor: HATS Project
 Export-Package: eu.hatsproject.absplugin.actions,
  eu.hatsproject.absplugin.builder,
  eu.hatsproject.absplugin.costabslink
+Import-Package: org.eclipse.jdt.debug.ui.launchConfigurations,
+ org.eclipse.jdt.launching

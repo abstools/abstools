@@ -934,7 +934,7 @@
     <extension
           point="org.eclipse.debug.ui.launchConfigurationTabGroups">
        <launchConfigurationTabGroup
-             class="eu.hatsproject.absplugin.actions.runconfig.JavaTabGroup"
+             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabGroup"
              id="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
              type="eu.hatsproject.absplugin.javaLaunchConfigurationType">
        </launchConfigurationTabGroup>
@@ -947,11 +947,35 @@
     <extension
           point="org.eclipse.debug.ui.launchConfigurationTabs">
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.JavaTab"
+             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabMain"
              group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
              id="eu.hatsproject.absplugin.javaTab1"
              name="Java Tab 1">
        </tab>
+       <tab
+             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabSchedulerOptions"
+             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
+             id="eu.hatsproject.absplugin.javaTab2"
+             name="Java Tab 2">
+             <placement after="eu.hatsproject.absplugin.javaTab1" />
+       </tab>
+       
+       <tab
+             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabForeignLanguageInterface"
+             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
+             id="eu.hatsproject.absplugin.javaTab3"
+             name="Java Tab 3">
+             <placement after="eu.hatsproject.absplugin.javaTab2" />
+       </tab>
+       
+       <tab
+             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabAdvancedOptions"
+             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
+             id="eu.hatsproject.absplugin.javaTab4"
+             name="Java Tab 4">
+             <placement after="eu.hatsproject.absplugin.javaTab3" />
+       </tab>
+       
        <tab
              class="eu.hatsproject.absplugin.actions.runconfig.MaudeTab"
              group="eu.hatsproject.absplugin.maudeLaunchConfigurationTabGroup"

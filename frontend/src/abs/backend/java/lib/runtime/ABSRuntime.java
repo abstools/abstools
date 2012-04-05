@@ -8,34 +8,34 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.types.ABSRef;
-import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
-import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.ScheduleAction;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulerFactory;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
+import abs.backend.java.scheduling.UsesRandomSeed;
 
 public class ABSRuntime {
     private static final String ABS_RUNSINOWNPROCESS_PROPERTY = "abs.runsinownprocess";
@@ -51,6 +51,23 @@ public class ABSRuntime {
     private final AtomicInteger cogCounter = new AtomicInteger();
     private final AtomicInteger taskCounter = new AtomicInteger();
 
+    /** classloader for loading the translated code and FLI classes */
+    private URLClassLoader classLoader;
+
+
+    /** URIs for loading foreign classes */
+    private List<URL> classPath = new ArrayList<URL>();
+
+    private PrintStream outStream = System.out;
+    private PrintStream errStream = System.err;
+    
+    /** whether to output an error message when no
+     * Java class is found for a class annotated with [Foreign] */
+    private boolean ignoreMissingFLIClasses = false;
+
+    
+
+    
     /**
      * Starts a new ABS program by giving a generated Main class
      * @param mainClass the Main class to be used
@@ -101,11 +118,10 @@ public class ABSRuntime {
         if (!targetDir.canRead()) {
             throw new IllegalArgumentException("Directory "+targetDir+" cannot be read");
         }
-        
-        URL[] urls;
         try {
-            urls = new URL[] { targetDir.toURI().toURL() };
-            ClassLoader classLoader = new URLClassLoader(urls, ABSRuntime.class.getClassLoader());
+            classPath.add(targetDir.toURI().toURL());
+            URL[] urls = classPath.toArray(new URL[0]);
+            classLoader = new URLClassLoader(urls, ABSRuntime.class.getClassLoader());
             Class<?> mainClass = classLoader.loadClass(mainClassName);
             start(mainClass);
         } catch (MalformedURLException e) {
@@ -162,12 +178,12 @@ public class ABSRuntime {
         random = new Random(seed);
         logger.config("New Random Seed: " + randomSeed);
         
-        if (globalSchedulingStrategy instanceof RandomSchedulingStrategy) {
-            ((RandomSchedulingStrategy)globalSchedulingStrategy).setRandom(random);
+        if (globalSchedulingStrategy instanceof UsesRandomSeed) {
+            ((UsesRandomSeed)globalSchedulingStrategy).setRandom(random);
         }
 
-        if (taskSchedulingStrategy instanceof RandomSchedulingStrategy) {
-            ((RandomSchedulingStrategy)taskSchedulingStrategy).setRandom(random);
+        if (taskSchedulingStrategy instanceof UsesRandomSeed) {
+            ((UsesRandomSeed)taskSchedulingStrategy).setRandom(random);
         }
         
     }
@@ -401,7 +417,7 @@ public class ABSRuntime {
             }
             
             if (DEBUG_FLI)
-                System.err.println("FLI: "+name+" = "+clazz);
+                errStream.println("FLI: "+name+" = "+clazz);
             
         }
         return clazz;
@@ -417,25 +433,18 @@ public class ABSRuntime {
         }
 
         if (className == null) {
-            // try to load class by convention
-            try {
-                Class<?> result = ABSRuntime.class.getClassLoader().loadClass(name+FLI_CLASS_SUFFIX);
-                if (DEBUG_FLI)
-                    System.err.println("Loaded foreign class "+result.getName()+" by convention");
-                return result;
-            } catch (ClassNotFoundException e) {
-                if (DEBUG_FLI)
-                    System.err.println("Could not found class "+name+FLI_CLASS_SUFFIX);
-                    
+            // use conventions:
+            className = name+FLI_CLASS_SUFFIX;
+        }
+            
+        try {
+            Class<?> result = classLoader.loadClass(className);
+            return result;
+        } catch (ClassNotFoundException e) {
+            if (!ignoreMissingFLIClasses) {
+                errStream.println("Could not load foreign class for " + name + "!");
             }
-        } else {
-            try {
-                Class<?> result = ABSRuntime.class.getClassLoader().loadClass(className);
-                return result;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }   
+        }
         return null;
      }
 
@@ -445,7 +454,7 @@ public class ABSRuntime {
         fliProperties = new Properties();
         if (url == null) {
             if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
-                System.err.println("Could not find ABS-FLI properties file "+propertiesFileName);
+                errStream.println("Could not find ABS-FLI properties file "+propertiesFileName);
             }
         } else {
             try {
@@ -453,13 +462,13 @@ public class ABSRuntime {
                         new InputStreamReader(url.openStream())));
 
                 if (DEBUG_FLI) {
-                    System.err.println("FLI: Loaded properties from URL "+url);
-                    System.err.println("FLI: Loaded properties: "+fliProperties.toString());
+                    errStream.println("FLI: Loaded properties from URL "+url);
+                    errStream.println("FLI: Loaded properties: "+fliProperties.toString());
                 }
                 
             } catch (IOException e) {
                 if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
-                    System.err.println("ABS Error while trying to read the FLI properties file "+propertiesFileName);
+                    errStream.println("ABS Error while trying to read the FLI properties file "+propertiesFileName);
                     e.printStackTrace();
                 }
             }
@@ -494,7 +503,7 @@ public class ABSRuntime {
             // ignore errors during shutdown
             return;
         }
-        System.err.println("Error in " + this + ":\n" + e.getMessage());
+        errStream.println("Error in " + this + ":\n" + e.getMessage());
         for (SystemObserver obs : systemObserver) {
             obs.systemError(e);
         }
@@ -510,7 +519,31 @@ public class ABSRuntime {
     public static void setRunsInOwnProcess(boolean b) {
         System.setProperty(ABS_RUNSINOWNPROCESS_PROPERTY, Boolean.toString(b));
     }
+    
+    public void addFLIClassPath(Collection<URL> fliClassPath) {
+        classPath.addAll(fliClassPath);
+    }
+    
+    public void setOutStream(PrintStream stream) {
+        outStream = stream;
+    }
      
-     
+    public PrintStream getOutStream() {
+        return  outStream;
+    }
+
+    public PrintStream getErrStream() {
+        return  errStream;
+    }
+
+    public void setErrStream(PrintStream stream) {
+        this.errStream = stream;
+    }
+    
+    public void setIgnoreMissingFLIClasses(boolean ignoreMissingFLIClasses) {
+        this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
+    }
+
+    
 
 }

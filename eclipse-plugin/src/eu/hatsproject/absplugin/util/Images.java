@@ -131,6 +131,9 @@ public abstract class Images {
 	//Icons for the debug perspective
 	public final static Image DEBUGGER_INTERACTIVE           = createIcon("debug/debug_mode_interactive.gif");
 	public final static Image DEBUGGER_RANDOM                = createIcon("debug/debug_mode_random.gif");
+	public final static Image DEBUGGER_HISTORY                = createIcon("debug/debug_mode_history.gif");
+	
+	public final static Image DEBUGGER_RESUME                = createIcon("debug/resume.gif");
 	
 	public final static Image DEBUGGER_PROGRAM               = createIcon("abs_logo.png");
 	

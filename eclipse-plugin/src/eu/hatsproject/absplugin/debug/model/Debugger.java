@@ -4,6 +4,7 @@
  */
 package eu.hatsproject.absplugin.debug.model;
 
+import static eu.hatsproject.absplugin.debug.DebugUtils.enableHightlighting;
 import static eu.hatsproject.absplugin.debug.DebugUtils.getDebugViewer;
 import static eu.hatsproject.absplugin.debug.DebugUtils.getDebugger;
 import static eu.hatsproject.absplugin.util.Constants.ABSDEBUGPERSPECTIVE_ID;
@@ -12,7 +13,10 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.showErrorMessage;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.standardExceptionHandling;
 
 
+import java.io.PrintStream;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.widgets.Display;
@@ -95,17 +99,27 @@ public class Debugger implements SystemObserver{
 	 * @param debuggerArgsTotalScheduler
 	 * @param debuggerIsInDebugMode
 	 * @param debuggerArgsRandomSeed
+	 * @param fliClassPath 
+	 * @param outStream 
+	 * @param ignoreMissingFLIClasses 
 	 * @throws InvalidRandomSeedException 
 	 */
 	public static void startABSRuntime(final String projectName,
 			final String mainClassName, final Path genPath, String debuggerArgsSystemObserver,
-			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed) throws InvalidRandomSeedException {
+			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed, 
+			List<URL> fliClassPath, PrintStream outStream, PrintStream errStream, boolean ignoreMissingFLIClasses) throws InvalidRandomSeedException {
 		
 		if(DO_DEBUG) System.out.println("start internal debugger");
 		
         final ABSRuntime r = new ABSRuntime();
         if(debuggerIsInDebugMode) r.enableDebugging(true);
-
+        
+        r.setOutStream(outStream);
+        r.setErrStream(errStream);
+        r.addFLIClassPath(fliClassPath);
+        r.setIgnoreMissingFLIClasses(ignoreMissingFLIClasses);
+        
+        
         boolean useOurScheduling = addSchedulingStrategy(debuggerArgsTotalScheduler, r);
         final boolean useOurSystemObserver = addSystemObservers(debuggerArgsSystemObserver, r);
         
@@ -149,12 +163,16 @@ public class Debugger implements SystemObserver{
         });
         
         if (useOurScheduling) {
+            enableHightlighting();
     		Display.getDefault().asyncExec(new Runnable() {
     			@Override
 				public void run() {
     				try {
     					PlatformUI.getWorkbench().showPerspective(ABSDEBUGPERSPECTIVE_ID, PlatformUI.getWorkbench().getActiveWorkbenchWindow());
     					getDebugger().initDebugger(projectName, r, debuggerRunner, useOurSystemObserver);
+    					if (DebugUtils.getRunAutomatically()) {
+    		                DebugUtils.getSchedulerRef().resumeAutomaticScheduling();
+    		            }
     				} catch (WorkbenchException e) {
     					standardExceptionHandling(e);
     					showErrorMessage("Could not open ABS debug perspective");

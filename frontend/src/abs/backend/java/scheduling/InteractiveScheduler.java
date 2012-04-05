@@ -184,57 +184,9 @@ interface SchedulerGUISwing {
 
 }
 
-enum HistoryAction {
-    SCHEDULE, EXECUTE, ACTIVATE;
-}
 
-class HistoryItem {
-    int cogId;
-    int taskid;
-    HistoryAction action;
 
-    HistoryItem(String s) {
-        String[] strings = s.trim().split(",");
-        cogId = Integer.parseInt(strings[0]);
-        String a = strings[1];
-        if (a.equals("S"))
-            action = HistoryAction.SCHEDULE;
-        else if (a.equals("E"))
-            action = HistoryAction.EXECUTE;
-        else if (a.equals("A"))
-            action = HistoryAction.ACTIVATE;
 
-        if (action != HistoryAction.SCHEDULE) {
-            taskid = Integer.parseInt(strings[2]);
-        }
-    }
-
-    boolean matches(ScheduleAction a) {
-        if (cogId != a.getCOG().getID())
-            return false;
-        
-        if ((a instanceof StepTask && action != HistoryAction.EXECUTE)
-                || (a instanceof ScheduleTask && action != HistoryAction.SCHEDULE)
-                || (a instanceof ActivateTask && action != HistoryAction.ACTIVATE))
-            return false;
-
-        if (action != HistoryAction.SCHEDULE) {
-            if (a.getTask() == null) {
-                System.err.println(a);
-                System.err.println(action);
-                System.err.println(a.getClass());
-            }
-            return a.getTask().getID() == taskid;
-        } else {
-            return true;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return cogId + "," + action.toString() + "," + taskid;
-    }
-}
 
 class InteractiveOptionPnl extends JPanel implements SchedulerGUISwing {
     private GridBagLayout layout;
@@ -565,22 +517,14 @@ class ReplayOptionPnl extends JPanel implements SchedulerGUISwing, TotalScheduli
 
     private void loadHistory(File f) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(f));
-            history = new ArrayList<HistoryItem>();
-            while (reader.ready()) {
-                String s = reader.readLine();
-                if (s == null)
-                    break;
-
-                history.add(new HistoryItem(s));
-            }
+            history = HistoryItem.loadHistory(f);
 
             scheduler.setDirectScheduler(this);
             scheduler.setNextAction(getOptionByHistory());
 
         } catch (FileNotFoundException e) {
             JOptionPane.showMessageDialog(this, "File " + f + " does not exist");
-        } catch (Exception e) {
+        } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error while reading history: " + e.getMessage());
         }
 

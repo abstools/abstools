@@ -4,6 +4,7 @@
  */
 package eu.hatsproject.absplugin.debug;
 
+import static eu.hatsproject.absplugin.debug.DebugUtils.getSchedulerRef;
 import static eu.hatsproject.absplugin.util.Constants.ABS_DEBUG_VARIABLE_VIEW;
 import static eu.hatsproject.absplugin.util.Constants.ABS_DEBUG_VIEW;
 import static eu.hatsproject.absplugin.util.Constants.DEFAULT_SCHEDULER;
@@ -42,7 +43,7 @@ import eu.hatsproject.absplugin.util.UtilityFunctions;
  *
  */
 public class DebugUtils {
-	public static Scheduler scheduler = DEFAULT_SCHEDULER;
+	private static Scheduler scheduler = DEFAULT_SCHEDULER;
 	public static IAction resume;
 	public static IAction terminate;
 	public static IAction executeSingleStep;
@@ -58,6 +59,8 @@ public class DebugUtils {
 	private static DebugView debugView;
 	public static volatile boolean highlightStep = true;
 	private static volatile TaskInfo lastHighlightInfo = null;
+    private static boolean runAutomatically;
+    private static String historyFile;
 	
 	public static void enableHightlighting(){
 		highlightStep = true;
@@ -89,8 +92,8 @@ public class DebugUtils {
 	 * the currently in the debug tree selected element and sets enablement of singleStep button accordingly.
 	 */
 	public static void refreshButtonEnablement(){
-		terminate.setEnabled(getDebugger().isRunning());
-		schedulerMenu.setEnabled(getDebugger().isRunning());
+		terminate.setEnabled(isDebuggerRunning());
+		schedulerMenu.setEnabled(isDebuggerRunning());
 		saveHistory.setEnabled(true);
 		
 		//Set enablement for step buttons explicitly
@@ -119,6 +122,7 @@ public class DebugUtils {
 				}
 			} break;
 		case random: 
+		case replay:
 			schedulableTasks = getSchedulerRef().getSchedulableTasks();
 			if(schedulableTasks != null && ! schedulableTasks.isEmpty()){
 				setStepButtonEnablement(true);
@@ -130,6 +134,10 @@ public class DebugUtils {
 			saveHistory.setEnabled(false);
 		}
 	}
+
+    private static boolean isDebuggerRunning() {
+        return getDebugger() != null && getDebugger().isRunning();
+    }
 	
 	public static void highlightLine(final IPath path, final int n){
 		Display.getDefault().asyncExec(new Runnable() {
@@ -343,4 +351,38 @@ public class DebugUtils {
 			public void run() { getDebugViewer().setSelection(new StructuredSelection(o)); }
 		});
 	}
+
+    public static Scheduler getScheduler() {
+        return scheduler;
+    }
+    
+    public static void setScheduler(Scheduler s) {
+        scheduler = s;
+        Display.getDefault().asyncExec(new Runnable() {
+            
+            @Override
+            public void run() {
+                if(getSchedulerRef() != null)
+                    getSchedulerRef().updateScheduler();
+                
+            }
+        });
+        
+    }
+
+    public static void setRunAutomatically(boolean ra) {
+        runAutomatically = ra;
+    }
+
+    public static boolean getRunAutomatically() {
+        return runAutomatically;
+    }
+
+    public static void setHistoryFile(String hf) {
+        historyFile = hf;        
+    }
+    
+    public static String getHistoryFile() {
+        return historyFile;
+    }
 }

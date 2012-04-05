@@ -15,9 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.eclipse.jface.action.IMenuCreator;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.widgets.Display;
 
+import eu.hatsproject.absplugin.debug.DebugUtils;
+import eu.hatsproject.absplugin.debug.perspective.SchedulerChoiceDelegate;
 import eu.hatsproject.absplugin.debug.views.debugview.DebugView;
 import abs.backend.java.debugging.TaskState;
 import abs.backend.java.observing.TaskStackFrameView;
@@ -26,11 +29,12 @@ import abs.backend.java.observing.TaskView;
 import abs.backend.java.scheduling.ActivateTask;
 import abs.backend.java.scheduling.ScheduleAction;
 import abs.backend.java.scheduling.ScheduleOptions;
+import abs.backend.java.scheduling.UsesRandomSeed;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
 
-public class SchedulingStrategy implements TotalSchedulingStrategy {
+public class SchedulingStrategy implements TotalSchedulingStrategy, UsesRandomSeed {
 	private boolean doDebug = true;
 	
     private List<ScheduleAction> scheduleActions;
@@ -42,6 +46,8 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 	TotalScheduler baseScheduler;
 	
 	abs.backend.java.debugging.TaskInfo steppedTask = null;
+
+    private Random random = null;
 	
 	public SchedulingStrategy() {
 		schedulerRef = this;
@@ -57,6 +63,9 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 	 * @param scheduler
 	 */
 	public synchronized void setCurrentScheduler(TotalScheduler scheduler){
+	    if (random != null && scheduler instanceof UsesRandomSeed) {
+	        ((UsesRandomSeed) scheduler).setRandom(random);
+	    }
 		TotalSchedulingStrategy oldscheduler = curScheduler;
 		curScheduler = scheduler;
 		schedulerUpdated(oldscheduler);
@@ -68,6 +77,9 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 	 * @param scheduler
 	 */
 	public synchronized void setBaseScheduler(TotalScheduler scheduler){
+	    if (random != null && scheduler instanceof UsesRandomSeed) {
+            ((UsesRandomSeed) scheduler).setRandom(random);
+        }
 		this.baseScheduler = scheduler;
 		if(baseScheduler instanceof RunTaskScheduler){
 			RunTaskScheduler ts = (RunTaskScheduler) baseScheduler;
@@ -117,7 +129,13 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 	 * has changed. Updates the current base scheduler accordingly.
 	 */
 	public void updateScheduler(){
-		switch(scheduler){
+	    if (DebugUtils.schedulerMenu != null && schedulerMenu.getMenuCreator() instanceof SchedulerChoiceDelegate) {
+	        // update selection in UI
+	        SchedulerChoiceDelegate menu = (SchedulerChoiceDelegate) schedulerMenu.getMenuCreator();
+	        menu.setSelection(DebugUtils.getScheduler());
+	    }
+	    
+		switch(DebugUtils.getScheduler()){
 		case interactive:
 			setBaseScheduler(new RunTaskScheduler(this));
 			refreshButtonEnablement();
@@ -127,7 +145,8 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 			refreshButtonEnablement();
 			break;
 		case replay:
-			//no yet implemented
+		    setBaseScheduler(new HistoryReplayScheduler(this));
+		    refreshButtonEnablement();
 			break;
 		default:
 			throw new RuntimeException("Non exhaustive match in scheduler enum" +
@@ -187,7 +206,9 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 				if(baseScheduler instanceof RunTaskScheduler && steppedTaskIsSchedulable()){
 					selectNextTask();
 				} else if(baseScheduler instanceof RandomScheduler){
-					setDebugTreeSelection(steppedTask.getTaskView());
+				    if (steppedTask != null) {
+				        setDebugTreeSelection(steppedTask.getTaskView());
+				    }
 				}
 				refreshVariableView();
 				refreshDebugViewer();
@@ -314,5 +335,10 @@ public class SchedulingStrategy implements TotalSchedulingStrategy {
 		enableHightlighting();
 		return curScheduler.choose(options);
 	}
+
+    @Override
+    public void setRandom(Random random) {
+        this.random = random;
+    }
 
 }
