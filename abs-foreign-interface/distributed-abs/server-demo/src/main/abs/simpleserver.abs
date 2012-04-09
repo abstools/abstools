@@ -18,14 +18,14 @@ class Worker(InputStream input, OutputStream output)
 implements ServerEnd {
 
 	Unit write(Int i) { 
-		await output != null;
+		//await output != null;
 		Fut<Feedback<Unit>> fw = output!writeInt(i);
 		Feedback<Unit> result = fw.get; 
 		assert isOK(result);
 	}
 	
 	Int read() {
-		await input != null;
+		//await input != null;
 		Fut<Feedback<Int>> f = input!readInt();
 		Feedback<Int> fb = f.get;
 		
