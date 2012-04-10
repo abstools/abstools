@@ -52,7 +52,7 @@ public class ABSRuntime {
     private final AtomicInteger taskCounter = new AtomicInteger();
 
     /** classloader for loading the translated code and FLI classes */
-    private URLClassLoader classLoader;
+    private ClassLoader classLoader = ABSRuntime.class.getClassLoader();
 
 
     /** URIs for loading foreign classes */
