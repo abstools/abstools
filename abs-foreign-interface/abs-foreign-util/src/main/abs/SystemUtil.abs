@@ -7,6 +7,7 @@ import * from ABS.FLI;
 interface System {
 	Unit outPrint(String s);
 	Unit outPrintln(String s);
+	String read();
 }
 
 [Foreign] 
@@ -19,5 +20,9 @@ class System implements System {
 	
 	Unit outPrintln(String s) { 
 		histories = appendright(histories,s); 
+	}
+	
+	String read() {
+		return "";
 	}
 }
