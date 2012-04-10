@@ -219,6 +219,7 @@ def Map<A, B> map<A, B>(List<Pair<A, B>> l) =
   
 def Map<A, B> removeKey<A, B>(Map<A, B> map, A key) = // remove from the map
   case map {
+  	EmptyMap => map;
     InsertAssoc(Pair(key, _), m) => m;
     InsertAssoc(pair, tail) => InsertAssoc(pair, removeKey(tail, key));
   };
