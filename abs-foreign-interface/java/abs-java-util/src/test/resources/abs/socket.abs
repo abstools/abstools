@@ -97,7 +97,7 @@ class SocketTestImpl(Int port) implements SocketTest {
 }
 
 {
-	SocketTest test = new cog SocketTestImpl(8180);
+	SocketTest test = new cog SocketTestImpl(10180);
 	Fut<Unit> sr = test!setupServer();
 	Fut<Unit> cr = test!setupClient();
 	
