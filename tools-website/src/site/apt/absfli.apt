@@ -6,7 +6,7 @@ The ABS Foreign Language Interface
 
   To declare a class as a foreign class one just have to annotate it with the <<<[Foreign]>>> annotation, which is defined in the <<<ABS.FLI>>> module. It is also necessary to define an interface which is implemented by the foreign class. Finally, the class must not have any class parameters.
 
-  Example
+** Example
 
 ---
 module Test;
@@ -37,9 +37,12 @@ class HelloImpl implements Hello {
   When the Java code for the ABS model has been generated, there will be an class
   <<<Test.HelloImpl_c>>>. This class has to be extended by a standard Java public class.
   The Java class must have a public parameterless constructor (or no explicit constructor).
-  Now override the methods of the superclass which end with <<<_fli>>> in the Java class.
+  Now override the methods of the superclass which start with <<<fli_>>> in the Java class.
+  
+  Use the print methods defined in the FLIHelper class to print messages to the console.
+  System.out.println will not be visible when the program is started from Eclipse.
 
-  Example
+** Example
 
 ---
 package myjavaflitest;
@@ -51,8 +54,9 @@ import abs.backend.java.lib.types.ABSString;
 import Test.HelloImpl_c; 
 
 public class FLITest extends HelloImpl_c {
-   public ABSString hello_fli(ABSString msg) {
-      System.out.println("I got "+msg.getString()+" from ABS");
+   @Override
+   public ABSString fli_hello(ABSString msg) {
+      FLIHelper.println("I got "+msg.getString()+" from ABS");
       return ABSString.fromString("Hello ABS, this is Java");
    }
 }
@@ -72,6 +76,7 @@ public class FLITest extends HelloImpl_c {
    to the ABS module of the ABS class and must be named like the ABS class with a <<<_fli>>>
    suffix. For example, if an ABS class <<<SomeClass>>> is defined in a module <<<My.Module>>>
    then the Java class must be in a package <<<My.Module>>> and must be called <<<SomeClass_fli>>>.
+   Methods start with "fli_" followed by the name of the ABS method.
 
 ** Using System Properties
    

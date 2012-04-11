@@ -6,8 +6,10 @@ Executing ABS Projects from ABS Eclipse IDE
 
  The Java Backend can be started either by using a run configuration or by pressing a predefined button in the toolbar.
  
- * Toolbar buttons:
+** Toolbar buttons:
  
+
+[../images/eclipse/runbuttons.png]
  
 *-------------------+----------------------------------------------------+------------------------------------------------------+
 || Button Number    || Button tooltip                                    || Functionality /Description                          |
@@ -23,47 +25,63 @@ Executing ABS Projects from ABS Eclipse IDE
 |                   |                                                    |  and SDEdit will be used /started.                   |
 *-------------------+----------------------------------------------------+------------------------------------------------------+
  
- * Run configurations:
+** Run configurations:
  
  The user can create, manage and run different run configurations. Run configurations can be found in the Run menu of the menubar (Run -> Run Configurations) as well as in the right-click menu of ABS projects or files.
  
+*** Main Tab
+
+[../images/eclipse/java_launchconfig_1.png]
+ 
+ 
  Options:
  
-  * ABS Project: The chosen project with an ABS Model.
-   
-  * Observer   : User can add / remove one or more (new or predefined) observers.
-   
-  * Scheduler  : User can select a scheduler. 
-   
-  * Enable debug mode       : Should be selected.
-   
-  * Generate Java file first: The Java files are needed to debug.
-   
-  * Execute debugger in external process: Starts the command line debugger. If this option is selected, the user can not use the "Eclipse scheduler".
-   
-  * Additional Arguments: More arguments for the command line debugger. 
+  [ABS Project] The chosen project with an ABS Model.
+  
+  [ABS Product] A product from the selected ABS Model.
+  
+  [Run Target] The start point of the execution. This can be a module with a main block or you
+  	can select to run all unit tests in the project.
+  	
+  [Draw sequence diagram] If this option is checked, SDEdit will start and a sequence diagram of the execution
+  	is drawn. 
+
+
+*** Scheduler Options Tab
+
+[../images/eclipse/java_launchconfig_2.png]
+
+ Available Schedulers:
+
+	[Manual scheduler] With this scheduler the user has to decide which Task to execute first, whenever
+		there is an alternative.
+	
+	[Random scheduler] This scheduler makes random decisions about which Task to execute first. A 
+		fixed random can be set in the options.
+		
+	[Replay history] This scheduler replays a previously saved history file. The file can be chosen in the options.
+	
+ The <Run automatically> option can be enabled for the random and replay scheduler. This has the same effect as
+ pressing the run-button in the debugger.
+
+
+
+
+*** FLI classpath Tab
+
+ In this tab you can select a classpath from which foreign classes will be loaded.
+
+*** Advanced Tab   
  
- Note: It is recommended to use the "Eclipse scheduler" and "Eclipse observer" in combination. "Eclipse scheduler" without "Eclipse observer" makes no sense. If both are not selected, the user could not use the debug perspective in Eclipse. 
+ You should enable the options on this tab only if you know what you are doing.
  
- Predefined run configurations:
+ Options:
  
-*---------------------------+-------------------------------------------------------------------+
-|| Name                     || Description                     				                    |
-*---------------------------+-------------------------------------------------------------------+
-|  ABS Java Backend         |  Starts debugger without any scheduler or observer. Does not open |  
-|                           |  the debug perspective.									        |
-*---------------------------+-------------------------------------------------------------------+
-|  ABS Java Backend (Debug) |  Like toolbar button 2:                                           |  
-|                           |  "Eclipse scheduler" and "Eclipse observer" are selected.		    |	
-*---------------------------+-------------------------------------------------------------------+
-|  ABS Java Backend (Debug  |  Like toolbar button 3:                                           |  
-|  with Sequence Diagram)   |  "Eclipse scheduler", "Eclipse observer" and "UML observer"       |
-|                           |  are selected.		                                            |
-*---------------------------+-------------------------------------------------------------------+
- 
- "Generate debugger file first" and "Enable debug mode" are selected in all predefined run configurations.
- 
- See also project property page (right click on project in the package explorer -> properties -> ABS -> Java Backend). There, you can set default settings for the respective project.
+ [Skip compilation before run] If this option is selected, Eclipse will not recompile the ABS sources before
+ 	the program is executed. The binaries from the last compilation will be used.
+ 	
+ [Ignore missing foreign classes] If this option is selected, there will be no error when FLI fails to load
+ 	a foreign class.
  
   
 * Maude

@@ -72,6 +72,7 @@
 	  <item name="Installation" href="eclipseplugin/installation.html"/>
 	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
 	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
+	  <item name="Using Foreign Languages" href="eclipseplugin/fli.html"/>
 	  <item name="Package Dependencies" href="eclipseplugin/packagedependencies.html"/>
 	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
       <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html" collapse="true">
