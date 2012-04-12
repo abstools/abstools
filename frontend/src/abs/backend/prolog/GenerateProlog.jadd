@@ -631,7 +631,7 @@ aspect GenerateProlog {
             s.print(",");
         for (int i = 0; i < n; i++){
             stmts.getChild(i).generateProlog(s,reachInfo);
-            if (i != n-1 && !(stmts.getChild(i) instanceof VarDeclStmt)) s.print(",");
+            if (i != n-1 ) s.print(",");
         }
         s.print("])");
         s.println(").");
