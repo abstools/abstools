@@ -6,10 +6,15 @@ package abs.frontend.analyser;
 
 import static org.junit.Assert.*;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
+import abs.frontend.tests.ABSFormatter;
+import abs.frontend.tests.EmptyFormatter;
 
 public class OtherAnalysisTests extends FrontendTest {
     
@@ -23,6 +28,8 @@ public class OtherAnalysisTests extends FrontendTest {
     public void finalTest() {
         assertParse("interface I { } { [Final] I i; i = null; }", Config.TYPE_CHECK, Config.WITH_STD_LIB, Config.EXPECT_TYPE_ERROR);
     }
+
+    
 
     @Test
     public void fullcopyTest() {
@@ -50,5 +57,37 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m2 = m.fullCopy();
         assertFalse(m2.hasErrors());
         assertTrue(m2.typeCheck().toString(),m2.typeCheck().isEmpty());
+    }
+    
+    @Test
+    public void parsetreecopyTest() {
+        Model m = assertParseOk("module M; class C {}", Config.WITH_STD_LIB);
+        
+        Model m2 = m.parseTreeCopy();
+        assertEquals(prettyPrint(m), prettyPrint(m2));
+        assertFalse(m.hasErrors());
+        assertFalse(m2.hasErrors());
+    }
+
+    
+    @Test
+    public void parsetreecopyTest2() {
+        Model m = assertParseOk("module M; productline TestPL { " +
+        "features A, B, C; " +
+        "}", Config.WITH_STD_LIB);
+        
+        
+        Model m2 = m.parseTreeCopy();
+        assertEquals(prettyPrint(m), prettyPrint(m2));
+        assertFalse(m.hasErrors());
+        assertFalse(m2.hasErrors());
+    }
+    
+    private String prettyPrint(Model m2) {
+        StringWriter writer = new StringWriter();
+        PrintWriter w = new PrintWriter(writer);
+        ABSFormatter f = new EmptyFormatter();
+        m2.doPrettyPrint(w,f);
+        return writer.toString();
     }
 }

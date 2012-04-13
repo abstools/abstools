@@ -290,6 +290,9 @@ public class JavaJob extends Job {
 			if (product != null) {
 				/* [stolz] Flattening for a product will mangle the model according to [ramus]...
 				 */
+				// work on a copy:
+                model = model.parseTreeCopy();
+				
 				String productN = product.getModuleDecl().getName()+"."+product.getName();
 				try {
 					model.flattenForProduct(productN);

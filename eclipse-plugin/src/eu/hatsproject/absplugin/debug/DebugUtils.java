@@ -92,6 +92,9 @@ public class DebugUtils {
 	 * the currently in the debug tree selected element and sets enablement of singleStep button accordingly.
 	 */
 	public static void refreshButtonEnablement(){
+		if (terminate == null) {
+			return;
+		}
 		terminate.setEnabled(isDebuggerRunning());
 		schedulerMenu.setEnabled(isDebuggerRunning());
 		saveHistory.setEnabled(true);

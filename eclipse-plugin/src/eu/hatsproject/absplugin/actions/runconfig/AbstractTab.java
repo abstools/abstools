@@ -109,6 +109,9 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 						return false;
 					/* Check product if any */
 					
+					// work on a copy:
+					model = model.parseTreeCopy();
+					
 					if (prod != null) {
 						model.flattenForProduct(prod);
 						/* Type check again */
@@ -117,8 +120,6 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 					if (model.hasErrors())
 						throw new AbsJobException(new TypeCheckerException(model.getErrors()));
 					SemanticErrorList errs = model.typeCheck();
-					// #332: trigger fresh build
-					project.build(IncrementalProjectBuilder.FULL_BUILD, null);
 					if (errs != null && !errs.isEmpty())
 						throw new AbsJobException(new TypeCheckerException(errs));
 				}
@@ -130,9 +131,6 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 				setErrorMessage(e.getMessage());
 				res = false;
 			} catch (ASTNodeNotFoundException e) {
-				setErrorMessage(e.getMessage());
-				res = false;
-			} catch (CoreException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
 			}

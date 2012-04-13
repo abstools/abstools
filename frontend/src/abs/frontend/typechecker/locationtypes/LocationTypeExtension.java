@@ -46,7 +46,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
             if (adaptTo != null) {
                 adaptedRht = rhtl.adaptTo(getLocationType(adaptTo), dir);
             }
-            if (!adaptedRht.isSubtypeOf(lhtl)) {
+            if (adaptedRht == null && !adaptedRht.isSubtypeOf(lhtl)) {
                 errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,adaptedRht.toString(),lhtl.toString()));
             }
         }

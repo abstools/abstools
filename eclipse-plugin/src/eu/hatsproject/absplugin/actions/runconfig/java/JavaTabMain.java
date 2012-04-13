@@ -95,7 +95,7 @@ public class JavaTabMain extends AbstractTab {
         if (index >= 0) {
             return runTargets.get(index);
         } else {
-            throw new Error("no run target selected.");
+            return null;
         }
     }
 
@@ -197,7 +197,9 @@ public class JavaTabMain extends AbstractTab {
             cfg.setProductName(getSelectedProductName());
             cfg.setRunTarget(getSelectedItem(runTargetDropDown));
             RunTarget runTarget = getSelectedRunTarget();
-            runTarget.setConfig(cfg);
+            if (runTarget != null) {
+            	runTarget.setConfig(cfg);
+            }
             cfg.setDrawSequenceDiagram(sequenceDiagramCheckbox.getSelection());
         } catch (CoreException e) {
             standardExceptionHandling(e);
@@ -223,6 +225,11 @@ public class JavaTabMain extends AbstractTab {
         boolean res = super.isValid(launchConfig);
         if (res) {
             setErrorMessage(null);
+        } else {
+        	if (getSelectedRunTarget() == null) {
+        		setErrorMessage("No run target selected");
+        		return false;
+        	}
         }
         return res;
     }

@@ -199,6 +199,9 @@ public class MaudeJob extends Job{
 				throw new ParseException(model.getParserErrors());
 			}
 			if (getProduct() != null) {
+				// work on a copy:
+                model = model.parseTreeCopy();
+				
 				model.flattenForProduct(getProduct());
 				model.flushCache(); // #335
 			}
