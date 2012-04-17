@@ -11,6 +11,7 @@ import static eu.hatsproject.absplugin.util.Constants.DEFAULT_SCHEDULER;
 
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
@@ -61,6 +62,7 @@ public class DebugUtils {
 	private static volatile TaskInfo lastHighlightInfo = null;
     private static boolean runAutomatically;
     private static String historyFile;
+    private static  IProject currentProject;
 	
 	public static void enableHightlighting(){
 		highlightStep = true;
@@ -141,14 +143,15 @@ public class DebugUtils {
     private static boolean isDebuggerRunning() {
         return getDebugger() != null && getDebugger().isRunning();
     }
+
+    
 	
 	public static void highlightLine(final IPath path, final int n){
 		Display.getDefault().asyncExec(new Runnable() {
 			
 			@Override
 			public void run() {
-			    // TODO this will open an editor without a project (==> missing outline etc.)
-				ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, null);
+				ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, currentProject);
 				editor.highlightLine(n);
 			}
 		});
@@ -181,8 +184,7 @@ public class DebugUtils {
 			
 			@Override
 			public void run() {
-			    // TODO this will open an editor without a project (==> missing outline etc.)
-			    ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, null);
+			    ABSEditor editor = UtilityFunctions.openABSEditorForFile(path, currentProject);
 				editor.removeHighlighting();
 			}
 		});
@@ -373,6 +375,10 @@ public class DebugUtils {
         
     }
 
+    public static void setCurrentProject(IProject project) {
+        currentProject = project;
+    }
+    
     public static void setRunAutomatically(boolean ra) {
         runAutomatically = ra;
     }

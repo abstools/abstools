@@ -126,19 +126,18 @@ public class ABSEditor extends TextEditor implements IPersistableEditor{
 			lineOffset = doc.getLineOffset(line);
 			
 			IResource resource = getResource();
-			if (resource == null) {
-			    // can be null for files inside jars
-				return;
+			if (resource != null) { // can be null for files inside jars
+			    
+    			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_ZERO);
+    			
+    			getSourceViewer().invalidateTextPresentation();
+    			
+    			IMarker marker = resource.createMarker(Constants.CURRENT_IP_MARKER);
+                marker.setAttribute(IMarker.LINE_NUMBER, line);
+                marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+                marker.setAttribute(IMarker.MESSAGE, "current instruction pointer");
+                
 			}
-			resource.deleteMarkers(Constants.CURRENT_IP_MARKER, false, IResource.DEPTH_ZERO);
-			
-			getSourceViewer().invalidateTextPresentation();
-			
-			IMarker marker = resource.createMarker(Constants.CURRENT_IP_MARKER);
-            marker.setAttribute(IMarker.LINE_NUMBER, line);
-            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
-            marker.setAttribute(IMarker.MESSAGE, "current instruction pointer");
-            
             if(getSourceViewer() instanceof SourceViewer){
                 SourceViewer sourceviewer = (SourceViewer)getSourceViewer();
                 sourceviewer.setSelection(new TextSelection(lineOffset, 0), true);

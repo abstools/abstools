@@ -524,6 +524,7 @@ public class JavaJob extends Job {
 		DebugUtils.setScheduler(scheduler);
 		DebugUtils.setRunAutomatically(runAutomatically);
 		DebugUtils.setHistoryFile(historyFile);
+		DebugUtils.setCurrentProject(project);
 		
 		if(useInternalDebugger){
 			executeABSSystem(javaPath, moduleName);	
