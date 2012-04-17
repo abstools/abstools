@@ -1322,6 +1322,7 @@
     </extension>
     <extension
           point="org.eclipse.ui.menus">
+       
        <menuContribution
              allPopups="false"
              locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
@@ -1426,14 +1427,15 @@
              </menu>
           </menu>
        </menuContribution>
+       
        <menuContribution
              allPopups="false"
              locationURI="popup:eu.hatsproject.absplugin.navigator.view">
           <menu
-                id="absexplorerpopup"
+                id="absexplorerpopup2"
                 label="ABS">
              <menu
-                   id="projectaddlocations"
+                   id="projectaddlocations2"
                    label="locations">
                 <visibleWhen
                       checkEnabled="false">
