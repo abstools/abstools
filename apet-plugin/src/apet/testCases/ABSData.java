@@ -1,20 +1,25 @@
 package apet.testCases;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 
 public abstract class ABSData{
+	String type;
 	String value;
 		
-	static ABSData parseData(Element elem){
+	static ABSData parseData(Element elem) throws Exception{
 		if (elem.getNodeName().equalsIgnoreCase("ref"))
 			return new ABSRef(elem);
 		else if (elem.getNodeName().equalsIgnoreCase("term"))
 			return new ABSTerm(elem);
 		else return null;
 	}
-		
-	public ABSData(Element elem){
-		value=elem.getTextContent();
+	
+	ABSData(){}
+	
+	public ABSData(Element elem) throws Exception{
+		type = elem.getAttribute("type");
+		value = elem.getTextContent();
 	}
 }

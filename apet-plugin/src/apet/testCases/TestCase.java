@@ -71,11 +71,7 @@ public class TestCase {
 	}
 	
 	private void parseCell(Element item, HashMap<ABSRef, ABSObject> heap) throws Exception {
-		NodeList refList = item.getElementsByTagName("ref");
-		// There can be more refs inside. Here we just take the first one
-		Element refElem = (Element) refList.item(0);
-		ABSRef ref = new ABSRef(refElem);
-	
+		ABSRef ref = new ABSRef(item.getAttribute("ref"));
 		NodeList objectList = item.getElementsByTagName("object");
 		if (objectList.getLength() != 1) throw new Exception();
 		Element objectElem = (Element) objectList.item(0);	
