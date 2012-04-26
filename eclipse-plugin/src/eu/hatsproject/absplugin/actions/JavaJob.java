@@ -297,7 +297,10 @@ public class JavaJob extends Job {
 				try {
 					model.flattenForProduct(productN);
 					model.flushCache();
-					Assert.isTrue(!model.hasErrors() && !model.hasTypeErrors());
+					if (model.hasErrors() || model.hasTypeErrors()) {
+					    nat.createMarkers(model);
+					    throw new AbsJobException("An ABS file in the project has type errors after applying deltas");
+					}
 				} catch (WrongProgramArgumentException e) {
 					throw new AbsJobException(e);
 				} catch (ASTNodeNotFoundException e) {
@@ -854,7 +857,7 @@ public class JavaJob extends Job {
 		// Errors are automatically logged by Eclipse
 		return new Status(Status.ERROR, PLUGIN_ID, errorMessage+"\n"+e.getLocalizedMessage(), e);
 	}
-
+	
 	public void setDebuggerArgsOther(String debuggerArgsOther) {
 		this.debuggerArgsOther = debuggerArgsOther;
 	}

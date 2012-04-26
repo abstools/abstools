@@ -117,11 +117,15 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 						/* Type check again */
 						model.flushCache(); // #335, see IncrementalModelBuilder#flushAll()
 					}
-					if (model.hasErrors())
+					if (model.hasErrors()) {
+					    createMarkers(nat, model.getErrors());
 						throw new AbsJobException(new TypeCheckerException(model.getErrors()));
+					}
 					SemanticErrorList errs = model.typeCheck();
-					if (errs != null && !errs.isEmpty())
+					if (errs != null && !errs.isEmpty()) {
+					    createMarkers(nat, errs);
 						throw new AbsJobException(new TypeCheckerException(errs));
+					}
 				}
 				setErrorMessage(null);
 			} catch (AbsJobException e) {
@@ -133,7 +137,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 			} catch (ASTNodeNotFoundException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
-			}
+            }
 			getLaunchConfigurationDialog().updateMessage();
 		}
 		// cache the result
@@ -142,6 +146,16 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 		lastResult = res;
 		return res;
 	}
+
+
+
+    private void createMarkers(AbsNature nat, SemanticErrorList errs) {
+        try {
+            nat.createMarkers(errs);
+        } catch (CoreException e) { 
+            // ignore
+        }
+    }
 
 	@Override
 	public boolean isValid(ILaunchConfiguration launchConfig) {

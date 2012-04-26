@@ -214,7 +214,18 @@ public class AbsNature implements IProjectNature {
 		initDependencies(); 
 	}
 	
-	private void createMarker(SemanticError error) throws CoreException {
+	public void createMarkers(Model model) throws CoreException {
+        createMarkers(model.getErrors());
+        createMarkers(model.getTypeErrors());
+    }
+
+    public void createMarkers(SemanticErrorList errors) throws CoreException {
+        for (SemanticError e : errors) {
+            createMarker(e);
+        }
+    }
+	
+	public void createMarker(SemanticError error) throws CoreException {
 		createMarker(error.getNode(), error.getMsg(), IMarker.SEVERITY_ERROR, TYPECHECK_MARKER_TYPE);
 	}
 
@@ -376,11 +387,7 @@ public class AbsNature implements IProjectNature {
 	   try {
 		   addPackagesForTypeChecking();
 		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision);
-		   if(typeerrors.size() > 0){
-			   for(SemanticError error : typeerrors){
-				   createMarker(error);
-			   }
-		   }
+		   createMarkers(typeerrors);
 
 		   if (dolocationtypecheck) {
 			   createLocationTypeInferenceMarker();
@@ -614,4 +621,6 @@ public class AbsNature implements IProjectNature {
 		} catch (NoModelException e) {
 		}
 	}
+
+    
 }
