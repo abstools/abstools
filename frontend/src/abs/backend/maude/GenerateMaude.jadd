@@ -652,14 +652,12 @@ aspect GenerateMaude {
         int randomcount = getValue().numberOfRandom(new TreeSet<String>());
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);
         if (getValue() instanceof PureExp) {
-            stream.print("$pushrandom ; ");
             MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             stream.print("assign( ");
             getVar().generateMaude(stream);
             stream.print("; ");
             getValue().generateMaude(stream);
             stream.print(") ");
-            stream.print("; $poprandom ");
         } else {
             MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
