@@ -289,7 +289,7 @@ public class SequenceDiagramVisualization implements SystemObserver, TaskObserve
         if (escapedArg.length() > MAX_ARG_LENGTH) {
             StringBuffer sb = new StringBuffer(escapedArg);
             int halfLength = MAX_ARG_LENGTH / 2;
-            String rest = arg.substring(escapedArg.length() - halfLength);
+            String rest = escapedArg.substring(escapedArg.length() - halfLength);
             sb.setLength(halfLength);
             sb.append(" .. ");
             sb.append(rest);
