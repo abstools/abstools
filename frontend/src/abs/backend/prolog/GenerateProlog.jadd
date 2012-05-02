@@ -733,7 +733,14 @@ aspect GenerateProlog {
     public void VarDeclStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print("varDeclStmt(");//we ignore them as they have already been included in the block definition
         this.getVarDecl().generateProlog(s,reachInfo);
-        s.print(")");
+        List<Annotation> anns = getAnnotations();
+        int n = anns.getNumChild();
+        s.print(",[");
+        for (int i = 0; i < n; i++){
+            anns.getChild(i).generateProlog(s,reachInfo);
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
     }
     public void ExpressionStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("expressionStmt(");
