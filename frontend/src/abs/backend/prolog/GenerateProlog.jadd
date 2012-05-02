@@ -746,7 +746,14 @@ aspect GenerateProlog {
         getVar().generateProlog(s,reachInfo);
         s.print(",");
         getValue().generateProlog(s,reachInfo);
-        s.print(")");
+        List<Annotation> anns = getAnnotations();
+        int n = anns.getNumChild();
+        s.print(",[");
+        for (int i = 0; i < n; i++){
+            anns.getChild(i).generateProlog(s,reachInfo);
+            if (i != n-1) s.print(",");
+        }
+        s.print("])");
     }
     public void AssertStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("assertStmt(");
