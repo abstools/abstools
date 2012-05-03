@@ -21,6 +21,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
@@ -208,13 +209,17 @@ public class DebugUtils {
 	}
 	
 	private static DebugView getDebugView(){		
-//		if(debugView == null){
-			debugView = (DebugView)PlatformUI.
-			getWorkbench()
-			.getActiveWorkbenchWindow()
-			.getActivePage()
-			.findView(ABS_DEBUG_VIEW);
-//		}
+		IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+		debugView = (DebugView)activePage.findView(ABS_DEBUG_VIEW);
+		if (debugView == null) {
+			// open view if it does not exist yet
+			try {
+				debugView = (DebugView) activePage.showView(ABS_DEBUG_VIEW);
+			} catch (PartInitException e) {
+				e.printStackTrace();
+				UtilityFunctions.showErrorMessage("Could not open debug view.");
+			}
+		}
 		return debugView;		
 	}
 	
