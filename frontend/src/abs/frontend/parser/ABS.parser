@@ -95,7 +95,8 @@ import java.io.IOException;
 	}
 :};
 
-
+%goal goal;
+%goal delta_decl;
 
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
