@@ -30,9 +30,10 @@
       <item name="Location Types" href="locationtypes.html" />
       <item name="Unit Testing" href="absunit.html"/>
       <item name="Packaging" href="packages.html" />
-      <item name="Foreign Languages" href="absfli.html" />
+      <item name="Foreign Language Interface" href="absfli.html" />
       <item name="Timed Simulations" href="timedmodeling.html" />
       <item name="Resource Modeling" href="resourcemodeling.html" />
+      <item name="Class-Specific Schedulers" href="class-scheduling.html" />
     </menu>
 
     <menu name="The Core Tools">

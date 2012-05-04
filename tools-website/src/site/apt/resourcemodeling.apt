@@ -1,4 +1,4 @@
-Simulating Resources in Maude
+Simulating Resources Using the Maude Backend
 
 * Introduction
 
@@ -135,7 +135,7 @@ def DeploymentComponent thisDC() = builtin;
    complex expression will take more time on a real machine than
    assignment of a constant).
 
-** Bugs / TODO
+* Future Work
 
    * The <<<thisDC>>> function is currently undefined in the Java
      backend and will lead to a compile-time error.
