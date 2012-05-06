@@ -211,6 +211,12 @@ public final class AbsASTBuilderUtil {
         return getVarDecl(name, new InterfaceTypeUse(inf.getName()), ne);
     }
 
+    /**
+     * Generates import statement {@code import DeclName from DeclModule;}
+     * 
+     * @param decl
+     * @return
+     */
     public static final Import generateImportAST(Decl decl) {
         return generateImportAST(decl.getName(), decl.getModuleDecl().getName());
     }
@@ -238,6 +244,13 @@ public final class AbsASTBuilderUtil {
         return imports;
     }
 
+    /**
+     * Generates import statement {@code import name from module;}
+     * 
+     * @param name
+     * @param module
+     * @return
+     */
     public static final Import generateImportAST(String name, String module) {
         return new FromImport(new List<Name>().add(new Name(name)), module);
     }
