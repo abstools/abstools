@@ -41,7 +41,7 @@ import apet.console.ApetShellCommand;
 public class apetHandler extends AbstractHandler {
 
 	/**
-	 * This false dictates if test cases are to be translated into ABSUnit
+	 * This flag dictates if test cases are to be translated into ABSUnit
 	 * Currently only modify manually during development
 	 */
 	private boolean translate = false;
