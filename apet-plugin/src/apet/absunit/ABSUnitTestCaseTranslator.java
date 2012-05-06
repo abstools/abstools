@@ -1,7 +1,21 @@
 package apet.absunit;
 
-import static abs.backend.tests.AbsASTBuilderUtil.*;
-import static apet.testCases.ABSTestCaseExtractor.*;
+import static abs.backend.tests.AbsASTBuilderUtil.generateImportAST;
+import static abs.backend.tests.AbsASTBuilderUtil.getDecl;
+import static abs.backend.tests.AbsASTBuilderUtil.getExpStmt;
+import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
+import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
+import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
+import static abs.backend.tests.AbsASTBuilderUtil.namePred;
+import static abs.backend.tests.AbsASTBuilderUtil.newObj;
+import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
+import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
+import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
+import static apet.testCases.ABSTestCaseExtractor.getABSObjectType;
+import static apet.testCases.ABSTestCaseExtractor.getAfterState;
+import static apet.testCases.ABSTestCaseExtractor.getInitialState;
+import static apet.testCases.ABSTestCaseExtractor.getInputArgs;
+import static apet.testCases.ABSTestCaseExtractor.getReturnData;
 
 import java.io.File;
 import java.util.HashSet;
@@ -24,17 +38,16 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.EqExp;
-import abs.frontend.ast.Export;
 import abs.frontend.ast.Feature;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
-import abs.frontend.ast.Import;
 import abs.frontend.ast.InitBlock;
 import abs.frontend.ast.IntLiteral;
 import abs.frontend.ast.InterfaceDecl;
@@ -52,13 +65,14 @@ import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.RemoveMethodModifier;
 import abs.frontend.ast.ReturnStmt;
+import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.SyncCall;
+import abs.frontend.ast.TypeSynDecl;
 import abs.frontend.ast.VarUse;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
 import apet.testCases.ABSRef;
 import apet.testCases.ABSTerm;
-import apet.testCases.ABSTestCaseExtractor;
 import apet.testCases.ApetTestSuite;
 import apet.testCases.TestCase;
 
@@ -133,7 +147,14 @@ public class ABSUnitTestCaseTranslator {
 		return testType != null;
 	}
 	
-	public void generateABSUnitTests(ApetTestSuite suite) {
+	/**
+	 * Generates an ABS module {@link ModuleDecl} that defines the 
+	 * given test suite.
+	 * 
+	 * @param suite
+	 * @return
+	 */
+	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
 		
 		for (String key : suite.keySet()) {
 			generateABSUnitTest(suite.get(key), key);
@@ -167,6 +188,8 @@ public class ABSUnitTestCaseTranslator {
 		
 		output.setProductLine(productline);
 		output.addProduct(product);
+		
+		return output;
 	}
 	
 	private Annotation getTestAnnotation(DataConstructor c) {
@@ -218,6 +241,13 @@ public class ABSUnitTestCaseTranslator {
 		return modifier;
 	}
 	
+	/**
+	 * Create a method signature for testing method with the given method name.
+	 * 
+	 * @param methodName
+	 * @param decls
+	 * @return
+	 */
 	private MethodSig createTestMethodSig(String methodName, 
 			ParamDecl... decls) {
 		MethodSig methodSig = createMethodSig(methodName, getUnit(), decls);
@@ -267,6 +297,12 @@ public class ABSUnitTestCaseTranslator {
 		return dl;
 	}
 	
+	/**
+	 * Get a create an ABS interface with the given name.
+	 * 
+	 * @param testInterface
+	 * @return
+	 */
 	private InterfaceDecl getOrCreateTestInterfaceDecl(String testInterface) {
 		//check if we already have defined this.
 		InterfaceDecl ti = getDecl(output, InterfaceDecl.class, 
@@ -326,78 +362,103 @@ public class ABSUnitTestCaseTranslator {
 		return null;
 	}
 	
+	/**
+	 * Create a 
+	 * 
+	 * @param testCases
+	 * @param testInterface
+	 * @param className
+	 * @param methodName
+	 */
 	private void getOrCreateTestSuiteForClassMethod(
-			List<TestCase> cs,
+			List<TestCase> testCases,
 			InterfaceDecl testInterface, 
 			String className,
 			String methodName) {
 	
-		//create suite
+		//create test class ([Suite])
 		final ClassDecl testClass = createTestClass(testInterface);
 
 		//find class under test.
-		ClassDecl cut = getDecl(model, ClassDecl.class, 
+		ClassDecl classUnderTest = getDecl(model, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>(className));
 		
-		//find method under test.
-		MethodImpl mut = findMethodImpl(cut, new MethodNamePredicate(methodName));
+		assert classUnderTest != null : 
+			"It should not be possible to not " +
+			"find class under test";
 		
+		//find method under test.
+		MethodImpl methodUnderTest = 
+				findMethodImpl(classUnderTest, new MethodNamePredicate(methodName));
+		
+		assert methodUnderTest != null : 
+			"It should not be possible to not " +
+			"find method under test";
+
 		//find interface of class under test.
-		InterfaceDecl inf = null;
-		for (InterfaceTypeUse iu : cut.getImplementedInterfaceUseList()) {
+		InterfaceDecl interfaceOfClassUnderTest = null;
+		for (InterfaceTypeUse iu : classUnderTest.getImplementedInterfaceUseList()) {
 			InterfaceDecl infTemp = getDecl(model, InterfaceDecl.class, 
 					new DeclNamePredicate<InterfaceDecl>(iu.getName()));
 			
 			if (findMethodSig(infTemp, new MethodSigNamePredicate(methodName)) != null) {
-				inf = infTemp;
+				interfaceOfClassUnderTest = infTemp;
 				break;
 			}
 		}
 		
 		//add imports of class/interface under test
-		output.addImport(generateImportAST(cut));
-		output.addImport(generateImportAST(inf));
+		output.addImport(generateImportAST(classUnderTest));
+		output.addImport(generateImportAST(interfaceOfClassUnderTest));
 		
-		String minf = "ModifierFieldsOf"+className+"ForTest";
+		//String minf = "ModifierFieldsOf"+className+"ForTest";
 		
-		for (int i=0; i<cs.size(); i++) {
-			TestCase c = cs.get(i);
+		/*
+		 * Test methods and Test cases are ordered that is,
+		 * test case 1 is implemented by test method 1 and so on...
+		 */
+		for (int i=0; i<testCases.size(); i++) {
+			TestCase testCase = testCases.get(i);
 
 			//initial arg
-			List<ABSData> ia = ABSTestCaseExtractor.getInputArgs(c);
+			List<ABSData> inputArguments = getInputArgs(testCase);
 			Block block = testClass.getMethod(i).getBlock();
 			
-			//first initial arg is the reference of sut
-			String out = ABSTestCaseExtractor.getABSData(ia.get(0));
-			block.addStmt(newObj(inf, cut, out, false));
+			//first initial arg is the reference of Object Under Test
+			String heapReferenceToObjectUnderTest = getABSDataValue(inputArguments.get(0));
+			
+			//Instantiate object under tests
+			block.addStmt(newObj(interfaceOfClassUnderTest, classUnderTest, heapReferenceToObjectUnderTest, false));
 			
 			//TODO initial states' heap contains more than one object.
-			Map<ABSRef,ABSObject> is = ABSTestCaseExtractor.getInitialState(c);
+			Map<ABSRef,ABSObject> is = getInitialState(testCase);
 			assert is.size() == 1;
 			for (ABSRef r : is.keySet()) {
 				makeSetStatements(r, is.get(r), block);
 			}
 			
 			//test execution
-			SyncCall test = makeTestExecutionForMethod(mut.getMethodSig(), ia);
+			SyncCall test = 
+				makeTestExecutionForMethod(methodUnderTest.getMethodSig(), 
+						inputArguments);
 			
-			Access access = mut.getMethodSig().getReturnType();
+			Access access = methodUnderTest.getMethodSig().getReturnType();
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
 				block.addStmt(getExpStmt(test)); //no return value
-				assert ABSTestCaseExtractor.getReturnData(c) == null;
+				assert getReturnData(testCase) == null;
 			} else {
 				block.addStmt(getVarDecl("returnValue", access, test));
 			}
 			
 			//check return value
-			ABSData rd = ABSTestCaseExtractor.getReturnData(c);
+			ABSData rd = getReturnData(testCase);
 			if (rd != null) {
 				makeOracle("returnValue", access, rd, block);
 			}
 			
 			//check return value
-			Map<ABSRef,ABSObject> af = ABSTestCaseExtractor.getAfterState(c);
+			Map<ABSRef,ABSObject> af = getAfterState(testCase);
 			assert af.size() == 1;
 			for (ABSRef r : af.keySet()) {
 				makeGetAndAssertStatements(r, af.get(r), block);
@@ -412,7 +473,7 @@ public class ABSUnitTestCaseTranslator {
 			new AssertStmt(
 				new abs.frontend.ast.List<Annotation>(),
 				new EqExp(new VarUse(actual), 
-						  new IntLiteral(getABSData(data))));
+						  createPureExpression(data)));
 		
 		block.addStmt(stmt);
 	}
@@ -448,21 +509,22 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
+	private String setFieldMethodName(String fieldName) {
+		return SETTER_PREFIX+fieldName;
+	}
+	
 	private void makeSetStatements(ABSRef ref, ABSObject state, Block block) {
-		String rn = getABSData(ref); 
+		String rn = getABSDataValue(ref); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		for (String fn : fields.keySet()) {
 			SyncCall syncCall = new SyncCall();
 			syncCall.setCallee(new VarUse(rn));
-			syncCall.setMethod(SETTER_PREFIX+fn);
+			syncCall.setMethod(setFieldMethodName(fn));
+			
 			ABSData d = fields.get(fn);
-			
-			//TODO references!
-			if (d instanceof ABSTerm) {
-				
-			}
-			
+			PureExp exp = createPureExpression(d);
+			syncCall.addParam(exp);
 			block.addStmt(getExpStmt(syncCall));
 		}
 		
@@ -470,13 +532,63 @@ public class ABSUnitTestCaseTranslator {
 		updateDelta(getDecl(output, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>(getABSObjectType(state))));
 		
-//		block.addStmt(getVarDecl(getABSData(r), new InterfaceTypeUse(minf), 
-//				new VarUse(out)));
+	}
+	
+	/**
+	 * Adds the type import
+	 * @param dataValue
+	 * @return
+	 */
+	private PureExp createPureExpression(ABSData dataValue) {
+		String type = getABSDataType(dataValue);
+		String value = getABSDataValue(dataValue);
+
+		//import type
+		Decl decl = getDecl(model, Decl.class, namePred(type));
+		output.addImport(generateImportAST(decl));
 		
+		if (dataValue instanceof ABSTerm) {
+			return makeDataTermValue(value, decl);
+		} else if (dataValue instanceof ABSRef) {
+			return new VarUse(value);
+		} else {
+			throw new IllegalStateException("Cannot handle ABSData that is not " +
+					"either a ABSRef or a ABSTerm");
+		}
+	}
+	
+	/**
+	 * Construct a pure expression that is either a primitive literal
+	 * such as Int and String, or a value of a data type.
+	 * 
+	 * @param value
+	 * @param decl 
+	 * @return
+	 */
+	private PureExp makeDataTermValue(String value, Decl decl) {
+		if (decl instanceof TypeSynDecl) {
+			String type = ((TypeSynDecl) decl).getValue().getName();
+			Decl typeDecl = getDecl(model, Decl.class, namePred(type));
+			return makeDataTermValue(value, typeDecl);
+		} else if (decl instanceof ParametricDataTypeDecl) {
+			return null; //TODO
+		} else if (decl instanceof DataTypeDecl) {
+			if ("String".equals(decl.getName())) {
+				return new StringLiteral(value);
+			} else if ("Int".equals(decl.getName())) {
+				return new IntLiteral(value);
+			} else {
+				return null; //TODO
+			}
+		} else if (decl instanceof InterfaceDecl) {
+			return new VarUse(value);
+		} else {
+			throw new IllegalStateException("Cannot handle declaration type "+decl);
+		}
 	}
 	
 	private void makeGetAndAssertStatements(ABSRef ref, ABSObject state, Block block) {
-		String rn = getABSData(ref); 
+		String rn = getABSDataValue(ref); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		for (String fn : fields.keySet()) {
@@ -484,12 +596,7 @@ public class ABSUnitTestCaseTranslator {
 			syncCall.setCallee(new VarUse(rn));
 			syncCall.setMethod(GETTER_PREFIX+fn);
 			ABSData d = fields.get(fn);
-
-			//TODO references!
-			if (d instanceof ABSTerm) {
-				String expected = getABSData(d);
-			}
-			
+			PureExp exp = createPureExpression(d);
 			block.addStmt(getVAssign(GETTER_PREFIX+fn+"Var", syncCall));
 			makeOracle(GETTER_PREFIX+fn+"Var",null,d,block);
 		}
@@ -508,42 +615,48 @@ public class ABSUnitTestCaseTranslator {
 			throw new IllegalStateException("Inputs for a method must at least have a reference");
 		}
 		
-		String rn = ABSTestCaseExtractor.getABSData(r);
+		String rn = getABSDataValue(r);
 		syncCall.setCallee(new VarUse(rn));
 		syncCall.setMethod(method.getName());
 		syncCall.setParamList(ps);
 		
 		for (int i=1; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
-			String sv = ABSTestCaseExtractor.getABSData(d);
-			final PureExp exp;
-			if (d instanceof ABSRef) {
-				exp = new VarUse(sv);
-			} else if (d instanceof ABSTerm) {
-				//TODO need to differentiate terms
-				//Access type = method.getParam(i).getAccess();
-				exp = new IntLiteral(sv);
-			} else {
-				throw new IllegalStateException("");
-			}
+			PureExp exp = createPureExpression(d);
 			syncCall.setParam(exp,i);
 		}
 		return syncCall;
 	}
 	
-	private InterfaceDecl getOrCreateTestFixtureForClassMethod(int testCaseSize, String className, 
+	private String testInterfaceName(String className, String capMethodName) {
+		return className + INTERFACE_SUFFIX + "For" + capMethodName;
+	}
+	
+	private String testMethodName(String capMethodName, String testCaseName) {
+		return METHOD_PREFIX+ capMethodName + testCaseName;
+	}
+	
+	/**
+	 * Create Test Fixture for a given Class method.
+	 * 
+	 * @param testCaseSize
+	 * @param className
+	 * @param methodName
+	 * @return
+	 */
+	private InterfaceDecl createTestFixtureForClassMethod(int testCaseSize, String className, 
 			String methodName) {
 		
-		String cm = StringUtils.capitalize(methodName);
-		final String testInterfaceName = className + INTERFACE_SUFFIX + "For" + cm;
-		final String testMethodNamePrefix = METHOD_PREFIX+ cm ;
+		String capMethodName = StringUtils.capitalize(methodName);
+		final String testInterfaceName = testInterfaceName(className, capMethodName);
 		
 		//create fixture
 		final InterfaceDecl testInterface = 
 			getOrCreateTestInterfaceDecl(testInterfaceName);
 		
 		for (int i=1; i<=testCaseSize; i++) {
-			testInterface.addBody(createTestMethodSig(testMethodNamePrefix + i));
+			testInterface.addBody(createTestMethodSig(testMethodName(capMethodName, 
+					Integer.valueOf(i).toString())));
 		}
 		
 		return testInterface;
@@ -565,7 +678,7 @@ public class ABSUnitTestCaseTranslator {
 		}
 
 		if (className != null) {
-			InterfaceDecl ti = getOrCreateTestFixtureForClassMethod(cs.size(), className, methodName);
+			InterfaceDecl ti = createTestFixtureForClassMethod(cs.size(), className, methodName);
 			getOrCreateTestSuiteForClassMethod(cs, ti, className, methodName);
 		}
 		

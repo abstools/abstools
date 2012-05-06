@@ -1,6 +1,5 @@
 package apet.testCases;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +60,21 @@ public final class ABSTestCaseExtractor {
 	 * @param d
 	 * @return
 	 */
-	public static String getABSData(ABSData d) {
+	public static String getABSDataValue(ABSData d) {
 		return d.value;
 	}
 	
 	/**
+	 * Get the string type of the test data
+	 * @param d
+	 * @return
+	 */
+	public static String getABSDataType(ABSData d) {
+		return d.type;
+	}
+	
+	/**
+	 * Get the string type of the object.
 	 * @param d
 	 * @return
 	 */
