@@ -43,7 +43,8 @@ implements IWorkbenchPreferencePage {
 
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PCOST_MODEL,"Cost model:",
 				1,new String[][] { { "Termination", "termination" }, {"Steps", "steps" }, 
-				{"Memory", "memory" }, {"Objects", "objects" }, {"Task level", "task_level" }}, getFieldEditorParent()));
+				{"Memory", "memory" }, {"Objects", "objects" }, {"Task level", "task_level" },
+				{"User-defined", "user" }}, getFieldEditorParent()));
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PCOST_CENTER,"Enable cost centers:",
 				1,new String[][] { { "Yes", "yes" }, {"No", "no" }}, getFieldEditorParent()));
 		addField(new RadioGroupFieldEditor(PreferenceConstants.PSIZE_ABST,"Size norm:",

@@ -9,7 +9,8 @@ public class CostabsOptions {
 		"Steps",
 		"Memory",
 		"Objects",
-		"Task Level"
+		"Task Level",
+		"User-defined"
 	};
 	
 	public static final String[] COST_MODEL_PROLOG = {
@@ -17,7 +18,8 @@ public class CostabsOptions {
 		"steps",
 		"memory",
 		"objects",
-		"task_level"
+		"task_level",
+		"user"
 	};
 	
 	public static final String COST_CENTERS_TITLE = "Cost centers";
