@@ -214,9 +214,9 @@ public class ABSUnitTestCaseTranslator {
 		InterfaceDecl ti = createTestFixtureForClassMethodOrFunction(cs.size(), className, methodName);
 		
 		if (className == null) {
-			getOrCreateTestSuiteForFunction(cs, ti, methodName);
+			createTestSuiteForFunction(cs, ti, methodName);
 		} else {
-			getOrCreateTestSuiteForClassMethod(cs, ti, className, methodName);
+			createTestSuiteForClassMethod(cs, ti, className, methodName);
 		}
 	}
 
@@ -402,7 +402,7 @@ public class ABSUnitTestCaseTranslator {
 	 * @param className
 	 * @param methodName
 	 */
-	private void getOrCreateTestSuiteForFunction(
+	private void createTestSuiteForFunction(
 			List<TestCase> testCases,
 			InterfaceDecl testInterface, 
 			String methodName) {
@@ -472,7 +472,7 @@ public class ABSUnitTestCaseTranslator {
 	 * @param className
 	 * @param methodName
 	 */
-	private void getOrCreateTestSuiteForClassMethod(
+	private void createTestSuiteForClassMethod(
 			List<TestCase> testCases,
 			InterfaceDecl testInterface, 
 			String className,
