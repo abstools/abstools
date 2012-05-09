@@ -487,6 +487,7 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
 
+		getFunctionalModifierList().doPrettyPrint(stream, formatter);
 	    getClassOrIfaceModifierList().doPrettyPrint(stream, formatter);
         stream.println();
 
@@ -717,6 +718,40 @@ aspect doPrettyPrinter {
             stream.print(" = ");
             getDataConstructorList().doPrettyPrint(stream, formatter, "|");
         }
+        stream.print(";");
+    }
+    
+    public void AddDataTypeModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter)
+    {
+		stream.print("adds "); 
+		getDataTypeDecl().doPrettyPrint(stream, formatter);
+		stream.println();
+	}
+    
+    public void ModifyInterfaceModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("modifies interface ");
+        stream.print(getName());
+
+        formatter.beforeOpenBrace();
+        stream.println("{");
+        formatter.afterOpenBrace();
+
+        getMethodSigModifierList().doPrettyPrint(stream, formatter);
+
+        formatter.beforeCloseBrace();
+        stream.print("}");
+        formatter.afterCloseBrace();
+    }
+    
+    public void AddMethodSigModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("adds ");
+        getMethodSig().doPrettyPrint(stream, formatter);
+        stream.print(";");
+    }
+    
+    public void RemoveMethodSigModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("removes ");
+        getMethodSig().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
     

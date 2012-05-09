@@ -4,7 +4,6 @@
  */
 package abs.frontend.parser;
 
-import java.io.StringBufferInputStream;
 import java.io.StringReader;
 
 import junit.framework.Assert;
@@ -362,6 +361,14 @@ public class ParserTest extends FrontendTest {
         ABSScanner scanner = new ABSScanner(new StringReader("delta Mon {}"));
         DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
         Assert.assertNotNull(d);
+    }
+    
+    @Test (expected = ParseException.class)
+    public void deltaNameLowerCaseTest() throws Exception{
+        String deltaDecl = "delta foo{}";
+        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
+        parser.setRaiseExceptions(true);
+        parser.parse(scanner,ABSParser.AltGoals.delta_decl);
     }
     
 }
