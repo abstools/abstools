@@ -395,24 +395,24 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	/**
-	 * Create a 
+	 * Create a test suite for testing a function.
 	 * 
 	 * @param testCases
 	 * @param testInterface
 	 * @param className
-	 * @param methodName
+	 * @param functionName
 	 */
 	private void createTestSuiteForFunction(
 			List<TestCase> testCases,
 			InterfaceDecl testInterface, 
-			String methodName) {
+			String functionName) {
 	
 		//create test class ([Suite])
 		final ClassDecl testClass = createTestClass(testInterface);
 
 		//find function under test
 		FunctionDecl functionUnderTest = getDecl(model, FunctionDecl.class,
-				new DeclNamePredicate<FunctionDecl>(methodName));
+				new DeclNamePredicate<FunctionDecl>(functionName));
 
 		final Access access = functionUnderTest.getTypeUse();
 
@@ -437,7 +437,7 @@ public class ABSUnitTestCaseTranslator {
 			}
 			
 			//test execution
-			FnApp test = makeTestExecutionForFunction(methodName, inputArguments);
+			FnApp test = makeTestExecutionForFunction(functionName, inputArguments);
 			
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
@@ -465,7 +465,7 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	/**
-	 * Create a 
+	 * Create a test suite for testing a method.
 	 * 
 	 * @param testCases
 	 * @param testInterface
