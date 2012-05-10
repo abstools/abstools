@@ -6,12 +6,14 @@ package abs.backend.java;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.lib.runtime.ABSFut;
+import abs.backend.java.lib.runtime.ABSObject;
 import abs.backend.java.lib.types.*;
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
@@ -202,6 +204,10 @@ public class JavaBackend extends Main {
     static {
         for (String s : JAVA_RESERVED_WORDS_ARRAY) {
             JAVA_RESERVED_WORDS.add(s);
+        }
+        // add methods from ABSObject to reserved words:
+        for (Method m : ABSObject.class.getMethods()) {
+            JAVA_RESERVED_WORDS.add(m.getName());
         }
     }
 
