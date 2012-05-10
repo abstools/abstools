@@ -62,6 +62,7 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
+import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.PureExp;
@@ -70,7 +71,6 @@ import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.TypeSynDecl;
-import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.VarUse;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
@@ -164,7 +164,7 @@ public class ABSUnitTestCaseTranslator {
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
-		Set<String> dn = new HashSet<String>(); 
+		Set<String> dn = new HashSet<String>();
 		for (Decl d : output.getDeclList()) {
 			if (d instanceof DeltaDecl) {
 				dn.add(d.getName());
@@ -314,17 +314,6 @@ public class ABSUnitTestCaseTranslator {
 		return ti;
 	}
 	
-	private abs.frontend.ast.List<ParamDecl> getParams(ParamDecl... decls) {
-		abs.frontend.ast.List<ParamDecl> dl = 
-			new abs.frontend.ast.List<ParamDecl>();
-		
-		for (ParamDecl d : decls) {
-			dl.add(d);
-		}
-		
-		return dl;
-	}
-	
 	/**
 	 * Get a create an ABS interface with the given name.
 	 * 
@@ -431,7 +420,6 @@ public class ABSUnitTestCaseTranslator {
 			
 			//TODO initial states' heap contains more than one object.
 			Map<ABSRef,ABSObject> is = getInitialState(testCase);
-			assert is.size() == 1;
 			for (ABSRef r : is.keySet()) {
 				makeSetStatements(r, is.get(r), block);
 			}
@@ -580,20 +568,32 @@ public class ABSUnitTestCaseTranslator {
 		block.addStmt(stmt);
 	}
 	
+	private String deltaOnClass(String className) {
+		return className + DELTA_SUFFIX;
+	}
+	
+	private String interfaceForModifyingFieldOfClass(String className) {
+		return "ModifierFieldsOf"+className+"ForTest";
+	}
+	
+	/**
+	 * Add a delta that adds Getters and Setters for clazz.
+	 * @param clazz
+	 */
 	private void updateDelta(ClassDecl clazz) {
 		String className = clazz.getName();
 		
 		DeltaDecl dd = getDecl(output, DeltaDecl.class, 
-				new DeclNamePredicate<DeltaDecl>(className + DELTA_SUFFIX));
+				new DeclNamePredicate<DeltaDecl>(deltaOnClass(className)));
 		
 		if (dd == null) {
 			dd = new DeltaDecl();
-			dd.setName(className + DELTA_SUFFIX);
+			dd.setName(deltaOnClass(className));
 			
 			//add Setters and Getters
 			ModifyClassModifier mcm = new ModifyClassModifier();
 			InterfaceDecl ai = new InterfaceDecl();
-			ai.setName("ModifierFieldsOf"+className+"ForTest");
+			ai.setName(interfaceForModifyingFieldOfClass(className));
 			mcm.addImplementedInterfaceUse(new InterfaceTypeUse(ai.getName()));
 			for (FieldDecl fd : clazz.getFieldList()) {
 				AddMethodModifier smm = addSetter(fd.getName(), fd.getAccess());
@@ -673,7 +673,7 @@ public class ABSUnitTestCaseTranslator {
 			Decl typeDecl = getDecl(model, Decl.class, namePred(type));
 			return makeDataTermValue(value, typeDecl);
 		} else if (decl instanceof ParametricDataTypeDecl) {
-			return null; //TODO
+			return parseValue(value, new ParametricDataTypeUse(), (ParametricDataTypeDecl) decl);
 		} else if (decl instanceof DataTypeDecl) {
 			if ("String".equals(decl.getName())) {
 				return new StringLiteral(value);
@@ -689,18 +689,45 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
+	private ParametricDataTypeUse parseValue(String value, ParametricDataTypeUse result, 
+			ParametricDataTypeDecl decl) {
+		
+		String[] terms = value.split("(");
+		result.setName(terms[0]);
+		if (terms.length > 1) {
+			
+		}
+		return result;
+	}
+	
+	private String getterMethodName(String fieldName) {
+		return GETTER_PREFIX + fieldName;
+	}
+	
+	private String resultOfgetterMethodName(String fieldName) {
+		return getterMethodName(fieldName) + "Var";
+	}
+	
 	private void makeGetAndAssertStatements(ABSRef ref, ABSObject state, Block block) {
 		String rn = getABSDataValue(ref); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
-		for (String fn : fields.keySet()) {
-			SyncCall syncCall = new SyncCall();
-			syncCall.setCallee(new VarUse(rn));
-			syncCall.setMethod(GETTER_PREFIX+fn);
-			ABSData d = fields.get(fn);
-			PureExp exp = createPureExpression(d);
-			block.addStmt(getVAssign(GETTER_PREFIX+fn+"Var", syncCall));
-			makeOracle(GETTER_PREFIX+fn+"Var",null,d,block);
+		
+		ClassDecl clazz = 
+			getDecl(output, ClassDecl.class, 
+				new DeclNamePredicate<ClassDecl>(getABSObjectType(state)));
+		
+		abs.frontend.ast.List<FieldDecl> fieldDecls = clazz.getFieldList();
+		for (int i=0; i<fieldDecls.getNumChild(); i++) {
+			String fn = fieldDecls.getChild(i).getName();
+			if (fields.containsKey(fn)) {
+				ABSData d = fields.get(fn);
+				SyncCall syncCall = new SyncCall();
+				syncCall.setCallee(new VarUse(rn));
+				syncCall.setMethod(getterMethodName(fn));
+				block.addStmt(getVAssign(resultOfgetterMethodName(fn), syncCall));
+				makeOracle(resultOfgetterMethodName(fn),null,d,block);
+			}
 		}
 	}
 	
@@ -768,11 +795,12 @@ public class ABSUnitTestCaseTranslator {
 	private InterfaceDecl createTestFixtureForClassMethodOrFunction(int testCaseSize, String className, 
 			String methodName) {
 		
+		String capMethodName = StringUtils.capitalize(methodName);
+
 		if (className == null) {
-			className = functionClassName(methodName);
+			className = functionClassName(capMethodName);
 		}
 		
-		String capMethodName = StringUtils.capitalize(methodName);
 		final String testInterfaceName = testInterfaceName(className, capMethodName);
 		
 		//create fixture
