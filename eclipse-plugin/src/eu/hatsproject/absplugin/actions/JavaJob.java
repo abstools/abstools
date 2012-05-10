@@ -102,6 +102,8 @@ public class JavaJob extends Job {
    private List<URL> fliClassPath = new ArrayList<URL>();
 
    private boolean ignoreMissingFLIClasses;
+
+private boolean useFifoSemantics;
    
    
 
@@ -611,7 +613,7 @@ public class JavaJob extends Job {
         Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
     				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
     				debuggerIsInDebugMode, debuggerArgsRandomSeed, fliClassPath,
-    				outStream, errStream, ignoreMissingFLIClasses);
+    				outStream, errStream, ignoreMissingFLIClasses, useFifoSemantics);
 	}
 
 	/**
@@ -955,5 +957,9 @@ public class JavaJob extends Job {
 
     public void setIgnoreMissingFLIClasses(boolean ignoreMissingFLIClasses) {
         this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
+    }
+
+    public void setUseFifoSemantics(boolean useFifoSemantics) {
+       this.useFifoSemantics = useFifoSemantics;        
     }
 }

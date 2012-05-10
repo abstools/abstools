@@ -93,6 +93,7 @@ public class Constants {
 	public static final String RUNCONFIG_HISTORY_FILE                      = "historyFile";
 	public static final String RUNCONFIG_RUN_AUTOMATICALLY                 = "runAutomatically";
 	public static final String RUNCONFIG_FLI_IGNORE_MISSING_CLASSES        = "fliIgnoreMissingClasses";
+	public static final String RUNCONFIG_USE_FIFO_SEMANTICS        = "useFifoSemantics";
 	
 	//Default Values (see also RunConfigEnums)			
 	public static final String 	DEBUGGER_ARGS_OTHER_DEFAULT					= "";

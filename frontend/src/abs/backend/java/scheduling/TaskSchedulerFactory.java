@@ -9,5 +9,5 @@ import abs.backend.java.lib.runtime.ABSThreadManager;
 import abs.backend.java.lib.runtime.COG;
 
 public interface TaskSchedulerFactory {
-    TaskScheduler createTaskScheduler(ABSRuntime absRuntime, COG cog, ABSThreadManager m);
+    TaskScheduler createTaskScheduler(ABSRuntime absRuntime, COG cog, ABSThreadManager m, ScheduableTasksFilter filter);
 }

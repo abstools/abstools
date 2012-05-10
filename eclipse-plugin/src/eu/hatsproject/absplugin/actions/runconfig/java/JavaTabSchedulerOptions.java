@@ -37,6 +37,7 @@ public class JavaTabSchedulerOptions extends AbstractTab {
     private Button randomSchedulerBtn;
     private Button historySchedulerBtn;
     private Button runAutomaticallyCheckbox;
+    private Button useFifoSemanticsCheckbox;
     private Button useFixedSeed;
     private Text seedNumber;
     private Text historyFileName;
@@ -50,7 +51,7 @@ public class JavaTabSchedulerOptions extends AbstractTab {
         
         createSchedulerSelection(comp, myListener);
         createOptions(comp, myListener);
-
+        createFifoCheckbox(comp, myListener);
         
         
         setControl(comp);
@@ -64,6 +65,15 @@ public class JavaTabSchedulerOptions extends AbstractTab {
         runAutomaticallyCheckbox.setImage(Images.DEBUGGER_RESUME);
         runAutomaticallyCheckbox.addListener(SWT.Selection, myListener);
         
+    }
+    
+    private void createFifoCheckbox(Composite comp, TabListener myListener) {
+        Group group = createGroup(comp, "Advanced", 1, 1, GridData.FILL_HORIZONTAL);
+        GridLayout layout = (GridLayout) group.getLayout();
+        layout.verticalSpacing = 8;
+        
+        useFifoSemanticsCheckbox = createCheckButton(group, "Guarantee message ordering between two COGs");
+        useFifoSemanticsCheckbox.addListener(SWT.Selection, myListener);
     }
 
     private void setCompositeLayout(Composite comp) {
@@ -112,7 +122,12 @@ public class JavaTabSchedulerOptions extends AbstractTab {
         createHistorFileChooser(group, myListener);
         
         
+        
     }
+
+
+
+    
 
 
 
@@ -201,6 +216,7 @@ public class JavaTabSchedulerOptions extends AbstractTab {
             useFixedSeed.setSelection(cfg.hasFixedRandomSeed());
             historyFileName.setText(cfg.getHistoryFile());
             runAutomaticallyCheckbox.setSelection(cfg.getRunAutomatically());
+            useFifoSemanticsCheckbox.setSelection(cfg.getUseFifoSemantics());
         } catch (CoreException e) {
             standardExceptionHandling(e);
             showErrorMessage("Fatal error!");
@@ -244,6 +260,7 @@ public class JavaTabSchedulerOptions extends AbstractTab {
         } else {
             cfg.setRunAutomatically(false);
         }
+        cfg.setUseFifoSemantics(useFifoSemanticsCheckbox.getSelection());
     }
 
     

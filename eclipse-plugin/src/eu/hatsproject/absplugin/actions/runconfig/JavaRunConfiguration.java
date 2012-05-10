@@ -111,6 +111,7 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
         job.setHistoryFile(launchConfig.getHistoryFile());
         job.setFLIClassPath(launchConfig.getDebuggerClassPathList());
         job.setIgnoreMissingFLIClasses(launchConfig.getIgnoreMissingFLIClasses());
+        job.setUseFifoSemantics(launchConfig.getUseFifoSemantics());
 	}
 
 	private IAction createNewAction(JavaLaunchConfig launchConfig)

@@ -5,6 +5,7 @@
 package abs.backend.java.scheduling;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -41,6 +42,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private final AtomicLong idCounter = new AtomicLong();
     static Logger logger = Logging.getLogger("scheduler");
     private final ABSThreadManager threadManager; 
+    private final ScheduableTasksFilter scheduableTasksFilter;
 
     public class TaskInfo {
         /**
@@ -60,6 +62,11 @@ public class SimpleTaskScheduler implements TaskScheduler {
          * always waiting on a guard
          */
         public ABSGuard guard;
+        
+        /**
+         * stores whether this task has already been activated once
+         */
+        public boolean hasBeenActivated = false;
 
         public TaskInfo(Task<?> task) {
             this.task = task;
@@ -113,7 +120,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     protected final COG cog;
     private final ABSRuntime runtime;
 
-    public SimpleTaskScheduler(COG cog, ABSRuntime runtime, ABSThreadManager m) {
+    public SimpleTaskScheduler(COG cog, ABSRuntime runtime, ABSThreadManager m, ScheduableTasksFilter filter) {
         this.threadManager = m;
         this.cog = cog;
         TaskSchedulingStrategy strat = runtime.getTaskSchedulingStrategy();
@@ -124,6 +131,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
             this.schedulingStrategy = strat;
         }
         this.runtime = runtime;
+        this.scheduableTasksFilter = filter;
     }
 
     protected void taskDeadlocked() {
@@ -331,6 +339,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         } 
 
         TaskInfo nextTask = schedule(choices);
+        nextTask.hasBeenActivated = true;
         synchronized (this) {
 
             if (nextTask.isSuspended()) {
@@ -349,7 +358,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
         List<TaskInfo> suspendedTasksWithSatisfiedGuards = unsuspendTasks();
         List<TaskInfo> choices = new ArrayList<TaskInfo>(readyTasks);
         choices.addAll(suspendedTasksWithSatisfiedGuards);
-        return choices;
+        List<TaskInfo> choicesFiltered = scheduableTasksFilter.filter(choices);
+        return choicesFiltered;
     }
 
     private synchronized void activateTask(TaskInfo nextTask) {
@@ -383,7 +393,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
     }
 
     protected TaskInfo schedule(List<TaskInfo> scheduableTasks) {
-        return schedulingStrategy.schedule(this, scheduableTasks);
+        return schedulingStrategy.schedule(this, scheduableTasks );
     }
 
     private volatile View view;
@@ -453,8 +463,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
     public static TaskSchedulerFactory getFactory() {
         return new TaskSchedulerFactory() {
             @Override
-            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m) {
-                return new SimpleTaskScheduler(cog, runtime, m);
+            public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m, ScheduableTasksFilter filter) {
+                return new SimpleTaskScheduler(cog, runtime, m, filter);
             }
         };
     }

@@ -29,6 +29,7 @@ import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectView;
 import abs.backend.java.observing.SystemObserver;
+import abs.backend.java.scheduling.ScheduableTasksFilterFifo;
 import abs.backend.java.scheduling.TotalSchedulingStrategy;
 import eu.hatsproject.absplugin.debug.DebugUtils;
 import eu.hatsproject.absplugin.debug.scheduling.SchedulingStrategy;
@@ -102,12 +103,13 @@ public class Debugger implements SystemObserver{
 	 * @param fliClassPath 
 	 * @param outStream 
 	 * @param ignoreMissingFLIClasses 
+	 * @param useFifoSemantics 
 	 * @throws InvalidRandomSeedException 
 	 */
 	public static void startABSRuntime(final String projectName,
 			final String mainClassName, final Path genPath, String debuggerArgsSystemObserver,
 			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed, 
-			List<URL> fliClassPath, PrintStream outStream, PrintStream errStream, boolean ignoreMissingFLIClasses) throws InvalidRandomSeedException {
+			List<URL> fliClassPath, PrintStream outStream, PrintStream errStream, boolean ignoreMissingFLIClasses, boolean useFifoSemantics) throws InvalidRandomSeedException {
 		
 		if(DO_DEBUG) System.out.println("start internal debugger");
 		
@@ -118,6 +120,9 @@ public class Debugger implements SystemObserver{
         r.setErrStream(errStream);
         r.addFLIClassPath(fliClassPath);
         r.setIgnoreMissingFLIClasses(ignoreMissingFLIClasses);
+        if (useFifoSemantics) {
+            r.setScheduableTasksFilter(new ScheduableTasksFilterFifo());
+        }
         
         
         boolean useOurScheduling = addSchedulingStrategy(debuggerArgsTotalScheduler, r);

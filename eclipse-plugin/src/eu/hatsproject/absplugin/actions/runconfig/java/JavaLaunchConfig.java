@@ -19,6 +19,7 @@ import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_PROJECT_NAME_ATT
 import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_RUNTARGET_ATTRIBUTE;
 import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_RUN_AUTOMATICALLY;
 import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_TEST_EXECUTION;
+import static eu.hatsproject.absplugin.util.Constants.RUNCONFIG_USE_FIFO_SEMANTICS;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -269,6 +270,14 @@ public class JavaLaunchConfig {
 
     public void setIgnoreMissingFLIClasses(boolean ignore) {
         wConfig.setAttribute(RUNCONFIG_FLI_IGNORE_MISSING_CLASSES, ignore);
+    }
+
+    public boolean getUseFifoSemantics() throws CoreException {
+        return rConfig.getAttribute(RUNCONFIG_USE_FIFO_SEMANTICS, false);
+    }
+
+    public void setUseFifoSemantics(boolean use) {
+        wConfig.setAttribute(RUNCONFIG_USE_FIFO_SEMANTICS, use);
     }
 
 }

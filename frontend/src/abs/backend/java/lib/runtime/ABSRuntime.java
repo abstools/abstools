@@ -29,6 +29,8 @@ import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;
 import abs.backend.java.scheduling.GlobalSchedulingStrategy;
+import abs.backend.java.scheduling.ScheduableTasksFilter;
+import abs.backend.java.scheduling.ScheduableTasksFilterDefault;
 import abs.backend.java.scheduling.ScheduleAction;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
@@ -65,8 +67,7 @@ public class ABSRuntime {
      * Java class is found for a class annotated with [Foreign] */
     private boolean ignoreMissingFLIClasses = false;
 
-    
-
+    private ScheduableTasksFilter scheduableTasksFilter = new ScheduableTasksFilterDefault();
     
     /**
      * Starts a new ABS program by giving a generated Main class
@@ -301,7 +302,7 @@ public class ABSRuntime {
     }
 
     public TaskScheduler createTaskScheduler(COG cog) {
-        return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager);
+        return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager, scheduableTasksFilter);
     }
 
     public ABSThreadManager getThreadManager() {
@@ -542,6 +543,10 @@ public class ABSRuntime {
     
     public void setIgnoreMissingFLIClasses(boolean ignoreMissingFLIClasses) {
         this.ignoreMissingFLIClasses = ignoreMissingFLIClasses;
+    }
+
+    public void setScheduableTasksFilter(ScheduableTasksFilter filter) {
+        scheduableTasksFilter = filter;
     }
 
     

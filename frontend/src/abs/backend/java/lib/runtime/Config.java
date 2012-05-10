@@ -47,8 +47,16 @@ public class Config {
         loadTaskSchedulingStrategy();
         loadGlobalSchedulingStrategy();
         loadSchedulerFactory();
+        loadScheduableTasksFilter();
     }
     
+    private void loadScheduableTasksFilter() {
+        if (options.scheduableTasksFilter.wasSet) {
+            ScheduableTasksFilter filter = loadClassByName(ScheduableTasksFilter.class, options.scheduableTasksFilter.stringValue());;
+            runtime.setScheduableTasksFilter(filter);
+        }
+    }
+
     public void loadSystemObserver() {
         if (options.systemObserver.wasSet()) {
             for (String s : options.systemObserver.stringArrayValue()) {
