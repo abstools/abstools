@@ -4,7 +4,13 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Random;
+
+import abs.backend.java.lib.expr.UnmatchedCaseException;
 import abs.backend.java.lib.types.ABSInteger;
+import abs.backend.java.lib.types.ABSInterface;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 
@@ -31,13 +37,20 @@ public class ABSBuiltInFunctions {
     }
     
     public static ABSInteger random(ABSInteger i) {
-        ABSRuntime rt = ABSRuntime.getCurrentRuntime();
-        /* [stolz] Several issues:
-         * - there's no builtin nextLong(range)
-         * - if we'd use nextLong(), we'd need to spin until finding a value in range.
-         * So let's do with just ints for now.
-         */
-        int rnd = rt.getRandom().nextInt(i.toInt()); // FIXME: i can be a BigInteger!
-        return ABSInteger.fromInt(rnd);
+        if (i.ltEq(ABSInteger.ZERO).toBoolean()) {
+            throw new UnmatchedCaseException("Random function called with non positive upper bound " + i);
+        }
+        BigInteger n = i.getBigInteger();
+        Random rand = ABSRuntime.getCurrentRuntime().getRandom();
+        
+        BigInteger result = new BigInteger(n.bitLength(), rand);
+        while( result.compareTo(n) >= 0 ) {
+            result = new BigInteger(n.bitLength(), rand);
+        }
+        return ABSInteger.fromBigInt(result);
+    }
+    
+    public static <T> ABSString toString(T t) {
+        return ABSString.fromString(t.toString());
     }
 }

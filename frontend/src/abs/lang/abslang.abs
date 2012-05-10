@@ -329,6 +329,10 @@ def Int strlen(String str) = builtin;
  */
 def Int random(Int below) = builtin;
 
+/**
+ * Returns a string representation for t.
+ */
+def String toString<T>(T t) = builtin;
 
 // Time and Duration datatypes.
 

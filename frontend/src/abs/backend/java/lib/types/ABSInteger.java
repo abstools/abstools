@@ -117,4 +117,8 @@ public class ABSInteger extends ABSBuiltInDataType {
         return value.toString();
     }
 
+    public BigInteger getBigInteger() {
+        return value;
+    }
+
 }
