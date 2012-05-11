@@ -39,7 +39,8 @@
     <menu name="The Core Tools">
       <item name="Introduction" href="core/introduction.html" />
       <item name="Ant Tasks" href="core/anttasks.html" />
-      <item name="Changlog" href="changes-report.html" />
+      <item name="Changelog" href="changes-report.html" />
+      <item name="Java Backend" href="core/java/backend.html" />
 <!--      <item name="Parser" href="core/parser.html" />
       <item name="Type-Checker" href="core/typechecker.html" /> -->
     </menu>
