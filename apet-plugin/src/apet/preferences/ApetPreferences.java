@@ -62,7 +62,10 @@ implements IWorkbenchPreferencePage {
 		numOrConst.store();
 		min.store();
 		max.store();
-		aliasing.store();
+		
+		if (aliasing != null) 
+			aliasing.store();
+		
 		verbosity.store();
 		return success;
 	}

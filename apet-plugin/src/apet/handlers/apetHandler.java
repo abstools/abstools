@@ -44,7 +44,7 @@ public class apetHandler extends AbstractHandler {
 	 * This flag dictates if test cases are to be translated into ABSUnit
 	 * Currently only modify manually during development
 	 */
-	private boolean translate = false;
+	private boolean translate = true;
 	
 	/**
 	 * The constructor.

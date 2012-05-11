@@ -595,6 +595,14 @@ public class ABSUnitTestCaseTranslator {
 			InterfaceDecl ai = new InterfaceDecl();
 			ai.setName(interfaceForModifyingFieldOfClass(className));
 			mcm.addImplementedInterfaceUse(new InterfaceTypeUse(ai.getName()));
+			
+			for (MethodImpl m : clazz.getMethodList()) {
+				if (RUN_METHOD.equals(m.getMethodSig().getName())) {
+					mcm.addModifier(removeRun());
+					break;
+				}
+			}
+			
 			for (FieldDecl fd : clazz.getFieldList()) {
 				AddMethodModifier smm = addSetter(fd.getName(), fd.getAccess());
 				AddMethodModifier gmm = addGetter(fd.getName(), fd.getAccess());
@@ -673,14 +681,14 @@ public class ABSUnitTestCaseTranslator {
 			Decl typeDecl = getDecl(model, Decl.class, namePred(type));
 			return makeDataTermValue(value, typeDecl);
 		} else if (decl instanceof ParametricDataTypeDecl) {
-			return parseValue(value, new ParametricDataTypeUse(), (ParametricDataTypeDecl) decl);
+			return parseValue(value, (ParametricDataTypeDecl) decl);
 		} else if (decl instanceof DataTypeDecl) {
 			if ("String".equals(decl.getName())) {
 				return new StringLiteral(value);
 			} else if ("Int".equals(decl.getName())) {
 				return new IntLiteral(value);
 			} else {
-				return null; //TODO
+				return parseValue(value, (DataTypeDecl) decl);
 			}
 		} else if (decl instanceof InterfaceDecl) {
 			return new VarUse(value);
@@ -689,13 +697,17 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
-	private ParametricDataTypeUse parseValue(String value, ParametricDataTypeUse result, 
-			ParametricDataTypeDecl decl) {
+	private DataTypeUse parseValue(String value, 
+			DataTypeDecl decl) {
 		
-		String[] terms = value.split("(");
+		ParametricDataTypeUse result = new ParametricDataTypeUse(); 
+		String[] terms = value.split("\\(");
 		result.setName(terms[0]);
+		result.setParamList(new abs.frontend.ast.List<DataTypeUse>());
 		if (terms.length > 1) {
-			
+			DataTypeUse subResult = 
+					parseValue(value.substring(terms[0].length()), decl);
+			result.setParam(subResult, 0);
 		}
 		return result;
 	}
