@@ -209,6 +209,8 @@ public class JavaBackend extends Main {
         for (Method m : ABSObject.class.getMethods()) {
             JAVA_RESERVED_WORDS.add(m.getName());
         }
+        // the run method is special, because it can be overridden
+        JAVA_RESERVED_WORDS.remove("run");
     }
 
     public static String getConstructorName(DataTypeDecl dataType, String name) {
