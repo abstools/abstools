@@ -18,8 +18,8 @@ public abstract class ABSData{
 	
 	ABSData(){}
 	
-	public ABSData(Element elem) throws Exception{
-		type = elem.getAttribute("type");
-		value = elem.getTextContent();
-	}
+	/*public ABSData(String type,String value) throws Exception{
+		this.type = type;
+		this.value = value;
+	}*/
 }

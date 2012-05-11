@@ -32,7 +32,7 @@ implements IWorkbenchPreferencePage {
 	IntegerFieldEditor min;
 	IntegerFieldEditor max;
 	IntegerFieldEditor maxPrior;
-	BooleanFieldEditor aliasing;
+	//BooleanFieldEditor aliasing;
 	RadioGroupFieldEditor pruning;
 	RadioGroupFieldEditor maxQL;
 	RadioGroupFieldEditor sched;
@@ -63,8 +63,7 @@ implements IWorkbenchPreferencePage {
 		min.store();
 		max.store();
 		
-		if (aliasing != null) 
-			aliasing.store();
+		//if (aliasing != null) aliasing.store();
 		
 		verbosity.store();
 		return success;

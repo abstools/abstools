@@ -27,7 +27,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.NUM_OR_CONST, "num");
 		store.setDefault(PreferenceConstants.DOM_MIN, 0);
 		store.setDefault(PreferenceConstants.DOM_MAX, 10);
-		store.setDefault(PreferenceConstants.ALIASING, false);
+		//store.setDefault(PreferenceConstants.ALIASING, false);
 		store.setDefault(PreferenceConstants.VERBOSITY, "2");
 
 	}

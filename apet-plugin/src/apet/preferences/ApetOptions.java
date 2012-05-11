@@ -1,7 +1,7 @@
 package apet.preferences;
 
 public class ApetOptions {
-	
+/*	
 public static final String COVERAGE_CRITERION_TITLE = "Coverage criterion";
 	
 	public static final String[] COVERAGE_CRITERION_OPTS = {
@@ -53,5 +53,5 @@ public static final String COVERAGE_CRITERION_TITLE = "Coverage criterion";
 		"none",
 		"statements"
 	};
-	
+	*/
 }

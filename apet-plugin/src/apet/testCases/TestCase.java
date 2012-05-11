@@ -4,6 +4,8 @@ package apet.testCases;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.xml.soap.Node;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -48,11 +50,13 @@ public class TestCase {
 		if (argsInList.getLength() != 1) throw new Exception();
 		argsIn =(Element) argsInList.item(0);
 		
-		NodeList argList = argsIn.getElementsByTagName("*");
+		NodeList argList = argsIn.getChildNodes();
 		for (int i = 0; i < argList.getLength(); i++) {
-			Element argInElem = (Element) argList.item(i); 
-			ABSData argIn = ABSData.parseData(argInElem);
-			this.argsIn.add(argIn);			
+			if (argList.item(i).getNodeType() == Node.ELEMENT_NODE){
+				Element argInElem = (Element) argList.item(i); 	
+				ABSData argIn = ABSData.parseData(argInElem);
+				this.argsIn.add(argIn);
+			}
 		}
     }
     
