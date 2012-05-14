@@ -51,7 +51,7 @@ public class Main {
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
     protected boolean fullabs = false;
-    protected String product;
+    public String product;
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
     // mTVL options
@@ -72,7 +72,6 @@ public class Main {
        } catch (Exception e) {
           printErrorAndExit(e.getMessage());
        }
-       
     }
 
     public void setWithStdLib(boolean withStdLib) {
@@ -132,11 +131,9 @@ public class Main {
                 printUsageAndExit();
             } else
                 remaindingArgs.add(arg);
-
         }
         return remaindingArgs;
     }
-
 
     public Model parse(final String[] args) throws Exception {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
@@ -146,10 +143,9 @@ public class Main {
 
     public Model parseFiles(String... fileNames) throws IOException {
         if (fileNames.length == 0) {
-            printErrorAndExit("Please provide at least one intput file");
+            printErrorAndExit("Please provide at least one input file");
         }
-
-        
+    
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
         if (stdlib) {
@@ -184,7 +180,7 @@ public class Main {
         return m;
     }
 
-    private void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
+    public void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
         m.verbose = verbose;
         m.debug = dump;
         
@@ -351,11 +347,11 @@ public class Main {
         }
     }
 
-    private boolean isABSPackageFile(File f) throws IOException {
+    public static boolean isABSPackageFile(File f) throws IOException {
        return f.getName().endsWith(".jar") && new ABSPackageFile(f).isABSPackage();
     }
 
-    private boolean isABSSourceFile(File f) {
+    public static boolean isABSSourceFile(File f) {
         return f.getName().endsWith(".abs") || f.getName().endsWith(".mtvl");
     }
 
@@ -394,8 +390,7 @@ public class Main {
     public CompilationUnit getStdLib() throws IOException {
         InputStream stream = Main.class.getClassLoader().getResourceAsStream(ABS_STD_LIB);
         if (stream == null) {
-            System.err.println("Could not found ABS Standard Library");
-            System.exit(1);
+            printErrorAndExit("Could not find ABS Standard Library");
         }
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
