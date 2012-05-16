@@ -13,7 +13,7 @@ Using the Foreign Language Interface with Eclipse
 	
 ** Example
 	
-----
++----
 module Test;
 import * from ABS.FLI;
 
@@ -32,7 +32,7 @@ class HelloImpl implements Hello {
    Hello h = new HelloImpl();
    h.hello("Hi there");
 }
----- 
++---- 
  
  
 * Setting up the Java project
@@ -71,12 +71,12 @@ class HelloImpl implements Hello {
 		* Use the print methods defined in the FLIHelper class to print messages to the console.
   			System.out.println will not be visible when the program is started from Eclipse.
 		
-	[[5]] If everything was set up correctly eclipse should now show any errors.
+	[[5]] If everything was set up correctly eclipse should not show any compiler errors.
 	
 	
 ** Example
 
----
++---
 package Test;
 
 // included in the ABS runtime
@@ -95,7 +95,7 @@ public class HelloImpl_fli extends HelloImpl_c {
    }
 }
 
----
++---
  
 * Run Configuration
  
@@ -106,3 +106,19 @@ public class HelloImpl_fli extends HelloImpl_c {
 	[[3]] Add the Java project to the classpath by choosing "Add Projects ...".
 	
 	[[4]] Save the run configuration and run it.
+
+	
+* Using a properties file
+
+	If you do not want to map the Java classes to the ABS classes by using the naming conventions
+	listed above you can use a properties file to declare the mapping. The file has to be named
+	"absfli.properties" and must be located in the classpath. So in step 3 of the run configuration
+	section you also have to add the folder containing your "absfli.properties" file 
+	(Use Advanced... Add folders).  
+	
+	A properties file for our small example is shown below. It assumes that there is a 
+	Java class named "Hello" in package "Abc".
+	
++---
+Test.HelloImpl=Abc.Hello
++---	

@@ -451,7 +451,7 @@ public class ABSRuntime {
 
     private void loadFLIProperties() {
         String propertiesFileName = System.getProperty("abs.fli.properties",ABSFLI_PROPERTIES);
-        URL url = ABSRuntime.class.getClassLoader().getResource(propertiesFileName);
+        URL url = classLoader.getResource(propertiesFileName);
         fliProperties = new Properties();
         if (url == null) {
             if (!propertiesFileName.equals(ABSFLI_PROPERTIES)) {
