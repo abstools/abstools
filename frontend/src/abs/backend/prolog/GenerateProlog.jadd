@@ -604,7 +604,8 @@ aspect GenerateProlog {
             if(one)
                 s.print(",");
             one=true;
-            s.print("assignStmt("+fieldTransform(parameter.getName())+","+varTransform(parameter.getName())+")");
+            s.print("assignStmt(" + fieldTransform(parameter.getName())+"," 
+                    + varTransform(parameter.getName()) + ",[])");
 
         }
 
@@ -618,9 +619,9 @@ aspect GenerateProlog {
                 if(one)
                     s.print(",");
                 one=true;
-                s.print("assignStmt("+fieldTransform(field.getName())+",");
+                s.print("assignStmt(" + fieldTransform(field.getName()) + ",");
                 field.getInitExp().generateProlog(s,reachInfo);
-                s.print(")");
+                s.print(",[])");
             }
         }
 
