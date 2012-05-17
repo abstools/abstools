@@ -99,7 +99,6 @@ aspect OriginalCallResolver {
         if (! mod.getModel().containsCachedOriginalMethod(methodId)) {
             ModifyClassModifier cm = new ModifyClassModifier();
             cm.setName(mod.className());
-            cm.setImplementedInterfaceUseList(mod.getModifyClassModifier().getImplementedInterfaceUseList().fullCopy());
             cm.addModifier(new AddMethodModifier(originalMethodCopy));
             mod.delta().addClassOrIfaceModifier(cm);
             mod.getModel().cacheOriginalMethod(methodId);
