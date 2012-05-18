@@ -12,6 +12,8 @@ import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectType;
+import static apet.testCases.ABSTestCaseExtractor.getABSTermArgs;
+import static apet.testCases.ABSTestCaseExtractor.getABSTermFunctor;
 import static apet.testCases.ABSTestCaseExtractor.getAfterState;
 import static apet.testCases.ABSTestCaseExtractor.getInitialState;
 import static apet.testCases.ABSTestCaseExtractor.getInputArgs;
@@ -62,7 +64,6 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.PureExp;
@@ -658,7 +659,8 @@ public class ABSUnitTestCaseTranslator {
 		output.addImport(generateImportAST(decl));
 		
 		if (dataValue instanceof ABSTerm) {
-			return makeDataTermValue(value, decl);
+			ABSTerm term = (ABSTerm) dataValue;
+			return makeDataTermValue(term, decl);
 		} else if (dataValue instanceof ABSRef) {
 			return new VarUse(value);
 		} else {
@@ -675,39 +677,36 @@ public class ABSUnitTestCaseTranslator {
 	 * @param decl 
 	 * @return
 	 */
-	private PureExp makeDataTermValue(String value, Decl decl) {
+	private PureExp makeDataTermValue(ABSTerm term, Decl decl) {
 		if (decl instanceof TypeSynDecl) {
 			String type = ((TypeSynDecl) decl).getValue().getName();
 			Decl typeDecl = getDecl(model, Decl.class, namePred(type));
-			return makeDataTermValue(value, typeDecl);
+			return makeDataTermValue(term, typeDecl);
 		} else if (decl instanceof ParametricDataTypeDecl) {
-			return parseValue(value, (ParametricDataTypeDecl) decl);
+			return parseValue(term, (ParametricDataTypeDecl) decl);
 		} else if (decl instanceof DataTypeDecl) {
 			if ("String".equals(decl.getName())) {
-				return new StringLiteral(value);
+				return new StringLiteral(getABSDataValue(term));
 			} else if ("Int".equals(decl.getName())) {
-				return new IntLiteral(value);
+				return new IntLiteral(getABSDataValue(term));
 			} else {
-				return parseValue(value, (DataTypeDecl) decl);
+				return parseValue(term, (DataTypeDecl) decl);
 			}
-		} else if (decl instanceof InterfaceDecl) {
-			return new VarUse(value);
 		} else {
 			throw new IllegalStateException("Cannot handle declaration type "+decl);
 		}
 	}
 	
-	private DataTypeUse parseValue(String value, 
+	private DataConstructorExp parseValue(ABSTerm term, 
 			DataTypeDecl decl) {
 		
-		ParametricDataTypeUse result = new ParametricDataTypeUse(); 
-		String[] terms = value.split("\\(");
-		result.setName(terms[0]);
-		result.setParamList(new abs.frontend.ast.List<DataTypeUse>());
-		if (terms.length > 1) {
-			DataTypeUse subResult = 
-					parseValue(value.substring(terms[0].length()), decl);
-			result.setParam(subResult, 0);
+		final DataConstructorExp result = new DataConstructorExp();
+		String fn = getABSTermFunctor(term);
+		result.setConstructor(fn);
+		result.setParamList(new abs.frontend.ast.List<PureExp>());
+		List<ABSData> vs = getABSTermArgs(term);
+		for (int i=0; i<vs.size(); i++) {
+			result.setParam(createPureExpression(vs.get(i)),i);
 		}
 		return result;
 	}

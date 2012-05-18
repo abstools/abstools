@@ -56,6 +56,24 @@ public final class ABSTestCaseExtractor {
 	}
 	
 	/**
+	 * Get the arguments of the ABS term
+	 * @param d
+	 * @return
+	 */
+	public static List<ABSData> getABSTermArgs(ABSTerm d) {
+		return d.args;
+	}
+	
+	/**
+	 * Get the functor of the ABS term
+	 * @param d
+	 * @return
+	 */
+	public static String getABSTermFunctor(ABSTerm d) {
+		return d.functor;
+	}
+	
+	/**
 	 * Get the string value of the test data
 	 * @param d
 	 * @return
