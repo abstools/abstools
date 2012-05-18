@@ -27,6 +27,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.LetExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
@@ -39,6 +40,7 @@ import abs.frontend.ast.Stmt;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import abs.frontend.ast.VarDecl;
+import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
@@ -411,8 +413,9 @@ public class JavaGeneratorHelper {
         } else {
             // process children:
             for (int i=0; i < astNode.getNumChild(); i++) {
-                if (astNode.getChild(i) instanceof PureExp) {
-                    replaceLocalVariables(astNode.getChild(i), beforeAwaitStream);
+                Object child = astNode.getChild(i);
+                if (child instanceof ASTNode<?>) {
+                    replaceLocalVariables((ASTNode<?>)child, beforeAwaitStream);
                 }
             }
         }
@@ -424,8 +427,9 @@ public class JavaGeneratorHelper {
     private static boolean isLocalVarUse(ASTNode<?> astNode) {
         if (astNode instanceof VarUse) {
             VarUse v = (VarUse) astNode;
-            if (v.getDecl() instanceof VarDecl || v.getDecl() instanceof ParamDecl) {
-                return true;
+            VarOrFieldDecl decl = v.getDecl();
+            if (decl instanceof VarDecl || decl instanceof ParamDecl) {
+                return !(decl.getParent() instanceof LetExp);
             }
         }
         return false;
@@ -441,7 +445,7 @@ public class JavaGeneratorHelper {
     private static void replaceVarUse(PrintStream beforeAwaitStream, VarUse v, TypedVarOrFieldDecl vDecl) {
         String name = JavaBackend.getVariableName(vDecl.getName());
         String tempName = "temp$"+tempCounter+"$"+name;
-        tempCounter = Math.max(tempCounter++, 0);
+        tempCounter = Math.max(tempCounter+1, 0);
         // copy value of variable to temporary, final variable
         beforeAwaitStream.print("final ");
         vDecl.getAccess().generateJava(beforeAwaitStream);

@@ -87,6 +87,23 @@ public class JavaStmtTests extends JavaBackendTest {
     public void awaitStmtExpGuardParameter() throws Exception {
         assertValidStdLib("class C { Int counter = 0; Unit m(Int i) { await counter > i; } }");
     }
+ 
+
+    @Test
+    public void awaitStmtExpGuardParameter_funcApp() throws Exception {
+        // see #381
+        assertValidStdLib("def Bool greater(Int a, Int b) = a > b; class C { Int counter = 0; Unit m(Int i) { await greater(counter, i); } }");
+    }
+    
+    @Test
+    public void awaitStmtExpGuardParameter_letExpr() throws Exception {
+        assertValidStdLib("class C { Int counter = 0; Unit m(Int i) { await let (Int x) = counter in x > i; } }");
+    }
+    
+    @Test
+    public void awaitStmtExpGuardParameter_ifExpr() throws Exception {
+        assertValidStdLib("class C { Int counter = 0; Unit m(Int i) { await if counter > i then counter > i else False; } }");
+    }
     
     @Test
     public void awaitStmtExpGuardLocalVar() throws Exception {

@@ -753,7 +753,9 @@ aspect GenerateJava {
         for (String freeVarName : getExp().getFreeVars()) {
           if (freeVarName.equals(getVar().getName()))
             continue;
-          VarOrFieldDecl decl = getExp().lookupVarOrFieldName(freeVarName,false);
+          // ignore renaming of variables to temp variables...
+          String freeVarName2 = freeVarName.replaceFirst("^temp\\$[0-9]+\\$", "");
+          VarOrFieldDecl decl = getExp().lookupVarOrFieldName(freeVarName2,false);
           if (decl == null) {
             throw new IllegalArgumentException("Variable "+freeVarName+" cannot be resolved");
           }
