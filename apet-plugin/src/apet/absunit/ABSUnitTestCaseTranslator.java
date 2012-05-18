@@ -20,11 +20,15 @@ import static apet.testCases.ABSTestCaseExtractor.getInputArgs;
 import static apet.testCases.ABSTestCaseExtractor.getReturnData;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.backend.prettyprint.DefaultABSFormatter;
 import abs.backend.tests.AbsASTBuilderUtil;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.MethodNamePredicate;
@@ -69,10 +73,13 @@ import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.RemoveMethodModifier;
 import abs.frontend.ast.ReturnStmt;
+import abs.frontend.ast.StarExport;
+import abs.frontend.ast.StarImport;
 import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.TypeSynDecl;
 import abs.frontend.ast.VarUse;
+import abs.frontend.tests.ABSFormatter;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
 import apet.testCases.ABSRef;
@@ -113,6 +120,8 @@ public class ABSUnitTestCaseTranslator {
 	private final Model model;
 	private final ModuleDecl output;
 	
+	private File outputFile;
+	
 	public ABSUnitTestCaseTranslator(Model model, File outputDir) {
 		if (model == null)
 			throw new IllegalArgumentException("Model cannot be null!");
@@ -120,7 +129,7 @@ public class ABSUnitTestCaseTranslator {
 		this.model = model;
 		this.output = new ModuleDecl();
 		this.output.setName(MAIN);
-
+		
 		gatherABSUnitAnnotations();
 
 		/*
@@ -138,6 +147,11 @@ public class ABSUnitTestCaseTranslator {
 		if (! outputDir.exists())
 			outputDir.mkdirs();
 		
+		outputFile = new File(outputDir, "unitTest.abs"); 
+
+		if (outputFile.exists()) {
+			outputFile.delete();
+		}
 		
 		this.absAssertImpl = 
 			getDecl(model, ClassDecl.class, 
@@ -161,6 +175,8 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
 		
+		addBasicImports(output);
+		
 		for (String key : suite.keySet()) {
 			generateABSUnitTest(suite.get(key), key);
 		}
@@ -172,29 +188,56 @@ public class ABSUnitTestCaseTranslator {
 			}
 		}
 		
-		ProductLine productline = new ProductLine();
-		productline.setName("ABSUnitConfiguration");
-		Feature feature = new Feature();
-		feature.setName("F");
-		productline.addOptionalFeature(feature);
-		
-		for (String d : dn) {
-			DeltaClause clause = new DeltaClause();
-			Deltaspec spec = new Deltaspec();
-			spec.setName(d);
-			clause.setDeltaspec(spec);
-			clause.addFeature(feature);
-			productline.addDeltaClause(clause);
+		if (! dn.isEmpty()) {
+			ProductLine productline = new ProductLine();
+			productline.setName("ABSUnitConfiguration");
+			Feature feature = new Feature();
+			feature.setName("F");
+			productline.addOptionalFeature(feature);
+			
+			for (String d : dn) {
+				DeltaClause clause = new DeltaClause();
+				Deltaspec spec = new Deltaspec();
+				spec.setName(d);
+				clause.setDeltaspec(spec);
+				clause.addFeature(feature);
+				productline.addDeltaClause(clause);
+			}
+			
+			Product product = new Product();
+			product.setName("ABSUnitProduct");
+			product.addFeature(feature);
+			
+			output.setProductLine(productline);
+			output.addProduct(product);
 		}
 		
-		Product product = new Product();
-		product.setName("ABSUnitProduct");
-		product.addFeature(feature);
-		
-		output.setProductLine(productline);
-		output.addProduct(product);
+		printToFile(output, outputFile);
 		
 		return output;
+	}
+	
+	private void addBasicImports(ModuleDecl module) {
+		//export *;
+		//import * from AbsUnit;
+		//import * from AbsUnit.Hamcrest;
+		//import * from AbsUnit.Hamcrest.Core;
+		module.addExport(new StarExport());
+		module.addImport(new StarImport("AbsUnit"));
+		module.addImport(new StarImport("AbsUnit.Hamcrest"));
+		module.addImport(new StarImport("AbsUnit.Hamcrest.Core"));
+	}
+	
+	private void printToFile(ModuleDecl module, File file) {
+        try {
+			PrintStream stream = new PrintStream(file);
+	        ABSFormatter formatter = new DefaultABSFormatter();
+	        PrintWriter writer = new PrintWriter(stream, true);
+	        formatter.setPrintWriter(writer);
+	        module.doPrettyPrint(writer, formatter);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void generateABSUnitTest(List<TestCase> cs, String mn) {
@@ -433,7 +476,7 @@ public class ABSUnitTestCaseTranslator {
 				block.addStmt(getExpStmt(test)); //no return value
 				assert getReturnData(testCase) == null;
 			} else {
-				block.addStmt(getVarDecl("returnValue", access, test));
+				block.addStmt(getVarDecl("returnValue", (Access) access.fullCopy(), test));
 			}
 			
 			//check return value
@@ -679,26 +722,21 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	private PureExp makeDataTermValue(ABSTerm term, Decl decl) {
 		if (decl instanceof TypeSynDecl) {
-			String type = ((TypeSynDecl) decl).getValue().getName();
-			Decl typeDecl = getDecl(model, Decl.class, namePred(type));
-			return makeDataTermValue(term, typeDecl);
-		} else if (decl instanceof ParametricDataTypeDecl) {
-			return parseValue(term, (ParametricDataTypeDecl) decl);
+			return parseValue(term);
 		} else if (decl instanceof DataTypeDecl) {
 			if ("String".equals(decl.getName())) {
 				return new StringLiteral(getABSDataValue(term));
 			} else if ("Int".equals(decl.getName())) {
 				return new IntLiteral(getABSDataValue(term));
 			} else {
-				return parseValue(term, (DataTypeDecl) decl);
+				return parseValue(term);
 			}
 		} else {
 			throw new IllegalStateException("Cannot handle declaration type "+decl);
 		}
 	}
 	
-	private DataConstructorExp parseValue(ABSTerm term, 
-			DataTypeDecl decl) {
+	private DataConstructorExp parseValue(ABSTerm term) {
 		
 		final DataConstructorExp result = new DataConstructorExp();
 		String fn = getABSTermFunctor(term);
@@ -753,7 +791,7 @@ public class ABSUnitTestCaseTranslator {
 		fa.setName(functionName);
 		fa.setParamList(ps);
 		
-		for (int i=1; i<inArgs.size(); i++) {
+		for (int i=0; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
 			PureExp exp = createPureExpression(d);
 			fa.setParam(exp,i);
