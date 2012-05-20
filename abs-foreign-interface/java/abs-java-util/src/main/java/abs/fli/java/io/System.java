@@ -3,6 +3,7 @@ package abs.fli.java.io;
 import java.io.IOException;
 
 import FLI.SystemUtils.System_c;
+import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 
@@ -28,5 +29,11 @@ public class System extends System_c {
         }
         return ABSString.fromString(String.valueOf(c));
     }
+    
+    public ABSUnit fli_exit(ABSInteger i) {
+    	java.lang.System.exit(i.toInt());
+    	return ABSUnit.UNIT;
+    }
+
 
 }
