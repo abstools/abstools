@@ -278,35 +278,35 @@ public class ABSUnitTestCaseTranslator {
 	
 	/**
 	 * Add an add method modifier
-	 * @param field
+	 * @param fieldName
 	 * @param exp
 	 * @param decl
 	 * @return
 	 */
 	private AddMethodModifier addSetter(
-			String field, Access type) {
-		MethodSig sig = new MethodSig(SETTER_PREFIX+field, 
+			String fieldName, Access type) {
+		MethodSig sig = new MethodSig(setterMethodName(fieldName), 
 				new abs.frontend.ast.List<Annotation>(),
 				getUnit(),  
 				new abs.frontend.ast.List<ParamDecl>());
 		
 		sig.addParam(new ParamDecl("v", type, new abs.frontend.ast.List<Annotation>()));
 		Block block = new Block();
-		block.addStmt(getVAssign(new FieldUse(field), new VarUse("v")));
+		block.addStmt(getVAssign(new FieldUse(fieldName), new VarUse("v")));
 		MethodImpl method = new MethodImpl(sig, block);
 		AddMethodModifier modifier = new AddMethodModifier(method);
 		return modifier;
 	}
 	
-	private AddMethodModifier addGetter(String field, Access returnType) {
-		MethodSig sig = new MethodSig(GETTER_PREFIX+field, 
+	private AddMethodModifier addGetter(String fieldName, Access returnType) {
+		MethodSig sig = new MethodSig(getterMethodName(fieldName), 
 				new abs.frontend.ast.List<Annotation>(),
 				returnType,  
 				new abs.frontend.ast.List<ParamDecl>());
 		
 		Block block = new Block();
 		ReturnStmt rs = new ReturnStmt();
-		rs.setRetExp(new FieldUse(field));
+		rs.setRetExp(new FieldUse(fieldName));
 		block.addStmt(rs);
 		MethodImpl method = new MethodImpl(sig, block);
 		AddMethodModifier modifier = new AddMethodModifier(method);
@@ -562,12 +562,14 @@ public class ABSUnitTestCaseTranslator {
 			Block block = testClass.getMethod(i).getBlock();
 			
 			//first initial arg is the reference of Object Under Test
-			String heapReferenceToObjectUnderTest = getABSDataValue(inputArguments.get(0));
+			String heapReferenceToObjectUnderTest = 
+					getABSDataValue(inputArguments.get(0)).toLowerCase();
 			
 			//Instantiate object under tests
 			block.addStmt(newObj(interfaceOfClassUnderTest, classUnderTest, heapReferenceToObjectUnderTest, false));
 			
 			//TODO initial states' heap contains more than one object.
+			//TODO add this to a delta and introduce an empty method.
 			Map<ABSRef,ABSObject> is = getInitialState(testCase);
 			assert is.size() == 1;
 			for (ABSRef r : is.keySet()) {
@@ -591,7 +593,7 @@ public class ABSUnitTestCaseTranslator {
 				makeOracle("returnValue", access, rd, block);
 			}
 			
-			//check return value
+			//check return value (using deltas)
 			Map<ABSRef,ABSObject> af = getAfterState(testCase);
 			assert af.size() == 1;
 			for (ABSRef r : af.keySet()) {
@@ -603,6 +605,7 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	private void makeOracle(String actual, Access access, ABSData data, Block block) {
+		//TODO handle object comparison!
 		AssertStmt stmt =
 			new AssertStmt(
 				new abs.frontend.ast.List<Annotation>(),
@@ -648,8 +651,8 @@ public class ABSUnitTestCaseTranslator {
 			}
 			
 			for (FieldDecl fd : clazz.getFieldList()) {
-				AddMethodModifier smm = addSetter(fd.getName(), fd.getAccess());
-				AddMethodModifier gmm = addGetter(fd.getName(), fd.getAccess());
+				AddMethodModifier smm = addSetter(fd.getName(), (Access) fd.getAccess().fullCopy());
+				AddMethodModifier gmm = addGetter(fd.getName(), (Access) fd.getAccess().fullCopy());
 				mcm.addModifier(smm);
 				mcm.addModifier(gmm);
 				ai.addBody(smm.getMethodImpl().getMethodSig());
@@ -663,18 +666,18 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
-	private String setFieldMethodName(String fieldName) {
-		return SETTER_PREFIX+fieldName;
+	private String setterMethodName(String fieldName) {
+		return SETTER_PREFIX+StringUtils.capitalize(fieldName);
 	}
 	
 	private void makeSetStatements(ABSRef ref, ABSObject state, Block block) {
-		String rn = getABSDataValue(ref); 
+		String rn = getABSDataValue(ref).toLowerCase(); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		for (String fn : fields.keySet()) {
 			SyncCall syncCall = new SyncCall();
 			syncCall.setCallee(new VarUse(rn));
-			syncCall.setMethod(setFieldMethodName(fn));
+			syncCall.setMethod(setterMethodName(fn));
 			
 			ABSData d = fields.get(fn);
 			PureExp exp = createPureExpression(d);
@@ -683,7 +686,7 @@ public class ABSUnitTestCaseTranslator {
 		}
 		
 		//ADD getter and setter
-		updateDelta(getDecl(output, ClassDecl.class, 
+		updateDelta(getDecl(model, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>(getABSObjectType(state))));
 		
 	}
@@ -750,7 +753,7 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	private String getterMethodName(String fieldName) {
-		return GETTER_PREFIX + fieldName;
+		return GETTER_PREFIX + StringUtils.capitalize(fieldName);
 	}
 	
 	private String resultOfgetterMethodName(String fieldName) {
@@ -758,24 +761,27 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	private void makeGetAndAssertStatements(ABSRef ref, ABSObject state, Block block) {
-		String rn = getABSDataValue(ref); 
+		String rn = getABSDataValue(ref).toLowerCase(); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		
 		ClassDecl clazz = 
-			getDecl(output, ClassDecl.class, 
+			getDecl(model, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>(getABSObjectType(state)));
 		
 		abs.frontend.ast.List<FieldDecl> fieldDecls = clazz.getFieldList();
 		for (int i=0; i<fieldDecls.getNumChild(); i++) {
-			String fn = fieldDecls.getChild(i).getName();
+			FieldDecl field = fieldDecls.getChild(i);
+			String fn = field.getName();
 			if (fields.containsKey(fn)) {
 				ABSData d = fields.get(fn);
 				SyncCall syncCall = new SyncCall();
 				syncCall.setCallee(new VarUse(rn));
 				syncCall.setMethod(getterMethodName(fn));
-				block.addStmt(getVAssign(resultOfgetterMethodName(fn), syncCall));
-				makeOracle(resultOfgetterMethodName(fn),null,d,block);
+				block.addStmt(getVarDecl(resultOfgetterMethodName(fn), 
+						(Access) field.getAccess().fullCopy(), syncCall));
+				makeOracle(resultOfgetterMethodName(fn),
+						(Access) field.getAccess().fullCopy(), d,block);
 			}
 		}
 	}
@@ -820,7 +826,7 @@ public class ABSUnitTestCaseTranslator {
 		for (int i=1; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
 			PureExp exp = createPureExpression(d);
-			syncCall.setParam(exp,i);
+			syncCall.setParam(exp,i - 1);
 		}
 		return syncCall;
 	}

@@ -480,15 +480,30 @@ aspect doPrettyPrinter {
     	}
     	stream.print("delta ");
         stream.print(getName());
-        stream.print("(");
-        getParamList().doPrettyPrint(stream, formatter, ",");
-        stream.print(")");
+        
+        List<DeltaParamDecl> dpl = getParamList();
+        if (dpl.getNumChild() > 0) {
+        	stream.print("(");
+        	dpl.doPrettyPrint(stream, formatter, ",");
+        	stream.print(")");
+        }
         formatter.beforeOpenBrace();
         stream.println("{");
         formatter.afterOpenBrace();
 
-		getFunctionalModifierList().doPrettyPrint(stream, formatter);
-	    getClassOrIfaceModifierList().doPrettyPrint(stream, formatter);
+		List<FunctionalModifier> fms = getFunctionalModifierList();
+		int mcount = fms.getNumChild();
+		if (mcount > 0) {
+			formatter.afterStmt();
+		}
+		fms.doPrettyPrint(stream, formatter);
+		
+		List<ClassOrIfaceModifier> cms = getClassOrIfaceModifierList();
+		if (cms.getNumChild() > 0 && mcount == 0) {
+			formatter.afterStmt();
+		} 
+		cms.doPrettyPrint(stream, formatter);
+
         stream.println();
 
         formatter.beforeCloseBrace();
@@ -516,8 +531,13 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
 
-		getModifierList().doPrettyPrint(stream, formatter);
-
+		List<Modifier> mms = getModifierList();
+		if (mms.getNumChild() > 0) {
+ 			mms.doPrettyPrint(stream, formatter);
+  	        stream.println();
+			formatter.afterStmt();
+ 		}
+		
         formatter.beforeCloseBrace();
         stream.print("}");
         formatter.afterCloseBrace();
@@ -683,7 +703,12 @@ aspect doPrettyPrinter {
         stream.println();
         formatter.afterStmt();
         
-        getMethodList().doPrettyPrint(stream, formatter);
+        List<MethodImpl> methods = getMethodList();
+        if (methods.getNumChild() > 0) {
+			methods.doPrettyPrint(stream, formatter);        
+	        stream.println();
+    	    formatter.afterStmt();
+        }
         
         formatter.beforeCloseBrace();
         stream.print("}");
