@@ -122,7 +122,7 @@ public class ABSUnitTestCaseTranslator {
 	
 	private File outputFile;
 	
-	public ABSUnitTestCaseTranslator(Model model, File outputDir) {
+	public ABSUnitTestCaseTranslator(Model model, File outputFile) {
 		if (model == null)
 			throw new IllegalArgumentException("Model cannot be null!");
 
@@ -141,20 +141,10 @@ public class ABSUnitTestCaseTranslator {
 			return;
 		}
 		
-		if (outputDir.isFile())
-			throw new IllegalArgumentException(outputDir.toString()+" is a file!");
-		
-		if (! outputDir.exists())
-			outputDir.mkdirs();
-		
-		outputFile = new File(outputDir, "unitTest.abs"); 
+		this.outputFile = outputFile;
 
-		if (outputFile.exists()) {
-			outputFile.delete();
-		}
-		
 		this.absAssertImpl = 
-			getDecl(model, ClassDecl.class, 
+			getDecl(this.model, ClassDecl.class, 
 				new DeclNamePredicate<ClassDecl>("ABSAssertImpl"));
 		
 		if (this.absAssertImpl == null) 

@@ -2,6 +2,7 @@ package apet.handlers;
 
 
 import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -45,6 +46,12 @@ public class apetHandler extends AbstractHandler {
 	 * Currently only modify manually during development
 	 */
 	private boolean translate = true;
+	
+	/**
+	 * The default file location to store ABSUnit test cases 
+	 */
+	private final String absUnitOutputFile = 
+			System.getProperty("java.io.tmpdir") + File.separator + "absunit-testcase.abs";
 	
 	/**
 	 * The constructor.
@@ -106,20 +113,31 @@ public class apetHandler extends AbstractHandler {
 	}
 	
 	/**
-	 * Connection to ABSUnit translator -- WORK IN PROGRESS
+	 * Connection to ABSUnit translator
 	 * @param model
 	 * @param suite
+	 * @throws IOException 
 	 */
-	private void generateABSUnitTests(Model model, ApetTestSuite suite) {
+	private void generateABSUnitTests(Model model, ApetTestSuite suite) throws IOException {
 		
 		if (suite == null) {
 			System.out.println("aPET error: Error generating ABSUnit test suite");
 			return;
 		}
 		
-		File g = new File("//tmp//absunit");
-		g.mkdirs();
-		ABSUnitTestCaseTranslator generator = new ABSUnitTestCaseTranslator(model, g); 
+		File file = new File(absUnitOutputFile);
+		if (file.isDirectory()) {
+			System.out.println("aPET error: cannot create ABSUnit test cases to "+file);
+			return;
+		}
+
+		if (file.isFile() && file.exists()) {
+			file.delete();
+		} else {
+			file.createNewFile();
+		}
+		
+		ABSUnitTestCaseTranslator generator = new ABSUnitTestCaseTranslator(model, file); 
 		
 		if (! generator.hasABSUnit()) {
 			System.out.println("aPET error: cannot find ABSUnit packages");
