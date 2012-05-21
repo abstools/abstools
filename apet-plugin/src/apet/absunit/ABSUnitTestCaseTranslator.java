@@ -33,6 +33,8 @@ import abs.backend.tests.AbsASTBuilderUtil;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.MethodNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.MethodSigNamePredicate;
+import abs.backend.tests.AbsASTBuilderUtil.ModifyClassModifierNamePredicate;
+import abs.backend.tests.AbsASTBuilderUtil.ModifyMethodModifierNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.Predicate;
 import abs.common.StringUtils;
 import abs.frontend.ast.Access;
@@ -42,6 +44,7 @@ import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AssertStmt;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.ClassOrIfaceModifier;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
@@ -63,7 +66,9 @@ import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Modifier;
 import abs.frontend.ast.ModifyClassModifier;
+import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
@@ -90,6 +95,8 @@ import apet.testCases.TestCase;
 
 public class ABSUnitTestCaseTranslator {
 	
+	private static final String INITIAL_TEST_PREFIX = "initialForTest";
+	private static final String ASSERT_TEST_PREFIX = "assertForTest";
 	private static final String SETTER_PREFIX = "setForTest";
 	private static final String GETTER_PREFIX = "getForTest";
 	private static final String RUN_METHOD = "run";
@@ -450,13 +457,12 @@ public class ABSUnitTestCaseTranslator {
 
 			//initial arg
 			List<ABSData> inputArguments = getInputArgs(testCase);
-			Block block = testClass.getMethod(i).getBlock();
+			MethodImpl method = testClass.getMethod(i);
+			Block block = method.getBlock();
 			
 			//TODO initial states' heap contains more than one object.
-			Map<ABSRef,ABSObject> is = getInitialState(testCase);
-			for (ABSRef r : is.keySet()) {
-				makeSetStatements(r, is.get(r), block);
-			}
+			makeSetStatements(testClass, getInitialState(testCase), 
+					method.getMethodSig().getName(), block);
 			
 			//test execution
 			FnApp test = makeTestExecutionForFunction(functionName, inputArguments);
@@ -549,7 +555,8 @@ public class ABSUnitTestCaseTranslator {
 
 			//initial arg
 			List<ABSData> inputArguments = getInputArgs(testCase);
-			Block block = testClass.getMethod(i).getBlock();
+			MethodImpl method = testClass.getMethod(i);
+			Block block = method.getBlock();
 			
 			//first initial arg is the reference of Object Under Test
 			String heapReferenceToObjectUnderTest = 
@@ -558,13 +565,8 @@ public class ABSUnitTestCaseTranslator {
 			//Instantiate object under tests
 			block.addStmt(newObj(interfaceOfClassUnderTest, classUnderTest, heapReferenceToObjectUnderTest, false));
 			
-			//TODO initial states' heap contains more than one object.
-			//TODO add this to a delta and introduce an empty method.
-			Map<ABSRef,ABSObject> is = getInitialState(testCase);
-			assert is.size() == 1;
-			for (ABSRef r : is.keySet()) {
-				makeSetStatements(r, is.get(r), block);
-			}
+			makeSetStatements(testClass, getInitialState(testCase), 
+					method.getMethodSig().getName(), block);
 			
 			//test execution
 			SyncCall test = makeTestExecutionForMethod(methodName, inputArguments);
@@ -592,6 +594,101 @@ public class ABSUnitTestCaseTranslator {
 		}
 		
 		output.addDecl(testClass);
+	}
+	
+	private String initialTestMethodName(String testName) {
+		return INITIAL_TEST_PREFIX + StringUtils.capitalize(testName);
+	}
+	
+	private String assertTestMethodName(String testName) {
+		return ASSERT_TEST_PREFIX + StringUtils.capitalize(testName);
+	}
+	
+	private <T extends ClassOrIfaceModifier> T findClassOrIfaceModifier(
+			DeltaDecl delta, Class<T> klazz, Predicate<T> predicate) {
+		
+		abs.frontend.ast.List<ClassOrIfaceModifier> modifiers = 
+				delta.getClassOrIfaceModifiers();
+		
+		for (int i=0; i<modifiers.getNumChild(); i++) {
+			ClassOrIfaceModifier modifier = modifiers.getChild(i);
+			if (klazz.isInstance(modifier)) {
+				T obj = klazz.cast(modifier);
+				if (predicate.predicate(obj)) {
+					return obj;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private <T extends Modifier> T findModifier(
+			ModifyClassModifier classModifier, Class<T> klazz, Predicate<T> predicate) {
+		
+		abs.frontend.ast.List<Modifier> modifiers = 
+				classModifier.getModifierList();
+		
+		for (int i=0; i<modifiers.getNumChild(); i++) {
+			Modifier modifier = modifiers.getChild(i);
+			if (klazz.isInstance(modifier)) {
+				T obj = klazz.cast(modifier);
+				if (predicate.predicate(obj)) {
+					return obj;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private void makeSetStatements(ClassDecl testClass, 
+			Map<ABSRef,ABSObject> initialHeap, 
+			String testMethodName, 
+			Block testMethodBlock) {
+		
+		String testClassName = testClass.getName();
+		String deltaName = deltaOnClass(testClassName);
+		
+		DeltaDecl delta = getDecl(output, DeltaDecl.class, 
+			new DeclNamePredicate<DeltaDecl>(deltaName));
+		
+		if (delta == null) {
+			delta = new DeltaDecl();
+			delta.setName(deltaName);
+			output.addDecl(delta);
+		}
+		
+		ModifyClassModifier modifier =
+				findClassOrIfaceModifier(delta, ModifyClassModifier.class, 
+						new ModifyClassModifierNamePredicate(testClassName));
+		
+		if (modifier == null) {
+			modifier = new ModifyClassModifier();
+			modifier.setName(testClassName);
+			delta.addClassOrIfaceModifier(modifier);
+		}
+		
+		String setMethodForTest =
+				initialTestMethodName(testMethodName);
+		
+		MethodSig sig = new MethodSig();
+		sig.setName(setMethodForTest);
+		sig.setReturnType(getUnit());
+		
+		//add an empty method to be modified
+		MethodImpl setMethodForObjectImpl = new MethodImpl(sig, new Block());
+		testClass.addMethod(setMethodForObjectImpl);
+		
+		ModifyMethodModifier mmm = new ModifyMethodModifier(setMethodForObjectImpl.fullCopy());
+		Block modifyBlock = mmm.getMethodImpl().getBlock();
+		
+		SyncCall call = new SyncCall();
+		call.setCallee(new VarUse("this"));
+		call.setMethod(setMethodForTest);
+		testMethodBlock.addStmt(getExpStmt(call));
+
+		for (ABSRef r : initialHeap.keySet()) {
+			makeSetStatements(r, initialHeap.get(r), modifyBlock);
+		}
 	}
 	
 	private void makeOracle(String actual, Access access, ABSData data, Block block) {
@@ -629,6 +726,8 @@ public class ABSUnitTestCaseTranslator {
 			
 			//add Setters and Getters
 			ModifyClassModifier mcm = new ModifyClassModifier();
+			mcm.setName(className);
+
 			InterfaceDecl ai = new InterfaceDecl();
 			ai.setName(interfaceForModifyingFieldOfClass(className));
 			mcm.addImplementedInterfaceUse(new InterfaceTypeUse(ai.getName()));
