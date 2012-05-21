@@ -234,6 +234,10 @@ public class TypeCheckerHelper {
         return res;
     }
 
+    /**
+     * @deprecated
+     * Unused.
+     */
     public static java.util.List<Type> getUnboundTypes(List<TypeParameterDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (TypeParameterDecl u : params) {
@@ -322,13 +326,6 @@ public class TypeCheckerHelper {
     }
 
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
-
-    /**
-     * @deprecated
-     */
-    public static ResolvedName resolveName(ModuleDecl mod, KindedName name) {
-        return mod.resolveName(name);
-    }
 
     public static void checkForDuplicateDecls(ModuleDecl mod, SemanticErrorList errors) {
         ArrayList<KindedName> duplicateNames = new ArrayList<KindedName>();
@@ -466,11 +463,11 @@ public class TypeCheckerHelper {
 
     
     
-    public static Map<KindedName, ResolvedName> getAllNames(String name, Map<KindedName, ResolvedName> sourceMap) {
-        HashMap<KindedName, ResolvedName> map = new HashMap<KindedName, ResolvedName>();
+    public static <RN extends ResolvedName> Map<KindedName, RN> getAllNames(String name, Map<KindedName, RN> sourceMap) {
+        HashMap<KindedName, RN> map = new HashMap<KindedName, RN>();
         for (Kind k : Kind.values()) {
             KindedName kn = new KindedName(k, name);
-            ResolvedName rn = sourceMap.get(kn);
+            RN rn = sourceMap.get(kn);
             if (rn != null) {
                 map.put(kn, rn);
             }
@@ -478,8 +475,8 @@ public class TypeCheckerHelper {
         return map;
     }
 
-    public static void putKindedNames(String name, Map<KindedName, ResolvedName> sourceMap,
-            Map<KindedName, ResolvedName> targetMap) {
+    public static <RN extends ResolvedName> void putKindedNames(String name, Map<KindedName, RN> sourceMap,
+            Map<KindedName, RN> targetMap) {
         targetMap.putAll(getAllNames(name, sourceMap));
     }
     
