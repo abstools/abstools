@@ -102,14 +102,14 @@ public class DeltaCollectorHelper {
                   res.putAll(mod.getDefinedDeltas());
               } else {
                   String moduleName = se.getModuleName().getName();
-                  res.putNamesOfModule(mod, moduleName, null);
+                  res.putNamesOfModule(mod, mod.getVisibleDeltas(), moduleName, null);
               }
           } else if (e instanceof FromExport) {
               FromExport fe = (FromExport) e;
               String moduleName = fe.getModuleName();
               for (Name n : fe.getNames()) {
                   String simpleName = n.getSimpleName();
-                  res.putNamesOfModule(mod, moduleName, simpleName);
+                  res.putNamesOfModule(mod, mod.getVisibleDeltas(), moduleName, simpleName);
               }
           } else if (e instanceof NamedExport) {
               NamedExport ne = (NamedExport) e;

@@ -64,8 +64,8 @@ public class ResolvedMap extends HashMap<KindedName, ResolvedName> {
         }
     }
 
-    public void putNamesOfModule(ModuleDecl mod, String moduleName, String simpleNamePattern) {
-        for (Map.Entry<KindedName, ResolvedName> entry : mod.getVisibleDeltas().entrySet()) {
+    public void putNamesOfModule(ModuleDecl mod, ResolvedMap with, String moduleName, String simpleNamePattern) {
+        for (Map.Entry<KindedName, ResolvedName> entry : with.entrySet()) {
             KindedName kn = entry.getKey();
             if (TypeCheckerHelper.isQualified(kn.getName())) {
                 if (TypeCheckerHelper.getModuleName(kn.getName()).equals(moduleName)) {
