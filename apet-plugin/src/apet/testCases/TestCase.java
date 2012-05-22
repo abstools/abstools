@@ -18,7 +18,6 @@ public class TestCase {
 	HashMap<ABSRef,ABSObject> heapOut;
 	
 	public TestCase(Element elem) throws Exception{
-
 		// get method name
 		this.parseMethodName(elem);
 		
@@ -32,8 +31,7 @@ public class TestCase {
 		this.parseReturn(elem);
 		
 		//get heap out
-		this.parseHeapOut(elem);
-		
+		this.parseHeapOut(elem);	
 	}
 		
 	private void parseMethodName(Element elem) throws Exception{ 	
@@ -85,10 +83,17 @@ public class TestCase {
 
 	private void parseReturn(Element elem) throws Exception {
     	NodeList returnElemList = elem.getElementsByTagName("return");
-		Element returnElem;
+		boolean foundFirst = false;
 		if (returnElemList.getLength() != 1) throw new Exception();
-		returnElem = (Element) returnElemList.item(0);
-		this.returnData = ABSData.parseData(returnElem);
+		Element returnElem = (Element) returnElemList.item(0);
+		NodeList childList = returnElem.getChildNodes();
+		for (int i = 0; i < childList.getLength() && !foundFirst; i++) {
+			if (childList.item(i).getNodeType() == Node.ELEMENT_NODE){			
+				Element dataElem = (Element) childList.item(i);	
+				this.returnData = ABSData.parseData(dataElem);
+				foundFirst = true;
+			}
+		}
 	}
 	
 	private void parseHeapOut(Element elem) throws Exception {
