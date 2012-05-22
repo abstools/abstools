@@ -13,8 +13,6 @@ import abs.frontend.typechecker.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -24,18 +22,17 @@ import java.util.Map;
  * To change this template use File | Settings | File Templates.
  * 
  * TODO: Some documentation, e.g. why are ClassDecls returned?
- * TODO: Encapsulating e.g. in a public static class ResolvedMap extends HashMap<KindedName, ResolvedDeclName> might read nicer.
  */
 
 public class DeltaCollectorHelper {        
 
-  public static Map<KindedName, ResolvedDeclName> getDefinedDeltas(ModuleDecl mod) {
+  public static ResolvedMap getDefinedDeltas(ModuleDecl mod) {
        return getDefinedDeltas(mod, new ArrayList<KindedName>());
    }
 
-   public static Map<KindedName, ResolvedDeclName> getDefinedDeltas(ModuleDecl mod,
+  public static ResolvedMap getDefinedDeltas(ModuleDecl mod,
            Collection<KindedName> foundDuplicates) {
-       HashMap<KindedName, ResolvedDeclName> res = new HashMap<KindedName, ResolvedDeclName>();
+       ResolvedMap res = new ResolvedMap();
        ResolvedModuleName moduleName = new ResolvedModuleName(mod);
 
        for (Decl d : mod.getDeclList()) {
@@ -50,14 +47,14 @@ public class DeltaCollectorHelper {
        return res;
    }
 
-  public static Map<KindedName, ResolvedDeclName> getVisibleDeltas(ModuleDecl mod) {
-      HashMap<KindedName, ResolvedDeclName> res = new HashMap<KindedName, ResolvedDeclName>(mod.getDefinedDeltas());
+  public static ResolvedMap getVisibleDeltas(ModuleDecl mod) {
+      ResolvedMap res = new ResolvedMap(mod.getDefinedDeltas());
       res.putAll(mod.getImportedDeltas());
       return res;
   }
 
-  public static Map<KindedName, ResolvedDeclName> getImportedDeltas(ModuleDecl mod) {
-      HashMap<KindedName, ResolvedDeclName> res = new HashMap<KindedName, ResolvedDeclName>();
+  public static ResolvedMap getImportedDeltas(ModuleDecl mod) {
+      ResolvedMap res = new ResolvedMap();
 
       for (Import i : mod.getImports()) {
           if (i instanceof StarImport) {
@@ -79,25 +76,16 @@ public class DeltaCollectorHelper {
                           throw new TypeCheckerException(new TypeError(n, ErrorMessage.MODULE_NOT_RESOLVABLE,
                                   n.getModuleName()));
                   }
-                  Map<KindedName, ResolvedDeclName> allNames = TypeCheckerHelper.getAllNames(n.getSimpleName(), md.getExportedDeltas());
-                  if (!allNames.isEmpty()) {
-                      for (Map.Entry<KindedName, ResolvedDeclName> e : allNames.entrySet()) {
-                          res.put(new KindedName(e.getKey().getKind(), n.getModuleName() + "." + e.getKey().getName()),
-                                  e.getValue());
-                      }
-                  } else {
-                      throw new TypeCheckerException(new TypeError(n, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE,
-                              n.getSimpleName(), n.getModuleName()));
-                  }
+                  res.addAllNames(md.getExportedDeltas(), n);
               }
           } else if (i instanceof FromImport) {
               FromImport fi = (FromImport) i;
               ModuleDecl md = mod.lookupModule(fi.getModuleName());
               if (md != null) {
-                  Map<KindedName, ResolvedDeclName> en = md.getExportedDeltas();
+                  ResolvedMap en = md.getExportedDeltas();
                   for (Name n : fi.getNames()) {
-                      TypeCheckerHelper.putKindedNames(n.getString(), en, res);
-                      TypeCheckerHelper.putKindedNames(fi.getModuleName() + "." + n.getString(), en, res);
+                      res.putKindedNames(n.getString(), en);
+                      res.putKindedNames(fi.getModuleName() + "." + n.getString(), en);
                   }
               }
           }
@@ -105,8 +93,8 @@ public class DeltaCollectorHelper {
       return res;
   }
 
-  public static Map<KindedName, ResolvedDeclName> getExportedDeltas(ModuleDecl mod) {
-      HashMap<KindedName, ResolvedDeclName> res = new HashMap<KindedName, ResolvedDeclName>();
+  public static ResolvedMap getExportedDeltas(ModuleDecl mod) {
+      ResolvedMap res = new ResolvedMap();
       for (Export e : mod.getExports()) {
           if (e instanceof StarExport) {
               StarExport se = (StarExport) e;
@@ -114,43 +102,24 @@ public class DeltaCollectorHelper {
                   res.putAll(mod.getDefinedDeltas());
               } else {
                   String moduleName = se.getModuleName().getName();
-
-                  putNamesOfModule(mod, res, moduleName, null);
+                  res.putNamesOfModule(mod, moduleName, null);
               }
           } else if (e instanceof FromExport) {
               FromExport fe = (FromExport) e;
               String moduleName = fe.getModuleName();
               for (Name n : fe.getNames()) {
                   String simpleName = n.getSimpleName();
-                  putNamesOfModule(mod, res, moduleName, simpleName);
+                  res.putNamesOfModule(mod, moduleName, simpleName);
               }
           } else if (e instanceof NamedExport) {
               NamedExport ne = (NamedExport) e;
               for (Name n : ne.getNames()) {
                   String simpleName = TypeCheckerHelper.getSimpleName(n.getString());
-                  TypeCheckerHelper.putKindedNames(simpleName, mod.getVisibleDeltas(), res);
-                  TypeCheckerHelper.putKindedNames(mod.getName() + "." + simpleName, mod.getVisibleDeltas(), res);
+                  res.putKindedNames(simpleName, mod.getVisibleDeltas());
+                  res.putKindedNames(mod.getName() + "." + simpleName, mod.getVisibleDeltas());
               }
           }
-
       }
       return res;
   }
-
-  private static void putNamesOfModule(ModuleDecl mod, HashMap<KindedName, ResolvedDeclName> res, String moduleName,
-          String simpleNamePattern) {
-      for (Map.Entry<KindedName, ResolvedDeclName> entry : mod.getVisibleDeltas().entrySet()) {
-          KindedName kn = entry.getKey();
-          if (TypeCheckerHelper.isQualified(kn.getName())) {
-              if (TypeCheckerHelper.getModuleName(kn.getName()).equals(moduleName)) {
-                  String simpleName = TypeCheckerHelper.getSimpleName(kn.getName());
-                  if (simpleNamePattern == null || simpleNamePattern.equals(simpleName)) {
-                      res.put(new KindedName(kn.getKind(), mod.getName() + "." + simpleName), entry.getValue());
-                      res.put(new KindedName(kn.getKind(), simpleName), entry.getValue());
-                  }
-              }
-          }
-      }
-  }
-
 }
