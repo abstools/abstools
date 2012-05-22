@@ -134,13 +134,20 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
             if (locationTypeInferenceResult != null) {
                 LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(type);
                 if (lv != null) {
-                    return locationTypeInferenceResult.get(lv);
+                    return defaultIfNull(locationTypeInferenceResult.get(lv));
                 }
             }
         }
-        return (LocationType) type.getMetaData(LocationType.LOCATION_KEY);
+        return defaultIfNull((LocationType) type.getMetaData(LocationType.LOCATION_KEY));
     }
     
+    private LocationType defaultIfNull(LocationType l) {
+        if (l == null)
+          return defaultType;
+        else
+            return l;
+    }
+
     public void setLocationType(Type type, LocationType lt) {
         type.addMetaData(LocationType.LOCATION_KEY, lt);
     }
