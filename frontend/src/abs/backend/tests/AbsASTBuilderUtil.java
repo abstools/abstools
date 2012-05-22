@@ -26,6 +26,8 @@ import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ModifyClassModifier;
+import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NewExp;
@@ -67,6 +69,32 @@ public final class AbsASTBuilderUtil {
         @Override
         public boolean predicate(T t) {
             return name.equals(t.getName());
+        }
+
+    }
+    
+    public static final class ModifyClassModifierNamePredicate extends Named implements Predicate<ModifyClassModifier> {
+
+        public ModifyClassModifierNamePredicate(String name) {
+            super(name);
+        }
+
+        @Override
+        public boolean predicate(ModifyClassModifier t) {
+            return name.equals(t.getName());
+        }
+
+    }
+    
+    public static final class ModifyMethodModifierNamePredicate extends Named implements Predicate<ModifyMethodModifier> {
+
+        public ModifyMethodModifierNamePredicate(String name) {
+            super(name);
+        }
+
+        @Override
+        public boolean predicate(ModifyMethodModifier t) {
+            return name.equals(t.getMethodImpl().getMethodSig().getName());
         }
 
     }
