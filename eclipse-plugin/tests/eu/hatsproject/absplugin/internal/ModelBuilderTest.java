@@ -235,14 +235,16 @@ public class ModelBuilderTest {
 		modelbuilder.addCompilationUnit(testcu);
 		SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
 		assertEquals(testel.toString(),1, testel.size());
+		System.err.println("Test 1 finished");
 
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
 		modelbuilder.addCompilationUnit(importTestCU);
 		SemanticErrorList testel1 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
 		assertEquals(0, testel1.size());
+		System.err.println("Test 2 finished");
 		modelbuilder.removeCompilationUnit(importTestCU);
 		SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
-		assertEquals(2, testel2.size()); //Why 2? Module not resolved gets inserted 2 times.
+		assertEquals(1, testel2.size());
 	}
 }
