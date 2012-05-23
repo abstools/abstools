@@ -157,6 +157,7 @@ public class IncrementalModelBuilder {
 //			throw new TypecheckInternalException(new Exception("Model has parser errors!"));
 //		model.flushCache();
 		flushAll(model);
+		model.getTypeExt().clearTypeSystemExtensions();
 		if (locationTypeChecking) {
 			LocationType defaultLocType = LocationType.createFromName(defaultloctype);
 			LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(model);
