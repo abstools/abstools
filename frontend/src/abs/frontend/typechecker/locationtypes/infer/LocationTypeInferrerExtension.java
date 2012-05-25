@@ -43,6 +43,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         GLOBAL_FAR
     }
 
+    private static final int THRESHOLD = 5;
+
     private LocationTypingPrecision precision = LocationTypingPrecision.CLASS_LOCAL_FAR;
     
     public void setLocationTypingPrecision(LocationTypingPrecision p) {
@@ -162,7 +164,11 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
             return farTypes.get(node);
         } else {
             java.util.List<LocationType> result = new ArrayList<LocationType>();
-            for (int i = 0; i < node.getNumberOfNewCogExpr(); i++) {
+            int numberOfNewCogs = node.getNumberOfNewCogExpr();
+            if (numberOfNewCogs > THRESHOLD) {
+                numberOfNewCogs = THRESHOLD;
+            }
+            for (int i = 0; i < numberOfNewCogs; i++) {
                 result.add(LocationType.createParametricFar(prefix + i));
             }
             farTypes.put(node, result);

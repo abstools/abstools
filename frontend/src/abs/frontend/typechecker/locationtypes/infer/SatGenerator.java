@@ -83,7 +83,7 @@ public class SatGenerator {
             System.out.println("Constraint generation time: " + (genNanos - startNanos) / 1000000);
         }
         
-        StringBuffer weights = new StringBuffer();
+        StringBuilder weights = new StringBuilder();
         
         int countNiceConstraints = 0;
         for (LocationTypeVariable tv : vars) {
@@ -103,7 +103,7 @@ public class SatGenerator {
             }
         }
         
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int nbclauses = output.size() + countNiceConstraints;
         int nbvars = e.current;
         
@@ -117,13 +117,17 @@ public class SatGenerator {
             }
         }
         //System.out.println("SHOULD_HAVE value: "+ newShouldHave);
-        
+        try{
         for (List<Integer> line : output) {
             for (Integer i : line) {
                 sb.append(i);
                 sb.append(" ");
             }
             sb.append("0\n");
+        }
+        } catch (Error e) {
+            System.out.println(sb.length());
+            throw e;
         }
         
         sb.append(weights);
@@ -136,6 +140,7 @@ public class SatGenerator {
         //System.out.println(sb);
         
         IPBSolver solver = org.sat4j.maxsat.SolverFactory.newDefault();//instance().defaultSolver();
+        //IPBSolver solver = org.sat4j.pb.SolverFactory.newBoth();
         
         //System.exit(0);
         
@@ -148,6 +153,10 @@ public class SatGenerator {
         try {
             InputStream is = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
             IProblem problem = reader.parseInstance(is);
+            long parseNanos = System.nanoTime();
+            if (enableStats) {
+                System.out.println("Parsing time: " + (parseNanos - genNanos) / 1000000);
+            }
             if (enableStats) {
                 System.gc();
                 try {
@@ -158,15 +167,12 @@ public class SatGenerator {
                 }
                 System.gc();
             }
-            long parseNanos = System.nanoTime();
-            if (enableStats) {
-                System.out.println("Parsing time: " + (parseNanos - genNanos) / 1000000);
-            }
             OptToPBSATAdapter opt = new OptToPBSATAdapter(wmsd);
             opt.setVerbose(false);
-            opt.setTimeoutMs(1000);
+            //opt.setTimeoutMs(10000);
             //parseNanos = System.nanoTime();
             //opt.setTimeout(arg0)
+            parseNanos = System.nanoTime();
             if (opt.isSatisfiable()) {
                 int[] model = opt.model();
                 long solveNanos = System.nanoTime();
@@ -230,7 +236,7 @@ public class SatGenerator {
         return null;
     }
 
-    private void addInitLine(StringBuffer sb, int nbclauses, int nbvars) {
+    private void addInitLine(StringBuilder sb, int nbclauses, int nbvars) {
         sb.append("p wcnf ");
         sb.append(nbvars);
         sb.append(" ");
