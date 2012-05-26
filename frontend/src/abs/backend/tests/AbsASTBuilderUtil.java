@@ -32,6 +32,7 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
+import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypeUse;
@@ -141,6 +142,15 @@ public final class AbsASTBuilderUtil {
     public static final <T extends Decl> Predicate<T> namePred(String name) {
         return new DeclNamePredicate<T>(name);
     }
+    
+    public static final FieldDecl getFieldDecl(ClassDecl clazz, Predicate<FieldDecl> p) {
+        for (FieldDecl f : clazz.getFields()) {
+            if (p.predicate(f)) {
+                return f;
+            }
+        }
+        return null;
+    }
 
     public static final <T extends Decl> T getDecl(Model model, Class<T> klass, Predicate<T> p) {
         return getDecl(model, null, klass, p);
@@ -229,14 +239,28 @@ public final class AbsASTBuilderUtil {
         }
         return new VarDeclStmt(new List<Annotation>(), new VarDecl(name, a, opt));
     }
-
-    public static final VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
+    
+    public static final FieldDecl makeFieldDecl(Access access, String name) {
+        FieldDecl fd = new FieldDecl();
+        fd.setName(name);
+        fd.setAccess(access);
+        return fd;
+    }
+    
+    public static final NewExp newObj(ClassDecl clazz, boolean cog, PureExp... ps) {
         NewExp ne = new NewExp();
         ne.setClassName(clazz.getName());
+        for (int i=0; i < ps.length; i++) {
+            ne.setParam(ps[i], i);
+        }
         if (cog) {
             ne.setCog(new Cog());
         }
-        return getVarDecl(name, new InterfaceTypeUse(inf.getName()), ne);
+        return ne;
+    }
+
+    public static final VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
+        return getVarDecl(name, new InterfaceTypeUse(inf.getName()), newObj(clazz, cog));
     }
 
     /**
