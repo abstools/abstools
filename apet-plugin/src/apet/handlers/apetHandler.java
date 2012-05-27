@@ -137,7 +137,8 @@ public class apetHandler extends AbstractHandler {
 			file.createNewFile();
 		}
 		
-		ABSUnitTestCaseTranslator generator = new ABSUnitTestCaseTranslator(model, file); 
+		ABSUnitTestCaseTranslator generator = 
+		        new ABSUnitTestCaseTranslator(model, file, true); 
 		
 		if (! generator.hasABSUnit()) {
 			System.out.println("aPET error: cannot find ABSUnit packages");
@@ -148,10 +149,11 @@ public class apetHandler extends AbstractHandler {
 	}
 	
 	private Model getABSModel(String filename) throws Exception {
-		int numArgs = 2;
+		int numArgs = 3;
 		String[] args = new String[numArgs];
 		int i = 0;
 		args[i++] = "-v";
+		args[i++] = "-notypecheck";
 		args[i++] = filename;
 		
 		Main main = new Main();

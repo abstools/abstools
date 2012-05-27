@@ -1,12 +1,12 @@
 package apet.absunit;
 
-import static abs.backend.tests.AbsASTBuilderUtil.*;
+import static abs.backend.tests.AbsASTBuilderUtil.generateImportAST;
+import static abs.backend.tests.AbsASTBuilderUtil.getCall;
 import static abs.backend.tests.AbsASTBuilderUtil.getDecl;
 import static abs.backend.tests.AbsASTBuilderUtil.getExpStmt;
 import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
 import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
-import static abs.backend.tests.AbsASTBuilderUtil.makeFieldDecl;
 import static abs.backend.tests.AbsASTBuilderUtil.namePred;
 import static abs.backend.tests.AbsASTBuilderUtil.newObj;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
@@ -38,12 +38,14 @@ import abs.backend.tests.AbsASTBuilderUtil.MethodSigNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.ModifyClassModifierNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.Predicate;
 import abs.common.StringUtils;
+import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.AddInterfaceModifier;
 import abs.frontend.ast.AddMethodModifier;
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.AssertStmt;
 import abs.frontend.ast.Block;
+import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ClassOrIfaceModifier;
 import abs.frontend.ast.DataConstructor;
@@ -54,7 +56,6 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Deltaspec;
-import abs.frontend.ast.EqExp;
 import abs.frontend.ast.Feature;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
@@ -67,11 +68,9 @@ import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.Modifier;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
@@ -110,6 +109,12 @@ public class ABSUnitTestCaseTranslator {
 	
 	private static final String MAIN = "AbsUnit.TestCase";
 
+	private static final String ASSERT_HELPER = "absAssertHelper";
+	
+	private static final String PRODUCT_NAME = "ABSUnitProduct";
+	private static final String CONFIGURATION_NAME = "ABSUnitConfiguration";
+	private static final String FEATURE_NAME = "F";
+	
 	private static final String ignore = "AbsUnit.Ignored";
 	private static final String test = "AbsUnit.Test";
 	private static final String dataPoint = "AbsUnit.DataPoint";
@@ -131,13 +136,20 @@ public class ABSUnitTestCaseTranslator {
 	
 	private File outputFile;
 	
-	public ABSUnitTestCaseTranslator(Model model, File outputFile) {
+	private final boolean verbose;
+	
+	public ABSUnitTestCaseTranslator(Model model, File outputFile, boolean verbose) {
 		if (model == null)
 			throw new IllegalArgumentException("Model cannot be null!");
 
 		this.model = model;
 		this.output = new ModuleDecl();
 		this.output.setName(MAIN);
+		this.verbose = verbose;
+		
+		if (verbose) {
+			System.out.println("Gathering ABSUnit annotations");
+		}
 		
 		gatherABSUnitAnnotations();
 
@@ -174,9 +186,16 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
 		
+		if (verbose) {
+			System.out.println("Add basic imports...");
+		}
+
 		addBasicImports(output);
 		
 		for (String key : suite.keySet()) {
+			if (verbose) {
+				System.out.println("Generating test suite for "+key+"...");
+			}
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
@@ -188,10 +207,14 @@ public class ABSUnitTestCaseTranslator {
 		}
 		
 		if (! dn.isEmpty()) {
+			if (verbose) {
+				System.out.println("Generating product line description...");
+			}
+
 			ProductLine productline = new ProductLine();
-			productline.setName("ABSUnitConfiguration");
+			productline.setName(CONFIGURATION_NAME);
 			Feature feature = new Feature();
-			feature.setName("F");
+			feature.setName(FEATURE_NAME);
 			productline.addOptionalFeature(feature);
 			
 			for (String d : dn) {
@@ -204,16 +227,54 @@ public class ABSUnitTestCaseTranslator {
 			}
 			
 			Product product = new Product();
-			product.setName("ABSUnitProduct");
+			product.setName(PRODUCT_NAME);
 			product.addFeature(feature);
 			
 			output.setProductLine(productline);
 			output.addProduct(product);
 		}
 		
+		if (verbose) {
+			System.out.println("Pretty printing ABSUnit tests...");
+		}
+
 		printToFile(output, outputFile);
 		
+		if (verbose) {
+			System.out.println("Validating ABSUnit tests...");
+		}
+		
+		validateOutput();
+
+		if (verbose) {
+			System.out.println("ABSUnit tests generation successful");
+		}
+		
 		return output;
+	}
+	
+	private void validateOutput() {
+		Model copy = model.fullCopy();
+		copy.getCompilationUnit().addModuleDecl(output.fullCopy());
+		
+		validateOutput(copy.fullCopy(), null);
+		validateOutput(copy.fullCopy(), output.getName().concat(".").concat(PRODUCT_NAME));
+	}
+	
+	private void validateOutput(Model model, String product) {
+		Model copy = model.fullCopy();
+		if (product != null) {
+            try {
+				copy.flattenForProduct(product);
+			} catch (Exception e) {
+				throw new IllegalStateException("Cannot select product "+product, e);
+			}
+		}
+		
+        SemanticErrorList typeerrors = copy.typeCheck();
+        for (SemanticError se : typeerrors) {
+            System.err.println(se.getHelpMessage());
+        }
 	}
 	
 	private void addBasicImports(ModuleDecl module) {
@@ -404,6 +465,14 @@ public class ABSUnitTestCaseTranslator {
 		for (MethodSig m : inf.getAllMethodSigs()) {
 			ct.addMethod(createTestMethodImpl(m));
 		}
+
+		FieldDecl assertImpl = new FieldDecl();
+		assertImpl.setName(ASSERT_HELPER);
+		assertImpl.setAccess(absAssertImpl.getImplementedInterfaceUse(0).fullCopy());
+		
+		InitBlock block = new InitBlock();
+		block.addStmt(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));
+		ct.setInitBlock(block);
 		
 		return ct;
 	}
@@ -580,6 +649,11 @@ public class ABSUnitTestCaseTranslator {
 		 * test case 1 is implemented by test method 1 and so on...
 		 */
 		for (int i=0; i<testCases.size(); i++) {
+			
+			if (verbose) {
+				System.out.println("Generating test case "+i+"...");
+			}
+
 			TestCase testCase = testCases.get(i);
 
 			//initial arg
@@ -596,7 +670,7 @@ public class ABSUnitTestCaseTranslator {
 			createObjectsInHeap(objectsTypes, testClass, getInitialState(testCase), testName, block);
 			
 			//test execution
-			SyncCall test = makeTestExecutionForMethod(methodName, inputArguments);
+			Call test = makeTestExecutionForMethod(methodName, inputArguments);
 			
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
@@ -704,25 +778,6 @@ public class ABSUnitTestCaseTranslator {
 		return null;
 	}
 	
-	private <T extends Modifier> T findModifier(
-			ModifyClassModifier classModifier, Class<T> klazz, 
-			Predicate<T> predicate) {
-		
-		abs.frontend.ast.List<Modifier> modifiers = 
-				classModifier.getModifierList();
-		
-		for (int i=0; i<modifiers.getNumChild(); i++) {
-			Modifier modifier = modifiers.getChild(i);
-			if (klazz.isInstance(modifier)) {
-				T obj = klazz.cast(modifier);
-				if (predicate.predicate(obj)) {
-					return obj;
-				}
-			}
-		}
-		return null;
-	}
-	
 	private void createObjectsInHeap(
 			Map<String,Access> objectsInHeap,
 			ClassDecl testClass, 
@@ -758,10 +813,8 @@ public class ABSUnitTestCaseTranslator {
 		Block modifyBlock = mmm.getMethodImpl().getBlock();
 		modifier.addModifier(mmm);
 		
-		SyncCall call = new SyncCall();
-		call.setCallee(new VarUse("this"));
-		call.setMethod(setMethodForTest);
-		testMethodBlock.addStmt(getExpStmt(call));
+		testMethodBlock.addStmt(
+				getExpStmt(getCall(getThis(), setMethodForTest, false)));
 
 		for (ABSRef r : initialHeap.keySet()) {
 			makeSetStatements(objectsInHeap, r, initialHeap.get(r), 
@@ -777,15 +830,15 @@ public class ABSUnitTestCaseTranslator {
 		
 	}
 	
+	private PureExp getThis() {
+		return new VarUse("this");
+	}
+	
 	private void makeOracle(String actual, Access access, ABSData data, Block block) {
 		//TODO handle object comparison!
-		AssertStmt stmt =
-			new AssertStmt(
-				new abs.frontend.ast.List<Annotation>(),
-				new EqExp(new VarUse(actual), 
-						  createPureExpression(data)));
-		
-		block.addStmt(stmt);
+		block.addStmt(
+			getExpStmt(getCall(new VarUse(ASSERT_HELPER), "assertTrue", true, 
+				new VarUse(actual), createPureExpression(data))));
 	}
 	
 	private String deltaOnClass(String className) {
@@ -1009,9 +1062,7 @@ public class ABSUnitTestCaseTranslator {
 		return fa;
 	}
 	
-	private SyncCall makeTestExecutionForMethod(String methodName, List<ABSData> inArgs) {
-		abs.frontend.ast.List<PureExp> ps = new abs.frontend.ast.List<PureExp>();
-		SyncCall syncCall = new SyncCall();
+	private Call makeTestExecutionForMethod(String methodName, List<ABSData> inArgs) {
 		
 		if (inArgs.size() == 0) {
 			throw new IllegalStateException("Inputs for a method must at least have a reference");
@@ -1022,17 +1073,17 @@ public class ABSUnitTestCaseTranslator {
 			throw new IllegalStateException("Inputs for a method must at least have a reference");
 		}
 		
-		String rn = getABSDataValue(r);
-		syncCall.setCallee(new VarUse(rn));
-		syncCall.setMethod(methodName);
-		syncCall.setParamList(ps);
-		
+		PureExp[] ps = new PureExp[inArgs.size() - 1];
 		for (int i=1; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
 			PureExp exp = createPureExpression(d);
-			syncCall.setParam(exp,i - 1);
+			ps[i-1] = exp;
 		}
-		return syncCall;
+		
+		String rn = getABSDataValue(r);
+		Call call = getCall(new VarUse(rn), methodName, false, ps);
+		return call;
+		
 	}
 	
 	private String testInterfaceName(String className, String capMethodName) {
