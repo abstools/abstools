@@ -10,6 +10,8 @@ import java.util.Set;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AssignStmt;
+import abs.frontend.ast.AsyncCall;
+import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Cog;
 import abs.frontend.ast.DataTypeUse;
@@ -32,9 +34,9 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
-import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarDeclStmt;
@@ -210,6 +212,21 @@ public final class AbsASTBuilderUtil {
         ExpressionStmt ex = new ExpressionStmt();
         ex.setExp(exp);
         return ex;
+    }
+    
+    public static final Call getCall(PureExp who, String method, boolean sync, PureExp... exps) {
+        Call call;
+        if (sync) {
+            call = new SyncCall();
+        } else {
+            call = new AsyncCall();
+        }
+        call.setCallee(who);
+        call.setMethod(method);
+        for (int i=0; i<exps.length; i++) {
+            call.setParam(exps[i], i);
+        }
+        return call;
     }
 
     public static final DataTypeUse getFutUnitType() {
