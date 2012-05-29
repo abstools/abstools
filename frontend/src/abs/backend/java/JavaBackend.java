@@ -37,6 +37,8 @@ public class JavaBackend extends Main {
 
     private File destDir = new File("gen/");
     private boolean sourceOnly = false;
+    private boolean untypedJavaGen = false;
+    
 
     @Override
     public List<String> parseArgs(String[] args) throws Exception {
@@ -55,6 +57,8 @@ public class JavaBackend extends Main {
                 }
             } else if (arg.equals("-sourceonly")) {
                 this.sourceOnly = true;
+            } else if (arg.equals("-untypedJavaGen")) {
+                this.untypedJavaGen = true;
             } else if (arg.equals("-debug")) {
                 /* Print stacktrace on exception, used in main(), must be removed from remaining args. */
             } else {
@@ -92,7 +96,11 @@ public class JavaBackend extends Main {
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
         JavaCode javaCode = new JavaCode(destDir);
-        m.generateJavaCode(javaCode);
+        if (this.untypedJavaGen) {
+            m.generateJavaCodeDynamic(javaCode);
+        } else {
+            m.generateJavaCode(javaCode);
+        }
         if (!sourceOnly) {
             javaCode.compile();
         }
