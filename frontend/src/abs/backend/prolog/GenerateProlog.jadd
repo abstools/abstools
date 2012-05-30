@@ -189,6 +189,9 @@ aspect GenerateProlog {
         }
         return false;     
     }
+    public boolean VarOrFieldUse.isField(){
+        return true;
+    }
     public void FieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print(fieldTransform(getName()));
     }

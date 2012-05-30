@@ -43,17 +43,18 @@ aspect GenerateJava {
       stream.println("package "+p.packageName+";");
           //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
-            stream.println("public class "+mainName+" extends "+ABSObject.class.getName()+" {");
+            stream.println("public class "+mainName+" extends "+ABSDynamicObject.class.getName()+" {");
             stream.println("   public static void main(java.lang.String[] args) throws Exception {");
             stream.println("       "+StartUp.class.getName()+".startup(args,"+mainName+".class);");
             stream.println("   }");
 
-            stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
-            stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public "+mainName+"("+COG.class.getName()+" cog) { super(cog); }");
+            //stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
+            //stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
+            stream.println("   public "+mainName+"("+COG.class.getName()+" cog) { super(cog, " + ABSMainClass.class.getName() + ".instance()); }");
 
             // main block
             stream.println("   public "+ABSUnit.class.getName()+" run() {");
+            stream.println(ABSDynamicObject.class.getName() + " thisP = this;");
             block.generateJavaDynamic("   ",stream);
             stream.println("      return "+JavaBackendConstants.UNITVALUE+";");
             stream.println("   }");
@@ -204,7 +205,11 @@ aspect GenerateJava {
     }
 
     public void ParamDecl.generateJavaDynamic(PrintStream stream) {
-      getAccess().generateJavaDynamic(stream);
+        if (getAccess().getType().isReferenceType()) {
+            stream.print(ABSValue.class.getName());
+        } else {
+            getAccess().generateJavaDynamic(stream);
+        }
       stream.print(" "+JavaBackend.getVariableName(getName()));
     }
 
@@ -223,7 +228,11 @@ aspect GenerateJava {
     public void FieldDecl.generateJavaDynamic(String indent, PrintStream stream) {
         DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
       stream.print(indent);
-      getAccess().generateJavaDynamic(stream);
+      if (getAccess().getType().isReferenceType()) {
+          stream.print(ABSValue.class.getName());
+      } else {
+          getAccess().generateJavaDynamic(stream);
+      }
       stream.print(" "+JavaBackend.getVariableName(getName()));
       stream.println(";");
     }
@@ -306,11 +315,11 @@ aspect GenerateJava {
       
         super.generateJavaDynamic(indent,stream);
         if (this instanceof MainBlock || this instanceof InitBlock) {
-            stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
+            stream.print("    if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
             String name = "init block";
             if (this instanceof MainBlock)
                 name = "main block";
-            stream.println("__ABS_getRuntime().getCurrentTask().newStackFrame(this,\""+name+"\");");
+            stream.println("thisP.__ABS_getRuntime().getCurrentTask().newStackFrame(thisP,\""+name+"\");");
         }
         
         String newIndent = incIndent(indent);
@@ -329,8 +338,8 @@ aspect GenerateJava {
         if (addReturn) {
         stream.println(indent+DynamicJavaGeneratorHelper.getDebugString(this, this.getEnd()));
         
-        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
-        stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        stream.print("    if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
 
              stream.println(indent+"return "+JavaBackendConstants.UNITVALUE+";");
          }
@@ -339,7 +348,11 @@ aspect GenerateJava {
 
     public void VarDecl.generateJavaDynamic(String indent, PrintStream stream) {
         stream.print(indent);
-        getAccess().generateJavaDynamic(stream);
+        if (getAccess().getType().isReferenceType()) {
+            stream.print(ABSValue.class.getName());
+        } else {
+            getAccess().generateJavaDynamic(stream);
+        }
         String name = JavaBackend.getVariableName(getName());
         stream.print(" "+name+" = ");
 
@@ -350,8 +363,8 @@ aspect GenerateJava {
         }
         stream.print(";");
 
-        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
-        stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+getName()+"\","+name+");");
+        stream.print("    if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
+        stream.print("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+getName()+"\","+name+");");
     }
 
 
@@ -373,18 +386,7 @@ aspect GenerateJava {
 
     public void AssignStmt.generateJavaDynamic(String indent, PrintStream stream) {
       super.generateJavaDynamic(indent,stream);
-        stream.print(indent);
-        getVar().generateJavaDynamic(stream);
-        stream.print(" = ");
-        getValue().generateJavaDynamic(stream);
-        stream.println(";");
-        
-        if (getVar() instanceof VarUse) {
-            stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+getVar().getName()+"\",");
-            getVar().generateJavaDynamic(stream);
-            stream.print(");");
-        }
+      DynamicJavaGeneratorHelper.assign(stream, indent, this);
 
     }
 
@@ -416,8 +418,8 @@ aspect GenerateJava {
 
     public void ReturnStmt.generateJavaDynamic(String indent, PrintStream stream) {
       super.generateJavaDynamic(indent,stream);
-        stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");      
-        stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
+        stream.print("    if (thisP.__ABS_getRuntime().debuggingEnabled()) ");      
+        stream.println("thisP.__ABS_getRuntime().getCurrentTask().popStackFrame();");
         
         stream.print(indent+"return ");
         getRetExp().generateJavaDynamic(stream);
@@ -505,8 +507,8 @@ aspect GenerateJava {
         stream.print(ABSRuntime.class.getName()+".checkForNull(");
         getCallee().generateJavaDynamic(stream);
         stream.print(")");
-        stream.print("."+JavaBackend.getMethodName(getMethod()));
-        DynamicJavaGeneratorHelper.generateArgs(stream,getParams());
+        stream.print(".dispatch");
+        DynamicJavaGeneratorHelper.generateArgs(stream,"\""+getMethod()+"\"",getParams());
     }
 
     public void OriginalCall.generateJavaDynamic(PrintStream stream) {
@@ -531,10 +533,10 @@ aspect GenerateJava {
       String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
         if (hasCog()) {
             stream.print(className+".__ABS_createNewCOG");
-	        DynamicJavaGeneratorHelper.generateArgs(stream,"this",getParams());
+	        DynamicJavaGeneratorHelper.generateArgs(stream,"thisP",getParams());
         } else {
             stream.print(className+".__ABS_createNewObject");
-	        DynamicJavaGeneratorHelper.generateArgs(stream,"this",getParams());
+	        DynamicJavaGeneratorHelper.generateArgs(stream,"thisP",getParams());
         }
     }
 
@@ -555,13 +557,18 @@ aspect GenerateJava {
     }
 
     public void FieldUse.generateJavaDynamic(PrintStream stream) {
-        ClassDecl d = (ClassDecl) getContextDecl();
-        String className = JavaBackend.getClassName(d.getName());
-        stream.print(className+".this."+JavaBackend.getVariableName(getName()));
+        //ClassDecl d = (ClassDecl) getContextDecl();
+        //String className = JavaBackend.getClassName(d.getName());
+        //stream.print(className+".this."+JavaBackend.getVariableName(getName()));
+        DynamicJavaGeneratorHelper.fieldUse(stream, this);
     }
 
     public void VarUse.generateJavaDynamic(PrintStream stream) {
-        stream.print(JavaBackend.getVariableName(getName()));
+        if (isField()) {
+            DynamicJavaGeneratorHelper.fieldUse(stream, this);
+        } else {
+            stream.print(JavaBackend.getVariableName(getName()));
+        }
     }
 
     public void IfExp.generateJavaDynamic(PrintStream stream) {
@@ -801,7 +808,7 @@ aspect GenerateJava {
     }
 
     public void ThisExp.generateJavaDynamic(PrintStream stream) {
-        stream.print("this");
+        stream.print("thisP");
     }
 
     public void MinusExp.generateJavaDynamic(PrintStream stream) {

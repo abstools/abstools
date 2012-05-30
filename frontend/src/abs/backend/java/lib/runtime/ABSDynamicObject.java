@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import abs.backend.java.codegeneration.dynamic.DynamicException;
+import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
 
 public class ABSDynamicObject extends ABSObject {
@@ -17,6 +18,12 @@ public class ABSDynamicObject extends ABSObject {
     private Map<String,ABSValue> fields;
     
     public ABSDynamicObject(ABSClass clazz, ABSValue... params) {
+        this.clazz = clazz;
+        initializeFields(params);
+    }
+    
+    public ABSDynamicObject(COG cog, ABSClass clazz, ABSValue... params) {
+        super(cog);
         this.clazz = clazz;
         initializeFields(params);
     }
@@ -45,11 +52,25 @@ public class ABSDynamicObject extends ABSObject {
         return new ArrayList<String>(clazz.getFieldNames());
     }
     
-    public ABSValue getFieldValue(String field) {
+    public ABSValue getFieldValue(String field) throws NoSuchFieldException {
+        ABSValue result;
         if (fields == null) {
-            return null;
+            result = null;
+        } else {
+            result = fields.get(field);
         }
-        return fields.get(field);
+        if (result == null) {
+            throw new NoSuchFieldException(field);
+        }
+        return result;
+    }
+    
+    public ABSValue getFieldValue_Internal(String field) {
+        try {
+            return getFieldValue(field);
+        } catch (NoSuchFieldException e) {
+            throw new DynamicException("Field not found");
+        }
     }
     
     public void setFieldValue(String field, ABSValue val) {
@@ -59,9 +80,22 @@ public class ABSDynamicObject extends ABSObject {
         fields.put(field, val);
     }
     
-    protected void __ABS_init() {
+    public void __ABS_init() {
         clazz.getConstructor().exec(this);
         this.getCOG().objectInitialized(this);
     }
     
+    public ABSValue dispatch(String mName, ABSValue... params) {
+        ABSClosure cl = clazz.getMethod(mName);
+        return cl.exec(this, params);
+    }
+    
+    public ABSUnit run() {
+        ABSClosure cl = clazz.getMethod("run");
+        if (cl != null) {
+            cl.exec(this);
+        }
+        return ABSUnit.UNIT;
+    }
+        
 }

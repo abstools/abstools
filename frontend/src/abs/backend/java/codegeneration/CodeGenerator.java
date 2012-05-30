@@ -7,9 +7,9 @@ package abs.backend.java.codegeneration;
 import java.io.PrintStream;
 
 public class CodeGenerator {
-    final PrintStream stream;
+    protected final PrintStream stream;
     String indent; 
-    CodeGenerator(String indent, PrintStream stream) {
+    protected CodeGenerator(String indent, PrintStream stream) {
         this.stream = stream;
         this.indent = indent;
     }

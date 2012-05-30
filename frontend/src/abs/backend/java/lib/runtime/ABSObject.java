@@ -68,7 +68,7 @@ public abstract class ABSObject implements ABSRef {
         return ABSUnit.UNIT;
     }
 
-    protected final void __ABS_checkSameCOG() {
+    public final void __ABS_checkSameCOG() {
         if (__cog != getCurrentCOG()) {
             throw new ABSIllegalSynchronousCallException();
         }
