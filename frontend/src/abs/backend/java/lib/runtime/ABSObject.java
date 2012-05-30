@@ -23,7 +23,7 @@ import static abs.backend.java.lib.runtime.ABSRuntime.*;
  *
  */
 public abstract class ABSObject implements ABSRef {
-    private final COG __cog;
+    protected final COG __cog;
     protected final long __id;
 
     public ABSObject() {
@@ -96,7 +96,7 @@ public abstract class ABSObject implements ABSRef {
 
     protected volatile ObjectView __view;
 
-    public final synchronized ObjectView getView() {
+    public synchronized ObjectView getView() {
         if (__view == null) {
             __view = new View();
         }

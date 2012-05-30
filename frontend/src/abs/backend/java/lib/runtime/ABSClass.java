@@ -4,12 +4,14 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import abs.backend.java.observing.manipulation.ClassManipulator;
 
 public class ABSClass {
     private String name;
@@ -81,6 +83,44 @@ public class ABSClass {
         }
         return params;
     }
+    
+    private View __view;
+    public synchronized ClassManipulator getView() {
+        if (__view == null) {
+            __view = new View();
+        }
+        return __view;
+    }
+    
+    private class View implements ClassManipulator {
+
+        @Override
+        public String getName() {
+            return getName();
+        }
+
+        @Override
+        public List<String> getFieldNames() {
+            return new ArrayList<String>(ABSClass.this.getFieldNames());
+        }
+
+        @Override
+        public List<String> getMethodNames() {
+            if (methods == null) return Collections.emptyList();
+            return new ArrayList<String>(methods.keySet());
+        }
+
+        @Override
+        public void addField(String name, String type, ABSClosure init) {
+            // FIXME
+            if (fields == null) {
+                fields = new HashMap<String,ABSField>();
+            }
+            fields.put(name, new ABSField());
+        }
+        
+    }
+
     
 
 }

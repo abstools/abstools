@@ -5,6 +5,7 @@
 package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,10 @@ import java.util.Map;
 import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.ClassView;
+import abs.backend.java.observing.ObjectObserver;
+import abs.backend.java.observing.ObjectView;
 
 public class ABSDynamicObject extends ABSObject {
     private ABSClass clazz;
@@ -96,6 +101,60 @@ public class ABSDynamicObject extends ABSObject {
             cl.exec(this);
         }
         return ABSUnit.UNIT;
+    }
+    
+    
+    
+    public synchronized ObjectView getView() {
+        if (__view == null) {
+            __view = new View();
+        }
+        return __view;
+    }
+
+    private class View implements ObjectView {
+
+        @Override
+        public COGView getCOG() {
+            return __cog.getView();
+        }
+
+        @Override
+        public ClassView getClassView() {
+            return clazz.getView();
+        }
+
+        @Override
+        public ABSValue getFieldValue(String fieldName) throws NoSuchFieldException {
+            return ABSDynamicObject.this.getFieldValue(fieldName);
+        }
+
+        @Override
+        public void registerObjectObserver(ObjectObserver l) {
+            // FIXME: implement
+        }
+
+        @Override
+        public String toString() {
+            return ABSDynamicObject.this.toString();
+        }
+
+        @Override
+        public long getID() {
+            return ABSDynamicObject.this.__id;
+        }
+
+        @Override
+        public String getClassName() {
+            return clazz.getName();
+        }
+
+        @Override
+        public List<String> getFieldNames() {
+            if (fields == null) return Collections.emptyList();
+            return new ArrayList<String>(fields.keySet());
+        }
+
     }
         
 }
