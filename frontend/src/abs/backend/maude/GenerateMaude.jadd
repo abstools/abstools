@@ -272,7 +272,7 @@ aspect GenerateMaude {
     }
 
     public void StringLiteral.generateMaude(PrintStream stream) {
-        stream.print("\"str\"[\"" + getContent() + "\"] ");
+        stream.print("\"str\"[\"" + getContent().replaceAll("\"", "\\\\\"") + "\"] ");
     }
 
     public void IntLiteral.generateMaude(PrintStream stream) {
@@ -405,10 +405,11 @@ aspect GenerateMaude {
 
     public void LetExp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("let '" + getVar().getName() + " = ");
+        stream.print("( let '" + getVar().getName() + " = ");
         getVal().generateMaude(stream);
         stream.print("in ");
         getExp().generateMaude(stream);
+        stream.print(" )");
     }
     public int LetExp.numberOfRandom(Set<String> visitedFunctions) {
         return getVal().numberOfRandom(visitedFunctions)
