@@ -28,11 +28,16 @@ import org.eclipse.ui.services.IServiceScopes;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
+import beaver.Symbol;
 
+
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
+import eu.hatsproject.absplugin.editor.reconciling.CompilationUnitChangeListener;
+import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.CoreControlUnit;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
@@ -51,7 +56,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 */
 	private final ABSEditor editor;
 	
-	private final ResourceBuildListener builtListener;
+	private final CompilationUnitChangeListener modelChangeListener;
 	/**
 	 * The ITreeContentProvider delivers the elements that should be shown in the outline
 	 */
@@ -61,11 +66,16 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 */
 	private ICommandService commandService;
 
+	/** flag indicating whether a selection should move 
+	 * cursor inside the editor
+	 */
+	private boolean selectionMovesCursor = true;
+	
 	public ABSContentOutlinePage(IDocumentProvider docProvider,	ABSEditor editor) {
 		this.editor = editor;
 		coProv = new ABSContentOutlineProvider();
 		// When the project is built this listener is responsible for updating the input
-		builtListener = new ABSContentOutlineChangeListener();
+		modelChangeListener = new ABSContentOutlineChangeListener();
 	}
 	
 	/**
@@ -78,7 +88,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		addSelectionListener();
 		setInput();
 		restoreFilters();
-		CoreControlUnit.addResourceBuildListener(builtListener);
+		editor.addModelChangeListener(modelChangeListener);
 	}
 	
 	//suppress Warnings is used here because commandService.refreshElements needs a Map without generics...
@@ -135,7 +145,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	private void setInput() {
-		InternalASTNode<CompilationUnit> cu = UtilityFunctions.getCompilationUnit(editor); 
+		InternalASTNode<CompilationUnit> cu = editor.getCompilationUnit(); 
 		
 		// Update the input of the tree viewer to reflect the new outline of the AST
 		getTreeViewer().setInput(cu);
@@ -158,7 +168,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 					// Get only the first element of the selection
 					InternalASTNode<?> t = ((InternalASTNode<?>) ((IStructuredSelection) sel)
 							.getFirstElement());
-					UtilityFunctions.highlightInEditor(editor, t);
+					UtilityFunctions.highlightInEditor(editor, t, selectionMovesCursor);
 				}
 			}
 		});
@@ -175,43 +185,76 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	
 	@Override
 	public void dispose() {
-		CoreControlUnit.removeResourceBuildListener(builtListener);
+		editor.removeModelChangeListener(modelChangeListener);
 	}
 	
-	class ABSContentOutlineChangeListener implements ResourceBuildListener {
-		/**
-		 * {@inheritDoc}
-		 * 
-		 * @throws SWTException
-		 *             - ERROR_DEVICE_DISPOSED if the default {@link Display}
-		 *             device has been disposed
-		 */
+	/**
+	 * updates the outline whenever the compilationUnit of the editor changes
+	 */
+	class ABSContentOutlineChangeListener implements CompilationUnitChangeListener {
+		
 		@Override
-		public void resourceBuilt(ResourceBuiltEvent builtevent) {
-			IResource eres = editor.getResource();
-			if (builtevent.hasChanged(eres)) {
-				refreshInput(eres);
-			}
+		public void onCompilationUnitChange(final CompilationUnit newCu) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					ViewerFilter[] vf = getTreeViewer().getFilters();
+					ViewerComparator sort = getTreeViewer().getComparator();
+					InternalASTNode<CompilationUnit> cu = editor.getCompilationUnit();
+					getTreeViewer().setInput(cu);
+					getTreeViewer().setFilters(vf);
+					getTreeViewer().setComparator(sort);
+					editor.getSelectionProvider().setSelection(editor.getSelectionProvider().getSelection());
+				}
+			});
 		}
+	}
 
-		private void refreshInput(final IResource eres) {
-			final AbsNature nature = UtilityFunctions.getAbsNature(eres);
-			if(nature == null)
-				return;
-			final CompilationUnit cu = nature.getCompilationUnit(eres);
-			if (cu != null) {
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						ViewerFilter[] vf = getTreeViewer().getFilters();
-						ViewerComparator sort = getTreeViewer().getComparator();
-						getTreeViewer().setInput(new InternalASTNode<CompilationUnit>(cu, nature));
-						getTreeViewer().setFilters(vf);
-						getTreeViewer().setComparator(sort);
-						editor.getSelectionProvider().setSelection(editor.getSelectionProvider().getSelection());
-					}
-				});
-			}
-		}
+	/**
+	 * selects a node in the outline without moving the cursor
+	 * in the editor
+	 */
+	public void setSelectionWithoutCursorMove(ISelection sel) {
+		selectionMovesCursor = false;
+		setSelection(sel);
+		selectionMovesCursor = true;
+	}
+
+	/**
+	 * select the closest node to the given line
+	 */
+	public void selectNodeByPos(int startLine) {
+	    if (!getValueOfCommand(ABSContentOutlineConstants.LINK_EDITOR_COMMAND_ID)) {
+	        // linking with editor not enabled ...
+	        return;
+	    }
+	    
+	    Object input = getTreeViewer().getInput();
+	    if (input instanceof InternalASTNode<?>) {
+	        @SuppressWarnings("unchecked")
+	        InternalASTNode<CompilationUnit> internalASTNode = (InternalASTNode<CompilationUnit>) input;
+	        InternalASTNode<?> sel = findNodeInLine(internalASTNode, startLine+1);
+	        ISelection selection = new TreeSelection(new TreePath(new Object[] {sel}));
+	        setSelectionWithoutCursorMove(selection);
+	    }
+	}
+
+	private InternalASTNode<?> findNodeInLine(InternalASTNode<?> node, int startLine) {
+	    if (Symbol.getLine(node.getASTNode().getStart()) > startLine) {
+	        return null;
+	    }
+	    InternalASTNode<?> result = node;
+	    for (Object child : coProv.getChildren(node)) {
+	        if (child instanceof InternalASTNode<?>) {
+	            InternalASTNode<?> childNode = (InternalASTNode<?>) child;
+	            InternalASTNode<?> r = findNodeInLine(childNode, startLine);
+	            if (r != null) {
+	                result = r;
+	            } else {
+	                break;
+	            }
+	        }
+	    }
+	    return result;
 	}
 }

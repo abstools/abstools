@@ -839,6 +839,22 @@
                 </with>
              </visibleWhen>
           </command>
+          <command
+                commandId="eu.hatsproject.absplugin.linkEditorCommand"
+                icon="icons/synced.gif"
+                label="Link with Editor"
+                style="toggle"
+                tooltip="Link with Editor">
+             <visibleWhen
+                   checkEnabled="false">
+                <with
+                      variable="activeEditor">
+                   <instanceof
+                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                   </instanceof>
+                </with>
+             </visibleWhen>
+          </command>
        </menuContribution>
     </extension>
     <extension
@@ -880,6 +896,16 @@
              name="Hide Exports">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:false"
+                id="org.eclipse.ui.commands.toggleState">
+          </state>
+       </command>
+       <command
+             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
+             description="Link with Editor"
+             id="eu.hatsproject.absplugin.linkEditorCommand"
+             name="Link with Editor">
+          <state
+                class="org.eclipse.ui.handlers.RegistryToggleState:true"
                 id="org.eclipse.ui.commands.toggleState">
           </state>
        </command>

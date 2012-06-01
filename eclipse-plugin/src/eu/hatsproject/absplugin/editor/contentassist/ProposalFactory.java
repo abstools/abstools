@@ -33,20 +33,14 @@ import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 import abs.frontend.ast.*;
-import abs.frontend.parser.Main;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.ResolvedName;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerException;
-import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
-import eu.hatsproject.absplugin.editor.outline.PackageEntry;
-import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
-import eu.hatsproject.absplugin.internal.NoModelException;
-import eu.hatsproject.absplugin.util.Constants;
-import eu.hatsproject.absplugin.util.UtilityFunctions;
+import eu.hatsproject.absplugin.util.InternalASTNode;
 
 /**
  * Class generating the actual proposals for auto completion
@@ -65,9 +59,7 @@ public class ProposalFactory{
 		private int documentOffset;
 		private IDocument doc;
 		private List<ICompletionProposal> proposals;
-		private CompilationUnit cu;
 		private ABSEditor editor;
-		private Main absParser;
 
 		/**
 		 * Initializes the {@link ProposalFactory} by parsing all abs files in the current project and
@@ -85,103 +77,11 @@ public class ProposalFactory{
 			this.doc = doc;
 			this.proposals = proposals;
 			this.editor = editor;
-			this.absParser = new Main();
-			this.absParser.setAllowIncompleteExpr(true);
-		    this.absParser.setTypeChecking(false);
-			parseProject();
-		}
-		
-		private void parseABSFile(
-				final IncrementalModelBuilder builder,
-				IResource resource) throws IOException,
-				CoreException, NoModelException {
-			if (isABSFile(resource)) {
-				IFile visitedfile = (IFile) resource;
-				if (isABSSourceFile(visitedfile)) {
-					CompilationUnit cu = absParser.parseUnit(visitedfile.getLocation().toFile(),
-							null, new InputStreamReader(visitedfile.getContents()));
-					cu.setName(visitedfile.getLocation().toFile().getAbsolutePath());
-					builder.addCompilationUnit(cu);
-				} else if (isABSPackage(visitedfile)) {
-					builder.addCompilationUnits(
-							absParser.parseABSPackageFile(visitedfile.getLocation().toFile()));
-				} 
-			}
-		}
-		
-		/**
-		 * Parse package dependencies in the ABS project containing the input file
-		 * @param file
-		 * @return a set of {@link CompilationUnit} of package dependencies.  
-		 * @throws IOException
-		 */
-		private Set<CompilationUnit> parseDependencies(IResource file) throws IOException {
-			//iterate over package dependencies
-			AbsNature nature = UtilityFunctions.getAbsNature(file);
-			Set<CompilationUnit> units = new HashSet<CompilationUnit>();  
-			for (PackageEntry entry : nature.getPackages().getPackages()) {
-				units.addAll(absParser.parseABSPackageFile(new File(entry.getPath())));
-			}
-			return units;
+			// parse editor content (without typechecking):
+			editor.setCaretPos(documentOffset);
+			editor.reconcile(false);
 		}
 
-		/**
-		 * parse the abs files of the current project and the currently open document
-		 */
-		private void parseProject() {
-			final IncrementalModelBuilder builder = new IncrementalModelBuilder();
-			final IResource file = editor.getResource();
-			try {
-				file.getProject().accept(new IResourceVisitor() {
-					
-					@Override
-					public boolean visit(IResource resource) throws CoreException {
-						try{
-							if(isABSFile(resource)){
-								parseABSFile(builder, resource);
-							}
-						} catch(IOException ex){
-							throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, ex.getLocalizedMessage(), ex));
-						} catch (NoModelException e) {
-							throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, e.getLocalizedMessage(), e));
-						}
-						return true;
-					}
-				});
-				
-				builder.addCompilationUnits(parseDependencies(file));
-				
-				// compile the current document with non-saved changes
-				cu = absParser.parseUnit(file.getLocation().toFile(), null,
-						new StringReader(prepareDocContent()));
-				cu.setName(file.getLocation().toFile().getAbsolutePath());
-				builder.addCompilationUnit(cu);
-			} catch (CoreException e) {
-				standardExceptionHandling(e);
-			} catch (NoModelException e) {
-				standardExceptionHandling(e);
-			} catch (IOException e) {
-				standardExceptionHandling(e);
-			} catch (BadLocationException e) {
-				standardExceptionHandling(e);
-			}
-			if(cu==null){
-				AbsNature nature = getAbsNature(file.getProject());
-				if(nature!=null){
-					cu = nature.getCompilationUnit(file);
-				}
-			}
-		}
-
-		/**
-		 * The document content has to be enhanced by inserting a semicolon in the right position.
-		 * @return the adapted document content
-		 * @throws BadLocationException if the location of the cursor is not valid (should not happen)
-		 */
-		private String prepareDocContent() throws BadLocationException {
-			return doc.get(0,documentOffset+qualifier.length())+";"+doc.get(documentOffset+qualifier.length(),
-					doc.getLength() - (documentOffset+qualifier.length()));
-		}
 		
 		/**
 		 * Creates the list of completion proposals for the current qualifier. The list contains all top level elements 
@@ -190,11 +90,12 @@ public class ProposalFactory{
 		 * @see abs.frontend.parser.Keywords
 		 */
 		public void computeStructureProposals() { 
-			
-			if(cu==null) {
+			InternalASTNode<CompilationUnit> internalCu = editor.getCompilationUnit();
+			if(internalCu==null) {
 			    addKeywordProposals();
 				return;
 			}
+			CompilationUnit cu = internalCu.getASTNode();
 			
 			try {
 				ASTNode<?> node = getASTNodeOfOffset(doc, cu, documentOffset);

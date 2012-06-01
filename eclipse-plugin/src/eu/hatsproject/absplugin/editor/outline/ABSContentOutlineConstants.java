@@ -25,6 +25,7 @@ public class ABSContentOutlineConstants {
 	public static final String HIDE_FIELD_COMMAND_ID   = PLUGIN_PACKAGE + ".hideFieldCommand";
 	public static final String HIDE_IMPORTS_COMMAND_ID = PLUGIN_PACKAGE + ".hideImportsCommand";
 	public static final String SORT_COMMAND_ID         = PLUGIN_PACKAGE + ".sortCommand";
+	public static final String LINK_EDITOR_COMMAND_ID  = PLUGIN_PACKAGE + ".linkEditorCommand";
 	
 	// Default Strings
 	public static final String OUTLINE_PARAM_OPEN_PARENTHESIS       = "(";

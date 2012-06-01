@@ -29,7 +29,9 @@ aspect ParserErrors {
 		parserErrors = new ArrayList<ParserError>();
 	
 		for (CompilationUnit u : getCompilationUnits()) {
-			parserErrors.addAll(u.getParserErrors());
+			if (u.getParserErrors() != null) {
+				parserErrors.addAll(u.getParserErrors());
+			}
 		}
 		
 		return parserErrors;

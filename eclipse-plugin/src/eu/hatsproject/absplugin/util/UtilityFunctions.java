@@ -29,6 +29,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
@@ -39,6 +40,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
+import abs.frontend.parser.Main;
 import abs.frontend.parser.SourcePosition;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
@@ -52,6 +54,7 @@ import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
+import eu.hatsproject.absplugin.editor.reconciling.AbsModelManager;
 
 /**
  * Collection of project-wide utility functions
@@ -382,77 +385,14 @@ public class UtilityFunctions {
 		return null;
 	}
 	
-	/**
-	 * returns the compilation unit for a given editor
-	 * @param editor 
-	 */
-	public static InternalASTNode<CompilationUnit> getCompilationUnit(ABSEditor editor) {
-		AbsNature nature;
-		CompilationUnit cu;
-		IResource file = editor.getResource();
-		if (file == null) {
-			// we are looking at abslang.abs or a file inside a jar-package
-			
-			IURIEditorInput uriInput = (IURIEditorInput) editor.getEditorInput().getAdapter(IURIEditorInput.class);
-			
-			if (uriInput != null) {
-				// We're looking e.g. at abslang.abs which only exists in memory.
-				
-				// create an empty model which only contains abslang.abs:
-				nature = new AbsNature();
-				nature.emptyModel();
-				File f = new File(uriInput.getURI());
-				String path = f.getAbsolutePath();
-				cu = nature.getCompilationUnit(path);
-				if (cu == null) {
-					Activator.logException(new IllegalArgumentException("Can't find "+path));
-					return null;
-				}
-			} else {
-				PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
-				if (storageInput != null) {
-					// we are looking at a file inside a jar package
-					IProject project = UtilityFunctions.getProject(editor);
-					if (project == null) {
-						Activator.logException(new IllegalArgumentException("Can't get project"));
-						return null;
-					} else {
-						nature = UtilityFunctions.getAbsNature(project);
-					}
-					String path = storageInput.getFile().getAbsoluteFilePath();
-					if (nature == null) {
-						Activator.logException(new IllegalArgumentException("Can't find nature on "+path));
-						return null;
-					}
-					cu = nature.getCompilationUnit(path);
-					if (cu == null) {
-						Activator.logException(new IllegalArgumentException("Can't find "+path));
-						return null;
-					}
-				} else {
-					Activator.logException(new IllegalArgumentException("Can't get editor input."));
-					return null;
-				}
-			}
-		} else {
-			if (!file.exists())
-				return null;
-			// Tries to get the ABS ProjectNature in order to get the AST
-			nature = UtilityFunctions.getAbsNature(file);
-			if (nature == null) {
-			    return null;
-			}
-			cu = nature.getCompilationUnit(file);
-			if (cu == null) {
-				// Band-aid for ticket #299:
-				nature.parseABSFile(file, false, null);
-				cu = nature.getCompilationUnit(file);
-				Assert.isNotNull(cu,"Cannot get compilation unit for "+file.getLocation().toFile().getAbsolutePath());
-			}
+	public static AbsNature getAbsNatureNotNull(IProject project) {
+		AbsNature nature = getAbsNature(project);
+		if (nature == null) {
+			nature = new AbsNature();
 		}
-		
-		return new InternalASTNode<CompilationUnit>(cu, nature);
+		return nature;
 	}
+	
 	
 	/**
 	 * Convenience method showing an error dialog with the given error message.
@@ -509,7 +449,7 @@ public class UtilityFunctions {
 	 * @param edit The target editor
 	 * @param node The node that should be highlighted.
 	 */
-	public static void highlightInEditor(ITextEditor edit, ASTNode<?> node) {
+	public static void highlightInEditor(ITextEditor edit, ASTNode<?> node, boolean moveCursor) {
 	
 		EditorPosition pos = getPosition(node);
 	
@@ -524,7 +464,7 @@ public class UtilityFunctions {
 				int startOff = doc.getLineOffset(pos.getLinestart()) + pos.getColstart();
 				int endOff = doc.getLineOffset(pos.getLineend()) + pos.getColend();
 	
-				edit.setHighlightRange(startOff, endOff - startOff, true);
+				edit.setHighlightRange(startOff, endOff - startOff, moveCursor);
 			} catch (BadLocationException e) {
 				/*
 				 * Should not be thrown, as an ASTNode in a document must have a
@@ -539,9 +479,9 @@ public class UtilityFunctions {
 	 * Highlights the a given {@link InternalASTNode} in the editor.<br/>
 	 * @see #highlightInEditor(ITextEditor, ASTNode)
 	 */
-	public static void highlightInEditor(ITextEditor edit, InternalASTNode<?> node) {
+	public static void highlightInEditor(ITextEditor edit, InternalASTNode<?> node, boolean moveCursor) {
 		if (node != null){
-			highlightInEditor(edit, node.getASTNode());
+			highlightInEditor(edit, node.getASTNode(), moveCursor);
 		}
 	}
 	
@@ -745,20 +685,6 @@ public class UtilityFunctions {
 		Activator.logException(e);
 	}
 
-	/**
-	 * returns the project for a given editor 
-	 */
-	public static IProject getProject(IEditorPart editor) {
-		IProject project = (IProject) editor.getAdapter(IProject.class);
-		if (project == null) {
-			PackageAbsFileEditorInput storageInput = (PackageAbsFileEditorInput) editor.getEditorInput().getAdapter(PackageAbsFileEditorInput.class);
-			if (storageInput != null) {
-				// we are looking at a file inside a jar package
-				project = storageInput.getFile().getProject();
-			}
-		}
-		return project;
-	}
 
     /**
      * checks if a string is formatted as a number

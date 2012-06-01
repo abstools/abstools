@@ -16,6 +16,8 @@ import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.PresentationReconciler;
+import org.eclipse.jface.text.reconciler.IReconciler;
+import org.eclipse.jface.text.reconciler.MonoReconciler;
 import org.eclipse.jface.text.rules.*;
 import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.DefaultAnnotationHover;
@@ -35,6 +37,7 @@ import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import eu.hatsproject.absplugin.editor.contentassist.ABSCompletionProcessor;
+import eu.hatsproject.absplugin.editor.reconciling.ABSReconcilingStrategy;
 
 /**
  * Configures the {@link SourceViewer} which is the main part of the {@link ABSEditor}.
@@ -218,4 +221,16 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 				new AbsHyperlinkDetector(editor)
 		};
 	}
+	
+	@Override
+	public IReconciler getReconciler(ISourceViewer sourceViewer) {
+		ABSReconcilingStrategy strategy = new ABSReconcilingStrategy(editor);
+		MonoReconciler r = new MonoReconciler(strategy , false);
+		// the reconciler repareses the document 
+		// when the user stops typing for 1 second:
+		r.setDelay(1000);
+		return r;
+	}
+	
+	
 }

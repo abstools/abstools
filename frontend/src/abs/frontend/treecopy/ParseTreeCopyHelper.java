@@ -25,8 +25,8 @@ public class ParseTreeCopyHelper {
             Class<? extends T> nodeClass =  (Class<? extends T>) node.getClass();
             T copy = nodeClass.newInstance();
             // set children
-            for (int i=0; i<node.getNumChild(); i++) {
-                S child = node.getChild(i);
+            for (int i=0; i<node.getNumChildNoTransform(); i++) {
+                S child = node.getChildNoTransform(i);
                 S childCopy = (S) child.parseTreeCopy();
                 copy.setChild(childCopy, i);
             }

@@ -13,6 +13,7 @@ import org.eclipse.jface.text.hyperlink.IHyperlink;
 
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Call;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.ConstructorPattern;
 import abs.frontend.ast.DataConstructorExp;
@@ -28,6 +29,7 @@ import abs.frontend.ast.NewExp;
 import abs.frontend.ast.PatternVarUse;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
+import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnknownDecl;
 import abs.frontend.ast.VarOrFieldUse;
@@ -97,7 +99,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
 
     public static IHyperlink[] getHyperlinks(ABSEditor editor, int offset) {
         try {
-            InternalASTNode<CompilationUnit> cu = UtilityFunctions.getCompilationUnit(editor);
+            InternalASTNode<CompilationUnit> cu = editor.getCompilationUnit();
             if (cu == null) {
                 return null;
             }
@@ -148,7 +150,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
      */
     public static void jumpToPosition(ABSEditor currentEditor, EditorPosition pos) {
         IDocument doc;
-        IProject project = UtilityFunctions.getProject(currentEditor);
+        IProject project = currentEditor.getProject();
         ABSEditor targeteditor = 
             UtilityFunctions.openABSEditorForFile(pos.getPath(),project );
         if(targeteditor==null){
@@ -189,8 +191,13 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             } else if(node instanceof Call){
                 Call call = (Call)node;
                 String mname = call.getMethod();
-                Type type = call.getCallee().getType();
-                decl = type.lookupMethod(mname);
+                if (call.getCallee() instanceof ThisExp) {
+                    ClassDecl classDecl = (ClassDecl) call.getContextDecl();
+                    decl = classDecl.lookupMethod(mname);
+                } else {
+                    Type type = call.getCallee().getType();
+                    decl = type.lookupMethod(mname);
+                }
             } else if(node instanceof DataConstructorExp){
                 DataConstructorExp exp = (DataConstructorExp)node;
                 decl = exp.getDecl();

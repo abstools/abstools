@@ -47,6 +47,8 @@ import eu.hatsproject.absplugin.console.MsgConsole;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
+import eu.hatsproject.absplugin.editor.reconciling.AbsModelManager;
+import eu.hatsproject.absplugin.editor.reconciling.AbsModelManagerImpl;
 import eu.hatsproject.absplugin.internal.IncrementalModelBuilder;
 import eu.hatsproject.absplugin.internal.NoModelException;
 import eu.hatsproject.absplugin.internal.TypecheckInternalException;
@@ -55,6 +57,7 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 public class AbsNature implements IProjectNature {
 	private IProject project;
 	private final IncrementalModelBuilder modelbuilder = new IncrementalModelBuilder();
+	private AbsModelManager modelManager = new AbsModelManagerImpl(this);
 	
 	public static final String PACKAGE_DEPENDENCIES = ".dependencies";
 	public static final String READONLY_PACKAGE_SUFFIX = "-readonly";
@@ -343,7 +346,7 @@ public class AbsNature implements IProjectNature {
 		return !ignore || !target.getProjectRelativePath().isPrefixOf(resource.getProjectRelativePath());
 	}
 
-   private static void addMarker(IFile file, ParserError err) throws CoreException {
+	public static void addMarker(IFile file, ParserError err) throws CoreException {
       int startline   = err.getLine()-1;
       int startcolumn = err.getColumn()-1;
       int endline;
@@ -620,6 +623,10 @@ public class AbsNature implements IProjectNature {
 			Activator.logException(e);
 		} catch (NoModelException e) {
 		}
+	}
+
+	public AbsModelManager getModelManager() {
+		return modelManager;
 	}
 
     

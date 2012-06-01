@@ -63,7 +63,7 @@ public class NavigatorUtils {
 		IEditorPart editorPart = openABSEditorForFile(node.getFileName(), node.getProject());
 		if (editorPart instanceof TextEditor){
 			TextEditor texteditor = ((TextEditor) editorPart);
-			highlightInEditor(texteditor, node);
+			highlightInEditor(texteditor, node, true);
 		}
 	}	
 	
