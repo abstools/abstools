@@ -5,6 +5,7 @@
 package abs.frontend;
 
 import abs.frontend.analyser.*;
+import abs.frontend.mtvl.SearchSolutionsTest;
 import abs.frontend.parser.*;
 import abs.frontend.typesystem.*;
 
@@ -13,11 +14,13 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        ScannerTest.class, ModuleSystemTests.class, FreeVarTest.class,
         ParserTest.class, RecoverTest.class, DuplicateCheckTest.class, InterfaceDeclarationTest.class,
         ParseSamplesTest.class, VarResolutionTest.class, TypingTest.class, TypeCheckerTest.class,
         NegativeTypeCheckerTests.class, LocationTypeTests.class,
         ExamplesTypeChecking.class, AnnotationTests.class,
         ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
         BackPositionTest.class, IncompleteExpTests.class,
+        SearchSolutionsTest.class,
         TestABSPackages.class, CaseStudyTypeChecking.class})
 public class AllFrontendTests {}
