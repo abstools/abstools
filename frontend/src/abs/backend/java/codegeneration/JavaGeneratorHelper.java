@@ -37,6 +37,7 @@ import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
+import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import abs.frontend.ast.VarDecl;
@@ -204,7 +205,6 @@ public class JavaGeneratorHelper {
        
        generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
              TypeCheckerHelper.getTypesFromExp(params), method);
-       
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
@@ -216,12 +216,20 @@ public class JavaGeneratorHelper {
         stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");
-        stream.print(ABSRuntime.class.getName()+".checkForNull(");
-        if (calleeString != null)
-            stream.print(calleeString);
-        else
-            callee.generateJava(stream);
-        stream.print(")) {");
+        if (callee instanceof ThisExp) {
+            if (calleeString != null)
+                stream.print(calleeString);
+            else
+                callee.generateJava(stream);
+        } else { 
+            stream.print(ABSRuntime.class.getName()+".checkForNull(");
+            if (calleeString != null)
+                stream.print(calleeString);
+            else
+                callee.generateJava(stream);
+            stream.print(')');
+        }
+        stream.print(") {");
         int i = 0;
         for (Type t : paramTypes) {
             stream.print(JavaBackend.getQualifiedString(t)+" arg"+i+";");

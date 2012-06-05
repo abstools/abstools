@@ -493,6 +493,7 @@ aspect GenerateJava {
 
     public void IncompleteExp.generateJava(PrintStream s) {
         // never called for type correct programs
+       throw new JavaBackendException(this, "should never happen in type-correct programs!");
     }
     
     public void AsyncCall.generateJava(PrintStream stream) {
@@ -500,10 +501,14 @@ aspect GenerateJava {
     }
 
     public void SyncCall.generateJava(PrintStream stream) {
-        stream.print(ABSRuntime.class.getName()+".checkForNull(");
-        getCallee().generateJava(stream);
-        stream.print(")");
-        stream.print("."+JavaBackend.getMethodName(getMethod()));
+    	PureExp callee = getCallee();
+ 	    if (callee instanceof ThisExp) {
+ 	       stream.print(JavaBackend.getMethodName(getMethod()));
+ 	    } else {
+ 	       stream.print(ABSRuntime.class.getName()+".checkForNull(");
+ 	       callee.generateJava(stream);
+ 	       stream.print(")."+JavaBackend.getMethodName(getMethod()));
+ 	    }
         JavaGeneratorHelper.generateArgs(stream,getParams());
     }
 
