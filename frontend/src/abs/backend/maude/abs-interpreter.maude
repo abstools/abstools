@@ -546,8 +546,9 @@ mod ABS-PROCESS is
   op notFound : -> Process [ctor format (!b o)] .
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] .
 
+  *** FIXME: re-instate InfTime, or wrap finishing time in a Maybe
   op liftProcess : Process -> Data .
-  eq liftProcess({ L | SL }) = "Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["int"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "ABS.StdLib.False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "int"[0] fi ] .
+  eq liftProcess({ L | SL }) = "ABS.Scheduler.Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "ABS.StdLib.Duration"["int"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "ABS.StdLib.False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "int"[0] fi ] .
 
 endm
 
@@ -580,8 +581,8 @@ mod ABS-PROCESS-POOL is
 
 
   op liftMProc : MProc -> Data .
-  eq liftMProc(noProc) = "Nil"[emp] .
-  eq liftMProc(P, W) = "Cons"[liftProcess(P) :: liftMProc(W)] .
+  eq liftMProc(noProc) = "ABS.StdLib.Nil"[emp] .
+  eq liftMProc(P, W) = "ABS.StdLib.Cons"[liftProcess(P) :: liftMProc(W)] .
 
   op findProcess : MProc Label -> Process .
   eq findProcess(({ '.label |-> N, L | SL}, W), N) = { '.label |-> N, L | SL} .
@@ -910,7 +911,7 @@ mod ABS-EVAL is
   --- N will be 0 in the untimed case.
   eq eval($builtin("currentms"), S, CN, MAC) = MAC['.time] .
   eq eval($builtin("lowlevelDeadline"), S, CN, MAC) =
-    eval((case MAC['.deadline] of { ("Duration"[ 'v ] => 'v) ; ("InfDuration"[ emp ] => "int"[ -1 ]) }), S, CN, MAC) .
+    eval((case MAC['.deadline] of { ("ABS.StdLib.Duration"[ 'v ] => 'v) ; ("ABS.StdLib.InfDuration"[ emp ] => "int"[ -1 ]) }), S, CN, MAC) .
   eq eval($builtin("thisDC"), S, CN, MAC) = MAC['.comp] .
 
   op markFutures : DataList -> StmtList .
@@ -946,13 +947,13 @@ mod ABS-EVAL is
   *** Result type is Expr not Data so that we can advance time on insufficient
   *** resources.
   op consumeDCResource : Data String Nat -> Expr .
-  ceq consumeDCResource("InsertAssoc"["Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, N)
-  = "InsertAssoc"["Pair"["str"[RN:String] :: "int"[sd(RA:Nat, N)]] :: D]
+  ceq consumeDCResource("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, N)
+  = "ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[sd(RA:Nat, N)]] :: D]
   if RA:Nat >= N .
-  eq consumeDCResource("EmptyMap"[emp], RN:String, N)
-  = "EmptyMap"[emp] .
-  ceq consumeDCResource("InsertAssoc"["Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, N)
-  = "InsertAssoc"["Pair"["str"[RN:String] :: "int"[RA:Nat]] :: consumeDCResource(D, RN:String, N)]
+  eq consumeDCResource("ABS.StdLib.EmptyMap"[emp], RN:String, N)
+  = "ABS.StdLib.EmptyMap"[emp] .
+  ceq consumeDCResource("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, N)
+  = "ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: consumeDCResource(D, RN:String, N)]
   if RN:String =/= RN':String .
 
   op findDCStatus : Oid Configuration -> Data .
@@ -962,11 +963,11 @@ mod ABS-EVAL is
   = IS:Data .
 
   op hasEnoughResources : Data String Nat -> Bool .
-  eq hasEnoughResources("InsertAssoc"["Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
+  eq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
   = RA:Nat >= CO:Nat .
   *** The DC doesn't have the resource - just go ahead.
-  eq hasEnoughResources("EmptyMap"[emp], RN:String, CO:Nat) = true .
-  ceq hasEnoughResources("InsertAssoc"["Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
+  eq hasEnoughResources("ABS.StdLib.EmptyMap"[emp], RN:String, CO:Nat) = true .
+  ceq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
   = hasEnoughResources(D, RN:String, CO:Nat)
   if RN:String =/= RN':String .
 endm
@@ -1019,14 +1020,14 @@ mod ABS-MSG-TRANSPORT is
 
   ceq makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T, S)
   =
-    { AUX, '.c |-> eval(CO, S :: L, none, ('.time |-> "int"[T])), '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "Time"["int"[T]], '.random |-> "Nil"[emp], '.staticfuture |-> null, '_ |-> null, L | SL ; if B then $cont(N) else noStmt fi }
+    { AUX, '.c |-> eval(CO, S :: L, none, ('.time |-> "int"[T])), '.label |-> N, '.method |-> "str"[ string(M) ], '.r |-> "ABS.StdLib.Time"["int"[T]], '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, '_ |-> null, L | SL ; if B then $cont(N) else noStmt fi }
   if L := createSubst(AL, DL) .
 
   op recordStartTime : Process Nat -> Process .
   *** This will only ever be evaluated with a simple substitution SS.
   eq recordStartTime({ SS | SL}, T:Nat) =
   if $hasMapping(SS, '.s) then { SS | SL }
-  else { $insert('.s, "Time"["int"[T:Nat]], SS) | SL } fi .
+  else { $insert('.s, "ABS.StdLib.Time"["int"[T:Nat]], SS) | SL } fi .
 
 endm
 
@@ -1124,7 +1125,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   rl
     < O : C | Cog: CG, Att: S, Pr: { L | $pushrandom ; SL }, PrQ: W, Lcnt: F >
   =>
-    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
+    < O : C | Cog: CG, Att: S, Pr: { L | assign('.random ; "ABS.StdLib.Cons"["int"[random(counter)] :: '.random]) ; SL }, PrQ: W, Lcnt: F > .
 
   eq
     < O : C | Cog: CG, Att: S, Pr: { L | $poprandom ; SL }, PrQ: W, Lcnt: F >
@@ -1155,7 +1156,7 @@ mod ABS-MACHINE-BASICS-COMMON is
       CN  }
   if W1 := getSchedulableProcesses(W, S, CN, ('.time |-> "int"[T], '.comp |-> S['.comp]))
     /\ W1 =/= noProc
-    /\ "Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]] , S), none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "Cons"["int"[RAND] :: "Nil"[emp]]))
+    /\ "ABS.Scheduler.Process"[N :: DL] := eval(SC, ('queue |-> liftMProc(W1), '.random |-> "ABS.StdLib.Cons"["int"[RAND] :: "ABS.StdLib.Nil"[emp]] , S), none, ('.time |-> "int"[T], '.comp |-> S['.comp], '.random |-> "ABS.StdLib.Cons"["int"[RAND] :: "ABS.StdLib.Nil"[emp]]))
     /\ P := findProcess(W1, N)
       [label PrQ-schedulable] .
 
@@ -1168,11 +1169,11 @@ mod ABS-MACHINE-BASICS-COMMON is
     < 'main : Cog | Object: ob('main, 0) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: 'main,
-      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'creationTime |-> "Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "EmptyMap"[emp],
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "ABS.StdLib.EmptySet"[emp], 'creationTime |-> "ABS.StdLib.Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "ABS.StdLib.EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "ABS.StdLib.EmptyMap"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: 'main,
       Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
-      Pr: { '.deadline |-> "InfDuration"[ emp ], '_ |-> null, '.random |-> "Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; CID:Cid ; DL:DataList) },
+      Pr: { '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; CID:Cid ; DL:DataList) },
       PrQ: noProc, Lcnt: 0 > .
 
   --- Resource consumption.  Must be a rewrite rule for confluence.
@@ -1271,7 +1272,7 @@ mod ABS-MACHINE-BASICS-RL is
                    References: if G == 0 then 0 else sd(G, 1) fi,
                    Value: D >
     *** HACK: L can be noSubst, so we might not be able to look up the deadline
-  if N := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp]))
+  if N := eval(E, (S :: L), none, ('.time |-> "int"[-1], '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '.comp |-> S['.comp]))
       [label free] .
 
   --- Introduce a new variable into the local scope.
@@ -1367,7 +1368,7 @@ mod ABS-MACHINE-BASICS-TIMED is
                    Value: D >
     < T : Clock | Limit: LIM, Random: RAND >
     *** HACK: L can be noSubst, so we might not be able to look up the deadline
-  if N := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> "InfDuration"[ emp ], '.comp |-> S['.comp]))
+  if N := eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '.comp |-> S['.comp]))
       [label free] .
 
   --- Introduce a new variable into the local scope.
@@ -1964,7 +1965,7 @@ mod ABS-NEW-RL is
     *** Here we get to write the whole synchronous invocation /
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
@@ -1978,7 +1979,7 @@ mod ABS-NEW-RL is
   =>
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
@@ -2010,7 +2011,7 @@ mod ABS-NEW-EQ-TIMED is
     *** synchronization protocol by hand (normally it is generated by the code
     *** generator)
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), '.comp |-> S['.comp], S1,
@@ -2026,7 +2027,7 @@ mod ABS-NEW-EQ-TIMED is
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: newId(B, G),
