@@ -146,11 +146,11 @@ fmod ABS-DATA-BOOL is
 
 
   op _asBool : Data -> Bool .
-  eq "True"[ emp ] asBool = true .
-  eq "False"[ emp] asBool = false .
+  eq "ABS.StdLib.True"[ emp ] asBool = true .
+  eq "ABS.StdLib.False"[ emp] asBool = false .
   op _asAbsBool : Bool -> Data .
-  eq true asAbsBool = "True"[ emp ] .
-  eq false asAbsBool = "False"[ emp ] .
+  eq true asAbsBool = "ABS.StdLib.True"[ emp ] .
+  eq false asAbsBool = "ABS.StdLib.False"[ emp ] .
 
   eq fparams("==") = 'D1, 'D2 .
   eq fdefn("==") = $builtin("==") .
@@ -547,7 +547,7 @@ mod ABS-PROCESS is
   op {_|_} : Subst StmtList -> Process [ctor format (r o rni o r o)] .
 
   op liftProcess : Process -> Data .
-  eq liftProcess({ L | SL }) = "Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["int"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "int"[0] fi ] .
+  eq liftProcess({ L | SL }) = "Process"[ L['.label] :: L['.method] :: L['.r] :: if hasMapping(L, '.c) then L['.c] else "Duration"["int"[0]] fi :: L['.deadline] :: if hasMapping(L, '.s) then L['.s] else "InfTime"[emp] fi :: "InfTime"[emp] :: if hasMapping(L, '.crit) then L['.crit] else "ABS.StdLib.False"[emp] fi :: if hasMapping(L, 'value) then L['value] else "int"[0] fi ] .
 
 endm
 
@@ -1168,7 +1168,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < 'main : Cog | Object: ob('main, 0) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: 'main,
-      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'creationTime |-> "Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "Nil"[emp], 'initialized |-> "True"[ emp ], 'internalState |-> "EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "EmptyMap"[emp],
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "EmptySet"[emp], 'creationTime |-> "Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "EmptyMap"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: 'main,
       Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
@@ -1183,13 +1183,13 @@ mod ABS-MACHINE-BASICS-COMMON is
     < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE, 'initialized |-> "True"[ emp ], S1,
+      Att: 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   => < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE':Data, 'initialized |-> "True"[ emp ], S1,
+      Att: 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random]))
       /\ hasEnoughResources(STATE, "CPU", COSTNAT)
