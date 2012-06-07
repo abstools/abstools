@@ -714,7 +714,6 @@ aspect GenerateJava {
 
       stream.print("apply");
       JavaGeneratorHelper.generateArgs(stream,getParams());
-
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
@@ -722,10 +721,10 @@ aspect GenerateJava {
         DataTypeDecl decl = c.getDataTypeDecl();
         Type t = decl.getType();
         if (t.isBoolType()) {
-            stream.print(ABSBool.class.getName());
-            stream.print(".fromBoolean(");
-            stream.print(c.getName().toLowerCase());
-            stream.print(")");
+            if ("True".equals(c.getName()))
+              stream.print(ABSBool.class.getName()+".TRUE");
+            else
+              stream.print(ABSBool.class.getName()+".FALSE");
         } else if (t.isUnitType()) {
             stream.print(JavaBackendConstants.UNITVALUE);
         } else {
