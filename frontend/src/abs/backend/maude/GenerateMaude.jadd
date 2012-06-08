@@ -484,11 +484,11 @@ aspect GenerateMaude {
 
     public void ConstructorPattern.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        stream.print("\"");
-        if (!(getConstructor().contains("."))) {
-            stream.print(getContextDecl().getModule().getName() + ".");
-        }
-        stream.print(getConstructor() + "\"[ ");
+        stream.print("\"" + getDataConstructor() + "\"[");
+        // if (!(getConstructor().contains("."))) {
+        //     stream.print(getContextDecl().getModule().getName() + ".");
+        // }
+        // stream.print(getConstructor() + "\"[ ");
         if (getNumParam() == 0) {
             stream.print("emp ");
         } else {
