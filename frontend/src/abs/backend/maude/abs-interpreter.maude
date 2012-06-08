@@ -1409,10 +1409,11 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq canAdvance (m:Msg CN, CN', MAC) = false .
   *** Block clock if object is idle but has processes that can be scheduled.
   eq canAdvance (
-      < CG : Cog | Object: O >
+      < CG : Cog | Object: D >
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, CN', MAC) =
-    noneSchedulable(W, S, CN CN', MAC) 
+    (D == O or D == null)
+    and noneSchedulable(W, S, CN CN', MAC) 
     and canAdvance (< CG : Cog | Object: O > CN,
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC) .
   *** Block clock if process is executing and can execute. "can execute" means
