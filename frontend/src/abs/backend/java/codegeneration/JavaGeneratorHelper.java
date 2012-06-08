@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.JavaBackendConstants;
@@ -19,6 +20,8 @@ import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
@@ -44,6 +47,7 @@ import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 import abs.frontend.typechecker.Type;
+import abs.frontend.typechecker.TypeCheckerException;
 import abs.frontend.typechecker.TypeCheckerHelper;
 import beaver.Symbol;
 
@@ -153,8 +157,20 @@ public class JavaGeneratorHelper {
     public static void generateBuiltInFnApp(PrintStream stream, FnApp app) {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = d.getName();
+        if (!builtInFunctionExists(name)) {
+            throw new RuntimeException("The built in function '" + name + "' is not implemented in the Java backend.");
+        }
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
         generateArgs(stream, app.getParams());
+    }
+
+    private static boolean builtInFunctionExists(String name) {
+        for (Method m : ABSBuiltInFunctions.class.getMethods()) {
+            if (m.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String getDebugString(Stmt stmt) {
