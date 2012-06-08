@@ -159,7 +159,7 @@ aspect GenerateJava {
 
            // match method
            stream.println("   public boolean match("+PatternConstructor.class.getName()+" c, "+PatternBinding.class.getName()+" b) {");
-           stream.println("       if (!c.constructorName.equals(\""+getName()+"\")) return false;");
+           stream.println("       if (!c.constructorClass.equals(this.getClass())) return false;");
            i = 0;
            for (ConstructorArg u : getConstructorArgs()) {
                stream.println("       if (!c.subpattern["+i+"].match(this.arg"+i+",b)) return false;");
@@ -644,7 +644,8 @@ aspect GenerateJava {
     public abstract void Pattern.generateJava(PrintStream stream);
 
     public void ConstructorPattern.generateJava(PrintStream stream) {
-        stream.print("new "+PatternConstructor.class.getName()+"(\""+getConstructor()+"\"");
+        DataConstructor decl = getDataConstructor();
+        stream.print("new "+PatternConstructor.class.getName()+"("+JavaBackend.getQualifiedString(decl)+".class");
         for (Pattern p : getParams()) {
             stream.print(",");
             p.generateJava(stream);

@@ -9,10 +9,10 @@ import abs.backend.java.lib.types.ABSValue;
 
 public class PatternConstructor extends Pattern {
     public final Pattern[] subpattern;
-    public final String constructorName;
+    public final Class<?> constructorClass;
 
-    public PatternConstructor(String constructorName, Pattern... subpattern) {
-        this.constructorName = constructorName;
+    public PatternConstructor(Class<?> constructorClass, Pattern... subpattern) {
+        this.constructorClass = constructorClass;
         this.subpattern = subpattern;
     }
 

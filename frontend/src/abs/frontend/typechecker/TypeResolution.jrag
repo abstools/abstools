@@ -265,6 +265,16 @@ aspect TypeResolution {
             throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
         return (DataConstructor) decl;    
     }
+    
+/** 
+ * @throws TypeCheckerException
+ */
+    syn lazy DataConstructor ConstructorPattern.getDataConstructor() {
+        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
+        if (! (decl instanceof DataConstructor)) 
+            throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
+        return (DataConstructor) decl;    
+    }
 
 
     syn boolean Call.isAsync();

@@ -14,6 +14,11 @@ import junit.framework.Assert;
 import abs.ABSTest;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
+import abs.backend.java.lib.runtime.ABSException;
+import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.observing.COGView;
+import abs.backend.java.observing.ObjectView;
+import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
@@ -53,6 +58,66 @@ public class JavaBackendTest extends ABSTest {
     void assertValidJava(JavaCode javaCode) throws Exception {
         try {
             javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
+        } catch (Exception e) {
+            System.out.println(javaCode);
+            throw e;
+        } finally {
+            javaCode.deleteCode();
+        }
+    }
+    
+    /**
+     * compiles and executes the given code
+     * ABS assertions can be used to check the result 
+     */
+    void assertValidJavaExecution(boolean withStdLib, String ... codeLines) throws Exception {
+        StringBuilder absCode = new StringBuilder();
+        for (String line : codeLines) {
+            absCode.append(line);
+            absCode.append("\n");
+        }
+        JavaCode javaCode = getJavaCode(absCode.toString(), withStdLib);
+        try {
+            String genDir = javaCode.getSrcDir().getAbsolutePath()+"/gen/test";
+            javaCode.compile("-classpath", "bin", "-d", genDir);
+            final ABSRuntime r = new ABSRuntime();
+            r.enableDebugging(true);
+            final boolean[] finished = new boolean[] {false};
+            final List<ABSException> exceptions = Collections.synchronizedList(new ArrayList<ABSException>());
+            r.addSystemObserver(new SystemObserver() {
+                
+                @Override
+                public void systemStarted() {
+                }
+                
+                @Override
+                public void systemFinished() {
+                    synchronized (finished) {
+                        finished[0] = true;
+                        finished.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void systemError(ABSException e) {
+                    exceptions.add(e);
+                }
+                
+                @Override
+                public void newCOGCreated(COGView cog, ObjectView initialObject) {
+                }
+            });
+            r.start(new File(genDir), "Test.Main");
+            
+            while (!finished[0]) {
+                synchronized (finished) {
+                    finished.wait(100);
+                }
+            }
+            r.shutdown();
+            for (ABSException e : exceptions) {
+                throw e;
+            }
         } catch (Exception e) {
             System.out.println(javaCode);
             throw e;

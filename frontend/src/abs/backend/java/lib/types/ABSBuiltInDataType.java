@@ -20,7 +20,7 @@ public abstract class ABSBuiltInDataType extends ABSDataType {
 
     @Override
     public boolean match(PatternConstructor p, PatternBinding b) {
-        if (p.constructorName.equals(constructorName)) {
+        if (p.constructorClass.getSimpleName().endsWith(constructorName)) {
             return true;
         } else {
             return false;
