@@ -7,20 +7,16 @@ package eu.hatsproject.absplugin.editor.outline;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.FILTER_COMMANDS;
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.SORT_COMMAND_ID;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.State;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.*;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IURIEditorInput;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.RegistryToggleState;
@@ -30,17 +26,9 @@ import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 import beaver.Symbol;
 
-
-import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
-import eu.hatsproject.absplugin.Activator;
-import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.reconciling.CompilationUnitChangeListener;
-import eu.hatsproject.absplugin.util.Constants;
-import eu.hatsproject.absplugin.util.CoreControlUnit;
-import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
-import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -64,7 +52,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	/**
 	 * ICommandService for retrieving the states of the filter buttons
 	 */
-	private ICommandService commandService;
+	private final ICommandService commandService;
 
 	/** flag indicating whether a selection should move 
 	 * cursor inside the editor
@@ -73,6 +61,8 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	
 	public ABSContentOutlinePage(IDocumentProvider docProvider,	ABSEditor editor) {
 		this.editor = editor;
+		commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
+		assert commandService != null;
 		coProv = new ABSContentOutlineProvider();
 		// When the project is built this listener is responsible for updating the input
 		modelChangeListener = new ABSContentOutlineChangeListener();
@@ -91,11 +81,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		editor.addModelChangeListener(modelChangeListener);
 	}
 	
-	//suppress Warnings is used here because commandService.refreshElements needs a Map without generics...
-	@SuppressWarnings("unchecked")
 	private void restoreFilters() {
-
-		commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
 		boolean value = getValueOfCommand(SORT_COMMAND_ID);
 		TreeViewer tw = getTreeViewer();
 		if (tw != null) {
@@ -122,14 +108,14 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 			}
 
 			//Trigger update of visible button state (pressed/not pressed)
-			@SuppressWarnings("rawtypes")
-			Map filter = new HashMap();
+			Map<String, IWorkbenchWindow> filter = new HashMap<String, IWorkbenchWindow>();
 			filter.put(IServiceScopes.WINDOW_SCOPE, editor.getSite().getPage().getWorkbenchWindow());
 			commandService.refreshElements(SORT_COMMAND_ID, filter);
 		}
 	}
 	
 	private boolean getValueOfCommand(String commandID){
+		assert commandService != null;
 		State state = commandService.getCommand(commandID).getState(RegistryToggleState.STATE_ID);
 		boolean value = ((Boolean)state.getValue()).booleanValue();
 		return value;
@@ -221,18 +207,18 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	/**
-	 * select the closest node to the given line
+	 * Select the closest node to the given line.
+	 * Note that the outline might actually not be visible.
 	 */
 	public void selectNodeByPos(int startLine) {
-	    if (!getValueOfCommand(ABSContentOutlineConstants.LINK_EDITOR_COMMAND_ID)) {
+		// Do nothing if viewer not created yet (e.g. invisible on startup)
+		if (getTreeViewer() == null || !getValueOfCommand(ABSContentOutlineConstants.LINK_EDITOR_COMMAND_ID)) {
 	        // linking with editor not enabled ...
 	        return;
 	    }
-	    
 	    Object input = getTreeViewer().getInput();
 	    if (input instanceof InternalASTNode<?>) {
-	        @SuppressWarnings("unchecked")
-	        InternalASTNode<CompilationUnit> internalASTNode = (InternalASTNode<CompilationUnit>) input;
+	        InternalASTNode<?> internalASTNode = (InternalASTNode<?>) input;
 	        InternalASTNode<?> sel = findNodeInLine(internalASTNode, startLine+1);
 	        ISelection selection = new TreeSelection(new TreePath(new Object[] {sel}));
 	        setSelectionWithoutCursorMove(selection);
