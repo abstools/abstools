@@ -12,35 +12,22 @@ import java.net.URISyntaxException;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.filesystem.URIUtil;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.texteditor.ITextEditor;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
-import abs.frontend.parser.Main;
 import abs.frontend.parser.SourcePosition;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
@@ -54,7 +41,6 @@ import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFileEditorInput;
 import eu.hatsproject.absplugin.editor.outline.PackageContainer;
 import eu.hatsproject.absplugin.editor.outline.PackageEntry;
-import eu.hatsproject.absplugin.editor.reconciling.AbsModelManager;
 
 /**
  * Collection of project-wide utility functions
@@ -176,7 +162,7 @@ public class UtilityFunctions {
 			int end = node.getEnd();
 			int endLine = Symbol.getLine(end) - 1;
 			int endCol = Symbol.getColumn(end);
-			return new UtilityFunctions.EditorPosition(null,startLine,startCol,endLine,endCol);
+			return new EditorPosition(null,startLine,startCol,endLine,endCol);
 		}
 		
 		return null;	
@@ -326,32 +312,6 @@ public class UtilityFunctions {
 	}
 
 	/**
-	 * Looks for the first project with an ABSNature that contains this file
-	 * 
-	 * @return The ABSNature for a file with the given IPath. If the file is not in a project with an ABS nature null will be returned.
-	 * @deprecated This method does not work with linked files that are members of multiple projects.
-	 *  
-	 */
-	public static AbsNature getNatureForPath(IPath path) {
-		IFile[] filesForLocation = ResourcesPlugin.getWorkspace().getRoot().findFilesForLocationURI(URIUtil.toURI(path));
-
-		if (filesForLocation.length > 0) {
- 
-			for (IFile file : filesForLocation) {
-				IProject project = file.getProject();
-				try {
-					if (project.isAccessible() && project.hasNature(Constants.NATURE_ID)) {
-						return UtilityFunctions.getAbsNature(project);
-					}
-				} catch (CoreException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return null;
-	}
-	
-	/**
 	 * Wrapper method for {@link #getAbsNature(IProject)}
 	 * 
 	 * @param file
@@ -384,15 +344,6 @@ public class UtilityFunctions {
 		
 		return null;
 	}
-	
-	public static AbsNature getAbsNatureNotNull(IProject project) {
-		AbsNature nature = getAbsNature(project);
-		if (nature == null) {
-			nature = new AbsNature();
-		}
-		return nature;
-	}
-	
 	
 	/**
 	 * Convenience method showing an error dialog with the given error message.
@@ -441,56 +392,13 @@ public class UtilityFunctions {
 	public static String getMaudeCommand (int steps){
 		return MAUDE_COMMAND1 + '[' + (steps < 0 ? 0 : steps) + ']' + MAUDE_COMMAND2 + MAUDE_COMMAND_QUIT;
 	}
-
-	/**
-	 * Highlights the given {@link ASTNode} in the editor.<br/>
-	 * Only one ASTNode at a time can be highlighted (This is a restriction of {@link ITextEditor}}).<br/><br/>
-     *
-	 * @param edit The target editor
-	 * @param node The node that should be highlighted.
-	 */
-	public static void highlightInEditor(ITextEditor edit, ASTNode<?> node, boolean moveCursor) {
-	
-		EditorPosition pos = getPosition(node);
-	
-		if (pos != null) {
-			IDocument doc = edit.getDocumentProvider().getDocument(
-					edit.getEditorInput());
-	
-			try {
-				/* Calculate the position on the editor by retrieving the char offset
-				 * of the position line and the target column in this line.
-				 */
-				int startOff = doc.getLineOffset(pos.getLinestart()) + pos.getColstart();
-				int endOff = doc.getLineOffset(pos.getLineend()) + pos.getColend();
-	
-				edit.setHighlightRange(startOff, endOff - startOff, moveCursor);
-			} catch (BadLocationException e) {
-				/*
-				 * Should not be thrown, as an ASTNode in a document must have a
-				 * specific location.
-				 */
-			}
-	
-		}
-	}
-	
-	/**
-	 * Highlights the a given {@link InternalASTNode} in the editor.<br/>
-	 * @see #highlightInEditor(ITextEditor, ASTNode)
-	 */
-	public static void highlightInEditor(ITextEditor edit, InternalASTNode<?> node, boolean moveCursor) {
-		if (node != null){
-			highlightInEditor(edit, node.getASTNode(), moveCursor);
-		}
-	}
 	
 	public static ABSEditor openABSEditorForFile(PackageAbsFile file){
 		try {
 			return (ABSEditor) IDE.openEditor(getActiveWorkbenchPage(),
 					new PackageAbsFileEditorInput(file), Constants.EDITOR_ID);
 		} catch (PartInitException e) {
-			
+			assert false : e;
 		}
 		return null;
 	}
@@ -546,8 +454,6 @@ public class UtilityFunctions {
 		}
 		return null;
 	}
-	
-	
 	
 	/**
 	 * Get the current active {@link IWorkbenchPage}.

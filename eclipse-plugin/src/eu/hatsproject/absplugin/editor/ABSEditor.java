@@ -22,11 +22,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
-import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextSelection;
-import org.eclipse.jface.text.TextViewer;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
 import org.eclipse.jface.text.source.ICharacterPairMatcher;
@@ -40,15 +37,9 @@ import org.eclipse.jface.viewers.IPostSelectionProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreePath;
-import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.swt.SWTException;
-import org.eclipse.swt.custom.CaretEvent;
-import org.eclipse.swt.custom.CaretListener;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
@@ -59,8 +50,8 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.TextEditor;
-import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditor;
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
@@ -77,11 +68,11 @@ import eu.hatsproject.absplugin.editor.reconciling.AbsModelManager;
 import eu.hatsproject.absplugin.editor.reconciling.CompilationUnitChangeListener;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.CoreControlUnit;
-import eu.hatsproject.absplugin.util.Images;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
+import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
 
 /**
  * The editor for ABS file. Includes syntax highlighting and content assist for ABS files
@@ -208,7 +199,48 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 			standardExceptionHandling(e);
 		}
 	}
+
+	/**
+	 * Highlights the given {@link ASTNode} in the editor.<br/>
+	 * Only one ASTNode at a time can be highlighted (This is a restriction of {@link ITextEditor}}).<br/><br/>
+     *
+	 * @param edit The target editor
+	 * @param node The node that should be highlighted.
+	 */
+	void highlightInEditor(ASTNode<?> node, boolean moveCursor) {
 	
+		EditorPosition pos = UtilityFunctions.getPosition(node);
+	
+		if (pos != null) {
+			IDocument doc = getDocumentProvider().getDocument(
+					getEditorInput());	
+			try {
+				/* Calculate the position on the editor by retrieving the char offset
+				 * of the position line and the target column in this line.
+				 */
+				int startOff = doc.getLineOffset(pos.getLinestart()) + pos.getColstart();
+				int endOff = doc.getLineOffset(pos.getLineend()) + pos.getColend();
+	
+				setHighlightRange(startOff, endOff - startOff, moveCursor);
+			} catch (BadLocationException e) {
+				/*
+				 * Should not be thrown, as an ASTNode in a document must have a
+				 * specific location.
+				 */
+			}
+		}
+	}
+
+	/**
+	 * Highlights the a given {@link InternalASTNode} in the editor.<br/>
+	 * @see #highlightInEditor(ITextEditor, ASTNode)
+	 */
+	public void highlightInEditor(InternalASTNode<?> node, boolean moveCursor) {
+		if (node != null){
+			highlightInEditor(node.getASTNode(), moveCursor);
+		}
+	}
+
 	/**
 	 * removes the the highlighting set by {@link #highlightLine(int)}.
 	 */

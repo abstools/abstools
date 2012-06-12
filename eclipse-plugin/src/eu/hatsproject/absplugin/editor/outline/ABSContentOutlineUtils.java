@@ -6,6 +6,7 @@ package eu.hatsproject.absplugin.editor.outline;
 
 import static eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.*;
 import static eu.hatsproject.absplugin.util.Constants.*;
+import static abs.common.Constants.STDLIB_NAME;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -380,7 +381,7 @@ public class ABSContentOutlineUtils {
 	 */
 	static boolean isStandardLibImport(Import imp){
 		return ((imp instanceof StarImport)
-				&& ABS_STDLIB_ID.equals(((StarImport) imp).getModuleName()));
+				&& STDLIB_NAME.equals(((StarImport) imp).getModuleName()));
 	}	
 	
 	/**

@@ -4,7 +4,7 @@
  */
 package eu.hatsproject.absplugin.navigator;
 
-import static eu.hatsproject.absplugin.util.Constants.ABS_STDLIB_ID;
+import static abs.common.Constants.STDLIB_NAME;
 import static eu.hatsproject.absplugin.util.UtilityFunctions.hasDecls;
 
 import java.util.*;
@@ -209,7 +209,7 @@ public class ModulePath {
 
 			for (ModuleDecl m : model.getModuleDecls()) {
 				String name = m.getName();
-				if (!name.equals(ABS_STDLIB_ID)) {
+				if (!name.equals(STDLIB_NAME)) {
 
 					if (name.indexOf('.') < 0 &&
 					 !hasSubModule(name) &&
@@ -224,7 +224,7 @@ public class ModulePath {
 			for (ModuleDecl m : model.getModuleDecls()) {
 				String name = m.getName();
 
-				if (!name.equals(ABS_STDLIB_ID)) {
+				if (!name.equals(STDLIB_NAME)) {
 
 					String regex = NavigatorUtils.buildRegex(modulePath);
 
@@ -246,7 +246,7 @@ public class ModulePath {
 			// Get the first category of module elements
 
 			for (String name : getModuleNames(model)) {
-				if (!name.equals(ABS_STDLIB_ID)){
+				if (!name.equals(STDLIB_NAME)){
 				
 				
 				if (name.indexOf('.') > -1) {

@@ -14,8 +14,6 @@ import org.eclipse.ui.IEditorPart;
 public class JumpToDeclarationDelegate implements IEditorActionDelegate {
 	private IEditorPart editor;
 	
-	private static final boolean doDebug = false;
-	
 	@Override
 	public void run(IAction action) {
 	    if(!(editor instanceof ABSEditor)){

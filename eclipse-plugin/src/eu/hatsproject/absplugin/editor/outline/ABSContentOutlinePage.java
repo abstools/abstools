@@ -30,7 +30,6 @@ import abs.frontend.ast.CompilationUnit;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.reconciling.CompilationUnitChangeListener;
 import eu.hatsproject.absplugin.util.InternalASTNode;
-import eu.hatsproject.absplugin.util.UtilityFunctions;
 
 /**
  * Implements the Content Outline for ABS files
@@ -154,7 +153,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 					// Get only the first element of the selection
 					InternalASTNode<?> t = ((InternalASTNode<?>) ((IStructuredSelection) sel)
 							.getFirstElement());
-					UtilityFunctions.highlightInEditor(editor, t, selectionMovesCursor);
+					editor.highlightInEditor(t, selectionMovesCursor);
 				}
 			}
 		});

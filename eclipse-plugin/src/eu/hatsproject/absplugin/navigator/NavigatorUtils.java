@@ -11,12 +11,11 @@ import java.util.ArrayList;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.editors.text.TextEditor;
 
 import abs.frontend.ast.ModuleDecl;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 
@@ -60,11 +59,8 @@ public class NavigatorUtils {
 	}
 
 	private static void openAndHighlightEditor(InternalASTNode<?> node) throws PartInitException {
-		IEditorPart editorPart = openABSEditorForFile(node.getFileName(), node.getProject());
-		if (editorPart instanceof TextEditor){
-			TextEditor texteditor = ((TextEditor) editorPart);
-			highlightInEditor(texteditor, node, true);
-		}
+		ABSEditor editorPart = openABSEditorForFile(node.getFileName(), node.getProject());
+		editorPart.highlightInEditor(node, true);
 	}	
 	
 	public static void updateDependencies(TreeSelection ts) {

@@ -33,7 +33,6 @@ public class Constants {
 	public static final String SDEDIT_PLUGIN_ID             = "eu.hatsproject.sdedit";
 	public static final String PLUGIN_ID                    = PLUGIN_PACKAGE;
 	public static final String ABS_FILE_EXTENSION           = "abs";
-	public static final String ABS_STDLIB_ID                = "ABS.StdLib";
 	/**
 	 * ID of this project nature
 	 */
