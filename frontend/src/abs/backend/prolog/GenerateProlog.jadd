@@ -608,7 +608,9 @@ aspect GenerateProlog {
                 s.print(",");
             one=true;
             s.print("assignStmt(" + fieldTransform(parameter.getName())+"," 
-                    + varTransform(parameter.getName()) + ",[])");
+                    + varTransform(parameter.getName()) + ",[],");
+            this.printContextInformation(s);
+            s.print(")");
 
         }
 
@@ -624,7 +626,9 @@ aspect GenerateProlog {
                 one=true;
                 s.print("assignStmt(" + fieldTransform(field.getName()) + ",");
                 field.getInitExp().generateProlog(s,reachInfo);
-                s.print(",[])");
+                s.print(",[],");
+                this.printContextInformation(s);
+                s.print(")");
             }
         }
 
@@ -721,6 +725,14 @@ aspect GenerateProlog {
     }
     
     //Statements
+    public void Stmt.printContextInformation(PrintStream s){
+    	s.print("[");
+        if(this.getModuleDecl()!=null){
+    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getLine( this.getStart())+","+this.getLine(this.getEnd())+")");
+    	}
+    	s.print("]");
+    }	
+    
     public void AwaitStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("awaitStmt(" + PrologBackend.awaitId++ + ",");
         List<Annotation> anns = getAnnotations();
@@ -732,6 +744,8 @@ aspect GenerateProlog {
         }
         s.print("],");
         getGuard().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     public void VarDeclStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
@@ -744,11 +758,16 @@ aspect GenerateProlog {
             anns.getChild(i).generateProlog(s,reachInfo);
             if (i != n-1) s.print(",");
         }
-        s.print("])");
+        s.print("]");
+        s.print(",");
+        this.printContextInformation(s);
+        s.print(")");
     }
     public void ExpressionStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("expressionStmt(");
         getExp().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     public void AssignStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
@@ -764,24 +783,36 @@ aspect GenerateProlog {
             anns.getChild(i).generateProlog(s,reachInfo);
             if (i != n-1) s.print(",");
         }
-        s.print("])");
+         s.print("]");
+        s.print(",");
+        this.printContextInformation(s);
+        s.print(")");
     }
     public void AssertStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
         s.print("assertStmt(");
         getCondition().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     public void ReturnStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
 
         s.print("returnStmt(");
         this.getRetExp().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     public void SkipStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
-        s.print("skipStmt");
+        s.print("skipStmt(");
+        this.printContextInformation(s);
+         s.print(")");
     }
     public void SuspendStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
-        s.print("suspendStmt(" + PrologBackend.awaitId++ + ")");
+        s.print("suspendStmt(" + PrologBackend.awaitId++ + ",");
+        
+        this.printContextInformation(s);
+        s.print(")");
     }   
     public void IfStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
 
@@ -791,6 +822,8 @@ aspect GenerateProlog {
         this.getThen().generateProlog(s,reachInfo);
         s.print(",");
         this.getElseOpt().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     public void WhileStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
@@ -798,6 +831,8 @@ aspect GenerateProlog {
         getCondition().generateProlog(s,reachInfo);
         s.print(",");
         getBody().generateProlog(s,reachInfo);
+        s.print(",");
+        this.printContextInformation(s);
         s.print(")");
     }
     //side effect statements
