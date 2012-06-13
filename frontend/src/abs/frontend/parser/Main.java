@@ -50,7 +50,8 @@ public class Main {
     protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
     protected boolean locationTypeInferenceEnabled = false;
-    protected boolean fullabs = false;
+    // Must be public for AspectJ instrumentation 
+    public boolean fullabs = false;
     public String product;
     protected boolean locationTypeStats = false;
     protected LocationTypingPrecision locationTypeScope = null;
