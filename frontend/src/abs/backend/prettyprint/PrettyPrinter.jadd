@@ -30,7 +30,7 @@ aspect doPrettyPrinter {
 	
 	public void Model.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
     	for (ModuleDecl d : getModuleDecls()) {
-            if (!d.getName().equals("ABS.StdLib") && !d.getName().equals("ABS.Scheduler")
+            if (!d.getName().equals(Constants.STDLIB_NAME) && !d.getName().equals("ABS.Scheduler")
                     && !d.getName().equals("ABS.FLI") && !d.getName().equals("ABS.DC")) {
                 d.doPrettyPrint(stream, formatter);
             }

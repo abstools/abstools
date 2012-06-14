@@ -29,6 +29,8 @@ Bundle-ClassPath: .,
 Bundle-Vendor: HATS Project
 Export-Package: eu.hatsproject.absplugin.actions,
  eu.hatsproject.absplugin.builder,
- eu.hatsproject.absplugin.costabslink
+ eu.hatsproject.absplugin.costabslink,
+ eu.hatsproject.absplugin.editor,
+ eu.hatsproject.absplugin.util
 Import-Package: org.eclipse.jdt.debug.ui.launchConfigurations,
  org.eclipse.jdt.launching

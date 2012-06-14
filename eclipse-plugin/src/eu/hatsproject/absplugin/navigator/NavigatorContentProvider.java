@@ -103,7 +103,7 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 	
 	private boolean hasChildren(IProject proj) {
 		try {
-			if (proj.hasNature(Constants.NATURE_ID) && proj.isOpen()) {
+			if (proj.isOpen() && proj.hasNature(Constants.NATURE_ID)) {
 				AbsNature nature = getAbsNature(proj);
 
 				if (nature != null) {
