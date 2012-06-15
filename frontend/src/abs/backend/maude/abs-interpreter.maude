@@ -1401,7 +1401,7 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   op noneSchedulable : MProc Subst Configuration SSubst -> Bool .
   eq noneSchedulable((W, { L | SL }), S, CN, MAC) =
-    not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) and noneSchedulable(W, S, CN, MAC) .
+    (not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC))) and noneSchedulable(W, S, CN, MAC) .
   eq noneSchedulable(noProc, S, CN, MAC) = true .
 
   op canAdvance : Configuration Configuration SSubst -> Bool .
@@ -1412,8 +1412,8 @@ mod ABS-MACHINE-BASICS-TIMED is
       < CG : Cog | Object: D >
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, CN', MAC) =
-    (D == O or D == null)
-    and noneSchedulable(W, S, CN CN', MAC) 
+    ((D == O or D == null)
+      implies noneSchedulable(W, S, CN CN', MAC))
     and canAdvance (< CG : Cog | Object: O > CN,
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC) .
   *** Block clock if process is executing and can execute. "can execute" means
