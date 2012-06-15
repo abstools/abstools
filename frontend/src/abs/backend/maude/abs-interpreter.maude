@@ -1088,6 +1088,20 @@ mod ABS-MACHINE-BASICS-COMMON is
   if  L[A] == L1['.label]
     [label schedule-self] .
 
+  *** Handle synchronous calls within cogs.
+  ceq
+    < CG : Cog | Object: O >
+    < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
+  =
+    < CG : Cog | Object: O1 >
+    < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
+    < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
+    *** We only check the process bindings L because synchronous calls are
+    *** always handled via ".staticfuture"
+  if  L[A] == L1['.label]
+    [label schedule-cog] .
+
   --- Skip the $release instruction if the variable is uninitialized.  This
   --- helps the code generator.
   ceq
@@ -1215,27 +1229,6 @@ mod ABS-MACHINE-BASICS-RL is
   var SC : Expr .
   var COST : Expr .
 
-  *** Handle synchronous calls within cogs.
-  ***
-  *** Only schedule the process if it is schedulable - so we have to capture the
-  *** entire state here as well.
-  ceq
-    { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
-      < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
-      CN
-    }
-  =
-    { < CG : Cog | Object: O1 >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
-      < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
-      CN
-    }
-    *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label]
-      /\ schedulable(SL1, (S1 :: L1), CN, ('.time |-> "int"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
-    [label schedule-cog] .
-
   --- mark
   ---
   --- Mark a label in use.  We don't bother to make this a rule until we need
@@ -1314,29 +1307,6 @@ mod ABS-MACHINE-BASICS-TIMED is
   var M : Mid .
   var CG : Cogid .
   var COST : Expr .
-
-  *** Handle synchronous calls within cogs.
-  ***
-  *** Only schedule the process if it is schedulable - so we have to capture the
-  *** entire state here as well.
-  ceq
-    { < CG : Cog | Object: O >
-      < O : C | Cog: CG, Att: S, Pr: { L | get(A ; A') ; SL }, PrQ: W, Lcnt: F >
-      < O1 : B | Cog: CG, Att: S1, Pr: idle, PrQ: W1 , { L1 | SL1 }, Lcnt: G >
-      < T : Clock | Limit: LIM, Random: RAND >
-      CN
-    }
-  =
-    { < CG : Cog | Object: O1 >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, { L | get(A ; A') ; SL }, Lcnt: F >
-      < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
-      < T : Clock | Limit: LIM, Random: RAND >
-      CN
-    }
-    *** L[A] because synchronous calls are always handled via ".staticfuture"
-  if  L[A] == L1['.label]
-      /\ schedulable(SL1, (S1 :: L1), CN, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp]))
-    [label schedule-cog] .
 
   --- mark
   ---
