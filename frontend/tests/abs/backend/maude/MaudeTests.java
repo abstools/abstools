@@ -60,23 +60,23 @@ public class MaudeTests extends ABSTest {
     }
 
     public void assertTrueMaude(String absCode) throws Exception {
-        assertMaudeResult(absCode, "True");
+        assertMaudeResult(absCode, "ABS.StdLib.True");
     }
 
     public void assertFalseMaude(String absCode) throws Exception {
-        assertMaudeResult(absCode, "False");
+        assertMaudeResult(absCode, "ABS.StdLib.False");
     }
 
     void assertMaudeResult(String absCode, String expectedResult) throws Exception {
         String generatedMaudeCode = getMaudeCode(absCode, mode);
         String maudeOutput = getMaudeOutput(generatedMaudeCode);
-        Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(\\w+)\"\\[emp\\].*");
+        Pattern pattern = Pattern.compile(".*'testresult \\|-> \"(.*?)\"\\[emp\\].*");
         Matcher matcher = pattern.matcher(maudeOutput);
         if (matcher.find()) {
             String boolValue = matcher.group(1);
             Assert.assertEquals(expectedResult, boolValue);
         } else {
-            System.out.println(maudeOutput);
+            System.err.println(maudeOutput);
             Assert.fail("Did not find Maude \"testresult\" variable.");
         }
     }
@@ -114,7 +114,7 @@ public class MaudeTests extends ABSTest {
         }
         // pb.directory(workingDir);
         pb.redirectErrorStream(true);
-        Process p = pb.start();
+        final Process p = pb.start();
 
         BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
@@ -126,11 +126,25 @@ public class MaudeTests extends ABSTest {
         out.println("rew start .");
         out.println("quit");
         out.flush();
+        Runnable killer = new Runnable() {
+            
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000*5);
+                    System.err.println("Timeout!");
+                    p.destroy();
+                } catch (InterruptedException e) {}
+            }
+        };
+        Thread kT = new Thread(killer);
+        kT.start();
         String l;
         while ((l = in.readLine()) != null) {
             result.append(l + "\n");
         }
         p.waitFor();
+        kT.interrupt();
         return result.toString();
     }
 
