@@ -553,6 +553,7 @@ aspect GenerateProlog {
 	        }else{
 	            //if there is no init block the easiest way is to create an empty one
 	            InitBlock block=new InitBlock();
+	            block.setPosition(this.getStartPos(), this.getStartPos());
 	            block.generateProlog(s,reachInfo,quote(getName()),parameterList,fieldsList);
 	        }
 	        //we generate the rest of the methods implemented by the class
@@ -641,8 +642,9 @@ aspect GenerateProlog {
             stmts.getChild(i).generateProlog(s,reachInfo);
             if (i != n-1 ) s.print(",");
         }
-        s.print("])");
-        s.println(").");
+        s.print("]),");
+        this.printContextInformation(s);  
+         s.print(").\n");
     }
     public void Block.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         //generates block(localVariablesDeclarationList,statementsList)
