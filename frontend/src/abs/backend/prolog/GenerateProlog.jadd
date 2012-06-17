@@ -666,7 +666,13 @@ aspect GenerateProlog {
         }
         s.print("])");
     }
-
+    public void MethodImpl.printContextInformation(PrintStream s){
+    	s.print("[");
+        if(this.getModuleDecl()!=null){
+    	    s.print("programLocation('" +this.getModuleDecl().getName()+"',"+ this.getLine( this.getStart())+","+this.getLine(this.getEnd())+")");
+    	}
+    	s.print("]");
+    }	
     public void MethodImpl.generateProlog(PrintStream s,ReachabilityInformation reachInfo,String quotedClass){
         //generates "methodImpl(methodSig,className,annotationsList,block)."
        if(reachInfo==null || reachInfo.isReachable(this)){
@@ -684,6 +690,8 @@ aspect GenerateProlog {
 	        s.print("],");
 	        
 	        getChild(1).generateProlog(s,reachInfo);
+	        s.print(",");
+            this.printContextInformation(s);
 	        s.println(").");      
         }  
     }
