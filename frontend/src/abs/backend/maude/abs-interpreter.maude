@@ -1099,7 +1099,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < O1 : B | Cog: CG, Att: S1, Pr: { L1 | SL1 }, PrQ: W1 , Lcnt: G >
     *** We only check the process bindings L because synchronous calls are
     *** always handled via ".staticfuture"
-  if  L[A] == L1['.label]
+  if  (S :: L)[A] == (S1 :: L1)['.label]
     [label schedule-cog] .
 
   --- Skip the $release instruction if the variable is uninitialized.  This
