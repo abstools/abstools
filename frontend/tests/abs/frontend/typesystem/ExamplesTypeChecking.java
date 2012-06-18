@@ -4,60 +4,17 @@
  */
 package abs.frontend.typesystem;
 
-import org.junit.Test;
+import abs.frontend.ast.Model;
+import abs.frontend.parser.ParseSamplesTest;
 
-import abs.frontend.FrontendTest;
+public class ExamplesTypeChecking extends ParseSamplesTest {
 
-public class ExamplesTypeChecking extends FrontendTest {
-
-    private static final String EXAMPLEDIR = "examples/"; 
-    
-    @Test
-    public void abslang() throws Exception {
-        assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
+    public ExamplesTypeChecking(String input) {
+        super(input);
     }
 
-    @Test
-    public void pingPong() throws Exception {
-        assertTypeCheckExampleFileOk("PingPong.abs");
+    @Override
+    protected Model parse(String input) throws Exception {
+        return assertTypeCheckFileOk(input, true);
     }
-
-    @Test
-    public void peerToPeer() throws Exception {
-        assertTypeCheckExampleFileOk("PeerToPeer.abs");
-    }
-
-    @Test
-    public void boundedBuffer() throws Exception {
-        assertTypeCheckExampleFileOk("BoundedBuffer.abs");
-    }
-
-    @Test
-    public void randomBool() throws Exception {
-        assertTypeCheckTestFileOk("RandomBool.abs");
-    }
-
-    @Test
-    public void lizeth() throws Exception {
-        assertTypeCheckTestFileOk("lizeth.abs", false);
-    }
-    
-    @Test
-    public void fredhopper() throws Exception {
-        assertTypeCheckTestFileOk("ReplicationSystem.abs");
-    }
-
-    private void assertTypeCheckExampleFileOk(String fileName) throws Exception {
-        assertTypeCheckFileOk(EXAMPLEDIR+fileName, true);
-    }
-    
-    private void assertTypeCheckTestFileOk(String fileName) throws Exception {
-        assertTypeCheckTestFileOk(fileName, true);
-    }
-
-    private void assertTypeCheckTestFileOk(String fileName, boolean withStdLib) throws Exception {
-        String dir = "tests/abssamples/";
-        assertTypeCheckFileOk(dir + fileName, withStdLib);
-    }
-
 }

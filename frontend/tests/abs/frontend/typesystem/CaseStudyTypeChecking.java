@@ -11,10 +11,15 @@ import static org.junit.Assume.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import abs.backend.maude.MaudeTests;
 import abs.frontend.FrontendTest;
@@ -23,6 +28,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
+@RunWith(Parameterized.class)
 public class CaseStudyTypeChecking extends FrontendTest {
 
     // default relative path to https://repos.hats-project.eu:444/svn/hats/CaseStudies/models
@@ -44,33 +50,26 @@ public class CaseStudyTypeChecking extends FrontendTest {
             CASESTUDY_DIR += "/";
     }
 
-    @Test
-    public void testFredhopper() throws Exception {
-        assertTypeCheckDirOk("fredhopper/replication/abs");
+    @Parameters
+    public static Collection<?> data() {
+        final Object[][] data = new Object[][] { { "fredhopper/replication/abs" }
+                                               , { "fredhopper/replication/abs-single/annual-meeting-2011" }
+                                               , { "fredhopper/replication/abs-single/annual-meeting-2011-async" }
+                                               , { "tradingsystem"}
+                                               , { "vof"} };
+        return Arrays.asList(data);
+    }
+
+    final private String input;
+    protected Model m;
+
+    public CaseStudyTypeChecking(String input) {
+        this.input = input;
     }
 
     @Test
-    public void testFredhopper2() throws Exception {
-        assertTypeCheckDirOk("fredhopper/replication/abs-single/annual-meeting-2011");
-    }
-
-    @Test
-    public void testFredhopper3() throws Exception {
-        assertTypeCheckDirOk("fredhopper/replication/abs-single/annual-meeting-2011-async");
-    }
-
-    @Test
-    public void testTradingsystem() throws Exception {
-        assertTypeCheckDirOk("tradingsystem");
-    }
-
-    @Test
-    public void testVof() throws Exception {
-        assertTypeCheckDirOk("vof");
-    }
-
-    private void assertTypeCheckDirOk(String srcfolder) throws Exception {
-        assertParseFilesOk(CASESTUDY_DIR+srcfolder, TYPE_CHECK, WITH_STD_LIB);
+    public void test() throws Exception {
+        m = assertParseFilesOk(CASESTUDY_DIR+input, TYPE_CHECK, WITH_STD_LIB);
     }
 
     protected Model assertParseFilesOk(String srcFolder, Config... config) throws IOException {

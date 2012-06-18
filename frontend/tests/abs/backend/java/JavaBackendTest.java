@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import junit.framework.Assert;
+import static org.junit.Assert.*;
 
 import abs.ABSTest;
 import abs.backend.java.codegeneration.JavaCode;
@@ -29,6 +29,7 @@ public class JavaBackendTest extends ABSTest {
 
     private static final boolean DEBUG = false;
 
+    @SuppressWarnings("serial")
     final protected List<String> jvmArgs = new ArrayList<String>() {{ add("-Dabs.terminateOnException=true"); }};
     /**
      * Additional arguments when running the compiled ABS program.
@@ -55,7 +56,7 @@ public class JavaBackendTest extends ABSTest {
         assertValidJava(getJavaCode(m));
     }
 
-    void assertValidJava(JavaCode javaCode) throws Exception {
+    static void assertValidJava(JavaCode javaCode) throws Exception {
         try {
             javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
@@ -201,22 +202,22 @@ public class JavaBackendTest extends ABSTest {
         // + code;
         model = Main.parseString(code, withStdLib);
         if (model.hasErrors()) {
-            Assert.fail(model.getErrors().get(0).getHelpMessage());
+            fail(model.getErrors().get(0).getHelpMessage());
         } else {
             SemanticErrorList el = model.typeCheck();
             if (!el.isEmpty()) {
-                Assert.fail(el.get(0).getMsg());
+                fail(el.get(0).getMsg());
             }
         }
 
         if (model.hasErrors()) {
-            Assert.fail(model.getErrors().getFirst().getHelpMessage());
+            fail(model.getErrors().getFirst().getHelpMessage());
             return null;
         }
         return getJavaCode(model);
     }
 
-    private JavaCode getJavaCode(Model model) throws IOException, JavaCodeGenerationException {
+    static JavaCode getJavaCode(Model model) throws IOException, JavaCodeGenerationException {
         JavaCode code = new JavaCode();
         model.generateJavaCode(code);
         return code;
@@ -243,7 +244,7 @@ public class JavaBackendTest extends ABSTest {
         if (value != res) {
             //System.out.println(javaCode);
         }
-        Assert.assertEquals(value, res);
+        assertEquals(value, res);
     }
 
     public void assertEvalFails(String absCode) throws Exception {
@@ -251,7 +252,7 @@ public class JavaBackendTest extends ABSTest {
         try {
             runJavaAndTestResult(javaCode, true);
             System.err.println(javaCode);
-            Assert.fail("Expected that Java run failed, but did not.");
+            fail("Expected that Java run failed, but did not.");
         } catch (NoTestResultFoundException e) {
             // OK
         }

@@ -23,6 +23,16 @@ public class TypeCheckerTest extends FrontendTest {
     // POSITIVE TESTS
 
     @Test
+    public void abslang() throws Exception {
+        assertTypeCheckFileOk("src/abs/lang/abslang.abs", false);
+    }
+
+    @Test
+    public void lizeth() throws Exception {
+        assertTypeCheckFileOk("tests/abssamples/lizeth.abs", false);
+    }
+
+    @Test
     public void testVarDecl() {
         assertNoTypeErrorsNoLib("data Bool = True | False; { Bool b = True; }");
     }

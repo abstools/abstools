@@ -15,8 +15,10 @@ import abs.backend.java.lib.net.AllNetTests;
     JavaExprTests.class, 
     JavaExamplesTests.class,
     JavaObservationTest.class,
-    JavaFLITest.class,
-    AllNetTests.class})
+    JavaFLITest.class
+    , AllNetTests.class
+    , CaseStudies.class
+    })
 public class AllJavaTests {
 
 }
