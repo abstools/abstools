@@ -529,6 +529,9 @@ interface DeploymentComponent {
     Int available(Resourcename resourcename);
     Int load(Resourcename resourcename, Int periods);
     Int total(Resourcename resourcename);
+    Unit transfer(DeploymentComponent target, String resourcename, Int amount);
+    Unit decrementResources(String resourcename, Int amount);
+    Unit incrementResources(String resourcename, Int amount);
 }
 
 class DeploymentComponent (String description, Set<DCData> configuration)
@@ -553,6 +556,25 @@ implements DeploymentComponent {
         return lookupDefault(totals, resourcename, 0);
     }
 
+    // Transfer resources between deployment components.
+    // KLUDGE: load calculation will be invalid if resource totals have
+    // been changed in the specified interval.
+    Unit transfer(DeploymentComponent target, String resourcename, Int amount) {
+        this.decrementResources(resourcename, amount);
+        target!incrementResources(resourcename, amount);
+    }
+    
+    Unit decrementResources(String resourcename, Int amount) {
+        assert(contains(keys(totals), resourcename));
+        assert(lookup(totals, resourcename) >= amount);
+        totals = put(totals, resourcename,
+            lookup(totals, resourcename) - amount);
+    }
+    Unit incrementResources(String resourcename, Int amount) {
+        assert(contains(keys(totals), resourcename));
+        totals = put(totals, resourcename,
+            lookup(totals, resourcename) + amount);
+    }
 }
 
 // abbreviation for [DC: foo] annotations
