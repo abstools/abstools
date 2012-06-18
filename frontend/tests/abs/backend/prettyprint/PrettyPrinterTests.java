@@ -35,7 +35,7 @@ public class PrettyPrinterTests {
         String deltaDecl = "delta Foo{adds data States=F|B|I|M;}";
         ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
         DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
-        assertEquals("deltaFoo(){addsdataStates=F|B|I|M;}", replaceWhitespaceChars(prettyPrint(d)));
+        assertEquals("deltaFoo{addsdataStates=F|B|I|M;}", replaceWhitespaceChars(prettyPrint(d)));
     }
     
     @Test
@@ -43,7 +43,7 @@ public class PrettyPrinterTests {
         String deltaDecl = "delta Foo{modifies interface X{removes Int fooMethod();adds Int fooMethod();}}";
         ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
         DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
-        assertEquals("deltaFoo(){modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}}", replaceWhitespaceChars(prettyPrint(d)));
+        assertEquals("deltaFoo{modifiesinterfaceX{removesIntfooMethod();addsIntfooMethod();}}", replaceWhitespaceChars(prettyPrint(d)));
     }
     
     private String prettyPrint(DeltaDecl d) {
