@@ -57,7 +57,7 @@ public class JavaBackend extends Main {
                 }
             } else if (arg.equals("-sourceonly")) {
                 this.sourceOnly = true;
-            } else if (arg.equals("-untypedJavaGen")) {
+            } else if (arg.equals("-dynamic")) {
                 this.untypedJavaGen = true;
             } else if (arg.equals("-debug")) {
                 /* Print stacktrace on exception, used in main(), must be removed from remaining args. */

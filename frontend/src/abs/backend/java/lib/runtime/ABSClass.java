@@ -30,15 +30,20 @@ public class ABSClass {
     
     public void addField(String name, ABSField f) {
         if (fields == null) {
-            fields = new HashMap<String,ABSField>();
+            fields = new HashMap<String, ABSField>();
         }
         fields.put(name,f);
     }
-    public void getField(String name) {
+    
+    public void removeField(String name) {
+        fields.remove(name);
+    }
+    
+    public ABSField getField(String name) {
         if (fields == null) {
-            fields = new HashMap<String,ABSField>();
+            fields = new HashMap<String, ABSField>();
         }
-        fields.get(name);
+        return fields.get(name);
     }
     
     public void addMethod(String name, ABSClosure m) {
