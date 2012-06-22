@@ -12,9 +12,9 @@
    <feature url="features/eu.hatsproject.costabs_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.costabs" version="0.0.0" os="linux">
       <category name="eu.hatsproject.abs"/>
    </feature>
-   <!--<feature url="features/eu.hatsproject.apet_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.apet" version="0.0.0" os="linux">
+   <!-- <feature url="features/eu.hatsproject.apet_0.0.0.VERSION_STRING.jar" id="eu.hatsproject.apet" version="0.0.0" os="linux">
       <category name="eu.hatsproject.abs"/>
-   </feature>-->
+   </feature> -->
    <category-def name="eu.hatsproject.abs" label="ABS">
       <description>
          Features for the ABS language
