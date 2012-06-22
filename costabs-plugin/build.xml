@@ -20,7 +20,7 @@
 	</taskdef>	
 	
 	<target name="download-costa-binary">
-	   <get src="http://clip.dia.fi.upm.es/~mzamalloa/costabs_exe" 
+	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/costabs_exe" 
 		    dest="${basedir}"
 		    usetimestamp="true"/>
 	   <chmod perm="a+x" file="${basedir}/costabs_exe" />
