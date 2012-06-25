@@ -31,7 +31,7 @@ class JavaCompiler {
         }
         return compile(sb.toString());
     }
-    
+
     public static boolean compile(String args) throws JavaCodeGenerationException {
         StringWriter outWriter = new StringWriter();
         StringWriter errWriter = new StringWriter();
@@ -40,7 +40,7 @@ class JavaCompiler {
         if (!res) {
             errorString = errWriter.toString();
             throw new JavaCodeGenerationException("There seems to be a bug in the abs java backend." +
-            		"The generated code contains errors:\n" + errorString);
+                    "The generated code contains errors:\n" + errorString);
         }
         return res;
     }

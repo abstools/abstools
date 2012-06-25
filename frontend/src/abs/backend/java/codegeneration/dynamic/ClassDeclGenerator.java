@@ -38,22 +38,22 @@ public class ClassDeclGenerator extends CodeGenerator {
         this.decl = decl;
         className = JavaBackend.getClassName(decl.getName());
     }
-    
+
     @Override
     public void generate() {
         DynamicJavaGeneratorHelper.generateHelpLine(decl,stream);
         generateClassHeader();
         generateClassBody();
     }
-    
+
     private void generateClassBody() {
         println("{");
         incIndent();
-        
+
         println("private static " + ABSClass.class.getName() + " instance;");
         println("public static " + ABSClass.class.getName() + " instance() {");
         incIndent();
-        
+
         println("if (instance == null) {");
         println("instance = new " + ABSClass.class.getName() + "();");
         println("instance.setName(\"" + decl.getName() + "\");");
@@ -68,17 +68,17 @@ public class ClassDeclGenerator extends CodeGenerator {
         println(");");
         for (MethodImpl m : decl.getMethods()) {
             //m.generateJava("   ", stream);
-              String methodName = m.getMethodSig().getName();
-              println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".instance());");
-          }
+            String methodName = m.getMethodSig().getName();
+            println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".instance());");
+        }
         println("}");
         println("return instance;");
-        
+
         decIndent();
         println("}");
-        
+
         generateConstructor();
-        
+
         for (MethodImpl m : decl.getMethods()) {
             incIndent();
             println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
@@ -94,21 +94,21 @@ public class ClassDeclGenerator extends CodeGenerator {
             decIndent();
         }
 
-//        generateFieldNamesMethod();
-//        generateFields();
-//        generateConstructor();
-//        generateGetFieldValueMethod();
+        //        generateFieldNamesMethod();
+        //        generateFields();
+        //        generateConstructor();
+        //        generateGetFieldValueMethod();
 
         //println("public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
 
         generateCreateNewCOGMethod();
         generateNewObjectMethods();
-//        generateMethods();
+        //        generateMethods();
         decIndent();
         println("}");
     }
 
-    
+
     private void generateNewObjectMethods() {
         // Convenience method for new C
         stream.print("   public static final <T extends "+ABSDynamicObject.class.getName()+"> T createNewObject");
@@ -118,7 +118,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.print(className + ".__ABS_createNewObject");
         DynamicJavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
-    
+
         // static constructor method for new C
         stream.print("   public static final <T extends "+ABSDynamicObject.class.getName()+"> T __ABS_createNewObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source", decl.getParams());
@@ -142,7 +142,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.print(className + ".__ABS_createNewCOG");
         DynamicJavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
-    
+
         // static constructor method for new cog C    
         stream.print("   public static final <T extends "+ABSDynamicObject.class.getName()+"> T __ABS_createNewCOG");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName()+" __ABS_source",decl.getParams());
@@ -155,12 +155,12 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.println("       __ABS_thread.setCOG(__ABS_cog);");
         stream.println("       try { ");
         generateObjectConstruction("__ABS_runtime");
-            
+
         stream.println(";");
         stream.println("          __ABS_runtime.cogCreated(__ABS_result);");
         stream.println("          __ABS_cog.getScheduler().addTask(new "+Task.class.getName()+"(new "+
-             ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
-        
+                ABSInitObjectCall.class.getName() + "(__ABS_sendingTask,__ABS_source,__ABS_result)));");
+
         if (decl.isActiveClass()) {
             stream.println("          __ABS_runtime.asyncCall(new "+ABSRunMethodCall.class.getName()+"(__ABS_sendingTask,__ABS_source,__ABS_result));");
         }
@@ -177,11 +177,11 @@ public class ClassDeclGenerator extends CodeGenerator {
             stream.println("("+className+") "+runtime+".getForeignObject(\""+decl.getModule().getName()+"."+decl.getName()+"\");");
             stream.print("         if (__ABS_result == null) __ABS_result = ");
         }
-        
+
         stream.print("new "+ABSDynamicObject.class.getName());
         DynamicJavaGeneratorHelper.generateParamArgs(stream, className + ".instance()", decl.getParams());
         stream.println(";");
-                
+
     }
 
     private void generateConstructor() {
@@ -211,11 +211,11 @@ public class ClassDeclGenerator extends CodeGenerator {
             decl.getInitBlock().generateJavaDynamic("      ",stream);
         }
         println("return null;");
-        
+
         decIndent();
         println("}");
-        
-        
+
+
         println("}");
         decIndent();
     }
@@ -223,15 +223,15 @@ public class ClassDeclGenerator extends CodeGenerator {
     private void generateFields() {
         for (ParamDecl p : decl.getParams()) {
             println("instance.addField(\"" + p.getName() + "\", new " + ABSField.class.getName() + "());");
-//            stream.print("   private ");
-//            p.generateJava(stream);
-//            stream.println(";");
-          //TODO: INITIALIZER
+            //            stream.print("   private ");
+            //            p.generateJava(stream);
+            //            stream.println(";");
+            //TODO: INITIALIZER
         }
 
         for (FieldDecl f : decl.getFields()) {
             println("instance.addField(\"" + f.getName() + "\", new " + ABSField.class.getName() + "());");
-          //f.generateJava("   private ", stream);
+            //f.generateJava("   private ", stream);
             //TODO: INITIALIZER
         }
     }

@@ -90,7 +90,7 @@ public class DynamicJavaGeneratorHelper {
     public static void generateParamArgs(PrintStream stream, String firstArg, List<ParamDecl> params) {
         stream.print("(");
         boolean first = true;
-        
+
         if (firstArg != null) {
             stream.print(firstArg);
             first = false;
@@ -134,10 +134,10 @@ public class DynamicJavaGeneratorHelper {
         if (dtd instanceof ParametricDataTypeDecl) {
             typeParams = ((ParametricDataTypeDecl)dtd).getTypeParameters();
         } else
-        if (dtd instanceof ParametricFunctionDecl) {
-            typeParams = ((ParametricFunctionDecl)dtd).getTypeParameters();
-        } else
-            return;
+            if (dtd instanceof ParametricFunctionDecl) {
+                typeParams = ((ParametricFunctionDecl)dtd).getTypeParameters();
+            } else
+                return;
         if (typeParams.getNumChild() > 0) {
             stream.print("<");
             boolean isFirst = true;
@@ -169,54 +169,54 @@ public class DynamicJavaGeneratorHelper {
         int line = Symbol.getLine(pos);
         String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (thisP.__ABS_getRuntime().debuggingEnabled()) thisP.__ABS_getRuntime().nextStep(\""
-                + fileName + "\"," + line + ");";
+        + fileName + "\"," + line + ");";
     }
-    
+
     public static void generateMethodSig(String indent, PrintStream stream, MethodSig sig, boolean async) {
         generateMethodSig(indent, stream, sig, async, "", "");
     }
-    
+
     public static void generateMethodSig(String indent, PrintStream stream, MethodSig sig, boolean async, String modifier, String prefix) {
-       DynamicJavaGeneratorHelper.generateHelpLine(sig,stream);
-       stream.print(indent+"public "+modifier+" ");
-       if (async) {
-           prefix = "async_";
-           stream.print(ABSFut.class.getName()+"<");
-       }
-       
-       sig.getReturnType().generateJavaDynamic(stream);
-       
-       if (async)
-           stream.print(">");
-       stream.print(" "+prefix+JavaBackend.getMethodName(sig.getName()));
-       DynamicJavaGeneratorHelper.generateParams(stream, sig.getParams());
+        DynamicJavaGeneratorHelper.generateHelpLine(sig,stream);
+        stream.print(indent+"public "+modifier+" ");
+        if (async) {
+            prefix = "async_";
+            stream.print(ABSFut.class.getName()+"<");
+        }
+
+        sig.getReturnType().generateJavaDynamic(stream);
+
+        if (async)
+            stream.print(">");
+        stream.print(" "+prefix+JavaBackend.getMethodName(sig.getName()));
+        DynamicJavaGeneratorHelper.generateParams(stream, sig.getParams());
     }
-    
+
     public static void generateAsyncMethod(String indent, PrintStream stream, MethodImpl method) {
-       final MethodSig sig = method.getMethodSig();
-       generateMethodSig(indent,stream,sig,true,"final","");
-       stream.println("{ return ("+ABSFut.class.getName()+")");
-       generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
-             TypeCheckerHelper.getTypes(sig.getParams()),sig.getName());
-       stream.println(indent+"; }");
+        final MethodSig sig = method.getMethodSig();
+        generateMethodSig(indent,stream,sig,true,"final","");
+        stream.println("{ return ("+ABSFut.class.getName()+")");
+        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
+                TypeCheckerHelper.getTypes(sig.getParams()),sig.getName());
+        stream.println(indent+"; }");
     }
-    
-    
+
+
     public static void generateAsyncCall(PrintStream stream, AsyncCall call) {
-       final PureExp callee = call.getCallee();
-       final List<PureExp> params = call.getParams();
-       final String method = call.getMethod();
-       
-       generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
-             TypeCheckerHelper.getTypesFromExp(params), method);
-       
+        final PureExp callee = call.getCallee();
+        final List<PureExp> params = call.getParams();
+        final String method = call.getMethod();
+
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
+                TypeCheckerHelper.getTypesFromExp(params), method);
+
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
-          final PureExp callee, final Type calleeType, final List<PureExp> args, 
-          final List<ParamDecl> params,
-          final java.util.List<Type> paramTypes,
-          final String method) 
+            final PureExp callee, final Type calleeType, final List<PureExp> args, 
+            final List<ParamDecl> params,
+            final java.util.List<Type> paramTypes,
+            final String method) 
     {
         stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
@@ -254,55 +254,55 @@ public class DynamicJavaGeneratorHelper {
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         int i;
         stream.print("    public "+abs.backend.java.lib.runtime.AsyncCall.class.getName()+"<?> init(");
-           i = 0;
-           for (Type t : paramTypes) {
-               if (i > 0) stream.print(",");
-               stream.print(ABSValue.class.getName()+" _arg"+i);
-               i++;
-           }
-           stream.print(") {");
-           for (i = 0; i < paramTypes.size(); i++) {
-               stream.print("arg"+i+" = _arg"+i+";");
-           }
-           stream.print(" return this; }");
+        i = 0;
+        for (Type t : paramTypes) {
+            if (i > 0) stream.print(",");
+            stream.print(ABSValue.class.getName()+" _arg"+i);
+            i++;
+        }
+        stream.print(") {");
+        for (i = 0; i < paramTypes.size(); i++) {
+            stream.print("arg"+i+" = _arg"+i+";");
+        }
+        stream.print(" return this; }");
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
         stream.print(" public java.util.List<"+ABSValue.class.getName()+"> getArgs() { return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] { ");
-           generateArgStringList(stream, n);
-           stream.print(" }); } ");
+        generateArgStringList(stream, n);
+        stream.print(" }); } ");
     }
 
     private static void generateArgStringList(PrintStream stream, String init, final int n) {
         stream.print(init);
         for (int i = 0; i < n; i++) {
-               stream.print(",");
-               stream.print("arg"+i);
-           }
+            stream.print(",");
+            stream.print("arg"+i);
+        }
     }
     private static void generateArgStringList(PrintStream stream, final int n) {
         for (int i = 0; i < n; i++) {
-               if (i > 0) stream.print(",");
-               stream.print("arg"+i);
-           }
+            if (i > 0) stream.print(",");
+            stream.print("arg"+i);
+        }
     }
 
-    
+
     public static void generateClassDecl(PrintStream stream, final ClassDecl decl) {
         new ClassDeclGenerator("", stream, decl).generate();
     }
-    
+
     public static void generateMethodImpl(String indent, PrintStream stream, final MethodImpl m) {
-      // Async variant
-//      DynamicJavaGeneratorHelper.generateAsyncMethod(indent,stream,m);
-//
-//        // Sync variant
-//      generateMethodSig(indent,stream,m.getMethodSig(),false,"final","");
-//      generateMethodBody(indent, stream, m, false);
-//      
-//      if (m.isForeign()) {
-//          generateFLIMethod(indent,stream,m);
-//      }
+        // Async variant
+        //      DynamicJavaGeneratorHelper.generateAsyncMethod(indent,stream,m);
+        //
+        //        // Sync variant
+        //      generateMethodSig(indent,stream,m.getMethodSig(),false,"final","");
+        //      generateMethodBody(indent, stream, m, false);
+        //      
+        //      if (m.isForeign()) {
+        //          generateFLIMethod(indent,stream,m);
+        //      }
         stream.println("public " + ABSValue.class.getName() + " exec(" + ABSDynamicObject.class.getName() + " thisP, " + ABSValue.class.getName() + "... args) {");
         for (int i = 0; i < m.getMethodSig().getNumParam(); i++) {
             ParamDecl d = m.getMethodSig().getParam(i);
@@ -317,9 +317,9 @@ public class DynamicJavaGeneratorHelper {
         }
         generateMethodBody(indent, stream, m, false);
         stream.println("}");
-        
+
     }
-    
+
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
         if (!f.getType().isReferenceType()) {
             stream.print("(" + JavaBackend.getQualifiedString(f.getType()) + ")");
@@ -330,32 +330,32 @@ public class DynamicJavaGeneratorHelper {
     private static void generateMethodBody(String indent, PrintStream stream, final MethodImpl m, boolean isFliMethod) {
         boolean addReturn = false;
         if (m.getMethodSig().getReturnType().getType().isUnitType()) {
-          if (m.getBlock().getNumStmt() == 0 ||
-              (! (m.getBlock().getStmt(m.getBlock().getNumStmt()-1) instanceof ReturnStmt))) {
-            addReturn = true;
-          }
+            if (m.getBlock().getNumStmt() == 0 ||
+                    (! (m.getBlock().getStmt(m.getBlock().getNumStmt()-1) instanceof ReturnStmt))) {
+                addReturn = true;
+            }
         }
 
         stream.println("{ thisP.__ABS_checkSameCOG(); ");
-          
-          if (!isFliMethod && m.isForeign()) {
-              stream.print(indent+"return this.");
-              stream.print(FLI_METHOD_PREFIX+JavaBackend.getMethodName(m.getMethodSig().getName()));
-              DynamicJavaGeneratorHelper.generateParamArgs(stream, m.getMethodSig().getParams());
-              stream.println(";");
-          } else {
-              stream.println("    if (thisP.__ABS_getRuntime().debuggingEnabled()) {");
-              stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = thisP.__ABS_getRuntime().getCurrentTask();");
-              stream.println("       __ABS_currentTask.newStackFrame(thisP,\""+m.getMethodSig().getName()+"\");");
-              for (ParamDecl d : m.getMethodSig().getParams()) {
-                  stream.print("     __ABS_currentTask.setLocalVariable(");
-                  stream.println("\""+d.getName()+"\","+d.getName()+");");
-              }
-              stream.println("    }");
-              m.getBlock().generateJavaDynamic(indent, stream, addReturn);
-          
-          }
-          stream.println("}");
+
+        if (!isFliMethod && m.isForeign()) {
+            stream.print(indent+"return this.");
+            stream.print(FLI_METHOD_PREFIX+JavaBackend.getMethodName(m.getMethodSig().getName()));
+            DynamicJavaGeneratorHelper.generateParamArgs(stream, m.getMethodSig().getParams());
+            stream.println(";");
+        } else {
+            stream.println("    if (thisP.__ABS_getRuntime().debuggingEnabled()) {");
+            stream.println("       "+Task.class.getName()+"<?> __ABS_currentTask = thisP.__ABS_getRuntime().getCurrentTask();");
+            stream.println("       __ABS_currentTask.newStackFrame(thisP,\""+m.getMethodSig().getName()+"\");");
+            for (ParamDecl d : m.getMethodSig().getParams()) {
+                stream.print("     __ABS_currentTask.setLocalVariable(");
+                stream.println("\""+d.getName()+"\","+d.getName()+");");
+            }
+            stream.println("    }");
+            m.getBlock().generateJavaDynamic(indent, stream, addReturn);
+
+        }
+        stream.println("}");
     }
 
     private static void generateFLIMethod(String indent, PrintStream stream, MethodImpl m) {
@@ -424,17 +424,17 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateExprGuard(ExpGuard expGuard, PrintStream beforeAwaitStream, PrintStream stream) {
         PureExp expr = expGuard.getPureExp();
-        
+
         replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
-        
+
         stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
         expGuard.getPureExp().generateJavaDynamic(stream);
         stream.print("; }}");
-        
+
     }
 
-    
-    
+
+
     /**
      * replace all uses of local variables and parameters by a use of a newly introduced
      * temporary final local variable 
@@ -468,9 +468,9 @@ public class DynamicJavaGeneratorHelper {
         return false;
     }
 
-    
+
     private static long tempCounter = 0;
-    
+
     /**
      * replaces a varUse v of the local variable vDecl by a new temporary variable, which will be
      * written to beforeAwaitStream      
@@ -506,20 +506,20 @@ public class DynamicJavaGeneratorHelper {
             assign.getValue().generateJavaDynamic(stream);
             stream.print(");");
         } else {
-        
-        vfu.generateJavaDynamic(stream);
-        stream.print(" = ");
-        assign.getValue().generateJavaDynamic(stream);
-        stream.println(";");
+
+            vfu.generateJavaDynamic(stream);
+            stream.print(" = ");
+            assign.getValue().generateJavaDynamic(stream);
+            stream.println(";");
         }
-        
+
         if (assign.getVar() instanceof VarUse) {
             stream.print("    if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
             stream.print("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\""+assign.getVar().getName()+"\",");
             assign.getVar().generateJavaDynamic(stream);
             stream.print(");");
         }
-        
+
     }
 
 
