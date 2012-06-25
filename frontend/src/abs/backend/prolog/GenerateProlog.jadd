@@ -721,7 +721,9 @@ aspect GenerateProlog {
 	            stmts.getChild(i).generateProlog(s,reachInfo);
 	            if (i != n-1) s.print(",");
 	        }
-	        s.println("]).");
+	        s.print("],");
+            this.printContextInformation(s);  
+            s.print(").");
         }
     }
 
