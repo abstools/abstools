@@ -78,11 +78,11 @@ public class ABSDynamicObject extends ABSObject {
         }
     }
     
-    public void setFieldValue(String field, ABSValue val) {
+    public void setFieldValue(String fieldName, ABSValue val) {
         if (fields == null) {
             fields = new HashMap<String,ABSValue>();
         }
-        fields.put(field, val);
+        fields.put(fieldName, val);
     }
     
     public void __ABS_init() {
@@ -91,8 +91,8 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     public ABSValue dispatch(String mName, ABSValue... params) {
-        ABSClosure cl = clazz.getMethod(mName);
-        return cl.exec(this, params);
+        ABSClosure method = clazz.getMethod(mName);
+        return method.exec(this, params);
     }
     
     public ABSUnit run() {
