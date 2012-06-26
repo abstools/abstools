@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
 
@@ -233,5 +234,13 @@ public abstract class Type {
     
     public Collection<FieldDecl> getAllFieldDecls() {
         return Collections.emptyList();
+    }
+    
+    /**
+     * returns the declaration of this type or null if there is no 
+     * declaration for this type
+     */
+    public Decl getDecl() {
+        return null;
     }
 }
