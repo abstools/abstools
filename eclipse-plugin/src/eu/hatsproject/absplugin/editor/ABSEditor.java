@@ -23,6 +23,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentExtension3;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.source.DefaultCharacterPairMatcher;
 import org.eclipse.jface.text.source.IAnnotationModel;
@@ -110,6 +111,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	private ABSReconcilingStrategy reconciler;
     private AbsNature absNature;
     private volatile int caretPos;
+    private AbsInformationPresenter informationPresenter;
 	
 	public ABSEditor() {
 	    super();
@@ -512,6 +514,18 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
     
     public int getCaretPos() {
         return caretPos;
+    }
+
+    public ITextViewer getTextViewer() {
+        return getSourceViewer();
+    }
+    
+    public AbsInformationPresenter getInformationPresenter() {
+        if (informationPresenter == null) {
+            informationPresenter = new AbsInformationPresenter();
+            informationPresenter.install(getSourceViewer());
+        }
+        return informationPresenter;
     }
 	
 }

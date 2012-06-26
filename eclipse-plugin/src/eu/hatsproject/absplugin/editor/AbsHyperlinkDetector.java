@@ -1,5 +1,8 @@
 package eu.hatsproject.absplugin.editor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.BadLocationException;
@@ -17,11 +20,15 @@ import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.ConstructorPattern;
 import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FromExport;
 import abs.frontend.ast.FromImport;
+import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.MethodImpl;
+import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
@@ -34,6 +41,7 @@ import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnknownDecl;
 import abs.frontend.ast.VarOrFieldUse;
 import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import abs.frontend.typechecker.ResolvedName;
@@ -52,23 +60,20 @@ import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
  */
 public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
 
-    private static final class AbsHyperlink implements IHyperlink {
+    
+    private abstract static class AbsHyperlink implements IHyperlink {
         private final int endOffset;
         private final int startOffset;
-        private final EditorPosition pos;
-        private ABSEditor editor;
+        protected ABSEditor editor;
+        
+        
 
-        private AbsHyperlink(ABSEditor editor, int endOffset, int startOffset, EditorPosition pos) {
+        private AbsHyperlink(ABSEditor editor, int startOffset, int endOffset) {
             this.editor = editor;
             this.endOffset = endOffset;
             this.startOffset = startOffset;
-            this.pos = pos;
         }
 
-        @Override
-        public void open() {
-            jumpToPosition(editor, pos);
-        }
 
         @Override
         public String getTypeLabel() {
@@ -76,14 +81,74 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         }
 
         @Override
-        public String getHyperlinkText() {
-            return null;
-        }
-
-        @Override
         public IRegion getHyperlinkRegion() {
             return new Region(startOffset, endOffset+1-startOffset);
         }
+    }
+    
+    private static final class JumpToDeclaration extends AbsHyperlink {
+        private final EditorPosition targetPos;
+        
+        
+
+        private JumpToDeclaration(ABSEditor editor, int startOffset, int endOffset, EditorPosition targetPos) {
+            super(editor, startOffset, endOffset);
+            this.targetPos = targetPos;
+        }
+
+        @Override
+        public void open() {
+            jumpToPosition(editor, targetPos);
+        }
+
+        @Override
+        public String getHyperlinkText() {
+           return "Open declaration";
+        }
+
+    }
+    
+    private static final class JumpToImplementation extends AbsHyperlink {
+        private final String methodName;
+        private final Type calleeType;
+
+
+        public JumpToImplementation(ABSEditor editor, int startOffset, int endOffset, String methodName, Type calleeType) {
+            super(editor, startOffset, endOffset);
+            this.methodName = methodName;
+            this.calleeType = calleeType;
+        }
+
+        @Override
+        public void open() {
+            InterfaceDecl i = (InterfaceDecl) calleeType.getDecl();
+            final List<MethodImpl> implementingMethods = new ArrayList<MethodImpl>();
+            for (Decl t : i.getSubTypes()) {
+                if (t instanceof ClassDecl) {
+                    ClassDecl c = (ClassDecl) t;
+                    MethodImpl m = c.lookupMethod(methodName);
+                    if (m != null) {
+                        implementingMethods.add(m);
+                    }
+                }
+            }
+            if (implementingMethods.size() == 1) {
+                // only one implementing method => directly jump to it
+                jumpToPosition(editor, getPosition(implementingMethods.get(0)));
+            } else if (implementingMethods.size() > 1) {
+                // more than one implementing method => show alternatives in a list
+                AbsInformationPresenter p = editor.getInformationPresenter();
+                p.setInformationControl(new HyperlinkInformationControl(
+                        editor, "Select implementing class ...", implementingMethods));
+                p.showInformation();
+            }
+        }
+
+        @Override
+        public String getHyperlinkText() {
+           return "Open implementation";
+        }
+
     }
 
     private ABSEditor editor;
@@ -105,25 +170,45 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             }
             IDocument doc = editor.getDocumentProvider().getDocument(editor.getEditorInput());
 
-            EditorPosition pos = null;
+            EditorPosition targetPos = null;
             ASTNode<?> node;
+            ASTNode<?> decl;
             synchronized (cu.getNature()) {
                 node = UtilityFunctions.getASTNodeOfOffset(doc, cu.getASTNode(), offset);
                 if (node == null) {
                     return null;
                 }
-                pos = getPosition(cu.getASTNode(), node);
+                decl = getDecl(cu.getASTNode(), node);
+                targetPos = getPosition(decl);
             }
 
-            if (pos == null) {
+            if (targetPos == null) {
                 return null;
             }
 
             final int startOffset = getOffset(doc, node.getStart());
             final int endOffset = getOffset(doc, node.getEnd());
 
+            if (decl instanceof MethodSig) { 
+                // decl is an interface method
+                MethodSig methodSig = (MethodSig) decl;
+                
+                
+                Type typ = new InterfaceType((InterfaceDecl) methodSig.getContextDecl());
+                if (node instanceof Call) {
+                    // in case of a call the type can be determined more exactly
+                    Call call = (Call) node;
+                    typ = call.getCallee().getType();
+                }
+                
+                return new IHyperlink[]{
+                        new JumpToDeclaration(editor, startOffset, endOffset, targetPos),
+                        new JumpToImplementation(editor, startOffset, endOffset, methodSig.getName(), typ)
+                };
+            }
+            
             return new IHyperlink[]{
-                    new AbsHyperlink(editor, endOffset, startOffset, pos)
+                    new JumpToDeclaration(editor, startOffset, endOffset, targetPos)
             };
         } catch (BadLocationException e) {
             e.printStackTrace();
@@ -173,7 +258,30 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
      * @return the position of a declaration linked to the given node
      * or null if there is no declaration
      */
-    public static EditorPosition getPosition(CompilationUnit cu, ASTNode<?> node) {
+    private static EditorPosition getDeclarationPosition(CompilationUnit cu, ASTNode<?> node) {
+        ASTNode<?> decl = getDecl(cu, node);
+        return getPosition(decl);
+    }
+
+    /**
+     * returns the position of a given node
+     */
+    public static EditorPosition getPosition(ASTNode<?> node) {
+        if(node == null || node instanceof UnknownDecl){
+            return null;
+        }
+        CompilationUnit declcu = node.getCompilationUnit();
+
+        int start = node.getStartPos();
+        int end = node.getEndPos();
+        
+        return new EditorPosition(new Path(declcu.getFileName()), Symbol.getLine(start), Symbol.getColumn(start), Symbol.getLine(end), Symbol.getColumn(end));
+    }
+
+    /**
+     * get the declaration associated with a given node 
+     */
+    private static ASTNode<?> getDecl(CompilationUnit cu, ASTNode<?> node) {
         ASTNode<?> decl = null;
         try {
             if(node instanceof FnApp){
@@ -248,16 +356,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             // Nada - may come from resolveName() on broken models.
             Activator.logException(e);
         }
-
-        if(decl == null || decl instanceof UnknownDecl){
-            return null;
-        }
-        CompilationUnit declcu = decl.getCompilationUnit();
-
-        int start = decl.getStartPos();
-        int end = decl.getEndPos();
-        
-        return new EditorPosition(new Path(declcu.getFileName()), Symbol.getLine(start), Symbol.getColumn(start), Symbol.getLine(end), Symbol.getColumn(end));
+        return decl;
     }
 
     private static ASTNode<?> getDeltaDecl(Deltaspec deltaspec) {
