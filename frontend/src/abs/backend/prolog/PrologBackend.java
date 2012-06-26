@@ -103,6 +103,11 @@ public class PrologBackend extends Main {
             entriesMode = true;
             collectReachableCode(entries);
         }
+        
+        //print discontiguous predicate to avoid warnings when loading the file
+        outStream.print(":-discontiguous mainBlock/3,def/5, data/3,methodImpl/5,"+
+        "module/1, starImport/1,type/2,interface/3,class/3.\n");
+        
         model.generateProlog(outStream,reachInfo);
     }
 
