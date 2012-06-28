@@ -22,14 +22,16 @@ public class TypeHierarchyHelper {
 
     public static List<Decl> getDirectSubTypes(InterfaceDecl interfaceDecl) {
         List<Decl> result = new ArrayList<Decl>();
-        CompilationUnit cu = interfaceDecl.getCompilationUnit();
+        Model model = interfaceDecl.getModel();
         // iterate over all the types
         // could be done more intelligent, when more performance is needed
-        for (ModuleDecl module : cu.getModuleDecls()) {
-            for (Decl decl : module.getDeclList()) {
-                for (InterfaceDecl superType : getDirectSuperTypes(decl)) {
-                    if (superType == interfaceDecl) {
-                        result.add(decl);
+        for (CompilationUnit cu : model.getCompilationUnits()) {
+            for (ModuleDecl module : cu.getModuleDecls()) {
+                for (Decl decl : module.getDeclList()) {
+                    for (InterfaceDecl superType : getDirectSuperTypes(decl)) {
+                        if (superType == interfaceDecl) {
+                            result.add(decl);
+                        }
                     }
                 }
             }
