@@ -234,21 +234,12 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
      * @param pos position to jump to. Must be in same project as current editor.
      */
     public static void jumpToPosition(ABSEditor currentEditor, EditorPosition pos) {
-        IDocument doc;
         IProject project = currentEditor.getProject();
-        ABSEditor targeteditor = 
-            UtilityFunctions.openABSEditorForFile(pos.getPath(),project );
-        if(targeteditor==null){
+        boolean opened = UtilityFunctions.jumpToPosition(project, pos);
+        if (!opened) {
             currentEditor.openInformation("File not found!",
                     "Could not find file "+pos.getPath().toOSString());
             return;
-        }
-        doc = targeteditor.getDocumentProvider().getDocument(targeteditor.getEditorInput());
-        try {    
-            int startoff = doc.getLineOffset(pos.getLinestart()-1) + pos.getColstart()-1;
-            targeteditor.getSelectionProvider().setSelection(new TextSelection(startoff,0));
-        } catch(BadLocationException ex){
-            Activator.logException(ex);
         }
     }
 

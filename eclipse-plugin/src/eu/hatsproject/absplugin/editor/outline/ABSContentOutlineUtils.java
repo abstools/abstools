@@ -414,7 +414,7 @@ public class ABSContentOutlineUtils {
 	 * @return The String representation or <code>null</code> if there is no
 	 *         text label for the given object
 	 */
-	private static StyledString getLabel(ASTNode<?> element) {
+	public static StyledString getLabel(ASTNode<?> element) {
 
 		// ModuleDecl
 		if (element instanceof ModuleDecl) {

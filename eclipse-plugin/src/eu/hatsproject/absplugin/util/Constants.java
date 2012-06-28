@@ -51,6 +51,7 @@ public class Constants {
 	public static final String ABS_DEBUG_VIEW          = PLUGIN_PACKAGE + ".debug.views.debugview.DebugView";
 	public static final String ABS_DEBUG_VARIABLE_VIEW = PLUGIN_PACKAGE + ".debug.views.variableview.VariableView";
 	public static final String NAVIGATOR_ID            = PLUGIN_PACKAGE + ".navigator.view";
+	public static final String ABS_TYPE_HIERARCHY_VIEW = PLUGIN_PACKAGE + ".editor.views.typehierarchy";
 	//-------------------- BUILDER MARKER ---------------------------------------------------------------------
 	public static final String MARKER_TYPE           = PLUGIN_PACKAGE + ".absproblem";
 	public static final String PARSE_MARKER_TYPE     = PLUGIN_PACKAGE + ".absparseproblem";

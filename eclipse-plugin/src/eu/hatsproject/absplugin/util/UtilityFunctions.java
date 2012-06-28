@@ -19,6 +19,7 @@ import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -611,5 +612,21 @@ public class UtilityFunctions {
 	    MsgConsole c = ConsoleManager.getDefault();
 	    c.println(msg, MessageType.MESSAGE_INFO);
 	}
+
+    public static boolean jumpToPosition(IProject project, EditorPosition pos) {
+        ABSEditor targeteditor = UtilityFunctions.openABSEditorForFile(pos.getPath(),project );
+            if(targeteditor==null){
+                return false;
+            }
+            IDocument doc = targeteditor.getDocumentProvider().getDocument(targeteditor.getEditorInput());
+            try {    
+                int startoff = doc.getLineOffset(pos.getLinestart()-1) + pos.getColstart()-1;
+                targeteditor.getSelectionProvider().setSelection(new TextSelection(startoff,0));
+                return true;
+            } catch(BadLocationException ex){
+                Activator.logException(ex);
+                return false;
+            }
+    }
 	
 }

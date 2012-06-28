@@ -442,6 +442,10 @@
              id="eu.hatsproject.absplugin.jumpdecl"
              name="Jump to declaration">
        </command>
+       <command
+             id="eu.hatsproject.absplugin.openTypeHierarchy"
+             name="Jump to declaration">
+       </command>
     </extension>
     <extension
           point="org.eclipse.ui.bindings">
@@ -450,6 +454,12 @@
              contextId="eu.hatsproject.absplugin.abseditorscope"
              schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
              sequence="F3">
+       </key>
+       <key
+             commandId="eu.hatsproject.absplugin.openTypeHierarchy"
+             contextId="eu.hatsproject.absplugin.abseditorscope"
+             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+             sequence="F4">
        </key>
     </extension>
     <extension
@@ -473,6 +483,14 @@
                 menubarPath="additions"
                 style="push">
           </action>
+          <action
+                class="eu.hatsproject.absplugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
+                definitionId="eu.hatsproject.absplugin.openTypeHierarchy"
+                id="eu.hatsproject.absplugin.openTypeHierarchy"
+                label="Open Type Hierarchy"
+                menubarPath="additions"
+                style="push">
+          </action>
        </viewerContribution>
     </extension>
     <extension
@@ -485,6 +503,13 @@
                 definitionId="eu.hatsproject.absplugin.jumpdecl"
                 id="eu.hatsproject.absplugin.jumpToDeclaration"
                 label="Jump to declaration"
+                style="push">
+          </action>
+          <action
+                class="eu.hatsproject.absplugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
+                definitionId="eu.hatsproject.absplugin.openTypeHierarchy"
+                id="eu.hatsproject.absplugin.openTypeHierarchy"
+                label="Open Type Hierarchy"
                 style="push">
           </action>
        </editorContribution>
@@ -773,7 +798,7 @@
           point="org.eclipse.ui.menus">
        <menuContribution
              allPopups="false"
-             locationURI="toolbar:org.eclipse.ui.views.ContentOutline?after=additions">
+             locationURI="toolbar:org.eclipse.ui.views.Content?after=additions">
           <command
                 commandId="eu.hatsproject.absplugin.sortCommand"
                 icon="icons/sort_icon.gif"
@@ -1038,6 +1063,14 @@
              icon="icons/debug/variable_view.gif"
              id="eu.hatsproject.absplugin.debug.views.variableview.VariableView"
              name="ABS Variables">
+       </view>
+       <view
+             allowMultiple="false"
+             category="eu.hatsproject.absplugin.category"
+             class="eu.hatsproject.absplugin.editor.views.typehierarchy.TypeHierarchyView"
+             icon="icons/class_hi.gif"
+             id="eu.hatsproject.absplugin.editor.views.typehierarchy"
+             name="ABS Type Hierarchy">
        </view>
     </extension>
     <extension
