@@ -61,6 +61,8 @@ public class Main {
     protected boolean check = false ;
     protected boolean numbersol = false ;
     protected boolean ignoreattr = false ;
+    protected boolean minimise = false ;
+    protected boolean maximise = false ;
 
 
     public static void main(final String... args)  {
@@ -119,6 +121,12 @@ public class Main {
                 solve = true;
             } else if (arg.equals("-solveall")) {
                 solveall = true;
+            } else if (arg.startsWith("-min=")) {
+                minimise = true;
+                product = arg.split("=")[1];
+            } else if (arg.startsWith("-max=")) {
+                maximise = true;
+                product = arg.split("=")[1];
             } else if (arg.equals("-sat")) {
                 check = true;
             } else if (arg.startsWith("-check=")) {
@@ -235,6 +243,18 @@ public class Main {
                             System.out.println("Searching for solutions for the feature model...");
                         ChocoSolver s = m.getCSModel();
                         System.out.print(s.resultToString());
+                    }
+                    if (minimise) {
+                        if (verbose)
+                            System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
+                        ChocoSolver s = m.getCSModel();
+                        System.out.print(s.minimiseToString(product));
+                    }
+                    if (maximise) {
+                        if (verbose)
+                            System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
+                        ChocoSolver s = m.getCSModel();
+                        System.out.print(s.maximiseToString(product));
                     }
                     if (solveall) {
                         if (verbose)
@@ -417,6 +437,8 @@ public class Main {
                 + "  -dump          dump AST to standard output \n" 
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature model\n"
                 + "  -solveall      get ALL solutions for the CSP\n"
+                + "  -min=<var>     minimise variable <var> when solving the CSP for the feature model\n"
+                + "  -max=<var>     maximise variable <var> when solving the CSP for the feature model\n"
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
                 + "  -check=<PID>   check satisfiability of a product with qualified name PID\n" 

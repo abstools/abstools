@@ -7,24 +7,27 @@ package abs.frontend.mtvl;
 
 //import abs.frontend.ast.AST.Id;
 //import choco.cp.solver.constraints.global.automata.fast_multicostregular.valselector.MCRValSelector;
-import choco.kernel.model.constraints.ComponentConstraint;
-import choco.kernel.model.constraints.ConstraintType;
-import choco.kernel.model.constraints.MetaConstraint;
-//import com.sun.org.apache.bcel.internal.generic.RETURN;
-import abs.frontend.ast.Model;
-
-import java.io.PrintStream;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import abs.frontend.ast.Model;
 import choco.Choco;
 import choco.cp.model.CPModel;
-import choco.kernel.model.variables.integer.IntegerVariable;
-import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerExpressionVariable;
 import choco.cp.solver.CPSolver;
 import choco.kernel.common.logging.ChocoLogging;
 import choco.kernel.common.logging.Verbosity;
+import choco.kernel.model.constraints.ComponentConstraint;
+import choco.kernel.model.constraints.Constraint;
+import choco.kernel.model.constraints.ConstraintType;
+import choco.kernel.model.constraints.MetaConstraint;
+import choco.kernel.model.variables.integer.IntegerExpressionVariable;
+import choco.kernel.model.variables.integer.IntegerVariable;
 import choco.kernel.solver.ContradictionException;
 
 public class ChocoSolver {
@@ -151,6 +154,39 @@ public class ChocoSolver {
     solved = true;
     return newsol;
   }
+  
+  public boolean optimise(String var, Boolean minimise) {
+      // add the constraints
+      if (!solved) {
+        for (Constraint c: constraints)
+          m.addConstraint(c);
+      }
+
+      // show the problem
+      if (ast.debug) {
+          ast.println("## The constraints:");
+        //ast.println(m.pretty());
+        for (Constraint c: constraints)  {
+          if (!c.pretty().startsWith("true"))
+              ast.println(prettyConst(c));
+        }
+        ast.println("-----");
+      }
+
+      // Read the model
+      s.read(m);
+      
+      // Minmise the model, if possible
+      if (vars.containsKey(var))
+          if (s.contains(vars.get(var))) {
+              solved = true;
+              if (minimise) newsol = s.minimize(s.getVar(vars.get(var)), true);
+              else          newsol = s.maximize(s.getVar(vars.get(var)), true);
+              return newsol;
+          }
+      return false;
+    }
+
 
   public int countSolutions() {
     if (ast.debug) {
@@ -205,6 +241,16 @@ public class ChocoSolver {
         result = result + var.getName() + " -> "+s.getVar(var).getVal() + "\n";
     }
     return result;
+  }
+  
+  public String minimiseToString(String var) {      
+      optimise(var,true);
+      return resultToString();
+  }
+
+  public String maximiseToString(String var) {      
+      optimise(var,false);
+      return resultToString();
   }
 
 
@@ -428,7 +474,9 @@ public class ChocoSolver {
 
     m.addConstraint(
 //      Choco.and(Choco.eq(i1, 1), Choco.TRUE)
-      Choco.or(Choco.eq(b1,1),Choco.eq(b2,1)) // b1 && b2
+//      Choco.or(Choco.eq(b1,1),Choco.eq(b2,1)) // b1 && b2
+//            Choco.and( Choco.lt(i1, i2) , Choco.lt(i2, 7) )
+            Choco.or(Choco.eq(i1,-3), Choco.eq(i1,5))
 //       Choco.and(Choco.and(b1),Choco.TRUE)
 //       Choco.ifOnlyIf( Choco.and( Choco.leq(i3, 9), Choco.eq(i1, Choco.mult(10, Choco.abs(i2))) ), Choco.TRUE )
     );
@@ -446,13 +494,23 @@ public class ChocoSolver {
     s.read(m);
     // Solve the model
 //     s.solve();
+//    s.setObjective(s.getVar(i1))
+    Boolean solved = //s.solve(); //
+            s.maximize(s.getVar(i1), true);
+    if (solved) {
+        System.out.println("i1: "+s.getVar(i1).getVal());
+//        System.out.println("i2: "+s.getVar(i2).getVal());
+    }
+    else {
+        System.out.println("no sol...");
+    }
     try {
-      s.getVar(b1).setVal(1);
-//      s.getVar(b2).setVal(0);
-//      s.getVar(b3).setVal(1);
-      System.out.println("$$$ check sol: "+s.checkSolution()+" $$$");
-      System.out.println("$$$ b1: "+s.getVar(b1).isInstantiated()+" $$$");
-      System.out.println("$$$ b2: "+s.getVar(b2).isInstantiated()+" $$$");
+//      s.getVar(b1).setVal(1);
+////      s.getVar(b2).setVal(0);
+////      s.getVar(b3).setVal(1);
+//      System.out.println("$$$ check sol: "+s.checkSolution()+" $$$");
+//      System.out.println("$$$ b1: "+s.getVar(b1).isInstantiated()+" $$$");
+//      System.out.println("$$$ b2: "+s.getVar(b2).isInstantiated()+" $$$");
     }
     catch (Exception e1) {
       // Catch-all
