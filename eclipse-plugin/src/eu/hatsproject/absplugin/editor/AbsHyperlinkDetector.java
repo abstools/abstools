@@ -1,7 +1,9 @@
 package eu.hatsproject.absplugin.editor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
@@ -88,12 +90,19 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     
     private static final class JumpToDeclaration extends AbsHyperlink {
         private final EditorPosition targetPos;
+        private final String name;
         
         
 
         private JumpToDeclaration(ABSEditor editor, int startOffset, int endOffset, EditorPosition targetPos) {
+            this(editor, startOffset, endOffset, targetPos, "");
+        }
+
+        public JumpToDeclaration(ABSEditor editor, int startOffset, int endOffset, EditorPosition targetPos,
+                String name) {
             super(editor, startOffset, endOffset);
             this.targetPos = targetPos;
+            this.name = name;
         }
 
         @Override
@@ -103,7 +112,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
 
         @Override
         public String getHyperlinkText() {
-           return "Open declaration";
+           return "Open declaration " + name;
         }
 
     }
@@ -190,21 +199,40 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             final int endOffset = getOffset(doc, node.getEnd());
 
             if (decl instanceof MethodSig) { 
-                // decl is an interface method
                 MethodSig methodSig = (MethodSig) decl;
-                
-                
-                Type typ = new InterfaceType((InterfaceDecl) methodSig.getContextDecl());
-                if (node instanceof Call) {
-                    // in case of a call the type can be determined more exactly
-                    Call call = (Call) node;
-                    typ = call.getCallee().getType();
+                if (methodSig.getContextDecl() instanceof InterfaceDecl) {
+                    // decl is an interface method
+                    Type typ = new InterfaceType((InterfaceDecl) methodSig.getContextDecl());
+                    if (node instanceof Call) {
+                        // in case of a call the type can be determined more exactly
+                        Call call = (Call) node;
+                        typ = call.getCallee().getType();
+                    }
+                    
+                    return new IHyperlink[]{
+                            new JumpToDeclaration(editor, startOffset, endOffset, targetPos),
+                            new JumpToImplementation(editor, startOffset, endOffset, methodSig.getName(), typ)
+                    };
+                } else if (methodSig.getContextDecl() instanceof ClassDecl) {
+                    // cursor is on a class method => provide links to methods in interfaces
+                    ClassDecl classDecl = (ClassDecl) methodSig.getContextDecl();
+                    List<IHyperlink> links = new ArrayList<IHyperlink>();
+                    Set<MethodSig> addedMethods = new HashSet<MethodSig>();
+                    for (InterfaceDecl sup : classDecl.getSuperTypes()) {
+                        MethodSig lookupMethod = sup.lookupMethod(methodSig.getName());
+                        if (lookupMethod != null && !addedMethods.contains(lookupMethod)) {
+                            addedMethods.add(lookupMethod);
+                            targetPos = getPosition(lookupMethod);
+                            String name = lookupMethod.getContextDecl().getName() + "." + lookupMethod.getName();
+                            links.add(new JumpToDeclaration(editor, startOffset, endOffset, targetPos, name));
+                        }
+                    }
+                    if (links.size() > 0) {
+                        return links.toArray(new IHyperlink[links.size()]);
+                    } else {
+                        return null;
+                    }
                 }
-                
-                return new IHyperlink[]{
-                        new JumpToDeclaration(editor, startOffset, endOffset, targetPos),
-                        new JumpToImplementation(editor, startOffset, endOffset, methodSig.getName(), typ)
-                };
             }
             
             return new IHyperlink[]{
@@ -342,6 +370,8 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 String mName = cm.moduleName();
                 ModuleDecl dm = cu.lookupModule(mName);
                 decl = dm.lookup(new KindedName(Kind.CLASS, cm.className()));
+            } else if (node instanceof MethodSig) {
+                decl = node;
             }
         } catch (TypeCheckerException e) {
             // Nada - may come from resolveName() on broken models.

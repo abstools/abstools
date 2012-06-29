@@ -1070,7 +1070,7 @@
              class="eu.hatsproject.absplugin.editor.views.typehierarchy.TypeHierarchyView"
              icon="icons/class_hi.gif"
              id="eu.hatsproject.absplugin.editor.views.typehierarchy"
-             name="ABS Type Hierarchy">
+             name="Type Hierarchy">
        </view>
     </extension>
     <extension
