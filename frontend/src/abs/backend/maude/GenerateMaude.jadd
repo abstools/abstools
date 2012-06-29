@@ -770,11 +770,17 @@ aspect GenerateMaude {
         boolean inlist = false;
         stream.println("\n\n< '.Start : Class | Param: noVid,");
         stream.print("  Att: ");
-        if (getNumVar() == 0) {
+        Collection<VarDecl> vars = new ArrayList<VarDecl>();
+        for (Stmt stmt : getStmts()) {
+            if (stmt instanceof VarDeclStmt) {
+                vars.add(((VarDeclStmt) stmt).getVarDecl());
+            }
+        }
+        if (vars.size() == 0) {
             stream.print("noSubst");
         } else {
             inlist = false;
-            for (VarDecl var : getVars()) {
+            for (VarDecl var : vars) {
                 if (inlist) stream.print(", "); else inlist = true;
                 stream.print("'" + var.getName() + " |-> null ");
             }
