@@ -34,6 +34,7 @@ import abs.frontend.parser.ParseException;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.util.Preferences;
 
 /**
  * scans the document and analyzes each token for it's semantic.
@@ -132,10 +133,7 @@ public class ABSCodeScanner implements ITokenScanner {
 		this.fEditor = editor;
 		
 		preferencestore = getDefaultPreferenceStore();
-		Color keycolor = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_KEYWORD));
-		keywordToken = new Token(new TextAttribute(keycolor, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_KEYWORD)));
+		keywordToken = Preferences.getToken(preferencestore, SYNTAXCOLOR_KEYWORD);
 		
 		for(String keyword : abs.frontend.parser.Keywords.getKeywords()){
 			keywords.add(keyword);
@@ -146,15 +144,8 @@ public class ABSCodeScanner implements ITokenScanner {
 	}
 
 	public void initRegexRules() {
-		Color funcolor = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_FUNCTION));
-		IToken funtoken = new Token(new TextAttribute(funcolor, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_FUNCTION)));
-		
-		Color typecolor = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_DATATYPE));
-		IToken typetoken = new Token(new TextAttribute(typecolor, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_DATATYPE)));
+		IToken funtoken = Preferences.getToken(preferencestore, SYNTAXCOLOR_FUNCTION);
+		IToken typetoken = Preferences.getToken(preferencestore, SYNTAXCOLOR_DATATYPE); 
 		
 		String NO_WORD = "[^A-Za-z0-9_]*";
 		String WORD = "[A-Za-z0-9_]*";
@@ -167,74 +158,31 @@ public class ABSCodeScanner implements ITokenScanner {
 	}
 	
 	public void initSemanticRules(){
-		Color color;
 		IToken token;
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_VAR));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_VAR)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_VAR);
 		semanticrules.add(new SemanticRule(VarDecl.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_PARAM));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_PARAM)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_PARAM);
 		semanticrules.add(new SemanticRule(ParamDecl.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_FIELD));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_FIELD)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_FIELD);
 		semanticrules.add(new SemanticRule(FieldDecl.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_FUNCTION));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_FUNCTION)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_FUNCTION);
 		semanticrules.add(new SemanticRule(FnApp.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_DATATYPE));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_DATATYPE)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_DATATYPE);
 		semanticrules.add(new SemanticRule(DataTypeDecl.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_INTERFACE));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_INTERFACE)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_INTERFACE);
 		semanticrules.add(new SemanticRule(InterfaceDecl.class, token));
 		
-		color = new Color(Display.getCurrent(),
-				PreferenceConverter.getColor(preferencestore, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_CONSTRUCTOR));
-		token = new Token(new TextAttribute(color, null,
-				computeAttributes(preferencestore, SYNTAXCOLOR_CONSTRUCTOR)));
+		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_CONSTRUCTOR);
 		semanticrules.add(new SemanticRule(DataConstructorExp.class, token));
 	}
 	
-	/**
-	 * Compute the attributes like bold, italic, underline and strike through for the given key-postfix
-	 * @param store the preference store the attributes are stored in
-	 * @param postfix the postfix of the key. It is combined with e.g. {@link Constants.SYNTAXCOLOR_BOLD}
-	 * @return the int corresponding to the set of attributes
-	 */
-	private static int computeAttributes(IPreferenceStore store, String postfix) {
-		int funattr = 0;
-		//bold
-		boolean attrbold = store.getBoolean(SYNTAXCOLOR_BOLD + postfix);
-		if(attrbold) funattr = funattr | SWT.BOLD;
-		//italic
-		boolean attritalic = store.getBoolean(SYNTAXCOLOR_ITALIC + postfix);
-		if(attritalic) funattr = funattr | SWT.ITALIC;
-		//underline
-		boolean attrunderline = store.getBoolean(SYNTAXCOLOR_UNDERLINE + postfix);
-		if(attrunderline) funattr = funattr | TextAttribute.UNDERLINE;
-		//strike through
-		boolean attrstrikethrough = store.getBoolean(SYNTAXCOLOR_STRIKETHROUGH + postfix);
-		if(attrstrikethrough) funattr = funattr | TextAttribute.STRIKETHROUGH;
-		return funattr;
-	}
+	
 	
 	/**
 	 * Gets called before the first {@link #nextToken()}. Parses the current document.

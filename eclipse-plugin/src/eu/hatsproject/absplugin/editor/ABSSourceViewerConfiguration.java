@@ -41,6 +41,7 @@ import eu.hatsproject.absplugin.console.ConsoleManager.MessageType;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
 import eu.hatsproject.absplugin.editor.contentassist.ABSCompletionProcessor;
 import eu.hatsproject.absplugin.editor.reconciling.ABSReconcilingStrategy;
+import eu.hatsproject.absplugin.util.Preferences;
 
 /**
  * Configures the {@link SourceViewer} which is the main part of the {@link ABSEditor}.
@@ -82,8 +83,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 	public class ABSSingleCommentScanner extends RuleBasedScanner {
 		public ABSSingleCommentScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
-			Color color = new Color(Display.getCurrent(),PreferenceConverter.getColor(store, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_COMMENT));
-			IToken token = new Token(new TextAttribute(color, null, computeAttributes(store, SYNTAXCOLOR_COMMENT)));
+            IToken token = Preferences.getToken(store, SYNTAXCOLOR_COMMENT);
 			IRule singleLineRule = new EndOfLineRule("//",token); 
 			setRules(new IRule[] {singleLineRule});
 		}
@@ -91,8 +91,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 	public class ABSMultiCommentScanner extends RuleBasedScanner {
 		public ABSMultiCommentScanner(){
 			IPreferenceStore store = getDefaultPreferenceStore();
-			Color color = new Color(Display.getCurrent(),PreferenceConverter.getColor(store, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_COMMENT));
-			IToken token = new Token(new TextAttribute(color, null, computeAttributes(store, SYNTAXCOLOR_COMMENT)));
+			IToken token = Preferences.getToken(store, SYNTAXCOLOR_COMMENT);
 			IRule multiLineRule = new MultiLineRule("/*", "*/", token, '\\', true);
 			setRules(new IRule[] {multiLineRule});
 		}
@@ -100,8 +99,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 	public class ABSStringScanner extends RuleBasedScanner {
 		public ABSStringScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
-			Color color = new Color(Display.getCurrent(),PreferenceConverter.getColor(store, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_STRING));
-			IToken token = new Token(new TextAttribute(color, null, computeAttributes(store, SYNTAXCOLOR_STRING)));
+			IToken token = Preferences.getToken(store, SYNTAXCOLOR_STRING);
 			IRule singleLineRule = new SingleLineRule("\"", "\"", token, '\\');
 			setRules(new IRule[] {singleLineRule});
 		}
@@ -109,30 +107,13 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 	public class ABSCharacterScanner extends RuleBasedScanner {
 		public ABSCharacterScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
-			Color color = new Color(Display.getCurrent(),PreferenceConverter.getColor(store, SYNTAXCOLOR_COLOR + SYNTAXCOLOR_STRING));
-			IToken token = new Token(new TextAttribute(color, null, computeAttributes(store, SYNTAXCOLOR_STRING)));
+			IToken token = Preferences.getToken(store, SYNTAXCOLOR_STRING);
 			IRule singleLineRule = new SingleLineRule("'", "'", token, '\\');
 			setRules(new IRule[] {singleLineRule});
 		}
 	}
 	
-	private static int computeAttributes(IPreferenceStore store, String postfix) {
-		int funattr = 0;
-
-		boolean attrbold = store.getBoolean(SYNTAXCOLOR_BOLD + postfix);
-		if(attrbold) funattr = funattr | SWT.BOLD;
-
-		boolean attritalic = store.getBoolean(SYNTAXCOLOR_ITALIC + postfix);
-		if(attritalic) funattr = funattr | SWT.ITALIC;
-
-		boolean attrunderline = store.getBoolean(SYNTAXCOLOR_UNDERLINE + postfix);
-		if(attrunderline) funattr = funattr | TextAttribute.UNDERLINE;
-
-		boolean attrstrikethrough = store.getBoolean(SYNTAXCOLOR_STRIKETHROUGH + postfix);
-		if(attrstrikethrough) funattr = funattr | TextAttribute.STRIKETHROUGH;
-		
-		return funattr;
-	}
+	
 	
 	public class IdentifierWordDetector implements IWordDetector{
 		@Override
@@ -150,19 +131,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 		return new DefaultAnnotationHover(){
 			@Override
 			protected boolean isIncluded(Annotation annotation) {
-				if(annotation instanceof SimpleMarkerAnnotation){
-					SimpleMarkerAnnotation markerannotation = (SimpleMarkerAnnotation)annotation;
-					
-					try {
-						return markerannotation.getMarker().exists() 
-							&& ( markerannotation.getMarker().isSubtypeOf(MARKER_TYPE)
-									|| (markerannotation.getMarker().isSubtypeOf(LOCATION_TYPE_INFERENCE_MARKER_TYPE))
-									|| (markerannotation.getMarker().isSubtypeOf(CostabsLink.MARKER_UB)));
-					} catch (CoreException e) {
-						e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
-					}
-				}
-				return false;
+			    return isAnnotationIncluded(annotation);
 			}
 		};
 	}
@@ -172,21 +141,25 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 		return new DefaultTextHover(sourceViewer){
 			@Override
 			protected boolean isIncluded(Annotation annotation) {
-				if(annotation instanceof SimpleMarkerAnnotation){SimpleMarkerAnnotation markerannotation = (SimpleMarkerAnnotation)annotation;
-					try {
-						return markerannotation.getMarker().exists() 
-							&& ( markerannotation.getMarker().isSubtypeOf(MARKER_TYPE) 
-									|| (markerannotation.getMarker().isSubtypeOf(LOCATION_TYPE_INFERENCE_MARKER_TYPE))
-									|| (markerannotation.getMarker().isSubtypeOf(CostabsLink.MARKER_UB)));
-					} catch (CoreException e) {
-						e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
-					}
-				}
-				return false;
+				return isAnnotationIncluded(annotation);
 			}
+
 		};
 	}
 
+	private boolean isAnnotationIncluded(Annotation annotation) {
+        if(annotation instanceof SimpleMarkerAnnotation){SimpleMarkerAnnotation markerannotation = (SimpleMarkerAnnotation)annotation;
+            try {
+                return markerannotation.getMarker().exists() 
+                    && ( markerannotation.getMarker().isSubtypeOf(MARKER_TYPE) 
+                            || (markerannotation.getMarker().isSubtypeOf(LOCATION_TYPE_INFERENCE_MARKER_TYPE))
+                            || (markerannotation.getMarker().isSubtypeOf(CostabsLink.MARKER_UB)));
+            } catch (CoreException e) {
+                e.printStackTrace(ConsoleManager.getDefault().getPrintStream(MessageType.MESSAGE_ERROR));
+            }
+        }
+        return false;
+    }
 	
 	@Override
 	public IContentAssistant getContentAssistant(ISourceViewer sourceViewer){
