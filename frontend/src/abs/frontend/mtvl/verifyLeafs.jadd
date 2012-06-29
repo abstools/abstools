@@ -32,6 +32,10 @@ aspect VerifyLeafs {
           = getNonLeafs();
   eq CompilationUnit.getFExt(int i).getNonLeafs()
           = getNonLeafs();
+  eq FeatureModelDecl.getFeatureDecl(int i).getNonLeafs()
+          = new HashSet<String>();
+  eq FeatureModelDecl.getFExt(int i).getNonLeafs()
+          = new HashSet<String>();
 }
 
 
