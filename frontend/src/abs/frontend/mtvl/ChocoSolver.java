@@ -124,7 +124,7 @@ public class ChocoSolver {
   }
 
   public IntegerVariable getVar(String var) {
-    return (IntegerVariable) vars.get(var);
+    return vars.get(var);
   }
 
   public boolean solve() {
@@ -162,6 +162,39 @@ public class ChocoSolver {
           m.addConstraint(c);
       }
 
+      // Impose the feature name to be present
+      if (var.contains(".")) {
+         String feat = var.split("\\.")[0];
+         if (ast.debug)
+             ast.println("## including feature '"+feat+"'"); // and its parents.");
+         if (vars.containsKey(feat)) {
+             if (ast.debug)
+                 ast.println("  "+feat+" (selected) -> 1");
+             m.addConstraint(Choco.eq(vars.get(feat), 1));
+
+//             // collect parents of 'newFeatures'
+//             Set<String> newFeatures = new HashSet<String>();
+//             Set<String> newParents  = new HashSet<String>();
+//             
+//             if (model != null) {             
+//                 newFeatures.add(feat);
+//                 model.collectParents(newFeatures,newParents);
+//             }
+//             // add newParents and default values to the solution
+//             Iterator<IntegerVariable> it = m.getIntVarIterator();
+//             while (it.hasNext()) { // for all variables in the constraints (model): round 2
+//                 IntegerVariable var2 = it.next();
+//                 
+//                 // If it is a parent to include, set
+//                 if (newParents.contains(var2.getName())) {
+//                     if (ast.debug)
+//                         ast.println("  "+var2+" (parent) -> 1");             
+//                     m.addConstraint(Choco.eq(var2, 1));
+//                 }
+//             }
+         }
+      }
+
       // show the problem
       if (ast.debug) {
           ast.println("## The constraints:");
@@ -173,9 +206,9 @@ public class ChocoSolver {
         ast.println("-----");
       }
 
-      // Read the model
+         // Read the model
       s.read(m);
-      
+            
       // Minmise the model, if possible
       if (vars.containsKey(var))
           if (s.contains(vars.get(var))) {
@@ -219,7 +252,7 @@ public class ChocoSolver {
 
     Iterator<IntegerVariable> it = m.getIntVarIterator();
     while (it.hasNext()) {
-       IntegerVariable var = (IntegerVariable) it.next();
+       IntegerVariable var = it.next();
        result.put(var.getName(), s.getVar(var).getVal());
     }
     return result;
@@ -236,7 +269,7 @@ public class ChocoSolver {
 
     Iterator<IntegerVariable> it = m.getIntVarIterator();
     while (it.hasNext()) {
-      IntegerVariable var = (IntegerVariable) it.next();
+      IntegerVariable var = it.next();
       if (ast.debug || !var.getName().startsWith("$"))
         result = result + var.getName() + " -> "+s.getVar(var).getVal() + "\n";
     }
@@ -249,6 +282,8 @@ public class ChocoSolver {
   }
 
   public String maximiseToString(String var) {      
+      if (ast.debug)
+          ast.println("optimising "+var);
       optimise(var,false);
       return resultToString();
   }
@@ -304,7 +339,7 @@ public class ChocoSolver {
   
   private static String prettyConst(Constraint c){
     if (c instanceof MetaConstraint) {
-      MetaConstraint mc = (MetaConstraint) c;
+      MetaConstraint<?> mc = (MetaConstraint<?>) c;
       if (mc.getConstraintType() == ConstraintType.IMPLIES)
         return mbParenthesis(prettyConst(mc.getConstraint(0)))+" -> "+mbParenthesis(prettyConst(mc.getConstraint(1)));
       if (mc.getConstraintType() == ConstraintType.AND)
@@ -359,7 +394,7 @@ public class ChocoSolver {
       if (ast.debug)
           ast.println("Adding new values:");
       while (it.hasNext()) { // for all variables in the constraints (model): round 1
-        IntegerVariable var = (IntegerVariable) it.next();
+        IntegerVariable var = it.next();
         // IF used variable is present in the solution, update it!
         if (solution.containsKey  (var.getName())) {
           val = solution.get(var.getName());
@@ -383,7 +418,7 @@ public class ChocoSolver {
       // add newParents and default values to the solution
       it = m.getIntVarIterator();
       while (it.hasNext()) { // for all variables in the constraints (model): round 2
-        IntegerVariable var = (IntegerVariable) it.next();
+        IntegerVariable var = it.next();
 
         // If it is a parent to include, set
         if (newParents.contains(var.getName())) {

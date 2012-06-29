@@ -208,7 +208,7 @@ public class Main {
                 m.flattenForProductUnsafe(product);
         }
         if (dump) {
-            m.dump();
+//            m.dump();
             m.dumpMVars();
         }
 
