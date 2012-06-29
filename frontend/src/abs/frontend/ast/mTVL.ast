@@ -3,6 +3,7 @@
 /// mTVL - root and extension ///
 /////////////////////////////////
 
+FeatureModelDecl ::= FeatureDecl* FExt*;
 
 FExt ::= <Name> [Group] AttrConstraints;
 

@@ -108,8 +108,12 @@ CompilationUnit goal =
   ;
 
 CompilationUnit compilation_unit =
-	module_decl_list.m? rootfeature_list.r fextension_list.ext {:
-        CompilationUnit u = new CompilationUnit(getFileName(),m,r,ext);
+	module_decl_list.m? featuremodeldecl.fm {:  //rootfeature_list.r fextension_list.ext {:
+		List fd = fm.getFeatureDecls();
+		List ed = fm.getFExts();
+		fm.setFeatureDeclList(new List());
+		fm.setFExtList(new List());
+        CompilationUnit u = new CompilationUnit(getFileName(),m,fd, ed);
 //  module_decl_list.m? {:
 //        CompilationUnit u = new CompilationUnit(getFileName(),m,new List(), new List());
 		u.setParserErrors(getErrors());
@@ -932,18 +936,26 @@ Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMIC
 // mTVL language: roots and extensions //
 /////////////////////////////////////////
 
-List fextension_list =
-    {: return new List(); :}
-  | fextension_list.l fextension.ext {: return l.add(ext); :}
-  ;
+FeatureModelDecl featuremodeldecl =
+	{: return new FeatureModelDecl(new List(), new List()); :}
+  | featuremodeldecl.l ROOT feature_decl.f {: l.addFeatureDecl(f); return l; :}
+  | featuremodeldecl.l EXTENSION fextension.ext {: l.addFExt(ext); return l; :}
+  ;	
 
-FExt fextension = EXTENSION TYPE_IDENTIFIER.f LBRACE group.g? attribute_constraint_list.acl RBRACE
+// deprecated
+//List fextension_list =
+//    {: return new List(); :}
+//  | fextension_list.l EXTENSION fextension.ext {: return l.add(ext); :}
+//  ;
+
+FExt fextension = TYPE_IDENTIFIER.f LBRACE group.g? attribute_constraint_list.acl RBRACE
              {: return new FExt(f, g, acl); :} ;
 
-List rootfeature_list =
-    {: return new List(); :}
-  | rootfeature_list.l ROOT feature_decl.f {: return l.add(f); :}
-  ;
+// deprecated
+//List rootfeature_list =
+//    {: return new List(); :}
+//  | rootfeature_list.l ROOT feature_decl.f {: return l.add(f); :}
+//  ;
 
 FeatureDecl feature_decl =
     TYPE_IDENTIFIER.f
