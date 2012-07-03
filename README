@@ -16,8 +16,6 @@ eclipse-plugin - the Eclipse plugin of the ABS IDE
 frontend       - the ABS frontend as well as several backends like the Java
                   backend and the Maude backend
 
-mTVL           - the mTVL implementation
-
 sdedit-for-abs - a modified version of sdedit (sdedit.sourceforge.net) for
                   the visualization of UML sequence charts
 
