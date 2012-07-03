@@ -58,7 +58,7 @@ public class ClassDeclGenerator {
         stream.print("instance.setParams(");
         for (int i = 0; i < decl.getNumParam(); i++) {
             if (i != 0)
-                stream.println(", ");
+                stream.print(", ");
             stream.print("\"" + JavaBackend.getVariableName(decl.getParam(i).getName()) + "\"");
         }
         stream.println(");");
