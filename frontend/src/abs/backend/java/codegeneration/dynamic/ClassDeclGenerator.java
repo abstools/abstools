@@ -55,10 +55,10 @@ public class ClassDeclGenerator {
         generateFields();
         // Constructor
         stream.println("instance.setConstructor(" + className + ".CON$TRUCT.instantiate());");
-        stream.println("instance.setParams(");
+        stream.print("instance.setParams(");
         for (int i = 0; i < decl.getNumParam(); i++) {
             if (i != 0)
-                stream.println(",");
+                stream.println(", ");
             stream.print("\"" + JavaBackend.getVariableName(decl.getParam(i).getName()) + "\"");
         }
         stream.println(");");
