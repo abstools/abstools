@@ -24,18 +24,18 @@ import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.ParamDecl;
 
-public class ClassDeclGenerator extends CodeGenerator {
+public class ClassDeclGenerator {
 
     private final ClassDecl decl;
     private final String className;
+    protected final PrintStream stream;
 
     ClassDeclGenerator(PrintStream stream, ClassDecl decl) {
-        super(stream);
+        this.stream = stream;
         this.decl = decl;
         className = JavaBackend.getClassName(decl.getName());
     }
 
-    @Override
     public void generate() {
         DynamicJavaGeneratorHelper.generateHelpLine(decl, stream);
         generateClassHeader();
@@ -74,8 +74,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         generateConstructor();
 
         for (MethodImpl m : decl.getMethods()) {
-            stream.println("public static class " + m.getMethodSig().getName() + " extends "
-                    + ABSClosure.class.getName() + " {");
+            stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
             stream.println("private static " + ABSClosure.class.getName() + " instance;");
             stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
             stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
@@ -143,7 +142,7 @@ public class ClassDeclGenerator extends CodeGenerator {
         stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");
         stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
         stream.println("__ABS_thread.setCOG(__ABS_cog);");
-        stream.println("try { ");
+        stream.println("try {");
         generateObjectConstruction("__ABS_runtime");
 
         stream.println(";");
@@ -189,11 +188,11 @@ public class ClassDeclGenerator extends CodeGenerator {
 
         for (FieldDecl f : decl.getFields()) {
             if (f.hasInitExp()) {
-                stream.println("thisP.setFieldValue(\"");
+                stream.print("thisP.setFieldValue(\"");
                 stream.print(JavaBackend.getVariableName(f.getName()));
                 stream.print("\", ");
                 f.getInitExp().generateJavaDynamic(stream);
-                stream.print(");");
+                stream.println(");");
             }
         }
         if (decl.hasInitBlock()) {

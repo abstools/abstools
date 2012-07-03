@@ -109,7 +109,7 @@ aspect GenerateJava {
         stream.print(" extends " + dataTypeDecl.getName());
         DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
 
-        stream.println(" {");
+        stream.println("{");
 
         int i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
@@ -139,7 +139,7 @@ aspect GenerateJava {
         }
         stream.println("}");
 
-        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] {");
+        stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
         i=0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
@@ -147,7 +147,7 @@ aspect GenerateJava {
             stream.print("this.arg" + i);
             i++;
         }
-        stream.println("};}");
+        stream.println("}; }");
 
         stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\" ;}");
 
@@ -314,7 +314,7 @@ aspect GenerateJava {
     }
 
     public void Block.generateJavaDynamic(PrintStream stream, boolean addReturn) {
-        stream.println(" {");
+        stream.println("{");
 
         super.generateJavaDynamic(stream);
         if (this instanceof MainBlock || this instanceof InitBlock) {

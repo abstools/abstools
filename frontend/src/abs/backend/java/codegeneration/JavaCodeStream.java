@@ -41,7 +41,7 @@ public class JavaCodeStream extends PrintStream {
      * @see java.io.PrintStream#print(java.lang.String)
      */
     public void print(String s) {
-        System.err.println("=== " + indent.length() + " === " + s + " ===");
+        //System.err.println("=== " + indent.length() + " === " + s + " ===");
         if (startNewLine) super.print(indent);
         super.print(s);
         startNewLine = false;
@@ -50,7 +50,7 @@ public class JavaCodeStream extends PrintStream {
     /*
      * println statement that tries to be smart about code indentation:
      * If string ends with "{", it will increase the indentation,
-     * if string is "}", it will decrease indentation. 
+     * if string is equal to "}", it will decrease indentation. 
      * 
      * This to work requires some collaboration from the programmer:
      * - open braces should be the last character in a line of code, i.e. println("...{")
@@ -59,15 +59,17 @@ public class JavaCodeStream extends PrintStream {
      * @see java.io.PrintStream#println(java.lang.String)
      */
     public void println(String s) {
-        System.err.println("*** " + indent.length() + " *** " + s + " ***");
-        if (startNewLine) super.print(indent);
+       //System.err.println("*** " + indent.length() + " *** " + s + " ***");
+        if (s.equals("}"))
+            decIndent();
+
+        if (startNewLine) 
+            super.print(indent);
         super.print(s);
         super.println();
         startNewLine = true;
         
         if (s.endsWith("{"))
             incIndent();
-        else if (s.equals("}"))
-            decIndent();
     }
 }

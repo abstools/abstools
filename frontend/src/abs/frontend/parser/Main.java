@@ -208,7 +208,6 @@ public class Main {
                 m.flattenForProductUnsafe(product);
         }
         if (dump) {
-//            m.dump();
             m.dumpMVars();
         }
 
@@ -229,13 +228,6 @@ public class Main {
                     System.err.flush();
                 }
             } else {
-//                if (fullabs) {
-//                    // apply deltas that correspond to given product
-//                    m.flattenForProduct(product);
-//
-//                    if (dump)
-//                        m.dump();
-//                }
                 typeCheckModel(m);
                 if (m.hasMTVL()) {
                     if (solve) {

@@ -73,7 +73,8 @@ public class JavaBackend extends Main {
         System.out.println("Java Backend:\n"
                 + "  -d <dir>       generate files to <dir>\n"
                 + "  -debug         print stacktrace on exception\n"
-                + "  -sourceonly    do not generate class files\n");
+                + "  -sourceonly    do not generate class files\n"
+                + "  -dynamic       generate dynamically updateable code\n");
     }
 
     private void compile(String[] args) throws Exception {
