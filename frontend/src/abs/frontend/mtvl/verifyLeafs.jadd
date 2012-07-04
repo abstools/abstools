@@ -2,7 +2,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
-Given a set of features, collect in "newParents" all of its parents.
+Adds a single set for names of features with children, accessible from any feature declaration.
+This set is initialised here, and extended when collecting semantic errors (ErrorCheck.jadd). 
 **/
 
 
@@ -13,13 +14,6 @@ aspect VerifyLeafs {
   public Set<String> Model.getNonLeafs() {
     return nonLeafs;
   }
-
-//  public boolean FeatureDecl.isLeaf() {
-//    return hasGroup();
-//  }
-//  public boolean FExt.isLeaf() {
-//    return hasGroup();
-//  }
 
 
   inh Set<String> CompilationUnit.getNonLeafs();
@@ -32,6 +26,9 @@ aspect VerifyLeafs {
           = getNonLeafs();
   eq CompilationUnit.getFExt(int i).getNonLeafs()
           = getNonLeafs();
+  
+  // FeatureModelDecl is a temporary structure, never present in the final AST,
+  // so result is not relevant. But the compiler needs these definitions anyway.
   eq FeatureModelDecl.getFeatureDecl(int i).getNonLeafs()
           = new HashSet<String>();
   eq FeatureModelDecl.getFExt(int i).getNonLeafs()
