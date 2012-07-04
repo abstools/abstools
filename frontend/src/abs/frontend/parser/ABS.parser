@@ -995,6 +995,12 @@ BoundaryInt boundary_int
                   {: return new BoundaryVal((-1)*Integer.parseInt(i)); :}
   ;
 
+List int_list
+  = INTLITERAL.i {: return new List().add(new BoundaryVal(Integer.parseInt(i))); :}
+  |	int_list.il COMMA INTLITERAL.i {: return il.add(new BoundaryVal(Integer.parseInt(i))); :}
+  | MINUS INTLITERAL.i {: return new List().add(new BoundaryVal((-1)*Integer.parseInt(i))); :}
+  |	int_list.il COMMA MINUS INTLITERAL.i {: return il.add(new BoundaryVal((-1)*Integer.parseInt(i))); :}
+  ;
 
 
 
@@ -1003,6 +1009,17 @@ BoundaryInt boundary_int
 AttrConstraints attribute_constraint_list
   =   {: return new AttrConstraints(new List(),new List()); :}
   /* Attributes */
+  | attribute_constraint_list.acl 
+    TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACE int_list.il RBRACE SEMICOLON
+	{: Symbol curr_sym = _symbols[offset + 1];
+	  if (!(t.equals("Int"))) {
+	   addSyntaxError("Unknown attribute type '"+t+"'",curr_sym); // TEST THIS
+	  }
+	  List al = acl.getAttributes().add(new Attribute(id, new IntListType(il)));
+	  List cl = acl.getConstrs();
+	  return new AttrConstraints(al,cl);
+	  //return new Attribute(id,new IntType(b1,b2));      
+   :}
   | attribute_constraint_list.acl 
     TYPE_IDENTIFIER.t IDENTIFIER.id IN LBRACKET boundary_int.b1 UNTIL boundary_int.b2 RBRACKET SEMICOLON
       {: Symbol curr_sym = _symbols[offset + 1];

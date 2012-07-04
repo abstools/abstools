@@ -27,6 +27,7 @@ Attribute ::= <Name> AType:MType;
 abstract  MType;
 BoolType: MType;
 IntType:  MType ::= Min:BoundaryInt Max:BoundaryInt;
+IntListType:  MType ::= BoundaryVal*;
 
 abstract BoundaryInt;
 Limit: BoundaryInt;

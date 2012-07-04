@@ -22,9 +22,15 @@ aspect CSP {
 
     // new int variable for all int variables
     for (String st : ints().keySet()) {
-      BoundaryInt b1 = ints().get(st)[0];
-      BoundaryInt b2 = ints().get(st)[1];
-      addBoundedVar(s,st,b1,b2);
+      if (ints().get(st).length == 2) {
+    	  BoundaryInt b1 = ints().get(st)[0];
+    	  BoundaryInt b2 = ints().get(st)[1];
+    	  addBoundedVar(s,st,b1,b2);
+      }
+      else {
+    	  addSetVar(s,st,ints().get(st));
+      }
+    
       //s.addIntVar(st,getBoundary(b1,false),getBoundary(b2,true));
     }
     for (String st : bools())
@@ -100,6 +106,16 @@ aspect CSP {
         s.addIntVar(name,((BoundaryVal) b1).getValue(),true);
     else
         s.addIntVar(name,((BoundaryVal) b1).getValue(),((BoundaryVal) b2).getValue());
+  }
+
+  private void Model.addSetVar(ChocoSolver s, String name, BoundaryInt[] bs) {
+	  int bsize = bs.length - 1;
+	  int[] vals = new int[bsize];
+	  // addSetVar only called if bs has only BoundaryVals
+	  for (int i=0; i < bsize; i++) {
+		vals[i] = ((BoundaryVal) bs[i+1]).getValue(); // drop first value - repeated
+	  }
+	  s.addIntVar(name,vals);
   }
 
   // GENERAL NODE: propagate

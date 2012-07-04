@@ -96,6 +96,13 @@ public class ChocoSolver {
     if (ast.debug) ast.println("  adding var '"+name+"' (default -> "+fromto+")");
     //m.addVariable(v);
   }
+  public void addIntVar(String name, int[] vals) {
+      IntegerVariable v = Choco.makeIntVar(name,vals);
+      vars.put(name,v);
+      defaultvals.put(name,vals[0]); // vals has at least 1 element! (by the parser constraints)
+      if (ast.debug) ast.println("  adding var '"+name+"' (default -> "+vals[0]+")");
+      //m.addVariable(v);
+  }
   public void addIntVar(String name) {
     IntegerVariable v = Choco.makeIntVar(name);
     vars.put(name,v);

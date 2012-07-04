@@ -92,6 +92,23 @@ aspect Variables {
       BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
       ivars.put(pname()+"."+getName(),boundaries);
     }
+    if (getAType() instanceof IntListType) {
+//      System.out.println("searching for att "+pname()+"."+getName()+" in "+ivars);
+     if (ivars.containsKey(pname()+"."+getName()))
+       isRepeated = true;
+     // check also for bools, but not check in bool for ints!
+     if (getBoolCVars().indexOf(pname()+"."+getName()) != -1)
+       isRepeated = true;
+     IntListType type = (IntListType) getAType();
+     // note that "type" is a list with at least a value, because of the parser
+     int bsize = type.getBoundaryVals().getNumChild()+1;
+     BoundaryInt[] values = new BoundaryInt[bsize];
+     values[0] = type.getBoundaryVal(0); // duplicate first value;
+     for (int i=1; i<bsize; i++) {
+    	 values[i] = type.getBoundaryVal(i-1);
+     }
+     ivars.put(pname()+"."+getName(),values);
+    }
   }
   public void Attribute.getBoolFVars(ArrayList<String> bvars) {
     if (getAType() instanceof BoolType) {
