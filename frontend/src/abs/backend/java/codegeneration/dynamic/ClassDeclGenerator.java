@@ -162,7 +162,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateObjectConstruction(String runtime) {
-        stream.print(ABSDynamicObject.class.getName() + "__ABS_result = ");
+        stream.print(ABSDynamicObject.class.getName() + " __ABS_result = ");
         if (decl.isForeign()) {
             stream.println("(" + className + ") " + runtime + ".getForeignObject(\"" + decl.getModule().getName() + "."
                     + decl.getName() + "\");");

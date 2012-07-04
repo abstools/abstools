@@ -39,7 +39,7 @@ class JavaCompiler {
         boolean res = BatchCompiler.compile(DEFAULT_PREFIX + args, new PrintWriter(outWriter), new PrintWriter(errWriter), null);
         if (!res) {
             errorString = errWriter.toString();
-            throw new JavaCodeGenerationException("There seems to be a bug in the abs java backend." +
+            throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +
                     "The generated code contains errors:\n" + errorString);
         }
         return res;

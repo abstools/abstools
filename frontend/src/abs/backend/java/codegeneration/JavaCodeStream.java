@@ -53,14 +53,14 @@ public class JavaCodeStream extends PrintStream {
      * if string is equal to "}", it will decrease indentation. 
      * 
      * This to work requires some collaboration from the programmer:
-     * - open braces should be the last character in a line of code, i.e. println("...{")
-     * - closing braces should stand alone on a separate line of code, i.e. println("}")
+     * - open braces should be the last character in a line of code, i.e. println("... {")
+     * - closing braces should be the first character in a line of code, i.e. println("} ...")
      *
      * @see java.io.PrintStream#println(java.lang.String)
      */
     public void println(String s) {
        //System.err.println("*** " + indent.length() + " *** " + s + " ***");
-        if (s.equals("}"))
+        if (s.startsWith("}"))
             decIndent();
 
         if (startNewLine) 

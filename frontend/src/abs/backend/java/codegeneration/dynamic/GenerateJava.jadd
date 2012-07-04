@@ -647,8 +647,17 @@ aspect GenerateJava {
 
     public abstract void Pattern.generateJavaDynamic(PrintStream stream);
 
+//    public void ConstructorPattern.generateJavaDynamic(PrintStream stream) {
+//        stream.print("new " + PatternConstructor.class.getName() + "(\"" + getConstructor() + "\"");
+//        for (Pattern p : getParams()) {
+//            stream.print(",");
+//            p.generateJavaDynamic(stream);
+//        }
+//        stream.print(")");
+//    }
     public void ConstructorPattern.generateJavaDynamic(PrintStream stream) {
-        stream.print("new " + PatternConstructor.class.getName() + "(\"" + getConstructor() + "\"");
+        DataConstructor decl = getDataConstructor();
+        stream.print("new " + PatternConstructor.class.getName() + "(" + JavaBackend.getQualifiedString(decl) + ".class");
         for (Pattern p : getParams()) {
             stream.print(",");
             p.generateJavaDynamic(stream);
@@ -656,6 +665,8 @@ aspect GenerateJava {
         stream.print(")");
     }
 
+    
+    
     public void PatternVar.generateJavaDynamic(PrintStream stream) {
         stream.print("new " + PatternVariable.class.getName() + "(\"" + JavaBackend.getVariableName(getVar().getName()) + "\")");
     }

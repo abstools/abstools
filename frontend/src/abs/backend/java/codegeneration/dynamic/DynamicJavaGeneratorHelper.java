@@ -11,6 +11,7 @@ import java.io.PrintStream;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.CodeGenerator;
+import abs.backend.java.codegeneration.JavaCodeStream;
 import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
@@ -491,11 +492,11 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateAwaitStmt(AwaitStmt awaitStmt, PrintStream stream) {
         OutputStream exprOStream = new ByteArrayOutputStream();
-        PrintStream exprStream = new PrintStream(exprOStream);
+        PrintStream exprStream = new JavaCodeStream(exprOStream);
         // Necessary temporary variables are written to "stream" and the 
         // await-expression is written to exprStream
         awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
-        stream.print(JavaBackendConstants.ABSRUNTIME+".await(");
+        stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
         stream.print(exprOStream.toString());
         stream.println(");");
     }

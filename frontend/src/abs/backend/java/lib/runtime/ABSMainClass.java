@@ -7,7 +7,7 @@ package abs.backend.java.lib.runtime;
 public class ABSMainClass extends ABSClass {
     private static ABSMainClass instance;
     
-    public static ABSMainClass instance() {
+    public static ABSMainClass instantiate() {
         if (instance == null) instance = new ABSMainClass();
         return instance;
     }
