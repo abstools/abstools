@@ -344,6 +344,7 @@ def String toString<T>(T t) = builtin;
 data Time = Time(Int);
 def Int currentms() = builtin;
 def Time now() = Time(currentms());
+// CLEANUP: rename to timeValue
 def Int timeval(Time t) = case t { Time(v) => v; };
 
 // use this like so:
