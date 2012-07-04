@@ -1,0 +1,24 @@
+import java.util.Map;
+import java.util.Set;
+
+aspect ProductConstraints {
+    public boolean Model.getProdConstraints(String productname, Map<String,IntegerVariable> vars, Set<Constraint> newcs) {
+        boolean res = false;
+        for (CompilationUnit cu: getCompilationUnits())
+            for (ModuleDecl md: cu.getModuleDecls())
+                for (Product p: md.getProducts())
+                    if (p.qualifiedName().equals(productname)) {
+                        res = true;
+                        for (Feature f: p.getFeatures()) {
+                            newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
+                            for (AttrAssignment aa: f.getAttrAssignments()) {
+                                String fname = f.getName()+"."+aa.getName();
+                                if (vars.containsKey(fname))
+                                    newcs.add(ChocoSolver.eqeq(vars.get(fname),
+                                            aa.getValue().getIntValue().intValue()));
+                            }
+                        }
+                    }                
+        return res;
+    }
+}

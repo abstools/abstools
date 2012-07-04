@@ -18,8 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
+
+import choco.kernel.model.constraints.Constraint;
 
 import abs.frontend.mtvl.ChocoSolver;
 
@@ -58,6 +61,7 @@ public class Main {
     // mTVL options
     protected boolean solve = false ;
     protected boolean solveall = false ;
+    protected boolean solveWith = false ;
     protected boolean check = false ;
     protected boolean numbersol = false ;
     protected boolean ignoreattr = false ;
@@ -121,6 +125,9 @@ public class Main {
                 solve = true;
             } else if (arg.equals("-solveall")) {
                 solveall = true;
+            } else if (arg.startsWith("-solveWith=")) {
+                solveWith = true;
+                product = arg.split("=")[1];
             } else if (arg.startsWith("-min=")) {
                 minimise = true;
                 product = arg.split("=")[1];
@@ -256,6 +263,21 @@ public class Main {
                         while(s.solveAgain()) {
                           System.out.println("------ "+(i++)+"------");
                           System.out.print(s.resultToString());
+                        }
+                    }
+                    if (solveWith) {
+                        if (verbose)
+                            System.out.println("Searching for solution that includes "+product+"...");
+                        ChocoSolver s = m.getCSModel();
+                        HashSet<Constraint> newcs = new HashSet<Constraint>();
+                        if (m.getProdConstraints(product,s.vars,newcs)) {
+                            for (Constraint c: newcs) s.addConstraint(c);
+                            System.out.println("checking solution: "+s.resultToString());
+                        }
+                        else {
+                            System.out.println("Product '"+product+"' not found.");
+                            if (!product.contains("."))
+                                System.out.println("Maybe you forgot the module name?");
                         }
                     }
                     if (check) {
@@ -429,6 +451,8 @@ public class Main {
                 + "  -dump          dump AST to standard output \n" 
                 + "  -solve         solve constraint satisfaction problem (CSP) for the feature model\n"
                 + "  -solveall      get ALL solutions for the CSP\n"
+                + "  -solveWith=<PID> \n"
+                + "                 solve CSP by finding a product that includes PID.\n"
                 + "  -min=<var>     minimise variable <var> when solving the CSP for the feature model\n"
                 + "  -max=<var>     maximise variable <var> when solving the CSP for the feature model\n"
                 + "  -nsol          count the number of solutions\n"
