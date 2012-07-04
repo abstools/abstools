@@ -60,7 +60,7 @@ public class JavaCodeStream extends PrintStream {
      */
     public void println(String s) {
        //System.err.println("*** " + indent.length() + " *** " + s + " ***");
-        if (s.startsWith("}"))
+        if (s.startsWith("}") || s.equals(")"))
             decIndent();
 
         if (startNewLine) 
@@ -69,7 +69,7 @@ public class JavaCodeStream extends PrintStream {
         super.println();
         startNewLine = true;
         
-        if (s.endsWith("{"))
+        if (s.endsWith("{") || s.equals("("))
             incIndent();
     }
 }

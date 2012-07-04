@@ -6,7 +6,6 @@ package abs.backend.java.codegeneration.dynamic;
 
 import java.io.PrintStream;
 import abs.backend.java.JavaBackend;
-import abs.backend.java.codegeneration.CodeGenerator;
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSField;
@@ -183,7 +182,7 @@ public class ClassDeclGenerator {
         stream.println("if (instance == null) { instance = new CON$TRUCT(); }");
         stream.println("return instance;");
         stream.println("}");
-        stream.println("public " + ABSValue.class.getName() + " exec(" + ABSDynamicObject.class.getName() + " thisP, "
+        stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, "
                 + ABSValue.class.getName() + "... args) {");
 
         for (FieldDecl f : decl.getFields()) {

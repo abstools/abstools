@@ -59,7 +59,7 @@ aspect GenerateJava {
 
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
-                stream.println(ABSDynamicObject.class.getName() + " thisP = this;");
+                stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
                 block.generateJavaDynamic(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
@@ -310,7 +310,7 @@ aspect GenerateJava {
     }
 
     public void Block.generateJavaDynamic(PrintStream stream) {
-        generateJavaDynamic(stream,false);
+        generateJavaDynamic(stream, false);
     }
 
     public void Block.generateJavaDynamic(PrintStream stream, boolean addReturn) {
@@ -362,7 +362,7 @@ aspect GenerateJava {
         } else {
             stream.print("null");
         }
-        stream.print(";");
+        stream.println(";");
 
         stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
         stream.print("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
@@ -504,11 +504,7 @@ aspect GenerateJava {
     }
 
     public void SyncCall.generateJavaDynamic(PrintStream stream) {
-        stream.print(ABSRuntime.class.getName() + ".checkForNull(");
-        getCallee().generateJavaDynamic(stream);
-        stream.print(")");
-        stream.print(".dispatch");
-        DynamicJavaGeneratorHelper.generateArgs(stream,"\"" + getMethod() + "\"",getParams());
+        DynamicJavaGeneratorHelper.generateSyncCall(stream, this);
     }
 
     public void OriginalCall.generateJavaDynamic(PrintStream stream) {
@@ -533,10 +529,10 @@ aspect GenerateJava {
         String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
         if (hasCog()) {
             stream.print(className + ".__ABS_createNewCOG");
-            DynamicJavaGeneratorHelper.generateArgs(stream,"thisP",getParams());
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams());
         } else {
             stream.print(className + ".__ABS_createNewObject");
-            DynamicJavaGeneratorHelper.generateArgs(stream,"thisP",getParams());
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams());
         }
     }
 
@@ -589,7 +585,7 @@ aspect GenerateJava {
        stream.println(expType + ">");
          */
         stream.println("() {");
-        stream.print("      public " + expType + " of(");
+        stream.print("public " + expType + " of(");
         for (String freeVarName : getFreeVars()) {
             VarOrFieldDecl decl = lookupVarOrFieldName(freeVarName,false);
             String freeVarType = JavaBackend.getQualifiedString(decl.getType());
@@ -597,7 +593,7 @@ aspect GenerateJava {
             stream.print(", ");
         }
 
-        stream.println("final " + varType + " __ABS_value) { ");
+        stream.println("final " + varType + " __ABS_value) {");
         int i = 0;
         for (CaseBranch b : getBranchs()) {
             String bindingName = "__ABS_binding" + i;
@@ -612,7 +608,7 @@ aspect GenerateJava {
             boolean first = true;
             for (PatternVar var : freeVars) {
                 if (first) first = false;
-                else stream.print(",");
+                else stream.print(", ");
                 stream.print("final " + JavaBackend.getQualifiedString(var.getType()));
                 stream.print(" " + JavaBackend.getVariableName(var.getVar().getName()));
             }
@@ -623,7 +619,7 @@ aspect GenerateJava {
             first = true;
             for (int j = 0; j < freeVars.size(); j++) {
                 if (first) first = false;
-                else stream.print(",");
+                else stream.print(", ");
                 stream.print("(");
                 stream.print(JavaBackend.getQualifiedString(freeVars.get(j).getType()));
                 stream.print(") ");
@@ -635,7 +631,8 @@ aspect GenerateJava {
         Position pos = new Position(this);
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
         stream.println(pos.getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
-        stream.print("}}.of(");
+        stream.println("}");
+        stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
             stream.print(JavaBackend.getVariableName(freeVarName));
             stream.print(", ");
