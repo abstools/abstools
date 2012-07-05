@@ -66,6 +66,8 @@ public class Main {
     protected boolean solve = false ;
     protected boolean solveall = false ;
     protected boolean solveWith = false ;
+    protected boolean minWith = false ;
+    protected boolean maxProduct = false ;
     protected boolean check = false ;
     protected boolean numbersol = false ;
     protected boolean ignoreattr = false ;
@@ -132,6 +134,11 @@ public class Main {
             } else if (arg.startsWith("-solveWith=")) {
                 solveWith = true;
                 product = arg.split("=")[1];
+            } else if (arg.startsWith("-minWith=")) {
+                minWith = true;
+                product = arg.split("=")[1];
+            } else if (arg.startsWith("-maxProduct")) {
+                maxProduct = true;
             } else if (arg.startsWith("-min=")) {
                 minimise = true;
                 product = arg.split("=")[1];
@@ -290,6 +297,38 @@ public class Main {
                             if (!product.contains("."))
                                 System.out.println("Maybe you forgot the module name?");
                         }
+                    }
+                    if (minWith) {
+                        if (verbose)
+                            System.out.println("Searching for solution that includes "+product+"...");
+                        ChocoSolver s = m.getCSModel();
+                        HashSet<Constraint> newcs = new HashSet<Constraint>();
+                        s.addIntVar("difference", 0, 50);
+                        if (m.getDiffConstraints(product,s.vars,newcs, "difference")) {
+                            for (Constraint c: newcs) s.addConstraint(c);
+                            System.out.println("checking solution: "+s.minimiseToString("difference"));
+                        }
+                        else {
+                            System.out.println("Product '"+product+"' not found.");
+                            if (!product.contains("."))
+                                System.out.println("Maybe you forgot the module name?");
+                        }
+                        
+                    }
+                    if (maxProduct) {
+                        if (verbose)
+                            System.out.println("Searching for solution that includes "+product+"...");
+                        ChocoSolver s = m.getCSModel();
+                        HashSet<Constraint> newcs = new HashSet<Constraint>();
+                        s.addIntVar("noOfFeatures", 0, 50);
+                        if (m.getMaxConstraints(product,s.vars,newcs, "noOfFeatures")) {
+                            for (Constraint c: newcs) s.addConstraint(c);
+                            System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
+                        }
+                        else {
+                            System.out.println("---No solution-------------");
+                        }
+                        
                     }
                     if (check) {
                         /*for (CompilationUnit u : m.getCompilationUnits()) {
