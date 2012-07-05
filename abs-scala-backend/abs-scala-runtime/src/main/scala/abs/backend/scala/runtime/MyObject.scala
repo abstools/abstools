@@ -5,9 +5,12 @@
 package abs.backend.scala.runtime
 
 import akka.actor.{Actor, ActorRef}
-import akka.event.EventHandler
-import akka.serialization.RemoteActorSerialization
 import scala.util.continuations._
+import akka.event.Logging
+import akka.pattern.ask
+import akka.dispatch.Await
+import akka.util.Timeout
+import akka.util.duration._
 
 object MyObject {
   sealed abstract class Message
@@ -16,19 +19,19 @@ object MyObject {
 }
 
 abstract class MyObject(private val cog: ActorRef) extends Actor {
-  self.id = self.uuid.toString
-
+  private val log = Logging(context.system, this)
+  
   /**
    * Submits a new task to this object's COG and returns a remote actor reference to it.
    */
   protected def submit(block: => Any @suspendable) {
-    EventHandler.debug(this, "[%s] Submitting block to COG %s".format(self, cog))
+    log.debug("[%s] Submitting block to COG %s".format(self, cog))
 
-    cog !! new Cog.Run(() => block) match {
-      case None => throw new RuntimeException("[%s] No reply from cog %s".format(self, cog))
-      case Some(x) => 
-        self reply_? x
-    }
+    implicit val timeout = Timeout(5 seconds)
+    
+    val result = Await.result(cog ? new Cog.Run(() => block), timeout.duration)
+    
+    sender ! result
   }
   
   protected def await(fut: ActorRef) =
@@ -43,57 +46,44 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
       k : (Unit => Unit) => k()
     }
 
-  def _new(clazz: Class[_ <: Actor], args: Any*) =
-    cog !! new Cog.New(clazz, args) match {
-      case None    => throw new RuntimeException("[%s] No reply from COG %s".format(self, cog));
-	  case Some(x) => x.asInstanceOf[Array[Byte]]
-    }
+  def _new(clazz: Class[_ <: Actor], args: Any*) = {
+    implicit val timeout = Timeout(5 seconds)
+    
+    Await.result (cog ? new Cog.New(clazz, args), timeout.duration).asInstanceOf[ActorRef]
+  }
   
   def _newcog(url: Option[String], clazz: Class[_ <: Actor], args: Any*) =
     url map { url =>
-      val addr = url.split(":")
-      
       // contact remote host
-      val remoteNode = Actor.remote.actorFor("nodeManager", addr(0), addr(1).toInt)
+      val remoteNode = context.actorFor("akka://ABS-Scala@%s/NodeManager".format(url))
     
-      val remoteCog = remoteNode !! NodeManager.NewCog match {
-      	case None    => throw new RuntimeException("[%s] No reply from remote node %s".format(self, remoteNode));
-      	case Some(x) => RemoteActorSerialization.fromBinaryToRemoteActorRef(x.asInstanceOf[Array[Byte]])
-      }
-    
-      remoteCog !! new Cog.New(clazz, args) match {
-      	case None    => throw new RuntimeException("[%s] No reply from remote COG %s".format(self, remoteCog));
-      	case Some(x) => x.asInstanceOf[Array[Byte]]
-      }
-    } getOrElse (
-      cog !! new Cog.NewCog(clazz, args) match {
-      	case None    => throw new RuntimeException("[%s] No reply from COG %s".format(self, cog));
-      	case Some(x) => x.asInstanceOf[Array[Byte]]
-      }
-    )
-  
-  def asyncCall(that: Array[Byte], msg: Any): ActorRef =
-    asyncCall(RemoteActorSerialization.fromBinaryToRemoteActorRef(that), msg)
-    
-  def asyncCall(that: ActorRef, msg: Any): ActorRef = {
-    EventHandler.debug(this, "[%s] Invoking async call %s (recipient %s)".format(self, msg.toString, that))
-    
-    that !! msg match {
-      case None => throw new RuntimeException("%s didn't get task reference from other actor %s due to timeout".format(self, that))
-      case Some(x) => RemoteActorSerialization.fromBinaryToRemoteActorRef(x.asInstanceOf[Array[Byte]])
+      implicit val timeout = Timeout(5 seconds)
+      
+      val remoteCog = Await.result(remoteNode ? NodeManager.NewCog, timeout.duration).asInstanceOf[ActorRef]
+
+      Await.result(remoteCog ? Cog.New(clazz, args), timeout.duration).asInstanceOf[ActorRef]
+    } getOrElse {
+      implicit val timeout = Timeout(5 seconds)
+      Await.result(cog ? Cog.NewCog(clazz, args), timeout.duration).asInstanceOf[ActorRef]
     }
+  
+  def asyncCall(that: ActorRef, msg: Any): ActorRef = {
+    log.debug("[%s] Invoking async call %s (recipient %s)".format(self, msg.toString, that))
+    
+    implicit val timeout = Timeout(5 seconds)
+    
+    Await.result(that ? msg, timeout.duration).asInstanceOf[ActorRef]
   }
  
   protected def getFuture(fut: ActorRef): Any @suspendable = {
-    fut !! Task.Get match {
-      case None => throw new RuntimeException("%s: No response from future %s".format(self, fut))
-      case Some(x) => x.asInstanceOf[Option[Any]] match {
-        case Some(x) => x
-        case None =>
-          // block the whole COG until the future gets resolved
-          await(fut) 
-          getFuture(fut)
-      }
+    implicit val timeout = Timeout(5 seconds)
+    
+    Await.result(fut ? Task.Get, timeout.duration).asInstanceOf[Option[Any]] match {
+      case Some(x) => x
+      case None =>
+        // block the whole COG until the future gets resolved
+        await(fut) 
+        getFuture(fut)
     }
   }
 }

@@ -5,14 +5,16 @@
 package abs.backend.scala.runtime
 
 import akka.actor.{Actor, ActorRef, FSM}
-import akka.event.EventHandler
-import akka.remoteinterface.RemoteServerModule
-import akka.serialization.RemoteActorSerialization
 import scala.util.continuations._
+import akka.event.Logging
+import akka.pattern.ask
+import akka.dispatch.Await
+import akka.util.Timeout
+import akka.util.duration._
+import akka.actor.Props
 
 object Cog {
   sealed abstract class Message
-  case class RemoteSelfRef(ref: Array[Byte]) extends Message
   case class Run(block: () => Any @suspendable) extends Message
   case object Work extends Message
   case class Done(finished: Boolean) extends Message
@@ -21,30 +23,24 @@ object Cog {
   case class NewCog[T <: Actor](clazz: Class[T], args: Seq[Any]) extends Message
   
   sealed trait State
-  case object INIT extends State
   case object IDLE extends State
   case object BUSY extends State
   case object BLOCKED extends State
 }
 
-class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[ActorRef]]{
+class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[ActorRef]] {
+  //private val log = Logging(context.system, this)
   import Cog._
   import FSM._
   
   private var tasks: List[ActorRef] = Nil
-  private var remoteSelfRef: Array[Byte] = _
-  
-  self.id = self.uuid.toString
   
   private def pickTask: Option[ActorRef] = {
+    implicit val timeout = Timeout(5 seconds)
     for (task <- tasks) {
-      task !! Task.CanRun match {
-        case None ⇒
-          throw new RuntimeException("[%s] Error: no reply from task %s for CanRun".format(self, task))
-        case Some(x) => x match {
+      Await.result(task ? Task.CanRun, timeout.duration).asInstanceOf[Boolean] match {
           case true => return Some(task)
           case false => 
-        }
       }
     }
     
@@ -52,110 +48,92 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
   }
       
   private def newobj[T <: Actor](clazz: Class[T], args: Seq[Any]) {
-    EventHandler.debug(this, "[%s] creating new concurrent object for %s".format(self, clazz))
+    log.debug("[%s] creating new concurrent object for %s".format(self, clazz))
     
-    val actor = Actor.actorOf {
+    val actor: ActorRef = context.actorOf(Props({
       val obj = clazz.getConstructor(classOf[ActorRef]).newInstance(self)
       // does it have an init method?
       try {
-        EventHandler.debug(this, "[%s] invoking init method with args %s".format(self, args.mkString(", ")))
-    	  clazz.getMethod("init", classOf[Array[Any]]).invoke(obj, args.toArray)
+        log.debug("[%s] invoking init method with args %s".format(self, args.mkString(", ")))
+    	clazz.getMethod("init", classOf[Array[Any]]).invoke(obj, args.toArray)
       } catch {
         case e: NoSuchMethodException => // nope
-          EventHandler.debug(this, "[%s] no init method in class".format(self))
+          log.debug("[%s] no init method in class".format(self))
       }
       obj
-    }.start()
-    server.registerByUuid(actor)
+    }))
     
-    
-    val remoteActor = Actor.remote.actorFor(actor.uuid.toString, server.host, server.port)
-    
-    val remoteRef = RemoteActorSerialization.toRemoteActorRefProtocol(remoteActor).toByteArray
-    
-    actor ! new MyObject.RemoteSelfRef(remoteRef)
     actor ! MyObject.Run
-    
-    self reply_? remoteRef 
+    sender ! actor
   }
   
   private def newtask(block: () => Any @suspendable) {
-    val task = Actor.actorOf(new Task(remoteSelfRef, block))
-    tasks ::= task.start
-    server.registerByUuid(task)
-    self reply_? RemoteActorSerialization.toRemoteActorRefProtocol(
-      Actor.remote.actorFor(task.uuid.toString, 
-          server.host, 
-          server.port)).toByteArray
+    val task = context.actorOf(Props(new Task(self, block)))
+    tasks ::= task
+    
+    sender ! task
   }
   
   private def newcog[T <: Actor](clazz: Class[T], args: Seq[Any]) = {
     // ask for a new cog from node manager
-    val (newCog, newCogRemote) = server.newCog
+    val newCog = server.newCog
     newCog.forward(New(clazz, args))
   }
   
-  startWith(INIT, None)
-  
-  when(INIT) {
-    case Ev(RemoteSelfRef(ref)) =>
-      EventHandler.debug(this, "[%s] COG initializing".format(self))
-      this.remoteSelfRef = ref
-      goto(IDLE)
-  }
+  startWith(IDLE, None)
   
   when(IDLE) {
-    case Ev(Work) =>
-      EventHandler.debug(this, "[%s] Awakened, looking for something to do".format(self))
+    case Event(Work, _) =>
+      log.debug("[%s] Awakened, looking for something to do".format(self))
       // pick something that can run
       pickTask match {
         case None =>
-          EventHandler.debug(this, "[%s] Nothing to do, sleeping".format(self))
+          log.debug("[%s] Nothing to do, sleeping".format(self))
           stay
         case Some(task) =>
-          EventHandler.debug(this, "[%s] Activating task %s".format(self, task))
+          log.debug("[%s] Activating task %s".format(self, task))
           //task ! Task.Run(remoteSelfRef)
           task ! Task.Run
           goto(BUSY) using Some(task)
       }
             
-    case Ev(Run(block)) =>
-      EventHandler.debug(this, "[%s] New task received (while passive)".format(self))
+    case Event(Run(block), _) =>
+      log.debug("[%s] New task received (while passive)".format(self))
       
       newtask(block)
       self ! Work
       stay
       
-    case Ev(New(clazz, args)) =>
+    case Event(New(clazz, args), _) =>
       newobj(clazz, args)
        stay
       
-    case Ev(NewCog(clazz, args)) =>
+    case Event(NewCog(clazz, args), _) =>
       newcog(clazz, args)
       stay
   }
   
   when(BUSY) {
-    case Ev(Work) => // ignore
-      EventHandler.debug(this, "[%s] Work received while already working".format(self))
+    case Event(Work, _) => // ignore
+      log.debug("[%s] Work received while already working".format(self))
       stay
       
-    case Ev(Run(block)) =>
-      EventHandler.debug(this, "[%s] New task received (while working)".format(self))
+    case Event(Run(block), _) =>
+      log.debug("[%s] New task received (while working)".format(self))
       
       newtask(block)
       stay
       
-    case Ev(New(clazz, args)) =>
+    case Event(New(clazz, args), _) =>
       newobj(clazz, args)
       stay
       
-    case Ev(NewCog(clazz, args)) =>
+    case Event(NewCog(clazz, args), _) =>
       newcog(clazz, args)
       stay
       
     case Event(Done(finished), Some(task)) =>
-      EventHandler.debug(this, "[%s] Task finished, awakening myself".format(self))
+      log.debug("[%s] Task finished, awakening myself".format(self))
       
       if (finished) 
         tasks -= task
@@ -164,36 +142,33 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
       goto(IDLE) using None
       
     case Event(Blocked, t) =>
-      EventHandler.debug(this, "[%s] COG blocked by task %s".format(self, t))
+      log.debug("[%s] COG blocked by task %s".format(self, t))
       goto(BLOCKED)
   }
   
   when(BLOCKED) {
     case Event(Work, Some(task)) ⇒
-      EventHandler.debug(this, "[%s] Work received while blocked, checking task".format(self))
+      log.debug("[%s] Work received while blocked, checking task".format(self))
+
+      implicit val timeout = Timeout(5 seconds)
       
-      task !! Task.CanRun match {
-      case None =>
-        throw new RuntimeException("[%s] Error: no reply frm task %s for CanRun".format(self, task))
-        
-      case Some(x) => x.asInstanceOf[Boolean] match {
-          case true =>
-            goto(BUSY)
-          case false =>
-            stay
-        }
+      Await.result(task ? Task.CanRun, timeout.duration).asInstanceOf[Boolean] match {
+        case true =>
+          goto(BUSY)
+        case false =>
+          stay
       }
       
-    case Ev(Run(block)) =>
-      EventHandler.debug(this, "[%s] New task received (while blocked)".format(self))
+    case Event(Run(block), _) =>
+      log.debug("[%s] New task received (while blocked)".format(self))
       newtask(block)
       stay
       
-    case Ev(New(clazz, args)) =>
+    case Event(New(clazz, args), _) =>
       newobj(clazz, args)
       stay
       
-    case Ev(NewCog(clazz, args)) =>
+    case Event(NewCog(clazz, args), _) =>
       newcog(clazz, args)
       stay
   }

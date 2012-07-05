@@ -5,9 +5,12 @@
 package abs.backend.scala.runtime
 
 import akka.actor.{Actor, ActorRef}
-import akka.event.EventHandler
-import akka.serialization.RemoteActorSerialization
+import akka.event.Logging
 import java.net.ServerSocket
+import akka.actor.ActorSystem
+import com.typesafe.config.ConfigFactory
+import akka.actor.Props
+import akka.event.Logging
 
 object NodeManager {
   sealed abstract class Message
@@ -15,51 +18,36 @@ object NodeManager {
   case object NewLocalCog extends Message
   private[runtime] case object Init extends Message
   
-  def newNode(host: String, port: Int): ActorRef = {
-    val actor = Actor.actorOf(new NodeManager(host, port)).start()
-    actor ! Init
+  def newNode(name : String): ActorRef = {
+    val config = ConfigFactory.load()
+    val system = ActorSystem("ABS-Scala", config.getConfig(name).withFallback(config))
+    
+    val actor = system.actorOf(Props[NodeManager], name = "NodeManager")
+    
     actor
   }
   
   def main(argv: Array[String]) {
-    newNode(argv(1), Integer.parseInt(argv(2)))
+    newNode(argv(1))
   }
 }
 
-class NodeManager(var host: String, var port: Int) extends Actor {
+class NodeManager extends Actor {
+  private val log = Logging(context.system, this)
   import NodeManager._
   
-  if (port == 0) {
-    val server = new ServerSocket(0);
-    port = server.getLocalPort();
-    server.close();
-  }
-    
-  private val server = Actor.remote.start(host, port)
-  host = server.address.getAddress().getHostAddress()
-  
-  private[runtime] def registerByUuid(actor: ActorRef) {
-    server.registerByUuid(actor)
-  }
-  
   private[runtime] def newCog = {
-    EventHandler.debug(this, "Allocating new COG")
+    log.debug("Allocating new COG")
       
-    val cog = Actor.actorOf(new Cog(this)).start()
-    server.registerByUuid(cog)
-    val remoteRef = RemoteActorSerialization.toRemoteActorRefProtocol(Actor.remote.actorFor(cog.uuid.toString, server.address.getAddress().getHostAddress(), server.address.getPort())).toByteArray
-      
-    cog ! new Cog.RemoteSelfRef(remoteRef)
+    val cog = context.actorOf(Props[Cog])
     
-    (cog, remoteRef)
+    cog
   }
   
   def receive = {
-    case Init =>
-      server.register("nodeManager", self)
-    case NewLocalCog =>
-      self reply_? newCog
     case NewCog =>
-      self reply_? newCog._2
+      
+      sender ! newCog
+      //self reply_? newCog
   }
 }

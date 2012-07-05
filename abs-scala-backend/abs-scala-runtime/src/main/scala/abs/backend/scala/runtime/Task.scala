@@ -6,9 +6,13 @@ package abs.backend.scala.runtime
 
 import akka.actor.FSM
 import akka.actor.{Actor, ActorRef}
-import akka.event.EventHandler
-import akka.serialization.RemoteActorSerialization
+import akka.event.Logging
 import scala.util.continuations._
+import akka.actor.Props
+import akka.pattern.ask
+import akka.dispatch.Await
+import akka.util.Timeout
+import akka.util.duration._
 
 object Runner {
   sealed abstract class Message
@@ -17,7 +21,8 @@ object Runner {
   val currentRunner: ThreadLocal[Runner[_]] = new ThreadLocal()
 }
 
-class Runner[A](private val cog: Array[Byte], private val task: ActorRef, private val f: () => A @suspendable) extends Actor {
+class Runner[A](private val cog: ActorRef, private val task: ActorRef, private val f: () => A @suspendable) extends Actor {
+  private val log = Logging(context.system, this)
   
   private var schedCont: Unit => Unit = null
   private var taskCont: Unit => Unit = null
@@ -25,7 +30,7 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
   private var result: A = _
   
   def await(cond: => Boolean): Unit @suspendable = {
-    EventHandler.debug(this, "Runner awaiting")
+    log.debug("Runner awaiting")
     task ! new Task.Await(() => cond, false)
 
     shift {
@@ -39,12 +44,12 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
   }
   
   def await(fut: ActorRef, blocked: Boolean = false): Unit @suspendable = {
-    EventHandler.debug(this, "Runner %s".format(if (blocked) "blocked" else "waiting"))
+    log.debug("Runner %s".format(if (blocked) "blocked" else "waiting"))
     
     fut ! new Task.Listen(cog)
-    task ! new Task.Await(() => fut !! Task.Get match {
-      case None => false
-      case Some(x) => x.asInstanceOf[Option[Any]] match {
+    task ! new Task.Await(() => {
+      implicit val timeout = Timeout(5 seconds)
+      Await.result(fut ? Task.Get, timeout.duration).asInstanceOf[Option[Any]] match {
         case None => false
         case Some(_) => true
       }
@@ -59,9 +64,9 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
   }
   
   private def start = reset {
-    EventHandler.debug(this, "starting task")
+    log.debug("starting task")
     result = f()
-    EventHandler.debug(this, "task done, retval: %s".format(result))
+    log.debug("task done, retval: %s".format(result))
     Runner.currentRunner.remove
     task ! Task.Done(result)
     //schedCont()
@@ -69,18 +74,18 @@ class Runner[A](private val cog: Array[Byte], private val task: ActorRef, privat
 
   private def work {
     if (taskCont == null) {
-      EventHandler.debug(this, "task not started, starting")
+      log.debug("task not started, starting")
       start
     }
     else {
-      EventHandler.debug(this, "continuing suspended task")
+      log.debug("continuing suspended task")
       taskCont()
     }
   }
     
   def receive = {
     case Runner.Run =>
-      EventHandler.debug(this, "Runner running")
+      log.debug("Runner running")
       Runner.currentRunner.set(this)
       work
   
@@ -95,108 +100,95 @@ object Task {
   case class Done(result: Any) extends TaskMessage
   case object Get extends TaskMessage
   case object CanRun extends TaskMessage
-  case class Listen(task: Array[Byte]) extends TaskMessage
+  case class Listen(task: ActorRef) extends TaskMessage
   case class Await(guard: () => Boolean, blocked: Boolean) extends TaskMessage
   
   sealed trait State
   case object IDLE extends State
   case object RUNNING extends State
   case object DONE extends State
+  
+  
+  sealed trait Data
+  case class Idle(listeners: Set[ActorRef], guard: () => Boolean) extends Data
+  case class Running(listeners: Set[ActorRef]) extends Data
+  case class Result(result: Any) extends Data
 }
 
-class Task[A](private val cogRef: Array[Byte], f: () => A @suspendable) extends Actor with FSM[Task.State, Unit] {
+class Task[A](private val cog: ActorRef, f: () => A @suspendable) extends Actor with FSM[Task.State, Task.Data] {
   import FSM._
   import Task._
   
-  private var listeners: Set[ActorRef] = Set.empty
-  
-  private var result: Option[Any] = None
-  
-  private var guard: () => Boolean = (() => true)
- 
-  private var cog: ActorRef = RemoteActorSerialization.fromBinaryToRemoteActorRef(cogRef) 
-  private var runner: ActorRef = Actor.actorOf(new Runner(cogRef, self, f)).start
+  //private val log = Logging(context.system, this)
+  private val runner: ActorRef = context.actorOf(Props(new Runner(cog, self, f)))
 
-  self.id = self.uuid.toString
   
   // Initial state = IDLE
-  startWith(IDLE, Unit)
+  startWith(IDLE, Idle(Set.empty, () => true))
   
   when(IDLE) {
-    case Ev(CanRun) =>
-      EventHandler.debug(this, "[%s] checking guard".format(self))
-      if (guard != null) {
-        val b = guard()
-        EventHandler.debug(this, "[%s] guard = %s".format(self, b))
-        self reply_? guard()
-      }
-      else
-        self reply_? false
-      stay
+    case Event(CanRun, Idle(_, guard)) =>
+      log.debug("[%s] checking guard".format(self))
+      val b = if (guard != null) guard() else false
+      log.debug("[%s] guard = %s".format(self, b))
       
-    case Ev(Get) =>
-      EventHandler.debug(this, "[%s] get while task not complete".format(self))
-      self reply_? None
-      stay
+      stay replying b
       
-    case Ev(Listen(cog)) =>
-      EventHandler.debug(this, "[%s] listen request from %s".format(self, cog))
-      listeners += RemoteActorSerialization.fromBinaryToRemoteActorRef(cog)
-      stay
+    case Event(Get, _) =>
+      log.debug("[%s] get while task not complete".format(self))
+      stay replying None
+      
+    case Event(Listen(cog), Idle(listeners, guard)) =>
+      log.debug("[%s] listen request from %s".format(self, cog))
+      stay using Idle(listeners + cog , guard)
     
-    case Ev(Task.Run) =>
-      EventHandler.debug(this, "[%s] running".format(self))
+    case Event(Task.Run, Idle(listeners, guard)) =>
+      log.debug("[%s] running".format(self))
       runner ! Runner.Run
-      goto(RUNNING)
+      goto(RUNNING) using Running(listeners)
   }
   
   when(RUNNING) {
-    case Ev(CanRun) =>
-      EventHandler.debug(this, "[%s] CanRun while already running".format(self))
-      self reply_? false
-      stay 
+    case Event(CanRun, _) =>
+      log.debug("[%s] CanRun while already running".format(self))
+      stay replying false 
       
-    case Ev(Get) =>
-      EventHandler.debug(this, "[%s] get while task not complete".format(self))
-      self reply_? None
-      stay
+    case Event(Get, _) =>
+      log.debug("[%s] get while task not complete".format(self))
+      stay replying None
     
-    case Ev(Listen(cog)) =>
-      EventHandler.debug(this, "[%s] listen request from %s".format(self, cog))
-      listeners += RemoteActorSerialization.fromBinaryToRemoteActorRef(cog)
-      stay
+    case Event(Listen(cog), Running(listeners)) =>
+      log.debug("[%s] listen request from %s".format(self, cog))
+      stay using Running(listeners + cog)
         
-    case Ev(Done(result)) =>
-      EventHandler.debug(this, "[%s] Task done, result = %s".format(self, result))
-      this.result = Some(result)
+    case Event(Done(result), Running(listeners)) =>
+      log.debug("[%s] Task done, result = %s".format(self, result))
       listeners foreach (_ ! Cog.Work)
       cog ! Cog.Done(true)
-      goto(DONE)
+      goto(DONE) using Result(result)
       
-    case Ev(Task.Await(guard, blocked)) =>
-      EventHandler.debug(this, "[%s] Task blocked".format(self))
-      this.guard = guard
+    case Event(Task.Await(guard, blocked), Running(listeners)) =>
+      log.debug("[%s] Task blocked".format(self))
       
       cog ! (if (blocked) Cog.Blocked else Cog.Done(false))
       
-      goto(IDLE)
+      goto(IDLE) using Idle(listeners, guard)
   }
   
   when(DONE) {
-    case Ev(CanRun) =>
-      EventHandler.debug(this, "[%s] CanRun when task finished".format(self))
-      self reply_? false
+    case Event(CanRun, _) =>
+      log.debug("[%s] CanRun when task finished".format(self))
+      stay replying false
+      
+    case Event(Get, Result(result)) => 
+      log.debug("[%s] get".format(self))
+      stay replying result
+      
+    case Event(Listen(cog), _) =>
+      log.debug("[%s] listen while task complete".format(self))
+      cog ! Cog.Work
       stay
       
-    case Ev(Get) => 
-      EventHandler.debug(this, "[%s] get".format(self))
-      self reply_? result
-      stay
-      
-    case Ev(Listen(cog)) =>
-      EventHandler.debug(this, "[%s] listen while task complete".format(self))
-      RemoteActorSerialization.fromBinaryToRemoteActorRef(cog) ! Cog.Work
-      stay
   }
   
   initialize
