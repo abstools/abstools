@@ -215,7 +215,6 @@ public class ChocoSolver {
 
          // Read the model
       s.read(m);
-            
       // Minmise the model, if possible
       if (vars.containsKey(var))
           if (s.contains(vars.get(var))) {
@@ -242,7 +241,7 @@ public class ChocoSolver {
     s.read(m);
     // Solve the model
     s.solveAll();
-
+    
     return s.getNbSolutions();
   }
 
@@ -283,6 +282,24 @@ public class ChocoSolver {
     return result;
   }
   
+  public int maxValue(String optVar) {
+      if (!solved) solve();
+
+      if (!newsol)
+        return 0;
+
+      String result = "";
+      Iterator<IntegerVariable> it = m.getIntVarIterator();
+      while (it.hasNext()) {
+        IntegerVariable var = it.next();
+        if (var.getName().equalsIgnoreCase(optVar)){
+            return s.getVar(var).getVal();
+        }
+      }
+      return 0;
+    }
+
+  
   public String minimiseToString(String var) {      
       optimise(var,true);
       return resultToString();
@@ -293,6 +310,13 @@ public class ChocoSolver {
           ast.println("optimising "+var);
       optimise(var,false);
       return resultToString();
+  }
+  
+  public int maximiseToInt(String var) {      
+      if (ast.debug)
+          ast.println("optimising "+var);
+      optimise(var,false);
+      return maxValue(var);
   }
 
 
@@ -490,7 +514,9 @@ public class ChocoSolver {
     return Choco.eq(v1,1);
   }
 
-
+  public CPSolver getCPSolver(){
+      return s;
+  }
 
   /* *************
   Experiments with the constraint solver!

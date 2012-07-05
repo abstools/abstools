@@ -22,7 +22,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
 
+import choco.Choco;
 import choco.kernel.model.constraints.Constraint;
+import choco.kernel.model.variables.integer.IntegerVariable;
+import choco.kernel.solver.branch.VarSelector;
 
 import abs.frontend.mtvl.ChocoSolver;
 
@@ -36,6 +39,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.FeatureDecl;
 import abs.frontend.ast.FExt;
+import abs.frontend.ast.Product;
 import abs.frontend.ast.StarImport;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -253,7 +257,14 @@ public class Main {
                         if (verbose)
                             System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
                         ChocoSolver s = m.getCSModel();
-                        System.out.print(s.maximiseToString(product));
+                        //System.out.print(s.maximiseToInt(product));
+                        s.addConstraint(ChocoSolver.eqeq(s.vars.get(product), s.maximiseToInt(product)));
+                        ChocoSolver s1 = m.getCSModel();
+                        int i=1;
+                        while(s1.solveAgain()) {
+                          System.out.println("------ "+(i++)+"------");
+                          System.out.print(s1.resultToString());
+                        }
                     }
                     if (solveall) {
                         if (verbose)
@@ -281,6 +292,10 @@ public class Main {
                         }
                     }
                     if (check) {
+                        /*for (CompilationUnit u : m.getCompilationUnits()) {
+                            u.printFM("");
+                        }*/
+                        
                         ChocoSolver s = m.getCSModel();
                         Map<String,Integer> guess = new HashMap<String,Integer>();
                         if (m.getSolution(product,guess))
