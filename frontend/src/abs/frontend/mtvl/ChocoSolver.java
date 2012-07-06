@@ -157,7 +157,6 @@ public class ChocoSolver {
     s.read(m);
     // Solve the model
     newsol = s.solve();
-
     solved = true;
     return newsol;
   }
@@ -266,6 +265,7 @@ public class ChocoSolver {
 
 
   public String resultToString() {
+      
     if (!solved) solve();
 
     if (!newsol)
