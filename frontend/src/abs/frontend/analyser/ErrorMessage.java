@@ -76,6 +76,7 @@ public enum ErrorMessage {
     WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation"),
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
+    OPT_NOT_IN_ALLOF("The %s feature is optional but the cardinality of its parent is not 'allof'."),
     EXPECTED_BOOL("Inferred type Int for %s, expected Bool."),
     EXPECTED_INT("Inferred type Bool for %s, expected Int."),
     DUPLICATE_FEATURE("Feature %s is already defined."),
