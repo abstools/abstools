@@ -357,6 +357,11 @@ aspect GenerateJava {
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
 
+        if (! getAccess().getType().isReferenceType()) {
+            stream.print("(");
+            getAccess().generateJavaDynamic(stream);
+            stream.print(")");
+        }
         if (hasInitExp()) {
             getInitExp().generateJavaDynamic(stream);
         } else {
@@ -365,7 +370,7 @@ aspect GenerateJava {
         stream.println(";");
 
         stream.print("if (thisP.__ABS_getRuntime().debuggingEnabled()) ");
-        stream.print("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
+        stream.println("thisP.__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
     }
 
 

@@ -318,7 +318,7 @@ public class JavaGeneratorHelper {
         
     }
 
-    private static void generateMethodBody(String indent, PrintStream stream, final MethodImpl m, boolean isFliMethod) {
+    public static void generateMethodBody(String indent, PrintStream stream, final MethodImpl m, boolean isFliMethod) {
         boolean addReturn = false;
         if (m.getMethodSig().getReturnType().getType().isUnitType()) {
           if (m.getBlock().getNumStmt() == 0 ||

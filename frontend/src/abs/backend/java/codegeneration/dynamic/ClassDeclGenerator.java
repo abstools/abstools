@@ -62,7 +62,6 @@ public class ClassDeclGenerator {
         }
         stream.println(");");
         for (MethodImpl m : decl.getMethods()) {
-            // m.generateJava("   ", stream);
             String methodName = m.getMethodSig().getName();
             stream.println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".instantiate());");
         }

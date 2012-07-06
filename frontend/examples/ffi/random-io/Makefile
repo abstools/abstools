@@ -1,4 +1,4 @@
-DIST=../../../../dist
+DIST=../../../dist
 
 gen: clean
 	java -cp $(DIST)/absfrontend.jar abs.backend.java.JavaBackend -d gen/java abs/*.abs $@
