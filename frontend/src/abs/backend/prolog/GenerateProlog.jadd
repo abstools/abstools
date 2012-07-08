@@ -723,7 +723,7 @@ aspect GenerateProlog {
 	        }
 	        s.print("],");
             this.printContextInformation(s);  
-            s.print(").");
+            s.println(").");
         }
     }
 
