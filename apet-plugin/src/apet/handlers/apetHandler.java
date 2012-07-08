@@ -98,10 +98,12 @@ public class apetHandler extends AbstractHandler {
 				} else {
 					callPrologBackend(absFile);
 					shell.callAPet(CostabsLink.ENTRIES_STRINGS);
-					ApetTestSuite suite = callXMLParser();
-					if (translate) {
-						Model m = getABSModel(absFile);
-						generateABSUnitTests(m,suite);
+					if (proceed(shell)) {
+						ApetTestSuite suite = callXMLParser();
+						if (translate) {
+							Model m = getABSModel(absFile);
+							generateABSUnitTests(m,suite);
+						}
 					}
 				}	
 				ConsoleHandler.write(shell.getResult());
@@ -110,6 +112,15 @@ public class apetHandler extends AbstractHandler {
 			ConsoleHandler.write(shell.getError());
 		}
 		return null;
+	}
+	
+	boolean proceed(ApetShellCommand shell) {
+		String error = shell.getError();
+		if (error != null && ! error.isEmpty()) {
+			ConsoleHandler.write(error);
+			return false;
+		}
+		return true;
 	}
 	
 	/**
