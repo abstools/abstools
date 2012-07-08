@@ -48,6 +48,7 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ClassOrIfaceModifier;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
@@ -86,6 +87,7 @@ import abs.frontend.ast.SyncCall;
 import abs.frontend.ast.TypeSynDecl;
 import abs.frontend.ast.VarUse;
 import abs.frontend.tests.ABSFormatter;
+import apet.console.ConsoleHandler;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
 import apet.testCases.ABSRef;
@@ -93,7 +95,11 @@ import apet.testCases.ABSTerm;
 import apet.testCases.ApetTestSuite;
 import apet.testCases.TestCase;
 
-
+/**
+ * 
+ * @author pwong
+ *
+ */
 public class ABSUnitTestCaseTranslator {
 	
 	private static final String INITIAL_TEST_PREFIX = "initialForTest";
@@ -147,9 +153,7 @@ public class ABSUnitTestCaseTranslator {
 		this.output.setName(MAIN);
 		this.verbose = verbose;
 		
-		if (verbose) {
-			System.out.println("Gathering ABSUnit annotations");
-		}
+		console("Gathering ABSUnit annotations");
 		
 		gatherABSUnitAnnotations();
 
@@ -185,17 +189,11 @@ public class ABSUnitTestCaseTranslator {
 	 * @return
 	 */
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
-		
-		if (verbose) {
-			System.out.println("Add basic imports...");
-		}
-
+		console("Add basic imports...");
 		addBasicImports(output);
 		
 		for (String key : suite.keySet()) {
-			if (verbose) {
-				System.out.println("Generating test suite for "+key+"...");
-			}
+			console("Generating test suite for "+key+"...");
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
@@ -207,10 +205,7 @@ public class ABSUnitTestCaseTranslator {
 		}
 		
 		if (! dn.isEmpty()) {
-			if (verbose) {
-				System.out.println("Generating product line description...");
-			}
-
+			console("Generating product line description...");
 			ProductLine productline = new ProductLine();
 			productline.setName(CONFIGURATION_NAME);
 			Feature feature = new Feature();
@@ -234,25 +229,48 @@ public class ABSUnitTestCaseTranslator {
 			output.addProduct(product);
 		}
 		
-		if (verbose) {
-			System.out.println("Pretty printing ABSUnit tests...");
-		}
-
+		console("Pretty printing ABSUnit tests...");
 		printToFile(output, outputFile);
-		
-		if (verbose) {
-			System.out.println("Validating ABSUnit tests...");
-		}
-		
+		console("Validating ABSUnit tests...");
 		validateOutput();
-
-		if (verbose) {
-			System.out.println("ABSUnit tests generation successful");
-		}
-		
+		console("ABSUnit tests generation successful");
 		return output;
 	}
 	
+	void generateABSUnitTest(List<TestCase> cs, String mn) {
+		
+		String[] sp = mn.split("\\.");
+		final String methodName; 
+		final String className;
+		if (sp.length == 2) {
+			className = sp[0];
+			methodName = sp[1];
+		} else if (sp.length == 1) {
+			className = null;
+			methodName = mn;
+		} else {
+			throw new IllegalArgumentException();
+		}
+	
+		InterfaceDecl ti = createTestFixtureForClassMethodOrFunction(cs.size(), className, methodName);
+		
+		if (className == null) {
+			createTestSuiteForFunction(cs, ti, methodName);
+		} else {
+			createTestSuiteForClassMethod(cs, ti, className, methodName);
+		}
+	}
+
+	void console(String txt) {
+		console(txt, false);
+	}
+
+	void console(String txt, boolean force) {
+		if (verbose || force) {
+			ConsoleHandler.write(txt);
+		}
+	}
+
 	private void validateOutput() {
 		Model copy = model.fullCopy();
 		copy.getCompilationUnit().addModuleDecl(output.fullCopy());
@@ -300,30 +318,6 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
-	public void generateABSUnitTest(List<TestCase> cs, String mn) {
-		
-		String[] sp = mn.split("\\.");
-		final String methodName; 
-		final String className;
-		if (sp.length == 2) {
-			className = sp[0];
-			methodName = sp[1];
-		} else if (sp.length == 1) {
-			className = null;
-			methodName = mn;
-		} else {
-			throw new IllegalArgumentException();
-		}
-	
-		InterfaceDecl ti = createTestFixtureForClassMethodOrFunction(cs.size(), className, methodName);
-		
-		if (className == null) {
-			createTestSuiteForFunction(cs, ti, methodName);
-		} else {
-			createTestSuiteForClassMethod(cs, ti, className, methodName);
-		}
-	}
-
 	private Annotation getTestAnnotation(DataConstructor c) {
 		return new Annotation(new DataConstructorExp(
 				c.getName(), 
@@ -540,6 +534,7 @@ public class ABSUnitTestCaseTranslator {
 		 * test case 1 is implemented by test method 1 and so on...
 		 */
 		for (int i=0; i<testCases.size(); i++) {
+			console("Generating test case "+i+"...");
 			TestCase testCase = testCases.get(i);
 
 			//initial arg
@@ -548,7 +543,6 @@ public class ABSUnitTestCaseTranslator {
 			String testName = method.getMethodSig().getName();
 			Block block = method.getBlock();
 			
-			//TODO initial states' heap contains more than one object.
 			Map<String,Access> typesOfObjectInHeap = new HashMap<String, Access>();
 			for (ABSData arg : inputArguments) {
 				typesOfObjectInHeap.putAll(getTypesFromABSData(testName, arg));
@@ -570,17 +564,14 @@ public class ABSUnitTestCaseTranslator {
 			}
 			
 			//check return value
+			Map<ABSRef,ABSObject> finalHeap = getAfterState(testCase);
+
 			ABSData rd = getReturnData(testCase);
 			if (rd != null) {
-				makeOracle("returnValue", access, rd, block);
+				makeOracle(finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
 			}
 			
-			//check return value
-			Map<ABSRef,ABSObject> af = getAfterState(testCase);
-			assert af.size() == 1;
-			for (ABSRef r : af.keySet()) {
-				makeGetAndAssertStatements(testName, r, af.get(r), block);
-			}
+			makeGetAndAssertStatements(testClass, finalHeap, testName, block);
 		}
 		
 		output.addDecl(testClass);
@@ -648,12 +639,8 @@ public class ABSUnitTestCaseTranslator {
 		 * Test methods and Test cases are ordered that is,
 		 * test case 1 is implemented by test method 1 and so on...
 		 */
-		for (int i=0; i<testCases.size(); i++) {
-			
-			if (verbose) {
-				System.out.println("Generating test case "+i+"...");
-			}
-
+		for (int i=0; i<testCases.size(); i++) {			
+			console("Generating test case "+i+"...");
 			TestCase testCase = testCases.get(i);
 
 			//initial arg
@@ -662,12 +649,14 @@ public class ABSUnitTestCaseTranslator {
 			String testName = method.getMethodSig().getName();
 			Block block = method.getBlock();
 			
-			Map<String,Access> objectsTypes = new HashMap<String, Access>();
+			Map<String,Access> typesOfObjectInHeap = new HashMap<String, Access>();
 			for (ABSData d : inputArguments) {
-				objectsTypes.putAll(getTypesFromABSData(testName, d));
+				typesOfObjectInHeap.putAll(getTypesFromABSData(testName, d));
 			}
 			
-			createObjectsInHeap(objectsTypes, testClass, getInitialState(testCase), testName, block);
+			createObjectsInHeap(typesOfObjectInHeap, 
+					testClass, getInitialState(testCase), 
+					testName, block);
 			
 			//test execution
 			Call test = makeTestExecutionForMethod(methodName, inputArguments);
@@ -677,17 +666,19 @@ public class ABSUnitTestCaseTranslator {
 				block.addStmt(getExpStmt(test)); //no return value
 				assert getReturnData(testCase) == null;
 			} else {
-				block.addStmt(getVarDecl("returnValue", access, test));
+				block.addStmt(getVarDecl("returnValue", (Access) access.fullCopy(), test));
 			}
+			
+			Map<ABSRef,ABSObject> finalHeap = getAfterState(testCase);
 			
 			//check return value
 			ABSData rd = getReturnData(testCase);
 			if (rd != null) {
-				makeOracle("returnValue", access, rd, block);
+				makeOracle(finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
 			}
 			
 			//check return value (using deltas)
-			makeGetAndAssertStatements(testClass, getAfterState(testCase), testName, block);
+			makeGetAndAssertStatements(testClass, finalHeap, testName, block);
 		}
 		
 		output.addDecl(testClass);
@@ -747,7 +738,7 @@ public class ABSUnitTestCaseTranslator {
 		testMethodBlock.addStmt(getExpStmt(call));
 
 		for (ABSRef r : finalHeap.keySet()) {
-			makeGetAndAssertStatements(testMethodName, r, finalHeap.get(r), modifyBlock);
+			makeGetAndAssertStatements(finalHeap, testMethodName, r, finalHeap.get(r), modifyBlock);
 		}
 		
 	}
@@ -834,11 +825,29 @@ public class ABSUnitTestCaseTranslator {
 		return new VarUse("this");
 	}
 	
-	private void makeOracle(String actual, Access access, ABSData data, Block block) {
+	private void makeOracle(Map<ABSRef,ABSObject> finalHeap, 
+			String actual, Access access, ABSData data, Block block) {
+		
+		if (data instanceof ABSTerm) {
+			makeOracle(finalHeap, actual, access, (ABSTerm) data, block);
+		} else if (data instanceof ABSRef) {
+			
+		} else {
+			throw new IllegalStateException("Cannot handle ABSData that is not " +
+					"either a ABSRef or a ABSTerm");
+		}
+	
 		//TODO handle object comparison!
 		block.addStmt(
 			getExpStmt(getCall(new VarUse(ASSERT_HELPER), "assertTrue", true, 
 				new VarUse(actual), createPureExpression(data))));
+	}
+	
+	private void makeOracle(Map<ABSRef,ABSObject> finalHeap, 
+			String actual, Access access, ABSTerm term, Block block) {
+		String type = getABSDataType(term);
+		String fn = getABSTermFunctor(term);
+		List<ABSData> datas = getABSTermArgs(term);
 	}
 	
 	private String deltaOnClass(String className) {
@@ -1012,11 +1021,12 @@ public class ABSUnitTestCaseTranslator {
 		return GETTER_PREFIX + StringUtils.capitalize(fieldName);
 	}
 	
-	private String resultOfgetterMethodName(String fieldName) {
+	private String resultOfGetterMethodName(String fieldName) {
 		return getterMethodName(fieldName) + "Var";
 	}
 	
-	private void makeGetAndAssertStatements(String testName, 
+	private void makeGetAndAssertStatements(
+			Map<ABSRef, ABSObject> finalHeap, String testName, 
 			ABSRef ref, ABSObject state, Block block) {
 		String rn = heapReferenceForTest(testName, getABSDataValue(ref)); 
 		
@@ -1035,9 +1045,9 @@ public class ABSUnitTestCaseTranslator {
 				SyncCall syncCall = new SyncCall();
 				syncCall.setCallee(new VarUse(rn));
 				syncCall.setMethod(getterMethodName(fn));
-				block.addStmt(getVarDecl(resultOfgetterMethodName(fn), 
+				block.addStmt(getVarDecl(resultOfGetterMethodName(fn), 
 						(Access) field.getAccess().fullCopy(), syncCall));
-				makeOracle(resultOfgetterMethodName(fn),
+				makeOracle(finalHeap, resultOfGetterMethodName(fn),
 						(Access) field.getAccess().fullCopy(), d,block);
 			}
 		}
