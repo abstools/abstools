@@ -95,8 +95,7 @@ public class ApetShellCommand {
 		command.append("-pr " + store.getString(PreferenceConstants.PRUNING) + " ");
 		command.append("-ql " + store.getString(PreferenceConstants.MAXQL) + " ");
 		command.append("-verbosity " + store.getString(PreferenceConstants.VERBOSITY) + " ");
-		
-		command.append("-xmlpath /tmp/pet/abs_testcases.xml");	
+		command.append("-xmlpath " + XML_FILE_PATH);	
 	}
 
 	/**
