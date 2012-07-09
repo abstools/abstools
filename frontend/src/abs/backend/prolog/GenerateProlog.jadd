@@ -271,11 +271,20 @@ aspect GenerateProlog {
     }
 
     public void AddAddExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        s.print("+(");
-        getChild(0).generateProlog(s,reachInfo);
-        s.print(",");
-        getChild(1).generateProlog(s,reachInfo);
-        s.print(")");
+        if(this.getType().isStringType()){
+            s.print("apply(strapp(");
+            getChild(0).generateProlog(s,reachInfo);
+            s.print(",");
+            getChild(1).generateProlog(s,reachInfo);
+            s.print("))");
+        }else{
+           s.print("+(");
+           getChild(0).generateProlog(s,reachInfo);
+           s.print(",");
+           getChild(1).generateProlog(s,reachInfo);
+           s.print(")");
+        }
+
     }
 
     public void SubAddExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
