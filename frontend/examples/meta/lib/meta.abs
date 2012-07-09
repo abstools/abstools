@@ -1,0 +1,48 @@
+module ABS.Meta;
+export *;
+import Foreign from ABS.FLI;
+
+/* Reflective, mirror-based interface for ABS
+ * - supports dynamic updates of ABS models
+ *
+ * The idea is to implement it in Java and use FFI to load it into ABS.
+ */
+
+interface Meta {
+    ObjectMirror reflect(Object o);
+}
+
+[Foreign]
+class Meta implements Meta {
+    ObjectMirror reflect(Object o) {
+        // FIXME Overide in Meta_fli.java to return a mirror of the given object o
+        return new ObjectMirror();
+    }
+}
+
+
+interface Object {}
+interface Class {}
+interface ABSValue {}
+
+interface ObjectMirror {
+    String getClassName();
+    Class getClass();
+    Unit setClass(Class c);
+    ABSValue getFieldValue();
+    Unit setFieldValue(ABSValue val);    
+    //...
+}
+
+[Foreign]
+class ObjectMirror implements ObjectMirror {
+    String getClassName() {
+        // FIXME Override in ObjectMirror_fli.java to return the object's class name
+        return("");
+    }
+    
+    Class getClass() {
+        return new Class();
+    }
+
+}
