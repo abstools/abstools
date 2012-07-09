@@ -285,6 +285,8 @@ aspect TypeResolution {
     syn lazy Decl ASTNode.getContextDecl() = (Decl) calcContextNode(Decl.class);
     syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
     syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);
+    
+    /** returns the parent compilation unit of this node **/
     syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
 
     syn lazy FieldDecl ASTNode.getContextFieldDecl() = (FieldDecl) calcContextNode(FieldDecl.class);
