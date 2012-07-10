@@ -17,7 +17,7 @@ interface ObjectMirror {
     String getClassName();
     Class getClass();
     Unit setClass(Class c);
-    ABSValue getFieldValue();
+    Value getFieldValue();
     Unit setFieldValue(Value val);    
 }
 

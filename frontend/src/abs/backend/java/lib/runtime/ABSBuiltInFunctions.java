@@ -16,6 +16,8 @@ import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
 
 public class ABSBuiltInFunctions {
+    
+    
     public static ABSInteger strlen(ABSString s) {
         return s.strlen();
     }
@@ -61,7 +63,7 @@ public class ABSBuiltInFunctions {
             ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(name);
             return (ABSDynamicObject)existingMirror;
         } catch(NoSuchFieldException e) {
-            ABSDynamicObject o = new ABSDynamicObject(new ABSClass());
+            ABSDynamicObject o = new ABSDynamicObject(ABSMetaObject.getObjectMirrorClass());
             ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)o);
             return o;
         }
