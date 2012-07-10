@@ -53,4 +53,8 @@ public class ABSBuiltInFunctions {
     public static <T> ABSString toString(T t) {
         return ABSString.fromString(t.toString());
     }
+    
+    public static <T> ABSDynamicObject reflect(T t) {
+        return (ABSDynamicObject) t;
+    }
 }
