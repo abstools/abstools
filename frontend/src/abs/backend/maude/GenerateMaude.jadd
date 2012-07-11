@@ -163,7 +163,7 @@ aspect GenerateMaude {
         }
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
-        else stream.print("\"InfDuration\"[ emp ]");
+        else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
         stream.print(") ");
     }
     public int AsyncCall.numberOfRandom(Set<String> visitedFunctions) {
@@ -194,7 +194,7 @@ aspect GenerateMaude {
         }
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
-        else stream.print("\"InfDuration\"[ emp ]");
+        else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
         stream.print(") ; ");
         stream.print("get( '.staticfuture ; '" + var + ") ");
     }
@@ -559,7 +559,7 @@ aspect GenerateMaude {
         }
         stream.print(",\n      Cost: ");
         if (cost == null) {
-            stream.print("\"Duration\"[\"int\"[0]] ");
+            stream.print("\"ABS.StdLib.Duration\"[\"int\"[0]] ");
         } else {
             cost.generateMaude(stream);
         }
@@ -788,7 +788,7 @@ aspect GenerateMaude {
         stream.print(",\n  Sched: \"ABS.Scheduler.defaultscheduler\"('queue)");
         stream.print(",\n  Mtds: ");
         stream.print("< '.init : Method | Param: noVid,\n");
-        stream.print("      Cost: \"Duration\"[\"int\"[0]],\n");
+        stream.print("      Cost: \"ABS.StdLib.Duration\"[\"int\"[0]],\n");
         stream.print("      Code: ");
         inlist = false;
         if (!inlist && getNumStmt() == 0) {
@@ -818,7 +818,7 @@ aspect GenerateMaude {
                                         boolean isActiveClass) {
         boolean inlist = false;
         stream.print("< '.init : Method | Param: noVid,\n");
-        stream.print("      Cost: \"Duration\"[\"int\"[0]],\n");
+        stream.print("      Cost: \"ABS.StdLib.Duration\"[\"int\"[0]],\n");
         stream.print("      Code: ");
         // Process field initializers here
         for (FieldDecl field : fields) {
@@ -837,7 +837,7 @@ aspect GenerateMaude {
         stream.print("return(null) ");
         if (isActiveClass) {
             stream.print("; ");
-            stream.print("asynccall('.staticfuture ; 'this ; 'run ; emp ; \"InfDuration\"[ emp ]) ");
+            stream.print("asynccall('.staticfuture ; 'this ; 'run ; emp ; \"ABS.StdLib.InfDuration\"[ emp ]) ");
         }
         stream.print("> ");
     }
