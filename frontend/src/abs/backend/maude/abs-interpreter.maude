@@ -962,9 +962,19 @@ mod ABS-EVAL is
       | Cog: CG:Cogid, Att: ('internalState |-> IS:Data, S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN)
   = IS:Data .
 
+  op nResources : Data String Nat -> Nat .
+  eq nResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
+  = RA:Nat .
+  ceq nResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
+  = nResources(D, RN:String, CO:Nat)
+  if RN:String =/= RN':String .
+  *** The DC doesn't have the resource - return exactly what's asked for
+  eq nResources("ABS.StdLib.EmptyMap"[emp], RN:String, CO:Nat) = CO:Nat .
+
+
   op hasEnoughResources : Data String Nat -> Bool .
   eq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
-  = RA:Nat >= CO:Nat .
+  = RA:Nat > 0 or CO:Nat == 0 .
   *** The DC doesn't have the resource - just go ahead.
   eq hasEnoughResources("ABS.StdLib.EmptyMap"[emp], RN:String, CO:Nat) = true .
   ceq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
@@ -1193,7 +1203,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   --- Resource consumption.  Must be a rewrite rule for confluence.
   *** DC variables:
   var ODC : Oid .    var CG1 : Cogid . var STATE : Data .
-  var P1 : Process . var F1 : Nat .    var COSTNAT : Nat .
+  var P1 : Process . var F1 : Nat .    vars COSTNAT DCRES MINCOST : Nat .
   crl < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
@@ -1201,16 +1211,24 @@ mod ABS-MACHINE-BASICS-COMMON is
       Att: 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   => < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
+    < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ["int"[COSTNAT - MINCOST]]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
       Att: 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random]))
-      /\ hasEnoughResources(STATE, "CPU", COSTNAT)
-      /\ STATE':Data := consumeDCResource(STATE, "CPU", COSTNAT)
+      /\ DCRES := nResources(STATE, "CPU", COSTNAT)
+      /\ DCRES > 0
+      /\ MINCOST := min(COSTNAT, DCRES)
+      /\ STATE':Data := consumeDCResource(STATE, "CPU", MINCOST)
   [label consume-resources] .
   
+
+  eq < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ["int"[0]]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
+  = < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ST:Stmt ; SL }, PrQ: W, Lcnt: F >
+  [label remove-annotation] .
+
+
 endm
 mod ABS-MACHINE-BASICS-RL is
   protecting ABS-EVAL .
