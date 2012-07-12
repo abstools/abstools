@@ -48,7 +48,6 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ClassOrIfaceModifier;
-import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
@@ -72,6 +71,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.NullExp;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
@@ -548,12 +548,15 @@ public class ABSUnitTestCaseTranslator {
 				typesOfObjectInHeap.putAll(getTypesFromABSData(testName, arg));
 			}
 			
-			createObjectsInHeap(typesOfObjectInHeap, 
-					testClass, getInitialState(testCase), 
-					method.getMethodSig().getName(), block);
+			Map<ABSRef,ABSObject> initial = getInitialState(testCase);
+			Set<String> initialHeapNames = referenceNames(initial.keySet());
+			
+			createObjectsInHeap(testName, initialHeapNames, typesOfObjectInHeap, 
+					testClass, initial, block);
 			
 			//test execution
-			FnApp test = makeTestExecutionForFunction(functionName, inputArguments);
+			FnApp test = makeTestExecutionForFunction(testName, 
+					initialHeapNames, functionName, inputArguments);
 			
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
@@ -565,20 +568,38 @@ public class ABSUnitTestCaseTranslator {
 			
 			//check return value
 			Map<ABSRef,ABSObject> finalHeap = getAfterState(testCase);
-
+			Set<String> finalHeapNames = referenceNames(finalHeap.keySet());
+			
 			ABSData rd = getReturnData(testCase);
 			if (rd != null) {
-				makeOracle(finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
+				makeOracle(testName, finalHeapNames, finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
 			}
 			
-			makeGetAndAssertStatements(testClass, finalHeap, testName, block);
+			makeGetAndAssertStatements(testName, finalHeapNames, testClass, finalHeap, block);
 		}
 		
 		output.addDecl(testClass);
 	}
 	
+	private Set<String> referenceNames(Set<ABSRef> refs) {
+		Set<String> names = new HashSet<String>();
+		for (ABSRef r : refs) {
+			names.add(getABSDataValue(r));
+		}
+		return names;
+	}
+	
 	private String heapReferenceForTest(String testName, String ref) {
 		return ref.toLowerCase() + StringUtils.capitalize(testName);
+	}
+	
+	private String testCaseRefNameFromheapReference(String reference) {
+		for (int i=0; i<reference.length(); i++) {
+			if (Character.isUpperCase(reference.charAt(i))) {
+				return reference.substring(0, i + 1).toUpperCase();
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -654,12 +675,14 @@ public class ABSUnitTestCaseTranslator {
 				typesOfObjectInHeap.putAll(getTypesFromABSData(testName, d));
 			}
 			
-			createObjectsInHeap(typesOfObjectInHeap, 
-					testClass, getInitialState(testCase), 
-					testName, block);
+			Map<ABSRef,ABSObject> initial = getInitialState(testCase);
+			Set<String> initialHeapNames = referenceNames(initial.keySet());
+			
+			createObjectsInHeap(testName, initialHeapNames, typesOfObjectInHeap, 
+					testClass, initial, block);
 			
 			//test execution
-			Call test = makeTestExecutionForMethod(methodName, inputArguments);
+			Call test = makeTestExecutionForMethod(testName, initialHeapNames, methodName, inputArguments);
 			
 			if (access instanceof DataTypeUse &&
 				((DataTypeUse) access).getName().equals("Unit")) {
@@ -670,15 +693,16 @@ public class ABSUnitTestCaseTranslator {
 			}
 			
 			Map<ABSRef,ABSObject> finalHeap = getAfterState(testCase);
+			Set<String> finalHeapNames = referenceNames(finalHeap.keySet());
 			
 			//check return value
 			ABSData rd = getReturnData(testCase);
 			if (rd != null) {
-				makeOracle(finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
+				makeOracle(testName, finalHeapNames, finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
 			}
 			
 			//check return value (using deltas)
-			makeGetAndAssertStatements(testClass, finalHeap, testName, block);
+			makeGetAndAssertStatements(testName, finalHeapNames, testClass, finalHeap, block);
 		}
 		
 		output.addDecl(testClass);
@@ -698,9 +722,11 @@ public class ABSUnitTestCaseTranslator {
 		return delta;
 	}
 	
-	private void makeGetAndAssertStatements(ClassDecl testClass, 
+	private void makeGetAndAssertStatements(
+			String testMethodName,
+			Set<String> heapNames,
+			ClassDecl testClass, 
 			Map<ABSRef,ABSObject> finalHeap, 
-			String testMethodName, 
 			Block testMethodBlock) {
 		
 		String testClassName = testClass.getName();
@@ -727,8 +753,7 @@ public class ABSUnitTestCaseTranslator {
 		MethodImpl assertMethodForObjectImpl = new MethodImpl(sig, new Block());
 		testClass.addMethod(assertMethodForObjectImpl);
 		
-		ModifyMethodModifier mmm = 
-				new ModifyMethodModifier(assertMethodForObjectImpl.fullCopy());
+		ModifyMethodModifier mmm = new ModifyMethodModifier(assertMethodForObjectImpl.fullCopy());
 		Block modifyBlock = mmm.getMethodImpl().getBlock();
 		modifier.addModifier(mmm);
 		
@@ -738,7 +763,7 @@ public class ABSUnitTestCaseTranslator {
 		testMethodBlock.addStmt(getExpStmt(call));
 
 		for (ABSRef r : finalHeap.keySet()) {
-			makeGetAndAssertStatements(finalHeap, testMethodName, r, finalHeap.get(r), modifyBlock);
+			makeGetAndAssertStatements(testMethodName, heapNames, finalHeap, r, finalHeap.get(r), modifyBlock);
 		}
 		
 	}
@@ -770,10 +795,11 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	private void createObjectsInHeap(
+			String testMethodName, 
+			Set<String> heapNames,
 			Map<String,Access> objectsInHeap,
 			ClassDecl testClass, 
 			Map<ABSRef,ABSObject> initialHeap, 
-			String testMethodName, 
 			Block testMethodBlock) {
 		
 		String testClassName = testClass.getName();
@@ -808,8 +834,9 @@ public class ABSUnitTestCaseTranslator {
 				getExpStmt(getCall(getThis(), setMethodForTest, false)));
 
 		for (ABSRef r : initialHeap.keySet()) {
-			makeSetStatements(objectsInHeap, r, initialHeap.get(r), 
-					modifyBlock, testMethodName, testClass);
+			makeSetStatements(testMethodName, heapNames, initialHeap, 
+					objectsInHeap, r, initialHeap.get(r), 
+					modifyBlock, testClass);
 		}
 		
 		for (String r : objectsInHeap.keySet()) {
@@ -825,30 +852,32 @@ public class ABSUnitTestCaseTranslator {
 		return new VarUse("this");
 	}
 	
-	private void makeOracle(Map<ABSRef,ABSObject> finalHeap, 
+	private void makeOracle(String testName, Set<String> heapNames, 
+			Map<ABSRef,ABSObject> finalHeap, 
 			String actual, Access access, ABSData data, Block block) {
 		
-		if (data instanceof ABSTerm) {
-			makeOracle(finalHeap, actual, access, (ABSTerm) data, block);
-		} else if (data instanceof ABSRef) {
-			
-		} else {
-			throw new IllegalStateException("Cannot handle ABSData that is not " +
-					"either a ABSRef or a ABSTerm");
-		}
+//		if (data instanceof ABSTerm) {
+//			makeOracle(finalHeap, actual, access, (ABSTerm) data, block);
+//		} else if (data instanceof ABSRef) {
+//			ABSObject obj = finalHeap.get(data);
+//		} else {
+//			throw new IllegalStateException("Cannot handle ABSData that is not " +
+//					"either a ABSRef or a ABSTerm");
+//		}
 	
 		//TODO handle object comparison!
 		block.addStmt(
-			getExpStmt(getCall(new VarUse(ASSERT_HELPER), "assertTrue", true, 
-				new VarUse(actual), createPureExpression(data))));
+			getExpStmt(getCall(
+					new VarUse(ASSERT_HELPER), "assertTrue", true, new VarUse(actual), 
+				createPureExpression(testName, heapNames, data))));
 	}
 	
-	private void makeOracle(Map<ABSRef,ABSObject> finalHeap, 
-			String actual, Access access, ABSTerm term, Block block) {
-		String type = getABSDataType(term);
-		String fn = getABSTermFunctor(term);
-		List<ABSData> datas = getABSTermArgs(term);
-	}
+//	private void makeOracle(Map<ABSRef,ABSObject> finalHeap, 
+//			String actual, Access access, ABSTerm term, Block block) {
+//		String type = getABSDataType(term);
+//		String fn = getABSTermFunctor(term);
+//		List<ABSData> datas = getABSTermArgs(term);
+//	}
 	
 	private String deltaOnClass(String className) {
 		return className + DELTA_SUFFIX;
@@ -907,9 +936,13 @@ public class ABSUnitTestCaseTranslator {
 		return SETTER_PREFIX+StringUtils.capitalize(fieldName);
 	}
 	
-	private void makeSetStatements(Map<String, Access> objectsInHeap, 
+	private void makeSetStatements(
+			String testName,
+			Set<String> heapNames,
+			Map<ABSRef, ABSObject> initialHeap, 
+			Map<String, Access> objectsInHeap, 
 			ABSRef ref, ABSObject state, Block block, 
-			String testName, ClassDecl testClass) {
+			ClassDecl testClass) {
 		
 		String rn = heapReferenceForTest(testName, getABSDataValue(ref)); 
 		String concreteTypeName = getABSObjectType(state);
@@ -931,7 +964,7 @@ public class ABSUnitTestCaseTranslator {
 			assert fields.containsKey(name);
 			ABSData d = fields.remove(name);
 			objectsInHeap.putAll(getTypesFromABSData(testName, d));
-			PureExp exp = createPureExpression(d);
+			PureExp exp = createPureExpression(testName, heapNames, d);
 			constructorArgs[i] = exp;
 		}
 		
@@ -945,7 +978,7 @@ public class ABSUnitTestCaseTranslator {
 			ABSData d = fields.get(fn);
 			objectsInHeap.putAll(getTypesFromABSData(testName, d));
 
-			PureExp exp = createPureExpression(d);
+			PureExp exp = createPureExpression(testName, heapNames, d);
 			syncCall.addParam(exp);
 			block.addStmt(getExpStmt(syncCall));
 		}
@@ -958,10 +991,11 @@ public class ABSUnitTestCaseTranslator {
 	
 	/**
 	 * Adds the type import
+	 * @param heap 
 	 * @param dataValue
 	 * @return
 	 */
-	private PureExp createPureExpression(ABSData dataValue) {
+	private PureExp createPureExpression(String testName, Set<String> heap, ABSData dataValue) {
 		String type = getABSDataType(dataValue);
 		String value = getABSDataValue(dataValue);
 
@@ -971,9 +1005,13 @@ public class ABSUnitTestCaseTranslator {
 		
 		if (dataValue instanceof ABSTerm) {
 			ABSTerm term = (ABSTerm) dataValue;
-			return makeDataTermValue(term, decl);
+			return makeDataTermValue(testName, heap, term, decl);
 		} else if (dataValue instanceof ABSRef) {
-			return new VarUse(value);
+			if (heap.contains(value)) {
+				return new VarUse(heapReferenceForTest(testName, value));
+			} else {
+				return new NullExp();
+			}
 		} else {
 			throw new IllegalStateException("Cannot handle ABSData that is not " +
 					"either a ABSRef or a ABSTerm");
@@ -983,28 +1021,31 @@ public class ABSUnitTestCaseTranslator {
 	/**
 	 * Construct a pure expression that is either a primitive literal
 	 * such as Int and String, or a value of a data type.
+	 * @param heap 
+	 * @param testName 
 	 * 
 	 * @param value
 	 * @param decl 
 	 * @return
 	 */
-	private PureExp makeDataTermValue(ABSTerm term, Decl decl) {
+	private PureExp makeDataTermValue(String testName, Set<String> heap, 
+			ABSTerm term, Decl decl) {
 		if (decl instanceof TypeSynDecl) {
-			return parseValue(term);
+			return parseValue(test, heap, term);
 		} else if (decl instanceof DataTypeDecl) {
 			if ("String".equals(decl.getName())) {
 				return new StringLiteral(getABSDataValue(term));
 			} else if ("Int".equals(decl.getName())) {
 				return new IntLiteral(getABSDataValue(term));
 			} else {
-				return parseValue(term);
+				return parseValue(testName, heap, term);
 			}
 		} else {
 			throw new IllegalStateException("Cannot handle declaration type "+decl);
 		}
 	}
 	
-	private DataConstructorExp parseValue(ABSTerm term) {
+	private DataConstructorExp parseValue(String testName, Set<String> heap, ABSTerm term) {
 		
 		final DataConstructorExp result = new DataConstructorExp();
 		String fn = getABSTermFunctor(term);
@@ -1012,7 +1053,7 @@ public class ABSUnitTestCaseTranslator {
 		result.setParamList(new abs.frontend.ast.List<PureExp>());
 		List<ABSData> vs = getABSTermArgs(term);
 		for (int i=0; i<vs.size(); i++) {
-			result.setParam(createPureExpression(vs.get(i)),i);
+			result.setParam(createPureExpression(testName, heap, vs.get(i)),i);
 		}
 		return result;
 	}
@@ -1026,8 +1067,12 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	private void makeGetAndAssertStatements(
-			Map<ABSRef, ABSObject> finalHeap, String testName, 
-			ABSRef ref, ABSObject state, Block block) {
+			String testName,
+			Set<String> heapNames,
+			Map<ABSRef, ABSObject> finalHeap,
+			ABSRef ref, 
+			ABSObject state, 
+			Block block) {
 		String rn = heapReferenceForTest(testName, getABSDataValue(ref)); 
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
@@ -1047,13 +1092,14 @@ public class ABSUnitTestCaseTranslator {
 				syncCall.setMethod(getterMethodName(fn));
 				block.addStmt(getVarDecl(resultOfGetterMethodName(fn), 
 						(Access) field.getAccess().fullCopy(), syncCall));
-				makeOracle(finalHeap, resultOfGetterMethodName(fn),
+				makeOracle(testName, heapNames, finalHeap, resultOfGetterMethodName(fn),
 						(Access) field.getAccess().fullCopy(), d,block);
 			}
 		}
 	}
 	
-	private FnApp makeTestExecutionForFunction(String functionName, List<ABSData> inArgs) {
+	private FnApp makeTestExecutionForFunction(String testName, Set<String> heap, 
+			String functionName, List<ABSData> inArgs) {
 		abs.frontend.ast.List<PureExp> ps = new abs.frontend.ast.List<PureExp>();
 		FnApp fa = new FnApp();
 		
@@ -1066,13 +1112,15 @@ public class ABSUnitTestCaseTranslator {
 		
 		for (int i=0; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
-			PureExp exp = createPureExpression(d);
+			PureExp exp = createPureExpression(testName, heap, d);
 			fa.setParam(exp,i);
 		}
 		return fa;
 	}
 	
-	private Call makeTestExecutionForMethod(String methodName, List<ABSData> inArgs) {
+	private Call makeTestExecutionForMethod(
+			String testName, Set<String> heapNames,
+			String methodName, List<ABSData> inArgs) {
 		
 		if (inArgs.size() == 0) {
 			throw new IllegalStateException("Inputs for a method must at least have a reference");
@@ -1086,7 +1134,7 @@ public class ABSUnitTestCaseTranslator {
 		PureExp[] ps = new PureExp[inArgs.size() - 1];
 		for (int i=1; i<inArgs.size(); i++) {
 			ABSData d = inArgs.get(i);
-			PureExp exp = createPureExpression(d);
+			PureExp exp = createPureExpression(testName, heapNames, d);
 			ps[i-1] = exp;
 		}
 		
