@@ -1,6 +1,0 @@
-Coding Conventions
-
-   We currently only have one coding convention and that is to use
-   no tabs for indentation. The indentation size is 4.
-   Eclipse users can import the absformatter.xml file in the .settings
-   directory to apply this formatting style.

@@ -1,8 +1,0 @@
-
-aspect AtomicityAnnotation {
-    
-    syn lazy boolean MethodSig.isAtomic() {
-        return AtomicityChecker.isAtomic(this.getAnnotations());
-    }
-
-}

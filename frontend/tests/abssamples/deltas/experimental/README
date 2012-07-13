@@ -1,4 +1,0 @@
-This folder contains ABS code which doesn't compile due to various reasons:
-- the features used are not yet implemented by the ABS compiler 
-- legacy code
-- work in progress, etc.

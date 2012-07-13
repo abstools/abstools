@@ -1,8 +1,0 @@
-aspect Annotations {
-
-    public abstract List<Annotation> TypedVarOrFieldDecl.getAnnotations();
-    inh lazy List<Annotation> VarDecl.getAnnotations();
-    eq VarDeclStmt.getVarDecl().getAnnotations() = getAnnotations();
-
-    
-}
