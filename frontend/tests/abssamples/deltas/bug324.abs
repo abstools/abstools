@@ -1,0 +1,26 @@
+module C;
+
+class C { Unit m() { } }
+
+delta I {
+  modifies class C {
+    modifies Unit m() { }
+    adds Unit n() { }
+  }
+}
+
+delta K {
+  modifies class C {
+    modifies Unit m() { I.original(); }
+    modifies Unit n() { I.original(); }
+  }
+}
+
+productline PL {
+  features X,Z;
+  delta I when X;
+  delta K after I when Z;
+}
+
+product A(X,Z);
+product B(Z);

@@ -1,0 +1,62 @@
+aspect TypeHierarchy {
+
+    /**
+     * returns all direct subtypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+	public java.util.Collection<Decl> InterfaceDecl.getDirectSubTypes() {
+		return TypeHierarchyHelper.getDirectSubTypes(this);
+	}
+	
+	/**
+     * returns all direct subtypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+    public java.util.Collection<Decl> InterfaceDecl.getSubTypes() {
+        return TypeHierarchyHelper.getSubTypes(this);
+    }
+    
+    /**
+     * returns all supertypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+    public java.util.Collection<InterfaceDecl> InterfaceDecl.getSuperTypes() {
+        return TypeHierarchyHelper.getSuperTypes(this);
+    }
+    
+    /**
+     * returns all direct supertypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+    public java.util.Collection<InterfaceDecl> InterfaceDecl.getDirectSuperTypes() {
+        return TypeHierarchyHelper.getDirectSuperTypes(this);
+    }
+    
+    /**
+     * returns all supertypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+    public java.util.Collection<InterfaceDecl> ClassDecl.getSuperTypes() {
+        return TypeHierarchyHelper.getSuperTypes(this);
+    }
+    
+    /**
+     * returns all direct supertypes of this interfaces:
+     *  - all interfaces extending this interface
+     *  - all classes implementing this interface
+     * results are not cached
+     */
+    public java.util.Collection<InterfaceDecl> ClassDecl.getDirectSuperTypes() {
+        return TypeHierarchyHelper.getDirectSuperTypes(this);
+    }
+}

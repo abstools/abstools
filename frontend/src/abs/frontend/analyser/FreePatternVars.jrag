@@ -1,0 +1,26 @@
+/**
+ * This aspect returns the names of the free variables of a Pattern
+ */
+
+aspect FreePatternVars {
+    syn lazy ArrayList<PatternVar> Pattern.getFreePatternVars();
+    
+    eq PatternVar.getFreePatternVars() {
+        ArrayList<PatternVar> res = new ArrayList<PatternVar>(1);
+        res.add(this);
+        return res;
+    }
+    
+    eq PatternVarUse.getFreePatternVars() = new ArrayList<PatternVar>(0);
+    eq LiteralPattern.getFreePatternVars() = new ArrayList<PatternVar>(0);
+    eq UnderscorePattern.getFreePatternVars() = new ArrayList<PatternVar>(0);
+    eq ConstructorPattern.getFreePatternVars() {
+        ArrayList<PatternVar> res = new ArrayList<PatternVar>();
+        for (Pattern p : getParams()) {
+            res.addAll(p.getFreePatternVars());
+        }
+        return res;
+    }
+    
+    
+}

@@ -1,0 +1,46 @@
+module M;
+export *;
+
+interface I1 {
+    Unit m();
+}
+class X implements I1 { Unit m() {} }
+
+//*****************************************************
+module M2;
+export *;
+import * from M;
+
+interface I2 {
+    Unit n();
+}
+
+//*****************************************************
+module PL;
+export *;
+import * from M;
+import * from M2;
+
+delta D {
+    modifies class X implements I1, M2.I2 {
+        adds Unit n() { }
+    }
+    
+}
+
+/*
+delta D {
+    adds interface J extends I { }
+
+    modifies class X implements J {
+        adds Unit n() { }
+    }   
+}
+*/
+
+productline PL {
+    features F;
+    delta D when F;
+}
+
+product P(F);

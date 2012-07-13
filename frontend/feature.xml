@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="eu.hatsproject.abs.compiler"
+      label="ABS Compiler"
+      version="0.0.0.VERSION_STRING"
+      provider-name="HATS Project">
+
+   <description url="http://www.hats-project.eu">
+      ABS Frontend
+   </description>
+
+   <url>
+      <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.jdt.core"/>
+   </requires>
+
+   <plugin
+         id="eu.hatsproject.abs.compiler"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>

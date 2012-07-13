@@ -1,0 +1,36 @@
+// inform ClassOrIfaceModifiers and Modifiers about the DeltaDecl where they were declared
+aspect Delta {
+    inh DeltaDecl ClassOrIfaceModifier.delta();
+    eq DeltaDecl.getClassOrIfaceModifier().delta() = this;
+    
+    inh DeltaDecl Modifier.delta();
+    eq ModifyClassModifier.getModifier().delta() = this.delta();
+
+    inh DeltaDecl MethodSigModifier.getDelta();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getDelta() = this.delta();
+}
+
+//inform nodes about the Module where they were declared
+aspect Module {
+    inh ModuleDecl Decl.getModule();
+    eq ModuleDecl.getDecl().getModule() = this;
+
+    inh ModuleDecl ClassOrIfaceModifier.getModule();
+    eq DeltaDecl.getClassOrIfaceModifier().getModule() = this.getModule();
+
+    inh ModuleDecl Modifier.getModule();
+    eq ModifyClassModifier.getModifier().getModule() = this.getModule();
+}
+
+//inform various nodes about the Model
+aspect Model {
+    inh Model Modifier.getModel();
+    eq ModifyClassModifier.getModifier().getModel() = this.getModule().getModel();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getModule().getModel();
+}
+
+// inform Modifier about the ModifyClassModifier where it was declared
+aspect ModifyClassModifier {
+    inh ModifyClassModifier Modifier.getModifyClassModifier();
+    eq ModifyClassModifier.getModifier().getModifyClassModifier() = this;
+}

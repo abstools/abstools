@@ -1,0 +1,20 @@
+aspect FinalAnnotation {
+
+    syn lazy boolean TypedVarOrFieldDecl.isFinal() {
+        for (Annotation an : getAnnotations()) {
+            if (an.getType().getQualifiedName().equals("ABS.StdLib.FinalAnnotation")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    syn lazy boolean VarOrFieldUse.isFinal() {
+        if (getDecl() instanceof TypedVarOrFieldDecl) {
+            return ((TypedVarOrFieldDecl)getDecl()).isFinal();
+        }
+        // pattern var decls are always final
+        return true;
+    } 
+
+}

@@ -1,0 +1,111 @@
+module ABSChat.Client;
+export ClientImpl;
+export ClientGUI, ClientGUIImpl;
+import * from ABSChat.Interfaces;
+import * from GUI;
+
+interface ClientIntern extends Client {
+	 Unit sendText(String text);
+}
+ 
+interface ClientGUIIntern extends ClientGUI {
+   [Near] ClientIntern getClientIntern();
+   String getTextFieldText();
+} 
+
+class ClientGUIImpl([Near] ClientIntern client) implements ClientGUIIntern {
+   Window gui;
+   Button sendButton;   
+   TextField textField; 
+   Bool initialized = False;
+   
+   {   
+   	  gui = new cog WindowImpl();
+   } 
+   
+   Unit init() { 
+   	  Fut<Button> f = gui!newButton("Send");
+   	  sendButton = f.get;
+   	  ButtonListener l = new SendButtonListener(this);
+   	  sendButton!registerListener(l);
+
+      Fut<TextField> tf;
+      tf = gui!newTextField();
+      textField = tf.get;
+
+   	  initialized = True;
+   }
+   
+   Button getSendButton() {
+      await initialized;
+      return sendButton;
+   }
+   
+   TextField getTextField() {
+      await initialized;
+      return textField;
+   }
+   
+   String getTextFieldText() {
+      Fut<String> f = textField!getText();
+      return f.get;
+   }
+   
+   ClientIntern getClientIntern() {
+      return client;
+   }
+}
+
+[Plain]
+class SendButtonListener([Final] [Near] ClientGUIIntern client) implements ButtonListener {
+   Unit pressed() {
+       ClientIntern ci = client.getClientIntern();
+       String s = client.getTextFieldText();
+   	   ci.sendText(s);
+   }
+}
+
+
+[COG]
+class ClientImpl implements ClientIntern { 
+   String name = "Alice";
+   Server server;
+   Session session;
+   [Near] ClientGUI gui;
+
+   ClientGUI getGUI() {
+	  if (gui == null) {
+	     gui = new ClientGUIImpl(this);
+	     gui.init();
+	  }
+   	  return gui;
+   }
+
+   Unit setServer(Server s) { 
+   	   this.server = s;
+   }
+   
+   Unit start() {
+      await server != null;
+      Fut<Session> f = server!connect(this);
+      await f?;
+      session = f.get; 
+   }
+   
+   Unit receive(ServerMsg msg) {
+   	  await session != null;
+   	  ClientMsg ans = 
+   	  	case msg {
+   	  		  Welcome => ChatMessage(name,"Welt"); 
+   	  };
+   	  
+   	  Fut<Unit> u = session ! receive(ans);
+   	  await u?;
+   	  session ! close();
+   }  
+   
+   Unit sendText(String text) {
+      await session != null;
+      session ! receive(ChatMessage(name,text));
+   }
+}

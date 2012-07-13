@@ -1,0 +1,73 @@
+import java.util.Map;
+import java.util.Set;
+
+aspect ProductConstraints {
+    public boolean Model.getProdConstraints(String productname, Map<String,IntegerVariable> vars, Set<Constraint> newcs) {
+        boolean res = false;
+        for (CompilationUnit cu: getCompilationUnits())
+            for (ModuleDecl md: cu.getModuleDecls())
+                for (Product p: md.getProducts())
+                    if (p.qualifiedName().equals(productname)) {
+                        res = true;
+                        for (Feature f: p.getFeatures()) {
+                            newcs.add(ChocoSolver.isTrue(vars.get(f.getName())));
+                            for (AttrAssignment aa: f.getAttrAssignments()) {
+                                String fname = f.getName()+"."+aa.getName();
+                                if (vars.containsKey(fname))
+                                    newcs.add(ChocoSolver.eqeq(vars.get(fname),
+                                            aa.getValue().getIntValue().intValue()));
+                            }
+                        }
+                    }                
+        return res;
+    }
+    
+    
+    public boolean Model.getDiffConstraints(String productname, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String diffVar) {
+        boolean res = false;
+        
+        //calculating deselected featrues, initially initialized by all features
+        ArrayList<String> deselectedFeatures = new ArrayList();
+        for (String fname: features()){
+            deselectedFeatures.add(fname);
+        }
+        
+        //removing the selected features to get deselected features
+        //
+        IntegerExpressionVariable v = Choco.ZERO;
+        for (CompilationUnit cu: getCompilationUnits())
+            for (ModuleDecl md: cu.getModuleDecls())
+                for (Product p: md.getProducts())
+                    if (p.qualifiedName().equals(productname)) {
+                        res = true;
+                        for (Feature f: p.getFeatures()) {
+                            v = Choco.plus(v, Choco.abs(Choco.minus(vars.get(f.getName()), 1)));
+                            for (String fname: deselectedFeatures){
+                                if(f.getName().equalsIgnoreCase(fname)){
+                                    deselectedFeatures.remove(fname);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+        
+        
+        for(String fname: deselectedFeatures){
+            v = Choco.plus(v, vars.get(fname));
+        }
+        newcs.add(ChocoSolver.eqeq(vars.get(diffVar),v));
+        return res;
+    }
+
+    public boolean Model.getMaxConstraints(String productname, Map<String,IntegerVariable> vars, Set<Constraint> newcs, String maxVar) {
+        IntegerExpressionVariable v = Choco.ZERO;
+        for(String fname: features()){
+            if (vars.containsKey(fname))
+                v = Choco.plus(v, vars.get(fname));
+        }
+        
+        newcs.add(ChocoSolver.eqeq(vars.get(maxVar),v));
+        return true;
+    }
+
+}

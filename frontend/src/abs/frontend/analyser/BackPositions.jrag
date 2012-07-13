@@ -1,0 +1,20 @@
+
+aspect BackPositions {
+
+	syn lazy int ASTNode.getStartPos() {
+		return getStart();
+	}
+	
+	syn boolean ASTNode.hasChildren() = getNumChild() > 0;
+	
+
+	syn lazy int ASTNode.getEndPos() {
+		return getEnd();
+	}
+	
+	// set the position of an AstNode, this should only be used for generated code (-> ASTPreProcessor)
+	public void ASTNode.setPosition(int startPos, int endPos) {
+	    start = startPos;
+	    end = endPos;
+	}
+}

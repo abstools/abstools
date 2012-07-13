@@ -1,0 +1,9 @@
+This is a small example that demonstrates the use of the FFI (a.k.a. FLI).
+It uses java.util.Random to generate a random number and prints it to standard output.
+
+Use "make gen" to generate code and "make run" to run it and see the output.
+
+The Makefile assumes that it can find Tools/ABS/trunk/frontend/dist/absfrontend.jar.
+You might need to build it first ("ant dist").
+
+Note that at some point in the future "fli" will be replaced with "ffi".

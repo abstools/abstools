@@ -1,0 +1,381 @@
+import java.util.Map;
+import abs.frontend.delta.*;
+import abs.common.*;
+import abs.frontend.delta.exceptions.*;
+
+aspect DeltaCollector {
+
+    public ArrayList<DeltaDecl> Model.getSortedDeltas(Product prod) {
+
+        // first, collect ALL deltas
+        HashMap<String, DeltaDecl> alldeltas = new HashMap<String, DeltaDecl>();
+        this.collectDeltas(alldeltas);
+
+        // given a product, find the applicable deltas (and sort them)
+        HashMap<String, DeltaDecl> appdeltas;
+        try {
+            appdeltas = this.findApplicableDeltas(prod, alldeltas);
+        } catch(WrongProgramArgumentException e) {
+            return new ArrayList<DeltaDecl>(); // shouldn't happen
+        }
+
+        return sortDeltas(appdeltas);
+    }    
+
+
+    /**************************************************************************
+     * find a particular product given by its name
+     */
+    public Product Model.findProduct(String id) throws WrongProgramArgumentException {
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (ModuleDecl d : u.getModuleDecls()) {
+                for (Product p : d.getProducts()) {
+                    if (id.equals(p.qualifiedName()))
+                        return p;
+                }
+            }
+        }
+        throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
+    }
+
+
+    /**************************************************************************
+     * collect all Deltas in the Model
+     */
+    //propagate
+    public void ASTNode.collectDeltas(HashMap<String, DeltaDecl> deltas) {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChild(i).collectDeltas(deltas);
+        }
+    }
+
+    public void Model.collectDeltas(HashMap<String, DeltaDecl> deltas) {
+        super.collectDeltas(deltas);
+    }
+
+    // remember this DeltaDecl
+    public void DeltaDecl.collectDeltas(HashMap<String, DeltaDecl> deltas) {
+        String deltaid = this.qualifiedName();
+//        String deltaid = this.getName();
+        deltas.put(deltaid, this);
+//        System.out.println("--- AllDeltas: " + deltaid);
+    }
+
+    /**************************************************************************
+     * Evaluate each delta clause to find the applicable deltas
+     * i.e. test each application condition in the context of the features which are ON in the given product
+     *
+     */
+    public HashMap<String, DeltaDecl> Model.findApplicableDeltas(
+            Product prod, 
+            HashMap<String, DeltaDecl> alldeltas) throws WrongProgramArgumentException {
+
+        HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
+        int seed = 0;
+        
+        // collect applicable deltas
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (ModuleDecl module : u.getModuleDecls()) {
+                if (module.hasProductLine()) {
+                    ProductLine pl = module.getProductLine();
+                    for (DeltaClause c : pl.getDeltaClauses()) {
+//                        System.out.println("DeltaClause: " + c.moduleName() + "." + c.getDeltaspec().getName());
+                        
+                        if (c.evaluateAppCond(prod.getFeatures())) {
+                            DeltaDecl delta = null;
+                            String deltaid = null;
+
+                            // search for delta symbol in the list of visible names
+                            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, c.getDeltaspec().getName());
+                            ResolvedMap visibleSymbols = module.getVisibleDeltas();
+                            if (visibleSymbols.containsKey(symbol)) {
+                                // found name of delta, now find the declaration...
+                                delta = (DeltaDecl) visibleSymbols.get(symbol).getDecl();
+                                deltaid = delta.moduleName() + "." + delta.getName();
+//                                System.out.println("=== found DeltaDecl: " + deltaid);
+                            } else {
+                                // delta not found
+                                throw new WrongProgramArgumentException("Delta [" + deltaid + "] is not declared");
+                            }                    
+                            
+                            // substitute params, and remember delta
+                            List<Deltaparam> params = c.getDeltaspec().getDeltaparams();
+                            delta = delta.substituteDeltaParams(params, prod.getFeatures());
+                            deltas.put(deltaid, delta);
+                        }
+                    }
+                }
+            }
+        }
+        // DEBUG
+        if (debug) {
+        	println("## Collected deltas:");
+        	println(deltas.toString());
+        }
+        return deltas;
+    }
+
+    syn ResolvedMap ModuleDecl.getVisibleDeltas() circular [new ResolvedMap()];
+    eq ModuleDecl.getVisibleDeltas() {
+        return DeltaCollectorHelper.getVisibleDeltas(this);
+    }
+
+    syn ResolvedMap ModuleDecl.getExportedDeltas() circular [new ResolvedMap()];
+    eq ModuleDecl.getExportedDeltas() {
+        return DeltaCollectorHelper.getExportedDeltas(this);
+    }
+
+    syn ResolvedMap ModuleDecl.getImportedDeltas() circular [new ResolvedMap()];
+    eq ModuleDecl.getImportedDeltas() {
+        return DeltaCollectorHelper.getImportedDeltas(this);
+    }
+
+    syn ResolvedMap ModuleDecl.getDefinedDeltas() circular [new ResolvedMap()];
+    eq ModuleDecl.getDefinedDeltas() {
+        return DeltaCollectorHelper.getDefinedDeltas(this);
+    }
+
+
+    public abstract String Deltaparam.getName();
+    public String FIDAID.getName()  { return getFeatName() + "." + getAttrName(); }
+    public String FID.getName()  { return getFeatName(); }
+    public String Const.getName()   { return getValue().getName(); }
+    public abstract String Value.getName();
+    public String IntVal.getName()  { return "" + getValue(); }
+    public String BoolVal.getName() { return "" + getValue(); }
+
+    /**************************************************************************
+     * Sort the given deltas using the partial orders defined in DeltaClauses
+     * 
+     */
+    public ArrayList<DeltaDecl> Model.sortDeltas(
+            HashMap<String, DeltaDecl> deltas) {
+        
+        // sort deltas
+        GraphTS g = new GraphTS(deltas.values().toArray());
+        
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (ModuleDecl module : u.getModuleDecls()) {
+                if (module.hasProductLine()) {
+                    ProductLine pl = module.getProductLine();
+                    for (DeltaClause c : pl.getDeltaClauses()) {
+                        String deltaid = c.moduleName() + "." + c.getDeltaspec().getName();
+                        if (deltas.containsKey(deltaid)) {
+                            DeltaDecl delta = deltas.get(deltaid);
+                            // for each afterdelta: add an edge to delta
+                            for (DeltaID did : c.getDeltaIDs()) {
+                                String otherid = c.moduleName() + "." + did.getName();
+                                if (deltas.containsKey(otherid)) {
+                                    DeltaDecl otherdelta = deltas.get(otherid);
+                                    try {
+                                        g.addEdge(otherdelta, delta);
+                                    } catch (VertexNotFoundException e) {
+                                        assert false; // should never reach this point
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        g.sort(); // FIXME catch the case when sort fails -- use assert?
+        return g.getSortedDeltas();
+    }
+
+
+    /**************************************************************************
+     *  Evaluate the application condition assciated with this DeltaClause
+     *  in the context of the given list of features and attribute values
+     *
+     *  currently this only compares feature NAMES
+     *  and only delas with the AND operator
+     *  TODO properly handle all logical connectives, also feature attributes
+     */
+    public boolean DeltaClause.evaluateAppCond(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
+
+        // check whether each required feature is also ON
+        for (Feature reqFeature : this.getFeatures()) {
+            if (! onFeatureIDs.contains(reqFeature.getName()))
+                return false;
+        }
+        return true;
+    }
+
+
+
+    // calculate the concrete value of a Deltaparam given a feature selection.
+    abstract public Value Deltaparam.calcValue(List<Feature> feats) throws WrongProgramArgumentException;
+
+    public Value Const.calcValue(List<Feature> feats)  {
+        return (Value) getValue().fullCopy();
+    }
+
+    public Value CID.calcValue(List<Feature> feats) {
+        for (Feature f : feats) {
+            if (f.getName().equals(getName()))
+                return new BoolVal(true);
+        }
+        return new BoolVal(false);
+    }
+    
+    public Value FID.calcValue(List<Feature> feats) {
+        for (Feature f : feats) {
+            if (f.getName().equals(getName()))
+                return new BoolVal(true);
+        }
+        return new BoolVal(false);
+    }
+
+    public Value FIDAID.calcValue(List<Feature> features) throws WrongProgramArgumentException {
+        for (Feature f : features) {
+            if (f.getName().equals(this.getFeatName())) // found feature
+                for (AttrAssignment attr : f.getAttrAssignments()) {
+                    if (attr.getName().equals(getAttrName()))   // found attribute
+                        return (Value) attr.getValue().fullCopy();
+                }
+        }
+        throw new WrongProgramArgumentException("Argument " + getFeatName() + "." + getAttrName() + " not found.");
+    }
+
+    // collect the substitution to be applied in a DeltaDecl given the parameters and the feature selection
+    public HashMap<String,Value> DeltaDecl.getSubstitution(List<Deltaparam> dparams, List<Feature> feats) throws WrongProgramArgumentException {
+        HashMap<String,Value> res = new HashMap<String,Value>();
+        for (int i = 0; i < dparams.getNumChild(); i++) {
+            res.put(getParam(i).getName(),dparams.getChildNoTransform(i).calcValue(feats));
+        }
+//        System.out.println("## collected subst [" + getName() + "]: " + res);
+        return res;
+    }
+
+    abstract public String DeltaParamDecl.getName();
+    public String DeltaFieldParam.getName() {
+        return getParamDecl().getName();
+    }
+
+    // This is the main function that should be used!
+    public DeltaDecl DeltaDecl.substituteDeltaParams(List<Deltaparam> dparams, List<Feature> feats) throws WrongProgramArgumentException {
+        DeltaDecl d;
+        d = this.fullCopy();
+        d.applySubstitution(d.getSubstitution(dparams,feats));
+        return d;
+    }
+
+    // apply a substitution to DeltaDecl
+    public void DeltaDecl.applySubstitution(HashMap<String,Value> subst) {
+        for (ClassOrIfaceModifier d : getClassOrIfaceModifiers())
+            d.applySubstitution(subst);
+    }
+
+    // apply a substitution to ClassOrIfaceModifier
+    abstract public void ClassOrIfaceModifier.applySubstitution(HashMap<String,Value> subst);
+    
+    public void AddClassModifier.applySubstitution(HashMap<String,Value> subst) {
+        getClassDecl().applySubstitution(subst);
+    }
+    public void RemoveClassModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void ModifyClassModifier.applySubstitution(HashMap<String,Value> subst) {
+        for (Modifier m : getModifiers()) 
+            m.applySubstitution(subst);
+    }
+    public void AddInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void ModifyInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
+
+    // apply a substitution to Modifier
+    abstract public void Modifier.applySubstitution(HashMap<String,Value> subst);
+  
+    public void AddFieldModifier.applySubstitution(HashMap<String,Value> subst) {
+        getFieldDecl().applySubstitution(subst);
+    }
+    public void RemoveFieldModifier.applySubstitution(HashMap<String,Value> subst) {
+        getFieldDecl().applySubstitution(subst);
+    }
+    public void AddMethodModifier.applySubstitution(HashMap<String,Value> subst) {
+        getMethodImpl().applySubstitution(subst);
+    }
+    public void RemoveMethodModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void ModifyMethodModifier.applySubstitution(HashMap<String,Value> subst) {
+        getMethodImpl().applySubstitution(subst);
+    }
+    
+    public void AddMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
+    public void RemoveMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
+
+    public void ClassDecl.applySubstitution(HashMap<String,Value> subst) {
+        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+        for (ParamDecl p : getParams()) 
+            p.updateSubstitution(subst2);
+        if (hasInitBlock())
+            getInitBlock().applySubstitution(subst2);
+        for (FieldDecl f : getFields())
+            f.applySubstitution(subst2);
+        for (MethodImpl m : getMethods())
+            m.applySubstitution(subst2);
+    }
+    public void FieldDecl.applySubstitution(HashMap<String,Value> subst) {
+        if (hasInitExp()) 
+            getInitExp().applySubstitution(subst);
+        for (Annotation a : getAnnotations()) 
+            a.applySubstitution(subst);
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
+    }
+    public void VarDecl.applySubstitution(HashMap<String,Value> subst) {
+        if (hasInitExp()) 
+            getInitExp().applySubstitution(subst);
+        // Removal should not be necessary with well-typed deltas
+        subst.remove(getName());
+    }
+    public void ParamDecl.updateSubstitution(HashMap<String,Value> subst) {
+        subst.remove(getName());
+        for (Annotation a : getAnnotations()) 
+            a.applySubstitution(subst);
+    }
+    public void MethodImpl.applySubstitution(HashMap<String,Value> subst) {
+        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+        getMethodSig().updateSubstitution(subst2);
+        getBlock().applySubstitution(subst2);
+    }
+    public void MethodSig.updateSubstitution(HashMap<String,Value> subst) {
+        for (ParamDecl p : getParams()) 
+            p.updateSubstitution(subst);
+    }
+
+    // the actual substitution!
+    public void VarUse.applySubstitution(HashMap<String,Value> subst) {
+//        System.out.println("%%% Substituting value of " + getName());
+//        System.out.println("%%% using subst: " + subst);
+        if (subst.containsKey(getName())) {
+            Value v = subst.get(getName());
+            ASTNode p = getParent();
+            int i = p.getIndexOfChild(this);
+            p.setChild(v.calcExpr(), i);
+//            System.out.println("%%% assigning " + v.calcExpr());
+        }
+
+    }
+    abstract public PureExp Value.calcExpr();
+    public PureExp IntVal.calcExpr() {
+        return new IntLiteral(""+getValue());
+    }
+    public PureExp BoolVal.calcExpr() {
+        if (getValue())
+            return new DataConstructorExp("True", new List());
+        else
+            return new DataConstructorExp("False", new List());
+    }
+
+    // used to go down Blocks, Stmts, Exps
+    public void ASTNode.applySubstitution(HashMap<String,Value> subst) {
+        for(int i = 0; i < getNumChild(); i++) {
+            getChildNoTransform(i).applySubstitution(subst);
+        }
+    }
+
+
+
+}

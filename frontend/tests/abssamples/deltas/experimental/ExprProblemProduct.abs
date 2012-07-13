@@ -1,0 +1,175 @@
+
+// Generated product for features Lit, Print, Add, Eval (no Neg).
+
+
+interface Exp {
+    String print();
+    Int eval();
+}
+
+class Lit(Int value) implements Exp {
+    String print() {
+        return intToString(value);
+    }
+    Int eval() {
+        return value;
+    }
+}
+
+class Test {
+
+    Exp a;
+    String output = "";
+
+    Unit run() {
+        {a=new Lit(3);
+        output = a.print();}
+        {Int result = 0; result = a.eval();
+        output = output + " " + intToString(result);}
+        {a = new Add(a, a);
+        String result = ""; result = a.print();
+        output = output + " " + result;}
+        {Int result = 0; result = a.eval();
+        output = output + " " + intToString(result);}
+    }
+}
+
+class Add(Exp expr1, Exp expr2) implements Exp {
+    String print() {
+        String res1 = ""; res1 = expr1.print();
+        String res2 = ""; res2 = expr2.print();
+        return res1 + " + " + res2;
+    }
+    Int eval() {
+        Int res1 = 0; res1 = expr1.eval();
+        Int res2 = 0; res2 = expr2.eval();
+        return res1 + res2;
+    }
+}
+
+
+// delta DLitEval {
+
+//     modifies interface Exp {
+//         adds Int eval();
+//     }
+
+//     modifies class Lit {
+//         adds Int eval() {
+//             return value;
+//         }
+//     }
+
+//     modifies class Test {
+
+//         modifies Unit run() {
+//             original();
+//             Int result = a.eval();
+//             output = output + " " + intToString(result);
+//         }
+//     }
+// }
+
+
+// delta DAddPrint { 
+
+//     adds class Add(Exp expr1, Exp expr2) implements Exp {
+//         String print() {
+//             return expr1.print() + " + " + expr2.print();
+//         }
+//     }
+
+//     modifies class Test {
+//         modifies Unit run() {
+//             original();
+//             a = new Add(a, a);
+//             String result = a.print();
+//             output = output + " " + result;
+//         }
+//     }
+// }
+
+
+
+
+// delta DAddEval {
+
+//     modifies class Add {
+//         adds Int eval() {
+//             return expr1.eval() + expr2.eval();
+//         }
+//     }
+
+//     modifies class Test {
+
+//         modifies Unit run() {
+//             original();
+//             Int result = e.eval();
+//             output = output + " " + intToString(result);
+//         }
+//     }
+// }
+
+
+// delta DNegPrint {
+
+//     adds class Neg(Exp expr) implements Exp {
+
+//         String print() {
+//             String result = expr.print();
+//             return " -(" + result + ") ";
+//         }
+//     }
+
+//     modifies class Test {
+//         modifies Unit run() {
+//             original();
+//             a = new Neg(a);
+//             String result = a.print();
+//             output = output + " " + result;
+//         }
+//     }
+// }
+
+
+
+// delta DNegEval {  
+
+//     modifies class Neg {
+   
+//         adds Int eval() {
+//             Int result = expr.eval();
+//             return -1 * result;
+//         }
+//     }
+
+//     modifies class Test {
+
+//         modifies String run() {
+//             original();
+//             String result = f.eval();
+//             output = output + " " + result;
+//         }
+//     }
+// }
+
+
+
+// product line Epl {
+//     features Lit, Print, Add, Eval, Neg;
+//     core Lit, Print;
+//     feature model satisfies Lit && Print;
+//     // Dave, please insert uTVL feature model here
+
+//     delta DLitEval when Eval;
+//     delta DAddPrint after DEval when Add;
+//     delta DAddEval after DAddPrint when Add && Eval;
+//     delta DNegPrint after DAddEval when Neg;
+//     delta DNegEval after DNegPrint when Neg && Eval;
+// }
+
+// product LitPrintAddEval is Lit, Print, Add, Eval;
+
+{
+    new Test();
+}

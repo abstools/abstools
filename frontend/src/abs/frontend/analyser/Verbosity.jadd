@@ -1,0 +1,20 @@
+aspect Verbosity {
+	public boolean Model.verbose = false; // small verbosity
+	public boolean Model.debug   = false; // print also debug information
+	private PrintStream Model.output = System.out;
+	
+	public void Model.setPrintStream(PrintStream o) {
+		output = o;
+	}
+    public void Model.setNullPrintStream() {
+    	setPrintStream(
+            new java.io.PrintStream(
+            new java.io.OutputStream () {
+                public void write (int b) {}
+            }) );
+    }
+
+	public void Model.print(String s)   { output.print(s);   }
+	public void Model.println(String s) { output.println(s); }
+	
+}

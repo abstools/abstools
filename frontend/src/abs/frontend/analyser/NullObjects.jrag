@@ -1,0 +1,13 @@
+aspect NullObjects {
+  // the actual unknown declaration null object is created in PredefinedTypes.jrag
+    
+  // explicit check if declaration is null object
+  syn boolean Decl.isUnknown() = false;
+  eq UnknownDecl.isUnknown() = true;
+  syn lazy UnknownDecl Model.unknownDecl() = new UnknownDecl();
+
+}
+
+// Local Variables:
+// mode: java
+// End:

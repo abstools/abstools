@@ -1,0 +1,287 @@
+import abs.common.*;
+
+import abs.frontend.typechecker.*;
+import abs.frontend.typechecker.KindedName.Kind;
+import java.util.Map;
+
+aspect Typing {
+    
+    syn DataTypeType Model.getStdDataType(String n) =
+    	new DataTypeType((DataTypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n)));
+    
+    syn Model Model.getModel() = this;
+    
+    
+    inh Model ModuleDecl.getModel();
+    inh Model Decl.getModel();
+    
+//    inh Model FeatureDecl.getModel();
+//    inh Model FExt.getModel();
+
+    inh Model CompilationUnit.getModel();
+    eq Model.getCompilationUnit().getModel() = this;
+    
+    inh Model Stmt.getModel();
+    inh Model Exp.getModel();
+    inh Model ExpGuard.getModel();
+    inh Model DurationGuard.getModel();
+    inh Model MethodImpl.getModel();
+    inh Model VarOrFieldDecl.getModel();
+    inh Model MethodSig.getModel();
+    
+    syn Type Model.getUnitType() = getStdDataType("Unit");
+    syn Type Model.getIntType() = getStdDataType("Int");
+    syn Type Model.getBoolType() = getStdDataType("Bool");
+    syn Type Model.getStringType() = getStdDataType("String");
+    syn Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
+
+//    eq ClassDecl.getMethod().getUnitType() = getUnitType();
+//    inh Type MethodImpl.getUnitType();
+
+    syn lazy Type Decl.getType();
+    
+    eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
+    eq FunctionDecl.getType() = getTypeUse().getType();
+    eq DataConstructor.getType() = getDataTypeDecl().getType();
+    eq DeltaDecl.getType() = getModel().getUnitType();
+
+    eq DataTypeDecl.getType() {
+        return new DataTypeType(this);
+    }
+    eq ParametricDataTypeDecl.getType() { 
+   	 return new DataTypeType(this, TypeCheckerHelper.getTypesFromTypeParamDecls(getTypeParameters())); 
+    }
+    
+    eq InterfaceDecl.getType() { 
+        return new InterfaceType(this);
+    }
+    eq TypeParameterDecl.getType() { 
+        return new TypeParameter(this);
+    }
+    eq TypeSynDecl.getType() { 
+        return getValue().getType(); 
+    }
+    
+    eq UnknownDecl.getType() = UnknownType.INSTANCE;
+    eq AmbiguousDecl.getType() = UnknownType.INSTANCE;
+    
+    syn Type ConstructorArg.getType();
+    eq ConstructorArg.getType() = getDataTypeUse().getType();
+    
+    syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
+    eq TypedVarOrFieldDecl.getType() = getAccess().getType();
+    eq PatternVarDecl.getType() {
+   	 PatternVar v = (PatternVar) getParent(); 
+   	 return v.getType();
+    }
+    
+    /* Annotations */
+    syn lazy Type Annotation.getType() = getValue().getType();
+    
+    /* STMTS */
+    syn Type Stmt.getType() = getModel().getUnitType();
+    eq ReturnStmt.getType() = getRetExp().getType();
+    
+    
+    
+    /* EXPRESSIONS */
+    
+    syn lazy Type Exp.getType();
+    
+    eq IncompleteExp.getType() {
+        return UnknownType.INSTANCE;
+    }
+
+    
+    eq AsyncCall.getType() {  
+        return getModel().getFutType(getCallType());
+    }
+
+    eq SyncCall.getType() {  
+        return getCallType();
+    }
+
+    eq OriginalCall.getType() {
+        return getContextMethod().getType();
+    }
+    
+    syn lazy Type MethodSig.getType() {
+        return getReturnType().getType();
+    }
+    
+    syn lazy Type Call.getCallType() {
+   	 MethodSig s = getMethodSig();
+   	 if (s == null)
+   		 return UnknownType.INSTANCE;
+   	 return s.getType();
+    }
+    
+    syn lazy MethodSig Call.getMethodSig() {
+  	  if (getCallee() instanceof ThisExp) {
+		  ClassDecl decl = (ClassDecl) getContextDecl();
+		  MethodImpl i = decl.lookupMethod(getMethod());
+		  if (i == null)
+			  return null;
+		  return i.getMethodSig();
+	  } else {
+		  Type t = getCallee().getType();
+		  MethodSig s = t.lookupMethod(getMethod());
+		  return s;
+	  }
+    }
+    
+    eq GetExp.getType() { 
+   	 Type t = getPureExp().getType();
+   	 if (! (t instanceof DataTypeType))
+   		 return UnknownType.INSTANCE;
+   	 DataTypeType dt = (DataTypeType) t;
+   	 if (!dt.hasTypeArgs())
+   		 return UnknownType.INSTANCE;
+   	 return dt.getTypeArg(0);
+    }
+    eq NewExp.getType() {
+        Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
+
+    protected List<Annotation> DataTypeUse.calcAnnotations() {
+        if (getParent() instanceof MethodSig) {
+            return ((MethodSig)getParent()).getAnnotations();
+        } else if (getParent() instanceof TypedVarOrFieldDecl) {
+            return ((TypedVarOrFieldDecl)getParent()).getAnnotations();
+        }
+        return getAnnotations();            
+    }
+
+    syn lazy List<Annotation> DataTypeUse.findAnnotations() = calcAnnotations();
+
+	syn lazy Type VarOrFieldUse.getType();    
+    eq FieldUse.getType() { 
+        VarOrFieldDecl d = getDecl();
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
+    eq VarUse.getType() { 
+        VarOrFieldDecl d = getDecl();
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    }
+    eq TypeUse.getType() = getDecl().getType();
+    eq DataTypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
+    eq ParametricDataTypeUse.getType() {
+        Decl d = getDecl();
+        if (d == null || !(d instanceof ParametricDataTypeDecl))
+            return UnknownType.INSTANCE;
+        
+        return new DataTypeType((ParametricDataTypeDecl)d,getParams()).withAnnotations(getAnnotations());
+    }
+    eq AddAddExp.getType() = getLeft().getType();  // Int or String
+    eq ArithmeticExp.getType() = getModel().getIntType();
+    eq BoolExp.getType() = getModel().getBoolType();
+    eq RelationalExpr.getType() = getModel().getBoolType();
+    eq IfExp.getType() {
+        Type mostGeneralType = getThenExp().getType();
+        if (mostGeneralType.isAssignable(getElseExp().getType())) {
+            mostGeneralType = getElseExp().getType();
+        }
+        return mostGeneralType;
+    }
+    eq CaseExp.getType() {
+   	 Type mostGeneralType = null;
+   	 for (CaseBranch b : getBranchs()) {
+   		 if (mostGeneralType == null) {
+   			 mostGeneralType = b.getType();
+   		 } else {
+   			 Type t2 = b.getType();
+   			 if (mostGeneralType.isAssignable(t2)) {
+   				 mostGeneralType = t2;
+   			 } 
+   		 }
+   	 }
+   	 if (mostGeneralType == null)
+   	     return UnknownType.INSTANCE;
+   	 return mostGeneralType;
+    }
+    eq FnApp.getType() {
+       Decl d = lookup(new KindedName(Kind.FUN,getName()));
+       if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
+   	 
+   	 Type declaredResultType = ((FunctionDecl)d).getType();
+   	 if (d instanceof ParametricFunctionDecl) {
+   		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(d,funDecl.getParams(),getParams());
+   		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
+   	 } else {
+   		 return declaredResultType;
+   	 }
+    }
+    eq DataConstructorExp.getType() {
+
+	 DataConstructor d = getDataConstructor();
+   	 DataTypeDecl dataDecl = d.getDataTypeDecl();
+   	 Type declaredResultType = dataDecl.getType();
+   	 if (dataDecl instanceof ParametricDataTypeDecl) {
+   	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
+   	         return UnknownType.INSTANCE;
+   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBinding(d,TypeCheckerHelper.getTypesFromConstructorArgs(d.getConstructorArgs()),getParams());
+   		 return TypeCheckerHelper.applyBinding(typeBinding, declaredResultType);
+   	 } else {
+   		 return declaredResultType;
+   	 }
+   	 
+    }
+    eq LetExp.getType() = getExp().getType();
+    eq IntLiteral.getType() = getModel().getIntType();
+    eq StringLiteral.getType() =  getModel().getStringType();
+    eq NullExp.getType() = NullType.INSTANCE;
+    eq ThisExp.getType() = getContextDecl().getType();
+    eq MinusExp.getType() = getModel().getIntType();
+    eq NegExp.getType() = getModel().getBoolType();
+    
+    syn lazy Type CaseBranch.getType() = getRight().getType();
+
+    inh Type CaseBranch.getPatternExpType();
+    eq CaseExp.getBranch(int i).getPatternExpType() = getExpr().getType();
+    
+    syn lazy Type Pattern.getType();
+    eq ConstructorPattern.getType() = getInhType();
+    eq PatternVarUse.getType() {
+        VarOrFieldDecl d = lookupVarOrFieldName(getName(),false);
+        if (d == null) return UnknownType.INSTANCE;
+        return d.getType();
+    	
+    } 
+    eq PatternVar.getType() = getInhType();  
+    eq UnderscorePattern.getType() = AnyType.INSTANCE;
+    eq LiteralPattern.getType() = getLiteral().getType();
+    
+    inh Type Pattern.getInhType();
+    eq CaseBranch.getLeft().getInhType() {
+        return getPatternExpType();
+    }
+    eq ConstructorPattern.getParam(int i).getInhType() {
+        Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,this.getConstructor()));
+        if (decl == null || !(decl instanceof DataConstructor)) return UnknownType.INSTANCE;
+        DataConstructor d = (DataConstructor) decl;
+        if (i >= d.getNumConstructorArg()) 
+            return UnknownType.INSTANCE;
+
+        Type declaredType = d.getConstructorArg(i).getType(); 
+        
+        Type dataType = getType();
+        if (dataType == null || !dataType.isDataType())
+            return UnknownType.INSTANCE;
+
+        DataTypeType dt = (DataTypeType) dataType;
+        Type res = dt.substituteTypeParams(declaredType);
+        if (res == null)
+            return UnknownType.INSTANCE;
+        return res;
+    }
+
+}
+
+// Local Variables:
+// mode: java
+// End:

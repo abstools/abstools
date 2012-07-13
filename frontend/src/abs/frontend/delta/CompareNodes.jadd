@@ -1,0 +1,40 @@
+aspect CompareNodes {
+
+    /*
+     * lexically compare two ASTNodes; return true if they match
+     * crude, but it seems to be all we need...
+     */
+    public boolean ASTNode.matches(ASTNode other) {
+        //System.out.println(this + " ?? " + other);
+        return this.toString().equals(other.toString());
+    }
+
+    /*
+     * lexically compare two method signatures; return true if they match
+     */
+    public boolean MethodSig.matches(MethodSig other) {
+        if (! this.getName().equals(other.getName()))
+            return false;
+
+        if (! this.getReturnType().matches(other.getReturnType()))
+            return false;
+        
+        if (this.getNumParam() != other.getNumParam())
+            return false;
+        
+        for (int i = 0; i < this.getNumParam(); i++) {
+            if (! this.getParam(i).toString().equals(other.getParam(i).toString()))
+                return false;
+        }
+        return true;
+    }
+    
+    public boolean FieldDecl.matches(FieldDecl other) {
+        if (! this.getAccess().matches(other.getAccess()))
+            return false;
+        if (! this.getName().equals(other.getName()))
+            return false;
+        
+        return true;
+    }
+}

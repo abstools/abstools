@@ -1,0 +1,10 @@
+aspect EffectAnalysis {
+
+	// TODO: Does not know about builtins #345
+    syn lazy boolean Exp.hasSideEffects();
+    eq Exp.hasSideEffects() = ! isPure();
+    
+    syn lazy boolean Exp.isPure();
+    eq Exp.isPure() = false;
+    eq PureExp.isPure() = true;
+}

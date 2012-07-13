@@ -1,0 +1,17 @@
+module Test;
+import * from Env;
+
+class Application(IO io, Int n) { // active class
+    Unit run() {
+        io.println(intToString(n));
+    }
+}
+
+
+{
+    IO io = new IO();
+    Random rnd = new Random();
+    Int n = rnd.random(100);
+    
+    new Application(io, n);
+}

@@ -1,0 +1,233 @@
+module PeerToPeer;
+
+//type synonyms
+
+type Filename = String ;
+type Filenames = Set<String> ;
+type Packet = String ;
+type File = List<Packet> ;
+type Catalog = List<Pair<Peer, Filenames> > ;
+
+
+interface Server {
+  Filenames enquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
+}
+
+
+interface Peer extends Client, Server {
+   Unit setAdmin(Network admin);
+   Unit run();
+}
+
+interface Network {
+  List<Peer> getNeighbors(Peer caller);
+}
+
+interface DataBase {
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Unit storeFile(Filename fId, File file);
+  Filenames listFiles();
+}
+
+interface Client {
+  Unit reqFile(Server sId, Filename fId);
+}
+
+class DataBaseImpl(Map<Filename, File> db) implements DataBase {
+  File getFile(Filename fId) {
+    return lookup(db, fId);
+  }
+
+  Int getLength(Filename fId) {
+    return length(lookup(db,fId));
+  }
+
+  Unit storeFile(Filename fId, File file) {
+    db = InsertAssoc(Pair(fId,file), db);
+  }
+
+  Filenames listFiles() {
+    return keys(db);
+  }
+}
+
+class Node(DataBase db, Filename file) implements Peer {
+  Catalog catalog = Nil;
+  List<Peer> myNeighbors = Nil;
+  Network admin = null;
+
+  Peer findServer(Filename file, Catalog catalog) {
+    Peer s = null;
+    if (contains(snd(head(catalog)),file)) {
+      s = fst(head(catalog));
+    } else {
+      s = this.findServer(file, tail(catalog));
+    }
+    return s;
+  }
+
+  Unit run() {
+    Fut<Catalog> c ;
+    Fut<List<Peer>> f;
+    Server server ;
+
+    await admin != null;
+    f = admin!getNeighbors(this);   // Asynchronous call to admin
+    await f?;
+    myNeighbors = f.get;
+    c = this!availFiles(myNeighbors); // Asynchronous call
+    await c?;               // Allow other peers to call in the meantime
+    catalog = c.get;        // Build the catalog
+    server = this.findServer(file, catalog); // Find the server for the requested file
+    if (server != null) {
+      this.reqFile(server,file) ;       // Download file
+    }
+  }
+
+  Unit setAdmin(Network admin) {
+    this.admin = admin;
+  }
+
+  Filenames enquire() {
+    Fut<Filenames> f ;
+    f = db!listFiles();
+    await f?;
+    return f.get;
+  }
+
+  Int getLength(Filename fId) {
+    Fut<Int> length ;
+    length = db!getLength(fId);
+    await length?;
+    return length.get;
+  }
+
+  Packet getPack(Filename fId, Int pNbr) {
+    File f = Nil;
+    Fut<File> ff;
+    ff = db!getFile(fId);
+    await ff?;
+    f = ff.get;
+    return nth(f, pNbr);
+  }
+
+  Catalog availFiles (List<Peer> sList) {
+    Catalog cat = Nil;
+    Filenames fNames = EmptySet;
+    Fut<Filenames> fN;
+    Catalog catList = Nil;
+    Fut<Catalog> cL;
+
+    if (sList != Nil) {
+      fN = head(sList)!enquire();
+      cL = this!availFiles(tail(sList));
+      await fN? & cL?;
+      catList = cL.get;
+      fNames = fN.get;
+      cat = appendright(catList, Pair(head(sList), fNames));
+    }
+    return cat;
+  }
+
+  Unit reqFile(Server sId, Filename fId) {
+    File file = Nil;
+    Packet pack = "";
+    Int lth = 0;
+    Fut<Int> l1;
+    Fut<Packet> l2;
+
+    l1 = sId!getLength(fId);
+    await l1?;
+    lth = l1.get;
+    while (lth > 0) {
+      lth = lth - 1;            // indexing is zero-based
+      l2 = sId!getPack(fId, lth);
+      await l2?;
+      pack = l2.get ;
+      file = Cons(pack, file);
+    }
+    db!storeFile(fId, file);
+  }
+}
+
+class OurTopology(Peer node0, Peer node1, Peer node2, Peer node3)
+implements Network
+{
+  List<Peer> getNeighbors(Peer caller) {
+    List<Peer> res = Nil;
+    if (caller == node0) { res = list[node1, node2]; }
+    if (caller == node1) { res = list[node3]; }
+    if (caller == node2) { res = list[node0, node1, node3]; }
+    if (caller == node3) { res = list[node0, node2]; }
+    return res;
+  }
+}
+
+
+delta DFileFilter() {
+    modifies class Node {
+        modifies Peer findServer(Filename file, Catalog catalog) {
+            Peer p = null;
+            Bool valid = this.isValid(file);
+            if (valid) {
+                p = original(file, catalog);
+//                original();
+            }
+            return p;
+        }
+        adds Bool isValid(Filename fId) {
+            return True;
+        }
+    }
+}
+
+delta DParentalControl() {
+    modifies class Node {
+        modifies Bool isValid(Filename fId) {
+            return (~isSubstring("xxx",fId));
+        }
+    }
+}
+
+productline Peer2Peer {
+    features Basic, FileFilter, ParentalControl;
+    delta DFileFilter when FileFilter;
+    delta DParentalControl after DFileFilter when ParentalControl;
+}
+
+product P1 (Basic);
+product P2 (FileFilter);
+product P3 (ParentalControl);
+product P4 (FileFilter, ParentalControl);
+
+{
+  // Map<Filename, File>
+  DataBase db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
+  DataBase db1 = new cog DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
+  DataBase db2 = new cog DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
+  Peer node0 = new cog Node(db0, "file2");
+  Peer node1 = new cog Node(db1, "file2");
+  Peer node2 = new cog Node(db2, "file1");
+  Peer node3 = new cog Node(db2, "file0");
+  Network admin = new cog OurTopology(node0, node1, node2, node3);
+  node0!setAdmin(admin);
+  node1!setAdmin(admin);
+  node2!setAdmin(admin);
+  node3!setAdmin(admin);
+}
+
+// Feature Model
+root Peer2Peer {
+    group oneof {
+        Basic,
+        Extended {
+            group [0..2] {
+                FileFilter,
+                ParentalControl { require: FileFilter; }
+            }
+        }
+    }
+}

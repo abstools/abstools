@@ -1,0 +1,40 @@
+import java.io.PrintStream;
+import beaver.Symbol;
+
+aspect GenerateCoreABS {
+
+    public void ASTNode.generateCoreABS(PrintStream stream) {
+        // placeholder
+        
+        stream.println("// " + getClass().getSimpleName()
+//                + " Declared in " + getModuleDecl().getFileName()
+                + " line " + Symbol.getLine(getStart())
+                + " column " + Symbol.getColumn(getStart())
+                );
+    }
+    
+    public void Model.generateCoreABS(PrintStream stream) {
+        super.generateCoreABS(stream);
+
+        for (ModuleDecl decl : getModuleDecls()) {
+            decl.generateCoreABS(stream);
+        }
+    }
+ 
+    public void ModuleDecl.generateCoreABS(PrintStream stream) {
+        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + Symbol.getLine(getStart()));
+
+        stream.println("Module " + getName() + ";");
+        
+        for (Decl decl : getDecls()) {
+            decl.generateCoreABS(stream);
+        }
+    }
+    
+    public void Decl.generateCoreABS(PrintStream stream) {
+        stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + Symbol.getLine(getStart()));
+        
+    }
+
+        
+}

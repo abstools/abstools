@@ -1,0 +1,274 @@
+//$Id$
+//
+
+// needed for lists of strings
+Name ::= <Name> ;
+DeltaID ::= <Name>;
+
+Model ::= CompilationUnit* ;
+
+CompilationUnit ::= <Name> ModuleDecl* FeatureDecl* FExt*;
+ModuleDecl ::= <Name> Export* Import* Decl* [ProductLine] Product* [Block:MainBlock] ;
+
+abstract Import;
+NamedImport : Import ::= Name* ;
+StarImport : Import ::= <ModuleName>;
+FromImport : Import ::= Name* <ModuleName>;
+
+abstract Export;
+NamedExport: Export ::= Name* ;
+StarExport: Export ::= [ModuleName:Name];
+FromExport: Export ::= Name* <ModuleName>;
+// (see below for Blocks)
+
+abstract Decl ::= <Name>;
+abstract BehaviorDecl: Decl ::= ; // Entities used in behavior expressions
+abstract TypeDecl: Decl; // Entities used in type expressions
+
+UnknownDecl:    TypeDecl;		// Unknown declarations
+AmbiguousDecl:	UnknownDecl 		::= <Alternative:java.util.List<Decl>>;
+ClassDecl:      BehaviorDecl	::=  Annotation* Param:ParamDecl* ImplementedInterfaceUse:InterfaceTypeUse* [InitBlock] Field:FieldDecl* Method:MethodImpl*;
+DeltaDecl:      Decl            ::= Annotation* Param:DeltaParamDecl* FunctionalModifier* ClassOrIfaceModifier* ;
+FunctionDecl:	BehaviorDecl    ::=  Annotation* TypeUse Param:ParamDecl* FunctionDef ;
+DataConstructor : BehaviorDecl  ::= <Name> ConstructorArg:ConstructorArg* ;
+ParametricFunctionDecl : FunctionDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
+InterfaceDecl:	TypeDecl		::=  Annotation* ExtendedInterfaceUse:InterfaceTypeUse* Body:MethodSig*;
+DataTypeDecl:	TypeDecl		::=  Annotation* DataConstructor* ;
+TypeParameterDecl	: TypeDecl 	::= <Name>;  // local declaration
+ParametricDataTypeDecl : DataTypeDecl ::=  Annotation* TypeParameter:TypeParameterDecl* ;
+TypeSynDecl:    TypeDecl        ::=  Annotation* Value:DataTypeUse ;
+
+ConstructorArg ::= DataTypeUse [SelectorName:Name];
+
+
+/*
+  TODO ensures fix grammar to only allow add/remove method signatures for modifies Interface modifier.
+  Currently this is incorrect in the grammar shown in Figure 5.7 of D1.2.
+ */
+
+abstract          DeltaParamDecl;
+DeltaClassParam : DeltaParamDecl ::= <Name> HasCondition;
+DeltaFieldParam : DeltaParamDecl ::= ParamDecl; // same parameter as method parameters
+
+abstract       HasCondition;
+HasField     : HasCondition ::= FieldDecl;
+HasMethod    : HasCondition ::= MethodSig;
+HasInterface : HasCondition ::= InterfaceTypeUse;
+
+abstract ClassOrIfaceModifier;
+abstract Modifier;
+abstract MethodSigModifier;
+abstract FunctionalModifier;
+abstract TypeSynModifier  : FunctionalModifier;
+abstract DataTypeModifier : FunctionalModifier;
+abstract FunctionModifier : FunctionalModifier;
+
+AddTypeSynModifier   : TypeSynModifier   ::= TypeSynDecl;
+AddDataTypeModifier  : DataTypeModifier  ::= DataTypeDecl;
+AddFunctionModifier  : FunctionModifier  ::= FunctionDecl;
+
+AddClassModifier     	: ClassOrIfaceModifier  ::= ClassDecl;
+RemoveClassModifier  	: ClassOrIfaceModifier  ::= <Name>;
+ModifyClassModifier  	: ClassOrIfaceModifier  ::= <Name> ImplementedInterfaceUse:InterfaceTypeUse* Modifier*;
+AddInterfaceModifier 	: ClassOrIfaceModifier  ::= InterfaceDecl;
+ModifyInterfaceModifier : ClassOrIfaceModifier  ::= <Name> MethodSigModifier*;
+
+AddFieldModifier        : Modifier ::= FieldDecl;
+RemoveFieldModifier     : Modifier ::= FieldDecl;
+AddMethodModifier       : Modifier ::= MethodImpl;
+RemoveMethodModifier    : Modifier ::= MethodSig;
+ModifyMethodModifier    : Modifier ::= MethodImpl;
+AddMethodSigModifier    : MethodSigModifier ::= MethodSig;
+RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
+
+abstract VarOrFieldDecl  ::= <Name>;
+abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
+VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
+FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
+ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
+PatternVarDecl: VarOrFieldDecl;
+
+abstract FunctionDef;
+BuiltinFunctionDef: FunctionDef;
+ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
+
+MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
+MethodImpl ::= MethodSig Block;
+
+
+// Uses of various identifiers
+abstract Access:		PureExp;
+abstract IdUse:			Access	::= <Name>;
+abstract TypeUse:		IdUse;
+InterfaceTypeUse:		TypeUse; // TODO: reconsider hierarchy of expressions?
+DataTypeUse:			TypeUse ::= Annotation*;
+ParametricDataTypeUse:  DataTypeUse ::= Param:DataTypeUse* ;
+TypeParameterUse:		TypeUse;
+abstract VarOrFieldUse: Access ::= <Name>;
+VarUse:					VarOrFieldUse;
+FieldUse:				VarOrFieldUse;        // this.f
+
+// Used for the IDE to provide auto-completion:
+abstract IncompleteExp:     PureExp;
+abstract IncompleteAccess:  IncompleteExp ::= Target:PureExp;
+IncompleteSyncAccess:       IncompleteAccess; // something like "x."
+IncompleteAsyncAccess:      IncompleteAccess; // something like "x!"
+IncompleteNewExp:           IncompleteExp ::= [Cog]; // a "new" without a classname
+IncompleteStmt:             Stmt ::= Stmt;
+
+UnresolvedTypeUse:		TypeUse;	// A type expression whose type cannot be resolved at parse time.
+									// Will be  resolved by rewriting.   TODO: needed?
+
+
+/*
+Constructors occur as
+- DataConstructors as in data declarations Co(_D_)
+- term consctructors as in Co(_t_)
+- patterns as in Co(_p_)
+- Don't know yet how to organise these.
+*/
+
+Annotation      ::= Value:PureExp;
+TypedAnnotation : Annotation ::= Access;
+
+abstract Stmt   ::= Annotation* ;
+abstract InitStmt:		Stmt;   //FIXME not all statements can be init statements, i.e. occur in an init block
+
+AssignStmt: Stmt		::= Var:VarOrFieldUse Value:Exp;
+AwaitStmt: Stmt			::= Guard;
+SkipStmt: Stmt;
+SuspendStmt: Stmt;
+DurationStmt: Stmt      ::= Min:PureExp Max:PureExp;
+ReturnStmt: Stmt		::= RetExp:Exp;
+ExpressionStmt: Stmt	::= Exp:Exp;
+AssertStmt: Stmt        ::= Condition:PureExp;
+VarDeclStmt: Stmt       ::= VarDecl:VarDecl;
+
+IfStmt: Stmt			::= Condition:PureExp Then:Stmt [Else:Stmt];
+WhileStmt: Stmt			::= Condition:PureExp Body:Stmt;
+// A Block is the body of programs and methods and is also used for initblocks
+// It contains a list of zero or more ast.VarOrFieldDecl
+// and zero or more ast.Stmt, these are named Fields and Stmts resp.
+Block: Stmt				::= Stmt:Stmt*;
+InitBlock: Block;		// Initializer block in a class - can be handled specially during code generation
+MainBlock: Block;             // Active behavior of the model
+
+
+abstract Guard;
+ClaimGuard: Guard		::= Var:PureExp;
+AndGuard: Guard			::= Left:Guard Right:Guard;
+//For boolean guards
+ExpGuard: Guard			::= PureExp ;
+// For time-delay guards (used in Maude timed simulation, otherwise always true)
+DurationGuard: Guard       ::= Min:PureExp Max:PureExp;
+
+
+// Expressions
+abstract Exp;
+// Pure expressions
+abstract PureExp: Exp;
+// Expressions with side effect.
+abstract EffExp: Exp;
+
+// Side effect free expressions
+NullExp: PureExp;
+ThisExp: PureExp;
+// plus *Use-s
+
+abstract LiteralExp: PureExp;
+// For now the literal just contain a variable Content of type String.
+StringLiteral: LiteralExp  ::= <Content> ;
+IntLiteral: LiteralExp ::= <Content>;
+
+DataConstructorExp : PureExp  ::= <Constructor> Param:PureExp* ;
+LetExp  : PureExp ::= Var:ParamDecl Val:PureExp Exp:PureExp ;
+FnApp  : PureExp ::= <Name> Param:PureExp* ;
+CaseExp  : PureExp ::= Expr:PureExp Branch:CaseBranch* ;
+IfExp : PureExp ::= CondExp:PureExp ThenExp:PureExp ElseExp:PureExp ;
+CaseBranch ::= Left:Pattern Right:PureExp ;
+
+//Patterns
+abstract Pattern ;
+
+PatternVarUse:    Pattern ::= <Name>;
+PatternVar:			Pattern ::= Var:PatternVarDecl;
+ConstructorPattern: Pattern ::= <Constructor> Param:Pattern*;
+LiteralPattern:		Pattern ::= Literal:LiteralExp;
+//PatternPair:		Pattern ::= Left:Pattern Right:Pattern;
+UnderscorePattern:	Pattern;
+
+
+Cog ; // just the COG marker
+
+// Expressions with side effects.
+NewExp: EffExp			::= <ClassName> Param:PureExp* [Cog] ;
+abstract Call: EffExp 	::= Callee:PureExp <Method> Param:PureExp*;
+SyncCall: Call;
+AsyncCall: Call;
+GetExp: EffExp			::= PureExp;
+OriginalCall: EffExp    ::= Param:PureExp*;
+TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp*;
+
+abstract Unary : PureExp ::= Operand:PureExp;
+
+abstract Binary : PureExp ::= Left:PureExp Right:PureExp;
+
+
+//Integers
+MinusExp : Unary ;
+
+abstract ArithmeticExp : Binary ;
+
+abstract MultExp :  ArithmeticExp ;
+MultMultExp  : MultExp ;
+DivMultExp  : MultExp ;
+ModMultExp : MultExp ;
+
+abstract AddExp :  ArithmeticExp ;
+AddAddExp  : AddExp ;
+SubAddExp : AddExp ;
+
+//Booleans
+NegExp: Unary ;
+
+abstract BoolExp : Binary ;
+AndBoolExp : BoolExp ;
+OrBoolExp : BoolExp ;
+
+//Relations
+abstract RelationalExpr : Binary;
+LTExp : RelationalExpr ;
+GTExp : RelationalExpr ;
+LTEQExp : RelationalExpr ;
+GTEQExp : RelationalExpr ;
+
+abstract EqualityExpr : RelationalExpr;
+EqExp : EqualityExpr ;
+NotEqExp : EqualityExpr ;
+
+
+
+// feature Configuration and Product Selection Language (CL/PSL)
+ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause* ;
+
+// TODO: The third argument (Feature*) is meant to be an application condition,
+// i.e. a propositional formula over features. If the application condition evaluates
+// to true, then the delta is applied.
+DeltaClause ::= Deltaspec DeltaID* Feature* ;
+
+Feature ::= <Name> AttrAssignment*;
+
+AttrAssignment ::= <Name:String> Value ;
+abstract Value;
+IntVal:  Value ::= <Value:int>;
+BoolVal: Value ::= <Value:Boolean>;
+
+Deltaspec ::= <Name> Deltaparam* ;
+abstract Deltaparam;
+CID: Deltaparam ::= <Name>;
+FID: Deltaparam ::= <FeatName>;
+FIDAID: Deltaparam ::= <FeatName> <AttrName>;
+Const: Deltaparam ::= Value ;
+
+Product ::= <Name> Feature* ;
+

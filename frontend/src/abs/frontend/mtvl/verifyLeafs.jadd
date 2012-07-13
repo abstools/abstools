@@ -1,0 +1,38 @@
+import java.util.Set;
+import java.util.HashSet;
+
+/**
+Adds a single set for names of features with children, accessible from any feature declaration.
+This set is initialised here, and extended when collecting semantic errors (ErrorCheck.jadd). 
+**/
+
+
+aspect VerifyLeafs {
+
+  private Set<String> Model.nonLeafs = new HashSet<String>();
+
+  public Set<String> Model.getNonLeafs() {
+    return nonLeafs;
+  }
+
+
+  inh Set<String> CompilationUnit.getNonLeafs();
+  inh Set<String> FeatureDecl.getNonLeafs();
+  inh Set<String> FExt.getNonLeafs();
+
+  eq Model.getCompilationUnit(int i).getNonLeafs()
+          = getNonLeafs();
+  eq CompilationUnit.getFeatureDecl(int i).getNonLeafs()
+          = getNonLeafs();
+  eq CompilationUnit.getFExt(int i).getNonLeafs()
+          = getNonLeafs();
+  
+  // FeatureModelDecl is a temporary structure, never present in the final AST,
+  // so result is not relevant. But the compiler needs these definitions anyway.
+  eq FeatureModelDecl.getFeatureDecl(int i).getNonLeafs()
+          = new HashSet<String>();
+  eq FeatureModelDecl.getFExt(int i).getNonLeafs()
+          = new HashSet<String>();
+}
+
+

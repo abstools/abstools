@@ -1,0 +1,32 @@
+An Abs model is executed on the Maude backend by first compiling it via
+generateMaude (found in frontend/src/bash/) and then loading the
+resulting .maude file inside Maude.  The file abs-interpreter.maude
+(contained in the same directory as this file) must be visible to Maude,
+either by linking or copying it to the same directory as the compiled
+Abs file, or via the MAUDE_LIB environment variable.
+
+After loading the compiled file into Maude, the model is started by
+entering "rew start ." (without the quotes) at the Maude prompt.
+
+The result of evaluating "rew start ." at the Maude prompt is a complete
+system state, with one term for each class, cog, object, and unfinished
+method call (future).
+
+What is usually interesting are the object states, which look like this:
+
+< ob("Bob-0") : "Bob" |
+ Cog: "Bob-0",
+ Att: @ "alice" |-> ob("Alice-0"), @ "msg" |-> "int"[7], @ "this" |-> ob("Bob-0"),
+ Pr: idle,
+ PrQ: noProc,
+ Lcnt: 2 >
+
+Here we have an object with identity ob("Bob-0"), of class "Bob",
+running in the cog "Bob-0".  It has three attributes: "this" pointing to
+itself, "msg" with the integer 7, and "alice" pointing to another
+object.
+
+The main block of the Abs model runs as an object as well, which is
+always of class ".Start" (which is an invalid class name in Abs, so we
+never get name clashes).  Variables defined in the main block become
+attributes of that object.

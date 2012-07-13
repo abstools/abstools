@@ -1,0 +1,54 @@
+module ABSChat.Server;
+
+export ServerImpl;
+import * from ABSChat.Interfaces;
+
+
+interface ServerIntern extends Server {
+	Unit sessionClosed(SessionIntern i);
+}
+
+interface SessionIntern extends Session {
+   Unit init();
+}
+
+[COG]
+class ServerImpl implements ServerIntern { 
+   Bool running = False;
+   List<SessionIntern> sessions = Nil;
+   
+   Unit start() {
+      running = True;
+   }
+   
+   Session connect(Client c) {
+       await running;
+       SessionIntern s;
+       s = new SessionImpl(this, c);
+       sessions = Cons(s,sessions);
+       s!init();
+       return s;
+   }
+
+	Unit sessionClosed(SessionIntern i) {
+	   sessions = without(sessions,i);
+	}
+
+}
+
+[Plain]
+class SessionImpl(ServerIntern server, Client c) implements SessionIntern {
+	Unit init() {
+		c!receive(Welcome);
+	}
+	
+	Unit close() {
+	   server.sessionClosed(this);
+	}
+	
+	Unit receive(ClientMsg m) {
+	}
+
+}
+
+
