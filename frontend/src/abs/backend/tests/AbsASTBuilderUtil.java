@@ -11,11 +11,14 @@ import abs.frontend.ast.Access;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.AsyncCall;
+import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.ClassOrIfaceModifier;
 import abs.frontend.ast.Cog;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.ExpressionStmt;
 import abs.frontend.ast.FieldDecl;
@@ -34,6 +37,7 @@ import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Name;
 import abs.frontend.ast.NewExp;
 import abs.frontend.ast.Opt;
+import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.SyncCall;
@@ -45,7 +49,7 @@ import abs.frontend.ast.VarUse;
 
 /**
  * 
- * @author pwong
+ * @author woner
  * 
  */
 public final class AbsASTBuilderUtil {
@@ -188,6 +192,24 @@ public final class AbsASTBuilderUtil {
         }
         return null;
     }
+    
+    public static final MethodImpl findMethodImpl(ClassDecl clazz, Predicate<MethodImpl> pred) {
+        for (MethodImpl m : clazz.getMethodList()) {
+                if (pred.predicate(m)) {
+                        return m;
+                }
+        }
+        return null;
+    }
+
+    public static final MethodSig findMethodSig(InterfaceDecl inf, Predicate<MethodSig> pred) {
+        for (MethodSig m : inf.getAllMethodSigs()) {
+                if (pred.predicate(m)) {
+                        return m;
+                }
+        }
+        return null;
+    }
 
     public static final FnApp getFnApp(String fn, PureExp... exps) {
         List<PureExp> ps = new List<PureExp>();
@@ -227,6 +249,59 @@ public final class AbsASTBuilderUtil {
             call.setParam(exps[i], i);
         }
         return call;
+    }
+    
+    public static final InterfaceDecl createInterface(String interfaceName) {
+        return new InterfaceDecl(interfaceName, 
+                        new abs.frontend.ast.List<Annotation>(), 
+                        new abs.frontend.ast.List<InterfaceTypeUse>(), 
+                        new abs.frontend.ast.List<MethodSig>());
+    }
+    
+    public static final MethodImpl createMethodImpl(MethodSig method) {
+        MethodImpl methodImpl = new MethodImpl(method.copy(), new Block());
+        return methodImpl;
+    }
+
+    
+    public static final MethodSig createMethodSig(String methodName, 
+            Access returnType,
+            ParamDecl... decls) {
+    
+        abs.frontend.ast.List<ParamDecl> dl = 
+                new abs.frontend.ast.List<ParamDecl>();
+        
+        for (ParamDecl d : decls) {
+                dl.add(d);
+        }
+        
+        MethodSig method = new MethodSig(methodName,
+                        new abs.frontend.ast.List<Annotation>(),
+                        returnType, dl);
+        
+        return method;
+    }
+    
+    public static final <T extends ClassOrIfaceModifier> T findClassOrIfaceModifier(
+            DeltaDecl delta, Class<T> klazz, Predicate<T> predicate) {
+    
+        abs.frontend.ast.List<ClassOrIfaceModifier> modifiers = 
+                        delta.getClassOrIfaceModifiers();
+        
+        for (int i=0; i<modifiers.getNumChild(); i++) {
+                ClassOrIfaceModifier modifier = modifiers.getChild(i);
+                if (klazz.isInstance(modifier)) {
+                        T obj = klazz.cast(modifier);
+                        if (predicate.predicate(obj)) {
+                                return obj;
+                        }
+                }
+        }
+        return null;
+    }
+    
+    public static final PureExp getThis() {
+        return new VarUse("this");
     }
 
     public static final DataTypeUse getFutUnitType() {
