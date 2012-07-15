@@ -151,7 +151,11 @@ abstract class ABSUnitTestCaseBuilder {
 			Block testMethodBlock) {
 		
 		String testClassName = testClass.getName();
-		DeltaDecl delta = deltaBuilder.getOrCreateDeltaFor(testClassName);
+		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
+		
+		if (delta == null) {
+			delta = deltaBuilder.createDeltaFor(testClassName);
+		}
 		
 		ModifyClassModifier modifier =
 				findClassOrIfaceModifier(delta, ModifyClassModifier.class, 
@@ -257,7 +261,11 @@ abstract class ABSUnitTestCaseBuilder {
 			Block testMethodBlock) {
 		
 		String testClassName = testClass.getName();
-		DeltaDecl delta = deltaBuilder.getOrCreateDeltaFor(testClassName);
+		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
+		
+		if (delta == null) {
+			delta = deltaBuilder.createDeltaFor(testClassName);
+		}
 		
 		ModifyClassModifier modifier =
 				findClassOrIfaceModifier(delta, ModifyClassModifier.class, 

@@ -32,17 +32,17 @@ final class DeltaForGetSetFieldsBuilder {
 		this.output = output;
 	}
 	
-	DeltaDecl getOrCreateDeltaFor(String testClassName) {
+	DeltaDecl getDeltaFor(String testClassName) {
 		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
-		DeltaDecl delta = getDecl(output, DeltaDecl.class, 
+		return getDecl(output, DeltaDecl.class, 
 				new DeclNamePredicate<DeltaDecl>(deltaName));
-			
-		if (delta == null) {
-			delta = new DeltaDecl();
-			delta.setName(deltaName);
-			output.addDecl(delta);
-		}
-		
+	}
+	
+	DeltaDecl createDeltaFor(String testClassName) {
+		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
+		DeltaDecl delta = new DeltaDecl();
+		delta.setName(deltaName);
+		output.addDecl(delta);
 		return delta;
 	}
 	
