@@ -1,13 +1,11 @@
 module ABS.Meta;
 export *;
 
-/* Reflective, mirror-based interface for ABS
- * - supports dynamic updates of ABS models
- *
+/* 
+ * Reflective, mirror-based interface for ABS
  */
 
 
-def ObjectMirror reflect<A>(A a) = builtin;
 
 interface Object {}
 interface Class {}
@@ -21,3 +19,4 @@ interface ObjectMirror {
     Unit setFieldValue(Value val);    
 }
 
+def ObjectMirror reflect<A>(A a) = builtin;

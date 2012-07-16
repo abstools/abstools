@@ -1,5 +1,5 @@
 module M;
-//import * from ABS.Meta;
+import * from ABS.Meta;
 
 interface I { 
     Int getFieldX();
@@ -23,15 +23,15 @@ class MyClass(Int fieldX, String fieldS) implements I {
     Unit setFieldS(String s) {
         fieldS = s;
     }
-
-    Unit run() {
-    }
 }
 
 {
 
     I o1 = new MyClass(1111, "Hello World");
 
-//    ObjectMirror m = Meta.reflect(o1);
-//    String s = m.getClassName();
+    ObjectMirror m = reflect(o1);
+    
+    String s = m.getClassName();
+    m.getClass();
+    
 }
