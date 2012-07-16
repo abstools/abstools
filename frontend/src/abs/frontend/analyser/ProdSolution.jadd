@@ -27,27 +27,16 @@ aspect ProdSolution {
     }
 
     public boolean CompilationUnit.getSolution(String product, Map<String,Integer> sol) {
-        boolean res = false;
-        for (ModuleDecl m : getModuleDecls())
-            res = res || m.getSolution(product,sol);
-        return res;
-    }
-
-    public boolean ModuleDecl.getSolution(String product, Map<String,Integer> sol) {
-        if (product.startsWith(getName()+".")) {
-            for (Product p : getProducts()) {
-                if (product.equals(p.qualifiedName())) {
-                    for(Feature f : p.getFeatures())
-                        f.getSolution(true,sol);
-                    return true;
-                }
+        for (Product p : getProducts()) {
+            if (product.equals(p.qualifiedName())) {
+                for(Feature f : p.getFeatures())
+                    f.getSolution(true,sol);
+                return true;
             }
         }
-//        else {
-//            System.out.println("Wrong module "+product+" - "+getName());
-//        }
         return false;
     }
+
 
     // simpler version: product already found
     public boolean Model.getSolution(Product product, Map<String,Integer> sol) {

@@ -1,17 +1,15 @@
 module M;
 
-delta Y { }
+delta Y;
 
-delta X {
-  adds interface I { }
-  adds interface J extends I { }
-}
+delta X;
+  adds interface M.I { }
+  adds interface M.J extends I { }
 
-productline PL {
+productline PL;
   features F, G;
   delta X when F;
   delta Y when G;
-}
 
 product P (F);
 product Q (G);

@@ -12,8 +12,9 @@ import java.util.Arrays;
 
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.*;
+import abs.frontend.typechecker.TypeCheckerException;
 
-public class OriginalCallTest extends DeltaFlattenerTest {
+public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void originalCall() throws ASTNodeNotFoundException {
@@ -21,23 +22,25 @@ public class OriginalCallTest extends DeltaFlattenerTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} }"
-                + "delta D { modifies class C { modifies Unit m() { original(); } } }"
-                + "delta D2 { modifies class C { modifies Unit m() { original(); } } }"
+                + "delta D; "
+                + "modifies class M.C { modifies Unit m() { original(); } }"
+                + "delta D2;"
+                + "modifies class M.C { modifies Unit m() { original(); } }"
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertTrue(cls.getMethods().getNumChild() == 1);
         
-        DeltaDecl delta1 = (DeltaDecl) findDecl(model, "M", "D");
-        assertTrue(delta1.getNumClassOrIfaceModifier() == 1);
-        assertTrue(((ModifyClassModifier) delta1.getClassOrIfaceModifier(0)).getNumModifier() == 1);
+        DeltaDecl delta1 = findDelta(model, "D");
+        assertTrue(delta1.getNumModuleModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta1.getModuleModifier(0)).getNumModifier() == 1);
         
-        DeltaDecl delta2 = (DeltaDecl) findDecl(model, "M", "D2");
-        assertTrue(delta2.getNumClassOrIfaceModifier() == 1);
-        assertTrue(((ModifyClassModifier) delta2.getClassOrIfaceModifier(0)).getNumModifier() == 1);
+        DeltaDecl delta2 = findDelta(model, "D2");
+        assertTrue(delta2.getNumModuleModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
-        assertTrue(delta1.getNumClassOrIfaceModifier() == 2);
-        assertTrue(delta2.getNumClassOrIfaceModifier() == 2);
+        assertTrue(delta1.getNumModuleModifier() == 2);
+        assertTrue(delta2.getNumModuleModifier() == 2);
         
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
         
@@ -54,18 +57,20 @@ public class OriginalCallTest extends DeltaFlattenerTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} Unit n() {} Unit p() {} }"
-                + "delta D { modifies class C {"
+                + "delta D;" 
+                + "modifies class M.C {"
                     + "modifies Unit m() { original(); }" 
                     + "modifies Unit n() { original(); }"
-                + "} }"
+                    + "modifies Unit p() { original(); }" 
+                + "}"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertEquals(1, delta.getNumClassOrIfaceModifier());
+        DeltaDecl delta = findDelta(model, "D");
+        assertEquals(1, delta.getNumModuleModifier());
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        assertEquals(3, delta.getNumClassOrIfaceModifier());
+        assertEquals(4, delta.getNumModuleModifier());
     }
 
     @Test
@@ -74,18 +79,19 @@ public class OriginalCallTest extends DeltaFlattenerTest {
                 "module M;"
                 + "interface I {}"
                 + "class C implements I { Unit m() {} }"
-                + "delta D { modifies class C {"
+                + "delta D;"
+                + "modifies class C {"
                     + "modifies Unit m() { original(); original(); }" 
-                + "} }"
+                + "}"
         );
 
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "M", "D");
-        assertEquals(1, delta.getNumClassOrIfaceModifier());
+        DeltaDecl delta = findDelta(model, "D");
+        assertEquals(1, delta.getNumModuleModifier());
 
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
-        assertEquals(delta.getClassOrIfaceModifiers().toString(),2, delta.getNumClassOrIfaceModifier());
+        assertEquals(delta.getModuleModifiers().toString(),2, delta.getNumModuleModifier());
     }
     
     
@@ -93,15 +99,44 @@ public class OriginalCallTest extends DeltaFlattenerTest {
     public void targetedOriginalCall() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
-                + "class C {}"
-                + "delta D1 { modifies class C { adds Unit m() {} } }"
-                + "delta D2 { modifies class C { modifies Unit m() { original(); D1.original(); } } }"
+                + "class C { Unit m() {} }"
+                + "delta D1; modifies class M.C { adds Unit n() {} }"
+                + "delta D2; modifies class M.C { modifies Unit m() { original(); core.original(); } }"
+                + "delta D3; modifies class M.C { modifies Unit n() { original(); D1.original(); } }"
         );
         
-        DeltaDecl d1 = (DeltaDecl) findDecl(model, "M", "D1");
-        DeltaDecl d2 = (DeltaDecl) findDecl(model, "M", "D2");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        DeltaDecl d1 = findDelta(model, "D1");
+        DeltaDecl d2 = findDelta(model, "D2");
+        DeltaDecl d3 = findDelta(model, "D3");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
+        
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertEquals(cls.getMethods().toString(), 4, cls.getMethods().getNumChild());
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("n"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_core"));
+        assertTrue(cls.getMethod(3).getMethodSig().getName().equals("n$ORIGIN_D1"));
+    }
+
+    @Test
+    public void multipleTargetedOriginalCalls() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { }"
+                + "delta D1;"
+                + "modifies class M.C { adds Unit m() {} }"
+                + "delta D2;"
+                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+                + "delta D3;"
+                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+        );
+        
+        DeltaDecl d1 = findDelta(model, "D1");
+        DeltaDecl d2 = findDelta(model, "D2");
+        DeltaDecl d3 = findDelta(model, "D3");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2,d3)));
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
         assertEquals(cls.getMethods().toString(), 2, cls.getMethods().getNumChild());
@@ -110,25 +145,74 @@ public class OriginalCallTest extends DeltaFlattenerTest {
     }
 
     @Test
-    public void multipleTargetedOriginalCalls() throws ASTNodeNotFoundException {
+    public void originalNotFound() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { }"
-                + "delta D { modifies class C { adds Unit m() {} } }"
-                + "delta D1 { modifies class C { modifies Unit m() { D.original(); } } }"
-                + "delta D2 { modifies class C { modifies Unit m() { D.original(); } } }"
+                + "delta D1;"
+                + "modifies class M.C { modifies Unit m() { original(); } }"
         );
         
-        DeltaDecl d = (DeltaDecl) findDecl(model, "M", "D");
-        DeltaDecl d1 = (DeltaDecl) findDecl(model, "M", "D1");
-        DeltaDecl d2 = (DeltaDecl) findDecl(model, "M", "D2");
-        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d,d1,d2)));
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d,d1,d2)));
+        DeltaDecl d1 = findDelta(model, "D1");
+
+        try {
+            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
+        } catch (ASTNodeNotFoundException e) {
+            return; // this is the expected outcome
+        }
+        fail("Expected ASTNodeNotFoundException");
+    }
+
+    @Test
+    public void targetedOriginalNotFound() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { }"
+                + "delta D1;"
+                + "modifies class M.C { modifies Unit m() { core.original(); } }"
+        );
+        
+        DeltaDecl d1 = findDelta(model, "D1");
+
+        try {
+            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
+        } catch (ASTNodeNotFoundException e) {
+            return; // this is the expected outcome
+        }
+        fail("Expected ASTNodeNotFoundException");
+    }
+
+    @Test
+    public void targetedDeltaNotYetApplied() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "class C { Unit m() {} }"
+                + "delta D1;"
+                + "modifies class M.C { modifies Unit m() { core.original(); } }"
+                + "delta D2;"
+                + "modifies class M.C { modifies Unit m() { D1.original(); } }"
+        );
+        
+        DeltaDecl d1 = findDelta(model, "D1");
+        DeltaDecl d2 = findDelta(model, "D2");
+
+        boolean caught = false;
+        try {
+            // apply deltas in wrong order - note that D2 has a targeted original call to a method in D1
+            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d2,d1)));
+        } catch (ASTNodeNotFoundException e) {
+            caught = true;
+        }
+        assertTrue(caught);
+        
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals(cls.getMethods().toString(), 2, cls.getMethods().getNumChild());
+        assertEquals(cls.getMethods().toString(), 3, cls.getMethods().getNumChild());
         assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
-        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_D"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
 
 }

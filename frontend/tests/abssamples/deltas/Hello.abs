@@ -1,4 +1,4 @@
-module Helloworld;
+module Hello;
 
 interface Greeting {
     String sayHello();
@@ -18,28 +18,36 @@ class Application {
         s = bob.sayHello();
     }
 }
-delta De {
-    modifies class Greeter {
-        modifies String sayHello() {
-            return "Hallo Welt";
-        }
+
+{
+    // main block
+    new Application(); // this runs the application
+}
+
+delta De;
+
+modifies class Hello.Greeter {
+    modifies String sayHello() {
+        return "Hallo Welt";
     }
 }
-delta Nl {
+
+delta Nl;
+
     modifies class Greeter {
         modifies String sayHello() {
             return "Hallo wereld";
         }
     }
-}
-delta Fr {
+
+delta Fr;
     modifies class Greeter {
         modifies String sayHello() {
             return "Bonjour tout le monde";
         }
     }
-}
-delta Rpt (Int times) {
+
+delta Rpt (Int times);
     modifies class Greeter {
         modifies String sayHello() {
             String result = "";
@@ -52,7 +60,6 @@ delta Rpt (Int times) {
             return result;
         }
     }
-}
 
 
 productline MultiLingualHelloWorld {
@@ -76,7 +83,3 @@ product P3 (French, Repeat{times=10});
 // apply deltas En and Repeat, but it should be refused because "times > 5"
 product P4 (English, Repeat{times=6});
 
-{
-    // main block
-    new Application(); // this runs the application
-}

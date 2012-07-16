@@ -353,12 +353,13 @@ public class ParserTest extends FrontendTest {
     
     @Test
     public void ticket238() throws Exception{
-        assertParseOk("module T238; delta D {} productline P { features F,G; delta D when F && (~ G); }");
+        assertParseOk("module T238; delta D; productline P; features F,G; delta D when F && (~ G);");
+        // fails because logical connectives apart from && are not implemented yet...
     }
     
     @Test
     public void entry_deltadecl() throws Exception {
-        ABSScanner scanner = new ABSScanner(new StringReader("delta Mon {}"));
+        ABSScanner scanner = new ABSScanner(new StringReader("delta Mon;"));
         DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
         Assert.assertNotNull(d);
     }

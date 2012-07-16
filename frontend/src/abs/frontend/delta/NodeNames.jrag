@@ -3,65 +3,50 @@ aspect ModuleName {
     inh String Decl.moduleName();
     eq ModuleDecl.getDecl().moduleName() = this.getName();
 
-    inh String ClassOrIfaceModifier.moduleName();
-    eq DeltaDecl.getClassOrIfaceModifier().moduleName() = this.moduleName();
+// **DM** DeltaDecl, ProductLine and Products are not contained in modules anymore
+//    inh String OOModifier.moduleName();
+//    eq DeltaDecl.getOOModifier().moduleName() = this.moduleName();
     
-    inh String Product.moduleName();
-    eq ModuleDecl.getProduct().moduleName() = this.getName();
+//    inh String Product.moduleName();
+//    eq ModuleDecl.getProduct().moduleName() = this.getName();
+//    inh String ProductLine.moduleName();
+//    eq ModuleDecl.getProductLine().moduleName() = this.getName();
 
-    inh String ProductLine.moduleName();
-    eq ModuleDecl.getProductLine().moduleName() = this.getName();
-
-    inh String DeltaClause.moduleName();
-    eq ProductLine.getDeltaClause().moduleName() = this.moduleName();
+//    inh String DeltaClause.moduleName();
+//    eq ProductLine.getDeltaClause().moduleName() = this.moduleName();
 }
 
 
 aspect DeltaName {
-    inh String ClassOrIfaceModifier.deltaName();
-    eq DeltaDecl.getClassOrIfaceModifier().deltaName() = this.getName();
+    inh String ModuleModifier.deltaName();
+    eq DeltaDecl.getModuleModifier().deltaName() = this.getName();
 
     inh String Modifier.deltaName();
     eq ModifyClassModifier.getModifier().deltaName() = this.deltaName();
 }
 
-// inform various nodes about the name of the class where they were defined
-aspect ClassName {
-    public String AddClassModifier.className() {
-        return this.getClassDecl().getName();
-    }
-    public String RemoveClassModifier.className() {
-        return this.getName();
-    }
-    public String ModifyClassModifier.className() {
-        return this.getName();
-    }
-    public String AddInterfaceModifier.className() {
-        return this.getInterfaceDecl().getName();
-    }
-    public String ClassOrIfaceModifier.className() {
-        return "FIXME: add method for " + this.getClass().getName();
-    }
-    public String ModifyInterfaceModifier.className() {
-        return this.getName();
-    }
+// Set the name of ModuleModifier to name of entity that is being modified by ModuleModifier
+aspect Name {
+    abstract public String ModuleModifier.getName();
+    syn String AddClassModifier.getName() = this.getClassDecl().getName();
+    syn String AddInterfaceModifier.getName() = this.getInterfaceDecl().getName();
+    syn String AddDataTypeModifier.getName() = this.getDataTypeDecl().getName();
+    syn String AddFunctionModifier.getName() = this.getFunctionDecl().getName();
+    syn String AddTypeSynModifier.getName() = this.getTypeSynDecl().getName();
     
-    inh String ModifyMethodModifier.className();
-    eq ModifyClassModifier.getModifier().className() = this.className();
-
-  
-    
-//    inh String ModifyMethodSigModifier.className();
-//    eq ModifyInterfaceModifier.className() = this.className();
-        
-//    inh String Stmt.className();
-//    eq ModifyMethodModifier.getMethodImpl().getBlock().getStmt().className() = this.className();
-//    
-//    inh String Exp.className();
-//    eq ExpressionStmt.getExp().className() = this.className();
+    // strip off any module name prefix
+    syn String ModuleModifier.getSimpleName() {
+        Name name = new Name(this.getName());
+        return name.getSimpleName();
+    }
 }
 
+// inform Modifiers about the name of the class where they were defined
+aspect ClassName {
+    inh String ModifyMethodModifier.className();
+    eq ModifyClassModifier.getModifier().className() = this.getName();
 
+}
 
 // qualify node names with the name of the module where they were defined
 aspect QualifiedName {
@@ -69,16 +54,16 @@ aspect QualifiedName {
         return this.moduleName() + "." + this.getName();
     }
     
+    public String DeltaDecl.qualifiedName() {
+        return this.getName();
+    }
+
     public String Product.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
+        return this.getName();
     }
-    
-    public String ProductLine.qualifiedName() {
-        return this.moduleName() + "." + this.getName();
-    }
-    
-    public String ClassOrIfaceModifier.qualifiedName() {
-        return this.moduleName() + "." + this.className();
+
+    public String OOModifier.qualifiedName() {
+        return this.getName();
     }
 }
 

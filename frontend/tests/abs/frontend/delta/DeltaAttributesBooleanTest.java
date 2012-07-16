@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 @RunWith(Parameterized.class)
-public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
+public class DeltaAttributesBooleanTest extends DeltaTest {
     protected String product;
     protected String expected;
     public DeltaAttributesBooleanTest(String p, String x) {
@@ -29,8 +29,8 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
     @Parameters
     public static java.util.Collection<?> data() {
         final Object[][] data = new String[][] {
-                {"M.P1", "True()"},
-                {"M.P2", "False()"}
+                {"P1", "True()"},
+                {"P2", "False()"}
         };
         return Arrays.asList(data);
     }
@@ -39,8 +39,11 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
     public void passFeatureAsBoolean() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool f) { adds class C { Bool myField = f; } }" 
-                + "productline PL { features F, G; delta D(F) when G; }"
+                + "delta D(Bool f);"
+                + "    adds class M.C { Bool myField = f; }" 
+                + "productline PL;"
+                + "    features F, G;"
+                + "    delta D(F) when G;"
                 + "product P1(F, G);"
                 + "product P2(G);"
         );
@@ -55,8 +58,11 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
     public void passBooleanFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr) { adds class C { Bool myField = attr; } }"
-                + "productline PL { features F; delta D(F.a) when F; }"
+                + "delta D(Bool attr);"
+                + "adds class M.C { Bool myField = attr; }"
+                + "productline PL;"
+                + "    features F;"
+                + "    delta D(F.a) when F;"
                 + "product P1(F{a=True});"
                 + "product P2(F{a=False});"
         );
@@ -71,16 +77,20 @@ public class DeltaAttributesBooleanTest extends DeltaFlattenerTest {
     public void passBooleanConstant() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr) { adds class C { Bool myField = attr; } }"
-                + "productline PL { features A,B; delta D(True) when A; delta D(False) when B; }"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Bool myField = attr; }"
+                + "productline PL;"
+                + "    features A,B;"
+                + "    delta D(True) when A;"
+                + "    delta D(False) when B;"
                 + "product P1(A);"
                 + "product P2(B);"
         );
         
         model.flattenForProduct(product);
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        assertEquals("myField",cls.getField(0).getName());
-        assertEquals("Product "+product,expected,cls.getField(0).getInitExp().value.toString());
+        assertEquals("myField", cls.getField(0).getName());
+        assertEquals("Product " + product, expected, cls.getField(0).getInitExp().value.toString());
     }
 
 }

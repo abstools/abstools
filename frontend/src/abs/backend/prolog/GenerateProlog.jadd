@@ -967,16 +967,17 @@ aspect GenerateProlog {
         for (int i = 0; i < n; i++){
             declarations.getChild(i).generateProlog(s,reachInfo);
         }
-        //productLine
-        Opt<ProductLine> productLine=this.getProductLineOpt();
-        if(productLine.getNumChild()>0)
-            productLine.getChild(0).generateProlog(s,reachInfo);
-        //products
-        List<Product> products = this.getProductList();
-        n = products.getNumChild();
-        for (int i = 0; i < n; i++){
-            products.getChild(i).generateProlog(s,reachInfo);
-        }
+        // FIXME DeltaDecl, ProductLine and Product have been move outside modules
+//        //productLine
+//        Opt<ProductLine> productLine=this.getProductLineOpt();
+//        if(productLine.getNumChild()>0)
+//            productLine.getChild(0).generateProlog(s,reachInfo);
+//        //products
+//        List<Product> products = this.getProductList();
+//        n = products.getNumChild();
+//        for (int i = 0; i < n; i++){
+//            products.getChild(i).generateProlog(s,reachInfo);
+//        }
         Opt<MainBlock> mainBlock=this.getBlockOpt();
         if(mainBlock.getNumChild()>0)
             mainBlock.getChild(0).generateProlog(s,reachInfo);

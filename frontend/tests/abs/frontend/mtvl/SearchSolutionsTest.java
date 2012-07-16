@@ -50,21 +50,21 @@ public class SearchSolutionsTest extends FrontendTest {
 
     @Test
     public void SearchSolutions() {
-        Model model       = assertParseOk(helloprogram);
+        Model model = assertParseOk(helloprogram);
         model.setNullPrintStream();
                 
         ChocoSolver s = model.getCSModel();
 
         assertTrue(s.countSolutions() == 78);
-        assertTrue(checkSol(s,model,"Helloworld.P1"));
-        assertTrue(checkSol(s,model,"Helloworld.P2"));
-        assertTrue(checkSol(s,model,"Helloworld.P3"));
-        assertTrue(!checkSol(s,model,"Helloworld.P4"));        
+        assertTrue(checkSol(s,model,"P1"));
+        assertTrue(checkSol(s,model,"P2"));
+        assertTrue(checkSol(s,model,"P3"));
+        assertTrue(!checkSol(s,model,"P4"));        
     }
 
     @Test
     public void SearchSolutionsNoAttr() {
-        Model model       = assertParseOk(helloprogram);
+        Model model = assertParseOk(helloprogram);
         model.dropAttributes();
         
         ChocoSolver s = model.getCSModel();

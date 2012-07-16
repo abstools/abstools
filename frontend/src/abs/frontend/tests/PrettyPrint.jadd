@@ -91,7 +91,7 @@ aspect PrettyPrint {
         super.prettyPrintChildren(w,f);        
     }
     
-    public void ClassOrIfaceModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
+    public void OOModifier.prettyPrint(PrintWriter w, ABSFormatter f) {
         w.print(this.getClass().getSimpleName() + "(" + this.qualifiedName() + ")");
         
     }

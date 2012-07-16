@@ -2,15 +2,13 @@ module DE;
 
 class A {}
 
-delta D {
- modifies class A {
+delta D;
+ modifies class DE.A {
   adds Unit test() {}
  }
-}
 
-productline PL {
+productline PL;
   features F;
   delta D when F;
-}
 
 product C(F);

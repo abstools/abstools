@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 @RunWith(Parameterized.class)
-public class DeltaAttributesIntegerTest extends DeltaFlattenerTest {
+public class DeltaAttributesIntegerTest extends DeltaTest {
     protected String product;
     protected String expected;
     public DeltaAttributesIntegerTest(String p, String x) {
@@ -29,8 +29,8 @@ public class DeltaAttributesIntegerTest extends DeltaFlattenerTest {
     @Parameters
     public static java.util.Collection<?> data() {
         final Object[][] data = new String[][] {
-                {"M.P1", "IntLiteral(0)"},
-                {"M.P2", "IntLiteral(99)"},
+                {"P1", "IntLiteral(0)"},
+                {"P2", "IntLiteral(99)"},
         };
         return Arrays.asList(data);
     }
@@ -39,8 +39,11 @@ public class DeltaAttributesIntegerTest extends DeltaFlattenerTest {
     public void passIntegerFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr) { adds class C { Int myField = attr; } }"
-                + "productline PL { features F; delta D(F.a) when F; }"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Int myField = attr; }"
+                + "productline PL;"
+                + "    features F;"
+                + "    delta D(F.a) when F;"
                 + "product P1(F{a=0});"
                 + "product P2(F{a=99});"
                 // TODO: test what happens if attribute is not passed
@@ -58,8 +61,12 @@ public class DeltaAttributesIntegerTest extends DeltaFlattenerTest {
     public void passIntegerConstant() throws ASTNodeNotFoundException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr) { adds class C { Int myField = attr; } }"
-                + "productline PL { features A,B; delta D(0) when A; delta D(99) when B; }"
+                + "delta D(Bool attr);"
+                + "    adds class M.C { Int myField = attr; }"
+                + "productline PL;"
+                + "    features A,B;"
+                + "    delta D(0) when A;"
+                + "    delta D(99) when B;"
                 + "product P1(A);"
                 + "product P2(B);"
         );

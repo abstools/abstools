@@ -13,6 +13,7 @@ aspect Typing {
     
     
     inh Model ModuleDecl.getModel();
+    inh Model DeltaDecl.getModel();
     inh Model Decl.getModel();
     
 //    inh Model FeatureDecl.getModel();
@@ -43,7 +44,7 @@ aspect Typing {
     eq ClassDecl.getType() = new UnionType(this, getImplementedInterfaceUses());
     eq FunctionDecl.getType() = getTypeUse().getType();
     eq DataConstructor.getType() = getDataTypeDecl().getType();
-    eq DeltaDecl.getType() = getModel().getUnitType();
+//    eq DeltaDecl.getType() = getModel().getUnitType();
 
     eq DataTypeDecl.getType() {
         return new DataTypeType(this);

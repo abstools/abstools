@@ -92,14 +92,32 @@ aspect TypeResolution {
         return res;
     }
 
+    syn lazy Collection<DeltaDecl> Model.getDeltaDecls() {
+        ArrayList<DeltaDecl> res = new ArrayList<DeltaDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+
     syn lazy Collection<Product> Model.getProducts() {
         ArrayList<Product> res = new ArrayList<Product>();
-        for (ModuleDecl mdecl : getModuleDecls()) {
-            for (Product p : mdecl.getProducts()) {
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (Product p : u.getProducts()) {
                 res.add(p);
             }
         }
         return res;
+    }
+
+    syn lazy ProductLine Model.getProductLine() {
+        for (CompilationUnit u : getCompilationUnits()) {
+            if (u.hasProductLine())
+                return u.getProductLine();
+        }
+        return null;
     }
 
     syn lazy Block Model.getMainBlock() {
@@ -135,6 +153,7 @@ aspect TypeResolution {
         return null;
     }
 
+    syn lazy boolean Model.hasProductLine() = getProductLine() != null;
     syn lazy boolean Model.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
     syn lazy boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
@@ -199,9 +218,11 @@ aspect TypeResolution {
     inh Decl ParametricFunctionDecl.lookup(KindedName name);
     inh Decl ClassDecl.lookup(KindedName name);
     inh Decl InterfaceDecl.lookup(KindedName name);
+    
     eq ModuleDecl.getDecl(int i).lookup(KindedName name) = lookup(name);
+    eq Model.getCompilationUnit(int i).lookup(KindedName name) = lookup(name);
     eq ModuleDecl.getBlock().lookup(KindedName name) = lookup(name);
-    eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
+//    eq ModuleDecl.getProduct(int i).lookup(KindedName name) = lookup(name);
 //    eq ModuleDecl.getDeltaDecl(int i).getInterfaceModifier().lookup(KindedName name) = lookup(name);
 
     /**

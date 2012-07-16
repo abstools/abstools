@@ -14,7 +14,7 @@ import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.ClassOrIfaceModifier;
+import abs.frontend.ast.ModuleModifier;
 import abs.frontend.ast.Cog;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
@@ -282,14 +282,14 @@ public final class AbsASTBuilderUtil {
         return method;
     }
     
-    public static final <T extends ClassOrIfaceModifier> T findClassOrIfaceModifier(
+    public static final <T extends ModuleModifier> T findClassOrIfaceModifier(
             DeltaDecl delta, Class<T> klazz, Predicate<T> predicate) {
     
-        abs.frontend.ast.List<ClassOrIfaceModifier> modifiers = 
-                        delta.getClassOrIfaceModifiers();
+        abs.frontend.ast.List<ModuleModifier> modifiers = 
+                        delta.getModuleModifiers();
         
         for (int i=0; i<modifiers.getNumChild(); i++) {
-                ClassOrIfaceModifier modifier = modifiers.getChild(i);
+                ModuleModifier modifier = modifiers.getChild(i);
                 if (klazz.isInstance(modifier)) {
                         T obj = klazz.cast(modifier);
                         if (predicate.predicate(obj)) {

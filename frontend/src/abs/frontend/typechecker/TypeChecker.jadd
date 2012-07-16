@@ -30,6 +30,8 @@ aspect TypeChecker {
     public void Model.typeCheck(SemanticErrorList errors) {
         try {
             TypeCheckerHelper.checkForDuplicateModules(errors, getCompilationUnits());
+            TypeCheckerHelper.checkForDuplicateDeltas(errors, getCompilationUnits());
+            TypeCheckerHelper.checkForDuplicateProducts(errors, getCompilationUnits());
             for (CompilationUnit u : getCompilationUnits()) {
                 u.typeCheck(errors);
             }
@@ -53,18 +55,6 @@ aspect TypeChecker {
             d.typeCheck(e);
         }
 
-        if (hasProductLine())
-          getProductLine().typeCheck(e);
-
-        { // duplicate products #340
-            List<Product> products = getProducts();
-            Set<String> seen = new HashSet<String>();
-            for (Product p : products) {
-                if (!seen.add(p.getName()))
-                    e.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
-            }
-        }
-
         if (hasBlock()) {
             getBlock().typeCheck(e);
         }
@@ -74,6 +64,11 @@ aspect TypeChecker {
         for (ModuleDecl d : getModuleDecls()) {
             d.typeCheck(e);
         }
+        for (DeltaDecl d : getDeltaDecls()) {
+            d.typeCheck(e);
+        }
+        if (hasProductLine())
+            getProductLine().typeCheck(e);
     }
     
     
@@ -339,7 +334,7 @@ aspect TypeChecker {
     public void ProductLine.typeCheck(SemanticErrorList e) {
        // TODO: check for undeclared features?
        for (DeltaClause dc : getDeltaClauses()) {
-         dc.typeCheck(e);
+           dc.typeCheck(e);
        }
     }
 

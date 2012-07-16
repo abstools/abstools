@@ -4,7 +4,7 @@ aspect VarResolution {
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
-	/* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different */
+    /* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different */
     rewrite VarUse {
        when (getDecl() instanceof FieldDecl)
        to FieldUse {
@@ -114,6 +114,10 @@ aspect VarResolution {
     
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
+    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = null;
+    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
+        = null;
     
     syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
@@ -144,16 +148,20 @@ aspect VarResolution {
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) 
         = null;
     // The -1 case happened within deltas (#346)...
+    // RM: Since DeltaDecl is not a subclass of Decl anymore, this fix could be reverted
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = i == -1 ? null : getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
-
+    
+    eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly)
+        = null;
+    
     eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
-     if (!fieldOnly) {
-        VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
-        if (d != null)
-        return d;
-     }
-     return lookupVarOrFieldName(name,fieldOnly);
+        if (!fieldOnly) {
+            VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null)
+                return d;
+        }
+        return lookupVarOrFieldName(name,fieldOnly);
     }
 
     eq LetExp.getExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
@@ -164,19 +172,19 @@ aspect VarResolution {
 
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
-    inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
+//    inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     // replace unbound pattern variables with var decls
     rewrite PatternVarUse {
         when (lookupVarOrFieldName(getName(),false) == null)
-            to PatternVar {
-            	PatternVarDecl decl = new PatternVarDecl(getName());
-		        decl.setPosition(getStartPos(), getEndPos());
-		        PatternVar v = new PatternVar(decl);
-		        v.setPosition(getStartPos(), getEndPos());
-		        return v;
-            }
+        to PatternVar {
+            PatternVarDecl decl = new PatternVarDecl(getName());
+            decl.setPosition(getStartPos(), getEndPos());
+            PatternVar v = new PatternVar(decl);
+            v.setPosition(getStartPos(), getEndPos());
+            return v;
+        }
     }
     
 }

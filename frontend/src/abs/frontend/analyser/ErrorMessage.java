@@ -81,6 +81,7 @@ public enum ErrorMessage {
     EXPECTED_INT("Inferred type Bool for %s, expected Int."),
     DUPLICATE_FEATURE("Feature %s is already defined."),
     DUPLICATE_PRODUCT("Product %s is already defined."),
+    DUPLICATE_DELTA("Delta Module %s is already defined."),
     DUPLICATE_VARIABLE("Variable %s is already defined."),
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration"),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s"),

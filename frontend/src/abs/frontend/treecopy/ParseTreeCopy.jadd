@@ -47,7 +47,7 @@ aspect ParseTreeCopy {
     public CID CID.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ClaimGuard ClaimGuard.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ClassDecl ClassDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public ClassOrIfaceModifier ClassOrIfaceModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public ModuleModifier ModuleModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Cog Cog.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public CompilationUnit CompilationUnit.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Const Const.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

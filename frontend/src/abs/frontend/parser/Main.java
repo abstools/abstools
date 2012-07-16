@@ -34,12 +34,15 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.FeatureDecl;
 import abs.frontend.ast.FExt;
-import abs.frontend.ast.Product;
+import abs.frontend.ast.Opt;
 import abs.frontend.ast.StarImport;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -613,7 +616,7 @@ public class Main {
             try {
                 u = (CompilationUnit) parser.parse(scanner);
             } catch (Parser.Exception e) {
-                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<FeatureDecl>(), new List<FExt>());
+                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<DeltaDecl>(), new Opt<ProductLine>(), new List<Product>(), new List<FeatureDecl>(), new List<FExt>());
                 u.setParserErrors(parser.getErrors());
             }
             if (stdlib) {

@@ -166,43 +166,6 @@ implements Network
   }
 }
 
-
-delta DFileFilter() {
-    modifies class Node {
-        modifies Peer findServer(Filename file, Catalog catalog) {
-            Peer p = null;
-            Bool valid = this.isValid(file);
-            if (valid) {
-                p = original(file, catalog);
-//                original();
-            }
-            return p;
-        }
-        adds Bool isValid(Filename fId) {
-            return True;
-        }
-    }
-}
-
-delta DParentalControl() {
-    modifies class Node {
-        modifies Bool isValid(Filename fId) {
-            return (~isSubstring("xxx",fId));
-        }
-    }
-}
-
-productline Peer2Peer {
-    features Basic, FileFilter, ParentalControl;
-    delta DFileFilter when FileFilter;
-    delta DParentalControl after DFileFilter when ParentalControl;
-}
-
-product P1 (Basic);
-product P2 (FileFilter);
-product P3 (ParentalControl);
-product P4 (FileFilter, ParentalControl);
-
 {
   // Map<Filename, File>
   DataBase db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
@@ -219,6 +182,49 @@ product P4 (FileFilter, ParentalControl);
   node3!setAdmin(admin);
 }
 
+
+//**********************************************************************************
+delta DFileFilter;
+uses PeerToPeer;
+
+modifies class Node {
+    modifies Peer findServer(Filename file, Catalog catalog) {
+        Peer p = null;
+        Bool valid = this.isValid(file);
+        if (valid) {
+            p = original(file, catalog);
+//                original();
+        }
+        return p;
+    }
+    adds Bool isValid(Filename fId) {
+        return True;
+    }
+}
+
+//**********************************************************************************
+delta DParentalControl;
+uses PeerToPeer;
+
+modifies class Node {
+    modifies Bool isValid(Filename fId) {
+        return (~isSubstring("xxx",fId));
+    }
+}
+
+//**********************************************************************************
+productline Peer2Peer;
+features Basic, FileFilter, ParentalControl;
+delta DFileFilter when FileFilter;
+delta DParentalControl after DFileFilter when ParentalControl;
+
+//**********************************************************************************
+product P1 (Basic);
+product P2 (FileFilter);
+product P3 (ParentalControl);
+product P4 (FileFilter, ParentalControl);
+
+//**********************************************************************************
 // Feature Model
 root Peer2Peer {
     group oneof {

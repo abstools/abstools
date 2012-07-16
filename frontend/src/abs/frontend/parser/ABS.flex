@@ -29,7 +29,7 @@ import abs.frontend.parser.ABSParser.Terminals;
   private ABSSymbol sym(short id, String text) {
     return new ABSSymbol(id, yyline + 1, yycolumn + 1, text.length(), yychar, text);
   }
-  
+
   private ABSSymbol symString(String text) {
       return new ABSSymbol(Terminals.STRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
   }
@@ -84,6 +84,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "def"         { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
  "delta"       { return sym(Terminals.DELTA); }
+ "uses"        { return sym(Terminals.USES); }
  "adds"        { return sym(Terminals.ADDS); }
  "modifies"    { return sym(Terminals.MODIFIES); }
  "removes"     { return sym(Terminals.REMOVES); }

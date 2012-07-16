@@ -27,8 +27,9 @@ aspect OriginalCallResolver {
      */
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+
         System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
-        for (ClassOrIfaceModifier cm : this.getClassOrIfaceModifiers()) {
+        for (ModuleModifier cm : this.getModuleModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
                    if (m instanceof ModifyMethodModifier)
@@ -100,9 +101,9 @@ aspect OriginalCallResolver {
             ModifyClassModifier cm = new ModifyClassModifier();
             cm.setName(mod.className());
             cm.addModifier(new AddMethodModifier(originalMethodCopy));
-            mod.delta().addClassOrIfaceModifier(cm);
+            mod.getDelta().addModuleModifier(cm);
             mod.getModel().cacheOriginalMethod(methodId);
-            System.out.println("*** copied original method to delta " + mod.delta().getName() + " as " + originalMethodCopy.getMethodSig().getName());
+            System.out.println("*** copied original method to delta " + mod.getDelta().getName() + " as " + originalMethodCopy.getMethodSig().getName());
         } else {
             System.out.println("*** original method already cached as " + methodId);
         }
@@ -192,8 +193,8 @@ aspect OriginalCallResolver {
             String classid, 
             DeltaDecl delta) throws ASTNodeNotFoundException {
         
-        for (ClassOrIfaceModifier cm : delta.getClassOrIfaceModifiers()) {
-            if (cm.className().equals(classid)) {
+        for (ModuleModifier cm : delta.getModuleModifiers()) {
+            if (cm.getName().equals(classid)) {
                 if (cm instanceof ModifyClassModifier) {
                     for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
                         if (m instanceof AddMethodModifier) {
@@ -228,18 +229,17 @@ aspect OriginalCallResolver {
      * find first MethodImpl that matches classid and methodid
      * return a copy with changed name
      */
-    public MethodImpl ModifyMethodModifier.findOriginalInCore(            
+    public MethodImpl ModifyMethodModifier.findOriginalInCore(
             String methodid,
             String classid) throws ASTNodeNotFoundException {
 
-        KindedName symbol = new KindedName(KindedName.Kind.CLASS, classid);
-        Map<KindedName, ResolvedName> visibleSymbols = this.getModule().getVisibleNames();
-        if (visibleSymbols.containsKey(symbol)) {
-            ClassDecl cls = (ClassDecl) visibleSymbols.get(symbol).getDecl();
-            System.out.println("*** searching in core class " + cls.getName());
-            for (MethodImpl method : cls.getMethods()) {
-                if (method.getMethodSig().getName().equals(methodid))
-                    return copyMethod(method, "core");
+        for (Decl cls : getDelta().getModel().getDecls()) {
+            if (cls instanceof ClassDecl) {
+                System.out.println("*** searching in core class " + cls.getName());
+                for (MethodImpl method : ((ClassDecl)cls).getMethods()) {
+                    if (method.getMethodSig().getName().equals(methodid))
+                        return copyMethod(method, "core");
+                }
             }
         }
         // not found

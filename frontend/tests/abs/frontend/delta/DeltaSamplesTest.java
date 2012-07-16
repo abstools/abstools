@@ -8,6 +8,8 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,8 +18,10 @@ import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 
 public class DeltaSamplesTest extends FrontendTest {
 
@@ -31,7 +35,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_P2P_P1() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
-        m.flattenForProduct("PeerToPeer.P1");
+        m.flattenForProduct("P1");
         m.flushCache();
         assertTrue(m.typeCheck().isEmpty());
     }
@@ -40,7 +44,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_P2P_P2() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
-        m.flattenForProduct("PeerToPeer.P2");
+        m.flattenForProduct("P2");
         m.flushCache();
         assertTrue(m.typeCheck().isEmpty());
     }
@@ -49,14 +53,14 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_P2P_P3() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
-        m.flattenForProduct("PeerToPeer.P3");
+        m.flattenForProduct("P3");
     }
 
     @Test
     public void test_P2P_P4() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/PeerToPeer.abs", true);
         m.setNullPrintStream();
-        m.flattenForProduct("PeerToPeer.P4");
+        m.flattenForProduct("P4");
         m.flushCache();
         SemanticErrorList res = m.typeCheck();
         if (!res.isEmpty())
@@ -67,7 +71,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_ticket280() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug280.abs", true);
         m.setNullPrintStream();
-        m.flattenForProduct("D.P");
+        m.flattenForProduct("P");
         /* Run Maude gen (from the ticket), although it's not relevant. */
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         m.generateMaude(new PrintStream(out), null, 100, 0);
@@ -97,18 +101,20 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket324_A() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
-        m.flattenForProduct("C.A");
+        m.flattenForProduct("A");
         m.flushCache();
-        Assert.assertTrue(!m.hasTypeErrors());
+        Assert.assertFalse(m.hasTypeErrors());
     }
 
     @Test
     public void test_ticket324_B() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
-        m.flattenForProduct("C.B");
-        m.flushCache();
-        assertFalse(m.hasErrors());
-        assertFalse(m.hasTypeErrors());
+        try {
+            m.flattenForProduct("B");
+        } catch (ASTNodeNotFoundException e) {
+            return; // this is the expected outcome
+        }
+        fail("Expected ASTNodeNotFoundException");
     }
     
     @Test
@@ -120,25 +126,25 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket322_P() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug322.abs", true);
-        m.flattenForProduct("M.P");
+        m.flattenForProduct("P");
         m.flushCache();
         assertFalse(m.hasErrors());
         assertFalse(m.hasTypeErrors());
-        InterfaceDecl i = (InterfaceDecl) DeltaFlattenerTest.findDecl(m, "M", "I");
+        InterfaceDecl i = (InterfaceDecl) DeltaTest.findDecl(m, "M", "I");
         assertNotNull(i);
-        InterfaceDecl j = (InterfaceDecl) DeltaFlattenerTest.findDecl(m, "M", "J");
+        InterfaceDecl j = (InterfaceDecl) DeltaTest.findDecl(m, "M", "J");
         assertNotNull(j);
     }
     @Test
     public void test_ticket322_Q() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug322.abs", true);
-        m.flattenForProduct("M.Q");
+        m.flattenForProduct("Q");
         m.flushCache();
         assertFalse(m.hasErrors());
         assertFalse(m.hasTypeErrors());
-        InterfaceDecl i = (InterfaceDecl) DeltaFlattenerTest.findDecl(m, "M", "I");
+        InterfaceDecl i = (InterfaceDecl) DeltaTest.findDecl(m, "M", "I");
         assertNull(i);
-        InterfaceDecl j = (InterfaceDecl) DeltaFlattenerTest.findDecl(m, "M", "J");
+        InterfaceDecl j = (InterfaceDecl) DeltaTest.findDecl(m, "M", "J");
         assertNull(j);
     }
     
@@ -151,7 +157,7 @@ public class DeltaSamplesTest extends FrontendTest {
     @Test
     public void test_ticket361_P() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
-        m.flattenForProduct("M3.P");
+        m.flattenForProduct("P");
         m.flushCache();
         assertFalse(m.hasErrors());
         assertFalse(m.hasTypeErrors());
@@ -169,7 +175,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_ticket332_parse() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/ticket332.abs", true);
         m.flushCache();
-        m.flattenForProduct("DE.C");
+        m.flattenForProduct("C");
         m.flushCache();
         assertTrue(m.typeCheck().isEmpty());
     }
@@ -178,7 +184,7 @@ public class DeltaSamplesTest extends FrontendTest {
     public void test_ticket332_check() throws Exception {
         Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", true);
         m.flushCache();
-        m.flattenForProduct("DE.C");
+        m.flattenForProduct("C");
         m.flushCache();
         assertTrue(m.typeCheck().isEmpty());
     }

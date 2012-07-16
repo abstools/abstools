@@ -1,36 +1,59 @@
-// inform ClassOrIfaceModifiers and Modifiers about the DeltaDecl where they were declared
+//inform various nodes about the Model
+aspect Model {
+    inh Model ModuleModifier.getModel();
+    eq DeltaDecl.getModuleModifier().getModel() = this.getModel();
+
+    inh Model ProductLine.getModel();
+}
+
+// inform ModuleModifiers and Modifiers about the DeltaDecl where they were declared
 aspect Delta {
-    inh DeltaDecl ClassOrIfaceModifier.delta();
-    eq DeltaDecl.getClassOrIfaceModifier().delta() = this;
+    inh DeltaDecl ModuleModifier.getDelta();
+    eq DeltaDecl.getModuleModifier().getDelta() = this;
     
-    inh DeltaDecl Modifier.delta();
-    eq ModifyClassModifier.getModifier().delta() = this.delta();
+    inh DeltaDecl Modifier.getDelta();
+    eq ModifyClassModifier.getModifier().getDelta() = this.getDelta();
 
     inh DeltaDecl MethodSigModifier.getDelta();
-    eq ModifyInterfaceModifier.getMethodSigModifier().getDelta() = this.delta();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getDelta() = this.getDelta();
+}
+
+// inform DeltaClause about the ProductLine where it was declared
+aspect ProductLine {
+    inh ProductLine DeltaClause.getProductLine();
+    eq ProductLine.getDeltaClause().getProductLine() = this;
 }
 
 //inform nodes about the Module where they were declared
 aspect Module {
     inh ModuleDecl Decl.getModule();
     eq ModuleDecl.getDecl().getModule() = this;
-
-    inh ModuleDecl ClassOrIfaceModifier.getModule();
-    eq DeltaDecl.getClassOrIfaceModifier().getModule() = this.getModule();
-
-    inh ModuleDecl Modifier.getModule();
-    eq ModifyClassModifier.getModifier().getModule() = this.getModule();
 }
 
 //inform various nodes about the Model
 aspect Model {
     inh Model Modifier.getModel();
-    eq ModifyClassModifier.getModifier().getModel() = this.getModule().getModel();
-    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getModule().getModel();
+    eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getDelta().getModel();
 }
 
 // inform Modifier about the ModifyClassModifier where it was declared
 aspect ModifyClassModifier {
     inh ModifyClassModifier Modifier.getModifyClassModifier();
     eq ModifyClassModifier.getModifier().getModifyClassModifier() = this;
+}
+
+// inform DeltaDecl about their 'used' modules
+aspect Uses {
+    syn lazy ArrayList<ModuleDecl> DeltaDecl.usesModules();
+    eq DeltaDecl.usesModules() {
+        ArrayList<ModuleDecl> usedModules = new ArrayList<ModuleDecl>();
+        for (DeltaAccess da : getDeltaAccessList()) {
+            for (ModuleDecl module : getModel().getModuleDecls()) {
+                if (da.getModuleName().equals(module.getName()))
+                        usedModules.add(module);
+            }
+        }
+        return usedModules;
+    }
 }

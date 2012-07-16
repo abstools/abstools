@@ -101,33 +101,31 @@ import java.io.IOException;
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
   | error INVALID_CHARACTER? {: // adding dummy-token-type "INVALID_CHARACTER" for the lexer
-		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new List());
+		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new Opt(),new List(),new List(),new List());
 		u.setParserErrors(getErrors());
 		return u;
 	:}
   ;
 
 CompilationUnit compilation_unit =
-	module_decl_list.m? featuremodeldecl.fm {:  //rootfeature_list.r fextension_list.ext {:
+	module_decl_list.m? delta_decl_list.d? product_line.pl? product_list.p? featuremodeldecl.fm {:
 		List fd = fm.getFeatureDecls();
 		List ed = fm.getFExts();
 		fm.setFeatureDeclList(new List());
 		fm.setFExtList(new List());
-        CompilationUnit u = new CompilationUnit(getFileName(),m,fd, ed);
-//  module_decl_list.m? {:
-//        CompilationUnit u = new CompilationUnit(getFileName(),m,new List(), new List());
+        CompilationUnit u = new CompilationUnit(getFileName(),m,d,pl,p,fd,ed);
 		u.setParserErrors(getErrors());
 		return u;
-		:}
+	:}
   ;
 
 ModuleDecl module_decl =
-    module_name_decl.n export_list.el? import_list.il? decl_list.dl? product_line.pr? product_list.pl? main_block.b?
-    {: return new ModuleDecl(n.getName(),el,il,dl,pr,pl,b); :}
+    module_name_decl.n export_list.el? import_list.il? decl_list.dl? main_block.b?
+    {: return new ModuleDecl(n.getName(),el,il,dl,b); :}
   ;
 
 List module_decl_list =
-	module_decl.t			{: return new List().add(t); :}
+    module_decl.t			{: return new List().add(t); :}
   | module_decl_list.l module_decl.t	{: return l.add(t); :}
   ;
 
@@ -139,13 +137,14 @@ Name module_name_decl =
 Name module_name = type_name ;
 
 Name simple_type_name =
-  TYPE_IDENTIFIER.id      {: Symbol curr_sym = _symbols[offset + 1]; // Trust me, there is no other way to get the original symbol (beaver replaces id by id.value and casts it to String).
-    Name n = new Name(id);
-    if (curr_sym instanceof ABSSymbol) {
-        n.setAbsolutePosition(((ABSSymbol)curr_sym).getAbsolutePosition());
-    }
-    return n; :}
-;
+  TYPE_IDENTIFIER.id {: 
+      Symbol curr_sym = _symbols[offset + 1]; // Trust me, there is no other way to get the original symbol (beaver replaces id by id.value and casts it to String).
+      Name n = new Name(id);
+      if (curr_sym instanceof ABSSymbol) {
+          n.setAbsolutePosition(((ABSSymbol)curr_sym).getAbsolutePosition());
+      }
+      return n; 
+  :};
 
 Name simple_name =
     IDENTIFIER.id  {: return new Name(id); :}
@@ -222,7 +221,6 @@ Decl decl =
 	|	function_decl
 	|	interface_decl
 	|	class_decl
-	|	delta_decl
 	|	error
 	;
 
@@ -240,64 +238,102 @@ VarDecl var_decl =
     | type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t, new Opt()); :}
     ;
 
-DataTypeDecl  datatype_decl =
+DataTypeDecl datatype_decl =
 	annotation_list.al? DATA TYPE_IDENTIFIER.id datatypeparam_list_decl.p? ASSIGN data_constructor_list.l SEMICOLON
 	{: return new ParametricDataTypeDecl(id, l, al, p); :}
    | annotation_list.al? DATA TYPE_IDENTIFIER.id datatypeparam_list_decl.p? SEMICOLON
     {: return new ParametricDataTypeDecl(id, new List<DataConstructor>(), al, p); :}
   ;
 
-TypeSynDecl  typesyn_decl =
+TypeSynDecl typesyn_decl =
 	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
 
-FunctionDecl  function_decl =
-	annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new ParametricFunctionDecl(fn, t, l, new BuiltinFunctionDef(), al, p); :}
-    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON 
-    			{: return new ParametricFunctionDecl(fn, t, l, ef, al, p); :}
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON {: return new FunctionDecl(fn, al, t, l, new BuiltinFunctionDef()); :}
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON
-	  {: return new FunctionDecl(fn, al, t, l, ef); :}
-	// error recovery:
-	| annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN error
-	  {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(new NullExp())); :}
-	;
+FunctionDecl function_decl =
+    annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON 
+        {: return new ParametricFunctionDecl(fn, t, l, new BuiltinFunctionDef(), al, p); :}
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn datatypeparam_list_decl.p LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON
+        {: return new ParametricFunctionDecl(fn, t, l, ef, al, p); :}
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN BUILTIN SEMICOLON
+        {: return new FunctionDecl(fn, al, t, l, new BuiltinFunctionDef()); :}
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN exp_function_def.ef SEMICOLON
+        {: return new FunctionDecl(fn, al, t, l, ef); :}
+    // error recovery:
+    | annotation_list.al? DEF datatypeuse.t IDENTIFIER.fn LPAREN param_decl_list.l? RPAREN ASSIGN error
+        {: return new FunctionDecl(fn, al, t, l, new ExpFunctionDef(new NullExp())); :}
+    ;
 	
 ExpFunctionDef exp_function_def =
-	data_exp.ef {: return new ExpFunctionDef(ef); :}
-;
+    data_exp.ef {: return new ExpFunctionDef(ef); :}
+    ;
 
 InterfaceDecl interface_decl =
     annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE
     {: return new InterfaceDecl(id, al, i, l); :}
-  // error recovery :
-  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? error
-    {: return new InterfaceDecl(id, al, i, new List()); :}
-  | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id error
-    {: return new InterfaceDecl(id, al, new List(), new List()); :}
-  | annotation_list.al? INTERFACE error
-    {: return new InterfaceDecl("<unknown>",al, new List(), new List()); :}
-  ;
+    // error recovery :
+    | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id extends_interfaces.i? error
+        {: return new InterfaceDecl(id, al, i, new List()); :}
+    | annotation_list.al? INTERFACE TYPE_IDENTIFIER.id error
+        {: return new InterfaceDecl(id, al, new List(), new List()); :}
+    | annotation_list.al? INTERFACE error
+        {: return new InterfaceDecl("<unknown>", al, new List(), new List()); :}
+    ;
 
-
+InterfaceDecl qualified_interface_decl =
+    annotation_list.al? INTERFACE type_name.id extends_interfaces.i? LBRACE methodsig_list.l? RBRACE
+    {: return new InterfaceDecl(id.getString(), al, i, l); :}
+    ;
+    
 ClassDecl class_decl =
-	annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE
-	{: return new ClassDecl(id, annotations, params,  i, init_block, fields, methods); :}
-  // error recovery:
-  | annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE error
-	{: return new ClassDecl(id, annotations, params,  i, new Opt(), new List(), new List()); :}
+    annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE
+    field_decl_list.fields? 
+    init_block.init_block? 
+    method_list.methods? 
+    RBRACE
+    {: return new ClassDecl(id, annotations, params, i, init_block, fields, methods); :}
+    // error recovery:
+    | annotation_list.annotations? CLASS TYPE_IDENTIFIER.id param_decls.params? implement_interfaces.i? LBRACE
+    error
+    {: return new ClassDecl(id, annotations, params, i, new Opt(), new List(), new List()); :}
+    ;
 
-  ;
+ClassDecl qualified_class_decl =
+    annotation_list.annotations? CLASS type_name.id param_decls.params? implement_interfaces.i? LBRACE 
+    field_decl_list.fields? 
+    init_block.init_block? 
+    method_list.methods? 
+    RBRACE
+    {: return new ClassDecl(id.getString(), annotations, params, i, init_block, fields, methods); :}
+    // error recovery:
+    | annotation_list.annotations? CLASS type_name.id param_decls.params? implement_interfaces.i? LBRACE
+    error
+    {: return new ClassDecl(id.getString(), annotations, params, i, new Opt(), new List(), new List()); :}
+    ;
 
 DeltaDecl delta_decl =
-    annotation_list.annotations? DELTA TYPE_IDENTIFIER.id delta_param_decls.params? LBRACE functional_modifier_list.fnmodifiers? class_modifier_list.modifiers? RBRACE
-    {: return new DeltaDecl(id, annotations, params, fnmodifiers, modifiers); :} ;
+    DELTA TYPE_IDENTIFIER.id delta_param_decls.params? SEMICOLON 
+    delta_access_list.uses? 
+    module_modifier_list.modifiers? 
+    {: return new DeltaDecl(id, params, uses, modifiers); :} ;
 
+List delta_decl_list =
+    delta_decl.t                       {: return new List().add(t); :}
+  | delta_decl_list.l delta_decl.t     {: return l.add(t); :}
+  ;
+
+List delta_access_list =
+    delta_access.t                     {: return new List().add(t); :}
+  | delta_access_list.l delta_access.t {: return l.add(t); :}  
+  ;
+
+Import delta_access =
+    USES module_name.m SEMICOLON       {: return new DeltaAccess(m.getName()); :}
+  ;
 
 List delta_param_decls =
-	LPAREN delta_param_decl_list.f? RPAREN     {: return f ; :}
-	;
+    LPAREN delta_param_decl_list.f? RPAREN     {: return f ; :}
+  ;
 
 List delta_param_decl_list =
       delta_param_decl.i                               {: return new List().add(i); :}
@@ -318,43 +354,31 @@ HasCondition has_condition =
            return res; :}
   ;
 
-List functional_modifier_list =
-    functional_modifier.m {: return new List().add(m); :}
-  | functional_modifier_list.l functional_modifier.m {: return l.add(m); :}
+
+List module_modifier_list =
+    module_modifier.m {: return new List().add(m); :}
+  | module_modifier_list.l module_modifier.m {: return l.add(m); :}
   ;
-  
+
+ModuleModifier module_modifier =
+    functional_modifier.m {: return m; :}
+    | oo_modifier.m {: return m; :}
+    ;
+
 FunctionalModifier functional_modifier =
   ADDS function_decl.functiondecl {: return new AddFunctionModifier(functiondecl); :}
   | ADDS datatype_decl.datatypedecl {: return new AddDataTypeModifier(datatypedecl); :}
   | ADDS typesyn_decl.typesyndecl {: return new AddTypeSynModifier(typesyndecl); :}
   ;
 
-List class_modifier_list =
-    class_modifier.m {: return new List().add(m); :}
-  | class_modifier_list.l class_modifier.m {: return l.add(m); :}
-  ;
-
-ClassOrIfaceModifier class_modifier =
-//  ADDS class_decl.classdecl {: return new AddClassModifier(classdecl); :}
+OOModifier oo_modifier =
   ADDS qualified_class_decl.classdecl {: return new AddClassModifier(classdecl); :}
-  | REMOVES CLASS TYPE_IDENTIFIER.id SEMICOLON {: return new RemoveClassModifier(id); :}
-  | MODIFIES CLASS TYPE_IDENTIFIER.id implement_interfaces.iface? LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id, iface, fragments); :}
-  | ADDS interface_decl.ifacedecl {: return new AddInterfaceModifier(ifacedecl); :}
-  | MODIFIES INTERFACE TYPE_IDENTIFIER.id LBRACE inf_modifier_fragment_list.fragments? RBRACE {: return new ModifyInterfaceModifier(id, fragments); :}
+  | REMOVES CLASS type_name.id SEMICOLON {: return new RemoveClassModifier(id.getString()); :}
+  | MODIFIES CLASS type_name.id implement_interfaces_add.ifadd? implement_interfaces_remove.ifremove? LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id.getString(), ifadd, ifremove, fragments); :}
+  | ADDS qualified_interface_decl.ifacedecl {: return new AddInterfaceModifier(ifacedecl); :}
+  | MODIFIES INTERFACE type_name.id LBRACE inf_modifier_fragment_list.fragments? RBRACE {: return new ModifyInterfaceModifier(id.getString(), fragments); :}
   ;
 
-ClassDecl qualified_class_decl =
-    annotation_list.annotations? CLASS simple_qual_name.id param_decls.params? implement_interfaces.i? LBRACE field_decl_list.fields? init_block.init_block? method_list.methods? RBRACE
-  {: return new ClassDecl(id.getString(), annotations, params,  i, init_block, fields, methods); :}
-  // error recovery:
-  | annotation_list.annotations? CLASS simple_qual_name.id param_decls.params? implement_interfaces.i? LBRACE error
-  {: return new ClassDecl(id.getString(), annotations, params,  i, new Opt(), new List(), new List()); :}
-  ;
-
-Name simple_qual_name =
-    TYPE_IDENTIFIER.id {: return new Name(id); :}
-  | TYPE_IDENTIFIER.mod DOT TYPE_IDENTIFIER.id {: return new Name(mod+"."+id); :};
-  
 List inf_modifier_fragment_list =
     inf_modifier_fragment.f {: return new List().add(f); :}
   | inf_modifier_fragment_list.l inf_modifier_fragment.f {: return l.add(f); :}
@@ -405,6 +429,14 @@ ConstructorArg constructor_arg =
 
 List implement_interfaces =
     IMPLEMENTS ifname_list.i           {: return i; :}
+  ;
+
+List implement_interfaces_add =
+    ADDS ifname_list.i           {: return i; :}
+  ;
+
+List implement_interfaces_remove =
+    REMOVES ifname_list.i           {: return i; :}
   ;
 
 List extends_interfaces =
@@ -735,7 +767,7 @@ SyncCall sync_call =
 OriginalCall original_call =
         ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new OriginalCall(params); :}
         | delta_id.delta DOTORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(delta, params); :}
-        | CORE DOT ORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID("core"), params); :}
+        | CORE DOTORIGINAL LPAREN data_exp_list.params? RPAREN {: return new TargetedOriginalCall(new DeltaID("core"), params); :}
         ;
 
 DeltaID delta_id =
@@ -831,11 +863,10 @@ Guard guard =
 
 
 ProductLine product_line =
-    PRODUCTLINE TYPE_IDENTIFIER.id LBRACE
+    PRODUCTLINE TYPE_IDENTIFIER.id SEMICOLON
     optfeature_list.o
     corefeature_list.c
     deltaclause_list.d
-    RBRACE
     {: return new ProductLine(id, o, c, d); :}
     ;
 

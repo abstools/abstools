@@ -2,25 +2,25 @@ module C;
 
 class C { Unit m() { } }
 
-delta I {
-  modifies class C {
-    modifies Unit m() { }
-    adds Unit n() { }
-  }
+delta I;
+modifies class C.C {
+  modifies Unit m() { }
+  adds Unit n() { }
 }
 
-delta K {
-  modifies class C {
-    modifies Unit m() { I.original(); }
-    modifies Unit n() { I.original(); }
-  }
+delta K;
+modifies class C.C {
+  modifies Unit m() { I.original(); }
+  modifies Unit n() { I.original(); }
 }
 
-productline PL {
-  features X,Z;
-  delta I when X;
-  delta K after I when Z;
-}
+productline PL;
+features X,Z;
+delta I when X;
+delta K after I when Z;
 
 product A(X,Z);
+
+// this cannot work because inside delta K there is call to an original method 
+// defined by delta I, but delta I is not applied
 product B(Z);

@@ -181,18 +181,21 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckDeltaClause(DeltaClause dc, SemanticErrorList e) {
-        { /* Does the Delta exist ? */
-            final String name = dc.getDeltaspec().getName();
-            KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, name); // TODO: idiom
-            if (!dc.getModuleDecl().getVisibleDeltas().containsKey(symbol)) {
-                e.add(new TypeError(dc.getDeltaspec(),ErrorMessage.NAME_NOT_RESOLVABLE, name));
-            }
+    public static void typeCheckDeltaClause(DeltaClause clause, SemanticErrorList e) {
+        
+        // cache all names of defined deltas for easy lookup
+        HashSet<String> deltaNames = new HashSet<String>();
+        for (DeltaDecl delta : clause.getProductLine().getModel().getDeltaDecls()) {
+            deltaNames.add(delta.getName());
         }
-        assert dc.getModuleDecl().hasProductLine(); // otherwise we wouldn't be here...
-        ProductLine p = dc.getModuleDecl().getProductLine();
+        
+        /* Does the delta exist? */
+        if (! deltaNames.contains(clause.getDeltaspec().getName()))
+            e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
+
+        ProductLine p = clause.getProductLine();
         /* Do the referenced features exist? */
-        for (Feature f : dc.getFeatures()) {
+        for (Feature f : clause.getFeatures()) {
             boolean found = false;
             for (Feature cf : p.getOptionalFeatures()) {
                 if (cf.getName().equals(f.getName())) {
@@ -203,14 +206,13 @@ public class TypeCheckerHelper {
             if (!found)
                 e.add(new TypeError(f,ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
         }
-        /* What about 'after ...' clauses? */
-        for (DeltaID d : dc.getDeltaIDs()) {
-            KindedName kn = new KindedName(KindedName.Kind.TYPE_DECL, d.getName());
-            if (!dc.getModuleDecl().getVisibleDeltas().containsKey(kn)) {
-                e.add(new TypeError(d,ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
+        /* What about deltas mentioned in the 'after' clause? */
+        for (DeltaID did : clause.getDeltaIDs()) {
+            if (! deltaNames.contains(did.getName())) {
+                e.add(new TypeError(did, ErrorMessage.NAME_NOT_RESOLVABLE, did.getName()));
             }                 
         }
-     }
+    }
     
     public static java.util.List<Type> getTypesFromDataTypeUse(List<? extends DataTypeUse> params) {
         ArrayList<Type> res = new ArrayList<Type>();
@@ -500,7 +502,7 @@ public class TypeCheckerHelper {
     }
     
     /**
-     * check a list of compilation units for duplicate module names
+     * check a list of compilation units for duplicate module names, product names, delta names
      */
     public static void checkForDuplicateModules(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
         Set<String> seenModules = new HashSet<String>();
@@ -512,7 +514,25 @@ public class TypeCheckerHelper {
             }
         }
     }
-
+    public static void checkForDuplicateProducts(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+        Set<String> seen = new HashSet<String>();
+        for (CompilationUnit u : compilationUnits) {
+            for (Product p : u.getProducts()) {
+                if (!seen.add(p.getName()))
+                    errors.add(new TypeError(p, ErrorMessage.DUPLICATE_PRODUCT, p.getName()));
+            }
+        }
+    }
+    public static void checkForDuplicateDeltas(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+        Set<String> seen = new HashSet<String>();
+        for (CompilationUnit u : compilationUnits) {
+            for (DeltaDecl d : u.getDeltaDecls()) {
+                if (!seen.add(d.getName()))
+                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_DELTA, d.getName()));
+            }
+        }
+    }
+    
     /**
      * checks if a declaration is unknown and adds an appropriate error message to the semantic error list
      * @param use the use of the declaration (this is where the error will be shown)

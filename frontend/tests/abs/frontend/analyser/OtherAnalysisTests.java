@@ -72,9 +72,9 @@ public class OtherAnalysisTests extends FrontendTest {
     
     @Test
     public void parsetreecopyTest2() {
-        Model m = assertParseOk("module M; productline TestPL { " +
-        "features A, B, C; " +
-        "}", Config.WITH_STD_LIB);
+        Model m = assertParseOk("module M; productline TestPL;" +
+        "features A, B, C; ",
+        Config.WITH_STD_LIB);
         
         
         Model m2 = m.parseTreeCopy();

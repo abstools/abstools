@@ -7,7 +7,7 @@ package abs.frontend.delta;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.*;
 
-public class DeltaFlattenerTest extends FrontendTest {
+public class DeltaTest extends FrontendTest {
 
     // helper method: find a Decl node in given module
     static protected Decl findDecl(Model model, String moduleName, String name) {
@@ -19,6 +19,16 @@ public class DeltaFlattenerTest extends FrontendTest {
                 }
         }
         return null;
+    }
+
+    protected DeltaDecl findDelta(Model model, String name) {
+        DeltaDecl decl = null;
+        for (DeltaDecl d : model.getDeltaDecls()) {
+            if (d.getName().equals(name)) {
+                decl = d;
+            }
+        }
+        return decl;
     }
 
 }

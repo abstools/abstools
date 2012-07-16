@@ -97,13 +97,13 @@ public class BackPositionTest extends FrontendTest {
     public void testDeltaId() {
         assertNodeAtPos("module M;\n" +
         		"class C {}\n" +
-        		"delta D1 { modifies class C { adds Unit m() {} } }\n" +
-        		"delta D2 { modifies class C { modifies Unit m() { original(); D1.original(); } } }", 4, 63, DeltaID.class);
+        		"delta D1; modifies class C { adds Unit m() {} }\n" +
+        		"delta D2; modifies class C { modifies Unit m() { original(); D1.original(); } }", 4, 63, DeltaID.class);
     }
     
     @Test
     public void testDeltaClause() {
-        assertNodeAtPos("module Bla; productline PL { features X; delta KX when X; }", 1, 48, Deltaspec.class);
+        assertNodeAtPos("module Bla; productline PL; features X; delta KX when X;", 1, 48, Deltaspec.class);
     }
     
     

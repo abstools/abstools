@@ -1,0 +1,228 @@
+import java.util.Map;
+import abs.frontend.delta.*;
+import abs.common.*;
+import abs.frontend.delta.exceptions.*;
+
+aspect ProductFlattener {
+
+    /**************************************************************************
+     * Configure a product
+     * This is the top level method, which does the following:
+     * - find the features of a given product, 
+     * - find a valid sequence of associated deltas,
+     * - resolve original() calls,
+     * - apply deltas in sequence.
+     */
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod);
+    }
+    /**************************************************************************
+     * Apply delta to model without checking if the product is valid wrt the feature model
+     * i.e. apply each ModuleModifier to its corresponding class or interface
+     */
+    public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod, false);
+    }
+    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        flattenForProduct(prod, true);
+    }
+    public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        Product prod = this.findProduct(id);
+        flattenForProduct(prod, check);
+    }
+    
+    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+        if (verbose)
+            System.out.println("--- configuring product: " + prod.getName());
+
+        if (check && hasMTVL()) {
+            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(getSolution(prod), this);
+            if (!errors.isEmpty()) {
+                String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
+                for (String s: errors)
+                    msg = msg + "\n- " + s;
+                throw new WrongProgramArgumentException(msg);
+            }
+        }
+
+        // find product line
+        ProductLine pl = this.findProductLine();
+
+        // find/get applicable deltas
+        HashSet<String> deltaids = this.findApplicableDeltas(prod, pl);
+        HashMap<String, DeltaDecl> unsorted_deltas = this.findDeltas(deltaids);
+
+        // sort deltas
+        ArrayList<DeltaDecl> deltas = this.sortDeltas(unsorted_deltas, pl);
+        
+        // substitute delta parameters
+        this.substituteDeltaParams(deltas, prod, pl);
+        
+        // resolve original() calls
+        this.resolveOriginalCalls(deltas);
+        
+        if (verbose) {
+            System.out.print("--- applying deltas to core << ");
+            String delim = "";
+            for (DeltaDecl delta : deltas) {
+                print(delim + delta.getName());
+                delim = " << ";
+            }
+            println(" .");
+        }
+
+        // apply the applicable deltas in the given order
+        this.applyDeltas(deltas);
+    }
+
+    /**************************************************************************
+     * Apply deltas to model
+     */
+    public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+        // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
+        //             to flush the correct cache at the same time (or avoid flushing at all?)
+        for (DeltaDecl delta : deltas) {
+            this.applyDelta(delta);
+            for (CompilationUnit unit: this.getCompilationUnits())
+                for (ModuleDecl module: unit.getModuleDecls())
+                        module.flushCache();
+        }
+    }
+
+    /**************************************************************************
+    * apply each FunctionalModifier and ModuleModifier 
+    * to its corresponding class or interface
+    * 
+    * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
+    */
+    public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
+        for (ModuleModifier mod : delta.getModuleModifiers()) {
+            System.out.println("*** applying ModuleModifier " + mod);
+            mod.apply();
+        }
+    }
+
+    /**************************************************************************
+     * find a particular product given by its name
+     */
+    public Product Model.findProduct(String id) throws WrongProgramArgumentException {
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (Product p : u.getProducts()) {
+                if (id.equals(p.getName()))
+                    return p;
+            }
+        }
+        throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
+    }
+    
+    /**************************************************************************
+     * find the product line definition
+     * We pick the first ProductLine definition we find. We don't care if there are more than one ProductLines 
+     * defined in the model (in different CompilationUnits), as the ABS grammar allows this. 
+     * FIXME It should be caught by the type checker.
+     */
+    public ProductLine Model.findProductLine() throws ASTNodeNotFoundException {
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            if (u.hasProductLine()) {
+                return u.getProductLine();
+            }
+        }
+        throw new ASTNodeNotFoundException("Model is missing a 'productline' definition");
+    }
+    
+    
+    /**************************************************************************
+     * Evaluate each delta clause to find the applicable delta names
+     * i.e. test each application condition in the context of the features which are ON in the given product
+     */
+    public HashSet<String> Model.findApplicableDeltas(
+            Product prod, ProductLine pl) throws WrongProgramArgumentException {
+
+        HashSet<String> deltaids = new HashSet<String>();
+
+        for (DeltaClause clause : pl.getDeltaClauses()) {
+            // System.out.println("DeltaClause: " + clause.moduleName() + "." + clause.getDeltaspec().getName());
+
+            if (clause.evaluateApplicationCondition(prod.getFeatures()))
+                deltaids.add(clause.getDeltaspec().getName());
+        }
+        return deltaids;
+    }
+
+    /**************************************************************************
+     * Evaluate the application condition assciated with this DeltaClause
+     * in the context of the given list of features and attribute values
+     *
+     * currently this only compares feature NAMES
+     * and only deals with the AND operator
+     * TODO properly handle all logical connectives, also feature attributes
+     */
+    public boolean DeltaClause.evaluateApplicationCondition(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
+
+        // check whether each required feature is also ON
+        for (Feature reqFeature : this.getFeatures()) {
+            if (! onFeatureIDs.contains(reqFeature.getName()))
+                return false;
+        }
+        return true;
+    }
+
+
+    /**************************************************************************
+     * Find DeltaDecls, given a set of delta names
+     */
+    public HashMap<String, DeltaDecl> Model.findDeltas(HashSet<String> deltaids) {
+        HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
+        for (CompilationUnit u : this.getCompilationUnits()) {
+            for (DeltaDecl delta : u.getDeltaDecls()) {
+                for (String deltaid : deltaids) {
+                    if (deltaid.equals(delta.getName())) {
+                        System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
+                        deltas.put(deltaid, delta);
+                    }
+                }
+            }
+        }
+        return deltas;
+    }
+        
+    /**************************************************************************
+     * Sort DeltaDecls according to a valid order of application defined by the product line
+     */
+    public ArrayList<DeltaDecl> Model.sortDeltas(HashMap<String, DeltaDecl> deltas, ProductLine pl) {
+        
+        GraphTS g = new GraphTS(deltas.values().toArray());
+
+        for (DeltaClause c : pl.getDeltaClauses()) {
+            String deltaid = c.getDeltaspec().getName();
+            
+            if (deltas.containsKey(deltaid)) {
+                DeltaDecl delta = deltas.get(deltaid);
+                // for each afterdelta: add an edge to delta
+                for (DeltaID did : c.getDeltaIDs()) {
+                    String otherid = did.getName();
+                    if (deltas.containsKey(otherid)) {
+                        DeltaDecl otherdelta = deltas.get(otherid);
+                        try {
+                            g.addEdge(otherdelta, delta);
+                        } catch (VertexNotFoundException e) {
+                            assert false; // should never reach this point
+                        }
+                    }
+                }
+            }
+        }
+        g.sort(); // FIXME catch the case when sort fails -- use assert?
+        return g.getSortedDeltas();
+    }
+ 
+    
+    
+    
+}

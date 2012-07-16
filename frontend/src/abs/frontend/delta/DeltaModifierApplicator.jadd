@@ -1,0 +1,293 @@
+import java.util.Map;
+import java.util.HashMap;
+import abs.frontend.delta.*;
+import abs.frontend.delta.exceptions.*;
+import abs.common.*;
+import abs.frontend.parser.*;
+
+/*
+ * Collection of methods to be added to the various Modifiers inside a delta:
+ * - ModuleModifiers, which can be 
+ *   OOModifiers, which in turn contain: 
+ *     - AddClassModifier, RemoveClassModifier, ModifyClassModifier
+ *     - AddInterfaceModifier, ModifyInterfaceModifier
+ *   FunctionalModifiers, which in turn contain:
+ *     - AddFunctionModifier, AddDataTypeModifier, AddTypeSynModifier
+ */
+aspect DeltaModifierApplicator {
+
+    abstract public void ModuleModifier.apply() throws ASTNodeNotFoundException;
+
+    /**************************************************************************
+     * OOModifiers add/remove/modify classes or interfaces
+     * they are applied to Modules
+     */
+    
+    public void AddClassModifier.apply() throws ASTNodeNotFoundException {
+        ModuleDecl module = findModule();
+        ClassDecl cls = getClassDecl().fullCopy();
+        cls.setName(getSimpleName());
+        module.getDecls().addChild(cls);
+    }
+    
+    public void RemoveClassModifier.apply() throws ASTNodeNotFoundException {
+        ClassDecl cls = findClass();
+        ModuleDecl module = cls.getModule();
+        module.getDecls().removeChild(module.getDecls().getIndexOfChild(cls));
+    }
+
+    public void ModifyClassModifier.apply() throws ASTNodeNotFoundException {
+        ClassDecl cls = findClass();
+        
+        // add any interfaces added by the ClassModifier
+        for (InterfaceTypeUse iface : this.getAddedInterfaces()) {
+            cls.addImplementedInterfaceUse(iface.fullCopy());
+        }
+
+        // remove any interfaces removed by the ClassModifier
+        for (InterfaceTypeUse toRemove : this.getRemovedInterfaces()) {
+            boolean found = false;
+            for (InterfaceTypeUse iface : cls.getImplementedInterfaceUseList()) {
+                if (iface.getName().equals(toRemove.getName())) {
+                    cls.getImplementedInterfaceUseList().removeChild(cls.getImplementedInterfaceUseList().getIndexOfChild(iface));
+                    found = true;
+                    break;
+                }
+            }
+            if (! found)
+                throw new ASTNodeNotFoundException("Class " + cls.getName() + " does not implement interface " + toRemove.getName() + ".");
+        }
+
+        // apply all modifiers
+        for (Modifier mod : this.getModifiers()) {
+            mod.applyTo(cls);
+        }
+    }
+    
+    public void AddInterfaceModifier.apply() throws ASTNodeNotFoundException {
+        ModuleDecl module = findModule();
+        InterfaceDecl decl = getInterfaceDecl().fullCopy();
+        decl.setName(getSimpleName());
+        module.getDecls().addChild(decl);
+    }
+    public void ModifyInterfaceModifier.apply() throws ASTNodeNotFoundException {
+        InterfaceDecl iface = this.findInterface();
+        // apply all modifiers
+        for (MethodSigModifier mod : this.getMethodSigModifiers()) {
+            mod.applyTo(iface);
+        }
+    }
+    
+    /**************************************************************************
+     * FunctionalModifiers add functions, data types and type synonyms
+     * they are applied to Modules
+     */
+
+    public String AddFunctionModifier.toString() {
+        return "adds function " + getFunctionDecl().getName();
+    }
+    
+    public void AddFunctionModifier.apply() throws ASTNodeNotFoundException {
+        ModuleDecl module = findModule();
+        module.getDecls().addChild(this.getFunctionDecl().fullCopy());
+    }
+    
+    public String AddDataTypeModifier.toString() {
+        return "adds data type " + getDataTypeDecl().getName();
+    }
+    
+    public void AddDataTypeModifier.apply() throws ASTNodeNotFoundException {
+        ModuleDecl module = findModule();
+        
+        DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
+        module.getDecls().addChild(dtd);
+        for (DataConstructor c : dtd.getDataConstructors()) {
+            int i = 0;
+            for (ConstructorArg ca : c.getConstructorArgs()) {
+                if (ca.hasSelectorName()) {
+                    module.getDecls().addChild(new ASTPreProcessor().createSelectorFunctionForDeltaApplication(dtd, c, ca, i));
+                }
+                i++;
+            }
+        }
+    }
+    
+    public String AddTypeSynModifier.toString() {
+        return "adds type synonym " + getTypeSynDecl().getName();
+    }
+    
+    public void AddTypeSynModifier.apply() throws ASTNodeNotFoundException {
+        ModuleDecl module = findModule();
+        module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
+    }
+
+
+    /**************************************************************************
+     * helper method
+     * find the ModuleDecl to which this ModuleModifier applies
+     * if qualified => easy; if unqualified => look in delta's 'uses' list.
+     */
+    public ModuleDecl ModuleModifier.findModule() throws ASTNodeNotFoundException {
+        String moduleid;
+        Name name = new Name(getName());
+        if (name.isSimple()) {
+            // assume the module name was specified in a 'uses' statement
+            // For now we only check the first used module - does having multiple 'uses' statements ever make sense?
+            // If not, FIXME change the syntax accordingly.
+            try {
+                moduleid = this.getDelta().getDeltaAccess(0).getModuleName();
+            } catch(NullPointerException e) {
+                throw new ASTNodeNotFoundException("Unqualified name of modified entity requires "
+                        + "a \'uses\' statement to determine the module to be modified.");
+            }
+        } else {
+            moduleid = name.getModuleName();
+        }            
+
+        for (ModuleDecl module : getModel().getModuleDecls()) {
+            if (module.getName().equals(moduleid)) {
+                return module;
+            }
+        }
+        throw new ASTNodeNotFoundException("Cannot find module " + moduleid + " for adding ModuleModifier " + getName()
+                + " in Delta " + getDelta().getName() + ".");
+    }
+
+
+    
+    /**************************************************************************
+     * helper methods
+     * find the (Class or Interface) Decl which should be modified by this OOModifier
+     */
+    public ClassDecl ClassModifier.findClass() throws ASTNodeNotFoundException {
+        System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
+
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName()))
+                return (ClassDecl) decl;
+        }
+        // not found
+        throw new ASTNodeNotFoundException("Delta " + getDelta().getName() 
+                + " wants to modify class declaration " + this.getName() + ", which was not found.");
+    }
+
+    public InterfaceDecl InterfaceModifier.findInterface() throws ASTNodeNotFoundException {
+        System.out.println("=== Delta " + getDelta().getName() + " looking for InterfaceDecl: " + this.getName());
+
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof InterfaceDecl && decl.getName().equals(this.getSimpleName()))
+                return (InterfaceDecl) decl;
+        }
+        // not found
+        throw new ASTNodeNotFoundException("Delta " + getDelta().getName() 
+                + " wants to modify interface declaration " + this.getName() + ", which was not found.");
+    }
+
+    
+    /**************************************************************************
+     * Modifiers are applied to Classes
+     * - add/remove/modify methods
+     * - add/remove fields
+     */
+    public abstract void Modifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException;
+
+    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodSig();
+
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // remove MethodImpl from list
+            cd.getMethods().removeChild(found);
+        else
+            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+                    + " wants to remove method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
+    }
+
+    public void AddMethodModifier.applyTo(ClassDecl cd) {
+        cd.addMethod(this.getMethodImpl().fullCopy());
+    }
+
+    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodImpl().getMethodSig();
+
+        // in given ClassDecl: find MethodDecl that matches sig
+        int found = -1;
+        for (int i = 0; i < cd.getNumMethod(); i++) {
+            MethodSig sig = cd.getMethod(i).getMethodSig();
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // replace MethodImpl
+            cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
+        else
+            throw new ASTNodeNotFoundException("Delta " + "." + this.getDelta().getName() 
+                    + " wants to modify method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
+    }
+
+    public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+        FieldDecl myfield = this.getFieldDecl();
+
+        // in given ClassDecl: find FieldDecl that matches this
+        int found = -1;
+        for (int i = 0; i < cd.getNumField(); i++) {
+            FieldDecl field = cd.getField(i);
+            if (field.matches(myfield)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            cd.getFields().removeChild(found);
+        else
+            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+                    + " wants to remove field " + cd.qualifiedName() + "." + myfield + ", which was not found.");
+    }
+
+    public void AddFieldModifier.applyTo(ClassDecl cd) {
+        cd.addField(this.getFieldDecl().fullCopy());
+    }
+    
+    /**************************************************************************
+     * MethodSigModifiers are applied to Interfaces
+     * - add/remove method signatures
+     */
+    public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException;
+
+    public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException {
+        iface.addBody(this.getMethodSig().fullCopy());
+    }
+    public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException {
+        MethodSig mysig = this.getMethodSig();
+
+        // in given InterfaceDecl: find MethodSig that matches mysig
+        int found = -1;
+        for (int i = 0; i < iface.getNumBody(); i++) {
+            MethodSig sig = iface.getBody(i);
+            if (sig.matches(mysig)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0)
+            // remove MethodSig
+            iface.getBodys().removeChild(found);
+        else
+            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+                    + " wants to remove method signature " + iface.qualifiedName() + "." + mysig + ", which was not found.");
+    }
+    
+    
+}

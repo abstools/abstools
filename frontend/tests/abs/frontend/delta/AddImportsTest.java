@@ -16,7 +16,7 @@ import abs.frontend.typechecker.*;
 import abs.frontend.delta.exceptions.*;
 
 
-public class AddImportsTest extends DeltaFlattenerTest {
+public class AddImportsTest extends DeltaTest {
     
     @Test
     public void addQualImport() throws ASTNodeNotFoundException {
@@ -30,12 +30,12 @@ public class AddImportsTest extends DeltaFlattenerTest {
                 + "module D;"
                 + "import * from M1;"
                 + "import * from M2;"
-                + "delta D { "
+                
+                + "delta D;"
                 + "modifies class C implements M2.I { adds Unit m() {} } "
-                + "}"
         );
         ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
+        DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler needs to add an "import M2.I" to M1
@@ -57,7 +57,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
                 + "adds class C implements M.I { Unit m() {} }"
                 + "}"
         );
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
+        DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler doesn't need to add anything 
@@ -84,7 +84,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
                 + "modifies class C { adds Unit n() { I obj = new D.C2(); } }"
                 + "}"
         );
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
+        DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler needs to add an "import D.C2" to M
@@ -138,7 +138,7 @@ public class AddImportsTest extends DeltaFlattenerTest {
         );
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
-        DeltaDecl delta = (DeltaDecl) findDecl(model, "D", "D");
+        DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
 
         // the compiler should not add an import, because the delta cannot see I!
