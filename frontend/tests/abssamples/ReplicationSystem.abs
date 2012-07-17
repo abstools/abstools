@@ -546,7 +546,7 @@ implements InternalClient, ClientConnector {
 	}
 	
 	Unit becomesState(State state) {
-		assert contains(lookup(machine,this.state),state);
+		assert contains(lookupUnsafe(machine,this.state),state);
 		this.state = state;	
 	}
 	
@@ -1418,7 +1418,7 @@ implements ServerDataBase, ClientDataBase {
 		// then update the filestore of the current checkpoint
 		// else update the filestore of the next checkpoint
 		if (~update || more) {
-			Map<FileId,FileContent> updates = lookup(db,ccp);
+			Map<FileId,FileContent> updates = lookupUnsafe(db,ccp);
 			this.rootPath = updateDirWithContents(this.rootPath,updates);
 		}
 		
@@ -1542,7 +1542,7 @@ def Int cmdToint(Command command) =
 	fromJust(hasValue(commandMap(),command));
 
 // convert an integer to its corresponding command
-def Command intTocmd(Int i) = lookup(commandMap(),i);
+def Command intTocmd(Int i) = lookupUnsafe(commandMap(),i);
 	
 // Insert 'a' at position i of list. 
 def List<A> setAt<A>(List<A> list, A a, Int i) =
@@ -1782,9 +1782,10 @@ def Maybe<Either<File,Directory>> findFromEntryIn(Directory d, FileId id) =
 // find either a file or a directory (if it exists) given
 // the file name (suffix of a fully qualified path)
 def Maybe<Either<File,Directory>> findFromEntry(FileEntry f, FileId id) =
+    // TODO: use new 'lookup'
 	case contains(keys(f),id) {
 		True =>
-			case lookup(f,id) {
+			case lookupUnsafe(f,id) {
 				Content(s) => makeMaybeEitherValue(True,id,Content(s)); // leaf
 				Entries(e) => makeMaybeEitherValue(False,id,Entries(e)); // leaf
 			};
@@ -1838,9 +1839,10 @@ def Maybe<FileContent> getFromEntry(FileEntry entry, FileId qualified) =
 	let (List<String> paths) = split(qualified,fileSep()) in
 	case length(paths) > 0 {
 		True => 
+		    // TODO: use new 'lookup'
 			case contains(keys(entry),head(paths)) {
 				True => 
-					let (FileContent cc) = lookup(entry,head(paths)) in
+					let (FileContent cc) = lookupUnsafe(entry,head(paths)) in
 					case length(tail(paths)) {
 						0 => Just(cc); // at node
 						_ => case cc {
@@ -1881,9 +1883,10 @@ def FileEntry updateFile1(FileEntry fe, FileContent c, List<String> path) =
 		Nil => fe;
 		Cons(p,Nil) => put(fe,p,c);
 		Cons(p,ps) =>
+		    // TODO: use new 'lookup'
 			case contains(keys(fe),p) {
 				True => 
-					case lookup(fe,p) {
+					case lookupUnsafe(fe,p) {
 						Entries(dc) => put(fe,p,Entries(updateFile1(dc,c,ps))); //dir
 						_ => put(fe,p,create(ps,c));  //file 
 					};

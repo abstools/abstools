@@ -218,27 +218,26 @@ def Set<A> keys<A, B>(Map<A, B> map) =
   };
     
 /**
- * Returns the value associated with key 'k' in map 'ms'.
- * WILL FAIL if the key is not in the map.
- * NEW CODE should use lookupMaybe, or lookupUnsafe if you like driving
- *   with your hands free. OLD CODE should be adapted.
- * The SIGNATURE of this FUNCTION WILL CHANGE in the near future (see ticket #342).
+ * Returns the value associated with key 'k' in map 'ms', or 'Nothing'.
  */
-def B lookup<A, B>(Map<A, B> ms, A k) = lookupUnsafe(ms, k);
+def Maybe<B> lookup<A, B>(Map<A, B> ms, A k) = // retrieve from the map
+  case ms {
+     InsertAssoc(Pair(k, y), _) => Just(y);
+     InsertAssoc(_, tm) => lookup(tm, k);
+     EmptyMap => Nothing;
+  };
+
+/**
+ * Compatibility stub for #342. DEPRECATED!
+ */
+def Maybe<B> lookupMaybe<A, B>(Map<A, B> ms, A k) = lookup(ms, k);
 
 /**
  * Returns the value associated with key 'k' in map 'ms',
  * or fails if not present.
  */
 def B lookupUnsafe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
-  fromJust(lookupMaybe(ms,k));
-
-def Maybe<B> lookupMaybe<A, B>(Map<A, B> ms, A k) = // retrieve from the map
-  case ms {
-     InsertAssoc(Pair(k, y), _) => Just(y);
-     InsertAssoc(_, tm) => lookupMaybe(tm, k);
-     EmptyMap => Nothing;
-  };
+  fromJust(lookup(ms,k));
   
 /**
  * Returns the value associated with key 'k' in map 'ms', or the value 'd'
@@ -250,7 +249,7 @@ def B lookupDefault<A, B>(Map<A, B> ms, A k, B d) = // retrieve from the map
      InsertAssoc(_, tm) => lookupDefault(tm, k, d);
      EmptyMap => d;
   };
-  
+
 /**
  * Returns a map with all entries of 'map' plus an entry 'p',
  * which might override but not remove another entry with the same key.
@@ -541,14 +540,14 @@ implements DeploymentComponent {
     
     Unit decrementResources(String resourcename, Int amount) {
         assert(contains(keys(totals), resourcename));
-        assert(lookup(totals, resourcename) >= amount);
+        assert(lookupUnsafe(totals, resourcename) >= amount);
         totals = put(totals, resourcename,
-            lookup(totals, resourcename) - amount);
+            lookupUnsafe(totals, resourcename) - amount);
     }
     Unit incrementResources(String resourcename, Int amount) {
         assert(contains(keys(totals), resourcename));
         totals = put(totals, resourcename,
-            lookup(totals, resourcename) + amount);
+            lookupUnsafe(totals, resourcename) + amount);
     }
 }
 

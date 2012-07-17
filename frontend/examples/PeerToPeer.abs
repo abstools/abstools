@@ -50,11 +50,11 @@ interface Client {
 
 class DataBaseImpl(Map<Filename, File> db) implements DataBase {
   File getFile(Filename fId) {
-    return lookup(db, fId);
+    return lookupUnsafe(db, fId);
   }
 
   Int getLength(Filename fId) {
-    return length(lookup(db,fId));
+    return length(lookupUnsafe(db,fId));
   }
 
   Unit storeFile(Filename fId, File file) {

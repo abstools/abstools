@@ -44,7 +44,7 @@ public class StdLibTests extends SemanticTests {
 
     @Test
     public void mapLookup() {
-        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == 300; }");
+        assertEvalTrue("{ Map<Int, Int> map = map[Pair(1, 100), Pair(2, 200), Pair(3, 300)]; Bool testresult = lookup(map, 3) == Just(300); }");
     }
 
     @Test
