@@ -22,7 +22,7 @@ Timed Model Simulation in Maude
    over time.
 
 +---
-data Time = Time(Int);  // this is part of the ABS standard library
+data Time = Time(Int timeValue);  // this is part of the ABS standard library
 Time t = now();
 +---
 

@@ -341,29 +341,26 @@ def String toString<T>(T t) = builtin;
 // 
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
-data Time = Time(Int);
+data Time = Time(Int timeValue);
 def Int currentms() = builtin;
 def Time now() = Time(currentms());
-// CLEANUP: rename to timeValue
-def Int timeval(Time t) = case t { Time(v) => v; };
 
 // use this like so:
 //   Time t = now(); await timeDifference(now(), t) > 5;
 def Int timeDifference(Time t1, Time t2) =
-  abs(timeval(t2) - timeval(t1));
+  abs(timeValue(t2) - timeValue(t1));
 def Bool timeLessThan(Time t1, Time t2) =
-  timeval(t1) < timeval(t2);
+  timeValue(t1) < timeValue(t2);
 
-data Duration = Duration(Int) | InfDuration;
-def Int durationValue(Duration d) = case d { Duration(x) => x; };
+data Duration = Duration(Int durationValue) | InfDuration;
 def Bool isDurationInfinite(Duration d) = 
   case d { Duration(_) => False; InfDuration => True; };
 
 def Time addDuration(Time t, Duration d) =
-  Time(timeval(t) + durationValue(d));
+  Time(timeValue(t) + durationValue(d));
 
 def Time subtractDuration(Time t, Duration d) =
-  Time(timeval(t) - durationValue(d));
+  Time(timeValue(t) - durationValue(d));
 
 def Bool durationLessThan(Duration d1, Duration d2) =
   case d1 {
