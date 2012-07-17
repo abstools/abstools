@@ -35,6 +35,13 @@ aspect doPrettyPrinter {
                 d.doPrettyPrint(stream, formatter);
             }
         }
+        
+        for (DeltaDecl d : getDeltaDecls()) {
+          d.doPrettyPrint(stream, formatter);
+        }
+        if (hasProductLine()) {
+          getProductLine().doPrettyPrint(stream, formatter);
+        }
     }
     
     public void ModuleDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -109,9 +116,8 @@ aspect doPrettyPrinter {
     public void ProductLine.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("productline ");
         stream.print(getName());
-        formatter.beforeOpenBrace();
-        stream.print(" {");
-        formatter.afterOpenBrace();
+        stream.print(";");
+        formatter.afterStmt();
         boolean hasFeatures = false;
         if (getNumCoreFeature() > 0) {
         	stream.println();
@@ -135,10 +141,6 @@ aspect doPrettyPrinter {
         }
 
 		getDeltaClauseList().doPrettyPrint(stream, formatter);
-
-        formatter.beforeCloseBrace();
-        stream.print("}");
-        formatter.afterCloseBrace();
     }
     
     public void DeltaClause.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -467,11 +469,10 @@ aspect doPrettyPrinter {
             dpl.doPrettyPrint(stream, formatter, ",");
             stream.print(")");
         }
-        formatter.beforeOpenBrace();
-        stream.println("{");
-        formatter.afterOpenBrace();
-
+        stream.println(";");
+		formatter.afterStmt();
         getModuleModifierList().doPrettyPrint(stream, formatter);
+        // FIXME: USES
 
 //        List<FunctionalModifier> fms = getFunctionalModifierList();
 //        int mcount = fms.getNumChild();
@@ -487,11 +488,6 @@ aspect doPrettyPrinter {
 //        cms.doPrettyPrint(stream, formatter);
 
         stream.println();
-
-        formatter.beforeCloseBrace();
-        formatter.afterStmt();
-        stream.print("}");
-        formatter.afterCloseBrace();
     }
     
     public void RemoveClassModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {

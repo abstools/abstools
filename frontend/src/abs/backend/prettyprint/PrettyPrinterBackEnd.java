@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import abs.frontend.ast.Model;
@@ -18,6 +17,7 @@ import abs.frontend.tests.ABSFormatter;
 public class PrettyPrinterBackEnd extends Main {
     private File outputfile;
     private boolean force = false;
+    private static boolean debug = false;
     
     public static void main(final String... args) {
         try {
@@ -25,7 +25,7 @@ public class PrettyPrinterBackEnd extends Main {
         } catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
 
-            if (Arrays.asList(args).contains("-debug")) {
+            if (debug) {
                 e.printStackTrace();
             }
 
@@ -53,6 +53,8 @@ public class PrettyPrinterBackEnd extends Main {
                 }
             } else if (arg.equals("-f"))  {
                 force = true;
+            } else if (arg.equals("-debug")) {
+                debug = true;
             } else {
                 remainingArgs.add(arg);
             }
