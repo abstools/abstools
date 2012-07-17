@@ -367,9 +367,11 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 decl = getDeltaDecl(deltaspec);
             } else if (node instanceof ModifyClassModifier) {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
+                /* FIXME: fallout from #300
                 String mName = cm.moduleName();
                 ModuleDecl dm = cu.lookupModule(mName);
                 decl = dm.lookup(new KindedName(Kind.CLASS, cm.className()));
+                */
             } else if (node instanceof MethodSig) {
                 decl = node;
             }

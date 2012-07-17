@@ -109,9 +109,7 @@ public class UtilityFunctions {
 			return (m.getNumDecl() > 0) ||
 						(m.getNumExport() > 0) ||
 						(m.getNumImport() > 1) ||
-						(m.getNumProduct() > 0) ||
-						(m.hasBlock()) ||
-						(m.hasProductLine());
+						(m.hasBlock());
 		}else{
 			return false;
 		}

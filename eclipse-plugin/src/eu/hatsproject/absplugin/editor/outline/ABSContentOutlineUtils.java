@@ -356,14 +356,6 @@ public class ABSContentOutlineUtils {
 				decls.add(d);
 			}
 			
-			if (modDecl.getProductLineOpt().getNumChild() > 0) {
-				decls.add(modDecl.getProductLine());
-			}
-	
-			for (Product p : modDecl.getProductList()) {
-				decls.add(p);
-			}
-			
 			//If there is a main block, add it.
 			if (modDecl.hasBlock()){
 				decls.add(modDecl.getBlock());

@@ -278,7 +278,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	}
 	
 	private boolean hasChildren(ModuleDecl m){
-		return (m.getNumDecl() > 0) || (m.getNumImport() > 0) || (m.getNumExport() > 0) || (m.getNumProduct() > 0); 
+		return (m.getNumDecl() > 0) || (m.getNumImport() > 0) || (m.getNumExport() > 0); 
 	}
 	
 	private boolean hasChildren(ClassDecl c){
