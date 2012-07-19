@@ -430,124 +430,76 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DCData, DC, DeploymentComponent, thisDC, Cost, URL, CPUCapacity;
+export DC, DeploymentComponent, thisDC, Cost, DCData, InfCPU, CPU, capacity;
 import * from ABS.StdLib;
 
-data DCData = URL(String)
-            | CPUCapacity(Int);
+data DCData = InfCPU
+            | CPU(Int capacity);
 
-
-type Resourcename = String;
-
-// Utility functions.
-def Int sum(List<Int> list, Int n) =
-  if (n==0) 
+// Sums things up in percents (thus the * 100, which makes us not lose
+// precision.)
+def Int sumDivsN(List<Int> consumeds, List<Int> totals, Int n) =
+  if (n==0 || isEmpty(consumeds) || isEmpty(totals))
   then 0
-  else case list { Nil => 0; Cons(head,tail) => head + sum(tail, n-1);};
+  else (head(consumeds) * 100 / head(totals)) + sumDivsN(tail(consumeds), tail(totals), n-1);
 
-def Int average(List<Int> list, Int length) = 
-          sum(list, min(length(list),length)) / min(length(list),length);
-
-def Resourcename nameFor(DCData dcdata) =
-  case dcdata {
-      URL(s) => "URL";
-      CPUCapacity(_) => "CPU";
-  };
-
-def Int contentFor(DCData dcdata) =
-  case dcdata {
-      URL(s) => 0;
-      CPUCapacity(c) => c;
-  };
-
-def Map<Resourcename, Int> createDCInternalsMap(Set<DCData> datas) =
-  case datas {
-      EmptySet => EmptyMap;
-      Insert(dcdata, rest) => InsertAssoc(
-          Pair(nameFor(dcdata), contentFor(dcdata)), createDCInternalsMap(rest));
-      };
-
-def Map<String, Int> createTotals(Set<DCData> datas) =
-  case datas {
-      EmptySet => EmptyMap;
-      Insert(dcdata, rest) => InsertAssoc(Pair(nameFor(dcdata), contentFor(dcdata)), createTotals(rest));
-      };
-
-def Map<Resourcename, List<Int>> createDCHistory(Set<DCData> datas) =
-  case datas {
-      EmptySet => EmptyMap;
-      Insert(dcdata, rest) => InsertAssoc(
-          Pair(nameFor(dcdata), Nil), createDCHistory(rest));
-  };
-
-// Internal function, called by the Maude interpreter: replenish
-// resources in 'internalState' to the value given in 'totals'
-def Map<Resourcename, Int> updateDCInternalsForTimeAdvance(Map<Resourcename, Int> internalState, Map<Resourcename, Int> totals) =
-  case internalState {
-      EmptyMap => EmptyMap;
-      InsertAssoc(Pair(name, _), rest) => InsertAssoc(Pair(name, lookupUnsafe(totals, name)), updateDCInternalsForTimeAdvance(rest, totals));
-  };
-
-// Internal function, called by the Maude interpreter: update
-// 'history' lists for each resource
-def Map<Resourcename, List<Int>> updateDCHistoryForTimeAdvance(Map<Resourcename, List<Int>> history, Map<Resourcename, Int> internalState, Map<Resourcename, Int> totals) =
-  case internalState {
-      EmptyMap => history;
-      InsertAssoc(Pair(name, available), rest) =>
-          updateDCHistoryForTimeAdvance(put(history, name, Cons(lookupUnsafe(totals, name) - available, lookupDefault(history, name, Nil))), rest, totals);
-  };
-
+def Int averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
+  let (Int mins) = min(length, min(length(consumeds), length(totals)))
+  in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
-    Set<DCData> getConfiguration();
-    Int available(Resourcename resourcename);
-    Int load(Resourcename resourcename, Int periods);
-    Int total(Resourcename resourcename);
-    Unit transfer(DeploymentComponent target, String resourcename, Int amount);
-    Unit decrementResources(String resourcename, Int amount);
-    Unit incrementResources(String resourcename, Int amount);
+    DCData available();
+    Int load(Int periods);
+    DCData total();
+    Unit transfer(DeploymentComponent target, Int amount);
+    Unit decrementResources(Int amount);
+    Unit incrementResources(Int amount);
 }
 
-class DeploymentComponent (String description, Set<DCData> configuration)
+class DeploymentComponent (String description, DCData cpu)
 implements DeploymentComponent {
     Time creationTime = now();
-    Map<String, List<Int>> history = createDCHistory(configuration);
-    Map<String, Int> totals = createTotals(configuration);
-    Map<String, Int> internalState = createDCInternalsMap(configuration);
+    List<Int> history = Nil;      // updated by Maude interpreter
+    List<Int> totalhistory = Nil; // ditto; will stay empty for InfCPU case
+    Int internalState = 0;
     Bool initialized = False;
     {
         this.initialized = True;
     }
-    Set<DCData> getConfiguration() { return configuration; }
-
-    Int available(String resourcename) {
-        return lookupDefault(internalState, resourcename, 0);
+    DCData available() {
+        return if (cpu == InfCPU) then InfCPU else CPU(capacity(cpu) - internalState);
     }
-    Int load(String resourcename, Int periods) {
-        return (average(lookupDefault(history, resourcename, Nil), periods) * 100) / lookupDefault(totals, resourcename, 1);
+    Int load(Int periods) {
+        return if (cpu == InfCPU) then 0
+        else averageDivsN(history, totalhistory, periods);
     }
-    Int total(Resourcename resourcename) {
-        return lookupDefault(totals, resourcename, 0);
+    DCData total() {
+        return cpu;
     }
 
     // Transfer resources between deployment components.
-    // KLUDGE: load calculation will be invalid if resource totals have
+    // FIXME: load calculation will be invalid if resource totals have
     // been changed in the specified interval.
-    Unit transfer(DeploymentComponent target, String resourcename, Int amount) {
-        this.decrementResources(resourcename, amount);
-        target!incrementResources(resourcename, amount);
+    Unit transfer(DeploymentComponent target, Int amount) {
+        this.decrementResources(amount);
+        target!incrementResources(amount);
     }
     
-    Unit decrementResources(String resourcename, Int amount) {
-        assert(contains(keys(totals), resourcename));
-        assert(lookupUnsafe(totals, resourcename) >= amount);
-        totals = put(totals, resourcename,
-            lookupUnsafe(totals, resourcename) - amount);
+    Unit decrementResources(Int amount) {
+        if (cpu == InfCPU)
+            skip;
+        else {
+            Int capacity = capacity(cpu);
+            assert (capacity >= amount);
+            cpu = CPU(capacity - amount);
+        }
     }
-    Unit incrementResources(String resourcename, Int amount) {
-        assert(contains(keys(totals), resourcename));
-        totals = put(totals, resourcename,
-            lookupUnsafe(totals, resourcename) + amount);
+    Unit incrementResources(Int amount) {
+        if (cpu == InfCPU)
+            skip;
+        else {
+            cpu = CPU(capacity(cpu) + amount);
+        }
     }
 }
 

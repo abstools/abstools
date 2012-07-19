@@ -32,51 +32,58 @@ Simulating Resources Using the Maude Backend
 
 ** Resource Types
 
-   Deployment components are created with a set of resources, which are
-   of type <<<DCData>>>.  At the moment, this can be a cpu capacity and
-   an associated URL that can be used to express the "location" of a
-   deployment component.  (In a distributed implementation of ABS, the
-   URL can be used to specify the location of a new cog and its first
-   object.)
+   Deployment components carry a specific capacity, which is a possibly
+   infinite number of CPU "cycles".  The partial function <<<capacity>>>
+   returns the number of resources, if finite.
 
 +---
-data DCData = URL(String)
-            | CPUCapacity(Int);
+data DCData = InfCPU | CPU(Int capacity);
 +---   
 
 ** Deployment Components
 
-   Deployment components are modeled by an ABS class and interface
-   <<<DeploymentComponent>>> which is contained in the standard library.
-   DCs are initialized with resource data which can be used by the Maude
-   backend to simulate cpu usage and performance behavior of models.
+   A deployment component ("DC") is modeled by an ABS class and
+   interface <<<DeploymentComponent>>> which is contained in the
+   standard library in the module <<<ABS.DC>>>.  DCs are initialized
+   with resource data which is used by the Maude backend to simulate cpu
+   usage and performance behavior of models.
 
 +---
 interface DeploymentComponent {
-    Set<DCData> getConfiguration();
-    Int available(Resourcename resourcename);
-    Int load(Resourcename resourcename, Int periods);
-    Int total(Resourcename resourcename);
+    DCData available();
+    Int load(Int periods);
+    DCData total();
+    Unit transfer(DeploymentComponent target, Int amount);
+    Unit decrementResources(Int amount);
+    Unit incrementResources(Int amount);
 }
 
-class DeploymentComponent (String description, Set<DCData> configuration)
+class DeploymentComponent (String description, DCData cpu)
 implements DeploymentComponent {
     ...
 }
 +---
 
-   Some methods of <<<DeploymentComponent>>> use an argument of type
-   <<<Resourcename>>>, which is (at the moment) a string.  The only
-   meaningful value at the moment is <<<"CPU">>>.
+   * The call <<<available()>>> returns the number of currently
+     available resources.  (The value will change during execution,
+     hence code using this method should be aware of the obvious race
+     condition.)
 
-   * The call <<<available("CPU")>>> returns the number of currently
-     available resources.  (The value will change during execution.)
-
-   * The call <<<load("CPU", n)>>> returns the <average load> for the
+   * The call <<<load(n)>>> returns the <average load> for the
      last n time periods as an integer between 0 and 100.
 
-   * the method <<<total("CPU")>>> returns the number of resources per
-     time unit.
+   * The method <<<total()>>> returns the number of resources currently
+     available per time unit.
+
+   * The method <<<transfer(target, amount)>>> transfers a number of
+     resources from the current DC to <<<target>>>.  If either the
+     current or the target DC have an infinite number of resources,
+     their respective values are not changed.
+
+   * The methods <<<decrementResources>>> and <<<incrementResources>>>
+     are used to implement <<<transfer>>>, but can also used on their
+     own to increment or decrement the amount of resources of the
+     current deployment component.
 
 
 ** Using Deployment Components
@@ -93,10 +100,10 @@ interface Server { ... }
 class ServerImp implements Server { ... }
 
 {
-  DeploymentComponent remote = new DeploymentComponent("remote",
-      set[URL(http://192.168.50.12:6002/)]);
-  [DC: remote] Server x = new cog ServerImp();  // running in dc `remote'
-  Server y = new cog ServerImp();               // running in current dc
+  DeploymentComponent machine = new DeploymentComponent("remote",
+      CPU(20));
+  [DC: machine] Server x = new cog ServerImp();  // running in dc `machine'
+  Server y = new cog ServerImp();                // running in current DC
 }
 +---
 
@@ -109,11 +116,9 @@ def DeploymentComponent thisDC() = builtin;
    The <<<thisDC()>>> "function" returns the current deployment
    component, i.e., the one that was given as annotation at the <<<new
    cog>>> object instantiation.  <<<thisDC>>> returns <<<null>>> if no
-   deployment component was specified.
-
-+---
-  DCData currentData = thisDC().getConfiguration();
-+---
+   deployment component was specified.  (Due to implementation issues,
+   models containing <<<thisDC()>>> cannot be currently compiled on the
+   Java platform.)
 
 ** Expressing statement costs
 
@@ -139,6 +144,3 @@ def DeploymentComponent thisDC() = builtin;
 
    * The <<<thisDC>>> function is currently undefined in the Java
      backend and will lead to a compile-time error.
-
-   * The <<<[DC: dc]>>> and <<<[Cost: x]>>> annotations are not
-     currently type-checked.

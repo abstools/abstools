@@ -849,8 +849,7 @@ mod ABS-EVAL is
   --- Executableness
   *** Do we have enough resources?
   eq executable([COST]ST:Stmt ; SL, S, CN, MAC)
-  = hasEnoughResources(findDCStatus(S['.comp], CN), "CPU",
-      eval(COST, S, CN, MAC) asInt)
+  = hasEnoughResources(S['.comp], CN, eval(COST, S, CN, MAC) asInt)
   and executable(ST:Stmt ; SL, S, CN, MAC) .
   eq executable(await E ; SL, S, CN, MAC) = eval(E, S, CN, MAC) asBool .
   *** Note that "get" is always deemed to be executable, so that it can block
@@ -862,9 +861,8 @@ mod ABS-EVAL is
   --- execution, i.e., the corresponding process may be waken up.
   *** Check resources first.
   eq schedulable([COST]ST:Stmt ; SL, S, CN, MAC)
-  = hasEnoughResources(findDCStatus(S['.comp], CN), "CPU",
-      eval(COST, S, CN, MAC) asInt)
-  and schedulable(ST:Stmt ; SL, S, CN, MAC) .
+  = hasEnoughResources(S['.comp], CN, eval(COST, S, CN, MAC) asInt)
+    and schedulable(ST:Stmt ; SL, S, CN, MAC) .
   eq schedulable(get(QID ; A') ; SL , S, CN, MAC)
   = completed(S[QID], CN) .
   eq schedulable(get(@ QID ; A') ; SL , (SS :: S), CN, MAC)
@@ -946,40 +944,38 @@ mod ABS-EVAL is
   *** of names and numbers once we properly support multiple resource types.
   *** Result type is Expr not Data so that we can advance time on insufficient
   *** resources.
-  op consumeDCResource : Data String Nat -> Expr .
-  ceq consumeDCResource("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, N)
-  = "ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[sd(RA:Nat, N)]] :: D]
-  if RA:Nat >= N .
-  eq consumeDCResource("ABS.StdLib.EmptyMap"[emp], RN:String, N)
-  = "ABS.StdLib.EmptyMap"[emp] .
-  ceq consumeDCResource("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, N)
-  = "ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: consumeDCResource(D, RN:String, N)]
-  if RN:String =/= RN':String .
+  op consumeDCResource : Data Nat -> Expr .
+  eq consumeDCResource("int"[RA:Nat], N)
+  = "int"[RA:Nat + N] .
 
-  op findDCStatus : Oid Configuration -> Data .
+  op findDC : Oid Configuration -> Object .
+  eq findDC(DC:Oid, < DC:Oid : 'ABS.DC.DeploymentComponent
+      | Cog: CG:Cogid, Att: S, Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN)
+  = < DC:Oid : 'ABS.DC.DeploymentComponent
+      | Cog: CG:Cogid, Att: S, Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > .
+
+  op findDCStatus : Oid Configuration -> DataList .
   eq findDCStatus(DC:Oid,
       < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: ('internalState |-> IS:Data, S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN)
-  = IS:Data .
+      | Cog: CG:Cogid, Att: ('cpu |-> CPU:Data, 'internalState |-> IS:Data, S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN)
+  = CPU:Data :: IS:Data .
 
-  op nResources : Data String Nat -> Nat .
-  eq nResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
-  = RA:Nat .
-  ceq nResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
-  = nResources(D, RN:String, CO:Nat)
-  if RN:String =/= RN':String .
-  *** The DC doesn't have the resource - return exactly what's asked for
-  eq nResources("ABS.StdLib.EmptyMap"[emp], RN:String, CO:Nat) = CO:Nat .
+  op hasEnoughResources : Oid Configuration Nat -> Bool .
+  eq hasEnoughResources(DC:Oid,
+      < DC:Oid : 'ABS.DC.DeploymentComponent
+      | Cog: CG:Cogid, Att: ('cpu |-> "ABS.DC.InfCPU"[emp], S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN, CO:Nat)
+  = true .
+  eq hasEnoughResources(DC:Oid,
+      < DC:Oid : 'ABS.DC.DeploymentComponent
+      | Cog: CG:Cogid, Att: ('cpu |-> "ABS.DC.CPU"["int"[RA:Nat]], 'internalState |-> "int"[STATE:Nat], S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN, CO:Nat)
+  = CO:Nat + STATE:Nat <= RA:Nat  .
 
+  op getFreeResources : Data Data Nat -> Nat .
+  eq getFreeResources("int"[RA:Nat], "ABS.DC.CPU"["int"[TOTAL:Nat]], CO:Nat) = sd(TOTAL:Nat, RA:Nat) .
+  *** The DC is unlimited -- return exactly what's asked for
+  eq getFreeResources("int"[RA:Nat], "ABS.DC.InfCPU"[emp], CO:Nat)
+  = CO:Nat .
 
-  op hasEnoughResources : Data String Nat -> Bool .
-  eq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN:String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
-  = RA:Nat > 0 or CO:Nat == 0 .
-  *** The DC doesn't have the resource - just go ahead.
-  eq hasEnoughResources("ABS.StdLib.EmptyMap"[emp], RN:String, CO:Nat) = true .
-  ceq hasEnoughResources("ABS.StdLib.InsertAssoc"["ABS.StdLib.Pair"["str"[RN':String] :: "int"[RA:Nat]] :: D], RN:String, CO:Nat)
-  = hasEnoughResources(D, RN:String, CO:Nat)
-  if RN:String =/= RN':String .
 endm
 
 mod ABS-MSG-TRANSPORT is
@@ -1193,7 +1189,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < 'main : Cog | Object: ob('main, 0) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: 'main,
-      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "ABS.StdLib.EmptySet"[emp], 'creationTime |-> "ABS.StdLib.Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "ABS.StdLib.EmptyMap"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totals |-> "ABS.StdLib.EmptyMap"[emp],
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "ABS.StdLib.EmptySet"[emp], 'creationTime |-> "ABS.StdLib.Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "int"[0], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'cpu |-> "ABS.DC.InfCPU"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: 'main,
       Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
@@ -1208,19 +1204,19 @@ mod ABS-MACHINE-BASICS-COMMON is
     < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
+      Att: 'cpu |-> CPU:Data, 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   => < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: ('.comp |-> ODC, S), Pr: { L | ["int"[COSTNAT - MINCOST]]ST:Stmt ; SL }, PrQ: W, Lcnt: F >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
-      Att: 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
+      Att: 'cpu |-> CPU:Data, 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1,
       Pr: P1, PrQ: W1, Lcnt: F1 >
   if "int"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random]))
-      /\ DCRES := nResources(STATE, "CPU", COSTNAT)
+      /\ DCRES := getFreeResources(STATE, CPU:Data, COSTNAT)
       /\ DCRES > 0
       /\ MINCOST := min(COSTNAT, DCRES)
-      /\ STATE':Data := consumeDCResource(STATE, "CPU", MINCOST)
+      /\ STATE':Data := consumeDCResource(STATE, MINCOST)
   [label consume-resources] .
   
 
@@ -1420,14 +1416,15 @@ mod ABS-MACHINE-BASICS-TIMED is
   *** waiting processes.
   op advance : Configuration Nat -> Configuration .
   eq advance(< O : 'ABS.DC.DeploymentComponent
-                 | Cog: CG, Att: ('history |-> HI:Data, 'internalState |-> IS:Data, 'totals |-> TO:Data, S),
+                 | Cog: CG, Att: ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "int"[IS:Nat], 'totalhistory |-> THI:Data, S),
                    Pr: P, PrQ: W, Lcnt: F > CN, T)
   =
     < O : 'ABS.DC.DeploymentComponent
         | Cog: CG, Att: (
-            'history |-> eval(("ABS.DC.updateDCHistoryForTimeAdvance"(HI:Data :: IS:Data :: TO:Data)), noSubst, none, noSubst),
-            'internalState |-> eval(("ABS.DC.updateDCInternalsForTimeAdvance"(IS:Data :: TO:Data)), noSubst, none, noSubst),
-            'totals |-> TO:Data,
+            'cpu |-> CPU:Data,
+            'history |-> "ABS.StdLib.Cons"["int"[IS:Nat] :: HI:Data],
+            'internalState |-> "int"[0],
+            'totalhistory |-> advanceTotalsHistory(CPU:Data, THI:Data),
             S),
           Pr: advanceActiveProcess(P, S, T),
           PrQ: advanceProcesses(W, S, T), Lcnt: F >
@@ -1439,6 +1436,10 @@ mod ABS-MACHINE-BASICS-TIMED is
     advance(CN, T)
   if C =/= 'ABS.DC.DeploymentComponent .
   eq advance(CN, T) = CN [owise] .
+
+  op advanceTotalsHistory : Data Data -> Data .
+  eq advanceTotalsHistory("ABS.DC.InfCPU"[emp], THI:Data) = THI:Data .
+  eq advanceTotalsHistory("ABS.DC.CPU"[T:Data], THI:Data) = "ABS.StdLib.Cons"[T:Data :: THI:Data] .
 
   op reduceDeadline : Subst Nat -> Subst .
   eq reduceDeadline(L, T) = update('.deadline, eval("ABS.StdLib.subtractFromDuration"((L['.deadline] :: "int"[T])), noSubst, none, noSubst), L) .
