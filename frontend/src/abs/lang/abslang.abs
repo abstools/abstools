@@ -448,9 +448,9 @@ def Int averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
-    DCData available();
-    Int load(Int periods);
-    DCData total();
+    [Atomic] DCData available();
+    [Atomic] Int load(Int periods);
+    [Atomic] DCData total();
     Unit transfer(DeploymentComponent target, Int amount);
     Unit decrementResources(Int amount);
     Unit incrementResources(Int amount);
@@ -466,14 +466,14 @@ implements DeploymentComponent {
     {
         this.initialized = True;
     }
-    DCData available() {
+    [Atomic] DCData available() {
         return if (cpu == InfCPU) then InfCPU else CPU(capacity(cpu) - internalState);
     }
-    Int load(Int periods) {
+    [Atomic] Int load(Int periods) {
         return if (cpu == InfCPU) then 0
         else averageDivsN(history, totalhistory, periods);
     }
-    DCData total() {
+    [Atomic] DCData total() {
         return cpu;
     }
 
