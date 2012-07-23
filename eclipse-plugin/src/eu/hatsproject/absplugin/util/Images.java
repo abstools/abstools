@@ -120,9 +120,10 @@ public abstract class Images {
 	 */
 	public final static Image CLOSED_PROJECT_IMAGE = createStandardIcon(org.eclipse.ui.ide.IDE.SharedImages.IMG_OBJ_PROJECT_CLOSED);
 	/**
-	 * The standard icon for error markers
+	 * The standard icon for error markers.
+	 * [stolz] Workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=383810 on Juno/4.2.0
 	 */
-	public final static Image ERROR_MARKER = createStandardIcon(ISharedImages.IMG_DEC_FIELD_ERROR);
+	public final static Image ERROR_MARKER = createIcon("error_co.gif");
 	/**
 	 * The standard icon for folder markers
 	 */
