@@ -813,6 +813,7 @@ Stmt stmt_without_annotations =
        var_or_field_ref.r ASSIGN exp.e        {: return new AssignStmt(new List(),r,e) ; :}
 	|  AWAIT guard  {: return new AwaitStmt(new List(), guard) ; :}
 	|  SKIP         {: return new SkipStmt(new List()) ; :}
+	|  MOVECOGTO data_exp  {: return new MoveCogToStmt(new List(), data_exp) ; :}
 	|  SUSPEND      {: return new SuspendStmt(new List()) ; :}
     |  DURATION LPAREN data_exp.min COMMA data_exp.max RPAREN {: return new DurationStmt(new List(), min, max) ; :}
     |  RETURN exp.e        {: return new ReturnStmt(new List(),e) ; :}

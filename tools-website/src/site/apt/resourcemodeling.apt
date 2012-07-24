@@ -140,6 +140,13 @@ def DeploymentComponent thisDC() = builtin;
    complex expression will take more time on a real machine than
    assignment of a constant).
 
+** Changing the deployment component
+
+   A statement <<<movecogto dc;>>> transfers the current cog and all its
+   objects to the deployment component <<<dc>>>.  On backends without
+   resource modeling features (Java, Scala) this translates to a
+   <<<skip>>>.
+
 * Future Work
 
    * The <<<thisDC>>> function is currently undefined in the Java

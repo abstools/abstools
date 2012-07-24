@@ -108,6 +108,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "suspend"     { return sym(Terminals.SUSPEND); }
  "duration"    { return sym(Terminals.DURATION); }
  "new"         { return sym(Terminals.NEW); }
+ "movecogto"   { return sym(Terminals.MOVECOGTO); }
  "this"        { return sym(Terminals.THIS); }
  "core"        { return sym(Terminals.CORE); }
  "original"    { return sym(Terminals.ORIGINAL); }

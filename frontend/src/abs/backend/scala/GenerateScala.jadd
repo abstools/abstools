@@ -766,6 +766,11 @@ aspect GenerateScala {
 		return false;
 	}
 	
+	public boolean MoveCogToStmt.generateScala(String prefix, PrintWriter writer) {
+		writer.println(prefix + "{}");
+		return false;
+	}
+
 	public boolean DurationStmt.generateScala(String prefix, PrintWriter writer) {
 		writer.println(prefix + "{}");
 		return false;

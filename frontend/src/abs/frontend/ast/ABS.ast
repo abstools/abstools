@@ -146,6 +146,7 @@ AwaitStmt: Stmt ::= Guard;
 SkipStmt: Stmt;
 SuspendStmt: Stmt;
 DurationStmt: Stmt ::= Min:PureExp Max:PureExp;
+MoveCogToStmt: Stmt ::= Target:PureExp;
 ReturnStmt: Stmt ::= RetExp:Exp;
 ExpressionStmt: Stmt ::= Exp:Exp;
 AssertStmt: Stmt ::= Condition:PureExp;

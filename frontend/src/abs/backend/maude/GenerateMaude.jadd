@@ -649,6 +649,13 @@ aspect GenerateMaude {
         stream.print("skip ");
     }
 
+    public void MoveCogToStmt.generateMaude(PrintStream stream) {
+        MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
+        stream.print("movecogto(");
+        this.getTarget().generateMaude(stream);
+        stream.print(") ");
+    }
+
     public void AssignStmt.generateMaude(PrintStream stream) {
         int randomcount = getValue().numberOfRandom(new TreeSet<String>());
         MaudeCompilerHelper.emitPushRandomInst(stream, randomcount);

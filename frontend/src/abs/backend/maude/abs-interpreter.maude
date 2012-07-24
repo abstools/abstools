@@ -489,6 +489,7 @@ mod ABS-STATEMENT is
   op $call(_;_;_;_;_;_) : Label Oid Mid DataList Bool Data -> Stmt [ctor format (r d o r o r o r o r o r o r o)] .
   op get(_;_)  : Vid Vid -> Stmt [ctor format (b d o b o b o)] .
   op get(_;_)  : Label Vid -> Stmt [ctor ditto] .
+  op movecogto(_) : Expr -> Stmt [ctor format (c d o b o)] .
 
   op return(_) : Expr -> Stmt [ctor format (c d o b o)] .
   op $mark(_) : Expr -> Stmt [ctor format (r d o r o)] .
@@ -1037,6 +1038,28 @@ mod ABS-MSG-TRANSPORT is
 
 endm
 
+mod ABS-MOVE-COG is
+  protecting ABS-EVAL .
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var P : Process .
+  var CG : Cogid .
+  var CONF : Configuration .
+  vars DCID DCID1 : Oid .
+
+  *** Move all objects of CG from DCID1 to DCID.
+  op moveCog : Configuration Cogid Oid -> Configuration .
+
+  eq moveCog(< O : C | Cog: CG, Att: ('.comp |-> DCID1, S), Pr: P, PrQ: W, Lcnt: F >
+    CONF,
+    CG, DCID)
+  =
+    < O : C | Cog: CG, Att: ('.comp |-> DCID, S), Pr: P, PrQ: W, Lcnt: F >
+    moveCog(CONF, CG, DCID) .
+
+  eq moveCog(CONF, CG, DCID) = CONF [owise] .
+
+endm
 
 *** The machine.
 ***
@@ -1598,6 +1621,61 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
     [label field-assignment] .
 endm
 
+mod ABS-STMT-GOTO-RL is
+  protecting ABS-EVAL .
+  protecting ABS-MOVE-COG .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+  var CONF : Configuration .
+  var CG : Cogid .
+  var T : Int .
+  vars LIM RAND : Nat .
+
+  rl
+    {
+      < T : Clock | Limit: LIM, Random: RAND >
+      < O : C | Cog: CG, Att: S, Pr: { L | movecogto(E) ; SL }, PrQ: W, Lcnt: F >
+      CONF
+    }
+  =>
+    {
+      < T : Clock | Limit: LIM, Random: RAND >
+      moveCog(
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        CONF, CG, eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
+    }
+    [label goto] .
+endm
+mod ABS-STMT-GOTO-EQ is
+  protecting ABS-EVAL .
+  protecting ABS-MOVE-COG .
+
+  var O : Oid .        var C : Cid .    vars S L : Subst .
+  var SL : StmtList .  var W : MProc .  var F : Nat .
+  var E : Expr .
+  var CONF : Configuration .
+  var CG : Cogid .
+  var T : Int .
+  vars LIM RAND : Nat .
+
+  eq
+    {
+      < T : Clock | Limit: LIM, Random: RAND >
+      < O : C | Cog: CG, Att: S, Pr: { L | movecogto(E) ; SL }, PrQ: W, Lcnt: F >
+      CONF
+    }
+  =
+    {
+      < T : Clock | Limit: LIM, Random: RAND >
+      moveCog(
+        < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+        CONF, CG, eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
+    }
+    [label goto] .
+endm
+
 *** The conditional (if_then_else) statement.
 mod ABS-STMT-COND-RL is
   protecting ABS-EVAL .
@@ -2157,6 +2235,7 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-MACHINE-BASICS-RL .
   protecting ABS-STMT-SKIP-RL .
   protecting ABS-STMT-ASSIGN-RL .
+  protecting ABS-STMT-GOTO-RL .
   protecting ABS-STMT-COND-RL .
   protecting ABS-STMT-WHILE-RL .
   protecting ABS-STMT-SUSPEND-RL .
@@ -2187,6 +2266,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-MACHINE-BASICS-TIMED .
   protecting ABS-STMT-SKIP-EQ .
   protecting ABS-STMT-ASSIGN-EQ-TIMED .
+  protecting ABS-STMT-GOTO-EQ .
   protecting ABS-STMT-COND-EQ-TIMED .
   protecting ABS-STMT-WHILE-EQ .
   protecting ABS-STMT-SUSPEND-EQ .

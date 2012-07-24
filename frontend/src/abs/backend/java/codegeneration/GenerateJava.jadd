@@ -432,6 +432,11 @@ aspect GenerateJava {
       stream.println(indent+";");
     }
 
+    public void MoveCogToStmt.generateJava(String indent, PrintStream stream) {
+      super.generateJava(indent,stream);
+      stream.println(indent+";");
+    }
+
     public void SuspendStmt.generateJava(String indent, PrintStream stream) {
       super.generateJava(indent,stream);
       stream.println(indent+JavaBackendConstants.ABSRUNTIME+".suspend();");
