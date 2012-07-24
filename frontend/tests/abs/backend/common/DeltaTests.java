@@ -18,7 +18,7 @@ public class DeltaTests extends SemanticTests {
 
     static String INTERFACE_I = "interface I { Int m(); } ";
     static String CLASS_C = "class C implements I { Int m() { return 1; } } ";
-    static String DELTA_D = "delta D {modifies C {modifies Int m() { return 2; }}} ";
+    static String DELTA_D = "delta D; modifies class BackendTest.C {modifies Int m() { return 2; }} ";
     static String CALL_ORIGINAL = "{Bool testresult = False; Int s = 0; I i; i = new C(); s = i.m(); testresult = s == 1;}";
     static String CALL_DELTA = "{Bool testresult = False; Int s = 0; I i; i = new C(); s = i.m(); testresult = s == 2;}";
 

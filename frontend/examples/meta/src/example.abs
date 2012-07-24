@@ -1,5 +1,20 @@
 module M;
 import * from ABS.Meta;
+import Foreign from ABS.FLI;
+
+//---- IO via FFI ------------------------------------------------------
+interface IO {
+    Unit println(String s);
+}
+
+[Foreign]
+class IO implements IO {
+    List<String> history = Nil;
+    Unit println(String s) { // this method is overridden IO_fli.java
+        history = appendright(history, s);
+    }
+}
+//-----------------------------------------------------------------------
 
 interface I { 
     Int getFieldX();
@@ -32,6 +47,7 @@ class MyClass(Int fieldX, String fieldS) implements I {
     ObjectMirror m = reflect(o1);
     
     String s = m.getClassName();
-    m.getClass();
+    Class c = m.getClass();
     
+    io.println(s);
 }

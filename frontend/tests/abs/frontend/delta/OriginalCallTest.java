@@ -52,6 +52,35 @@ public class OriginalCallTest extends DeltaTest {
     }
 
     @Test
+    public void originalCall2() throws ASTNodeNotFoundException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I { Int one() { return 1; } }"
+                + "delta D; "
+                + "modifies class M.C { modifies Int one() { Int x = original(); return x + 1; } }"
+        );
+    
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertEquals(1, cls.getMethods().getNumChild());
+        
+        DeltaDecl delta1 = findDelta(model, "D");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1)));
+
+        assertEquals(2, cls.getMethods().getNumChild());
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("one"));
+        // make sure method has the right body
+        assertTrue(cls.getMethod(0).getBlock().getStmt(1) instanceof ReturnStmt);
+        
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("one$ORIGIN_core"));
+        // make sure method has the right body
+        assertTrue(cls.getMethod(1).getBlock().getStmt(0) instanceof ReturnStmt);
+
+    }
+    
+    
+    @Test
     public void oneDeltaMultipleCalls() throws ASTNodeNotFoundException {
         Model model = assertParseOk(
                 "module M;"
