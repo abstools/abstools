@@ -57,8 +57,7 @@ public class DynamicJavaGeneratorHelper {
     private static final String FLI_METHOD_PREFIX = "fli_";
 
     public static void generateHelpLine(ASTNode<?> node, PrintStream stream) {
-        Position pos = new Position(node);
-        stream.println("// " + pos.getPositionString());
+        JavaGeneratorHelper.generateHelpLine(node, stream);
     }
 
     public static void generateArgs(PrintStream stream, List<PureExp> args) {
@@ -304,7 +303,13 @@ public class DynamicJavaGeneratorHelper {
 
 
     public static void generateClassDecl(PrintStream stream, final ClassDecl decl) {
-        new ClassDeclGenerator(stream, decl).generate();
+        if (decl.isForeign()) {
+            // generate standard code
+            new abs.backend.java.codegeneration.ClassDeclGenerator("", stream, decl).generate();
+        } else {
+            // generate dynamic/untyped code
+            new ClassDeclGenerator(stream, decl).generate();
+        }
     }
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {
@@ -370,12 +375,28 @@ public class DynamicJavaGeneratorHelper {
     }
 
     public static void generateFLIMethod(PrintStream stream, MethodImpl m) {
-        stream.println("public " + ABSValue.class.getName() + " " + FLI_METHOD_PREFIX + "exec(final " + ABSDynamicObject.class.getName() + " thisP, " + ABSValue.class.getName() + "... args) {");
-        stream.println("// not implemented yet...");
-        stream.println("}");
-    
 //        JavaGeneratorHelper.generateMethodSig("", stream, m.getMethodSig(), false, "", FLI_METHOD_PREFIX);
 //        JavaGeneratorHelper.generateMethodBody("", stream, m, true);
+        
+        MethodSig sig = m.getMethodSig();
+        DynamicJavaGeneratorHelper.generateHelpLine(sig ,stream);
+        stream.print("public ");
+//        if (async) {
+//            prefix = "async_";
+//            stream.print(ABSFut.class.getName()+"<");
+//        }
+        
+        sig.getReturnType().generateJavaDynamic(stream);
+        
+//        if (async)
+//            stream.print(">");
+        stream.print(" " + FLI_METHOD_PREFIX + JavaBackend.getMethodName(sig.getName()));
+        DynamicJavaGeneratorHelper.generateParams(stream, sig.getParams());
+
+        // TODO now generate method body
+        stream.println(" {");
+        stream.println("// FIXME body is not yet generated...");
+        stream.println("}");
     }
 
     /**

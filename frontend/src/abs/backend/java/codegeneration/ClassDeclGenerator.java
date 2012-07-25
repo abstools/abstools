@@ -29,7 +29,7 @@ public class ClassDeclGenerator extends CodeGenerator {
     private final ClassDecl decl;
     private final String className;
 
-    ClassDeclGenerator(String indent, PrintStream stream, ClassDecl decl) {
+    public ClassDeclGenerator(String indent, PrintStream stream, ClassDecl decl) {
         super(indent, stream);
         this.decl = decl;
         className = JavaBackend.getClassName(decl.getName());

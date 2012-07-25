@@ -71,6 +71,7 @@ public class ClassDeclGenerator {
 
         generateConstructor();
 
+        // methods are mapped to static inner classes
         for (MethodImpl m : decl.getMethods()) {
             stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
             stream.println("private static " + ABSClosure.class.getName() + " instance;");
@@ -80,6 +81,11 @@ public class ClassDeclGenerator {
             stream.println("}");
             m.generateJavaDynamic(stream);
             stream.println("}");
+
+            // fli methods are mapped to methods...
+            if (m.isForeign()) {
+                DynamicJavaGeneratorHelper.generateFLIMethod(stream, m);
+            }
         }
 
         // generateFieldNamesMethod();
@@ -93,6 +99,7 @@ public class ClassDeclGenerator {
         generateNewObjectMethods();
         // generateMethods();
         stream.println("}");
+        
     }
 
     private void generateNewObjectMethods() {
