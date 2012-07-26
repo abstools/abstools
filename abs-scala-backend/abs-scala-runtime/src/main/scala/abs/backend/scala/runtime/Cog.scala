@@ -15,7 +15,7 @@ import akka.actor.Props
 
 object Cog {
   sealed abstract class Message
-  case class Run(block: () => Any @suspendable) extends Message
+  case class Run(name: String, block: () => Any @suspendable) extends Message
   case object Work extends Message
   case class Done(finished: Boolean) extends Message
   case object Blocked extends Message
@@ -29,9 +29,10 @@ object Cog {
 }
 
 class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[ActorRef]] {
-  //private val log = Logging(context.system, this)
   import Cog._
   import FSM._
+  
+  private val taskCounter = new java.util.concurrent.atomic.AtomicLong(0);
   
   private var tasks: List[ActorRef] = Nil
   
@@ -48,27 +49,27 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
   }
       
   private def newobj[T <: Actor](clazz: Class[T], args: Seq[Any]) {
-    log.debug("[%s] creating new concurrent object for %s".format(self, clazz))
+    log.debug("creating new concurrent object for %s".format(clazz))
     
     val actor: ActorRef = context.actorOf(Props({
       val obj = clazz.getConstructor(classOf[ActorRef]).newInstance(self)
       // does it have an init method?
       try {
-        log.debug("[%s] invoking init method with args %s".format(self, args.mkString(", ")))
+        log.debug("invoking init method with args %s".format(args.mkString(", ")))
     	clazz.getMethod("init", classOf[Array[Any]]).invoke(obj, args.toArray)
       } catch {
         case e: NoSuchMethodException => // nope
-          log.debug("[%s] no init method in class".format(self))
+          log.debug("no init method in class")
       }
       obj
-    }))
+    }), name = "%s%d".format(clazz.getName, taskCounter.incrementAndGet))
     
     actor ! MyObject.Run
     sender ! actor
   }
   
-  private def newtask(block: () => Any @suspendable) {
-    val task = context.actorOf(Props(new Task(self, block)))
+  private def newtask(name: String, block: () => Any @suspendable) {
+    val task = context.actorOf(Props(new Task(self, block)), name = name)
     tasks ::= task
     
     sender ! task
@@ -84,23 +85,23 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
   
   when(IDLE) {
     case Event(Work, _) =>
-      log.debug("[%s] Awakened, looking for something to do".format(self))
+      log.debug("Awakened, looking for something to do")
       // pick something that can run
       pickTask match {
         case None =>
-          log.debug("[%s] Nothing to do, sleeping".format(self))
+          log.debug("Nothing to do, sleeping")
           stay
         case Some(task) =>
-          log.debug("[%s] Activating task %s".format(self, task))
+          log.debug("Activating task %s".format(task))
           //task ! Task.Run(remoteSelfRef)
           task ! Task.Run
           goto(BUSY) using Some(task)
       }
             
-    case Event(Run(block), _) =>
-      log.debug("[%s] New task received (while passive)".format(self))
+    case Event(Run(name, block), _) =>
+      log.debug("New task received (while passive)")
       
-      newtask(block)
+      newtask(name, block)
       self ! Work
       stay
       
@@ -115,13 +116,13 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
   
   when(BUSY) {
     case Event(Work, _) => // ignore
-      log.debug("[%s] Work received while already working".format(self))
+      log.debug("Work received while already working")
       stay
       
-    case Event(Run(block), _) =>
-      log.debug("[%s] New task received (while working)".format(self))
+    case Event(Run(name, block), _) =>
+      log.debug("New task received (while working)")
       
-      newtask(block)
+      newtask(name, block)
       stay
       
     case Event(New(clazz, args), _) =>
@@ -133,7 +134,7 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
       stay
       
     case Event(Done(finished), Some(task)) =>
-      log.debug("[%s] Task finished, awakening myself".format(self))
+      log.debug("Task finished, awakening myself")
       
       if (finished) 
         tasks -= task
@@ -142,13 +143,13 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
       goto(IDLE) using None
       
     case Event(Blocked, t) =>
-      log.debug("[%s] COG blocked by task %s".format(self, t))
+      log.debug("COG blocked by task %s".format(t))
       goto(BLOCKED)
   }
   
   when(BLOCKED) {
     case Event(Work, Some(task)) ⇒
-      log.debug("[%s] Work received while blocked, checking task".format(self))
+      log.debug("Work received while blocked, checking task")
 
       implicit val timeout = Timeout(5 seconds)
       
@@ -159,9 +160,9 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
           stay
       }
       
-    case Event(Run(block), _) =>
-      log.debug("[%s] New task received (while blocked)".format(self))
-      newtask(block)
+    case Event(Run(name, block), _) =>
+      log.debug("New task received (while blocked)")
+      newtask(name, block)
       stay
       
     case Event(New(clazz, args), _) =>

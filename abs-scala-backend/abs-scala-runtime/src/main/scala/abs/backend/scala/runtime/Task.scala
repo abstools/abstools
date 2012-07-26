@@ -13,6 +13,7 @@ import akka.pattern.ask
 import akka.dispatch.Await
 import akka.util.Timeout
 import akka.util.duration._
+import akka.actor.ActorLogging
 
 object Runner {
   sealed abstract class Message
@@ -21,9 +22,7 @@ object Runner {
   val currentRunner: ThreadLocal[Runner[_]] = new ThreadLocal()
 }
 
-class Runner[A](private val cog: ActorRef, private val task: ActorRef, private val f: () => A @suspendable) extends Actor {
-  private val log = Logging(context.system, this)
-  
+class Runner[A](private val cog: ActorRef, private val task: ActorRef, private val f: () => A @suspendable) extends Actor with ActorLogging {
   private var schedCont: Unit => Unit = null
   private var taskCont: Unit => Unit = null
   
@@ -120,7 +119,7 @@ class Task[A](private val cog: ActorRef, f: () => A @suspendable) extends Actor 
   import Task._
   
   //private val log = Logging(context.system, this)
-  private val runner: ActorRef = context.actorOf(Props(new Runner(cog, self, f)))
+  private val runner: ActorRef = context.actorOf(Props(new Runner(cog, self, f)), name = "runner")
 
   
   // Initial state = IDLE
@@ -128,47 +127,47 @@ class Task[A](private val cog: ActorRef, f: () => A @suspendable) extends Actor 
   
   when(IDLE) {
     case Event(CanRun, Idle(_, guard)) =>
-      log.debug("[%s] checking guard".format(self))
+      log.debug("checking guard")
       val b = if (guard != null) guard() else false
-      log.debug("[%s] guard = %s".format(self, b))
+      log.debug("guard = %s".format(b))
       
       stay replying b
       
     case Event(Get, _) =>
-      log.debug("[%s] get while task not complete".format(self))
+      log.debug("get while task not complete")
       stay replying None
       
     case Event(Listen(cog), Idle(listeners, guard)) =>
-      log.debug("[%s] listen request from %s".format(self, cog))
+      log.debug("listen request from %s".format(cog))
       stay using Idle(listeners + cog , guard)
     
     case Event(Task.Run, Idle(listeners, guard)) =>
-      log.debug("[%s] running".format(self))
+      log.debug("running")
       runner ! Runner.Run
       goto(RUNNING) using Running(listeners)
   }
   
   when(RUNNING) {
     case Event(CanRun, _) =>
-      log.debug("[%s] CanRun while already running".format(self))
+      log.debug("CanRun while already running")
       stay replying false 
       
     case Event(Get, _) =>
-      log.debug("[%s] get while task not complete".format(self))
+      log.debug("get while task not complete")
       stay replying None
     
     case Event(Listen(cog), Running(listeners)) =>
-      log.debug("[%s] listen request from %s".format(self, cog))
+      log.debug("listen request from %s".format(cog))
       stay using Running(listeners + cog)
         
     case Event(Done(result), Running(listeners)) =>
-      log.debug("[%s] Task done, result = %s".format(self, result))
+      log.debug("Task done, result = %s".format(result))
       listeners foreach (_ ! Cog.Work)
       cog ! Cog.Done(true)
       goto(DONE) using Result(result)
       
     case Event(Task.Await(guard, blocked), Running(listeners)) =>
-      log.debug("[%s] Task blocked".format(self))
+      log.debug("Task blocked")
       
       cog ! (if (blocked) Cog.Blocked else Cog.Done(false))
       
@@ -177,15 +176,15 @@ class Task[A](private val cog: ActorRef, f: () => A @suspendable) extends Actor 
   
   when(DONE) {
     case Event(CanRun, _) =>
-      log.debug("[%s] CanRun when task finished".format(self))
+      log.debug("CanRun when task finished")
       stay replying false
       
     case Event(Get, Result(result)) => 
-      log.debug("[%s] get".format(self))
-      stay replying result
+      log.debug("get")
+      stay replying Some(result)
       
     case Event(Listen(cog), _) =>
-      log.debug("[%s] listen while task complete".format(self))
+      log.debug("listen while task complete")
       cog ! Cog.Work
       stay
       

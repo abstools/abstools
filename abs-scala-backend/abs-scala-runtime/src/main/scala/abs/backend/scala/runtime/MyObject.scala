@@ -11,25 +11,24 @@ import akka.pattern.ask
 import akka.dispatch.Await
 import akka.util.Timeout
 import akka.util.duration._
+import akka.actor.ActorLogging
 
 object MyObject {
   sealed abstract class Message
-  case class RemoteSelfRef(ref: Array[Byte]) extends Message
   case object Run extends Message
 }
 
-abstract class MyObject(private val cog: ActorRef) extends Actor {
-  private val log = Logging(context.system, this)
-  
+abstract class MyObject(private val cog: ActorRef) extends Actor with ActorLogging {
+  private val taskCounter = new java.util.concurrent.atomic.AtomicLong(0);
   /**
    * Submits a new task to this object's COG and returns a remote actor reference to it.
    */
   protected def submit(block: => Any @suspendable) {
-    log.debug("[%s] Submitting block to COG %s".format(self, cog))
+    log.debug("Submitting block to COG %s".format(cog))
 
     implicit val timeout = Timeout(5 seconds)
     
-    val result = Await.result(cog ? new Cog.Run(() => block), timeout.duration)
+    val result = Await.result(cog ? new Cog.Run(getClass().getName() + "T" + taskCounter.incrementAndGet , () => block), timeout.duration)
     
     sender ! result
   }
@@ -67,14 +66,23 @@ abstract class MyObject(private val cog: ActorRef) extends Actor {
       Await.result(cog ? Cog.NewCog(clazz, args), timeout.duration).asInstanceOf[ActorRef]
     }
   
+  def ignore[A](x : A) : Unit = {}
+  
   def asyncCall(that: ActorRef, msg: Any): ActorRef = {
-    log.debug("[%s] Invoking async call %s (recipient %s)".format(self, msg.toString, that))
+    log.debug("Invoking async call %s".format(msg.toString, that))
     
     implicit val timeout = Timeout(5 seconds)
     
     Await.result(that ? msg, timeout.duration).asInstanceOf[ActorRef]
   }
  
+  def syncCall(that: ActorRef, msg: Any): ActorRef = {
+    // FIXME
+    log.debug("FIXME sync call %s to %s".format(msg.toString, that))
+    throw new UnsupportedOperationException()
+    null
+  }
+  
   protected def getFuture(fut: ActorRef): Any @suspendable = {
     implicit val timeout = Timeout(5 seconds)
     
