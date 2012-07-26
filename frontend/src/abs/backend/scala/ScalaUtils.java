@@ -13,7 +13,9 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
+import abs.frontend.ast.TypeDecl;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.typechecker.Type;
 
 /**
  * 
@@ -21,7 +23,7 @@ import abs.frontend.ast.TypeParameterDecl;
  *
  */
 public class ScalaUtils {
-    
+    /*
     interface A {
         public int method();
     }
@@ -33,6 +35,7 @@ public class ScalaUtils {
             }
         };
     }
+    */
     
     /**
      * Changes the variable (or parameter) names that are legal in ABS but not in Scala by prepending underscores to them.
@@ -102,4 +105,13 @@ public class ScalaUtils {
                 writer.println(" extends Message");
         }
     }
+    /*
+    public static final String mangleTypeName(TypeDecl t) {
+        if (t.getModule().getName().equals("ABS.StdLib")) {
+            if (t.getName().equals("Unit") || t.getName().equals("Int") ||
+                    t.getName().equals("String") || t.getName().equals("Bool") ||
+                    t.getName().equals("Fut"))
+                    return;
+
+    }*/
 }
