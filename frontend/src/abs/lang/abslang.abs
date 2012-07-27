@@ -463,6 +463,7 @@ implements DeploymentComponent {
     List<Int> totalhistory = Nil; // ditto; will stay empty for InfCPU case
     Int internalState = 0;
     Bool initialized = False;
+    DCData nextcpu = cpu;
     {
         this.initialized = True;
     }
@@ -486,19 +487,19 @@ implements DeploymentComponent {
     }
     
     Unit decrementResources(Int amount) {
-        if (cpu == InfCPU)
+        if (nextcpu == InfCPU)
             skip;
         else {
             Int capacity = capacity(cpu);
             assert (capacity >= amount);
-            cpu = CPU(capacity - amount);
+            nextcpu = CPU(capacity - amount);
         }
     }
     Unit incrementResources(Int amount) {
-        if (cpu == InfCPU)
+        if (nextcpu == InfCPU)
             skip;
         else {
-            cpu = CPU(capacity(cpu) + amount);
+            nextcpu = CPU(capacity(cpu) + amount);
         }
     }
 }

@@ -955,12 +955,6 @@ mod ABS-EVAL is
   = < DC:Oid : 'ABS.DC.DeploymentComponent
       | Cog: CG:Cogid, Att: S, Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > .
 
-  op findDCStatus : Oid Configuration -> DataList .
-  eq findDCStatus(DC:Oid,
-      < DC:Oid : 'ABS.DC.DeploymentComponent
-      | Cog: CG:Cogid, Att: ('cpu |-> CPU:Data, 'internalState |-> IS:Data, S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN)
-  = CPU:Data :: IS:Data .
-
   op hasEnoughResources : Oid Configuration Nat -> Bool .
   eq hasEnoughResources(DC:Oid,
       < DC:Oid : 'ABS.DC.DeploymentComponent
@@ -1212,7 +1206,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < 'main : Cog | Object: ob('main, 0) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: 'main,
-      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'configuration |-> "ABS.StdLib.EmptySet"[emp], 'creationTime |-> "ABS.StdLib.Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "int"[0], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'cpu |-> "ABS.DC.InfCPU"[emp],
+      Att: '.comp |-> ob('ABS.DC.DeploymentComponent, -1), 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["int"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "int"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totalhistory |-> "ABS.StdLib.Nil"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: 'main,
       Att:  '.comp |-> ob('ABS.DC.DeploymentComponent, -1),
@@ -1439,14 +1433,14 @@ mod ABS-MACHINE-BASICS-TIMED is
   *** waiting processes.
   op advance : Configuration Nat -> Configuration .
   eq advance(< O : 'ABS.DC.DeploymentComponent
-                 | Cog: CG, Att: ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "int"[IS:Nat], 'totalhistory |-> THI:Data, S),
+                 | Cog: CG, Att: ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "int"[IS:Nat], 'nextcpu |-> NCPU:Data, 'totalhistory |-> THI:Data, S),
                    Pr: P, PrQ: W, Lcnt: F > CN, T)
   =
     < O : 'ABS.DC.DeploymentComponent
         | Cog: CG, Att: (
-            'cpu |-> CPU:Data,
+            'cpu |-> NCPU:Data,
             'history |-> "ABS.StdLib.Cons"["int"[IS:Nat] :: HI:Data],
-            'internalState |-> "int"[0],
+            'internalState |-> "int"[0], 'nextcpu |-> NCPU:Data,
             'totalhistory |-> advanceTotalsHistory(CPU:Data, THI:Data),
             S),
           Pr: advanceActiveProcess(P, S, T),
