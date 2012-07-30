@@ -4,7 +4,7 @@
  */
 package abs.backend.java.lib.runtime;
 
-public class ABSMainClass extends ABSClass {
+public class ABSMainClass extends ABSDynamicClass {
     private static ABSMainClass instance;
     
     public static ABSMainClass instantiate() {

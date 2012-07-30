@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import abs.backend.java.observing.manipulation.ClassManipulator;
 
-public class ABSClass {
+public class ABSDynamicClass {
     private String name;
     private Map<String, ABSField> fields;
     private Map<String, ABSClosure> methods;
@@ -106,7 +106,7 @@ public class ABSClass {
 
         @Override
         public List<String> getFieldNames() {
-            return new ArrayList<String>(ABSClass.this.getFieldNames());
+            return new ArrayList<String>(ABSDynamicClass.this.getFieldNames());
         }
 
         @Override

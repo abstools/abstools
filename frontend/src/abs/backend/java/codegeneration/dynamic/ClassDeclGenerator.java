@@ -16,7 +16,7 @@ import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.ABSThread;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Task;
-import abs.backend.java.lib.runtime.ABSClass;
+import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
@@ -44,12 +44,12 @@ public class ClassDeclGenerator {
     private void generateClassBody() {
         stream.println("{");
 
-        stream.println("private static " + ABSClass.class.getName() + " instance;");
-        stream.println("public static " + ABSClass.class.getName() + " instantiate() {");
+        stream.println("private static " + ABSDynamicClass.class.getName() + " instance;");
+        stream.println("public static " + ABSDynamicClass.class.getName() + " instantiate() {");
 
         stream.println("if (instance == null) {");
 
-        stream.println("instance = new " + ABSClass.class.getName() + "();");
+        stream.println("instance = new " + ABSDynamicClass.class.getName() + "();");
         stream.println("instance.setName(\"" + decl.getName() + "\");");
         generateFields();
         // Constructor

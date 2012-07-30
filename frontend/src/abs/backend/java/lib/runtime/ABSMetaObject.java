@@ -11,11 +11,11 @@ import abs.backend.java.lib.types.*;
  * including its interface, i.e. the meta-object protocol for object mirrors.
  */
 public class ABSMetaObject {
-    private static ABSClass objectMirrorClass;
+    private static ABSDynamicClass objectMirrorClass;
 
-    public static ABSClass getObjectMirrorClass() {
+    public static ABSDynamicClass getObjectMirrorClass() {
         if (objectMirrorClass == null) {
-            objectMirrorClass = new ABSClass();
+            objectMirrorClass = new ABSDynamicClass();
             setupMetaAPI();
         }
         return objectMirrorClass;
@@ -33,15 +33,15 @@ public class ABSMetaObject {
             
         objectMirrorClass.addMethod("getClass", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                return (ABSValue)t.getClazz();
+            public ABSClass exec(ABSDynamicObject t, ABSValue... params) {
+                return (ABSClass)t.getClazz();
             }
         });
         
         objectMirrorClass.addMethod("setClass", new ABSClosure() {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
-                t.setClazz((ABSClass)params[0]);
+                t.setClazz((ABSDynamicClass)params[0]);
                 return ABSUnit.UNIT;
             }
         });

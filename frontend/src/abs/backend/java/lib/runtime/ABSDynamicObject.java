@@ -19,15 +19,15 @@ import abs.backend.java.observing.ObjectObserver;
 import abs.backend.java.observing.ObjectView;
 
 public class ABSDynamicObject extends ABSObject {
-    private ABSClass clazz;
+    private ABSDynamicClass clazz;
     private Map<String,ABSValue> fields;
     
-    public ABSDynamicObject(ABSClass clazz, ABSValue... params) {
+    public ABSDynamicObject(ABSDynamicClass clazz, ABSValue... params) {
         this.clazz = clazz;
         initializeFields(params);
     }
     
-    public ABSDynamicObject(COG cog, ABSClass clazz, ABSValue... params) {
+    public ABSDynamicObject(COG cog, ABSDynamicClass clazz, ABSValue... params) {
         super(cog);
         this.clazz = clazz;
         initializeFields(params);
@@ -45,11 +45,11 @@ public class ABSDynamicObject extends ABSObject {
         return getClazz().getName();
     }
 
-    public void setClazz(ABSClass clazz) {
+    public void setClazz(ABSDynamicClass clazz) {
         this.clazz = clazz;
     }
 
-    public ABSClass getClazz() {
+    public ABSDynamicClass getClazz() {
         return clazz;
     }
     

@@ -57,15 +57,16 @@ public class ABSBuiltInFunctions {
         return ABSString.fromString(t.toString());
     }
     
+    // A "mirror object" is created when the reflect() function is called on an object the first time
     public static <T> ABSDynamicObject reflect(T t) {
-        String name = "$metaObject";
+        String name = "$mirror";
         try {
             ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(name);
             return (ABSDynamicObject)existingMirror;
         } catch(NoSuchFieldException e) {
-            ABSDynamicObject o = new ABSDynamicObject(ABSMetaObject.getObjectMirrorClass());
-            ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)o);
-            return o;
+            ABSDynamicObject mirror = new ABSDynamicObject(ABSMetaObject.getObjectMirrorClass());
+            ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)mirror);
+            return mirror;
         }
     }
         
