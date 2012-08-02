@@ -42,16 +42,21 @@ class Runner[A](private val cog: ActorRef, private val task: ActorRef, private v
     }
   }
   
-  def await(fut: ActorRef, blocked: Boolean = false): Unit @suspendable = {
+  /*
+  def await(fut: ActorRef, blocked: Boolean = false): Unit @suspendable =
+    await(Seq(fut), blocked)
+    */
+  def await(fut: Seq[ActorRef], blocked: Boolean = false): Unit @suspendable = {
     log.debug("Runner %s".format(if (blocked) "blocked" else "waiting"))
     
-    fut ! new Task.Listen(cog)
+    fut.foreach(_ ! new Task.Listen(cog))
+    //fut ! new Task.Listen(cog)
     task ! new Task.Await(() => {
       implicit val timeout = Timeout(5 seconds)
-      Await.result(fut ? Task.Get, timeout.duration).asInstanceOf[Option[Any]] match {
+      fut.forall(f => Await.result(f ? Task.Get, timeout.duration).asInstanceOf[Option[Any]] match {
         case None => false
         case Some(_) => true
-      }
+      })
     }, blocked)
 
     shift {

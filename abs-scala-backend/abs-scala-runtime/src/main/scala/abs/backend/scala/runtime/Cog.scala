@@ -62,8 +62,11 @@ class Cog(val server: NodeManager) extends Actor with FSM[Cog.State, Option[Acto
           log.debug("no init method in class")
       }
       obj
-    }), name = "%s%d".format(clazz.getName, taskCounter.incrementAndGet))
+    }), name = "%s$%d".format(clazz.getName, taskCounter.incrementAndGet))
     
+    implicit val timeout = Timeout(5 seconds)
+    
+    //Await.result(actor ? MyObject.Run, timeout.duration)
     actor ! MyObject.Run
     sender ! actor
   }
