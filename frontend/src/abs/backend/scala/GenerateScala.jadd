@@ -106,12 +106,19 @@ aspect GenerateScala {
 		writer.write(body.getBuffer().toString());
 		
 		writer.println(
-				"\tdef receive = {\n" +
-				"\t\tcase MyObject.Run => submit { run() }\n" + 
+				"\toverride def resolve: MyObject.Resolve = {\n" +
+				"\t\tcase MyObject.Run => (\"Run\", () => { run() })\n" + 
 				//"\t\tcase x => throw new RuntimeException(\"Unknown message received: \" + x)" +
 				"\t}\n" +
 				"}");
-				
+		/*
+		writer.println(
+				"\tdef receive = {\n" +
+				"\t\tcase MyObject.Run => submit(\"run\")(() => { run() })\n" + 
+				//"\t\tcase x => throw new RuntimeException(\"Unknown message received: \" + x)" +
+				"\t}\n" +
+				"}");
+		*/		
 		writer.print(
 				"object Main {\n" +
 				"  def main(argv : Array[String]) {\n" +
@@ -249,10 +256,17 @@ aspect GenerateScala {
 			writer.print(")");
 		}
 		
-		writer.format(" => log.debug(\"%s: received %%s\".format(self)); submit { %s(", StringUtils.capitalize(name), name);
+		/*
+		writer.format(" => log.debug(\"received %%s\".format(self)); submit(\"%s\") { %s(", StringUtils.capitalize(name), name);
 		for (int i = 0; i < s.getNumParam(); i++)
 			writer.format("%sarg%d", i > 0 ? ", " : "", i);
-		writer.println(") }");		
+		writer.println(") }");
+		*/		
+		
+		writer.format(" => log.debug(\"received %%s\".format(self)); (\"%s\", () => { %s(", StringUtils.capitalize(name), name);
+		for (int i = 0; i < s.getNumParam(); i++)
+			writer.format("%sarg%d", i > 0 ? ", " : "", i);
+		writer.println(") })");
 	}
 	public void ClassDecl.generateScala(String prefix, PrintWriter writer) {
 		// messages for asynchronous calls to self
@@ -306,22 +320,23 @@ aspect GenerateScala {
 		
 		// TODO handle (ABS) init blocks
 		
-		// TODO method implementations
 		for (MethodImpl m: getMethods())
 			m.generateScala(prefix + "\t", writer);
 		
 		// methods
-		writer.println(prefix + "\tdef receive = {");
+		//writer.println(prefix + "\tdef receive = {");
+		writer.println(prefix + "\toverride def resolve: MyObject.Resolve = {");
 		
 		// standard stuff
-		writer.print(prefix + "\t\tcase MyObject.Run => log.debug(\"%s: received Run\".format(self)); ");
+		writer.print(prefix + "\t\tcase MyObject.Run => log.debug(\"%s: received Run\".format(self)); (\"Run\", () => { ");
 		for (MethodImpl m: getMethods()) {
 			if (m.getMethodSig().getName().equals("run") && m.getMethodSig().getNumParam() == 0) {
-				writer.print("submit { run() }");
+				//writer.print("submit(\"run\") { run() }");
+				writer.print("run()");
 				break;
 			}
 		}
-		writer.println();
+		writer.println("})");
 		
 		// iterate over all the interfaces
 		for (InterfaceTypeUse intf: getImplementedInterfaceUses())
@@ -353,7 +368,7 @@ aspect GenerateScala {
 		InitExpMetadata metadata = generateScalaInitExp(prefix, writer, annotations);
 		
 		if (!metadata.hasInitExp())
-			writer.print(" = _ ");
+			writer.print(" = null ");
 		writer.println();
 		
 		return metadata.initExpSuspends();
@@ -636,7 +651,6 @@ aspect GenerateScala {
 		writer.write(body.getBuffer().toString());
 		
 		writer.println();
-		// FIXME
 	}
 	
 	public abstract boolean Stmt.generateScala(String prefix, PrintWriter writer);
@@ -657,7 +671,9 @@ aspect GenerateScala {
 	
 	public boolean ReturnStmt.generateScala(String prefix, PrintWriter writer) {
 		writer.write(prefix + "return "); 
-		return getRetExp().generateScala(prefix, writer, getAnnotations());
+		boolean r = getRetExp().generateScala(prefix, writer, getAnnotations());
+		writer.println();
+		return r;
 	}
 	
 	public boolean AssignStmt.generateScala(String prefix, PrintWriter writer) {
@@ -670,9 +686,11 @@ aspect GenerateScala {
 	}
 	
 	public boolean AssertStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("AssertStmt");
-		dump();
-		return false;
+		writer.print(prefix + "if (!("); 
+		boolean r = getCondition().generateScala(prefix + "\t", writer, getAnnotations()); 
+		writer.println("))");
+		writer.format(prefix + "\tthrow new AssertionError(\"%sAssert failed\");%n", new Position(this).getPositionString());
+		return r;
 	}
 	
 	public boolean WhileStmt.generateScala(String prefix, PrintWriter writer) {
@@ -688,8 +706,7 @@ aspect GenerateScala {
 	}
 	
 	public boolean SuspendStmt.generateScala(String prefix, PrintWriter writer) {
-		System.out.println("SuspendStmt");
-		dump();
+		writer.println(prefix + "suspend()");
 		return true;
 	}
 	
@@ -753,12 +770,13 @@ aspect GenerateScala {
 	public abstract void Guard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations);
 	
 	public void AndGuard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		System.out.println("AndGuard");
-		dump();
+		getLeft().generateScala(prefix, writer, annotations);
+		writer.write(" && ");
+		getRight().generateScala(prefix, writer, annotations);
 	}
 	
 	public void ClaimGuard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		getVar().generateScala(prefix, writer, annotations);
+		writer.write("fut2bool("); getVar().generateScala(prefix, writer, annotations); writer.write(")");
 	}
 	
 	public void DurationGuard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
@@ -766,13 +784,11 @@ aspect GenerateScala {
 	}
 	
 	public void ExpGuard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		System.out.println("ExpGuard");
-		dump();
+		getPureExp().generateScala(prefix, writer, annotations);
 	}
 	
 	public boolean IncompleteStmt.generateScala(String prefix, PrintWriter writer) {
 		throw new RuntimeException("This should not happen: can't compile IncompleteStmt, go fix the frontend!");
-		//return false;
 	}
 	
 	public boolean SkipStmt.generateScala(String prefix, PrintWriter writer) {
@@ -793,7 +809,7 @@ aspect GenerateScala {
 	/*
 	 * @return true if the expression includes something that may block (resolving a future); false otherwise
 	 */
-	public abstract boolean Exp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations); // abs.frontend.ast.List<Annotation> annotations);
+	public abstract boolean Exp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations);
 	
 	public boolean ThisExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.write("self");
@@ -823,6 +839,7 @@ aspect GenerateScala {
 		DataConstructor c = getDataConstructor();
         DataTypeDecl decl = c.getDataTypeDecl();
         
+        /*
         if (decl instanceof ParametricDataTypeDecl) {
         	System.out.println("---");            			
             dump();
@@ -831,6 +848,7 @@ aspect GenerateScala {
             System.out.println(decl);
             System.out.println("---");
         }
+        */
         /*
         	DataTypeType type = (DataTypeType) this.getType();
             if (type.hasTypeArgs()) {
@@ -852,6 +870,7 @@ aspect GenerateScala {
             			first = false;
             		else 
             			writer.write(", ");
+
 
 				System.out.println("---");            			
             	dump();
@@ -1038,11 +1057,7 @@ aspect GenerateScala {
 		return false;
 	}
 	
-	public abstract boolean PureExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations); //{
-		//dump();
-		//throw new NotImplementedYetException(this);
-		// FIXME
-	//}
+	public abstract boolean PureExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations); 
 	
 	public boolean FnApp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.format("%s(", getDecl().moduleName() + "." + ScalaUtils.mangleName(getName()));
@@ -1133,16 +1148,22 @@ aspect GenerateScala {
 		throw new RuntimeException("Should not happen: deltas haven't been flattened away, go fix the frontend!");
 	}
 	
-	// Call
+	// Call	
+	public boolean Call.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 	
-	public boolean AsyncCall.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.write("asyncCall("); getCallee().generateScala(prefix, writer, annotations);
+		if (this instanceof SyncCall)
+			writer.write("syncCall(");
+		else
+			writer.write("asyncCall(");
+		getCallee().generateScala(prefix, writer, annotations);
 		writer.write(", ");
+		
 		if (getNumParam() > 0)
 			writer.write("new ");
-		
-		writer.format("%s.%s",
-				(getCallee().getType().isInterfaceType() ? "I" : "") + getCallee().getType().getSimpleName(),
+					
+		writer.format("%s.%s.%s",
+				getMethodSig().getContextDecl().getModule().getName(),
+				getMethodSig().getContextDecl().getName(),
 				StringUtils.capitalize(getMethod()));
 
 		if (getNumParam() > 0) {
@@ -1174,46 +1195,8 @@ aspect GenerateScala {
 	public boolean NullExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
 		writer.write("null");
 		return false;
-		//throw new NotImplementedYetException(this);
 	}
-	
-	// Call
-	public boolean SyncCall.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.write("syncCall("); getCallee().generateScala(prefix, writer, annotations);
-		writer.write(", ");
-		if (getNumParam() > 0)
-			writer.write("new ");
-
-		String typeName = getCallee().getType().getSimpleName();
 		
-		if (getCallee().getType().isUnionType()) {
-			UnionType t = (UnionType)getCallee().getType();
-			
-			if (t.getTypes().size() > 1)
-				throw new UnsupportedOperationException("FIXME: union of multiple types");
-				
-			typeName = t.getType(0).getSimpleName();
-		}
-					
-		writer.format("%s.%s",
-				(getCallee().getType().isInterfaceType() ? "I" : "") + typeName,
-				StringUtils.capitalize(getMethod()));
-
-		if (getNumParam() > 0) {
-			writer.write("(");
-			boolean f = false;
-			for (PureExp args: getParams()) {
-				if (f)
-					writer.write(", ");
-				args.generateScala(prefix, writer, annotations);
-				f = true;
-			}
-			writer.write(")");
-		}
-		writer.write(")");
-		return false;
-	}
-	
 	public final boolean IncompleteExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
 	}
