@@ -40,15 +40,32 @@ class MyClass(Int fieldX, String fieldS) implements I {
     }
 }
 
+interface I2 {}
+class A implements I2 {}
+
+
 {
 
-    I o1 = new MyClass(1111, "Hello World");
-
+    I o1 = new MyClass(1, "Hello World");
     ObjectMirror m = reflect(o1);
+
+    String name = m.getClassName();
+    m.debug(name);
+
+    I2 o2 = new A();
+    ObjectMirror m2 = reflect(o2);
+    Class co2 = m2.getClass();
     
-    String s = m.getClassName();
-    Class c = m.getClass();
+    m.setClass(co2);
+    name = m.getClassName();
+    m.debug(name);
+        
+//    String s = o1.getFieldS();
     
+    
+    
+//    String s = m.getClassName();
+//    Class c = m.getClass();
     
 //    IO io = new IO();
 //    io.println(s);

@@ -16,7 +16,9 @@ interface ObjectMirror {
     Class getClass();
     Unit setClass(Class c);
     Value getFieldValue();
-    Unit setFieldValue(Value val);    
+    Unit setFieldValue(Value val);
+    
+    Unit debug(String s);
 }
 
 def ObjectMirror reflect<A>(A a) = builtin;

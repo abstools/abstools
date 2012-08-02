@@ -356,6 +356,7 @@ aspect GenerateJava {
         }
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
+        stream.print("/*VarDecl*/");
 
         if (! getAccess().getType().isReferenceType()) {
             stream.print("(");
@@ -513,7 +514,7 @@ aspect GenerateJava {
     }
 
     public void OriginalCall.generateJavaDynamic(PrintStream stream) {
-        //        throw new NotImplementedYetException(this); // TODO: implement me
+        // should not appear; by flattening, original calls are replaced with regular calls
     }
 
     public void GetExp.generateJavaDynamic(PrintStream stream) {

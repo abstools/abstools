@@ -11,9 +11,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSClass;
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.manipulation.ClassManipulator;
 
-public class ABSDynamicClass {
+public class ABSDynamicClass implements ABSClass {
     private String name;
     private Map<String, ABSField> fields;
     private Map<String, ABSClosure> methods;
@@ -124,6 +128,26 @@ public class ABSDynamicClass {
             fields.put(name, new ABSField());
         }
         
+    }
+
+    @Override
+    public ABSBool eq(ABSValue o) {
+        return ABSBool.fromBoolean(name.equals(((ABSDynamicClass)o).getName()));
+    }
+
+    @Override
+    public ABSBool notEq(ABSValue o) {
+        return eq(o).negate();
+    }
+
+    @Override
+    public boolean isDataType() {
+        return false;
+    }
+
+    @Override
+    public boolean isReference() {
+        return true;
     }
 
     

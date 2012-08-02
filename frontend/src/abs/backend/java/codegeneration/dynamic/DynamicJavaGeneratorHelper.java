@@ -256,10 +256,8 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateSyncCall(PrintStream stream, SyncCall call) {
         stream.print("((" + ABSDynamicObject.class.getName() + ")" + ABSRuntime.class.getName() + ".checkForNull(");
-//        stream.print(ABSRuntime.class.getName() + ".checkForNull(");
         call.getCallee().generateJavaDynamic(stream);
         stream.print("))");
-//        stream.print(")");
         stream.print(".dispatch");
         DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams());
     }
@@ -496,6 +494,7 @@ public class DynamicJavaGeneratorHelper {
         } else {
             vfu.generateJavaDynamic(stream);
             stream.print(" = ");
+            stream.print("/*AssignStmt*/");
             assign.getValue().generateJavaDynamic(stream);
             stream.println(";");
         }
