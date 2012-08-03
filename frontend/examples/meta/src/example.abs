@@ -57,8 +57,12 @@ class A implements I2 {}
     Class co2 = m2.getClass();
     
     m.setClass(co2);
+
     name = m.getClassName();
     m.debug(name);
+    
+    o1 = new MyClass(2, "Hello2");
+    
         
 //    String s = o1.getFieldS();
     

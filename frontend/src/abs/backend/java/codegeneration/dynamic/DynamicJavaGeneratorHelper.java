@@ -494,7 +494,12 @@ public class DynamicJavaGeneratorHelper {
         } else {
             vfu.generateJavaDynamic(stream);
             stream.print(" = ");
-            stream.print("/*AssignStmt*/");
+            if (! assign.getVar().getType().isReferenceType()) {
+                // cast ABSValue to more specific type
+                stream.print("(");
+                stream.print(JavaBackend.getQualifiedString(assign.getVar().getType()));
+                stream.print(")");
+            }
             assign.getValue().generateJavaDynamic(stream);
             stream.println(";");
         }
