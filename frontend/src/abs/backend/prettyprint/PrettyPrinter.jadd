@@ -67,6 +67,13 @@ aspect doPrettyPrinter {
         stream.println();
 		formatter.afterStmt();
 
+        if (hasBlock()) {
+            getBlock().doPrettyPrint(stream, formatter);
+        }
+        
+        stream.println();
+		formatter.afterStmt();
+
         for (Decl decl : getDecls()) {
             decl.doPrettyPrint(stream, formatter);
             stream.println();
@@ -74,13 +81,6 @@ aspect doPrettyPrinter {
             formatter.afterStmt();
         }
 
-        stream.println();
-		formatter.afterStmt();
-
-        if (hasBlock()) {
-            getBlock().doPrettyPrint(stream, formatter);
-        }
-        
         stream.flush();
     
     }
