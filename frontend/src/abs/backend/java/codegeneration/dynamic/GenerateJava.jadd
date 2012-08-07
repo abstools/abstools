@@ -356,7 +356,6 @@ aspect GenerateJava {
         }
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
-        stream.print("/*VarDecl*/");
 
         if (! getAccess().getType().isReferenceType()) {
             stream.print("(");

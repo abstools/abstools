@@ -65,6 +65,21 @@ public class ABSObjectMirrorClass {
 
         // TODO: getFieldValue(), setFieldValue()
 
+        objectMirrorClass.addMethod("getCog", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject mirror, ABSValue... params) {
+                return ((ABSDynamicObject)mirror.dispatch("getObject")).getCOG();
+            }
+        });
+        
+        objectMirrorClass.addMethod("setCog", new ABSClosure() {
+            @Override
+            public ABSUnit exec(ABSDynamicObject mirror, ABSValue... params) {
+                ((ABSDynamicObject)mirror.dispatch("getObject")).setCOG((COG)params[0]);
+                return ABSUnit.UNIT;
+            }
+        });
+
         /*
          * getObject: obtain the mirrored object
          */

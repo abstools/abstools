@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSClass;
 import abs.backend.java.lib.types.ABSValue;
@@ -32,36 +33,51 @@ public class ABSDynamicClass implements ABSClass {
         return name;
     }
     
-    public void addField(String name, ABSField f) {
+    public void addField(String fName, ABSField f) throws DynamicException {
         if (fields == null) {
             fields = new HashMap<String, ABSField>();
         }
-        fields.put(name,f);
+        if (! fields.containsKey(fName))
+            fields.put(fName,f);
+        else
+            throw new DynamicException("Field " + fName + " already defined for class " + fName + ".");
     }
     
-    public void removeField(String name) {
-        fields.remove(name);
+    public void removeField(String fName) throws DynamicException {
+        if (fields.containsKey(fName))
+            fields.remove(fName);
+        else
+            throw new DynamicException("Field " + fName + " not defined for class " + name + ".");
     }
     
-    public ABSField getField(String name) {
+    public ABSField getField(String fName) throws DynamicException {
         if (fields == null) {
             fields = new HashMap<String, ABSField>();
         }
-        return fields.get(name);
+        if (fields.containsKey(fName))
+            return fields.get(fName);
+        else
+            throw new DynamicException("Field " + fName + " not defined for class " + name + ".");
     }
     
-    public void addMethod(String name, ABSClosure m) {
+    public void addMethod(String mName, ABSClosure m) throws DynamicException {
         if (methods == null) {
             methods = new HashMap<String,ABSClosure>();
         }
-        methods.put(name, m);
+        if (! methods.containsKey(mName))
+            methods.put(mName, m);
+        else
+            throw new DynamicException("Method " + mName + " already defined for class " + name + ".");
     }
     
-    public ABSClosure getMethod(String name) {
+    public ABSClosure getMethod(String mName) throws DynamicException {
         if (methods == null) {
             methods = new HashMap<String,ABSClosure>();
         }
-        return methods.get(name);
+        if (methods.containsKey(mName))
+            return methods.get(mName);
+        else
+            throw new DynamicException("Method " + mName + " not defined for class " + name + ".");
     }
 
     public void setConstructor(ABSClosure constructor) {
@@ -105,7 +121,7 @@ public class ABSDynamicClass implements ABSClass {
 
         @Override
         public String getName() {
-            return getName();
+            return ABSDynamicClass.this.getName();
         }
 
         @Override

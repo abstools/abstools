@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.COGView;
 import abs.backend.java.observing.ObjectCreationObserver;
 import abs.backend.java.observing.TaskSchedulerView;
@@ -17,7 +19,7 @@ import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 
-public class COG {
+public class COG implements ABSValue {
     private final TaskScheduler scheduler;
     private final Class<?> initialClass;
     private final int id;
@@ -145,6 +147,26 @@ public class COG {
 
     public void register(ABSObject absObject) {
         // nothing to do
+    }
+
+    @Override
+    public ABSBool eq(ABSValue o) {
+        return ABSBool.fromBoolean(this.equals(o));
+    }
+
+    @Override
+    public ABSBool notEq(ABSValue o) {
+        return eq(o).negate();
+    }
+
+    @Override
+    public boolean isDataType() {
+        return false;
+    }
+
+    @Override
+    public boolean isReference() {
+        return true;
     }
 
 }

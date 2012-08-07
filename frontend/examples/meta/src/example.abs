@@ -45,23 +45,39 @@ class A implements I2 {}
 
 
 {
-
+    Bool b = False;
     I o1 = new MyClass(1, "Hello World");
-    ObjectMirror m = reflect(o1);
+    ObjectMirror m1 = reflect(o1);
 
-    String name = m.getClassName();
-    m.debug(name);
+    Cog cog1 = m1.getCog();
+
+    String name = m1.getClassName();
+    b = name.eq("MyClass");
+
+    
+
+    assert b;
+    m1.debug(name);
 
     I2 o2 = new A();
     ObjectMirror m2 = reflect(o2);
     Class co2 = m2.getClass();
     
-    m.setClass(co2);
+    m1.setClass(co2);
 
-    name = m.getClassName();
-    m.debug(name);
+    name = m1.getClassName();
+    m1.debug(name);
     
     o1 = new MyClass(2, "Hello2");
+    // now o1 is a new object of class MyClass
+    m1.debug(name);
+
+    // reflect should give a brand new mirror
+    m1 = reflect(o1);
+    name = m1.getClassName();
+    
+    // that reflects a MyClass object
+    m1.debug(name);
     
         
 //    String s = o1.getFieldS();

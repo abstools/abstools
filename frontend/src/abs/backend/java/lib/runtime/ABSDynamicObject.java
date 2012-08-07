@@ -45,6 +45,10 @@ public class ABSDynamicObject extends ABSObject {
         return getClazz().getName();
     }
 
+    public void setCOG(COG cog) {
+        this.__cog = cog;
+    }
+    
     public void setClazz(ABSDynamicClass clazz) {
         this.clazz = clazz;
     }

@@ -23,7 +23,7 @@ import static abs.backend.java.lib.runtime.ABSRuntime.*;
  *
  */
 public abstract class ABSObject implements ABSRef {
-    protected final COG __cog;
+    protected COG __cog;
     protected final long __id;
 
     public ABSObject() {

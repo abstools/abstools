@@ -6,7 +6,7 @@ export *;
  */
 
 
-
+interface Cog {}
 interface Object {}
 interface Class {}
 interface Value {}
@@ -15,8 +15,12 @@ interface ObjectMirror {
     String getClassName();
     Class getClass();
     Unit setClass(Class c);
+    
     Value getFieldValue();
     Unit setFieldValue(Value val);
+    
+    Cog getCog();
+    Unit setCog(Cog c);
     
     Unit debug(String s);
 }
