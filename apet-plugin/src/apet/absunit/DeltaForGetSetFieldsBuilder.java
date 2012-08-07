@@ -1,8 +1,12 @@
 package apet.absunit;
 
-import static abs.backend.tests.AbsASTBuilderUtil.*;
+import static abs.backend.tests.AbsASTBuilderUtil.createMethodSig;
+import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
+import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.RUN_METHOD;
-import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
+
+import java.util.Set;
+
 import abs.frontend.ast.Access;
 import abs.frontend.ast.AddInterfaceModifier;
 import abs.frontend.ast.AddMethodModifier;
@@ -17,7 +21,6 @@ import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ModifyClassModifier;
-import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.RemoveMethodModifier;
 import abs.frontend.ast.ReturnStmt;
@@ -26,23 +29,31 @@ import abs.frontend.ast.VarUse;
 final class DeltaForGetSetFieldsBuilder {
 
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
-	private final ModuleDecl output;
+	private final Set<DeltaDecl> deltas;
 	
-	DeltaForGetSetFieldsBuilder(ModuleDecl output) {
-		this.output = output;
+	DeltaForGetSetFieldsBuilder(Set<DeltaDecl> deltas) {
+		this.deltas = deltas;
+	}
+	
+	DeltaDecl getDelta(String deltaName) {
+		for (DeltaDecl d : deltas) {
+			if (deltaName.equals(d.getName())) {
+				return d;
+			}
+		}
+		return null;
 	}
 	
 	DeltaDecl getDeltaFor(String testClassName) {
 		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
-		return getDecl(output, DeltaDecl.class, 
-				new DeclNamePredicate<DeltaDecl>(deltaName));
+		return getDelta(deltaName);
 	}
 	
 	DeltaDecl createDeltaFor(String testClassName) {
 		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
 		DeltaDecl delta = new DeltaDecl();
 		delta.setName(deltaName);
-		output.addDecl(delta);
+		deltas.add(delta);
 		return delta;
 	}
 	
@@ -101,8 +112,7 @@ final class DeltaForGetSetFieldsBuilder {
 		String interfaceForModifyingClassFieldName = 
 				testCaseNameBuilder.interfaceForModifyingFieldOfClass(className);
 		
-		DeltaDecl dd = getDecl(output, DeltaDecl.class, 
-				new DeclNamePredicate<DeltaDecl>(deltaOnClassName));
+		DeltaDecl dd = getDelta(deltaOnClassName);
 		
 		if (dd == null) {
 			dd = new DeltaDecl();
@@ -114,7 +124,7 @@ final class DeltaForGetSetFieldsBuilder {
 
 			InterfaceDecl ai = new InterfaceDecl();
 			ai.setName(interfaceForModifyingClassFieldName);
-			mcm.addImplementedInterfaceUse(new InterfaceTypeUse(ai.getName()));
+			mcm.addAddedInterface(new InterfaceTypeUse(ai.getName()));
 			
 			for (MethodImpl m : clazz.getMethodList()) {
 				if (RUN_METHOD.equals(m.getMethodSig().getName())) {
@@ -132,10 +142,10 @@ final class DeltaForGetSetFieldsBuilder {
 				ai.addBody(gmm.getMethodImpl().getMethodSig());
 			}
 			
-			dd.addClassOrIfaceModifier(new AddInterfaceModifier(ai));
-			dd.addClassOrIfaceModifier(mcm);
+			dd.addModuleModifier(new AddInterfaceModifier(ai));
+			dd.addModuleModifier(mcm);
 			
-			output.addDecl(dd);
+			deltas.add(dd);
 		}
 	}
 	

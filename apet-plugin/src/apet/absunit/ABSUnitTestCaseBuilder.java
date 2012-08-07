@@ -164,7 +164,7 @@ abstract class ABSUnitTestCaseBuilder {
 		if (modifier == null) {
 			modifier = new ModifyClassModifier();
 			modifier.setName(testClassName);
-			delta.addClassOrIfaceModifier(modifier);
+			delta.addModuleModifier(modifier);
 		}
 		
 		String setMethodForTest =
@@ -274,7 +274,7 @@ abstract class ABSUnitTestCaseBuilder {
 		if (modifier == null) {
 			modifier = new ModifyClassModifier();
 			modifier.setName(testClassName);
-			delta.addClassOrIfaceModifier(modifier);
+			delta.addModuleModifier(modifier);
 		}
 		
 		String assertMethodForTest =

@@ -38,6 +38,7 @@ import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Deltaspec;
@@ -88,7 +89,10 @@ public class ABSUnitTestCaseTranslator {
 	private ClassDecl absAssertImpl;
 
 	private final Model model;
-	private final ModuleDecl output;
+	private final ModuleDecl module;
+	private final Set<DeltaDecl> deltas;
+	private ProductLine productline;
+	private Product product;
 	
 	private File outputFile;
 	
@@ -105,10 +109,11 @@ public class ABSUnitTestCaseTranslator {
 			throw new IllegalArgumentException("Model cannot be null!");
 
 		this.model = model;
-		this.output = new ModuleDecl();
-		this.output.setName(MAIN);
-		this.pureExpBuilder = new PureExpressionBuilder(this.model, output);
-		this.deltaBuilder = new DeltaForGetSetFieldsBuilder(output);
+		this.module = new ModuleDecl();
+		this.module.setName(MAIN);
+		this.deltas = new HashSet<DeltaDecl>();
+		this.pureExpBuilder = new PureExpressionBuilder(this.model, module);
+		this.deltaBuilder = new DeltaForGetSetFieldsBuilder(deltas);
 		this.methodBuilder = new MethodTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
 		this.functionBuilder = new FunctionTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
 		this.verbose = verbose;
@@ -150,33 +155,36 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
 		console("Add basic imports...");
-		addBasicImports(output);
+		addBasicImports(module);
 		
 		for (String key : suite.keySet()) {
 			console("Generating test suite for "+key+"...");
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
-		buildProductLine(output);
+		buildProductLine(module);
 		console("Pretty printing ABSUnit tests...");
-		printToFile(output, outputFile);
+		printToFile(module, outputFile);
 		console("Validating ABSUnit tests...");
 		validateOutput();
 		console("ABSUnit tests generation successful");
-		return output;
+		return module;
 	}
 	
 	void buildProductLine(ModuleDecl module) {
+		String moduleName = module.getName();
+		
 		Set<String> dn = new HashSet<String>();
-		for (Decl d : module.getDeclList()) {
-			if (d instanceof DeltaDecl) {
-				dn.add(d.getName());
-			}
+		for (DeltaDecl d : deltas) {
+			abs.frontend.ast.List<DeltaAccess> access = new abs.frontend.ast.List<DeltaAccess>();
+			access.add(new DeltaAccess(moduleName));
+			d.setDeltaAccessList(access);
+			dn.add(d.getName());
 		}
 		
 		if (! dn.isEmpty()) {
 			console("Generating product line description...");
-			ProductLine productline = new ProductLine();
+			productline = new ProductLine();
 			productline.setName(CONFIGURATION_NAME);
 			Feature feature = new Feature();
 			feature.setName(FEATURE_NAME);
@@ -191,12 +199,10 @@ public class ABSUnitTestCaseTranslator {
 				productline.addDeltaClause(clause);
 			}
 			
-			Product product = new Product();
+			product = new Product();
 			product.setName(PRODUCT_NAME);
 			product.addFeature(feature);
 			
-			module.setProductLine(productline);
-			module.addProduct(product);
 		}
 	}
 	
@@ -236,10 +242,10 @@ public class ABSUnitTestCaseTranslator {
 
 	private void validateOutput() {
 		Model copy = model.fullCopy();
-		copy.getCompilationUnit().addModuleDecl(output.fullCopy());
+		copy.getCompilationUnit().addModuleDecl(module.fullCopy());
 		
 		validateOutput(copy.fullCopy(), null);
-		validateOutput(copy.fullCopy(), output.getName().concat(".").concat(PRODUCT_NAME));
+		validateOutput(copy.fullCopy(), module.getName().concat(".").concat(PRODUCT_NAME));
 	}
 	
 	private void validateOutput(Model model, String product) {
@@ -356,7 +362,7 @@ public class ABSUnitTestCaseTranslator {
 
 		final Access access = functionUnderTest.getTypeUse();
 
-		output.addImport(generateImportAST(functionUnderTest));
+		module.addImport(generateImportAST(functionUnderTest));
 			
 		/*
 		 * Test methods and Test cases are ordered that is,
@@ -370,7 +376,7 @@ public class ABSUnitTestCaseTranslator {
 					method, access, functionName);
 		}
 		
-		output.addDecl(testClass);
+		module.addDecl(testClass);
 	}
 	
 	/**
@@ -423,8 +429,8 @@ public class ABSUnitTestCaseTranslator {
 		final Access access = signature.getReturnType();
 
 		//add imports of class/interface under test
-		output.addImport(generateImportAST(classUnderTest));
-		output.addImport(generateImportAST(interfaceOfClassUnderTest));
+		module.addImport(generateImportAST(classUnderTest));
+		module.addImport(generateImportAST(interfaceOfClassUnderTest));
 
 
 		/*
@@ -439,7 +445,7 @@ public class ABSUnitTestCaseTranslator {
 					method, access, methodName);
 		}
 		
-		output.addDecl(testClass);
+		module.addDecl(testClass);
 	}
 	
 	/**
@@ -462,12 +468,12 @@ public class ABSUnitTestCaseTranslator {
 		final String testInterfaceName = testCaseNameBuilder.testInterfaceName(className, capMethodName);
 		
 		//create fixture
-		InterfaceDecl testInterface = getDecl(output, InterfaceDecl.class, 
+		InterfaceDecl testInterface = getDecl(module, InterfaceDecl.class, 
 				AbsASTBuilderUtil.<InterfaceDecl>namePred(testInterfaceName));
 		
 		if (testInterface == null) {
 			testInterface = createTestInterface(testInterfaceName);
-			output.addDecl(testInterface);
+			module.addDecl(testInterface);
 		}
 		
 		for (int i=1; i<=testCaseSize; i++) {
