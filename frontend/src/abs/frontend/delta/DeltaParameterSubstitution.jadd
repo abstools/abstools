@@ -63,7 +63,7 @@ aspect DeltaParameterSubstitution {
 
         for (DeltaDecl delta : deltas) {
             for (DeltaClause clause : pl.getDeltaClauses()) {
-                if (delta.getName().equals(clause.getDeltaspec().getName())) {
+                if (delta.getName().equals(clause.getDeltaspec().getName()) && clause.isApplicable(prod)) {
                     List<Deltaparam> params = clause.getDeltaspec().getDeltaparams();
                     delta.substituteParameters(params, prod.getFeatures());
                     break;
@@ -74,6 +74,15 @@ aspect DeltaParameterSubstitution {
         }
     }
 
+    /* Check whether delta clause is applicable for given product
+     * 
+     */
+    public boolean DeltaClause.isApplicable(Product prod) {
+        if (evaluateApplicationCondition(prod.getFeatures()))
+            return true;
+        else
+            return false;
+    }
 
     /* Substitute DeltaDecl's parameters with the values (defined in a delta clause) 
      * 
