@@ -78,10 +78,7 @@ aspect DeltaParameterSubstitution {
      * 
      */
     public boolean DeltaClause.isApplicable(Product prod) {
-        if (evaluateApplicationCondition(prod.getFeatures()))
-            return true;
-        else
-            return false;
+        return evaluateApplicationCondition(prod.getFeatures());
     }
 
     /* Substitute DeltaDecl's parameters with the values (defined in a delta clause) 
