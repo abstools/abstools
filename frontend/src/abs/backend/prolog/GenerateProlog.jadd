@@ -945,8 +945,12 @@ aspect GenerateProlog {
         getPureExp().generateProlog(s,reachInfo);
         s.print(")");
     }
-    //modules, imports, exports
+    //CompilationUnit, modules, imports, exports
 
+    public void CompilationUnit.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+        this.getModuleDecls().generateProlog(s,reachInfo);
+    }
+    
     public void ModuleDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.println("module("+quote(getName())+").");
         //exports
