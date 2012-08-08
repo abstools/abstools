@@ -21,10 +21,6 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         Model model = null;
         String code = null;
         code = absCode;
-        // if (withStdLib)
-        // code =
-        // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
-        // + code;
         model = Main.parseString(code, withStdLib);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());

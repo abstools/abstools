@@ -518,6 +518,7 @@ type Cost = Duration;
  */
 module ABS.Meta;
 export *;
+import * from ABS.StdLib;
 
 interface ObjectMirror {
     String getClassName();
