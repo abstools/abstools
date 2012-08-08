@@ -18,10 +18,10 @@ all: clean gensrc_dyn gen
 static: cleans gensrc_static gens
 
 gensrc_dyn:
-	java -cp $(CP) abs.backend.java.JavaBackend -sourceonly -dynamic -d gen/java src/meta.abs src/example.abs
+	java -cp $(CP) abs.backend.java.JavaBackend -sourceonly -dynamic -d gen/java src/example.abs
 
 gensrc_static:
-	java -cp $(CP) abs.backend.java.JavaBackend -sourceonly -d gens/java src/meta.abs src/example.abs
+	java -cp $(CP) abs.backend.java.JavaBackend -sourceonly -d gens/java src/example.abs
 
 gen:
 	javac -cp $(CP):gen/java src/IO_fli.java gen/java/M/Main.java -d gen/bin

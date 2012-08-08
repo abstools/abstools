@@ -511,3 +511,31 @@ def DeploymentComponent thisDC() = builtin;
 
 // Annotation for method definitions: runtime cost specification
 type Cost = Duration;
+
+
+/**
+ * Reflective, mirror-based interface for ABS
+ */
+module ABS.Meta;
+export *;
+
+interface ObjectMirror {
+    String getClassName();
+    Class getClass();
+    Unit setClass(Class c);
+    
+    Value getFieldValue();
+    Unit setFieldValue(Value val);
+    
+    Cog getCog();
+    Unit setCog(Cog c);
+    
+    Unit debug(String s);
+}
+
+interface Cog {}
+interface Object {}
+interface Class {}
+interface Value {}
+
+def ObjectMirror reflect<A>(A a) = builtin;

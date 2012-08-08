@@ -40,7 +40,7 @@ public class ABSDynamicClass implements ABSClass {
         if (! fields.containsKey(fName))
             fields.put(fName,f);
         else
-            throw new DynamicException("Field " + fName + " already defined for class " + fName + ".");
+            throw new DynamicException("Field " + fName + " already defined for class " + name + ".");
     }
     
     public void removeField(String fName) throws DynamicException {
