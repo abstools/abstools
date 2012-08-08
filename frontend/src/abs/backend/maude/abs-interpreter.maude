@@ -701,7 +701,7 @@ mod ABS-CONFIGURATION is
     [ctor format(nb m! ob b b b m! b n)] .
   op <_: Clock | Limit:_, Random:_> : Int Nat Nat -> Clock
     [ctor format(nb m! ob b b b m! b b m! b n)] .
-  eq < T : Clock | Limit: LIM > = < T : Clock | Limit: LIM, Random: random(counter) > .
+  rl < T : Clock | Limit: LIM > => < T : Clock | Limit: LIM, Random: random(counter) > .
 
 
   *** Cogs.  The second argument is of type Data since it can be an Oid (the
@@ -1402,7 +1402,7 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   op noneSchedulable : MProc Subst Configuration SSubst -> Bool .
   eq noneSchedulable((W, { L | SL }), S, CN, MAC) =
-    (not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC))) and noneSchedulable(W, S, CN, MAC) .
+    (not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC))) and-then noneSchedulable(W, S, CN, MAC) .
   eq noneSchedulable(noProc, S, CN, MAC) = true .
 
   op canAdvance : Configuration Configuration SSubst -> Bool .
@@ -1413,9 +1413,8 @@ mod ABS-MACHINE-BASICS-TIMED is
       < CG : Cog | Object: D >
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
       CN, CN', MAC) =
-    ((D == O or D == null)
-      implies noneSchedulable(W, S, CN CN', MAC))
-    and canAdvance (< CG : Cog | Object: O > CN,
+    ((D =/= O and D =/= null) or-else noneSchedulable(W, S, CN CN', MAC))
+    and-then canAdvance (< CG : Cog | Object: O > CN,
       < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC) .
   *** Block clock if process is executing and can execute. "can execute" means
   *** "schedulable" in this case since a get-operation should not block time
@@ -1426,7 +1425,7 @@ mod ABS-MACHINE-BASICS-TIMED is
       CN, CN', MAC)
   =
     not(schedulable(SL, (S :: L), CN CN', $insert('.deadline, L['.deadline], MAC)))
-    and canAdvance(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC) .
+    and-then canAdvance(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC) .
   eq canAdvance(CN, CN', MAC) = true [owise] .
 
   *** Advance time by T steps: decrement durations in blocked processes and
