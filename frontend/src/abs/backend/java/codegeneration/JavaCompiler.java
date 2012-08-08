@@ -9,16 +9,14 @@ import java.io.StringWriter;
 
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 
+import abs.backend.java.JavaBackend;
+
 class JavaCompiler {
-    private static final String DEFAULT_PREFIX = "-source 5 -nowarn -noExit ";
+    private static final String DEFAULT_PREFIX = "-encoding " + JavaBackend.CHARSET+" -source 5 -nowarn -noExit ";
 
     public static void main(String... args) throws JavaCodeGenerationException {
         if (!compile(args))
             System.exit(1);
-    }
-
-    public static boolean compile(JavaCode code) throws JavaCodeGenerationException {
-        return compile(code.getFileNames());
     }
 
     public static boolean compile(String[] args) throws JavaCodeGenerationException {
@@ -32,10 +30,9 @@ class JavaCompiler {
     public static boolean compile(String args) throws JavaCodeGenerationException {
         StringWriter outWriter = new StringWriter();
         StringWriter errWriter = new StringWriter();
-        String errorString = null;
         boolean res = BatchCompiler.compile(DEFAULT_PREFIX + args, new PrintWriter(outWriter), new PrintWriter(errWriter), null);
         if (!res) {
-            errorString = errWriter.toString();
+            String errorString = errWriter.toString();
             throw new JavaCodeGenerationException("There seems to be a bug in the ABS Java backend. " +
                     "The generated code contains errors:\n" + errorString);
         }

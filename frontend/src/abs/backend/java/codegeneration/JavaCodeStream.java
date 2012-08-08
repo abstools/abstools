@@ -4,8 +4,13 @@
  */
 package abs.backend.java.codegeneration;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+
+import abs.backend.java.JavaBackend;
 
 public class JavaCodeStream extends PrintStream {
     private static final int INDENT_LENGTH = 4;
@@ -20,8 +25,12 @@ public class JavaCodeStream extends PrintStream {
     private Boolean startNewLine = true;
     private String indent = ""; 
 
-    public JavaCodeStream(OutputStream out) {
-        super(out);
+    public JavaCodeStream(OutputStream out) throws UnsupportedEncodingException {
+        super(out, false, JavaBackend.CHARSET);
+    }
+
+    public JavaCodeStream(File file) throws FileNotFoundException, UnsupportedEncodingException {
+        super(file, JavaBackend.CHARSET);
     }
 
     public void incIndent() {

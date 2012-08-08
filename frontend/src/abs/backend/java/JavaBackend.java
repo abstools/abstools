@@ -21,6 +21,8 @@ import abs.frontend.typechecker.*;
 
 public class JavaBackend extends Main {
 
+    public final static String CHARSET = "UTF-8";
+
     public static void main(final String... args) {
         try {
             new JavaBackend().compile(args);

@@ -20,8 +20,6 @@ import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.Position;
-import abs.frontend.analyser.ErrorMessage;
-import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
@@ -47,7 +45,6 @@ import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 import abs.frontend.typechecker.Type;
-import abs.frontend.typechecker.TypeCheckerException;
 import abs.frontend.typechecker.TypeCheckerHelper;
 import beaver.Symbol;
 

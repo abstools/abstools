@@ -111,7 +111,6 @@ public class JavaCode {
         args2.addAll(Arrays.asList(args));
         args2.addAll(Arrays.asList(getFileNames()));
         JavaCompiler.compile(args2.toArray(new String[0]));
-
     }
 
     public String getFirstMainClass() {
@@ -119,7 +118,6 @@ public class JavaCode {
             throw new IllegalStateException("There is no main class");
 
         return mainClasses.get(0);
-
     }
 
     public String toString() {

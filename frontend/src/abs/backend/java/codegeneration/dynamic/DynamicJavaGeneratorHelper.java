@@ -7,6 +7,7 @@ package abs.backend.java.codegeneration.dynamic;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeStream;
@@ -21,7 +22,6 @@ import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
-import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.AsyncCall;
@@ -476,13 +476,17 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateAwaitStmt(AwaitStmt awaitStmt, PrintStream stream) {
         OutputStream exprOStream = new ByteArrayOutputStream();
-        PrintStream exprStream = new JavaCodeStream(exprOStream);
-        // Necessary temporary variables are written to "stream" and the 
-        // await-expression is written to exprStream
-        awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
-        stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
-        stream.print(exprOStream.toString());
-        stream.println(");");
+        try {
+            PrintStream exprStream = new JavaCodeStream(exprOStream);
+            // Necessary temporary variables are written to "stream" and the 
+            // await-expression is written to exprStream
+            awaitStmt.getGuard().generateJavaGuardDynamic(stream, exprStream);
+            stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
+            stream.print(exprOStream.toString());
+            stream.println(");");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public static void assign(PrintStream stream, AssignStmt assign) {

@@ -37,7 +37,7 @@ aspect GenerateJava {
           File file = p.createJavaFile(mainName);
       PrintStream stream = null;
       try {
-      stream = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+      stream = new JavaCodeStream(file);
       stream.println("package "+p.packageName+";");
           //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
@@ -71,7 +71,7 @@ aspect GenerateJava {
     try {
       String name = JavaBackend.getJavaName(this);
       File file = pkg.createJavaFile(name);
-      s = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)));
+      s = new JavaCodeStream(file);
       s.println("package "+pkg.packageName+";");
           //s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
       generateJava(s);
