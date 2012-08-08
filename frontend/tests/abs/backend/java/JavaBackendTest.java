@@ -71,6 +71,18 @@ public class JavaBackendTest extends ABSTest {
      * compiles and executes the given code
      * ABS assertions can be used to check the result 
      */
+    void assertValidJavaExecution(String absFile, boolean useStdLib) throws Exception {
+        FileReader fileReader = new FileReader(absFile);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        List<String> lines = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            lines.add(line);
+        }
+        bufferedReader.close();
+        assertValidJavaExecution(useStdLib, lines.toArray(new String[lines.size()]));
+    }
+
     void assertValidJavaExecution(boolean withStdLib, String ... codeLines) throws Exception {
         StringBuilder absCode = new StringBuilder();
         for (String line : codeLines) {

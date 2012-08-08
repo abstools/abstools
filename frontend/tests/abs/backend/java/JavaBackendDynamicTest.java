@@ -4,8 +4,12 @@
  */
 package abs.backend.java;
 
+import static abs.ABSTest.Config.TYPE_CHECK;
+import static abs.ABSTest.Config.WITH_STD_LIB;
 import static org.junit.Assert.fail;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import org.junit.Test;
 import abs.backend.java.codegeneration.JavaCode;
@@ -38,25 +42,42 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         return getJavaCodeDynamic(model);
     }
 
+    @Override
+    protected void assertValidJavaFile(String absFile, boolean useStdLib) throws Exception {
+        Model m = assertParseFileOk(absFile, WITH_STD_LIB, TYPE_CHECK);
+        assertValidJava(getJavaCodeDynamic(m));
+    }
+
     static JavaCode getJavaCodeDynamic(Model model) throws IOException, JavaCodeGenerationException {
         JavaCode code = new JavaCode();
         model.generateJavaCodeDynamic(code);
         return code;
     }
 
+
+    /*
+     * Test all ABS code samples in tests/abssamples/meta/
+     */
     @Test
-    public void meta1() throws Exception {
-        assertValidJavaExecution(true,
-                "module Test; import * from ABS.Meta;",
-                "interface A {}",
-                "class A implements A {}",
-                "{",
-                    "A obj = new A();",
-                    "ObjectMirror m = reflect(obj);",
-                    "String name = m.getClassName();",
-                    "assert (name == \"A\");",
-                "}"
-                
-        );
+    public void metaSamples() throws Exception {
+        final String s = System.getProperty("file.separator");
+        final String dir = "tests" + s + "abssamples" + s + "meta";
+        ABSFileNameFilter filter = new ABSFileNameFilter();
+        File dirHandle = new File(dir);
+        String[] absFiles = dirHandle.list(filter);
+
+        for (int i=0; i < absFiles.length; i++) {
+            String file = absFiles[i];
+            System.out.println("ABS sample: " + file);
+            assertValidJavaExecution(dir + s + file, true);
+        }
+    }
+    
+    class ABSFileNameFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            return name.endsWith(".abs");
+        }
+        
     }
 }
