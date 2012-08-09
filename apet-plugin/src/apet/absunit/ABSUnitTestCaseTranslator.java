@@ -1,16 +1,9 @@
 package apet.absunit;
 
-import static abs.backend.tests.AbsASTBuilderUtil.createInterface;
-import static abs.backend.tests.AbsASTBuilderUtil.createMethodImpl;
-import static abs.backend.tests.AbsASTBuilderUtil.createMethodSig;
 import static abs.backend.tests.AbsASTBuilderUtil.findMethodImpl;
 import static abs.backend.tests.AbsASTBuilderUtil.findMethodSig;
 import static abs.backend.tests.AbsASTBuilderUtil.generateImportAST;
 import static abs.backend.tests.AbsASTBuilderUtil.getDecl;
-import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
-import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
-import static abs.backend.tests.AbsASTBuilderUtil.newObj;
-import static apet.absunit.ABSUnitTestCaseTranslatorConstants.ASSERT_HELPER;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.CONFIGURATION_NAME;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.FEATURE_NAME;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.MAIN;
@@ -33,31 +26,21 @@ import abs.common.StringUtils;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Access;
-import abs.frontend.ast.Annotation;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.Feature;
-import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.InitBlock;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Opt;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
-import abs.frontend.ast.PureExp;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
 import abs.frontend.tests.ABSFormatter;
@@ -72,22 +55,6 @@ import apet.testCases.TestCase;
  */
 public class ABSUnitTestCaseTranslator {
 	
-	private static final String ignore = "AbsUnit.Ignored";
-	private static final String test = "AbsUnit.Test";
-	private static final String dataPoint = "AbsUnit.DataPoint";
-
-	private static final String suite = "AbsUnit.Suite";
-	private static final String fixture = "AbsUnit.Fixture";
-
-	private DataConstructor ignoreType;
-	private DataConstructor testType;
-	private DataConstructor dataPointType;
-
-	private DataConstructor suiteType;
-	private DataConstructor fixtureType;
-	
-	private ClassDecl absAssertImpl;
-
 	private final Model model;
 	private final ModuleDecl module;
 	private final Set<DeltaDecl> deltas;
@@ -99,6 +66,7 @@ public class ABSUnitTestCaseTranslator {
 	private final boolean verbose;
 	
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
+	private final ABSUnitTestCaseTranslatorHelper translatorHelper =  new ABSUnitTestCaseTranslatorHelper();
 	private final PureExpressionBuilder pureExpBuilder;
 	private final DeltaForGetSetFieldsBuilder deltaBuilder;
 	private final MethodTestCaseBuilder methodBuilder;
@@ -120,30 +88,20 @@ public class ABSUnitTestCaseTranslator {
 		
 		console("Gathering ABSUnit annotations");
 		
-		gatherABSUnitAnnotations();
-
 		/*
 		 * Do not search for test class definitions if this model does not
 		 * contain the necessary ABSUnit annotations
 		 */
-		if (ignoreType == null || testType == null || dataPointType == null ||
-			suiteType == null || fixtureType == null) {
+		if (! translatorHelper.gatherABSUnitAnnotations(this.model)) {
 			return;
 		}
 		
 		this.outputFile = outputFile;
-
-		this.absAssertImpl = 
-			getDecl(this.model, ClassDecl.class, 
-				new DeclNamePredicate<ClassDecl>("ABSAssertImpl"));
-		
-		if (this.absAssertImpl == null) 
-			throw new IllegalArgumentException("Cannot find ABSAssertImpl");
-
+		this.translatorHelper.setABSAssertImpl(model);
 	}
 	
 	public boolean hasABSUnit() {
-		return testType != null;
+		return translatorHelper.hasABSUnit();
 	}
 	
 	/**
@@ -287,59 +245,6 @@ public class ABSUnitTestCaseTranslator {
 		}
 	}
 	
-	private Annotation getTestAnnotation(DataConstructor c) {
-		return new Annotation(new DataConstructorExp(
-				c.getName(), 
-				new abs.frontend.ast.List<PureExp>()));
-	}
-	
-	/**
-	 * Create a method signature for testing method with the given method name.
-	 * 
-	 * @param methodName
-	 * @param decls
-	 * @return
-	 */
-	private MethodSig createTestMethodSig(String methodName, 
-			ParamDecl... decls) {
-		MethodSig methodSig = createMethodSig(methodName, getUnit(), decls);
-		methodSig.addAnnotation(getTestAnnotation(testType));
-		return methodSig;
-	}
-	
-	private InterfaceDecl createTestInterface(String interfaceName) {
-		InterfaceDecl ti = createInterface(interfaceName);
-		ti.addAnnotation(getTestAnnotation(fixtureType)); 
-		return ti;
-	}
-	
-	private ClassDecl createTestClass(InterfaceDecl inf) {
-		ClassDecl ct = new ClassDecl(testCaseNameBuilder.className(inf.getName()), 
-				new abs.frontend.ast.List<Annotation>(), 
-				new abs.frontend.ast.List<ParamDecl>(),
-				new abs.frontend.ast.List<InterfaceTypeUse>(), 
-				new Opt<InitBlock>(),
-				new abs.frontend.ast.List<FieldDecl>(),
-				new abs.frontend.ast.List<MethodImpl>());
-		
-		ct.addAnnotation(getTestAnnotation(suiteType)); 
-		ct.addImplementedInterfaceUse(new InterfaceTypeUse(inf.getName()));
-		
-		for (MethodSig m : inf.getAllMethodSigs()) {
-			ct.addMethod(createMethodImpl(m));
-		}
-
-		FieldDecl assertImpl = new FieldDecl();
-		assertImpl.setName(ASSERT_HELPER);
-		assertImpl.setAccess(absAssertImpl.getImplementedInterfaceUse(0).fullCopy());
-		
-		InitBlock block = new InitBlock();
-		block.addStmt(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));
-		ct.setInitBlock(block);
-		
-		return ct;
-	}
-		
 	/**
 	 * Create a test suite for testing a function.
 	 * 
@@ -354,7 +259,7 @@ public class ABSUnitTestCaseTranslator {
 			String functionName) {
 	
 		//create test class ([Suite])
-		final ClassDecl testClass = createTestClass(testInterface);
+		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
 
 		//find function under test
 		FunctionDecl functionUnderTest = getDecl(model, FunctionDecl.class,
@@ -394,7 +299,7 @@ public class ABSUnitTestCaseTranslator {
 			String methodName) {
 	
 		//create test class ([Suite])
-		final ClassDecl testClass = createTestClass(testInterface);
+		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
 
 		//find class under test.
 		ClassDecl classUnderTest = getDecl(model, ClassDecl.class, 
@@ -472,39 +377,17 @@ public class ABSUnitTestCaseTranslator {
 				AbsASTBuilderUtil.<InterfaceDecl>namePred(testInterfaceName));
 		
 		if (testInterface == null) {
-			testInterface = createTestInterface(testInterfaceName);
+			testInterface = translatorHelper.createTestInterface(testInterfaceName);
 			module.addDecl(testInterface);
 		}
 		
 		for (int i=1; i<=testCaseSize; i++) {
-			testInterface.addBody(createTestMethodSig(testCaseNameBuilder.testMethodName(capMethodName, 
+			testInterface.addBody(
+					translatorHelper.createTestMethodSig(testCaseNameBuilder.testMethodName(capMethodName, 
 					Integer.valueOf(i).toString())));
 		}
 		
 		return testInterface;
 	}
 	
-	private void gatherABSUnitAnnotations() {
-		for (Decl decl : this.model.getDecls()) {
-			if (decl instanceof ParametricDataTypeDecl) {
-				if (decl.getType().getQualifiedName().equals(test)) {
-					testType = ((ParametricDataTypeDecl) decl)
-							.getDataConstructor(0);
-				} else if (decl.getType().getQualifiedName().equals(fixture)) {
-					fixtureType = ((ParametricDataTypeDecl) decl)
-							.getDataConstructor(0);
-				} else if (decl.getType().getQualifiedName().equals(suite)) {
-					suiteType = ((ParametricDataTypeDecl) decl)
-							.getDataConstructor(0);
-				} else if (decl.getType().getQualifiedName().equals(dataPoint)) {
-					dataPointType = ((ParametricDataTypeDecl) decl)
-							.getDataConstructor(0);
-				} else if (decl.getType().getQualifiedName().equals(ignore)) {
-					ignoreType = ((ParametricDataTypeDecl) decl)
-							.getDataConstructor(0);
-				}
-			}
-		}
-	}
-
 }

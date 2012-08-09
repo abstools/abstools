@@ -15,6 +15,7 @@ import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.IntLiteral;
+import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.NullExp;
@@ -32,6 +33,9 @@ import apet.testCases.ABSTerm;
  *
  */
 final class PureExpressionBuilder {
+	
+	private final String INT = "Int";
+	private final String STRING = "String";
 	
 	private final Model model;
 	private final ModuleDecl output;
@@ -85,12 +89,19 @@ final class PureExpressionBuilder {
 		if (decl instanceof TypeSynDecl) {
 			return parseValue(testName, heap, term);
 		} else if (decl instanceof DataTypeDecl) {
-			if ("String".equals(decl.getName())) {
+			if (STRING.equals(decl.getName())) {
 				return new StringLiteral(getABSDataValue(term));
-			} else if ("Int".equals(decl.getName())) {
+			} else if (INT.equals(decl.getName())) {
 				return new IntLiteral(getABSDataValue(term));
 			} else {
 				return parseValue(testName, heap, term);
+			}
+		} else if (decl instanceof InterfaceDecl) {
+			String value = getABSDataValue(term);
+			if (heap.contains(value)) {
+				return new VarUse(heapRefBuilder.heapReferenceForTest(testName, value));
+			} else {
+				return new NullExp();
 			}
 		} else {
 			throw new IllegalStateException("Cannot handle declaration type "+decl);

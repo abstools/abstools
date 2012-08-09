@@ -339,15 +339,6 @@ abstract class ABSUnitTestCaseBuilder {
 			Map<ABSRef,ABSObject> finalHeap, 
 			String actual, Access access, ABSData data, Block block) {
 		
-//		if (data instanceof ABSTerm) {
-//			makeOracle(finalHeap, actual, access, (ABSTerm) data, block);
-//		} else if (data instanceof ABSRef) {
-//			ABSObject obj = finalHeap.get(data);
-//		} else {
-//			throw new IllegalStateException("Cannot handle ABSData that is not " +
-//					"either a ABSRef or a ABSTerm");
-//		}
-	
 		//TODO handle object comparison!
 		block.addStmt(
 			getExpStmt(getCall(
