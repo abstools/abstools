@@ -301,13 +301,13 @@ public class DynamicJavaGeneratorHelper {
 
 
     public static void generateClassDecl(PrintStream stream, final ClassDecl decl) {
-        if (decl.isForeign()) {
-            // generate standard code
-            new abs.backend.java.codegeneration.ClassDeclGenerator("", stream, decl).generate();
-        } else {
+//        if (decl.isForeign()) {
+//            // generate standard code
+//            new abs.backend.java.codegeneration.ClassDeclGenerator("", stream, decl).generate();
+//        } else {
             // generate dynamic/untyped code
             new ClassDeclGenerator(stream, decl).generate();
-        }
+//        }
     }
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {
@@ -323,13 +323,12 @@ public class DynamicJavaGeneratorHelper {
             }
             stream.println("args[" + i + "];");
         }
-        generateMethodBody(stream, m, false);
-        stream.println("}");
-        
         if (m.isForeign()) {
-            generateFLIMethod(stream, m);
+            stream.println("// TODO call " + FLI_METHOD_PREFIX + JavaBackend.getMethodName(m.getMethodSig().getName()) + " in outer class");
+        } else {
+            generateMethodBody(stream, m, false);
         }
-
+        stream.println("}");
     }
 
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
@@ -374,26 +373,19 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateFLIMethod(PrintStream stream, MethodImpl m) {
 //        JavaGeneratorHelper.generateMethodSig("", stream, m.getMethodSig(), false, "", FLI_METHOD_PREFIX);
-//        JavaGeneratorHelper.generateMethodBody("", stream, m, true);
-        
+
+        // Generate method signature
         MethodSig sig = m.getMethodSig();
-        DynamicJavaGeneratorHelper.generateHelpLine(sig ,stream);
+        DynamicJavaGeneratorHelper.generateHelpLine(sig, stream);
         stream.print("public ");
-//        if (async) {
-//            prefix = "async_";
-//            stream.print(ABSFut.class.getName()+"<");
-//        }
-        
         sig.getReturnType().generateJavaDynamic(stream);
-        
-//        if (async)
-//            stream.print(">");
         stream.print(" " + FLI_METHOD_PREFIX + JavaBackend.getMethodName(sig.getName()));
         DynamicJavaGeneratorHelper.generateParams(stream, sig.getParams());
 
         // TODO now generate method body
+        // JavaGeneratorHelper.generateMethodBody("", stream, m, true);
         stream.println(" {");
-        stream.println("// FIXME body is not yet generated...");
+        stream.println("// TODO generate body");
         stream.println("}");
     }
 

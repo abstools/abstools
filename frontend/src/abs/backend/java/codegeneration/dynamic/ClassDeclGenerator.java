@@ -84,6 +84,7 @@ public class ClassDeclGenerator {
 
             // fli methods are mapped to methods...
             if (m.isForeign()) {
+                stream.println("/* FLI method: to be overridden */");
                 DynamicJavaGeneratorHelper.generateFLIMethod(stream, m);
             }
         }

@@ -16,70 +16,15 @@ class IO implements IO {
 }
 //-----------------------------------------------------------------------
 
-interface I { 
-    Int getFieldX();
-    Unit setFieldX(Int x);
-    String getFieldS();
-    Unit setFieldS(String s);
-}
-class C(Int fieldX, String fieldS) implements I {
-    Int getFieldX() {
-        return fieldX;
-    }
-    String getFieldS() {
-        return fieldS;
-    }
-
-    Unit setFieldX(Int x) {
-        this.fieldX = x;
-    }
-    Unit setFieldS(String s) {
-        fieldS = s;
-    }
-}
-
-interface I2 {}
-class C2 implements I2 {}
-
+interface I { Unit m(); }
+class C implements I { Unit m() {} }
 
 {
-    I o1 = new C(1, "Hello World");
-    ObjectMirror m1 = reflect(o1);
-    String name = m1.getClassName();
-    assert (name == "C");
+    I o = new C();
+    o.m();
+    ObjectMirror m = reflect(o);
+    String name = m.getClassName();
 
-    Cog cog1 = m1.getCog();
-
-    I2 o2 = new C2();
-    ObjectMirror m2 = reflect(o2);
-    name = m2.getClassName();
-    assert (name == "C2");
-    
-    // change class of object o1
-    Class co2 = m2.getClass();
-    m1.setClass(co2);
-    name = m1.getClassName();
-    assert (name == "C2");
-
-    o1 = new C(2, "Hello2");
-    // now o1 is a new object of class C
-    m1.debug(name);
-
-    // reflect should give a brand new mirror
-    m1 = reflect(o1);
-    name = m1.getClassName();
-    
-    // that reflects a C object
-    m1.debug(name);
-    
-        
-//    String s = o1.getFieldS();
-    
-    
-    
-//    String s = m.getClassName();
-//    Class c = m.getClass();
-    
-//    IO io = new IO();
-//    io.println(s);
+    IO io = new IO();
+    io.println(name);
 }
