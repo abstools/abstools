@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,7 @@ import abs.backend.tests.AbsASTBuilderUtil.MethodSigNamePredicate;
 import abs.common.StringUtils;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DeltaAccess;
@@ -122,7 +124,16 @@ public class ABSUnitTestCaseTranslator {
 		
 		buildProductLine(module);
 		console("Pretty printing ABSUnit tests...");
-		printToFile(module, outputFile);
+		
+		List<ASTNode<ASTNode>> nodes = 
+				new ArrayList<ASTNode<ASTNode>>();
+		
+		nodes.add(module);
+		nodes.addAll(deltas);
+		nodes.add(productline);
+		nodes.add(product);
+		
+		printToFile(nodes, outputFile);
 		console("Validating ABSUnit tests...");
 		validateOutput();
 		console("ABSUnit tests generation successful");
@@ -233,15 +244,18 @@ public class ABSUnitTestCaseTranslator {
 		module.addImport(new StarImport("AbsUnit.Hamcrest.Core"));
 	}
 	
-	private void printToFile(ModuleDecl module, File file) {
+	private void printToFile(List<ASTNode<ASTNode>> nodes, File file) {
         try {
 			PrintStream stream = new PrintStream(file);
 	        ABSFormatter formatter = new DefaultABSFormatter();
 	        PrintWriter writer = new PrintWriter(stream, true);
 	        formatter.setPrintWriter(writer);
-	        module.doPrettyPrint(writer, formatter);
+	        for (ASTNode<ASTNode> n : nodes) {
+		        n.doPrettyPrint(writer, formatter);
+	        }
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			e.printStackTrace(new PrintStream(
+				ConsoleHandler.getDefault().newMessageStream()));
 		}
 	}
 	
