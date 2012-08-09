@@ -15,7 +15,6 @@ import org.junit.Test;
 
 import abs.ABSTest;
 import abs.frontend.ast.Model;
-import abs.frontend.parser.Main;
 
 /**
  * Note that this class doesn't have a nullary constructor and can't be run
@@ -82,7 +81,7 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeCode(String absCode, String module) throws Exception {
-        Model model = Main.parseString(absCode, true);
+        Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
 
         if (model.hasErrors()) {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
