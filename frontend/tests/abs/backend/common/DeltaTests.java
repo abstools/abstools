@@ -24,7 +24,7 @@ public class DeltaTests extends SemanticTests {
 
     @Test
     public void nonAppliedDelta() {
-        assertEvalTrue(INTERFACE_I + CLASS_C + DELTA_D + CALL_ORIGINAL);
+        assertEvalTrue(INTERFACE_I + CLASS_C + CALL_ORIGINAL + DELTA_D);
     }
     // TODO: design a way to give arguments to assertEvalTrue (we will need this
     // when selecting among products as well, later).

@@ -22,7 +22,6 @@ import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
-import abs.frontend.parser.Main;
 import static abs.ABSTest.Config.*;
 
 public class JavaBackendTest extends ABSTest {
@@ -212,7 +211,7 @@ public class JavaBackendTest extends ABSTest {
         // code =
         // "data Unit = Unit; data Bool = True | False; data Int; data String; data Fut<A>; "
         // + code;
-        model = Main.parseString(code, withStdLib);
+        model = assertParse(code, withStdLib ? WITH_STD_LIB : null);
         if (model.hasErrors()) {
             fail(model.getErrors().get(0).getHelpMessage());
         } else {
