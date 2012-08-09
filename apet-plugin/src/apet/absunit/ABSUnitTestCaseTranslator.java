@@ -29,6 +29,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaClause;
 import abs.frontend.ast.DeltaDecl;
@@ -111,9 +112,10 @@ public class ABSUnitTestCaseTranslator {
 	 * given test suite.
 	 * 
 	 * @param suite
+	 * @param validate
 	 * @return
 	 */
-	public ModuleDecl generateABSUnitTests(ApetTestSuite suite) {
+	public ModuleDecl generateABSUnitTests(ApetTestSuite suite, boolean validate) {
 		console("Add basic imports...");
 		addBasicImports(module);
 		
@@ -134,8 +136,11 @@ public class ABSUnitTestCaseTranslator {
 		nodes.add(product);
 		
 		printToFile(nodes, outputFile);
-		console("Validating ABSUnit tests...");
-		validateOutput();
+		if (validate) {
+			console("Validating ABSUnit tests...");
+			validateOutput();
+		}
+
 		console("ABSUnit tests generation successful");
 		return module;
 	}
@@ -210,8 +215,17 @@ public class ABSUnitTestCaseTranslator {
 	}
 
 	private void validateOutput() {
+		CompilationUnit unit = new CompilationUnit();
+		ModuleDecl cm = module.fullCopy();
+		unit.addModuleDecl(cm);
+		for (DeltaDecl d : deltas) {
+			unit.addDeltaDecl(d);
+		}
+		unit.setProductLine(productline);
+		unit.addProduct(product);
+		
 		Model copy = model.fullCopy();
-		copy.getCompilationUnit().addModuleDecl(module.fullCopy());
+		copy.addCompilationUnit(unit);
 		
 		validateOutput(copy.fullCopy(), null);
 		validateOutput(copy.fullCopy(), module.getName().concat(".").concat(PRODUCT_NAME));

@@ -3,6 +3,7 @@ package apet.handlers;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -46,6 +47,12 @@ public class apetHandler extends AbstractHandler {
 	 * Currently only modify manually during development
 	 */
 	private boolean translate = true;
+	
+	/**
+	 * This flag dictates if the generated test cases should be type checked
+	 * against the SUT.
+	 */
+	private boolean validate = false;
 	
 	/**
 	 * The default file location to store ABSUnit test cases 
@@ -98,29 +105,28 @@ public class apetHandler extends AbstractHandler {
 				} else {
 					callPrologBackend(absFile);
 					shell.callAPet(CostabsLink.ENTRIES_STRINGS);
-					if (proceed(shell)) {
-						ApetTestSuite suite = callXMLParser();
-						if (translate) {
-							Model m = getABSModel(absFile);
-							generateABSUnitTests(m,suite);
-						}
+					printError(shell);
+					ApetTestSuite suite = callXMLParser();
+					if (translate) {
+						Model m = getABSModel(absFile);
+						generateABSUnitTests(m,suite);
 					}
 				}	
 				ConsoleHandler.write(shell.getResult());
 			}
 		} catch (Exception e) {
 			ConsoleHandler.write(shell.getError());
+			e.printStackTrace(new PrintStream(
+				ConsoleHandler.getDefault().newMessageStream()));
 		}
 		return null;
 	}
 	
-	boolean proceed(ApetShellCommand shell) {
+	void printError(ApetShellCommand shell) {
 		String error = shell.getError();
 		if (error != null && ! error.isEmpty()) {
 			ConsoleHandler.write(error);
-			return false;
 		}
-		return true;
 	}
 	
 	/**
@@ -132,13 +138,13 @@ public class apetHandler extends AbstractHandler {
 	private void generateABSUnitTests(Model model, ApetTestSuite suite) throws IOException {
 		
 		if (suite == null) {
-			System.out.println("aPET error: Error generating ABSUnit test suite");
+			ConsoleHandler.write("aPET error: Error generating ABSUnit test suite");
 			return;
 		}
 		
 		File file = new File(absUnitOutputFile);
 		if (file.isDirectory()) {
-			System.out.println("aPET error: cannot create ABSUnit test cases to "+file);
+			ConsoleHandler.write("aPET error: cannot create ABSUnit test cases to "+file);
 			return;
 		}
 
@@ -152,11 +158,11 @@ public class apetHandler extends AbstractHandler {
 		        new ABSUnitTestCaseTranslator(model, file, true); 
 		
 		if (! generator.hasABSUnit()) {
-			System.out.println("aPET error: cannot find ABSUnit packages");
+			ConsoleHandler.write("aPET error: cannot find ABSUnit packages");
 			return;
 		}
 		
-		generator.generateABSUnitTests(suite);
+		generator.generateABSUnitTests(suite, validate);
 	}
 	
 	private Model getABSModel(String filename) throws Exception {
