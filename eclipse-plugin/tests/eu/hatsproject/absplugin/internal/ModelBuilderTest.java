@@ -82,11 +82,11 @@ public class ModelBuilderTest {
 			"\n"+
 			"class DataBaseImpl(Map<Filename, File> db) implements DataBase {\n"+
 			"  File getFile(Filename fId) {\n"+
-			"    return lookup(db, fId);\n"+
+			"    return lookupUnsafe(db, fId);\n"+
 			"  }\n"+
 			"\n"+
 			"  Int getLength(Filename fId) {\n"+
-			"    return length(lookup(db,fId));\n"+
+			"    return length(lookupUnsafe(db,fId));\n"+
 			"  }\n"+
 			"\n"+
 			"  Unit storeFile(Filename fId, File file) {\n"+
