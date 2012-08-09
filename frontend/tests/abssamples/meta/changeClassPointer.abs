@@ -1,21 +1,26 @@
 module Test;
 import * from ABS.Meta;
 
-interface I {}
-class C implements I {}
-class D implements I {}
+interface I {Int m(); }
+class C implements I { Int m() {return 1;} }
+class D implements I { Int m() {return 2;} }
 
 {
     I o1 = new C();
     ObjectMirror m1 = reflect(o1);
     String name = m1.getClassName();
     assert (name == "C");
+    Int x = o1.m();
+    assert x == 1;
 
+    // change class of o1 to C2 and invoke m() again
     I o2 = new D();
     ObjectMirror m2 = reflect(o2);
     Class class_of_o2 = m2.getClass();
     m1.setClass(class_of_o2);
     name = m1.getClassName();
     assert (name == "D");
+    x = o1.m();
+    assert x == 2;
     
 }
