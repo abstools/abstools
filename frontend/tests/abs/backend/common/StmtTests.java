@@ -29,7 +29,7 @@ public class StmtTests extends SemanticTests {
 
     @Test
     public void whileFalse() {
-        assertEvalTrue("{ Bool testresult = False; while (False) { }; testresult = True;  }");
+        assertEvalTrue("{ Bool testresult = False; while (False) { } testresult = True;  }");
     }
 
     @Test

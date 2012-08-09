@@ -14,11 +14,6 @@ public class JavaStmtTests extends JavaBackendTest {
     }
 
     @Test
-    public void emptyStmt() throws Exception {
-        assertValid("{ ; }");
-    }
-
-    @Test
     public void skipStmt() throws Exception {
         assertValid("{ skip; }");
     }
