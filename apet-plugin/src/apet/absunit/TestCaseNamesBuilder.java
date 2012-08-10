@@ -30,7 +30,7 @@ final class TestCaseNamesBuilder {
 	}
 	
 	String resultOfGetterMethodName(String fieldName) {
-		return getterMethodName(fieldName) + "Var";
+		return getterMethodName(fieldName) + "ReturnValue";
 	}
 	
 	String className(String interfaceName) {

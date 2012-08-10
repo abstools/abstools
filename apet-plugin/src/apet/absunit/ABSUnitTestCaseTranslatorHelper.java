@@ -97,6 +97,7 @@ class ABSUnitTestCaseTranslatorHelper {
 		FieldDecl assertImpl = new FieldDecl();
 		assertImpl.setName(ASSERT_HELPER);
 		assertImpl.setAccess(absAssertImpl.getImplementedInterfaceUse(0).fullCopy());
+		ct.addField(assertImpl);
 		
 		InitBlock block = new InitBlock();
 		block.addStmt(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));

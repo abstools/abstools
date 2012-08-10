@@ -16,6 +16,7 @@ import apet.testCases.ABSRef;
 final class MethodTestCaseBuilder extends ABSUnitTestCaseBuilder {
 
 	private final PureExpressionBuilder pureExpBuilder;
+	private final HeapReferenceBuilder heapRefBuilder = new HeapReferenceBuilder();
 	
 	MethodTestCaseBuilder(PureExpressionBuilder pureExpBuilder,
 			DeltaForGetSetFieldsBuilder deltaBuilder,
@@ -45,7 +46,9 @@ final class MethodTestCaseBuilder extends ABSUnitTestCaseBuilder {
 		}
 		
 		String rn = getABSDataValue(r);
-		Call call = getCall(new VarUse(rn), testExecutionName, false, ps);
+		Call call = getCall(
+				new VarUse(heapRefBuilder.heapReferenceForTest(testName, rn)), 
+				testExecutionName, true, ps);
 		return call;
 	}
 
