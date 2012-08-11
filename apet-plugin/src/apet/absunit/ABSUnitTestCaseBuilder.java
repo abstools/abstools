@@ -36,6 +36,7 @@ import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.EqExp;
 import abs.frontend.ast.Exp;
 import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
@@ -332,8 +333,9 @@ abstract class ABSUnitTestCaseBuilder {
 				syncCall.setMethod(testCaseNameBuilder.getterMethodName(fn));
 				block.addStmt(getVarDecl(testCaseNameBuilder.resultOfGetterMethodName(fn), 
 						(Access) field.getAccess().fullCopy(), syncCall));
-				makeOracle(testName, heapNames, finalHeap, testCaseNameBuilder.resultOfGetterMethodName(fn),
-						(Access) field.getAccess().fullCopy(), d,block);
+				makeOracle(testName, heapNames, finalHeap, 
+						testCaseNameBuilder.resultOfGetterMethodName(fn),
+						(Access) field.getAccess().fullCopy(), d, block);
 			}
 		}
 	}
@@ -341,13 +343,29 @@ abstract class ABSUnitTestCaseBuilder {
 	void makeOracle(String testName, Set<String> heapNames, 
 			Map<ABSRef,ABSObject> finalHeap, 
 			String actual, Access access, ABSData data, Block block) {
+
+		InterfaceDecl inf = null;
+		if (access instanceof DataTypeUse) {
+			inf = getDecl(model, InterfaceDecl.class, 
+					new DeclNamePredicate<InterfaceDecl>(((DataTypeUse) access).getName()));
+		}
 		
-		//TODO handle object comparison!
-		block.addStmt(
-			getExpStmt(getCall(
-					new VarUse(ASSERT_HELPER), "assertTrue", true, 
-					new EqExp(new VarUse(actual), 
-							pureExpBuilder.createPureExpression(testName, heapNames, data)))));
+		if (inf == null) {
+			block.addStmt(getExpStmt(getCall(
+				new VarUse(ASSERT_HELPER), "assertTrue", true, 
+				new EqExp(new VarUse(actual), 
+						pureExpBuilder.createPureExpression(testName, heapNames, data)))));
+		} else {
+			String ref = getABSDataValue(data);
+			for (ABSRef r : finalHeap.keySet()) {
+				if (getABSDataValue(r).equals(ref)) {
+					makeGetAndAssertStatementsForHeapRef(
+							testName, heapNames, finalHeap, r, finalHeap.get(r), block);
+					break;
+				}
+			}
+		}
+		
 	}
 
 	abstract Exp makeTestExecution(String testName, Set<String> heap, 
