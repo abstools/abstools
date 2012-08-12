@@ -43,6 +43,7 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModifyMethodModifier;
+import abs.frontend.ast.NullExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.SyncCall;
@@ -350,11 +351,11 @@ abstract class ABSUnitTestCaseBuilder {
 					new DeclNamePredicate<InterfaceDecl>(((DataTypeUse) access).getName()));
 		}
 		
-		if (inf == null) {
+		PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, data);
+		if (inf == null || exp instanceof NullExp) {
 			block.addStmt(getExpStmt(getCall(
 				new VarUse(ASSERT_HELPER), "assertTrue", true, 
-				new EqExp(new VarUse(actual), 
-						pureExpBuilder.createPureExpression(testName, heapNames, data)))));
+				new EqExp(new VarUse(actual), exp))));
 		} else {
 			String ref = getABSDataValue(data);
 			for (ABSRef r : finalHeap.keySet()) {
