@@ -208,6 +208,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	/**
 	 * Select the closest node to the given line.
 	 * Note that the outline might actually not be visible.
+	 * startLine < 0 indicates invalid info, e.g. from upstream, will reset selection.
 	 */
 	public void selectNodeByPos(int startLine) {
 		// Do nothing if viewer not created yet (e.g. invisible on startup)
@@ -218,15 +219,24 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	    Object input = getTreeViewer().getInput();
 	    if (input instanceof InternalASTNode<?>) {
 	        InternalASTNode<?> internalASTNode = (InternalASTNode<?>) input;
-	        InternalASTNode<?> sel = findNodeInLine(internalASTNode, startLine+1);
-	        ISelection selection = new TreeSelection(new TreePath(new Object[] {sel}));
+	        final ISelection selection;
+	        if (startLine > -1) { // valid line info?
+	        	InternalASTNode<?> sel = findNodeInLine(internalASTNode, startLine+1);
+	        	assert sel != null; // preempt assertion in TreeSelection
+	        	selection = new TreeSelection(new TreePath(new Object[] {sel}));
+	        } else
+	        	selection = new TreeSelection();
 	        setSelectionWithoutCursorMove(selection);
 	    }
 	}
 
 	private InternalASTNode<?> findNodeInLine(InternalASTNode<?> node, int startLine) {
-	    if (Symbol.getLine(node.getASTNode().getStart()) > startLine) {
-	        return null;
+	    final int line = Symbol.getLine(node.getASTNode().getStart());
+		if (line > startLine) {
+			/* If a module starts with comments, the "module" declaration will be the
+			 * root node in line n > 1, yet the editor will be placed in startLine=1.
+			 */
+	        return node;
 	    }
 	    InternalASTNode<?> result = node;
 	    for (Object child : coProv.getChildren(node)) {
