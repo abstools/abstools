@@ -244,6 +244,7 @@ aspect GenerateJava {
         for (ModuleModifier mod : getModuleModifiers()) {
             mod.generateJavaCodeDynamic(pkg);
         }
+        DynamicJavaGeneratorHelper.generateDeltaApplication(this, pkg);
     }
 
     public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {

@@ -4,12 +4,18 @@
  */
 package abs.backend.java.codegeneration.dynamic;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
 import abs.backend.java.JavaBackend;
+import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.codegeneration.JavaCodeStream;
 import abs.backend.java.codegeneration.JavaGeneratorHelper;
 import abs.backend.java.JavaBackendConstants;
@@ -28,6 +34,7 @@ import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
@@ -508,6 +515,25 @@ public class DynamicJavaGeneratorHelper {
         }
 
     }
-
+    
+    public static void generateDeltaApplication(DeltaDecl delta, JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String name = "Application";
+        try {
+            File file = pkg.createJavaFile(name);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+        stream.println("package " + pkg.packageName + ";");
+        stream.print("public class " + name + " {");
+        stream.print("public static void apply() {");
+        stream.print("// TODO...");
+        
+        
+        stream.print("}");
+        stream.print("}");
+    }
 
 }
