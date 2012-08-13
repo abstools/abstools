@@ -522,18 +522,16 @@ public class DynamicJavaGeneratorHelper {
         try {
             File file = pkg.createJavaFile(name);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + name + " {");
+            stream.println("public static void apply() {");
+            stream.println("// TODO...");
+            stream.println("}");
+            stream.println("}");
         } finally {
             if (stream != null)
                 stream.close();
         }
-        stream.println("package " + pkg.packageName + ";");
-        stream.print("public class " + name + " {");
-        stream.print("public static void apply() {");
-        stream.print("// TODO...");
-        
-        
-        stream.print("}");
-        stream.print("}");
     }
 
 }
