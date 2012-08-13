@@ -222,8 +222,10 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	        final ISelection selection;
 	        if (startLine > -1) { // valid line info?
 	        	InternalASTNode<?> sel = findNodeInLine(internalASTNode, startLine+1);
-	        	assert sel != null; // preempt assertion in TreeSelection
-	        	selection = new TreeSelection(new TreePath(new Object[] {sel}));
+	        	if (sel == null)
+	        		selection = new TreeSelection();
+	        	else
+	        		selection = new TreeSelection(new TreePath(new Object[] {sel}));
 	        } else
 	        	selection = new TreeSelection();
 	        setSelectionWithoutCursorMove(selection);
@@ -236,12 +238,13 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 			/* If a module starts with comments, the "module" declaration will be the
 			 * root node in line n > 1, yet the editor will be placed in startLine=1.
 			 */
-	        return node;
+	        return null;
 	    }
 	    InternalASTNode<?> result = node;
 	    for (Object child : coProv.getChildren(node)) {
 	        if (child instanceof InternalASTNode<?>) {
 	            InternalASTNode<?> childNode = (InternalASTNode<?>) child;
+	            // FIXME: probably shouldn't be recursive.
 	            InternalASTNode<?> r = findNodeInLine(childNode, startLine);
 	            if (r != null) {
 	                result = r;
