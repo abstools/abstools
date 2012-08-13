@@ -165,7 +165,4 @@ public class ABSDynamicClass implements ABSClass {
     public boolean isReference() {
         return true;
     }
-
-    
-
 }

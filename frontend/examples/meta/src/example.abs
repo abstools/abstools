@@ -1,20 +1,5 @@
 module M;
 import * from ABS.Meta;
-import Foreign from ABS.FLI;
-
-//---- IO via FFI ------------------------------------------------------
-interface IO {
-    Unit println(String s);
-}
-
-[Foreign]
-class IO implements IO {
-    List<String> history = Nil;
-    Unit println(String s) { // this method is overridden IO_fli.java
-        history = appendright(history, s);
-    }
-}
-//-----------------------------------------------------------------------
 
 interface I { Unit m(); }
 class C implements I { Unit m() {} }
@@ -25,6 +10,17 @@ class C implements I { Unit m() {} }
     ObjectMirror m = reflect(o);
     String name = m.getClassName();
 
-    IO io = new IO();
-    io.println(name);
+//    I o2 = new NewClass();
+
+}
+
+delta D;
+uses M;
+
+adds class NewClass implements I {
+    Unit m() {}
+}
+
+modifies class C {
+    adds Int x() {return 1;}
 }

@@ -24,6 +24,15 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Module " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
             }
         }
+        for (DeltaDecl decl : getDeltaDecls()) {
+            try {
+                decl.generateJavaCodeDynamic(code);
+            } catch (NotImplementedYetException e) { 
+                throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (RuntimeException e) { 
+                throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+            }
+        }
     }
 
     public void ModuleDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
@@ -222,8 +231,54 @@ aspect GenerateJava {
         DynamicJavaGeneratorHelper.generateClassDecl(stream,this);
     }
 
-    public void DeltaDecl.generateJavaDynamic(PrintStream stream) {
-        // TODO: Java generation here
+    public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+//        String plName;
+//        try {
+//            plName = getModel().getProductLine().getName();
+//        } catch (NullPointerException e) {
+//            plName = "nopl";
+//        }
+//        String packageName = "delta." + plName + "." + getName();
+        String packageName = "delta." + getName();
+        JavaCode.Package pkg = code.createPackage(packageName);
+        for (ModuleModifier mod : getModuleModifiers()) {
+            mod.generateJavaCodeDynamic(pkg);
+        }
+    }
+
+    public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        try {
+            String name = JavaBackend.getJavaName(this);
+            // FIXME make sure name is uniqe (a delta can modify same class multiple times)
+            File file = pkg.createJavaFile(name);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream.println("package " + pkg.packageName + ";");
+            generateJavaDynamic(stream);
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+
+    abstract void ModuleModifier.generateJavaDynamic(PrintStream stream);
+    
+    public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
+        // TODO delta application code
+        
+    }
+    public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
+        // TODO
+    }
+    public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
+        // TODO
+    }
+    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
+        // TODO
+    }
+    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
+        // TODO
     }
 
     public void MethodImpl.generateJavaDynamic(PrintStream stream) {

@@ -7,5 +7,7 @@ package abs.backend.java.lib.runtime;
 import abs.backend.java.lib.types.ABSValue;
 
 public abstract class ABSClosure {
+    
+    // run the method
     public abstract ABSValue exec(ABSDynamicObject t, ABSValue... params);
 }

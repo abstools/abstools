@@ -275,7 +275,17 @@ public class JavaBackend extends Main {
         }
         return result;
     }
-   
+
+    public static String getJavaName(ModuleModifier mod) {
+        String result;
+        if (mod instanceof ClassModifier) {
+            result = getClassName(mod.getName());
+        } else {
+            result = truncate(mod.getName());
+        }
+        return result;
+    }
+
     // Shorten name to 255 chars as files with these names are created    
     private static String truncate(String s) {
         int maxlength = 200;

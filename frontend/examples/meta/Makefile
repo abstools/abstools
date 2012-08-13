@@ -24,7 +24,7 @@ gensrc_static:
 	java -cp $(CP) abs.backend.java.JavaBackend -sourceonly -d gens/java src/example.abs
 
 gen:
-	javac -cp $(CP):gen/java src/IO_fli.java gen/java/M/Main.java -d gen/bin
+	javac -cp $(CP):gen/java:src gen/java/M/Main.java -d gen/bin
 
 gens:
 	javac -cp $(CP):gens/java src/*.java -d gens/bin
