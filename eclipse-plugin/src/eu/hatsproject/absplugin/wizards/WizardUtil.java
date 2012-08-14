@@ -295,16 +295,7 @@ public class WizardUtil {
 		/* Classes and interfaces go before product lines / products in the grammar.
 		 * We don't want to generate invalid input for the user.
 		 */
-		/* FIXME, fallout from #300
-		if (m.hasProductLine()) {
-			position = UtilityFunctions.getPosition(m.getProductLine());
-			return d.getLineOffset(position.getLinestart());
-		} else {
-			if (m.getProducts().hasChildren()) {
-				position = UtilityFunctions.getPosition(m.getProducts());
-				return d.getLineOffset(position.getLinestart());
-			}else
-		 */ if (m.hasBlock()) {
+		if (m.hasBlock()) {
 				MainBlock block = m.getBlock();
 				position = UtilityFunctions.getPosition(block);
 				return d.getLineOffset(position.getLinestart()) + position.getColstart();

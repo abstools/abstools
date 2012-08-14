@@ -42,6 +42,7 @@ import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnknownDecl;
 import abs.frontend.ast.VarOrFieldUse;
+import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.KindedName;
@@ -367,11 +368,11 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 decl = getDeltaDecl(deltaspec);
             } else if (node instanceof ModifyClassModifier) {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
-                /* FIXME: fallout from #300
-                String mName = cm.moduleName();
-                ModuleDecl dm = cu.lookupModule(mName);
-                decl = dm.lookup(new KindedName(Kind.CLASS, cm.className()));
-                */
+                try {
+                    decl = cm.findClass();
+                } catch (ASTNodeNotFoundException e) {
+                    decl = null;
+                }
             } else if (node instanceof MethodSig) {
                 decl = node;
             }

@@ -122,8 +122,9 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 			return getChildrenOf((MainBlock) parentElement);
 		} else if (parentElement instanceof List<?>) {
 			return getChildrenOf((List<?>) parentElement);
+		} else if (parentElement instanceof DeltaDecl) {
+		    return getChildrenOf((DeltaDecl) parentElement);
 		}
-		
 		return EMPTY_NODES;
 	}
 
@@ -211,12 +212,22 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	 */
 	private ASTNode<?>[] getChildrenOf (CompilationUnit cu){
 	    if (cu != null){
-	        ArrayList<ModuleDecl> modules = new ArrayList<ModuleDecl>();
+	        ArrayList<ASTNode<?>> children = new ArrayList<ASTNode<?>>();
+
+	        for (ModuleDecl d : cu.getModuleDecls()) 
+	            children.add(d);
+	        for (DeltaDecl d : cu.getDeltaDecls())
+	            children.add(d);
+	        if (cu.hasProductLine())
+	            children.add(cu.getProductLine());
+	        for (Product d : cu.getProducts())
+	            children.add(d);
+	        for (FeatureDecl d : cu.getFeatureDecls())
+	            children.add(d);
+	        for (FExt d : cu.getFExts())
+	            children.add(d);
 	        
-	        for (ModuleDecl d : cu.getModuleDecls()) {
-	    	modules.add(d);
-	        }
-		return modules.toArray(EMPTY_NODES);
+	        return children.toArray(EMPTY_NODES);
 	    } else{
 	        return EMPTY_NODES;
 	    }
@@ -237,6 +248,18 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		}
 		return pDecl.toArray(EMPTY_NODES);
 	}		
+
+	/**
+	 * Retrieve the Children of a DeltaDecl
+	 * @param d The target DeltaDecl
+	 * @return The children of a DeltaDecl, which are relevant for the Content Outline
+	 */
+	private ASTNode<?>[] getChildrenOf(DeltaDecl d) {
+	    ArrayList<ASTNode<?>> children = new ArrayList<ASTNode<?>>();
+	    for (ModuleModifier m : d.getModuleModifiers())
+	        children.add(m);
+	    return children.toArray(EMPTY_NODES);
+	}               
 
 	/**
 	 * Retrieve the Children of an InterfaceDecl
@@ -285,6 +308,10 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		return (((ClassDecl) c).getNumField() > 0) || (((ClassDecl) c).getNumMethod() > 0);
 	}
 
+	private boolean hasChildren(DeltaDecl c){
+	    return ((DeltaDecl) c).getNumModuleModifier() > 0;
+	}
+
 	@Override
 	public Object[] getElements(Object inputElement) {
 		if (inputElement instanceof InternalASTNode){
@@ -329,22 +356,22 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	}
 	
 	public boolean hasChildren(ASTNode<?> element) {
-
-		if (element instanceof ModuleDecl) {
-			return hasChildren((ModuleDecl) element);
-		} else if (element instanceof ClassDecl) {
-			return hasChildren((ClassDecl) element);
-		} else if (element instanceof InterfaceDecl) {
-			return ((InterfaceDecl) element).getNumBody() > 0;
-		} else if (element instanceof DataTypeDecl) {
-			return ((DataTypeDecl) element).getNumDataConstructor() > 0;
-		} else if (element instanceof MainBlock) {
-			return ((MainBlock) element).getNumVar() > 0;
-		} else if (element instanceof List<?>) {
-			return hasChilden((List<?>) element);
-		}
-		
-		return false;
+	    if (element instanceof ModuleDecl) {
+	        return hasChildren((ModuleDecl) element);
+	    } else if (element instanceof ClassDecl) {
+	        return hasChildren((ClassDecl) element);
+	    } else if (element instanceof InterfaceDecl) {
+	        return ((InterfaceDecl) element).getNumBody() > 0;
+	    } else if (element instanceof DataTypeDecl) {
+	        return ((DataTypeDecl) element).getNumDataConstructor() > 0;
+	    } else if (element instanceof MainBlock) {
+	        return ((MainBlock) element).getNumVar() > 0;
+	    } else if (element instanceof List<?>) {
+	        return hasChilden((List<?>) element);
+	    } else if (element instanceof DeltaDecl) {
+	        return hasChildren((DeltaDecl) element);
+	    }
+	    return false;
 	}
 	
 	/**

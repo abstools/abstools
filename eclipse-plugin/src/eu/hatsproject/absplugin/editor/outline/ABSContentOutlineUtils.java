@@ -408,51 +408,60 @@ public class ABSContentOutlineUtils {
 	 */
 	public static StyledString getLabel(ASTNode<?> element) {
 
-		// ModuleDecl
-		if (element instanceof ModuleDecl) {
-			return new StyledString(((ModuleDecl) element).getName(), STYLER_BLACK);
-		} else if (element instanceof DataConstructor) {
-			return formatDataConstructor((DataConstructor) element);
-		} else if (element instanceof InterfaceDecl) {
-			InterfaceDecl iDecl = (InterfaceDecl) element;
-			return new StyledString(iDecl.getName(), STYLER_BLACK);
-		} else if (element instanceof TypeDecl) {
-			StyledString sb = new StyledString();
-			addWithNormalStyler(sb, ((TypeDecl) element).getName());
-			if (element instanceof ParametricDataTypeDecl) {
-				addWithNormalStyler(sb, formatParametricTypes(((ParametricDataTypeDecl) element).getTypeParameterList()));
-			}
-			return sb;
-		} else if (element instanceof MainBlock) {
-			return MAIN_BLOCK_STYLED_STRING;
-		} else if (element instanceof List<?>) {
-			return handleImportsExportsBlock((List<?>) element);
-		} else if (element instanceof Import) {
-			return formatImportExport((Import) element);
-		} else if (element instanceof Export) {
-			return formatImportExport((Export) element);
-		} else if (element instanceof FunctionDecl) {
-			return formatFunctionDecl((FunctionDecl) element);
-		} else if (element instanceof ProductLine) {
-			// FIXME Unfold ProductLine Definition
-			return new StyledString("PL: " + ((ProductLine) element).getName(), STYLER_BLACK);
-		} else if (element instanceof Product) {
-			// FIXME Unfold ProductLine Definition
-			return new StyledString("Π "+((Product) element).getName(), STYLER_BLACK);
-		} else if (element instanceof DeltaDecl) {
-			// FIXME Unfold
-			return new StyledString("Δ "+ ((DeltaDecl) element).getName(), STYLER_BLACK);
-		} else if (element instanceof ClassDecl) {
-			return formatClassDecl((ClassDecl) element);
-		} else if (element instanceof TypedVarOrFieldDecl) {
-			TypedVarOrFieldDecl fDecl = (TypedVarOrFieldDecl) element;
-			return formatTypedVarOrFieldDecl(fDecl);
-		} else if (element instanceof MethodImpl || element instanceof MethodSig) {
-			return formatMethod(element);
-		}
+	    if (element instanceof ModuleDecl) {
+	        return new StyledString(((ModuleDecl) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof DataConstructor) {
+	        return formatDataConstructor((DataConstructor) element);
+	    } else if (element instanceof InterfaceDecl) {
+	        InterfaceDecl iDecl = (InterfaceDecl) element;
+	        return new StyledString(iDecl.getName(), STYLER_BLACK);
+	    } else if (element instanceof TypeDecl) {
+	        StyledString sb = new StyledString();
+	        addWithNormalStyler(sb, ((TypeDecl) element).getName());
+	        if (element instanceof ParametricDataTypeDecl) {
+	            addWithNormalStyler(sb, formatParametricTypes(((ParametricDataTypeDecl) element).getTypeParameterList()));
+	        }
+	        return sb;
+	    } else if (element instanceof MainBlock) {
+	        return MAIN_BLOCK_STYLED_STRING;
+	    } else if (element instanceof List<?>) {
+	        return handleImportsExportsBlock((List<?>) element);
+	    } else if (element instanceof Import) {
+	        return formatImportExport((Import) element);
+	    } else if (element instanceof Export) {
+	        return formatImportExport((Export) element);
+	    } else if (element instanceof FunctionDecl) {
+	        return formatFunctionDecl((FunctionDecl) element);
+	    } else if (element instanceof ProductLine) {
+	        // FIXME Unfold ProductLine Definition
+	        return new StyledString(((ProductLine) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof Product) {
+	        // FIXME Unfold ProductLine Definition
+	        return new StyledString(((Product) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof DeltaDecl) {
+	        return new StyledString(((DeltaDecl) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof FunctionalModifier) {
+	        return new StyledString("✳" + ((FunctionalModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof AddClassModifier) {
+	        return new StyledString("✳" + ((AddClassModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof RemoveClassModifier) {
+	        return new StyledString("✘" + ((RemoveClassModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof ModifyClassModifier) {
+	        return new StyledString("✎" + ((ModifyClassModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof AddInterfaceModifier) {
+	        return new StyledString("✳" + ((AddInterfaceModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof ModifyInterfaceModifier) {
+	        return new StyledString("✎" + ((ModifyInterfaceModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof ClassDecl) {
+	        return formatClassDecl((ClassDecl) element);
+	    } else if (element instanceof TypedVarOrFieldDecl) {
+	        TypedVarOrFieldDecl fDecl = (TypedVarOrFieldDecl) element;
+	        return formatTypedVarOrFieldDecl(fDecl);
+	    } else if (element instanceof MethodImpl || element instanceof MethodSig) {
+	        return formatMethod(element);
+	    }
 
-		return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(element), STYLER_BLACK);
-
+	    return new StyledString(WORKBENCH_LABEL_PROVIDER.getText(element), STYLER_BLACK);
 	}
 	
 	/**

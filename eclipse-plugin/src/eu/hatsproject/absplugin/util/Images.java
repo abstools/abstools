@@ -128,6 +128,18 @@ public abstract class Images {
 	 * The standard icon for folder markers
 	 */
 	public final static Image FOLDER_MARKER = createIcon("abs_project_logo.gif");	
+        /**
+         * The standard icon for a delta declaration
+         */
+        public final static Image DELTA_IMAGE = createIcon("abs_delta.gif");
+        /**
+         * The standard icon for a product line declaration
+         */
+        public final static Image PRODUCTLINE_IMAGE = createIcon("abs_productline.gif");
+        /**
+         * The standard icon for a product declaration
+         */
+        public final static Image PRODUCT_IMAGE = createIcon("abs_product.gif");
 
 	//Icons for the debug perspective
 	public final static Image DEBUGGER_INTERACTIVE           = createIcon("debug/debug_mode_interactive.gif");
@@ -238,6 +250,22 @@ public abstract class Images {
 			}
 		} else if (node instanceof DataConstructor){
 			return DATACONSTRUCTOR_IMAGE;
+		} else if (node instanceof ProductLine) {
+		    return PRODUCTLINE_IMAGE;
+		} else if (node instanceof Product) {
+		    return PRODUCT_IMAGE;
+		} else if (node instanceof DeltaDecl) {
+		    return DELTA_IMAGE;
+		} else if (node instanceof ClassModifier) {
+		    return CLASS_IMAGE;
+		} else if (node instanceof InterfaceModifier) {
+		    return INTERFACE_IMAGE;
+		} else if (node instanceof TypeSynModifier) {
+		    return TYPE_IMAGE;
+		} else if (node instanceof DataTypeModifier) {
+		    return TYPE_IMAGE;
+		} else if (node instanceof FunctionModifier) {
+		    return FUNCTION_IMAGE;
 		}
 		return NO_IMAGE;
 	}

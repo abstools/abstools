@@ -97,9 +97,7 @@ public class UtilityFunctions {
 	 * <ul>
 	 *  <li>Exports</li>
 	 *  <li>Imports</li>
-	 *  <li>Products</li>
 	 *  <li>MainBlock</li>
-	 *  <li>ProductLine</li>
 	 * </ul>
 	 *  declarations,<br/>
 	 * FALSE if m is null or the the module declarations
