@@ -23,20 +23,6 @@ import abs.frontend.typechecker.Type;
  *
  */
 public class ScalaUtils {
-    /*
-    interface A {
-        public int method();
-    }
-    
-    public static A getSomething() {
-        return new A() {
-            public int method() {
-                return 0;
-            }
-        };
-    }
-    */
-    
     /**
      * Changes the variable (or parameter) names that are legal in ABS but not in Scala by prepending underscores to them.
      * 
@@ -44,7 +30,9 @@ public class ScalaUtils {
      * @return Scala-safe name
      */
     public static String mangleName(String name) {
-        if (name.matches("^_*var$") || name.matches("^_*val$") || name.matches("^_*abs$"))
+        if (name.matches("^_*var$") || name.matches("^_*val$") || 
+                name.matches("^_*abs$") || name.matches("^_*sender$") ||
+                name.matches("^_*log$"))
             return "_" + name;
         
         return name;

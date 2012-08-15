@@ -77,7 +77,7 @@ aspect GenerateScala {
 				decl.generateScala("", otherWriter);
 	
 		if (hasBlock()) {
-			getBlock().generateScala("", otherWriter);
+			getBlock().generateScala("", otherWriter, getBlock().isSuspendable());
 		}
 		
 		otherWriter.close();
@@ -87,8 +87,12 @@ aspect GenerateScala {
 		//}
 	}
 	
-	
-	public boolean MainBlock.generateScala(String prefix, PrintWriter writer) {
+
+/*
+	public void MainBlock.isSuspendable() {
+		return false;
+	}*/	
+	public void MainBlock.generateScala(String prefix, PrintWriter writer, boolean isSuspendable) {
 		writer.print(
 				"class Main(private val cog: ActorRef) extends MyObject(cog) {\n" +
 				"\tdef init(args: Array[Any]) {\n" +
@@ -96,14 +100,14 @@ aspect GenerateScala {
 				"\n" +
 				"\tprivate def run(): Unit");
 		
-		StringWriter body = new StringWriter();
+		boolean suspendable = isSuspendable();
 		
-		if (super.generateScala(prefix, new PrintWriter(body)))
+		if (suspendable)
 			writer.print(" @suspendable");
 		
 		writer.print(" = ");
 		
-		writer.write(body.getBuffer().toString());
+		super.generateScala(prefix, writer, suspendable);
 		
 		writer.println(
 				"\toverride def resolve: MyObject.Resolve = {\n" +
@@ -151,7 +155,6 @@ aspect GenerateScala {
 				"  )}\n" +
 				"}");
 		*/
-		return false;
 	}
 	
 	public abstract void Decl.generateScala(String prefix, PrintWriter output);
@@ -175,51 +178,65 @@ aspect GenerateScala {
 		writer.write("): ");
 		getTypeUse().generateScala(prefix, writer, getAnnotations());
 		
-		StringWriter body = new StringWriter();
-		if (getFunctionDef().generateScala("\t" + prefix, new PrintWriter(body)))
+		//StringWriter body = new StringWriter();
+		boolean suspendable = getFunctionDef().isSuspendable();
+		
+		if (suspendable) 
 			writer.write(" @suspendable");
 		writer.println(" = ");
-		writer.write(body.getBuffer().toString());
+		getFunctionDef().generateScala("\t" + prefix, writer, suspendable);
 		writer.println();
 	}
 	
-	public abstract boolean FunctionDef.generateScala(String prefix, PrintWriter writer);
+	public abstract boolean FunctionDef.isSuspendable();
+	public abstract void FunctionDef.generateScala(String prefix, PrintWriter writer, boolean suspendable);
 	
-	public boolean BuiltinFunctionDef.generateScala(String prefix, PrintWriter writer) {
+	public boolean BuiltinFunctionDef.isSuspendable() {
+		return false;
+	}
+	public void BuiltinFunctionDef.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		FunctionDecl decl = ((FunctionDecl)getContextDecl());
 		
 		if (decl.getModule().getName().equals("ABS.StdLib")) {
 			if (decl.getName().equals("substr")) {
 				writer.write(prefix + "str.substring(start, start + length)");
-				return false;
+				return;
 			}
 			if (decl.getName().equals("strlen")) {
 				writer.write(prefix + "str.length()");
-				return false;
+				return;
 			}
 			if (decl.getName().equals("currentms")) {
 				writer.write("System.currentTimeMillis().toInt");
-				return false;
+				return;
 			}
 			if (decl.getName().equals("toString")) {
 				writer.write(prefix + "t.toString()");
-				return false;
+				return;
 			}
 			
 			if (decl.getName().equals("random")) {
 				// FIXME this should be slightly more random
 				writer.write("0");
-				return false;
+				return;
 			}
 			
 			// unsupported ones that we nonetheless handle by providing default values
 			if (decl.getName().equals("currentms")) {
 				writer.write("System.currentTimeMillis");
-				return false;
+				return;
 			}
 			if (decl.getName().equals("lowlevelDeadline")) {
 				writer.write("0");
-				return false;
+				return;
+			}
+		}
+		
+		if (decl.getModule().getName().equals("ABS.Meta")) {
+			if (decl.getName().equals("reflect")) {
+				// unsupported
+				writer.write("null");
+				return;
 			}
 		}
 		
@@ -227,16 +244,19 @@ aspect GenerateScala {
 			if (decl.getName().equals("thisDC")) {
 				// FIXME
 				writer.write(prefix + "null");
-				return false;
+				return;
 			}
 		}
 		
-		throw new RuntimeException("Unsupported builtin function: " + decl.getName());
+		throw new RuntimeException("Unsupported builtin function: " + decl.getModule().getName() + "." + decl.getName());
 	}
 	
-	public boolean ExpFunctionDef.generateScala(String prefix, PrintWriter writer) {
+	public boolean ExpFunctionDef.isSuspendable() {
+		return getRhs().isSuspendable(new List<Annotation>());
+	}
+	public void ExpFunctionDef.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.write(prefix);
-		return getRhs().generateScala("\t" + prefix, writer, new List<Annotation>());
+		getRhs().generateScala("\t" + prefix, writer, new List<Annotation>());
 	}
 
 	public void TypeDecl.generateScala(String prefix, PrintWriter writer) {
@@ -263,7 +283,7 @@ aspect GenerateScala {
 		writer.println(") }");
 		*/		
 		
-		writer.format(" => log.debug(\"received %%s\".format(self)); (\"%s\", () => { %s(", StringUtils.capitalize(name), name);
+		writer.format(" => log.debug(\"received %%s\".format(self)); (\"%s\", () => { %s(", StringUtils.capitalize(name), ScalaUtils.mangleName(name));
 		for (int i = 0; i < s.getNumParam(); i++)
 			writer.format("%sarg%d", i > 0 ? ", " : "", i);
 		writer.println(") })");
@@ -361,8 +381,17 @@ aspect GenerateScala {
 		return new InitExpMetadata();
 	}
 	
-	public boolean TypedVarOrFieldDecl.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.format(prefix + "var %s: ", abs.backend.scala.ScalaUtils.mangleName(getName()));
+	protected String TypedVarOrFieldDecl.getScalaName() {
+		return ScalaUtils.mangleName(getName());
+	}
+	
+	public boolean TypedVarOrFieldDecl.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		InitExpMetadata metadata = generateScalaInitExp("", new PrintWriter(new StringWriter()), annotations);
+		
+		return metadata.initExpSuspends();
+	}
+	public void TypedVarOrFieldDecl.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+		writer.format(prefix + "var %s: ", getScalaName());
 		getAccess().generateScala(prefix, writer, annotations);
 		
 		InitExpMetadata metadata = generateScalaInitExp(prefix, writer, annotations);
@@ -370,24 +399,28 @@ aspect GenerateScala {
 		if (!metadata.hasInitExp())
 			writer.print(" = null ");
 		writer.println();
-		
-		return metadata.initExpSuspends();
+	}
+	
+	protected String FieldDecl.getScalaName() {
+		return "f" + super.getScalaName();
 	}
 	
 	protected InitExpMetadata FieldDecl.generateScalaInitExp(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		if (!hasInitExp())
-			return new InitExpMetadata();
+			return new InitExpMetadata(false, false);
 		
 		writer.print(" = ");
-		return new InitExpMetadata(getInitExp().generateScala(prefix, writer, annotations));
+		getInitExp().generateScala(prefix, writer, annotations);
+		return new InitExpMetadata(true, getInitExp().isSuspendable(annotations));
 	}
 	
 	protected InitExpMetadata VarDecl.generateScalaInitExp(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		if (!hasInitExp())
-			return new InitExpMetadata();
+			return new InitExpMetadata(false, false);
 
 		writer.print(" = ");
-		return new InitExpMetadata(getInitExp().generateScala(prefix, writer, annotations));
+		getInitExp().generateScala(prefix, writer, annotations);
+		return new InitExpMetadata(true, getInitExp().isSuspendable(annotations));
 	}
 	
 	public void ParamDecl.generateScalaConstructor(int offset, PrintWriter writer) {
@@ -425,7 +458,7 @@ aspect GenerateScala {
 				for (ParamDecl param: s.getParams()) {
 					if (f)
 						writer.write(", ");
-					writer.write(param.getName() + ": "); param.getAccess().generateScala("", writer, new List<Annotation>());					
+					writer.write(ScalaUtils.mangleName(param.getName()) + ": "); param.getAccess().generateScala("", writer, new List<Annotation>());					
 					f = true;
 				}
 				
@@ -503,7 +536,8 @@ aspect GenerateScala {
 		writer.println();
 	}
 
-	public abstract boolean Access.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations);
+	public abstract boolean Access.isSuspendable(abs.frontend.ast.List<Annotation> annotations);
+	public abstract void Access.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations);
 	public abstract String Access.getScalaType();
 	
 	public String Decl.getScalaType() {
@@ -536,9 +570,11 @@ aspect GenerateScala {
 		return getDecl().getScalaType();
 	}
 	
-	public boolean DataTypeUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		writer.write(getScalaType());
+	public boolean DataTypeUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
+	}
+	public void DataTypeUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+		writer.write(getScalaType());
 	}
 	
 	
@@ -576,13 +612,14 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	public boolean InterfaceTypeUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+	public boolean InterfaceTypeUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		return false;
+	}
+	public void InterfaceTypeUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
 		for (InterfaceTypeUse intf: ((InterfaceDecl)getDecl()).getExtendedInterfaceUses())
 			intf.generateScala(prefix, writer, annotations);
 
 		//writer.format(prefix + "import %s._%n", getName());
-		
-		return false;
 	}
 	
 	public String TypeParameterUse.getScalaType() {
@@ -590,7 +627,10 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	public boolean TypeParameterUse.generateScala(String prefix, PrintWriter output, List<Annotation> annotations) {
+	public boolean TypeParameterUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		throw new NotImplementedYetException(this);
+	}
+	public void TypeParameterUse.generateScala(String prefix, PrintWriter output, List<Annotation> annotations) {
 		throw new NotImplementedYetException(this);
 		// FIXME
 	}
@@ -599,7 +639,11 @@ aspect GenerateScala {
 		throw new RuntimeException("This should not happen");
 	}
 	
-	public boolean UnresolvedTypeUse.generateScala(String prefix, PrintWriter output, List<Annotation> annotations) {
+	
+	public boolean UnresolvedTypeUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		throw new RuntimeException("This should not happen");
+	}
+	public void UnresolvedTypeUse.generateScala(String prefix, PrintWriter output, List<Annotation> annotations) {
 		throw new RuntimeException("This should not happen");
 	}
 	
@@ -608,10 +652,11 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	@Override
-	public boolean FieldUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		writer.format("this.%s", abs.backend.scala.ScalaUtils.mangleName(getName()));
+	public boolean FieldUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
+	}
+	public void FieldUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+		writer.format("this.f%s", abs.backend.scala.ScalaUtils.mangleName(getName()));
 	}
 	
 	public String VarUse.getScalaType() {
@@ -619,14 +664,19 @@ aspect GenerateScala {
 		// FIXME
 	}
 	
-	@Override
-	public boolean VarUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		writer.print(abs.backend.scala.ScalaUtils.mangleName(getName()));
+	public boolean VarUse.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
+	}
+	@Override
+	public void VarUse.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+		//writer.print("/* "); writer.print(getDecl().getClass().getName()); writer.print("*/");
+		if (getDecl() instanceof FieldDecl)
+			writer.print("f");
+		writer.print(abs.backend.scala.ScalaUtils.mangleName(getName()));
 	}
 		
 	public void MethodImpl.generateScala(String prefix, PrintWriter writer) {
-		writer.format(prefix + "private def %s(", getMethodSig().getName());
+		writer.format(prefix + "private def %s(", ScalaUtils.mangleName(getMethodSig().getName()));
 		
 		boolean f = false;
 		
@@ -640,90 +690,120 @@ aspect GenerateScala {
 		writer.print("): ");
 		getMethodSig().getReturnType().generateScala(prefix, writer, new List<Annotation>());
 		
-		StringWriter body = new StringWriter();
-		
-		if (getBlock().generateScala(prefix, new PrintWriter(body)))
+		boolean suspendable = getBlock().isSuspendable();
+		 
+		if (suspendable)
 			writer.print(" @suspendable");
 		
 		writer.print(" = ");
 		
-		//getBlock().generateScala(prefix, writer);
-		writer.write(body.getBuffer().toString());
+		getBlock().generateScala(prefix, writer, suspendable);
 		
 		writer.println();
 	}
+
+	public abstract boolean Stmt.isSuspendable();	
+	public abstract void Stmt.generateScala(String prefix, PrintWriter writer, boolean suspendable);
 	
-	public abstract boolean Stmt.generateScala(String prefix, PrintWriter writer);
-	
-	public boolean Block.generateScala(String prefix, PrintWriter writer) {
-		writer.println("{");
-		
-		boolean r = false;
+	public boolean Block.isSuspendable() {
 		for (Stmt stmt: getStmts()) {
-			boolean r2 = stmt.generateScala(prefix + "\t", writer); 
-			r =  r || r2; 
+			if (stmt.isSuspendable())
+				return true;
 		}
 		
-		writer.println(prefix + "}");
+		return false;
+	}
+	
+	public void Block.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		writer.println("{");
 		
-		return r;
+		for (Stmt stmt: getStmts())
+			stmt.generateScala(prefix + "\t", writer, suspendable); 
+		
+		writer.println(prefix + "}");
 	}
 	
-	public boolean ReturnStmt.generateScala(String prefix, PrintWriter writer) {
-		writer.write(prefix + "return "); 
-		boolean r = getRetExp().generateScala(prefix, writer, getAnnotations());
+	public boolean ReturnStmt.isSuspendable() {
+		return getRetExp().isSuspendable(getAnnotations());
+	}
+	public void ReturnStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		writer.write(prefix + "return ");
+		boolean expSuspendable = isSuspendable();
+		
+		if (suspendable && !expSuspendable)
+			writer.write("wrap(");
+		getRetExp().generateScala(prefix, writer, getAnnotations());
+		
+		if (suspendable && !expSuspendable)
+			writer.write(")");
+		
 		writer.println();
-		return r;
 	}
 	
-	public boolean AssignStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean AssignStmt.isSuspendable() {
+		return getValue().isSuspendable(getAnnotations());
+	}
+	public void AssignStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.write(prefix);
 		getVar().generateScala(prefix, writer, getAnnotations());
 		writer.write(" = ");
-		boolean r = getValue().generateScala(prefix, writer, getAnnotations());
+		getValue().generateScala(prefix, writer, getAnnotations());
 		writer.println();
-		return r;
 	}
 	
-	public boolean AssertStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean AssertStmt.isSuspendable() {
+		return getCondition().isSuspendable(getAnnotations());
+	}
+	public void AssertStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.print(prefix + "if (!("); 
-		boolean r = getCondition().generateScala(prefix + "\t", writer, getAnnotations()); 
+		getCondition().generateScala(prefix + "\t", writer, getAnnotations()); 
 		writer.println("))");
 		writer.format(prefix + "\tthrow new AssertionError(\"%sAssert failed\");%n", new Position(this).getPositionString());
-		return r;
 	}
 	
-	public boolean WhileStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean WhileStmt.isSuspendable() {
+		return getCondition().isSuspendable(getAnnotations()) || getBody().isSuspendable();
+	} 
+	public void WhileStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.print(prefix + "while (");
-		boolean b = getCondition().generateScala(prefix, writer, getAnnotations());
+		getCondition().generateScala(prefix, writer, getAnnotations());
 		writer.println(")");
-		boolean b2 = getBody().generateScala(prefix + "\t", writer);
-		return b || b2;
+		getBody().generateScala(prefix + "\t", writer, suspendable);
 	}
 	
-	public boolean VarDeclStmt.generateScala(String prefix, PrintWriter writer) {
-		return getVarDecl().generateScala(prefix, writer, getAnnotations());
+	public boolean VarDeclStmt.isSuspendable() {
+		return getVarDecl().isSuspendable(getAnnotations());
+	}
+	public void VarDeclStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		getVarDecl().generateScala(prefix, writer, getAnnotations());
 	}
 	
-	public boolean SuspendStmt.generateScala(String prefix, PrintWriter writer) {
-		writer.println(prefix + "suspend()");
+	public boolean SuspendStmt.isSuspendable() {
 		return true;
 	}
-	
-	public boolean IfStmt.generateScala(String prefix, PrintWriter writer) {
-		boolean r = false;
+	public void SuspendStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		writer.println(prefix + "suspend()");
+	}
+
+	public boolean IfStmt.isSuspendable() {
+		return getCondition().isSuspendable(getAnnotations()) || getThen().isSuspendable() || (hasElse() && getElse().isSuspendable());
+	}
+	public void IfStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.write(prefix + "if (");
-		r = getCondition().generateScala(prefix + "\t", writer, getAnnotations());
+		getCondition().generateScala(prefix + "\t", writer, getAnnotations());
 		writer.write(")");
 		
 		StringWriter thenWriter = new StringWriter();
 		StringWriter elseWriter = new StringWriter();
 		
-		boolean thenFlag = getThen().generateScala(getThen() instanceof Block ? prefix : prefix + "\t", new PrintWriter(thenWriter));
+		getThen().generateScala(getThen() instanceof Block ? prefix : prefix + "\t", new PrintWriter(thenWriter), isSuspendable());
+		boolean thenFlag = getThen().isSuspendable();
 		boolean elseFlag = false;
 		
-		if (hasElse())
-			elseFlag = getElse().generateScala(getElse() instanceof Block ? prefix : prefix + "\t", new PrintWriter(elseWriter));
+		if (hasElse()) {
+			getElse().generateScala(getElse() instanceof Block ? prefix : prefix + "\t", new PrintWriter(elseWriter), isSuspendable());
+			elseFlag = getElse().isSuspendable();
+		}
 		
 		// mash things together
 		if (!(getThen() instanceof Block) || (elseFlag && !thenFlag))
@@ -745,26 +825,27 @@ aspect GenerateScala {
 			if ((hasElse() && !(getElse() instanceof Block)) || (thenFlag && !elseFlag))
 				writer.println(prefix + "}");
 		}
-		
-		
-		return r || thenFlag || elseFlag;
 	}
 	
-	public boolean ExpressionStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean ExpressionStmt.isSuspendable() {
+		return getExp().isSuspendable(getAnnotations());
+	}
+	public void ExpressionStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.write(prefix);
 		writer.write("ignore(");
 		//writer.write("val _ = ");
-		boolean r = getExp().generateScala(prefix, writer, getAnnotations());
+		getExp().generateScala(prefix, writer, getAnnotations());
 		writer.write(")");
 		writer.println();
-		return r;
 	}
 	
-	public boolean AwaitStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean AwaitStmt.isSuspendable() {
+		return true;
+	}
+	public void AwaitStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.write(prefix + "await(");
 		getGuard().generateScala(prefix, writer, getAnnotations());
 		writer.println(")");
-		return true;
 	}
 	
 	public abstract void Guard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations);
@@ -787,119 +868,68 @@ aspect GenerateScala {
 		getPureExp().generateScala(prefix, writer, annotations);
 	}
 	
-	public boolean IncompleteStmt.generateScala(String prefix, PrintWriter writer) {
+	public boolean IncompleteStmt.isSuspendable() {
+		throw new RuntimeException("This should not happen: can't compile IncompleteStmt, go fix the frontend!");
+	}
+	public void IncompleteStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		throw new RuntimeException("This should not happen: can't compile IncompleteStmt, go fix the frontend!");
 	}
 	
-	public boolean SkipStmt.generateScala(String prefix, PrintWriter writer) {
-		writer.println(prefix + "{}");
+	public boolean SkipStmt.isSuspendable() {
 		return false;
+	}
+	public void SkipStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		writer.println(prefix + "{}");
 	}
 	
-	public boolean MoveCogToStmt.generateScala(String prefix, PrintWriter writer) {
-		writer.println(prefix + "{}");
+	public boolean MoveCogToStmt.isSuspendable() {
 		return false;
 	}
-
-	public boolean DurationStmt.generateScala(String prefix, PrintWriter writer) {
+	public void MoveCogToStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
 		writer.println(prefix + "{}");
+	}
+
+	public boolean DurationStmt.isSuspendable() {
 		return false;
+	}
+	public void DurationStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+		System.err.println("Warning: Duration statements are not supported by the Scala backend");
+		writer.println(prefix + "{}");
 	}
 	
 	/*
 	 * @return true if the expression includes something that may block (resolving a future); false otherwise
 	 */
-	public abstract boolean Exp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations);
+	public abstract boolean Exp.isSuspendable(abs.frontend.ast.List<Annotation> annotations);
+	public abstract void Exp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations);
 	
-	public boolean ThisExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.write("self");
+	public boolean ThisExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
 	}
+	public void ThisExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+		writer.write("self");
+	}
 	
-	public boolean DataConstructorExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public boolean DataConstructorExp.isSuspendable(List<Annotation> annotations) {
+		return false;
+	}
+	public void DataConstructorExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		if (getDecl().getModule().getName().equals("ABS.StdLib")) {
 			if (getDecl().getName().equals("True")) {
 				writer.write("true");
-				return false;
+				return;
 			}
 			if (getDecl().getName().equals("False")) {
 				writer.write("false");
-				return false;
+				return;
 			}
 		}
 		
-		//if (getNumParam() > 0)
-			writer.write("new ");
+		writer.write("new ");
 		writer.write(getDataConstructor().getType().getModuleName());
 		writer.write(".");
 		writer.write(getConstructor());
-		
-		// try to resolve generics
-		
-		DataConstructor c = getDataConstructor();
-        DataTypeDecl decl = c.getDataTypeDecl();
-        
-        /*
-        if (decl instanceof ParametricDataTypeDecl) {
-        	System.out.println("---");            			
-            dump();
-            System.out.println(decl.getClass().getName());
-            System.out.println(c);
-            System.out.println(decl);
-            System.out.println("---");
-        }
-        */
-        /*
-        	DataTypeType type = (DataTypeType) this.getType();
-            if (type.hasTypeArgs()) {
-            	// HACK: if something is unbound just skip it all
-            	boolean skip = false;
-            	
-            	for (Type typeArg: type.getTypeArgs()) {
-            		if (typeArg.isBoundedType() && !((BoundedType)typeArg).hasBoundType()) {
-            			skip = true;
-            			break;
-            		}
-            	}
-            	
-            	if (!skip) {
-            	writer.write("[");
-            	boolean first = true;
-            	for (Type typeArg: type.getTypeArgs()) {
-            		if (first) 
-            			first = false;
-            		else 
-            			writer.write(", ");
-
-
-				System.out.println("---");            			
-            	dump();
-            	System.out.println(typeArg.getClass().getName());
-            	System.out.println(typeArg);
-            	System.out.println(typeArg.getDecl());
-            	System.out.println("---");
-            	
-            	if (typeArg.isBoundedType()) {
-            		BoundedType bt = (BoundedType)typeArg;
-            		
-            		if (bt.hasBoundType())
-            			writer.write(bt.toString()); //typeArg.getDecl().getScalaType());
-            		else {
-            			writer.write("_"); 
-            		}
-            	}
-            	else
-            		writer.write(typeArg.getDecl().getScalaType());
-              }
-              writer.write("]");
-              }
-            }
-          }
-        */
-		//ScalaUtils.generateTypeParameters(getDataConstructor().getDataTypeDecl(), writer);
-		//writer.write("[]");
-		
-		//if (getNumParam() > 0) {
+		    
 			writer.write("(");
 			boolean f = false;
 			for (PureExp param: getParams()) {
@@ -908,23 +938,31 @@ aspect GenerateScala {
 				f = true;
 			}
 			writer.write(")");
-		//}
+	}
+	
+	public boolean CaseExp.isSuspendable(List<Annotation> annotations) {
+		if (getExpr().isSuspendable(annotations))
+			return true;
 			
+		for (CaseBranch branch: getBranchs())
+			if (branch.isSuspendable(annotations))
+				return true;
+		
 		return false;
 	}
-	
-	public boolean CaseExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		boolean r = getExpr().generateScala(prefix, writer, annotations);
+	public void CaseExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+		getExpr().generateScala(prefix, writer, annotations);
 		writer.println(" match { ");
-		for (CaseBranch branch: getBranchs()) {
-			boolean r2 = branch.generateScala("\t" + prefix, writer, annotations); 
-			r = r2 || r;
-		}
+		for (CaseBranch branch: getBranchs())
+			branch.generateScala("\t" + prefix, writer, annotations);
+			 
 		writer.print(prefix + "}");
-		return r;
 	}
 	
-	public boolean CaseBranch.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public boolean CaseBranch.isSuspendable(List<Annotation> annotations) {
+		return getRight().isSuspendable(annotations);
+	}
+	public void CaseBranch.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.print(prefix + "case ");
 		Collection<PatternVarUse> varUses = new LinkedList<PatternVarUse>();
 		getLeft().generateScala(prefix, writer, varUses, annotations);
@@ -940,23 +978,23 @@ aspect GenerateScala {
 			}
 		}
 		writer.print(" => ");
-		boolean r = getRight().generateScala(prefix, writer, annotations);
+		getRight().generateScala(prefix, writer, annotations);
 		writer.println();
-		
-		return r;
 	}
 	
-	public boolean LetExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public boolean LetExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		return getVal().isSuspendable(annotations) || getExp().isSuspendable(annotations);
+	}
+	public void LetExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.print("let (");
-		boolean l = getVal().generateScala(prefix, writer, annotations);
+		getVal().generateScala(prefix, writer, annotations);
 		writer.print(") {");
 		writer.print(abs.backend.scala.ScalaUtils.mangleName(getVar().getName()));
 		writer.print(": ");
 	    getVar().getAccess().generateScala(prefix, writer, annotations);
 		writer.print(" => ");
-		boolean r = getExp().generateScala(prefix, writer, annotations);
+		getExp().generateScala(prefix, writer, annotations);
 		writer.print("}");
-		return l || r;
 	}
 	
 	public abstract void Pattern.generateScala(String prefix, PrintWriter writer, Collection<PatternVarUse> varUses, abs.frontend.ast.List<Annotation> annotations);
@@ -966,7 +1004,8 @@ aspect GenerateScala {
 	}
 	
 	public void ConstructorPattern.generateScala(String prefix, PrintWriter writer, Collection<PatternVarUse> varUses, abs.frontend.ast.List<Annotation> annotations) {
-		if (getContextDecl().getModule().getName().equals("ABS.StdLib")) {
+		//if (getContextDecl().getModule().getName().equals("ABS.StdLib")) {
+		if (getDataConstructor().getModule().getName().equals("ABS.StdLib")) {
 			if (getConstructor().equals("True")) {
 				writer.write("true");
 				return;
@@ -1009,26 +1048,32 @@ aspect GenerateScala {
 	}
 	
 	protected abstract String Unary.getScalaOperator();
-	public final boolean Unary.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	
+	public final boolean Unary.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		return getOperand().isSuspendable(annotations);
+	}
+	public final void Unary.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.write(getScalaOperator());
 		writer.write("(");
-		boolean b = getOperand().generateScala(prefix, writer, annotations);
+		getOperand().generateScala(prefix, writer, annotations);
 		writer.write(")");
-		
-		return b;
 	}
 	
 	protected final String NegExp.getScalaOperator() { return "!"; }
 	protected final String MinusExp.getScalaOperator() { return "-"; }
 	
 	protected abstract String Binary.getScalaOperator();
-	public final boolean Binary.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	
+	public final boolean Binary.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		return getLeft().isSuspendable(annotations) || 
+		       getRight().isSuspendable(annotations);
+	}
+	public final void Binary.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.write("(");
-		boolean l = getLeft().generateScala(prefix, writer, annotations);
+		getLeft().generateScala(prefix, writer, annotations);
 		writer.format(") %s (", getScalaOperator());
-		boolean r = getRight().generateScala(prefix, writer, annotations);
+		getRight().generateScala(prefix, writer, annotations);
 		writer.write(")");
-		return l || r;
 	}
 	
 	protected final String AndBoolExp.getScalaOperator() { return "&&"; }
@@ -1045,39 +1090,77 @@ aspect GenerateScala {
 	protected final String DivMultExp.getScalaOperator() { return "/"; }
 	protected final String ModMultExp.getScalaOperator() { return "%"; }
 	
-	public boolean IntLiteral.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.write(getContent());
+	public boolean LiteralExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
 	}
+	public void IntLiteral.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+		writer.write(getContent());
+	}
 	
-	public boolean StringLiteral.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public void StringLiteral.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.write("\"");
 		writer.write(getContent());
 		writer.write("\"");
-		return false;
 	}
 	
-	public abstract boolean PureExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations); 
-	
-	public boolean FnApp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public abstract boolean PureExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations);
+	public abstract void PureExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations); 
+
+	public boolean FnApp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		for (PureExp p: getParams())
+			if (p.isSuspendable(annotations))
+				return true;
+		return false;
+	}
+	public void FnApp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.format("%s(", getDecl().moduleName() + "." + ScalaUtils.mangleName(getName()));
 		boolean f = false;
-		boolean r = false;
 		for (PureExp p: getParams()) {
 			if (f) writer.write(", ");
-			boolean r2 = p.generateScala(prefix, writer, annotations); 
-			r = r2 || r;
+			p.generateScala(prefix, writer, annotations); 
 			f = true;
 		}
 		writer.write(")");
-		
-		return r;
 	}
 			
 	// EffExp
-	public boolean NewExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		boolean r = false;
+	public boolean NewExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		if (hasCog()) {
+			PureExp dc = null;
+			
+			for (Annotation a: annotations) {
+				if (!(a instanceof TypedAnnotation))
+					continue;
+				
+				TypedAnnotation ta = (TypedAnnotation)a;
+				
+				if (!(ta.getAccess() instanceof DataTypeUse))
+					continue;
+				
+				Decl d = ((DataTypeUse)ta.getAccess()).getDecl();
+				
+				if (d instanceof TypeSynDecl)
+					d = ((TypeSynDecl)d).getValue().getDecl();
+				
+				if (d.qualifiedName().equals("ABS.DC.DeploymentComponent")) {
+					// score!
+					dc = a.getValue();
+					break;
+				}
+			}
+			
+			if (dc != null)
+				return true;
+		}
 		
+		for (PureExp param: getParams())
+			if (param.isSuspendable(annotations))
+				return true;
+				
+		return false;
+	}
+	
+	public void NewExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		writer.print("_new");
 		
 		if (hasCog()) {
@@ -1112,8 +1195,6 @@ aspect GenerateScala {
 				writer.print(", ABS.DC.IDeploymentComponent.GetConfiguration)).asInstanceOf[ABS.DC.DCData].i1");
 				//writer.print(") !! ABS.DC.IDeploymentComponent.GetConfiguration) map { _.asInstanceOf[ABS.DC.DCData].i1 } get" +
 				writer.print("), ");
-				
-				r = true;
 			}
 			else
 				writer.print("None, "); 
@@ -1121,35 +1202,47 @@ aspect GenerateScala {
 		else
 			writer.print("(");
 		
-		writer.format("classOf[%s]", (((UnionType)getType()).getOriginatingClass()).qualifiedName());
+		writer.format("classOf[_root_.%s]", (((UnionType)getType()).getOriginatingClass()).qualifiedName());
 		
 		
 		for (PureExp param: getParams()) {
 			writer.write(", ");
-			boolean r2 = param.generateScala(prefix, writer, annotations); 
-			r = r2 || r;
+			param.generateScala(prefix, writer, annotations); 
 		}
 		
 		writer.println(")");
-		
-		return r;
 	}
 	
 	// EffExp
-	public boolean GetExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		writer.write("getFuture(");
-		getPureExp().generateScala(prefix, writer, annotations);
-		writer.write(")");
+	public boolean GetExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return true;
 	}
+	public void GetExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+		writer.write("getFuture(");
+		getPureExp().generateScala(prefix, writer, annotations);
+		writer.format(")"); // .asInstanceOf[%s]", getType().getDecl().getScalaType());
+	}
 	
 	// EffExp
-	public boolean OriginalCall.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public boolean OriginalCall.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		throw new RuntimeException("Should not happen: deltas haven't been flattened away, go fix the frontend!");
+	}
+	public void OriginalCall.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		throw new RuntimeException("Should not happen: deltas haven't been flattened away, go fix the frontend!");
 	}
 	
 	// Call	
-	public boolean Call.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public boolean Call.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		if (getCallee().isSuspendable(annotations))
+			return true;
+		
+		for (PureExp args: getParams())
+			if (args.isSuspendable(annotations))
+				return true;
+		
+		return false;
+	}
+	public void Call.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 	
 		if (this instanceof SyncCall)
 			writer.write("syncCall(");
@@ -1161,9 +1254,9 @@ aspect GenerateScala {
 		if (getNumParam() > 0)
 			writer.write("new ");
 					
-		writer.format("%s.%s.%s",
+		writer.format("%s.%s%s.%s",
 				getMethodSig().getContextDecl().getModule().getName(),
-				getMethodSig().getContextDecl().getName(),
+				getMethodSig().getContextDecl().isInterface() ? "I" : "", getMethodSig().getContextDecl().getName(),
 				StringUtils.capitalize(getMethod()));
 
 		if (getNumParam() > 0) {
@@ -1178,26 +1271,31 @@ aspect GenerateScala {
 			writer.write(")");
 		}
 		writer.write(")");
-		return false;
 	}
 	
-	public boolean IfExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+	public boolean IfExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		return getCondExp().isSuspendable(annotations) || getThenExp().isSuspendable(annotations) || getElseExp().isSuspendable(annotations);
+	}
+	public void IfExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
 		writer.write("if (");
 		getCondExp().generateScala(prefix, writer, annotations);
 		writer.write(") ");
 		getThenExp().generateScala(prefix, writer, annotations);
 		writer.write(" else ");
 		getElseExp().generateScala(prefix, writer, annotations);
-		
-		return false;
 	}
 	
-	public boolean NullExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
-		writer.write("null");
+	public boolean NullExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
 		return false;
 	}
-		
-	public final boolean IncompleteExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
+	public void NullExp.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {
+		writer.write("null");
+	}
+
+	public final boolean IncompleteExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) {
+		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
+	}		
+	public final void IncompleteExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
 	}
 }

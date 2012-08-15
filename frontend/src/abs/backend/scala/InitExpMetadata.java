@@ -12,8 +12,8 @@ public class InitExpMetadata {
         
     }
     
-    public InitExpMetadata(boolean initExpSuspends) {
-        this.hasInitExp = true;
+    public InitExpMetadata(boolean hasInitExp, boolean initExpSuspends) {
+        this.hasInitExp = hasInitExp;
         this.initExpSuspends = initExpSuspends;
     }
     
