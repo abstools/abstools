@@ -71,6 +71,9 @@ abstract class MyObject(private val cog: ActorRef) extends Actor with ActorLoggi
     if (!cond)
       Runner.currentRunner.get.await(cond)
   
+  protected def wrap[T](value: T): T @suspendable =
+    value
+    
   def noop: Unit @suspendable = 
     shift {
       k : (Unit => Unit) => k()
@@ -145,11 +148,11 @@ abstract class MyObject(private val cog: ActorRef) extends Actor with ActorLoggi
         }
   */
   
-  protected def getFuture(fut: ActorRef): Any @suspendable = {
+  protected def getFuture[T](fut: ActorRef): T @suspendable = {
     implicit val timeout = Timeout(5 seconds)
     
     Await.result(fut ? Task.Get, timeout.duration).asInstanceOf[Option[Any]] match {
-      case Some(x) => x
+      case Some(x) => x.asInstanceOf[T]
       case None =>
         // block the whole COG until the future gets resolved
         await(fut2bool(fut)) 
