@@ -10,7 +10,12 @@ class C implements I { Unit m() {} }
     ObjectMirror m = reflect(o);
     String name = m.getClassName();
 
-//    I o2 = new NewClass();
+    // apply delta
+    
+    // now NewClass is part of module M
+    // so we can use it to instantiate objects
+
+    //I o2 = new NewClass();
 
 }
 
@@ -23,4 +28,6 @@ adds class NewClass implements I {
 
 modifies class C {
     adds Int x() {return 1;}
+    adds Int y() {return 2;}
 }
+

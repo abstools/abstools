@@ -21,6 +21,8 @@ import abs.backend.java.codegeneration.JavaGeneratorHelper;
 import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
+import abs.backend.java.lib.runtime.ABSClosure;
+import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
@@ -29,6 +31,7 @@ import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.AddMethodModifier;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
@@ -533,5 +536,31 @@ public class DynamicJavaGeneratorHelper {
                 stream.close();
         }
     }
+    
+    public static void generateAddMethodModifier(PrintStream stream, AddMethodModifier mod) {
+        // gen header
+        String className = JavaBackend.getModifierName(mod.getModifyClassModifier().getName());
+        stream.println("public class " + className + " {");
+
+        // gen method implementation
+        MethodImpl m = mod.getMethodImpl();
+        stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
+        stream.println("private static " + ABSClosure.class.getName() + " instance;");
+        stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
+        stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
+        stream.println("return instance;");
+        stream.println("}");
+        m.generateJavaDynamic(stream);
+        stream.println("}");
+
+        // gen application
+        stream.println("public static void apply(" + ABSDynamicClass.class.getName() + " clazz) {");
+        stream.println("clazz.addMethod(" + m.getMethodSig().getName() + ".instantiate());");
+        stream.println("}");
+
+        // close
+        stream.println("}");
+    }
+
 
 }

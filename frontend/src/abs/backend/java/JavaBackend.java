@@ -240,6 +240,10 @@ public class JavaBackend extends Main {
         return truncate(name + "_c");
     }
 
+    public static String getModifierName(String name) {
+        return truncate(name + "_mod");
+    }
+
     public static String getFunctionName(String name) {
         return truncate(escapeReservedWords(name) + "_f");
     }

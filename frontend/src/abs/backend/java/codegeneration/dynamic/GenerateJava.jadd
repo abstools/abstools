@@ -270,24 +270,53 @@ aspect GenerateJava {
         
     }
     public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
-        // TODO
+        stream.println("// TODO " + this.getClass().getName());
     }
     public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
-        // TODO
-    }
-    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
-        // TODO
-    }
-    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
-        // TODO
+        for (Modifier m : getModifiers()) {
+            // FIXME open separate file for each m
+            m.generateJavaDynamic(stream);
+        }
+        
+        // TODO handle interface additions & removals
     }
 
+    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+
+    abstract void Modifier.generateJavaDynamic(PrintStream stream);
+    public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateAddMethodModifier(stream, this);
+    }
+    public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void AddMethodSigModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    public void RemoveMethodSigModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+    
     public void MethodImpl.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateMethodImpl(stream, this);
     }
 
     public void FieldDecl.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
+        DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
         if (getAccess().getType().isReferenceType()) {
             stream.print(ABSValue.class.getName());
         } else {
@@ -299,10 +328,10 @@ aspect GenerateJava {
 
 
     public void DataTypeDecl.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateHelpLine(this,stream);
+        DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
 
         stream.print("public abstract class " + getName());
-        DynamicJavaGeneratorHelper.generateTypeParameters(stream,this, true);
+        DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, true);
 
         stream.println(" extends " + ABSDataType.class.getName() + " {");
 
@@ -311,7 +340,7 @@ aspect GenerateJava {
                     + "() { return this instanceof " + JavaBackend.getConstructorName(c)
                     + "; }");
             stream.print("public final " + JavaBackend.getConstructorName(c));
-            DynamicJavaGeneratorHelper.generateTypeParameters(stream,this, false);
+            DynamicJavaGeneratorHelper.generateTypeParameters(stream, this, false);
             stream.println(" to" + c.getName()
                     + "() { return (" + JavaBackend.getConstructorName(c) + ") this; }");
 
