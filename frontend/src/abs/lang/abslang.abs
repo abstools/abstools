@@ -430,7 +430,7 @@ data FLIAnnotation = Foreign;
  * Used to model aspects of hardware configurations and deployment.
  */
 module ABS.DC;
-export DC, DeploymentComponent, thisDC, Cost, DCData, InfCPU, CPU, capacity;
+export DC, DeploymentComponent, thisDC, Cost, DCData, InfCPU, CPU, capacity, CogLocation;
 import * from ABS.StdLib;
 
 data DCData = InfCPU
@@ -512,6 +512,8 @@ def DeploymentComponent thisDC() = builtin;
 // Annotation for method definitions: runtime cost specification
 type Cost = Duration;
 
+// Distributed execution (eg the Scala backend): where the cog will be created
+type CogLocation = String;
 
 /**
  * Reflective, mirror-based interface for ABS

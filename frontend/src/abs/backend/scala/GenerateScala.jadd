@@ -87,11 +87,6 @@ aspect GenerateScala {
 		//}
 	}
 	
-
-/*
-	public void MainBlock.isSuspendable() {
-		return false;
-	}*/	
 	public void MainBlock.generateScala(String prefix, PrintWriter writer, boolean isSuspendable) {
 		writer.print(
 				"class Main(private val cog: ActorRef) extends MyObject(cog) {\n" +
@@ -1142,7 +1137,7 @@ aspect GenerateScala {
 				if (d instanceof TypeSynDecl)
 					d = ((TypeSynDecl)d).getValue().getDecl();
 				
-				if (d.qualifiedName().equals("ABS.DC.DeploymentComponent")) {
+				if (d.qualifiedName().equals("ABS.DC.CogLocation")) {
 					// score!
 					dc = a.getValue();
 					break;
@@ -1177,10 +1172,7 @@ aspect GenerateScala {
 				
 				Decl d = ((DataTypeUse)ta.getAccess()).getDecl();
 				
-				if (d instanceof TypeSynDecl)
-					d = ((TypeSynDecl)d).getValue().getDecl();
-				
-				if (d.qualifiedName().equals("ABS.DC.DeploymentComponent")) {
+				if (d.qualifiedName().equals("ABS.DC.CogLocation")) {
 					// score!
 					dc = a.getValue();
 				}
@@ -1188,12 +1180,8 @@ aspect GenerateScala {
 			writer.print("cog(");
 						
 			if (dc != null) {
-				writer.print("ABS.DC._getURL(");
-				//(RemoteActorSerialization.fromBinaryToRemoteActorRef(");
-				writer.print("getFuture(asyncCall(");
-				dc.generateScala(prefix + "\t", writer, annotations);
-				writer.print(", ABS.DC.IDeploymentComponent.GetConfiguration)).asInstanceOf[ABS.DC.DCData].i1");
-				//writer.print(") !! ABS.DC.IDeploymentComponent.GetConfiguration) map { _.asInstanceOf[ABS.DC.DCData].i1 } get" +
+				writer.print("Some(");
+				dc.generateScala(prefix, writer, annotations);
 				writer.print("), ");
 			}
 			else
