@@ -26,30 +26,27 @@ module D;
 export *; 
 import * from M;
 
-delta Delta {
-	//adds interface J {
-	//	Unit o();
-	//}
+delta Delta;
+uses M;
 
-	modifies class C { //implements J {
-		adds Unit o() { }
-	}
+//adds interface J {
+//	Unit o();
+//}
+
+modifies class C { //implements J {
+	adds Unit o() { }
+}
 	
-	modifies class Main {
-		modifies Unit run() {
-			original();
-			//J j = new C(4);
-		}
-	} 
-}
+modifies class Main {
+	modifies Unit run() {
+		original();
+		//J j = new C(4);
+	}
+} 
 
-module P;
+productline PL;
 
-import * from D;
-
-productline PL {
-	features F;
-	delta Delta when F;
-}
+features F;
+delta Delta when F;
 
 product P1(F);

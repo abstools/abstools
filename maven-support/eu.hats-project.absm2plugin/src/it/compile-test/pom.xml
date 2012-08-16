@@ -17,7 +17,7 @@
 				<configuration>
 					<maudeInterpreter>../../../../../frontend/src/abs/backend/maude/abs-interpreter.maude</maudeInterpreter>
 					<mainBlock>AbsUnit.TestRunner</mainBlock>
-					<productName>P.P1</productName>
+					<productName>P1</productName>
 					<generateRunner>true</generateRunner>
 					<verbose>true</verbose>
 				</configuration>
