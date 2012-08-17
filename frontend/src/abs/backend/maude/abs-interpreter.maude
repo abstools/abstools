@@ -276,6 +276,8 @@ fmod ABS-DATA-STRING is
   eq fdefn("ABS.StdLib.substr") = $builtin("substr") .
   eq fparams("ABS.StdLib.strlen") = 'S .
   eq fdefn("ABS.StdLib.strlen") = $builtin("strlen") .
+  eq fparams("ABS.StdLib.toString") = 'S .
+  eq fdefn("ABS.StdLib.toString") = $builtin("toString") .
   eq "find" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[find(S, S', N)] .
   eq "rfind" ("str"[S] :: "str"[S'] :: "int"[N]) = "int"[rfind(S, S', N)] .
 
@@ -395,6 +397,18 @@ mod ABS-DATATYPES is
     extending ABS-DATA-STRING .
     extending ABS-DATA-TIME .
     extending ABS-OID .
+
+  op toAbsString : Data -> String .
+  eq toAbsString("int"[N:Int]) = string(N:Int, 10) .
+  eq toAbsString("str"[S:String]) = S:String .
+  eq toAbsString(null) = "null" .
+  eq toAbsString(N:String[ emp ]) = N:String .
+  eq toAbsString(N:String[ A:NeDataList ])
+  = N:String + "(" + toAbsString(A:NeDataList) + ")" .
+
+  op toAbsString : DataList -> String .
+  eq toAbsString(D:Data :: N:NeDataList)
+  = toAbsString(D:Data) + ", " + toAbsString(N:NeDataList) .
 endm
 
 
@@ -906,6 +920,7 @@ mod ABS-EVAL is
     "str"[substr((S['S]) asString, (S['L]) asInt, (S['R]) asInt)] .
   eq eval($builtin("strlen"), S, CN, MAC) =
     "int"[length((S['S]) asString)] .
+  eq eval($builtin("toString"), S, CN, MAC) = "str"[toAbsString(S['S])] .
   *** ABS-DATA-TIME
   --- N will be 0 in the untimed case.
   eq eval($builtin("currentms"), S, CN, MAC) = MAC['.time] .
