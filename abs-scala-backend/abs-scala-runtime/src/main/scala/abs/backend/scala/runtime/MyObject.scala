@@ -88,7 +88,7 @@ abstract class MyObject(private val cog: ActorRef) extends Actor with ActorLoggi
   def _newcog(url: Option[String], clazz: Class[_ <: Actor], args: Any*) =
     url map { url =>
       // contact remote host
-      val remoteNode = context.actorFor("akka://ABS-Scala@%s/NodeManager".format(url))
+      val remoteNode = context.actorFor("akka://ABS-Scala@%s/user/NodeManager".format(url))
     
       implicit val timeout = Timeout(5 seconds)
       
