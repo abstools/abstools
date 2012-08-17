@@ -402,6 +402,10 @@ mod ABS-DATATYPES is
   eq toAbsString("int"[N:Int]) = string(N:Int, 10) .
   eq toAbsString("str"[S:String]) = S:String .
   eq toAbsString(null) = "null" .
+  eq toAbsString(ob(C:Cid, N:Int))
+  = "< REF " + string(C:Cid) + " " + string(N:Int, 10) + " >" .
+  eq toAbsString(label(O:Oid, N:Int))
+  = "< FUT " + toAbsString(O:Oid) + string(N:Int, 10) + " >" .
   eq toAbsString(N:String[ emp ]) = N:String .
   eq toAbsString(N:String[ A:NeDataList ])
   = N:String + "(" + toAbsString(A:NeDataList) + ")" .
