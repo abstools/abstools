@@ -12,9 +12,17 @@ public class ABSTerm extends ABSData{
 	
 	String functor;
 	ArrayList<ABSData> args = new ArrayList<ABSData>();
+	String typeName;
+	String[] typeParams;
 	
 	public ABSTerm(Element elem) throws Exception{
 		type = elem.getAttribute("type");
+		int iPar = type.indexOf('(');
+		if (iPar >= 0){
+			typeName = type.substring(0,iPar);
+			typeParams = type.substring(iPar+1).split("[(,)]");
+		} else
+			typeName = type;
 		value = elem.getAttribute("value");
 		functor = elem.getAttribute("functor");
 		NodeList childList = elem.getChildNodes();

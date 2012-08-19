@@ -57,8 +57,9 @@ public class apetHandler extends AbstractHandler {
 	/**
 	 * The default file location to store ABSUnit test cases 
 	 */
-	private final String absUnitOutputFile = 
-			System.getProperty("java.io.tmpdir") + File.separator + "absunit-testcase.abs";
+	private final String absUnitOutputFile = "/tmp/" + "absunit-testcase.abs";
+	//private final String absUnitOutputFile = 
+	//		System.getProperty("java.io.tmpdir") + File.separator + "absunit-testcase.abs";
 	
 	/**
 	 * The constructor.
