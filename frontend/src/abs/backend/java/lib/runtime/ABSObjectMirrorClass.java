@@ -18,7 +18,7 @@ public class ABSObjectMirrorClass {
     /* 
      * Create the class object for object mirrors. This only happens once.
      */
-    public static ABSDynamicClass instance() {
+    public static ABSDynamicClass singleton() {
         if (objectMirrorClass == null) {
             // System.err.println("Creating ObjectMirrorClass and metaAPI.");
             objectMirrorClass = new ABSDynamicClass();

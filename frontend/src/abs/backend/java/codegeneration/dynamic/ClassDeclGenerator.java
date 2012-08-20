@@ -44,7 +44,7 @@ public class ClassDeclGenerator {
     private void generateClassBody() {
         stream.println("{");
         stream.println("private static " + ABSDynamicClass.class.getName() + " instance;");
-        stream.println("public static " + ABSDynamicClass.class.getName() + " instantiate() {");
+        stream.println("public static " + ABSDynamicClass.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
         stream.println("instance = new " + ABSDynamicClass.class.getName() + "();");
         stream.println("instance.setName(\"" + decl.getName() + "\");");
@@ -52,7 +52,7 @@ public class ClassDeclGenerator {
         generateFields();
         
         // Constructor
-        stream.println("instance.setConstructor(" + className + ".CON$TRUCT.instantiate());");
+        stream.println("instance.setConstructor(" + className + ".CON$TRUCT.singleton());");
         stream.print("instance.setParams(");
         for (int i = 0; i < decl.getNumParam(); i++) {
             if (i != 0)
@@ -62,7 +62,7 @@ public class ClassDeclGenerator {
         stream.println(");");
         for (MethodImpl m : decl.getMethods()) {
             String methodName = m.getMethodSig().getName();
-            stream.println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".instantiate());");
+            stream.println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".singleton());");
         }
         stream.println("}");
         stream.println("return instance;");
@@ -167,7 +167,7 @@ public class ClassDeclGenerator {
         }
 
         stream.print("new " + ABSDynamicObject.class.getName());
-        DynamicJavaGeneratorHelper.generateParamArgs(stream, className + ".instantiate()", decl.getParams());
+        DynamicJavaGeneratorHelper.generateParamArgs(stream, className + ".singleton()", decl.getParams());
         stream.println(";");
 
     }
@@ -176,7 +176,7 @@ public class ClassDeclGenerator {
         // constructor
         stream.println("public static class " + "CON$TRUCT" + " extends " + ABSClosure.class.getName() + " {");
         stream.println("private static " + ABSClosure.class.getName() + " instance;");
-        stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
+        stream.println("public static " + ABSClosure.class.getName() + " singleton() {");
         stream.println("if (instance == null) { instance = new CON$TRUCT(); }");
         stream.println("return instance;");
         stream.println("}");

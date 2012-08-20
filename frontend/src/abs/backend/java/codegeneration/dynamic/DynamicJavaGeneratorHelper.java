@@ -325,7 +325,7 @@ public class DynamicJavaGeneratorHelper {
         // methods are mapped to static inner classes
         stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
         stream.println("private static " + ABSClosure.class.getName() + " instance;");
-        stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
+        stream.println("public static " + ABSClosure.class.getName() + " singleton() {");
         stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
         stream.println("return instance;");
         stream.println("}");

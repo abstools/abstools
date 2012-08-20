@@ -66,7 +66,7 @@ public class ABSBuiltInFunctions {
             ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(name);
             return (ABSDynamicObject)existingMirror;
         } catch(NoSuchFieldException e) {
-            ABSDynamicObject mirror = new ABSDynamicObject(ABSObjectMirrorClass.instance());
+            ABSDynamicObject mirror = new ABSDynamicObject(ABSObjectMirrorClass.singleton());
             mirror.setFieldValue("object", (ABSValue)t);
             ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)mirror);
             return mirror;

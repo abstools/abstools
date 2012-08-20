@@ -64,7 +64,7 @@ aspect GenerateJava {
                 //stream.println("public java.lang.String getClassName() { return \"Main\"; }");
                 //stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
                 stream.println("public " + mainName + "(" + COG.class.getName() 
-                        + " cog) { super(cog, " + ABSMainClass.class.getName() + ".instantiate()); }");
+                        + " cog) { super(cog, " + ABSMainClass.class.getName() + ".singleton()); }");
 
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
@@ -313,19 +313,18 @@ aspect GenerateJava {
     }
     public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
         FieldDecl f = getFieldDecl();
-        stream.print("clazz.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "(");
+        stream.println("clazz.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "());");
         if (f.hasInitExp()) {
             // initialise
-            f.getInitExp().generateJavaDynamic(stream);
-        }
-        stream.println("));");
-         
+            // FIXME modify the class' constructor... ??
             
 //            stream.print("clazz.setFieldValue(\"");
 //            stream.print(JavaBackend.getVariableName(f.getName()));
 //            stream.print("\", ");
 //            f.getInitExp().generateJavaDynamic(stream);
 //            stream.println(");");
+        }
+
     }
     
     public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
@@ -341,7 +340,7 @@ aspect GenerateJava {
     }
     public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
         String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
-        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".instantiate());");
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
     public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
@@ -358,10 +357,10 @@ aspect GenerateJava {
     public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
         String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
         stream.println("clazz.removeMethod(\"" + mName + "\");");
-        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".instantiate());");
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     /*
-     * Deltas END
+     * Deltas END 
      */
     
     public void MethodImpl.generateJavaDynamic(PrintStream stream) {
