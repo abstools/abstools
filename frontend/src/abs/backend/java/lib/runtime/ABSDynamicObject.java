@@ -62,23 +62,20 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     public ABSValue getFieldValue(String field) throws NoSuchFieldException {
-        ABSValue result;
-        if (fields == null) {
-            result = null;
-        } else {
-            result = fields.get(field);
-        }
-        if (result == null) {
+        if (fields == null)
             throw new NoSuchFieldException(field);
-        }
-        return result;
+
+        if (fields.containsKey(field))
+            return fields.get(field);
+        else
+            throw new NoSuchFieldException(field);
     }
     
     public ABSValue getFieldValue_Internal(String field) {
         try {
             return getFieldValue(field);
         } catch (NoSuchFieldException e) {
-            throw new DynamicException("Field not found");
+            throw new DynamicException("Field not found: " + field);
         }
     }
     

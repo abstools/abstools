@@ -43,15 +43,14 @@ public class ClassDeclGenerator {
 
     private void generateClassBody() {
         stream.println("{");
-
         stream.println("private static " + ABSDynamicClass.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicClass.class.getName() + " instantiate() {");
-
         stream.println("if (instance == null) {");
-
         stream.println("instance = new " + ABSDynamicClass.class.getName() + "();");
         stream.println("instance.setName(\"" + decl.getName() + "\");");
+        
         generateFields();
+        
         // Constructor
         stream.println("instance.setConstructor(" + className + ".CON$TRUCT.instantiate());");
         stream.print("instance.setParams(");
@@ -71,20 +70,12 @@ public class ClassDeclGenerator {
 
         generateConstructor();
 
-        // methods are mapped to static inner classes
         for (MethodImpl m : decl.getMethods()) {
-            stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
-            stream.println("private static " + ABSClosure.class.getName() + " instance;");
-            stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
-            stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
-            stream.println("return instance;");
-            stream.println("}");
             m.generateJavaDynamic(stream);
-            stream.println("}");
 
-            // fli methods are mapped to methods...
+            // FIXME not sure how to handle FLI methods
             if (m.isForeign()) {
-                stream.println("/* FLI method: to be overridden */");
+                stream.println("/* FLI method: not implemented yet */");
                 DynamicJavaGeneratorHelper.generateFLIMethod(stream, m);
             }
         }
@@ -192,6 +183,12 @@ public class ClassDeclGenerator {
         stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, "
                 + ABSValue.class.getName() + "... args) {");
 
+//        stream.println("// Initialise fields");
+//        stream.println("for (String f : thisP.getFieldNames()) {");
+//        stream.println("thisP.setFieldValue(f, thisP.getClazz().getField(f).getInitialValue());");
+//        stream.println("}");
+
+        // initialise fields
         for (FieldDecl f : decl.getFields()) {
             if (f.hasInitExp()) {
                 stream.print("thisP.setFieldValue(\"");
@@ -201,6 +198,7 @@ public class ClassDeclGenerator {
                 stream.println(");");
             }
         }
+
         if (decl.hasInitBlock()) {
             decl.getInitBlock().generateJavaDynamic(stream);
         }
@@ -211,17 +209,17 @@ public class ClassDeclGenerator {
 
     private void generateFields() {
         for (ParamDecl p : decl.getParams()) {
-            stream.println("instance.addField(\"" + p.getName() + "\", new " + ABSField.class.getName() + "());");
-            // stream.print("   private ");
-            // p.generateJava(stream);
-            // stream.print(";");
-            // TODO: INITIALIZER
+            stream.println("instance.addField(\"" + JavaBackend.getVariableName(p.getName()) + "\", new " + ABSField.class.getName() + "());");
+            // TODO: INITIALIZER // I think class parameters cannot have initial values
         }
 
         for (FieldDecl f : decl.getFields()) {
-            stream.println("instance.addField(\"" + f.getName() + "\", new " + ABSField.class.getName() + "());");
-            // f.generateJava("   private ", stream);
-            // TODO: INITIALIZER
+            stream.print("instance.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "(");
+//            if (f.hasInitExp()) {
+//                // save initial value
+//                f.getInitExp().generateJavaDynamic(stream);
+//            }
+            stream.println("));");
         }
     }
 

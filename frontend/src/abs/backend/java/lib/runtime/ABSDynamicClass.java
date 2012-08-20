@@ -6,6 +6,7 @@ package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ public class ABSDynamicClass implements ABSClass {
     public String getName() {
         return name;
     }
-    
+
     public void addField(String fName, ABSField f) throws DynamicException {
         if (fields == null) {
             fields = new HashMap<String, ABSField>();
@@ -70,6 +71,13 @@ public class ABSDynamicClass implements ABSClass {
             throw new DynamicException("Method " + mName + " already defined for class " + name + ".");
     }
     
+    public void removeMethod(String mName) throws DynamicException {
+        if (methods.containsKey(mName))
+            methods.remove(mName);
+        else
+            throw new DynamicException("Method " + mName + " not defined for class " + name + ".");
+    }
+
     public ABSClosure getMethod(String mName) throws DynamicException {
         if (methods == null) {
             methods = new HashMap<String,ABSClosure>();

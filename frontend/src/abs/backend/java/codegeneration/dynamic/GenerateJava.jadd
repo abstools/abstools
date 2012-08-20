@@ -231,6 +231,9 @@ aspect GenerateJava {
         DynamicJavaGeneratorHelper.generateClassDecl(stream,this);
     }
 
+    /*
+     * Deltas
+     */
     public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
 //        String plName;
 //        try {
@@ -247,15 +250,21 @@ aspect GenerateJava {
         DynamicJavaGeneratorHelper.generateDeltaApplication(this, pkg);
     }
 
+    protected String ModuleModifier.generatedJavaClassName;
+
     public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
+        generatedJavaClassName = JavaBackend.getModifierName(getModule().getName() + "_" + getName());
+        // FIXME make sure generatedClassName is uniqe (a delta can modify same class multiple times)
         try {
-            String name = JavaBackend.getJavaName(this);
-            // FIXME make sure name is uniqe (a delta can modify same class multiple times)
-            File file = pkg.createJavaFile(name);
+            File file = pkg.createJavaFile(generatedJavaClassName);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             stream.println("package " + pkg.packageName + ";");
+
+            // gen header
+            stream.println("public class " + generatedJavaClassName + " {");
             generateJavaDynamic(stream);
+            stream.println("}");
         } finally {
             if (stream != null)
                 stream.close();
@@ -266,6 +275,7 @@ aspect GenerateJava {
     
     public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
+        // FIXME generate _mod instead of _c class
         // TODO delta application code
         
     }
@@ -274,9 +284,16 @@ aspect GenerateJava {
     }
     public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
         for (Modifier m : getModifiers()) {
-            // FIXME open separate file for each m
+            DynamicJavaGeneratorHelper.generateHelpLine(m, stream);
             m.generateJavaDynamic(stream);
         }
+        // generate application method, which applies all modifications defined by the ClassModifier to given clazz
+        stream.println();
+        stream.println("public static void apply(" + ABSDynamicClass.class.getName() + " clazz) {");
+        for (Modifier m : getModifiers()) {
+            m.generateJavaDynamicApplication(stream, generatedJavaClassName);
+        }
+        stream.println("}");
         
         // TODO handle interface additions & removals
     }
@@ -289,27 +306,63 @@ aspect GenerateJava {
     }
 
     abstract void Modifier.generateJavaDynamic(PrintStream stream);
+    abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
+    
     public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
+        // nothing to generate
     }
+    public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        FieldDecl f = getFieldDecl();
+        stream.print("clazz.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "(");
+        if (f.hasInitExp()) {
+            // initialise
+            f.getInitExp().generateJavaDynamic(stream);
+        }
+        stream.println("));");
+         
+            
+//            stream.print("clazz.setFieldValue(\"");
+//            stream.print(JavaBackend.getVariableName(f.getName()));
+//            stream.print("\", ");
+//            f.getInitExp().generateJavaDynamic(stream);
+//            stream.println(");");
+    }
+    
     public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
+        // nothing to generate
     }
+    public void RemoveFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        FieldDecl f = getFieldDecl();
+        stream.println("clazz.removeField(\"" + JavaBackend.getVariableName(f.getName()) + "\");");
+    }
+    
     public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateAddMethodModifier(stream, this);
+        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
     }
+    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".instantiate());");
+    }
+    
     public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
+        // nothing to generate
     }
+    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodSig().getName());
+        stream.println("clazz.removeMethod(\"" + mName + "\");");
+    }
+    
     public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
+        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
     }
-    public void AddMethodSigModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
+    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
+        stream.println("clazz.removeMethod(\"" + mName + "\");");
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".instantiate());");
     }
-    public void RemoveMethodSigModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
-    }
+    /*
+     * Deltas END
+     */
     
     public void MethodImpl.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateMethodImpl(stream, this);

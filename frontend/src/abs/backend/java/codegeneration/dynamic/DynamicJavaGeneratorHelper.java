@@ -45,6 +45,7 @@ import abs.frontend.ast.LetExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
@@ -321,6 +322,14 @@ public class DynamicJavaGeneratorHelper {
     }
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {
+        // methods are mapped to static inner classes
+        stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
+        stream.println("private static " + ABSClosure.class.getName() + " instance;");
+        stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
+        stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
+        stream.println("return instance;");
+        stream.println("}");
+
         stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, " + ABSValue.class.getName() + "... args) {");
         for (int i = 0; i < m.getMethodSig().getNumParam(); i++) {
             ParamDecl d = m.getMethodSig().getParam(i);
@@ -339,13 +348,15 @@ public class DynamicJavaGeneratorHelper {
             generateMethodBody(stream, m, false);
         }
         stream.println("}");
+        stream.println("}");
     }
 
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
+        stream.print("(");
         if (!f.getType().isReferenceType()) {
             stream.print("(" + JavaBackend.getQualifiedString(f.getType()) + ")");
         }
-        stream.print("thisP.getFieldValue_Internal(\"" + f.getName() + "\")");
+        stream.print("thisP.getFieldValue_Internal(\"" + f.getName() + "\"))");
     }
 
     private static void generateMethodBody(PrintStream stream, final MethodImpl m, boolean isFliMethod) {
@@ -528,7 +539,7 @@ public class DynamicJavaGeneratorHelper {
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + name + " {");
             stream.println("public static void apply() {");
-            stream.println("// TODO...");
+            stream.println("// TODO this should call all static apply methods in all _gen classes");
             stream.println("}");
             stream.println("}");
         } finally {
@@ -537,30 +548,4 @@ public class DynamicJavaGeneratorHelper {
         }
     }
     
-    public static void generateAddMethodModifier(PrintStream stream, AddMethodModifier mod) {
-        // gen header
-        String className = JavaBackend.getModifierName(mod.getModifyClassModifier().getName());
-        stream.println("public class " + className + " {");
-
-        // gen method implementation
-        MethodImpl m = mod.getMethodImpl();
-        stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
-        stream.println("private static " + ABSClosure.class.getName() + " instance;");
-        stream.println("public static " + ABSClosure.class.getName() + " instantiate() {");
-        stream.println("if (instance == null) { instance = new " + m.getMethodSig().getName() + "(); }");
-        stream.println("return instance;");
-        stream.println("}");
-        m.generateJavaDynamic(stream);
-        stream.println("}");
-
-        // gen application
-        stream.println("public static void apply(" + ABSDynamicClass.class.getName() + " clazz) {");
-        stream.println("clazz.addMethod(" + m.getMethodSig().getName() + ".instantiate());");
-        stream.println("}");
-
-        // close
-        stream.println("}");
-    }
-
-
 }

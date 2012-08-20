@@ -1,14 +1,25 @@
 module M;
 import * from ABS.Meta;
 
-interface I { Unit m(); }
-class C implements I { Unit m() {} }
+interface I { Int getF(); Int getP(); }
+
+class C(Int p) implements I { 
+    Int f = p - 1;
+    Int getF() { return f; }
+    Int getP() {return p; }
+}
+
 
 {
-    I o = new C();
-    o.m();
-    ObjectMirror m = reflect(o);
-    String name = m.getClassName();
+    I o = new C(101);
+    Int f = o.getF();
+    Int p = o.getP();
+
+    assert p == 101;
+    assert f == 100;
+    
+    ObjectMirror mirror = reflect(o);
+    String name = mirror.getClassName();
 
     // apply delta
     
@@ -23,11 +34,19 @@ delta D;
 uses M;
 
 adds class NewClass implements I {
+    Int f = 103;
     Unit m() {}
 }
 
 modifies class C {
     adds Int x() {return 1;}
     adds Int y() {return 2;}
+    
+    modifies Unit m() { skip; }
+
+    removes Unit m();
+
+    adds Int fieldA = 17;
+    removes String fieldB;
 }
 

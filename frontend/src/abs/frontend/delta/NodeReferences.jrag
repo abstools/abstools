@@ -4,6 +4,10 @@ aspect Model {
     eq DeltaDecl.getModuleModifier().getModel() = this.getModel();
 
     inh Model ProductLine.getModel();
+    
+    inh Model Modifier.getModel();
+    eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();
+    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getDelta().getModel();
 }
 
 // inform ModuleModifiers and Modifiers about the DeltaDecl where they were declared
@@ -24,18 +28,24 @@ aspect ProductLine {
     eq ProductLine.getDeltaClause().getProductLine() = this;
 }
 
-//inform nodes about the Module where they were declared
+//inform nodes about the Module in which they were declared or to which they apply
 aspect Module {
     inh ModuleDecl Decl.getModule();
     eq ModuleDecl.getDecl().getModule() = this;
+
+    /**
+     * @throws ASTNodeNotFoundException
+     */
+    syn lazy ModuleDecl ModuleModifier.getModule() {
+        try {
+            return this.findModule(); 
+        } catch (ASTNodeNotFoundException e) {
+            return null;
+            // FIXME this is ugly; how can I throw an exception from within an attribute declaration??
+        }
+    }
 }
 
-//inform various nodes about the Model
-aspect Model {
-    inh Model Modifier.getModel();
-    eq ModifyClassModifier.getModifier().getModel() = this.getDelta().getModel();
-    eq ModifyInterfaceModifier.getMethodSigModifier().getModel() = this.getDelta().getModel();
-}
 
 // inform Modifier about the ModifyClassModifier where it was declared
 aspect ModifyClassModifier {
