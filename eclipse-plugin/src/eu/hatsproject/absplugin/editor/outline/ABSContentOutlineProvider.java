@@ -334,7 +334,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 
 	@Override
 	public boolean hasChildren(Object element) {
-		if (element instanceof InternalASTNode<?> && element != null){
+		if (element instanceof InternalASTNode<?>){
 			InternalASTNode<?> node = ((InternalASTNode<?>) element);
 			synchronized(node.getNature().modelLock){
 				return hasChildren(node.getASTNode());
@@ -420,7 +420,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 
 	@Override
 	public Object getParent(Object element) {
-		if (element instanceof InternalASTNode<?> && element != null) {
+		if (element instanceof InternalASTNode<?>) {
 			InternalASTNode<?> node = (InternalASTNode<?>) element;
 			
 			AbsNature nature = node.getNature();

@@ -19,14 +19,9 @@ import java.util.regex.Pattern;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.*;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.Main;
@@ -74,7 +69,7 @@ public class ABSCodeScanner implements ITokenScanner {
 	
 	private static final boolean doSemanticHighlighting = true;
 	
-	public class RegexRule{
+	static class RegexRule{
 		private IToken token;
 		private String rule;
 		private Pattern pattern;
@@ -109,7 +104,7 @@ public class ABSCodeScanner implements ITokenScanner {
 	 * @author mweber
 	 *
 	 */
-	public class SemanticRule{
+	static class SemanticRule{
 		private IToken token;
 		private Class<? extends ASTNode<?>> semclass;
 		
@@ -408,10 +403,10 @@ public class ABSCodeScanner implements ITokenScanner {
 		IToken token = Token.UNDEFINED;
 		StringBuffer sbuffer = new StringBuffer();
 		int offset = fTokenOffset;
-		int c;
+		char c;
 		try{
-			while(offset > 0 && !fDetector.isWordPart((char)(c = fDocument.getChar(--offset)))){
-				sbuffer.append((char) c);
+			while(offset > 0 && !fDetector.isWordPart(c = fDocument.getChar(--offset))){
+				sbuffer.append(c);
 			}
 			sbuffer.reverse();
 			sbuffer.append(fBuffer);
@@ -419,10 +414,10 @@ public class ABSCodeScanner implements ITokenScanner {
 			offset = fOffset;
 			c = fDocument.getChar(offset);
 			do {
-				sbuffer.append((char) c);
+				sbuffer.append(c);
 				offset++;
 				c = fDocument.getChar(offset);
-			} while (c != ICharacterScanner.EOF && !fDetector.isWordPart((char) c) && !isLineDelimiter((char)c));
+			} while (!fDetector.isWordPart(c) && !isLineDelimiter(c));
 			String buffer = sbuffer.toString();
 			
 			Iterator<RegexRule> iter = wordrules.iterator();
