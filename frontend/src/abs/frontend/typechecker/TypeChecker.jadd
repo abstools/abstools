@@ -646,6 +646,11 @@ aspect TypeChecker {
     
     public void Exp.typeCheck(SemanticErrorList e) { }
     
+    public void OriginalCall.typeCheck(SemanticErrorList e) {
+       /* We are never typeChecking method bodies within deltas at the moment. #386*/
+       e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));
+    }
+
     public void TypeUse.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName());
     }

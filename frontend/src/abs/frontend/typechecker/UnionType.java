@@ -44,8 +44,6 @@ public class UnionType extends ReferenceType {
 
     @Override
     public boolean equals(Object o) {
-        if (!super.equals(o))
-            return false;
         if (!(o instanceof UnionType))
             return false;
         UnionType t = (UnionType) o;

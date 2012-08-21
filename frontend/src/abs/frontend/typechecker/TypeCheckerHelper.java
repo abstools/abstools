@@ -123,27 +123,9 @@ public class TypeCheckerHelper {
     public static java.util.List<Type> applyBinding(Map<TypeParameter, Type> binding, java.util.List<Type> types) {
         ArrayList<Type> res = new ArrayList<Type>(types.size());
         for (Type t : types) {
-            res.add(applyBinding(binding, t));
+            res.add(t.applyBinding(binding));
         }
         return res;
-    }
-
-    public static Type applyBinding(Map<TypeParameter, Type> binding, Type t) {
-        if (t.isTypeParameter()) {
-            Type res = binding.get((TypeParameter) t);
-            if (res == null)
-                return new BoundedType();
-            else
-                return res;
-        } else if (t.isDataType()) {
-            DataTypeType dt = (DataTypeType) t;
-            if (dt.hasTypeArgs()) {
-                java.util.List<Type> argTypes = applyBinding(binding, dt.getTypeArgs());
-                return new DataTypeType(dt.getDecl(), argTypes);
-            }
-        }
-
-        return t;
     }
 
     public static void typeCheckEqualDataTypeUses(SemanticErrorList l, ASTNode<?> n, List<? extends DataTypeUse> params,
@@ -355,7 +337,7 @@ public class TypeCheckerHelper {
         return getDefinedNames(mod, new ArrayList<KindedName>());
     }
 
-    public static ResolvedMap getDefinedNames(ModuleDecl mod,
+    static ResolvedMap getDefinedNames(ModuleDecl mod,
             java.util.List<KindedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
         ResolvedModuleName moduleName = new ResolvedModuleName(mod);

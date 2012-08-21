@@ -8,8 +8,6 @@ import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,7 +16,6 @@ import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
-import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
@@ -64,7 +61,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flushCache();
         SemanticErrorList res = m.typeCheck();
         if (!res.isEmpty())
-            fail(res.toString());
+            fail(res.getFirst().getMessage());
     }
 
     @Test
@@ -159,7 +156,8 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
         m.flattenForProduct("P");
         m.flushCache();
-        assertFalse(m.hasErrors());
+        if (m.hasErrors())
+            fail(m.getErrors().getFirst().getMessage());
         assertFalse(m.hasTypeErrors());
     }
 

@@ -243,4 +243,6 @@ public abstract class Type {
     public Decl getDecl() {
         return null;
     }
+    
+    public Type applyBinding(Map<TypeParameter, Type> binding) { return this; }
 }

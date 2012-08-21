@@ -86,9 +86,6 @@ public class DataTypeType extends Type {
 
     @Override
     public boolean equals(Object o) {
-        if (!super.equals(o))
-            return false;
-
         if (!(o instanceof DataTypeType))
             return false;
 
@@ -249,4 +246,12 @@ public class DataTypeType extends Type {
         return substitution;
     }
 
+    @Override
+    public Type applyBinding(Map<TypeParameter, Type> binding) {
+        if (hasTypeArgs()) {
+            List<Type> argTypes = TypeCheckerHelper.applyBinding(binding, getTypeArgs());
+            return new DataTypeType(getDecl(), argTypes);
+        } else
+            return super.applyBinding(binding);
+    }
 }

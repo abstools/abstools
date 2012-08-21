@@ -4,6 +4,8 @@
  */
 package abs.frontend.typechecker;
 
+import java.util.Map;
+
 import abs.frontend.ast.TypeParameterDecl;
 
 public class TypeParameter extends Type {
@@ -55,5 +57,14 @@ public class TypeParameter extends Type {
     @Override
     public Type copy() {
         return new TypeParameter(decl);
+    }
+    
+    @Override
+    public Type applyBinding(Map<TypeParameter, Type> binding) {
+        Type res = binding.get(this);
+        if (res == null)
+            return new BoundedType();
+        else
+            return res;
     }
 }

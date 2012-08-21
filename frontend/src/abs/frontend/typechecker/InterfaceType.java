@@ -30,8 +30,6 @@ public class InterfaceType extends ReferenceType {
 
     @Override
     public boolean equals(Object o) {
-        if (!super.equals(o))
-            return false;
         if (!(o instanceof InterfaceType))
             return false;
         InterfaceType t = (InterfaceType) o;

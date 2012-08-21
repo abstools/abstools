@@ -53,9 +53,8 @@ public class AddImportsTest extends DeltaTest {
                 
                 + "module D;"
                 + "import * from M;"
-                + "delta D { "
+                + "delta D;"
                 + "adds class C implements M.I { Unit m() {} }"
-                + "}"
         );
         DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
@@ -79,10 +78,9 @@ public class AddImportsTest extends DeltaTest {
                 
                 + "module D;"
                 + "import * from M;"
-                + "delta D { "
+                + "delta D;"
                 + "adds class C2 implements I { Unit m() {} }"
                 + "modifies class C { adds Unit n() { I obj = new D.C2(); } }"
-                + "}"
         );
         DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
@@ -111,9 +109,8 @@ public class AddImportsTest extends DeltaTest {
                 + "module MD;"
                 + "import * from M1;"
                 + "import * from M2;"
-                + "delta D { "
+                + "delta D;"
                 + "modifies class C implements I { adds Unit m() {} } "
-                + "}"
         );
         
         // the compiler needs to add an "import I from M2" to M1 
@@ -132,9 +129,8 @@ public class AddImportsTest extends DeltaTest {
                 
                 + "module D;"
                 + "import * from M1;"
-                + "delta D { "
+                + "delta D;"
                 + "modifies class C implements M2.I { adds Unit m() {} } "
-                + "}"
         );
         
         ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
