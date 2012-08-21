@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -22,6 +23,7 @@ import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
+import abs.backend.java.lib.runtime.ABSField;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.AbstractAsyncCall;
@@ -36,6 +38,7 @@ import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.ExpGuard;
+import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.LetExp;
@@ -319,6 +322,7 @@ public class DynamicJavaGeneratorHelper {
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {
         // methods are mapped to static inner classes
+        DynamicJavaGeneratorHelper.generateHelpLine(m, stream);
         stream.println("public static class " + m.getMethodSig().getName() + " extends " + ABSClosure.class.getName() + " {");
         stream.println("private static " + ABSClosure.class.getName() + " instance;");
         stream.println("public static " + ABSClosure.class.getName() + " singleton() {");
@@ -347,6 +351,30 @@ public class DynamicJavaGeneratorHelper {
         stream.println("}");
     }
 
+    public static void generateField(PrintStream stream, final FieldDecl f) {
+        // fields are mapped to subclasses of ABSField (because they need to store an initialisation routine)
+        String name = JavaBackend.getVariableName("field$" + f.getName());
+        DynamicJavaGeneratorHelper.generateHelpLine(f, stream);
+        stream.println("public static class " + name + " extends " + ABSField.class.getName() + " {");
+        stream.println("private static " + ABSField.class.getName() + " instance;");
+        stream.println("public static " + ABSField.class.getName() + " singleton() {");
+        stream.println("if (instance == null) { instance = new " + name + "(); }");
+        stream.println("return instance;");
+        stream.println("}");
+
+        stream.println("public " + ABSValue.class.getName() + " init(final " + ABSDynamicObject.class.getName() + " thisP " + ") {");
+        stream.print("return ");
+        if (f.hasInitExp()) {
+            f.getInitExp().generateJavaDynamic(stream);
+        } else {
+            stream.print("null");
+        }
+        stream.println(";");
+        stream.println("}");
+        stream.println("}");
+    }
+
+    
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
         stream.print("(");
         if (!f.getType().isReferenceType()) {
@@ -524,16 +552,21 @@ public class DynamicJavaGeneratorHelper {
 
     }
     
-    public static void generateDeltaApplication(DeltaDecl delta, JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+    public static void generateDeltaApplication(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
+            throws IOException, JavaCodeGenerationException {
+        
         PrintStream stream = null;
-        String name = "Application";
+        String name = "App";
         try {
             File file = pkg.createJavaFile(name);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + name + " {");
-            stream.println("public static void apply() {");
-            stream.println("// TODO this should call all static apply methods in all _gen classes");
+            stream.println("// Run this method to apply delta: " + pkg.packageName + "." + name + ".ly();");
+            stream.println("public static void ly() {");
+            for (String cls : classes) {
+                stream.println(pkg.packageName + "." + cls + ".apply();");
+            }
             stream.println("}");
             stream.println("}");
         } finally {

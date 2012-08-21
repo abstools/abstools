@@ -244,13 +244,18 @@ aspect GenerateJava {
 //        String packageName = "delta." + plName + "." + getName();
         String packageName = "delta." + getName();
         JavaCode.Package pkg = code.createPackage(packageName);
+        ArrayList<String> classes = new ArrayList<String>();
         for (ModuleModifier mod : getModuleModifiers()) {
             mod.generateJavaCodeDynamic(pkg);
+            classes.add(mod.getGeneratedJavaClassName());
         }
-        DynamicJavaGeneratorHelper.generateDeltaApplication(this, pkg);
+        DynamicJavaGeneratorHelper.generateDeltaApplication(this, pkg, classes);
     }
 
     protected String ModuleModifier.generatedJavaClassName;
+    public String ModuleModifier.getGeneratedJavaClassName() {
+        return generatedJavaClassName;
+    }
 
     public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
@@ -274,9 +279,9 @@ aspect GenerateJava {
     abstract void ModuleModifier.generateJavaDynamic(PrintStream stream);
     
     public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
         // FIXME generate _mod instead of _c class
         // TODO delta application code
+        // DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
         
     }
     public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
@@ -284,14 +289,15 @@ aspect GenerateJava {
     }
     public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
         for (Modifier m : getModifiers()) {
-            DynamicJavaGeneratorHelper.generateHelpLine(m, stream);
             m.generateJavaDynamic(stream);
         }
         // generate application method, which applies all modifications defined by the ClassModifier to given clazz
         stream.println();
-        stream.println("public static void apply(" + ABSDynamicClass.class.getName() + " clazz) {");
+        stream.println("public static void apply() {");
+        stream.println(ABSDynamicClass.class.getName() + " clazz = " + JavaBackend.getClassName(getModule().getName() + "." + getName()) + ".singleton();");
         for (Modifier m : getModifiers()) {
             m.generateJavaDynamicApplication(stream, generatedJavaClassName);
+            // System.out.println("generated " + m.getClass());
         }
         stream.println("}");
         
@@ -309,30 +315,19 @@ aspect GenerateJava {
     abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
     
     public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
-        // nothing to generate
+        DynamicJavaGeneratorHelper.generateField(stream, getFieldDecl());
     }
     public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        FieldDecl f = getFieldDecl();
-        stream.println("clazz.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "());");
-        if (f.hasInitExp()) {
-            // initialise
-            // FIXME modify the class' constructor... ??
-            
-//            stream.print("clazz.setFieldValue(\"");
-//            stream.print(JavaBackend.getVariableName(f.getName()));
-//            stream.print("\", ");
-//            f.getInitExp().generateJavaDynamic(stream);
-//            stream.println(");");
-        }
-
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clazz.addField(\"" + name + "\", " + className + ".field$" + name + ".singleton());");
     }
     
     public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
         // nothing to generate
     }
     public void RemoveFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        FieldDecl f = getFieldDecl();
-        stream.println("clazz.removeField(\"" + JavaBackend.getVariableName(f.getName()) + "\");");
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clazz.removeField(\"" + JavaBackend.getVariableName(name) + "\");");
     }
     
     public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
@@ -368,14 +363,15 @@ aspect GenerateJava {
     }
 
     public void FieldDecl.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateHelpLine(this, stream);
-        if (getAccess().getType().isReferenceType()) {
-            stream.print(ABSValue.class.getName());
-        } else {
-            getAccess().generateJavaDynamic(stream);
-        }
-        stream.print(" " + JavaBackend.getVariableName(getName()));
-        stream.println(";");
+        DynamicJavaGeneratorHelper.generateField(stream, this);
+        
+//        if (getAccess().getType().isReferenceType()) {
+//            stream.print(ABSValue.class.getName());
+//        } else {
+//            getAccess().generateJavaDynamic(stream);
+//        }
+//        stream.print(" " + JavaBackend.getVariableName(getName()));
+//        stream.println(";");
     }
 
 

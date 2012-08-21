@@ -34,11 +34,22 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     private void initializeFields(ABSValue[] params) {
+        // parameters
         if (params.length != clazz.getParams().size()) throw new DynamicException("Type mismatch");
         for (int i = 0; i < params.length; i++) {
             setFieldValue(clazz.getParams().get(i), params[i]);
         }
+        // all other fields
+        for (String f : clazz.getFieldNames()) {
+            if (! fields.containsKey(f)) {
+                setFieldValue(f, clazz.getField(f).init(this));
+            }
+        }
         this.getCOG().objectCreated(this);
+
+//        for (String s : getFieldNames()) {
+//            System.out.println("*** Class " + clazz.getName() + ": Field " + s + " = " + getFieldValue_Internal(s));
+//        }
     }
 
     public String getClassName() {

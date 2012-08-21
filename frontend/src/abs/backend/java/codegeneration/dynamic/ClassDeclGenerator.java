@@ -41,17 +41,33 @@ public class ClassDeclGenerator {
         generateClassBody();
     }
 
+    private void generateClassHeader() {
+        stream.print("public class " + className + " ");
+    }
+
     private void generateClassBody() {
+        // singleton() method instantiates strictly one dynamic class object and does initialisation,
+        // i.e. adds fields, constructor and methods.
         stream.println("{");
         stream.println("private static " + ABSDynamicClass.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicClass.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
         stream.println("instance = new " + ABSDynamicClass.class.getName() + "();");
         stream.println("instance.setName(\"" + decl.getName() + "\");");
+
+        // add class parameters
+        for (ParamDecl p : decl.getParams()) {
+            String name = JavaBackend.getVariableName(p.getName());
+            stream.println("instance.addField(\"" + name + "\", new " + ABSField.class.getName() + "());");
+        }
         
-        generateFields();
-        
-        // Constructor
+        // add fields
+        for (FieldDecl f : decl.getFields()) {
+            String name = JavaBackend.getVariableName(f.getName());
+            stream.println("instance.addField(\"" + name + "\", " + className + ".field$" + name + ".singleton());");
+        }
+
+        // add constructor
         stream.println("instance.setConstructor(" + className + ".CON$TRUCT.singleton());");
         stream.print("instance.setParams(");
         for (int i = 0; i < decl.getNumParam(); i++) {
@@ -60,6 +76,8 @@ public class ClassDeclGenerator {
             stream.print("\"" + JavaBackend.getVariableName(decl.getParam(i).getName()) + "\"");
         }
         stream.println(");");
+        
+        // add methods
         for (MethodImpl m : decl.getMethods()) {
             String methodName = m.getMethodSig().getName();
             stream.println("instance.addMethod(\"" + methodName + "\", " + className + "." + methodName + ".singleton());");
@@ -68,28 +86,28 @@ public class ClassDeclGenerator {
         stream.println("return instance;");
         stream.println("}");
 
+        
+        // generate field inner classes
+        for (FieldDecl field : decl.getFields()) {
+            field.generateJavaDynamic(stream);
+        }
+        
+        // generate CON$TRUCT inner class
         generateConstructor();
 
-        for (MethodImpl m : decl.getMethods()) {
-            m.generateJavaDynamic(stream);
+        // generate method inner classes 
+        for (MethodImpl method : decl.getMethods()) {
+            method.generateJavaDynamic(stream);
 
             // FIXME not sure how to handle FLI methods
-            if (m.isForeign()) {
+            if (method.isForeign()) {
                 stream.println("/* FLI method: not implemented yet */");
-                DynamicJavaGeneratorHelper.generateFLIMethod(stream, m);
+                DynamicJavaGeneratorHelper.generateFLIMethod(stream, method);
             }
         }
 
-        // generateFieldNamesMethod();
-        // generateFields();
-        // generateConstructor();
-        // generateGetFieldValueMethod();
-
-        // stream.println("public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
-
         generateCreateNewCOGMethod();
         generateNewObjectMethods();
-        // generateMethods();
         stream.println("}");
         
     }
@@ -183,21 +201,25 @@ public class ClassDeclGenerator {
         stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, "
                 + ABSValue.class.getName() + "... args) {");
 
+        
+        // Fields and parameters are initialised in ABSDynamicObject::initializeFields(ABSValue[] params)
+        // so this whole CON$TRUCT is probably only needed for the InitBlock
+        
 //        stream.println("// Initialise fields");
 //        stream.println("for (String f : thisP.getFieldNames()) {");
-//        stream.println("thisP.setFieldValue(f, thisP.getClazz().getField(f).getInitialValue());");
+//        stream.println("thisP.setFieldValue(f, thisP.getClazz().getField(f).init(thisP));");
 //        stream.println("}");
 
-        // initialise fields
-        for (FieldDecl f : decl.getFields()) {
-            if (f.hasInitExp()) {
-                stream.print("thisP.setFieldValue(\"");
-                stream.print(JavaBackend.getVariableName(f.getName()));
-                stream.print("\", ");
-                f.getInitExp().generateJavaDynamic(stream);
-                stream.println(");");
-            }
-        }
+        // initialise fields (old, static way)
+//        for (FieldDecl f : decl.getFields()) {
+//            if (f.hasInitExp()) {
+//                stream.print("thisP.setFieldValue(\"");
+//                stream.print(JavaBackend.getVariableName(f.getName()));
+//                stream.print("\", ");
+//                f.getInitExp().generateJavaDynamic(stream);
+//                stream.println(");");
+//            }
+//        }
 
         if (decl.hasInitBlock()) {
             decl.getInitBlock().generateJavaDynamic(stream);
@@ -206,26 +228,4 @@ public class ClassDeclGenerator {
         stream.println("}");
         stream.println("}");
     }
-
-    private void generateFields() {
-        for (ParamDecl p : decl.getParams()) {
-            stream.println("instance.addField(\"" + JavaBackend.getVariableName(p.getName()) + "\", new " + ABSField.class.getName() + "());");
-            // TODO: INITIALIZER // I think class parameters cannot have initial values
-        }
-
-        for (FieldDecl f : decl.getFields()) {
-            stream.print("instance.addField(\"" + JavaBackend.getVariableName(f.getName()) + "\", new " + ABSField.class.getName() + "(");
-//            if (f.hasInitExp()) {
-//                // save initial value
-//                f.getInitExp().generateJavaDynamic(stream);
-//            }
-            stream.println("));");
-        }
-    }
-
-    private void generateClassHeader() {
-        stream.print("public ");
-        stream.print("class " + className + " ");
-    }
-
 }

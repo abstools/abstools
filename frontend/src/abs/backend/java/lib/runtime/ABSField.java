@@ -8,26 +8,8 @@ import abs.backend.java.lib.types.ABSValue;
 
 public class ABSField {
 
-    // Not sure if all this is useful.
-    // ABSFields are created upon creation of classes (ABSDynamicClass);
-    // However, the initial value of a field might not be know until instances of that class are created (i.e. ABSDynamicObjects)
-    
-    private ABSValue intialValue;
-
-    public ABSField() {
-        super();
+    // to be overridden
+    public ABSValue init(ABSDynamicObject t) {
+        return null;
     }
-
-    public ABSField(ABSValue v) {
-        super();
-        this.intialValue = v;
-    }
-    
-    public void setInitialValue(ABSValue v) {
-        intialValue = v;
-    }
-    public ABSValue getInitialValue() {
-        return intialValue;
-    }
-
 }

@@ -103,6 +103,14 @@ public class ABSDynamicClass implements ABSClass {
         return fields.keySet();
     }
 
+    public Set<String> getMethodNames() {
+        if (methods == null) {
+            return Collections.emptySet();
+        }
+        return methods.keySet();
+    }
+
+    
     public void setParams(String... args) {
         setParams(Arrays.asList(args));
     }
