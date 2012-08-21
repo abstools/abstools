@@ -5,15 +5,11 @@
 package abs.backend.prolog;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 import abs.frontend.parser.Main;
 
 public class PrologBackend extends Main {
@@ -28,7 +24,6 @@ public class PrologBackend extends Main {
 
     public static int awaitId = 0;
     public static boolean entriesMode = false;
-
     
     public static void main(final String[] args) {
         runFromShell(args);
@@ -49,7 +44,7 @@ public class PrologBackend extends Main {
             }
             //System.exit(1);
         } finally {
-            if (prologBE.outStream != null) prologBE.outStream.close();
+            if (prologBE != null && prologBE.outStream != null) prologBE.outStream.close();
         }
     }
     
@@ -62,7 +57,7 @@ public class PrologBackend extends Main {
         } catch (Exception e) {
             System.err.println("Error in Prolog backend: " + e.getMessage());
         } finally {
-            if (prologBE.outStream != null) prologBE.outStream.close();
+            if (prologBE != null && prologBE.outStream != null) prologBE.outStream.close();
         }
     }
     

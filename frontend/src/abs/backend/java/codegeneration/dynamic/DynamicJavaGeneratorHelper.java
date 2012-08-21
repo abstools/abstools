@@ -7,7 +7,6 @@ package abs.backend.java.codegeneration.dynamic;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,7 +21,6 @@ import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSClosure;
-import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
@@ -31,7 +29,6 @@ import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AddMethodModifier;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
@@ -45,7 +42,6 @@ import abs.frontend.ast.LetExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ModifyMethodModifier;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
@@ -446,10 +442,8 @@ public class DynamicJavaGeneratorHelper {
         } else {
             // process children:
             for (int i=0; i < astNode.getNumChild(); i++) {
-                Object child = astNode.getChild(i);
-                if (child instanceof ASTNode<?>) {
-                    replaceLocalVariables((ASTNode<?>)child, beforeAwaitStream);
-                }
+                ASTNode<?> child = astNode.getChild(i);
+                replaceLocalVariables(child, beforeAwaitStream);
             }
         }
     }

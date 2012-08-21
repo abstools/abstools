@@ -418,10 +418,7 @@ public class JavaGeneratorHelper {
         stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
         expGuard.getPureExp().generateJava(stream);
         stream.print("; }}");
-        
     }
-
-    
     
     /**
      * replace all uses of local variables and parameters by a use of a newly introduced
@@ -434,10 +431,8 @@ public class JavaGeneratorHelper {
         } else {
             // process children:
             for (int i=0; i < astNode.getNumChild(); i++) {
-                Object child = astNode.getChild(i);
-                if (child instanceof ASTNode<?>) {
-                    replaceLocalVariables((ASTNode<?>)child, beforeAwaitStream);
-                }
+                ASTNode<?> child = astNode.getChild(i);
+                replaceLocalVariables(child, beforeAwaitStream);
             }
         }
     }

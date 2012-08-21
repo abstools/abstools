@@ -148,10 +148,8 @@ public class ASTPreProcessor {
     private void setPosition(ASTNode<?> node, int startPos, int endPos) {
         node.setPosition(startPos, endPos);
         for (int i=0; i < node.getNumChildNoTransform(); i++) {
-            Object child = node.getChildNoTransform(i);
-            if (child instanceof ASTNode<?>) {
-                setPosition((ASTNode<?>) child, startPos, endPos);
-            }
+            ASTNode<?> child = node.getChildNoTransform(i);
+            setPosition(child, startPos, endPos);
         }
     }
 }
