@@ -24,6 +24,7 @@ public class ParseSamplesTest extends FrontendTest {
         final Object[][] data = new Object[][] { { "examples/PeerToPeer.abs" }
                                                , { "examples/PingPong.abs" }
                                                , { "examples/BoundedBuffer.abs"}
+                                               , { "examples/SmartHome/abs/"}
                                                , { "tests/abssamples/RandomBool.abs"}
                                                , { "tests/abssamples/LexicalTest.abs"}
                                                , { "tests/abssamples/ReplicationSystem.abs"}
