@@ -259,7 +259,7 @@ aspect GenerateJava {
 
     public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
-        generatedJavaClassName = JavaBackend.getModifierName(getModule().getName() + "_" + getName());
+        generatedJavaClassName = JavaBackend.getModifierName(getModule().getName() + "_" + getSimpleName());
         // FIXME make sure generatedClassName is uniqe (a delta can modify same class multiple times)
         try {
             File file = pkg.createJavaFile(generatedJavaClassName);
@@ -294,7 +294,7 @@ aspect GenerateJava {
         // generate application method, which applies all modifications defined by the ClassModifier to given clazz
         stream.println();
         stream.println("public static void apply() {");
-        stream.println(ABSDynamicClass.class.getName() + " clazz = " + JavaBackend.getClassName(getModule().getName() + "." + getName()) + ".singleton();");
+        stream.println(ABSDynamicClass.class.getName() + " clazz = " + JavaBackend.getClassName(getModule().getName() + "." + getSimpleName()) + ".singleton();");
         for (Modifier m : getModifiers()) {
             m.generateJavaDynamicApplication(stream, generatedJavaClassName);
             // System.out.println("generated " + m.getClass());

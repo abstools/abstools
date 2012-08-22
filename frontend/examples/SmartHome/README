@@ -1,4 +1,6 @@
-This ABS project implements a product line of 'smart homes'. 
+This ABS project implements a product line of 'smart homes'. The idea is based
+on Chapter 3 of Pohl, K., Böckle, G., van der Linden, F.: Software Product Line Engineering, Springer (2005).
+
 It was developed as part of a Master's thesis by Wouter Seyen at KUL in 2012.
 The thesis text can be found under doc/thesis.pdf.
 
