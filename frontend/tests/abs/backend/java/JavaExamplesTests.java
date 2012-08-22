@@ -6,15 +6,13 @@ package abs.backend.java;
 
 import org.junit.Test;
 
-import abs.frontend.ast.Model;
-import abs.frontend.parser.ParseSamplesTest;
-import static abs.ABSTest.Config.*;
+import abs.frontend.typesystem.ExamplesTypeChecking;
 import static abs.backend.java.JavaBackendTest.*;
 
-public class JavaExamplesTests extends ParseSamplesTest {
+public class JavaExamplesTests extends ExamplesTypeChecking {
 
-    public JavaExamplesTests(String input) {
-        super(input);
+    public JavaExamplesTests(String input, String product) {
+        super(input,product);
     }
 
     @Test @Override
@@ -23,8 +21,4 @@ public class JavaExamplesTests extends ParseSamplesTest {
         assertValidJava(getJavaCode(m));
     }
 
-    @Override
-    protected Model parse(String input) throws Exception {
-        return assertParseFileOk(input, WITH_STD_LIB, TYPE_CHECK);
-    }
 }

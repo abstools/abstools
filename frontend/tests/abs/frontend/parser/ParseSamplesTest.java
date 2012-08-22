@@ -21,22 +21,28 @@ public class ParseSamplesTest extends FrontendTest {
     /* TODO: JUnit 4.11 might allow setting reasonable names for a test */
     @Parameters
     public static Collection<?> data() {
-        final Object[][] data = new Object[][] { { "examples/PeerToPeer.abs" }
-                                               , { "examples/PingPong.abs" }
-                                               , { "examples/BoundedBuffer.abs"}
-                                               , { "examples/SmartHome/abs/"}
-                                               , { "tests/abssamples/RandomBool.abs"}
-                                               , { "tests/abssamples/LexicalTest.abs"}
-                                               , { "tests/abssamples/ReplicationSystem.abs"}
+        final Object[][] data = new Object[][] { { "examples/PeerToPeer.abs" , null }
+                                               , { "examples/PingPong.abs" , null }
+                                               , { "examples/BoundedBuffer.abs" , null}
+                                               , { "examples/SmartHome/abs/" , null}
+                                               , { "examples/SmartHome/abs/" , "OilHeating" }
+                                               , { "examples/SmartHome/abs/" , "ElectricHeating" }
+                                               , { "examples/SmartHome/abs/" , "FireAlarm" }
+                                               , { "examples/SmartHome/abs/" , "Test" }
+                                               , { "tests/abssamples/RandomBool.abs" , null}
+                                               , { "tests/abssamples/LexicalTest.abs", null}
+                                               , { "tests/abssamples/ReplicationSystem.abs" , null}
                                                };
         return Arrays.asList(data);
     }
     
     final private String input;
+    final protected String product;
     protected Model m;
 
-    public ParseSamplesTest(String input) {
+    public ParseSamplesTest(String input, String product) {
         this.input = input;
+        this.product = product;
     }
 
     @Test

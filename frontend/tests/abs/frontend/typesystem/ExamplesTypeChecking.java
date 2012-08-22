@@ -4,17 +4,25 @@
  */
 package abs.frontend.typesystem;
 
+import org.junit.Assert;
+
 import abs.frontend.ast.Model;
 import abs.frontend.parser.ParseSamplesTest;
 
 public class ExamplesTypeChecking extends ParseSamplesTest {
 
-    public ExamplesTypeChecking(String input) {
-        super(input);
+    public ExamplesTypeChecking(String input, String product) {
+        super(input,product);
     }
 
     @Override
     protected Model parse(String input) throws Exception {
-        return assertTypeCheckFileOk(input, true);
+        Model m = assertTypeCheckFileOk(input, true);
+        if (product != null) {
+            m.flattenForProduct(product);
+            if (m.hasErrors())
+                Assert.fail(m.getErrors().getFirst().getMessage());
+        }
+        return m;
     }
 }
