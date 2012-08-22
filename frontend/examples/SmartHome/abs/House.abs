@@ -1,0 +1,25 @@
+module House;
+
+export *;
+
+import * from Foreign;
+import * from Interface;
+import * from AbsUnit;
+
+interface House {
+}
+
+class House implements House {
+	SmartHomeInterface houseInterface;
+	{
+		this.houseInterface = new SmartHomeInterface(this);
+	}
+	Unit run() {
+		Printer printer = new Printer();
+		printer.printS("Finished");
+	}
+}
+
+{
+	House house = new cog House();
+}

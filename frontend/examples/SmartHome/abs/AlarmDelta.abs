@@ -1,0 +1,54 @@
+/*
+* Delta adding basic Alarm functionality
+*/
+delta DAlarm;
+uses House;
+adds interface Alarm {
+	Unit arm();
+	Unit disarm();
+	Unit reset();
+}
+adds class Alarm implements Alarm {
+	Bool armed = False;
+	Bool active = False;
+	
+	Unit arm() {
+		this.armed = True;
+	}
+	
+	Unit disarm() {
+		this.armed = False;
+		this.active = False;
+	}
+	
+	Unit reset() {
+		this.active = False;
+	}
+}
+
+/*
+* Delta adding functionality for FireAlarm
+*/
+delta DFireAlarm;
+uses House;
+adds interface FireAlarm extends Alarm, Observer {
+}
+modifies class Alarm adds FireAlarm {
+	adds Unit alert() {
+		Printer printer = new Printer();
+		Sleeper sleeper = new cog Sleeper();
+		while (this.active) {
+			printer.printS("*** Fire ***\nContacting fire department");
+			Fut<Unit> s = sleeper!sleep(2000);
+			await s?;
+		}
+	}
+	
+	adds Unit notify(String message) {
+		Printer printer = new Printer();
+		if (this.armed && message == "fire" && ~this.active) {
+			this.active = True;
+			this.alert();
+		}
+	}
+}

@@ -1,0 +1,164 @@
+/*
+* Delta adding basic Heating functionality
+*/
+delta DHeating;
+uses House;
+adds interface Heating extends Observer {
+    Unit setTemperature(Int temperature);
+    Unit start();
+    Unit stop();
+}
+adds class Heating(House house) implements Heating {
+	Bool active = False;
+	Bool warming = False;
+	Bool cooling = False;
+	Int setTemperature = 10;
+	Int goalTemperature = 10;
+	Int baseTemperature = 10;
+	Int lastRcvdTemperature = 10;
+    
+    Unit warming() {
+    	while (this.warming) {
+    		this.warm();
+    	}
+    }
+    
+    Unit warm() {
+    }
+    
+    /*
+	* When cooling this function decreases the temperature in the house
+	* every 3 seconds
+	*/
+    Unit cooling() {
+    	Sleeper sleeper = new cog Sleeper();
+    	while (this.cooling) {
+    		Fut<Unit> s = sleeper!sleep(3000);
+    		await s?;
+    		if (this.cooling) {
+    			this.house!incrementTemperature(-1);
+    		}
+    	}
+    }
+    
+    /*
+	* Sets the temperature to which the house should be heated
+	*/
+    Unit setTemperature(Int temperature) {
+        this.setTemperature = temperature;
+        if (this.active) {
+    	    this.start();
+        }
+    }
+    
+    /*
+	* Activates the heating of the house
+	*/
+    Unit start() {
+        this.active = True;
+        // Sets the goalTemperature to that the user set if it is greater than
+		// the base temperature
+        if (this.setTemperature >= this.baseTemperature) {
+        	this.goalTemperature = this.setTemperature;
+        } else {
+        	this.goalTemperature = this.baseTemperature;
+        }
+        // Starts warming if the goal is higher than the last recieved temperature
+		// or cooling if it is lower or nothing if they are equal
+        if (this.goalTemperature > this.lastRcvdTemperature) {
+        	if (~warming) {
+        		this.warming = True;
+        		this.cooling = False;
+        		this.warming();
+        	}
+        } else if (this.goalTemperature < this.lastRcvdTemperature) {
+        	if (~cooling) {
+        		this.warming = False;
+        		this.cooling = True;
+        		this.cooling();
+        	}
+        } else {
+        	this.warming = False;
+        	this.cooling = False;
+        }
+    }
+    
+    /*
+	* Stops the heating of the house
+	*/
+    Unit stop() {
+        this.active = False;
+        this.goalTemperature = this.baseTemperature;
+        this.warming = False;
+        // Start cooling to the base temperature
+        if (this.goalTemperature < this.lastRcvdTemperature) {
+        	if (~cooling) {
+        		this.cooling = True;
+        		this.cooling();
+        	}
+        }
+    }
+    
+    /*
+	* Recieve a new temperature
+	*/
+    Unit notify(String message) {
+        Parser parser = new Parser();
+        this.lastRcvdTemperature = parser.intFromString(message);
+        // Stop heating when goal temperature is reached
+        if (this.lastRcvdTemperature >= this.goalTemperature) {
+            this.warming = False;
+            // Start cooling because heating is turned off
+            if (this.lastRcvdTemperature > this.baseTemperature) {
+            	if (~cooling) {
+            		this.cooling = True;
+            		this.cooling();
+            	}
+            } else {
+            	this.cooling = False;
+            }
+        } else {
+        	// Start heating if temperature is below goal and not already heating
+        	if (~warming) {
+            	this.warming = True;
+            	this.cooling = False;
+            	this.warming();
+            }
+        }
+    }
+}
+
+/*
+* Delta adding Gas burner functionality
+*/
+delta DOilBurner;
+uses House;
+modifies class Heating {
+	/*
+	* Heats 1 degree after 1 second
+	*/
+    modifies Unit warm() {
+    	Sleeper sleeper = new cog Sleeper();
+    	Fut<Unit> s = sleeper!sleep(1000);
+    	await s?;
+    	if (this.warming) {
+    		this.house!incrementTemperature(1);
+    	}
+    }
+}
+
+delta DElectricHeater;
+uses House;
+modifies class Heating {
+	/*
+	* Heats 1 degree after 1.5 seconds
+	*/
+	modifies Unit warm() {
+		Sleeper sleeper = new cog Sleeper();
+		Fut<Unit> s = sleeper!sleep(1500);
+		await s?;
+		if (this.warming) {
+			this.house!incrementTemperature(1);
+		}
+	}
+}

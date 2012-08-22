@@ -1,0 +1,23 @@
+/*
+    Delta to add interfaces for observer functionality.
+*/
+delta DObserver;
+uses House;
+adds interface Observer {
+    Unit notify(String message);
+}
+adds interface Observable {
+    Unit register(Observer observer);
+    Unit unregister(Observer observer);
+}
+adds class Observable implements Observable {
+    Set<Observer> observers = EmptySet;
+
+    Unit register(Observer observer) {
+        this.observers = insertElement(this.observers, observer);
+    }
+
+    Unit unregister(Observer observer) {
+        this.observers = remove(this.observers, observer);
+    }
+}

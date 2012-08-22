@@ -1,0 +1,71 @@
+module AbsUnit.Hamcrest;
+
+export *;
+
+data Formula = Formula(Matcher) | 
+			   And(Formula,Formula) | 
+			   Or(Formula,Formula) |
+			   AllOf(Set<Formula>) | 
+			   AnyOf(Set<Formula>) |
+			   Not(Formula);
+
+//exclusive or
+def Formula xor(Formula a, Formula b) = And(Or(a,b),Not(And(a,b)));
+// implication
+def Formula impl(Formula a, Formula b) = Or(Not(a),b);
+// equivalence
+def Formula equiv(Formula a, Formula b) = And(impl(a,b),impl(b,a));
+
+def Formula fm(Matcher m) = Formula(m);
+def Matcher matcher(Formula f) = case f { Formula(m) => m; };
+
+def Bool isAllOf(Formula f) = 
+	case f {
+		AllOf(_) => True;
+		_ => False;
+	};
+	
+def Bool isAnyOf(Formula f) = 
+	case f {
+		AnyOf(_) => True;
+		_ => False;
+	};
+
+def Bool isAnd(Formula f) = 
+	case f {
+		And(_,_) => True;
+		_ => False;
+	};
+	
+def Bool isOr(Formula f) = 
+	case f {
+		Or(_,_) => True;
+		_ => False;
+	};
+	
+def Bool isNot(Formula f) = 
+	case f {
+		Not(_) => True;
+		_ => False;
+	};
+	
+def Formula unary(Formula f) =
+	case f {
+		Not(g) => g;
+	};
+	
+def Set<Formula> nary(Formula f) =
+	case f {
+		AllOf(fs) => fs;
+		AnyOf(fs) => fs;
+	};	
+	
+def Pair<Formula,Formula> binary(Formula f) = 
+	case f {
+		And(x,y) => Pair(x,y);
+		Or(x,y) => Pair(x,y);
+	};
+	
+interface Matcher {
+	[Near] Bool matches();
+}

@@ -1,0 +1,141 @@
+/*
+* Delta adding basic sensor implementation
+*/
+delta DSensor;
+uses House;
+adds data SensorType =
+	Sensor |
+	TemperatureSensor |
+	FireSensor;
+adds def Bool isSensorType(SensorType toCheck, SensorType t) =
+	case toCheck {
+		t => True;
+		Sensor => True;
+		TemperatureSensor => case t {
+			TemperatureSensor => True;
+			_ => False;
+			};
+		FireSensor => case t {
+			FireSensor => True;
+			_ => False;
+			};
+		};
+adds interface Sensor extends Observable {
+    Unit enable();
+    Unit disable();
+    Bool getEnabled();
+}
+
+adds class Sensor(House house, SensorType typE) implements Sensor {
+    Bool enabled = True;    
+    Sleeper sleeper;
+    Set<Observer> observers = EmptySet;
+
+    Unit register(Observer observer) {
+        this.observers = insertElement(this.observers, observer);
+    }
+
+    Unit unregister(Observer observer) {
+        this.observers = remove(this.observers, observer);
+    }
+    
+    Unit notifyObservers(String message) {
+    	Printer printer = new Printer();
+    	Set<Observer> obs = this.observers;
+    	while (hasNext(obs)) {
+    		Pair<Set<Observer>, Observer> pair = next(obs);
+    		obs = fst(pair);
+    		snd(pair)!notify(message);
+    	}
+    }
+
+    Unit run() {
+        sleeper = new cog Sleeper();
+        while (True) {
+            if (enabled) {
+                this.gatherInformation();
+            }
+            Fut<Unit> s = sleeper!sleep(100);
+            await s?;
+        }
+    }
+    
+    Unit enable() {
+        this.enabled = True;
+    }
+    
+    Unit disable() {
+        this.enabled = False;
+    }
+    
+    Bool getEnabled() {
+    	return this.enabled;
+    }
+    
+    Unit gatherInformation() {
+    }
+}
+adds class BoolComparator(Bool a, Bool b) implements Comparator {
+	Int compare() {
+		Int result = 1;
+		if (a == b) {
+			result = 0;
+		}
+		return result;
+	}
+}
+
+/*
+* Delta adding temperature sensor functionality to sensor
+*/
+delta DTemperatureSensor;
+uses House;
+adds interface TemperatureSensor extends Sensor {
+	Int getTemperature();
+}
+modifies class Sensor adds TemperatureSensor {
+    adds Int temperature = 10;
+
+    adds Int getTemperature() {
+        return this.temperature;
+    }
+    
+    modifies Unit gatherInformation() {
+    	Unit result = Unit;
+        if (this.typE == TemperatureSensor) {
+        	Fut<Int> t = this.house!getTemperature();
+        	await t?;
+        	Int temp = t.get;
+        	if (temp != this.temperature) {
+       			this.temperature = temp;
+       			this.notifyObservers(intToString(temp));
+       		}
+       		result = Unit;
+       	} else {
+       		result = original();
+       	}
+       	return result;
+    }
+}
+
+/*
+* Delta adding FireSensor functionality to sensor
+*/
+delta DFireSensor;
+uses House;
+adds interface FireSensor extends Sensor {
+}
+modifies class Sensor adds FireSensor {
+	modifies Unit gatherInformation() {
+		if (this.typE == FireSensor) {
+			Fut<Bool> f = this.house!getFire();
+			await f?;
+			Bool fire = f.get;
+			if (fire) {
+				this.notifyObservers("fire");
+			}
+		} else {
+			original();
+		}
+	}
+}

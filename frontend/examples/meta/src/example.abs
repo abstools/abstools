@@ -50,9 +50,11 @@ modifies class C {
     removes Unit m();
 
     removes Int f;
-    adds Int fieldA = 17;
-    adds Int fieldB;
+    adds Int a = 17;
+    adds Int b;
 
-//    adds Int fieldC = p;
+    // fixme
+    adds Int c = p;
+
 }
 

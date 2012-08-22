@@ -1,0 +1,140 @@
+/*
+* Delta adding basic sensor functionality
+*/
+/*delta DSensorInterface;
+uses Interface;
+modifies interface SmartHomeInterface {
+    adds Unit enableSensor(String sensor);
+    adds Unit disableSensor(String sensor);
+}
+modifies class SmartHomeInterface {
+    adds Map<String, Sensor> sensors = EmptyMap;
+    
+    adds Unit addSensor(String name, Sensor sensor) {
+    	sensors = put(sensors, name, sensor);
+    }
+    
+    adds Unit enableSensor(String sensor) {
+        lookup(sensors, sensor).enable();
+    }
+    
+    adds Unit disableSensor(String sensor) {
+        lookup(sensors, sensor).disable();
+    }
+}*/
+
+/*
+* Delta adding functionality when temperature monitoring is available
+*/
+delta DTemperatureMonitor;
+uses Interface;
+modifies interface SmartHomeInterface {
+    adds Int getTemperature();
+}
+modifies class SmartHomeInterface {
+    adds TemperatureSensor temperatureSensor;
+	modifies Unit init() {
+		original();
+		this.temperatureSensor = new cog Sensor(this.house, TemperatureSensor);
+		Sensor s = this.temperatureSensor;
+//		this.addSensor("temperature sensor", temperatureSensor);
+	}
+    adds Int getTemperature() {
+        Fut<Int> t = this.temperatureSensor!getTemperature();
+        await t?;
+        return t.get;
+    }
+}
+
+/*
+* Delta adding functionality when heating is available
+*/
+delta DHeatingInterface;
+uses Interface;
+modifies interface SmartHomeInterface {
+    adds Unit setTemperature(Int temperature);
+    adds Unit activateHeating();
+    adds Unit disactivateHeating();
+}
+modifies class SmartHomeInterface {
+    adds Heating heating;
+    
+    modifies Unit init() {
+        original();
+        this.heating = new cog Heating(this.house);
+        this.temperatureSensor!register(this.heating);
+    }
+    
+    adds Unit setTemperature(Int temperature) {
+        this.heating!setTemperature(temperature);
+    }
+    
+    adds Unit activateHeating() {
+    	this.heating!start();
+    }
+    
+    adds Unit disactivateHeating() {
+    	this.heating!stop();
+    }
+}
+
+/*
+* Adds functionality to support Alarms
+*/
+delta DAlarmInterface;
+uses Interface;
+modifies interface SmartHomeInterface {
+	adds Unit resetAlarm(String alarm);
+}
+modifies class SmartHomeInterface {
+	adds Map<String, Alarm> alarms = EmptyMap;
+	
+	adds Unit resetAlarm(String alarm) {
+		lookup(alarms, alarm)!reset();
+	}
+}
+
+/*
+* Adds functionality to support FireAlarms
+*/
+delta DFireAlarmInterface;
+uses Interface;
+modifies interface SmartHomeInterface {
+	/*
+	* Starts monitoring fire if active is True, stops monitoring otherwise
+	*/
+	adds Unit monitorFire(Bool active);
+}
+modifies class SmartHomeInterface {
+	adds FireSensor fireSensor;
+	
+	modifies Unit init() {
+		original();
+		fireSensor = new cog Sensor(this.house, FireSensor);
+		FireAlarm fireAlarm = new cog Alarm();
+		Alarm a = fireAlarm;
+		alarms = put(alarms, "fire alarm", a);
+		Fut<Unit> u = this.fireSensor!register(fireAlarm);
+		await u?;
+	}
+	
+	adds Unit monitorFire(Bool active) {
+		if (active) {
+			lookup(alarms, "fire alarm")!arm();
+		} else {
+			lookup(alarms, "fire alarm")!disarm();
+		}
+	}
+}
+
+delta DTestInterface;
+uses Interface;
+adds [Fixture] interface SmartHomeInterfaceTest {
+	[Test] Unit testInit();
+}
+adds [Suite] class SmartHomeInterfaceTestImpl implements SmartHomeInterfaceTest {
+	Unit testInit() {
+		assert True;
+	}
+}
+		

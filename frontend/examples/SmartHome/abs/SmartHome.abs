@@ -1,0 +1,80 @@
+productline House;
+    features ElectronicDoor, SlidingDoor, SwingingDoor, ElectronicBlinds,
+    Sensors, DoorSensor, FireSensor, MovementSensor, WindowSensor, COSensor,
+    TemperatureSensor, Alarm, FireAlarm, BurglarAlarm, COAlarm, Interface,
+    RemoteInterface, Heating, Gas, Electric, Oil;
+    
+    delta DTestInterface when Interface;
+    // Deltas concerning House
+    delta DTemperature when TemperatureSensor;
+    delta DFire when FireAlarm;
+    
+    // Deltas concerning SmartHomeInterface
+    delta DTemperatureMonitor after DTemperatureSensor when TemperatureSensor;
+    delta DHeatingInterface after DTemperatureMonitor when Heating;
+//	delta DSensorInterface after DSensor when Sensors;
+    delta DAlarmInterface after DAlarm when Alarm;
+    delta DFireAlarmInterface after DFireAlarm when FireAlarm;
+    
+    // Deltas concerning Sensor
+    delta DObserver when Sensors;
+    delta DSensor after DObserver when Sensors;
+    delta DTemperatureSensor after DSensor when TemperatureSensor;
+	delta DFireSensor after DSensor when FireSensor;
+    
+    // Deltas concerning Heating
+    delta DHeating after DTemperatureSensor when Heating;
+    delta DOilBurner after DHeating when Oil;
+    delta DElectricHeater after DHeating when Electric;
+    
+    // Deltas concerning Alarm
+    delta DAlarm when Alarm;
+    delta DFireAlarm after DAlarm, DFireSensor when FireAlarm; 
+
+product OilHeating (Interface, Heating, Oil, Sensors, TemperatureSensor);
+product ElectricHeating (Interface, Heating, Electric, Sensors, TemperatureSensor);
+product FireAlarm (Interface, Alarm, FireAlarm, Sensors, FireSensor);
+product Test (Interface, Sensors, TemperatureSensor);
+
+root SmartHome {
+	group allof {
+		opt ElectronicDoor {
+			group [1..*] {
+				SlidingDoor,
+				SwingingDoor
+			}
+			require: DoorSensor ; 
+		},
+		opt ElectronicBlinds { require: WindowSensor ; },
+		opt Sensors {
+			group [1..*] {
+				DoorSensor,
+				FireSensor,
+				MovementSensor,
+				WindowSensor,
+				COSensor,
+				TemperatureSensor
+			}
+		},
+		opt Alarm {
+			group [1..*] {
+				FireAlarm { require: FireSensor ; },
+				BurglarAlarm { require: MovementSensor ; },
+				COAlarm { require: COSensor ; }
+			}
+		},
+		Interface {
+			group allof {
+				opt RemoteInteface
+			}
+		},
+		opt Heating {
+			group oneof {
+				Gas { require: COAlarm ; },
+				Electric,
+				Oil
+			}
+			require: TemperatureSensor ;
+		}
+	}
+}

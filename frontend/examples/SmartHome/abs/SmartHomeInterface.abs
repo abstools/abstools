@@ -1,0 +1,16 @@
+module Interface;
+
+export *;
+
+import * from House;
+import * from Foreign;
+import * from AbsUnit;
+
+interface SmartHomeInterface {
+	Unit init();
+}
+
+class SmartHomeInterface(House house) implements SmartHomeInterface {
+	Unit init() {
+	}
+}

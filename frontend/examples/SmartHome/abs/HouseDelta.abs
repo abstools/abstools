@@ -1,0 +1,73 @@
+/*
+* Delta for simulating temperature in the house.
+*/
+delta DTemperature;
+uses House;
+modifies interface House {
+    adds Unit incrementTemperature(Int increment);
+    adds Int getTemperature();
+}
+modifies class House {
+	adds Int temperature = 10;
+	
+	modifies Unit run() {
+		this.houseInterface.init();
+		Printer printer = new Printer();
+//		houseInterface.setTemperature(15);
+//		houseInterface.activateHeating();
+		Sleeper sleeper = new Sleeper();
+		Int i = 0;
+		Int t = 10;
+		while (i < 300) {
+			i = i+1;
+			sleeper.sleep(50);
+			Int temp = houseInterface.getTemperature();
+			if (t != temp) {
+				t = temp;
+				printer.printI(t);
+			}
+		}
+		original();
+	}
+    
+    adds Unit incrementTemperature(Int increment) {
+        this.temperature = temperature + increment;
+    }
+    
+    adds Int getTemperature() {
+        return this.temperature;
+    }
+}
+
+/*
+* Delta for simulating fire.
+*/
+delta DFire;
+uses House;
+modifies interface House {
+	adds Bool getFire();
+	adds Unit setFire(Bool fire);
+}
+modifies class House {
+	adds Bool fire = False;
+	
+	modifies Unit run() {
+		this.houseInterface.init();
+		Printer printer = new Printer();
+		this.houseInterface.monitorFire(True);
+		this.setFire(True);
+		Sleeper sleeper = new cog Sleeper();
+		Fut<Unit> u = sleeper!sleep(5000);
+		await u?;
+		this.houseInterface.monitorFire(False);
+		original();
+	}
+	
+	adds Bool getFire() {
+		return this.fire;
+	}
+	
+	adds Unit setFire(Bool fire) {
+		this.fire = fire;
+	}
+}

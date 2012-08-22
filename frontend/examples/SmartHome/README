@@ -1,0 +1,7 @@
+This ABS project implements a product line of 'smart homes'. 
+It was developed as part of a Master's thesis by Wouter Seyen at KUL in 2012.
+The thesis text can be found under doc/thesis.pdf.
+
+The provided Makefile can be used to compile and run the products.
+It relies on finding the ABS compiler runtime under Tools/ABS/trunk/frontend/dist/absfrontend.jar.
+

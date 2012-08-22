@@ -1,0 +1,110 @@
+module AbsUnit.Hamcrest.Core;
+
+export *;
+
+import Comparator from AbsUnit; 
+import * from AbsUnit.Hamcrest;
+
+
+class Is(Comparator comp) implements Matcher {
+	Bool matches() {
+		Int result = comp.compare();
+		return result == 0;
+	}
+}
+
+class LessThan(Comparator comp) implements Matcher {
+	Bool matches() {
+		Int result = comp.compare();
+		return result < 0;
+	}
+}
+
+class MoreThan(Comparator comp) implements Matcher {
+	Bool matches() {
+		Int result = comp.compare();
+		return result > 0;
+	}
+}
+
+class CoreMatcher(Formula formula) implements Matcher {
+
+	Bool matches() {
+		return this.eval(formula);
+	}
+	
+	Bool eval(Formula formula) {
+		Bool result = True;
+		if (isAnd(formula)) {
+			result = this.and(formula);
+		} else if (isOr(formula)) {
+			result = this.or(formula);
+		} else if (isNot(formula)) {
+			result = this.not(formula);
+		} else if (isAllOf(formula)) {
+			result = this.allOf(formula);
+		} else if (isAnyOf(formula)) {
+			result = this.anyOf(formula);
+		} else {
+			result = matcher(formula).matches();
+		} 
+		return result;
+	}
+	
+	Bool and(Formula formula) {
+		Pair<Formula,Formula> pair = binary(formula);
+		Bool result = this.eval(fst(pair));
+		if (result) {
+			result = this.eval(snd(pair));
+		}
+		return result;
+	}
+	
+	Bool or(Formula formula) {
+		Pair<Formula,Formula> pair = binary(formula);
+		Bool result = this.eval(fst(pair));
+		if (~result) {
+			result = this.eval(snd(pair));
+		}
+		return result;
+	}
+	
+	Bool not(Formula formula) {
+		Formula f = unary(formula);
+		Bool result = this.eval(f);
+		return ~result;
+	}
+	
+	/**
+ 	 * Calculates the logical conjunction of a set of matchers. Evaluation is
+ 	 * shortcut, so that the n+1th matcher is not called if nth matcher
+ 	 * returns False.
+ 	 */
+	Bool allOf(Formula formula) {
+		Set<Formula> fs = nary(formula);
+		Bool result = False;
+		while (hasNext(fs) && result) {
+			Pair<Set<Formula>,Formula> nt = next(fs);
+			fs = fst(nt);
+			result = this.eval(snd(nt));
+		}
+		return result;
+	}
+	
+	/**
+ 	 * Calculates the logical disjunction of a set of matchers. Evaluation is
+ 	 * shortcut, so that the n+1th matcher is not called if nth matcher
+ 	 * returns True.
+ 	 */
+	Bool anyOf(Formula formula) {
+		Set<Formula> fs = nary(formula);
+		Bool result = True;
+		while (hasNext(fs) && ~result) {
+			Pair<Set<Formula>,Formula> nt = next(fs);
+			fs = fst(nt);
+			result = this.eval(snd(nt));
+		}
+		return result;
+	}
+
+} 

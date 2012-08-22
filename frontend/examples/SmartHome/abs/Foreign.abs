@@ -1,0 +1,56 @@
+module Foreign;
+export Printer;
+export Parser;
+export Sleeper;
+
+import * from ABS.FLI;
+
+interface Printer {
+
+	/**
+        Prints the provided string to the console.
+    */
+    Unit printS(String text);
+    Unit printI(Int integer);
+    Unit printB(Bool bool);
+}
+
+[Foreign] class Printer implements Printer {
+    Unit printS(String text) {
+        return Unit;
+    }
+    
+    Unit printI(Int integer) {
+    	return Unit;
+    }
+    
+    Unit printB(Bool bool) {
+    	return Unit;
+    }
+}
+
+interface Parser {
+    /**
+        Parser an integer from the provided string
+    */
+    Int intFromString(String toParse);
+}
+
+[Foreign] class Parser implements Parser {
+    Int intFromString(String toParse) {
+        return 0;
+    }
+}
+
+interface Sleeper {
+    Unit sleep(Int time);
+}
+
+[Foreign] class Sleeper implements Sleeper {
+    /**
+        Halts the execution for the provided time in miliseconds
+    */
+    Unit sleep(Int time) {
+        return Unit;
+    }
+}
