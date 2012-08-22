@@ -10,6 +10,7 @@ import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
 import static abs.backend.tests.AbsASTBuilderUtil.newObj;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.ASSERT_HELPER;
+import static apet.absunit.ABSUnitTestCaseTranslatorConstants.MAIN;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
@@ -159,7 +160,7 @@ abstract class ABSUnitTestCaseBuilder {
 		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
 		
 		if (delta == null) {
-			delta = deltaBuilder.createDeltaFor(testClassName);
+			delta = deltaBuilder.createDeltaFor(testClassName, MAIN);
 		}
 		
 		ModifyClassModifier modifier =
@@ -269,7 +270,7 @@ abstract class ABSUnitTestCaseBuilder {
 		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
 		
 		if (delta == null) {
-			delta = deltaBuilder.createDeltaFor(testClassName);
+			delta = deltaBuilder.createDeltaFor(testClassName, MAIN);
 		}
 		
 		ModifyClassModifier modifier =
