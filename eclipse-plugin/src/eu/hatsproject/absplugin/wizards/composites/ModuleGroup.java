@@ -150,7 +150,7 @@ public class ModuleGroup extends CompositeGroup {
 	}
 
 	public InternalASTNode<ModuleDecl> getSelectedModuleDecl(){
-		return (selectedModuleDecl instanceof InternalASTNode) ? selectedModuleDecl : null;
+		return selectedModuleDecl;
 	}
 
 	/**

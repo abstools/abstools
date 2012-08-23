@@ -29,7 +29,7 @@ public class ModulePath {
 	/**
 	 * AbsNature to retrieve the current {@link Model}. Additionally used for synchronization.
 	 */
-	private AbsNature absNature;
+	final private AbsNature absNature;
 	/**
 	 * Cached, synchronized list of all children of a ModulPath
 	 */

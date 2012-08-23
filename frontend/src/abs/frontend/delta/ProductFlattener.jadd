@@ -52,7 +52,7 @@ aspect ProductFlattener {
 
         // find/get applicable deltas
         HashSet<String> deltaids = this.findApplicableDeltas(prod, pl);
-        HashMap<String, DeltaDecl> unsorted_deltas = this.findDeltas(deltaids);
+        Map<String, DeltaDecl> unsorted_deltas = this.findDeltas(deltaids);
 
         // sort deltas
         ArrayList<DeltaDecl> deltas = this.sortDeltas(unsorted_deltas, pl);
@@ -177,7 +177,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Find DeltaDecls, given a set of delta names
      */
-    public HashMap<String, DeltaDecl> Model.findDeltas(HashSet<String> deltaids) {
+    public Map<String, DeltaDecl> Model.findDeltas(Collection<String> deltaids) {
         HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (DeltaDecl delta : u.getDeltaDecls()) {
@@ -195,7 +195,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Sort DeltaDecls according to a valid order of application defined by the product line
      */
-    public ArrayList<DeltaDecl> Model.sortDeltas(HashMap<String, DeltaDecl> deltas, ProductLine pl) {
+    public ArrayList<DeltaDecl> Model.sortDeltas(Map<String, DeltaDecl> deltas, ProductLine pl) {
         
         GraphTS g = new GraphTS(deltas.values().toArray());
 

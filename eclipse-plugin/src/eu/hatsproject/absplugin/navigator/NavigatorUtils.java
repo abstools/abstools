@@ -6,8 +6,6 @@ package eu.hatsproject.absplugin.navigator;
 
 import static eu.hatsproject.absplugin.util.UtilityFunctions.*;
 
-import java.util.ArrayList;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
@@ -24,7 +22,7 @@ import eu.hatsproject.absplugin.util.InternalASTNode;
  * @author cseise
  *
  */
-public class NavigatorUtils {
+public abstract class NavigatorUtils {
 
 	private NavigatorUtils(){}
 	
@@ -110,38 +108,6 @@ public class NavigatorUtils {
 	 */
 	public static String buildRegex(String prefix){
 		return  "^" + prefix + "\\.[^\\.]+$";
-	}
-
-	/**
-	 * Gives the module hierarchy for a given ModuleDecl
-	 * 
-	 * @param md
-	 *            The target ModuleDecl
-	 * @param nature
-	 *            The AbsNature connected to this ModuleDecl
-	 * @return An ArrayList of ModulePaths. This List will be empty if the
-	 *         ModuleDecl is null
-	 */
-	public static ArrayList<ModulePath> getParentHierarchyForModuleDecl(ModuleDecl md, AbsNature nature) {
-		ArrayList<ModulePath> hierarchy = new ArrayList<ModulePath>();
-	
-		if (md != null) {
-			String moduleName = md.getName();
-			String[] split = moduleName.split("\\.");
-	
-			String work = "";
-	
-			for (int i = 0; i < split.length - 1; i++) {
-				work = work + split[i];
-				ModulePath path = new ModulePath(nature, work);
-				hierarchy.add(path);
-				work = work + ".";
-	
-			}
-		}
-	
-		return hierarchy;
-	
 	}
 	
 	/**

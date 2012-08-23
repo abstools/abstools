@@ -709,8 +709,7 @@ public class ABSContentOutlineUtils {
 		}
 	}	
 	
-	public static void insertCostabsItems(ISelection sel) {
-		
+	static void insertCostabsItems(ISelection sel) {
 		Object[] selectedItems = ((IStructuredSelection) sel).toArray();
 		CostabsLink.ENTRIES_STRINGS = new ArrayList<String>();
 		CostabsLink.ENTRIES_NODES = new ArrayList<ASTNode<?>>();
@@ -718,7 +717,7 @@ public class ABSContentOutlineUtils {
 		if (selectedItems.length > 0)
 			CostabsLink.ABS_NATURE = ((InternalASTNode<?>) selectedItems[0]).getNature();
 		
-		for (int i = 0; (selectedItems != null) && (i < selectedItems.length); i++) {
+		for (int i = 0; i < selectedItems.length; i++) {
 			ASTNode<?> node = ((InternalASTNode<?>) selectedItems[i]).getASTNode();
 			CostabsLink.ENTRIES_NODES.add(node);
 			String callerName;

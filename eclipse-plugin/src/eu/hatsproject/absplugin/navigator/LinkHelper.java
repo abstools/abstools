@@ -106,9 +106,10 @@ public class LinkHelper implements ILinkHelper {
 	 */
 	private static TreeSelection buildTreeSelection(AbsNature nature, IProject project, InternalASTNode<ModuleDecl> md) {
 		assert nature != null;
+		assert nature == md.getNature(); // TODO: if this holds (as it should), remove argument
 		if (project != null && md != null) {
 			// Split the module's name and return the module hierarchy
-			ArrayList<ModulePath> paths = NavigatorUtils.getParentHierarchyForModuleDecl(md.getASTNode(), nature);
+			ArrayList<ModulePath> paths = md.getParentHierarchyForModuleDecl();
 
 			ArrayList<Object> arli = new ArrayList<Object>();
 			arli.add(project);

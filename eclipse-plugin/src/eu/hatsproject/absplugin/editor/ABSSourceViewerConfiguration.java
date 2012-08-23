@@ -9,7 +9,6 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenc
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.*;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
@@ -29,7 +28,6 @@ import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
@@ -80,7 +78,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 		return reconciler;
 	}
 	
-	public class ABSSingleCommentScanner extends RuleBasedScanner {
+	public static class ABSSingleCommentScanner extends RuleBasedScanner {
 		public ABSSingleCommentScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
             IToken token = Preferences.getToken(store, SYNTAXCOLOR_COMMENT);
@@ -88,7 +86,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 			setRules(new IRule[] {singleLineRule});
 		}
 	}
-	public class ABSMultiCommentScanner extends RuleBasedScanner {
+	public static class ABSMultiCommentScanner extends RuleBasedScanner {
 		public ABSMultiCommentScanner(){
 			IPreferenceStore store = getDefaultPreferenceStore();
 			IToken token = Preferences.getToken(store, SYNTAXCOLOR_COMMENT);
@@ -96,7 +94,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 			setRules(new IRule[] {multiLineRule});
 		}
 	}
-	public class ABSStringScanner extends RuleBasedScanner {
+	public static class ABSStringScanner extends RuleBasedScanner {
 		public ABSStringScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
 			IToken token = Preferences.getToken(store, SYNTAXCOLOR_STRING);
@@ -104,7 +102,7 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 			setRules(new IRule[] {singleLineRule});
 		}
 	}
-	public class ABSCharacterScanner extends RuleBasedScanner {
+	public static class ABSCharacterScanner extends RuleBasedScanner {
 		public ABSCharacterScanner() {
 			IPreferenceStore store = getDefaultPreferenceStore();
 			IToken token = Preferences.getToken(store, SYNTAXCOLOR_STRING);
@@ -112,10 +110,8 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 			setRules(new IRule[] {singleLineRule});
 		}
 	}
-	
-	
-	
-	public class IdentifierWordDetector implements IWordDetector{
+
+	public static class IdentifierWordDetector implements IWordDetector{
 		@Override
 		public boolean isWordStart(char c){
 			return isWordPart(c);
@@ -143,7 +139,6 @@ public class ABSSourceViewerConfiguration extends SourceViewerConfiguration {
 			protected boolean isIncluded(Annotation annotation) {
 				return isAnnotationIncluded(annotation);
 			}
-
 		};
 	}
 

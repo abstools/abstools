@@ -12,7 +12,9 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.ModuleDecl;
 import eu.hatsproject.absplugin.builder.AbsNature;
+import eu.hatsproject.absplugin.navigator.ModulePath;
 
 /**
  * Class for wrapping abs.frontend.AST.* nodes with their respective project nature
@@ -121,5 +123,30 @@ public class InternalASTNode<T extends ASTNode<?>> {
 	 */
 	public IProject getProject(){
 		return getNature().getProject();
+	}
+
+	/**
+	 * Gives the module hierarchy for a given ModuleDecl
+	 * 
+	 * @return An ArrayList of ModulePaths. This List will be empty if the
+	 *         ModuleDecl is null
+	 */
+	public ArrayList<ModulePath> getParentHierarchyForModuleDecl() {
+
+		ArrayList<ModulePath> hierarchy = new ArrayList<ModulePath>();
+
+		String moduleName = ((ModuleDecl)getASTNode()).getName();
+		String[] split = moduleName.split("\\.");
+
+		StringBuffer work = new StringBuffer();
+
+		for (int i = 0; i < split.length - 1; i++) {
+			work.append(split[i]);
+			ModulePath path = new ModulePath(getNature(), work.toString());
+			hierarchy.add(path);
+			work.append('.');
+		}
+
+		return hierarchy;
 	}
 }

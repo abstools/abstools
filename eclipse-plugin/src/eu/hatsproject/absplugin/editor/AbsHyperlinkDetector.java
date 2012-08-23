@@ -1,9 +1,7 @@
 package eu.hatsproject.absplugin.editor;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Path;
@@ -12,44 +10,13 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Region;
-import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.IHyperlink;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Call;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.ConstructorPattern;
-import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.DeltaClause;
-import abs.frontend.ast.Deltaspec;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FromExport;
-import abs.frontend.ast.FromImport;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ModifyClassModifier;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.Name;
-import abs.frontend.ast.NewExp;
-import abs.frontend.ast.PatternVarUse;
-import abs.frontend.ast.StarExport;
-import abs.frontend.ast.StarImport;
-import abs.frontend.ast.ThisExp;
-import abs.frontend.ast.TypeUse;
-import abs.frontend.ast.UnknownDecl;
-import abs.frontend.ast.VarOrFieldUse;
+import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
-import abs.frontend.typechecker.DataTypeType;
-import abs.frontend.typechecker.InterfaceType;
-import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
-import abs.frontend.typechecker.ResolvedName;
-import abs.frontend.typechecker.Type;
-import abs.frontend.typechecker.TypeCheckerException;
 import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.util.InternalASTNode;
@@ -62,21 +29,17 @@ import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
  * (ctrl + left mouse can be used to jump to declaration) 
  */
 public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
-
     
     private abstract static class AbsHyperlink implements IHyperlink {
         private final int endOffset;
         private final int startOffset;
         protected ABSEditor editor;
-        
-        
 
         private AbsHyperlink(ABSEditor editor, int startOffset, int endOffset) {
             this.editor = editor;
             this.endOffset = endOffset;
             this.startOffset = startOffset;
         }
-
 
         @Override
         public String getTypeLabel() {
@@ -93,8 +56,6 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         private final EditorPosition targetPos;
         private final String name;
         
-        
-
         private JumpToDeclaration(ABSEditor editor, int startOffset, int endOffset, EditorPosition targetPos) {
             this(editor, startOffset, endOffset, targetPos, "");
         }
@@ -121,7 +82,6 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     private static final class JumpToImplementation extends AbsHyperlink {
         private final String methodName;
         private final Type calleeType;
-
 
         public JumpToImplementation(ABSEditor editor, int startOffset, int endOffset, String methodName, Type calleeType) {
             super(editor, startOffset, endOffset);
@@ -273,17 +233,6 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     }
 
     /**
-     * @param cu
-     * @param node
-     * @return the position of a declaration linked to the given node
-     * or null if there is no declaration
-     */
-    private static EditorPosition getDeclarationPosition(CompilationUnit cu, ASTNode<?> node) {
-        ASTNode<?> decl = getDecl(cu, node);
-        return getPosition(decl);
-    }
-
-    /**
      * returns the position of a given node
      */
     public static EditorPosition getPosition(ASTNode<?> node) {
@@ -362,10 +311,14 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 decl = cu.lookupModule(simpleName);
             } else if (node instanceof DeltaClause) {
                 DeltaClause d = (DeltaClause) node;
-                decl = getDeltaDecl(d.getDeltaspec());
+                decl = getDeltaDecl(cu,d.getDeltaspec());
             } else if (node instanceof Deltaspec) {
                 Deltaspec deltaspec = (Deltaspec) node;
-                decl = getDeltaDecl(deltaspec);
+                decl = getDeltaDecl(cu,deltaspec);
+            } else if (node instanceof DeltaID) {
+            	decl = getDeltaDecl(cu, ((DeltaID)node).getName());
+            } else if (node instanceof Feature) {
+            	return null; // TODO #395
             } else if (node instanceof ModifyClassModifier) {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
                 try {
@@ -383,15 +336,17 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         return decl;
     }
 
-    private static ASTNode<?> getDeltaDecl(Deltaspec deltaspec) {
-        String dName = deltaspec.getName();
-        /* XXX: [stolz] Is 'm' ALWAYS the right scope to lookup in? */
-        ModuleDecl m = deltaspec.getModuleDecl();
-        ResolvedName res = m.resolveName(new KindedName(Kind.TYPE_DECL, dName));
-        if (res != null)
-            return res.getDecl();
-        return null;
+    private static DeltaDecl getDeltaDecl(CompilationUnit cu, String dName) {
+        Model m = cu.getModel();
+        assert m != null : dName;
+        Map<String, DeltaDecl> res = m.findDeltas(Collections.singleton(dName));
+        /* There may be more than one! Think of delta D(True) when ... delta(False) when.
+         * We pick the first one.
+         */
+        return res.isEmpty() ? null : res.values().iterator().next();
     }
 
-
+	private static DeltaDecl getDeltaDecl(CompilationUnit cu, Deltaspec deltaspec) {
+		return getDeltaDecl(cu,deltaspec.getName());
+    }
 }
