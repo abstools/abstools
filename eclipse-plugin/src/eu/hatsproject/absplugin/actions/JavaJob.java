@@ -295,7 +295,7 @@ private boolean useFifoSemantics;
 				// work on a copy:
                 model = model.parseTreeCopy();
 				
-				String productN = product.getModuleDecl().getName()+"."+product.getName();
+				String productN = product.getName();
 				try {
 					model.flattenForProduct(productN);
 					model.flushCache();
