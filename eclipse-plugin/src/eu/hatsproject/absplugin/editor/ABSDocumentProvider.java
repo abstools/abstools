@@ -49,7 +49,8 @@ public class ABSDocumentProvider extends FileDocumentProvider{
 						}
 					}
 				}
-			}
+			} else
+				throw new CoreException(new Status(IStatus.ERROR,Constants.PLUGIN_ID,"Don't know how to open "+element.toString()));
 		}
 		
 		ABSPartitionScanner scanner = new ABSPartitionScanner();                         
