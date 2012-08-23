@@ -634,7 +634,6 @@ aspect GenerateMaude {
                     stream.print(") ");
                 } else {
                     stream.print("$vardecl( '" + var.getName() + " ; null ) ; ");
-                    MaudeCompilerHelper.emitCostAnnotation(stream, getAnnotations(), getModel().defaultResources);
                     var.getInitExp().generateMaudeAsStatement(stream, var.getName(), getAnnotations());
                 }
                 MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
@@ -667,7 +666,6 @@ aspect GenerateMaude {
             getValue().generateMaude(stream);
             stream.print(") ");
         } else {
-            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             getValue().generateMaudeAsStatement(stream, ((VarOrFieldUse)getVar()).getName(), getAnnotations());
         }
         MaudeCompilerHelper.emitPopRandomInst(stream, randomcount);
@@ -690,7 +688,8 @@ aspect GenerateMaude {
             }
             getRetExp().generateMaudeAsStatement(stream, var, getAnnotations());
             stream.print("; ");
-            MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
+            // // done by getRetExp().generateMaudeAsStatement already
+            // MaudeCompilerHelper.emitCostAnnotation(stream, this.getAnnotationList(), getModel().defaultResources);
             stream.print("return('" + var + ") " );
         }
     }
