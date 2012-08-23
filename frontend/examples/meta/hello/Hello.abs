@@ -1,0 +1,60 @@
+module Hello;
+import * from ABS.Meta;
+
+interface Greeting {
+    String sayHello();
+}
+class Greeter implements Greeting {
+    String sayHello() {
+        return "Hello world";
+    }
+}
+
+{
+    while (True) {
+        Greeting bob = new Greeter();
+        String message = bob.sayHello();
+        Unit u = println("\f" + message);
+        
+        u = println("(1) English");
+        u = println("(2) Español");
+        u = println("(3) Deutsch");
+        String selection = readln();
+        
+        Runtime runtime = getRuntime();
+        if (selection == "1") {
+            runtime.applyDelta("En");
+        } else if (selection == "2") {
+            runtime.applyDelta("Es");
+        } else if (selection == "3") {
+            runtime.applyDelta("De");
+        } else {
+            // break...
+            assert False;
+        }
+    }
+}
+
+
+delta En;
+modifies class Hello.Greeter {
+    modifies String sayHello() {
+        return "Hello World";
+    }
+}
+
+delta Es;
+modifies class Hello.Greeter {
+    modifies String sayHello() {
+        return "Hola mundo";
+    }
+}
+
+delta De;
+modifies class Hello.Greeter {
+    modifies String sayHello() {
+        return "Hallo Welt";
+    }
+}
+
+

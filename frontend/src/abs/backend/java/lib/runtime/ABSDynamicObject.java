@@ -34,6 +34,8 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     private void initializeFields(ABSValue[] params) {
+        fields = new HashMap<String,ABSValue>();
+        
         // parameters
         if (params.length != clazz.getParams().size()) throw new DynamicException("Type mismatch");
         for (int i = 0; i < params.length; i++) {
@@ -73,9 +75,6 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     public ABSValue getFieldValue(String field) throws NoSuchFieldException {
-        if (fields == null)
-            throw new NoSuchFieldException(field);
-
         if (fields.containsKey(field))
             return fields.get(field);
         else
@@ -91,9 +90,6 @@ public class ABSDynamicObject extends ABSObject {
     }
     
     public void setFieldValue(String fieldName, ABSValue val) {
-        if (fields == null) {
-            fields = new HashMap<String,ABSValue>();
-        }
         fields.put(fieldName, val);
     }
     

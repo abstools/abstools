@@ -533,7 +533,6 @@ interface ObjectMirror {
     Cog getCog();
     Unit setCog(Cog c);
     
-    Unit debug(String s);
 }
 
 interface Cog {}
@@ -542,3 +541,13 @@ interface Class {}
 interface Value {}
 
 def ObjectMirror reflect<A>(A a) = builtin;
+
+interface Runtime {
+    Unit applyDelta(String s);
+}
+def Runtime getRuntime() = builtin;
+
+// convenience functions (to be removed)
+def Unit println(String s) = builtin;
+def Unit print(String s) = builtin;
+def String readln() = builtin;

@@ -2,8 +2,12 @@
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.java.lib.runtime;
+package abs.backend.java.lib.runtime.dynamic;
 
+import abs.backend.java.lib.runtime.ABSClosure;
+import abs.backend.java.lib.runtime.ABSDynamicClass;
+import abs.backend.java.lib.runtime.ABSDynamicObject;
+import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.types.*;
 
 /* Class ABSObjectMirror
@@ -95,18 +99,6 @@ public class ABSObjectMirrorClass {
                 return object;
             }
         });
-
-        /*
-         * print debug statement to STDERR
-         */
-        objectMirrorClass.addMethod("debug", new ABSClosure() {
-            @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                System.err.println(params[0]);
-                return ABSUnit.UNIT;
-            }
-        });
-        
     }
 
 

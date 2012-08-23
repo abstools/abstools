@@ -62,14 +62,13 @@ delta Rpt (Int times);
     }
 
 
-productline MultiLingualHelloWorld {
-    features English, German, French, Dutch, Repeat;
+productline MultiLingualHelloWorld;
+features English, German, French, Dutch, Repeat;
+delta Rpt(Repeat.times) after De, Fr, Nl when Repeat;
+delta De when German;
+delta Fr when French;
+delta Nl when Dutch;
 
-    delta Rpt(Repeat.times) after De, Fr, Nl when Repeat;
-    delta De when German;
-    delta Fr when French;
-    delta Nl when Dutch;
-}
 
 // basic product with no deltas
 product P1 (English);

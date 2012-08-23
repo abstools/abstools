@@ -4,13 +4,16 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 
 import abs.backend.java.lib.expr.UnmatchedCaseException;
+import abs.backend.java.lib.runtime.dynamic.ABSObjectMirrorClass;
+import abs.backend.java.lib.runtime.dynamic.ABSRuntimeClass;
 import abs.backend.java.lib.types.ABSInteger;
-import abs.backend.java.lib.types.ABSInterface;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
@@ -27,7 +30,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSUnit print(ABSString s) {
-        System.out.println(s.getString());
+        System.out.print(s.getString());
         return ABSUnit.UNIT;
     }
 
@@ -73,18 +76,31 @@ public class ABSBuiltInFunctions {
         }
     }
 
-    // for static meta API
-    // return a mirror object that provides the meta-API
-//    public static <T> ABSDynamicObjectMirror reflect(T t) {
-//        String mirrorPointer = "$mirror";
-//        try {
-//            ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(mirrorPointer);
-//            return (ABSDynamicObjectMirror)existingMirror;
-//        } catch(NoSuchFieldException e) {
-//            ABSDynamicObjectMirror mirror = new ABSDynamicObjectMirror((ABSDynamicObject)t);
-//            ((ABSDynamicObject)t).setFieldValue(mirrorPointer, mirror);
-//            return mirror;
-//        }
-//    }
+    public static ABSDynamicObject getRuntime() {
+        ABSDynamicObject runtime = new ABSDynamicObject(ABSRuntimeClass.singleton());
+        return runtime;
+    }
+    
+
+    /* Convenience functions, to be removed 
+     * 
+     */
+    public static ABSString readln() {
+        Scanner scanner = new Scanner(System.in);
+        String line = scanner.nextLine();
+        return ABSString.fromString(line.trim());
+    }
+    
+    public static ABSUnit println(ABSString s) {
+        try {
+            PrintStream out = new PrintStream(System.out, true, "UTF-8");
+            out.println(s.getString());
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        //System.out.println(s.getString());
+        return ABSUnit.UNIT;
+    }
 
 }

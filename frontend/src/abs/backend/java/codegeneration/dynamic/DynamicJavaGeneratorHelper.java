@@ -556,14 +556,14 @@ public class DynamicJavaGeneratorHelper {
             throws IOException, JavaCodeGenerationException {
         
         PrintStream stream = null;
-        String name = "App";
+        String name = "Application";
         try {
             File file = pkg.createJavaFile(name);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + name + " {");
-            stream.println("// Run this method to apply delta: " + pkg.packageName + "." + name + ".ly();");
-            stream.println("public static void ly() {");
+            stream.println("// Run this method to apply delta: " + pkg.packageName + "." + name + ".apply();");
+            stream.println("public static void apply() {");
             for (String cls : classes) {
                 stream.println(pkg.packageName + "." + cls + ".apply();");
             }
