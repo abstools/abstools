@@ -7,6 +7,7 @@ import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
 import static apet.testCases.ABSTestCaseExtractor.getABSTermArgs;
 import static apet.testCases.ABSTestCaseExtractor.getABSTermFunctor;
+import static apet.testCases.ABSTestCaseExtractor.getABSTermTypeName;
 
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,12 @@ final class PureExpressionBuilder {
 	PureExp createPureExpression(String testName, Set<String> heapNames, ABSData dataValue) {
 		String type = getABSDataType(dataValue);
 		String value = getABSDataValue(dataValue);
-
+		
+		if (type.contains("(") && dataValue instanceof ABSTerm) {
+			ABSTerm term = (ABSTerm) dataValue;
+			type = getABSTermTypeName(term);
+		}
+		
 		//import type
 		Decl decl = getDecl(model, Decl.class, namePred(type));
 		output.addImport(generateImportAST(decl));

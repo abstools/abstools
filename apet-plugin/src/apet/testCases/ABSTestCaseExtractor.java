@@ -73,6 +73,25 @@ public final class ABSTestCaseExtractor {
 		return d.functor;
 	}
 	
+	
+	/**
+	 * Get the type name of the ABS term 
+	 * @param d
+	 * @return
+	 */
+	public static String getABSTermTypeName(ABSTerm d) {
+		return d.typeName;
+	}
+	
+	/**
+	 * Get the type name of the ABS term 
+	 * @param d
+	 * @return
+	 */
+	public static String[] getABSTermTypeParams(ABSTerm d) {
+		return d.typeParams;
+	}
+	
 	/**
 	 * Get the string value of the test data
 	 * @param d
