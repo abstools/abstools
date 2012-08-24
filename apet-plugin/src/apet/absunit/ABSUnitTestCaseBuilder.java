@@ -164,7 +164,7 @@ abstract class ABSUnitTestCaseBuilder {
 		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
 		
 		if (delta == null) {
-			delta = deltaBuilder.createDeltaFor(testClassName);
+			delta = deltaBuilder.createDeltaFor(testClass);
 		}
 		
 		ModifyClassModifier modifier =

@@ -13,6 +13,7 @@ import abs.frontend.ast.AddMethodModifier;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
@@ -49,10 +50,11 @@ final class DeltaForGetSetFieldsBuilder {
 		return getDelta(deltaName);
 	}
 	
-	DeltaDecl createDeltaFor(String testClassName) {
-		String deltaName = testCaseNameBuilder.deltaOnClass(testClassName);
+	DeltaDecl createDeltaFor(ClassDecl testClass) {
+		String deltaName = testCaseNameBuilder.deltaOnClass(testClass.getName());
 		DeltaDecl delta = new DeltaDecl();
 		delta.setName(deltaName);
+		delta.addDeltaAccess(new DeltaAccess(testClass.getModuleDecl().getName()));
 		deltas.add(delta);
 		return delta;
 	}
@@ -117,6 +119,7 @@ final class DeltaForGetSetFieldsBuilder {
 		if (dd == null) {
 			dd = new DeltaDecl();
 			dd.setName(deltaOnClassName);
+			dd.addDeltaAccess(new DeltaAccess(clazz.getModuleDecl().getName()));
 			
 			//add Setters and Getters
 			ModifyClassModifier mcm = new ModifyClassModifier();

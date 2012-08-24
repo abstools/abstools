@@ -115,6 +115,7 @@ public class ABSUnitTestCaseTranslator {
 	 * @param validate
 	 * @return
 	 */
+	@SuppressWarnings("rawtypes")
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite, boolean validate) {
 		console("Add basic imports...");
 		addBasicImports(module);
@@ -258,6 +259,7 @@ public class ABSUnitTestCaseTranslator {
 		module.addImport(new StarImport("AbsUnit.Hamcrest.Core"));
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private void printToFile(List<ASTNode<ASTNode>> nodes, File file) {
         try {
 			PrintStream stream = new PrintStream(file);
@@ -288,7 +290,8 @@ public class ABSUnitTestCaseTranslator {
 	
 		//create test class ([Suite])
 		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
-
+		module.addDecl(testClass);
+		
 		//find function under test
 		FunctionDecl functionUnderTest = getDecl(model, FunctionDecl.class,
 				new DeclNamePredicate<FunctionDecl>(functionName));
@@ -309,7 +312,6 @@ public class ABSUnitTestCaseTranslator {
 					method, access, functionName);
 		}
 		
-		module.addDecl(testClass);
 	}
 	
 	/**
@@ -328,6 +330,7 @@ public class ABSUnitTestCaseTranslator {
 	
 		//create test class ([Suite])
 		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
+		module.addDecl(testClass);
 
 		//find class under test.
 		ClassDecl classUnderTest = getDecl(model, ClassDecl.class, 
@@ -364,8 +367,7 @@ public class ABSUnitTestCaseTranslator {
 		//add imports of class/interface under test
 		module.addImport(generateImportAST(classUnderTest));
 		module.addImport(generateImportAST(interfaceOfClassUnderTest));
-
-
+	
 		/*
 		 * Test methods and Test cases are ordered that is,
 		 * test case 1 is implemented by test method 1 and so on...
@@ -378,7 +380,6 @@ public class ABSUnitTestCaseTranslator {
 					method, access, methodName);
 		}
 		
-		module.addDecl(testClass);
 	}
 	
 	/**
