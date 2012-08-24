@@ -10,7 +10,6 @@ import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
 import static abs.backend.tests.AbsASTBuilderUtil.newObj;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.ASSERT_HELPER;
-import static apet.absunit.ABSUnitTestCaseTranslatorConstants.MAIN;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
@@ -148,19 +147,24 @@ abstract class ABSUnitTestCaseBuilder {
 		makeGetAndAssertStatements(testName, finalHeapNames, testClass, finalHeap, block);
 	}
 	
-	void createObjectsInHeap(
-			String testMethodName, 
-			Set<String> heapNames,
-			Map<String,Access> objectsInHeap,
-			ClassDecl testClass, 
-			Map<ABSRef,ABSObject> initialHeap, 
-			Block testMethodBlock) {
+	/**
+	 * Initialise (create if necessary) a delta to modify the given test class.
+	 * In particular it ensures the delta contains a class modifier for the 
+	 * given test class and within that modifier, a method modifier for the given
+	 * method name. 
+	 * 
+	 * @param testClass
+	 * @param setOrAssertMethodForTest
+	 * @return the method block of the method modifier. 
+	 */
+	Block initialiseDeltaForTestClass(ClassDecl testClass, 
+			String setOrAssertMethodForTest) {
 		
 		String testClassName = testClass.getName();
 		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
 		
 		if (delta == null) {
-			delta = deltaBuilder.createDeltaFor(testClassName, MAIN);
+			delta = deltaBuilder.createDeltaFor(testClassName);
 		}
 		
 		ModifyClassModifier modifier =
@@ -173,20 +177,35 @@ abstract class ABSUnitTestCaseBuilder {
 			delta.addModuleModifier(modifier);
 		}
 		
-		String setMethodForTest =
-				testCaseNameBuilder.initialTestMethodName(testMethodName);
-		
 		MethodSig sig = new MethodSig();
-		sig.setName(setMethodForTest);
+		sig.setName(setOrAssertMethodForTest);
 		sig.setReturnType(getUnit());
 		
 		//add an empty method to be modified
-		MethodImpl setMethodForObjectImpl = new MethodImpl(sig, new Block());
-		testClass.addMethod(setMethodForObjectImpl);
+		MethodImpl setOrAssertMethodForObjectImpl = new MethodImpl(sig, new Block());
+		testClass.addMethod(setOrAssertMethodForObjectImpl);
 		
-		ModifyMethodModifier mmm = new ModifyMethodModifier(setMethodForObjectImpl.fullCopy());
+		ModifyMethodModifier mmm = new ModifyMethodModifier(
+				setOrAssertMethodForObjectImpl.fullCopy());
 		Block modifyBlock = mmm.getMethodImpl().getBlock();
 		modifier.addModifier(mmm);
+		
+		return modifyBlock;
+	}
+	
+	void createObjectsInHeap(
+			String testMethodName, 
+			Set<String> heapNames,
+			Map<String,Access> objectsInHeap,
+			ClassDecl testClass, 
+			Map<ABSRef,ABSObject> initialHeap, 
+			Block testMethodBlock) {
+		
+		String setMethodForTest =
+				testCaseNameBuilder.initialTestMethodName(testMethodName);
+		
+		Block modifyBlock = initialiseDeltaForTestClass(testClass, 
+				testCaseNameBuilder.initialTestMethodName(testMethodName));
 		
 		testMethodBlock.addStmt(
 				getExpStmt(getCall(getThis(), setMethodForTest, true)));
@@ -266,43 +285,14 @@ abstract class ABSUnitTestCaseBuilder {
 			Map<ABSRef,ABSObject> finalHeap, 
 			Block testMethodBlock) {
 		
-		String testClassName = testClass.getName();
-		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
-		
-		if (delta == null) {
-			delta = deltaBuilder.createDeltaFor(testClassName, MAIN);
-		}
-		
-		ModifyClassModifier modifier =
-				findClassOrIfaceModifier(delta, ModifyClassModifier.class, 
-						new ModifyClassModifierNamePredicate(testClassName));
-		
-		if (modifier == null) {
-			modifier = new ModifyClassModifier();
-			modifier.setName(testClassName);
-			delta.addModuleModifier(modifier);
-		}
-		
 		String assertMethodForTest =
 				testCaseNameBuilder.assertTestMethodName(testMethodName);
 		
-		MethodSig sig = new MethodSig();
-		sig.setName(assertMethodForTest);
-		sig.setReturnType(getUnit());
+		Block modifyBlock = initialiseDeltaForTestClass(testClass, assertMethodForTest);
 		
-		//add an empty method to be modified
-		MethodImpl assertMethodForObjectImpl = new MethodImpl(sig, new Block());
-		testClass.addMethod(assertMethodForObjectImpl);
+		testMethodBlock.addStmt(
+				getExpStmt(getCall(getThis(), assertMethodForTest, true)));
 		
-		ModifyMethodModifier mmm = new ModifyMethodModifier(assertMethodForObjectImpl.fullCopy());
-		Block modifyBlock = mmm.getMethodImpl().getBlock();
-		modifier.addModifier(mmm);
-		
-		SyncCall call = new SyncCall();
-		call.setCallee(new VarUse("this"));
-		call.setMethod(sig.getName());
-		testMethodBlock.addStmt(getExpStmt(call));
-
 		for (ABSRef r : finalHeap.keySet()) {
 			makeGetAndAssertStatementsForHeapRef(testMethodName, heapNames, finalHeap, r, finalHeap.get(r), modifyBlock);
 		}
