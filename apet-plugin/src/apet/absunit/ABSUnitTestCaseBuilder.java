@@ -138,6 +138,11 @@ abstract class ABSUnitTestCaseBuilder {
 		}
 		
 		Map<ABSRef,ABSObject> finalHeap = getAfterState(testCase);
+		if (finalHeap.isEmpty()) {
+			//the method under test is side-effect free?
+			//use the initial heap as oracle
+			finalHeap = initial;
+		}
 		Set<String> finalHeapNames = referenceNames(finalHeap.keySet());
 		
 		//check return value
