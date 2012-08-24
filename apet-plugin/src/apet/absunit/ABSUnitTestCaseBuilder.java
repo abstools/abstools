@@ -29,7 +29,9 @@ import java.util.Set;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.ModifyClassModifierNamePredicate;
 import abs.frontend.ast.Access;
+import abs.frontend.ast.AddFieldModifier;
 import abs.frontend.ast.Block;
+import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.DeltaDecl;
@@ -43,10 +45,11 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModifyClassModifier;
 import abs.frontend.ast.ModifyMethodModifier;
+import abs.frontend.ast.ModuleModifier;
 import abs.frontend.ast.NullExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
-import abs.frontend.ast.SyncCall;
+import abs.frontend.ast.RemoveFieldModifier;
 import abs.frontend.ast.VarUse;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
@@ -210,22 +213,45 @@ abstract class ABSUnitTestCaseBuilder {
 		testMethodBlock.addStmt(
 				getExpStmt(getCall(getThis(), setMethodForTest, true)));
 
+		Map<String, String> typeHierarchy = new HashMap<String, String>();
 		for (ABSRef r : initialHeap.keySet()) {
-			makeSetStatements(testMethodName, heapNames, initialHeap, 
+			makeSetStatements(
+					typeHierarchy,
+					testMethodName, heapNames, initialHeap, 
 					objectsInHeap, r, initialHeap.get(r), 
 					modifyBlock, testClass);
+		}
+		
+		String testClassName = testClass.getName();
+		DeltaDecl delta = deltaBuilder.getDeltaFor(testClassName);
+		ModifyClassModifier cm = null;
+		for (ModuleModifier m : delta.getModuleModifiers()) {
+			if (m.getName().equals(testClassName)) {
+				cm = (ModifyClassModifier) m;
+				break;
+			}
 		}
 		
 		for (String r : objectsInHeap.keySet()) {
 			FieldDecl field = new FieldDecl();
 			field.setName(r);
-			field.setAccess(objectsInHeap.get(r));
+			
+			InterfaceTypeUse inf = (InterfaceTypeUse) objectsInHeap.get(r);
+			field.setAccess(inf);
 			testClass.addField(field);
+			
+			//allow access of subtype information
+			cm.addModifier(new RemoveFieldModifier(field.fullCopy()));
+			FieldDecl newField = new FieldDecl();
+			newField.setName(r);
+			newField.setAccess(new InterfaceTypeUse(typeHierarchy.get(inf.getName())));
+			cm.addModifier(new AddFieldModifier(newField));
 		}
 		
 	}
 	
 	void makeSetStatements(
+			Map<String, String> typeHierarchy, 
 			String testName,
 			Set<String> heapNames,
 			Map<ABSRef, ABSObject> initialHeap, 
@@ -260,21 +286,19 @@ abstract class ABSUnitTestCaseBuilder {
 		block.addStmt(getVAssign(rn, newObj(concreteType, false, constructorArgs)));
 		
 		for (String fn : fields.keySet()) {
-			SyncCall syncCall = new SyncCall();
-			syncCall.setCallee(new VarUse(rn));
-			syncCall.setMethod(testCaseNameBuilder.setterMethodName(fn));
-			
 			ABSData d = fields.get(fn);
 			objectsInHeap.putAll(getTypesFromABSData(testName, d));
-
 			PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, d);
-			syncCall.addParam(exp);
-			block.addStmt(getExpStmt(syncCall));
+			Call call = getCall(new VarUse(rn), testCaseNameBuilder.setterMethodName(fn), true, exp);
+			block.addStmt(getExpStmt(call));
 		}
 		
 		//ADD getter and setter
-		deltaBuilder.updateDelta(getDecl(model, ClassDecl.class, 
-				new DeclNamePredicate<ClassDecl>(getABSObjectType(state))));
+		deltaBuilder.updateDelta(
+				typeHierarchy,
+				objectsInHeap.get(rn),
+				getDecl(model, ClassDecl.class, 
+				new DeclNamePredicate<ClassDecl>(concreteTypeName)));
 		
 	}
 	
@@ -306,7 +330,7 @@ abstract class ABSUnitTestCaseBuilder {
 			ABSRef ref, 
 			ABSObject state, 
 			Block block) {
-		String rn = heapRefBuilder.heapReferenceForTest(testName, getABSDataValue(ref)); 
+		String rn = heapRefBuilder.heapReferenceForTest(testName, getABSDataValue(ref));
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		
@@ -320,11 +344,9 @@ abstract class ABSUnitTestCaseBuilder {
 			String fn = field.getName();
 			if (fields.containsKey(fn)) {
 				ABSData d = fields.get(fn);
-				SyncCall syncCall = new SyncCall();
-				syncCall.setCallee(new VarUse(rn));
-				syncCall.setMethod(testCaseNameBuilder.getterMethodName(fn));
 				block.addStmt(getVarDecl(testCaseNameBuilder.resultOfGetterMethodName(fn), 
-						(Access) field.getAccess().fullCopy(), syncCall));
+						(Access) field.getAccess().fullCopy(), 
+						getCall(new VarUse(rn), testCaseNameBuilder.getterMethodName(fn), true)));
 				makeOracle(testName, heapNames, finalHeap, 
 						testCaseNameBuilder.resultOfGetterMethodName(fn),
 						(Access) field.getAccess().fullCopy(), d, block);

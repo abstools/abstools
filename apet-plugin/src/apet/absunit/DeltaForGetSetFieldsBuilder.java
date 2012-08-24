@@ -5,6 +5,7 @@ import static abs.backend.tests.AbsASTBuilderUtil.getUnit;
 import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.RUN_METHOD;
 
+import java.util.Map;
 import java.util.Set;
 
 import abs.frontend.ast.Access;
@@ -15,6 +16,7 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.Exp;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.InterfaceDecl;
@@ -30,16 +32,30 @@ import abs.frontend.ast.VarUse;
 final class DeltaForGetSetFieldsBuilder {
 
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
-	private final Set<DeltaDecl> deltas;
+	private final Set<DeltaWrapper> deltas;
 	
-	DeltaForGetSetFieldsBuilder(Set<DeltaDecl> deltas) {
+	static class DeltaWrapper {
+		private final DeltaDecl delta;
+		private final boolean last;
+		
+		DeltaWrapper(DeltaDecl delta, boolean last) {
+			this.delta = delta;
+			this.last = last;
+		}
+		
+		boolean isLast() { return last; }
+		DeltaDecl getDelta() { return delta; }
+	}
+	
+	DeltaForGetSetFieldsBuilder(Set<DeltaWrapper> deltas) {
 		this.deltas = deltas;
 	}
 	
 	DeltaDecl getDelta(String deltaName) {
-		for (DeltaDecl d : deltas) {
-			if (deltaName.equals(d.getName())) {
-				return d;
+		for (DeltaWrapper d : deltas) {
+			DeltaDecl dd = d.getDelta();
+			if (deltaName.equals(dd.getName())) {
+				return dd;
 			}
 		}
 		return null;
@@ -55,7 +71,7 @@ final class DeltaForGetSetFieldsBuilder {
 		DeltaDecl delta = new DeltaDecl();
 		delta.setName(deltaName);
 		delta.addDeltaAccess(new DeltaAccess(testClass.getModuleDecl().getName()));
-		deltas.add(delta);
+		deltas.add(new DeltaWrapper(delta, true));
 		return delta;
 	}
 	
@@ -88,6 +104,11 @@ final class DeltaForGetSetFieldsBuilder {
 	}
 	
 	AddMethodModifier addGetter(String fieldName, Access returnType) {
+		Exp returnExp = new FieldUse(fieldName);
+		return addGetter(returnExp, fieldName, returnType);
+	}
+	
+	AddMethodModifier addGetter(Exp returnValue, String fieldName, Access returnType) {
 		MethodSig sig = new MethodSig(testCaseNameBuilder.getterMethodName(fieldName), 
 				new abs.frontend.ast.List<Annotation>(),
 				returnType,  
@@ -104,9 +125,15 @@ final class DeltaForGetSetFieldsBuilder {
 	
 	/**
 	 * Add a delta that adds Getters and Setters for clazz.
+	 * 
+	 * @param extensions
+	 * @param access 
 	 * @param clazz
+	 * 
 	 */
-	void updateDelta(ClassDecl clazz) {
+	void updateDelta(Map<String, String> typeHierarchy, 
+			Access access, ClassDecl clazz) {
+		
 		String className = clazz.getName();
 		
 		String deltaOnClassName = 
@@ -116,40 +143,49 @@ final class DeltaForGetSetFieldsBuilder {
 		
 		DeltaDecl dd = getDelta(deltaOnClassName);
 		
-		if (dd == null) {
-			dd = new DeltaDecl();
-			dd.setName(deltaOnClassName);
-			dd.addDeltaAccess(new DeltaAccess(clazz.getModuleDecl().getName()));
-			
-			//add Setters and Getters
-			ModifyClassModifier mcm = new ModifyClassModifier();
-			mcm.setName(className);
-
-			InterfaceDecl ai = new InterfaceDecl();
-			ai.setName(interfaceForModifyingClassFieldName);
-			mcm.addAddedInterface(new InterfaceTypeUse(ai.getName()));
-			
-			for (MethodImpl m : clazz.getMethodList()) {
-				if (RUN_METHOD.equals(m.getMethodSig().getName())) {
-					mcm.addModifier(removeRun());
-					break;
-				}
-			}
-			
-			for (FieldDecl fd : clazz.getFieldList()) {
-				AddMethodModifier smm = addSetter(fd.getName(), (Access) fd.getAccess().fullCopy());
-				AddMethodModifier gmm = addGetter(fd.getName(), (Access) fd.getAccess().fullCopy());
-				mcm.addModifier(smm);
-				mcm.addModifier(gmm);
-				ai.addBody(smm.getMethodImpl().getMethodSig());
-				ai.addBody(gmm.getMethodImpl().getMethodSig());
-			}
-			
-			dd.addModuleModifier(new AddInterfaceModifier(ai));
-			dd.addModuleModifier(mcm);
-			
-			deltas.add(dd);
+		if (dd != null) {
+			InterfaceTypeUse inf = (InterfaceTypeUse) access;
+			typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
+			return;
 		}
+		
+		dd = new DeltaDecl();
+		dd.setName(deltaOnClassName);
+		dd.addDeltaAccess(new DeltaAccess(clazz.getModuleDecl().getName()));
+
+		//add Setters and Getters
+		ModifyClassModifier mcm = new ModifyClassModifier();
+		mcm.setName(className);
+
+		InterfaceDecl ai = new InterfaceDecl();
+		ai.setName(interfaceForModifyingClassFieldName);
+		
+		//extends the existing interface
+		InterfaceTypeUse inf = ((InterfaceTypeUse) access).fullCopy();
+		ai.addExtendedInterfaceUse(inf);
+		mcm.addAddedInterface(new InterfaceTypeUse(ai.getName()));
+		typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
+
+		for (MethodImpl m : clazz.getMethodList()) {
+			if (RUN_METHOD.equals(m.getMethodSig().getName())) {
+				mcm.addModifier(removeRun());
+				break;
+			}
+		}
+
+		for (FieldDecl fd : clazz.getFieldList()) {
+			AddMethodModifier smm = addSetter(fd.getName(), (Access) fd.getAccess().fullCopy());
+			AddMethodModifier gmm = addGetter(fd.getName(), (Access) fd.getAccess().fullCopy());
+			mcm.addModifier(smm);
+			mcm.addModifier(gmm);
+			ai.addBody(smm.getMethodImpl().getMethodSig());
+			ai.addBody(gmm.getMethodImpl().getMethodSig());
+		}
+		
+		dd.addModuleModifier(new AddInterfaceModifier(ai));
+		dd.addModuleModifier(mcm);
+
+		deltas.add(new DeltaWrapper(dd, false));
 	}
 	
 }

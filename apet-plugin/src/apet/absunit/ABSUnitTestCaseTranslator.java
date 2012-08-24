@@ -29,9 +29,8 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaClause;
-import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.DeltaID;
 import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.Feature;
 import abs.frontend.ast.FunctionDecl;
@@ -46,6 +45,7 @@ import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.StarExport;
 import abs.frontend.ast.StarImport;
 import abs.frontend.tests.ABSFormatter;
+import apet.absunit.DeltaForGetSetFieldsBuilder.DeltaWrapper;
 import apet.console.ConsoleHandler;
 import apet.testCases.ApetTestSuite;
 import apet.testCases.TestCase;
@@ -59,7 +59,7 @@ public class ABSUnitTestCaseTranslator {
 	
 	private final Model model;
 	private final ModuleDecl module;
-	private final Set<DeltaDecl> deltas;
+	private final Set<DeltaWrapper> deltas;
 	private final Set<String> importModules;
 	private ProductLine productline;
 	private Product product;
@@ -82,7 +82,7 @@ public class ABSUnitTestCaseTranslator {
 		this.model = model;
 		this.module = new ModuleDecl();
 		this.module.setName(MAIN);
-		this.deltas = new HashSet<DeltaDecl>();
+		this.deltas = new HashSet<DeltaWrapper>();
 		this.importModules = new HashSet<String>();
 		this.pureExpBuilder = new PureExpressionBuilder(this.model, importModules);
 		this.deltaBuilder = new DeltaForGetSetFieldsBuilder(deltas);
@@ -134,7 +134,9 @@ public class ABSUnitTestCaseTranslator {
 				new ArrayList<ASTNode<ASTNode>>();
 		
 		nodes.add(module);
-		nodes.addAll(deltas);
+		for (DeltaWrapper w : deltas) {
+			nodes.add(w.getDelta());
+		}
 		nodes.add(productline);
 		nodes.add(product);
 		
@@ -149,38 +151,47 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	void buildProductLine(ModuleDecl module) {
-		String moduleName = module.getName();
 		
-		Set<String> dn = new HashSet<String>();
-		for (DeltaDecl d : deltas) {
-			abs.frontend.ast.List<DeltaAccess> access = new abs.frontend.ast.List<DeltaAccess>();
-			access.add(new DeltaAccess(moduleName));
-			d.setDeltaAccessList(access);
-			dn.add(d.getName());
+		if (deltas.isEmpty()) {
+			return;
 		}
 		
-		if (! dn.isEmpty()) {
-			console("Generating product line description...");
-			productline = new ProductLine();
-			productline.setName(CONFIGURATION_NAME);
-			Feature feature = new Feature();
-			feature.setName(FEATURE_NAME);
-			productline.addOptionalFeature(feature);
-			
-			for (String d : dn) {
-				DeltaClause clause = new DeltaClause();
-				Deltaspec spec = new Deltaspec();
-				spec.setName(d);
-				clause.setDeltaspec(spec);
-				clause.addFeature(feature);
-				productline.addDeltaClause(clause);
+		console("Generating product line description...");
+		productline = new ProductLine();
+		productline.setName(CONFIGURATION_NAME);
+		Feature feature = new Feature();
+		feature.setName(FEATURE_NAME);
+		productline.addOptionalFeature(feature);
+
+		Set<String> applicationConditions = new HashSet<String>();
+		DeltaClause lastClause = null;
+		for (DeltaWrapper d : deltas) {
+			DeltaClause clause = new DeltaClause();
+			Deltaspec spec = new Deltaspec();
+			String name = d.getDelta().getName();
+			spec.setName(name);
+			clause.setDeltaspec(spec);
+			clause.addFeature(feature);
+
+			if (d.isLast()) {
+				lastClause = clause;
+			} else {
+				applicationConditions.add(name);
 			}
 			
-			product = new Product();
-			product.setName(PRODUCT_NAME);
-			product.addFeature(feature);
-			
+			productline.addDeltaClause(clause);
 		}
+		
+		if (lastClause != null) {
+			for (String n : applicationConditions) {
+				lastClause.addDeltaID(new DeltaID(n));
+			}
+		}
+
+		product = new Product();
+		product.setName(PRODUCT_NAME);
+		product.addFeature(feature);
+
 	}
 	
 	void generateABSUnitTest(List<TestCase> cs, String mn) {
@@ -221,11 +232,11 @@ public class ABSUnitTestCaseTranslator {
 		CompilationUnit unit = new CompilationUnit();
 		ModuleDecl cm = module.fullCopy();
 		unit.addModuleDecl(cm);
-		for (DeltaDecl d : deltas) {
-			unit.addDeltaDecl(d);
+		for (DeltaWrapper d : deltas) {
+			unit.addDeltaDecl(d.getDelta().fullCopy());
 		}
-		unit.setProductLine(productline);
-		unit.addProduct(product);
+		unit.setProductLine(productline.fullCopy());
+		unit.addProduct(product.fullCopy());
 		
 		Model copy = model.fullCopy();
 		copy.addCompilationUnit(unit);
