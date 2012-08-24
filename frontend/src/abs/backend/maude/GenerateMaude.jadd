@@ -366,7 +366,8 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        String fnName = getDecl().getModuleDecl().getName() + "." + getName();
+        String fnName = getDecl().getModule().getName()
+            + "." + getDecl().getName();
         stream.print("\"" + fnName + "\"( ");
         if (getNumParam() == 0) {
             stream.print("emp ");
