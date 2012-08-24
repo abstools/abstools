@@ -16,24 +16,20 @@ import org.eclipse.jface.preference.IPreferencePage;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
-
 import org.eclipse.swt.widgets.Shell;
-
 import org.eclipse.ui.handlers.HandlerUtil;
 
+import abs.backend.prolog.PrologBackend;
+import abs.frontend.ast.Model;
+import abs.frontend.parser.Main;
 import apet.absunit.ABSUnitTestCaseTranslator;
+import apet.console.ApetShellCommand;
 import apet.console.ConsoleHandler;
-//import apet.dialogs.OptionsDialog;
 import apet.preferences.ApetPreferences;
 import apet.testCases.ApetTestSuite;
 import apet.testCases.XMLParser;
 import apet.utils.SourceUtils;
 import eu.hatsproject.absplugin.costabslink.CostabsLink;
-import abs.backend.prolog.PrologBackend;
-import abs.frontend.ast.Model;
-import abs.frontend.parser.Main;
-
-import apet.console.ApetShellCommand;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -55,11 +51,14 @@ public class apetHandler extends AbstractHandler {
 	private boolean validate = false;
 	
 	/**
-	 * The default file location to store ABSUnit test cases 
+	 * The file name to store ABSUnit test cases 
 	 */
-	private final String absUnitOutputFile = "/tmp/" + "absunit-testcase.abs";
-	//private final String absUnitOutputFile = 
-	//		System.getProperty("java.io.tmpdir") + File.separator + "absunit-testcase.abs";
+	private final String absUnitOutputFile = "absunit-testcase.abs";
+	
+	/**
+	 * The default file location to store ABSUnit test cases
+	 */
+	private final String defaultAbsUnitOutputFile = "/tmp/" + absUnitOutputFile;
 	
 	/**
 	 * The constructor.
@@ -110,7 +109,8 @@ public class apetHandler extends AbstractHandler {
 					ApetTestSuite suite = callXMLParser();
 					if (translate) {
 						Model m = getABSModel(absFile);
-						generateABSUnitTests(m,suite);
+						generateABSUnitTests(m,suite, 
+							new File(new File(absFile).getParentFile(), absUnitOutputFile));
 					}
 				}	
 				ConsoleHandler.write(shell.getResult());
@@ -134,29 +134,30 @@ public class apetHandler extends AbstractHandler {
 	 * Connection to ABSUnit translator
 	 * @param model
 	 * @param suite
+	 * @param outputFile 
 	 * @throws IOException 
 	 */
-	private void generateABSUnitTests(Model model, ApetTestSuite suite) throws IOException {
+	private void generateABSUnitTests(Model model, ApetTestSuite suite, 
+			File outputFile) throws IOException {
 		
 		if (suite == null) {
 			ConsoleHandler.write("aPET error: Error generating ABSUnit test suite");
 			return;
 		}
 		
-		File file = new File(absUnitOutputFile);
-		if (file.isDirectory()) {
-			ConsoleHandler.write("aPET error: cannot create ABSUnit test cases to "+file);
+		if (outputFile.isDirectory()) {
+			ConsoleHandler.write("aPET error: cannot create ABSUnit test cases to "+outputFile);
 			return;
 		}
 
-		if (file.isFile() && file.exists()) {
-			file.delete();
+		if (outputFile.isFile() && outputFile.exists()) {
+			outputFile.delete();
 		} else {
-			file.createNewFile();
+			outputFile.createNewFile();
 		}
 		
 		ABSUnitTestCaseTranslator generator = 
-		        new ABSUnitTestCaseTranslator(model, file, true); 
+		        new ABSUnitTestCaseTranslator(model, outputFile, true); 
 		
 		if (! generator.hasABSUnit()) {
 			ConsoleHandler.write("aPET error: cannot find ABSUnit packages");
