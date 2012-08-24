@@ -87,7 +87,7 @@ modifies class Hello.Application {
 delta Cn;
 modifies class Hello.Greeter {
     modifies String sayHello() {
-        return "你们好";
+        return "世界您好";
     }
 }
 modifies class Hello.Application {
@@ -95,7 +95,7 @@ modifies class Hello.Application {
         Unit u = println("(1) 英语");
              u = println("(2) 西班牙语");
              u = println("(3) 德语");
-             u = println("    普通话");
+             u = println("    汉语");
     }
 
     modifies Unit menu(Greeting bob) {

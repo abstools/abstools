@@ -84,34 +84,4 @@ modifies class Hello.Application {
     }
 }
 
-delta Cn;
-modifies class Hello.Greeter {
-    modifies String sayHello() {
-        return "你们好";
-    }
-}
-modifies class Hello.Application {
-    modifies Unit printMenu() {
-        Unit u = println("(1) 英语");
-             u = println("(2) 西班牙语");
-             u = println("(3) 德语");
-             u = println("    普通话");
-    }
-
-    modifies Unit menu(Greeting bob) {
-        String message = bob.sayHello();
-        Unit u = println(message);
-        this.printMenu();
-        String selection = readln();
-        
-        Runtime runtime = getRuntime();
-
-        if (selection == "1") runtime.applyDelta("En");
-        else if (selection == "2") runtime.applyDelta("Es");
-        else if (selection == "3") runtime.applyDelta("De");
-        else if (selection == "4") runtime.applyDelta("Cn");
-    }
-
-}
-
 
