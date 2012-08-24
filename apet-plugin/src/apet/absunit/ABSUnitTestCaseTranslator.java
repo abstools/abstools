@@ -2,7 +2,6 @@ package apet.absunit;
 
 import static abs.backend.tests.AbsASTBuilderUtil.findMethodImpl;
 import static abs.backend.tests.AbsASTBuilderUtil.findMethodSig;
-import static abs.backend.tests.AbsASTBuilderUtil.generateImportAST;
 import static abs.backend.tests.AbsASTBuilderUtil.getDecl;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.CONFIGURATION_NAME;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.FEATURE_NAME;
@@ -61,6 +60,7 @@ public class ABSUnitTestCaseTranslator {
 	private final Model model;
 	private final ModuleDecl module;
 	private final Set<DeltaDecl> deltas;
+	private final Set<String> importModules;
 	private ProductLine productline;
 	private Product product;
 	
@@ -83,7 +83,8 @@ public class ABSUnitTestCaseTranslator {
 		this.module = new ModuleDecl();
 		this.module.setName(MAIN);
 		this.deltas = new HashSet<DeltaDecl>();
-		this.pureExpBuilder = new PureExpressionBuilder(this.model, module);
+		this.importModules = new HashSet<String>();
+		this.pureExpBuilder = new PureExpressionBuilder(this.model, importModules);
 		this.deltaBuilder = new DeltaForGetSetFieldsBuilder(deltas);
 		this.methodBuilder = new MethodTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
 		this.functionBuilder = new FunctionTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
@@ -118,12 +119,13 @@ public class ABSUnitTestCaseTranslator {
 	@SuppressWarnings("rawtypes")
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite, boolean validate) {
 		console("Add basic imports...");
-		addBasicImports(module);
 		
 		for (String key : suite.keySet()) {
 			console("Generating test suite for "+key+"...");
 			generateABSUnitTest(suite.get(key), key);
 		}
+		
+		addImports(module);
 		
 		buildProductLine(module);
 		console("Pretty printing ABSUnit tests...");
@@ -248,7 +250,7 @@ public class ABSUnitTestCaseTranslator {
         }
 	}
 	
-	private void addBasicImports(ModuleDecl module) {
+	private void addImports(ModuleDecl module) {
 		//export *;
 		//import * from AbsUnit;
 		//import * from AbsUnit.Hamcrest;
@@ -257,6 +259,10 @@ public class ABSUnitTestCaseTranslator {
 		module.addImport(new StarImport("AbsUnit"));
 		module.addImport(new StarImport("AbsUnit.Hamcrest"));
 		module.addImport(new StarImport("AbsUnit.Hamcrest.Core"));
+		
+		for (String ip : importModules) {
+			module.addImport(new StarImport(ip));
+		}
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -298,7 +304,7 @@ public class ABSUnitTestCaseTranslator {
 
 		final Access access = functionUnderTest.getTypeUse();
 
-		module.addImport(generateImportAST(functionUnderTest));
+		importModules.add(functionUnderTest.getModuleDecl().getName());
 			
 		/*
 		 * Test methods and Test cases are ordered that is,
@@ -365,9 +371,9 @@ public class ABSUnitTestCaseTranslator {
 		final Access access = signature.getReturnType();
 
 		//add imports of class/interface under test
-		module.addImport(generateImportAST(classUnderTest));
-		module.addImport(generateImportAST(interfaceOfClassUnderTest));
-	
+		importModules.add(classUnderTest.getModuleDecl().getName());
+		importModules.add(interfaceOfClassUnderTest.getModuleDecl().getName());
+		
 		/*
 		 * Test methods and Test cases are ordered that is,
 		 * test case 1 is implemented by test method 1 and so on...
