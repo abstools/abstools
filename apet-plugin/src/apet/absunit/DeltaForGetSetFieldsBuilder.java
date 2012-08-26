@@ -127,12 +127,12 @@ final class DeltaForGetSetFieldsBuilder {
 	 * Add a delta that adds Getters and Setters for clazz.
 	 * 
 	 * @param extensions
-	 * @param access 
+	 * @param interf 
 	 * @param clazz
 	 * 
 	 */
 	void updateDelta(Map<String, String> typeHierarchy, 
-			Access access, ClassDecl clazz) {
+			InterfaceTypeUse interf, ClassDecl clazz) {
 		
 		String className = clazz.getName();
 		
@@ -144,8 +144,7 @@ final class DeltaForGetSetFieldsBuilder {
 		DeltaDecl dd = getDelta(deltaOnClassName);
 		
 		if (dd != null) {
-			InterfaceTypeUse inf = (InterfaceTypeUse) access;
-			typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
+			typeHierarchy.put(interf.getName(), interfaceForModifyingClassFieldName);
 			return;
 		}
 		
@@ -161,8 +160,8 @@ final class DeltaForGetSetFieldsBuilder {
 		ai.setName(interfaceForModifyingClassFieldName);
 		
 		//extends the existing interface
-		InterfaceTypeUse inf = ((InterfaceTypeUse) access).fullCopy();
-		ai.addExtendedInterfaceUse(inf);
+		InterfaceTypeUse inf = interf.fullCopy();
+		ai.addExtendedInterfaceUse(inf.fullCopy());
 		mcm.addAddedInterface(new InterfaceTypeUse(ai.getName()));
 		typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
 

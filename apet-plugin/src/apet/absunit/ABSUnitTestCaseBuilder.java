@@ -82,8 +82,17 @@ abstract class ABSUnitTestCaseBuilder {
 		return names;
 	}
 	
-	Map<String, Access> getTypesFromABSData(String testName, ABSData data) {
-		Map<String, Access> map = new HashMap<String, Access>();
+	Map<String, InterfaceTypeUse> getTypesFromABSObject(
+			String testName, ABSObject obj) {
+		Map<String, InterfaceTypeUse> map = new HashMap<String, InterfaceTypeUse>();
+		for (ABSData data : getABSObjectFields(obj).values()) {
+			map.putAll(getTypesFromABSData(testName, data));
+		}
+		return map;
+	}	
+	
+	Map<String, InterfaceTypeUse> getTypesFromABSData(String testName, ABSData data) {
+		Map<String, InterfaceTypeUse> map = new HashMap<String, InterfaceTypeUse>();
 		if (data instanceof ABSRef) {
 			String type = getABSDataType(data);
 			String value = getABSDataValue(data);
@@ -113,14 +122,17 @@ abstract class ABSUnitTestCaseBuilder {
 		String testName = method.getMethodSig().getName();
 		Block block = method.getBlock();
 		
-		Map<String,Access> typesOfObjectInHeap = new HashMap<String, Access>();
+		Map<String,InterfaceTypeUse> typesOfObjectInHeap = new HashMap<String, InterfaceTypeUse>();
 		for (ABSData d : inputArguments) {
 			typesOfObjectInHeap.putAll(getTypesFromABSData(testName, d));
 		}
 		
 		Map<ABSRef,ABSObject> initial = getInitialState(testCase);
-		Set<String> initialHeapNames = referenceNames(initial.keySet());
+		for (ABSObject obj : initial.values()) {
+			typesOfObjectInHeap.putAll(getTypesFromABSObject(testName, obj));			
+		}
 		
+		Set<String> initialHeapNames = referenceNames(initial.keySet());
 		createObjectsInHeap(testName, initialHeapNames, typesOfObjectInHeap, 
 				testClass, initial, block);
 		
@@ -204,7 +216,7 @@ abstract class ABSUnitTestCaseBuilder {
 	void createObjectsInHeap(
 			String testMethodName, 
 			Set<String> heapNames,
-			Map<String,Access> objectsInHeap,
+			Map<String,InterfaceTypeUse> objectsInHeap,
 			ClassDecl testClass, 
 			Map<ABSRef,ABSObject> initialHeap, 
 			Block testMethodBlock) {
@@ -260,7 +272,7 @@ abstract class ABSUnitTestCaseBuilder {
 			String testName,
 			Set<String> heapNames,
 			Map<ABSRef, ABSObject> initialHeap, 
-			Map<String, Access> objectsInHeap, 
+			Map<String, InterfaceTypeUse> objectsInHeap, 
 			ABSRef ref, ABSObject state, Block block, 
 			ClassDecl testClass) {
 		

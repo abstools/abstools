@@ -22,6 +22,7 @@ import abs.backend.tests.AbsASTBuilderUtil;
 import abs.backend.tests.AbsASTBuilderUtil.DeclNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.MethodNamePredicate;
 import abs.backend.tests.AbsASTBuilderUtil.MethodSigNamePredicate;
+import abs.backend.tests.AbsASTBuilderUtil.Predicate;
 import abs.common.StringUtils;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -332,6 +333,29 @@ public class ABSUnitTestCaseTranslator {
 	}
 	
 	/**
+	 * Find an interface the given class implements that exposes the given method.
+	 * 
+	 * @param methodName
+	 * @param classUnderTest
+	 * @return
+	 */
+	InterfaceDecl findInterfaceUnderTest(String methodName, ClassDecl classUnderTest) {
+		
+		Predicate<MethodSig> mp = new MethodSigNamePredicate(methodName);
+		for (InterfaceTypeUse iu : classUnderTest.getImplementedInterfaceUseList()) {
+			InterfaceDecl inf = getDecl(model, InterfaceDecl.class, 
+					new DeclNamePredicate<InterfaceDecl>(iu.getName()));
+
+			if (findMethodSig(inf, mp) != null) {
+				return inf;
+			}
+		}
+		
+		//no interface exposed the given method.
+		return null;
+	}
+	
+	/**
 	 * Create a test suite for testing a method.
 	 * 
 	 * @param testCases
@@ -366,15 +390,12 @@ public class ABSUnitTestCaseTranslator {
 			"find method under test";
 
 		//find interface of class under test.
-		InterfaceDecl interfaceOfClassUnderTest = null;
-		for (InterfaceTypeUse iu : classUnderTest.getImplementedInterfaceUseList()) {
-			InterfaceDecl infTemp = getDecl(model, InterfaceDecl.class, 
-					new DeclNamePredicate<InterfaceDecl>(iu.getName()));
-
-			if (findMethodSig(infTemp, new MethodSigNamePredicate(methodName)) != null) {
-				interfaceOfClassUnderTest = infTemp;
-				break;
-			}
+		InterfaceDecl interfaceOfClassUnderTest = 
+				findInterfaceUnderTest(methodName, classUnderTest);
+				
+		if (interfaceOfClassUnderTest == null) {
+			//this method is not exposed by any interface!
+			
 		}
 
 		//return type
