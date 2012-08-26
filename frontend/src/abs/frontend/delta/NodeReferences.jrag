@@ -46,6 +46,17 @@ aspect Module {
     }
 }
 
+//inform ClassModifiers about the Class to which they apply
+aspect Class {
+    syn lazy ClassDecl ClassModifier.getClassDecl() {
+        try {
+            return this.findClass();
+        } catch (ASTNodeNotFoundException e) {
+            return null;
+            // FIXME this is ugly; how can I throw an exception from within an attribute declaration??
+        }
+    }
+}
 
 // inform Modifier about the ModifyClassModifier where it was declared
 aspect ModifyClassModifier {

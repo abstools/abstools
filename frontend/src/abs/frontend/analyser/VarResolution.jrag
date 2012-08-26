@@ -110,14 +110,24 @@ aspect VarResolution {
         return null;
     }
     
+    syn lazy VarOrFieldDecl AddMethodModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        ClassDecl cd = getModifyClassModifier().getClassDecl();
+        return cd.locallookupVarOrFieldName(name,fieldOnly);
+    }
+
+    syn lazy VarOrFieldDecl ModifyMethodModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        ClassDecl cd = getModifyClassModifier().getClassDecl();
+        return cd.locallookupVarOrFieldName(name,fieldOnly);
+    }
+    
     inh VarOrFieldDecl MethodImpl.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
     eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = null;
+        = locallookupVarOrFieldName(name,fieldOnly);
     eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = null;
+        = locallookupVarOrFieldName(name,fieldOnly);
     
     syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
@@ -145,15 +155,13 @@ aspect VarResolution {
         return locallookupVarOrFieldName(name,fieldOnly);
     }
     
-    eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = null;
+    eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     // The -1 case happened within deltas (#346)...
     // RM: Since DeltaDecl is not a subclass of Decl anymore, this fix could be reverted
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = i == -1 ? null : getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
     
-    eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly)
-        = null;
+    eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     
     eq CaseExp.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
