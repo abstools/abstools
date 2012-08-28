@@ -48,12 +48,31 @@ final class PureExpressionBuilder {
 		this.importModules = importModules;
 	}
 	
+	void updateInitialisationOrder(List<String> initialisationsOrders, String cr, String nr) {
+		int cpos = initialisationsOrders.indexOf(cr);
+		int npos = initialisationsOrders.indexOf(nr);
+		if (npos < 0 || npos > cpos) {
+			initialisationsOrders.add(cpos, nr);
+		}
+	}
+	
+	PureExp createPureExpression(
+			String testName, Set<String> heapNames, ABSData dataValue) {
+		return createPureExpression(null, null, testName, heapNames, dataValue);
+	}
+	
 	/**
+	 * @param currentHeapReference 
+	 * @param initialisationsOrders 
 	 * @param heapNames 
 	 * @param dataValue
 	 * @return
 	 */
-	PureExp createPureExpression(String testName, Set<String> heapNames, ABSData dataValue) {
+	PureExp createPureExpression(
+			String currentHeapReference, 
+			List<String> initialisationsOrders, 
+			String testName, Set<String> heapNames, ABSData dataValue) {
+		
 		String type = getABSDataType(dataValue);
 		String value = getABSDataValue(dataValue);
 		
@@ -68,10 +87,16 @@ final class PureExpressionBuilder {
 		
 		if (dataValue instanceof ABSTerm) {
 			ABSTerm term = (ABSTerm) dataValue;
-			return makeDataTermValue(testName, heapNames, term, decl);
+			return makeDataTermValue(currentHeapReference, 
+					initialisationsOrders, testName, heapNames, term, decl);
 		} else if (dataValue instanceof ABSRef) {
-			if (heapNames.contains(value)) {
-				return new VarUse(heapRefBuilder.heapReferenceForTest(testName, value));
+			if (heapNames.contains(value)) {	
+				String ref = heapRefBuilder.heapReferenceForTest(testName, value);
+				if (currentHeapReference != null) {
+					//we need to consider initialisation order!
+					updateInitialisationOrder(initialisationsOrders, currentHeapReference, ref);
+				}
+				return new VarUse(ref);
 			} else {
 				return new NullExp();
 			}
@@ -119,14 +144,19 @@ final class PureExpressionBuilder {
 	/**
 	 * Construct a pure expression that is either a primitive literal
 	 * such as Int and String, or a value of a data type.
+	 * @param currentHeapReference 
+	 * 
+	 * @param initialisationsOrders 
 	 * @param heap 
 	 * @param testName 
-	 * 
 	 * @param value
-	 * @param decl 
+	 * @param decl
+	 *  
 	 * @return
 	 */
-	PureExp makeDataTermValue(String testName, Set<String> heap, 
+	PureExp makeDataTermValue(String currentHeapReference, 
+			List<String> initialisationsOrders, 
+			String testName, Set<String> heap, 
 			ABSTerm term, Decl decl) {
 		
 		if (decl instanceof TypeSynDecl) {
@@ -139,12 +169,18 @@ final class PureExpressionBuilder {
 			} else if (INT.equals(decl.getName())) {
 				return new IntLiteral(getABSDataValue(term));
 			} else {
-				return parseValue(testName, heap, term);
+				return parseValue(currentHeapReference, 
+						initialisationsOrders, testName, heap, term);
 			}
 		} else if (decl instanceof InterfaceDecl) {
 			String value = getABSDataValue(term);
 			if (heap.contains(value)) {
-				return new VarUse(heapRefBuilder.heapReferenceForTest(testName, value));
+				String ref = heapRefBuilder.heapReferenceForTest(testName, value);
+				if (currentHeapReference != null) {
+					//we need to consider initialisation order!
+					updateInitialisationOrder(initialisationsOrders, currentHeapReference, ref);
+				}
+				return new VarUse(ref);
 			} else {
 				return new NullExp();
 			}
@@ -153,7 +189,9 @@ final class PureExpressionBuilder {
 		}
 	}
 	
-	DataConstructorExp parseValue(String testName, Set<String> heap, ABSTerm term) {
+	DataConstructorExp parseValue(String currentHeapReference, 
+			List<String> initialisationsOrders, 
+			String testName, Set<String> heap, ABSTerm term) {
 		
 		final DataConstructorExp result = new DataConstructorExp();
 		String fn = getABSTermFunctor(term);
@@ -161,7 +199,8 @@ final class PureExpressionBuilder {
 		result.setParamList(new abs.frontend.ast.List<PureExp>());
 		List<ABSData> vs = getABSTermArgs(term);
 		for (int i=0; i<vs.size(); i++) {
-			result.setParam(createPureExpression(testName, heap, vs.get(i)),i);
+			result.setParam(createPureExpression(currentHeapReference, 
+					initialisationsOrders, testName, heap, vs.get(i)),i);
 		}
 		return result;
 	}

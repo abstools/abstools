@@ -21,6 +21,7 @@ import static apet.testCases.ABSTestCaseExtractor.getInitialState;
 import static apet.testCases.ABSTestCaseExtractor.getInputArgs;
 import static apet.testCases.ABSTestCaseExtractor.getReturnData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ import abs.frontend.ast.NullExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.RemoveFieldModifier;
+import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarUse;
 import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
@@ -162,14 +164,17 @@ abstract class ABSUnitTestCaseBuilder {
 		}
 		Set<String> finalHeapNames = referenceNames(finalHeap.keySet());
 		
+		//need to remember which objects in the heap we have already handled.
+		Set<String> visited = new HashSet<String>();
+
 		//check return value
 		if (hasReturnValue) {
 			ABSData rd = getReturnData(testCase);
-			makeOracle(testName, finalHeapNames, finalHeap, "returnValue", (Access) access.fullCopy(), rd, block);
+			makeOracle(testName, finalHeapNames, finalHeap, "returnValue", (Access) access.fullCopy(), rd, visited, block);
 		}
 		
 		//check return value (using deltas)
-		makeGetAndAssertStatements(testName, finalHeapNames, testClass, finalHeap, block);
+		makeGetAndAssertStatements(testName, finalHeapNames, testClass, finalHeap, visited, block);
 	}
 	
 	/**
@@ -236,12 +241,22 @@ abstract class ABSUnitTestCaseBuilder {
 				getExpStmt(getCall(getThis(), setMethodForTest, true)));
 
 		Map<String, String> typeHierarchy = new HashMap<String, String>();
+		Map<String, List<Stmt>> initialisations = new HashMap<String, List<Stmt>>();
+		List<String> initialisationsOrders = new ArrayList<String>();
 		for (ABSRef r : initialHeap.keySet()) {
 			makeSetStatements(
 					typeHierarchy,
+					initialisations,
+					initialisationsOrders,
 					testMethodName, heapNames, initialHeap, 
 					objectsInHeap, r, initialHeap.get(r), 
-					modifyBlock, testClass);
+					testClass);
+		}
+		
+		for (String ref : initialisationsOrders) {
+			for (Stmt s : initialisations.get(ref)) {
+				modifyBlock.addStmt(s);
+			}
 		}
 		
 		String testClassName = testClass.getName();
@@ -274,11 +289,13 @@ abstract class ABSUnitTestCaseBuilder {
 	
 	void makeSetStatements(
 			Map<String, String> typeHierarchy, 
+			Map<String, List<Stmt>> initialisations, 
+			List<String> initialisationsOrders, 
 			String testName,
 			Set<String> heapNames,
 			Map<ABSRef, ABSObject> initialHeap, 
 			Map<String, InterfaceTypeUse> objectsInHeap, 
-			ABSRef ref, ABSObject state, Block block, 
+			ABSRef ref, ABSObject state, 
 			ClassDecl testClass) {
 		
 		String rn = heapRefBuilder.heapReferenceForTest(testName, getABSDataValue(ref)); 
@@ -292,6 +309,12 @@ abstract class ABSUnitTestCaseBuilder {
 			throw new IllegalStateException("Cannot find class: "+concreteTypeName);
 		}
 		
+		List<Stmt> statements = new ArrayList<Stmt>();
+		initialisations.put(rn, statements);
+		if (! initialisationsOrders.contains(rn)) {
+			initialisationsOrders.add(rn);
+		}
+		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		abs.frontend.ast.List<ParamDecl> params = concreteType.getParamList();
 		PureExp[] constructorArgs = new PureExp[params.getNumChild()];
@@ -301,18 +324,18 @@ abstract class ABSUnitTestCaseBuilder {
 			assert fields.containsKey(name);
 			ABSData d = fields.remove(name);
 			objectsInHeap.putAll(getTypesFromABSData(testName, d));
-			PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, d);
+			PureExp exp = pureExpBuilder.createPureExpression(rn, initialisationsOrders, testName, heapNames, d);
 			constructorArgs[i] = exp;
 		}
 		
-		block.addStmt(getVAssign(rn, newObj(concreteType, false, constructorArgs)));
+		statements.add(getVAssign(rn, newObj(concreteType, false, constructorArgs)));
 		
 		for (String fn : fields.keySet()) {
 			ABSData d = fields.get(fn);
 			objectsInHeap.putAll(getTypesFromABSData(testName, d));
-			PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, d);
+			PureExp exp = pureExpBuilder.createPureExpression(rn, initialisationsOrders, testName, heapNames, d);
 			Call call = getCall(new VarUse(rn), testCaseNameBuilder.setterMethodName(fn), true, exp);
-			block.addStmt(getExpStmt(call));
+			statements.add(getExpStmt(call));
 		}
 		
 		//ADD getter and setter
@@ -329,6 +352,7 @@ abstract class ABSUnitTestCaseBuilder {
 			Set<String> heapNames,
 			ClassDecl testClass, 
 			Map<ABSRef,ABSObject> finalHeap, 
+			Set<String> visited,
 			Block testMethodBlock) {
 		
 		String assertMethodForTest =
@@ -340,7 +364,7 @@ abstract class ABSUnitTestCaseBuilder {
 				getExpStmt(getCall(getThis(), assertMethodForTest, true)));
 		
 		for (ABSRef r : finalHeap.keySet()) {
-			makeGetAndAssertStatementsForHeapRef(testMethodName, heapNames, finalHeap, r, finalHeap.get(r), modifyBlock);
+			makeGetAndAssertStatementsForHeapRef(testMethodName, heapNames, finalHeap, r, finalHeap.get(r), visited, modifyBlock);
 		}
 		
 	}
@@ -351,8 +375,13 @@ abstract class ABSUnitTestCaseBuilder {
 			Map<ABSRef, ABSObject> finalHeap,
 			ABSRef ref, 
 			ABSObject state, 
+			Set<String> visited, 
 			Block block) {
 		String rn = heapRefBuilder.heapReferenceForTest(testName, getABSDataValue(ref));
+
+		if (! visited.add(rn)) {
+			return;
+		}
 		
 		Map<String,ABSData> fields = getABSObjectFields(state);
 		
@@ -371,14 +400,14 @@ abstract class ABSUnitTestCaseBuilder {
 						getCall(new VarUse(rn), testCaseNameBuilder.getterMethodName(fn), true)));
 				makeOracle(testName, heapNames, finalHeap, 
 						testCaseNameBuilder.resultOfGetterMethodName(fn),
-						(Access) field.getAccess().fullCopy(), d, block);
+						(Access) field.getAccess().fullCopy(), d, visited, block);
 			}
 		}
 	}
 
 	void makeOracle(String testName, Set<String> heapNames, 
 			Map<ABSRef,ABSObject> finalHeap, 
-			String actual, Access access, ABSData data, Block block) {
+			String actual, Access access, ABSData data, Set<String> visited, Block block) {
 
 		InterfaceDecl inf = null;
 		if (access instanceof DataTypeUse) {
@@ -396,7 +425,7 @@ abstract class ABSUnitTestCaseBuilder {
 			for (ABSRef r : finalHeap.keySet()) {
 				if (getABSDataValue(r).equals(ref)) {
 					makeGetAndAssertStatementsForHeapRef(
-							testName, heapNames, finalHeap, r, finalHeap.get(r), block);
+							testName, heapNames, finalHeap, r, finalHeap.get(r), visited, block);
 					break;
 				}
 			}
