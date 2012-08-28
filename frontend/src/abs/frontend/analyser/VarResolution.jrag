@@ -124,10 +124,12 @@ aspect VarResolution {
     
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
-    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = locallookupVarOrFieldName(name,fieldOnly);
-    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = locallookupVarOrFieldName(name,fieldOnly);
+    
+    // FIXME Variable resolution for runtime deltas
+    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+//        = locallookupVarOrFieldName(name,fieldOnly);
+    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+//        = locallookupVarOrFieldName(name,fieldOnly);
     
     syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
