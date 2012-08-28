@@ -30,7 +30,9 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
+import abs.frontend.ast.DeltaAccess;
 import abs.frontend.ast.DeltaClause;
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.DeltaID;
 import abs.frontend.ast.Deltaspec;
 import abs.frontend.ast.Feature;
@@ -126,6 +128,17 @@ public class ABSUnitTestCaseTranslator {
 			generateABSUnitTest(suite.get(key), key);
 		}
 		
+		Set<DeltaDecl> deltaDecls = new HashSet<DeltaDecl>(); 
+		for (DeltaWrapper w : deltas) {
+			DeltaDecl delta = w.getDelta();
+			deltaDecls.add(delta);
+			abs.frontend.ast.List<DeltaAccess> access = delta.getDeltaAccesss();
+			if (access.hasChildren()) {
+				String use = access.getChild(0).getModuleName();
+				importModules.add(use);
+			}
+		}
+		
 		addImports(module);
 		
 		buildProductLine(module);
@@ -135,9 +148,7 @@ public class ABSUnitTestCaseTranslator {
 				new ArrayList<ASTNode<ASTNode>>();
 		
 		nodes.add(module);
-		for (DeltaWrapper w : deltas) {
-			nodes.add(w.getDelta());
-		}
+		nodes.addAll(deltaDecls);
 		nodes.add(productline);
 		nodes.add(product);
 		

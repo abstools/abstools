@@ -12,6 +12,7 @@ final class ABSUnitTestCaseTranslatorConstants {
 	static final String SETTER_PREFIX = "setForTest";
 	static final String GETTER_PREFIX = "getForTest";
 	static final String RUN_METHOD = "run";
+	static final String NULL = "null";
 	static final String CLASS_SUFFIX = "Impl";
 	static final String INTERFACE_SUFFIX = "Test";
 	static final String METHOD_PREFIX = "test";

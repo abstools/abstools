@@ -10,6 +10,7 @@ import static abs.backend.tests.AbsASTBuilderUtil.getVAssign;
 import static abs.backend.tests.AbsASTBuilderUtil.getVarDecl;
 import static abs.backend.tests.AbsASTBuilderUtil.newObj;
 import static apet.absunit.ABSUnitTestCaseTranslatorConstants.ASSERT_HELPER;
+import static apet.absunit.ABSUnitTestCaseTranslatorConstants.NULL;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataType;
 import static apet.testCases.ABSTestCaseExtractor.getABSDataValue;
 import static apet.testCases.ABSTestCaseExtractor.getABSObjectFields;
@@ -96,8 +97,12 @@ abstract class ABSUnitTestCaseBuilder {
 		if (data instanceof ABSRef) {
 			String type = getABSDataType(data);
 			String value = getABSDataValue(data);
-			map.put(heapRefBuilder.heapReferenceForTest(testName, value), 
-					new InterfaceTypeUse(type));
+			
+			if (! value.equals(NULL)) {
+				map.put(heapRefBuilder.heapReferenceForTest(testName, value), 
+						new InterfaceTypeUse(type));
+			}
+			
 		} else if (data instanceof ABSTerm) {
 			ABSTerm term = (ABSTerm) data;
 			for (ABSData t : getABSTermArgs(term)) {
