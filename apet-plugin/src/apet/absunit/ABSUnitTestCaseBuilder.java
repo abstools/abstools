@@ -168,9 +168,14 @@ abstract class ABSUnitTestCaseBuilder {
 		Set<String> visited = new HashSet<String>();
 
 		//check return value
+		//only look at reference and data values
+		//assertions of object states can be done in the heap assertions
 		if (hasReturnValue) {
 			ABSData rd = getReturnData(testCase);
-			makeOracle(testName, finalHeapNames, finalHeap, "returnValue", (Access) access.fullCopy(), rd, visited, block);
+			PureExp exp = pureExpBuilder.createPureExpression(testName, finalHeapNames, rd);
+			block.addStmt(getExpStmt(getCall(
+				new VarUse(ASSERT_HELPER), "assertTrue", true, 
+				new EqExp(new VarUse("returnValue"), exp))));
 		}
 		
 		//check return value (using deltas)
