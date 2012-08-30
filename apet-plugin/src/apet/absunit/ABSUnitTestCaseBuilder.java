@@ -421,11 +421,11 @@ abstract class ABSUnitTestCaseBuilder {
 		}
 		
 		PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, data);
-		if (inf == null || exp instanceof NullExp) {
-			block.addStmt(getExpStmt(getCall(
+		block.addStmt(getExpStmt(getCall(
 				new VarUse(ASSERT_HELPER), "assertTrue", true, 
 				new EqExp(new VarUse(actual), exp))));
-		} else {
+
+		if (inf != null && ! (exp instanceof NullExp)) {
 			String ref = getABSDataValue(data);
 			for (ABSRef r : finalHeap.keySet()) {
 				if (getABSDataValue(r).equals(ref)) {
