@@ -549,6 +549,10 @@ public class ABSRuntime {
         scheduableTasksFilter = filter;
     }
 
+    public boolean getTerminateOnException() {
+        return terminateOnException;
+    }
+
     
 
 }

@@ -6,6 +6,7 @@ package eu.hatsproject.absplugin.actions.runconfig;
 
 import eu.hatsproject.absplugin.debug.model.Debugger;
 import eu.hatsproject.absplugin.debug.scheduling.SchedulingStrategy;
+import abs.backend.java.absunit.ABSTestObserver;
 import abs.backend.java.debugging.GraphicalDebugger;
 import abs.backend.java.scheduling.InteractiveScheduler;
 import abs.backend.java.scheduling.RandomSchedulingStrategy;
@@ -20,8 +21,9 @@ public class RunConfigEnums {
 	public enum DebuggerObserver {
 		ECLIPSE(Debugger.class.getName(),"Eclipse Debugger", true),
 		GRAPHICAL(GraphicalDebugger.class.getName(), "Graphical Debugger", false),
-		UML (UMLSequenceChart.class.getName(), "UML Sequence Diagram", false);
-		
+		UML (UMLSequenceChart.class.getName(), "UML Sequence Diagram", false),
+		ABSUnit (ABSTestObserver.class.getName(), "ABS Unit Testrunner", false);
+        
 		private String className;
 		private String userReadableName;
 		private boolean isSelectedDefault;

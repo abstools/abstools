@@ -108,7 +108,8 @@ public class Debugger implements SystemObserver{
 	 */
 	public static void startABSRuntime(final String projectName,
 			final String mainClassName, final Path genPath, String debuggerArgsSystemObserver,
-			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed, 
+			String debuggerArgsTotalScheduler, boolean debuggerIsInDebugMode, String debuggerArgsRandomSeed,
+			boolean terminateOnException,
 			List<URL> fliClassPath, PrintStream outStream, PrintStream errStream, boolean ignoreMissingFLIClasses, boolean useFifoSemantics) throws InvalidRandomSeedException {
 		
 		if(DO_DEBUG) System.out.println("start internal debugger");
@@ -123,8 +124,8 @@ public class Debugger implements SystemObserver{
         if (useFifoSemantics) {
             r.setScheduableTasksFilter(new ScheduableTasksFilterFifo());
         }
-        
-        
+        r.terminateOnException(terminateOnException);
+                
         boolean useOurScheduling = addSchedulingStrategy(debuggerArgsTotalScheduler, r);
         final boolean useOurSystemObserver = addSystemObservers(debuggerArgsSystemObserver, r);
         
@@ -340,14 +341,16 @@ public class Debugger implements SystemObserver{
 	}
 
     @Override
-    public void systemError(final ABSException e) {
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                showErrorMessage(e.getMessageWithStackTrace());
-            }
-        });
-        shutdown();
+    public void systemError(final ABSException e) {        
+    	if (runtime.getTerminateOnException()) {
+    		Display.getDefault().asyncExec(new Runnable() {
+    			@Override
+    			public void run() {
+    				showErrorMessage(e.getMessageWithStackTrace());
+    			}
+    		});
+    		shutdown();
+    	}
     }
 
 }

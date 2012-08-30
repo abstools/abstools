@@ -81,6 +81,7 @@ public class JavaJob extends Job {
 	private String debuggerArgsTotalScheduler;
 	private String debuggerCompileFirst;
 	private String debuggerArgsRandomSeed;
+	private boolean terminateOnException = true;
 	private boolean useInternalDebugger;
 	private boolean debuggerIsInDebugMode;
 
@@ -131,6 +132,9 @@ private boolean useFifoSemantics;
 		useInternalDebugger = true;
 		debuggerIsInDebugMode = true;
 		this.absUnit = absUnit;
+		if (absUnit) {
+			terminateOnException = false;
+		}
 	}
 	
 	@Override
@@ -612,7 +616,9 @@ private boolean useFifoSemantics;
         PrintStream errStream = javaConsole.getPrintStream(MessageType.MESSAGE_ERROR);
         Debugger.startABSRuntime(project.getName(), moduleName, javaPath,
     				debuggerArgsSystemObserver, debuggerArgsTotalScheduler,
-    				debuggerIsInDebugMode, debuggerArgsRandomSeed, fliClassPath,
+    				debuggerIsInDebugMode, debuggerArgsRandomSeed, 
+    				terminateOnException,
+    				fliClassPath,
     				outStream, errStream, ignoreMissingFLIClasses, useFifoSemantics);
 	}
 
@@ -887,7 +893,11 @@ private boolean useFifoSemantics;
 	public void setArgsDebuggerRandomSeed(String debuggerRandomSeed) {
 		this.debuggerArgsRandomSeed = debuggerRandomSeed;
 	}
-	
+
+	public void setTerminateOnException(boolean b) {
+		this.terminateOnException = b;
+	}
+
 	public void setDebuggerCompileFirst(boolean debuggerCompileFirst) {
 		this.debuggerCompileFirst = String.valueOf(debuggerCompileFirst);
 	}

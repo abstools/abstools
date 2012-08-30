@@ -24,6 +24,7 @@ import org.eclipse.debug.core.model.ILaunchConfigurationDelegate;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 
+import abs.backend.java.absunit.ABSTestObserver;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 
@@ -60,13 +61,18 @@ public class JavaRunConfiguration implements ILaunchConfigurationDelegate {
 		        throw new CoreException(new Status(IStatus.ERROR, Constants.PLUGIN_ID, "Launch failed", e));
 		    }
 		}
-		
-		modifyDebuggerArguments(launchConfig, job);
-		
+
 		if (launchConfig.getTestExecution()) {
-		    // execution of unit tests
-		    Job testJob = new ABSUnitTestJavaExecutionJob(project, product, job);
-		    testJob.schedule();
+			List<String> obs = launchConfig.getDebuggerObserverList();
+			obs.add(ABSTestObserver.class.getName());			
+		}
+
+		modifyDebuggerArguments(launchConfig, job);
+				
+		if (launchConfig.getTestExecution()) {
+		    // execution of unit tests		
+			Job testJob = new ABSUnitTestJavaExecutionJob(project, product, job);
+			testJob.schedule();
 		} else {
 		    // normal execution
 		    job.schedule();

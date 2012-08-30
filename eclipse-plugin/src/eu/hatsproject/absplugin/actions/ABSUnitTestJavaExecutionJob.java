@@ -25,6 +25,7 @@ public class ABSUnitTestJavaExecutionJob extends ABSUnitTestExecutionJob {
 
 	protected IStatus executeTest(IProgressMonitor monitor) throws CoreException {
 	    runJob.setRunTarget(ABSTestRunnerGenerator.RUNNER_MAIN);
+	    runJob.setTerminateOnException(false);
 		return runJob.runJob(monitor);
 	}
 	
