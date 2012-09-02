@@ -18,12 +18,12 @@ class Application() {
 	    }
     }
     Unit menu(Greeting bob) {
+        Runtime runtime = getRuntime();
+
         String message = bob.sayHello();
         Unit u = println(message);
         this.printMenu();
         String selection = readln();
-        
-        Runtime runtime = getRuntime();
         
         if (selection == "1") runtime.applyDelta("En");
         else if (selection == "2") runtime.applyDelta("Es");
@@ -99,12 +99,12 @@ modifies class Hello.Application {
     }
 
     modifies Unit menu(Greeting bob) {
+        Runtime runtime = getRuntime();
+
         String message = bob.sayHello();
         Unit u = println(message);
         this.printMenu();
         String selection = readln();
-        
-        Runtime runtime = getRuntime();
 
         if (selection == "1") runtime.applyDelta("En");
         else if (selection == "2") runtime.applyDelta("Es");

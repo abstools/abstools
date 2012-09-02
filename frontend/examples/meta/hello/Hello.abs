@@ -18,17 +18,16 @@ class Application() {
 	    }
     }
     Unit menu(Greeting bob) {
+        Runtime runtime = getRuntime();
+
         String message = bob.sayHello();
         Unit u = println(message);
         this.printMenu();
         String selection = readln();
         
-        Runtime runtime = getRuntime();
-        
         if (selection == "1") runtime.applyDelta("En");
         else if (selection == "2") runtime.applyDelta("Es");
         else if (selection == "3") runtime.applyDelta("De");
-        else if (selection == "4") runtime.applyDelta("Cn");
     }
     Unit printMenu() {
         Unit u = println("    English");
