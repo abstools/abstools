@@ -21,7 +21,7 @@ class Application() {
         Runtime runtime = getRuntime();
 
         String message = bob.sayHello();
-        Unit u = println(message);
+        Unit u = println("\n" + message + "\n");
         this.printMenu();
         String selection = readln();
         
@@ -30,7 +30,7 @@ class Application() {
         else if (selection == "3") runtime.applyDelta("De");
     }
     Unit printMenu() {
-        Unit u = println("    English");
+        Unit u = println("(1) English");
              u = println("(2) Spanish");
              u = println("(3) German");
     }
@@ -40,7 +40,7 @@ class Application() {
     new Application();
 }
 
-
+//*************************************************************
 delta En;
 modifies class Hello.Greeter {
     modifies String sayHello() {
@@ -49,12 +49,12 @@ modifies class Hello.Greeter {
 }
 modifies class Hello.Application {
     modifies Unit printMenu() {
-        Unit u = println("    English");
+        Unit u = println("(1) English");
              u = println("(2) Spanish");
              u = println("(3) German");
     }
 }
-
+//*************************************************************
 delta Es;
 modifies class Hello.Greeter {
     modifies String sayHello() {
@@ -64,11 +64,11 @@ modifies class Hello.Greeter {
 modifies class Hello.Application {
     modifies Unit printMenu() {
         Unit u = println("(1) Inglés");
-             u = println("    Español");
+             u = println("(2) Español");
              u = println("(3) Alemán");
     }
 }
-
+//*************************************************************
 delta De;
 modifies class Hello.Greeter {
     modifies String sayHello() {
@@ -79,7 +79,7 @@ modifies class Hello.Application {
     modifies Unit printMenu() {
         Unit u = println("(1) Englisch");
              u = println("(2) Spanisch");
-             u = println("    Deutsch");
+             u = println("(3) Deutsch");
     }
 }
 
