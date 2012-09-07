@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -117,11 +116,12 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 						/* Type check again */
 						model.flushCache(); // #335, see IncrementalModelBuilder#flushAll()
 					}
-					if (model.hasErrors()) {
-					    createMarkers(nat, model.getErrors());
-						throw new AbsJobException(new TypeCheckerException(model.getErrors()));
+					SemanticErrorList errs = model.getErrors();
+					if (errs != null && !errs.isEmpty()) {
+					    createMarkers(nat, errs);
+						throw new AbsJobException(new TypeCheckerException(errs));
 					}
-					SemanticErrorList errs = model.typeCheck();
+					errs = model.typeCheck();
 					if (errs != null && !errs.isEmpty()) {
 					    createMarkers(nat, errs);
 						throw new AbsJobException(new TypeCheckerException(errs));

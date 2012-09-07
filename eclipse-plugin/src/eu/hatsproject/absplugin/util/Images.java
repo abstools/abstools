@@ -9,7 +9,6 @@ import java.net.URL;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.ISharedImages;
@@ -18,6 +17,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.osgi.framework.Bundle;
 
 import abs.frontend.ast.*;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineConstants.AnnotationType;
 import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtils;
 import eu.hatsproject.absplugin.editor.outline.PackageAbsFile;
@@ -176,7 +176,8 @@ public abstract class Images {
 	 * @return The desired Image or a default image, if the desired image was not found;
 	 */
 	public static Image createImage(String path){
-		Bundle bundle = Platform.getBundle(Constants.PLUGIN_ID);
+		Bundle bundle = Activator.getDefault().getBundle();
+		assert bundle != null;
 		IPath imagepath = new Path(path);
 		URL imageUrl = FileLocator.find(bundle, imagepath,null);
 		ImageDescriptor id = ImageDescriptor.createFromURL(imageUrl);

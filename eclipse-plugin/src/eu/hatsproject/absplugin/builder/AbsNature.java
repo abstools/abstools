@@ -22,9 +22,7 @@ import java.util.Set;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
@@ -323,8 +321,10 @@ public class AbsNature implements IProjectNature {
 							}
 						} catch(NoModelException e){
 							//ignore
+						} catch (CoreException e) {
+							throw e;
 						}catch (Exception e) {
-							throw new CoreException(new Status(IStatus.ERROR, PLUGIN_ID, "Parsing failed.", e));
+							throw new InvocationTargetException(e);
 						}
 					}
 				}.run(monitor);
@@ -332,7 +332,8 @@ public class AbsNature implements IProjectNature {
 				Activator.logException(e);
 			} catch (InterruptedException e) {
 			}
-		}
+		} else
+			assert false : resource;
 	}
 
 	public boolean toIncludeInScope(IResource resource) {
@@ -528,7 +529,16 @@ public class AbsNature implements IProjectNature {
 	}
 	
 	public Model getCompleteModel(){
-		return modelbuilder.getCompleteModel();
+		Model model = modelbuilder.getCompleteModel();
+		/* Not compiled yet? */
+		if (model == null && project != null) {
+			try {
+				project.build(IncrementalProjectBuilder.FULL_BUILD, null);
+			} catch (CoreException e) {
+				Activator.logException(e);
+			}
+		}
+		return model;
 	}
 	
 	/**
@@ -582,9 +592,9 @@ public class AbsNature implements IProjectNature {
 					prop.loadFromXML(new FileInputStream(file));
 					for (String qualified : prop.stringPropertyNames()) {
 						Boolean readonly = Boolean.valueOf(prop.getProperty(qualified));
-						String name = new File(qualified).getName();
-						if (isABSPackage(new File(qualified))) {
-							entries.add(new PackageEntry(packageContainer, name, qualified, readonly));
+						File f = new File(qualified);
+						if (isABSPackage(f)) {
+							entries.add(new PackageEntry(packageContainer, f.getName(), qualified, readonly));
 						}
 					}
 					packageContainer.setPackages(entries);
@@ -607,6 +617,9 @@ public class AbsNature implements IProjectNature {
 		modelbuilder.addCompilationUnit(null); // Hack to get stdlib
 	}
 
+	/**
+	 * @deprecated unused
+	 */
 	public void parseABSFile(PackageAbsFile file, boolean withincomplete,
 			Object monitor) {
 		Main m = new Main();

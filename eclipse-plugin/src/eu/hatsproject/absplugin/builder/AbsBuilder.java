@@ -53,7 +53,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		@Override
 		public boolean visit(IResourceDelta delta) throws CoreException {
 			IResource resource = delta.getResource();
-			AbsNature nature = getAbsNature(resource.getProject());
+			AbsNature nature = getAbsNature(resource);
 			switch (delta.getKind()) {
 			case IResourceDelta.ADDED:
 				// handle added resource
@@ -93,10 +93,12 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		
 		@Override
 		public boolean visit(IResource resource) throws CoreException{
-			AbsNature nature = getAbsNature(resource.getProject());
-			if(isABSFile(resource) && nature.toIncludeInScope(resource)){
-				nature.parseABSFile(resource,false,monitor);
-				changedFiles.add(resource.getFullPath().toString());
+			AbsNature nature = getAbsNature(resource);
+			synchronized (nature.modelLock) {
+				if(isABSFile(resource) && nature.toIncludeInScope(resource)){
+					nature.parseABSFile(resource,false,monitor);
+					changedFiles.add(resource.getFullPath().toString());
+				}
 			}
 			return true;
 		}
@@ -149,7 +151,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 		AbsNature nature = getAbsNature(getProject());
 		synchronized (nature.modelLock) {
 			getProject().deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_INFINITE);
-			getAbsNature(getProject()).cleanModel();
+			nature.cleanModel();
 			
 			// delete all Java files and classes
 			String javaPathString = nature.getProjectPreferenceStore().getString(JAVA_SOURCE_PATH);

@@ -277,8 +277,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 		// for example: F3 (JumpToDeclaration) is only active if this editor scope is enabled
 	    IContextService cs = (IContextService)getSite().getService(IContextService.class);
 	    cs.activateContext(ABSEDITOR_CONTEXT_ID);
-	    
-	 
 	}
 	
 	@Override
@@ -293,7 +291,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	}
 
 	private void initCompilationUnit() {
-	    absNature = UtilityFunctions.getAbsNature(getProject());
+	    absNature = UtilityFunctions.getAbsNature(getResource());
 	    if (absNature != null) {
 	        AbsModelManager modelManager = absNature.getModelManager();
 	        compilationUnit = modelManager.getCompilationUnit(getAbsoluteFilePath());
@@ -344,8 +342,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 		store.setDefault(EDITOR_MATCHING_BRACKETS, true);
 		store.setDefault(EDITOR_MATCHING_BRACKETS_COLOR, Constants.DEFAULT_MATCHING_BRACKETS_COLOR);
 	}
-
-
 
 	@Override
 	protected void doSetInput(IEditorInput input) throws CoreException {
@@ -463,7 +459,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 		for (CompilationUnitChangeListener mcl : modelChangeListeners) {
 			mcl.onCompilationUnitChange(newCu);
 		}
-		
 	}
 
 	/**
@@ -479,7 +474,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 
 	public void setReconciler(ABSReconcilingStrategy absReconcilingStrategy) {
 		this.reconciler = absReconcilingStrategy;
-		
 	}
 
 	@Override

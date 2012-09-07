@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 
@@ -18,6 +19,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
+import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.CoreControlUnit;
@@ -25,7 +27,6 @@ import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuildListener;
 import eu.hatsproject.absplugin.util.CoreControlUnit.ResourceBuiltEvent;
 
 public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListener {
-
 
     private AbsNature absNature;
 
@@ -37,8 +38,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
         CoreControlUnit.addResourceBuildListener(this);
         updateModelFromNature();
     }
-
-
 
     @Override
     public synchronized void updateModel(CompilationUnit cu, boolean withTypechecks) {
@@ -67,8 +66,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
         notifyChangeListeners();
     }
 
-
-
     private void notifyChangeListeners() {
         for (ModelChangeListener cl : changeListeners) {
             cl.onModelChange(model);
@@ -94,7 +91,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
         SemanticErrorList typeErrors = model.typeCheck();
 
         updateMarkers(typeErrors);
-
     }
 
     private void updateMarkers(SemanticErrorList typeErrors) {
@@ -106,7 +102,7 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
             absNature.getProject().deleteMarkers(Constants.TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
             absNature.createMarkers(typeErrors);
         } catch (CoreException e) {
-            e.printStackTrace();
+            Activator.logException(e);
         }
     }
 
@@ -125,7 +121,17 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
 
     @Override
     public synchronized CompilationUnit getCompilationUnit(String absoluteFilePath) {
-        if (model == null) return null;
+        if (model == null) {
+        	/* Project hasn't been built yet. */
+        	try {
+				absNature.getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);
+			} catch (CoreException e) {
+				Activator.logException(e);
+				return null;
+			}
+        	updateModelFromNature();
+        }
+        assert model != null;
         for (CompilationUnit cu : model.getCompilationUnits()) {
             if (cu.getFileName().equals(absoluteFilePath)) {
                 return cu;

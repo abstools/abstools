@@ -17,8 +17,6 @@ import java.util.jar.JarEntry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
@@ -27,7 +25,6 @@ import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
-import eu.hatsproject.absplugin.util.Constants;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
 
@@ -141,23 +138,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 		AbsNature nature = UtilityFunctions.getAbsNature(file.getProject());
 		if(nature != null){
 			CompilationUnit cu = nature.getCompilationUnit(file.getAbsoluteFilePath());
-			try {
-				if (file.getProject().hasNature(Constants.NATURE_ID)){
-					return getChildrenOf(cu,(AbsNature)file.getProject().getNature(Constants.NATURE_ID));
-				}else{
-					return null;
-				}
-			} catch (CoreException e) {
-				MessageDialog.openError(null,
-						"Error", "Error in Content outline. Could not check project natures for project."
-						+ file.getProject().getName() +
-						"\n Maybe the project does not exist anymore or the project is not accessible!");
-				Activator.logException(e);
-				return null;
-			}
-				
+			return getChildrenOf(cu,nature);
 		} else {
-
 			return null;
 		}
 	}

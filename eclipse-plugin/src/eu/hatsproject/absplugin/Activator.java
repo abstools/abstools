@@ -10,11 +10,7 @@ import static eu.hatsproject.absplugin.util.UtilityFunctions.getDefaultPreferenc
 import java.util.ArrayList;
 
 import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.*;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.jface.resource.JFaceResources;
@@ -110,6 +106,8 @@ public class Activator extends AbstractUIPlugin {
 	 * The constructor
 	 */
 	public Activator() {
+		super();
+		plugin = this;
 	}
 	
 	/*
@@ -122,21 +120,11 @@ public class Activator extends AbstractUIPlugin {
 		//Print SWT Stack traces in case of an SWT Error (Ticket #199)
 		Device.DEBUG = true;
 		Display.DEBUG = true;
-		plugin = this;
 		initializePreferenceStore();
 		initializeColors();
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IProject[] projects = workspace.getRoot().getProjects();
 		resourceChangeTracker = new AddRemoveTracker();
 		workspace.addResourceChangeListener(resourceChangeTracker,IResourceChangeEvent.POST_CHANGE);
-		/* Need to trigger a build so that the nature is correctly configured.
-		 * Conflicts with Java-builder on the same project, see #337. [stolz]
-		 */
-		for(IProject proj : projects){ 
-			if(proj.isAccessible() && proj.hasNature(NATURE_ID)){
-				proj.build(IncrementalProjectBuilder.FULL_BUILD, null); 
-			} 
-		}
 	}
 	
 	private void setDefaultValue(String name, RGB value){
@@ -232,7 +220,6 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
-		plugin = null;
 		ResourcesPlugin.getWorkspace().removeResourceChangeListener(resourceChangeTracker);
 		super.stop(context);
 	}
