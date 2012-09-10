@@ -15,7 +15,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 @RunWith(Parameterized.class)
 public class DeltaAttributesBooleanTest extends DeltaTest {
@@ -36,7 +36,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
     }
     
     @Test
-    public void passFeatureAsBoolean() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passFeatureAsBoolean() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool f);"
@@ -55,7 +55,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
     }
 
     @Test
-    public void passBooleanFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passBooleanFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
@@ -74,7 +74,7 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
     }
 
     @Test
-    public void passBooleanConstant() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passBooleanConstant() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"

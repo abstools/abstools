@@ -44,7 +44,7 @@ import abs.frontend.ast.FeatureDecl;
 import abs.frontend.ast.FExt;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.StarImport;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
@@ -210,7 +210,7 @@ public class Main {
         return m;
     }
 
-    public void analyzeModel(Model m) throws WrongProgramArgumentException, ASTNodeNotFoundException {
+    public void analyzeModel(Model m) throws WrongProgramArgumentException, DeltaModellingException {
         m.verbose = verbose;
         m.debug = dump;
         

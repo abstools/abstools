@@ -33,28 +33,15 @@ aspect Module {
     inh ModuleDecl Decl.getModule();
     eq ModuleDecl.getDecl().getModule() = this;
 
-    /**
-     * @throws ASTNodeNotFoundException
-     */
     syn lazy ModuleDecl ModuleModifier.getModule() {
-        try {
-            return this.findModule(); 
-        } catch (ASTNodeNotFoundException e) {
-            return null;
-            // FIXME this is ugly; how can I throw an exception from within an attribute declaration??
-        }
+        return this.findModule(); 
     }
 }
 
 //inform ClassModifiers about the Class to which they apply
 aspect Class {
     syn lazy ClassDecl ClassModifier.getClassDecl() {
-        try {
-            return this.findClass();
-        } catch (ASTNodeNotFoundException e) {
-            return null;
-            // FIXME this is ugly; how can I throw an exception from within an attribute declaration??
-        }
+        return this.findClass();
     }
 }
 

@@ -1,21 +1,8 @@
-//inform a Decl about the name of the Module where it was declared
+// Inform node about the name of the Module where it was declared
 aspect ModuleName {
     inh String Decl.moduleName();
     eq ModuleDecl.getDecl().moduleName() = this.getName();
-
-// **DM** DeltaDecl, ProductLine and Products are not contained in modules anymore
-//    inh String OOModifier.moduleName();
-//    eq DeltaDecl.getOOModifier().moduleName() = this.moduleName();
-    
-//    inh String Product.moduleName();
-//    eq ModuleDecl.getProduct().moduleName() = this.getName();
-//    inh String ProductLine.moduleName();
-//    eq ModuleDecl.getProductLine().moduleName() = this.getName();
-
-//    inh String DeltaClause.moduleName();
-//    eq ProductLine.getDeltaClause().moduleName() = this.moduleName();
 }
-
 
 aspect DeltaName {
     inh String ModuleModifier.deltaName();
@@ -41,11 +28,22 @@ aspect Name {
     }
 }
 
-// inform Modifiers about the name of the class where they were defined
-aspect ClassName {
-    inh String ModifyMethodModifier.className();
-    eq ModifyClassModifier.getModifier().className() = this.getName();
+//Inform modifier node about the module to which it applies
+aspect TargetModuleName {
+ syn String ModuleModifier.targetModuleName() = this.getModule().getName();
+ 
+ inh String Modifier.targetModuleName();
+ eq ModifyClassModifier.getModifier().targetModuleName() = this.targetModuleName();
+}
 
+// inform modifier node about the name of the class to which it applies
+aspect TargetClassName {
+    
+    syn String ModifyClassModifier.targetClassName() = this.getSimpleName();
+    syn String AddClassModifier.targetClassName() = this.getSimpleName();
+
+    inh String Modifier.targetClassName();
+    eq ModifyClassModifier.getModifier().targetClassName() = this.getSimpleName();
 }
 
 // qualify node names with the name of the module where they were defined

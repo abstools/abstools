@@ -110,26 +110,81 @@ aspect VarResolution {
         return null;
     }
     
-    syn lazy VarOrFieldDecl AddMethodModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        ClassDecl cd = getModifyClassModifier().getClassDecl();
-        return cd.locallookupVarOrFieldName(name,fieldOnly);
-    }
-
-    syn lazy VarOrFieldDecl ModifyMethodModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
-        ClassDecl cd = getModifyClassModifier().getClassDecl();
-        return cd.locallookupVarOrFieldName(name,fieldOnly);
+    syn lazy VarOrFieldDecl AddFieldModifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        FieldDecl d = getFieldDecl();
+        if (d.getName().equals(name))
+            return d;
+        else
+            return null;
     }
     
+    
+    /* Resolution of variables used inside deltas
+     * TODO use SPL configuration for guidance as of which deltas must have been applied before this delta.
+     * But for now this will do:
+     * Search for FieldDecl in current ModifyClassModifier, then all deltas, then core
+     */
+    syn lazy VarOrFieldDecl Modifier.locallookupVarOrFieldName(String name, boolean fieldOnly) {
+        VarOrFieldDecl var = null;
+        
+        // search in current ModifyClassModifier for AddField modifiers
+        for (Modifier mod : getModifyClassModifier().getModifiers()) {
+            if (mod instanceof AddFieldModifier) {
+                var = ((AddFieldModifier)mod).locallookupVarOrFieldName(name, fieldOnly);
+                if (var != null) {
+                    return var;
+                }
+            }
+        }
+        
+        // Search in all other deltas for addField modifiers that apply to same module&class
+        String targetModule = targetModuleName();
+        String targetClass = targetClassName();
+        
+        for (DeltaDecl delta : getModel().getDeltaDecls()) {
+            for (ModuleModifier mmod : delta.getModuleModifiers()) {
+                if (mmod.targetModuleName().equals(targetModule)) {
+                    
+                    if (mmod instanceof AddClassModifier) {
+                        if (mmod.getSimpleName().equals(targetClass)) {
+                            ClassDecl cd = ((AddClassModifier)mmod).getClassDecl();
+                            var = cd.locallookupVarOrFieldName(name, fieldOnly);
+                            if (var != null) {
+                                return var;
+                            }
+                        }
+                    } else if (mmod instanceof ModifyClassModifier) {
+                        if (((ModifyClassModifier)mmod).targetClassName().equals(targetClass)) {
+                            for (Modifier mod : ((ModifyClassModifier)mmod).getModifiers()) {
+                                if (mod instanceof AddFieldModifier) {
+                                    var = ((AddFieldModifier)mod).locallookupVarOrFieldName(name, fieldOnly);
+                                    if (var != null) {
+                                        return var;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // search core
+        ClassDecl cd = getModifyClassModifier().getClassDecl();
+        var = cd.locallookupVarOrFieldName(name, fieldOnly);
+        
+        return var;
+    }
+
     inh VarOrFieldDecl MethodImpl.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     eq ClassDecl.getMethod(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
         = locallookupVarOrFieldName(name,fieldOnly);
     
-    // FIXME Variable resolution for runtime deltas
-    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-//        = locallookupVarOrFieldName(name,fieldOnly);
-    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-//        = locallookupVarOrFieldName(name,fieldOnly);
+    eq AddMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
+        = locallookupVarOrFieldName(name,fieldOnly);
+    eq ModifyMethodModifier.getMethodImpl().lookupVarOrFieldName(String name, boolean fieldOnly) //= null;
+        = locallookupVarOrFieldName(name,fieldOnly);
     
     syn lazy VarOrFieldDecl MethodImpl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly) {
@@ -180,9 +235,11 @@ aspect VarResolution {
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
+    eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
-//    inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
+    inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl PatternVarUse.lookupVarOrFieldName(String name, boolean fieldOnly);
     
     // replace unbound pattern variables with var decls

@@ -4,8 +4,11 @@
  */
 package abs.frontend.delta.exceptions;
 
-public class ASTNodeNotFoundException extends Exception {
-    public ASTNodeNotFoundException(String msg) {
+public class DeltaModellingException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
+    public DeltaModellingException(String msg) {
         super(msg);
     }
 }

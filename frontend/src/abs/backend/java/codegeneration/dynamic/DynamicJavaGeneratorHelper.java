@@ -377,7 +377,7 @@ public class DynamicJavaGeneratorHelper {
     
     public static void fieldUse(PrintStream stream, VarOrFieldUse f) {
         stream.print("(");
-        if (!f.getType().isReferenceType()) {
+        if (! f.getType().isReferenceType()) {
             stream.print("(" + JavaBackend.getQualifiedString(f.getType()) + ")");
         }
         stream.print("thisP.getFieldValue_Internal(\"" + f.getName() + "\"))");

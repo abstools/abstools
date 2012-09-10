@@ -18,7 +18,7 @@ import abs.frontend.ast.*;
 
 public class AddRemoveModifyClassesTest extends DeltaTest {
     @Test
-    public void addClass() throws ASTNodeNotFoundException {
+    public void addClass() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D; uses M;"
@@ -42,7 +42,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
 
     @Test
-    public void removeClass() throws ASTNodeNotFoundException {
+    public void removeClass() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C {}"
@@ -61,7 +61,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void addField() throws ASTNodeNotFoundException {
+    public void addField() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C {}"
@@ -83,7 +83,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void removeField() throws ASTNodeNotFoundException {
+    public void removeField() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { String myField = \"hello\"; } " 
@@ -103,7 +103,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void modifyField() throws ASTNodeNotFoundException {
+    public void modifyField() throws DeltaModellingException {
         // remove and re-add field with different type
         Model model = assertParseOk(
                 "module M; "
@@ -125,7 +125,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void addMethod() throws ASTNodeNotFoundException {
+    public void addMethod() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C {}"
@@ -145,7 +145,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void removeMethod() throws ASTNodeNotFoundException {
+    public void removeMethod() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit myMethod() {} }"
@@ -165,7 +165,7 @@ public class AddRemoveModifyClassesTest extends DeltaTest {
     }
     
     @Test
-    public void modifyMethod() throws ASTNodeNotFoundException {
+    public void modifyMethod() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Int myField = 0; Unit myMethod() {} } "

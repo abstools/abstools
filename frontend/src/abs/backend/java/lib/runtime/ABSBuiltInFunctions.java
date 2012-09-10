@@ -4,9 +4,13 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -85,12 +89,6 @@ public class ABSBuiltInFunctions {
     /* Convenience functions, to be removed 
      * 
      */
-    public static ABSString readln() {
-        Scanner scanner = new Scanner(System.in);
-        String line = scanner.nextLine();
-        return ABSString.fromString(line.trim());
-    }
-    
     public static ABSUnit println(ABSString s) {
         try {
             PrintStream out = new PrintStream(System.out, true, "UTF-8");
@@ -103,4 +101,11 @@ public class ABSBuiltInFunctions {
         return ABSUnit.UNIT;
     }
 
+    public static ABSString readln() {
+        Scanner scanner = new Scanner(System.in);
+        String line = scanner.nextLine();
+        return ABSString.fromString(line.trim());
+    }
+    
+    
 }

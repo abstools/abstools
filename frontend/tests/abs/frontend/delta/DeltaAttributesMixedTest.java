@@ -8,12 +8,12 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class DeltaAttributesMixedTest extends DeltaTest {
 
     @Test
-    public void passFeaturesAsBooleans() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passFeaturesAsBooleans() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool a, Bool b, Bool c, Int c_a1);"
@@ -42,7 +42,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
     }
 
     @Test
-    public void passBooleanFeatureAttributes1() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passBooleanFeatureAttributes1() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool a1, Bool a2);"
@@ -63,7 +63,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
 
    
     @Test
-    public void passBooleanFeatureAttributes2() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passBooleanFeatureAttributes2() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
@@ -82,7 +82,7 @@ public class DeltaAttributesMixedTest extends DeltaTest {
     }
 
     @Test
-    public void passBooleanFeatureAttributes3() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passBooleanFeatureAttributes3() throws DeltaModellingException, WrongProgramArgumentException {
         assertParse(
                 "module M;"
                 + "delta D(Bool a1, Bool a2, Bool a3);"

@@ -13,7 +13,7 @@ import abs.frontend.ast.*;
 
 public class DeltaSyntax extends DeltaTest {
     @Test
-    public void delta() throws ASTNodeNotFoundException {
+    public void delta() throws DeltaModellingException {
         Model model = assertParseOk("module M; delta D;");
 
         DeltaDecl delta = findDelta(model, "D");
@@ -21,7 +21,7 @@ public class DeltaSyntax extends DeltaTest {
     }
 
     @Test
-    public void deltaUses() throws ASTNodeNotFoundException {
+    public void deltaUses() throws DeltaModellingException {
         Model model;
         model = assertParseOk("module M; delta D; uses M;");
         model = assertParseOk("module M; delta D; uses M; uses N;");

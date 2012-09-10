@@ -15,7 +15,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 @RunWith(Parameterized.class)
 public class DeltaAttributesIntegerTest extends DeltaTest {
@@ -36,7 +36,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
     }
     
     @Test
-    public void passIntegerFeatureAttribute() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passIntegerFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"
@@ -58,7 +58,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
         assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
     }
 
-    public void passIntegerConstant() throws ASTNodeNotFoundException, WrongProgramArgumentException {
+    public void passIntegerConstant() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
                 + "delta D(Bool attr);"

@@ -176,8 +176,9 @@ aspect GenerateProlog {
         else
             s.print(varTransform(getName()));
     }
+
     //Infers if the used variable was declared as a field or as an argument of a class
-    public boolean VarUse.isField(){
+    public boolean VarUse.isField() {
         if(this.getDecl_value instanceof FieldDecl)//field
             return true;
 
@@ -187,11 +188,13 @@ aspect GenerateProlog {
             if(param.getParent().getParent() instanceof ClassDecl)
                 return true;
         }
-        return false;     
+        return false;   
     }
-    public boolean VarOrFieldUse.isField(){
+    
+    public boolean VarOrFieldUse.isField() {
         return true;
     }
+    
     public void FieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print(fieldTransform(getName()));
     }

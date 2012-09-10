@@ -13,13 +13,13 @@ import abs.frontend.delta.exceptions.*;
 public class ModifyInterfacesTest extends DeltaTest {
     
     @Test
-    public void addMethodSig() throws ASTNodeNotFoundException {
+    public void addMethodSig() throws DeltaModellingException {
         // TODO
     
     }
     
     @Test
-    public void removeMethodSig() throws ASTNodeNotFoundException {
+    public void removeMethodSig() throws DeltaModellingException {
         // TODO
         
     }

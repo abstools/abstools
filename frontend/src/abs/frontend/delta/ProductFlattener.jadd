@@ -13,7 +13,7 @@ aspect ProductFlattener {
      * - resolve original() calls,
      * - apply deltas in sequence.
      */
-    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProduct(String id) throws WrongProgramArgumentException,DeltaModellingException {
         Product prod = this.findProduct(id);
         flattenForProduct(prod);
     }
@@ -21,19 +21,19 @@ aspect ProductFlattener {
      * Apply delta to model without checking if the product is valid wrt the feature model
      * i.e. apply each ModuleModifier to its corresponding class or interface
      */
-    public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProductUnsafe(String id) throws WrongProgramArgumentException,DeltaModellingException {
         Product prod = this.findProduct(id);
         flattenForProduct(prod, false);
     }
-    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProduct(Product prod) throws WrongProgramArgumentException,DeltaModellingException {
         flattenForProduct(prod, true);
     }
-    public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProduct(String id, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         Product prod = this.findProduct(id);
         flattenForProduct(prod, check);
     }
     
-    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,ASTNodeNotFoundException {
+    public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         if (verbose)
             System.out.println("--- configuring product: " + prod.getName());
 
@@ -80,7 +80,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Apply deltas to model
      */
-    public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+    public void Model.applyDeltas(ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         // TODO/FIXME: The following code is sort of hack-ish and slow. Find a better way
         //             to flush the correct cache at the same time (or avoid flushing at all?)
         for (DeltaDecl delta : deltas) {
@@ -97,7 +97,7 @@ aspect ProductFlattener {
     * 
     * These "apply" methods are defined in "DeltaModifierApplicator.jadd"
     */
-    public void Model.applyDelta(DeltaDecl delta) throws ASTNodeNotFoundException {
+    public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
         for (ModuleModifier mod : delta.getModuleModifiers()) {
             System.out.println("*** applying ModuleModifier " + mod);
             mod.apply();
@@ -123,13 +123,13 @@ aspect ProductFlattener {
      * defined in the model (in different CompilationUnits), as the ABS grammar allows this. 
      * FIXME It should be caught by the type checker.
      */
-    public ProductLine Model.findProductLine() throws ASTNodeNotFoundException {
+    public ProductLine Model.findProductLine() throws DeltaModellingException {
         for (CompilationUnit u : this.getCompilationUnits()) {
             if (u.hasProductLine()) {
                 return u.getProductLine();
             }
         }
-        throw new ASTNodeNotFoundException("Model is missing a 'productline' definition");
+        throw new DeltaModellingException("Model is missing a 'productline' definition");
     }
     
     

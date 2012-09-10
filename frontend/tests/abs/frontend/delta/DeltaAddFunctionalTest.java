@@ -17,7 +17,7 @@ import abs.frontend.ast.FunctionDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.TypeSynDecl;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 /**
  * Testing the adding functions, data types and type synonyms using deltas.
@@ -27,7 +27,7 @@ import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
 public class DeltaAddFunctionalTest extends DeltaTest {
 
     @Test
-    public void addFun() throws ASTNodeNotFoundException {
+    public void addFun() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "def Int i() = 1;"
@@ -56,7 +56,7 @@ public class DeltaAddFunctionalTest extends DeltaTest {
     }
     
     @Test
-    public void addDataType() throws ASTNodeNotFoundException {
+    public void addDataType() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "data O = O;"
@@ -85,7 +85,7 @@ public class DeltaAddFunctionalTest extends DeltaTest {
     }
     
     @Test
-    public void addTypeSyn() throws ASTNodeNotFoundException {
+    public void addTypeSyn() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "type X = Int;"

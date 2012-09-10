@@ -17,7 +17,7 @@ import abs.frontend.typechecker.TypeCheckerException;
 public class OriginalCallTest extends DeltaTest {
 
     @Test
-    public void originalCall() throws ASTNodeNotFoundException {
+    public void originalCall() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -52,7 +52,7 @@ public class OriginalCallTest extends DeltaTest {
     }
 
     @Test
-    public void originalCall2() throws ASTNodeNotFoundException {
+    public void originalCall2() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -81,7 +81,7 @@ public class OriginalCallTest extends DeltaTest {
     
     
     @Test
-    public void oneDeltaMultipleCalls() throws ASTNodeNotFoundException {
+    public void oneDeltaMultipleCalls() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -103,7 +103,7 @@ public class OriginalCallTest extends DeltaTest {
     }
 
     @Test
-    public void multipleCallsToSameMethod() throws ASTNodeNotFoundException {
+    public void multipleCallsToSameMethod() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -125,7 +125,7 @@ public class OriginalCallTest extends DeltaTest {
     
     
     @Test
-    public void targetedOriginalCall() throws ASTNodeNotFoundException {
+    public void targetedOriginalCall() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit m() {} }"
@@ -149,7 +149,7 @@ public class OriginalCallTest extends DeltaTest {
     }
 
     @Test
-    public void multipleTargetedOriginalCalls() throws ASTNodeNotFoundException {
+    public void multipleTargetedOriginalCalls() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { }"
@@ -174,7 +174,7 @@ public class OriginalCallTest extends DeltaTest {
     }
 
     @Test
-    public void originalNotFound() throws ASTNodeNotFoundException {
+    public void originalNotFound() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { }"
@@ -186,14 +186,14 @@ public class OriginalCallTest extends DeltaTest {
 
         try {
             model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
         fail("Expected ASTNodeNotFoundException");
     }
 
     @Test
-    public void targetedOriginalNotFound() throws ASTNodeNotFoundException {
+    public void targetedOriginalNotFound() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { }"
@@ -205,14 +205,14 @@ public class OriginalCallTest extends DeltaTest {
 
         try {
             model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
         fail("Expected ASTNodeNotFoundException");
     }
 
     @Test
-    public void targetedDeltaNotYetApplied() throws ASTNodeNotFoundException {
+    public void targetedDeltaNotYetApplied() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "class C { Unit m() {} }"
@@ -229,7 +229,7 @@ public class OriginalCallTest extends DeltaTest {
         try {
             // apply deltas in wrong order - note that D2 has a targeted original call to a method in D1
             model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d2,d1)));
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             caught = true;
         }
         assertTrue(caught);

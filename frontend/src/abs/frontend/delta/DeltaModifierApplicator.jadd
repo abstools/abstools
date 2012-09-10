@@ -16,27 +16,27 @@ import abs.frontend.parser.*;
  */
 aspect DeltaModifierApplicator {
 
-    abstract public void ModuleModifier.apply() throws ASTNodeNotFoundException;
+    abstract public void ModuleModifier.apply() throws DeltaModellingException;
 
     /**************************************************************************
      * OOModifiers add/remove/modify classes or interfaces
      * they are applied to Modules
      */
     
-    public void AddClassModifier.apply() throws ASTNodeNotFoundException {
+    public void AddClassModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         ClassDecl cls = getClassDecl().fullCopy();
         cls.setName(getSimpleName());
         module.getDecls().addChild(cls);
     }
     
-    public void RemoveClassModifier.apply() throws ASTNodeNotFoundException {
+    public void RemoveClassModifier.apply() throws DeltaModellingException {
         ClassDecl cls = findClass();
         ModuleDecl module = cls.getModule();
         module.getDecls().removeChild(module.getDecls().getIndexOfChild(cls));
     }
 
-    public void ModifyClassModifier.apply() throws ASTNodeNotFoundException {
+    public void ModifyClassModifier.apply() throws DeltaModellingException {
         ClassDecl cls = findClass();
         
         // add any interfaces added by the ClassModifier
@@ -55,7 +55,7 @@ aspect DeltaModifierApplicator {
                 }
             }
             if (! found)
-                throw new ASTNodeNotFoundException("Class " + cls.getName() + " does not implement interface " + toRemove.getName() + ".");
+                throw new DeltaModellingException("Class " + cls.getName() + " does not implement interface " + toRemove.getName() + ".");
         }
 
         // apply all modifiers
@@ -64,13 +64,13 @@ aspect DeltaModifierApplicator {
         }
     }
     
-    public void AddInterfaceModifier.apply() throws ASTNodeNotFoundException {
+    public void AddInterfaceModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         InterfaceDecl decl = getInterfaceDecl().fullCopy();
         decl.setName(getSimpleName());
         module.getDecls().addChild(decl);
     }
-    public void ModifyInterfaceModifier.apply() throws ASTNodeNotFoundException {
+    public void ModifyInterfaceModifier.apply() throws DeltaModellingException {
         InterfaceDecl iface = this.findInterface();
         // apply all modifiers
         for (MethodSigModifier mod : this.getMethodSigModifiers()) {
@@ -87,7 +87,7 @@ aspect DeltaModifierApplicator {
         return "adds function " + getFunctionDecl().getName();
     }
     
-    public void AddFunctionModifier.apply() throws ASTNodeNotFoundException {
+    public void AddFunctionModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         module.getDecls().addChild(this.getFunctionDecl().fullCopy());
     }
@@ -96,7 +96,7 @@ aspect DeltaModifierApplicator {
         return "adds data type " + getDataTypeDecl().getName();
     }
     
-    public void AddDataTypeModifier.apply() throws ASTNodeNotFoundException {
+    public void AddDataTypeModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         
         DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
@@ -116,7 +116,7 @@ aspect DeltaModifierApplicator {
         return "adds type synonym " + getTypeSynDecl().getName();
     }
     
-    public void AddTypeSynModifier.apply() throws ASTNodeNotFoundException {
+    public void AddTypeSynModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
     }
@@ -127,7 +127,7 @@ aspect DeltaModifierApplicator {
      * find the ModuleDecl to which this ModuleModifier applies
      * if qualified => easy; if unqualified => look in delta's 'uses' list.
      */
-    public ModuleDecl ModuleModifier.findModule() throws ASTNodeNotFoundException {
+    public ModuleDecl ModuleModifier.findModule() throws DeltaModellingException {
         String moduleid;
         Name name = new Name(getName());
         if (name.isSimple()) {
@@ -137,7 +137,7 @@ aspect DeltaModifierApplicator {
             try {
                 moduleid = this.getDelta().getDeltaAccess(0).getModuleName();
             } catch(NullPointerException e) {
-                throw new ASTNodeNotFoundException("Unqualified name of modified entity requires "
+                throw new DeltaModellingException("Unqualified name of modified entity requires "
                         + "a \'uses\' statement to determine the module to be modified.");
             }
         } else {
@@ -149,7 +149,7 @@ aspect DeltaModifierApplicator {
                 return module;
             }
         }
-        throw new ASTNodeNotFoundException("Cannot find module " + moduleid + " for adding ModuleModifier " + getName()
+        throw new DeltaModellingException("Cannot find module " + moduleid + " for adding ModuleModifier " + getName()
                 + " in Delta " + getDelta().getName() + ".");
     }
 
@@ -159,7 +159,7 @@ aspect DeltaModifierApplicator {
      * helper methods
      * find the (Class or Interface) Decl which should be modified by this OOModifier
      */
-    public ClassDecl ClassModifier.findClass() throws ASTNodeNotFoundException {
+    public ClassDecl ClassModifier.findClass() throws DeltaModellingException {
         System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
 
         ModuleDecl module = findModule();
@@ -168,11 +168,11 @@ aspect DeltaModifierApplicator {
                 return (ClassDecl) decl;
         }
         // not found
-        throw new ASTNodeNotFoundException("Delta " + getDelta().getName() 
+        throw new DeltaModellingException("Delta " + getDelta().getName() 
                 + " wants to modify class declaration " + this.getName() + ", which was not found.");
     }
 
-    public InterfaceDecl InterfaceModifier.findInterface() throws ASTNodeNotFoundException {
+    public InterfaceDecl InterfaceModifier.findInterface() throws DeltaModellingException {
         System.out.println("=== Delta " + getDelta().getName() + " looking for InterfaceDecl: " + this.getName());
 
         ModuleDecl module = findModule();
@@ -181,7 +181,7 @@ aspect DeltaModifierApplicator {
                 return (InterfaceDecl) decl;
         }
         // not found
-        throw new ASTNodeNotFoundException("Delta " + getDelta().getName() 
+        throw new DeltaModellingException("Delta " + getDelta().getName() 
                 + " wants to modify interface declaration " + this.getName() + ", which was not found.");
     }
 
@@ -191,9 +191,9 @@ aspect DeltaModifierApplicator {
      * - add/remove/modify methods
      * - add/remove fields
      */
-    public abstract void Modifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException;
+    public abstract void Modifier.applyTo(ClassDecl cd) throws DeltaModellingException;
 
-    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+    public void RemoveMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
         MethodSig mysig = this.getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
@@ -209,7 +209,7 @@ aspect DeltaModifierApplicator {
             // remove MethodImpl from list
             cd.getMethods().removeChild(found);
         else
-            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+            throw new DeltaModellingException("Delta " + this.getDelta().getName() 
                     + " wants to remove method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
     }
 
@@ -217,7 +217,7 @@ aspect DeltaModifierApplicator {
         cd.addMethod(this.getMethodImpl().fullCopy());
     }
 
-    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+    public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
         MethodSig mysig = this.getMethodImpl().getMethodSig();
 
         // in given ClassDecl: find MethodDecl that matches sig
@@ -233,11 +233,11 @@ aspect DeltaModifierApplicator {
             // replace MethodImpl
             cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
         else
-            throw new ASTNodeNotFoundException("Delta " + "." + this.getDelta().getName() 
+            throw new DeltaModellingException("Delta " + "." + this.getDelta().getName() 
                     + " wants to modify method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
     }
 
-    public void RemoveFieldModifier.applyTo(ClassDecl cd) throws ASTNodeNotFoundException {
+    public void RemoveFieldModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
         FieldDecl myfield = this.getFieldDecl();
 
         // in given ClassDecl: find FieldDecl that matches this
@@ -252,7 +252,7 @@ aspect DeltaModifierApplicator {
         if (found >= 0)
             cd.getFields().removeChild(found);
         else
-            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+            throw new DeltaModellingException("Delta " + this.getDelta().getName() 
                     + " wants to remove field " + cd.qualifiedName() + "." + myfield + ", which was not found.");
     }
 
@@ -264,12 +264,12 @@ aspect DeltaModifierApplicator {
      * MethodSigModifiers are applied to Interfaces
      * - add/remove method signatures
      */
-    public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException;
+    public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException;
 
-    public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException {
+    public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
         iface.addBody(this.getMethodSig().fullCopy());
     }
-    public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws ASTNodeNotFoundException {
+    public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
         MethodSig mysig = this.getMethodSig();
 
         // in given InterfaceDecl: find MethodSig that matches mysig
@@ -285,7 +285,7 @@ aspect DeltaModifierApplicator {
             // remove MethodSig
             iface.getBodys().removeChild(found);
         else
-            throw new ASTNodeNotFoundException("Delta " + this.getDelta().getName() 
+            throw new DeltaModellingException("Delta " + this.getDelta().getName() 
                     + " wants to remove method signature " + iface.qualifiedName() + "." + mysig + ", which was not found.");
     }
     

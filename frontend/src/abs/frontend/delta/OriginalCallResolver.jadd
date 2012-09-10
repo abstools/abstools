@@ -11,7 +11,7 @@ aspect OriginalCallResolver {
      * declaration in the list of previously applied deltas + core,
      * copying it, and calling it instead of original().
      */
-    public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+    public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
         
         for (DeltaDecl delta : deltas) {
@@ -26,7 +26,7 @@ aspect OriginalCallResolver {
      * deal with this case.
      */
     public void DeltaDecl.resolveOriginalCalls(
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
         System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
         for (ModuleModifier cm : this.getModuleModifiers()) {
@@ -57,7 +57,7 @@ aspect OriginalCallResolver {
      * inside this ModifyMethodModifier
      */
     public void ModifyMethodModifier.resolveOriginalCalls(
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
         for (Stmt stmt : this.getMethodImpl().getBlock().getStmts())
             stmt.resolveOriginalCalls(this, deltas);
@@ -68,7 +68,7 @@ aspect OriginalCallResolver {
      */
     public void ASTNode.resolveOriginalCalls(
             ModifyMethodModifier mod, 
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
         for(int i = 0; i < getNumChild(); i++) {
             getChildNoTransform(i).resolveOriginalCalls(mod, deltas);
@@ -86,7 +86,7 @@ aspect OriginalCallResolver {
      */
     public void OriginalCall.resolveOriginalCalls(
             ModifyMethodModifier mod, 
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
         // found OriginalCall
         System.out.println("*** found: " + this);
@@ -96,10 +96,10 @@ aspect OriginalCallResolver {
         
         // Add the copied method to the delta in which this OriginalCall occured
         // - omit if the method is already cached
-        String methodId = mod.className() + "." + originalMethodCopy.getMethodSig().getName();
+        String methodId = mod.targetClassName() + "." + originalMethodCopy.getMethodSig().getName();
         if (! mod.getModel().containsCachedOriginalMethod(methodId)) {
             ModifyClassModifier cm = new ModifyClassModifier();
-            cm.setName(mod.className());
+            cm.setName(mod.targetClassName());
             cm.addModifier(new AddMethodModifier(originalMethodCopy));
             mod.getDelta().addModuleModifier(cm);
             mod.getModel().cacheOriginalMethod(methodId);
@@ -121,9 +121,9 @@ aspect OriginalCallResolver {
      */
     public MethodImpl ModifyMethodModifier.findOriginalMethod(
             OriginalCall oc, 
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        String classid = this.className();
+        String classid = this.targetClassName();
         String methodid = this.getMethodImpl().getMethodSig().getName();
         MethodImpl originalMethodCopy;
         
@@ -140,7 +140,7 @@ aspect OriginalCallResolver {
                         return originalMethodCopy;
                     }
                 }
-                throw new ASTNodeNotFoundException("Delta " + targetDeltaID 
+                throw new DeltaModellingException("Delta " + targetDeltaID 
                         + " is target of an original call, but has not yet been applied");
             }
             
@@ -160,7 +160,7 @@ aspect OriginalCallResolver {
     public MethodImpl ModifyMethodModifier.findOriginalInAppliedDeltasAndCore(            
             String methodid,
             String classid, 
-            ArrayList<DeltaDecl> deltas) throws ASTNodeNotFoundException {
+            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
         System.out.println("*** searching for method " + classid + "." + methodid);
         
@@ -168,7 +168,7 @@ aspect OriginalCallResolver {
         for (DeltaDecl delta : deltas) {
             try {
                 return findOriginalInDelta(methodid, classid, delta);
-            } catch(ASTNodeNotFoundException e) {
+            } catch(DeltaModellingException e) {
                 // continue search in next delta, then core
                 continue;
             }
@@ -177,9 +177,9 @@ aspect OriginalCallResolver {
         // search in core classes
         try {
             return findOriginalInCore(methodid, classid);
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             // give up
-            throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid 
+            throw new DeltaModellingException("Could not find original implementation of method " + classid 
                     + "." + methodid);
         }
     }
@@ -190,7 +190,7 @@ aspect OriginalCallResolver {
     public MethodImpl ModifyMethodModifier.findOriginalInDelta(            
             String methodid,
             String classid, 
-            DeltaDecl delta) throws ASTNodeNotFoundException {
+            DeltaDecl delta) throws DeltaModellingException {
         
         System.out.println("*** searching in delta " + delta.getName());
         for (ModuleModifier cm : delta.getModuleModifiers()) {
@@ -207,7 +207,7 @@ aspect OriginalCallResolver {
                                 return copyMethod(method, delta.getName());
                         } else if (m instanceof RemoveMethodModifier) {
                             if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
-                                throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                                throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                                         + " -- it was removed by delta " + delta.getName());
                         }
                 } else if (cm instanceof AddClassModifier) {
@@ -215,13 +215,13 @@ aspect OriginalCallResolver {
                         if (method.getMethodSig().getName().equals(methodid))
                             return copyMethod(method, delta.getName());
                 } else if (cm instanceof RemoveClassModifier) {
-                    throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+                    throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                             + " -- it was removed by delta " + delta.getName());
                 }
             }
         }
         // not found
-        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                 + " in delta " + delta.getName());
     }
 
@@ -231,7 +231,7 @@ aspect OriginalCallResolver {
      */
     public MethodImpl ModifyMethodModifier.findOriginalInCore(
             String methodid,
-            String classid) throws ASTNodeNotFoundException {
+            String classid) throws DeltaModellingException {
 
         for (Decl cls : getDelta().getModel().getDecls()) {
             if (cls instanceof ClassDecl) {
@@ -243,7 +243,7 @@ aspect OriginalCallResolver {
             }
         }
         // not found
-        throw new ASTNodeNotFoundException("Could not find original implementation of method " + classid + "." + methodid
+        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                 + " in the core.");
 
     }

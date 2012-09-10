@@ -55,7 +55,7 @@ public class JavaBackendTest extends ABSTest {
         assertValidJava(getJavaCode(m));
     }
 
-    static void assertValidJava(JavaCode javaCode) throws Exception {
+    protected static void assertValidJava(JavaCode javaCode) throws Exception {
         try {
             javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
@@ -70,7 +70,7 @@ public class JavaBackendTest extends ABSTest {
      * compiles and executes the given code
      * ABS assertions can be used to check the result 
      */
-    void assertValidJavaExecution(String absFile, boolean useStdLib) throws Exception {
+    protected void assertValidJavaExecution(String absFile, boolean useStdLib) throws Exception {
         FileReader fileReader = new FileReader(absFile);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         List<String> lines = new ArrayList<String>();

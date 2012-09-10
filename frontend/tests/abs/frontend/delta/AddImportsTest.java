@@ -19,7 +19,7 @@ import abs.frontend.delta.exceptions.*;
 public class AddImportsTest extends DeltaTest {
     
     @Test
-    public void addQualImport() throws ASTNodeNotFoundException {
+    public void addQualImport() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M1; export *;"
                 + "class C {}"
@@ -46,7 +46,7 @@ public class AddImportsTest extends DeltaTest {
     }
 
     @Test
-    public void addQualImport2() throws ASTNodeNotFoundException {
+    public void addQualImport2() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M; export *;"
                 + "interface I { Unit m(); }"
@@ -70,7 +70,7 @@ public class AddImportsTest extends DeltaTest {
     }
 
     @Test
-    public void addQualImport3() throws ASTNodeNotFoundException {
+    public void addQualImport3() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M; export *;"
                 + "interface I { Unit m(); }"
@@ -98,7 +98,7 @@ public class AddImportsTest extends DeltaTest {
     }
     
     @Test
-    public void addUnqualImport() throws ASTNodeNotFoundException {
+    public void addUnqualImport() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M1; export *;"
                 + "class C {}"
@@ -119,7 +119,7 @@ public class AddImportsTest extends DeltaTest {
     }
 
     @Test
-    public void doNotAddImport() throws ASTNodeNotFoundException {
+    public void doNotAddImport() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M1; export *;"
                 + "class C {}"

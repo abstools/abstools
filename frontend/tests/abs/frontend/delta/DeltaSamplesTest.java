@@ -18,7 +18,7 @@ import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class DeltaSamplesTest extends FrontendTest {
 
@@ -108,7 +108,7 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
         try {
             m.flattenForProduct("B");
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
         fail("Expected ASTNodeNotFoundException");

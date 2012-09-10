@@ -20,7 +20,7 @@ import abs.frontend.delta.exceptions.*;
 public class AddRemoveInterfacesTest extends DeltaTest {
     
     @Test
-    public void addIfaceDecl() throws ASTNodeNotFoundException {
+    public void addIfaceDecl() throws DeltaModellingException {
         final ArrayList<String> codeVariants = new ArrayList<String>(Arrays.asList(
                 "module M;"
                 + "interface I { Int fooi(); }"
@@ -66,7 +66,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
-    public void modifyIfaceDeclAddMethodSig() throws ASTNodeNotFoundException {
+    public void modifyIfaceDeclAddMethodSig() throws DeltaModellingException {
         final ArrayList<String> codeVariants = new ArrayList<String>(Arrays.asList(
                 "module M;"
                 + "interface I { Int a(); }"
@@ -96,7 +96,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
-    public void modifyIfaceDeclRemoveMethodSig() throws ASTNodeNotFoundException {
+    public void modifyIfaceDeclRemoveMethodSig() throws DeltaModellingException {
         final ArrayList<String> codeVariants = new ArrayList<String>(Arrays.asList(
                 "module M;"
                 + "interface I { Int a(); Unit b(); }"
@@ -126,7 +126,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
         
     @Test
-    public void addImplements() throws ASTNodeNotFoundException {
+    public void addImplements() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -149,7 +149,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
-    public void removeImplements() throws ASTNodeNotFoundException {
+    public void removeImplements() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -168,7 +168,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
-    public void removeImplementsNotFound() throws ASTNodeNotFoundException {
+    public void removeImplementsNotFound() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -184,14 +184,14 @@ public class AddRemoveInterfacesTest extends DeltaTest {
 
         try {
             model.applyDelta(delta);
-        } catch (ASTNodeNotFoundException e) {
+        } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
         fail("Expected ASTNodeNotFoundException");
     }
 
     @Test
-    public void addRemoveImplements() throws ASTNodeNotFoundException {
+    public void addRemoveImplements() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -212,7 +212,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
-    public void addRemove2Implements() throws ASTNodeNotFoundException {
+    public void addRemove2Implements() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface H {}"

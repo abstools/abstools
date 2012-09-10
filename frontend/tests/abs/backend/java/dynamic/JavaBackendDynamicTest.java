@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.java;
+package abs.backend.java.dynamic;
 
 import static abs.ABSTest.Config.TYPE_CHECK;
 import static abs.ABSTest.Config.WITH_STD_LIB;
@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import org.junit.Test;
+
+import abs.backend.java.JavaBackendTest;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.frontend.analyser.SemanticErrorList;
