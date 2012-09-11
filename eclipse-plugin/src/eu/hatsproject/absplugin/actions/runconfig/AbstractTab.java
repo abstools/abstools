@@ -24,7 +24,7 @@ import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.AbsJobException;
@@ -134,7 +134,7 @@ public abstract class AbstractTab extends AbstractLaunchConfigurationTab {
 			} catch (WrongProgramArgumentException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
-			} catch (ASTNodeNotFoundException e) {
+			} catch (DeltaModellingException e) {
 				setErrorMessage(e.getMessage());
 				res = false;
             }

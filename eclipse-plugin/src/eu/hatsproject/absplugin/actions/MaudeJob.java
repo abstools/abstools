@@ -18,7 +18,7 @@ import org.osgi.framework.Bundle;
 import abs.backend.maude.MaudeCompiler;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.*;
 import eu.hatsproject.absplugin.internal.NoModelException;
@@ -106,7 +106,7 @@ public class MaudeJob extends Job{
 			return new Status(IStatus.INFO, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection. Code has type errors.", e5);
 		} catch (WrongProgramArgumentException e) {
 			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
-		} catch (ASTNodeNotFoundException e) {
+		} catch (DeltaModellingException e) {
 			return new Status(IStatus.ERROR, PLUGIN_ID, MAUDE_ERROR, "Could not compile current selection.", e);
 		} catch (NoModelException e) {
 			return new Status(IStatus.INFO, PLUGIN_ID, "No ABS model in project");
@@ -174,11 +174,11 @@ public class MaudeJob extends Job{
 	 * will be compiled, otherwise the project currently selected in the project explorer will be compiled.
 	 * @throws ParseException Is thrown, if the project which is compiled has parse errors
 	 * @throws TypeCheckerException Is thrown, if the project which is compiled has type errors
-	 * @throws ASTNodeNotFoundException 
+	 * @throws DeltaModellingException 
 	 * @throws WrongProgramArgumentException 
 	 * @throws NoModelException 
 	 */
-	private void compileMaude(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, ASTNodeNotFoundException, NoModelException {
+	private void compileMaude(IProgressMonitor monitor, AbsNature nature) throws CoreException, IOException, ParseException, TypeCheckerException, WrongProgramArgumentException, DeltaModellingException, NoModelException {
 		PrintStream ps = null;
 		FileInputStream fis = null;
 		try{

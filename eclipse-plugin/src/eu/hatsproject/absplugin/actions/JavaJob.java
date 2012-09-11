@@ -37,7 +37,7 @@ import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
 import abs.frontend.ast.Product;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerObserver;
 import eu.hatsproject.absplugin.actions.runconfig.RunConfigEnums.DebuggerScheduler;
 import eu.hatsproject.absplugin.actions.runconfig.java.EclipseScheduler;
@@ -309,7 +309,7 @@ private boolean useFifoSemantics;
 					}
 				} catch (WrongProgramArgumentException e) {
 					throw new AbsJobException(e);
-				} catch (ASTNodeNotFoundException e) {
+				} catch (DeltaModellingException e) {
 					throw new AbsJobException(e);
 				}
 			}

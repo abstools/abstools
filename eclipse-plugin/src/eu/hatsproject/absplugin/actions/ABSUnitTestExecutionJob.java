@@ -25,7 +25,7 @@ import abs.backend.tests.ABSTestRunnerGenerator;
 import abs.backend.tests.ASTBasedABSTestRunnerGenerator;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.exceptions.ParseException;
 import eu.hatsproject.absplugin.exceptions.TypeCheckerException;
@@ -110,7 +110,7 @@ public abstract class ABSUnitTestExecutionJob extends Job {
 	 * Generate an ABS file from an ABS project that can be used to execute unit tests
 	 * @throws ParseException Is thrown, if the project which is compiled has parse errors
 	 * @throws TypeCheckerException Is thrown, if the project which is compiled has type errors
-	 * @throws ASTNodeNotFoundException 
+	 * @throws DeltaModellingException 
 	 * @throws WrongProgramArgumentException 
 	 */
 	private void generateTestRunner(IProgressMonitor monitor, AbsNature nature) 

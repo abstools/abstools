@@ -4,7 +4,7 @@ ant -Declipse.home=<path to eclipse> build-all-plugins
 ant -Declipse.home=<path to eclipse> generate-update-site
 
 OR
-ant -Declipse.home=/Applications/eclipse/ build-eclipse-plugin generate-update-site
+ant -Declipse.home=<path to eclipse> build-eclipse-plugin generate-update-site
 
 Add local update site to Eclipse:
 

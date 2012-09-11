@@ -14,7 +14,7 @@ import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector;
 import org.eclipse.jface.text.hyperlink.IHyperlink;
 
 import abs.frontend.ast.*;
-import abs.frontend.delta.exceptions.ASTNodeNotFoundException;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
 import beaver.Symbol;
@@ -323,7 +323,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
                 try {
                     decl = cm.findClass();
-                } catch (ASTNodeNotFoundException e) {
+                } catch (DeltaModellingException e) {
                     decl = null;
                 }
             } else if (node instanceof MethodSig) {
