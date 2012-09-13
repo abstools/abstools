@@ -1,8 +1,5 @@
-import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.AbstractMap.*;
 
 aspect Variables {
 
@@ -66,7 +63,7 @@ aspect Variables {
         isRepeated = true;
       IntType type = (IntType) getAType();
       final BoundaryInt[] boundaries = {type.getMin(),type.getMax()};
-      return new Entry(){ public String getKey(){return pname()+"."+getName();}
+      return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
                           public BoundaryInt[] getValue(){return boundaries;}
                           public Attribute getAttribute(){return Attribute.this;}};
     } else
@@ -83,7 +80,7 @@ aspect Variables {
      for (int i=1; i<bsize; i++) {
     	 values[i] = type.getBoundaryVal(i-1);
      }
-     return new Entry(){ public String getKey(){return pname()+"."+getName();}
+     return new Entry<String,BoundaryInt[]>(){ public String getKey(){return pname()+"."+getName();}
                          public BoundaryInt[] getValue(){return values;}
                          public Attribute getAttribute(){return Attribute.this;}};
     } else return null;

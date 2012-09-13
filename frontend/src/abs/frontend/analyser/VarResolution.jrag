@@ -4,9 +4,11 @@ aspect VarResolution {
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
-    /* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different */
+    /* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
+     * Do not attempt to rewrite within Deltas, as getDecl() will throw an exception.
+     */
     rewrite VarUse {
-       when (getDecl() instanceof FieldDecl)
+       when (calcContextNode(ModuleModifier.class) == null && getDecl() instanceof FieldDecl)
        to FieldUse {
         FieldUse fu=new FieldUse(getName());
         /* Patch position to cover original range.
