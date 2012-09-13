@@ -103,15 +103,10 @@ public class DeltaSamplesTest extends FrontendTest {
         Assert.assertFalse(m.hasTypeErrors());
     }
 
-    @Test
+    @Test(expected=DeltaModellingException.class)
     public void test_ticket324_B() throws Exception {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
-        try {
-            m.flattenForProduct("B");
-        } catch (DeltaModellingException e) {
-            return; // this is the expected outcome
-        }
-        fail("Expected ASTNodeNotFoundException");
+        m.flattenForProduct("B");
     }
     
     @Test

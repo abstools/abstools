@@ -368,23 +368,17 @@ public class TypeCheckerHelper {
             if (i instanceof StarImport) {
                 StarImport si = (StarImport) i;
                 ModuleDecl md = mod.lookupModule(si.getModuleName());
-                if (md == null) {
-                    if (!Constants.STDLIB_NAME.equals(si.getModuleName()))
-                        throw new TypeCheckerException(new TypeError(si, ErrorMessage.MODULE_NOT_RESOLVABLE,
-                                si.getModuleName()));
-                } else {
+                if (md != null) {
                     res.addAllNamesNoHiding(md.getExportedNames());
                 }
             } else if (i instanceof NamedImport) {
                 NamedImport ni = (NamedImport) i;
                 for (Name n : ni.getNames()) {
                     ModuleDecl md = mod.lookupModule(n.getModuleName());
-                    if (md == null) {
-                        if (!Constants.STDLIB_NAME.equals(n.getModuleName()))
-                            throw new TypeCheckerException(new TypeError(n, ErrorMessage.MODULE_NOT_RESOLVABLE,
-                                    n.getModuleName()));
-                    }
-                    res.addAllNames(md.getExportedNames(), n);
+                    if (md != null)
+                        try {
+                            res.addAllNames(md.getExportedNames(), n);
+                        } catch (TypeCheckerException e) {} // NADA
                 }
             } else if (i instanceof FromImport) {
                 FromImport fi = (FromImport) i;

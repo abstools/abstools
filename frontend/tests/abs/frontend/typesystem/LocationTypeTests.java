@@ -304,16 +304,11 @@ public class LocationTypeTests extends FrontendTest {
         assertLocationTypeError("{ [Near] I i; [Far] I j; j = i.n(j); }");
     }
     
-    @Test
+    @Test(expected=LocationTypeCheckerException.class)
     public void multipleError() {
         Model m = assertParse("interface I { } class C { [Far] [Near] I i; }",WITH_STD_LIB);
         ClassDecl decl = getFirstClassDecl(m);
-        try {
-            LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
-            fail("Expected exception");
-        } catch(LocationTypeCheckerException e) {
-            assertTrue(true);
-        }
+        LocationTypeExtension.getLocationTypeFromAnnotations(decl.getField(0).getType());
     }
     
     @Test
@@ -383,6 +378,7 @@ public class LocationTypeTests extends FrontendTest {
     
     private String writeBackSolutions(String code) throws Exception {
         File f = File.createTempFile("test", ".abs");
+        f.deleteOnExit();
         FileWriter fw = new FileWriter(f);
         fw.write(code);
         fw.close();
@@ -392,7 +388,9 @@ public class LocationTypeTests extends FrontendTest {
         SemanticErrorList e = m.typeCheck();
         assertEquals(e.isEmpty() ? "" : "Found error: "+e.get(0).getMessage(), false, !e.isEmpty());
         new InferMain().writeInferenceResultsBack(ltie.getResults());
-        return FileUtils.fileToStringBuilder(f).toString();
+        String res = FileUtils.fileToStringBuilder(f).toString();
+        f.delete();
+        return res;
     }
     
     private Model assertInferOk(String string, LocationType expected) {
@@ -406,10 +404,4 @@ public class LocationTypeTests extends FrontendTest {
     private void assertInferFails(String string) {
         assertInfer(string, null, true);
     }
-
-
-    
-
-
-
 }

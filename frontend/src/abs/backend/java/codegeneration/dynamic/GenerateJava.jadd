@@ -742,7 +742,7 @@ aspect GenerateJava {
             stream.print("if (" + bindingName + " != null) ");
             stream.println("return new Object() {");
             stream.print("  public " + expType + " execute(");
-            ArrayList<PatternVar> freeVars = pattern.getFreePatternVars();
+            java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
             boolean first = true;
             for (PatternVar var : freeVars) {
                 if (first) first = false;

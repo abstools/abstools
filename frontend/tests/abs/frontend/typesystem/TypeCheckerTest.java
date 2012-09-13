@@ -34,7 +34,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void tch_npe() throws Exception {
-        assertTypeErrors("module Test; import ABS.StdLib.Bar; { ABS.StdLib.Bar x; }", new Config[0]);
+        assertTypeErrors("module Test; import ABS.StdLib.Bar; { ABS.StdLib.Bar x; }", Config.EXPECT_TYPE_ERROR);
     }
 
     @Test

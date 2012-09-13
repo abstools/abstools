@@ -3,17 +3,15 @@
  */
 
 aspect FreePatternVars {
-    syn lazy ArrayList<PatternVar> Pattern.getFreePatternVars();
+    syn lazy java.util.List<PatternVar> Pattern.getFreePatternVars();
     
     eq PatternVar.getFreePatternVars() {
-        ArrayList<PatternVar> res = new ArrayList<PatternVar>(1);
-        res.add(this);
-        return res;
+        return Collections.singletonList(this);
     }
     
-    eq PatternVarUse.getFreePatternVars() = new ArrayList<PatternVar>(0);
-    eq LiteralPattern.getFreePatternVars() = new ArrayList<PatternVar>(0);
-    eq UnderscorePattern.getFreePatternVars() = new ArrayList<PatternVar>(0);
+    eq PatternVarUse.getFreePatternVars() = Collections.emptyList();
+    eq LiteralPattern.getFreePatternVars() = Collections.emptyList();
+    eq UnderscorePattern.getFreePatternVars() = Collections.emptyList();
     eq ConstructorPattern.getFreePatternVars() {
         ArrayList<PatternVar> res = new ArrayList<PatternVar>();
         for (Pattern p : getParams()) {
