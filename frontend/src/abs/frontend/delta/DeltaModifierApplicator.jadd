@@ -159,9 +159,9 @@ aspect DeltaModifierApplicator {
      * helper methods
      * find the (Class or Interface) Decl which should be modified by this OOModifier
      */
-    public ClassDecl ClassModifier.findClass() throws DeltaModellingException {
+    public ClassDecl ClassModifier.findClass() {
         System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
-
+        try {
         ModuleDecl module = findModule();
         for (Decl decl : module.getDecls()) {
             if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName()))
@@ -170,6 +170,7 @@ aspect DeltaModifierApplicator {
         // not found
         throw new DeltaModellingException("Delta " + getDelta().getName() 
                 + " wants to modify class declaration " + this.getName() + ", which was not found.");
+        } catch (DeltaModellingException e) { return null; }
     }
 
     public InterfaceDecl InterfaceModifier.findInterface() throws DeltaModellingException {

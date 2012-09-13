@@ -5,10 +5,9 @@ aspect VarResolution {
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
     /* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
-     * Do not attempt to rewrite within Deltas, as getDecl() will throw an exception.
      */
     rewrite VarUse {
-       when (calcContextNode(ModuleModifier.class) == null && getDecl() instanceof FieldDecl)
+       when (getDecl() instanceof FieldDecl)
        to FieldUse {
         FieldUse fu=new FieldUse(getName());
         /* Patch position to cover original range.
@@ -145,7 +144,7 @@ aspect VarResolution {
         
         for (DeltaDecl delta : getModel().getDeltaDecls()) {
             for (ModuleModifier mmod : delta.getModuleModifiers()) {
-                if (mmod.targetModuleName().equals(targetModule)) {
+                if (mmod.getModule() != null && mmod.targetModuleName().equals(targetModule)) {
                     
                     if (mmod instanceof AddClassModifier) {
                         if (mmod.getSimpleName().equals(targetClass)) {
@@ -173,7 +172,7 @@ aspect VarResolution {
         
         // search core
         ClassDecl cd = getModifyClassModifier().getClassDecl();
-        var = cd.locallookupVarOrFieldName(name, fieldOnly);
+        var = cd == null ? null : cd.locallookupVarOrFieldName(name, fieldOnly);
         
         return var;
     }

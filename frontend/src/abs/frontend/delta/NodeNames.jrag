@@ -30,7 +30,7 @@ aspect Name {
 
 //Inform modifier node about the module to which it applies
 aspect TargetModuleName {
- syn String ModuleModifier.targetModuleName() = this.getModule().getName();
+ syn String ModuleModifier.targetModuleName() = getModule() == null ? null : getModule().getName();
  
  inh String Modifier.targetModuleName();
  eq ModifyClassModifier.getModifier().targetModuleName() = this.targetModuleName();

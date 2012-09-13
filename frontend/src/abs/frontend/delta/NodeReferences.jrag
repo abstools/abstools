@@ -34,7 +34,7 @@ aspect Module {
     eq ModuleDecl.getDecl().getModule() = this;
 
     syn lazy ModuleDecl ModuleModifier.getModule() {
-        return this.findModule(); 
+        try { return findModule(); } catch (DeltaModellingException e) { return null; } 
     }
 }
 

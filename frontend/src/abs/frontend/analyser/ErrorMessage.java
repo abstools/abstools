@@ -87,7 +87,7 @@ public enum ErrorMessage {
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s"),
     AWAIT_TOO_PURE("You're not checking for anything observable in AWAIT."),
     WRONG_SCHEDULER_TYPE("Invalid scheduler expression type %s, should be ABS.Scheduler.Process.")
-    , ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in deltas.")
+    , ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas.")
     ;
 
     private String pattern;
