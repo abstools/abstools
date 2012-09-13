@@ -336,6 +336,11 @@ aspect TypeChecker {
        for (DeltaClause dc : getDeltaClauses()) {
            dc.typeCheck(e);
        }
+       Set<String> fs = new HashSet<String>();
+       for (Feature f : getOptionalFeatures()) {
+           if (!fs.add(f.getName()))
+               e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
+       }
     }
 
     public void DeltaClause.typeCheck(SemanticErrorList e) {

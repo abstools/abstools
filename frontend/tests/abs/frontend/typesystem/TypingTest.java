@@ -4,11 +4,16 @@
  */
 package abs.frontend.typesystem;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.SemanticError;
+import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ExpFunctionDef;
 import abs.frontend.ast.FieldDecl;
@@ -40,14 +45,12 @@ public class TypingTest extends FrontendTest {
         ReturnStmt s = (ReturnStmt) d.getMethod(0).getBlock().getStmt(0);
         assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(1), ((UnionType) s.getRetExp().getType())
                 .getType(0).getDecl());
-
     }
 
     @Test
     public void testInterfaceType() {
         Model m = assertParseOk("interface I { } class C {} { I i = new C(); I i2 = i; }");
         assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(), getTypeOfNthAssignment(m, 2));
-
     }
 
     @Test
@@ -171,5 +174,13 @@ public class TypingTest extends FrontendTest {
         TypeParameterDecl typeParameter = d.getTypeParameter(0);
         TypeParameter type = (TypeParameter) ((ExpFunctionDef) d.getFunctionDef()).getRhs().getType();
         assertEquals(typeParameter.getName(), type.getDecl().getName());
+    }
+    
+    @Test
+    public void test_DuplicateFeature() {
+        Model m = assertParseOk("productline Bar; features A,A;");
+        SemanticErrorList errs = m.getTypeErrors();
+        assertTrue(!errs.isEmpty());
+        assertThat(errs.getFirst(),instanceOf(SemanticError.class));
     }
 }
