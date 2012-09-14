@@ -95,7 +95,7 @@ public class MaudeTests extends ABSTest {
     }
 
     protected String getMaudeOutput(String maudeCode) throws IOException, InterruptedException {
-        StringBuffer result = new StringBuffer();
+        final StringBuffer result = new StringBuffer();
         // Assuming `maude' is in $PATH here.
 
         ProcessBuilder pb = new ProcessBuilder();
@@ -115,15 +115,23 @@ public class MaudeTests extends ABSTest {
         pb.redirectErrorStream(true);
         final Process p = pb.start();
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
         PrintWriter out = new PrintWriter(p.getOutputStream());
-        while (in.ready()) {
-            result.append(in.readLine());
-        }
+        Thread pin = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String l;
+                    while ((l = in.readLine()) != null) {
+                        result.append(l + "\n");
+                    }
+                } catch (IOException e) {}
+            }            
+        });
+        pin.start();
         out.println(maudeCode);
         // Shouldn't block here
-        out.println("rew start .");
-        out.println("quit");
+        out.println("rew start .\nquit");
         out.flush();
         Runnable killer = new Runnable() {
             
@@ -138,12 +146,11 @@ public class MaudeTests extends ABSTest {
         };
         Thread kT = new Thread(killer);
         kT.start();
-        String l;
-        while ((l = in.readLine()) != null) {
-            result.append(l + "\n");
-        }
         p.waitFor();
         kT.interrupt();
+        pin.join();
+        out.close();
+        in.close();
         return result.toString();
     }
 
