@@ -38,6 +38,10 @@ aspect DeltaModifierApplicator {
 
     public void ModifyClassModifier.apply() throws DeltaModellingException {
         ClassDecl cls = findClass();
+        if (cls == null)
+           throw new DeltaModellingException("Delta " + getDelta().getName() 
+                + " wants to modify class declaration " + getName() + ", which was not found.");
+
         
         // add any interfaces added by the ClassModifier
         for (InterfaceTypeUse iface : this.getAddedInterfaces()) {
@@ -215,7 +219,9 @@ aspect DeltaModifierApplicator {
     }
 
     public void AddMethodModifier.applyTo(ClassDecl cd) {
-        cd.addMethod(this.getMethodImpl().fullCopy());
+        assert cd != null;
+        assert getMethodImpl() != null;
+        cd.addMethod(getMethodImpl().fullCopy());
     }
 
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
