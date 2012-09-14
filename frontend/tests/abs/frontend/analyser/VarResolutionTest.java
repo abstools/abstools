@@ -7,26 +7,10 @@ package abs.frontend.analyser;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
 
 import abs.frontend.FrontendTest;
-import abs.frontend.ast.AssignStmt;
-import abs.frontend.ast.CaseExp;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.ConstructorPattern;
-import abs.frontend.ast.Exp;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.FieldUse;
-import abs.frontend.ast.LetExp;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.NegExp;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.PatternVar;
-import abs.frontend.ast.PatternVarDecl;
-import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.VarDecl;
-import abs.frontend.ast.VarOrFieldDecl;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 
@@ -51,7 +35,7 @@ public class VarResolutionTest extends FrontendTest {
     @Test
     public void testNestedPatternVar() {
         Model m = assertParseOkStdLib("data Foo = Bar(Bool); def Bool m(Foo f) = case f { Bar(y) => y; };");
-        VarUse v = (VarUse) getFirstCaseExpr(m);
+        assertThat(getFirstCaseExpr(m),instanceOf(VarUse.class));
         ConstructorPattern p = (ConstructorPattern) getFirstCasePattern(m);
         PatternVarDecl decl = ((PatternVar) p.getParam(0)).getVar();
         assertEquals("y", decl.getName());
@@ -63,7 +47,6 @@ public class VarResolutionTest extends FrontendTest {
         VarUse u = (VarUse) getFirstFunctionExpr(m);
         ParamDecl d = (ParamDecl) u.getDecl();
         assertEquals("b", d.getName());
-
     }
 
     @Test
@@ -73,7 +56,6 @@ public class VarResolutionTest extends FrontendTest {
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
         assertEquals(decl, u.getDecl());
-
     }
 
     @Test
@@ -83,7 +65,6 @@ public class VarResolutionTest extends FrontendTest {
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
         assertEquals(decl, u.getDecl());
-
     }
 
     @Test
@@ -93,7 +74,6 @@ public class VarResolutionTest extends FrontendTest {
         VarOrFieldDecl decl = e.getVar();
         VarUse u = (VarUse) e.getExp();
         assertEquals(decl, u.getDecl());
-
     }
 
     @Test
@@ -135,8 +115,9 @@ public class VarResolutionTest extends FrontendTest {
         assertEquals(f, ((FieldUse) s.getRetExp()).getDecl());
     }
 
-    private ModuleDecl getTestModule(Model m) {
-        return m.getCompilationUnit(1).getModuleDecl(0);
+    static private ModuleDecl getTestModule(Model m) {
+        ModuleDecl md = m.getCompilationUnit(1).getModuleDecl(0);
+        assertEquals("UnitTest",md.getName());
+        return md;
     }
-
 }

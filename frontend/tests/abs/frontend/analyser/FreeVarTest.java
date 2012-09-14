@@ -6,10 +6,7 @@ package abs.frontend.analyser;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -122,21 +119,18 @@ public class FreeVarTest extends FrontendTest {
     }
 
     @Test
-    public void ConstructorApp() {
+    public void constructorApp() {
         Exp e = getSecondExp("data D = C(Bool);{ Bool b; D d = C(b); }");
         assertEquals(e.getFreeVars(), "b");
     }
 
-
     @Test
-    public void IfExpr() {
+    public void ifExpr() {
         Exp e = getExp("{ Int x = 3; Int y = 4; Int z = 5; Int a = if x == 3 then y else z; }", 3);
         assertEquals(e.getFreeVars(), "x", "y", "z");
     }
     
     public void assertEquals(Set<String> actual, String... expected) {
         Assert.assertEquals(new HashSet<String>(Arrays.asList(expected)), actual);
-
     }
-
 }
