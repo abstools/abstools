@@ -110,10 +110,8 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("one$ORIGIN_core"));
         // make sure method has the right body
         assertTrue(cls.getMethod(1).getBlock().getStmt(0) instanceof ReturnStmt);
-
     }
-    
-    
+
     @Test
     public void oneDeltaMultipleCalls() throws DeltaModellingException {
         Model model = assertParseOk(
@@ -156,7 +154,6 @@ public class OriginalCallTest extends DeltaTest {
         
         assertEquals(delta.getModuleModifiers().toString(),2, delta.getNumModuleModifier());
     }
-    
     
     @Test
     public void targetedOriginalCall() throws DeltaModellingException {
@@ -207,7 +204,7 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
 
-    @Test
+    @Test(expected=DeltaModellingException.class)
     public void originalNotFound() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
@@ -218,15 +215,10 @@ public class OriginalCallTest extends DeltaTest {
         
         DeltaDecl d1 = findDelta(model, "D1");
 
-        try {
-            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
-        } catch (DeltaModellingException e) {
-            return; // this is the expected outcome
-        }
-        fail("Expected DeltaModellingException");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
     }
 
-    @Test
+    @Test(expected=DeltaModellingException.class)
     public void targetedOriginalNotFound() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
@@ -237,12 +229,7 @@ public class OriginalCallTest extends DeltaTest {
         
         DeltaDecl d1 = findDelta(model, "D1");
 
-        try {
-            model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
-        } catch (DeltaModellingException e) {
-            return; // this is the expected outcome
-        }
-        fail("Expected DeltaModellingException");
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1)));
     }
 
     @Test
@@ -259,14 +246,12 @@ public class OriginalCallTest extends DeltaTest {
         DeltaDecl d1 = findDelta(model, "D1");
         DeltaDecl d2 = findDelta(model, "D2");
 
-        boolean caught = false;
         try {
             // apply deltas in wrong order - note that D2 has a targeted original call to a method in D1
+            // TODO: should probably be two different tests.
             model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d2,d1)));
-        } catch (DeltaModellingException e) {
-            caught = true;
-        }
-        assertTrue(caught);
+            fail("expected an exception.");
+        } catch (DeltaModellingException e) {}
         
         model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
@@ -277,5 +262,4 @@ public class OriginalCallTest extends DeltaTest {
         assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
         assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D1"));
     }
-
 }
