@@ -14,23 +14,24 @@ import java.nio.charset.Charset;
 
 public class FileUtils {
     
-    
     private static String fileToString(File f) throws IOException {
         InputStream in = new FileInputStream(f);
+        try {
+            byte[] b = new byte[(int) f.length()];
+            int len = b.length;
+            int total = 0;
 
-        byte[] b = new byte[(int) f.length()];
-        int len = b.length;
-        int total = 0;
-
-        while (total < len) {
-            int result = in.read(b, total, len - total);
-            if (result == -1) {
-                break;
+            while (total < len) {
+                int result = in.read(b, total, len - total);
+                if (result == -1) {
+                    break;
+                }
+                total += result;
             }
-            total += result;
+            return new String(b, Charset.defaultCharset());
+        } finally {
+            in.close();
         }
-
-        return new String(b, Charset.defaultCharset());
     }
     
     public static StringBuilder fileToStringBuilder(File f) throws IOException {
@@ -42,5 +43,4 @@ public class FileUtils {
         pw.write(sb.toString());
         pw.close();
     }
-
 }
