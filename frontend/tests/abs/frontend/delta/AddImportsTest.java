@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -15,7 +16,9 @@ import abs.frontend.ast.*;
 import abs.frontend.typechecker.*;
 import abs.frontend.delta.exceptions.*;
 
-
+// Adding imports implicitly is not necessary anymore since deltas are modules
+// TODO add support for the explicit addition of imports
+@Ignore
 public class AddImportsTest extends DeltaTest {
     
     @Test

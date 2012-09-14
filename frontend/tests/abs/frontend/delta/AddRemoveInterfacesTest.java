@@ -187,7 +187,7 @@ public class AddRemoveInterfacesTest extends DeltaTest {
         } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
-        fail("Expected ASTNodeNotFoundException");
+        fail("Expected DeltaModellingException");
     }
 
     @Test

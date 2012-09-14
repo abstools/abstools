@@ -12,7 +12,6 @@ import java.util.Arrays;
 
 import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.*;
-import abs.frontend.typechecker.TypeCheckerException;
 
 public class OriginalCallTest extends DeltaTest {
 
@@ -53,6 +52,41 @@ public class OriginalCallTest extends DeltaTest {
 
     @Test
     public void originalCall2() throws DeltaModellingException {
+        Model model = assertParseOk(
+                "module M;"
+                + "interface I {}"
+                + "class C implements I { Unit m() {} }"
+                + "delta D; uses M;"
+                + "modifies class C { modifies Unit m() { original(); } }"
+                + "delta D2; uses M;"
+                + "modifies class C { modifies Unit m() { original(); } }"
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getMethods().getNumChild() == 1);
+        
+        DeltaDecl delta1 = findDelta(model, "D");
+        assertTrue(delta1.getNumModuleModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta1.getModuleModifier(0)).getNumModifier() == 1);
+        
+        DeltaDecl delta2 = findDelta(model, "D2");
+        assertTrue(delta2.getNumModuleModifier() == 1);
+        assertTrue(((ModifyClassModifier) delta2.getModuleModifier(0)).getNumModifier() == 1);
+
+        model.resolveOriginalCalls(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
+        assertTrue(delta1.getNumModuleModifier() == 2);
+        assertTrue(delta2.getNumModuleModifier() == 2);
+        
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta1,delta2)));
+        
+        // there should be 3 methods now: the original one and those added by the two deltas
+        assertEquals(3, cls.getMethods().getNumChild());
+        assertTrue(cls.getMethod(0).getMethodSig().getName().equals("m"));
+        assertTrue(cls.getMethod(1).getMethodSig().getName().equals("m$ORIGIN_core"));
+        assertTrue(cls.getMethod(2).getMethodSig().getName().equals("m$ORIGIN_D"));
+    }
+
+    @Test
+    public void originalCall3() throws DeltaModellingException {
         Model model = assertParseOk(
                 "module M;"
                 + "interface I {}"
@@ -189,7 +223,7 @@ public class OriginalCallTest extends DeltaTest {
         } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
-        fail("Expected ASTNodeNotFoundException");
+        fail("Expected DeltaModellingException");
     }
 
     @Test
@@ -208,7 +242,7 @@ public class OriginalCallTest extends DeltaTest {
         } catch (DeltaModellingException e) {
             return; // this is the expected outcome
         }
-        fail("Expected ASTNodeNotFoundException");
+        fail("Expected DeltaModellingException");
     }
 
     @Test

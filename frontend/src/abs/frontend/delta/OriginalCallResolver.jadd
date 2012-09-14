@@ -98,7 +98,7 @@ aspect OriginalCallResolver {
         String methodId = mod.targetClassName() + "." + originalMethodCopy.getMethodSig().getName();
         if (! mod.getModel().containsCachedOriginalMethod(methodId)) {
             ModifyClassModifier cm = new ModifyClassModifier();
-            cm.setName(mod.targetClassName());
+            cm.setName(mod.targetQualifiedClassName());
             cm.addModifier(new AddMethodModifier(originalMethodCopy));
             mod.getDelta().addModuleModifier(cm);
             mod.getModel().cacheOriginalMethod(methodId);
@@ -122,7 +122,7 @@ aspect OriginalCallResolver {
             OriginalCall oc, 
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        String classid = this.targetClassName();
+        String classid = this.targetQualifiedClassName();
         String methodid = this.getMethodImpl().getMethodSig().getName();
         MethodImpl originalMethodCopy;
         
@@ -195,7 +195,7 @@ aspect OriginalCallResolver {
         for (ModuleModifier cm : delta.getModuleModifiers()) {
             if (cm.getName().equals(classid)) {
                 if (cm instanceof ModifyClassModifier) {
-                    for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
+                    for (Modifier m : ((ModifyClassModifier)cm).getModifiers()) {
                         if (m instanceof AddMethodModifier) {
                             MethodImpl method = ((AddMethodModifier)m).getMethodImpl();
                             if (method.getMethodSig().getName().equals(methodid))
@@ -209,6 +209,7 @@ aspect OriginalCallResolver {
                                 throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                                         + " -- it was removed by delta " + delta.getName());
                         }
+                    }
                 } else if (cm instanceof AddClassModifier) {
                     for (MethodImpl method : ((AddClassModifier)cm).getClassDecl().getMethods())
                         if (method.getMethodSig().getName().equals(methodid))
