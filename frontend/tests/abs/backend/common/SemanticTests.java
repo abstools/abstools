@@ -14,6 +14,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import abs.backend.BackendTestDriver;
 import abs.backend.java.JavaTestDriver;
+import abs.backend.java.dynamic.JavaDynamicTestDriver;
 import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeTestDriver;
 
@@ -47,10 +48,12 @@ public abstract class SemanticTests {
         /* Append new tests to the end, so that we can aggregate relative differences in CI */
         if (checkMaude())
             data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }, { new MaudeTestDriver(MaudeCompiler.SIMULATOR_RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_EQ_TIMED) }
+            , {new JavaDynamicTestDriver()}
             // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simplex");}} }
             };
         else
             data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }
+            , {new JavaDynamicTestDriver()}
             //, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
             };
         return Arrays.asList(data);
@@ -67,5 +70,4 @@ public abstract class SemanticTests {
     public void assertEvalFails(String absCode) throws Exception {
         driver.assertEvalFails("module BackendTest; " + absCode);
     }
-
 }

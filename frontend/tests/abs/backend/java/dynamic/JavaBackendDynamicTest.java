@@ -16,7 +16,6 @@ import org.junit.Test;
 import abs.backend.java.JavaBackendTest;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
-import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -58,13 +57,12 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         return code;
     }
 
-
     /*
      * Test (i.e. run) all ABS code samples in tests/abssamples/meta/
      */
     @Test
     public void metaSamples() throws Exception {
-        final String s = System.getProperty("file.separator");
+        final String s = File.separator;
         final String dir = "tests" + s + "abssamples" + s + "meta";
         ABSFileNameFilter filter = new ABSFileNameFilter();
         File dirHandle = new File(dir);
@@ -82,6 +80,5 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         public boolean accept(File dir, String name) {
             return name.endsWith(".abs");
         }
-        
     }
 }
