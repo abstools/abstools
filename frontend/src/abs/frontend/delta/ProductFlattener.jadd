@@ -164,6 +164,10 @@ aspect ProductFlattener {
         HashSet<String> onFeatureIDs = new HashSet<String>();
         for (Feature f : onFeatures)
             onFeatureIDs.add(f.getName());
+        
+        if (hasAppCond())
+            return getAppCond().evaluate(onFeatureIDs);
+
 
         // check whether each required feature is also ON
 //        for (Feature reqFeature : this.getFeatures()) {
@@ -175,6 +179,25 @@ aspect ProductFlattener {
         // Solve: Does the product (= set of features) satisfy the given application condition?
         
         return true;
+    }
+
+    /*****************************************
+     * Evaluate if the application condition holds for a given set of
+     * selected feature names.
+     */
+    public abstract boolean AppCond.evaluate(Set<String> feats);
+    
+    public boolean AppCondAnd.evaluate(Set<String> feats) {
+    	return getLeft().evaluate(feats) && getRight().evaluate(feats);
+    }
+    public boolean AppCondOr.evaluate(Set<String> feats) {
+    	return getLeft().evaluate(feats) || getRight().evaluate(feats);
+    }
+    public boolean AppCondNot.evaluate(Set<String> feats) {
+    	return !getAppCond().evaluate(feats);
+    }
+    public boolean AppCondFeature.evaluate(Set<String> feats) {
+    	return (feats.contains(getName()));
     }
 
 
