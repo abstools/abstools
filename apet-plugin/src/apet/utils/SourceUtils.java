@@ -60,7 +60,6 @@ public class SourceUtils {
 	
 	public static IProject obtainCurrProject()throws ApetException{
 		IEditorPart ieditorpart;
-		ClassLoader loader;		
 		//we obtain the current window that is being edited
 		try{
 			ieditorpart = SourceUtils.obtainActiveEditor();
@@ -74,7 +73,7 @@ public class SourceUtils {
 		return jresource.getProject();
 	}
 	
-	public static Class ObtainCurrentlyEditingClass()throws ApetException{
+	public static Class<?> ObtainCurrentlyEditingClass()throws ApetException{
 		IEditorPart ieditorpart;
 		ClassLoader loader;		
 		//we obtain the current window that is being edited
@@ -145,14 +144,14 @@ public class SourceUtils {
 		}
 	}
 	
-	private static Class getClassFromResource (ICompilationUnit javaFile,ClassLoader loader) throws ApetException {
+	private static Class<?> getClassFromResource (ICompilationUnit javaFile,ClassLoader loader) throws ApetException {
 		try {
 			String className = javaFile.getElementName();
 			className = className.substring(0, className.length() - 5);
 			if (!"".equals(javaFile.getParent().getElementName()))
 				className = javaFile.getParent().getElementName() + "." + className;
 
-			Class clazz = loader.loadClass(className);
+			Class<?> clazz = loader.loadClass(className);
 
 			return clazz;
 		}
