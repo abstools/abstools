@@ -179,9 +179,6 @@ public class TypeCheckerHelper {
         
         /* Do the referenced features exist? */
         if (clause.hasAppCond()) {
-            for (String f : clause.getAppCond().getFeatures()) {
-                
-            }
             /* TODO
              * implement Appcond.getFeatures()
              * then reuse code below...
