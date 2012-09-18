@@ -155,9 +155,7 @@ aspect ProductFlattener {
      * Evaluate the application condition assciated with this DeltaClause
      * in the context of the given list of features and attribute values
      *
-     * currently this only compares feature NAMES
-     * and only deals with the AND operator
-     * TODO properly handle all logical connectives, also feature attributes
+     * TODO Support feature attributes
      */
     public boolean DeltaClause.evaluateApplicationCondition(List<Feature> onFeatures) {
         // first, log the names of all onFeatures in a set, for easy lookup
@@ -167,37 +165,27 @@ aspect ProductFlattener {
         
         if (hasAppCond())
             return getAppCond().evaluate(onFeatureIDs);
-
-
-        // check whether each required feature is also ON
-//        for (Feature reqFeature : this.getFeatures()) {
-//            if (! onFeatureIDs.contains(reqFeature.getName()))
-//                return false;
-//        }
-        
-        // FIXME
-        // Solve: Does the product (= set of features) satisfy the given application condition?
         
         return true;
     }
 
-    /*****************************************
+    /**************************************************************************
      * Evaluate if the application condition holds for a given set of
      * selected feature names.
      */
-    public abstract boolean AppCond.evaluate(Set<String> feats);
+    public abstract boolean AppCond.evaluate(Set<String> features);
     
-    public boolean AppCondAnd.evaluate(Set<String> feats) {
-    	return getLeft().evaluate(feats) && getRight().evaluate(feats);
+    public boolean AppCondAnd.evaluate(Set<String> features) {
+    	return getLeft().evaluate(features) && getRight().evaluate(features);
     }
-    public boolean AppCondOr.evaluate(Set<String> feats) {
-    	return getLeft().evaluate(feats) || getRight().evaluate(feats);
+    public boolean AppCondOr.evaluate(Set<String> features) {
+    	return getLeft().evaluate(features) || getRight().evaluate(features);
     }
-    public boolean AppCondNot.evaluate(Set<String> feats) {
-    	return !getAppCond().evaluate(feats);
+    public boolean AppCondNot.evaluate(Set<String> features) {
+    	return !getAppCond().evaluate(features);
     }
-    public boolean AppCondFeature.evaluate(Set<String> feats) {
-    	return (feats.contains(getName()));
+    public boolean AppCondFeature.evaluate(Set<String> features) {
+    	return (features.contains(getName()));
     }
 
 

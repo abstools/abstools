@@ -4,13 +4,19 @@
  */
 package abs.frontend.delta;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-import abs.frontend.ast.Model;
+import abs.common.WrongProgramArgumentException;
 import static org.junit.Assert.*;
 import abs.frontend.ast.*;
-
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class ApplicationConditionsTest extends DeltaTest {
 
@@ -94,4 +100,61 @@ public class ApplicationConditionsTest extends DeltaTest {
         AppCond a = model.getProductLine().getDeltaClause(0).getAppCond();
     }
 
+
+    @Test
+    public void evaluateTrue() throws DeltaModellingException, WrongProgramArgumentException {
+        ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
+                "A",
+                "A || B",
+                "A && ~B",
+                "A || ~A",
+                "C || A",
+                "(C || A) && ~B"
+                ));
+        
+        for (String ac : acs) {
+            Model model = assertParseOk(
+                    "module M;"
+                            + "delta D;"
+                            + "adds class M.C {}"
+                            + "productline PL;"
+                            + "features A,B,C;"
+                            + "delta D when " + ac + ";"
+                            + "product P(A);"
+                    );
+
+            model.flattenForProduct("P");
+            Decl cls = findDecl(model, "M", "C");
+            assertNotNull(cls);
+        }
+    }
+
+    @Test
+    public void evaluateFalse() throws DeltaModellingException, WrongProgramArgumentException {
+        ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
+                "C",
+                "~A",
+                "A && B",
+                "~A && B",
+                "A && ~A",
+                "B || C"
+                ));
+
+        for (String ac : acs) {
+            Model model = assertParseOk(
+                    "module M;"
+                            + "delta D;"
+                            + "adds class M.C {}"
+                            + "productline PL;"
+                            + "features A,B,C;"
+                            + "delta D when " + ac + ";"
+                            + "product P(A);"
+                    );
+
+            model.flattenForProduct("P");
+            Decl cls = findDecl(model, "M", "C");
+            assertNull(cls);
+        }
+    }
+    
 }
