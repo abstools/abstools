@@ -175,28 +175,14 @@ public class TypeCheckerHelper {
         if (! deltaNames.contains(clause.getDeltaspec().getName()))
             e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
 
-        ProductLine p = clause.getProductLine();
-        
-        /* Do the referenced features exist? */
         if (clause.hasAppCond()) {
-            /* TODO
-             * implement Appcond.getFeatures()
-             * then reuse code below...
-             */
+            /* Do the referenced features exist? */
+            HashSet<String> definedFeatures = new HashSet<String>();
+            for (Feature cf : clause.getProductLine().getOptionalFeatures()) {
+                definedFeatures.add(cf.getName());
+            }
+            clause.getAppCond().typeCheck(deltaNames, e);
         }
-        
-//        for (Feature f : clause.getFeatures()) {
-//            boolean found = false;
-//            for (Feature cf : p.getOptionalFeatures()) {
-//                if (cf.getName().equals(f.getName())) {
-//                    found = true;
-//                    break;
-//                }
-//            }
-//            if (!found)
-//                e.add(new TypeError(f,ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
-//        }
-        
         
         /* What about deltas mentioned in the 'after' clause? */
         for (DeltaID did : clause.getDeltaIDs()) {

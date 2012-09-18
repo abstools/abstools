@@ -347,8 +347,21 @@ aspect TypeChecker {
     	TypeCheckerHelper.typeCheckDeltaClause(this,e);
      }
 
-    public void AppCondFeature.typeCheck(SemanticErrorList e) {
-        
+    public abstract void AppCond.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e);
+    public void AppCondAnd.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
+        getLeft().typeCheck(definedFeatures, e);
+        getRight().typeCheck(definedFeatures, e);
+    }
+    public void AppCondOr.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
+        getLeft().typeCheck(definedFeatures, e);
+        getRight().typeCheck(definedFeatures, e);
+    }
+    public void AppCondNot.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
+        getAppCond().typeCheck(definedFeatures, e);
+    }
+    public void AppCondFeature.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
+        if (! definedFeatures.contains(getName()))
+            e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
     
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
