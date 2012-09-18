@@ -946,13 +946,22 @@ Deltaparam deltaparam =
 	else return new FID(c); :}
     ;
 
-List when_condition = WHEN application_condition.dl {: return dl; :};
+// Application conditions
+AppCond when_condition = WHEN appcond.ac {: return ac; :};
+AppCond appcond = or_appcond;
 
-// TODO: application conditions should be mTVL expressions, or at least have negation and parenthesis.
-List application_condition = feature.f {: return new List().add(f); :}
-    | application_condition.l ANDAND feature.f {: return l.add(f); :}
+AppCond or_appcond = and_appcond
+    | or_appcond.ac1 OROR and_appcond.ac2 {: return new AppCondOr(ac1, ac2); :}
+    ;
+    
+AppCond and_appcond = factor_appcond
+    | and_appcond.ac1 ANDAND factor_appcond.ac2 {: return new AppCondAnd(ac1, ac2); :}
     ;
 
+AppCond factor_appcond = feature.f {: return new AppCondFeature(f.getName()); :}
+    | NEGATION factor_appcond.ac {: return new AppCondNot(ac); :}
+    | LPAREN appcond.ac RPAREN {: return ac; :}
+    ; 
 
 // PSL - Product selection language
 

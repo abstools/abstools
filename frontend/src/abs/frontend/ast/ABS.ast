@@ -258,13 +258,22 @@ NotEqExp : EqualityExpr ;
 
 // feature Configuration and Product Selection Language (CL/PSL)
 ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause* ;
+Feature ::= <Name> AttrAssignment*;
 
 // TODO: The third argument (Feature*) is meant to be an application condition,
 // i.e. a propositional formula over features. If the application condition evaluates
 // to true, then the delta is applied.
-DeltaClause ::= Deltaspec DeltaID* Feature* ;
+//DeltaClause ::= Deltaspec DeltaID* Feature* ;
+DeltaClause ::= Deltaspec DeltaID* [AppCond] ;
 
-Feature ::= <Name> AttrAssignment*;
+abstract AppCond;
+AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;
+AppCondOr : AppCond ::= Left:AppCond Right:AppCond ;
+AppCondNot : AppCond ::= AppCond ;
+AppCondFeature : AppCond ::= <Name> ;
+
+// TODO allow application conditions over attributes too e.g. "delta D when (1 < F.foo < 5) && F.bar"
+
 
 AttrAssignment ::= <Name:String> Value ;
 abstract Value;

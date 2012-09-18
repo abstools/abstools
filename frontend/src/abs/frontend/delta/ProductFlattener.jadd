@@ -166,10 +166,14 @@ aspect ProductFlattener {
             onFeatureIDs.add(f.getName());
 
         // check whether each required feature is also ON
-        for (Feature reqFeature : this.getFeatures()) {
-            if (! onFeatureIDs.contains(reqFeature.getName()))
-                return false;
-        }
+//        for (Feature reqFeature : this.getFeatures()) {
+//            if (! onFeatureIDs.contains(reqFeature.getName()))
+//                return false;
+//        }
+        
+        // FIXME
+        // Solve: Does the product (= set of features) satisfy the given application condition?
+        
         return true;
     }
 

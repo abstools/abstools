@@ -4,49 +4,49 @@ import abs.backend.prettyprint.*;
 
 aspect doPrettyPrinter {
 
-	public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter, String separator) {
-		if (getNumChild() > 0) {
+    public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter, String separator) {
+        if (getNumChild() > 0) {
             getChild(0).doPrettyPrint(stream, formatter);
             for (int i = 1; i < getNumChild(); i++) {
                 stream.print(separator+" ");
                 getChild(i).doPrettyPrint(stream, formatter);
             }
         }
-	}
-	
-	public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-		if (getNumChild() > 0) {
+    }
+
+    public void List.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        if (getNumChild() > 0) {
             getChild(0).doPrettyPrint(stream, formatter);
             for (int i = 1; i < getNumChild(); i++) {
-            	stream.println();
+                stream.println();
                 formatter.afterStmt();
                 getChild(i).doPrettyPrint(stream, formatter);
             }
         }
-	}
-	
-	public void ASTNode.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-	}
-	
-	public void Model.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	for (ModuleDecl d : getModuleDecls()) {
+    }
+
+    public void ASTNode.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+    }
+
+    public void Model.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        for (ModuleDecl d : getModuleDecls()) {
             if (!d.getName().equals(Constants.STDLIB_NAME) && !d.getName().equals("ABS.Scheduler")
                     && !d.getName().equals("ABS.FLI") && !d.getName().equals("ABS.DC")) {
                 d.doPrettyPrint(stream, formatter);
             }
         }
-        
+
         for (DeltaDecl d : getDeltaDecls()) {
-          d.doPrettyPrint(stream, formatter);
+            d.doPrettyPrint(stream, formatter);
         }
         if (hasProductLine()) {
-          getProductLine().doPrettyPrint(stream, formatter);
+            getProductLine().doPrettyPrint(stream, formatter);
         }
     }
-    
+
     public void ModuleDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.println("module " + getName() + ";");
-    	stream.println();
+        stream.println("module " + getName() + ";");
+        stream.println();
         formatter.afterStmt();
 
         for (Export e : getExportList()) {
@@ -54,9 +54,9 @@ aspect doPrettyPrinter {
             stream.println();
             formatter.afterStmt();
         }
-        
+
         stream.println();
-		formatter.afterStmt();
+        formatter.afterStmt();
 
         for (Import i : getImportList()) {
             i.doPrettyPrint(stream, formatter);
@@ -65,14 +65,14 @@ aspect doPrettyPrinter {
         }
 
         stream.println();
-		formatter.afterStmt();
+        formatter.afterStmt();
 
         if (hasBlock()) {
             getBlock().doPrettyPrint(stream, formatter);
         }
-        
+
         stream.println();
-		formatter.afterStmt();
+        formatter.afterStmt();
 
         for (Decl decl : getDecls()) {
             decl.doPrettyPrint(stream, formatter);
@@ -82,21 +82,21 @@ aspect doPrettyPrinter {
         }
 
         stream.flush();
-    
+
     }
-    
+
     public void Product.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("product ");
         stream.print(getName());
         stream.print("(");
         getFeatureList().doPrettyPrint(stream, formatter, ",");
         stream.print(");");
-        
+
         stream.println();
-		formatter.afterStmt();
+        formatter.afterStmt();
         stream.flush();
     }
-    
+
     public void Feature.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
         if (getNumAttrAssignment() > 0) {
@@ -105,7 +105,7 @@ aspect doPrettyPrinter {
             stream.print("}");
         }
     }
-    
+
     public void AttrAssignment.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
         stream.print("=");
@@ -116,7 +116,7 @@ aspect doPrettyPrinter {
             stream.print(((BoolVal) v).getValue() ? "True" : "False");
         }
     }
-    
+
     public void ProductLine.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("productline ");
         stream.print(getName());
@@ -124,48 +124,73 @@ aspect doPrettyPrinter {
         formatter.afterStmt();
         boolean hasFeatures = false;
         if (getNumCoreFeature() > 0) {
-        	stream.println();
-        	stream.print("core ");
-        	hasFeatures = true;
+            stream.println();
+            stream.print("core ");
+            hasFeatures = true;
             getCoreFeatureList().doPrettyPrint(stream, formatter, ",");
             if (getNumOptionalFeature() > 0) {
-            	hasFeatures = true;
+                hasFeatures = true;
                 stream.print(", ");
             }
         }
         if (getNumOptionalFeature() > 0 && ! hasFeatures) {
             hasFeatures = true;
             stream.println();
-        	stream.print("features ");
+            stream.print("features ");
         }
         getOptionalFeatureList().doPrettyPrint(stream, formatter, ",");
         if (hasFeatures) {
-        	stream.println(";");
-        	formatter.afterStmt();
+            stream.println(";");
+            formatter.afterStmt();
         }
 
-		getDeltaClauseList().doPrettyPrint(stream, formatter);
-		
-		stream.println();
-		formatter.afterStmt();
+        getDeltaClauseList().doPrettyPrint(stream, formatter);
+
+        stream.println();
+        formatter.afterStmt();
         stream.flush();
     }
-    
-   public void DeltaClause.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    public void DeltaClause.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("delta ");
         getDeltaspec().doPrettyPrint(stream, formatter);
 
-		if (getNumDeltaID() > 0) {
-			stream.print(" after ");
-        	getDeltaIDList().doPrettyPrint(stream, formatter, ",");
+        if (getNumDeltaID() > 0) {
+            stream.print(" after ");
+            getDeltaIDList().doPrettyPrint(stream, formatter, ",");
         }
 
-        stream.print(" when ");
-        getFeatureList().doPrettyPrint(stream, formatter, " &&");
-        
+        if (hasAppCond()) {
+            stream.print(" when ");
+            getAppCond().doPrettyPrint(stream, formatter);
+        }
+
         stream.print(";");
     }
 
+    public abstract void AppCond.doPrettyPrint(PrintWriter stream, ABSFormatter formatter);
+    
+    public void AppCondAnd.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getLeft().doPrettyPrint(stream, formatter);
+        stream.print(" && ");
+        getRight().doPrettyPrint(stream, formatter);
+    }
+    
+    public void AppCondOr.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getLeft().doPrettyPrint(stream, formatter);
+        stream.print(" || ");
+        getRight().doPrettyPrint(stream, formatter);
+    }
+
+    public void AppCondNot.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("~");
+        getAppCond().doPrettyPrint(stream, formatter);
+    }
+    
+    public void AppCondFeature.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        stream.print(getName());
+    }
+    
     public void Deltaspec.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
         if (getNumDeltaparam() > 0) {
@@ -174,7 +199,7 @@ aspect doPrettyPrinter {
             stream.print(")");
         }
     }
-    
+
     public void Deltaparam.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
     }
@@ -182,13 +207,13 @@ aspect doPrettyPrinter {
     public void DeltaID.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
     }
-    
+
     public void Block.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         formatter.beforeOpenBrace();
         stream.println("{");
         formatter.afterOpenBrace();
@@ -200,41 +225,41 @@ aspect doPrettyPrinter {
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void AssertStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("assert ");
         getCondition().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
-    
+
     public void AssignStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         getVar().doPrettyPrint(stream, formatter);
         stream.print(" = ");
         getValue().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
-    
+
     public void Call.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getCallee().doPrettyPrint(stream, formatter);
-    	doPrettyPrintCallType(stream, formatter);
-    	stream.print(getMethod().replaceAll("\\$", ""));
+        getCallee().doPrettyPrint(stream, formatter);
+        doPrettyPrintCallType(stream, formatter);
+        stream.print(getMethod().replaceAll("\\$", ""));
         stream.print("(");
         getParamList().doPrettyPrint(stream, formatter, ",");
         stream.print(")");
     }
-    
+
     abstract public void Call.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter);
-    
+
     public void AsyncCall.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter) {
         stream.print("!");
     }
@@ -242,12 +267,12 @@ aspect doPrettyPrinter {
     public void SyncCall.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter) {
         stream.print(".");
     }
-    
+
     public void GetExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getPureExp().doPrettyPrint(stream, formatter);
         stream.print(".get");
     }
-    
+
     public void NewExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("new ");
         if (hasCog()) {
@@ -258,7 +283,7 @@ aspect doPrettyPrinter {
         getParamList().doPrettyPrint(stream, formatter, ",");
         stream.print(")");
     }
-    
+
     public void OriginalCall.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("original ");
         stream.print("(");
@@ -268,16 +293,16 @@ aspect doPrettyPrinter {
 
     public void AwaitStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("await ");
         getGuard().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
-    
-	public void AndGuard.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+
+    public void AndGuard.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getLeft().doPrettyPrint(stream, formatter);
         stream.print(" & ");
         getRight().doPrettyPrint(stream, formatter);
@@ -299,13 +324,13 @@ aspect doPrettyPrinter {
     public void ExpGuard.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getPureExp().doPrettyPrint(stream, formatter);
     }
-    
+
     public void DurationStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("duration(");
         getMin().doPrettyPrint(stream, formatter);
         stream.print(", ");
@@ -316,10 +341,10 @@ aspect doPrettyPrinter {
 
     public void ExpressionStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         getExp().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
@@ -334,7 +359,7 @@ aspect doPrettyPrinter {
             getElse().doPrettyPrint(stream, formatter);
         }
     }
-    
+
     public void ReturnStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("return ");
         getRetExp().doPrettyPrint(stream, formatter);
@@ -348,13 +373,13 @@ aspect doPrettyPrinter {
     public void SuspendStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("suspend;");
     }
-    
+
     public void VarDeclStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         getVarDecl().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
@@ -368,24 +393,24 @@ aspect doPrettyPrinter {
             getInitExp().doPrettyPrint(stream, formatter);
         }
     }
-    
+
     public void WhileStmt.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("while (");
         getCondition().doPrettyPrint(stream, formatter);
         stream.print(") ");
         getBody().doPrettyPrint(stream, formatter);
     }
-    
+
     abstract public void Export.doPrettyPrint(PrintWriter stream, ABSFormatter formatter);
-    
+
     public void NamedExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("export ");
         getNames().doPrettyPrint(stream, formatter, ",");
         stream.print(";");
     }
-    
+
     public void Name.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print(getName());
+        stream.print(getName());
     }
 
     public void StarExport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
@@ -404,7 +429,7 @@ aspect doPrettyPrinter {
         stream.print(getModuleName());
         stream.print(";");
     }
-    
+
     public void NamedImport.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("import ");
         getNames().doPrettyPrint(stream, formatter, ",");
@@ -425,13 +450,13 @@ aspect doPrettyPrinter {
         stream.print(getModuleName());
         stream.print(";");
     }
-    
+
     public void FunctionDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("def ");
         getTypeUse().doPrettyPrint(stream, formatter);
         stream.print(" ");
@@ -443,23 +468,23 @@ aspect doPrettyPrinter {
         getFunctionDef().doPrettyPrint(stream, formatter);
         formatter.afterStmt();
     }
-    
+
     public void FunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { }
-    
+
     public void ParametricFunctionDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { 
-    	if (getNumTypeParameter() > 0) {
-        	stream.print("<");
+        if (getNumTypeParameter() > 0) {
+            stream.print("<");
             getTypeParameterList().doPrettyPrint(stream, formatter, ",");
             stream.print(">");
-		}	
+        }	
     }
-    
+
     public void BuiltinFunctionDef.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print("builtin;");
+        stream.print("builtin;");
     }
-    
+
     public void ExpFunctionDef.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.println();
+        stream.println();
         formatter.afterOpenBrace();
         formatter.afterStmt();
         getRhs().doPrettyPrint(stream, formatter);
@@ -478,33 +503,33 @@ aspect doPrettyPrinter {
             stream.print(")");
         }
         stream.println(";");
-		formatter.afterStmt();
+        formatter.afterStmt();
         getDeltaAccesss().doPrettyPrint(stream, formatter);
         stream.println();
         getModuleModifierList().doPrettyPrint(stream, formatter);
 
-//        List<FunctionalModifier> fms = getFunctionalModifierList();
-//        int mcount = fms.getNumChild();
-//        if (mcount > 0) {
-//            formatter.afterStmt();
-//        }
-//        fms.doPrettyPrint(stream, formatter);
-//
-//        List<ClassOrIfaceModifier> cms = getClassOrIfaceModifierList();
-//        if (cms.getNumChild() > 0 && mcount == 0) {
-//            formatter.afterStmt();
-//        } 
-//        cms.doPrettyPrint(stream, formatter);
+        //        List<FunctionalModifier> fms = getFunctionalModifierList();
+        //        int mcount = fms.getNumChild();
+        //        if (mcount > 0) {
+        //            formatter.afterStmt();
+        //        }
+        //        fms.doPrettyPrint(stream, formatter);
+        //
+        //        List<ClassOrIfaceModifier> cms = getClassOrIfaceModifierList();
+        //        if (cms.getNumChild() > 0 && mcount == 0) {
+        //            formatter.afterStmt();
+        //        } 
+        //        cms.doPrettyPrint(stream, formatter);
 
         stream.println();
     }
-    
+
     public void DeltaAccess.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print("uses ");
-    	stream.print(getModuleName());
-    	stream.print(";");
+        stream.print("uses ");
+        stream.print(getModuleName());
+        stream.print(";");
     }
-    
+
     public void RemoveClassModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("removes class ");
         stream.print(getName());
@@ -525,18 +550,18 @@ aspect doPrettyPrinter {
         stream.println("{");
         formatter.afterOpenBrace();
 
-		List<Modifier> mms = getModifierList();
-		if (mms.getNumChild() > 0) {
- 			mms.doPrettyPrint(stream, formatter);
-  	        stream.println();
-			formatter.afterStmt();
- 		}
-		
+        List<Modifier> mms = getModifierList();
+        if (mms.getNumChild() > 0) {
+            mms.doPrettyPrint(stream, formatter);
+            stream.println();
+            formatter.afterStmt();
+        }
+
         formatter.beforeCloseBrace();
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void AddFieldModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("adds ");
         getFieldDecl().doPrettyPrint(stream, formatter);
@@ -572,38 +597,38 @@ aspect doPrettyPrinter {
         stream.print("adds ");
         getClassDecl().doPrettyPrint(stream, formatter);
     }
-    
+
     public void DeltaFieldParam.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getParamDecl().doPrettyPrint(stream, formatter);
+        getParamDecl().doPrettyPrint(stream, formatter);
     }
-    
+
     public void DeltaClassParam.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
         stream.print(" ");
         getHasCondition().doPrettyPrint(stream, formatter);
     }
-    
+
     public void HasField.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print("hasField");
+        stream.print("hasField");
         getFieldDecl().doPrettyPrint(stream, formatter);
     }
-    
+
     public void HasInterface.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print("hasInterface");
-    	getInterfaceTypeUse().doPrettyPrint(stream, formatter);
+        stream.print("hasInterface");
+        getInterfaceTypeUse().doPrettyPrint(stream, formatter);
     }
-    
+
     public void HasMethod.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print("hasMethod");
+        stream.print("hasMethod");
         getMethodSig().doPrettyPrint(stream, formatter);
     }
-    
+
     public void TypeSynDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("type ");
         stream.print(getName());
         stream.print(" = ");
@@ -613,10 +638,10 @@ aspect doPrettyPrinter {
 
     public void InterfaceDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         stream.print("interface ");
         stream.print(getName());
         if (getNumExtendedInterfaceUse() > 0) {
@@ -627,30 +652,30 @@ aspect doPrettyPrinter {
         stream.println(" {");
         formatter.afterOpenBrace();
         formatter.afterStmt();
-        
+
         List<MethodSig> ms = getBodys();
         if (ms.getNumChild() > 0) {
             ms.getChild(0).doPrettyPrint(stream, formatter);
             stream.print(";");
             for (int i = 1; i < ms.getNumChild(); i++) {
-            	stream.println();
+                stream.println();
                 formatter.afterStmt();
                 ms.getChild(i).doPrettyPrint(stream, formatter);
                 stream.print(";");
             }
         }
-        
+
         formatter.beforeCloseBrace();
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void MethodSig.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
+        }
         getReturnType().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName().replaceAll("\\$", ""));
@@ -661,11 +686,11 @@ aspect doPrettyPrinter {
 
     public void ClassDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
-    	stream.print("class ");
+        }
+        stream.print("class ");
         stream.print(getName());
 
         if (getNumParam() > 0) {
@@ -683,7 +708,7 @@ aspect doPrettyPrinter {
         formatter.afterOpenBrace();
         formatter.afterStmt();
 
-		getFieldList().doPrettyPrint(stream, formatter);
+        getFieldList().doPrettyPrint(stream, formatter);
 
         stream.println();
         formatter.afterStmt();
@@ -696,26 +721,26 @@ aspect doPrettyPrinter {
 
         stream.println();
         formatter.afterStmt();
-        
+
         List<MethodImpl> methods = getMethodList();
         if (methods.getNumChild() > 0) {
-			methods.doPrettyPrint(stream, formatter);        
-	        stream.println();
-    	    formatter.afterStmt();
+            methods.doPrettyPrint(stream, formatter);        
+            stream.println();
+            formatter.afterStmt();
         }
-        
+
         formatter.beforeCloseBrace();
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void FieldDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	if (getNumAnnotation() > 0) {
-    		stream.println();
+        if (getNumAnnotation() > 0) {
+            stream.println();
             formatter.afterStmt();
-    	}
-    	getAccess().doPrettyPrint(stream, formatter);
+        }
+        getAccess().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
         if (hasInitExp()) {
@@ -729,29 +754,29 @@ aspect doPrettyPrinter {
         getMethodSig().doPrettyPrint(stream, formatter);
         getBlock().doPrettyPrint(stream, formatter);
     }
-    
+
     public void TypeParameterDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	stream.print(getName());
+        stream.print(getName());
     }
-    
+
     public void DataTypeDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("data ");
         stream.print(getName());
-       	doPrettyPrintTypeParam(stream, formatter);
+        doPrettyPrintTypeParam(stream, formatter);
         if (getNumDataConstructor() > 0) {
             stream.print(" = ");
             getDataConstructorList().doPrettyPrint(stream, formatter, "|");
         }
         stream.print(";");
     }
-    
+
     public void AddDataTypeModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter)
     {
-		stream.print("adds "); 
-		getDataTypeDecl().doPrettyPrint(stream, formatter);
-		stream.println();
-	}
-    
+        stream.print("adds "); 
+        getDataTypeDecl().doPrettyPrint(stream, formatter);
+        stream.println();
+    }
+
     public void ModifyInterfaceModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("modifies interface ");
         stream.print(getName());
@@ -766,29 +791,29 @@ aspect doPrettyPrinter {
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void AddMethodSigModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("adds ");
         getMethodSig().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
-    
+
     public void RemoveMethodSigModifier.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("removes ");
         getMethodSig().doPrettyPrint(stream, formatter);
         stream.print(";");
     }
-    
+
     public void DataTypeDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { }
-    
+
     public void ParametricDataTypeDecl.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { 
-    	if (getNumTypeParameter() > 0) {
-    		stream.print("<");
+        if (getNumTypeParameter() > 0) {
+            stream.print("<");
             getTypeParameterList().doPrettyPrint(stream, formatter, ",");
             stream.print(">");
         }
     }
-    
+
     public void DataConstructor.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
         if (getNumConstructorArg() > 0) {
@@ -801,27 +826,27 @@ aspect doPrettyPrinter {
     public void ConstructorArg.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getDataTypeUse().doPrettyPrint(stream, formatter);
         if (hasSelectorName()) {
-        	stream.print(" ");
+            stream.print(" ");
             stream.print(getSelectorName());
         }
     }
 
     public void DataTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	stream.print(getName());
-    	doPrettyPrintTypeParam(stream, formatter);
+        stream.print(getName());
+        doPrettyPrintTypeParam(stream, formatter);
     }
-    
+
     public void DataTypeUse.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { }
-    
+
     public void ParametricDataTypeUse.doPrettyPrintTypeParam(PrintWriter stream, ABSFormatter formatter) { 
-    	if (getNumParam() > 0) {
+        if (getNumParam() > 0) {
             stream.print("<");
             getParamList().doPrettyPrint(stream, formatter, ",");
             stream.print(">");
         }
     }
-    
+
     public void TypedAnnotation.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("[");
         getAccess().doPrettyPrint(stream, formatter);
@@ -835,7 +860,7 @@ aspect doPrettyPrinter {
         getValue().doPrettyPrint(stream, formatter);
         stream.print("]");
     }
-    
+
     public void TypeParameterUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
     }
@@ -851,22 +876,22 @@ aspect doPrettyPrinter {
     public void VarUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getName());
     }
-    
+
     public void Binary.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         formatter.beforeOpenBrace();
         stream.print("( ");
         formatter.afterOpenBrace();
         getLeft().doPrettyPrint(stream, formatter);
         stream.print(" ");
-		doPrettyPrintOperator(stream, formatter);
-		stream.print(" ");
+        doPrettyPrintOperator(stream, formatter);
+        stream.print(" ");
         getRight().doPrettyPrint(stream, formatter);
         formatter.beforeCloseBrace();
         stream.print(" )");
         formatter.afterCloseBrace();
     }
 
-	abstract public void Binary.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter);
+    abstract public void Binary.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter);
 
     public void AddAddExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("+");
@@ -887,7 +912,7 @@ aspect doPrettyPrinter {
     public void MultMultExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("*");
     }
-    
+
     public void AndBoolExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("&&");
     }
@@ -895,7 +920,7 @@ aspect doPrettyPrinter {
     public void OrBoolExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("||");
     }
-    
+
     public void EqExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("==");
     }
@@ -919,7 +944,7 @@ aspect doPrettyPrinter {
     public void LTExp.doPrettyPrintOperator(PrintWriter stream, ABSFormatter formatter) {
         stream.print("<");
     }
-    
+
     public void CaseExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("case ");
         getExpr().doPrettyPrint(stream, formatter);
@@ -938,7 +963,7 @@ aspect doPrettyPrinter {
         stream.print("}");
         formatter.afterCloseBrace();
     }
-    
+
     public void ConstructorPattern.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getConstructor());
         if (getNumParam() > 0) {
@@ -967,7 +992,7 @@ aspect doPrettyPrinter {
     public void UnderscorePattern.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("_");
     }
-    
+
     public void DataConstructorExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getConstructor());
         if (getNumParam() > 0) {
@@ -1014,12 +1039,12 @@ aspect doPrettyPrinter {
     }
 
     public void ParamDecl.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-    	getAnnotationList().doPrettyPrint(stream, formatter, "");
-    	getAccess().doPrettyPrint(stream, formatter);
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        getAccess().doPrettyPrint(stream, formatter);
         stream.print(" ");
         stream.print(getName());
     }
-    
+
     public void IntLiteral.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print(getContent());
     }
@@ -1037,7 +1062,7 @@ aspect doPrettyPrinter {
     public void ThisExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("this");
     }
-    
+
     public void MinusExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("- ");
         getOperand().doPrettyPrint(stream, formatter);
@@ -1047,5 +1072,5 @@ aspect doPrettyPrinter {
         stream.print("~ ");
         getOperand().doPrettyPrint(stream, formatter);
     }
-    
+
 }

@@ -347,6 +347,10 @@ aspect TypeChecker {
     	TypeCheckerHelper.typeCheckDeltaClause(this,e);
      }
 
+    public void AppCondFeature.typeCheck(SemanticErrorList e) {
+        
+    }
+    
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.typeCheckParamList(e,getParams());
         getTypeUse().typeCheck(e);

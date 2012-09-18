@@ -3,6 +3,8 @@ import abs.common.*;
 import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 aspect Typing {
     
@@ -16,9 +18,6 @@ aspect Typing {
     inh Model DeltaDecl.getModel();
     inh Model Decl.getModel();
     
-//    inh Model FeatureDecl.getModel();
-//    inh Model FExt.getModel();
-
     inh Model CompilationUnit.getModel();
     eq Model.getCompilationUnit().getModel() = this;
     
