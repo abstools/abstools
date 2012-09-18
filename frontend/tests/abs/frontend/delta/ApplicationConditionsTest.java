@@ -103,6 +103,8 @@ public class ApplicationConditionsTest extends DeltaTest {
         ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
                 "A",
                 "A || B",
+                "~(B && B)",
+                "A || (B && B)",
                 "A && ~B",
                 "A || ~A",
                 "C || A",
@@ -131,6 +133,8 @@ public class ApplicationConditionsTest extends DeltaTest {
         ArrayList<String> acs = new ArrayList<String>(Arrays.asList(
                 "C",
                 "~A",
+                "~B && B",
+                "(A || B) && B",
                 "A && B",
                 "~A && B",
                 "A && ~A",
