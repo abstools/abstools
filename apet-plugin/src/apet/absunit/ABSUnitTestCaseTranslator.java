@@ -28,6 +28,8 @@ import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Access;
+import abs.frontend.ast.AppCond;
+import abs.frontend.ast.AppCondFeature;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaAccess;
@@ -174,6 +176,7 @@ public class ABSUnitTestCaseTranslator {
 		Feature feature = new Feature();
 		feature.setName(FEATURE_NAME);
 		productline.addOptionalFeature(feature);
+		AppCond ac = new AppCondFeature(FEATURE_NAME);
 
 		Set<String> applicationConditions = new HashSet<String>();
 		DeltaClause lastClause = null;
@@ -183,7 +186,7 @@ public class ABSUnitTestCaseTranslator {
 			String name = d.getDelta().getName();
 			spec.setName(name);
 			clause.setDeltaspec(spec);
-			clause.addFeature(feature);
+			clause.setAppCond(ac);
 
 			if (d.isLast()) {
 				lastClause = clause;
