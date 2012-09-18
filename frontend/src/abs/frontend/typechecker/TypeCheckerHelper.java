@@ -181,7 +181,7 @@ public class TypeCheckerHelper {
             for (Feature cf : clause.getProductLine().getOptionalFeatures()) {
                 definedFeatures.add(cf.getName());
             }
-            clause.getAppCond().typeCheck(deltaNames, e);
+            clause.getAppCond().typeCheck(definedFeatures, e);
         }
         
         /* What about deltas mentioned in the 'after' clause? */
