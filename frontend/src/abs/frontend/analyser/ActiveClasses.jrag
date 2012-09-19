@@ -1,12 +1,8 @@
 aspect ActiveClasses {
 
-    syn boolean ClassDecl.isActiveClass();
-    eq ClassDecl.isActiveClass() {
-        for (MethodImpl method : getMethods()) {
-            if (method.getMethodSig().getName().equals("run")) return true;
-        }
-        return false;
-    }
+    // TODO: check for no arguments as well?
+    syn boolean ClassDecl.isActiveClass() = lookupMethod("run") != null;
+
 }
 // Local Variables:
 // mode: java
