@@ -27,7 +27,7 @@ aspect OriginalCallResolver {
     public void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
+        //System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
         for (ModuleModifier cm : this.getModuleModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
@@ -88,7 +88,7 @@ aspect OriginalCallResolver {
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
         // found OriginalCall
-        System.out.println("*** found: " + this);
+        //System.out.println("*** found: " + this);
         
         // find and copy original method matching this OriginalCall
         MethodImpl originalMethodCopy = mod.findOriginalMethod(this, deltas);
@@ -102,9 +102,9 @@ aspect OriginalCallResolver {
             cm.addModifier(new AddMethodModifier(originalMethodCopy));
             mod.getDelta().addModuleModifier(cm);
             mod.getModel().cacheOriginalMethod(methodId);
-            System.out.println("*** copied original method to delta " + mod.getDelta().getName() + " as " + originalMethodCopy.getMethodSig().getName());
+            //System.out.println("*** copied original method to delta " + mod.getDelta().getName() + " as " + originalMethodCopy.getMethodSig().getName());
         } else {
-            System.out.println("*** original method already cached as " + methodId);
+            //System.out.println("*** original method already cached as " + methodId);
         }
         
         // replace OriginalCall with a normal call to the copied method
@@ -112,7 +112,7 @@ aspect OriginalCallResolver {
         ASTNode parent = getParent();
         int i = parent.getIndexOfChild(this);
         parent.setChild(call, i);
-        System.out.println("*** replaced " + this + " with call to: " + originalMethodCopy.getMethodSig() + "\n");
+        //System.out.println("*** replaced " + this + " with call to: " + originalMethodCopy.getMethodSig() + "\n");
     }
     
     /* Given an OriginalCall (targeted or untargeted), find original method.
@@ -161,7 +161,7 @@ aspect OriginalCallResolver {
             String classid, 
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        System.out.println("*** searching for method " + classid + "." + methodid);
+        //System.out.println("*** searching for method " + classid + "." + methodid);
         
         // search in list of applied deltas
         for (DeltaDecl delta : deltas) {
@@ -191,7 +191,7 @@ aspect OriginalCallResolver {
             String classid, 
             DeltaDecl delta) throws DeltaModellingException {
         
-        System.out.println("*** searching in delta " + delta.getName());
+        //System.out.println("*** searching in delta " + delta.getName());
         for (ModuleModifier cm : delta.getModuleModifiers()) {
             if (cm.getName().equals(classid)) {
                 if (cm instanceof ModifyClassModifier) {
@@ -235,7 +235,7 @@ aspect OriginalCallResolver {
 
         for (Decl cls : getDelta().getModel().getDecls()) {
             if (cls instanceof ClassDecl) {
-                System.out.println("*** searching in core class " + cls.getName());
+                //System.out.println("*** searching in core class " + cls.getName());
                 for (MethodImpl method : ((ClassDecl)cls).getMethods()) {
                     if (method.getMethodSig().getName().equals(methodid))
                         return copyMethod(method, "core");

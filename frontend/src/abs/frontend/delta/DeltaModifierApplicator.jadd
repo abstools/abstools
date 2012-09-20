@@ -40,7 +40,7 @@ aspect DeltaModifierApplicator {
         ClassDecl cls = findClass();
         if (cls == null)
            throw new DeltaModellingException("Delta " + getDelta().getName() 
-                + " wants to modify class declaration " + getName() + ", which was not found.");
+                + " wants to modify class [" + getName() + "], which was not found.");
 
         
         // add any interfaces added by the ClassModifier
@@ -59,7 +59,9 @@ aspect DeltaModifierApplicator {
                 }
             }
             if (! found)
-                throw new DeltaModellingException("Class " + cls.getName() + " does not implement interface " + toRemove.getName() + ".");
+                throw new DeltaModellingException("Delta " + getDelta().getName() 
+                    + " wants to remove interface [" + toRemove.getName() + "] from class [" + cls.getName() 
+                    + "]. However, the class does not implement said interface.");
         }
 
         // apply all modifiers
@@ -142,7 +144,7 @@ aspect DeltaModifierApplicator {
                 moduleid = this.getDelta().getDeltaAccess(0).getModuleName();
             } catch(NullPointerException e) {
                 throw new DeltaModellingException("Unqualified name of modified entity requires "
-                        + "a \'uses\' statement to determine the module to be modified.");
+                        + "a \'uses\' statement inside the delta, to determine the module to be modified.");
             }
         } else {
             moduleid = name.getModuleName();
@@ -153,8 +155,8 @@ aspect DeltaModifierApplicator {
                 return module;
             }
         }
-        throw new DeltaModellingException("Cannot find module " + moduleid + " for adding ModuleModifier " + getName()
-                + " in Delta " + getDelta().getName() + ".");
+        throw new DeltaModellingException("Delta " + getDelta().getName() 
+                + " wants to modify module [" + moduleid + "], which was not found.");
     }
 
 
@@ -164,21 +166,21 @@ aspect DeltaModifierApplicator {
      * find the (Class or Interface) Decl which should be modified by this OOModifier
      */
     public ClassDecl ClassModifier.findClass() {
-        System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
+        //System.out.println("=== Delta " + getDelta().getName() + " looking for ClassDecl: " + this.getName());
         try {
-        ModuleDecl module = findModule();
-        for (Decl decl : module.getDecls()) {
-            if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName()))
-                return (ClassDecl) decl;
-        }
-        // not found
-        throw new DeltaModellingException("Delta " + getDelta().getName() 
-                + " wants to modify class declaration " + this.getName() + ", which was not found.");
+            ModuleDecl module = findModule();
+            for (Decl decl : module.getDecls()) {
+                if (decl instanceof ClassDecl && decl.getName().equals(this.getSimpleName()))
+                    return (ClassDecl) decl;
+            }
+            // not found
+            throw new DeltaModellingException("Delta " + getDelta().getName() 
+                    + " wants to modify class [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
         } catch (DeltaModellingException e) { return null; }
     }
 
     public InterfaceDecl InterfaceModifier.findInterface() throws DeltaModellingException {
-        System.out.println("=== Delta " + getDelta().getName() + " looking for InterfaceDecl: " + this.getName());
+        //System.out.println("=== Delta " + getDelta().getName() + " looking for InterfaceDecl: " + this.getName());
 
         ModuleDecl module = findModule();
         for (Decl decl : module.getDecls()) {
@@ -187,7 +189,7 @@ aspect DeltaModifierApplicator {
         }
         // not found
         throw new DeltaModellingException("Delta " + getDelta().getName() 
-                + " wants to modify interface declaration " + this.getName() + ", which was not found.");
+                + " wants to modify interface [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
     }
 
     
@@ -215,7 +217,7 @@ aspect DeltaModifierApplicator {
             cd.getMethods().removeChild(found);
         else
             throw new DeltaModellingException("Delta " + this.getDelta().getName() 
-                    + " wants to remove method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
+                    + " wants to remove method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
 
     public void AddMethodModifier.applyTo(ClassDecl cd) {
@@ -241,7 +243,7 @@ aspect DeltaModifierApplicator {
             cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
         else
             throw new DeltaModellingException("Delta " + "." + this.getDelta().getName() 
-                    + " wants to modify method " + cd.qualifiedName() + "." + mysig + ", which was not found.");
+                    + " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
 
     public void RemoveFieldModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
@@ -260,7 +262,7 @@ aspect DeltaModifierApplicator {
             cd.getFields().removeChild(found);
         else
             throw new DeltaModellingException("Delta " + this.getDelta().getName() 
-                    + " wants to remove field " + cd.qualifiedName() + "." + myfield + ", which was not found.");
+                    + " wants to remove field [" + myfield + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
@@ -293,7 +295,7 @@ aspect DeltaModifierApplicator {
             iface.getBodys().removeChild(found);
         else
             throw new DeltaModellingException("Delta " + this.getDelta().getName() 
-                    + " wants to remove method signature " + iface.qualifiedName() + "." + mysig + ", which was not found.");
+                    + " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.qualifiedName() + "].");
     }
     
     

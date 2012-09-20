@@ -99,7 +99,7 @@ aspect ProductFlattener {
     */
     public void Model.applyDelta(DeltaDecl delta) throws DeltaModellingException {
         for (ModuleModifier mod : delta.getModuleModifiers()) {
-            System.out.println("*** applying ModuleModifier " + mod);
+            //System.out.println("*** applying ModuleModifier " + mod);
             mod.apply();
         }
     }
@@ -198,7 +198,7 @@ aspect ProductFlattener {
             for (DeltaDecl delta : u.getDeltaDecls()) {
                 for (String deltaid : deltaids) {
                     if (deltaid.equals(delta.getName())) {
-                        System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
+                        //System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
                         deltas.put(deltaid, delta);
                     }
                 }
