@@ -570,7 +570,7 @@ public class TypeCheckerHelper {
             e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
         } else {
             // check that fields are not used before they are defined:
-            boolean isUsedInFieldDecl = use.getContextFieldDecl() != null;
+            boolean isUsedInFieldDecl = use.getDecl() instanceof FieldDecl;
             if (isUsedInFieldDecl && use.getDecl().getEndPos() > use.getStartPos()) {
                 e.add(new TypeError(use,
                         use instanceof VarUse ? ErrorMessage.VAR_USE_BEFORE_DEFINITION

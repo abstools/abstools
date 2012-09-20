@@ -27,10 +27,9 @@ aspect TypeResolution {
     eq DataTypeDecl.isFuture() = getType().isFutureType();
     eq TypeSynDecl.isFuture() = getType().isFutureType();
 
-    syn Boolean Name.isSimple();
-    eq Name.isSimple() = !getName().contains(".");
+    syn Boolean Name.isSimple() = !getName().contains(".");
 
-    syn lazy String Name.getString() = getName();
+    syn String Name.getString() = getName();
     syn String Name.getSimpleName() {
         if (isSimple())
             return getName();
@@ -153,10 +152,10 @@ aspect TypeResolution {
         return null;
     }
 
-    syn lazy boolean Model.hasProductLine() = getProductLine() != null;
-    syn lazy boolean Model.hasMainBlock() = getMainBlock() != null;
+    syn boolean Model.hasProductLine() = getProductLine() != null;
+    syn boolean Model.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean Model.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
-    syn lazy boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
+    syn boolean CompilationUnit.hasMainBlock() = getMainBlock() != null;
     syn lazy boolean CompilationUnit.hasMainBlock(String mainBlock) = getMainBlock(mainBlock) != null;
 
     // *decl* refers to the appropriate declaration of the TypeUse or to
@@ -273,9 +272,7 @@ aspect TypeResolution {
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
     eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
 
-    syn lazy Decl DataConstructorExp.getDecl() {
-        return this.getDataConstructor();
-    }
+    syn Decl DataConstructorExp.getDecl() = getDataConstructor();
 
 /** 
  * @throws TypeCheckerException
@@ -311,8 +308,6 @@ aspect TypeResolution {
     
     /** returns the parent compilation unit of this node **/
     syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
-
-    syn lazy FieldDecl ASTNode.getContextFieldDecl() = (FieldDecl) calcContextNode(FieldDecl.class);
 
     public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
         ASTNode<?> n = this;
@@ -360,7 +355,7 @@ aspect TypeResolution {
     }
 
 
-    syn lazy String CompilationUnit.getFileName() = getName();
+    syn String CompilationUnit.getFileName() = getName();
 
     /**
      * @throws TypeCheckerException
