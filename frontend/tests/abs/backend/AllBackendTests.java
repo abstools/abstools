@@ -12,8 +12,12 @@ import abs.backend.java.*;
 import abs.backend.maude.MaudeTests;
 import abs.backend.prettyprint.PrettyPrinterTests;
 import abs.backend.tests.ASTBasedABSTestRunnerGeneratorTest;
+import abs.backend.tests.OtherCodeGenTests;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class, MaudeTests.MaudeRlTests.class, ASTBasedABSTestRunnerGeneratorTest.class, PrettyPrinterTests.class})
+@Suite.SuiteClasses({ AllJavaTests.class, AllSemanticTests.class, MaudeTests.MaudeEqTests.class, MaudeTests.MaudeRlTests.class
+    , ASTBasedABSTestRunnerGeneratorTest.class, PrettyPrinterTests.class
+    , OtherCodeGenTests.class
+    })
 public class AllBackendTests {
 }

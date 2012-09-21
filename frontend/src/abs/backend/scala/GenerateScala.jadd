@@ -228,11 +228,11 @@ aspect GenerateScala {
 		}
 		
 		if (decl.getModule().getName().equals("ABS.Meta")) {
-			if (decl.getName().equals("reflect")) {
+			// if (decl.getName().equals("reflect")) {
 				// unsupported
 				writer.write("null");
 				return;
-			}
+			// }
 		}
 		
 		if (decl.getModule().getName().equals("ABS.DC")) {
