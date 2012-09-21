@@ -1,7 +1,6 @@
 //$Id$
 package abs.frontend.parser;
 
-import beaver.Symbol;
 import beaver.Scanner;
 import abs.frontend.parser.ABSSymbol;
 import abs.frontend.parser.ABSParser.Terminals;
