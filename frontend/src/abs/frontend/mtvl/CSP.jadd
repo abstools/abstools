@@ -21,14 +21,15 @@ aspect CSP {
     ChocoSolver s = new ChocoSolver(this);
 
     // new int variable for all int variables
-    for (String st : ints().keySet()) {
-      if (ints().get(st).length == 2) {
-    	  BoundaryInt b1 = ints().get(st)[0];
-    	  BoundaryInt b2 = ints().get(st)[1];
+    for (java.util.Map.Entry<String, BoundaryInt[]> e : ints().entrySet()) {
+      String st = e.getKey();
+      if (e.getValue().length == 2) {
+    	  BoundaryInt b1 = e.getValue()[0];
+    	  BoundaryInt b2 = e.getValue()[1];
     	  addBoundedVar(s,st,b1,b2);
       }
       else {
-    	  addSetVar(s,st,ints().get(st));
+    	  addSetVar(s,st,e.getValue());
       }
     
       //s.addIntVar(st,getBoundary(b1,false),getBoundary(b2,true));

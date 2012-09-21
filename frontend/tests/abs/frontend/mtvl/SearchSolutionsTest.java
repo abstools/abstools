@@ -4,10 +4,8 @@
  */
 package abs.frontend.mtvl;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.FileOutputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
@@ -15,12 +13,11 @@ import org.junit.Test;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
 
-
 public class SearchSolutionsTest extends FrontendTest {
     
     static private boolean checkSol(ChocoSolver s, Model m, String prod) {
-        Map<String,Integer> guess = new HashMap<String,Integer>();
-        if (m.getSolution(prod,guess))
+        Map<String,Integer> guess = m.getSolution(prod);
+        if (guess != null)
             return s.checkSolution(guess,m);
         else return false;
     }
@@ -47,7 +44,6 @@ public class SearchSolutionsTest extends FrontendTest {
         "          (Repeat.times >= 2 && Repeat.times <= 5);" +
         " }";
 
-
     @Test
     public void SearchSolutions() {
         Model model = assertParseOk(helloprogram);
@@ -55,7 +51,7 @@ public class SearchSolutionsTest extends FrontendTest {
                 
         ChocoSolver s = model.getCSModel();
 
-        assertTrue(s.countSolutions() == 78);
+        assertEquals(78,s.countSolutions());
         assertTrue(checkSol(s,model,"P1"));
         assertTrue(checkSol(s,model,"P2"));
         assertTrue(checkSol(s,model,"P3"));
@@ -69,6 +65,6 @@ public class SearchSolutionsTest extends FrontendTest {
         
         ChocoSolver s = model.getCSModel();
         
-        assertTrue(s.countSolutions() == 8);
+        assertEquals(8,s.countSolutions());
     }
 }

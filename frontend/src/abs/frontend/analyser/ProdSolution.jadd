@@ -13,50 +13,26 @@ aspect ProdSolution {
     
     // Nullable: if it fails to get a possible solution returns null.
     public Map<String,Integer> Model.getSolution(String product)  {
-        Map<String,Integer> guess = new HashMap<String,Integer>();
-        boolean res = getSolution(product,guess);
-        if (res) return guess;
-        else return null;
+      try {
+        Product p = findProduct(product);
+        if (p != null)
+          return p.getSolution();
+      } catch (WrongProgramArgumentException e) {}
+      return null;
     }
     
-    public boolean Model.getSolution(String product, Map<String,Integer> sol) {
-        boolean res = false;
-        for (CompilationUnit c : getCompilationUnits())
-            res = res || c.getSolution(product,sol);
-        return res;
-    }
-
-    public boolean CompilationUnit.getSolution(String product, Map<String,Integer> sol) {
-        for (Product p : getProducts()) {
-            if (product.equals(p.qualifiedName())) {
-                for(Feature f : p.getFeatures())
-                    f.getSolution(true,sol);
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    // simpler version: product already found
-    public boolean Model.getSolution(Product product, Map<String,Integer> sol) {
-    	for(Feature f : product.getFeatures())
-    		f.getSolution(true,sol);
-    	return true;
-    }
-    public Map<String,Integer> Model.getSolution(Product product) {
+    public Map<String,Integer> Product.getSolution() {
         Map<String,Integer> sol= new HashMap<String,Integer>();
-        for(Feature f : product.getFeatures())
-    		f.getSolution(true,sol);
+        for(Feature f : getFeatures())
+    		getSolution(f,true,sol);
     	return sol;
     }
 
-
-    public void Feature.getSolution(Boolean found, Map<String,Integer> sol) {
+    private static void Product.getSolution(Feature f, Boolean found, Map<String,Integer> sol) {
         if (found) {
-            sol.put(getName(),new Integer(1));
-            for(AttrAssignment attr : getAttrAssignments())
-                sol.put(getName()+"."+attr.getName(),attr.getValue().getIntValue());
+            sol.put(f.getName(), Integer.valueOf(1));
+            for(AttrAssignment attr : f.getAttrAssignments())
+                sol.put(f.getName()+"."+attr.getName(),attr.getValue().getIntValue());
         }
     }
 
@@ -65,9 +41,6 @@ aspect ProdSolution {
             return getValue();
     }
     public Integer BoolVal.getIntValue() {
-            if (getValue()) return new Integer(1);
-            else            return new Integer(0);
+            return Integer.valueOf( getValue() ? 1 : 0);
     }
-
-
 }  

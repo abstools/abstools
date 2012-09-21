@@ -38,7 +38,7 @@ aspect ProductFlattener {
             System.out.println("--- configuring product: " + prod.getName());
 
         if (check && hasMTVL()) {
-            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(getSolution(prod), this);
+            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(prod.getSolution(), this);
             if (!errors.isEmpty()) {
                 String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
                 for (String s: errors)
@@ -216,14 +216,13 @@ aspect ProductFlattener {
 
         for (DeltaClause c : pl.getDeltaClauses()) {
             String deltaid = c.getDeltaspec().getName();
-            
-            if (deltas.containsKey(deltaid)) {
-                DeltaDecl delta = deltas.get(deltaid);
+            DeltaDecl delta = deltas.get(deltaid);
+            if (delta != null) {
                 // for each afterdelta: add an edge to delta
                 for (DeltaID did : c.getDeltaIDs()) {
                     String otherid = did.getName();
-                    if (deltas.containsKey(otherid)) {
-                        DeltaDecl otherdelta = deltas.get(otherid);
+                    DeltaDecl otherdelta = deltas.get(otherid);
+                    if (otherdelta != null) {
                         try {
                             g.addEdge(otherdelta, delta);
                         } catch (VertexNotFoundException e) {
@@ -236,8 +235,4 @@ aspect ProductFlattener {
         g.sort(); // FIXME catch the case when sort fails -- use assert?
         return g.getSortedDeltas();
     }
- 
-    
-    
-    
 }

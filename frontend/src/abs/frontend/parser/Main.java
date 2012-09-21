@@ -14,18 +14,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.jar.JarEntry;
 
-import choco.Choco;
 import choco.kernel.model.constraints.Constraint;
-import choco.kernel.model.variables.integer.IntegerVariable;
-import choco.kernel.solver.branch.VarSelector;
 
 import abs.frontend.mtvl.ChocoSolver;
 
@@ -339,8 +331,8 @@ public class Main {
                         }*/
                         
                         ChocoSolver s = m.getCSModel();
-                        Map<String,Integer> guess = new HashMap<String,Integer>();
-                        if (m.getSolution(product,guess))
+                        Map<String,Integer> guess = m.getSolution(product);
+                        if (guess != null)
                             System.out.println("checking solution: "+s.checkSolution(guess,m));
                         else {
                             System.out.println("Product '"+product+"' not found.");

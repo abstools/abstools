@@ -1,14 +1,13 @@
 
 aspect BackPositions {
 
-	syn lazy int ASTNode.getStartPos() {
+	syn int ASTNode.getStartPos() {
 		return getStart();
 	}
 	
 	syn boolean ASTNode.hasChildren() = getNumChild() > 0;
-	
 
-	syn lazy int ASTNode.getEndPos() {
+	syn int ASTNode.getEndPos() {
 		return getEnd();
 	}
 	
