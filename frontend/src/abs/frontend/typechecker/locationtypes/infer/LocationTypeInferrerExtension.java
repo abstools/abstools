@@ -4,22 +4,15 @@
  */
 package abs.frontend.typechecker.locationtypes.infer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import abs.frontend.analyser.HasCogs;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.ConstructorArg;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.MainBlock;
 import abs.frontend.ast.Model;
@@ -55,7 +48,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     private Map<LocationTypeVariable, LocationType> results;
     private LocationType defaultType = LocationType.INFER;
     
-    private Map<ASTNode<?>, java.util.List<LocationType>> farTypes = new HashMap<ASTNode<?>, java.util.List<LocationType>>();
+    private Map<HasCogs, List<LocationType>> farTypes = new HashMap<HasCogs, List<LocationType>>();
     
     public LocationTypeInferrerExtension(Model m) {
         super(m);
@@ -123,8 +116,8 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         return tv;
     }
 
-    private java.util.List<LocationType> getFarTypes(ASTNode<?> originatingNode) {
-        ASTNode<?> node = null;
+    private List<LocationType> getFarTypes(ASTNode<?> originatingNode) {
+        HasCogs node = null;
         String prefix = "";
         if (precision == LocationTypingPrecision.GLOBAL_FAR) {
             node = originatingNode.getCompilationUnit().getModel();
@@ -160,10 +153,11 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         if (node == null) {
             return Collections.emptyList();
         }
-        if (farTypes.containsKey(node)) {
-            return farTypes.get(node);
+        final List<LocationType> e = farTypes.get(node);
+        if (e != null) {
+            return e;
         } else {
-            java.util.List<LocationType> result = new ArrayList<LocationType>();
+            List<LocationType> result = new ArrayList<LocationType>();
             int numberOfNewCogs = node.getNumberOfNewCogExpr();
             if (numberOfNewCogs > THRESHOLD) {
                 numberOfNewCogs = THRESHOLD;
