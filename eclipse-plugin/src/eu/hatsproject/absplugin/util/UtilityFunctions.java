@@ -30,7 +30,6 @@ import org.eclipse.ui.ide.IDE;
 import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
 import abs.frontend.parser.SourcePosition;
-import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.builder.AbsNature;
 import eu.hatsproject.absplugin.console.ConsoleManager;
@@ -152,13 +151,11 @@ public class UtilityFunctions {
 	public static EditorPosition getPosition(ASTNode<?> node){
 		if (node != null){
 			//Get the start position	
-			int start = node.getStart();
-			int startLine = Symbol.getLine(start) - 1;
-			int startCol = Symbol.getColumn(start) - 1;
+			int startLine = node.getStartLine() - 1;
+			int startCol = node.getStartColumn() - 1;
 			//Get the end position
-			int end = node.getEnd();
-			int endLine = Symbol.getLine(end) - 1;
-			int endCol = Symbol.getColumn(end);
+			int endLine = node.getEndLine() - 1;
+			int endCol = node.getEndColumn();
 			return new EditorPosition(null,startLine,startCol,endLine,endCol);
 		}
 		

@@ -8,7 +8,7 @@ import beaver.Symbol;
 
 public class SyntaxError extends ParserError {
 
-    private Symbol token;
+    private final Symbol token;
 
     public SyntaxError(final String message) {
         this(message, 0, 0, null);
@@ -19,7 +19,6 @@ public class SyntaxError extends ParserError {
         this.token = token;
     }
 
-    public Symbol getToken() {
-        return token;
-    }
+    public int getEndLine() { return Symbol.getLine(token.getEnd()); };
+    public int getEndColumn() { return Symbol.getColumn(token.getEnd()); };
 }

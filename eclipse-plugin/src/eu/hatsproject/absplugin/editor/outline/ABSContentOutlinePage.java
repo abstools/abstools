@@ -24,8 +24,6 @@ import org.eclipse.ui.services.IServiceScopes;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
-import beaver.Symbol;
-
 import abs.frontend.ast.CompilationUnit;
 import eu.hatsproject.absplugin.editor.ABSEditor;
 import eu.hatsproject.absplugin.editor.reconciling.CompilationUnitChangeListener;
@@ -233,7 +231,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	}
 
 	private InternalASTNode<?> findNodeInLine(InternalASTNode<?> node, int startLine) {
-	    final int line = Symbol.getLine(node.getASTNode().getStart());
+	    final int line = node.getASTNode().getStartLine();
 		if (line > startLine) {
 			/* If a module starts with comments, the "module" declaration will be the
 			 * root node in line n > 1, yet the editor will be placed in startLine=1.

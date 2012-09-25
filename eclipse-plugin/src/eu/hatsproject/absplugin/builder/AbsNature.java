@@ -38,7 +38,6 @@ import abs.frontend.parser.SyntaxError;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
-import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.console.ConsoleManager;
 import eu.hatsproject.absplugin.console.MsgConsole;
@@ -243,9 +242,6 @@ public class AbsNature implements IProjectNature {
 		if (node == null)
 			return; 
 		
-		int start       = node.getStart();
-		int end         = node.getEnd();
-				
 	   IFile declfile;
 	   node = node.getCompilationUnit();
 		declfile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(((CompilationUnit)node).getFileName()));
@@ -263,11 +259,11 @@ public class AbsNature implements IProjectNature {
 		IMarker marker = declfile.createMarker(markerType);
 		marker.setAttribute(IMarker.MESSAGE, message);
 		marker.setAttribute(IMarker.SEVERITY, severity);
-		marker.setAttribute(START_LINE, Symbol.getLine(start)-1);
-		marker.setAttribute(START_COLUMN, Symbol.getColumn(start)-1);
-		marker.setAttribute(END_LINE, Symbol.getLine(end)-1);
-		marker.setAttribute(END_COLUMN, Symbol.getColumn(end));
-		marker.setAttribute(IMarker.LINE_NUMBER, Symbol.getLine(start));
+		marker.setAttribute(START_LINE, node.getStartLine()-1);
+		marker.setAttribute(START_COLUMN, node.getStartColumn()-1);
+		marker.setAttribute(END_LINE, node.getEndLine()-1);
+		marker.setAttribute(END_COLUMN, node.getEndColumn());
+		marker.setAttribute(IMarker.LINE_NUMBER, node.getStartLine());
    }
 	
 	/**
@@ -355,9 +351,8 @@ public class AbsNature implements IProjectNature {
 
       if(err instanceof SyntaxError){
       	SyntaxError serr = (SyntaxError)err;
-      	int end   = serr.getToken().getEnd();
-      	endline   = Symbol.getLine(end)-1;
-      	endcolumn = Symbol.getColumn(end);
+      	endline   = serr.getEndLine()-1;
+      	endcolumn = serr.getEndColumn();
       } else {
       	endcolumn = -1;
       	endline   = startline;

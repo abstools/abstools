@@ -726,7 +726,7 @@ public class ABSContentOutlineUtils {
 			if (node instanceof FunctionDecl) {
 				FunctionDecl del = (FunctionDecl) node;
 				callerName = del.getName();
-				line = FunctionDecl.getLine(del.getStart());
+				line = del.getStartLine();
 				CostabsLink.ENTRIES_STRINGS.add(callerName);
 				CostabsLink.LINE_ITEMS.add(line);
 			} else if (node instanceof MethodImpl) { 
@@ -735,7 +735,7 @@ public class ABSContentOutlineUtils {
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getMethodSig().getName();
-					line = MethodImpl.getLine(del.getStart());
+					line = del.getStartLine();
 					CostabsLink.ENTRIES_STRINGS.add(callerName);
 					CostabsLink.LINE_ITEMS.add(line);
 				}
@@ -745,7 +745,7 @@ public class ABSContentOutlineUtils {
 				if (par instanceof ClassDecl) {
 					ClassDecl cl = (ClassDecl) par;
 					callerName = cl.getName() + "." + del.getName();
-					line = MethodSig.getLine(del.getStart());
+					line = del.getStartLine();
 					CostabsLink.ENTRIES_STRINGS.add(callerName);
 					CostabsLink.LINE_ITEMS.add(line);
 				}

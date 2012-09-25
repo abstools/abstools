@@ -17,7 +17,6 @@ import abs.frontend.ast.*;
 import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.*;
 import abs.frontend.typechecker.KindedName.Kind;
-import beaver.Symbol;
 import eu.hatsproject.absplugin.Activator;
 import eu.hatsproject.absplugin.util.InternalASTNode;
 import eu.hatsproject.absplugin.util.UtilityFunctions;
@@ -156,8 +155,8 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
                 return null;
             }
 
-            final int startOffset = getOffset(doc, node.getStart());
-            final int endOffset = getOffset(doc, node.getEnd());
+            final int startOffset = getOffset(doc, node.getStartLine(), node.getStartColumn());
+            final int endOffset = getOffset(doc, node.getEndLine(), node.getEndColumn());
 
             if (decl instanceof MethodSig) { 
                 MethodSig methodSig = (MethodSig) decl;
@@ -208,12 +207,12 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     /**
      * gets the offset for a given line & column
      * @param doc
-     * @param position line & column packed
+     * @param position line & column
      * @return
      * @throws BadLocationException
      */
-    private static int getOffset(IDocument doc, int position)	throws BadLocationException {
-        return doc.getLineOffset(Symbol.getLine(position)-1) + Symbol.getColumn(position)-1;
+    private static int getOffset(IDocument doc, int line, int col) throws BadLocationException {
+        return doc.getLineOffset(line-1) + col-1;
     }
 
     /**
@@ -241,10 +240,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         }
         CompilationUnit declcu = node.getCompilationUnit();
 
-        int start = node.getStartPos();
-        int end = node.getEndPos();
-        
-        return new EditorPosition(new Path(declcu.getFileName()), Symbol.getLine(start), Symbol.getColumn(start), Symbol.getLine(end), Symbol.getColumn(end));
+        return new EditorPosition(new Path(declcu.getFileName()), node.getStartLine(), node.getStartColumn(), node.getEndLine(), node.getEndColumn());
     }
 
     /**
