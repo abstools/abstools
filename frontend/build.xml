@@ -374,6 +374,7 @@
 	              output="xml"
 	              outputFile="${gen.dir}/frontend-src-findbugs.xml"
 	    		  jvmargs="-Xmx512m"
+	              excludefilter="findbugs-jastadd-filter.xml"
 	    	      quietErrors="true" >
 	      <sourcePath path="${basedir}/src" />
 	      <class location="${build.dir}/abs" />

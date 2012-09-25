@@ -1,0 +1,14 @@
+<FindBugsFilter>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="NM_FIELD_NAMING_CONVENTION" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
+  </Match>   
+</FindBugsFilter>
