@@ -206,29 +206,25 @@ aspect TypeChecker {
         }
     }
     
-    public void Decl.checkOverloading(HashMap<String, MethodSig> sigs, HashMap<String, MethodSig> mysigs, InterfaceTypeUse u, SemanticErrorList e) {
+    protected void Decl.checkOverloading(HashMap<String, MethodSig> sigs, HashMap<String, MethodSig> mysigs, InterfaceTypeUse u, SemanticErrorList e) {
         for (Map.Entry<String, MethodSig> entry : mysigs.entrySet()) {
-            if (sigs.containsKey(entry.getKey())) {
+            MethodSig s = sigs.get(entry.getKey());
+            if (s != null) {
                 boolean overloads = false;
                 MethodSig ms = entry.getValue();
-                MethodSig s = sigs.get(entry.getKey());
                 if (s.getNumParam() != ms.getNumParam()) {
                     overloads = true;
                 } else {
                     for (int i = 0; i < s.getNumParam(); i++) {
                         Type texpected = s.getParam(i).getType();
                         Type t = ms.getParam(i).getType();
-                        if (!texpected.equals(t)) {
-                            overloads = true;
-                        }
+                        overloads |= !texpected.equals(t);
                     }
                 }
                 
                 Type expectedReturnType = s.getReturnType().getType();
                 Type actualReturnType = ms.getReturnType().getType(); 
-                if (!expectedReturnType.equals(actualReturnType)) {
-                    overloads = true;                            
-                }
+                overloads |= !expectedReturnType.equals(actualReturnType);
                 if (overloads) {
                     e.add(new TypeError(u, ErrorMessage.CANNOT_IMPL_INTERFACE, u.getName(), s.getName()));
                 }
@@ -276,13 +272,11 @@ aspect TypeChecker {
    	  for (MethodImpl m : getMethods()) {
    		  m.typeCheck(e);
    		  String name = m.getMethodSig().getName();
-   		  if (methodImpls.containsKey(name)) {
+   		  if (methodImpls.put(name,m) != null) {
               e.add(new TypeError(m, ErrorMessage.DUPLICATE_METHOD_NAME, name));
-   		  } else {
-          	methodImpls.put(name,m);
           }
-   		  if (sigs.containsKey(name)) {
-   		      MethodSig s = sigs.get(name);
+   		  MethodSig s = sigs.get(name);
+   		  if (s != null) {
    		      MethodSig ms = m.getMethodSig();
    		      InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
    		      if (s.getNumParam() != ms.getNumParam()) {
@@ -652,10 +646,13 @@ aspect TypeChecker {
    	 }
     }
     public void ExpGuard.typeCheck(SemanticErrorList e) { 
-      	 PureExp exp = getPureExp();
-       	 exp.typeCheck(e);
-       	 TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
-       	 hasFieldAccess(e); // check for visible change/builtin
+      PureExp exp = getPureExp();
+      // We'll only run "deeper" checks if the types check out. 
+      int size = e.size();
+      exp.typeCheck(e);
+      TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
+      if (e.size() == size)
+          hasFieldAccess(e); // check for visible change/builtin
     }
     public void DurationGuard.typeCheck(SemanticErrorList e) {
         getMin().typeCheck(e);

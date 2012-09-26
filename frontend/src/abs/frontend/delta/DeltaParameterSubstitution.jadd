@@ -182,8 +182,8 @@ aspect DeltaParameterSubstitution {
     public void VarUse.applySubstitution(HashMap<String,Value> subst) {
         //System.out.println("%%% Substituting value " + getName());
         //System.out.println("%%% using subst: " + subst);
-        if (subst.containsKey(getName())) {
-            Value v = subst.get(getName());
+        Value v = subst.get(getName());
+        if (v != null) {
             ASTNode p = getParent();
             int i = p.getIndexOfChild(this);
             p.setChild(v.calcExpr(), i);

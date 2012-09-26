@@ -240,8 +240,8 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             return;
         if (lht.isTypeParameter() && rht.isReferenceType()) {
             TypeParameter typeParam = (TypeParameter) lht;
-            if (map.containsKey(typeParam)) {
-                Type lt = map.get(typeParam);
+            Type lt = map.get(typeParam);
+            if (lt != null) {
                 checkEq(lt,rht,origin);
             } else {
                 map.put(typeParam, rht);
