@@ -138,7 +138,7 @@ public class ABSCodeScanner implements ITokenScanner {
 		initSemanticRules();
 	}
 
-	public void initRegexRules() {
+	private void initRegexRules() {
 		IToken funtoken = Preferences.getToken(preferencestore, SYNTAXCOLOR_FUNCTION);
 		IToken typetoken = Preferences.getToken(preferencestore, SYNTAXCOLOR_DATATYPE); 
 		
@@ -152,7 +152,7 @@ public class ABSCodeScanner implements ITokenScanner {
 		wordrules.add(new RegexRule(NO_WORD + "(" + LOWERCASE_WORD + ")[^\\(].*", Token.UNDEFINED));
 	}
 	
-	public void initSemanticRules(){
+	private void initSemanticRules(){
 		IToken token;
 		
 		token = Preferences.getToken(preferencestore, SYNTAXCOLOR_VAR);
@@ -297,16 +297,13 @@ public class ABSCodeScanner implements ITokenScanner {
 		
 		IToken token = Token.UNDEFINED;
 		
-		IDocument doc = fEditor.getDocumentProvider().getDocument(fEditor.getEditorInput());
-		
 		try {
-			IResource file = fEditor.getResource();
-			AbsNature nature = getAbsNature(file);
+			AbsNature nature = fEditor.getAbsNature();
 			if (nature == null)
 			   return token;
 			
 			synchronized (nature.modelLock) {
-				final ASTNode<?> currentNode = getASTNodeOfOffset(doc, compilationUnit, fTokenOffset);
+				final ASTNode<?> currentNode = getASTNodeOfOffset(fDocument, compilationUnit, fTokenOffset);
 				Model typecheckedModel = nature.getCompleteModel();
 				if(typecheckedModel == null)
 					return null;
@@ -363,7 +360,7 @@ public class ABSCodeScanner implements ITokenScanner {
 	 * @param typeCheckedModel
 	 * @return the declaration or <b>null</b> if a {@link RuntimeException} occurs
 	 */
-	public ASTNode<?> resolveTypeUse(TypeUse tu, Model typeCheckedModel) {
+	private ASTNode<?> resolveTypeUse(TypeUse tu, Model typeCheckedModel) {
 		try {
 			String tuname = tu.getName();
 			ModuleDecl moduleDecl = tu.getModuleDecl();
