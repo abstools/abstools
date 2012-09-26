@@ -242,9 +242,7 @@ public class AbsNature implements IProjectNature {
 		if (node == null)
 			return; 
 		
-	   IFile declfile;
-	   node = node.getCompilationUnit();
-		declfile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path(((CompilationUnit)node).getFileName()));
+	   IFile declfile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(new Path((node.getCompilationUnit()).getFileName()));
 		/* [stolz] I had a situation where I had the ABSFrontend in the workspace, and then closed it:
 			org.eclipse.core.internal.resources.ResourceException: Resource '/ABSFrontend/src/abs/lang/abslang.abs' does not exist.
 				at org.eclipse.core.internal.resources.Resource.checkExists(Resource.java:320)
