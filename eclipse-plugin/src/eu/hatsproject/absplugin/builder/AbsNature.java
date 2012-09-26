@@ -524,11 +524,17 @@ public class AbsNature implements IProjectNature {
 	}
 	
 	public Model getCompleteModel(){
+		return getCompleteModel(null);
+	}
+
+	public Model getCompleteModel(IProgressMonitor mon){
 		Model model = modelbuilder.getCompleteModel();
 		/* Not compiled yet? */
 		if (model == null && project != null) {
 			try {
-				project.build(IncrementalProjectBuilder.FULL_BUILD, null);
+				project.build(IncrementalProjectBuilder.FULL_BUILD, mon);
+				// Now it should be ready:
+				model = modelbuilder.getCompleteModel();
 			} catch (CoreException e) {
 				Activator.logException(e);
 			}
