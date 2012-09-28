@@ -446,6 +446,9 @@ aspect TypeChecker {
     }
     
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
+      if (getValue().getName().equals(getName()))
+          e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
+      else    
         getValue().typeCheck(e);
     }
     

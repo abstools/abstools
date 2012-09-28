@@ -549,4 +549,10 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void localVariableHidingOk4() {
         assertTypeOK(" class C {  Int x = 1; { Int x = 2; } }");
     }
+    
+    @Test
+    public void typeRecursive1() throws Exception {
+        assertTypeErrors("type Foo = Foo;");
+    }
+    
 }
