@@ -414,7 +414,7 @@ mod ABS-DATATYPES is
     extending ABS-OID .
 
   op toAbsString : Data -> String .
-  eq toAbsString("int"[N:Int]) = string(N:Int, 10) .
+  eq toAbsString("num"[N:Rat]) = string(N:Rat, 10) .
   eq toAbsString("str"[S:String]) = S:String .
   eq toAbsString(null) = "null" .
   eq toAbsString(ob(C:Cid, N:Int))
@@ -1675,7 +1675,7 @@ mod ABS-STMT-GOTO-RL is
       < T : Clock | Limit: LIM, Random: RAND >
       moveCog(
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-        CONF, CG, eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
+        CONF, CG, eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
     }
     [label goto] .
 endm
@@ -1702,7 +1702,7 @@ mod ABS-STMT-GOTO-EQ is
       < T : Clock | Limit: LIM, Random: RAND >
       moveCog(
         < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-        CONF, CG, eval(E, (S :: L), none, ('.time |-> "int"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
+        CONF, CG, eval(E, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random])))
     }
     [label goto] .
 endm
