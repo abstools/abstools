@@ -44,7 +44,7 @@ public class PrimitiveTypes extends SemanticTests {
 
     @Test
     public void intDiv() {
-        assertEvalTrue("{ Bool testresult = 10 / 5 == 2;  }");
+        assertEvalTrue("{ Int x = 10/4; Bool testresult = x == 2;  }");
     }
 
     @Test
@@ -85,6 +85,61 @@ public class PrimitiveTypes extends SemanticTests {
     @Test
     public void intGtEq2() {
         assertEvalTrue("{ Bool testresult = 5 >= 5;  }");
+    }
+
+    @Test
+    public void ratAdd() {
+        assertEvalTrue("{ Bool testresult = 5/2 + 5/2 == 5;  }");
+    }
+
+    @Test
+    public void ratSub() {
+        assertEvalTrue("{ Bool testresult = 10/3 - 1/3 == 3;  }");
+    }
+
+    @Test
+    public void ratDiv() {
+        assertEvalTrue("{ Rat x = 10/4; Bool testresult = x == 5/2;  }");
+    }
+
+    @Test
+    public void ratMult() {
+        assertEvalTrue("{ Bool testresult = (2/5) * (5/2) == 1;  }");
+    }
+
+    @Test
+    public void ratMod() {
+        assertEvalTrue("{ Rat x = 10 % 3; Bool testresult = x == 1;  }");
+    }
+
+    @Test
+    public void ratGt() {
+        assertEvalTrue("{ Bool testresult = 5/3 > 4/3;  }");
+    }
+
+    @Test
+    public void ratLt() {
+        assertEvalTrue("{ Bool testresult = 4/3 < 5/3;  }");
+    }
+
+    @Test
+    public void ratLtEq() {
+        assertEvalTrue("{ Bool testresult = 4/3 <= 5/3;  }");
+    }
+
+    @Test
+    public void ratLtEq2() {
+        assertEvalTrue("{ Bool testresult = 5/2 <= 5/2;  }");
+    }
+
+    @Test
+    public void ratGtEq() {
+        assertEvalTrue("{ Bool testresult = 5/3 >= 4/3;  }");
+    }
+
+    @Test
+    public void ratGtEq2() {
+        assertEvalTrue("{ Bool testresult = 5/3 >= 5/3;  }");
     }
 
     @Test
