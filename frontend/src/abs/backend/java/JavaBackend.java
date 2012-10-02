@@ -114,6 +114,7 @@ public class JavaBackend extends Main {
     private static Map<String, String> initDataTypeMap() {
         final Map<String, String> res = new HashMap<String, String>();
         res.put("Int", ABSInteger.class.getName());
+        res.put("Rat", ABSRational.class.getName());
         res.put("Bool", ABSBool.class.getName());
         res.put("String", ABSString.class.getName());
         res.put("Fut", ABSFut.class.getName());

@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-
 import abs.backend.java.JavaBackend;
 import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
@@ -57,11 +56,11 @@ public class JavaGeneratorHelper {
         stream.println("// " + pos.getPositionString());
     }
 
-    public static void generateArgs(PrintStream stream, List<PureExp> args) {
-        generateArgs(stream, null, args);
+    public static void generateArgs(PrintStream stream, List<PureExp> args, java.util.List<Type> types) {
+        generateArgs(stream, null, args, types);
     }
 
-    public static void generateArgs(PrintStream stream, String firstArg, List<PureExp> args) {
+    public static void generateArgs(PrintStream stream, String firstArg, List<PureExp> args, java.util.List<Type> types) {
         stream.print("(");
         boolean first = true;
 
@@ -70,11 +69,13 @@ public class JavaGeneratorHelper {
             first = false;
         }
 
-        for (PureExp e : args) {
+        for (int i = 0; i < args.getNumChild(); i++) {
+            PureExp e = args.getChild(i);
             if (!first)
                 stream.print(", ");
-
             e.generateJava(stream);
+            if (types.get(i).isIntType() && e.getType().isRatType())
+                stream.print(".truncate()");
             first = false;
         }
         stream.print(")");
@@ -158,7 +159,7 @@ public class JavaGeneratorHelper {
             throw new RuntimeException("The built in function '" + name + "' is not implemented in the Java backend.");
         }
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        generateArgs(stream, app.getParams());
+        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
     }
 
     private static boolean builtInFunctionExists(String name) {
@@ -261,7 +262,7 @@ public class JavaGeneratorHelper {
         stream.println(" }}");
         stream.print("     .init");
         if (args != null)
-            JavaGeneratorHelper.generateArgs(stream,args);
+            JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
             JavaGeneratorHelper.generateParamArgs(stream, params);
         stream.print(")");

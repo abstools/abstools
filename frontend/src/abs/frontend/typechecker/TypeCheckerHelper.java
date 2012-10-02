@@ -209,6 +209,14 @@ public class TypeCheckerHelper {
         return res;
     }
 
+    public static java.util.List<Type> getTypesFromParamDecls(List<ParamDecl> params) {
+        ArrayList<Type> res = new ArrayList<Type>();
+        for (ParamDecl u : params) {
+            res.add(u.getType());
+        }
+        return res;
+    }
+
     /**
      * @deprecated
      * Unused.

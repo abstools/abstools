@@ -71,6 +71,7 @@
 	    <pathelement location="${ext.dir}/sat4j-maxsat.jar" />
 	    <pathelement location="${ext.dir}/sat4j-pb.jar" />
 		<pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
+		<pathelement location="${ext.dir}/apfloat.jar" />
 	</path>
 		
 	<path id="run.classpath">

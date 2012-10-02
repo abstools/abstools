@@ -6,24 +6,21 @@ package abs.backend.java.lib.types;
 
 import java.math.BigInteger;
 
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
+
 /**
  * Implementation of an ABS integer
  * 
  * @author Jan Schäfer
  * 
  */
-public class ABSInteger extends ABSBuiltInDataType {
-    public static final ABSInteger ZERO = new ABSInteger(0);
-    public static final ABSInteger ONE = new ABSInteger(1);
+public class ABSInteger extends ABSRational {
+    public static final ABSInteger ZERO = new ABSInteger(Apint.ZERO);
+    public static final ABSInteger ONE = new ABSInteger(Apint.ONE);
 
-    private BigInteger value;
-
-    private ABSInteger(int i) {
-        this(BigInteger.valueOf(i));
-    }
-
-    private ABSInteger(BigInteger i) {
-        super("");
+    private ABSInteger(Aprational i) {
+        super();
         this.value = i;
     }
 
@@ -39,8 +36,8 @@ public class ABSInteger extends ABSBuiltInDataType {
         return fromBigInt(this.value.multiply(i.value));
     }
 
-    public ABSInteger divide(ABSInteger i) {
-        return fromBigInt(this.value.divide(i.value));
+    public ABSRational divide(ABSInteger i) {
+        return ABSRational.fromBigInt(this.value).divide(i);
     }
 
     public ABSInteger mod(ABSInteger i) {
@@ -51,46 +48,16 @@ public class ABSInteger extends ABSBuiltInDataType {
         return fromBigInt(this.value.negate());
     }
 
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (!super.eq(o).toBoolean())
-            return ABSBool.FALSE;
-        ABSInteger oi = (ABSInteger) o;
-        return ABSBool.fromBoolean(oi.value.compareTo(this.value) == 0);
-    }
-
-    public ABSBool gt(ABSInteger i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(this.value.compareTo(i.value) == 1);
-    }
-
-    public ABSBool lt(ABSInteger i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(this.value.compareTo(i.value) == -1);
-    }
-
-    public ABSBool gtEq(ABSInteger i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        int res = this.value.compareTo(i.value);
-        return ABSBool.fromBoolean(res == 0 || res == 1);
-    }
-
-    public ABSBool ltEq(ABSInteger i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        int res = this.value.compareTo(i.value);
-        return ABSBool.fromBoolean(res == 0 || res == -1);
-    }
-
     public static ABSInteger fromBigInt(BigInteger i) {
+        return new ABSInteger(new Aprational(i));
+    }
+
+    public static ABSInteger fromBigInt(Aprational i) {
         return new ABSInteger(i);
     }
 
     public static ABSInteger fromString(String value) {
-        return fromBigInt(new BigInteger(value));
+        return fromBigInt(new Apint(value));
     }
 
     public static ABSInteger fromInt(int i) {
@@ -100,12 +67,14 @@ public class ABSInteger extends ABSBuiltInDataType {
         case 1:
             return ONE;
         default:
-            return fromBigInt(BigInteger.valueOf(i));
+            return fromBigInt(new Apint(i));
         }
     }
 
-    public static ABSInteger fromLong(long currentTimeMillis) {
-        return fromBigInt(BigInteger.valueOf(currentTimeMillis));
+    public static ABSInteger fromLong(long l) {
+        if (l == 0) return ZERO;
+        if (l == 1) return ONE;
+        return fromBigInt(new Apint(l));
     }
 
     public int toInt() {
@@ -118,7 +87,12 @@ public class ABSInteger extends ABSBuiltInDataType {
     }
 
     public BigInteger getBigInteger() {
-        return value;
+        return value.truncate().toBigInteger();
+    }
+
+    @Override
+    public ABSInteger truncate() {
+        return this;
     }
 
 }

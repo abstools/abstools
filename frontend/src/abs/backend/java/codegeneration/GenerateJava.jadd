@@ -343,6 +343,9 @@ aspect GenerateJava {
 
         if (hasInitExp()) {
             getInitExp().generateJava(stream);
+            if (getType().isIntType() && getInitExp().getType().isRatType()) {
+                stream.print(".truncate()");
+            }
         } else {
             stream.print("null");
         }
@@ -375,6 +378,9 @@ aspect GenerateJava {
         getVar().generateJava(stream);
         stream.print(" = ");
         getValue().generateJava(stream);
+        if (getVar().getType().isIntType() && getValue().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
         stream.println(";");
         
         if (getVar() instanceof VarUse) {
@@ -507,6 +513,7 @@ aspect GenerateJava {
 
     public void SyncCall.generateJava(PrintStream stream) {
     	PureExp callee = getCallee();
+        final List<PureExp> params = getParams();
  	    if (callee instanceof ThisExp) {
  	       stream.print(JavaBackend.getMethodName(getMethod()));
  	    } else {
@@ -514,7 +521,8 @@ aspect GenerateJava {
  	       callee.generateJava(stream);
  	       stream.print(")."+JavaBackend.getMethodName(getMethod()));
  	    }
-        JavaGeneratorHelper.generateArgs(stream,getParams());
+        JavaGeneratorHelper.generateArgs(stream,params,
+                                         TypeCheckerHelper.getTypesFromParamDecls(getMethodSig().getParams()));
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
@@ -536,13 +544,15 @@ aspect GenerateJava {
     }
 
     public void NewExp.generateJava(PrintStream stream) {
-      String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
+      ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
+      String className = JavaBackend.getQualifiedString(decl);
+
         if (hasCog()) {
             stream.print(className+".__ABS_createNewCOG");
-	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
+	        JavaGeneratorHelper.generateArgs(stream,"this",getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
         } else {
             stream.print(className+".__ABS_createNewObject");
-	        JavaGeneratorHelper.generateArgs(stream,"this",getParams());
+	        JavaGeneratorHelper.generateArgs(stream,"this",getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
         }
     }
 
@@ -719,7 +729,7 @@ aspect GenerateJava {
      }
 
       stream.print("apply");
-      JavaGeneratorHelper.generateArgs(stream,getParams());
+      JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
@@ -750,7 +760,7 @@ aspect GenerateJava {
             }
           }
           */
-          JavaGeneratorHelper.generateArgs(stream,getParams());
+          JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()));
         }
     }
 
@@ -786,8 +796,10 @@ aspect GenerateJava {
           stream.print(", ");
         }
         getVal().generateJava(stream);
+        if (getVar().getType().isIntType() && getVal().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
         stream.print(")");
-
     }
 
     public void IntLiteral.generateJava(PrintStream stream) {
