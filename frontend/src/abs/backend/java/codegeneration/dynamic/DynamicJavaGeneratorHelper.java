@@ -70,11 +70,11 @@ public class DynamicJavaGeneratorHelper {
         JavaGeneratorHelper.generateHelpLine(node, stream);
     }
 
-    public static void generateArgs(PrintStream stream, List<PureExp> args) {
-        generateArgs(stream, null, args);
+    public static void generateArgs(PrintStream stream, List<PureExp> args, java.util.List<Type> types) {
+        generateArgs(stream, null, args, types);
     }
 
-    public static void generateArgs(PrintStream stream, String firstArg, List<PureExp> args) {
+    public static void generateArgs(PrintStream stream, String firstArg, List<PureExp> args, java.util.List<Type> types) {
         stream.print("(");
         boolean first = true;
 
@@ -83,11 +83,13 @@ public class DynamicJavaGeneratorHelper {
             first = false;
         }
 
-        for (PureExp e : args) {
+        for (int i = 0; i < args.getNumChild(); i++) {
+            PureExp e = args.getChild(i);
             if (!first)
                 stream.print(", ");
-
             e.generateJavaDynamic(stream);
+            if (types.get(i).isIntType() && e.getType().isRatType())
+                stream.print(".truncate()");
             first = false;
         }
         stream.print(")");
@@ -168,7 +170,7 @@ public class DynamicJavaGeneratorHelper {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = d.getName();
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        generateArgs(stream, app.getParams());
+        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromExp(app.getParams()));
     }
 
     public static String getDebugString(Stmt stmt) {
@@ -231,7 +233,6 @@ public class DynamicJavaGeneratorHelper {
             final String method) 
     {
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
-        String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.print("new " + AbstractAsyncCall.class.getName() + "<" + ABSDynamicObject.class.getName() + ">(thisP,");
         stream.print("(" + ABSDynamicObject.class.getName() + ")" + ABSRuntime.class.getName() + ".checkForNull(");
         if (calleeString != null)
@@ -239,10 +240,8 @@ public class DynamicJavaGeneratorHelper {
         else
             callee.generateJavaDynamic(stream);
         stream.print(")) {");
-        int i = 0;
-        for (Type t : paramTypes) {
+        for (int i = 0; i < paramTypes.size(); i++) {
             stream.print(ABSValue.class.getName()+" arg" + i + ";");
-            i++;
         }
 
         generateTaskGetArgsMethod(stream, paramTypes.size());
@@ -258,7 +257,7 @@ public class DynamicJavaGeneratorHelper {
         stream.println("}");
         stream.print(".init");
         if (args != null)
-            DynamicJavaGeneratorHelper.generateArgs(stream,args);
+            DynamicJavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
             DynamicJavaGeneratorHelper.generateParamArgs(stream, params);
         stream.print(")");
@@ -269,21 +268,18 @@ public class DynamicJavaGeneratorHelper {
         call.getCallee().generateJavaDynamic(stream);
         stream.print("))");
         stream.print(".dispatch");
-        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams());
+        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), TypeCheckerHelper.getTypesFromExp(call.getParams()));
     }
     
     
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
-        int i;
         stream.print("public "+abs.backend.java.lib.runtime.AsyncCall.class.getName()+"<?> init(");
-        i = 0;
-        for (Type t : paramTypes) {
+        for (int i = 0; i < paramTypes.size(); i++) {
             if (i > 0) stream.print(",");
             stream.print(ABSValue.class.getName()+" _arg"+i);
-            i++;
         }
         stream.print(") {");
-        for (i = 0; i < paramTypes.size(); i++) {
+        for (int i = 0; i < paramTypes.size(); i++) {
             stream.print("arg"+i+" = _arg"+i+";");
         }
         stream.print(" return this; }");
@@ -526,13 +522,18 @@ public class DynamicJavaGeneratorHelper {
 
     public static void assign(PrintStream stream, AssignStmt assign) {
         VarOrFieldUse vfu = assign.getVar();
+        boolean truncateNeeded
+            = vfu.getType().isIntType() && assign.getValue().getType().isRatType();
         if (vfu.isField()) {
             stream.print("thisP.setFieldValue(\"" + vfu.getName() + "\", ");
+            if (truncateNeeded) stream.print("(");
             assign.getValue().generateJavaDynamic(stream);
+            if (truncateNeeded) stream.print(").truncate()");
             stream.println(");");
         } else {
             vfu.generateJavaDynamic(stream);
             stream.print(" = ");
+            if (truncateNeeded) stream.print("(");
             if (! assign.getVar().getType().isReferenceType()) {
                 // cast ABSValue to more specific type
                 stream.print("(");
@@ -540,6 +541,9 @@ public class DynamicJavaGeneratorHelper {
                 stream.print(")");
             }
             assign.getValue().generateJavaDynamic(stream);
+            if (vfu.getType().isIntType() && assign.getValue().getType().isRatType()) {
+                stream.print(").truncate()");
+            }
             stream.println(";");
         }
 

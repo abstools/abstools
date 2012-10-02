@@ -497,6 +497,9 @@ aspect GenerateJava {
         }
         if (hasInitExp()) {
             getInitExp().generateJavaDynamic(stream);
+            if (getType().isIntType() && getInitExp().getType().isRatType()) {
+                stream.print(".truncate()");
+            }
         } else {
             stream.print("null");
         }
@@ -664,13 +667,14 @@ aspect GenerateJava {
     }
 
     public void NewExp.generateJavaDynamic(PrintStream stream) {
-        String className = JavaBackend.getQualifiedString(((UnionType)getType()).getOriginatingClass());
+        ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
+        String className = JavaBackend.getQualifiedString(decl);
         if (hasCog()) {
             stream.print(className + ".__ABS_createNewCOG");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams());
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
         } else {
             stream.print(className + ".__ABS_createNewObject");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams());
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
         }
     }
 
@@ -863,7 +867,7 @@ aspect GenerateJava {
         }
 
         stream.print("apply");
-        DynamicJavaGeneratorHelper.generateArgs(stream,getParams());
+        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
 
     }
 
@@ -895,7 +899,7 @@ aspect GenerateJava {
             }
           }
              */
-            DynamicJavaGeneratorHelper.generateArgs(stream,getParams());
+            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()));
         }
     }
 
@@ -931,6 +935,9 @@ aspect GenerateJava {
             stream.print(", ");
         }
         getVal().generateJavaDynamic(stream);
+        if (getVar().getType().isIntType() && getVal().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
         stream.print(")");
 
     }
