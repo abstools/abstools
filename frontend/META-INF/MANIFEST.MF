@@ -6,6 +6,7 @@ Bundle-Version: 0.0.0.qualifier
 Bundle-Vendor: HATS Project
 Bundle-ClassPath: .,
  bin,
+ lib/apfloat.jar,
  lib/beaver-rt.jar,
  lib/sat4j-maxsat.jar,
  lib/choco-solver-2.1.1.jar
