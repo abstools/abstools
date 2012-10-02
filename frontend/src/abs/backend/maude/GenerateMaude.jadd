@@ -276,7 +276,7 @@ aspect GenerateMaude {
     }
 
     public void IntLiteral.generateMaude(PrintStream stream) {
-        stream.print("\"int\"[" + getContent() + "] ");
+        stream.print("\"num\"[" + getContent() + "] ");
     }
 
     syn String Unary.maudePrefixOperator();

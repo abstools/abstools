@@ -113,8 +113,11 @@ public class DataTypeType extends Type {
             return false;
 
         DataTypeType dt = (DataTypeType) t;
-        if (!dt.decl.equals(this.decl))
+        if (!dt.decl.equals(this.decl)) {
+            // Int and Rat are cross-assignable, with implicit truncation
+            if (this.isNumericType() && dt.isNumericType()) return true;
             return false;
+        }
         for (int i = 0; i < numTypeArgs(); i++) {
             if (!getTypeArg(i).isAssignable(dt.getTypeArg(i), false))
                 return false;
@@ -168,6 +171,10 @@ public class DataTypeType extends Type {
 
     public boolean isIntType() {
         return decl.getName().equals("Int");
+    }
+
+    public boolean isRatType() {
+        return decl.getName().equals("Rat");
     }
 
     public boolean isStringType() {

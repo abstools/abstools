@@ -726,10 +726,10 @@ aspect TypeChecker {
         Type lt = getLeft().getType();
         Type rt = getRight().getType();
         
-        if (! (lt.isIntType() || lt.isStringType())) {
+        if (! (lt.isNumericType() || lt.isStringType())) {
             e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
         }
-        if (! (rt.isIntType() || rt.isStringType())) {
+        if (! (rt.isNumericType() || rt.isStringType())) {
             e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, rt));
         }
         if (!lt.isAssignable(rt) && !rt.isAssignable(lt)) {
@@ -740,7 +740,7 @@ aspect TypeChecker {
         getRight().typeCheck(e);
     }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
-        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getIntType());
+        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
     }
     
     public void BoolExp.typeCheck(SemanticErrorList e) { 
@@ -748,7 +748,7 @@ aspect TypeChecker {
     }
     
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getIntType());
+         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
     }
 
     public void EqualityExpr.typeCheck(SemanticErrorList e) {

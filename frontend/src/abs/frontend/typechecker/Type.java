@@ -170,6 +170,14 @@ public abstract class Type {
         return false;
     }
 
+    public boolean isRatType() {
+        return false;
+    }
+
+    public boolean isNumericType() {
+        return isIntType() || isRatType();
+    }
+
     public boolean isAnyType() {
         return false;
     }

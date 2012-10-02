@@ -4,17 +4,17 @@ export *;
 data Unit = Unit;               // builtin  
 data String;                    // builtin  
 data Int;                       // builtin
+data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
 
 def Bool and(Bool a, Bool b) = a && b;
 def Bool not(Bool a) = ~a;
 
-def Int max(Int a, Int b) = if a > b then a else b;
-def Int min(Int a, Int b) = if a < b then a else b;
+def Rat max(Rat a, Rat b) = if a > b then a else b;
+def Rat min(Rat a, Rat b) = if a < b then a else b;
     
-def Int abs(Int x) = 
-    case x > 0 { True => x; False => -x; };
+def Rat abs(Rat x) = if x > 0 then x else -x;
 
 data Maybe<A> = Nothing | Just(A fromJust);
 
@@ -75,7 +75,7 @@ def Set<A> union<A>(Set<A> set1, Set<A> set2) =
 
 /**
  * Returns a set with all elements of set 'xs' plus element 'e'.
- * Returns 'xs' if 'xs' already containts 'e'.
+ * Returns 'xs' if 'xs' already contains 'e'.
  */
 def Set<A> insertElement<A>(Set<A> xs, A e) =
   case contains(xs, e) {
@@ -317,18 +317,18 @@ def String toString<T>(T t) = builtin;
 // 
 // Durations can be added and subtracted from Times, and compared to
 // each other.  Times can be compared to each other.
-data Time = Time(Int timeValue);
+data Time = Time(Rat timeValue);
 def Int currentms() = builtin;
 def Time now() = Time(currentms());
 
 // use this like so:
 //   Time t = now(); await timeDifference(now(), t) > 5;
-def Int timeDifference(Time t1, Time t2) =
+def Rat timeDifference(Time t1, Time t2) =
   abs(timeValue(t2) - timeValue(t1));
 def Bool timeLessThan(Time t1, Time t2) =
   timeValue(t1) < timeValue(t2);
 
-data Duration = Duration(Int durationValue) | InfDuration;
+data Duration = Duration(Rat durationValue) | InfDuration;
 def Bool isDurationInfinite(Duration d) = 
   case d { Duration(_) => False; InfDuration => True; };
 
@@ -348,14 +348,14 @@ def Bool durationLessThan(Duration d1, Duration d2) =
   };
 
 // negative if no (i.e. infinite) deadline
-def Int lowlevelDeadline() = builtin;
+def Rat lowlevelDeadline() = builtin;
 def Duration deadline() = 
   case lowlevelDeadline() < 0 {
       True => InfDuration;
       False => Duration(lowlevelDeadline());
   };
 
-def Duration subtractFromDuration(Duration d, Int v) =
+def Duration subtractFromDuration(Duration d, Rat v) =
   case d {
       InfDuration => InfDuration;
       Duration(x) => Duration(max(x - v, 0));
@@ -438,18 +438,18 @@ data DCData = InfCPU
 
 // Sums things up in percents (thus the * 100, which makes us not lose
 // precision.)
-def Int sumDivsN(List<Int> consumeds, List<Int> totals, Int n) =
+def Rat sumDivsN(List<Int> consumeds, List<Int> totals, Int n) =
   if (n==0 || isEmpty(consumeds) || isEmpty(totals))
   then 0
   else (head(consumeds) * 100 / head(totals)) + sumDivsN(tail(consumeds), tail(totals), n-1);
 
-def Int averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
+def Rat averageDivsN(List<Int> consumeds, List<Int> totals, Int length) =
   let (Int mins) = min(length, min(length(consumeds), length(totals)))
   in sumDivsN(consumeds, totals, mins) / mins;
 
 interface DeploymentComponent {
     [Atomic] DCData available();
-    [Atomic] Int load(Int periods);
+    [Atomic] Rat load(Int periods);
     [Atomic] DCData total();
     Unit transfer(DeploymentComponent target, Int amount);
     Unit decrementResources(Int amount);
@@ -470,7 +470,7 @@ implements DeploymentComponent {
     [Atomic] DCData available() {
         return if (cpu == InfCPU) then InfCPU else CPU(capacity(cpu) - internalState);
     }
-    [Atomic] Int load(Int periods) {
+    [Atomic] Rat load(Int periods) {
         return if (cpu == InfCPU) then 0
         else averageDivsN(history, totalhistory, periods);
     }
