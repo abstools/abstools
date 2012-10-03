@@ -8,8 +8,13 @@ import java.util.Arrays;
 
 aspect Typing {
     
-    syn DataTypeType Model.getStdDataType(String n) =
-    	new DataTypeType((DataTypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n)));
+    /**
+    * May return UnknownType when running without stdlib.
+     */
+    syn Type Model.getStdDataType(String n) {
+       TypeDecl res = (TypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n));
+       return (res instanceof DataTypeDecl) ? (new DataTypeType((DataTypeDecl)res)) : UnknownType.INSTANCE;
+    }
     
     syn Model Model.getModel() = this;
     
@@ -34,7 +39,7 @@ aspect Typing {
     syn Type Model.getRatType() = getStdDataType("Rat");
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
-    syn Type Model.getFutType(Type typeArg) = getStdDataType("Fut").withTypeArgs(typeArg);
+    syn Type Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
 
 //    eq ClassDecl.getMethod().getUnitType() = getUnitType();
 //    inh Type MethodImpl.getUnitType();
