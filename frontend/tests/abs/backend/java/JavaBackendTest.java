@@ -151,7 +151,7 @@ public class JavaBackendTest extends ABSTest {
         ArrayList<String> args = new ArrayList<String>();
         args.add("java");
         args.addAll(Arrays.asList(jvmargs));
-        args.addAll(Arrays.asList("-cp", "bin:lib/apfloat.jar" + File.pathSeparator + javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
+        args.addAll(Arrays.asList("-cp", "bin" + File.pathSeparator + "lib/apfloat.jar" + File.pathSeparator + javaCode.getSrcDir().getAbsolutePath()+"/gen/test", javaCode.getFirstMainClass()));
         args.addAll(absArgs);
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
         pb.redirectErrorStream(true);
