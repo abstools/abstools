@@ -156,7 +156,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         }
         logger.finest("do next step");
         // we now have to wait for all tasks that waited for the future
-        // of this task to give them the opportunitiy to add a schedule action
+        // of this task to give them the opportunity to add a schedule action
         // to the global scheduler, before we do this step
         runtime.doNextStep();
         logger.finest("next step done");

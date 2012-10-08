@@ -6,6 +6,7 @@ package abs.backend.java.codegeneration;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -18,11 +19,18 @@ import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.scheduling.SimpleTaskScheduler;
+import abs.backend.java.scheduling.TaskScheduler;
+import abs.backend.java.scheduling.TaskSchedulingStrategy;
+import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.Cog;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
@@ -39,6 +47,7 @@ import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.TypedAnnotation;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
@@ -482,5 +491,63 @@ public class JavaGeneratorHelper {
         stream.println(");");
     }
 
+    public static void generateCog(PrintStream stream, Cog cog) {
+        
+        // generate user-defined scheduler class if annotation is present
+        for (Annotation a : cog.getAnnotationList()) {
+            if (a instanceof TypedAnnotation) {
+                TypedAnnotation ta = (TypedAnnotation)a;
+                if (((DataTypeUse)ta.getAccess()).getName().equals("Scheduler")) {
+                    generateUserSchedulingStrategy(cog, ta.getValue());
+                }
+            }
+        }
+    }
+    
+    public static void generateUserSchedulingStrategy(Cog cog, PureExp exp) {
+        String className = JavaBackend.getSchedulerName("UserSchedulingStrategy_" + JavaBackend.getRandomName());
+        PrintStream stream = null;
+        try {
+            JavaCode.Package pkg = cog.getModuleDecl().getJavaPackage();
+            File file = pkg.createJavaFile(className);
+            stream = new JavaCodeStream(file);
+
+            stream.println("package " + pkg.packageName + ";");
+            stream.print("public final class " + className);
+            stream.println(" implements " + TaskSchedulingStrategy.class.getName() + " {");
+            stream.println("@Override");
+            stream.print("public " + SimpleTaskScheduler.TaskInfo.class.getName());
+            stream.print(" schedule(" + TaskScheduler.class.getName() + " scheduler, ");
+            stream.println(java.util.List.class.getName() + "<" + SimpleTaskScheduler.TaskInfo.class.getName() + "> schedulableTasks) {");
+            stream.println("");
+            
+            stream.println(java.util.List.class.getName() + "<ABS.Scheduler.Process> queue = new " + java.util.List.class.getName() + "<ABS.Scheduler.Process>();");
+            stream.println("// TODO map List<TaskInfo> schedulableTasks --> List<Process> queue");
+            stream.println("");
+            stream.print("ABS.Scheduler.Process process = ");
+            exp.generateJava(stream);
+            stream.println(";");
+            
+            stream.println("");
+            stream.println(SimpleTaskScheduler.TaskInfo.class.getName() +  " task = new " + SimpleTaskScheduler.TaskInfo.class.getName() + "();");
+            stream.println("// TODO map ABS.Scheduler.Process process --> TaskInfo task");
+            stream.println("return task;");
+            stream.println("}");
+            stream.println("}");
+
+            // TODO 
+            // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
+
+        } catch (JavaCodeGenerationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
 
 }

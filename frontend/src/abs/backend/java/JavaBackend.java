@@ -249,6 +249,10 @@ public class JavaBackend extends Main {
         return truncate(escapeReservedWords(name) + "_f");
     }
 
+    public static String getSchedulerName(String name) {
+        return truncate(escapeReservedWords(name) + "_sched");
+    }
+
     public static String getMethodName(String name) {
         return escapeReservedWords(name);
     }
@@ -316,5 +320,11 @@ public class JavaBackend extends Main {
     public static String getFullJavaNameForMainBlock(ModuleDecl module) {
         return module.getName() + "." + getJavaNameForMainBlock();
     }
-
+    
+    /**
+     * Just return a randomly generated string
+     */
+    public static String getRandomName() {
+        return Integer.toHexString(UUID.randomUUID().hashCode());
+    }
 }

@@ -4,13 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Random;
 import java.util.Scanner;
 

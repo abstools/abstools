@@ -222,6 +222,7 @@ public class Main {
         }
         if (dump) {
             m.dumpMVars();
+            m.dump();
         }
 
         if (m.hasParserErrors()) {

@@ -728,7 +728,7 @@ List pattern_list =
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
 
-Cog cog = COG.g {: return new Cog(); :} ;
+Cog cog = annotation_list.annotations? COG {: return new Cog(annotations); :} ;
 
 Exp exp =
 	  eff_exp.e   {: return e; :}
@@ -751,7 +751,7 @@ Exp eff_exp =
 	;
 
 NewExp new_exp =
-	NEW cog.c? type_name.i LPAREN data_exp_list.l? RPAREN   {: return new NewExp(i.getName(),l,c) ; :}
+	NEW cog.c? type_name.i LPAREN data_exp_list.l? RPAREN {: return new NewExp(i.getName(),l,c) ; :}
 	;
 
 AsyncCall async_call =

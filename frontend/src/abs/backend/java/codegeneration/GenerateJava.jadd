@@ -21,47 +21,57 @@ aspect GenerateJava {
       }
     }
 
+    
+    // Provide easy access to the Java package that is generated for each ModuleDecl
+    private JavaCode.Package ModuleDecl.generatedJavaPackage = null;
+    public JavaCode.Package ModuleDecl.getJavaPackage() throws JavaCodeGenerationException { 
+        if (generatedJavaPackage != null)
+            return generatedJavaPackage; 
+        else 
+            throw new JavaCodeGenerationException("A Java Package is not yet associated with this ModuleDecl (this only happens upon code generation).");
+    }
+    
     public void ModuleDecl.generateJavaCode(JavaCode code) throws IOException, JavaCodeGenerationException {
       String packageName = getName();
-      JavaCode.Package p = code.createPackage(packageName);
-        for (Decl decl : getDecls()) {
-            decl.generateJavaCode(p);
-        }
+      this.generatedJavaPackage = code.createPackage(packageName);
+      
+      for (Decl decl : getDecls()) {
+          decl.generateJavaCode(generatedJavaPackage);
+      }
 
-
-        if (hasBlock()) {
+      if (hasBlock()) {
           Block block = getBlock();
-            
+
           String mainName = JavaBackend.getJavaNameForMainBlock();
-          p.addMainClass(mainName);
-          File file = p.createJavaFile(mainName);
-      PrintStream stream = null;
-      try {
-      stream = new JavaCodeStream(file);
-      stream.println("package "+p.packageName+";");
-          //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
+          generatedJavaPackage.addMainClass(mainName);
+          File file = generatedJavaPackage.createJavaFile(mainName);
+          PrintStream stream = null;
+          try {
+              stream = new JavaCodeStream(file);
+              stream.println("package " + generatedJavaPackage.packageName + ";");
+              //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
-            stream.println("public class "+mainName+" extends "+ABSObject.class.getName()+" {");
-            stream.println("   public static void main(java.lang.String[] args) throws Exception {");
-            stream.println("       "+StartUp.class.getName()+".startup(args,"+mainName+".class);");
-            stream.println("   }");
+              stream.println("public class " + mainName + " extends " + ABSObject.class.getName() + " {");
+              stream.println("public static void main(java.lang.String[] args) throws Exception {");
+              stream.println(StartUp.class.getName() + ".startup(args," + mainName + ".class);");
+              stream.println("}");
 
-            stream.println("   public java.lang.String getClassName() { return \"Main\"; }");
-            stream.println("   public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
-            stream.println("   public "+mainName+"("+COG.class.getName()+" cog) { super(cog); }");
+              stream.println("public java.lang.String getClassName() { return \"Main\"; }");
+              stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
+              stream.println("public " + mainName + "(" + COG.class.getName() + " cog) { super(cog); }");
 
-            // main block
-            stream.println("   public "+ABSUnit.class.getName()+" run() {");
-            block.generateJava("   ",stream);
-            stream.println("      return "+JavaBackendConstants.UNITVALUE+";");
-            stream.println("   }");
-            stream.println("}");
-        } finally {
-          if (stream != null)
-            stream.close();
-        }
+              // main block
+              stream.println("public " + ABSUnit.class.getName() + " run() {");
+              block.generateJava("", stream);
+              stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
+              stream.println("}");
+              stream.println("}");
+          } finally {
+              if (stream != null)
+                  stream.close();
+          }
 
-        }
+      }
 
 
     }
@@ -544,15 +554,16 @@ aspect GenerateJava {
     }
 
     public void NewExp.generateJava(PrintStream stream) {
-      ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
-      String className = JavaBackend.getQualifiedString(decl);
+        ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
+        String className = JavaBackend.getQualifiedString(decl);
 
         if (hasCog()) {
             stream.print(className+".__ABS_createNewCOG");
-	        JavaGeneratorHelper.generateArgs(stream,"this",getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            JavaGeneratorHelper.generateCog(stream, getCog());
         } else {
             stream.print(className+".__ABS_createNewObject");
-	        JavaGeneratorHelper.generateArgs(stream,"this",getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
         }
     }
 
