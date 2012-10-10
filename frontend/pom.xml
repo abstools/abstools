@@ -102,6 +102,12 @@
 		 	<artifactId>choco-solver</artifactId>
 		 	<version>1.0</version>
 		 </dependency>
+		 
+		 <dependency>
+		 	<groupId>eu.hats-project</groupId>
+		 	<artifactId>apfloat</artifactId>
+		 	<version>1.0</version>
+		 </dependency>
 	</dependencies>
 
 	<build>

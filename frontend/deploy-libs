@@ -98,3 +98,12 @@ mvn deploy:deploy-file \
          -Dpackaging=jar \
          -DgeneratePom=true
 
+mvn deploy:deploy-file \
+	 -Durl=scp://repos.hats-project.eu/home/hatsbuilder/public_html/tools/maven-repos \
+	 -DrepositoryId=repos.hats-project.eu \
+	 -Dfile=lib/apfloat.jar \
+	 -DgroupId=eu.hats-project \
+	 -DartifactId=apfloat \
+	 -Dversion=1.0 \
+	 -Dpackaging=jar \
+	 -DgeneratePom=true
