@@ -23,7 +23,7 @@ interface Text extends Chat {
   Unit receive(String client, String msg);
 }
 
-class TextImpl(Server s) implements Text {  
+class Client(Server s) implements Text {  
   Unit send(String client, String msg) {
     s.send(client, msg);
   }
@@ -35,24 +35,36 @@ class TextImpl(Server s) implements Text {
 ///////////
 // Voice //
 
-interface Voice {
+delta DVoice;
+
+adds interface Voice {
   Unit call(String client);
   Unit pickup(String client);
   Unit hangup();
 }
 
-class VoiceImp implements Voice {
-  Unit call(String client) {}
-  Unit pickup(String client) {}
-  Unit hangup() {}
+modifies class Client adds Voice {
+  adds Unit call(String client) {/*...*/}
+  adds Unit pickup(String client) {}
+  adds Unit hangup() {}
 }
 
 
-delta DVideo;
-/* ... code ... */
+///////////
+// Video //
 
-delta DVoice;
-/* ... code ... */
+delta DVideo;
+
+adds interface Video {
+  Unit startVideo();
+  Unit stopVideo();
+}
+
+modifies class Client adds Video {
+  adds Unit startVideo() {/*...*/}
+  adds Unit stopVideo() {/*...*/}
+}
+
 
 delta DFile;
 /* ... code ... */
