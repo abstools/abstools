@@ -276,7 +276,7 @@ abstract class AbstractABSMojo extends AbstractMojo {
     }
 
     protected String getClasspath(String groupId, String artifactId, String version) throws Exception {
-        return getClasspath(factory.createArtifact(groupId, artifactId, version, Artifact.SCOPE_RUNTIME, "jar"));
+        return getClasspath(factory.createArtifactWithClassifier(groupId, artifactId, version, "jar", "jar-with-dependencies"));
     }
     
     protected String getClasspath(Artifact artifact) throws Exception {
