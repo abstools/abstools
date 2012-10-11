@@ -1,0 +1,8 @@
+root Chat_ProductLine {
+    group allof {
+     	ChatMode {
+        	group oneof { TextChat, VoiceChat, VideoChat }
+   	   	},
+	  		opt FileTransfer
+     	}
+}
