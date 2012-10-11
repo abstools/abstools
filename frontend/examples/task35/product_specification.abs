@@ -1,0 +1,7 @@
+product HighEndChat (VideoChat, FileTransfer); /*{
+	RegularEndChat by PreSUtoRegular, Deltas…,PostSUtoRegular;
+	LowEndChat by PreSUtoLowEnd, Deltas…,PostSUtoLowEnd;
+};*/
+product RegularChat (VoiceChat);
+product LowEndChat (TextChat);
+
