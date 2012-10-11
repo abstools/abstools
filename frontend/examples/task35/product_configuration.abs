@@ -3,6 +3,14 @@ productline Chat_ProductLine;
 features TextChat, VideoChat, VoiceChat, FileTransfer;
 
 delta DVideo when VideoChat;
-delta DVoice when VoiceChat ;
-delta DFile when FileTransfer && VideoChat;
+delta DVoice when VoiceChat;
+delta DFile when FileTransfer;
 
+// NEW DELTAS!
+
+update Voice2Video;
+use Chat;
+
+modifies(statewise) class Chat {
+  quality = quality - 1;
+}
