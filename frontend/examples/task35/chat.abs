@@ -68,3 +68,8 @@ modifies class Client adds Video {
 
 delta DFile;
 /* ... code ... */
+
+
+// NEW DELTAS!!
+delta Video;
+
