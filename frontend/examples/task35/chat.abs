@@ -1,0 +1,58 @@
+module Chat;
+
+data BandWidth = Low | Mid | High;
+
+interface Server { 
+  /* missing methods */
+  Unit send(String client, String msg);
+}
+
+class ServerImp implements Server {
+  BandWidth bw = Mid;
+  // missing code...
+  Unit send(String client, String msg) {}
+}
+
+
+interface Chat {}
+
+//////////
+// Text //
+interface Text extends Chat {
+  Unit send(String client, String msg);
+  Unit receive(String client, String msg);
+}
+
+class TextImpl(Server s) implements Text {  
+  Unit send(String client, String msg) {
+    s.send(client, msg);
+  }
+  Unit receive(String client, String msg) {
+    // received
+  }
+}
+
+///////////
+// Voice //
+
+interface Voice {
+  Unit call(String client);
+  Unit pickup(String client);
+  Unit hangup();
+}
+
+class VoiceImp implements Voice {
+  Unit call(String client) {}
+  Unit pickup(String client) {}
+  Unit hangup() {}
+}
+
+
+delta DVideo;
+/* ... code ... */
+
+delta DVoice;
+/* ... code ... */
+
+delta DFile;
+/* ... code ... */
