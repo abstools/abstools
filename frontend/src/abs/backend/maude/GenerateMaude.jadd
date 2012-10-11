@@ -253,7 +253,7 @@ aspect GenerateMaude {
             if (dc != null) {
                 dc.generateMaude(stream);
             } else {
-                stream.print("'.comp ");
+                stream.print("\"ABS.DC.thisDC\"( emp )");
             }
         }
         stream.print(") ");
