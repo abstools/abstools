@@ -1,7 +1,5 @@
 module Chat;
 
-data BandWidth = Low | Mid | High;
-
 interface Client {}
 
 //////////
