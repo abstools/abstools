@@ -1,4 +1,5 @@
 module Chat;
+import * from Management;
 
 interface Client {}
 
@@ -17,6 +18,8 @@ class ClientImpl implements Client, Text {
     Text c2 = new cog ClientImpl();
     c1.message(c2, "Hello");
 
+    Connection conn = new ConnectionImpl();
+    Reconfigurator r = new cog ReconfiguratorImpl(conn);
 }
 
 
