@@ -4,7 +4,7 @@ features TextChat, VideoChat, VoiceChat, FileTransfer;
 
 delta DVideo when VideoChat;
 delta DVoice when VoiceChat;
-delta DFile when FileTransfer;
+//delta DFile when FileTransfer;
 
 // NEW DELTAS!
 
