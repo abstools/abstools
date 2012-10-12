@@ -516,9 +516,9 @@ public class JavaGeneratorHelper {
             stream.print("public final class " + className);
             stream.println(" implements " + TaskSchedulingStrategy.class.getName() + " {");
             stream.println("@Override");
-            stream.print("public " + SimpleTaskScheduler.TaskInfo.class.getName());
+            stream.print("public " + SimpleTaskScheduler.TaskInfo.class.getCanonicalName());
             stream.print(" schedule(" + TaskScheduler.class.getName() + " scheduler, ");
-            stream.println(java.util.List.class.getName() + "<" + SimpleTaskScheduler.TaskInfo.class.getName() + "> schedulableTasks) {");
+            stream.println(java.util.List.class.getName() + "<" + SimpleTaskScheduler.TaskInfo.class.getCanonicalName() + "> schedulableTasks) {");
             stream.println("");
             
             stream.println(java.util.List.class.getName() + "<ABS.Scheduler.Process> queue = new " + java.util.List.class.getName() + "<ABS.Scheduler.Process>();");
@@ -529,7 +529,7 @@ public class JavaGeneratorHelper {
             stream.println(";");
             
             stream.println("");
-            stream.println(SimpleTaskScheduler.TaskInfo.class.getName() +  " task = new " + SimpleTaskScheduler.TaskInfo.class.getName() + "();");
+            stream.println(SimpleTaskScheduler.TaskInfo.class.getCanonicalName() +  " task = new " + SimpleTaskScheduler.TaskInfo.class.getCanonicalName() + "();");
             stream.println("// TODO map ABS.Scheduler.Process process --> TaskInfo task");
             stream.println("return task;");
             stream.println("}");
@@ -537,6 +537,9 @@ public class JavaGeneratorHelper {
 
             // TODO 
             // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
+            
+            // TODO
+            // reflect the runtime queue in the functional layer (i.e. a queue datatype)
 
         } catch (JavaCodeGenerationException e) {
             // TODO Auto-generated catch block

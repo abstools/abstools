@@ -969,8 +969,24 @@ List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
     ;
 
-Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON
-    {: return new Product(id, l); :} ;
+
+Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new Product(id, l, new List()); :} 
+    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE adaptation_rule_list.al RBRACE {: return new Product(id, l, al); :}
+    ;
+
+List adaptation_rule_list = adaptation_rule.r {: return new List().add(r); :}
+    | adaptation_rule_list.l adaptation_rule.r {: return l.add(r); :}
+    ;
+
+ProductAdaptation adaptation_rule = TYPE_IDENTIFIER.id 
+    BY delta_list.deltas
+    PRE TYPE_IDENTIFIER.preupdate
+    POST TYPE_IDENTIFIER.postupdate SEMICOLON 
+    {: return new ProductAdaptation(deltas, preupdate, postupdate); :}
+    ;
+
+// TODO define what a state update actually is
+//stateupdate = UPDATE TYPE_IDENTIFIER.id SEMICOLON {: return new StateUpdate(id); :};
 
 
 /////////////////////////////////////////

@@ -2,7 +2,7 @@
 //
 
 // needed for lists of strings
-Name ::= <Name> ;
+Name ::= <Name>;
 DeltaID ::= <Name>;
 
 Model ::= CompilationUnit* ;
@@ -277,4 +277,7 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* ;
+UpdateID ::= <Name>;
+Product ::= <Name> Feature* ProductAdaptation* ;
+ProductAdaptation ::= DeltaID* <PreUpdateID> <PostUpdateID> ;
+//StateUpdateDecl ::= <Name>;

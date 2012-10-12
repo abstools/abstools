@@ -1,9 +1,7 @@
-product HighEndChatWithFileTransfer (VideoChat, VoiceChat, TextChat, FileTransfer);
-
-product HighEndChat (VideoChat, VoiceChat, TextChat); /*{
-	RegularEndChat by PreSUtoRegular, Deltas…,PostSUtoRegular;
-	LowEndChat by PreSUtoLowEnd, Deltas…,PostSUtoLowEnd;
-};*/
+product HighEndChat (VideoChat, VoiceChat, TextChat, FileTransfer) {
+	RegularChat by Video2Voice pre Something post Something;
+	LowEndChat by Video2Voice, Voice2Text pre Something post Something;
+}
 
 product RegularChat (VoiceChat, TextChat);
 

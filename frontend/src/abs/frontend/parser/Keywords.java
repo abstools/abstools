@@ -42,6 +42,9 @@ public class Keywords {
 
         "when", 
         "product", 
+        "pre", 
+        "post", 
+        "by", 
         "while", 
         "return", 
         "skip",
