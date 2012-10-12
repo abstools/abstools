@@ -2,21 +2,22 @@ module Chat;
 
 data BandWidth = Low | Mid | High;
 
+interface Client {}
 
 //////////
 // Text //
-interface Text {
+interface Text extends Client {
   Unit message(Client client, String msg);
 }
 
-class Client implements Text {
+class ClientImpl implements Client, Text {
   Unit message(Client client, String msg) {}
 }
 
 {
-    Client c1 = new ClientImpl();
-    Client c2 = new cog ClientImpl();
-    c1.send(c2, "Hello");
+    Text c1 = new ClientImpl();
+    Text c2 = new cog ClientImpl();
+    c1.message(c2, "Hello");
 
 }
 
@@ -64,12 +65,11 @@ modifies class ClientImpl removes Video {
     removes Unit startVideo();
     removes Unit stopVideo();
 }
-removes interface Video;
 
 delta Voice2Text;
 uses Chat;
 modifies class ClientImpl removes Voice {
-    removes Unit call(Client client)
+    removes Unit call(Client client);
 }
 
 
