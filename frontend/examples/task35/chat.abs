@@ -3,8 +3,8 @@ import * from Management;
 
 interface Client {}
 
-//////////
-// Text //
+
+// core: text-only Chat client
 interface Text extends Client {
   Unit message(Client client, String msg);
 }
@@ -19,13 +19,12 @@ class ClientImpl implements Client, Text {
     c1.message(c2, "Hello");
 
     Connection conn = new ConnectionImpl();
-    Reconfigurator r = new cog ReconfiguratorImpl(conn);
+    Reconfigurator r = new ReconfiguratorImpl(conn);
 }
 
 
-///////////
-// Voice //
 
+// delta that adds voice chat functionality
 delta DVoice;
 uses Chat;
 
@@ -42,9 +41,7 @@ modifies class ClientImpl adds Voice {
 }
 
 
-///////////
-// Video //
-
+// delta that adds video functionality
 delta DVideo;
 uses Chat;
 adds interface Video {
