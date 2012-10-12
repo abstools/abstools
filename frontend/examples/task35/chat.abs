@@ -56,7 +56,8 @@ modifies class ClientImpl adds Video {
 
 
 
-// NEW DELTAS!!
+// deltas that handle dynamic reconfigurations
+
 delta Video2Voice;
 uses Chat;
 modifies class ClientImpl removes Video {
