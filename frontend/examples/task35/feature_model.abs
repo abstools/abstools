@@ -1,8 +1,16 @@
 root Chat_ProductLine {
-    group allof {
+	group allof {
      	ChatMode {
-        	group oneof { TextChat, VoiceChat, VideoChat }
+        	group oneof { TextChat, VoiceChat, VideoChat } 
    	   	},
 	  		opt FileTransfer
-     	}
+	}	    	
+}
+
+extension VoiceChat {
+	require: TextChat;
+}
+
+extension VideoChat {
+	require: VoiceChat;
 }
