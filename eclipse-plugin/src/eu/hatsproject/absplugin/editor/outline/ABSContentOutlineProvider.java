@@ -17,9 +17,21 @@ import java.util.jar.JarEntry;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.model.BaseWorkbenchContentProvider;
+import org.eclipse.ui.progress.UIJob;
 
 import abs.frontend.ast.*;
 import abs.frontend.parser.ABSPackageFile;
@@ -38,11 +50,17 @@ import eu.hatsproject.absplugin.util.UtilityFunctions;
  * @author cseise
  * 
  */
-public class ABSContentOutlineProvider implements ITreeContentProvider {
+public class ABSContentOutlineProvider implements ITreeContentProvider, IResourceChangeListener, IResourceDeltaVisitor {
 
 	private static final ASTNode<?>[] EMPTY_NODES = new ASTNode<?>[0];
 	
 	private final BaseWorkbenchContentProvider baseProvider = new BaseWorkbenchContentProvider();
+
+	private StructuredViewer viewer;
+
+	public ABSContentOutlineProvider() {
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_CHANGE);
+	}
 
 	/**
 	 * @see
@@ -398,6 +416,7 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 	@Override
 	public void dispose() {
 		baseProvider.dispose();
+		ResourcesPlugin.getWorkspace().removeResourceChangeListener(this); 
 	}
 
 	@Override
@@ -420,6 +439,40 @@ public class ABSContentOutlineProvider implements ITreeContentProvider {
 
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-		//no-op
+		this.viewer = (StructuredViewer) viewer;
+	}
+
+	/** Notify viewer that content has changed.
+	 * @author stolz
+	 */
+	@Override
+	public boolean visit(IResourceDelta delta) throws CoreException {
+		IResource source = delta.getResource();
+		switch (source.getType()) {
+		case IResource.ROOT:
+		case IResource.PROJECT:
+		case IResource.FOLDER:
+			return true;
+		case IResource.FILE:
+			final IFile file = (IFile) source;
+			new UIJob("Update CommonViewer") {
+				public IStatus runInUIThread(IProgressMonitor monitor) {
+					if (viewer != null && !viewer.getControl().isDisposed())
+						viewer.refresh(file);
+					return Status.OK_STATUS;						
+				}
+			}.schedule();
+		}
+		return false;
+	}
+
+	@Override
+	public void resourceChanged(IResourceChangeEvent event) {
+		IResourceDelta delta = event.getDelta();
+		try {
+			delta.accept(this);
+		} catch (CoreException e) { 
+			Activator.logException(e);
+		} 	
 	}
 }

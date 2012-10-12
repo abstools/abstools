@@ -109,7 +109,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	private List<CompilationUnitChangeListener> modelChangeListeners = new ArrayList<CompilationUnitChangeListener>();
 	private CompilationUnit compilationUnit;
 	private ABSReconcilingStrategy reconciler;
-    private AbsNature absNature;
     private volatile int caretPos;
     private AbsInformationPresenter informationPresenter;
 	
@@ -291,7 +290,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	}
 
 	private void initCompilationUnit() {
-	    absNature = UtilityFunctions.getAbsNature(getResource());
+	    AbsNature absNature = UtilityFunctions.getAbsNature(getResource());
 	    if (absNature != null) {
 	        AbsModelManager modelManager = absNature.getModelManager();
 	        compilationUnit = modelManager.getCompilationUnit(getAbsoluteFilePath());
@@ -468,7 +467,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	 */
 	public void reconcile(boolean withTypechecks) {
 	    if (reconciler != null) {
-	        reconciler.reconcile(absNature, withTypechecks);
+	        reconciler.reconcile(getAbsNature(), withTypechecks);
 	    }
 	}
 
@@ -492,14 +491,14 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	 * when viewing files outside an ABS project
 	 */
 	public synchronized InternalASTNode<CompilationUnit> getCompilationUnit() {
-	    if (absNature == null || compilationUnit == null) {
+	    if (getAbsNature() == null || compilationUnit == null) {
 	        return null;
 	    }
-            return new InternalASTNode<CompilationUnit>(compilationUnit, absNature);
+            return new InternalASTNode<CompilationUnit>(compilationUnit, getAbsNature());
 	}
 
     public AbsNature getAbsNature() {
-        return absNature;
+        return UtilityFunctions.getAbsNature(getProject());
     }
 
     public void setCaretPos(int caretPos) {
