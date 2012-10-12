@@ -2,50 +2,40 @@ module Chat;
 
 data BandWidth = Low | Mid | High;
 
-interface Server { 
-  /* missing methods */
-  Unit send(String client, String msg);
-}
-
-class ServerImp implements Server {
-  BandWidth bw = Mid;
-  // missing code...
-  Unit send(String client, String msg) {}
-}
-
-
-interface Chat {}
 
 //////////
 // Text //
-interface Text extends Chat {
-  Unit send(String client, String msg);
-  Unit receive(String client, String msg);
+interface Text {
+  Unit message(Client client, String msg);
 }
 
-class Client(Server s) implements Text {  
-  Unit send(String client, String msg) {
-    s.send(client, msg);
-  }
-  Unit receive(String client, String msg) {
-    // received
-  }
+class Client implements Text {
+  Unit message(Client client, String msg) {}
 }
+
+{
+    Client c1 = new ClientImpl();
+    Client c2 = new cog ClientImpl();
+    c1.send(c2, "Hello");
+
+}
+
 
 ///////////
 // Voice //
 
 delta DVoice;
+uses Chat;
 
 adds interface Voice {
-  Unit call(String client);
-  Unit pickup(String client);
+  Unit call(Client client);
+  Unit pickup();
   Unit hangup();
 }
 
-modifies class Client adds Voice {
-  adds Unit call(String client) {/*...*/}
-  adds Unit pickup(String client) {}
+modifies class ClientImpl adds Voice {
+  adds Unit call(Client client) {/*...*/}
+  adds Unit pickup() {}
   adds Unit hangup() {}
 }
 
@@ -54,22 +44,34 @@ modifies class Client adds Voice {
 // Video //
 
 delta DVideo;
-
+uses Chat;
 adds interface Video {
   Unit startVideo();
   Unit stopVideo();
 }
 
-modifies class Client adds Video {
+modifies class ClientImpl adds Video {
   adds Unit startVideo() {/*...*/}
   adds Unit stopVideo() {/*...*/}
 }
 
 
-delta DFile;
-/* ... code ... */
-
 
 // NEW DELTAS!!
-delta Video;
+delta Video2Voice;
+uses Chat;
+modifies class ClientImpl removes Video {
+    removes Unit startVideo();
+    removes Unit stopVideo();
+}
+removes interface Video;
+
+delta Voice2Text;
+uses Chat;
+modifies class ClientImpl removes Voice {
+    removes Unit call(Client client)
+}
+
+
+
 
