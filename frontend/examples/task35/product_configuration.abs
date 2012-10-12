@@ -8,9 +8,9 @@ delta DFile when FileTransfer;
 
 // NEW DELTAS!
 
-update Voice2Video;
+/*update Voice2Video;
 use Chat;
 
 modifies(statewise) class Chat {
   quality = quality - 1;
-}
+}*/
