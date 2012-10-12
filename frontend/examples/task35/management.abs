@@ -1,10 +1,12 @@
 module Management;
+export *;
 import * from ABS.Meta;
 
-data BandWidth = Low | Mid | High;
+
+data Bandwidth = Low | Mid | High;
 
 interface Connection {
-    BandWidth checkBandwidth();
+    Bandwidth checkBandwidth();
 }
 
 interface Reconfigurator {
@@ -14,6 +16,7 @@ interface Reconfigurator {
 class ConnectionImpl implements Connection {
     Bandwidth checkBandwidth() {
         // randomly return a value
+        return Mid;
     }
 }
 
@@ -21,19 +24,19 @@ class ReconfiguratorImpl(Connection conn) implements Reconfigurator {
 
     Unit run() {
         while(True) {
-            reconfigure();
+            this.reconfigure();
         }
     }
 
     Unit reconfigure() {
         Bandwidth bw = conn.checkBandwidth();
-        if (bw == Low)
-            reconfigureProduct("LowEndChat");
-        else if (bw == Mid)
-            reconfigureProduct("RegularChat");
-        else (bw == High)
-            reconfigureProduct("HighEndChat");
-
+        if (bw == Low) {
+            //reconfigureProduct("LowEndChat");
+        } else if (bw == Mid) {
+            //reconfigureProduct("RegularChat");
+        } else {
+            //reconfigureProduct("HighEndChat");
+        }
         // reconfigureProduct() still needs to be implemented in metaABS.
     }
 }
