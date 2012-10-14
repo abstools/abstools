@@ -87,8 +87,19 @@ public enum ErrorMessage {
     WRONG_DEADLINE_TYPE("Wrong type %s in deadline annotation, should be ABS.StdLib.Duration"),
     AMBIGIOUS_USE("The use of %s is ambigious. It can refer to the following definitions: %s"),
     AWAIT_TOO_PURE("You're not checking for anything observable in AWAIT."),
-    WRONG_SCHEDULER_TYPE("Invalid scheduler expression type %s, should be ABS.Scheduler.Process.")
-    , ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas.")
+    WRONG_SCHEDULER_TYPE("Invalid scheduler expression type %s, should be ABS.Scheduler.Process."),
+    SQL_REWRITING_FAILED("The SQL statement could not be rewritten to core ABS correctly. Exception: %s"),
+    SQL_NO_ACTIVE_DATABASE("No active database for SQL expression (use annotation TX or DatabaseConnection)"),
+    SQL_UNSUPPORTED_OPERAND("Type \"%s\" not supported as an SQL operand by ABS DB library."),
+    SQL_NOT_IN_BLOCK("SQL statements are only allowed within statement blocks."),
+    SQL_SYNC_COMBINED_WITH_ASYNC("Annotations SqlSync and SqlAsync may not be used together."),
+    SQL_PROC_AT_INVALID_LOCATION("The SqlProc annotation may not be used at this location."),
+    SQL_PROC_WITHOUT_CONNECTION("Method %s is declared as SqlProc which requires a database connection. Use the DatabaseConnection annotation."),
+    SQL_PROC_ILLEGAL_ARGUMENT_TYPE("Type %s is not allowed to be transmitted by an SQL procedure. Only DatabaseInterfaceDatum and Unit are allowed."),
+    SQL_TOTAL_PROJECTION_WITH_GROUPING("The GROUP BY clause is disallowed in combination with a total projection (*)."),
+    SQL_UNKNOWN_AGGREGATE_FUNCTION("Aggregate function with name %s is undefined."),
+    SQL_INSERT_UNEQUAL_ATTR_AND_VALUE_NUMBER("The number of attributes and values must be equal."),
+    ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas.")
     ;
 
     private String pattern;

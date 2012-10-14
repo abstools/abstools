@@ -1,0 +1,94 @@
+module ABS.DB.Structure;
+
+export *;
+
+// SSH_DB 4.1: Structure --------------------------------------------------------
+
+// We restrict attribute types to Strings, Ints, and Bools:
+data AttributeType = AttrString | AttrInt | AttrBool;
+data AttributeValue =
+	AttrStringVal(String attrStringVal) |
+	AttrIntVal(Int attrIntVal) |
+	AttrBoolVal(Bool attrBoolVal) | AttrNullVal;
+
+def Bool isAttrStringVal(AttributeValue val) =
+	case val {
+		AttrStringVal(_) => True;
+		_ => False;
+	};
+
+def Bool isAttrIntVal(AttributeValue val) =
+	case val {
+		AttrIntVal(_) => True;
+		_ => False;
+	};
+
+def Bool isAttrBoolVal(AttributeValue val) =
+	case val {
+		AttrBoolVal(_) => True;
+		_ => False;
+	};
+
+def Bool isAttrNullVal(AttributeValue val) =
+	case val {
+		AttrNullVal => True;
+		_ => False;
+	};
+
+def String attributeTypeToString(AttributeType attrType) =
+	case attrType {
+		AttrString => "String";
+		AttrInt => "Int";
+		AttrBool => "Bool";
+	};
+
+def AttributeType getAttributeTypeOfValue(AttributeValue val) =
+	case val {
+		AttrStringVal(_) => AttrString;
+		AttrIntVal(_) => AttrInt;
+		AttrBoolVal(_) => AttrBool;
+		AttrNullVal => AttrString; // default
+	};
+
+// SSH_DB 4.1.1
+// String name, AttributeType domain
+type Attribute = Pair<String, AttributeType>;
+
+def String attributeToString(Attribute attr) =
+	case attr {
+		Pair(name, attrType) => attributeTypeToString(attrType) + " " + name;
+	};
+
+// SSH_DB 4.1.1
+// Set<Attribute> attributes
+type RelationScheme = Set<Attribute>;
+
+// SSH_DB 4.1.2
+// RelationScheme scheme, Set<Attribute> key attributes (subset of scheme attributes)
+type ExtendedRelationScheme = Pair<RelationScheme, Set<Attribute>>;
+
+// SSH_DB 4.1.1
+type Tuple = Map<Attribute, AttributeValue>;
+
+// SSH_DB 4.1.1
+/* Relation r over RelationScheme R =>
+ *   For each two tuples t1, t2 in r,
+ *     there must be a key attribute A in R such that t1(A) != t2(A).
+ */
+data Relation =
+	Relation(String relationName, RelationScheme relationScheme, List<Tuple> relationTuples);
+
+type RelationSchemeAttributes = Pair<RelationScheme, Set<Attribute>>;
+// SSH_DB 4.1.2
+// RelationSchemeAttributes foreignKey, RelationSchemeAttributes referencedAttributes
+type ForeignKey = Pair<RelationSchemeAttributes, RelationSchemeAttributes>;
+
+// SSH_DB 4.1.1, 4.1.2
+type DatabaseScheme = Pair<Map<String, ExtendedRelationScheme>, Set<ForeignKey>>; 
+
+// SSH_DB 4.1.1
+/* Database d over DatabaseScheme S =>
+ *   1) d must be as long as the length of the RelationScheme list of S.
+ *   2) d must comply with the ForeignKey set of S.
+ */
+type DatabaseValue = Set<Relation>;

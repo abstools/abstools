@@ -1,0 +1,102 @@
+aspect SQL {
+
+	eq SqlExp.getType() {
+	   return null; // not be needed after rewriting
+	}
+	
+	public void SqlExp.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
+	{
+		throw new NotImplementedYetException(this);
+	}
+    
+	public int SqlExp.numberOfRandom(Set<String> visitedFunctions) {
+		return 0;
+	}
+    
+	public void SqlExp.generateScala(String prefix, PrintWriter output, List<Annotation> annotations) {
+		throw new NotImplementedYetException(this);
+	}
+	
+	public void SqlExp.generateJava(PrintStream s) {
+		// never called for processed ASTs
+	}
+
+    public void SqlExp.generateJavaDynamic(PrintStream s) {
+        // never called for processed ASTs
+    }
+    
+    public boolean SqlExp.isSuspendable(List<Annotation> annotations) {
+        return false;
+    }
+
+    public void SqlStmt.generateMaude(PrintStream stream) {
+        // not needed after rewriting
+    }
+
+    public void SqlStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
+        // not needed after rewriting
+    }
+    
+    public boolean SqlStmt.isSuspendable() {
+        return false;
+    }
+    
+	
+	// Error checks
+	
+	refine ErrorCheck public void ASTNode.collectErrors(SemanticErrorList c) {
+        final List<Annotation> annotations = getNodeAnnotations();
+        if (CompilerUtils.hasAnnotation(annotations, "SqlSync") &&
+                CompilerUtils.hasAnnotation(annotations, "SqlAsync"))
+            c.add(new SemanticError(annotations,
+                    ErrorMessage.SQL_SYNC_COMBINED_WITH_ASYNC, new String[0]));
+        ErrorCheck.ASTNode.collectErrors(c);
+    }
+
+    public void Stmt.collectErrors(SemanticErrorList c) {
+        super.collectErrors(c);
+        if (CompilerUtils.hasAnnotation(getAnnotations(), "SqlProc"))
+            c.add(new SemanticError(getAnnotations(), ErrorMessage.SQL_PROC_AT_INVALID_LOCATION, new String[0]));
+    }
+    
+    public void FieldDecl.collectErrors(SemanticErrorList c) {
+        super.collectErrors(c);
+        if (CompilerUtils.hasAnnotation(getAnnotations(), "SqlProc"))
+            c.add(new SemanticError(getAnnotations(), ErrorMessage.SQL_PROC_AT_INVALID_LOCATION, new String[0]));
+    }
+    
+    public void MethodImpl.collectErrors(SemanticErrorList c) {
+        super.collectErrors(c);
+        if (getNodeWithAnnotation("SqlProc") != null && getInheritedAnnotationValue("DatabaseConnection") == null)
+            c.add(new SemanticError(getMethodSig(), ErrorMessage.SQL_PROC_WITHOUT_CONNECTION, getMethodSig().getName()));
+    }
+	
+	public void SqlStmt.typeCheck(SemanticErrorList e) {
+	}
+	
+	public void SqlStmt.collectErrors(SemanticErrorList c) {
+	    if (!(getParent() instanceof List))
+	       c.add(new SemanticError(this, ErrorMessage.SQL_NOT_IN_BLOCK, new String[0]));
+        else if (getSqlRewritingError() != null)
+            c.add(getSqlRewritingError());
+	}
+	
+	// Flushing
+	
+	// Should be used if the node has completely been rearranged, particularly,
+	// if this might influence the requirement to rewrite the node (or one
+	// of its children).
+	public void ASTNode.flushAll() {
+        for (int i = 0; i < getNumChild(); i++)
+            getChild(i).flushAll();
+        flushCache();
+        is$Final(false);
+        in$Circle(false);
+	}
+	
+	public void SqlStmt.flushAll() {
+		super.flushAll();
+        setSqlRewritingError(null);
+	}
+	
+}

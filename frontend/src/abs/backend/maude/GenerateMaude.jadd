@@ -144,7 +144,7 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         String effvar = var;
-        PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
+        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('"
                      + (var.equals("_") ? ".staticfuture" : var)
@@ -177,7 +177,7 @@ aspect GenerateMaude {
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
-        PureExp deadline = MaudeCompilerHelper.getAnnotationValue(annotations, "Deadline");
+        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("synccall('.staticfuture ; ");
         getCallee().generateMaude(stream);
@@ -248,7 +248,7 @@ aspect GenerateMaude {
             stream.print(") ");
         }
         if (hasCog()) {
-            PureExp dc = MaudeCompilerHelper.getAnnotationValue(annotations, "DC");
+            PureExp dc = CompilerUtils.getAnnotationValue(annotations, "DC");
             stream.print("; ");
             if (dc != null) {
                 dc.generateMaude(stream);
@@ -366,8 +366,12 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        String fnName = getDecl().getModule().getName()
-            + "." + getDecl().getName();
+        Decl decl = getDecl();
+        String fnName = decl.getModuleDecl().getName() + "." + decl.getName();
+        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(fnName)) {
+            getParam(0).generateMaude(stream);
+            return;
+        }
         stream.print("\"" + fnName + "\"( ");
         if (getNumParam() == 0) {
             stream.print("emp ");
@@ -503,7 +507,7 @@ aspect GenerateMaude {
 
     public void ClassDecl.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        PureExp scheduler = MaudeCompilerHelper.getAnnotationValue(this.getAnnotationList(), "Scheduler");
+        PureExp scheduler = CompilerUtils.getAnnotationValue(this.getAnnotationList(), "Scheduler");
 		stream.println("\n\n< '" + qualifiedName() + " : Class | Param: ");
         if (getNumParam() == 0) {
             stream.print("noVid");
@@ -546,7 +550,7 @@ aspect GenerateMaude {
     public void MethodImpl.generateMaude(PrintStream stream) {
         boolean inlist = false;
         MethodSig sig = getMethodSig();
-        PureExp cost = MaudeCompilerHelper.getAnnotationValue(sig.getAnnotationList(), "Cost");
+        PureExp cost = CompilerUtils.getAnnotationValue(sig.getAnnotationList(), "Cost");
         stream.print("< '" + sig.getName() + " : Method | Param: ");
         if (sig.getNumParam() == 0) {
             stream.print("noVid");

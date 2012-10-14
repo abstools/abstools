@@ -4,7 +4,7 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.backend.maude.MaudeCompilerHelper;
+import abs.common.CompilerUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ClassDecl;
@@ -24,7 +24,7 @@ public class SchedulerChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkClassDecl(ClassDecl decl) {
-        PureExp sched = MaudeCompilerHelper.getAnnotationValue(decl.getAnnotations(), "Scheduler");
+        PureExp sched = CompilerUtils.getAnnotationValue(decl.getAnnotations(), "Scheduler");
         if (sched != null) {
             if (!(sched instanceof FnApp)) {
                 errors.add(new TypeError(decl, ErrorMessage.WRONG_SCHEDULER_TYPE,

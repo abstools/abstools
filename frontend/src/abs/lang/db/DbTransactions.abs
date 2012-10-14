@@ -1,0 +1,412 @@
+module ABS.DB.Transactions;
+
+export *;
+
+import * from ABS.DB;
+import * from ABS.DB.Structure;
+import * from ABS.DB.Operators.Structure;
+import * from ABS.DB.Operators;
+import * from ABS.DB.Helpers;
+
+// Transactions: SSH_DB p. 385
+
+// Reference to DB, transaction ID
+data Transaction = TransactionCons(
+	RelationalTransactionalDatabase transactionDb,
+	Int transactionId,
+	// If this is True, database operations immediately return with an Error for this transaction
+	// if a required lock is not available. Otherwise, the database waits for the lock to be
+	// available. The operation where this typically occurs is RelationalDatabase.modifyInTransaction(...).
+	Bool failFast);
+
+
+// A tuple ID in the transactional setting consists of transaction ID
+// (attribute name "$TransactionID") and tuple ID ("$TupleID").
+type TupleId = Pair<Int, Int>;
+
+def SelectionCondition getConditionForTupleId(TupleId id) =
+	CompositeCondition(
+		ComparisonCondition(
+			TupleAttributeValue(AttributeRefByName("$TransactionID")),
+			CR_EQ,
+			TupleConstant(AttrIntVal(fst(id)))),
+		AND,
+		ComparisonCondition(
+			TupleAttributeValue(AttributeRefByName("$TupleID")),
+			CR_EQ,
+			TupleConstant(AttrIntVal(snd(id)))));
+
+def Tuple addTupleId(Tuple tuple, TupleId id) =
+	put(
+		put(tuple, Pair("$TransactionID", AttrInt), AttrIntVal(fst(id))),
+		Pair("$TupleID", AttrInt),
+		AttrIntVal(snd(id)));
+
+def Maybe<TupleId> getTupleId(Tuple tuple) =
+	case lookup(tuple, Pair("$TransactionID", AttrInt)) {
+		Just(AttrIntVal(transactionId)) =>
+			case lookup(tuple, Pair("$TupleID", AttrInt)) {
+				Just(AttrIntVal(tupleId)) => Just(Pair(transactionId, tupleId));
+				_ => Nothing;
+			};
+		_ => Nothing;
+	};
+
+def Relation removeTupleIds(Relation relation) =
+	let (RelationScheme schemeWithoutIds) =
+		setDifference(
+			relationScheme(relation),
+			set[Pair("$TransactionID", AttrInt), Pair("$TupleID", AttrInt)]) in
+	Relation(
+		relationName(relation),
+		schemeWithoutIds,
+		tupleListProjection(relationTuples(relation), schemeWithoutIds));
+		
+
+// Conversion of normal relation schemes to schemes which include attributes for the above tuple IDs.
+def ExtendedRelationScheme convertExtendedRelationSchemeToTransactional(ExtendedRelationScheme scheme) =
+	Pair(
+		convertRelationSchemeToTransactional(fst(scheme)),
+		snd(scheme));
+
+def RelationScheme convertRelationSchemeToTransactional(RelationScheme scheme) =
+	insertElement(
+		insertElement(scheme, Pair("$TransactionID", AttrInt)),
+		Pair("$TupleID", AttrInt));
+
+def Map<String, ExtendedRelationScheme> convertExtendedRelationSchemesToTransactional(
+		Map<String, ExtendedRelationScheme> schemes) =
+	case schemes {
+		InsertAssoc(Pair(str, scheme), rest) => InsertAssoc(
+			Pair(str, convertExtendedRelationSchemeToTransactional(scheme)),
+			convertExtendedRelationSchemesToTransactional(rest));
+		empty => empty;
+	};
+
+// Constant modification operators do not depend on other contents of the
+// database than relation names and tuple IDs.
+data RelationalConstantModificationOperator =
+	ConstantInsertion(Tuple) |
+	// tuple ID
+	ConstantDeletion(TupleId) |
+	// target tuple ID, new attribute value
+	ConstantUpdate(TupleId, Attribute, AttributeValue);
+
+// Error is returned if the operation is invalid.
+def MaybeEx<Relation> executeRelationalConstantModificationOperator(RelationalConstantModificationOperator operator,
+		Relation operand) =
+	case operator {
+		ConstantInsertion(tuple) => insertion(operand, tuple);
+		ConstantDeletion(id) =>
+			JustEx(deletion(operand, getConditionForTupleId(id)));
+		ConstantUpdate(id, attribute, value) =>
+			update(
+				operand,
+				getConditionForTupleId(id),
+				map[Pair(DirectAttributeRef(attribute), TupleConstant(value))]);
+	};
+
+// Constant DB operators
+data DbConstantModificationOperator =
+	RelationalConstantModification(String, RelationalConstantModificationOperator);
+
+// Returns Error if the operation is invalid.
+def MaybeEx<DatabaseValue> executeDbConstantModificationOperatorSafe(DbConstantModificationOperator operator,
+		DatabaseValue operand, Map<String, ExtendedRelationScheme> exRelationSchemes) =
+	case operator {
+		RelationalConstantModification(relationName, relOperator) =>
+			case getRelationByName(operand, relationName) {
+				Just(relation) =>
+					case executeRelationalConstantModificationOperator(
+							relOperator,
+							relation) {
+						JustEx(newRelation) =>
+							if relationSize(duplicateDeletion(projection(
+										newRelation,
+										wrapAttributesInRefs(snd(fromJust(lookup(exRelationSchemes, relationName))))))) ==
+									relationSize(newRelation) then
+								JustEx(Insert(newRelation, remove(operand, relation)))
+							else
+								Error("executeDbConstantModificationOperatorSafe", "Primary key uniqueness violated");
+						error => forwardError(error, "executeDbConstantModificationOperatorSafe");
+					};
+				Nothing => Error("executeDbConstantModificationOperator", "relationName \"" + relationName + "\" not contained in operand.");
+			};
+	};
+
+def MaybeEx<DatabaseValue> executeDbConstantModificationOperatorsSafe(
+		List<DbConstantModificationOperator> operators, DatabaseValue operand,
+		Map<String, ExtendedRelationScheme> exRelationSchemes) =
+	case operators {
+		Cons(operator, rest) =>
+			case executeDbConstantModificationOperatorSafe(operator, operand, exRelationSchemes) {
+				JustEx(result) => executeDbConstantModificationOperatorsSafe(rest, result, exRelationSchemes);
+				error => error;
+			};
+		Nil => JustEx(operand);
+	};
+
+// Constant operator generation from non-constant operators
+
+// Returns Error if an operation is invalid.
+// Otherwise: Pair(list of operations, next transaction-specific tuple ID to be used)
+def MaybeEx<Pair<List<DbConstantModificationOperator>, Int>> generateDbConstantModificationOperators(
+		DbModificationOperator operator, DatabaseValue operand, TupleId tupleId) =
+	case operator {
+		RelationalModification(relationName, relOperator) =>
+			let (Maybe<Relation> relation) = getRelationByName(operand, relationName) in
+				if isJust(relation) then
+					case generateRelationalConstantModificationOperators(
+							relOperator,
+							fromJust(relation),
+							tupleId) {
+						JustEx(Pair(relationalOperators, nextId)) =>
+							JustEx(Pair(
+								createDbConstantModificationOperatorsForRelationalOperators(
+									relationName,
+									relationalOperators),
+								nextId));
+						error => forwardError(error, "generateDbConstantModificationOperators");
+					}
+				else
+					Error("generateDbConstantModificationOperators",
+						"No relation with name \"" + relationName + "\" in operand.");
+	};
+
+def List<DbConstantModificationOperator> createDbConstantModificationOperatorsForRelationalOperators(
+		String relationName, List<RelationalConstantModificationOperator> operators) =
+	case operators {
+		Cons(relOperator, rest) =>
+			Cons(RelationalConstantModification(relationName, relOperator),
+				createDbConstantModificationOperatorsForRelationalOperators(relationName, rest));
+		Nil => Nil;
+	};
+
+def MaybeEx<Pair<List<RelationalConstantModificationOperator>, Int>> generateRelationalConstantModificationOperators(
+		RelationalModificationOperator operator, Relation operand, TupleId tupleId) =
+	let (Int sndId) = snd(tupleId) in
+	case operator {
+		InsertionTuple(t) => JustEx(Pair(list[ConstantInsertion(addTupleId(t, tupleId))], sndId + 1));
+		Insertion(values) =>
+			case createTupleFromAttributeValues(relationScheme(operand), values) {
+				JustEx(tuple) => JustEx(Pair(list[ConstantInsertion(addTupleId(tuple, tupleId))], sndId + 1));
+				error => forwardError(error, "generateRelationalConstantModificationOperators");
+			};
+		Deletion(condition) =>
+			case createConstantDeletionsFromTuples(relationTuples(selection(operand, condition))) {
+				JustEx(relOperators) => JustEx(Pair(relOperators, sndId));
+				error => forwardError(error, "generateRelationalConstantModificationOperators");
+			};
+		Update(condition, functions) =>
+			case convertAttrRefToAttrMap(relationScheme(operand), functions) {
+				JustEx(convertedFunctions) =>
+					case createConstantUpdatesForTuples(
+							relationTuples(selection(operand, condition)),
+							convertedFunctions) {
+						JustEx(relOperators) => JustEx(Pair(relOperators, sndId));
+						error => forwardError(error, "generateRelationalConstantModificationOperators");
+					};
+				error => forwardError(error, "generateRelationalConstantModificationOperators");
+			};
+	};
+
+def MaybeEx<List<RelationalConstantModificationOperator>> createConstantDeletionsFromTuples(
+		List<Tuple> tuples) =
+	case tuples {
+		Cons(t, rest) =>
+			case createConstantDeletionsFromTuples(rest) {
+				JustEx(processedRest) =>
+					case getTupleId(t) {
+						Just(tid) => JustEx(Cons(ConstantDeletion(tid), processedRest));
+						Nothing => Error("createConstantDeletionsFromTuples", "Tuple does not have ID.");
+					};
+				error => error;
+			};
+		Nil => JustEx(Nil);
+	};
+
+def MaybeEx<List<RelationalConstantModificationOperator>> createConstantUpdatesForTuples(
+		List<Tuple> tuples, Map<Attribute, TupleScalarFunction> functions) =
+	case tuples {
+		Cons(t, rest) =>
+			case getTupleId(t) {
+				Just(tid) =>
+					case createConstantUpdatesForTuples(rest, functions) {
+						JustEx(processedRest) =>
+							JustEx(concatenate(
+								createConstantUpdatesForTuple(t, tid, functions),
+								processedRest));
+						error => error;
+					};
+				Nothing => Error("createConstantUpdatesForTuples", "Tuple does not have ID.");
+			};
+		Nil => JustEx(Nil);
+	};
+
+def List<RelationalConstantModificationOperator> createConstantUpdatesForTuple(Tuple tuple,
+		TupleId tupleId, Map<Attribute, TupleScalarFunction> functions) =
+	case functions {
+		InsertAssoc(Pair(attribute, function), rest) =>
+			Cons(
+				ConstantUpdate(tupleId, attribute, applyScalarFunction(function, tuple)),
+				createConstantUpdatesForTuple(tuple, tupleId, rest));
+		EmptyMap => Nil;
+	};
+
+
+// Database locks
+// The need for locks: see The SAP HANA Database, pp. 51
+data DbLock =
+	// relation name, tuple ID
+	TupleLock(String, TupleId);
+
+def String dbLockToString(DbLock lock) =
+	case lock {
+		TupleLock(relationName, Pair(txId, tId)) =>
+			"(Relation: " + relationName + "; ID: (" + intToString(txId) + ", " + intToString(tId) + "))";
+	};
+
+def Set<DbLock> generateDbLocksForOperation(DbConstantModificationOperator operator) =
+	case operator {
+		RelationalConstantModification(relationName, relOperator) =>
+			case relOperator {
+				ConstantDeletion(tupleId) => set[TupleLock(relationName, tupleId)];
+				ConstantUpdate(tupleId, _, _) => set[TupleLock(relationName, tupleId)];
+				_ => EmptySet;
+			};
+		_ => EmptySet;
+	};
+
+// General-purpose locks
+interface Lock {
+
+	// Blocks until the lock is free and then obtains the lock.
+	Unit acquire();
+	
+	// Tries to acquire the lock immediately. Returns True if this was possible.
+	[Atomic] Bool tryAcquire();
+	
+	// Tries to acquire the lock within the given amount of time. Returns True if this was possible.
+	// Otherwise, False is returned after the given number of time units.
+	Bool acquireInTime(Int time);
+	
+	// Releases the lock if it is hold.
+	[Atomic] Unit release();
+
+}
+
+class Lock implements Lock {
+
+	Bool free = True;
+	
+	Bool timerCompleted = False;
+	
+	Lock timerLock = null;
+	
+	// Caveat: This implementation does not ensure fairness, i.e., the method may block
+	// infinitely long if there is always at least one other thread currently executing this
+	// method.
+	Unit acquire() {
+		Bool success = False;
+		while (~success) {
+			await free;
+			success = this.tryAcquire();
+		}
+	}
+	
+	[Atomic] Bool tryAcquire() {
+		Bool result = False;
+		if (free) {
+			free = False;
+			result = True;
+		}
+		return result;
+	}
+	
+	Bool acquireInTime(Int time) {
+		Time before = now();
+		Bool success = this.tryAcquire();
+		if (~success) {
+			Lock lock = this.getTimerLock();
+			lock.acquire();
+			while (time > timeDifference(now(), before) && ~success) {
+				timerCompleted = False;
+				this!executeTimer(time - timeDifference(now(), before));
+				await free || timerCompleted;
+				success = this.tryAcquire();
+			}
+			lock.release();
+		}
+		return success;
+	}
+	
+	Unit executeTimer(Int time) {
+		await duration(time, time);
+		timerCompleted = True;
+	}
+	
+	[Atomic] Lock getTimerLock() {
+		if (timerLock == null)
+			timerLock = new Lock();
+		return timerLock;
+	}
+	
+	[Atomic] Unit release() {
+		free = True;
+	}
+
+}
+
+interface TransactionData {
+
+	DatabaseValue getSnapshot();
+	Unit setSnapshot(DatabaseValue snapshot);
+	Int getNextTupleId();
+	Unit setNextTupleId(Int id);
+	List<DbConstantModificationOperator> getOperations();
+	Unit setOperations(List<DbConstantModificationOperator> operations);
+	Lock getLock();
+
+}
+
+class TransactionData(DatabaseValue snapshot) implements TransactionData {
+
+	Int nextTupleId = 0;
+	
+	List<DbConstantModificationOperator> operations = Nil;
+
+	Lock lock;
+	
+	{
+		this.lock = new Lock();
+	}
+
+	DatabaseValue getSnapshot() {
+		return snapshot;
+	}
+	
+	Unit setSnapshot(DatabaseValue snapshot) {
+		this.snapshot = snapshot;
+	}
+	
+	Int getNextTupleId() {
+		return nextTupleId;
+	}
+	
+	Unit setNextTupleId(Int id) {
+		nextTupleId = id;
+	}
+	
+	List<DbConstantModificationOperator> getOperations() {
+		return operations;
+	}
+	
+	Unit setOperations(List<DbConstantModificationOperator> operations) {
+		this.operations = operations;
+	}
+	
+	Lock getLock() {
+		return lock;
+	}
+
+}

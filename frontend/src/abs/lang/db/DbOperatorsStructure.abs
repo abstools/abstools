@@ -1,0 +1,117 @@
+module ABS.DB.Operators.Structure;
+
+export *;
+
+import * from ABS.DB.Structure;
+import * from ABS.DB.Helpers;
+
+data AttributeRef =
+	DirectAttributeRef(Attribute) |
+	AttributeRefByName(String);
+
+def String attributeRefToString(AttributeRef attrRef) =
+	case attrRef {
+		DirectAttributeRef(attr) => attributeToString(attr);
+		AttributeRefByName(name) => name;
+	};
+
+data AttributeValueOperator =
+	ValueSum |
+	ValueDifference |
+	ValueProduct |
+	ValueQuotient |
+	ValueConcatenation;
+
+def AttributeType getAttributeTypeForOperator(AttributeValueOperator operator) =
+	case operator {
+		ValueConcatenation => AttrString;
+		_ => AttrInt;
+	};
+
+data UnaryRelationalOperator =
+	// projection attributes
+	Projection(Set<AttributeRef>) |
+	Selection(SelectionCondition) |
+	// Remove duplicate tuples (= SQL distinct).
+	DuplicateDeletion |
+	// old attribute names, new attribute names
+	Renaming(Map<String, String>)      |
+	// names of new attributes mapped to the aggregate functions which determine their values,
+	// and the set of grouping attributes (may be empty => one group for all, or Nothing => no grouping)
+	Grouping(Map<String, AggregateFunction>, Maybe<Set<AttributeRef>>) |
+	// grouping and projection required in combination because grouping may produce new attributes
+	// with names which are already contained in the scheme; however, with a projection, the old
+	// ones might be removed
+	// Projection attributes (last argument) ONLY pertain to attributes of the original relation.
+	// I.e., attributes created by the grouping will be retained by the projection in any case.
+	// This operation includes a DuplicateDeletion application to the values of the grouping attributes.
+	GroupingAndProjection(Map<String, AggregateFunction>, Maybe<Set<AttributeRef>>, Set<AttributeRef>) |
+	// Ordering by Int or Bool attributes
+	// The list gives the order of ordering attributes. The Bool entry of each pair defines ascending (True)
+	// or descending (False).
+	Ordering(List<Pair<AttributeRef, Bool>>) |
+	// using a relational modification operator which would otherwise only be usable via
+	// a DbMoficiationOperator
+	Modification(RelationalModificationOperator);
+
+data BinaryRelationalOperator =
+	Join       |
+	LeftJoin   |
+	UnionAll   |
+	Union      |
+	Difference |
+	Intersection;
+
+// selection
+// =, !=, <, <=, >, >=
+data ComparisonRelation = CR_EQ | CR_NEQ | CR_LT | CR_LEQ | CR_GT | CR_GEQ;
+data BinaryBooleanOperator = AND | OR;
+data SelectionCondition =
+	NoCondition |
+	ComparisonCondition(TupleScalarFunction, ComparisonRelation, TupleScalarFunction) |
+	CompositeCondition(SelectionCondition, BinaryBooleanOperator, SelectionCondition) |
+	IsNullCondition(AttributeRef) |
+	NegatedCondition(SelectionCondition) |
+	// The considered tuple must equal the given tuple with respect to the attributes the given
+	// tuple maps to values:
+	TupleEqualityCondition(Tuple tuple);
+
+
+// grouping (SSH_DB 9.1)
+
+// Scalar functions are applied to one or more scalars and produces a scalar.
+data ScalarFunction = Sum(ScalarFunction, ScalarFunction) |
+	Constant(AttributeValue);
+
+// Tuple scalar functions are applied to one tuple and produce a scalar.
+data TupleScalarFunction = TupleAttributeValue(AttributeRef) |
+	TupleBinaryFunction(AttributeValueOperator, TupleScalarFunction, TupleScalarFunction) |
+	TupleConstant(AttributeValue) |
+	// Map (considered to be an ordered map!) from conditions to functions (1) and
+	// the "else" function (2) which is applied if none of the conditions matches.
+	TupleCaseFunction(Map<SelectionCondition, TupleScalarFunction>, TupleScalarFunction);
+
+// Aggregate functions are applied to a set of tuples and produce a scalar.
+data AggregateFunction = Maximum(TupleScalarFunction) |
+	Minimum(TupleScalarFunction) |
+	AggregateSum(TupleScalarFunction) |
+	Average(TupleScalarFunction) |
+	Unique(TupleScalarFunction) | // yields AttrNullVal if the function does not produce the same value for all aggregated tuples
+	AggregateConstant(AttributeValue) |
+	Count;
+
+
+// SSH_DB 4.3.2: Modifying relational algebra --------------------------------------------------------
+
+data RelationalModificationOperator =
+	InsertionTuple(Tuple) |
+	Insertion(Map<AttributeRef, AttributeValue>) |
+	Deletion(SelectionCondition) |
+	Update(SelectionCondition, Map<AttributeRef, TupleScalarFunction>);
+
+
+// Database value level =======================================================
+// modifying operations
+data DbModificationOperator =
+	// target relation name, operator
+	RelationalModification(String, RelationalModificationOperator);

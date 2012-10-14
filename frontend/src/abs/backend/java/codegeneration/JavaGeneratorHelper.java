@@ -22,7 +22,6 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
-import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
@@ -44,7 +43,6 @@ import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.Stmt;
 import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypedAnnotation;
@@ -88,7 +86,6 @@ public class JavaGeneratorHelper {
             first = false;
         }
         stream.print(")");
-
     }
 
     public static void generateParamArgs(PrintStream stream, List<ParamDecl> params) {
@@ -168,7 +165,15 @@ public class JavaGeneratorHelper {
             throw new RuntimeException("The built in function '" + name + "' is not implemented in the Java backend.");
         }
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
+        String firstArgs = null;
+        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
+            firstArgs = generateFunctionalBreakPointArgs(app);
+        generateArgs(stream, firstArgs, app.getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
+    }
+
+    private static String generateFunctionalBreakPointArgs(FnApp app) {
+        return new StringBuilder("\"").append(app.getCompilationUnit().getFileName().replace("\\", "\\\\"))
+                .append("\", ").append(Symbol.getLine(app.getStart())).toString();
     }
 
     private static boolean builtInFunctionExists(String name) {
@@ -180,13 +185,13 @@ public class JavaGeneratorHelper {
         return false;
     }
 
-    public static String getDebugString(Stmt stmt) {
-        return getDebugString(stmt, stmt.getStart());
+    public static String getDebugString(ASTNode<?> node) {
+        return getDebugString(node, node.getStart());
     }
 
-    public static String getDebugString(Stmt stmt, int pos) {
+    public static String getDebugString(ASTNode<?> node, int pos) {
         int line = Symbol.getLine(pos);
-        String fileName = stmt.getCompilationUnit().getFileName().replace("\\", "\\\\");
+        String fileName = node.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep(\""
                 + fileName + "\"," + line + ");";
     }

@@ -1,0 +1,109 @@
+aspect SqlProc {
+
+    refine TypeCheckerExtension public void MethodImpl.typeCheck(SemanticErrorList s) {
+        refined(s);
+        /*if (getNodeWithAnnotation("SqlProc") == null)
+            return;
+        final MethodSig methodSig = getMethodSig();
+        String typeName = methodSig.getReturnType().getType().getQualifiedName();
+        if (!isAllowedSqlProcType(typeName))
+            s.add(new SemanticError(methodSig.getReturnType(), ErrorMessage.SQL_PROC_ILLEGAL_ARGUMENT_TYPE, typeName));
+        for (ParamDecl param : methodSig.getParams()) {
+            typeName = param.getType().getQualifiedName();
+            if (!isAllowedSqlProcType(typeName))
+                s.add(new SemanticError(param.getAccess(), ErrorMessage.SQL_PROC_ILLEGAL_ARGUMENT_TYPE, typeName));
+        }*/
+    }
+
+    private boolean MethodImpl.isAllowedSqlProcType(String returnType) {
+        return (Constants.STDLIB_NAME + ".Unit").equals(returnType) ||
+                (Constants.DBLIB_NAME + ".DatabaseInterfaceDatum").equals(returnType);
+                
+    }
+    
+    private boolean MethodImpl.sqlProcRewriteDone = false;
+    syn boolean MethodImpl.sqlProcMethodImplRewriteRequired() = !sqlProcRewriteDone;
+    
+    rewrite MethodImpl {
+        when (sqlProcMethodImplRewriteRequired())
+        to MethodImpl {
+            sqlProcRewriteDone = true;
+            if (getNodeWithAnnotation("SqlProc") == null)
+            	return this;
+            PureExp dbConnection = getInheritedAnnotationValue("DatabaseConnection");
+            if (dbConnection == null)
+                return this;
+            List<Stmt> stmts = getBlockNoTransform().getStmtsNoTransform();
+            int i = 0;
+            
+            final ExpressionStmt propagationDelayStmt = CompilerUtils.copyPosition(this, new ExpressionStmt(
+                new List<Annotation>(),
+                CompilerUtils.copyPosition(dbConnection, new SyncCall(
+                    (PureExp) dbConnection.fullCopy(),
+                    "propagationDelay",
+                    new List<PureExp>()))));
+
+            // network delay before method
+            stmts.insertChild(propagationDelayStmt, i++);
+                
+            // transmission delay for arguments
+            for (ParamDecl param : getMethodSig().getParams())
+                stmts.insertChild(createSqlTransmissionDelay(dbConnection, param.getName()), i++);
+            
+            int countRegularStmts = stmts.getNumChild();
+            final Stmt lastStmt = stmts.getChild(countRegularStmts - 1);
+            if (lastStmt instanceof ReturnStmt)
+                countRegularStmts--;
+            
+            // network delay after method
+            stmts.insertChild(propagationDelayStmt.fullCopy(), countRegularStmts);
+            
+            if (!(lastStmt instanceof ReturnStmt))
+                return this;
+            
+            // transmission delay for return value
+            final String resultVar = getUnusedVarName(new HashSet<String>(), "result%s");
+            final ReturnStmt returnStmt = (ReturnStmt) lastStmt;
+            VarDeclStmt declareRetValueAsVarStmt = CompilerUtils.copyPosition(returnStmt, new VarDeclStmt(
+                new List<Annotation>(),
+                CompilerUtils.copyPosition(returnStmt, new VarDecl(
+                    resultVar,
+                    getMethodSig().getReturnType(),
+                    new Opt<Exp>(returnStmt.getRetExp())))));
+            stmts.insertChild(declareRetValueAsVarStmt, stmts.getNumChild() - 1);
+            stmts.insertChild(createSqlTransmissionDelay(dbConnection, resultVar), stmts.getNumChild() - 1);
+            returnStmt.setRetExp(new VarUse(resultVar));
+            return this;
+        }
+    }
+
+    private Stmt MethodImpl.createSqlTransmissionDelay(PureExp dbConnection, String dataVarName) {
+        return new ExpressionStmt(
+            new List<Annotation>(),
+            CompilerUtils.copyPosition(dbConnection, new SyncCall(
+                (PureExp) dbConnection.fullCopy(),
+                "transmissionDelay",
+                new List<PureExp>().add(new VarUse(dataVarName)))));
+    }
+    
+    refine SqlRewrites protected PureExp SqlExp.getDbExp(List<Stmt> newStmts, Set<String> occupiedVariables) {
+        if (getNodeWithAnnotation("SqlProc") == null)
+            return refined(newStmts, occupiedVariables); 
+        PureExp exp = activeDbConnection();
+        if (exp == null)
+            return null;
+        // TODO fix getUnusedVarName
+        final String dbVarName = getUnusedVarName(occupiedVariables, "dbExpression_" + getStart() + "_%s");
+        newStmts.add(new VarDeclStmt(
+            new List<Annotation>(),
+            new VarDecl(
+                dbVarName,
+                new DataTypeUse(abs.common.Constants.DBLIB_NAME + ".RelationalTransactionalDatabase", new List<Annotation>()),
+                new Opt<Exp>(CompilerUtils.copyPosition(exp, new SyncCall(
+                    (PureExp) exp.fullCopy(),
+                    "getWrappee",
+                    new List<PureExp>()))))));
+        return new VarUse(dbVarName);
+    }
+
+}

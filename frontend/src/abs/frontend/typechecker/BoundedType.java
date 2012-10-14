@@ -69,7 +69,7 @@ public class BoundedType extends Type {
 
     @Override
     public String toString() {
-        if (hasBoundType()) {
+        if (hasBoundType() && boundType != this) {
             return boundType.toString();
         }
         return "Unbound Type";

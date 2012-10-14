@@ -14,7 +14,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.jar.JarEntry;
 
 import choco.kernel.model.constraints.Constraint;
@@ -45,9 +50,14 @@ import beaver.Parser;
 public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    public static final String ABS_DB_LIB_PATH = "abs/lang/db/";
+    public static final String[] ABS_DB_LIBS =
+            {"DbHelpers.abs", "DbMain.abs", "DbOperators.abs", "DbOperatorsStructure.abs",
+             "DbStructure.abs", "DbTransactions.abs", "DbExecutionListener.abs", "DbCosts.abs"};
     protected boolean verbose = false;
     protected boolean typecheck = true;
     protected boolean stdlib = true;
+    protected boolean dblib = Constants.USE_DBLIB_BY_DEFAULT;
     protected boolean dump = false;
     protected boolean allowIncompleteExpr = false;
     protected LocationType defaultLocationType = null;
@@ -86,6 +96,10 @@ public class Main {
         this.stdlib = withStdLib;
     }
     
+    public void setWithDbLib(boolean withDbLib) {
+        this.dblib = withDbLib;
+    }
+    
     public void setAllowIncompleteExpr(boolean b) {
         allowIncompleteExpr = b;
     }
@@ -112,6 +126,10 @@ public class Main {
                 typecheck = false;
             else if (arg.equals("-nostdlib"))
                 stdlib = false;
+            else if (arg.equals("-dblib"))
+                dblib = true;
+            else if (arg.equals("-nodblib"))
+                dblib = false;
             else if (arg.equals("-loctypestats"))
                 locationTypeStats = true;
             else if (arg.equals("-loctypes")) {
@@ -170,9 +188,10 @@ public class Main {
     
         java.util.List<CompilationUnit> units = new ArrayList<CompilationUnit>();
 
-        if (stdlib) {
+        if (stdlib)
             units.add(getStdLib());
-        }
+        if (dblib)
+            units.addAll(getDbLibs());
 
         for (String fileName : fileNames) {
             if (fileName.startsWith("-")) {
@@ -479,6 +498,18 @@ public class Main {
         }
         return parseUnit(new File(ABS_STD_LIB), null, new InputStreamReader(stream));
     }
+    
+    public Collection<CompilationUnit> getDbLibs() throws IOException {
+        Collection<CompilationUnit> units = new ArrayList<CompilationUnit>();
+        for (String absDbLib : ABS_DB_LIBS) {
+            absDbLib = ABS_DB_LIB_PATH + absDbLib;
+            final InputStream stream = Main.class.getClassLoader().getResourceAsStream(absDbLib);
+            if (stream == null)
+                printErrorAndExit(String.format("Could not find DB Standard Library %s", absDbLib));
+            units.add(parseUnit(new File(absDbLib), null, new InputStreamReader(stream)));
+        }
+        return units;
+    }
 
     protected void printUsage() {
         printHeader();
@@ -491,6 +522,7 @@ public class Main {
                 + "  -product=<PID> build given product by applying deltas (PID is the qualified product ID)\n"
                 + "  -notypecheck   disable typechecking\n"
                 + "  -nostdlib      do not include the standard lib\n"
+                + "  -dblib         include the database library (required to use the SQL extensions)\n"
                 + "  -loctypes      enable location type checking\n"
                 + "  -locdefault=<loctype> \n"
                 + "                 sets the default location type to <loctype>\n"
@@ -592,6 +624,9 @@ public class Main {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (stdlib)
             units.add(getStdLib());
+        if (dblib)
+            for (final CompilationUnit unit : getDbLibs())
+                units.add(unit);
         units.add(parseUnit(file, sourceCode, reader));
         return new Model(units);
     }
@@ -629,9 +664,23 @@ public class Main {
         return parseString(s,withStdLib,false);
     }
 
+    /**
+     * Calls {@link #parseString(String, boolean, boolean, boolean)} with withDbLib set to false.
+     * 
+     * @param s
+     * @param withStdLib
+     * @param allowIncompleteExpr
+     * @return Model
+     * @throws Exception
+     */
     public static Model parseString(String s, boolean withStdLib, boolean allowIncompleteExpr) throws Exception {
+        return parseString(s, withStdLib, false, allowIncompleteExpr);
+    }
+    
+    public static Model parseString(String s, boolean withStdLib, boolean withDbLib, boolean allowIncompleteExpr) throws Exception {
         Main m = new Main();
         m.setWithStdLib(withStdLib);
+        m.setWithDbLib(withDbLib);
         m.setAllowIncompleteExpr(allowIncompleteExpr);
         return m.parse(null, s, new StringReader(s));
     }

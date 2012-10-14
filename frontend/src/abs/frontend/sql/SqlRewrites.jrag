@@ -1,0 +1,667 @@
+aspect SqlRewrites {
+
+	syn SqlExp Exp.toSqlExp() = null;
+	eq SqlExp.toSqlExp() = this;
+
+	syn boolean Exp.isSqlExp() = false;
+	eq SqlExp.isSqlExp() = true;
+	
+	syn lazy SqlExp Stmt.getContainedSqlExp() = null;
+	eq AssignStmt.getContainedSqlExp() = getValueNoTransform().toSqlExp();
+	eq ExpressionStmt.getContainedSqlExp() = getExpNoTransform().toSqlExp();
+	eq ReturnStmt.getContainedSqlExp() = getRetExpNoTransform().toSqlExp();
+	eq VarDeclStmt.getContainedSqlExp() = getVarDecl().hasInitExp()
+	       ? getVarDecl().getInitExpOptNoTransform().getChildNoTransform(0).toSqlExp()
+	       : null;
+	eq SqlStmt.getContainedSqlExp() = getStmtNoTransform().getContainedSqlExp();
+	eq IncompleteStmt.getContainedSqlExp() = getStmtNoTransform().getContainedSqlExp();
+
+	//syn boolean Stmt.isSqlStmt() = getContainedSqlExp() != null;
+
+	syn PureExp ASTNode.activeDbTransaction() = getInheritedAnnotationValue("TX");
+	syn PureExp ASTNode.activeDbConnection() = getInheritedAnnotationValue("DatabaseConnection");
+	
+	protected PureExp SqlExp.getDbExp(List<Stmt> newStmts, Set<String> occupiedVariables) {
+        PureExp exp = activeDbConnection();
+        if (exp != null)
+            return exp;
+        exp = activeDbTransaction();
+        if (exp == null)
+            return null;
+        return CompilerUtils.copyPosition(exp, new FnApp(Constants.DB_TRANSACTIONS_LIB_NAME
+                + ".transactionDb", new List<PureExp>().add((PureExp) exp.fullCopy())));
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public void ASTNode.replaceThis(final ASTNode newNode) {
+	    final ASTNode parent = getParent();
+	    if (parent == null)
+	        throw new RuntimeException("Trying to evaluate attribute in subtree not attached to main tree");
+	    final int index = parent.getIndexOfChild(this);
+	    parent.removeChild(index);
+	    parent.insertChild(newNode, index);
+	}
+	
+	
+	// Create DB ExecutionTree
+    private PureExp SqlSelectExp.createDbExecutionTree() throws abs.frontend.sql.SqlRewritingException {
+        PureExp exp = getSqlRelationRef().createDbExecutionTree();
+        if (hasSqlCondition())
+            exp = getSqlCondition().createDbExecutionTree(exp);
+        exp = getSqlAttrsDef().createDbExecutionTree(exp, getSqlGroupingAttributes());
+        exp = createDbExecutionTreeForDuplicateDeletion(exp);
+        return createDbExecutionTreeForOrdering(exp);
+    }
+
+    // DbExecutionTree for Relation:	
+    public abstract PureExp SqlRelationRef.createDbExecutionTree();
+
+	public PureExp SqlDbRelationRef.createDbExecutionTree() {
+	    return new DataConstructorExp(
+	            Constants.DBLIB_NAME + ".RelationLeaf",
+	            new List<PureExp>().add(new StringLiteral(getRelationName())));
+	}
+	
+	public PureExp SqlVarOrFieldRelationRef.createDbExecutionTree() {
+	    return CompilerUtils.copyPosition(this, new DataConstructorExp(
+                Constants.DBLIB_NAME + ".DirectRelationLeaf",
+                new List<PureExp>().add((PureExp) getVarOrFieldUse().fullCopy())));
+	}
+	
+	public PureExp SqlJoinRelationRef.createDbExecutionTree() {
+	   return new DataConstructorExp(
+	           Constants.DBLIB_NAME + ".BinaryExecutionNode",
+	           new List<PureExp>().add(
+	                   new DataConstructorExp(
+	                           Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + "." + getType(),
+	                           new List<PureExp>())).add(
+	                   getRelation1().createDbExecutionTree()).add(
+	                   getRelation2().createDbExecutionTree()));
+	}
+	
+	// DbExecutionTree for Condition:
+	public PureExp SqlCondition.createDbExecutionTree(PureExp baseRelation)
+			throws abs.frontend.sql.SqlRewritingException {
+	    return new DataConstructorExp(
+	            Constants.DBLIB_NAME + ".UnaryExecutionNode",
+	            new List<PureExp>().add(
+	                    new DataConstructorExp(
+	                            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Selection",
+	                            new List<PureExp>().add(createDbSelectionConditionExp()))).add(
+	                    baseRelation));
+	}
+	
+	public abstract PureExp SqlCondition.createDbSelectionConditionExp()
+			throws abs.frontend.sql.SqlRewritingException;
+
+	public PureExp SqlComparisonCondition.createDbSelectionConditionExp()
+			throws abs.frontend.sql.SqlRewritingException {
+	    return new DataConstructorExp(
+	            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".ComparisonCondition",
+	            new List<PureExp>().add(
+	                    getOperand1().createDbTupleScalarFunctionExp()).add(
+	                    getSqlComparisonRelation().createDbComparisonRelation()).add(
+	                    getOperand2().createDbTupleScalarFunctionExp()));
+	}
+	
+	public PureExp SqlComparisonRelation.createDbComparisonRelation() {
+	    return new DataConstructorExp(
+	            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + "." + getOperator(),
+	            new List<PureExp>());
+	}
+	
+	public abstract PureExp SqlTupleScalarFunction.createDbTupleScalarFunctionExp() throws abs.frontend.sql.SqlRewritingException;
+	
+	public PureExp SqlTupleAttributeValue.createDbTupleScalarFunctionExp() {
+	    return new DataConstructorExp(
+	            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".TupleAttributeValue",
+	            new List<PureExp>().add(new DataConstructorExp(
+	                    Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+	                    new List<PureExp>().add(new StringLiteral(getAttributeName())))));
+	}
+	
+    public PureExp SqlTupleConstant.createDbTupleScalarFunctionExp() throws abs.frontend.sql.SqlRewritingException {
+        return new DataConstructorExp(
+                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".TupleConstant",
+                new List<PureExp>().add(createDbValueExp()));
+    }
+    
+    public PureExp SqlTupleBinaryFunction.createDbTupleScalarFunctionExp() throws abs.frontend.sql.SqlRewritingException {
+        return new DataConstructorExp(
+                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".TupleBinaryFunction",
+                new List<PureExp>().add(
+                        new DataConstructorExp(
+                                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + "." + getOperator(),
+                                new List<PureExp>())).add(
+                        getFunction1().createDbTupleScalarFunctionExp()).add(
+                        getFunction2().createDbTupleScalarFunctionExp()));
+    }
+
+
+    public abstract PureExp SqlTupleConstant.createDbValueExp() throws abs.frontend.sql.SqlRewritingException;
+    
+	public PureExp SqlTupleBoolConstant.createDbValueExp() {
+	    return new DataConstructorExp(
+                Constants.DB_STRUCTURE_LIB_NAME + ".AttrBoolVal",
+                new List<PureExp>().add(new DataConstructorExp(
+                        getValue() ? "True" : "False", new List<PureExp>())));
+	}
+	
+	public PureExp SqlTupleIntConstant.createDbValueExp() {
+	    return new DataConstructorExp(
+                Constants.DB_STRUCTURE_LIB_NAME + ".AttrIntVal",
+                new List<PureExp>().add(new IntLiteral(Integer.toString(getValue()))));
+	}
+	
+	public PureExp SqlTupleStringConstant.createDbValueExp() {
+	    return new DataConstructorExp(
+                Constants.DB_STRUCTURE_LIB_NAME + ".AttrStringVal",
+                new List<PureExp>().add(new StringLiteral(getValue())));
+	}
+	
+    public PureExp SqlTupleVarOrFieldConstant.createDbValueExp() throws abs.frontend.sql.SqlRewritingException {
+        final String attrType = determineAttributeType();
+        if (attrType == null)
+            return getVarOrFieldUse();
+        return new DataConstructorExp(
+                Constants.DB_STRUCTURE_LIB_NAME + ".Attr" + attrType + "Val",
+                new List<PureExp>().add((PureExp) getVarOrFieldUseNoTransform().fullCopy()));
+    }
+    private String SqlTupleVarOrFieldConstant.determineAttributeType() throws abs.frontend.sql.SqlRewritingException {
+        final VarOrFieldDecl varDecl = getVarOrFieldUse().getDecl();
+        if (varDecl == null)
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(
+                    this,
+                    ErrorMessage.NAME_NOT_RESOLVABLE,
+                    getVarOrFieldUse().getName()));
+        if (!(varDecl instanceof TypedVarOrFieldDecl && ((TypedVarOrFieldDecl) varDecl).getAccess() instanceof IdUse))
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(
+                    this,
+                    ErrorMessage.SQL_UNSUPPORTED_OPERAND,
+                    varDecl.getClass().getSimpleName()));
+        String varTypeName = ((IdUse) ((TypedVarOrFieldDecl) varDecl).getAccess()).getName();
+        if ("AttributeValue".equals(varTypeName) ||
+                (Constants.DB_STRUCTURE_LIB_NAME + ".AttributeValue").equals(varTypeName))
+            return null;
+        final String attrType = abs.frontend.sql.Util.convertAbsToDbTypeName(varTypeName);
+        if (attrType == null)
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(
+                    this,
+                    ErrorMessage.SQL_UNSUPPORTED_OPERAND,
+                    varTypeName));
+        return attrType;
+    }
+    
+    public PureExp SqlTupleCaseFunction.createDbTupleScalarFunctionExp() throws abs.frontend.sql.SqlRewritingException {
+        PureExp branchesMap =
+            new DataConstructorExp(Constants.STDLIB_NAME + ".EmptyMap", new List<PureExp>());
+        for (int i = getNumSqlTupleCaseBranch() - 1; i >= 0; i--)
+            branchesMap = new DataConstructorExp(
+                Constants.STDLIB_NAME + ".InsertAssoc",
+                new List<PureExp>().add(
+                    getSqlTupleCaseBranch(i).createDbTupleCaseBranchExp()).add(
+                    branchesMap));
+        return new DataConstructorExp(
+            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".TupleCaseFunction",
+            new List<PureExp>().add(
+                branchesMap).add(
+                getElseFunction().createDbTupleScalarFunctionExp()));
+    }
+    
+    public PureExp SqlTupleCaseBranch.createDbTupleCaseBranchExp() throws abs.frontend.sql.SqlRewritingException {
+        return new DataConstructorExp(
+            Constants.STDLIB_NAME + ".Pair",
+            new List<PureExp>().add(
+                getSqlCondition().createDbSelectionConditionExp()).add(
+                getSqlTupleScalarFunction().createDbTupleScalarFunctionExp()));
+    }
+
+	public PureExp SqlCompoundCondition.createDbSelectionConditionExp()
+	       throws abs.frontend.sql.SqlRewritingException {
+	   return new DataConstructorExp(
+	           Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".CompositeCondition",
+	           new List<PureExp>().add(
+	                   getCondition1().createDbSelectionConditionExp()).add(
+	                   new DataConstructorExp(
+	                           Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + "." + getOperator().toUpperCase(),
+	                           new List<PureExp>())).add(
+	                   getCondition2().createDbSelectionConditionExp()));
+	}
+	
+	public PureExp SqlIsNullCondition.createDbSelectionConditionExp()
+	       throws abs.frontend.sql.SqlRewritingException {
+       return new DataConstructorExp(
+               Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".IsNullCondition",
+               new List<PureExp>().add(
+                       new DataConstructorExp(
+                               Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                               new List<PureExp>().add(getAttributeName().fullCopy()))));
+	}
+
+	public PureExp SqlNegatedCondition.createDbSelectionConditionExp()
+	        throws abs.frontend.sql.SqlRewritingException {
+	    return new DataConstructorExp(
+	            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".NegatedCondition",
+	            new List<PureExp>().add(getSqlCondition().createDbSelectionConditionExp()));
+	}
+    
+    // DbExecutionTree for attribute definitions, including projection:
+    public abstract PureExp SqlAttrsDef.createDbExecutionTree(PureExp exp, List<PureExp> groupingAttributes) throws abs.frontend.sql.SqlRewritingException;
+    public PureExp SqlAllAttrsDef.createDbExecutionTree(PureExp exp, List<PureExp> groupingAttributes) throws abs.frontend.sql.SqlRewritingException {
+        if (groupingAttributes.getNumChild() != 0)
+            throw new abs.frontend.sql.SqlRewritingException(
+                    new SemanticError(groupingAttributes, ErrorMessage.SQL_TOTAL_PROJECTION_WITH_GROUPING, new String[0]));
+        return exp;
+    }
+    public PureExp SqlExplicitAttrsDef.createDbExecutionTree(PureExp exp, List<PureExp> groupingAttributes) throws abs.frontend.sql.SqlRewritingException {
+        final Set<SqlCalcAttrDef> calcAttrDefs = new HashSet<SqlCalcAttrDef>();
+        final Set<SqlAttrDef> projectionAttrDefs = new HashSet<SqlAttrDef>();
+        segregateAttrDefs(calcAttrDefs, projectionAttrDefs);
+        if (calcAttrDefs.isEmpty() && groupingAttributes.getNumChild() == 0)
+            return createDbExecutionTreeForProjection(projectionAttrDefs, exp);
+        else
+            return createDbExecutionTreeForGroupingAndProjection(calcAttrDefs, projectionAttrDefs, groupingAttributes, exp);
+    }
+    private void SqlExplicitAttrsDef.segregateAttrDefs(Set<SqlCalcAttrDef> calcAttrDefs, Set<SqlAttrDef> projectionAttrDefs) {
+        for (SqlAttrDef def : getSqlAttrDefs()) {
+            if (def instanceof SqlCalcAttrDef)
+                calcAttrDefs.add((SqlCalcAttrDef) def);
+            else {
+                assert def instanceof SqlProjectionAttrDef;
+                projectionAttrDefs.add(def);
+            }
+        }
+    }
+    private PureExp SqlExplicitAttrsDef.createDbExecutionTreeForProjection(Set<SqlAttrDef> projectionAttrDefs, PureExp baseTree) {
+        return new DataConstructorExp(
+                Constants.DBLIB_NAME + ".UnaryExecutionNode", new List<PureExp>().add(
+                    new DataConstructorExp(
+                        Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Projection",
+                        new List<PureExp>().add(
+                            createDbProjectionAttributeRefSet(projectionAttrDefs)))).add(
+                    baseTree));
+    }
+    private PureExp SqlExplicitAttrsDef.createDbExecutionTreeForGroupingAndProjection(Set<SqlCalcAttrDef> calcAttrDefs,
+            Set<SqlAttrDef> projectionAttrDefs, List<PureExp> groupingAttributes, PureExp baseTree) throws abs.frontend.sql.SqlRewritingException {
+        assert !calcAttrDefs.isEmpty();
+        return new DataConstructorExp(
+            Constants.DBLIB_NAME + ".UnaryExecutionNode", new List<PureExp>().add(
+                new DataConstructorExp(
+                    Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".GroupingAndProjection",
+                    new List<PureExp>().add(
+                        createDbAttrToFunctionMap(calcAttrDefs)).add(
+                        createDbGroupingAttributesList(groupingAttributes)).add(
+                        createDbProjectionAttributeRefSet(projectionAttrDefs)))).add(
+                baseTree));
+    }
+    private PureExp SqlExplicitAttrsDef.createDbAttrToFunctionMap(Set<SqlCalcAttrDef> calcAttrDefs) throws abs.frontend.sql.SqlRewritingException {
+        PureExp functions = new DataConstructorExp(Constants.STDLIB_NAME + ".EmptyMap", new List<PureExp>());
+        for (SqlCalcAttrDef def : calcAttrDefs)
+            functions = new DataConstructorExp(
+                Constants.STDLIB_NAME + ".InsertAssoc",
+                new List<PureExp>().add(
+                    new DataConstructorExp(Constants.STDLIB_NAME + ".Pair", new List<PureExp>().add(
+                        def.getPureExp()).add( // attribute name
+                        def.getSqlAggregateFunction().createDbAggregateFunctionExp()))).add(
+                    functions));
+        return functions;
+    }
+    private PureExp SqlExplicitAttrsDef.createDbGroupingAttributesList(List<PureExp> groupingAttributes) {
+        if (groupingAttributes.getNumChild() == 0)
+            return new DataConstructorExp(Constants.STDLIB_NAME + ".Nothing", new List<PureExp>());
+        PureExp exp = new DataConstructorExp(Constants.STDLIB_NAME + ".EmptySet", new List<PureExp>());
+        for (PureExp attr : groupingAttributes)
+            exp = new DataConstructorExp(Constants.STDLIB_NAME + ".Insert", new List<PureExp>().add(
+                    new DataConstructorExp(
+                            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                            new List<PureExp>().add(attr))).add(
+                    exp));
+        return new DataConstructorExp(Constants.STDLIB_NAME + ".Just", new List<PureExp>().add(exp));
+    }
+    private PureExp SqlExplicitAttrsDef.createDbProjectionAttributeRefSet(Set<SqlAttrDef> projectionAttrDefs) {
+        PureExp exp = new DataConstructorExp(Constants.STDLIB_NAME + ".EmptySet", new List<PureExp>());
+        for (SqlAttrDef def : projectionAttrDefs)
+            exp = new DataConstructorExp(Constants.STDLIB_NAME + ".Insert", new List<PureExp>().add(
+                    new DataConstructorExp(
+                            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                            new List<PureExp>().add(def.getPureExp()))).add(
+                    exp));
+        return exp;
+    }
+    
+    public PureExp SqlAggregateFunction.createDbAggregateFunctionExp() throws abs.frontend.sql.SqlRewritingException {
+        abs.frontend.sql.AggregateFunctions.FunctionExpGenerator generator =
+                abs.frontend.sql.AggregateFunctions.getExpGeneratorForFunctionName(getName());
+        if (generator == null)
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(this,
+                    ErrorMessage.SQL_UNKNOWN_AGGREGATE_FUNCTION, getName()));
+        return generator.createDbAggregateFunctionExp(
+            hasSqlTupleScalarFunction() ? getSqlTupleScalarFunction() : null);
+    }
+
+    private PureExp SqlSelectExp.createDbExecutionTreeForDuplicateDeletion(PureExp exp) {
+        if (!getDistinct())
+            return exp;
+        return new DataConstructorExp(
+            Constants.DBLIB_NAME + ".UnaryExecutionNode",
+            new List<PureExp>().add(
+                new DataConstructorExp(
+                    Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".DuplicateDeletion",
+                    new List<PureExp>())).add(
+                exp));
+    }
+
+	private PureExp SqlSelectExp.createDbExecutionTreeForOrdering(PureExp exp) {
+        int numAttributes = getSqlOrderingAttributes().numChildren();
+        if (numAttributes == 0)
+            return exp;
+        PureExp attributes = new DataConstructorExp(
+                Constants.STDLIB_NAME + ".Nil",
+                new List<PureExp>());
+        for (numAttributes--; numAttributes >= 0; numAttributes--) {
+            final SqlOrderingAttribute attribute = getSqlOrderingAttribute(numAttributes);
+            attributes = new DataConstructorExp(
+                    Constants.STDLIB_NAME + ".Cons",
+                    new List<PureExp>().add(
+                            attribute.createDbOrderingAttributePair()).add(
+                            attributes));
+        }
+        return new DataConstructorExp(
+                Constants.DBLIB_NAME + ".UnaryExecutionNode",
+                new List<PureExp>().add(
+                        new DataConstructorExp(
+                                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Ordering",
+                                new List<PureExp>().add(attributes))).add(
+                        exp));
+    }
+	
+    public PureExp SqlOrderingAttribute.createDbOrderingAttributePair() {
+        return new DataConstructorExp(Constants.STDLIB_NAME + ".Pair",
+            new List<PureExp>().add(
+                CompilerUtils.copyPosition(
+                    getPureExp(),
+                    new DataConstructorExp(
+                        Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                        new List<PureExp>().add(CompilerUtils.copyPosition(
+                            getPureExp(),
+                            (PureExp) getPureExp().fullCopy()))))).add(
+                new DataConstructorExp(
+                    Constants.STDLIB_NAME + "." + (getAscending() ? "True" : "False"),
+                    new List<PureExp>())));
+    }
+
+    protected boolean SqlExp.isSqlSync() {
+        final ASTNode asyncAnnotationNode = getNodeWithAnnotation("SqlAsync");
+        if (asyncAnnotationNode == null)
+            return true;
+        final ASTNode syncAnnotationNode = getNodeWithAnnotation("SqlSync");
+        if (syncAnnotationNode == null)
+            return false;
+        return ancestorDistance(syncAnnotationNode) < ancestorDistance(asyncAnnotationNode);
+    }
+
+	/*
+	 * Generates core-ABS statements which replace the SQL expression based on the ABS DB library.
+	 * Replaces itself in the AST tree with a VarUse referencing a variable declared in the returned
+	 * statement list.
+	 * Throws an exception if there are semantic errors in the code.
+	 */
+    public List<Stmt> SqlExp.rewriteToCoreAbs() throws abs.frontend.sql.SqlRewritingException {
+        final List<Stmt> newStmts = new List<Stmt>();
+        final Set<String> occupiedVariables = new HashSet<String>();
+        final PureExp dbExp = getDbExp(newStmts, occupiedVariables);
+        if (dbExp == null)
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(
+                    this, ErrorMessage.SQL_NO_ACTIVE_DATABASE, new String[0]));
+        final boolean sync = isSqlSync();
+        ParametricDataTypeUse resultType = getSqlReturnTypeUse();
+        if (!sync)
+            resultType = new ParametricDataTypeUse(
+                    Constants.STDLIB_NAME + ".Fut",
+                    new List<Annotation>(),
+                    new List<DataTypeUse>().add(resultType));
+        // TODO fix getUnusedVarName so that it returns a really unused name
+        final String resultVar = getUnusedVarName(occupiedVariables, "dbResult" + "_" + getStart() + "_%s");
+        final List<Stmt> callStmts = createDbCalls(dbExp, sync, resultType, resultVar);
+        replaceThis(new VarUse(resultVar));
+        for (int i = 0; i < callStmts.getNumChild(); i++)
+            newStmts.add(callStmts.getChildNoTransform(i));
+        return newStmts;
+    }
+	
+    /**
+     * Creates the calls which actually perform the database operation
+     * represented by this expression. The result of the call must be saved in a
+     * variable with name resultVar with type resultType.
+     *
+     * The default implementation merely defines a VarDeclStmt which defines a new
+     * variable and assigns the value returned by createDatabaseCall(...) which
+     * itself uses the methods getSqlDbMethodName(...) and createSqlDbMethodArguments(...)
+     * to obtain specialized call properties.
+     * 
+     * @param dbExp
+     *            the database expression which shall be used for calls
+     * @param sync
+     *            whether the database calls shall be synchronous (true) or
+     *            asynchronous (false)
+     * @param resultType
+     * @param resultVar
+     * @return the new statements which must at least contain a variable
+     *         declaration for the result variable
+     * @throws SqlRewritingException
+     */
+    protected List<Stmt> SqlExp.createDbCalls(final PureExp dbExp, final boolean sync,
+            final ParametricDataTypeUse resultType, final String resultVar) throws abs.frontend.sql.SqlRewritingException {
+        return new List<Stmt>().add(CompilerUtils.copyPosition(this, new VarDeclStmt(
+                new List<Annotation>(),
+                CompilerUtils.copyPosition(this, new VarDecl(
+                    resultVar,
+                    resultType,
+                    new Opt<Exp>(createDatabaseCall(dbExp, sync)))))));
+    }
+
+    protected Call SqlExp.createDatabaseCall(PureExp dbExp, final boolean sync) throws abs.frontend.sql.SqlRewritingException {
+        final PureExp transactionExp = activeDbTransaction();
+        dbExp = (PureExp) dbExp.fullCopy();
+        final String methodName = getSqlDbMethodName(transactionExp != null);
+        final List<PureExp> arguments = createSqlDbMethodArguments(transactionExp);
+        return CompilerUtils.copyPosition(this, sync ? new SyncCall(dbExp, methodName, arguments) :
+            new AsyncCall(dbExp, methodName, arguments));
+    }
+	
+    syn ParametricDataTypeUse SqlExp.getSqlReturnTypeUse();
+    syn String SqlExp.getSqlDbMethodName(boolean inTransaction);
+    protected abstract List<PureExp> SqlExp.createSqlDbMethodArguments(PureExp transactionExp) throws abs.frontend.sql.SqlRewritingException;
+    
+    eq SqlSelectExp.getSqlReturnTypeUse() = new ParametricDataTypeUse(
+            Constants.DB_HELPERS_LIB_NAME + ".MaybeEx",
+            new List<Annotation>(),
+            new List<DataTypeUse>().add(new DataTypeUse(
+                Constants.DB_STRUCTURE_LIB_NAME + ".Relation",
+                new List<Annotation>())));
+    eq SqlSelectExp.getSqlDbMethodName(boolean inTransaction) =
+            inTransaction ? "executeTreeInTransaction" : "executeTree";
+    protected List<PureExp> SqlSelectExp.createSqlDbMethodArguments(PureExp transactionExp) throws abs.frontend.sql.SqlRewritingException {
+        final List<PureExp> arguments = new List<PureExp>().add(createDbExecutionTree());
+        if (transactionExp != null)
+            arguments.add((PureExp) transactionExp.fullCopy());
+        return arguments;
+    }
+    
+    syn boolean SqlModifyExp.modifiesDb();
+    eq SqlInsertExp.modifiesDb() = getSqlRelationRef() instanceof SqlDbRelationRef;
+    eq SqlUpdateExp.modifiesDb() = getSqlRelationRef() instanceof SqlDbRelationRef;
+
+    eq SqlModifyExp.getSqlReturnTypeUse() = new ParametricDataTypeUse(
+            Constants.DB_HELPERS_LIB_NAME + ".MaybeEx",
+            new List<Annotation>(),
+            new List<DataTypeUse>().add(new DataTypeUse(
+                modifiesDb() ?
+                    Constants.STDLIB_NAME + ".Unit" :
+                    Constants.DB_STRUCTURE_LIB_NAME + ".Relation",
+                new List<Annotation>())));
+    eq SqlModifyExp.getSqlDbMethodName(boolean inTransaction) = modifiesDb() ?
+            inTransaction ? "modifyInTransaction"      : "modify" :
+            inTransaction ? "executeTreeInTransaction" : "executeTree";
+    
+    protected List<PureExp> SqlInsertExp.createSqlDbMethodArguments(PureExp transactionExp) throws abs.frontend.sql.SqlRewritingException {
+        final List<PureExp> arguments = new List<PureExp>();
+        final PureExp relationalModification = new DataConstructorExp(
+                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Insertion",
+                new List<PureExp>().add(createSqlAttrValueMap()));
+        arguments.add(modifiesDb() ?
+            new DataConstructorExp(
+                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".RelationalModification",
+                new List<PureExp>().add(
+                    new StringLiteral(((SqlDbRelationRef) getSqlRelationRef()).getRelationName())).add(
+                    relationalModification)) :
+            new DataConstructorExp(
+                Constants.DBLIB_NAME + ".UnaryExecutionNode",
+                new List<PureExp>().add(
+                    new DataConstructorExp(
+                        Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Modification",
+                        new List<PureExp>().add(relationalModification))).add(
+                    CompilerUtils.copyPosition(getSqlRelationRef(), new DataConstructorExp(
+                        Constants.DBLIB_NAME + ".DirectRelationLeaf",
+                        new List<PureExp>().add(
+                            ((SqlVarOrFieldRelationRef) getSqlRelationRef()).getVarOrFieldUse()))))));
+        if (transactionExp != null)
+            arguments.add((PureExp) transactionExp.fullCopy());
+        return arguments;
+    }
+    
+    private PureExp SqlInsertExp.createSqlAttrValueMap() throws abs.frontend.sql.SqlRewritingException {
+        if (getNumSqlAttrRef() != getNumSqlTupleConstant())
+            throw new abs.frontend.sql.SqlRewritingException(new SemanticError(
+                getSqlTupleConstants(),
+                ErrorMessage.SQL_INSERT_UNEQUAL_ATTR_AND_VALUE_NUMBER,
+                new String[0]));
+        PureExp attrMap = new DataConstructorExp("EmptyMap", new List<PureExp>());
+        for (int i = getNumSqlAttrRef() - 1; i >= 0; i--)
+            attrMap = new DataConstructorExp(
+                "InsertAssoc",
+                new List<PureExp>().add(
+                    new DataConstructorExp("Pair", new List<PureExp>().add(
+                        new DataConstructorExp(
+                                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                                new List<PureExp>().add(getSqlAttrRef(i)))).add(
+                        getSqlTupleConstant(i).createDbValueExp()))).add(
+                    attrMap));
+        return attrMap;
+    }
+    
+    protected List<PureExp> SqlUpdateExp.createSqlDbMethodArguments(PureExp transactionExp) throws abs.frontend.sql.SqlRewritingException {
+        final PureExp relationalModification = new DataConstructorExp(
+                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Update",
+                new List<PureExp>().add(
+                        hasSqlCondition() ?
+                            getSqlCondition().createDbSelectionConditionExp() :
+                            new DataConstructorExp(
+                                    Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".NoCondition",
+                                    new List<PureExp>())).add(
+                        createDbAttrFunctionMap()));
+        final List<PureExp> arguments = new List<PureExp>();
+        arguments.add(modifiesDb() ?
+                new DataConstructorExp(
+                    Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".RelationalModification",
+                    new List<PureExp>().add(
+                        new StringLiteral(((SqlDbRelationRef) getSqlRelationRef()).getRelationName())).add(
+                        relationalModification)) :
+                new DataConstructorExp(
+                    Constants.DBLIB_NAME + ".UnaryExecutionNode",
+                    new List<PureExp>().add(
+                        new DataConstructorExp(
+                            Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".Modification",
+                            new List<PureExp>().add(relationalModification))).add(
+                        CompilerUtils.copyPosition(getSqlRelationRef(), new DataConstructorExp(
+                            Constants.DBLIB_NAME + ".DirectRelationLeaf",
+                            new List<PureExp>().add(
+                                ((SqlVarOrFieldRelationRef) getSqlRelationRef()).getVarOrFieldUse()))))));
+        if (transactionExp != null)
+            arguments.add((PureExp) transactionExp.fullCopy());
+        return arguments;
+    }
+    
+    private PureExp SqlUpdateExp.createDbAttrFunctionMap() throws abs.frontend.sql.SqlRewritingException {
+        PureExp functions = new DataConstructorExp("EmptyMap", new List<PureExp>());
+        for (int i = getNumSqlAttrAssignment() - 1; i >= 0; i--)
+            functions = new DataConstructorExp(
+                "InsertAssoc",
+                new List<PureExp>().add(
+                    new DataConstructorExp("Pair", new List<PureExp>().add(
+                        new DataConstructorExp(
+                                Constants.DB_OPERATORS_STRUCTURE_LIB_NAME + ".AttributeRefByName",
+                                new List<PureExp>().add(getSqlAttrAssignment(i).getAttrRef()))).add(
+                        getSqlAttrAssignment(i).getSqlTupleScalarFunction().createDbTupleScalarFunctionExp()))).add(
+                    functions));
+        return functions;
+    }
+    
+	private SemanticError SqlStmt.sqlRewritingError = null;
+	public SemanticError SqlStmt.getSqlRewritingError() {
+		return sqlRewritingError;
+	}
+	private void SqlStmt.setSqlRewritingError(SemanticError error) {
+		sqlRewritingError = error;
+	}
+	
+	public List<Stmt> SqlStmt.rewriteToCoreAbs() {
+        final SqlExp sqlExp = getContainedSqlExp();
+        final List<Stmt> newStmts;
+        try {
+            newStmts = sqlExp.rewriteToCoreAbs();
+        } catch (abs.frontend.sql.SqlRewritingException e) {
+            setSqlRewritingError(e.getError());
+            return new List<Stmt>().add(this);
+        } catch (RuntimeException e) {
+            setSqlRewritingError(new SemanticError(this, ErrorMessage.SQL_REWRITING_FAILED, e.getMessage()));
+            e.printStackTrace();
+            throw e;
+        }
+        if (!(getStmt() instanceof ExpressionStmt))
+            // Result is processed somehow, so do not forget the original statement:
+            newStmts.add(getStmt());
+        return newStmts;
+	}
+	
+	syn boolean Stmt.sqlStmtRewriteRequired() = !(this instanceof SqlStmt || getParent() instanceof SqlStmt) &&
+	   getContainedSqlExp() != null;
+	
+	rewrite Stmt {
+	   when (sqlStmtRewriteRequired())
+	   to SqlStmt CompilerUtils.copyPosition(this, new SqlStmt(new List<Annotation>(), this));
+	}
+	
+	syn boolean Stmt.sqlSqlStmtRewriteRequired() = false;
+	eq SqlStmt.sqlSqlStmtRewriteRequired() = getSqlRewritingError() == null;
+	
+	syn boolean Block.sqlBlockRewriteRequired() {
+	   for (Stmt stmt : getStmts())
+	       if (stmt instanceof SqlStmt && ((SqlStmt) stmt).sqlSqlStmtRewriteRequired())
+	           return true;
+	   return false;
+	}
+	
+	rewrite Block {
+	   when (sqlBlockRewriteRequired())
+	   to Block {
+	       final List<Stmt> stmts = getStmts();
+	       for (int i = 0; i < stmts.getNumChild(); ) {
+	           final Stmt stmt = stmts.getChild(i);
+	           if (!(stmt instanceof SqlStmt)) {
+	               i++;
+	               continue;
+	           }
+	           final List<Stmt> newStmts = ((SqlStmt) stmt).rewriteToCoreAbs();
+	           stmts.removeChild(i);
+               for (int j = 0; j < newStmts.getNumChildNoTransform(); j++) {
+                   final Stmt newStmt = newStmts.getChildNoTransform(j);
+                   stmts.insertChild(newStmt, i++);
+               }
+	       }
+	       return this;
+	   }
+	}
+	
+}

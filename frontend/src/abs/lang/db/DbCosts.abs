@@ -1,0 +1,253 @@
+module ABS.DB.Costs;
+
+export *;
+
+import * from ABS.DB.Listener;
+import * from ABS.DB.Operators.Structure;
+import * from ABS.DB.Operators;
+import * from ABS.DB.Structure;
+import * from ABS.DB.Helpers;
+import * from ABS.DC;
+
+data CostPattern =
+	SequentialCosts(List<CostPattern> sequentialCosts) |
+	ParallelCosts(Set<CostPattern> parallelCosts) |
+	SequentialRepeatedCost(Int sequentialTimes, CostPattern sequentialRepeatedCostPattern) |
+	ParallelRepeatedCost(Int parallelTimes, CostPattern parallelRepeatedCostPattern) |
+	// number of sequential execution steps
+	SequentialCost(Int sequentialCost) |
+	ParallelCost(Int parallelCost) |
+	// delay, CostPattern
+	DelayedCost(Int delay, CostPattern delayedCostPattern) |
+	// If pipelineLength is 1, the costs are considered to be forwarded exactly once.
+	PipelinedCost(CostPattern initialCostPattern, Int pipelineLength, Int pipelineDelay) |
+	// Delay execution and cost consumption by the given number of time units.
+	Delay(Int delayTime);
+
+def Bool isSequentialCosts(CostPattern pattern) =
+	case pattern {
+		SequentialCosts(_) => True;
+		_ => False;
+	};
+
+def Bool isParallelCosts(CostPattern pattern) =
+	case pattern {
+		ParallelCosts(_) => True;
+		_ => False;
+	};
+
+def Bool isSequentialRepeatedCost(CostPattern pattern) =
+	case pattern {
+		SequentialRepeatedCost(_, _) => True;
+		_ => False;
+	};
+
+def Bool isParallelRepeatedCost(CostPattern pattern) =
+	case pattern {
+		ParallelRepeatedCost(_, _) => True;
+		_ => False;
+	};
+
+def Bool isSequentialCost(CostPattern pattern) =
+	case pattern {
+		SequentialCost(_) => True;
+		_ => False;
+	};
+
+def Bool isParallelCost(CostPattern pattern) =
+	case pattern {
+		ParallelCost(_) => True;
+		_ => False;
+	};
+
+def Bool isDelayedCost(CostPattern pattern) =
+	case pattern {
+		DelayedCost(_, _) => True;
+		_ => False;
+	};
+
+def Bool isPipelinedCost(CostPattern pattern) =
+	case pattern {
+		PipelinedCost(_, _, _) => True;
+		_ => False;
+	};
+
+def Bool isDelay(CostPattern pattern) =
+	case pattern {
+		Delay(_) => True;
+		_ => False;
+	};
+
+interface CostPipeline {
+	// Starts consuming of one cost unit by the pipeline and returns immediately.
+	Unit consumeCost();
+	
+	// Blocks until all consuming processes initiated by consumeCost() are completed.
+	Unit awaitCompletion();
+}
+
+class CostPipeline([Final] Int length, [Final] Int delay,
+		[Final] CostPipeline outerPipeline) implements CostPipeline {
+
+	Int consuming = 0;
+	
+	Unit consumeCost() {
+		consuming = consuming + 1;
+		this!consumeCostIntern();
+	}
+	
+	Unit consumeCostIntern() {
+		Int length = this.length;
+		while (length > 0) {
+			await duration(delay, delay);
+			[Cost: 1] length = length - 1;
+		}
+		if (outerPipeline != null)
+			outerPipeline.consumeCost();
+		if (consuming == 1)
+			await duration(1, 1);
+		consuming = consuming - 1;
+	}
+	
+	Unit awaitCompletion() {
+		await consuming == 0;
+		if (outerPipeline != null)
+			outerPipeline.awaitCompletion();
+	}
+
+}
+	
+interface CostPatternConsumer {
+	// Consumes the costs specified by the given pattern. Blocks until all costs are consumed.
+	Unit consumeCostPattern(CostPattern pattern);
+	
+	// Set numerator with which cost and time values within this consumer are multiplied.
+	// Default is 1.
+	[Atomic] Unit setCostFactorNumerator(Int numerator);
+	
+	// Set denominator by which cost and time values within this consumer are divided.
+	// This integer division is applied after multiplication with the cost factor numerator.
+	// Default is 1.
+	[Atomic] Unit setCostFactorDenominator(Int denominator);
+}
+
+class CostPatternConsumer implements CostPatternConsumer {
+
+	Int costFactorNumerator = 1;
+	
+	Int costFactorDenominator = 1;
+	
+	// costs not yet been accounted due to integer division by costFactorDenominator
+	Int accumulatedRestCost = 0;
+	
+	// delay time not yet accounted due to integer division by costFactorDenominator
+	Int accumulatedRestDelay = 0;
+	
+	Unit consumeCostPattern(CostPattern pattern) {
+		this.consumeCostPatternIntern(pattern, null);
+	}
+	
+	// Costs are forwarded to the pipeline.
+	Unit consumeCostPatternIntern(CostPattern pattern, CostPipeline pipeline) {
+		if (isSequentialCosts(pattern)) {
+			List<CostPattern> patterns = sequentialCosts(pattern);
+			while (~isEmpty(patterns)) {
+				this.consumeCostPatternIntern(head(patterns), pipeline);
+				patterns = tail(patterns);
+			}
+		} else if (isParallelCosts(pattern)) {
+			Set<CostPattern> patterns = parallelCosts(pattern);
+			List<Fut<Unit>> futures = Nil;
+			while (hasNext(patterns)) {
+				Pair<Set<CostPattern>, CostPattern> iterator = next(patterns);
+				Fut<Unit> fut =	this!consumeCostPatternIntern(snd(iterator), pipeline);
+				futures = Cons(fut, futures);
+				patterns = fst(iterator);
+			}
+			// Wait for parallel costs to be consumed:
+			while (~isEmpty(futures)) {
+				Fut<Unit> fut = head(futures);
+				await fut?;
+				futures = tail(futures);
+			}
+		} else if (isSequentialRepeatedCost(pattern)) {
+			Int times = sequentialTimes(pattern);
+			CostPattern repeatedPattern = sequentialRepeatedCostPattern(pattern);
+			while (times > 0) {
+				this.consumeCostPatternIntern(repeatedPattern, pipeline);
+				times = times - 1;
+			}
+		} else if (isParallelRepeatedCost(pattern)) {
+			Int times = parallelTimes(pattern);
+			CostPattern repeatedPattern = parallelRepeatedCostPattern(pattern);
+			List<Fut<Unit>> futures = Nil;
+			while (times > 0) {
+				Fut<Unit> fut =	this!consumeCostPatternIntern(repeatedPattern, pipeline);
+				futures = Cons(fut, futures);
+				times = times - 1;
+			}
+			// Wait for parallel costs to be consumed:
+			while (~isEmpty(futures)) {
+				Fut<Unit> fut = head(futures);
+				await fut?;
+				futures = tail(futures);
+			}
+		} else if (isSequentialCost(pattern)) {
+			Int costs = this.transformCost(sequentialCost(pattern));
+			while (costs > 0) {
+				[Cost: 1] costs = costs - 1;
+				if (pipeline != null)
+					pipeline!consumeCost();
+				await duration(1, 1);
+			}
+		} else if (isParallelCost(pattern)) {
+			Int costs = this.transformCost(parallelCost(pattern));
+			if (costs > 0) {
+				while (costs > 0) {
+					[Cost: 1] costs = costs - 1;
+					if (pipeline != null)
+						pipeline!consumeCost();
+				}
+				await duration(1, 1);
+			}
+		} else if (isDelayedCost(pattern)) {
+			this.consumeCostPatternIntern(
+				SequentialCosts(list[
+					Delay(delay(pattern)),
+					delayedCostPattern(pattern)]),
+				pipeline);
+		} else if (isPipelinedCost(pattern)) {
+			Int transformedLength = this.transformCost(pipelineLength(pattern));
+			CostPipeline newPipeline = new CostPipeline(
+				transformedLength, pipelineDelay(pattern), pipeline);
+			this.consumeCostPatternIntern(initialCostPattern(pattern), newPipeline);
+			newPipeline.awaitCompletion();
+		} else if (isDelay(pattern)) {
+			Int transformedDelay = this.transformDelay(delayTime(pattern));
+			await duration(transformedDelay, transformedDelay);
+		}
+	}
+	
+	[Atomic] Int transformCost(Int cost) {
+		cost = cost + accumulatedRestCost;
+		Int transformedCost = (cost * costFactorNumerator) / costFactorDenominator;
+		accumulatedRestCost = cost - (transformedCost * costFactorDenominator) / costFactorNumerator;
+		return transformedCost;
+	}
+	
+	[Atomic] Int transformDelay(Int delay) {
+		delay = delay + accumulatedRestDelay;
+		Int transformedDelay = (delay * costFactorNumerator) / costFactorDenominator;
+		accumulatedRestDelay = delay - (transformedDelay * costFactorDenominator) / costFactorNumerator;
+		return transformedDelay;
+	}
+	
+	[Atomic] Unit setCostFactorNumerator(Int numerator) {
+		this.costFactorNumerator = numerator;
+	}
+	
+	[Atomic] Unit setCostFactorDenominator(Int denominator) {
+		this.costFactorDenominator = denominator;
+	}
+
+}

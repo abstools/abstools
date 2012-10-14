@@ -1,0 +1,50 @@
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+ * This file is licensed under the terms of the Modified BSD License.
+ */
+package abs.common;
+
+import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataConstructorExp;
+import abs.frontend.ast.DataTypeUse;
+import abs.frontend.ast.List;
+import abs.frontend.ast.PureExp;
+import abs.frontend.ast.TypedAnnotation;
+
+public class CompilerUtils {
+
+    public static PureExp getAnnotationValue(List<Annotation> annotations, String annotationName) {
+        for (Annotation a : annotations) {
+            if (a instanceof TypedAnnotation) {
+                TypedAnnotation ta = (TypedAnnotation)a;
+                if (((DataTypeUse)ta.getAccess()).getName().equals(annotationName))
+                    return ta.getValue();
+            }
+        }
+        return null;
+    }
+    
+    public static boolean hasAnnotation(List<Annotation> annotations, String dataConstructorName) {
+        for (Annotation a : annotations) {
+            if (a.getValue() instanceof DataConstructorExp &&
+                    ((DataConstructorExp) a.getValue()).getConstructor().equals(dataConstructorName))
+                return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Copies the position of fromNode to toNode.
+     * 
+     * @param fromNode
+     * @param toNode
+     * @return toNode
+     */
+    @SuppressWarnings("rawtypes")
+    public static <T extends ASTNode, U extends ASTNode> U copyPosition(T fromNode, U toNode) {
+        toNode.setPosition(fromNode.getStart(), fromNode.getEnd());
+        return toNode;
+    }
+
+}

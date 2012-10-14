@@ -20,7 +20,11 @@ import abs.frontend.parser.ABSParser.Terminals;
 %char
 
 %{
-  StringBuffer string = new StringBuffer();
+  private StringBuffer string = new StringBuffer();
+  
+  private int sqlParenthesisDepth = 0;
+  
+  private int previousState = 0;
 
   private ABSSymbol sym(short id) {
     return new ABSSymbol(id, yyline + 1, yycolumn + 1, yylength(), yychar, yytext());
@@ -31,6 +35,10 @@ import abs.frontend.parser.ABSParser.Terminals;
 
   private ABSSymbol symString(String text) {
       return new ABSSymbol(Terminals.STRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
+  }
+  
+  private ABSSymbol symSqlString(String text) {
+      return new ABSSymbol(Terminals.SQLSTRINGLITERAL, yyline + 1, yycolumn + 1 - text.length(), text.length(), yychar-text.length(), text);
   }
 %}
 
@@ -63,7 +71,7 @@ IntLiteral = 0 | [1-9][0-9]*
 //Identifier = {Alpha}({Alpha} | [:digit:] | "_")*
 //ID       [a-z][a-z0-9]*
 
-%state STRING
+%states STRING, SQL, SQLSTRING
 
 
 
@@ -142,12 +150,19 @@ IntLiteral = 0 | [1-9][0-9]*
  //"tt"        { return sym(Terminals.TRUE); }
  //"false"     { return sym(Terminals.FALSE); }
  //"ff"        { return sym(Terminals.FALSE); }
+ "sql"       { yybegin(SQL); sqlParenthesisDepth = 0; return sym(Terminals.SQL); }
 }
 
 //Separators
 <YYINITIAL> {
  "("           { return sym(Terminals.LPAREN); }
  ")"           { return sym(Terminals.RPAREN); }
+}
+<SQL> {
+ "("           { sqlParenthesisDepth++; return sym(Terminals.LPAREN); }
+ ")"           { if (--sqlParenthesisDepth <= 0) yybegin(YYINITIAL); return sym(Terminals.RPAREN); }
+}
+<YYINITIAL, SQL> {
  "{"           { return sym(Terminals.LBRACE); }
  "}"           { return sym(Terminals.RBRACE); }
  "["           { return sym(Terminals.LBRACKET); }
@@ -177,26 +192,74 @@ IntLiteral = 0 | [1-9][0-9]*
   "%"          { return sym(Terminals.MOD); }
  "&&"          { return sym(Terminals.ANDAND); }
  "||"          { return sym(Terminals.OROR); }
- "|"          { return sym(Terminals.BAR); }
- "~"          { return sym(Terminals.NEGATION); }
- "<"          { return sym(Terminals.LT); }
- ">"          { return sym(Terminals.GT); }
+ "|"           { return sym(Terminals.BAR); }
+ "~"           { return sym(Terminals.NEGATION); }
+ "<"           { return sym(Terminals.LT); }
+ ">"           { return sym(Terminals.GT); }
  "<="          { return sym(Terminals.LTEQ); }
  ">="          { return sym(Terminals.GTEQ); }
- "_"          { return sym(Terminals.USCORE); }
- "'"          { return sym(Terminals.PRIME); }
+ "_"           { return sym(Terminals.USCORE); }
+ "'"           { return sym(Terminals.PRIME); }
+}
+
+//SQL
+<SQL> {
+ "select"    { return sym(Terminals.SELECT); }
+ "distinct"  { return sym(Terminals.DISTINCT); }
+ "count"     { return sym(Terminals.COUNT); }
+ "as"        { return sym(Terminals.AS); }
+ "from"      { return sym(Terminals.FROM); }
+ "left"      { return sym(Terminals.LEFT); }
+ "right"     { return sym(Terminals.RIGHT); }
+ "join"      { return sym(Terminals.JOIN); }
+ "where"     { return sym(Terminals.WHERE); }
+ "group"     { return sym(Terminals.GROUP); }
+ "by"        { return sym(Terminals.BY); }
+ "order"     { return sym(Terminals.ORDER); }
+ "asc"       { return sym(Terminals.ASC); }
+ "desc"      { return sym(Terminals.DESC); }
+ "insert"    { return sym(Terminals.INSERT); }
+ "into"      { return sym(Terminals.INTO); }
+ "values"    { return sym(Terminals.VALUES); }
+ "update"    { return sym(Terminals.UPDATE); }
+ "set"       { return sym(Terminals.SET); }
+ "not"       { return sym(Terminals.NOT); }
+ "and"       { return sym(Terminals.AND); }
+ "or"        { return sym(Terminals.OR); }
+ "true"      { return sym(Terminals.TRUE); }
+ "false"     { return sym(Terminals.FALSE); }
+ "is"        { return sym(Terminals.IS); }
+ "null"      { return sym(Terminals.NULL); }
+ "case"      { return sym(Terminals.CASE); }
+ "when"      { return sym(Terminals.WHEN); }
+ "then"      { return sym(Terminals.THEN); }
+ "else"      { return sym(Terminals.ELSE); }
+ "end"       { return sym(Terminals.END); }
+ "."         { return sym(Terminals.DOT); }
+ "="         { return sym(Terminals.EQ); }
+  "+"	     { return sym(Terminals.PLUS); }
+  "-"        { return sym(Terminals.MINUS); }
+  "*"        { return sym(Terminals.MULT); }
+  "/"        { return sym(Terminals.DIV); }
+  "||"       { return sym(Terminals.CONCAT); }
+ "<"         { return sym(Terminals.LT); }
+ ">"         { return sym(Terminals.GT); }
+ "<="        { return sym(Terminals.LTEQ); }
+ ">="        { return sym(Terminals.GTEQ); }
+ "<>"        { return sym(Terminals.NOTEQ); }
+ "'"         { yybegin(SQLSTRING); string.setLength(0);  }
 }
 
 //Literals
-<YYINITIAL> {
-    \"            { yybegin(STRING); string.setLength(0);  }
+<YYINITIAL, SQL> {
+    \"            { previousState = yystate(); yybegin(STRING); string.setLength(0);  }
     {IntLiteral}  { return sym(Terminals.INTLITERAL); }
 //    {BoolLiteral} { return sym(Terminals.BOOLLITERAL); }
 }
 
-<YYINITIAL> {
+<YYINITIAL> {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
+<YYINITIAL, SQL> {
     {Identifier}  { return sym(Terminals.IDENTIFIER); }
-    {TypeIdentifier}  { return sym(Terminals.TYPE_IDENTIFIER); }
 	{Comment}     { /* discard token */ }
 	{WhiteSpace}  { /* discard token */ }
 }
@@ -205,13 +268,25 @@ IntLiteral = 0 | [1-9][0-9]*
 
 
 <STRING> {
- \"            { yybegin(YYINITIAL);
+ \"            { yybegin(previousState);
                  return symString(string.toString()); }
  [^\n\r\"\\]+  { string.append( yytext() ); }
  \\t           { string.append('\t'); }
  \\n           { string.append('\n'); }
  \\r           { string.append('\r'); }
  \\\"          { string.append('\"'); }
+ \\            { string.append('\\'); }
+}
+
+
+<SQLSTRING> {
+ "'"           { yybegin(SQL);
+                 return symSqlString(string.toString()); }
+ [^\n\r\'\\]+  { string.append( yytext() ); }
+ \\t           { string.append('\t'); }
+ \\n           { string.append('\n'); }
+ \\r           { string.append('\r'); }
+ \"            { string.append('\"'); }
  \\            { string.append('\\'); }
 }
 

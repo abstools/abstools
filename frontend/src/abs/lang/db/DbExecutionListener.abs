@@ -1,0 +1,385 @@
+module ABS.DB.Listener;
+
+export *;
+
+import * from ABS.DB.Helpers;
+import Relation, DatabaseValue from ABS.DB.Structure;
+import * from ABS.DB.Operators.Structure;
+import * from ABS.DB;
+
+type ListenerArgumentMap = Map<DatabaseExecutionListener, DatabaseExecutionListenerArgument>;
+type ListenerArgumentsMap = Map<DatabaseExecutionListener, List<DatabaseExecutionListenerArgument>>;
+
+def ListenerArgumentsMap listenerArgumentMapToArgumentsMap(ListenerArgumentMap map) =
+	case map {
+		InsertAssoc(Pair(listener, arg), rest) =>
+			InsertAssoc(
+				Pair(listener, list[arg]),
+				listenerArgumentMapToArgumentsMap(rest));
+		EmptyMap => EmptyMap;
+	};
+
+// Prepends the arguments given in the first map to the arguments given in the second map.
+def ListenerArgumentsMap prependToListenerArgumentsMap(ListenerArgumentMap map1,
+		ListenerArgumentsMap map2) =
+	case map1 {
+		InsertAssoc(Pair(listener, arg), rest) =>
+			InsertAssoc(
+				Pair(
+					listener,
+					Cons(arg, lookupDefault(map2, listener, Nil))),
+				prependToListenerArgumentsMap(
+					rest,
+					removeKey(map2, listener)));
+		EmptyMap => map2;
+	};
+
+interface DatabaseExecutionListener {
+
+	// All methods receive instances args of DatabaseExecutionListenerArgument. These instances
+	// were the return values of the previously called callback methods of this listener according
+	// to the data flow.
+	// Example: For the database request
+	//		UnaryExecutionNode(
+	//			Selection(...),
+	//			BinaryExecutionNode(
+	//				Union,
+	//				RelationLeaf("A"),
+	//				RelationLeaf("B")))
+	// the following methods of the listeners will be called (in success case) with the given
+	// arguments:
+	// 1a. arg1 = afterRelationLoading(/* Relation "A" */, Nil /* no arguments for the first call */)
+	// 1b. arg2 = afterRelationLoading(/* Relation "B" */, Nil /* no arguments for the first call */)
+	// 2.  arg3 = beforeBinaryRelationalOperator(Union, /* Relation "A" */, /* Relation "B" */,
+	//					list[arg1, arg2] /* return values of previous (concurrent) method calls */);
+	// 3.  arg4 = afterBinaryRelationalOperator(Union, /* Relation "A" */, /* Relation "B" */,
+	//					list[arg3]);
+	// 4.  arg5 = beforeUnaryRelationalOperator(Selection(...), /* input relation from union */,
+	//					list[arg4]);
+	// 5.  arg6 = afterUnaryRelationalOperator(Selection(...), /* input relation from union */,
+	//					list[arg5]);
+
+	// called before a unary relational operator is applied to the given relation
+	// If an Error is returned, the operation is not performed and the error will be forwarded.
+	MaybeEx<DatabaseExecutionListenerArgument> beforeUnaryRelationalOperator(
+		UnaryRelationalOperator operator,
+		Relation operand,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called after a unary relational operator is applied to the given relation
+	// If an Error is returned, the operation is not performed and the error will be forwarded.
+	MaybeEx<DatabaseExecutionListenerArgument> afterUnaryRelationalOperator(
+		UnaryRelationalOperator operator, Relation operand,
+		MaybeEx<Relation> result,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called before a binary relational operator is applied to the given relations
+	// If an Error is returned, the operation is not performed and the error will be forwarded.
+	MaybeEx<DatabaseExecutionListenerArgument> beforeBinaryRelationalOperator(
+		BinaryRelationalOperator operator,
+		Relation operand1,
+		Relation operand2,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called after a binary relational operator is applied to the given relations
+	// If an Error is returned, the operation is not performed and the error will be forwarded.
+	MaybeEx<DatabaseExecutionListenerArgument> afterBinaryRelationalOperator(
+		BinaryRelationalOperator operator, Relation operand1,
+		Relation operand2,
+		MaybeEx<Relation> result,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called after the given relation has been loaded from the database (by name)
+	// If an Error is returned, it will be forwarded by the database.
+	MaybeEx<DatabaseExecutionListenerArgument> afterRelationLoading(
+		Relation relation,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called before a modification is applied to the given database state
+	// If an Error is returned, the operation is not performed and the error will be forwarded.
+	MaybeEx<DatabaseExecutionListenerArgument> beforeDbModificationOperator(
+		DbModificationOperator operator,
+		DatabaseValue dbState,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called after a modification is successfully applied to the given database state
+	MaybeEx<DatabaseExecutionListenerArgument> afterDbModificationOperator(
+		DbModificationOperator operator,
+		DatabaseValue oldState,
+		DatabaseValue newState,
+		List<DatabaseExecutionListenerArgument> args);
+	
+	// called before the transaction lock is released (either after a modification or after commit)
+	Unit beforeTransactionLockRelease();
+	
+	// called after a transaction has been committed
+	// If success is True, the transaction data have successfully been applied to the database.
+	Unit afterCommit(Bool success);
+
+}
+
+interface DatabaseExecutionListenerArgument {
+	// Populate this interface as needed for your model with deltas.
+}
+
+interface DatabaseExecutionListenerCaller {
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+		DatabaseExecutionListener listener,
+		List<DatabaseExecutionListenerArgument> args);
+}
+
+interface BeforeUnaryRelationalOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(UnaryRelationalOperator operator,
+		Relation operand);
+	
+}
+
+class BeforeUnaryRelationalOperatorCaller
+		implements BeforeUnaryRelationalOperatorCaller {
+	
+	UnaryRelationalOperator operator = Projection(EmptySet);
+	
+	Relation operand = emptyRelation();
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.beforeUnaryRelationalOperator(operator, operand, args);
+	}
+	
+	[Atomic] Unit setArguments(UnaryRelationalOperator operator,
+			Relation operand) {
+		this.operator = operator;
+		this.operand = operand;
+	}
+	
+}
+
+interface AfterUnaryRelationalOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(UnaryRelationalOperator operator,
+		Relation operand, MaybeEx<Relation> result);
+	
+}
+
+class AfterUnaryRelationalOperatorCaller
+		implements AfterUnaryRelationalOperatorCaller {
+	
+	UnaryRelationalOperator operator = Projection(EmptySet);
+	
+	Relation operand = emptyRelation();
+	
+	MaybeEx<Relation> result = Error("", "");
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.afterUnaryRelationalOperator(operator, operand, result, args);
+	}
+	
+	[Atomic] Unit setArguments(UnaryRelationalOperator operator,
+			Relation operand, MaybeEx<Relation> result) {
+		this.operator = operator;
+		this.operand = operand;
+		this.result = result;
+	}
+	
+}
+
+interface BeforeBinaryRelationalOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(BinaryRelationalOperator operator,
+		Relation operand1, Relation operand2);
+	
+}
+
+class BeforeBinaryRelationalOperatorCaller
+		implements BeforeBinaryRelationalOperatorCaller {
+	
+	BinaryRelationalOperator operator = Union;
+	
+	Relation operand1 = emptyRelation();
+
+	Relation operand2 = emptyRelation();
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.beforeBinaryRelationalOperator(operator, operand1, operand2, args);
+	}
+	
+	[Atomic] Unit setArguments(BinaryRelationalOperator operator,
+			Relation operand1, Relation operand2) {
+		this.operator = operator;
+		this.operand1 = operand1;
+		this.operand2 = operand2;
+	}
+	
+}
+
+interface AfterBinaryRelationalOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(BinaryRelationalOperator operator,
+		Relation operand1, Relation operand2, MaybeEx<Relation> result);
+	
+}
+
+class AfterBinaryRelationalOperatorCaller
+		implements AfterBinaryRelationalOperatorCaller {
+	
+	BinaryRelationalOperator operator = Union;
+	
+	Relation operand1 = emptyRelation();
+
+	Relation operand2 = emptyRelation();
+	
+	MaybeEx<Relation> result = Error("", "");
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.afterBinaryRelationalOperator(
+			operator,
+			operand1,
+			operand2,
+			result,
+			args);
+	}
+	
+	[Atomic] Unit setArguments(BinaryRelationalOperator operator,
+			Relation operand1, Relation operand2, MaybeEx<Relation> result) {
+		this.operator = operator;
+		this.operand1 = operand1;
+		this.operand2 = operand2;
+		this.result = result;
+	}
+	
+}
+
+interface AfterRelationLoadingCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(Relation relation);
+	
+}
+
+class AfterRelationLoadingCaller
+		implements AfterRelationLoadingCaller {
+	
+	Relation relation = emptyRelation();
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.afterRelationLoading(relation, args);
+	}
+	
+	[Atomic] Unit setArguments(Relation relation) {
+		this.relation = relation;
+	}
+	
+}
+
+interface BeforeDbModificationOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(DbModificationOperator operator,
+		DatabaseValue dbState);
+	
+}
+
+class BeforeDbModificationOperatorCaller
+		implements BeforeDbModificationOperatorCaller {
+	
+	DbModificationOperator operator = RelationalModification("", Insertion(EmptyMap));
+	
+	DatabaseValue dbState = EmptySet;
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.beforeDbModificationOperator(operator, dbState, args);
+	}
+	
+	[Atomic] Unit setArguments(DbModificationOperator operator,
+			DatabaseValue dbState) {
+		this.operator = operator;
+		this.dbState = dbState;
+	}
+	
+}
+
+interface AfterDbModificationOperatorCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(DbModificationOperator operator,
+		DatabaseValue oldState,
+		DatabaseValue newState);
+	
+}
+
+class AfterDbModificationOperatorCaller
+		implements AfterDbModificationOperatorCaller {
+	
+	DbModificationOperator operator = RelationalModification("", Insertion(EmptyMap));
+
+	DatabaseValue oldState = EmptySet;
+
+	DatabaseValue newState = EmptySet;
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		return listener.afterDbModificationOperator(operator, oldState, newState, args);
+	}
+	
+	[Atomic] Unit setArguments(DbModificationOperator operator,
+			DatabaseValue oldState,
+			DatabaseValue newState) {
+		this.operator = operator;
+		this.oldState = oldState;
+		this.newState = newState;
+	}
+	
+}
+
+class BeforeTransactionLockReleaseCaller implements DatabaseExecutionListenerCaller {
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		listener.beforeTransactionLockRelease();
+		return JustEx(null);
+	}
+	
+}
+
+interface AfterCommitCaller
+		extends DatabaseExecutionListenerCaller {
+	
+	[Atomic] Unit setArguments(Bool success);
+	
+}
+
+class AfterCommitCaller
+		implements AfterCommitCaller {
+	
+	Bool success = False;
+
+	MaybeEx<DatabaseExecutionListenerArgument> callListener(
+			DatabaseExecutionListener listener,
+			List<DatabaseExecutionListenerArgument> args) {
+		listener.afterCommit(success);
+		return JustEx(null);
+	}
+	
+	[Atomic] Unit setArguments(Bool success) {
+		this.success = success;
+	}
+	
+}

@@ -232,20 +232,15 @@ aspect OriginalCallResolver {
     public MethodImpl ModifyMethodModifier.findOriginalInCore(
             String methodid,
             String classid) throws DeltaModellingException {
-
-        for (Decl cls : getDelta().getModel().getDecls()) {
-            if (cls instanceof ClassDecl) {
-                //System.out.println("*** searching in core class " + cls.getName());
-                for (MethodImpl method : ((ClassDecl)cls).getMethods()) {
-                    if (method.getMethodSig().getName().equals(methodid))
-                        return copyMethod(method, "core");
-                }
-            }
+        Decl coreClass = getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
+        if (!coreClass.isUnknown() && coreClass instanceof ClassDecl) {
+            MethodImpl coreMethod = ((ClassDecl) coreClass).lookupMethod(methodid);
+            if (coreMethod != null)
+                return copyMethod(coreMethod, "core");
         }
         // not found
         throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
                 + " in the core.");
-
     }
     
     /* Return a copy of given MethodImpl (changed name)

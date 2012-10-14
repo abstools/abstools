@@ -4,7 +4,7 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.backend.maude.MaudeCompilerHelper;
+import abs.common.CompilerUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
@@ -22,17 +22,17 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt expressionStmt) {
-        checkDCCorrect(expressionStmt, MaudeCompilerHelper.getAnnotationValue(expressionStmt.getAnnotations(), "DC"));
+        checkDCCorrect(expressionStmt, CompilerUtils.getAnnotationValue(expressionStmt.getAnnotations(), "DC"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDCCorrect(s, MaudeCompilerHelper.getAnnotationValue(s.getAnnotations(), "DC"));
+        checkDCCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "DC"));
     }
 
     @Override
     public void checkVarDeclStmt(VarDeclStmt varDeclStmt) {
-        checkDCCorrect(varDeclStmt, MaudeCompilerHelper.getAnnotationValue(varDeclStmt.getAnnotations(), "DC"));
+        checkDCCorrect(varDeclStmt, CompilerUtils.getAnnotationValue(varDeclStmt.getAnnotations(), "DC"));
     }
 
     private void checkDCCorrect(ASTNode<?> n, PureExp dc) {

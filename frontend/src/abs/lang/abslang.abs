@@ -394,6 +394,10 @@ data FinalAnnotation = Final;
  */ 
 data AtomicityAnnotation = Atomic;
 
+// functional break point
+def A watch<A>(A val) = builtin;
+def A watchEx<A, B>(A val, B info) = builtin;
+
 /**
  * Custom schedulers
  */

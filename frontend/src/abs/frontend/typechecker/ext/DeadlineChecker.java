@@ -4,7 +4,7 @@
  */
 package abs.frontend.typechecker.ext;
 
-import abs.backend.maude.MaudeCompilerHelper;
+import abs.common.CompilerUtils;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.TypeError;
 import abs.frontend.ast.ASTNode;
@@ -22,17 +22,17 @@ public class DeadlineChecker extends DefaultTypeSystemExtension {
 
     @Override
     public void checkExpressionStmt(ExpressionStmt e) {
-        checkDeadlineCorrect(e, MaudeCompilerHelper.getAnnotationValue(e.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(e, CompilerUtils.getAnnotationValue(e.getAnnotations(), "Deadline"));
     }
 
     @Override
     public void checkAssignStmt(AssignStmt s) {
-        checkDeadlineCorrect(s, MaudeCompilerHelper.getAnnotationValue(s.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(s, CompilerUtils.getAnnotationValue(s.getAnnotations(), "Deadline"));
     }
     
     @Override
     public void checkVarDeclStmt(VarDeclStmt v) {
-        checkDeadlineCorrect(v, MaudeCompilerHelper.getAnnotationValue(v.getAnnotations(), "Deadline"));
+        checkDeadlineCorrect(v, CompilerUtils.getAnnotationValue(v.getAnnotations(), "Deadline"));
     }
 
     private void checkDeadlineCorrect(ASTNode<?> n, PureExp deadline) {

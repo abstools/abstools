@@ -77,7 +77,33 @@ public class Keywords {
         "ifin",
         "ifout",
         "exclude",
-        "require" };
+        "require",
+        
+        "sql",
+        "select",
+        "distinct",
+        "as",
+        "left",
+        "right",
+        "join",
+        "where",
+        "group",
+        "by",
+        "order",
+        "asc",
+        "desc",
+        "insert",
+        "into",
+        "values",
+        "update",
+        "set",
+        "not",
+        "and",
+        "or",
+        "true",
+        "false",
+        "is",
+        "end"};
 
     
     public static String[] getKeywords() {

@@ -17,6 +17,7 @@ import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
+import abs.common.Constants;
 
 public class ABSBuiltInFunctions {
     
@@ -103,5 +104,39 @@ public class ABSBuiltInFunctions {
         return ABSString.fromString(line.trim());
     }
     
+    /*
+     * Functional break point
+     * 
+     * Keep the value of the following constant in sync with the name of the
+     * method and the according built-in function defined in abslang.abs.
+     */
+    private static final String FUNCTIONAL_BREAK_POINT_FUNCTION = "watch";
+    public static boolean isFunctionalBreakPointFunctionName(String functionName) {
+        return functionName.equals(Constants.STDLIB_NAME + "." + FUNCTIONAL_BREAK_POINT_FUNCTION) ||
+                functionName.equals(Constants.STDLIB_NAME + "." + FUNCTIONAL_BREAK_POINT_FUNCTION + "Ex");
+    }
+    public static <A extends ABSValue, B extends ABSValue> A watchEx(String fileName, int line, A val, B info) {
+        ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
+        if (runtime.debuggingEnabled()) {
+            Task<?> task = ABSRuntime.getCurrentTask();
+            task.newStackFrame(null, "$watch");
+            task.setLocalVariable("$watchValue", val);
+            task.setLocalVariable("$watchInfo", info);
+            runtime.nextStep(fileName, line);
+            task.popStackFrame();
+        }
+        return val;
+    }
+    public static <A extends ABSValue> A watch(String fileName, int line, A val) {
+        ABSRuntime runtime = ABSRuntime.getCurrentRuntime();
+        if (runtime.debuggingEnabled()) {
+            Task<?> task = ABSRuntime.getCurrentTask();
+            task.newStackFrame(null, "$watch");
+            task.setLocalVariable("$watchValue", val);
+            runtime.nextStep(fileName, line);
+            task.popStackFrame();
+        }
+        return val;
+    }
     
 }
