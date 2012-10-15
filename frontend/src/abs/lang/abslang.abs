@@ -548,6 +548,7 @@ def ObjectMirror reflect<A>(A a) = builtin;
 
 interface Runtime {
     Unit applyDelta(String s);
+    Unit configureProduct(String s);
 }
 def Runtime getRuntime() = builtin;
 

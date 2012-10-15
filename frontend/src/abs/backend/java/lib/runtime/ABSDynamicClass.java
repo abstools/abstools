@@ -164,7 +164,10 @@ public class ABSDynamicClass implements ABSClass {
 
     @Override
     public ABSBool eq(ABSValue o) {
-        return ABSBool.fromBoolean(name.equals(((ABSDynamicClass)o).getName()));
+        if (o instanceof ABSDynamicProduct)
+            return ABSBool.fromBoolean(name.equals(((ABSDynamicClass)o).getName()));
+        else 
+            return ABSBool.FALSE;
     }
 
     @Override

@@ -1175,11 +1175,11 @@ List adaptation_rule_list = adaptation_rule.r {: return new List().add(r); :}
     | adaptation_rule_list.l adaptation_rule.r {: return l.add(r); :}
     ;
 
-ProductAdaptation adaptation_rule = TYPE_IDENTIFIER.id 
+ProductAdaptation adaptation_rule = TYPE_IDENTIFIER.product
     BY delta_list.deltas
     PRE TYPE_IDENTIFIER.preupdate
     POST TYPE_IDENTIFIER.postupdate SEMICOLON 
-    {: return new ProductAdaptation(deltas, preupdate, postupdate); :}
+    {: return new ProductAdaptation(product, deltas, preupdate, postupdate); :}
     ;
 
 // TODO define what a state update actually is

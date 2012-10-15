@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import abs.backend.java.codegeneration.dynamic.DynamicException;
@@ -41,6 +42,21 @@ public class ABSRuntimeClass {
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
                 ABSRuntimeClass.applyDelta(deltaName);
+                return ABSUnit.UNIT;
+            }
+        });
+        
+        runtimeClass.addMethod("configureProduct", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                String productName = ((ABSString)params[0]).getString();
+                
+                // TODO obtain delta names
+                ArrayList<String> deltas = new ArrayList<String>();
+                
+                for (String deltaName : deltas) {
+                    ABSRuntimeClass.applyDelta(deltaName);                    
+                }
                 return ABSUnit.UNIT;
             }
         });
@@ -79,6 +95,9 @@ public class ABSRuntimeClass {
             throw new DynamicException("Error loading class: " + className);
         }
     }
+
+    
+    
     
     static class NetworkListenerThread extends Thread {
 

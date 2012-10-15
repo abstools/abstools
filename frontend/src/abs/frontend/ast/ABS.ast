@@ -277,7 +277,6 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-UpdateID ::= <Name>;
 Product ::= <Name> Feature* ProductAdaptation* ;
-ProductAdaptation ::= DeltaID* <PreUpdateID> <PostUpdateID> ;
+ProductAdaptation ::= <ProductID> DeltaID* <PreUpdateID> <PostUpdateID> ;
 //StateUpdateDecl ::= <Name>;

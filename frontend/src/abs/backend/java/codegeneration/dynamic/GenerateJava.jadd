@@ -33,6 +33,17 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
             }
         }
+        for (Product prod : getProducts()) {
+            try {
+                prod.generateJavaCodeDynamic(code);
+            } catch (NotImplementedYetException e) { 
+                throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+            } catch (RuntimeException e) { 
+                throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+            }
+            
+        }
+        
     }
 
     public void ModuleDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
@@ -282,10 +293,13 @@ aspect GenerateJava {
         // FIXME generate _mod instead of _c class
         // TODO delta application code
         // DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
-        
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+  
     }
     public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
         stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
     }
     public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
         for (Modifier m : getModifiers()) {
@@ -306,9 +320,11 @@ aspect GenerateJava {
 
     public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
         stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
     }
     public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
         stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
     }
 
     abstract void Modifier.generateJavaDynamic(PrintStream stream);
@@ -354,6 +370,28 @@ aspect GenerateJava {
         stream.println("clazz.removeMethod(\"" + mName + "\");");
         stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
+    
+    public void Product.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+        String packageName = "product." + getName();
+        JavaCode.Package pkg = code.createPackage(packageName);
+        
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getProductName(getName());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            // gen header
+            stream.println("package " + packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            DynamicJavaGeneratorHelper.generateProduct(stream, this);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+        
     /*
      * Deltas END 
      */

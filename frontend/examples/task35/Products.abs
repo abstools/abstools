@@ -4,8 +4,8 @@ product HighEndChat (VideoChat, VoiceChat, TextChat, FileTransfer) {
 }
 
 product RegularChat (VoiceChat, TextChat) {
-    HighEndChat by DVideo;
-    LowEndChat by Voice2Text;
+    HighEndChat by DVideo pre Something post Something;
+    LowEndChat by Voice2Text pre Something post Something;
 }
 
 product LowEndChat (TextChat);

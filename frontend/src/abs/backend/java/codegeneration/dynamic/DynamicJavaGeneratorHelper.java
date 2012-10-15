@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -22,7 +24,9 @@ import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSClosure;
+import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
+import abs.backend.java.lib.runtime.ABSDynamicProduct;
 import abs.backend.java.lib.runtime.ABSField;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
@@ -37,7 +41,9 @@ import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.DeltaID;
 import abs.frontend.ast.ExpGuard;
+import abs.frontend.ast.Feature;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
@@ -48,6 +54,8 @@ import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.ParametricDataTypeDecl;
 import abs.frontend.ast.ParametricFunctionDecl;
+import abs.frontend.ast.Product;
+import abs.frontend.ast.ProductAdaptation;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
@@ -577,6 +585,36 @@ public class DynamicJavaGeneratorHelper {
             if (stream != null)
                 stream.close();
         }
+    }
+    
+    public static void generateProduct(PrintStream stream, Product prod) {
+
+        stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
+        stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
+        stream.println("if (instance == null) {");
+        stream.println("instance = new " + ABSDynamicProduct.class.getName() + "();");
+        stream.println("instance.setName(\"" + prod.getName() + "\");");
+
+        // Features
+        for (Feature feature : prod.getFeatures())
+            stream.println("instance.addFeature(\"" + feature.getName() + "\");");
+        
+        // Adaptations
+        for (ProductAdaptation ad : prod.getProductAdaptations()) {
+            stream.print("instance.addAdaptation(\"" + ad.getProductID() + "\", ");
+            stream.print("new " + ArrayList.class.getName() + "<" + String.class.getName() + ">(" + Arrays.class.getName() + ".asList(");
+            String delim = "";
+            for (DeltaID delta : ad.getDeltaIDs()) {
+                stream.print(delim + "\"" + delta.getName() + "\"");
+                delim = ", ";
+            }
+            stream.print("))");
+            stream.println(");");
+        }
+        
+        stream.println("}");
+        stream.println("return instance;");
+        stream.println("}");
     }
     
 }
