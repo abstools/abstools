@@ -6,4 +6,3 @@ product HighEndChat (VideoChat, VoiceChat, TextChat, FileTransfer) {
 product RegularChat (VoiceChat, TextChat);
 
 product LowEndChat (TextChat);
-

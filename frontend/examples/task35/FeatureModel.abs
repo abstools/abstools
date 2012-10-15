@@ -1,4 +1,4 @@
-root Chat_ProductLine {
+root Chat {
 	group allof {
      	ChatMode {
         	group oneof { TextChat, VoiceChat, VideoChat } 
