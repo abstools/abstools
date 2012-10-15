@@ -220,8 +220,7 @@ public class JavaGeneratorHelper {
        final MethodSig sig = method.getMethodSig();
        generateMethodSig(indent,stream,sig,true,"final","");
        stream.println("{ return ("+ABSFut.class.getName()+")");
-       generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
-             TypeCheckerHelper.getTypes(sig.getParams()),sig.getName());
+       generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig);
        stream.println(indent+"; }");
     }
     
@@ -229,18 +228,18 @@ public class JavaGeneratorHelper {
     public static void generateAsyncCall(PrintStream stream, AsyncCall call) {
        final PureExp callee = call.getCallee();
        final List<PureExp> params = call.getParams();
-       final String method = call.getMethod();
+       final MethodSig sig = call.getMethodSig();
        
-       generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
-             TypeCheckerHelper.getTypesFromExp(params), method);
+       generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig);
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
           final PureExp callee, final Type calleeType, final List<PureExp> args, 
           final List<ParamDecl> params,
-          final java.util.List<Type> paramTypes,
-          final String method) 
+          final MethodSig sig) 
     {
+        final java.util.List<Type> paramTypes
+            = TypeCheckerHelper.getTypes(sig.getParams());
         stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");
@@ -267,11 +266,15 @@ public class JavaGeneratorHelper {
         generateTaskGetArgsMethod(stream, paramTypes.size());
         generateTaskInitMethod(stream, paramTypes);
 
-        stream.print(" public java.lang.String methodName() { return \""+method+"\"; }");
+        stream.print(" public java.lang.String methodName() { return \""+sig.getName()+"\"; }");
 
         stream.print(" public Object execute() {");
-        stream.print(" return target."+JavaBackend.getMethodName(method)+"(");
-        generateArgStringList(stream, paramTypes.size());
+        stream.print(" return target."+JavaBackend.getMethodName(sig.getName())+"(");
+        for (i = 0; i < paramTypes.size(); i++) {
+            if (i > 0) stream.print(",");
+            stream.print("arg"+i);
+            if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
+        }
         stream.print(");");
         stream.println(" }}");
         stream.print("     .init");
