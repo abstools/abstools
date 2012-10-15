@@ -190,60 +190,68 @@ aspect GenerateScala {
 		return false;
 	}
 	public void BuiltinFunctionDef.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
-		FunctionDecl decl = ((FunctionDecl)getContextDecl());
-		
-		if (decl.getModule().getName().equals("ABS.StdLib")) {
-			if (decl.getName().equals("substr")) {
-				writer.write(prefix + "str.substring(start, start + length)");
-				return;
-			}
-			if (decl.getName().equals("strlen")) {
-				writer.write(prefix + "str.length()");
-				return;
-			}
-			if (decl.getName().equals("currentms")) {
-				writer.write("System.currentTimeMillis().toInt");
-				return;
-			}
-			if (decl.getName().equals("toString")) {
-				writer.write(prefix + "t.toString()");
-				return;
-			}
-			
-			if (decl.getName().equals("random")) {
-				// FIXME this should be slightly more random
-				writer.write("0");
-				return;
-			}
-			
-			// unsupported ones that we nonetheless handle by providing default values
-			if (decl.getName().equals("currentms")) {
-				writer.write("System.currentTimeMillis");
-				return;
-			}
-			if (decl.getName().equals("lowlevelDeadline")) {
-				writer.write("0");
-				return;
-			}
-		}
-		
-		if (decl.getModule().getName().equals("ABS.Meta")) {
-			// if (decl.getName().equals("reflect")) {
-				// unsupported
-				writer.write("null");
-				return;
-			// }
-		}
-		
-		if (decl.getModule().getName().equals("ABS.DC")) {
-			if (decl.getName().equals("thisDC")) {
-				// FIXME
-				writer.write(prefix + "null");
-				return;
-			}
-		}
-		
-		throw new RuntimeException("Unsupported builtin function: " + decl.getModule().getName() + "." + decl.getName());
+        final FunctionDecl decl = ((FunctionDecl)getContextDecl());
+        final String functionName = decl.getName();
+        final String moduleName = decl.getModule().getName();
+        if (moduleName.equals(Constants.STDLIB_NAME)) {
+            if (functionName.equals("substr")) {
+                writer.write(prefix + "str.substring(start, start + length)");
+                return;
+            }
+            if (functionName.equals("strlen")) {
+                writer.write(prefix + "str.length()");
+                return;
+            }
+            if (functionName.equals("currentms")) {
+                writer.write("System.currentTimeMillis().toInt");
+                return;
+            }
+            if (functionName.equals("toString")) {
+                writer.write(prefix + "t.toString()");
+                return;
+            }
+            if (functionName.equals("random")) {
+                // FIXME this should be slightly more random
+                writer.write("0");
+                return;
+            }
+            
+            // unsupported ones that we nonetheless handle by providing default values
+            if (functionName.equals("currentms")) {
+                writer.write("System.currentTimeMillis");
+                return;
+            }
+            if (functionName.equals("lowlevelDeadline")) {
+                writer.write("0");
+                return;
+            }
+        }
+        
+        if (moduleName.equals("ABS.Meta")) {
+            // if (decl.getName().equals("reflect")) {
+                // unsupported
+                writer.write("null");
+                return;
+            // }
+        }
+        
+        if (moduleName.equals("ABS.DC")) {
+            if (functionName.equals("thisDC")) {
+                // FIXME
+                writer.write(prefix + "null");
+                return;
+            }
+        }
+        
+        final String fullFunctionName = moduleName + "." + functionName;
+        
+        // Functional break points not supported - just ignore the "watch" function:
+        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(fullFunctionName)) {
+            writer.write(prefix + "val");
+            return;
+        }
+                    
+        throw new RuntimeException("Unsupported builtin function: " + fullFunctionName);
 	}
 	
 	public boolean ExpFunctionDef.isSuspendable() {
