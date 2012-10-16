@@ -255,7 +255,7 @@ NotEqExp : EqualityExpr ;
 ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause* ;
 Feature ::= <Name> AttrAssignment*;
 
-DeltaClause ::= Deltaspec DeltaID* [AppCond] ;
+DeltaClause ::= Deltaspec DeltaID* [FromAppCond:AppCond] [AppCond] ;
 
 abstract AppCond;
 AppCondAnd : AppCond ::= Left:AppCond Right:AppCond ;
@@ -278,5 +278,5 @@ FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
 Product ::= <Name> Feature* ProductAdaptation* ;
-ProductAdaptation ::= <ProductID> DeltaID* <PreUpdateID> <PostUpdateID> ;
+ProductAdaptation ::= <ProductID> <UpdateID> ;
 //StateUpdateDecl ::= <Name>;

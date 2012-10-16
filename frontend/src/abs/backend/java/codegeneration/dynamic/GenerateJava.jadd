@@ -33,9 +33,11 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
             }
         }
+        
+        JavaCode.Package pkg = code.createPackage("product");
         for (Product prod : getProducts()) {
             try {
-                prod.generateJavaCodeDynamic(code);
+                prod.generateJavaCodeDynamic(pkg);
             } catch (NotImplementedYetException e) { 
                 throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
             } catch (RuntimeException e) { 
@@ -371,10 +373,7 @@ aspect GenerateJava {
         stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
-    public void Product.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
-        String packageName = "product." + getName();
-        JavaCode.Package pkg = code.createPackage(packageName);
-        
+    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
         
@@ -382,7 +381,7 @@ aspect GenerateJava {
             File file = pkg.createJavaFile(generatedJavaClassName);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             // gen header
-            stream.println("package " + packageName + ";");
+            stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
             DynamicJavaGeneratorHelper.generateProduct(stream, this);
             stream.println("}");

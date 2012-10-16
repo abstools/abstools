@@ -1,16 +1,16 @@
 root Chat {
-	group allof {
+    group allof {
      	ChatMode {
-        	group oneof { TextChat, VoiceChat, VideoChat } 
+            group oneof { Text, Voice, Video } 
    	   	},
-	  		opt FileTransfer
-	}	    	
+      	opt FileTransfer
+    }    	
 }
 
-extension VoiceChat {
-	require: TextChat;
+extension Voice {
+    require: Text;
 }
 
-extension VideoChat {
-	require: VoiceChat;
+extension Video {
+    require: Voice;
 }

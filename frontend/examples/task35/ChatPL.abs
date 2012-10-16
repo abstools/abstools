@@ -1,15 +1,11 @@
 productline ChatPL;
  
-features TextChat, VideoChat, VoiceChat, FileTransfer;
+features Text, Video, Voice, FileTransfer;
 
-delta DVideo when VideoChat;
-delta DVoice when VoiceChat;
+delta DVideo when Video;
+delta DVoice when Voice;
 
+// deltas used for runtime adaptations
+delta DVideo2Voice from Text && Voice && Video when Voice;
+delta DVoice2Text from Text && Voice && ~Video when Text;
 
-
-/*update Voice2Video;
-use Chat;
-
-modifies(statewise) class Chat {
-  quality = quality - 1;
-}*/

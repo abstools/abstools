@@ -16,7 +16,8 @@ public class ABSDynamicProduct implements ABSClass {
 
     private String name;
     private Set<String> features;
-    private HashMap<String, ArrayList<String>> adaptations = new HashMap<String, ArrayList<String>>();
+    private HashMap<String, ArrayList<String>> deltas = new HashMap<String, ArrayList<String>>();
+    private HashMap<String, String> update;
     
     public String getName() {
         return name;
@@ -35,14 +36,21 @@ public class ABSDynamicProduct implements ABSClass {
         this.features.add(feature);
     }
 
-    public HashMap<String, ArrayList<String>> getAdaptations() {
-        return adaptations;
-    }
-    public void addAdaptation(String productName, ArrayList<String> deltaNames) {
-        this.adaptations.put(productName, deltaNames);
+    public void addDeltas(String productName, ArrayList<String> deltaNames) {
+        this.deltas.put(productName, deltaNames);
     }
 
+    public ArrayList<String> getDeltas(String productName) {
+        return this.deltas.get(productName);
+    }
 
+    public void setUpdate(String productName, String upd) {
+        this.update.put(productName, upd);
+    }
+    public String getUpdate(String productName) {
+        return this.update.get(productName);
+    }
+    
     @Override
     public ABSBool eq(ABSValue o) {
         if (o instanceof ABSDynamicProduct)

@@ -58,14 +58,14 @@ modifies class ClientImpl adds Video {
 
 // deltas that handle dynamic reconfigurations
 
-delta Video2Voice;
+delta DVideo2Voice;
 uses Chat;
 modifies class ClientImpl removes Video {
     removes Unit startVideo();
     removes Unit stopVideo();
 }
 
-delta Voice2Text;
+delta DVoice2Text;
 uses Chat;
 modifies class ClientImpl removes Voice {
     removes Unit call(Client client);

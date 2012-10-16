@@ -1,11 +1,11 @@
 product HighEndChat (VideoChat, VoiceChat, TextChat, FileTransfer) {
-    RegularChat by Video2Voice pre Something post Something;
-    LowEndChat by Video2Voice, Voice2Text pre Something post Something;
+    RegularChat by StateUpdate1;
+    LowEndChat by StateUpdate2;
 }
 
 product RegularChat (VoiceChat, TextChat) {
-    HighEndChat by DVideo pre Something post Something;
-    LowEndChat by Voice2Text pre Something post Something;
+    HighEndChat by Something;
+    LowEndChat by Something;
 }
 
 product LowEndChat (TextChat);

@@ -599,15 +599,18 @@ public class DynamicJavaGeneratorHelper {
         for (Feature feature : prod.getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
         
-        // Adaptations
+        // Updates
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
-            stream.print("instance.addAdaptation(\"" + ad.getProductID() + "\", ");
+            stream.println("instance.setUpdate(\"" + ad.getProductID() + "\", \"" + ad.getUpdateID() + "\");");
+        }
+        
+        // Deltas
+        for (ProductAdaptation ad : prod.getProductAdaptations()) {
+            stream.print("instance.addDeltas(\"" + ad.getProductID() + "\", ");
             stream.print("new " + ArrayList.class.getName() + "<" + String.class.getName() + ">(" + Arrays.class.getName() + ".asList(");
-            String delim = "";
-            for (DeltaID delta : ad.getDeltaIDs()) {
-                stream.print(delim + "\"" + delta.getName() + "\"");
-                delim = ", ";
-            }
+            // FIXME
+            stream.print("\"\"" + "/* TODO: obtain sequence of deltas by solving CSP when compiling */");
+
             stream.print("))");
             stream.println(");");
         }

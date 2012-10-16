@@ -1103,8 +1103,8 @@ List deltaclause_list = {: return new List(); :}
       SEMICOLON {: return l.add(dc); :};
 
 DeltaClause delta_clause = 
-	DELTA deltaspec.d after_condition.a? when_condition.w?
-			{: return new DeltaClause(d, a, w); :}
+	DELTA deltaspec.d after_condition.a? from_condition.f? when_condition.w?
+			{: return new DeltaClause(d, a, f, w); :}
 ;
       
 /*| deltaclause_list.l DELTA deltaspec.d when_condition.w?
@@ -1145,6 +1145,7 @@ Deltaparam deltaparam =
 
 // Application conditions
 AppCond when_condition = WHEN appcond.ac {: return ac; :};
+AppCond from_condition = FROM appcond.ac {: return ac; :};
 AppCond appcond = or_appcond;
 
 AppCond or_appcond = and_appcond
@@ -1168,18 +1169,15 @@ List product_list = product.p {: return new List().add(p); :}
 
 
 Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new Product(id, l, new List()); :} 
-    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE adaptation_rule_list.al RBRACE {: return new Product(id, l, al); :}
+    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE adaptation_list.al RBRACE {: return new Product(id, l, al); :}
     ;
 
-List adaptation_rule_list = adaptation_rule.r {: return new List().add(r); :}
-    | adaptation_rule_list.l adaptation_rule.r {: return l.add(r); :}
+List adaptation_list = adaptation.ad {: return new List().add(ad); :}
+    | adaptation_list.l adaptation.ad {: return l.add(ad); :}
     ;
 
-ProductAdaptation adaptation_rule = TYPE_IDENTIFIER.product
-    BY delta_list.deltas
-    PRE TYPE_IDENTIFIER.preupdate
-    POST TYPE_IDENTIFIER.postupdate SEMICOLON 
-    {: return new ProductAdaptation(product, deltas, preupdate, postupdate); :}
+ProductAdaptation adaptation = TYPE_IDENTIFIER.product BY TYPE_IDENTIFIER.update SEMICOLON 
+    {: return new ProductAdaptation(product, update); :}
     ;
 
 // TODO define what a state update actually is
