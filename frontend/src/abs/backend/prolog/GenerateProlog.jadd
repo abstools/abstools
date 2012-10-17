@@ -177,10 +177,19 @@ aspect GenerateProlog {
             s.print(varTransform(getName()));
     }
 
-    //Infers if the used variable was declared as a field or as an argument of a class
+    /**
+     * Check for field OR parameter:<br/>
+     * Infers if the used variable was declared as a field or as an argument of a class
+     * TODO: use more OO, review use of parameters.
+     * @deprecated Use OO instead!
+     */
+    public abstract boolean VarOrFieldUse.isField();
+    public boolean FieldUse.isField() { return true;}
+
+    @Override
     public boolean VarUse.isField() {
         if(this.getDecl_value instanceof FieldDecl)//field
-            return true;
+            { assert false; return true; }
 
         if(this.getDecl_value instanceof ParamDecl){//it was declared as a parameter
             ParamDecl param=(ParamDecl)this.getDecl_value;
@@ -190,11 +199,7 @@ aspect GenerateProlog {
         }
         return false;   
     }
-    
-    public boolean VarOrFieldUse.isField() {
-        return true;
-    }
-    
+
     public void FieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
         s.print(fieldTransform(getName()));
     }
