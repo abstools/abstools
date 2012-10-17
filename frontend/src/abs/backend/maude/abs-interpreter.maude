@@ -2252,6 +2252,15 @@ mod ABS-RECEIVE-RESULT is
   if N = (S :: L)[A]
     [label receive-comp-var] .
 
+  crl
+    < O : C | Cog: CG, Att: S, Pr: { L | get(@ A ; A') ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: M, Completed: true, References: G, Value: D >
+  =>
+    < O : C | Cog: CG, Att: S, Pr: { L | assign(A' ; D) ; SL }, PrQ: W, Lcnt: F >
+    < N : Future | Name: M, Completed: true, References: G, Value: D >
+  if N = S[A]
+    [label receive-comp-field] .
+
 
   --- continue
   ---
