@@ -351,15 +351,14 @@ aspect GenerateMaude {
         return result;
     }
 
-    public void VarOrFieldUse.generateMaude(PrintStream stream) {
-        stream.println("--- Hey, I didn't expect this to be generated! " + getClass().toString());
-        throw new NotImplementedYetException(this); // TODO
-    }
+	public abstract void VarOrFieldUse.generateMaude(PrintStream stream);
 
+	@Override
 	public void VarUse.generateMaude(PrintStream stream) {
         stream.print("'" + getName() + " ");
 	}
 
+	@Override
 	public void FieldUse.generateMaude(PrintStream stream) {
         stream.print("@ '" + getName() + " ");
 	}
