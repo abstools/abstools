@@ -953,6 +953,7 @@ aspect GenerateProlog {
         getPureExp().generateProlog(s,reachInfo);
         s.print(")");
     }
+
     //CompilationUnit, modules, imports, exports
 
     public void CompilationUnit.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
@@ -1086,4 +1087,31 @@ aspect GenerateProlog {
         return "'" + s + "'";
     }
 
+    
+    //real time abs
+    public void DurationGuard.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+        s.print("duration( ");
+        getMin().generateProlog(s,reachInfo);
+        s.print(",");
+        getMax().generateProlog(s,reachInfo);
+        s.print(")");
+    }
+    public void DurationStmt.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+    	s.print("durationStmt(duration( ");
+        getMin().generateProlog(s,reachInfo);
+        s.print(",");
+        getMax().generateProlog(s,reachInfo);
+        s.print("),");
+        this.printContextInformation(s);
+        s.print(")");
+    }   
+    public void TypedAnnotation.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
+    	s.print("typedAnnotation( ");
+    	getAccess().generateProlog(s,reachInfo);
+        s.print(",");
+        getValue().generateProlog(s,reachInfo);
+        s.print(")");
+        
+    }   
 }
+
