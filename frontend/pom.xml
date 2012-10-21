@@ -257,7 +257,7 @@
 							<target>
 								<mkdir dir="${build.dir}/abs/lang" />
 								<copy todir="${build.dir}/abs/lang">
-									<filelist dir="${src.dir}/abs/lang" files="abslang.abs" />
+									<fileset dir="${src.dir}/abs/lang" includes="**/*.abs" />
 								</copy>
 							</target>
 						</configuration>
@@ -365,6 +365,7 @@
 							<resourcesDirectory>${src.dir}</resourcesDirectory>
 							<includes>
 								<include>abs/lang/*.abs</include>
+								<include>abs/lang/db/*.abs</include>
 							</includes>
 						</configuration>
 					</execution>

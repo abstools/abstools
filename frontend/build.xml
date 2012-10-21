@@ -169,7 +169,7 @@
 	<target name="genlang">
 		<mkdir dir="${build.dir}/abs/lang" />
 		<copy todir="${build.dir}/abs/lang" >
-			<filelist dir="${src.dir}/abs/lang" files="abslang.abs" />
+			<fileset dir="${src.dir}/abs/lang" includes="**/*.abs" />
 		</copy>
 	</target>
 
