@@ -7,6 +7,7 @@ package abs.frontend;
 import abs.frontend.analyser.*;
 import abs.frontend.mtvl.SearchSolutionsTest;
 import abs.frontend.parser.*;
+import abs.frontend.sql.SqlTransformationTests;
 import abs.frontend.typesystem.*;
 
 import org.junit.runner.RunWith;
@@ -22,5 +23,6 @@ import org.junit.runners.Suite;
         ClassKindTests.class, OtherAnalysisTests.class, AtomicityTests.class,
         BackPositionTest.class, IncompleteExpTests.class,
         SearchSolutionsTest.class,
-        TestABSPackages.class, CaseStudyTypeChecking.class})
+        TestABSPackages.class, CaseStudyTypeChecking.class
+        , SqlTransformationTests.class})
 public class AllFrontendTests {}

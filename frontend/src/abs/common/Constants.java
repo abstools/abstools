@@ -4,8 +4,6 @@
  */
 package abs.common;
 
-import abs.frontend.sql.SqlTransformationTests;
-
 public class Constants {
     public static final String STDLIB_NAME = "ABS.StdLib";
 
@@ -14,7 +12,7 @@ public class Constants {
      * src/abs/lang/db) during parsing a model<br>
      * This is discouraged because it makes parsing slower. When using a model
      * based on the DB extensions (e.g., if it uses the SQL language extensions
-     * - see {@link SqlTransformationTests}), you must then - if this constant
+     * - see {@link abs.frontend.sql.SqlTransformationTests}), you must then - if this constant
      * is false - do one of the following options:
      * <p>
      * 1. Use the ABS tools with the option "-dblib" which will include the ABS
