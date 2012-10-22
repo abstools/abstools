@@ -12,14 +12,15 @@ import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Product;
 
 public class SearchSolutionsTest extends FrontendTest {
     
-    static private boolean checkSol(ChocoSolver s, Model m, String prod) {
-        Map<String,Integer> guess = m.getSolution(prod);
-        if (guess != null)
-            return s.checkSolution(guess,m);
-        else return false;
+    static private boolean checkSol(ChocoSolver s, Model m, String prod) throws Exception {
+        Product p = m.findProduct(prod);
+        assertNotNull(p);
+        Map<String,Integer> guess = p.getSolution();
+        return s.checkSolution(guess,m);
     }
     
     static private String helloprogram =
@@ -45,7 +46,7 @@ public class SearchSolutionsTest extends FrontendTest {
         " }";
 
     @Test
-    public void SearchSolutions() {
+    public void SearchSolutions() throws Exception {
         Model model = assertParseOk(helloprogram);
         model.setNullPrintStream();
                 

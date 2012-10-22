@@ -272,6 +272,12 @@ public class Main {
      * However, the command-line argument handling will have to stay in Main. Pity.
      */
     private void analyzeMTVL(Model m) {
+        Product p_product = null;
+        try {
+            p_product = m.findProduct(product);
+        } catch (WrongProgramArgumentException e) {
+            // ignore in case we're just solving.
+        }
         if (m.hasMTVL()) {
             if (solve) {
                 if (verbose)
@@ -311,13 +317,13 @@ public class Main {
             if (solveWith) {
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
-                ChocoSolver s = m.getCSModel();
-                HashSet<Constraint> newcs = new HashSet<Constraint>();
-                if (m.getProdConstraints(product,s.vars,newcs)) {
+                if (p_product != null) {
+                    ChocoSolver s = m.getCSModel();
+                    HashSet<Constraint> newcs = new HashSet<Constraint>();
+                    p_product.getProdConstraints(s.vars,newcs);
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.resultToString());
-                }
-                else {
+                } else {
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
@@ -329,11 +335,11 @@ public class Main {
                 ChocoSolver s = m.getCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("difference", 0, 50);
-                if (m.getDiffConstraints(product,s.vars,newcs, "difference")) {
+                if (p_product != null) {
+                    m.getDiffConstraints(p_product,s.vars,newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.minimiseToString("difference"));
-                }
-                else {
+                } else {
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
@@ -346,7 +352,7 @@ public class Main {
                 ChocoSolver s = m.getCSModel();
                 HashSet<Constraint> newcs = new HashSet<Constraint>();
                 s.addIntVar("noOfFeatures", 0, 50);
-                if (m.getMaxConstraints(product,s.vars,newcs, "noOfFeatures")) {
+                if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
                 }
@@ -361,13 +367,13 @@ public class Main {
                 }*/
 
                 ChocoSolver s = m.getCSModel();
-                Map<String,Integer> guess = m.getSolution(product);
-                if (guess != null)
-                    System.out.println("checking solution: "+s.checkSolution(guess,m));
-                else {
+                if (p_product == null ){
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
                         System.out.println("Maybe you forgot the module name?");
+                } else {
+                    Map<String,Integer> guess = p_product.getSolution();
+                    System.out.println("checking solution: "+s.checkSolution(guess,m));
                 }
             }
             if (numbersol && !ignoreattr) {

@@ -9,30 +9,19 @@ aspect ProdSolution {
 //            res = res || getChildNoTransform(i).getSolution(product, sol);
 //        return res;
 //    }
-
-    
-    // Nullable: if it fails to get a possible solution returns null.
-    public Map<String,Integer> Model.getSolution(String product)  {
-      try {
-        Product p = findProduct(product);
-        if (p != null)
-          return p.getSolution();
-      } catch (WrongProgramArgumentException e) {}
-      return null;
-    }
     
     public Map<String,Integer> Product.getSolution() {
         Map<String,Integer> sol= new HashMap<String,Integer>();
         for(Feature f : getFeatures())
-    		getSolution(f,true,sol);
+    		f.getSolution(true,sol);
     	return sol;
     }
 
-    private static void Product.getSolution(Feature f, Boolean found, Map<String,Integer> sol) {
+    void Feature.getSolution(Boolean found, Map<String,Integer> sol) {
         if (found) {
-            sol.put(f.getName(), Integer.valueOf(1));
-            for(AttrAssignment attr : f.getAttrAssignments())
-                sol.put(f.getName()+"."+attr.getName(),attr.getValue().getIntValue());
+            sol.put(getName(), Integer.valueOf(1));
+            for(AttrAssignment attr : getAttrAssignments())
+                sol.put(getName()+"."+attr.getName(),attr.getValue().getIntValue());
         }
     }
 
