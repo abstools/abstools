@@ -1467,35 +1467,6 @@ mod ABS-MACHINE-BASICS-TIMED is
   if MTE:Rat := mte(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) .
   eq mte(noProc, S, CN, MAC) = 1 .
 
-
-  op noneSchedulable : MProc Subst Configuration SSubst -> Bool .
-  eq noneSchedulable((W, { L | SL }), S, CN, MAC) =
-    (not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC))) and-then noneSchedulable(W, S, CN, MAC) .
-  eq noneSchedulable(noProc, S, CN, MAC) = true .
-
-  op canAdvance : Configuration Configuration SSubst -> Bool .
-  *** Block clock if a method invocation is on its way.
-  eq canAdvance (m:Msg CN, CN', MAC) = false .
-  *** Block clock if object is idle but has processes that can be scheduled.
-  eq canAdvance (
-      < CG : Cog | Object: null, DC: DC:Data >
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
-      CN, CN', MAC) =
-    noneSchedulable(W, S, CN CN', MAC)
-    and-then canAdvance (< CG : Cog | Object: null, DC: DC:Data > CN,
-      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC) .
-  *** Block clock if process is executing and can execute. "can execute" means
-  *** "schedulable" in this case since a get-operation should not block time
-  *** advance, even though it _is_ allowed to block the cog (which is the
-  *** difference between executable and schedulable)
-  eq canAdvance (
-      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
-      CN, CN', MAC)
-  =
-    not(schedulable(SL, (S :: L), CN CN', $insert('.deadline, L['.deadline], MAC)))
-    and-then canAdvance(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC) .
-  eq canAdvance(CN, CN', MAC) = true [owise] .
-
   op mte : Configuration Configuration SSubst -> Rat .
   *** Don't advance clock if a method invocation is on its way.
   eq mte (m:Msg CN, CN', MAC) = 0 .
