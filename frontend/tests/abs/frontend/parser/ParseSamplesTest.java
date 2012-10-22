@@ -29,6 +29,10 @@ public class ParseSamplesTest extends FrontendTest {
                                                , { "examples/SmartHome/abs/" , "ElectricHeating" }
                                                , { "examples/SmartHome/abs/" , "FireAlarm" }
                                                , { "examples/SmartHome/abs/" , "Test" }
+                                               , { "examples/task35/" , null }
+                                               , { "examples/task35/" , "HighEndChat" }
+                                               , { "examples/task35/" , "LowEndChat" }
+                                               , { "examples/task35/" , "RegularChat" }
                                                , { "tests/abssamples/RandomBool.abs" , null}
                                                , { "tests/abssamples/LexicalTest.abs", null}
                                                , { "tests/abssamples/ReplicationSystem.abs" , null}
