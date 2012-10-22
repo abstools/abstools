@@ -1144,8 +1144,11 @@ Deltaparam deltaparam =
     ;
 
 // Application conditions
-AppCond when_condition = WHEN appcond.ac {: return ac; :};
 AppCond from_condition = FROM appcond.ac {: return ac; :};
+AppCond when_condition = 
+    WHEN appcond.ac {: return ac; :}
+    | TO appcond.ac {: return ac; :}
+    ;
 AppCond appcond = or_appcond;
 
 AppCond or_appcond = and_appcond
