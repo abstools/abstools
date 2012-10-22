@@ -907,6 +907,29 @@ mod ABS-EVAL is
   eq schedulable(duration(E ; E') ; SL, S, CN, MAC) = true .
   eq schedulable(SL, S, CN, MAC) = executable(SL, S, CN, MAC) [owise] .
 
+  *** minimum time elapse.  Only evalutes guards.  Returns a number between 0
+  *** and 1 (the clock only advances to the next integer, since resources are
+  *** replenished then).
+  op mte : Expr Subst Configuration SSubst -> Rat .
+  eq mte("&&"(E' :: E''), S, CN, MAC) = max(mte(E', S, CN, MAC), mte(E'', S, CN, MAC)) .
+  eq mte(?duration(E ; E'), S, CN, MAC) = if (MAC['.time]) asRat >= 0 then eval(E, S, CN, MAC) asRat else 0 fi .
+  eq mte(E, S, CN, MAC) = if eval(E, S, CN, MAC) asBool then 0 else 1 fi [owise] .
+
+  op mte : StmtList Subst Configuration SSubst -> Rat .
+  eq mte([COST]ST:Stmt ; SL, S, CN, MAC)
+  = if hasEnoughResources(MAC['.comp], CN, eval(COST, S, CN, MAC) asRat)
+    then mte(ST:Stmt ; SL, S, CN, MAC)
+    else 1 fi .
+  eq mte(get(QID ; A') ; SL , S, CN, MAC) = if completed(S[QID], CN) then 0 else 1 fi .
+  eq mte(get(@ QID ; A') ; SL , (SS :: S), CN, MAC) = if completed(SS[QID], CN) then 0 else 1 fi .
+  eq mte(get(L ; A') ; SL , S, CN, MAC) = if completed(L, CN) then 0 else 1 fi .
+  *** This is only for the untimed case -- in the timed interpreter, duration
+  *** is reduced to $duration via an equation.
+  eq mte(duration(E ; E') ; SL, S, CN, MAC) = 0 .
+  eq mte(await E ; SL, S, CN, MAC) = mte(E, S, CN, MAC) . *** reduce to mte of guard
+  eq mte($duration(MIN ; MAX) ; SL, S, CN, MAC) = max(MIN, 0) . *** do we want max(0, min(MAX, 1)) instead?
+  eq mte(SL, S, CN, MAC) = 0 [owise] .
+
   *** Evaluate various builtin functions.
 
   *** ABS-DATA-BOOL
@@ -1435,6 +1458,16 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   *** Clock advancement.
 
+  *** 0 <= mte <= 1 since the clock has to stop at integer boundaries so
+  *** deployment components refill.
+  op mte : MProc Subst Configuration SSubst -> Rat .
+  ceq mte((W, { L | SL }), S, CN, MAC) =
+    if MTE:Rat == 0 then 0
+    else min(MTE:Rat, mte(W, S, CN, MAC)) fi
+  if MTE:Rat := mte(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) .
+  eq mte(noProc, S, CN, MAC) = 1 .
+
+
   op noneSchedulable : MProc Subst Configuration SSubst -> Bool .
   eq noneSchedulable((W, { L | SL }), S, CN, MAC) =
     (not schedulable(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC))) and-then noneSchedulable(W, S, CN, MAC) .
@@ -1462,6 +1495,35 @@ mod ABS-MACHINE-BASICS-TIMED is
     not(schedulable(SL, (S :: L), CN CN', $insert('.deadline, L['.deadline], MAC)))
     and-then canAdvance(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC) .
   eq canAdvance(CN, CN', MAC) = true [owise] .
+
+  op mte : Configuration Configuration SSubst -> Rat .
+  *** Don't advance clock if a method invocation is on its way.
+  eq mte (m:Msg CN, CN', MAC) = 0 .
+  *** Don't advance clock if object is idle but has processes that can run now
+  ceq mte (
+      < CG : Cog | Object: null, DC: DC:Data >
+      < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F >
+      CN, CN', MAC) =
+    if MTE:Rat == 0 then 0
+    else min(MTE:Rat, mte (< CG : Cog | Object: null, DC: DC:Data > CN,
+          < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC))
+    fi
+  if MTE:Rat := mte(W, S, CN CN', MAC) .
+  *** Don't advance clock if process is executing and can execute. "can execute" means
+  *** "schedulable" in this case since a get-operation should not block time
+  *** advance, even though it _is_ allowed to block the cog (which is the
+  *** difference between executable and schedulable)
+  ceq mte (
+      < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
+      CN, CN', MAC)
+  =
+    if MTE:Rat == 0 then 0
+    else min(MTE:Rat, mte(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC))
+    fi
+  if MTE:Rat := mte(SL, (S :: L), CN CN', $insert('.deadline, L['.deadline], MAC)) .
+  *** Maximum time advance == 1.
+  eq mte(CN, CN', MAC) = 1 [owise] .
+  
 
   *** Advance time by T steps: decrement durations in blocked processes and
   *** waiting processes.
@@ -1492,24 +1554,24 @@ mod ABS-MACHINE-BASICS-TIMED is
   eq advanceTotalsHistory("ABS.DC.InfCPU"[emp], THI:Data) = THI:Data .
   eq advanceTotalsHistory("ABS.DC.CPU"[T:Data], THI:Data) = "ABS.StdLib.Cons"[T:Data :: THI:Data] .
 
-  op reduceDeadline : Subst Nat -> Subst .
+  op reduceDeadline : Subst Rat -> Subst .
   eq reduceDeadline(L, T) = update('.deadline, eval("ABS.StdLib.subtractFromDuration"((L['.deadline] :: "num"[T])), noSubst, none, noSubst), L) .
-  op reduceCost : Subst Nat -> Subst .
+  op reduceCost : Subst Rat -> Subst .
   eq reduceCost(L, T) = update('.c, eval("ABS.StdLib.subtractFromDuration"((L['.deadline] :: "num"[T])), noSubst, none, noSubst), L) .
 
-  op advanceProcesses : MProc Subst Nat -> MProc .
+  op advanceProcesses : MProc Subst Rat -> MProc .
   ceq advanceProcesses((P, W), S, T) =
     advanceProcess(P, S, T), advanceProcesses(W, S, T)
   if W =/= noProc .
   eq advanceProcesses(P, S, T) = advanceProcess(P, S, T) .
   eq advanceProcesses(noProc, S, T) = noProc .
 
-  op advanceProcess : Process Subst Nat -> Process .
+  op advanceProcess : Process Subst Rat -> Process .
   eq advanceProcess({ L | await E ; SL }, S, T) =
     { reduceDeadline(L, T) | await advanceDelays(E, (S :: L), ('.deadline |-> L['.deadline], '.time |-> "num"[T])) ; SL } .
   eq advanceProcess({ L | SL }, S, T) = { reduceDeadline(L, T) | SL } [owise] .
 
-  op advanceActiveProcess : Process Subst Nat -> Process .
+  op advanceActiveProcess : Process Subst Rat -> Process .
   eq advanceActiveProcess(idle, S, T) = idle .
   eq advanceActiveProcess({ L | $duration( MIN ; MAX ) ; SL }, S, T) =
       { reduceCost(reduceDeadline(L, T), T) | $duration( max(MIN - T, 0) ; max(MAX - T, 0) ) ; SL } .
