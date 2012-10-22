@@ -510,7 +510,7 @@ mod ABS-STATEMENT is
   op skip : -> Stmt [ctor format (b o)] .
   op suspend : -> Stmt [ctor format (b o)] .
   op duration(_;_) : Expr Expr -> Stmt [ctor format (b d o b o b o)] .
-  op $duration(_;_) : Nat Nat -> Stmt [ctor format (r d o r o r o) ] .
+  op $duration(_;_) : Rat Rat -> Stmt [ctor format (r d o r o r o) ] .
   op await_ : Expr -> Stmt [ctor format (b o d)] .
   op assert_ : Expr -> Stmt [ctor format (b o d)] .
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
@@ -791,7 +791,7 @@ mod ABS-EVAL is
   var MS : Msg .
   var N : Nat .
   var B : Bool .
-  vars MIN MAX : Nat .
+  vars MIN MAX : Rat .
   var MAC : SSubst .
   var W : MProc .
   var COST : Expr .
@@ -824,7 +824,7 @@ mod ABS-EVAL is
   eq eval(?(QID), S, CN, MAC) = completed(S[QID], CN) asAbsBool .
   eq eval(?(@ QID), (SS :: S), CN, MAC) = completed(SS[QID], CN) asAbsBool .
   eq eval(?(L), S, CN, MAC) = completed(L, CN) asAbsBool .
-  eq eval(?duration(E ; E'), S, CN, MAC) = (if (MAC['.time]) asRat >= 0 then ((eval(E, S, CN, MAC) asNat) <= 0) else true fi) asAbsBool .
+  eq eval(?duration(E ; E'), S, CN, MAC) = (if (MAC['.time]) asRat >= 0 then ((eval(E, S, CN, MAC) asRat) <= 0) else true fi) asAbsBool .
   eq eval(if E th E' el E'' fi, S, CN, MAC) =
     if eval(E, S, CN, MAC) asBool
     then eval(E', S, CN, MAC)
@@ -1360,7 +1360,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   var T : Int .
   var CN' : Configuration .
   vars LIM RAND : Nat .
-  vars MIN MAX : Nat .
+  vars MIN MAX : Rat .
   var MAC : SSubst .
   var M : Mid .
   var CG : Cogid .
@@ -1840,7 +1840,8 @@ mod ABS-STMT-DURATION-EQ-TIMED is
   var CG : Cogid .
   vars E1 E2 : Expr .
   var T : Int .
-  vars LIM RAND MIN MAX : Nat .
+  vars LIM RAND : Nat .
+  vars MIN MAX : Rat .
   var COST : Expr .
 
   ceq
@@ -1851,8 +1852,8 @@ mod ABS-STMT-DURATION-EQ-TIMED is
     < CG : Cog | Object: O, DC: DC:Data >
     < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Pr: { L | $duration( MIN ; MAX ) ; SL }, PrQ: W, Lcnt: F >
-  if MIN := (eval(E1, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asNat)
-      /\ MAX := (eval(E2, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asNat)
+  if MIN := (eval(E1, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asRat)
+      /\ MAX := (eval(E2, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])) asRat)
     [label duration] .
 
   ceq
