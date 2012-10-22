@@ -678,7 +678,7 @@ mod ABS-CONFIGURATION is
   var N : Label .
   vars F F' : Nat .
   var CN : Configuration .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
 
   --- Invocation protocol.
@@ -1048,7 +1048,7 @@ mod ABS-MSG-TRANSPORT is
   var DE : Data .
   var M : Mid .
   var SC : Expr .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
   var CO : Expr .
   var AUX : SSubst .
@@ -1116,7 +1116,7 @@ mod ABS-MACHINE-BASICS-COMMON is
   var D : Data .            var DL : DataList .  var S2 : SSubst .
   var M : Mid .
   var CG : Cogid .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
   var SC : Expr .
   var COST : Expr .
@@ -1380,7 +1380,7 @@ mod ABS-MACHINE-BASICS-TIMED is
   vars E E' : Expr .        var AL : VidList .   var N : Label .
   var Q : String .      var MS : MMtd .      var CO : Bool .
   var D : Data .            var DL : DataList .  var S2 : SSubst .
-  var T : Int .
+  var T : Rat .
   var CN' : Configuration .
   vars LIM RAND : Nat .
   vars MIN MAX : Rat .
@@ -1526,12 +1526,14 @@ mod ABS-MACHINE-BASICS-TIMED is
   
 
   *** Advance time by T steps: decrement durations in blocked processes and
-  *** waiting processes.
-  op advance : Configuration Rat -> Configuration .
+  *** waiting processes.  If third parameter = true, replenish resources in
+  *** deployment component as well.
+  op advance : Configuration Rat Bool -> Configuration .
   eq advance(< O : 'ABS.DC.DeploymentComponent
                  | Cog: CG, Att: ('cpu |-> CPU:Data, 'history |-> HI:Data, 'internalState |-> "num"[IS:Rat], 'nextcpu |-> NCPU:Data, 'totalhistory |-> THI:Data, S),
-                   Pr: P, PrQ: W, Lcnt: F > CN, T)
+                   Pr: P, PrQ: W, Lcnt: F > CN, T, RES:Bool)
   =
+    if RES:Bool then
     < O : 'ABS.DC.DeploymentComponent
         | Cog: CG, Att: (
             'cpu |-> NCPU:Data,
@@ -1541,14 +1543,26 @@ mod ABS-MACHINE-BASICS-TIMED is
             S),
           Pr: advanceActiveProcess(P, S, T),
           PrQ: advanceProcesses(W, S, T), Lcnt: F >
-    advance(CN, T) .
-  ceq advance(< O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F > CN, T)
+    else
+    < O : 'ABS.DC.DeploymentComponent
+        | Cog: CG, Att: (
+            'cpu |-> CPU:Data,
+            'history |-> HI:Data,
+            'internalState |-> "num"[IS:Rat],
+            'nextcpu |-> NCPU:Data,
+            'totalhistory |-> THI:Data,
+            S),
+          Pr: advanceActiveProcess(P, S, T),
+          PrQ: advanceProcesses(W, S, T), Lcnt: F >
+    fi
+    advance(CN, T, RES:Bool) .
+  ceq advance(< O : C | Cog: CG, Att: S, Pr: P, PrQ: W, Lcnt: F > CN, T, RES:Bool)
   =
     < O : C | Cog: CG, Att: S, Pr: advanceActiveProcess(P, S, T),
               PrQ: advanceProcesses(W, S, T), Lcnt: F >
-    advance(CN, T)
+    advance(CN, T, RES:Bool)
   if C =/= 'ABS.DC.DeploymentComponent .
-  eq advance(CN, T) = CN [owise] .
+  eq advance(CN, T, RES:Bool) = CN [owise] .
 
   op advanceTotalsHistory : Data Data -> Data .
   eq advanceTotalsHistory("ABS.DC.InfCPU"[emp], THI:Data) = THI:Data .
@@ -1568,7 +1582,7 @@ mod ABS-MACHINE-BASICS-TIMED is
 
   op advanceProcess : Process Subst Rat -> Process .
   eq advanceProcess({ L | await E ; SL }, S, T) =
-    { reduceDeadline(L, T) | await advanceDelays(E, (S :: L), ('.deadline |-> L['.deadline], '.time |-> "num"[T])) ; SL } .
+    { reduceDeadline(L, T) | await advanceDelays(E, (S :: L), ('.deadline |-> L['.deadline], '.time |-> "num"[T]), T) ; SL } .
   eq advanceProcess({ L | SL }, S, T) = { reduceDeadline(L, T) | SL } [owise] .
 
   op advanceActiveProcess : Process Subst Rat -> Process .
@@ -1580,25 +1594,27 @@ mod ABS-MACHINE-BASICS-TIMED is
     [owise] .
   
 
-  op advanceDelays : Expr Subst SSubst -> Expr .
-  eq advanceDelays("&&"(E :: E'), S, MAC) =
-    "&&"(advanceDelays(E, S, MAC) :: advanceDelays(E', S, MAC)) .
-  ceq advanceDelays(?duration(E ; E'), S, MAC) =
+  op advanceDelays : Expr Subst SSubst Rat -> Expr .
+  eq advanceDelays("&&"(E :: E'), S, MAC, T) =
+    "&&"(advanceDelays(E, S, MAC, T) :: advanceDelays(E', S, MAC, T)) .
+  ceq advanceDelays(?duration(E ; E'), S, MAC, T) =
     ?duration("num"[max(MIN - T, 0)] ; "num"[max(MAX - T, 0)])
-  if T := (MAC['.time]) asRat
-      /\ MIN := eval(E, S, none, MAC) asRat
+  if MIN := eval(E, S, none, MAC) asRat
       /\ MAX := eval(E', S, none, MAC) asRat .
-  eq advanceDelays(E, S, MAC) = E [owise] .
+  eq advanceDelays(E, S, MAC, T) = E [owise] .
 
   *** Now advance the clock.
   crl
     { CN < T : Clock | Limit: LIM, Random: RAND > }
   =>
-    { advance(CN, 1)
-      < T + 1 : Clock | Limit: LIM, Random: RAND >  }
-  if canAdvance (CN, none, '.time |-> "num"[T]) and T < LIM
-      [label tick] .
-
+    { advance(CN, TICK:Rat, (T + TICK:Rat) :: Nat)
+      < T + TICK:Rat : Clock | Limit: LIM, Random: RAND >  }
+  if MTE:Rat := mte(CN, none, '.time |-> "num"[T]) *** 0 <= MTE <= 1
+      /\ MTE:Rat > 0
+      /\ TICK:Rat := if T :: Nat then MTE:Rat else trunc(T + MTE:Rat) - T fi
+      /\ T + TICK:Rat <= LIM
+      [ label tick ] .
+      
 endm
 
 
@@ -1625,7 +1641,7 @@ mod ABS-STMT-SKIP-EQ is
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
   var COST : Expr .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
 
   eq
@@ -1683,7 +1699,7 @@ mod ABS-STMT-ASSIGN-EQ-TIMED is
   var O : Oid .        var C : Cid .    vars S L : Subst .
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var E : Expr .       var D : Data .   var CG : Cogid .
-  var T : Int .        var Q : Qid .
+  var T : Rat .        var Q : Qid .
   var D' : Data .
   vars LIM RAND : Nat .
   var COST : Expr .
@@ -1727,7 +1743,7 @@ mod ABS-STMT-GOTO-RL is
   var E : Expr .
   var CONF : Configuration .
   var CG : Cogid .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
 
   crl
@@ -1749,7 +1765,7 @@ mod ABS-STMT-GOTO-EQ is
   var E : Expr .
   var CONF : Configuration .
   var CG : Cogid .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
 
   ceq
@@ -1789,7 +1805,7 @@ mod ABS-STMT-COND-EQ-TIMED is
 
   var O : Oid .                 var C : Cid .       vars S L : Subst .
   vars SL SL1 SL2 : StmtList .  var W : MProc .     var F : Nat .
-  var E : Expr .                var T : Int .       var CG : Cogid .
+  var E : Expr .                var T : Rat .       var CG : Cogid .
   vars LIM RAND : Nat .
 
   eq
@@ -1901,7 +1917,7 @@ mod ABS-STMT-DURATION-EQ-TIMED is
   var SL : StmtList .  var W : MProc .  var F : Nat .
   var CG : Cogid .
   vars E1 E2 : Expr .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
   vars MIN MAX : Rat .
   var COST : Expr .
@@ -1961,7 +1977,7 @@ mod ABS-STMT-AWAIT-EQ-TIMED is
   var O : Oid .             var C : Cid .    vars S L : Subst .
   var SL : StmtList .       var W : MProc .  var F : Nat .
   var CN : Configuration .  var E : Expr .   var Q : String .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
   var CG : Cogid .
 
@@ -2056,7 +2072,7 @@ mod ABS-CALLSTMTS-EQ-TIMED is
   var CN : Configuration .     var E : Expr .        vars Q : String .
   var A : Vid .                var EL : ExprList .   var AL : VidList .
   var N : Label .              var DL : DataList .   var MS : MMtd .
-  var T : Int .                var SS : SSubst .     var MIS : MMtd .
+  var T : Rat .                var SS : SSubst .     var MIS : MMtd .
   var P1 : Process .
   var DE : Expr .
   var M : Mid .
@@ -2177,7 +2193,7 @@ mod ABS-NEW-EQ-TIMED is
   var SL : StmtList .  var W : MProc .    vars F G : Nat .
   var E : Expr .       var A : Vid .      var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
-  var T : Int .        var CG : Cogid .
+  var T : Rat .        var CG : Cogid .
   var SC : Expr .
   vars LIM RAND : Nat .
   var COST : Expr .
@@ -2258,7 +2274,7 @@ mod ABS-STMT-RETURN-EQ-TIMED is
   vars O : Oid .        var C : Cid .    vars S L : Subst .
   vars SL : StmtList .  var W : MProc .  vars F G : Nat .
   var Q : String .  var N : Label .  var E : Expr .
-  var T : Int .
+  var T : Rat .
   vars LIM RAND : Nat .
   var D : Data .
   var M : Mid .
