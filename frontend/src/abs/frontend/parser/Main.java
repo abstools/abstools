@@ -274,7 +274,7 @@ public class Main {
     private void analyzeMTVL(Model m) {
         Product p_product = null;
         try {
-            p_product = m.findProduct(product);
+            p_product = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
             // ignore in case we're just solving.
         }
@@ -286,12 +286,14 @@ public class Main {
                 System.out.print(s.resultToString());
             }
             if (minimise) {
+                assert product != null;
                 if (verbose)
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
                 ChocoSolver s = m.getCSModel();
                 System.out.print(s.minimiseToString(product));
             }
             if (maximise) {
+                assert product != null;
                 if (verbose)
                     System.out.println("Searching for maximum solutions of "+product+" for the feature model...");
                 ChocoSolver s = m.getCSModel();
@@ -315,6 +317,7 @@ public class Main {
                 }
             }
             if (solveWith) {
+                assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 if (p_product != null) {
@@ -330,6 +333,7 @@ public class Main {
                 }
             }
             if (minWith) {
+                assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 ChocoSolver s = m.getCSModel();
@@ -347,6 +351,7 @@ public class Main {
 
             }
             if (maxProduct) {
+                assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
                 ChocoSolver s = m.getCSModel();
@@ -365,7 +370,7 @@ public class Main {
                 /*for (CompilationUnit u : m.getCompilationUnits()) {
                     u.printFM("");
                 }*/
-
+                assert product != null;
                 ChocoSolver s = m.getCSModel();
                 if (p_product == null ){
                     System.out.println("Product '"+product+"' not found.");
