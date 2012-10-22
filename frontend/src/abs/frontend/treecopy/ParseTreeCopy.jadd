@@ -222,7 +222,6 @@ aspect ParseTreeCopy {
     public TypedVarOrFieldDecl TypedVarOrFieldDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public TypeParameterDecl TypeParameterDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public TypeParameterUse TypeParameterUse.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public Types Types.parseTreeCopy() { return new Types(); }
     public TypeSynDecl TypeSynDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public TypeSynModifier TypeSynModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public TypeUse TypeUse.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

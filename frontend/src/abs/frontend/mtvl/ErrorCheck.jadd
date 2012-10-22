@@ -1,7 +1,7 @@
 import java.util.Collection;
 import java.util.ArrayList;
 import abs.frontend.analyser.*;
-
+import abs.frontend.mtvl.Types;
 
 /**
 Checks type errors, and if all variables are properly declared.
@@ -44,7 +44,7 @@ aspect ErrorCheck {
         }
     }
   }   
-  public void ASTNode.checkType(short type, SemanticErrorList c) {
+  public void ASTNode.checkType(Types type, SemanticErrorList c) {
 //    System.out.println("spreading check in constraint from...");
     for(int i = 0; i < getNumChild(); i++)
       getChild(i).checkType(type,c);
@@ -58,35 +58,35 @@ aspect ErrorCheck {
   }
   
   // type of negation
-  public void MNegExp.checkType(short type,SemanticErrorList c) {
+  public void MNegExp.checkType(Types type,SemanticErrorList c) {
     super.checkType(Types.BOOL,c);
     //getOperand().checkType(Types.BOOL,c);
     if (type != Types.BOOL)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,"NEGATION"));
   }
   // type of negative sign
-  public void MMinusExp.checkType(short type,SemanticErrorList c) {
+  public void MMinusExp.checkType(Types type,SemanticErrorList c) {
     super.checkType(Types.INT,c);
     if (type != Types.INT)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,"NEGATIVE"));
   }
   // check type of values
-  public void IntVal.checkType(short type,SemanticErrorList c) {
+  public void IntVal.checkType(Types type,SemanticErrorList c) {
     if (type != Types.INT)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,""+getValue()));
   }
-  public void BoolVal.checkType(short type,SemanticErrorList c) {
+  public void BoolVal.checkType(Types type,SemanticErrorList c) {
     if (type != Types.BOOL)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,""+getValue()));
   }
   // check type of boolean operators
-  public void MBoolExp.checkType(short type, SemanticErrorList c) {
+  public void MBoolExp.checkType(Types type, SemanticErrorList c) {
     super.checkType(Types.BOOL,c);
     if (type != Types.BOOL)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
   }
   // check type of int relations
-  public void MRelationalExpr.checkType(short type, SemanticErrorList c) {
+  public void MRelationalExpr.checkType(Types type, SemanticErrorList c) {
     super.checkType(Types.INT,c);
     if (type != Types.BOOL)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_BOOL,toString()));
@@ -94,7 +94,7 @@ aspect ErrorCheck {
   // check type of equality operators (assuming boolean or int)
   public boolean MEqualityExpr.isInt  = false;
   public boolean MEqualityExpr.isBool = false;
-  public void MEqualityExpr.checkType(short type, SemanticErrorList c) {
+  public void MEqualityExpr.checkType(Types type, SemanticErrorList c) {
     SemanticErrorList lint  = new SemanticErrorList();
     SemanticErrorList lbool = new SemanticErrorList();
     getLeft().checkType(Types.INT,lint);
@@ -109,22 +109,14 @@ aspect ErrorCheck {
     }
   }
   //check type of arithmetic expressions
-  public void MArithmeticExpr.checkType(short type, SemanticErrorList c) {
+  public void MArithmeticExpr.checkType(Types type, SemanticErrorList c) {
     super.checkType(Types.INT,c);
     if (type != Types.INT)
       c.add(new SemanticError(this,ErrorMessage.EXPECTED_INT,toString()));
   }
-  
-
-  
-  
-  static public class Types {
-		static public final short BOOL = 0;
-		static public final short INT = 1;
-  }
 
   // type of variables
-  public void Variable.checkType(short type, SemanticErrorList c) {
+  public void Variable.checkType(Types type, SemanticErrorList c) {
     if (!isBool() && !isInt()) {
       c.add(new SemanticError(this,ErrorMessage.UNDECLARED_VARIABLE,getFullName()));
     }
