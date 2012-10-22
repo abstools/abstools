@@ -32,36 +32,29 @@ aspect ProductFlattener {
         Product prod = this.findProduct(id);
         flattenForProduct(prod, check);
     }
-    
+
+    /**
+     * Refined with MTVL-check in CSP.jadd.
+     */
     public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
         if (verbose)
             System.out.println("--- configuring product: " + prod.getName());
 
-        if (check && hasMTVL()) {
-            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(prod.getSolution(), this);
-            if (!errors.isEmpty()) {
-                String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
-                for (String s: errors)
-                    msg = msg + "\n- " + s;
-                throw new WrongProgramArgumentException(msg);
-            }
-        }
-
         // find product line
-        ProductLine pl = this.findProductLine();
+        ProductLine pl = findProductLine();
 
         // find/get applicable deltas
-        HashSet<String> deltaids = this.findApplicableDeltas(prod, pl);
-        Map<String, DeltaDecl> unsorted_deltas = this.findDeltas(deltaids);
+        HashSet<String> deltaids = findApplicableDeltas(prod, pl);
+        Map<String, DeltaDecl> unsorted_deltas = findDeltas(deltaids);
 
         // sort deltas
-        ArrayList<DeltaDecl> deltas = this.sortDeltas(unsorted_deltas, pl);
+        ArrayList<DeltaDecl> deltas = sortDeltas(unsorted_deltas, pl);
         
         // substitute delta parameters
-        this.substituteDeltaParams(deltas, prod, pl);
+        substituteDeltaParams(deltas, prod, pl);
         
         // resolve original() calls
-        this.resolveOriginalCalls(deltas);
+        resolveOriginalCalls(deltas);
         
         if (verbose) {
             System.out.print("--- applying deltas to core << ");
@@ -74,7 +67,7 @@ aspect ProductFlattener {
         }
 
         // apply the applicable deltas in the given order
-        this.applyDeltas(deltas);
+        applyDeltas(deltas);
     }
 
     /**************************************************************************

@@ -17,6 +17,20 @@ Checks type errors, and if all variables are properly declared.
 
 aspect CSP {
 
+  refine ProductFlattener public void Model.flattenForProduct(Product prod, boolean check) throws WrongProgramArgumentException,DeltaModellingException {
+        if (check && hasMTVL()) {
+            java.util.List<String> errors = getCSModel().checkSolutionWithErrors(prod.getSolution(), this);
+            if (!errors.isEmpty()) {
+                String msg = "Product [" + prod.getName() + "] does not satisfy the feature model. Constraints failed:";
+                for (String s: errors)
+                    msg = msg + "\n- " + s;
+                throw new WrongProgramArgumentException(msg);
+            }
+        }
+        /* call original: */
+        refined(prod,check);  
+  }
+
   public ChocoSolver Model.getCSModel() {
     ChocoSolver s = new ChocoSolver(this);
 

@@ -7,7 +7,6 @@ package abs.frontend.delta;
 import java.util.*;
 
 import abs.frontend.ast.DeltaDecl;
-import abs.frontend.delta.exceptions.VertexNotFoundException;
 
 /**
  * Created by IntelliJ IDEA.

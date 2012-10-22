@@ -179,7 +179,7 @@ aspect OriginalCallResolver {
         } catch (DeltaModellingException e) {
             // give up
             throw new DeltaModellingException("Could not find original implementation of method " + classid 
-                    + "." + methodid);
+                    + "." + methodid+" while handling"+getDelta().getName());
         }
     }
     

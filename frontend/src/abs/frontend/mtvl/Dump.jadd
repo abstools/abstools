@@ -8,7 +8,7 @@ aspect MyDumpMTVL {
     }
   }
   
-  public Boolean Model.hasMTVL() {
+  public boolean Model.hasMTVL() {
     for (CompilationUnit u: getCompilationUnits())
         if (u.getNumFeatureDecl() != 0)
             return true;
