@@ -6,14 +6,7 @@ package abs.frontend.typechecker.locationtypes.infer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import abs.common.FileUtils;
@@ -22,10 +15,7 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
-import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.locationtypes.LocationType;

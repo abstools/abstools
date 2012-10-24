@@ -36,7 +36,6 @@ public class SourcePosition {
 
     private static SourcePosition findPosition(ASTNode<?> node, int searchPos) {
         if (inNode(node, searchPos)) {
-            ASTNode<?> foundNode = node;
             for (int i = 0; i < node.getNumChild(); i++) {
                 SourcePosition pos = findPosition(node.getChild(i), searchPos);
                 if (pos != null) {

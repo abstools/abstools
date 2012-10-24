@@ -5,25 +5,7 @@
 package abs.frontend.typechecker.ext;
 
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AssertStmt;
-import abs.frontend.ast.AssignStmt;
-import abs.frontend.ast.AwaitStmt;
-import abs.frontend.ast.Block;
-import abs.frontend.ast.Call;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.DurationStmt;
-import abs.frontend.ast.ExpressionStmt;
-import abs.frontend.ast.GetExp;
-import abs.frontend.ast.IfStmt;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.NewExp;
-import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.Stmt;
-import abs.frontend.ast.SuspendStmt;
-import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.ast.WhileStmt;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.ext.AdaptDirection;
 
