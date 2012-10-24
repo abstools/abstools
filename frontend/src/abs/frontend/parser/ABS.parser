@@ -610,7 +610,7 @@ List data_exp_list =
 // The List literal.  Special syntax, but allows us to construct
 // arbitrary n-ary data structures (set, map, array ...) without resorting
 // to chains of constructors.
-PureExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
+DataConstructorExp list_literal_exp = LBRACKET data_exp_list.l? RBRACKET
  {: {
         DataConstructorExp result = new DataConstructorExp("Cons", new List<PureExp>());
         DataConstructorExp current = result;
