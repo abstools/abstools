@@ -9,28 +9,23 @@ aspect TypeAnalysis {
 	// *hasCycleOnExtendedInterfaceChain*
 	// True if there is a cycle somewhere on the superinterface chain
 	syn lazy boolean InterfaceDecl.hasCycleOnExtendedInterfacesChain() circular [true];
-  
-	
+
 	// *hasCycleOnExtendedInterfacesChain* - true if there is a cycle somewhere on the extendedInterfaces chain
 	eq InterfaceDecl.hasCycleOnExtendedInterfacesChain() {
 		List<InterfaceTypeUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
-		boolean cycleFound = false;
 
 		for (InterfaceTypeUse ref : refs) {
 			Decl decl = ref.getDecl(); // Note decl var. distinct from decl() method
 			if (decl instanceof InterfaceDecl) {
-				cycleFound = cycleFound || ((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain();
+				if (((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain())
+				   return true;
 			} else { // Semantic errors in input program can cause dell==null or dell to have other wild values
 				     // e.g., cyclic interface inheritance chains.
 				; // Ignore such AST structural oddities as the causes are caught by other checks (methinks...)
 			}
 		}
-
-		return cycleFound;
+		return false;
 	}
-	
-	
-	
 }
 
 // Local Variables:

@@ -5,12 +5,10 @@
 package abs.frontend.typechecker.locationtypes.infer;
 
 import abs.frontend.analyser.SemanticError;
-import abs.frontend.ast.Model;
 
 public class LocationInferenceError extends SemanticError {
 
     public LocationInferenceError() {
-        
     }
     
     @Override 
@@ -37,6 +35,4 @@ public class LocationInferenceError extends SemanticError {
     public String getFileName() {
         return "";
     }
-
-    
 }

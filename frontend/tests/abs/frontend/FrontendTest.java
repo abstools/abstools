@@ -6,6 +6,7 @@ package abs.frontend;
 
 import static org.junit.Assert.assertEquals;
 import abs.ABSTest;
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
 import abs.frontend.ast.CaseBranch;
@@ -164,11 +165,11 @@ public class FrontendTest extends ABSTest {
         assertTypeErrors(absCode, WITH_STD_LIB);
     }
 
-    protected void assertTypeErrors(String absCode) {
-        assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+    protected SemanticError assertTypeErrors(String absCode) {
+        return assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
     }
 
-    protected void assertTypeErrors(String absCode, Config... config) {
+    protected SemanticError assertTypeErrors(String absCode, Config... config) {
         Model m = assertParse(absCode, config);
         String msg = "";
         SemanticErrorList l = m.typeCheck();
@@ -176,6 +177,7 @@ public class FrontendTest extends ABSTest {
             msg = l.getFirst().getMsgWithHint(absCode);
         }
         assertEquals(msg, isSet(EXPECT_TYPE_ERROR, config), !l.isEmpty());
+        return l.isEmpty() ? null : l.getFirst();
     }
 
 }

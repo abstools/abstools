@@ -7,6 +7,7 @@ package abs.frontend.typesystem;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.SemanticError;
 import static abs.ABSTest.Config.*;
 
 public class ModuleSystemTests extends FrontendTest {
@@ -231,7 +232,6 @@ public class ModuleSystemTests extends FrontendTest {
         assertTypeOK("module M; export X from M; import X from M; data X;");
     }
     
-    
     @Test
     public void circularDefinition() {
         assertTypeErrors("module A; export X; import X from B; module B; export X; import X from A; ");
@@ -249,8 +249,9 @@ public class ModuleSystemTests extends FrontendTest {
         assertTypeErrors(absCode, NONE);
     }
 
-    protected void assertTypeErrors(String absCode) {
-        assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
+    @Override
+    protected SemanticError assertTypeErrors(String absCode) {
+       return assertTypeErrors(absCode, EXPECT_TYPE_ERROR);
     }
 
 }

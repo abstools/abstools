@@ -6,10 +6,8 @@ package abs.frontend.analyser;
 
 import java.io.File;
 
-import beaver.Symbol;
 import abs.common.CompilerError;
 import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Name;
 
 public class SemanticError extends CompilerError {
@@ -42,14 +40,7 @@ public class SemanticError extends CompilerError {
     @Override
     public String getFileName() {
         if (file == null) {
-            ASTNode<?> parent = node;
-            while (!(parent instanceof CompilationUnit)) {
-                parent = parent.getParent();
-                if (parent == null)
-                    return "<could not find filename>";
-            }
-            CompilationUnit u = (CompilationUnit) parent;
-            String name = u.getName();
+            String name = node.getCompilationUnit().getFileName();
             if (name == null)
                 return "<unkown>";
             file = new File(name);
@@ -59,12 +50,12 @@ public class SemanticError extends CompilerError {
 
     @Override
     public int getLine() {
-        return Symbol.getLine(node.getStart());
+        return node.getStartLine();
     }
 
     @Override
     public int getColumn() {
-        return Symbol.getColumn(node.getStart());
+        return node.getStartColumn();
     }
 
     public ASTNode<?> getNode() {
@@ -103,15 +94,5 @@ public class SemanticError extends CompilerError {
         }
         lineHint.append('^');
         return line + "\n" + lineHint;
-    }
-
-    /**
-     * Deprecated. Use getHelpMessage() instead
-     * 
-     * @return
-     */
-    @Deprecated
-    public String getMsgString() {
-        return getHelpMessage();
     }
 }

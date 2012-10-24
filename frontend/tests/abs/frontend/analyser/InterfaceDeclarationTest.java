@@ -6,7 +6,7 @@ package abs.frontend.analyser;
 
 import static abs.frontend.analyser.ErrorMessage.CYCLIC_INHERITANCE;
 import static abs.frontend.analyser.ErrorMessage.UNKOWN_INTERFACE;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Iterator;
 
@@ -19,46 +19,40 @@ public class InterfaceDeclarationTest extends FrontendTest {
 
     @Test
     public void trivial() {
-        Model p;
-        p = assertParseOk("interface I {} {}");
-        assertTrue(p.getErrors().size() == 0);
+        Model p = assertParseOk("interface I {} {}");
+        assertTrue(p.getErrors().isEmpty());
     }
 
     @Test
     public void extending() {
-        Model p;
-        p = assertParseOk("interface I {} interface J extends I {} {}");
-        assertTrue(p.getErrors().size() == 0);
+        Model p = assertParseOk("interface I {} interface J extends I {} {}");
+        assertTrue(p.getErrors().isEmpty());
     }
 
     @Test
     public void extendingReversed() {
-        Model p;
-        p = assertParseOk("interface J extends I {} interface I {} {}");
-        assertTrue(p.getErrors().size() == 0);
+        Model p = assertParseOk("interface J extends I {} interface I {} {}");
+        assertTrue(p.getErrors().isEmpty());
     }
 
     @Test
     public void extendingUndefined() {
-        Model p;
-        p = assertParseOk("interface J extends I {} {}");
-        assertTrue(p.getErrors().size() == 1);
+        Model p = assertParseOk("interface J extends I {} {}");
+        assertEquals(1,p.getErrors().size());
         assertEndsWith(p.getErrors().getFirst(), UNKOWN_INTERFACE.withArgs("I"));
     }
 
     @Test
     public void circular() {
-        Model p;
-        p = assertParseOk("interface I extends I {} {}");
-        assertTrue(p.getErrors().size() == 1);
+        Model p = assertParseOk("interface I extends I {} {}");
+        assertEquals(1,p.getErrors().size());
         assertEndsWith(p.getErrors().getFirst(), CYCLIC_INHERITANCE.withArgs("I"));
     }
 
     @Test
     public void mutuallyCircular() {
-        Model p;
-        p = assertParseOk("interface I extends J {} interface J extends I {} {}");
-        assertTrue(p.getErrors().size() == 2);
+        Model p = assertParseOk("interface I extends J {} interface J extends I {} {}");
+        assertEquals(2,p.getErrors().size());
         Iterator<SemanticError> i = p.getErrors().iterator();
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("I"));
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("J"));
@@ -66,9 +60,8 @@ public class InterfaceDeclarationTest extends FrontendTest {
 
     @Test
     public void mutuallyCircularIndirect() {
-        Model p;
-        p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}");
-        assertTrue(p.getErrors().size() == 3);
+        Model p = assertParseOk("interface I extends J {}  interface J extends K {}  interface K extends I {}");
+        assertEquals(3,p.getErrors().size());
         Iterator<SemanticError> i = p.getErrors().iterator();
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("I"));
         assertEndsWith(i.next(), CYCLIC_INHERITANCE.withArgs("J"));
