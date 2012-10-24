@@ -10,6 +10,9 @@ import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
 
 import abs.frontend.ast.*;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
+import abs.frontend.typechecker.UnknownType;
 
 public class VarResolutionTest extends DeltaTest {
 
@@ -28,9 +31,32 @@ public class VarResolutionTest extends DeltaTest {
         DeltaDecl delta = findDelta(model, "D");
         ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
         AddFieldModifier mod = (AddFieldModifier) mmod.getModifier(0);
-        assertThat(mod.getFieldDecl().getInitExp() , instanceOf(FieldUse.class));
+        // until a delta is applied, we may not be able to tell vars from fields:
+        assertThat(mod.getFieldDecl().getInitExp() , instanceOf(VarUse.class));
+        assertEquals(UnknownType.INSTANCE,mod.getFieldDecl().getInitExp().getType());
     }
-    
+
+    @Test
+    public void fromAddFieldModifierToCoreTest2() {
+        Model model = assertParseOk(
+                "module M;"
+                + "class C {"
+                + "Int x = 0;"
+                + "}"
+                + "delta D;"
+                + "modifies class M.C {"
+                + "adds Int y = x;"
+                + "}"
+        );
+        DeltaDecl delta = findDelta(model, "D");
+        ModifyClassModifier mmod = (ModifyClassModifier) delta.getModuleModifier(0);
+        mmod.apply();
+        ModuleDecl m = model.lookupModule("M");
+        ClassDecl c = (ClassDecl) m.lookup(new KindedName(Kind.CLASS, "C"));
+        FieldDecl fy = (FieldDecl) c.locallookupVarOrFieldName("y", true);
+        assertThat(fy.getInitExp() , instanceOf(FieldUse.class));
+    }
+
     @Test
     public void fromAddMethodModifierToCoreTest() {
         Model model = assertParseOk(
