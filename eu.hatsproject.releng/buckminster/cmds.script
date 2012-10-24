@@ -4,8 +4,10 @@ import "${WORKSPACE}/eu.hatsproject.releng/buckminster/abs.cquery"
 import "${WORKSPACE}/eu.hatsproject.releng/buckminster/costabs.cquery"
 import "${WORKSPACE}/eu.hatsproject.releng/buckminster/apet.cquery"
 build
-junit -l eu.hatsproject.absplugin/junit-SchedulingTest.launch -o out/junit-SchedulingTest.xml --stdout --stderr
+junit -l eu.hatsproject.absplugin.tests/JARTest.launch -o out/junit-jartest.xml --stdout --stderr
+emma -l eu.hatsproject.absplugin/junit-SchedulingTest.launch -o out/junit-SchedulingTest.xml -m --stdout --stderr --xml out/coverage-SchedulingTest.xml
 emma -l ABSFrontend/junit-frontend.launch -o out/junit-frontend.xml -m --stdout --stderr --xml out/coverage-frontend.xml
+emma -l ABSFrontend/junit-deltas.launch -o out/junit-deltas.xml -m --stdout --stderr --xml out/coverage-deltas.xml
 emma -l eu.hatsproject.absplugin/junit-plugin.launch -o out/junit-plugin.xml -m --stdout --stderr --xml out/coverage-plugin.xml
 perform -Dqualifier.replacement.*=generator:lastRevision eu.hatsproject.abs.compiler:eclipse.feature#site.p2
 perform -Dqualifier.replacement.*=generator:lastRevision eu.hatsproject.sdedit:eclipse.feature#site.p2
