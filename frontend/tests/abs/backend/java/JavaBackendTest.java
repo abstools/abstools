@@ -55,7 +55,7 @@ public class JavaBackendTest extends ABSTest {
         assertValidJava(getJavaCode(m));
     }
 
-    protected static void assertValidJava(JavaCode javaCode) throws Exception {
+    public static void assertValidJava(JavaCode javaCode) throws Exception {
         try {
             javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
         } catch (Exception e) {
@@ -138,6 +138,7 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
+    @SuppressWarnings("serial")
     static class NoTestResultFoundException extends RuntimeException {
         NoTestResultFoundException() {
             super("No test result was found!");
@@ -232,15 +233,6 @@ public class JavaBackendTest extends ABSTest {
         JavaCode code = new JavaCode();
         model.generateJavaCode(code);
         return code;
-    }
-
-    private static File getTempFile(String testCode) throws IOException {
-        File tmpFile = File.createTempFile("abs", "test");
-        PrintWriter p = new PrintWriter(new FileOutputStream(tmpFile));
-        p.print(testCode);
-        p.close();
-        tmpFile.deleteOnExit();
-        return tmpFile;
     }
 
     void assertEvalTrue(String absCode) throws Exception {

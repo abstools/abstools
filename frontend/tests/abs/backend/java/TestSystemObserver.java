@@ -7,15 +7,7 @@ package abs.backend.java;
 import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSValue;
-import abs.backend.java.observing.COGView;
-import abs.backend.java.observing.EmptyTaskObserver;
-import abs.backend.java.observing.GuardView;
-import abs.backend.java.observing.ObjectCreationObserver;
-import abs.backend.java.observing.ObjectView;
-import abs.backend.java.observing.SystemObserver;
-import abs.backend.java.observing.TaskObserver;
-import abs.backend.java.observing.TaskSchedulerObserver;
-import abs.backend.java.observing.TaskView;
+import abs.backend.java.observing.*;
 
 public class TestSystemObserver implements SystemObserver, ObjectCreationObserver {
 

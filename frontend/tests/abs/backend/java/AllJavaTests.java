@@ -18,6 +18,7 @@ import abs.backend.java.lib.net.AllNetTests;
     JavaObservationTest.class,
     JavaFLITest.class
     , JavaBackendDynamicTest.class
+    , abs.backend.java.dynamic.CaseStudies.class
     , AllNetTests.class
     , CaseStudies.class
     })

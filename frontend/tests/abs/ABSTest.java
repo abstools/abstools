@@ -7,6 +7,7 @@ package abs;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 
 import abs.frontend.analyser.SemanticError;
@@ -27,6 +28,13 @@ public class ABSTest {
         TYPE_CHECK
     }
         
+    public static class ABSFileNameFilter implements FilenameFilter {
+        @Override
+        public boolean accept(File dir, String name) {
+            return name.endsWith(".abs");
+        }
+    }
+
     protected boolean isSet(Config c, Config...configs) {
         if (configs == null)
             throw new IllegalArgumentException("Must give an array of configs");

@@ -14,8 +14,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.easymock.EasyMock.*;
 
-import abs.backend.java.lib.runtime.ABSObject;
-import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.*;
 import abs.backend.java.lib.net.msg.ObjectTargetMsg;
 import abs.backend.java.lib.net.msg.ObjectMsg;
 import abs.backend.java.lib.net.msg.COGMsg;

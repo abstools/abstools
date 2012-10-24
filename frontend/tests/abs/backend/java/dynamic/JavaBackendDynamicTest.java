@@ -9,7 +9,6 @@ import static abs.ABSTest.Config.WITH_STD_LIB;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import org.junit.Test;
 
@@ -67,18 +66,11 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         ABSFileNameFilter filter = new ABSFileNameFilter();
         File dirHandle = new File(dir);
         String[] absFiles = dirHandle.list(filter);
-
+        // TODO: use JUnit's Parameterized
         for (int i=0; i < absFiles.length; i++) {
             String file = absFiles[i];
             System.out.println("ABS sample: " + file);
             assertValidJavaExecution(dir + s + file, true);
-        }
-    }
-    
-    class ABSFileNameFilter implements FilenameFilter {
-        @Override
-        public boolean accept(File dir, String name) {
-            return name.endsWith(".abs");
         }
     }
 }
