@@ -1,0 +1,57 @@
+
+
+aspect InitChecker {
+
+    refine TypeCheckerExtension public void FieldDecl.typeCheck(SemanticErrorList l) {
+      refined(l);
+      if (hasInitExp())
+        getInitExp().checkLegalInit(l);
+    }
+
+    refine TypeCheckerExtension public void ClassDecl.typeCheck(SemanticErrorList l) {
+      refined(l);
+      if (hasInitBlock())
+        getInitBlock().checkLegalInit(l);
+    }
+
+    void ASTNode.checkLegalInit(SemanticErrorList l) {
+        for (ASTNode<?> n : this) {
+            n.checkLegalInit(l);
+        }
+    }
+	
+	@Override
+    void SuspendStmt.checkLegalInit(SemanticErrorList l) {
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Suspend statements"));
+    }
+    @Override
+    void AwaitStmt.checkLegalInit(SemanticErrorList l) {
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Await statements"));
+    }
+    @Override
+    void SyncCall.checkLegalInit(SemanticErrorList l) { 
+        if (!getMethodSig().isAtomic()) {
+            l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Synchronous calls of non-atomic methods"));
+        }
+    }
+    @Override
+    void GetExp.checkLegalInit(SemanticErrorList l) { 
+       l.add(new TypeError(this, ErrorMessage.NOT_ALLOWED_IN_INIT_CODE, "Get expressions"));
+    }
+    
+    @Override
+    void TypedVarOrFieldDecl.checkLegalInit(SemanticErrorList l) {}
+    @Override
+    void FieldDecl.checkLegalInit(SemanticErrorList l) {
+        if (hasInitExp()) {
+             getInitExp().checkLegalInit(l);
+         }
+    }
+    @Override
+    void VarDecl.checkLegalInit(SemanticErrorList l) {
+        if (hasInitExp()) {
+             getInitExp().checkLegalInit(l);
+        }
+    }
+
+}

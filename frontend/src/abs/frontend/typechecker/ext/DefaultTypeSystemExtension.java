@@ -4,6 +4,7 @@
  */
 package abs.frontend.typechecker.ext;
 
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
@@ -12,7 +13,7 @@ import abs.frontend.typechecker.ext.AdaptDirection;
 public class DefaultTypeSystemExtension implements TypeSystemExtension {
     
     protected SemanticErrorList errors;
-    protected Model model;
+    protected final Model model;
     
     protected DefaultTypeSystemExtension(Model m) {
         model = m;
@@ -20,6 +21,10 @@ public class DefaultTypeSystemExtension implements TypeSystemExtension {
     
     public void setSemanticErrorList(SemanticErrorList s) {
         errors = s;
+    }
+
+    protected boolean add(SemanticError e) {
+        return errors.add(e);
     }
     
     public void checkEq(Type lt, Type t, ASTNode<?> origin) {

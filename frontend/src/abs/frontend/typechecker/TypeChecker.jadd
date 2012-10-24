@@ -239,11 +239,9 @@ aspect TypeChecker {
       Set<String> fields = new HashSet<String>();
       for (ParamDecl d : getParams()) {
           d.typeCheck(e);
-          if (fields.contains(d.getName())) {
+          if (!fields.add(d.getName())) {
               e.add(new TypeError(d, ErrorMessage.DUPLICATE_FIELD_NAME, d.getName()));
-		  } else { 
-		  	  fields.add(d.getName());
-		  }          
+		  }
       }
       
       for (InterfaceTypeUse i : getImplementedInterfaceUses()) {
@@ -252,16 +250,13 @@ aspect TypeChecker {
       
       for (FieldDecl f : getFields()) {
    		  f.typeCheck(e);
-   		  if (fields.contains(f.getName())) {
+   		  if (!fields.add(f.getName())) {
               e.add(new TypeError(f, ErrorMessage.DUPLICATE_FIELD_NAME, f.getName()));
-          } else {
-              fields.add(f.getName());
           }
    	  }
 
       if (hasInitBlock()) {
           getInitBlock().typeCheck(e);
-          getInitBlock().checkLegalInit(e);
       }
       
       HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
@@ -427,10 +422,8 @@ aspect TypeChecker {
         HashSet<String> names = new HashSet<String>();
         for (DataConstructor c : getDataConstructors()) {
             c.typeCheck(e);
-            if (names.contains(c.getName())) {
+            if (!names.add(c.getName())) {
                 e.add(new TypeError(c, ErrorMessage.DUPLICATE_CONSTRUCTOR, c.getName()));
-            } else {
-                names.add(c.getName());
             }
         }
     }
@@ -521,7 +514,6 @@ aspect TypeChecker {
         Type t = getAccess().getType();
         if (hasInitExp()) {
             getInitExp().typeCheck(e);
-            getInitExp().checkLegalInit(e);
             if (e.size() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
