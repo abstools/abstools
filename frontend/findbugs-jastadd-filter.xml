@@ -10,5 +10,9 @@
   <Match>
     <Package name="abs.frontend.ast" />
     <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
+  </Match>
+  <Match>
+    <Package name="abs.frontend.ast" />
+    <Bug pattern="MF_CLASS_MASKS_FIELD" />
   </Match>   
 </FindBugsFilter>
