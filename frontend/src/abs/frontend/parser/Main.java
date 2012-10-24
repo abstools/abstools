@@ -634,11 +634,11 @@ public class Main {
         return files;
     }
 
-    public Model parse(File file, String sourceCode, InputStream stream) throws Exception {
+    public Model parse(File file, String sourceCode, InputStream stream) throws IOException {
         return parse(file, sourceCode, new BufferedReader(new InputStreamReader(stream)));
     }
 
-    public Model parse(File file, String sourceCode, Reader reader) throws Exception {
+    public Model parse(File file, String sourceCode, Reader reader) throws IOException  {
         List<CompilationUnit> units = new List<CompilationUnit>();
         if (stdlib)
             units.add(getStdLib());
@@ -695,7 +695,7 @@ public class Main {
         return parseString(s, withStdLib, false, allowIncompleteExpr);
     }
     
-    public static Model parseString(String s, boolean withStdLib, boolean withDbLib, boolean allowIncompleteExpr) throws Exception {
+    public static Model parseString(String s, boolean withStdLib, boolean withDbLib, boolean allowIncompleteExpr) throws IOException {
         Main m = new Main();
         m.setWithStdLib(withStdLib);
         m.setWithDbLib(withDbLib);

@@ -46,7 +46,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ " + DB_INITIALIZATION
                 + "[DatabaseConnection: db] MaybeEx<Relation> result = sql(select * from \"My Table\"); }");
         Exp dbCallExp = getSecondExp(m);
-        assertEquals(SyncCall.class.getName(), dbCallExp.getClass().getName());
+        assertEquals(SyncCall.class, dbCallExp.getClass());
         assertEquals("db", ((SyncCall) dbCallExp).getCallee().toString());
         /*
          * The following is fragile because it may fail if the String
@@ -60,7 +60,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ "
                 + DB_INITIALIZATION
                 + "Transaction tx = db.beginTransaction(); [TX: tx] MaybeEx<Relation> result = sql(select * from \"My Table\"); }");
-        assertEquals(SyncCall.class.getName(), getExp(m, 2).getClass().getName());
+        assertEquals(SyncCall.class, getExp(m, 2).getClass());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ "
                 + DB_INITIALIZATION
                 + "[SqlAsync] [DatabaseConnection: db] Fut<MaybeEx<Relation>> result = sql(select * from \"My Table\"); }");
-        assertEquals(AsyncCall.class.getName(), getSecondExp(m).getClass().getName());
+        assertEquals(AsyncCall.class, getSecondExp(m).getClass());
     }
 
     @Test
@@ -90,9 +90,9 @@ public class SqlTransformationTests extends FrontendTest {
                 + DB_INITIALIZATION
                 + "TransmissionTimeCalculator calc = new IdealTransmissionTimeCalculator(); DatabaseConnection conn = new DatabaseConnection(db, 0, calc); new C(conn);}");
         Stmt propagationDelayStmt = getFirstClassDecl(m).getMethod(0).getBlock().getStmt(0);
-        assertEquals(ExpressionStmt.class.getName(), propagationDelayStmt.getClass().getName());
+        assertEquals(ExpressionStmt.class, propagationDelayStmt.getClass());
         Exp propagationDelayExp = ((ExpressionStmt) propagationDelayStmt).getExp();
-        assertEquals(SyncCall.class.getName(), propagationDelayExp.getClass().getName());
+        assertEquals(SyncCall.class, propagationDelayExp.getClass());
         SyncCall propagationDelayCall = (SyncCall) propagationDelayExp;
         assertEquals("conn", propagationDelayCall.getCallee().toString());
         assertEquals("propagationDelay", propagationDelayCall.getMethod());
@@ -109,7 +109,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ "
                 + DB_INITIALIZATION
                 + "[DatabaseConnection: db] MaybeEx<Unit> result = sql(insert into \"My Table\" (\"Attribute\") values ('xyz')); }");
-        assertEquals(SyncCall.class.getName(), getSecondExp(m).getClass().getName());
+        assertEquals(SyncCall.class, getSecondExp(m).getClass());
     }
 
     @Test
@@ -124,7 +124,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ "
                 + DB_INITIALIZATION
                 + "Relation rel = emptyRelation(); [DatabaseConnection: db] MaybeEx<Relation> result = sql(insert into rel (\"Attribute\") values ('xyz')); }");
-        assertEquals(SyncCall.class.getName(), getExp(m, 2).getClass().getName());
+        assertEquals(SyncCall.class, getExp(m, 2).getClass());
     }
 
     @Test
@@ -132,7 +132,7 @@ public class SqlTransformationTests extends FrontendTest {
         Model m = assertParseOk("{ "
                 + DB_INITIALIZATION
                 + "[DatabaseConnection: db] MaybeEx<Unit> result = sql(update \"My Table\" set \"Attribute\" = 'xyz' where \"OtherAttribute\" <> 4); }");
-        assertEquals(SyncCall.class.getName(), getSecondExp(m).getClass().getName());
+        assertEquals(SyncCall.class, getSecondExp(m).getClass());
     }
 
 }

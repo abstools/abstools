@@ -4,34 +4,14 @@
  */
 package abs.frontend.parser;
 
-import static abs.ABSTest.Config.ALLOW_INCOMPLETE_EXPR;
-import static abs.ABSTest.Config.WITH_STD_LIB;
+import static abs.ABSTest.Config.*;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import junit.framework.Assert;
 
 import org.junit.Test;
 
-import beaver.Symbol;
-
 import abs.frontend.FrontendTest;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Binary;
-import abs.frontend.ast.Block;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.DeltaID;
-import abs.frontend.ast.Deltaspec;
-import abs.frontend.ast.Exp;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.MainBlock;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.StringLiteral;
-import abs.frontend.ast.VarDecl;
-import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
 
 public class BackPositionTest extends FrontendTest {
     @Test
@@ -106,26 +86,12 @@ public class BackPositionTest extends FrontendTest {
         assertNodeAtPos("module Bla; productline PL; features X; delta KX when X;", 1, 48, Deltaspec.class);
     }
     
-    
-    
-    
-    
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
-        assertParseOk(absCode, WITH_STD_LIB);
-        Model m = null;
-        try {
-            m = Main.parseString(absCode, false, true);
-        } catch (Exception e) {
-           e.printStackTrace();
-
-            Assert.fail();
-        }
+        Model m = assertParseOk(absCode, WITHOUT_MODULE_NAME,ALLOW_INCOMPLETE_EXPR);
         SourcePosition pos = SourcePosition.findPosition(m.getCompilationUnit(0), line, col);
-        if (pos == null)
-            assertTrue("Expected to find " + clazz + " at " + line + ":" + col + " but found nothing", false);
-        else
-            assertTrue("Expected " + clazz + " but found " + pos.getContextNode().getClass(),
-                    clazz.isInstance(pos.getContextNode()));
+        assertNotNull("Expected to find " + clazz + " at " + line + ":" + col + " but found nothing", pos);
+        assertTrue("Expected " + clazz + " but found " + pos.getContextNode().getClass(),
+                clazz.isInstance(pos.getContextNode()));
     }
 
 }
