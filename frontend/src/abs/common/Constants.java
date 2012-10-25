@@ -29,4 +29,10 @@ public class Constants {
     public static final String DB_OPERATORS_STRUCTURE_LIB_NAME = DB_OPERATORS_LIB_NAME + ".Structure";
     public static final String DB_TRANSACTIONS_LIB_NAME = DBLIB_NAME + ".Transactions";
     public static final String DB_HELPERS_LIB_NAME = DBLIB_NAME + ".Helpers";
+    
+    public static final String FUNCTIONAL_BREAK_POINT_FUNCTION = "watch";
+    public static boolean isFunctionalBreakPointFunctionName(String functionName) {
+        return functionName.equals(STDLIB_NAME + "." + FUNCTIONAL_BREAK_POINT_FUNCTION) ||
+                functionName.equals(STDLIB_NAME + "." + FUNCTIONAL_BREAK_POINT_FUNCTION + "Ex");
+    }
 }

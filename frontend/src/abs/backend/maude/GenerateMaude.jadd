@@ -367,7 +367,7 @@ aspect GenerateMaude {
         boolean inlist = false;
         Decl decl = getDecl();
         String fnName = decl.getModuleDecl().getName() + "." + decl.getName();
-        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(fnName)) {
+        if (Constants.isFunctionalBreakPointFunctionName(fnName)) {
             getParam(0).generateMaude(stream);
             return;
         }

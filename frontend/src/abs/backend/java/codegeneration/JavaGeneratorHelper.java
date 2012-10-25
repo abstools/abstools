@@ -22,6 +22,7 @@ import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
+import abs.common.Constants;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
@@ -52,7 +53,6 @@ import abs.frontend.ast.VarOrFieldDecl;
 import abs.frontend.ast.VarUse;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
-import beaver.Symbol;
 
 public class JavaGeneratorHelper {
 
@@ -166,14 +166,14 @@ public class JavaGeneratorHelper {
         }
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
         String firstArgs = null;
-        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
+        if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
             firstArgs = generateFunctionalBreakPointArgs(app);
         generateArgs(stream, firstArgs, app.getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {
         return new StringBuilder("\"").append(app.getCompilationUnit().getFileName().replace("\\", "\\\\"))
-                .append("\", ").append(Symbol.getLine(app.getStart())).toString();
+                .append("\", ").append(app.getStartLine()).toString();
     }
 
     private static boolean builtInFunctionExists(String name) {
@@ -186,11 +186,10 @@ public class JavaGeneratorHelper {
     }
 
     public static String getDebugString(ASTNode<?> node) {
-        return getDebugString(node, node.getStart());
+        return getDebugString(node, node.getStartLine());
     }
 
-    public static String getDebugString(ASTNode<?> node, int pos) {
-        int line = Symbol.getLine(pos);
+    public static String getDebugString(ASTNode<?> node, int line) {
         String fileName = node.getCompilationUnit().getFileName().replace("\\", "\\\\");
         return "if (__ABS_getRuntime().debuggingEnabled()) __ABS_getRuntime().nextStep(\""
                 + fileName + "\"," + line + ");";

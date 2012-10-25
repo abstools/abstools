@@ -246,7 +246,7 @@ aspect GenerateScala {
         final String fullFunctionName = moduleName + "." + functionName;
         
         // Functional break points not supported - just ignore the "watch" function:
-        if (ABSBuiltInFunctions.isFunctionalBreakPointFunctionName(fullFunctionName)) {
+        if (Constants.isFunctionalBreakPointFunctionName(fullFunctionName)) {
             writer.write(prefix + "val");
             return;
         }

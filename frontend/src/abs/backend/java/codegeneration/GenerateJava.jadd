@@ -335,7 +335,7 @@ aspect GenerateJava {
         }
 
         if (addReturn) {
-        stream.println(indent+JavaGeneratorHelper.getDebugString(this, this.getEnd()));
+        stream.println(indent+JavaGeneratorHelper.getDebugString(this, getEndLine()));
         
         stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");
         stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
