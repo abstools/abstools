@@ -64,13 +64,7 @@ aspect TypeChecker {
         for (ModuleDecl d : getModuleDecls()) {
             d.typeCheck(e);
         }
-        for (DeltaDecl d : getDeltaDecls()) {
-            d.typeCheck(e);
-        }
-        if (hasProductLine())
-            getProductLine().typeCheck(e);
     }
-    
     
     public abstract void Import.typeCheck(SemanticErrorList e);
 
@@ -314,43 +308,6 @@ aspect TypeChecker {
           }
       }
    	  
-    }
-
-    public void DeltaDecl.typeCheck(SemanticErrorList e) {
-        // TODO type-checking goes here
-    }
-
-    public void ProductLine.typeCheck(SemanticErrorList e) {
-       // TODO: check for undeclared features?
-       for (DeltaClause dc : getDeltaClauses()) {
-           dc.typeCheck(e);
-       }
-       Set<String> fs = new HashSet<String>();
-       for (Feature f : getOptionalFeatures()) {
-           if (!fs.add(f.getName()))
-               e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
-       }
-    }
-
-    public void DeltaClause.typeCheck(SemanticErrorList e) {
-    	TypeCheckerHelper.typeCheckDeltaClause(this,e);
-     }
-
-    public abstract void AppCond.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e);
-    public void AppCondAnd.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
-        getLeft().typeCheck(definedFeatures, e);
-        getRight().typeCheck(definedFeatures, e);
-    }
-    public void AppCondOr.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
-        getLeft().typeCheck(definedFeatures, e);
-        getRight().typeCheck(definedFeatures, e);
-    }
-    public void AppCondNot.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
-        getAppCond().typeCheck(definedFeatures, e);
-    }
-    public void AppCondFeature.typeCheck(HashSet<String> definedFeatures, SemanticErrorList e) {
-        if (! definedFeatures.contains(getName()))
-            e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
     
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
@@ -863,10 +820,66 @@ aspect TypeChecker {
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
 	    TypeCheckerHelper.typeCheck(this,e,t);
     }
-    
-    
 }
 
+aspect TypeCheckProductline {
+
+    refine TypeChecker public void CompilationUnit.typeCheck(SemanticErrorList e) {
+    	refined(e);
+    	for (DeltaDecl d : getDeltaDecls()) {
+            d.typeCheck(e);
+        }
+        if (hasProductLine())
+            getProductLine().typeCheck(e);
+    }
+    protected void DeltaDecl.typeCheck(SemanticErrorList e) {
+        // TODO type-checking goes here
+    }
+
+    protected void ProductLine.typeCheck(SemanticErrorList e) {
+        // TODO: JastAdd attributes?
+        // cache all names of defined deltas for easy lookup
+        HashSet<String> deltaNames = new HashSet<String>();
+        for (DeltaDecl delta : getModel().getDeltaDecls()) {
+            deltaNames.add(delta.getName());
+        }
+        HashSet<String> definedFeatures = new HashSet<String>();
+        for (Feature cf : getOptionalFeatures()) {
+              definedFeatures.add(cf.getName());
+        }
+            
+       // TODO: check for undeclared features?
+       for (DeltaClause dc : getDeltaClauses()) {
+           dc.typeCheck(deltaNames,definedFeatures,e);
+       }
+       Set<String> fs = new HashSet<String>();
+       for (Feature f : getOptionalFeatures()) {
+           if (!fs.add(f.getName()))
+               e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
+       }
+    }
+
+    protected void DeltaClause.typeCheck(Set<String> ds, Set<String> definedFeatures, SemanticErrorList e) {
+    	TypeCheckerHelper.typeCheckDeltaClause(this,ds,definedFeatures,e);
+     }
+
+    public abstract void AppCond.typeCheck(Set<String> definedFeatures, SemanticErrorList e);
+    public void AppCondAnd.typeCheck(Set<String> definedFeatures, SemanticErrorList e) {
+        getLeft().typeCheck(definedFeatures, e);
+        getRight().typeCheck(definedFeatures, e);
+    }
+    public void AppCondOr.typeCheck(Set<String> definedFeatures, SemanticErrorList e) {
+        getLeft().typeCheck(definedFeatures, e);
+        getRight().typeCheck(definedFeatures, e);
+    }
+    public void AppCondNot.typeCheck(Set<String> definedFeatures, SemanticErrorList e) {
+        getAppCond().typeCheck(definedFeatures, e);
+    }
+    public void AppCondFeature.typeCheck(Set<String> definedFeatures, SemanticErrorList e) {
+        if (! definedFeatures.contains(getName()))
+            e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
+    }
+}
 // Local Variables:
 // mode: java
 // End:

@@ -317,11 +317,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             	return null; // TODO #395
             } else if (node instanceof ModifyClassModifier) {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
-                try {
-                    decl = cm.findClass();
-                } catch (DeltaModellingException e) {
-                    decl = null;
-                }
+                decl = cm.findClass();
             } else if (node instanceof MethodSig) {
                 decl = node;
             }

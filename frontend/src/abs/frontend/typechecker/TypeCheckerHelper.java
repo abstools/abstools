@@ -163,13 +163,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckDeltaClause(DeltaClause clause, SemanticErrorList e) {
-        
-        // cache all names of defined deltas for easy lookup
-        HashSet<String> deltaNames = new HashSet<String>();
-        for (DeltaDecl delta : clause.getProductLine().getModel().getDeltaDecls()) {
-            deltaNames.add(delta.getName());
-        }
+    public static void typeCheckDeltaClause(DeltaClause clause, Set<String> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
         
         /* Does the delta exist? */
         if (! deltaNames.contains(clause.getDeltaspec().getName()))
@@ -177,10 +171,6 @@ public class TypeCheckerHelper {
 
         if (clause.hasAppCond()) {
             /* Do the referenced features exist? */
-            HashSet<String> definedFeatures = new HashSet<String>();
-            for (Feature cf : clause.getProductLine().getOptionalFeatures()) {
-                definedFeatures.add(cf.getName());
-            }
             clause.getAppCond().typeCheck(definedFeatures, e);
         }
         
