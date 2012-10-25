@@ -132,7 +132,7 @@ public class ClassDeclGenerator extends CodeGenerator {
     private void generateObjectConstruction(String runtime) {
         stream.print("            "+className+" __ABS_result = ");
         if (decl.isForeign()) {
-            stream.println("("+className+") "+runtime+".getForeignObject(\""+decl.getModule().getName()+"."+decl.getName()+"\");");
+            stream.println("("+className+") "+runtime+".getForeignObject(\""+decl.getModuleDecl().getName()+"."+decl.getName()+"\");");
             stream.print("         if (__ABS_result == null) __ABS_result = ");
         }
         

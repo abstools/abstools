@@ -174,6 +174,12 @@ aspect TypeResolution {
         return null;
     }
 
+    /**
+     * This method used to be in NodeReferences.jrag.
+     * @deprecated Duplicate, use {@link ASTNode#getModuleDecl()} directly.
+     */
+	public ModuleDecl Decl.getModule() { return getModuleDecl(); }
+
     inh ModuleDecl Decl.getModuleDecl();
     eq ModuleDecl.getDecl().getModuleDecl() = this;
 

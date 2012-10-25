@@ -91,9 +91,9 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         Set<String> mn = new HashSet<String>();
         Set<String> qn = new HashSet<String>();
         for (InterfaceDecl key : tests.keySet()) {
-            getImportsFrom(mn, qn, key.getModule());
+            getImportsFrom(mn, qn, key.getModuleDecl());
             for (ClassDecl clazz : tests.get(key)) {
-                getImportsFrom(mn, qn, clazz.getModule());
+                getImportsFrom(mn, qn, clazz.getModuleDecl());
             }
         }
         

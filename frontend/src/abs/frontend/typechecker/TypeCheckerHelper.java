@@ -217,18 +217,6 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    /**
-     * @deprecated
-     * Unused.
-     */
-    public static java.util.List<Type> getUnboundTypes(List<TypeParameterDecl> params) {
-        ArrayList<Type> res = new ArrayList<Type>();
-        for (TypeParameterDecl u : params) {
-            res.add(new BoundedType());
-        }
-        return res;
-    }
-
     public static java.util.List<Type> getTypes(List<ParamDecl> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (ParamDecl d : params) {
@@ -297,18 +285,6 @@ public class TypeCheckerHelper {
                 }
             }
         }
-    }
-
-    /**
-     * @deprecated Unused.
-     */
-    public static <A extends ASTNode<?>> Collection<A> prepend(A a, List<A> list) {
-        ArrayList<A> res = new ArrayList<A>();
-        res.add(a);
-        for (A x : list) {
-            res.add(x);
-        }
-        return res;
     }
 
     static final StarImport STDLIB_IMPORT = new StarImport(Constants.STDLIB_NAME);
