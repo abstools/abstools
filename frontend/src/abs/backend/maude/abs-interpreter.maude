@@ -737,18 +737,15 @@ mod ABS-CONFIGURATION is
   rl < T : Clock | Limit: LIM > => < T : Clock | Limit: LIM, Random: random(counter) > .
 
 
-  *** Cogs.  The second argument is of type Data since it can be an Oid (the
-  *** currently active object) or null.  The first argument is a unique
-  *** identifier - we use the string content of the Oid of the first object
-  *** contained inside the cog (to evade the need for a global counter term).
+  *** Cogs.  The second argument (the currently active object) is of type Data
+  *** since it can be an Oid (the currently active object) or null.  The first
+  *** argument is a unique identifier - we re-use the Oid of the primary
+  *** object of the cog (no object can be inside two cogs, and no object can
+  *** move between cogs).
   sort Cogid .
-  subsort Qid < Cogid .
+  subsort Oid < Cogid .
   op <_: Cog | Object:_, DC:_ > : Cogid Data Oid -> Cog
     [ctor format (cn o! o c d d o! d d o! c on ) ] .
-  --- Create a new fresh name for a cog
-  op newId : Qid Nat -> Cogid .
-  eq newId(C:Qid, F)  = qid(string(C:Qid) + "-" + string(F,10)) .
-
 
   *** Useful for real-time maude, and in general for accessing the whole
   *** configuration.  FIXME: We should use another name, since State is used
@@ -1241,12 +1238,12 @@ mod ABS-MACHINE-BASICS-COMMON is
   eq initConf(CN:Configuration, CID:Cid, DL:DataList, INIT:Int, LIM:Int) =
     CN:Configuration
     < INIT:Int : Clock | Limit: LIM:Int >
-    < 'main : Cog | Object: ob('main, 0), DC: ob('ABS.DC.DeploymentComponent, -1) >
+    < ob('main, 0) : Cog | Object: ob('main, 0), DC: ob('ABS.DC.DeploymentComponent, -1) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
-      Cog: 'main,
+      Cog: ob('main, 0),
       Att: 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totalhistory |-> "ABS.StdLib.Nil"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
-    < ob('main, 0) : '... | Cog: 'main,
+    < ob('main, 0) : '... | Cog: ob('main, 0),
       Att:  noSubst,
       Pr: { '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; CID:Cid ; DL:DataList) },
       PrQ: noProc, Lcnt: 0 > .
@@ -2148,11 +2145,11 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: newId(B, G),
+    < ob(B, G) :  B | Cog: ob(B, G),
                              Att: ('this |-> ob(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: null, DC: NEWDC:Data >
+    < ob(B, G) : Cog | Object: null, DC: NEWDC:Data >
     if NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label new-object-with-cog] .
 endm
@@ -2201,11 +2198,11 @@ mod ABS-NEW-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: newId(B, G),
+    < ob(B, G) :  B | Cog: ob(B, G),
                              Att: ('this |-> ob(B, G), S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
-    < newId(B, G) : Cog | Object: null, DC: NEWDC:Data >
+    < ob(B, G) : Cog | Object: null, DC: NEWDC:Data >
     if NEWDC:Data := eval(E, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     [label new-object-with-cog] .
 endm
@@ -2374,7 +2371,7 @@ mod ABS-SIMULATOR-RL is
     { initConf(CN:Configuration, qid(B:String), DL:DataList, -1, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: ob('main, 0), Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
@@ -2405,7 +2402,7 @@ mod ABS-SIMULATOR-EQ-TIMED is
     { initConf(CN:Configuration, qid(B:String), DL:DataList, 0, LIM:Int) } .
 
   --- The initial object commits suicide after it did its job.
-  eq < ob('main, 0) : '... | Cog: 'main, Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
+  eq < ob('main, 0) : '... | Cog: ob('main, 0), Att: S:Subst, Pr: idle, PrQ: noProc, Lcnt: 2 > =
     none .
 endm
 
