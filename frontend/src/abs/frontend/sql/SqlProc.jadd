@@ -1,8 +1,9 @@
 aspect SqlProc {
 
+	/*
     refine TypeCheckerExtension public void MethodImpl.typeCheck(SemanticErrorList s) {
         refined(s);
-        /*if (getNodeWithAnnotation("SqlProc") == null)
+        if (getNodeWithAnnotation("SqlProc") == null)
             return;
         final MethodSig methodSig = getMethodSig();
         String typeName = methodSig.getReturnType().getType().getQualifiedName();
@@ -12,8 +13,8 @@ aspect SqlProc {
             typeName = param.getType().getQualifiedName();
             if (!isAllowedSqlProcType(typeName))
                 s.add(new SemanticError(param.getAccess(), ErrorMessage.SQL_PROC_ILLEGAL_ARGUMENT_TYPE, typeName));
-        }*/
-    }
+        }
+    }*/
 
     private boolean MethodImpl.isAllowedSqlProcType(String returnType) {
         return (Constants.STDLIB_NAME + ".Unit").equals(returnType) ||
