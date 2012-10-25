@@ -137,7 +137,7 @@ aspect OriginalCallResolver {
                         return originalMethodCopy;
                     }
                 }
-                throw new DeltaModellingException("Delta " + targetDeltaID 
+                throw new DeltaModellingException(getDelta(),"Delta " + targetDeltaID 
                         + " is target of an original call, but has not yet been applied");
             }
             
@@ -176,8 +176,8 @@ aspect OriginalCallResolver {
             return findOriginalInCore(method, classid);
         } catch (DeltaModellingException e) {
             // give up
-            throw new DeltaModellingException("Could not find original implementation of method " + classid 
-                    + "." + method.getName()+" while handling"+getDelta().getName());
+            throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid 
+                    + "." + method.getName());
         }
     }
     
@@ -205,7 +205,7 @@ aspect OriginalCallResolver {
                                 return copyMethod(method, delta.getName());
                         } else if (m instanceof RemoveMethodModifier) {
                             if (((RemoveMethodModifier)m).getMethodSig().getName().equals(methodid))
-                                throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
+                                throw new DeltaModellingException(getDelta(),": Could not find original implementation of method " + classid + "." + methodid
                                         + " -- it was removed by delta " + delta.getName());
                         }
                     }
@@ -214,13 +214,13 @@ aspect OriginalCallResolver {
                         if (method.getMethodSig().getName().equals(methodid))
                             return copyMethod(method, delta.getName());
                 } else if (cm instanceof RemoveClassModifier) {
-                    throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
+                    throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid + "." + methodid
                             + " -- it was removed by delta " + delta.getName());
                 }
             }
         }
         // not found
-        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
+        throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid + "." + methodid
                 + " in delta " + delta.getName());
     }
 
@@ -238,7 +238,7 @@ aspect OriginalCallResolver {
                 return copyMethod(coreMethod, "core");
         }
         // not found
-        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + method.getName()
+        throw new DeltaModellingException(getDelta(), ": Could not find original implementation of method " + classid + "." + method.getName()
                 + " in the core.");
     }
     

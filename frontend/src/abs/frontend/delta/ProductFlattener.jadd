@@ -41,17 +41,19 @@ aspect ProductFlattener {
             System.out.println("--- configuring product: " + prod.getName());
 
         // find product line
-        ProductLine pl = findProductLine();
+        ProductLine pl = getProductLine();
+        if (pl == null)
+          throw new DeltaModellingException("Model is missing a 'productline' definition");
 
         // find/get applicable deltas
-        HashSet<String> deltaids = findApplicableDeltas(prod, pl);
+        Set<String> deltaids = pl.findApplicableDeltas(prod);
         Map<String, DeltaDecl> unsorted_deltas = findDeltas(deltaids);
 
         // sort deltas
-        ArrayList<DeltaDecl> deltas = sortDeltas(unsorted_deltas, pl);
+        ArrayList<DeltaDecl> deltas = pl.sortDeltas(unsorted_deltas);
         
         // substitute delta parameters
-        substituteDeltaParams(deltas, prod, pl);
+        pl.substituteDeltaParams(deltas, prod);
         
         // resolve original() calls
         resolveOriginalCalls(deltas);
@@ -108,34 +110,18 @@ aspect ProductFlattener {
             }
         }
         throw new WrongProgramArgumentException("Product [" + id + "] is not declared");
-    }
-    
-    /**************************************************************************
-     * find the product line definition
-     * We pick the first ProductLine definition we find. We don't care if there are more than one ProductLines 
-     * defined in the model (in different CompilationUnits), as the ABS grammar allows this. 
-     * FIXME It should be caught by the type checker.
-     */
-    public ProductLine Model.findProductLine() throws DeltaModellingException {
-        for (CompilationUnit u : this.getCompilationUnits()) {
-            if (u.hasProductLine()) {
-                return u.getProductLine();
-            }
-        }
-        throw new DeltaModellingException("Model is missing a 'productline' definition");
-    }
-    
-    
+    }   
+
     /**************************************************************************
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public HashSet<String> Model.findApplicableDeltas(
-            Product prod, ProductLine pl) throws WrongProgramArgumentException {
+    public Set<String> ProductLine.findApplicableDeltas(
+            Product prod) throws WrongProgramArgumentException {
 
         HashSet<String> deltaids = new HashSet<String>();
 
-        for (DeltaClause clause : pl.getDeltaClauses()) {
+        for (DeltaClause clause : getDeltaClauses()) {
             // System.out.println("DeltaClause: " + clause.moduleName() + "." + clause.getDeltaspec().getName());
 
             if (clause.evaluateApplicationCondition(prod.getFeatures()))
@@ -203,11 +189,11 @@ aspect ProductFlattener {
     /**************************************************************************
      * Sort DeltaDecls according to a valid order of application defined by the product line
      */
-    public ArrayList<DeltaDecl> Model.sortDeltas(Map<String, DeltaDecl> deltas, ProductLine pl) {
+    protected ArrayList<DeltaDecl> ProductLine.sortDeltas(Map<String, DeltaDecl> deltas) {
         
         GraphTS g = new GraphTS(deltas.values().toArray());
 
-        for (DeltaClause c : pl.getDeltaClauses()) {
+        for (DeltaClause c : getDeltaClauses()) {
             String deltaid = c.getDeltaspec().getName();
             DeltaDecl delta = deltas.get(deltaid);
             if (delta != null) {

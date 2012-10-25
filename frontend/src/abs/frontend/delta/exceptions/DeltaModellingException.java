@@ -4,11 +4,17 @@
  */
 package abs.frontend.delta.exceptions;
 
+import abs.frontend.ast.DeltaDecl;
+
 public class DeltaModellingException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    public DeltaModellingException(DeltaDecl d, String msg) {
+        super(d == null ? msg : "Delta " + d.getName()+":"+msg);
+    }
+
     public DeltaModellingException(String msg) {
-        super(msg);
+        this(null,msg);
     }
 }
