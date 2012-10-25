@@ -187,7 +187,8 @@ aspect DeltaParameterSubstitution {
         //System.out.println("%%% using subst: " + subst);
         Value v = subst.get(getName());
         if (v != null) {
-            ASTNode<?> p = getParent();
+            // TODO: Maven is a bit particular about the generic type here:
+            ASTNode p = getParent();
             int i = p.getIndexOfChild(this);
             p.setChild(v.calcExpr(), i);
             //System.out.println("%%% assigning " + v.calcExpr());
