@@ -19,7 +19,7 @@ aspect VarResolution {
        }
     }
 
-    syn lazy int Block.getNumVar() = getVars().size();
+    syn int Block.getNumVar() = getVars().size();
     
     syn lazy Collection<VarDecl> Block.getVars() {
         ArrayList<VarDecl> res = new ArrayList<VarDecl>();

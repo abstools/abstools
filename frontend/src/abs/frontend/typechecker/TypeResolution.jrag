@@ -274,7 +274,7 @@ aspect TypeResolution {
 
     syn lazy Decl FnApp.getDecl() = lookup(new KindedName(Kind.FUN,getName()));
 
-    inh lazy DataTypeDecl DataConstructor.getDataTypeDecl();
+    inh DataTypeDecl DataConstructor.getDataTypeDecl();
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
     eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
 

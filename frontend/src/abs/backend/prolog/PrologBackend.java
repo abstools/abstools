@@ -25,7 +25,7 @@ public class PrologBackend extends Main {
     public static int awaitId = 0;
     public static boolean entriesMode = false;
     
-    public static void main(final String[] args) {
+    public static void main(final String... args) {
         runFromShell(args);
     }
     

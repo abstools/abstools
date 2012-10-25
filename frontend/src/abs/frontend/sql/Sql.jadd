@@ -44,7 +44,7 @@ aspect SQL {
 	
 	// Error checks
 	
-	refine ErrorCheck public void ASTNode.collectErrors(SemanticErrorList c) {
+	refine ErrorCheck void ASTNode.collectErrors(SemanticErrorList c) {
         final List<Annotation> annotations = getNodeAnnotations();
         if (CompilerUtils.hasAnnotation(annotations, "SqlSync") &&
                 CompilerUtils.hasAnnotation(annotations, "SqlAsync"))

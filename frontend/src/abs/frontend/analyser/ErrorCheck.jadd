@@ -19,7 +19,7 @@ aspect ErrorCheck {
   }
 
   // generic traversal that collects errors in AST
-  public void ASTNode.collectErrors(SemanticErrorList c) {
+  void ASTNode.collectErrors(SemanticErrorList c) {
     for(int i = 0; i < getNumChild(); i++)
       getChild(i).collectErrors(c);
   }

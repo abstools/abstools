@@ -34,7 +34,7 @@ aspect SqlRewrites {
 	
 	
 	@SuppressWarnings("unchecked")
-	public void ASTNode.replaceThis(final ASTNode newNode) {
+	private void SqlExp.replaceThis(final ASTNode newNode) {
 	    final ASTNode parent = getParent();
 	    if (parent == null)
 	        throw new RuntimeException("Trying to evaluate attribute in subtree not attached to main tree");

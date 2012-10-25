@@ -103,43 +103,43 @@ aspect DeltaParameterSubstitution {
 
 
     // apply a substitution to OOModifier
-    abstract public void OOModifier.applySubstitution(HashMap<String,Value> subst);
+    abstract protected void OOModifier.applySubstitution(Map<String,Value> subst);
 
-    public void AddClassModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void AddClassModifier.applySubstitution(Map<String,Value> subst) {
         getClassDecl().applySubstitution(subst);
     }
-    public void RemoveClassModifier.applySubstitution(HashMap<String,Value> subst) {}
-    public void ModifyClassModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void RemoveClassModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void ModifyClassModifier.applySubstitution(Map<String,Value> subst) {
         for (Modifier m : getModifiers()) 
             m.applySubstitution(subst);
     }
-    public void AddInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
-    public void ModifyInterfaceModifier.applySubstitution(HashMap<String,Value> subst) {}
+    protected void AddInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void ModifyInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
 
     // TODO apply substitution to FunctionalModifier
 
     // apply a substitution to Modifier
-    abstract public void Modifier.applySubstitution(HashMap<String,Value> subst);
+    abstract protected void Modifier.applySubstitution(Map<String,Value> subst);
 
-    public void AddFieldModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void AddFieldModifier.applySubstitution(Map<String,Value> subst) {
         getFieldDecl().applySubstitution(subst);
     }
-    public void RemoveFieldModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void RemoveFieldModifier.applySubstitution(Map<String,Value> subst) {
         getFieldDecl().applySubstitution(subst);
     }
-    public void AddMethodModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void AddMethodModifier.applySubstitution(Map<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
-    public void RemoveMethodModifier.applySubstitution(HashMap<String,Value> subst) {}
-    public void ModifyMethodModifier.applySubstitution(HashMap<String,Value> subst) {
+    protected void RemoveMethodModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void ModifyMethodModifier.applySubstitution(Map<String,Value> subst) {
         getMethodImpl().applySubstitution(subst);
     }
 
-    public void AddMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
-    public void RemoveMethodSigModifier.applySubstitution(HashMap<String,Value> subst) {}
+    protected void AddMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void RemoveMethodSigModifier.applySubstitution(Map<String,Value> subst) {}
 
-    public void ClassDecl.applySubstitution(HashMap<String,Value> subst) {
-        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+    protected void ClassDecl.applySubstitution(Map<String,Value> subst) {
+        HashMap<String,Value> subst2 = new HashMap<String,Value>(subst);
         for (ParamDecl p : getParams()) 
             p.updateSubstitution(subst2);
         if (hasInitBlock())
@@ -149,7 +149,8 @@ aspect DeltaParameterSubstitution {
         for (MethodImpl m : getMethods())
             m.applySubstitution(subst2);
     }
-    public void FieldDecl.applySubstitution(HashMap<String,Value> subst) {
+    @Override
+    protected void FieldDecl.applySubstitution(Map<String,Value> subst) {
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
         for (Annotation a : getAnnotations()) 
@@ -157,34 +158,37 @@ aspect DeltaParameterSubstitution {
         // Removal should not be necessary with well-typed deltas
         subst.remove(getName());
     }
-    public void VarDecl.applySubstitution(HashMap<String,Value> subst) {
+    @Override
+    protected void VarDecl.applySubstitution(Map<String,Value> subst) {
         if (hasInitExp()) 
             getInitExp().applySubstitution(subst);
         // Removal should not be necessary with well-typed deltas
         subst.remove(getName());
     }
-    public void ParamDecl.updateSubstitution(HashMap<String,Value> subst) {
+    protected void ParamDecl.updateSubstitution(Map<String,Value> subst) {
         subst.remove(getName());
         for (Annotation a : getAnnotations()) 
             a.applySubstitution(subst);
     }
-    public void MethodImpl.applySubstitution(HashMap<String,Value> subst) {
-        HashMap<String,Value> subst2 = (HashMap<String,Value>) subst.clone();
+    @Override
+    protected void MethodImpl.applySubstitution(Map<String,Value> subst) {
+        HashMap<String,Value> subst2 = new HashMap<String,Value>(subst);
         getMethodSig().updateSubstitution(subst2);
         getBlock().applySubstitution(subst2);
     }
-    public void MethodSig.updateSubstitution(HashMap<String,Value> subst) {
+    protected void MethodSig.updateSubstitution(Map<String,Value> subst) {
         for (ParamDecl p : getParams()) 
             p.updateSubstitution(subst);
     }
 
     // the actual substitution!
-    public void VarUse.applySubstitution(HashMap<String,Value> subst) {
+    @Override
+    protected void VarUse.applySubstitution(Map<String,Value> subst) {
         //System.out.println("%%% Substituting value " + getName());
         //System.out.println("%%% using subst: " + subst);
         Value v = subst.get(getName());
         if (v != null) {
-            ASTNode p = getParent();
+            ASTNode<?> p = getParent();
             int i = p.getIndexOfChild(this);
             p.setChild(v.calcExpr(), i);
             //System.out.println("%%% assigning " + v.calcExpr());
@@ -203,7 +207,7 @@ aspect DeltaParameterSubstitution {
     }
 
     // used to go down Blocks, Stmts, Exps
-    public void ASTNode.applySubstitution(HashMap<String,Value> subst) {
+    protected void ASTNode.applySubstitution(Map<String,Value> subst) {
         for(int i = 0; i < getNumChild(); i++) {
             getChild(i).applySubstitution(subst);
         }

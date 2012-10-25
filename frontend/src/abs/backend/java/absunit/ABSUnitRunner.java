@@ -78,7 +78,7 @@ public class ABSUnitRunner extends Main {
     }    
     
     
-    public static void main(String[] args) {
+    public static void main(String... args) {
         try {
             new ABSUnitRunner().compile();
         } catch (Exception e) {

@@ -24,7 +24,7 @@ aspect OriginalCallResolver {
      * an existing class by modifying a method in that class, so we only 
      * deal with this case.
      */
-    public void DeltaDecl.resolveOriginalCalls(
+    protected void DeltaDecl.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
         //System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
@@ -45,17 +45,14 @@ aspect OriginalCallResolver {
         originalMethodsCache.add(id);
     }
     public boolean Model.containsCachedOriginalMethod(String id) {
-        if (originalMethodsCache.contains(id))
-            return true;
-        else
-            return false;
+        return originalMethodsCache.contains(id);
     }
     
     /*
      * resolve OriginalCalls within the body of the method defined
      * inside this ModifyMethodModifier
      */
-    public void ModifyMethodModifier.resolveOriginalCalls(
+    protected void ModifyMethodModifier.resolveOriginalCalls(
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
         for (Stmt stmt : this.getMethodImpl().getBlock().getStmts())
@@ -65,7 +62,7 @@ aspect OriginalCallResolver {
     /* 
      * traverse AST in search of OriginalCalls
      */
-    public void ASTNode.resolveOriginalCalls(
+    protected void ASTNode.resolveOriginalCalls(
             ModifyMethodModifier mod, 
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
         
@@ -118,24 +115,25 @@ aspect OriginalCallResolver {
     /* Given an OriginalCall (targeted or untargeted), find original method.
      * 
      */
-    public MethodImpl ModifyMethodModifier.findOriginalMethod(
+    protected MethodImpl ModifyMethodModifier.findOriginalMethod(
             OriginalCall oc, 
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        String classid = this.targetQualifiedClassName();
-        String methodid = this.getMethodImpl().getMethodSig().getName();
+        String classid = targetQualifiedClassName();
+        MethodSig method = getMethodImpl().getMethodSig();
+        String methodid = getMethodImpl().getMethodSig().getName();
         MethodImpl originalMethodCopy;
         
         if (oc instanceof TargetedOriginalCall) {
             String targetDeltaID = ((TargetedOriginalCall) oc).getTarget().getName();
 
             if ("core".equals(targetDeltaID)) {
-                originalMethodCopy = findOriginalInCore(methodid, classid);
+                originalMethodCopy = findOriginalInCore(method, classid);
                 return originalMethodCopy;
             } else {
                 for (DeltaDecl delta : deltas) {
                     if (delta.getName().equals(targetDeltaID)) {
-                        originalMethodCopy = findOriginalInDelta(methodid, classid, delta);
+                        originalMethodCopy = findOriginalInDelta(method, classid, delta);
                         return originalMethodCopy;
                     }
                 }
@@ -145,7 +143,7 @@ aspect OriginalCallResolver {
             
         } else {
             // untargeted OriginalCall
-            originalMethodCopy = findOriginalInAppliedDeltasAndCore(methodid, classid, deltas);
+            originalMethodCopy = findOriginalInAppliedDeltasAndCore(method, classid, deltas);
             return originalMethodCopy;
         }
     }
@@ -156,17 +154,17 @@ aspect OriginalCallResolver {
      * find original method implementation by searching in the applied deltas and, finally, in the core.
      * This is for untargeted original calls; for targeted OCs, we call findOriginalInDelta/findOriginalInCore directly.
      */
-    public MethodImpl ModifyMethodModifier.findOriginalInAppliedDeltasAndCore(            
-            String methodid,
+    private MethodImpl ModifyMethodModifier.findOriginalInAppliedDeltasAndCore(            
+            MethodSig method,
             String classid, 
             ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
 
-        //System.out.println("*** searching for method " + classid + "." + methodid);
+        //System.out.println("*** searching for method " + classid + "." + method.getName());
         
         // search in list of applied deltas
         for (DeltaDecl delta : deltas) {
             try {
-                return findOriginalInDelta(methodid, classid, delta);
+                return findOriginalInDelta(method, classid, delta);
             } catch(DeltaModellingException e) {
                 // continue search in next delta, then core
                 continue;
@@ -175,23 +173,24 @@ aspect OriginalCallResolver {
         
         // search in core classes
         try {
-            return findOriginalInCore(methodid, classid);
+            return findOriginalInCore(method, classid);
         } catch (DeltaModellingException e) {
             // give up
             throw new DeltaModellingException("Could not find original implementation of method " + classid 
-                    + "." + methodid+" while handling"+getDelta().getName());
+                    + "." + method.getName()+" while handling"+getDelta().getName());
         }
     }
     
     /* In given delta:
      * return first MethodImpl that matches classid and methodid
      */
-    public MethodImpl ModifyMethodModifier.findOriginalInDelta(            
-            String methodid,
+    private MethodImpl ModifyMethodModifier.findOriginalInDelta(            
+            MethodSig methodSig,
             String classid, 
             DeltaDecl delta) throws DeltaModellingException {
         
         //System.out.println("*** searching in delta " + delta.getName());
+        String methodid = methodSig.getName();
         for (ModuleModifier cm : delta.getModuleModifiers()) {
             if (cm.getName().equals(classid)) {
                 if (cm instanceof ModifyClassModifier) {
@@ -230,16 +229,16 @@ aspect OriginalCallResolver {
      * return a copy with changed name
      */
     public MethodImpl ModifyMethodModifier.findOriginalInCore(
-            String methodid,
+            MethodSig method,
             String classid) throws DeltaModellingException {
         Decl coreClass = getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
         if (!coreClass.isUnknown() && coreClass instanceof ClassDecl) {
-            MethodImpl coreMethod = ((ClassDecl) coreClass).lookupMethod(methodid);
+            MethodImpl coreMethod = ((ClassDecl) coreClass).lookupMethod(method.getName());
             if (coreMethod != null)
                 return copyMethod(coreMethod, "core");
         }
         // not found
-        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + methodid
+        throw new DeltaModellingException("Could not find original implementation of method " + classid + "." + method.getName()
                 + " in the core.");
     }
     

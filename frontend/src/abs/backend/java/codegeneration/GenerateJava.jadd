@@ -938,10 +938,7 @@ aspect GenerateJava {
         stream.print(")");
     }
 
-    public String ASTNode.incIndent(String indent) {
+    protected String ASTNode.incIndent(String indent) {
         return indent+"   ";
     }
-
-
-
 }
