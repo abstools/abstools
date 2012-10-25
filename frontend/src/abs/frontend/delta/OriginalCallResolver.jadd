@@ -228,12 +228,12 @@ aspect OriginalCallResolver {
      * find first MethodImpl that matches classid and methodid
      * return a copy with changed name
      */
-    public MethodImpl ModifyMethodModifier.findOriginalInCore(
+    private MethodImpl ModifyMethodModifier.findOriginalInCore(
             MethodSig method,
             String classid) throws DeltaModellingException {
-        Decl coreClass = getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
-        if (!coreClass.isUnknown() && coreClass instanceof ClassDecl) {
-            MethodImpl coreMethod = ((ClassDecl) coreClass).lookupMethod(method.getName());
+        ClassDecl coreClass = (ClassDecl) getDelta().getModel().lookup(new KindedName(Kind.CLASS, classid));
+        if (!coreClass.isUnknown()) {
+            MethodImpl coreMethod = coreClass.lookupMethod(method.getName());
             if (coreMethod != null)
                 return copyMethod(coreMethod, "core");
         }
