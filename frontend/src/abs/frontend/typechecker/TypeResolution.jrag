@@ -160,7 +160,7 @@ aspect TypeResolution {
 
     // *decl* refers to the appropriate declaration of the TypeUse or to
     // UnknownDecl if the declaration is missing
-    syn lazy Decl TypeUse.getDecl() = lookup(new KindedName(Kind.TYPE_DECL,getName()));
+    syn lazy TypeDecl TypeUse.getDecl() = (TypeDecl) lookup(new KindedName(Kind.TYPE_DECL,getName()));
 
 
     syn lazy ModuleDecl Model.lookupModule(String name) {

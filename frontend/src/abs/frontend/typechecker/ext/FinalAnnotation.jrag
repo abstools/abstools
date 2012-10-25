@@ -8,13 +8,4 @@ aspect FinalAnnotation {
         }
         return false;
     }
-
-    syn lazy boolean VarOrFieldUse.isFinal() {
-        if (getDecl() instanceof TypedVarOrFieldDecl) {
-            return ((TypedVarOrFieldDecl)getDecl()).isFinal();
-        }
-        // pattern var decls are always final
-        return true;
-    } 
-
 }
