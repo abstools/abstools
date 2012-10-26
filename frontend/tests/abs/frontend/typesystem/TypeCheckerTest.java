@@ -4,6 +4,7 @@
  */
 package abs.frontend.typesystem;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -12,11 +13,21 @@ import java.util.Collection;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.FieldUse;
 import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ModuleDecl;
+import abs.frontend.ast.ParamDecl;
+import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.VarDeclStmt;
+import abs.frontend.ast.VarOrFieldDecl;
+import abs.frontend.ast.VarOrFieldUse;
+import abs.frontend.ast.VarUse;
+import abs.frontend.typechecker.KindedName;
+import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerTest extends FrontendTest {
 
@@ -310,6 +321,32 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void classParams() {
         assertTypeOK("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
+    }
+    
+    @Test
+    public void classParamsRewrite() {
+        Model m = assertParseOkStdLib("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
+        ModuleDecl u = m.lookupModule("UnitTest");
+        ClassDecl c = (ClassDecl) u.lookup(new KindedName(Kind.CLASS, "C"));
+        MethodImpl me = c.lookupMethod("m");
+        ReturnStmt r = (ReturnStmt) me.getBlock().getStmt(0);
+        VarOrFieldUse vu = (VarOrFieldUse) r.getRetExp();
+        ParamDecl d = (ParamDecl) vu.getDecl();
+        assertThat(d.getParent().getParent(), instanceOf(ClassDecl.class));
+        assertThat(vu.getClass().getName(), vu, instanceOf(FieldUse.class));
+    }
+
+    @Test
+    public void classParamsRewrite2() {
+        Model m = assertParseOkStdLib("interface I { Bool m(Bool x); } class C(Bool b) implements I { Bool m(Bool x) { return x; } }");
+        ModuleDecl u = m.lookupModule("UnitTest");
+        ClassDecl c = (ClassDecl) u.lookup(new KindedName(Kind.CLASS, "C"));
+        MethodImpl me = c.lookupMethod("m");
+        ReturnStmt r = (ReturnStmt) me.getBlock().getStmt(0);
+        VarOrFieldUse vu = (VarOrFieldUse) r.getRetExp();
+        ParamDecl d = (ParamDecl) vu.getDecl();
+        assertThat(d.getParent().getParent(), instanceOf(MethodSig.class));
+        assertThat(vu.getClass().getName(), vu, instanceOf(VarUse.class));
     }
 
     @Test

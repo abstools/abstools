@@ -4,10 +4,12 @@ aspect VarResolution {
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
 
-    /* Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
+    /**
+     * Replace VarUse nodes with field accesses, since in the grammar this.x and x are different.
+     * Since we can do the 2nd part by AST-inspection, we might as well do it in the parser.  
      */
     rewrite VarUse {
-       when (getDecl() instanceof FieldDecl)
+       when (getDecl() instanceof FieldDecl || (getDecl() instanceof ParamDecl && getDecl().getParent().getParent() instanceof ClassDecl))
        to FieldUse {
         FieldUse fu=new FieldUse(getName());
         /* Patch position to cover original range.
@@ -62,6 +64,9 @@ aspect VarResolution {
         return null;
     }
     
+    /**
+     * FIXME: ignores fieldOnly - refactor to avoid confusion?
+     */
     eq ClassDecl.locallookupVarOrFieldName(String name, boolean fieldOnly) {
    	  for (ParamDecl p : getParams()) {
    		  if (p.getName().equals(name)) 
