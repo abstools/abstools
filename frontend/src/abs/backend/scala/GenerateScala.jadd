@@ -1,4 +1,4 @@
-
+import java.util.LinkedList;
 import abs.backend.scala.*;
 
 aspect GenerateScala {
