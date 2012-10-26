@@ -84,4 +84,15 @@ public class ObjectTests extends SemanticTests {
                 + CALL_M);
     }
 
+    @Test
+    public void classMethodShadowsField1() {
+        assertEvalTrue("interface I { Bool m(Bool f); } class C(Bool f) implements I { Bool m(Bool f) { return f; } }"
+                + "{ Bool testresult = False; I i = new C(False); testresult = i.m(True);}");
+    }
+
+    @Test
+    public void classMethodShadowsField2() {
+        assertEvalTrue("interface I { Bool m(Bool f); } class C(Bool f) implements I { Bool m(Bool f) { return this.f; } }"
+                + "{ Bool testresult = False; I i = new C(True); testresult = i.m(False);}");
+    }
 }

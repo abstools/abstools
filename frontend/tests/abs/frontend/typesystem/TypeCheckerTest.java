@@ -324,8 +324,21 @@ public class TypeCheckerTest extends FrontendTest {
     }
     
     @Test
+    public void classParamsMethodShadowsField() {
+        Model m = assertParseOkStdLib("class C(Bool b) { Bool m(Bool b) { return b; } }");
+        ModuleDecl u = m.lookupModule("UnitTest");
+        ClassDecl c = (ClassDecl) u.lookup(new KindedName(Kind.CLASS, "C"));
+        MethodImpl me = c.lookupMethod("m");
+        ReturnStmt r = (ReturnStmt) me.getBlock().getStmt(0);
+        VarOrFieldUse vu = (VarOrFieldUse) r.getRetExp();
+        ParamDecl d = (ParamDecl) vu.getDecl();
+        assertThat(d.getParent().getParent(), instanceOf(MethodSig.class));
+        assertThat(vu.getClass().getName(), vu, instanceOf(VarUse.class));
+    }
+
+    @Test
     public void classParamsRewrite() {
-        Model m = assertParseOkStdLib("interface I { Bool m(); } class C(Bool b) implements I { Bool m() { return b; } }");
+        Model m = assertParseOkStdLib("class C(Bool b) { Bool m() { return b; } }");
         ModuleDecl u = m.lookupModule("UnitTest");
         ClassDecl c = (ClassDecl) u.lookup(new KindedName(Kind.CLASS, "C"));
         MethodImpl me = c.lookupMethod("m");
@@ -338,7 +351,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void classParamsRewrite2() {
-        Model m = assertParseOkStdLib("interface I { Bool m(Bool x); } class C(Bool b) implements I { Bool m(Bool x) { return x; } }");
+        Model m = assertParseOkStdLib("class C(Bool b) { Bool m(Bool x) { return x; } }");
         ModuleDecl u = m.lookupModule("UnitTest");
         ClassDecl c = (ClassDecl) u.lookup(new KindedName(Kind.CLASS, "C"));
         MethodImpl me = c.lookupMethod("m");
