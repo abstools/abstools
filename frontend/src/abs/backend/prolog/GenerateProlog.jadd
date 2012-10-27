@@ -161,7 +161,6 @@ aspect GenerateProlog {
         s.print("builtin");
     }
 
-
     // Pure expressions
 
     public void PureExp.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
@@ -170,34 +169,9 @@ aspect GenerateProlog {
         throw new PrologBackendException("PureExp not supported by PrologBackend (" + this + ")");
     }
 
+	public abstract void VarOrFieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo);
     public void VarUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
-        if(this.isField())
-            s.print(fieldTransform(getName()));
-        else
-            s.print(varTransform(getName()));
-    }
-
-    /**
-     * Check for field OR parameter:<br/>
-     * Infers if the used variable was declared as a field or as an argument of a class
-     * TODO: use more OO, review use of parameters.
-     * @deprecated Use OO instead!
-     */
-    public abstract boolean VarOrFieldUse.isField();
-    public boolean FieldUse.isField() { return true;}
-
-    @Override
-    public boolean VarUse.isField() {
-        if(this.getDecl_value instanceof FieldDecl)//field
-            { assert false; return true; }
-
-        if(this.getDecl_value instanceof ParamDecl){//it was declared as a parameter
-            ParamDecl param=(ParamDecl)this.getDecl_value;
-            //the parent is a list, but the its parent can be a class , a method ...
-            if(param.getParent().getParent() instanceof ClassDecl)
-                return true;
-        }
-        return false;   
+        s.print(varTransform(getName()));
     }
 
     public void FieldUse.generateProlog(PrintStream s,ReachabilityInformation reachInfo){

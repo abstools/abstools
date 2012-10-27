@@ -15,7 +15,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
 import abs.backend.java.codegeneration.JavaCodeStream;
@@ -33,37 +32,7 @@ import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.AssignStmt;
-import abs.frontend.ast.AsyncCall;
-import abs.frontend.ast.AwaitStmt;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.DeltaDecl;
-import abs.frontend.ast.ExpGuard;
-import abs.frontend.ast.Feature;
-import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.FnApp;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.LetExp;
-import abs.frontend.ast.List;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.ParametricFunctionDecl;
-import abs.frontend.ast.Product;
-import abs.frontend.ast.ProductAdaptation;
-import abs.frontend.ast.PureExp;
-import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.Stmt;
-import abs.frontend.ast.SyncCall;
-import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.ast.TypedVarOrFieldDecl;
-import abs.frontend.ast.VarDecl;
-import abs.frontend.ast.VarOrFieldDecl;
-import abs.frontend.ast.VarOrFieldUse;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
 import beaver.Symbol;
@@ -530,7 +499,7 @@ public class DynamicJavaGeneratorHelper {
         VarOrFieldUse vfu = assign.getVar();
         boolean truncateNeeded
             = vfu.getType().isIntType() && assign.getValue().getType().isRatType();
-        if (vfu.isField()) {
+        if (vfu instanceof FieldUse) {
             stream.print("thisP.setFieldValue(\"" + vfu.getName() + "\", ");
             if (truncateNeeded) stream.print("(");
             assign.getValue().generateJavaDynamic(stream);

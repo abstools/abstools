@@ -731,6 +731,7 @@ aspect GenerateJava {
         throw new JavaBackendException(this,"Type " + getName() + " is unresolved!");
     }
 
+	public abstract void VarOrFieldUse.generateJavaDynamic(PrintStream stream);
     public void FieldUse.generateJavaDynamic(PrintStream stream) {
         //ClassDecl d = (ClassDecl) getContextDecl();
         //String className = JavaBackend.getClassName(d.getName());
@@ -739,11 +740,7 @@ aspect GenerateJava {
     }
 
     public void VarUse.generateJavaDynamic(PrintStream stream) {
-        if (isField()) {
-            DynamicJavaGeneratorHelper.fieldUse(stream, this);
-        } else {
-            stream.print(JavaBackend.getVariableName(getName()));
-        }
+        stream.print(JavaBackend.getVariableName(getName()));
     }
 
     public void IfExp.generateJavaDynamic(PrintStream stream) {
