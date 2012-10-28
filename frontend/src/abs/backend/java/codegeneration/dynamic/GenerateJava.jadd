@@ -708,10 +708,10 @@ aspect GenerateJava {
         String className = JavaBackend.getQualifiedString(decl);
         if (hasCog()) {
             stream.print(className + ".__ABS_createNewCOG");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypes(decl));
         } else {
             stream.print(className + ".__ABS_createNewObject");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypes(decl));
         }
     }
 
@@ -873,7 +873,7 @@ aspect GenerateJava {
         Type declaredResultType = d.getTypeUse().getType();
         if (d instanceof ParametricFunctionDecl) {
             ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-            Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(d,funDecl.getParams(),getParams());
+            Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl,this);
 
             /*
          StringBuffer buf = new StringBuffer();
@@ -901,7 +901,7 @@ aspect GenerateJava {
         }
 
         stream.print("apply");
-        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
+        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypes(d));
 
     }
 
@@ -933,7 +933,7 @@ aspect GenerateJava {
             }
           }
              */
-            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()));
+            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c));
         }
     }
 

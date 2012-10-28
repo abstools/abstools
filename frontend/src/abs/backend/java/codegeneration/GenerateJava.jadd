@@ -532,7 +532,7 @@ aspect GenerateJava {
  	       stream.print(")."+JavaBackend.getMethodName(getMethod()));
  	    }
         JavaGeneratorHelper.generateArgs(stream,params,
-                                         TypeCheckerHelper.getTypesFromParamDecls(getMethodSig().getParams()));
+                                         TypeCheckerHelper.getTypes(getMethodSig()));
     }
 
     public void OriginalCall.generateJava(PrintStream stream) {
@@ -559,11 +559,11 @@ aspect GenerateJava {
 
         if (hasCog()) {
             stream.print(className+".__ABS_createNewCOG");
-            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypes(decl));
             JavaGeneratorHelper.generateCog(stream, getCog());
         } else {
             stream.print(className+".__ABS_createNewObject");
-            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypesFromParamDecls(decl.getParams()));
+            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), TypeCheckerHelper.getTypes(decl));
         }
     }
 
@@ -712,7 +712,7 @@ aspect GenerateJava {
      Type declaredResultType = d.getTypeUse().getType();
      if (d instanceof ParametricFunctionDecl) {
          ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-         Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(d,funDecl.getParams(),getParams());
+         Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl,this);
 
          /*
          StringBuffer buf = new StringBuffer();
@@ -740,7 +740,7 @@ aspect GenerateJava {
      }
 
       stream.print("apply");
-      JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
+      JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypes(d));
     }
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
@@ -771,7 +771,7 @@ aspect GenerateJava {
             }
           }
           */
-          JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()));
+          JavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c));
         }
     }
 

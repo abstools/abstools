@@ -168,7 +168,7 @@ public class JavaGeneratorHelper {
         String firstArgs = null;
         if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
             firstArgs = generateFunctionalBreakPointArgs(app);
-        generateArgs(stream, firstArgs, app.getParams(), TypeCheckerHelper.getTypesFromParamDecls(d.getParams()));
+        generateArgs(stream, firstArgs, app.getParams(), TypeCheckerHelper.getTypes(d));
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {
@@ -238,7 +238,7 @@ public class JavaGeneratorHelper {
           final MethodSig sig) 
     {
         final java.util.List<Type> paramTypes
-            = TypeCheckerHelper.getTypes(sig.getParams());
+            = TypeCheckerHelper.getTypes(sig);
         stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");

@@ -145,7 +145,7 @@ public class DynamicJavaGeneratorHelper {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = d.getName();
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromExp(app.getParams()));
+        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromExp(app));
     }
 
     public static String getDebugString(Stmt stmt) {
@@ -185,7 +185,7 @@ public class DynamicJavaGeneratorHelper {
         stream.println("{");
         stream.println("return (" + ABSFut.class.getName() + ")");
         generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
-                TypeCheckerHelper.getTypes(sig.getParams()),sig.getName());
+                TypeCheckerHelper.getTypes(sig),sig.getName());
         stream.println(";");
         stream.println("}");
     }
@@ -197,7 +197,7 @@ public class DynamicJavaGeneratorHelper {
         final String method = call.getMethod();
 
         generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
-                TypeCheckerHelper.getTypesFromExp(params), method);
+                TypeCheckerHelper.getTypesFromExp(call), method);
 
     }
 
@@ -243,7 +243,7 @@ public class DynamicJavaGeneratorHelper {
         call.getCallee().generateJavaDynamic(stream);
         stream.print("))");
         stream.print(".dispatch");
-        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), TypeCheckerHelper.getTypesFromExp(call.getParams()));
+        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), TypeCheckerHelper.getTypesFromExp(call));
     }
     
     

@@ -13,7 +13,7 @@ import java.util.Map;
 
 import abs.frontend.ast.*;
 
-public class DataTypeType extends Type {
+public class DataTypeType extends Type implements HasTypes {
     private final DataTypeDecl decl;
     private final List<Type> typeArgs = new ArrayList<Type>();
 
@@ -256,9 +256,11 @@ public class DataTypeType extends Type {
     @Override
     public Type applyBinding(Map<TypeParameter, Type> binding) {
         if (hasTypeArgs()) {
-            List<Type> argTypes = TypeCheckerHelper.applyBinding(binding, getTypeArgs());
+            List<Type> argTypes = TypeCheckerHelper.applyBinding(binding, this);
             return new DataTypeType(getDecl(), argTypes);
         } else
             return super.applyBinding(binding);
     }
+    
+    public java.util.List<Type> getTypes() { return getTypeArgs(); }
 }

@@ -17,7 +17,7 @@ aspect GenerateScala {
 	
 	public void ModuleDecl.generateScala(File dir) throws IOException {
 		// are we compiling the standard library?
-		//if (!getName().equals("ABS.StdLib")) {
+		//if (!Constants.STDLIB_NAME.equals(getName())) {
 		PrintWriter moduleWriter = new PrintWriter(new File(dir, "module.scala"));
 		
 		// stuff that's supposed to go into the package object

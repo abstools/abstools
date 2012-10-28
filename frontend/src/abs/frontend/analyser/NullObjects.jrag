@@ -4,7 +4,7 @@ aspect NullObjects {
   // explicit check if declaration is null object
   syn boolean Decl.isUnknown() = false;
   eq UnknownDecl.isUnknown() = true;
-  syn lazy UnknownDecl Model.unknownDecl() = new UnknownDecl();
+  public final static UnknownDecl Model.unknownDecl = new UnknownDecl();
 
 }
 

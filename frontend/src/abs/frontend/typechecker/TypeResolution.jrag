@@ -198,11 +198,11 @@ aspect TypeResolution {
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 Decl decl = d.lookup(name);
-                if (!decl.equals(unknownDecl()))
+                if (!decl.equals(unknownDecl))
                     return decl;
             }    			
         }
-        return unknownDecl();
+        return unknownDecl;
     }
 
     eq ParametricDataTypeDecl.getDataConstructor().lookup(KindedName name) = localLookup(name);
@@ -238,7 +238,7 @@ aspect TypeResolution {
         if (r != null) {			
             return r.getDecl();
         } else {	
-            return getModel().unknownDecl();
+            return Model.unknownDecl;
         } 			
     }	    
 

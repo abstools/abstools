@@ -259,7 +259,6 @@ aspect VarResolution {
             return v;
         }
     }
-    
 }
 
 // Local Variables:

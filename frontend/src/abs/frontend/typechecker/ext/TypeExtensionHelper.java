@@ -97,7 +97,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         ClassDecl d = (ClassDecl) e.lookup(new KindedName(Kind.CLASS,e.getClassName()));
-        checkAssignable(e.getType(),d.getParams(),e.getParams(), e);
+        checkAssignable(e.getType(),d,e.getParams(), e);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
     }
     
-    public void checkAssignable(Type callee, List<ParamDecl> params, List<PureExp> args, ASTNode<?> n) {
+    public void checkAssignable(Type callee, HasParams params, List<PureExp> args, ASTNode<?> n) {
         java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);
         checkAssignable(callee, paramsTypes, args, n);
     }
@@ -229,7 +229,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
                 checkTypeParameter(map, t, arg, f.getParam(i));
             }
         } else {
-            checkAssignable(null, decl.getParams(), f.getParams(), f);
+            checkAssignable(null, decl, f.getParams(), f);
         }
     }
 

@@ -311,7 +311,7 @@ aspect TypeChecker {
     }
     
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
-        TypeCheckerHelper.typeCheckParamList(e,getParams());
+        TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
         if (getFunctionDef() instanceof ExpFunctionDef) {
             // built-in functions are assumed type-correct.
@@ -372,7 +372,7 @@ aspect TypeChecker {
     
     public void MethodSig.typeCheck(SemanticErrorList e) {
         getReturnType().typeCheck(e);
-        TypeCheckerHelper.typeCheckParamList(e,getParams());
+        TypeCheckerHelper.typeCheckParamList(e,this);
     }
      
     public void DataTypeDecl.typeCheck(SemanticErrorList e) {
@@ -647,7 +647,7 @@ aspect TypeChecker {
         if (t.isUnknownType() || getMethodSig() == null) {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
-            TypeCheckerHelper.typeCheckEqualParams(e,this,getMethodSig().getParams(),getParams());
+            TypeCheckerHelper.typeCheckEqualParams(e,this,getMethodSig());
         }
     }
     
@@ -659,7 +659,7 @@ aspect TypeChecker {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
         } else {
             ClassDecl cd = (ClassDecl) decl;
-            TypeCheckerHelper.typeCheckEqualParams(e,this,cd.getParams(),getParams());
+            TypeCheckerHelper.typeCheckEqualParams(e,this,cd);
         }
     }
     
@@ -754,14 +754,18 @@ aspect TypeChecker {
         } else if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
         } else {
-      	   if (d instanceof ParametricFunctionDecl) {
-      	   	TypeCheckerHelper.typeCheckMatchingParams(e,this,((ParametricFunctionDecl)d),getParams());
-      	   } else {
-      	   	TypeCheckerHelper.typeCheckEqualParams(e,this,((FunctionDecl)d).getParams(),getParams());
-      	   }
+           ((FunctionDecl)d).typeCheckParams(e, this);
         }
     }
-    
+
+    void FunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
+      TypeCheckerHelper.typeCheckEqualParams(e,fa,this);
+    }
+
+    void ParametricFunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
+      TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
+    }
+
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
    	 Decl decl = getDecl();
    	 if (decl == null || !(decl instanceof DataConstructor)) {
@@ -773,9 +777,9 @@ aspect TypeChecker {
    	       e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
    	   } else {
    	       if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-   	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this,c.getConstructorArgs(),getParams());
+   	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this);
    	       } else {
-   	           TypeCheckerHelper.typeCheckEqual(e,this,TypeCheckerHelper.getTypesFromConstructorArgs(c.getConstructorArgs()),getParams());
+   	           TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
    	       }
    	   }
    	 }
