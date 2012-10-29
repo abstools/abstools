@@ -68,8 +68,8 @@ public class ResolvedMap extends HashMap<KindedName, ResolvedName> {
         for (Map.Entry<KindedName, ResolvedName> entry : with.entrySet()) {
             KindedName kn = entry.getKey();
             if (TypeCheckerHelper.isQualified(kn.getName())) {
-                if (TypeCheckerHelper.getModuleName(kn.getName()).equals(moduleName)) {
-                    String simpleName = TypeCheckerHelper.getSimpleName(kn.getName());
+                if (kn.getModuleName().equals(moduleName)) {
+                    String simpleName = kn.getSimpleName();
                     if (simpleNamePattern == null || simpleNamePattern.equals(simpleName)) {
                         put(new KindedName(kn.getKind(), mod.getName() + "." + simpleName), entry.getValue());
                         put(new KindedName(kn.getKind(), simpleName), entry.getValue());

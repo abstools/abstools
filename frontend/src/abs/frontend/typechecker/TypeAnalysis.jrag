@@ -15,7 +15,7 @@ aspect TypeAnalysis {
 		List<InterfaceTypeUse> refs = getExtendedInterfaceUses(); // names occuring in this declaration
 
 		for (InterfaceTypeUse ref : refs) {
-			TypeDecl decl = ref.getDecl(); // Note decl var. distinct from decl() method
+			Decl decl = ref.getDecl(); // Note decl var. distinct from decl() method
 			if (decl instanceof InterfaceDecl) {
 				if (((InterfaceDecl)decl).hasCycleOnExtendedInterfacesChain())
 				   return true;

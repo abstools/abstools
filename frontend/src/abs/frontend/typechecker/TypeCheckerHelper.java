@@ -58,12 +58,6 @@ public class TypeCheckerHelper {
         typeCheckMatchingParamsPattern(e, p, c);
     }    
     
-    public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
-        if (!e.getType().isAssignable(t)) {
-            l.add(new TypeError(e, ErrorMessage.EXPECTED_TYPE, t, e.getType()));
-        }
-    }
-
     public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
         if (!te.isAssignable(lht)) {
@@ -81,16 +75,12 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static <N extends ASTNode<?>&HasActualParams> void typeCheckEqualParams(SemanticErrorList l, N n, HasParams params) {
-        typeCheckEqual(l, n, params.getTypes());
-    }
-
     public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n) {        
-        final Map<TypeParameter, Type> binding = getTypeParamBinding(n, n.getDataConstructor(), n);
+        final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, n.getDataConstructor());
         typeCheckEqual(l, n, n.getDataConstructor().applyBindings(binding));
     }
 
-    public static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
+    private static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
         Map<TypeParameter, Type> binding = getTypeParamBinding(n, decl, n.getTypes());
         java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqualPattern(l, n, types);
@@ -168,10 +158,6 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, HasTypes params, HasActualParams args) {
-        return getTypeParamBinding(node, params, args.getTypesFromExp());
-    }
-
     public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, HasTypes params, java.util.List<Type> args) {
         Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
         addTypeParamBinding(node, binding, params, args);
@@ -232,11 +218,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static ResolvedMap getDefinedNames(ModuleDecl mod) {
-        return getDefinedNames(mod, new ArrayList<KindedName>());
-    }
-
-    static ResolvedMap getDefinedNames(ModuleDecl mod,
+    public static ResolvedMap getDefinedNames(ModuleDecl mod,
             java.util.List<KindedName> foundDuplicates) {
         ResolvedMap res = new ResolvedMap();
         ResolvedModuleName moduleName = new ResolvedModuleName(mod);
@@ -307,18 +289,6 @@ public class TypeCheckerHelper {
         return name.contains(".");
     }
 
-    public static String getModuleName(String qualifiedName) {
-        return qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
-    }
-
-    public static String getSimpleName(String name) {
-        if (isQualified(name)) {
-            return name.substring(name.lastIndexOf('.') + 1, name.length());
-        } else {
-            return name;
-        }
-    }
-
     public static ResolvedMap getExportedNames(ModuleDecl mod) {
         ResolvedMap res = new ResolvedMap();
         for (Export e : mod.getExports()) {
@@ -340,7 +310,7 @@ public class TypeCheckerHelper {
             } else if (e instanceof NamedExport) {
                 NamedExport ne = (NamedExport) e;
                 for (Name n : ne.getNames()) {
-                    String simpleName = getSimpleName(n.getString());
+                    String simpleName = n.getSimpleName();
                     res.putKindedNames(simpleName, mod.getVisibleNames());
                     res.putKindedNames(mod.getName() + "." + simpleName, mod.getVisibleNames());
                 }
@@ -351,8 +321,8 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckBinary(SemanticErrorList e, Binary b, Type t) {
-        assertHasType(e, b.getLeft(),t);
-        assertHasType(e, b.getRight(),t);
+        b.getLeft().assertHasType(e, t);
+        b.getRight().assertHasType(e, t);
         b.getLeft().typeCheck(e);
         b.getRight().typeCheck(e);
     }

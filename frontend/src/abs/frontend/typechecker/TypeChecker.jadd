@@ -556,13 +556,13 @@ aspect TypeChecker {
     public void DurationStmt.typeCheck(SemanticErrorList e) {
         getMin().typeCheck(e);
         getMax().typeCheck(e);
-        TypeCheckerHelper.assertHasType(e, getMin(), getModel().getIntType());
-        TypeCheckerHelper.assertHasType(e, getMax(), getModel().getIntType());
+        getMin().assertHasType(e, getModel().getIntType());
+        getMax().assertHasType(e, getModel().getIntType());
     }
 
     public void IfStmt.typeCheck(SemanticErrorList e) {
    	 getCondition().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
+   	 getCondition().assertHasType(e,getModel().getBoolType());
    	 getThen().typeCheck(e);
    	 if (hasElse())
    		 getElse().typeCheck(e);
@@ -571,7 +571,7 @@ aspect TypeChecker {
     
     public void WhileStmt.typeCheck(SemanticErrorList e) {
    	 getCondition().typeCheck(e);
-   	 TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
+   	 getCondition().assertHasType(e,getModel().getBoolType());
    	 getBody().typeCheck(e);
     }
     
@@ -580,7 +580,7 @@ aspect TypeChecker {
 
     public void AssertStmt.typeCheck(SemanticErrorList e) {
    	  getCondition().typeCheck(e);
-   	  TypeCheckerHelper.assertHasType(e,getCondition(),getModel().getBoolType());
+   	  getCondition().assertHasType(e,getModel().getBoolType());
     }
 
     // GUARDS
@@ -602,15 +602,15 @@ aspect TypeChecker {
       // We'll only run "deeper" checks if the types check out. 
       int size = e.size();
       exp.typeCheck(e);
-      TypeCheckerHelper.assertHasType(e,getPureExp(),getModel().getBoolType());
+      getPureExp().assertHasType(e,getModel().getBoolType());
       if (e.size() == size)
           hasFieldAccess(e); // check for visible change/builtin
     }
     public void DurationGuard.typeCheck(SemanticErrorList e) {
         getMin().typeCheck(e);
         getMax().typeCheck(e);
-        TypeCheckerHelper.assertHasType(e, getMin(), getModel().getIntType());
-        TypeCheckerHelper.assertHasType(e, getMax(), getModel().getIntType());
+        getMin().assertHasType(e, getModel().getIntType());
+        getMax().assertHasType(e, getModel().getIntType());
     }
     
     // EXPRESSIONS
@@ -647,7 +647,7 @@ aspect TypeChecker {
         if (t.isUnknownType() || getMethodSig() == null) {
             e.add(new TypeError(this, ErrorMessage.METHOD_NOT_FOUND, getMethod()));
         } else {
-            TypeCheckerHelper.typeCheckEqualParams(e,this,getMethodSig());
+            typeCheckEqualParams(e,getMethodSig());
         }
     }
     
@@ -659,7 +659,7 @@ aspect TypeChecker {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
         } else {
             ClassDecl cd = (ClassDecl) decl;
-            TypeCheckerHelper.typeCheckEqualParams(e,this,cd);
+            typeCheckEqualParams(e,cd);
         }
     }
     
@@ -712,7 +712,7 @@ aspect TypeChecker {
 
     public void IfExp.typeCheck(SemanticErrorList e) {
         getCondExp().typeCheck(e);
-        TypeCheckerHelper.assertHasType(e,getCondExp(),getModel().getBoolType());
+        getCondExp().assertHasType(e,getModel().getBoolType());
         getThenExp().typeCheck(e);
         getElseExp().typeCheck(e);
         Type tt = getThenExp().getType();
@@ -759,7 +759,7 @@ aspect TypeChecker {
     }
 
     void FunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
-      TypeCheckerHelper.typeCheckEqualParams(e,fa,this);
+      fa.typeCheckEqualParams(e,this);
     }
 
     void ParametricFunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
@@ -767,7 +767,7 @@ aspect TypeChecker {
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
-        return TypeCheckerHelper.getTypeParamBinding(node, node, this);
+        return getTypeParamBinding(node, node);
     }
 
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
@@ -799,12 +799,12 @@ aspect TypeChecker {
     }
 
     public void MinusExp.typeCheck(SemanticErrorList e) { 
-   	 TypeCheckerHelper.assertHasType(e,getOperand(),getModel().getIntType());
+   	   getOperand().assertHasType(e,getModel().getIntType());
        getOperand().typeCheck(e);
     }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-   	 TypeCheckerHelper.assertHasType(e,getOperand(),getModel().getBoolType());
+   	   getOperand().assertHasType(e,getModel().getBoolType());
        getOperand().typeCheck(e);
     }
     
@@ -827,6 +827,12 @@ aspect TypeChecker {
     
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
 	    TypeCheckerHelper.typeCheck(this,e,t);
+    }
+    
+    public void Exp.assertHasType(SemanticErrorList l, Type t) {
+        if (!getType().isAssignable(t)) {
+            l.add(new TypeError(this, ErrorMessage.EXPECTED_TYPE, t, getType()));
+        }
     }
 }
 

@@ -237,7 +237,7 @@ aspect Typing {
    	 if (dataDecl instanceof ParametricDataTypeDecl) {
    	     if (d.getConstructorArgs().getNumChild() != getParams().getNumChild())
    	         return UnknownType.INSTANCE;
-   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBinding(d,d,this);
+   		 Map<TypeParameter, Type> typeBinding = getTypeParamBinding(d,d);
    		 return declaredResultType.applyBinding(typeBinding);
    	 } else {
    		 return declaredResultType;
@@ -364,6 +364,15 @@ aspect Typing {
     Exp implements HasType;
     Pattern implements HasType;
     ConstructorArg implements HasType;
+
+    // Unfortunately must be in same file as the interface. TypeChecker would be a better place:
+
+    public void HasActualParams.typeCheckEqualParams(SemanticErrorList l, HasParams params) {
+        TypeCheckerHelper.typeCheckEqual(l, this, params.getTypes());
+    }
+    public Map<TypeParameter, Type> HasActualParams.getTypeParamBinding(ASTNode<?> node, HasTypes params) {
+        return TypeCheckerHelper.getTypeParamBinding(node, params, getTypesFromExp());
+    }
 }
 
 // Local Variables:

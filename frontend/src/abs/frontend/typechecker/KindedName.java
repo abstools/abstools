@@ -30,7 +30,7 @@ public class KindedName {
         if (obj == null || !(obj instanceof KindedName))
             return false;
         KindedName o = (KindedName) obj;
-        return this.name.equals(o.name) && this.kind.equals(o.kind);
+        return name.equals(o.name) && kind.equals(o.kind);
     }
 
     @Override
@@ -41,5 +41,20 @@ public class KindedName {
     @Override
     public String toString() {
         return name + "[" + kind.name() + "]";
+    }
+    
+    
+    public String getModuleName() {
+        String qualifiedName = getName();
+        return qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
+    }
+
+    public String getSimpleName() {
+        String name = getName();
+        if (TypeCheckerHelper.isQualified(name)) {
+            return name.substring(name.lastIndexOf('.') + 1, name.length());
+        } else {
+            return name;
+        }
     }
 }
