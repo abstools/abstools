@@ -266,6 +266,10 @@ aspect GenerateScala {
 		writer.format("%stype %s = %s", prefix, getName(), getScalaType());
 		writer.println();
 	}
+
+	public void UnknownDecl.generateScala(String prefix, PrintWriter writer) {
+		throw new RuntimeException("Cowardly refusing to generate Scala for broken code.");
+	}
 	
 	private void ClassDecl.generateScalaActorInvocation(String className, MethodSig s, PrintWriter writer) {
 		String name = s.getName();
