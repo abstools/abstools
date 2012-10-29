@@ -766,6 +766,10 @@ aspect TypeChecker {
       TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
     }
 
+    public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
+        return TypeCheckerHelper.getTypeParamBinding(node, node, this);
+    }
+
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
    	 Decl decl = getDecl();
    	 if (decl == null || !(decl instanceof DataConstructor)) {

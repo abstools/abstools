@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 
 import abs.common.StringUtils;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.HasTypeParameters;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParamDecl;
@@ -41,13 +42,9 @@ public class ScalaUtils {
     public static void generateTypeParameters(Decl decl, PrintWriter writer) {
         List<TypeParameterDecl> typeParams = null;
         
-        if (decl instanceof ParametricDataTypeDecl) {
-            typeParams = ((ParametricDataTypeDecl)decl).getTypeParameters();
-        } 
-        else if (decl instanceof ParametricFunctionDecl) {
-            typeParams = ((ParametricFunctionDecl)decl).getTypeParameters();
-        } 
-        else
+        if (decl instanceof HasTypeParameters) {
+            typeParams = ((HasTypeParameters)decl).getTypeParameters();
+        } else
             return;
         
         if (typeParams.getNumChild() > 0) {

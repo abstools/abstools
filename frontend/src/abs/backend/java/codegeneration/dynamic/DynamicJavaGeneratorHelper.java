@@ -118,13 +118,10 @@ public class DynamicJavaGeneratorHelper {
     public static void generateTypeParameters(PrintStream stream, Decl dtd,
             boolean plusExtends) {
         List<TypeParameterDecl> typeParams = null;
-        if (dtd instanceof ParametricDataTypeDecl) {
-            typeParams = ((ParametricDataTypeDecl)dtd).getTypeParameters();
+        if (dtd instanceof HasTypeParameters) {
+            typeParams = ((HasTypeParameters)dtd).getTypeParameters();
         } else
-            if (dtd instanceof ParametricFunctionDecl) {
-                typeParams = ((ParametricFunctionDecl)dtd).getTypeParameters();
-            } else
-                return;
+            return;
         if (typeParams.getNumChild() > 0) {
             stream.print("<");
             boolean isFirst = true;
@@ -145,7 +142,7 @@ public class DynamicJavaGeneratorHelper {
         FunctionDecl d = (FunctionDecl) app.getDecl();
         String name = d.getName();
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
-        generateArgs(stream, app.getParams(), TypeCheckerHelper.getTypesFromExp(app));
+        generateArgs(stream, app.getParams(), app.getTypesFromExp());
     }
 
     public static String getDebugString(Stmt stmt) {
@@ -185,7 +182,7 @@ public class DynamicJavaGeneratorHelper {
         stream.println("{");
         stream.println("return (" + ABSFut.class.getName() + ")");
         generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), 
-                TypeCheckerHelper.getTypes(sig),sig.getName());
+                sig.getTypes(),sig.getName());
         stream.println(";");
         stream.println("}");
     }
@@ -197,7 +194,7 @@ public class DynamicJavaGeneratorHelper {
         final String method = call.getMethod();
 
         generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
-                TypeCheckerHelper.getTypesFromExp(call), method);
+                call.getTypesFromExp(), method);
 
     }
 
@@ -243,7 +240,7 @@ public class DynamicJavaGeneratorHelper {
         call.getCallee().generateJavaDynamic(stream);
         stream.print("))");
         stream.print(".dispatch");
-        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), TypeCheckerHelper.getTypesFromExp(call));
+        DynamicJavaGeneratorHelper.generateArgs(stream, "\"" + call.getMethod() + "\"", call.getParams(), call.getTypesFromExp());
     }
     
     

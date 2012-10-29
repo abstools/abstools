@@ -708,10 +708,10 @@ aspect GenerateJava {
         String className = JavaBackend.getQualifiedString(decl);
         if (hasCog()) {
             stream.print(className + ".__ABS_createNewCOG");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypes(decl));
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
         } else {
             stream.print(className + ".__ABS_createNewObject");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), TypeCheckerHelper.getTypes(decl));
+            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
         }
     }
 
@@ -873,7 +873,7 @@ aspect GenerateJava {
         Type declaredResultType = d.getTypeUse().getType();
         if (d instanceof ParametricFunctionDecl) {
             ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-            Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl,this);
+            Map<TypeParameter, Type> typeBinding = getTypeParamBindingFromParamDecl(funDecl);
 
             /*
          StringBuffer buf = new StringBuffer();
@@ -901,7 +901,7 @@ aspect GenerateJava {
         }
 
         stream.print("apply");
-        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypes(d));
+        DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), d.getTypes());
 
     }
 
@@ -933,7 +933,7 @@ aspect GenerateJava {
             }
           }
              */
-            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), TypeCheckerHelper.getTypesFromConstructorArgs(c));
+            DynamicJavaGeneratorHelper.generateArgs(stream,getParams(), c.getTypes());
         }
     }
 

@@ -97,7 +97,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
 
         ClassDecl d = (ClassDecl) e.lookup(new KindedName(Kind.CLASS,e.getClassName()));
-        checkAssignable(e.getType(),d,e.getParams(), e);
+        checkAssignable(e.getType(),d,e);
     }
 
     @Override
@@ -128,16 +128,12 @@ public class TypeExtensionHelper implements TypeSystemExtension {
 
         checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
     }
-    
-    public void checkAssignable(Type callee, HasParams params, List<PureExp> args, ASTNode<?> n) {
-        java.util.List<Type> paramsTypes = TypeCheckerHelper.getTypes(params);
-        checkAssignable(callee, paramsTypes, args, n);
-    }
 
-    private void checkAssignable(Type callee, java.util.List<Type> paramsTypes, List<PureExp> args, ASTNode<?> n) {
+    public <N extends ASTNode<?>&HasActualParams> void checkAssignable(Type callee, HasParams params, N n) {
+        java.util.List<Type> paramsTypes = params.getTypes();
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
-            PureExp exp = args.getChild(i);
+            PureExp exp = n.getParams().getChild(i);
             checkAssignable(callee, AdaptDirection.TO, exp.getType(), argType, n);
         }
     }
@@ -229,7 +225,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
                 checkTypeParameter(map, t, arg, f.getParam(i));
             }
         } else {
-            checkAssignable(null, decl, f.getParams(), f);
+            checkAssignable(null, decl, f);
         }
     }
 

@@ -200,7 +200,7 @@ aspect TypeCheckerExtension {
         if (s.size() > size) return;
         getModel().getTypeExt().checkMethodCall(this);
         if (getMethodSig() != null) {
-           getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig(),getParams(), this);
+           getModel().getTypeExt().checkAssignable(getCallee().getType(),getMethodSig(),this);
         }
     }
     

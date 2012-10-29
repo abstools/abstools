@@ -6,8 +6,6 @@ package abs.frontend.typechecker;
 
 import java.util.*;
 
-import beaver.Symbol;
-
 import abs.common.Constants;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
@@ -57,7 +55,7 @@ public class TypeCheckerHelper {
             return;
         }
 
-        TypeCheckerHelper.typeCheckMatchingParamsPattern(e, p, c);
+        typeCheckMatchingParamsPattern(e, p, c);
     }    
     
     public static void assertHasType(SemanticErrorList l, Exp e, Type t) {
@@ -71,7 +69,6 @@ public class TypeCheckerHelper {
         if (!te.isAssignable(lht)) {
             l.add(new TypeError(n, ErrorMessage.CANNOT_ASSIGN, te, lht));
         }
-
     }
 
     public static void typeCheckParamList(SemanticErrorList l, HasParams params) {
@@ -85,36 +82,21 @@ public class TypeCheckerHelper {
     }
 
     public static <N extends ASTNode<?>&HasActualParams> void typeCheckEqualParams(SemanticErrorList l, N n, HasParams params) {
-        typeCheckEqual(l, n, getTypes(params));
+        typeCheckEqual(l, n, params.getTypes());
     }
 
     public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n) {        
         final Map<TypeParameter, Type> binding = getTypeParamBinding(n, n.getDataConstructor(), n);
-        typeCheckEqual(l, n, applyBinding(binding, n.getDataConstructor()));
+        typeCheckEqual(l, n, n.getDataConstructor().applyBindings(binding));
     }
 
     public static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
-        java.util.List<Type> patternTypes = getTypesFromPattern(n);
-        Map<TypeParameter, Type> binding = getTypeParamBinding(n, decl, patternTypes);
-        java.util.List<Type> types = applyBinding(binding, decl);
+        Map<TypeParameter, Type> binding = getTypeParamBinding(n, decl, n.getTypes());
+        java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqualPattern(l, n, types);
     }
 
-    public static java.util.List<Type> getTypesFromConstructorArgs(DataConstructor constructor) {
-        java.util.List<Type> res = new ArrayList<Type>();
-        for (ConstructorArg arg : constructor.getConstructorArgs()) {
-            res.add(arg.getType());
-        }
-        return res;
-    }
-
-    public static <N extends ASTNode<?>&HasActualParams> void typeCheckMatchingParams(SemanticErrorList l, N n, ParametricFunctionDecl decl) {
-        Map<TypeParameter, Type> binding = getTypeParamBindingFromParamDecl(decl, n);
-        java.util.List<Type> types = applyBinding(binding, decl);
-        typeCheckEqual(l, n, types);
-    }
-
-    public static java.util.List<Type> applyBinding(Map<TypeParameter, Type> binding, HasTypes ty) {
+    public static java.util.List<Type> applyBindings(Map<TypeParameter, Type> binding, HasTypes ty) {
         java.util.List<Type> types = ty.getTypes();
         ArrayList<Type> res = new ArrayList<Type>(types.size());
         for (Type t : types) {
@@ -123,8 +105,9 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static <N extends ASTNode<?>&HasActualParams> void typeCheckEqualDataTypeUses(SemanticErrorList l, N n, List<? extends DataTypeUse> params) {
-        java.util.List<Type> types = getTypesFromDataTypeUse(params);
+    public static void typeCheckMatchingParams(SemanticErrorList l, FnApp n, ParametricFunctionDecl decl) {
+        Map<TypeParameter, Type> binding = n.getTypeParamBindingFromParamDecl(decl);
+        java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqual(l, n, types);
     }
 
@@ -177,63 +160,27 @@ public class TypeCheckerHelper {
         }
     }
     
-    public static java.util.List<Type> getTypesFromDataTypeUse(List<? extends DataTypeUse> params) {
+    public static <N extends ASTNode<?>&HasType> java.util.List<Type> getTypes(List<N> params) {
         ArrayList<Type> res = new ArrayList<Type>();
-        for (DataTypeUse u : params) {
-            Type t = u.getType();
-            res.add(t);
-        }
-        return res;
-    }
-    
-    public static java.util.List<Type> getTypesFromTypeParamDecls(ParametricDataTypeDecl params) {
-        ArrayList<Type> res = new ArrayList<Type>();
-        for (TypeParameterDecl u : params.getTypeParameters()) {
+        for (HasType u : params) {
             res.add(u.getType());
         }
         return res;
-    }
-
-    public static java.util.List<Type> getTypes(HasParams params) {
-        ArrayList<Type> res = new ArrayList<Type>();
-        for (ParamDecl u : params.getParams()) {
-            res.add(u.getType());
-        }
-        return res;
-    }
-
-    public static java.util.List<Type> getTypesFromExp(HasActualParams args) {
-        ArrayList<Type> res = new ArrayList<Type>();
-        for (PureExp e : args.getParams()) {
-            res.add(e.getType());
-        }
-        return res;
-    }
-
-    private static java.util.List<Type> getTypesFromPattern(ConstructorPattern args) {
-        ArrayList<Type> res = new ArrayList<Type>();
-        for (Pattern p : args.getParams()) {
-            res.add(p.getType());
-        }
-        return res;
-    }
-
-    public static Map<TypeParameter, Type> getTypeParamBindingFromParamDecl(ParametricFunctionDecl node, HasActualParams args) {
-        return getTypeParamBinding(node, node, args);
     }
 
     public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, HasTypes params, HasActualParams args) {
-        return getTypeParamBinding(node, params, getTypesFromExp(args));
+        return getTypeParamBinding(node, params, args.getTypesFromExp());
     }
 
     public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, HasTypes params, java.util.List<Type> args) {
         Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
-        addTypeParamBinding(node, binding, params.getTypes(), args);
+        addTypeParamBinding(node, binding, params, args);
         return binding;
     }
 
-    private static void addTypeParamBinding(ASTNode<?> node, Map<TypeParameter, Type> binding, java.util.List<Type> params,
+    private static void addTypeParamBinding(ASTNode<?> node, Map<TypeParameter, Type> binding, HasTypes ty,
             java.util.List<Type> args) {
+        java.util.List<Type> params = ty.getTypes();
         if (params.size() != args.size())
             throw new TypeCheckerException(new TypeError(node, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(),args.size()));
         for (int i = 0; i < params.size(); i++) {
@@ -253,7 +200,7 @@ public class TypeCheckerHelper {
                 DataTypeType paramdt = (DataTypeType) paramType;
                 DataTypeType argdt = (DataTypeType) argType;
                 if (paramdt.numTypeArgs() == argdt.numTypeArgs()) {
-                    addTypeParamBinding(node, binding, paramdt.getTypeArgs(), argdt.getTypeArgs());
+                    addTypeParamBinding(node, binding, paramdt, argdt.getTypeArgs());
                 }
             }
         }
@@ -416,19 +363,11 @@ public class TypeCheckerHelper {
     public static void checkForDuplicatesOfVarDecl(SemanticErrorList e, VarDeclStmt v) {
         String varName = v.getVarDecl().getName();
         VarOrFieldDecl otherVar = v.lookupVarOrFieldName(varName , false);
-        if (otherVar != null && inSameMethodOrBlock(v, otherVar)) {
+        if (otherVar != null && v.inSameMethodOrBlock(otherVar)) {
             e.add(new TypeError(v,ErrorMessage.VARIABLE_ALREADY_DECLARED, varName));
         }
     }
 
-    /**
-     * checks whether the two elements are defined in the same method or block
-     */
-    private static boolean inSameMethodOrBlock(ASTNode<?> a, ASTNode<?> b) {
-        return a.getContextMethod() != null && b.getContextMethod() == a.getContextMethod()
-            || a.getContextBlock()  != null && b.getContextBlock() == a.getContextBlock();
-    }
-    
     /**
      * check a list of compilation units for duplicate module names, product names, delta names
      */
@@ -493,7 +432,7 @@ public class TypeCheckerHelper {
         String result = "";
         for (Decl alternative : a.getAlternative()) {
             result += "\n * " + alternative.qualifiedName() +  " (defined in " + 
-                    alternative.getFileName() + ", line " + Symbol.getLine(alternative.getStart()) + ")";
+                    alternative.getFileName() + ", line " + alternative.getStartLine() + ")";
         }
         return result;
     }

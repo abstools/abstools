@@ -315,6 +315,14 @@ aspect TypeResolution {
     /** returns the parent compilation unit of this node **/
     syn lazy CompilationUnit ASTNode.getCompilationUnit() = (CompilationUnit) calcContextNode(CompilationUnit.class);
 
+    /**
+     * checks whether the two elements are defined in the same method or block
+     */
+     public boolean ASTNode.inSameMethodOrBlock(ASTNode<?> b) {
+        return getContextMethod() != null && b.getContextMethod() == getContextMethod()
+            || getContextBlock()  != null && b.getContextBlock() == getContextBlock();
+    }
+
     public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
         ASTNode<?> n = this;
         while (n != null) {

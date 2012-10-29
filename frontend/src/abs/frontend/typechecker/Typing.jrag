@@ -55,7 +55,7 @@ aspect Typing {
         return new DataTypeType(this);
     }
     eq ParametricDataTypeDecl.getType() { 
-   	 return new DataTypeType(this, TypeCheckerHelper.getTypesFromTypeParamDecls(this)); 
+   	 return new DataTypeType(this, getTypes()); 
     }
     
     eq InterfaceDecl.getType() { 
@@ -180,7 +180,7 @@ aspect Typing {
         if (d == null || !(d instanceof ParametricDataTypeDecl))
             return UnknownType.INSTANCE;
         
-        return new DataTypeType((ParametricDataTypeDecl)d,getParams()).withAnnotations(getAnnotations());
+        return new DataTypeType((ParametricDataTypeDecl)d,this).withAnnotations(getAnnotations());
     }
     eq Unary.getType() = getOperand().getType();
     eq AddAddExp.getType() = getLeft().getType();  // number or string
@@ -223,7 +223,7 @@ aspect Typing {
    	 Type declaredResultType = ((FunctionDecl)d).getType();
    	 if (d instanceof ParametricFunctionDecl) {
    		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
-   		 Map<TypeParameter, Type> typeBinding = TypeCheckerHelper.getTypeParamBindingFromParamDecl(funDecl,this);
+   		 Map<TypeParameter, Type> typeBinding = getTypeParamBindingFromParamDecl(funDecl);
    		 return declaredResultType.applyBinding(typeBinding);
    	 } else {
    		 return declaredResultType;
@@ -293,6 +293,9 @@ aspect Typing {
         return res;
     }
 
+    /**
+     * These classes have formal parameters.
+     */
     interface HasParams {
       List<ParamDecl> getParams();
     }
@@ -300,7 +303,10 @@ aspect Typing {
     FunctionDecl implements HasParams;
     ClassDecl implements HasParams;
     MethodSig implements HasParams;
-    
+
+    /**
+     * These classes have actual parameters.
+     */    
     interface HasActualParams {
       List<PureExp> getParams();
     }
@@ -309,16 +315,55 @@ aspect Typing {
     Call implements HasActualParams;
     FnApp implements HasActualParams;
     NewExp implements HasActualParams;
-    
+
+    /**
+     * Types of classes with formal/actual parameters.
+     */    
     interface HasTypes {
       java.util.List<Type> getTypes();
     }
     
     DataConstructor implements HasTypes;
     ParametricFunctionDecl implements HasTypes;
-	
-    public java.util.List<Type> DataConstructor.getTypes() { return TypeCheckerHelper.getTypesFromConstructorArgs(this); }
-    public java.util.List<Type> ParametricFunctionDecl.getTypes() { return TypeCheckerHelper.getTypes(this); }
+    ConstructorPattern implements HasTypes;
+    public java.util.List<Type> ConstructorPattern.getTypes() {
+        return TypeCheckerHelper.getTypes(getParams());
+    }
+    ParametricDataTypeDecl implements HasTypes;
+    public java.util.List<Type> ParametricDataTypeDecl.getTypes() {
+        return TypeCheckerHelper.getTypes(getTypeParameters());
+    }
+    ParametricDataTypeUse implements HasTypes;
+    public java.util.List<Type> ParametricDataTypeUse.getTypes() {
+        return TypeCheckerHelper.getTypes(getParams());
+    }
+
+	public java.util.List<Type> HasTypes.applyBindings(Map<TypeParameter, Type> binding) {
+		return TypeCheckerHelper.applyBindings(binding, this);
+    }
+
+    public java.util.List<Type> DataConstructor.getTypes() { return TypeCheckerHelper.getTypes(getConstructorArgs()); }
+
+    interface HasTypeParameters {
+      List<TypeParameterDecl> getTypeParameters();
+    }
+    
+    ParametricDataTypeDecl implements HasTypeParameters;
+    ParametricFunctionDecl implements HasTypeParameters;
+    
+    public java.util.List<Type> HasParams.getTypes()              { return TypeCheckerHelper.getTypes(getParams()); }
+    public java.util.List<Type> HasActualParams.getTypesFromExp() { return TypeCheckerHelper.getTypes(getParams()); }
+    
+    interface HasType {
+      Type getType();
+    }
+    
+    DataTypeUse implements HasType;
+    ParamDecl implements HasType;
+    Decl implements HasType;
+    Exp implements HasType;
+    Pattern implements HasType;
+    ConstructorArg implements HasType;
 }
 
 // Local Variables:

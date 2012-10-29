@@ -37,8 +37,8 @@ public class DataTypeType extends Type implements HasTypes {
         this(decl, new Type[0]);
     }
 
-    public DataTypeType(DataTypeDecl decl, abs.frontend.ast.List<DataTypeUse> typeUses) {
-        this(decl, TypeCheckerHelper.getTypesFromDataTypeUse(typeUses).toArray(new Type[0]));
+    public DataTypeType(DataTypeDecl decl, ParametricDataTypeUse typeUses) {
+        this(decl, typeUses.getTypes().toArray(new Type[0]));
     }
 
     public DataTypeType(DataTypeDecl decl, Type... typeArgs) {
@@ -256,11 +256,20 @@ public class DataTypeType extends Type implements HasTypes {
     @Override
     public Type applyBinding(Map<TypeParameter, Type> binding) {
         if (hasTypeArgs()) {
-            List<Type> argTypes = TypeCheckerHelper.applyBinding(binding, this);
+            List<Type> argTypes = applyBindings(binding);
             return new DataTypeType(getDecl(), argTypes);
         } else
             return super.applyBinding(binding);
     }
     
     public java.util.List<Type> getTypes() { return getTypeArgs(); }
+
+    /**
+     * @see abs.frontend.ast.HasTypes#applyBindings(java.util.Map)
+     * Not called from the outside, maybe shouldn't really be HasTypes?
+     */
+    @Override
+    public List<Type> applyBindings(Map<TypeParameter, Type> binding) {
+        return TypeCheckerHelper.applyBindings(binding, this);
+    }
 }

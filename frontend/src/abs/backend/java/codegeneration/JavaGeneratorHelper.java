@@ -35,6 +35,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
 import abs.frontend.ast.FunctionDecl;
+import abs.frontend.ast.HasTypeParameters;
 import abs.frontend.ast.LetExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
@@ -135,11 +136,8 @@ public class JavaGeneratorHelper {
     public static void generateTypeParameters(PrintStream stream, Decl dtd,
             boolean plusExtends) {
         List<TypeParameterDecl> typeParams = null;
-        if (dtd instanceof ParametricDataTypeDecl) {
-            typeParams = ((ParametricDataTypeDecl)dtd).getTypeParameters();
-        } else
-        if (dtd instanceof ParametricFunctionDecl) {
-            typeParams = ((ParametricFunctionDecl)dtd).getTypeParameters();
+        if (dtd instanceof HasTypeParameters) {
+            typeParams = ((HasTypeParameters)dtd).getTypeParameters();
         } else
             return;
         if (typeParams.getNumChild() > 0) {
@@ -168,7 +166,7 @@ public class JavaGeneratorHelper {
         String firstArgs = null;
         if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
             firstArgs = generateFunctionalBreakPointArgs(app);
-        generateArgs(stream, firstArgs, app.getParams(), TypeCheckerHelper.getTypes(d));
+        generateArgs(stream, firstArgs, app.getParams(), d.getTypes());
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {
@@ -238,7 +236,7 @@ public class JavaGeneratorHelper {
           final MethodSig sig) 
     {
         final java.util.List<Type> paramTypes
-            = TypeCheckerHelper.getTypes(sig);
+            = sig.getTypes();
         stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
         stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");
