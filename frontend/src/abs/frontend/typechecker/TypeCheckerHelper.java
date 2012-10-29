@@ -21,7 +21,7 @@ public class TypeCheckerHelper {
             return;
 
         Decl decl = p.lookup(new KindedName(Kind.DATA_CONSTRUCTOR, p.getConstructor()));
-        if (decl == null || !(decl instanceof DataConstructor)) {
+        if (!(decl instanceof DataConstructor)) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
@@ -40,7 +40,7 @@ public class TypeCheckerHelper {
 
         Type myType = p.getType();
 
-        if (myType == null || !(myType instanceof DataTypeType))
+        if (!(myType instanceof DataTypeType))
             return;
 
         if (!(t instanceof DataTypeType)) {
@@ -81,13 +81,12 @@ public class TypeCheckerHelper {
     }
 
     private static void typeCheckMatchingParamsPattern(SemanticErrorList l, ConstructorPattern n, DataConstructor decl) {
-        Map<TypeParameter, Type> binding = getTypeParamBinding(n, decl, n.getTypes());
+        Map<TypeParameter, Type> binding = decl.getTypeParamBinding(n, n.getTypes());
         java.util.List<Type> types = decl.applyBindings(binding);
         typeCheckEqualPattern(l, n, types);
     }
 
-    public static java.util.List<Type> applyBindings(Map<TypeParameter, Type> binding, HasTypes ty) {
-        java.util.List<Type> types = ty.getTypes();
+    public static java.util.List<Type> applyBindings(Map<TypeParameter, Type> binding, java.util.List<Type> types) {
         ArrayList<Type> res = new ArrayList<Type>(types.size());
         for (Type t : types) {
             res.add(t.applyBinding(binding));
@@ -118,7 +117,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckEqualPattern(SemanticErrorList l, ConstructorPattern n, java.util.List<Type> params) {
+    private static void typeCheckEqualPattern(SemanticErrorList l, ConstructorPattern n, java.util.List<Type> params) {
         List<Pattern> args = n.getParams();
         if (params.size() != args .getNumChild()) {
             l.add(new TypeError(n, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(), args.getNumChild()));
@@ -158,15 +157,8 @@ public class TypeCheckerHelper {
         return res;
     }
 
-    public static Map<TypeParameter, Type> getTypeParamBinding(ASTNode<?> node, HasTypes params, java.util.List<Type> args) {
-        Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
-        addTypeParamBinding(node, binding, params, args);
-        return binding;
-    }
-
-    private static void addTypeParamBinding(ASTNode<?> node, Map<TypeParameter, Type> binding, HasTypes ty,
+    public static void addTypeParamBinding(ASTNode<?> node, Map<TypeParameter, Type> binding, java.util.List<Type> params,
             java.util.List<Type> args) {
-        java.util.List<Type> params = ty.getTypes();
         if (params.size() != args.size())
             throw new TypeCheckerException(new TypeError(node, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(),args.size()));
         for (int i = 0; i < params.size(); i++) {
@@ -186,7 +178,7 @@ public class TypeCheckerHelper {
                 DataTypeType paramdt = (DataTypeType) paramType;
                 DataTypeType argdt = (DataTypeType) argType;
                 if (paramdt.numTypeArgs() == argdt.numTypeArgs()) {
-                    addTypeParamBinding(node, binding, paramdt, argdt.getTypeArgs());
+                    addTypeParamBinding(node, binding, paramdt.getTypeArgs(), argdt.getTypeArgs());
                 }
             }
         }
@@ -371,28 +363,6 @@ public class TypeCheckerHelper {
     }
     
     /**
-     * checks if a declaration is unknown and adds an appropriate error message to the semantic error list
-     * @param use the use of the declaration (this is where the error will be shown)
-     * @param decl the declaration which is referenced by the use
-     * @param e the semantic error list
-     * @param errorMessage the error message for unknown declarations 
-     * @param name the name of the declaration (used in the error message)
-     * @return
-     */
-    public static boolean checkDecl(ASTNode<?> use, Decl decl, SemanticErrorList e, ErrorMessage errorMessage, String name) {
-        if (decl.isUnknown()) {
-            if (decl instanceof AmbiguousDecl) {
-                AmbiguousDecl ambigiousDecl = (AmbiguousDecl) decl;
-                e.add(new TypeError(use, ErrorMessage.AMBIGIOUS_USE, name, getAlternativesAsString(ambigiousDecl)));
-            } else {
-                e.add(new TypeError(use, errorMessage, name));
-            }
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * get all the alternative declarations of an ambiguous declaration formated as a list
      * which can be used in error messages
      * @param a
@@ -408,14 +378,12 @@ public class TypeCheckerHelper {
     }
 
     public static void checkDataTypeUse(SemanticErrorList e, DataTypeUse use) {
-        if (! (use.getType() instanceof DataTypeType))
-            return;
-        
-        DataTypeType type = (DataTypeType) use.getType();
+        Type type = use.getType();
         if (type.getDecl() instanceof ParametricDataTypeDecl) {
+            DataTypeType t = (DataTypeType) type;
             int expected = ((ParametricDataTypeDecl)type.getDecl()).getNumTypeParameter();
-            if (expected != type.numTypeArgs()) {
-                e.add(new TypeError(use, ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+type.numTypeArgs()));
+            if (expected != t.numTypeArgs()) {
+                e.add(new TypeError(use, ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+t.numTypeArgs()));
             } else if (expected > 0) {
                 if (use instanceof ParametricDataTypeUse) {
                         for (DataTypeUse du : ((ParametricDataTypeUse)use).getParams()) {

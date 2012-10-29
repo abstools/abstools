@@ -74,7 +74,7 @@ aspect Typing {
     syn Type ConstructorArg.getType();
     eq ConstructorArg.getType() = getDataTypeUse().getType();
     
-    syn lazy Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
+    syn Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
     eq TypedVarOrFieldDecl.getType() = getAccess().getType();
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
@@ -147,7 +147,6 @@ aspect Typing {
     }
     eq NewExp.getType() {
         Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
-        if (d == null) return UnknownType.INSTANCE;
         return d.getType();
     }
 
@@ -218,9 +217,8 @@ aspect Typing {
     }
     eq FnApp.getType() {
        Decl d = lookup(new KindedName(Kind.FUN,getName()));
-       if (d == null || !d.isFunction()) return UnknownType.INSTANCE;
    	 
-   	 Type declaredResultType = ((FunctionDecl)d).getType();
+   	 Type declaredResultType = d.getType();
    	 if (d instanceof ParametricFunctionDecl) {
    		 ParametricFunctionDecl funDecl = (ParametricFunctionDecl) d;
    		 Map<TypeParameter, Type> typeBinding = getTypeParamBindingFromParamDecl(funDecl);
@@ -339,7 +337,7 @@ aspect Typing {
     }
 
 	public java.util.List<Type> HasTypes.applyBindings(Map<TypeParameter, Type> binding) {
-		return TypeCheckerHelper.applyBindings(binding, this);
+		return TypeCheckerHelper.applyBindings(binding, getTypes());
     }
 
     public java.util.List<Type> DataConstructor.getTypes() { return TypeCheckerHelper.getTypes(getConstructorArgs()); }
@@ -371,7 +369,12 @@ aspect Typing {
         TypeCheckerHelper.typeCheckEqual(l, this, params.getTypes());
     }
     public Map<TypeParameter, Type> HasActualParams.getTypeParamBinding(ASTNode<?> node, HasTypes params) {
-        return TypeCheckerHelper.getTypeParamBinding(node, params, getTypesFromExp());
+        return params.getTypeParamBinding(node, getTypesFromExp());
+    }
+    public Map<TypeParameter, Type> HasTypes.getTypeParamBinding(ASTNode<?> node, java.util.List<Type> args) {
+        Map<TypeParameter, Type> binding = new HashMap<TypeParameter, Type>();
+        TypeCheckerHelper.addTypeParamBinding(node, binding, getTypes(), args);
+        return binding;
     }
 }
 

@@ -337,11 +337,8 @@ aspect TypeChecker {
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
         HashMap<String, MethodSig> names = new HashMap<String, MethodSig>();
         for (MethodSig s : getBodys()) {
-            if (names.containsKey(s.getName())) {
+            if (names.put(s.getName(),s) != null)
                 e.add(new TypeError(s, ErrorMessage.DUPLICATE_METHOD_NAME, s.getName()));
-            } else {
-                names.put(s.getName(),s);
-            }
             s.typeCheck(e);
         }
         
@@ -483,7 +480,30 @@ aspect TypeChecker {
     public void ParamDecl.typeCheck(SemanticErrorList e) {
    	 	getAccess().typeCheck(e);
     }
+
+    /**
+     * checks if a declaration is unknown and adds an appropriate error message to the semantic error list
+     * @param use the use of the declaration (this is where the error will be shown)
+     * @param e the semantic error list
+     * @param errorMessage the error message for unknown declarations 
+     * @param name the name of the declaration (used in the error message)
+     * @return
+     */
+    protected boolean Decl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
+    	return true;
+    }
+    @Override
+    protected boolean UnknownDecl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
+            e.add(new TypeError(use, errorMessage, name));
+            return false;
+    }
+    @Override
+    protected boolean AmbiguousDecl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
+            e.add(new TypeError(use, ErrorMessage.AMBIGIOUS_USE, name, TypeCheckerHelper.getAlternativesAsString(this)));
+            return false;
+    }
     
+
     // STMTS
     
     public abstract void Stmt.typeCheck(SemanticErrorList e);
@@ -623,11 +643,11 @@ aspect TypeChecker {
     }
 
     public void TypeUse.typeCheck(SemanticErrorList e) {
-        TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName());
+        getDecl().checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName());
     }
 
     public void DataTypeUse.typeCheck(SemanticErrorList e) {
-        if (!TypeCheckerHelper.checkDecl(this, getDecl(), e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
+        if (! getDecl().checkDecl(this, e, ErrorMessage.TYPE_NOT_RESOLVABLE, getName())) {
             return;
         }
         TypeCheckerHelper.checkDataTypeUse(e, this);
@@ -653,7 +673,7 @@ aspect TypeChecker {
     
     public void NewExp.typeCheck(SemanticErrorList e) {
         Decl decl = lookup(new KindedName(Kind.CLASS,getClassName()));
-        if (!TypeCheckerHelper.checkDecl(this, decl, e, ErrorMessage.NO_CLASS_DECL, getClassName())) {
+        if (!decl.checkDecl(this, e, ErrorMessage.NO_CLASS_DECL, getClassName())) {
             return;
         } else if (!decl.isClass()) {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
@@ -749,7 +769,7 @@ aspect TypeChecker {
     
     public void FnApp.typeCheck(SemanticErrorList e) {
         Decl d = getDecl();
-        if (!TypeCheckerHelper.checkDecl(this, d, e, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName())) {
+        if (!d.checkDecl(this, e, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName())) {
             return;
         } else if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
@@ -772,7 +792,7 @@ aspect TypeChecker {
 
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
    	 Decl decl = getDecl();
-   	 if (decl == null || !(decl instanceof DataConstructor)) {
+   	 if (!(decl instanceof DataConstructor)) {
    		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
    	 } else {
    	 	DataConstructor c = (DataConstructor) decl;

@@ -13,7 +13,7 @@ import java.util.Map;
 
 import abs.frontend.ast.*;
 
-public class DataTypeType extends Type implements HasTypes {
+public class DataTypeType extends Type  {
     private final DataTypeDecl decl;
     private final List<Type> typeArgs = new ArrayList<Type>();
 
@@ -256,20 +256,9 @@ public class DataTypeType extends Type implements HasTypes {
     @Override
     public Type applyBinding(Map<TypeParameter, Type> binding) {
         if (hasTypeArgs()) {
-            List<Type> argTypes = applyBindings(binding);
+            List<Type> argTypes = TypeCheckerHelper.applyBindings(binding,getTypeArgs());
             return new DataTypeType(getDecl(), argTypes);
         } else
             return super.applyBinding(binding);
-    }
-    
-    public java.util.List<Type> getTypes() { return getTypeArgs(); }
-
-    /**
-     * @see abs.frontend.ast.HasTypes#applyBindings(java.util.Map)
-     * Not called from the outside, maybe shouldn't really be HasTypes?
-     */
-    @Override
-    public List<Type> applyBindings(Map<TypeParameter, Type> binding) {
-        return TypeCheckerHelper.applyBindings(binding, this);
     }
 }
