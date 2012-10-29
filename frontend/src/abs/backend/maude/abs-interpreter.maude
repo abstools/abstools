@@ -1072,7 +1072,7 @@ mod ABS-MSG-TRANSPORT is
     invoc(O, N, M, DL, B, AUX)
   =
     < T : Clock | Limit: LIM, Random: RAND >
-    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, AUX, T, S)), Lcnt: F >
+    < O : C | Cog: CG, Att: S, Pr: P, PrQ: (W, makeProcess(< M : Method | Param: AL, Cost: CO, Code: SL >, N, DL, B, (AUX, 'this |-> O), T, S)), Lcnt: F >
     < C : Class | Param: AL', Att: S1, Sched: SC,
                   Mtds: (MIS, < M : Method | Param: AL, Cost: CO, Code: SL >), Ocnt: G >
     [label transport-imsg] .
@@ -1241,11 +1241,11 @@ mod ABS-MACHINE-BASICS-COMMON is
     < ob('main, 0) : Cog | Object: ob('main, 0), DC: ob('ABS.DC.DeploymentComponent, -1) >
     < ob('ABS.DC.DeploymentComponent, -1) : 'ABS.DC.DeploymentComponent |
       Cog: ob('main, 0),
-      Att: 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'this |-> ob('ABS.DC.DeploymentComponent, -1), 'totalhistory |-> "ABS.StdLib.Nil"[emp],
+      Att: 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'totalhistory |-> "ABS.StdLib.Nil"[emp],
       Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob('main, 0) : '... | Cog: ob('main, 0),
       Att:  noSubst,
-      Pr: { '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null | new('x ; CID:Cid ; DL:DataList) },
+      Pr: { '.deadline |-> "ABS.StdLib.InfDuration"[ emp ], '_ |-> null, '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, 'x |-> null, 'this |-> ob('main, 0) | new('x ; CID:Cid ; DL:DataList) },
       PrQ: noProc, Lcnt: 0 > .
 
   --- Resource consumption.  Must be a rewrite rule for confluence.
@@ -2129,7 +2129,7 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), S1,
+    < ob(B, G) :  B | Cog: CG, Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -2146,7 +2146,7 @@ mod ABS-NEW-RL is
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: ob(B, G),
-                             Att: ('this |-> ob(B, G), S1,
+                             Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob(B, G) : Cog | Object: null, DC: NEWDC:Data >
@@ -2180,7 +2180,7 @@ mod ABS-NEW-EQ-TIMED is
     < O : C | Cog: CG, Att: S, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W,
               Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: CG, Att: ('this |-> ob(B, G), S1,
+    < ob(B, G) :  B | Cog: CG, Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     [label new-object] .
@@ -2199,7 +2199,7 @@ mod ABS-NEW-EQ-TIMED is
               Lcnt: (s F) >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: ob(B, G),
-                             Att: ('this |-> ob(B, G), S1,
+                             Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                              Pr: idle, PrQ: noProc, Lcnt: 0 >
     < ob(B, G) : Cog | Object: null, DC: NEWDC:Data >
