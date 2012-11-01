@@ -155,16 +155,16 @@ aspect CSP {
 	}
 
 
-   static public void CompilationUnit.includeGroupConstraints(Group g,ChocoSolver s, String varName) {
+   public void Group.includeGroupConstraints(ChocoSolver s, String varName) {
         IntegerVariable fvar = s.getVar(varName);
-        int nfeats = g.getNumFNode();
+        int nfeats = getNumFNode();
         String fname = "";
         IntegerVariable[] feats = new IntegerVariable[nfeats];
         for (int i = 0; i < nfeats; i++) {
-            fname = g.getFNode(i).getFeat().getName();
+            fname = getFNode(i).getFeat().getName();
             IntegerVariable v = null;
             // add intermediate variable $f if f is optional.
-            if (g.getFNode(i) instanceof OptFeat) {
+            if (getFNode(i) instanceof OptFeat) {
                 v = Choco.makeBooleanVar("$"+fname);
                 // f -> $f
                 s.addConstraint(
@@ -175,28 +175,28 @@ aspect CSP {
             // f -> fparent
             s.addConstraint(Choco.implies(ChocoSolver.isTrue(v),ChocoSolver.isTrue(fvar)));
             // rec - FNode
-            s.addConstraint(g.getFNode(i).collectConstraints(s));
+            s.addConstraint(getFNode(i).collectConstraints(s));
             feats[i] = v;
             // f -> $f /\ f -> fparent /\ [f]
         }
         // n1 <= $f1 + ... + $fn <= n2
-        if      (g.getCard() instanceof AllOf)
+        if      (getCard() instanceof AllOf)
             // f ->  #feats = nfeats
             s.addConstraint(Choco.implies(ChocoSolver.isTrue(fvar),
                     ChocoSolver.eqeq(Choco.sum(feats),nfeats)));
-        else if (g.getCard() instanceof Minim)
+        else if (getCard() instanceof Minim)
             // f ->  #feats >= from
             s.addConstraint(Choco.implies(
                     ChocoSolver.isTrue(fvar),
-                    Choco.geq(Choco.sum(feats),((Minim) g.getCard()).getCFrom())));
+                    Choco.geq(Choco.sum(feats),((Minim) getCard()).getCFrom())));
         else {
             // f ->  to >= #feats >= from
             s.addConstraint(Choco.implies(
                     ChocoSolver.isTrue(fvar),
-                    Choco.geq(Choco.sum(feats),((CRange) g.getCard()).getCFrom())));
+                    Choco.geq(Choco.sum(feats),((CRange) getCard()).getCFrom())));
             s.addConstraint(Choco.implies(
                     ChocoSolver.isTrue(fvar),
-                    Choco.leq(Choco.sum(feats),((CRange) g.getCard()).getCTo())));
+                    Choco.leq(Choco.sum(feats),((CRange) getCard()).getCTo())));
         }
     }
 
@@ -207,7 +207,7 @@ aspect CSP {
       s.addConstraint(acl.getConstr(i).collectConstraints(s));
 
     if (hasGroup())
-        CompilationUnit.includeGroupConstraints(getGroup(),s,getName());
+        getGroup().includeGroupConstraints(s,getName());
 
     return Choco.TRUE;
     
@@ -276,7 +276,7 @@ aspect CSP {
       s.addConstraint(acl.getConstr(i).collectConstraints(s));
 
     if (hasGroup())
-        CompilationUnit.includeGroupConstraints(getGroup(),s,getName());
+        getGroup().includeGroupConstraints(s,getName());
 
     return Choco.TRUE;
   }
