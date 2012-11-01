@@ -4,6 +4,9 @@
  */
 package abs.common;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Constants {
     public static final String STDLIB_NAME = "ABS.StdLib";
 
@@ -24,6 +27,14 @@ public class Constants {
      */
     public static final boolean USE_DBLIB_BY_DEFAULT = false;
     public static final String DBLIB_NAME = "ABS.DB";
+    public static final String FLI_NAME = "ABS.FLI";
+    public static final String META_NAME = "ABS.Meta";
+    public static final String DC_NAME = "ABS.DC";
+    public static final String SCHEDULE_NAME = "ABS.Scheduler";
+    
+    public static final List<String> BUILT_IN_LIBS = 
+            Arrays.asList(STDLIB_NAME, DBLIB_NAME, FLI_NAME, META_NAME, DC_NAME, SCHEDULE_NAME);
+    
     public static final String DB_STRUCTURE_LIB_NAME = DBLIB_NAME + ".Structure";
     public static final String DB_OPERATORS_LIB_NAME = DBLIB_NAME + ".Operators";
     public static final String DB_OPERATORS_STRUCTURE_LIB_NAME = DB_OPERATORS_LIB_NAME + ".Structure";

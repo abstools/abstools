@@ -27,6 +27,7 @@ import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.Pattern;
 import abs.frontend.ast.PatternVar;
 import abs.frontend.ast.PatternVarDecl;
+import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.UnderscorePattern;
 import abs.frontend.ast.VarUse;
@@ -42,6 +43,9 @@ import abs.frontend.ast.VarUse;
  *
  */
 public class ASTPreProcessor {
+    
+    public static String FUNCTIONSELECTOR = "selector";
+    
     public CompilationUnit preprocess(CompilationUnit unit) {
         for (ModuleDecl d : unit.getModuleDecls()) {
             preprocess(d);
@@ -138,6 +142,11 @@ public class ASTPreProcessor {
                     new List<Annotation>(), // annotations
                     typeParams
                     );
+        
+        // annotate that this function is a selector function
+        // such that backends will know about it
+        fd.addAnnotation(new Annotation(new StringLiteral(FUNCTIONSELECTOR)));
+        
         setPosition(fd, ca.getStartPos(), ca.getEndPos());
         return fd;
     }
