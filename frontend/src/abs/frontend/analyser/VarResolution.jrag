@@ -1,5 +1,9 @@
 aspect VarResolution {
 
+	/**
+	 * Unlike getType() which has UnknownType, getDecl() may still return null.
+	 * TODO: return UnknownDecl instead?
+	 */
     syn lazy VarOrFieldDecl VarOrFieldUse.getDecl();
     eq VarUse.getDecl() = lookupVarOrFieldName(getName(),false);
     eq FieldUse.getDecl() = lookupVarOrFieldName(getName(),true);
@@ -23,6 +27,10 @@ aspect VarResolution {
 
     syn int Block.getNumVar() = getVars().size();
     
+    /**
+     * Get declared variables.
+     * FIXME: descends into nested blocks, but not into IF/WHILE?!?
+     **/
     syn lazy Collection<VarDecl> Block.getVars() {
         ArrayList<VarDecl> res = new ArrayList<VarDecl>();
         for (Stmt stmt : getStmts()) {
@@ -219,10 +227,8 @@ aspect VarResolution {
     }
     
     eq ModuleDecl.getBlock().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-    // The -1 case happened within deltas (#346)...
-    // RM: Since DeltaDecl is not a subclass of Decl anymore, this fix could be reverted
     eq ModuleDecl.getDecl(int i).lookupVarOrFieldName(String name, boolean fieldOnly) 
-        = i == -1 ? null : getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
+        = getDecl(i).locallookupVarOrFieldName(name,fieldOnly);
     
     eq DeltaDecl.getModuleModifier(int i).lookupVarOrFieldName(String name, boolean fieldOnly) = null;
     

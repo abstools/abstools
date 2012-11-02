@@ -1,4 +1,17 @@
+import java.util.Collection;
+import abs.frontend.ast.InterfaceDecl;
+
 aspect TypeHierarchy {
+
+	// True if there is a cycle somewhere on the superinterface chain
+	syn boolean InterfaceDecl.hasCycleOnExtendedInterfacesChain() = getSuperTypes().contains(this);
+
+	interface HasTypeHierarchy {
+		Collection<InterfaceDecl> getDirectSuperTypes();
+	}
+
+	InterfaceDecl implements HasTypeHierarchy;
+	ClassDecl implements HasTypeHierarchy;
 
     /**
      * returns all direct subtypes of this interfaces:
@@ -6,7 +19,7 @@ aspect TypeHierarchy {
      *  - all classes implementing this interface
      * results are not cached
      */
-	public java.util.Collection<Decl> InterfaceDecl.getDirectSubTypes() {
+	public Collection<Decl> InterfaceDecl.getDirectSubTypes() {
 		return TypeHierarchyHelper.getDirectSubTypes(this);
 	}
 	
@@ -16,47 +29,23 @@ aspect TypeHierarchy {
      *  - all classes implementing this interface
      * results are not cached
      */
-    public java.util.Collection<Decl> InterfaceDecl.getSubTypes() {
+    public Collection<Decl> InterfaceDecl.getSubTypes() {
         return TypeHierarchyHelper.getSubTypes(this);
     }
-    
+
     /**
-     * returns all supertypes of this interfaces:
-     *  - all interfaces extending this interface
-     *  - all classes implementing this interface
+     * returns all direct supertypes
      * results are not cached
      */
-    public java.util.Collection<InterfaceDecl> InterfaceDecl.getSuperTypes() {
-        return TypeHierarchyHelper.getSuperTypes(this);
-    }
+    syn Collection<InterfaceDecl> Decl.getDirectSuperTypes() = Collections.emptySet();
+    eq InterfaceDecl.getDirectSuperTypes() = TypeHierarchyHelper.getTypeDecls(getExtendedInterfaceUseList());
+    eq ClassDecl.getDirectSuperTypes() = TypeHierarchyHelper.getTypeDecls(getImplementedInterfaceUseList());
     
     /**
-     * returns all direct supertypes of this interfaces:
-     *  - all interfaces extending this interface
-     *  - all classes implementing this interface
+     * returns all supertypes
      * results are not cached
      */
-    public java.util.Collection<InterfaceDecl> InterfaceDecl.getDirectSuperTypes() {
-        return TypeHierarchyHelper.getDirectSuperTypes(this);
-    }
-    
-    /**
-     * returns all supertypes of this interfaces:
-     *  - all interfaces extending this interface
-     *  - all classes implementing this interface
-     * results are not cached
-     */
-    public java.util.Collection<InterfaceDecl> ClassDecl.getSuperTypes() {
-        return TypeHierarchyHelper.getSuperTypes(this);
-    }
-    
-    /**
-     * returns all direct supertypes of this interfaces:
-     *  - all interfaces extending this interface
-     *  - all classes implementing this interface
-     * results are not cached
-     */
-    public java.util.Collection<InterfaceDecl> ClassDecl.getDirectSuperTypes() {
-        return TypeHierarchyHelper.getDirectSuperTypes(this);
+    public Collection<InterfaceDecl> HasTypeHierarchy.getSuperTypes() {
+        return TypeHierarchyHelper.addSuperTypes(new HashSet<InterfaceDecl>(), this);
     }
 }
