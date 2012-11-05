@@ -1540,7 +1540,7 @@
                 </command>
              </menu>
              <menu
-                   id="fileaddlocations"
+                   id="fileaddlocations2"
                    label="locations">
                 <visibleWhen
                       checkEnabled="false">
