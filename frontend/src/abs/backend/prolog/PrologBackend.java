@@ -169,4 +169,27 @@ public class PrologBackend extends Main {
         for (int i = 0; i < n; i++)
             System.out.print("    ");
     }
+    
+    // Auxiliary methods
+
+    public static String initialToUpperCase(String s){
+        char[] cs = s.toCharArray();
+        cs[0] = Character.toUpperCase(cs[0]);
+        return new String(cs);
+    }
+    
+    public static String varTransform(String s){
+        return "l('"+s+"')";
+    }
+
+    public static String fieldTransform(String s){
+        return "field('"+s+"')";
+    }
+    public static String strTransform(String s){
+        return "str('"+s+"')";
+    }
+
+    public static String quote(String s){
+        return "'" + s + "'";
+    }
 }

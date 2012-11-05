@@ -82,7 +82,7 @@ public class ReachabilityInformation {
         // Initialization of tables
         for (ASTNode<?> entry : entries) {
             if (entry instanceof MethodImpl) {
-                ownerClass = ObtainOwnerClass((MethodImpl) entry);
+                ownerClass = obtainOwnerClass((MethodImpl) entry);
                 if (ownerClass != null) {
                     reachableInterfacesOrClasses.add(getClassId(ownerClass));
                     reachableMethods.add(getMethodId(ownerClass, ((MethodImpl) entry).getMethodSig()));
@@ -132,7 +132,7 @@ public class ReachabilityInformation {
  * @param node 
  * @return the class that owns the parameter node or null if node does not belong to any class
  */
-    private ClassDecl ObtainOwnerClass(ASTNode<?> node) {
+    private ClassDecl obtainOwnerClass(ASTNode<?> node) {
         ASTNode<?> ancestor;
         boolean foundClass = false;
 
@@ -145,6 +145,8 @@ public class ReachabilityInformation {
             } else
                 foundClass = true;
         }
+        // FIXME: these two should be equivalent, so better use 
+        assert ancestor == node.calcContextNode(ClassDecl.class);
         return (ClassDecl) ancestor;
     }
 /**
@@ -225,7 +227,7 @@ public class ReachabilityInformation {
      * @return true if method is reachable, false otherwise
      */
     public boolean isReachable(MethodImpl method) {
-        ClassDecl clazz = ObtainOwnerClass(method);
+        ClassDecl clazz = obtainOwnerClass(method);
         boolean reachable = false;
 
         if (clazz != null) {
@@ -265,7 +267,7 @@ public class ReachabilityInformation {
      * @return true if block is reachable, false otherwise
      */
     public boolean isReachable(InitBlock block) {
-        ClassDecl clazz = ObtainOwnerClass(block);
+        ClassDecl clazz = obtainOwnerClass(block);
         if (clazz != null)
             return reachableMethods.contains(getClassId(clazz) + "init");
         else
@@ -303,7 +305,7 @@ public class ReachabilityInformation {
      * @return true if the parameter had not been processed before.
      */
     public boolean setProcessed(MethodImpl method) {
-        ClassDecl clazz = ObtainOwnerClass(method);
+        ClassDecl clazz = obtainOwnerClass(method);
         if (clazz != null)
             return processedMethods.add(clazz.qualifiedName() + method.getMethodSig().toString());
         else
@@ -315,7 +317,7 @@ public class ReachabilityInformation {
      * @return true if the parameter had not been processed before.
      */
     public boolean setProcessed(InitBlock block) {
-        ClassDecl clazz = ObtainOwnerClass(block);
+        ClassDecl clazz = obtainOwnerClass(block);
         if (clazz != null)
             return processedMethods.add(clazz.qualifiedName() + "init");
         else

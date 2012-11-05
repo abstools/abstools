@@ -6,6 +6,11 @@ import abs.backend.prolog.*;
 import abs.frontend.ast.*;
 
 import java.util.Iterator;
+import static abs.backend.prolog.PrologBackend.fieldTransform;
+import static abs.backend.prolog.PrologBackend.initialToUpperCase;
+import static abs.backend.prolog.PrologBackend.varTransform;
+import static abs.backend.prolog.PrologBackend.strTransform;
+import static abs.backend.prolog.PrologBackend.quote;
 
 aspect GenerateProlog {
 
@@ -1036,29 +1041,6 @@ aspect GenerateProlog {
     }
 	public void DeltaDecl.generateProlog(PrintStream s,ReachabilityInformation reachInfo){
        //we ignore deltas by now!
-    }
-
-    // Auxiliary methods
-
-    protected static String ASTNode.initialToUpperCase(String s){
-        char[] cs = s.toCharArray();
-        cs[0] = Character.toUpperCase(cs[0]);
-        return new String(cs);
-    }
-
-    protected static String ASTNode.varTransform(String s){
-        return "l('"+s+"')";
-    }
-
-    protected static String ASTNode.fieldTransform(String s){
-        return "field('"+s+"')";
-    }
-    protected static String ASTNode.strTransform(String s){
-        return "str('"+s+"')";
-    }
-
-    protected static String ASTNode.quote(String s){
-        return "'" + s + "'";
     }
 
     
