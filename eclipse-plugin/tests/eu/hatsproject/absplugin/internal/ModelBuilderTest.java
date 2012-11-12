@@ -233,18 +233,18 @@ public class ModelBuilderTest {
 		CompilationUnit testcu = absParser.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText));
 		assertEquals(0, testcu.getParserErrors().size());
 		modelbuilder.addCompilationUnit(testcu);
-		SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		SemanticErrorList testel = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
 		assertEquals(testel.toString(),1, testel.size());
 		System.err.println("Test 1 finished");
 
 		String importTestText = "module ImportTest;";
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
 		modelbuilder.addCompilationUnit(importTestCU);
-		SemanticErrorList testel1 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		SemanticErrorList testel1 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
 		assertEquals(0, testel1.size());
 		System.err.println("Test 2 finished");
 		modelbuilder.removeCompilationUnit(importTestCU);
-		SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString());
+		SemanticErrorList testel2 = modelbuilder.typeCheckModel(true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
 		assertEquals(1, testel2.size());
 	}
 }

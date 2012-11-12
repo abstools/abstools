@@ -14,11 +14,16 @@ import org.eclipse.core.runtime.Platform;
 
 import eu.hatsproject.absplugin.Activator;
 
+import abs.common.WrongProgramArgumentException;
+import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.List;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Product;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.parser.Main;
 import abs.frontend.typechecker.TypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -148,7 +153,7 @@ public class IncrementalModelBuilder {
 		return fileName;
 	}
 	
-	public synchronized SemanticErrorList typeCheckModel(boolean locationTypeChecking, String defaultloctype, String locationTypePrecision) throws NoModelException, TypecheckInternalException{
+	public synchronized SemanticErrorList typeCheckModel(boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
 		if(model == null)
 			throw new NoModelException();
 		
@@ -171,6 +176,33 @@ public class IncrementalModelBuilder {
 			/* Don't typecheck with semerrors, it might trip up. */
 			if (semerrors.isEmpty())
 				semerrors = model.typeCheck();
+			/* Check products for errors.
+			 * Only the first error is reported (if any), on the product AST-node.  
+			 * TODO: May be time-consuming for large projects, hence the checkProducts-switch.
+			 *       Also could use a timer to switch off if it becomes excessive.
+			 * TODO: Use Eclipse's nested markers to show ALL contained errors?
+			 * TODO: The outline could indicate the broken product as well.
+			 */
+			if (semerrors.isEmpty() && checkProducts) {
+				for (Product p : model.getProducts()) {
+					Model m2 = model.parseTreeCopy();
+					try {
+						m2.flattenForProduct(p);
+						SemanticErrorList p_errs = m2.typeCheck();
+						if (!p_errs.isEmpty()) {
+							// Only show first error, on product
+							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), p_errs.getFirst().getMessage()));
+						}
+					} catch (WrongProgramArgumentException e) {
+						semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
+					} catch (DeltaModellingException e) {
+						if (e.getDelta() == null)
+							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT, p.getName(), e.getMessage()));
+						else
+							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT_WITH_DELTA, p.getName(), e.getDelta().getName(), e.getMessage()));
+					}
+				}
+			}
 			return semerrors;
 	    } catch (TypeCheckerException e) {
 	        return new SemanticErrorList(e);

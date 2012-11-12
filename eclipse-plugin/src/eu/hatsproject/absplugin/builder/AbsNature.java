@@ -381,9 +381,10 @@ public class AbsNature implements IProjectNature {
 	   boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
 	   String defaultlocationtype = getProjectPreferenceStore().getString(DEFAULT_LOCATION_TYPE);
 	   String defaultlocationtypeprecision = getProjectPreferenceStore().getString(LOCATION_TYPE_PRECISION);
+	   boolean checkProducts = true;
 	   try {
 		   addPackagesForTypeChecking();
-		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision);
+		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision, checkProducts);
 		   createMarkers(typeerrors);
 
 		   if (dolocationtypecheck) {
