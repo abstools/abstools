@@ -372,10 +372,11 @@ public class AbsNature implements IProjectNature {
 	 * takes the properties from the project preference store for location type checking and location type precision. Typeckecks
 	 * the current model in the current model builder.
 	 * Note that your model must be sufficiently "complete" and not have any semantic errors .
+	 * @param monitor 
 	 * @throws CoreException {@link IResource#deleteMarkers(String, boolean, int)} does not handle exceptions thrown by
 	 * #createMarker(SemanticError) and #createMarker(TypecheckInternalException)
 	 */
-    void typeCheckModel() throws CoreException{
+    void typeCheckModel(IProgressMonitor monitor) throws CoreException{
 	   getProject().deleteMarkers(TYPECHECK_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 	   getProject().deleteMarkers(LOCATION_TYPE_INFERENCE_MARKER_TYPE, true, IResource.DEPTH_INFINITE);
 	   boolean dolocationtypecheck = getProjectPreferenceStore().getBoolean(LOCATION_TYPECHECK);
@@ -384,7 +385,7 @@ public class AbsNature implements IProjectNature {
 	   boolean checkProducts = true;
 	   try {
 		   addPackagesForTypeChecking();
-		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision, checkProducts);
+		   final SemanticErrorList typeerrors = modelbuilder.typeCheckModel(monitor,dolocationtypecheck, defaultlocationtype, defaultlocationtypeprecision, checkProducts);
 		   createMarkers(typeerrors);
 
 		   if (dolocationtypecheck) {

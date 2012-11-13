@@ -127,7 +127,7 @@ public class AbsBuilder extends IncrementalProjectBuilder {
 						HashSet<String> changedFiles = new HashSet<String>();
 						fullBuild(monitor, changedFiles);
 
-						nature.typeCheckModel();
+						nature.typeCheckModel(monitor);
 						notifyBuildListener(changedFiles);
 						if (monitor != null)
 							monitor.done();

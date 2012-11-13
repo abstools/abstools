@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.SubProgressMonitor;
 
 import eu.hatsproject.absplugin.Activator;
 
@@ -153,7 +155,7 @@ public class IncrementalModelBuilder {
 		return fileName;
 	}
 	
-	public synchronized SemanticErrorList typeCheckModel(boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
+	public synchronized SemanticErrorList typeCheckModel(IProgressMonitor monitor, boolean locationTypeChecking, String defaultloctype, String locationTypePrecision, boolean checkProducts) throws NoModelException, TypecheckInternalException{
 		if(model == null)
 			throw new NoModelException();
 		
@@ -184,7 +186,10 @@ public class IncrementalModelBuilder {
 			 * TODO: The outline could indicate the broken product as well.
 			 */
 			if (semerrors.isEmpty() && checkProducts) {
+				monitor = new SubProgressMonitor(monitor, 10); // arbitrary value
+				monitor.beginTask("Checking products", model.getProducts().size());
 				for (Product p : model.getProducts()) {
+					monitor.subTask("Checking "+p.getName());
 					Model m2 = model.parseTreeCopy();
 					try {
 						m2.flattenForProduct(p);
@@ -202,6 +207,7 @@ public class IncrementalModelBuilder {
 							semerrors.add(new SemanticError(p, ErrorMessage.ERROR_IN_PRODUCT_WITH_DELTA, p.getName(), e.getDelta().getName(), e.getMessage()));
 					}
 				}
+				monitor.done();
 			}
 			return semerrors;
 	    } catch (TypeCheckerException e) {
