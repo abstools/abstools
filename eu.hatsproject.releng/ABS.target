@@ -10,5 +10,10 @@
 <unit id="epp.package.java" version="1.4.1.20110909-1818"/>
 <repository location="http://download.eclipse.org/releases/indigo"/>
 </location>
+<location includeAllPlatforms="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.ajdt.feature.group" version="2.2.0.e37x-RELEASE-20120704-0900"/>
+<unit id="org.eclipse.equinox.weaving.sdk.feature.group" version="1.0.200.I20120427-0800"/>
+<repository location="http://download.eclipse.org/tools/ajdt/37/update"/>
+</location>
 </locations>
 </target>
