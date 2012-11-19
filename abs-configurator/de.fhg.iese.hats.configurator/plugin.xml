@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="de.ovgu.featureide.fm.ui.ConfigurationEditor">
+      <configurationPageExtension
+            class="de.fhg.iese.hats.configurator.ConfiguratorExtension2">
+      </configurationPageExtension>
+   </extension>
+   <extension
+         point="de.ovgu.featureide.fm.ui.ConfigurationEditor">
+      <configurationPageExtension
+            class="de.fhg.iese.hats.configurator.ConfigurationResult">
+      </configurationPageExtension>
+   </extension>
+
+</plugin>
