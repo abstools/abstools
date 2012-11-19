@@ -42,7 +42,7 @@ public class AddImportsTest extends DeltaTest {
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
         
         // the compiler needs to add an "import M2.I" to M1
-        ModuleDecl clsmodule = cls.getModule();
+        ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M2.I");
         assertTrue(clsVisibleSymbols.containsKey(symbol));
@@ -64,7 +64,7 @@ public class AddImportsTest extends DeltaTest {
         
         // the compiler doesn't need to add anything 
         ClassDecl cls = (ClassDecl) findDecl(model, "D", "C");
-        ModuleDecl clsmodule = cls.getModule();
+        ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M.I");
         assertTrue(clsVisibleSymbols.containsKey(symbol));
@@ -90,7 +90,7 @@ public class AddImportsTest extends DeltaTest {
         
         // the compiler needs to add an "import D.C2" to M
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        ModuleDecl clsmodule = cls.getModule();
+        ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         
         // TODO
@@ -141,7 +141,7 @@ public class AddImportsTest extends DeltaTest {
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
 
         // the compiler should not add an import, because the delta cannot see I!
-        ModuleDecl clsmodule = cls.getModule();
+        ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
         KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M2.I");
         assertFalse(clsVisibleSymbols.containsKey(symbol));

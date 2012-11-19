@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.java.lib.runtime.dynamic;
+package abs.backend.java.lib.runtime.metaABS;
 
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
@@ -16,28 +16,28 @@ import abs.backend.java.lib.types.*;
  * the given object o. Here we (dynamically) define the class of the meta-object,
  * including its interface, i.e. the meta-object protocol for object mirrors.
  */
-public class ABSObjectMirrorClass {
-    private static ABSDynamicClass objectMirrorClass;
+public class ObjectMirrorClass {
+    private static ABSDynamicClass thisClass;
 
     /* 
      * Create the class object for object mirrors. This only happens once.
      */
     public static ABSDynamicClass singleton() {
-        if (objectMirrorClass == null) {
+        if (thisClass == null) {
             // System.err.println("Creating ObjectMirrorClass and metaAPI.");
-            objectMirrorClass = new ABSDynamicClass();
+            thisClass = new ABSDynamicClass();
             setupMetaAPI();
         }
-        return objectMirrorClass;
+        return thisClass;
     }
     
     public static void setupMetaAPI() {
-        objectMirrorClass.setName("ObjectMirror");
+        thisClass.setName("ObjectMirror");
         
         /*
          * getClassName: get name of object's class
          */
-        objectMirrorClass.addMethod("getClassName", new ABSClosure() {
+        thisClass.addMethod(/*ABSString*/ "getClassName", new ABSClosure() {
             @Override
             public ABSString exec(ABSDynamicObject mirror, ABSValue... params) {
                 ABSString name;
@@ -49,17 +49,17 @@ public class ABSObjectMirrorClass {
         /*
          * getClass: get class of object
          */
-        objectMirrorClass.addMethod("getClass", new ABSClosure() {
+        thisClass.addMethod(/*ABSClass*/ "getClass", new ABSClosure() {
             @Override
             public ABSClass exec(ABSDynamicObject mirror, ABSValue... params) {
-                return (ABSClass)((ABSDynamicObject)mirror.dispatch("getObject")).getClazz();
+                return (ABSDynamicClass)((ABSDynamicObject)mirror.dispatch("getObject")).getClazz();
             }
         });
         
         /*
          * setClass: set new class for object
          */
-        objectMirrorClass.addMethod("setClass", new ABSClosure() {
+        thisClass.addMethod(/*Unit*/ "setClass", new ABSClosure() {
             @Override
             public ABSUnit exec(ABSDynamicObject mirror, ABSValue... params) {
                 ((ABSDynamicObject)mirror.dispatch("getObject")).setClazz((ABSDynamicClass)params[0]);
@@ -67,16 +67,28 @@ public class ABSObjectMirrorClass {
             }
         });
 
+        /*
+         * respondsTo: find out whether object responds to given method
+         */
+        thisClass.addMethod(/*ABSBool*/ "respondsTo", new ABSClosure() {
+            @Override
+            public ABSBool exec(ABSDynamicObject mirror, ABSValue... params) {
+                ABSDynamicClass cls = (ABSDynamicClass)((ABSDynamicObject)mirror.dispatch("getObject")).getClazz();
+                return ABSBool.fromBoolean(cls.hasMethod(((ABSString)params[0]).toString()));
+            }
+        });
+        
+                
         // TODO: getFieldValue(), setFieldValue()
 
-        objectMirrorClass.addMethod("getCog", new ABSClosure() {
+        thisClass.addMethod(/*COG*/ "getCog", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject mirror, ABSValue... params) {
                 return ((ABSDynamicObject)mirror.dispatch("getObject")).getCOG();
             }
         });
         
-        objectMirrorClass.addMethod("setCog", new ABSClosure() {
+        thisClass.addMethod(/*Unit*/ "setCog", new ABSClosure() {
             @Override
             public ABSUnit exec(ABSDynamicObject mirror, ABSValue... params) {
                 ((ABSDynamicObject)mirror.dispatch("getObject")).setCOG((COG)params[0]);
@@ -87,7 +99,7 @@ public class ABSObjectMirrorClass {
         /*
          * getObject: obtain the mirrored object
          */
-        objectMirrorClass.addMethod("getObject", new ABSClosure() {
+        thisClass.addMethod(/*ABSDynamicObject*/ "getObject", new ABSClosure() {
             @Override
             public ABSDynamicObject exec(ABSDynamicObject mirror, ABSValue... params) {
                 ABSDynamicObject object;

@@ -1,5 +1,6 @@
 module M;
 import * from ABS.Scheduler;
+import * from ABS.Meta;
 
 interface C { Unit m(); }
 
@@ -27,6 +28,10 @@ def Bool fifo_comp(Process p1, Process p2) = timeValue(arrival(p1)) <= timeValue
 {
     
     C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
-//    C obj = new cog CImpl();
     obj!m();
+    
+    ObjectMirror mir = reflect(obj);
+    Cog g = mir.getCog();
+    List<Process> q = g.getQueue();
+    
 }

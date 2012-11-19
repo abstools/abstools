@@ -32,7 +32,7 @@ aspect DeltaModifierApplicator {
     
     public void RemoveClassModifier.apply() throws DeltaModellingException {
         ClassDecl cls = findClass();
-        ModuleDecl module = cls.getModule();
+        ModuleDecl module = cls.getModuleDecl();
         module.getDecls().removeChild(module.getDecls().getIndexOfChild(cls));
     }
 

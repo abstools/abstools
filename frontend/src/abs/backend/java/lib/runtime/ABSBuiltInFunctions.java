@@ -11,8 +11,8 @@ import java.util.Random;
 import java.util.Scanner;
 
 import abs.backend.java.lib.expr.UnmatchedCaseException;
-import abs.backend.java.lib.runtime.dynamic.ABSObjectMirrorClass;
-import abs.backend.java.lib.runtime.dynamic.ABSRuntimeClass;
+import abs.backend.java.lib.runtime.metaABS.ObjectMirrorClass;
+import abs.backend.java.lib.runtime.metaABS.RuntimeClass;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
@@ -69,7 +69,7 @@ public class ABSBuiltInFunctions {
             ABSValue existingMirror = ((ABSDynamicObject)t).getFieldValue(name);
             return (ABSDynamicObject)existingMirror;
         } catch(NoSuchFieldException e) {
-            ABSDynamicObject mirror = new ABSDynamicObject(ABSObjectMirrorClass.singleton());
+            ABSDynamicObject mirror = new ABSDynamicObject(ObjectMirrorClass.singleton());
             mirror.setFieldValue("object", (ABSValue)t);
             ((ABSDynamicObject)t).setFieldValue(name, (ABSValue)mirror);
             return mirror;
@@ -77,7 +77,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSDynamicObject getRuntime() {
-        ABSDynamicObject runtime = new ABSDynamicObject(ABSRuntimeClass.singleton());
+        ABSDynamicObject runtime = new ABSDynamicObject(RuntimeClass.singleton());
         return runtime;
     }
     

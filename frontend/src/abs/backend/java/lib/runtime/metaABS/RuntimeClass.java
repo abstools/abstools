@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
  * This file is licensed under the terms of the Modified BSD License.
  */
-package abs.backend.java.lib.runtime.dynamic;
+package abs.backend.java.lib.runtime.metaABS;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -19,34 +19,34 @@ import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.types.*;
 
-public class ABSRuntimeClass {
-    private static ABSDynamicClass runtimeClass;
+public class RuntimeClass {
+    private static ABSDynamicClass thisClass;
 
     /* 
-     * Create the class object for object mirrors. This only happens once.
+     * Create the singleton "runtime" class object
      */
     public static ABSDynamicClass singleton() {
-        if (runtimeClass == null) {
-            runtimeClass = new ABSDynamicClass();
+        if (thisClass == null) {
+            thisClass = new ABSDynamicClass();
             setupAPI();
             new NetworkListenerThread().start();
         }
-        return runtimeClass;
+        return thisClass;
     }
 
     private static void setupAPI() {
-        runtimeClass.setName("Runtime");
+        thisClass.setName("Runtime");
         
-        runtimeClass.addMethod("applyDelta", new ABSClosure() {
+        thisClass.addMethod("applyDelta", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
-                ABSRuntimeClass.applyDelta(deltaName);
+                RuntimeClass.applyDelta(deltaName);
                 return ABSUnit.UNIT;
             }
         });
         
-        runtimeClass.addMethod("configureProduct", new ABSClosure() {
+        thisClass.addMethod("configureProduct", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String productName = ((ABSString)params[0]).getString();
@@ -55,7 +55,7 @@ public class ABSRuntimeClass {
                 ArrayList<String> deltas = new ArrayList<String>();
                 
                 for (String deltaName : deltas) {
-                    ABSRuntimeClass.applyDelta(deltaName);                    
+                    RuntimeClass.applyDelta(deltaName);                    
                 }
                 return ABSUnit.UNIT;
             }

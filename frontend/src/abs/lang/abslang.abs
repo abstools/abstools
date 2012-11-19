@@ -525,24 +525,37 @@ type CogLocation = String;
 module ABS.Meta;
 export *;
 import * from ABS.StdLib;
+import * from ABS.Scheduler;
 
+interface Object {}
 interface ObjectMirror {
     String getClassName();
     Class getClass();
     Unit setClass(Class c);
     
-    Value getFieldValue();
-    Unit setFieldValue(Value val);
+    Object getFieldValue();
+    Unit setFieldValue(Object val);
     
     Cog getCog();
     Unit setCog(Cog c);
     
 }
 
-interface Cog {}
-interface Object {}
-interface Class {}
-interface Value {}
+interface Cog {
+    List<Process> getQueue();
+}
+
+class CogImpl implements Cog {
+    List<Process> getQueue() {
+        return queue;
+    }
+}
+
+interface Class {
+    Unit addMethod(Method m);
+    Unit removeMethod(String mName);
+}
+interface Method {}
 
 def ObjectMirror reflect<A>(A a) = builtin;
 
@@ -550,6 +563,8 @@ interface Runtime {
     Unit applyDelta(String s);
     Unit configureProduct(String s);
 }
+
+
 def Runtime getRuntime() = builtin;
 
 // convenience functions (to be removed)

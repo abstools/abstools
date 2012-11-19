@@ -61,18 +61,22 @@ public class ABSDynamicClass implements ABSClass {
             throw new DynamicException("Field " + fName + " not defined for class " + name + ".");
     }
     
+    public boolean hasMethod(String mName) {
+        return methods.containsKey(mName);
+    }
+    
     public void addMethod(String mName, ABSClosure m) throws DynamicException {
         if (methods == null) {
             methods = new HashMap<String,ABSClosure>();
         }
-        if (! methods.containsKey(mName))
+        if (! hasMethod(mName))
             methods.put(mName, m);
         else
             throw new DynamicException("Method " + mName + " already defined for class " + name + ".");
     }
     
     public void removeMethod(String mName) throws DynamicException {
-        if (methods.containsKey(mName))
+        if (hasMethod(mName))
             methods.remove(mName);
         else
             throw new DynamicException("Method " + mName + " not defined for class " + name + ".");
@@ -82,7 +86,7 @@ public class ABSDynamicClass implements ABSClass {
         if (methods == null) {
             methods = new HashMap<String,ABSClosure>();
         }
-        if (methods.containsKey(mName))
+        if (hasMethod(mName))
             return methods.get(mName);
         else
             throw new DynamicException("Method " + mName + " not defined for class " + name + ".");

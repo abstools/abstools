@@ -520,7 +520,6 @@ public class JavaGeneratorHelper {
             stream.println("package " + pkg.packageName + ";");
             stream.print("public final class " + className);
             stream.println(" implements " + TaskSchedulingStrategy.class.getName() + " {");
-            stream.println("@Override");
             stream.print("public " + SimpleTaskScheduler.TaskInfo.class.getCanonicalName());
             stream.print(" schedule(" + TaskScheduler.class.getName() + " scheduler, ");
             stream.println(java.util.List.class.getName() + "<" + SimpleTaskScheduler.TaskInfo.class.getCanonicalName() + "> schedulableTasks) {");
