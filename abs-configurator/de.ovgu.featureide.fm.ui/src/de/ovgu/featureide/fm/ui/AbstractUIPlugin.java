@@ -104,7 +104,7 @@ abstract public class AbstractUIPlugin extends org.eclipse.ui.plugin.AbstractUIP
 	 *            A message that should be written to the eclipse log file
 	 */
 	public void logInfo(String message) {
-		log(IStatus.INFO, message, new Exception());
+//		log(IStatus.INFO, message, new Exception());
 	}
 
 	/**

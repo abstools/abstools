@@ -43,7 +43,7 @@ abstract public class AbstractCorePlugin extends Plugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		logInfo("Starting FeatureIDE plug-in '" + getID() + "'");
+		//logInfo("Starting FeatureIDE plug-in '" + getID() + "'");
 	}
 
 	/*
@@ -66,7 +66,7 @@ abstract public class AbstractCorePlugin extends Plugin {
 	 *            A message that should be written to the eclipse log file
 	 */
 	public void logInfo(String message) {
-		log(IStatus.INFO, message, new Exception());
+//		log(IStatus.INFO, message, new Exception());
 	}
 
 	/**

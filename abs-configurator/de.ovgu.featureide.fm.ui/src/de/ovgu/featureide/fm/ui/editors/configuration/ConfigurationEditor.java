@@ -112,7 +112,7 @@ public class ConfigurationEditor extends MultiPageEditorPart implements
 	/**
 	 * The file of the corresponding feature model.
 	 */
-	File modelFile;
+	public File modelFile;
 	
 	private LinkedList<IConfigurationEditorPage> extensionPages = new LinkedList<IConfigurationEditorPage>();
 	
