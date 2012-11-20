@@ -530,11 +530,11 @@ import * from ABS.Scheduler;
 interface Object {}
 interface ObjectMirror {
     String getClassName();
-    Class getClass();
-    Unit setClass(Class c);
+//    Class getClass();
+//    Unit setClass(Class c);
     
-    Object getFieldValue();
-    Unit setFieldValue(Object val);
+//    Object getFieldValue();
+//    Unit setFieldValue(Object val);
     
     Cog getCog();
     Unit setCog(Cog c);
@@ -542,19 +542,19 @@ interface ObjectMirror {
 }
 
 interface Cog {
-    List<Process> getQueue();
+ //   List<Process> getQueue();
 }
 
-class CogImpl implements Cog {
-    List<Process> getQueue() {
-        return queue;
-    }
-}
+//class CogImpl implements Cog {
+//    List<Process> getQueue() {
+//        return queue;
+//    }
+//}
 
-interface Class {
-    Unit addMethod(Method m);
-    Unit removeMethod(String mName);
-}
+//interface Class {
+//    Unit addMethod(Method m);
+//    Unit removeMethod(String mName);
+//}
 interface Method {}
 
 def ObjectMirror reflect<A>(A a) = builtin;
