@@ -4,10 +4,33 @@
  */
 package abs.backend.java.lib.runtime;
 
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 
-public abstract class ABSClosure {
+public abstract class ABSClosure implements ABSRef {
     
     // run the method
     public abstract ABSValue exec(ABSDynamicObject t, ABSValue... params);
+
+
+    @Override
+    public ABSBool eq(ABSValue o) {
+        return ABSBool.fromBoolean(this == o);
+    }
+
+    @Override
+    public ABSBool notEq(ABSValue o) {
+        return eq(o).negate();
+    }
+
+    @Override
+    public boolean isDataType() {
+        return false;
+    }
+
+    @Override
+    public boolean isReference() {
+        return true;
+    }
 }

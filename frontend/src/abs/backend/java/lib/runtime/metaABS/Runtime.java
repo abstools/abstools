@@ -19,7 +19,7 @@ import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.types.*;
 
-public class RuntimeClass {
+public class Runtime {
     private static ABSDynamicClass thisClass;
 
     /* 
@@ -41,7 +41,7 @@ public class RuntimeClass {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
-                RuntimeClass.applyDelta(deltaName);
+                Runtime.applyDelta(deltaName);
                 return ABSUnit.UNIT;
             }
         });
@@ -55,7 +55,7 @@ public class RuntimeClass {
                 ArrayList<String> deltas = new ArrayList<String>();
                 
                 for (String deltaName : deltas) {
-                    RuntimeClass.applyDelta(deltaName);                    
+                    Runtime.applyDelta(deltaName);                    
                 }
                 return ABSUnit.UNIT;
             }

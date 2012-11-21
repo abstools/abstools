@@ -1,6 +1,6 @@
 #!/bin/bash
 
 BASEDIR="$(dirname $0)/../.."
-CP=$BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/beaver-rt.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/ecj-3.6.2.jar:$BASEDIR/lib/choco-solver-2.1.1.jar
+CP=$BASEDIR/bin:$BASEDIR/lib/beaver-rt-src.jar:$BASEDIR/lib/beaver-rt.jar:$BASEDIR/lib/org.sat4j.core.jar:$BASEDIR/lib/org.sat4j.pb.jar:$BASEDIR/lib/sat4j-pb.jar:$BASEDIR/lib/org.sat4j.maxsat.jar:$BASEDIR/lib/sat4j-maxsat.jar:$BASEDIR/lib/ecj-3.6.2.jar:$BASEDIR/lib/choco-solver-2.1.1.jar:$BASEDIR/lib/apfloat.jar
 
 java -Xmx512m -cp $CP:gen "$@"

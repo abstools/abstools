@@ -6,7 +6,6 @@ package abs.backend.java.lib.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -188,4 +187,5 @@ public class ABSDynamicClass implements ABSClass {
     public boolean isReference() {
         return true;
     }
+
 }

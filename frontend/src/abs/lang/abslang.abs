@@ -528,14 +528,15 @@ import * from ABS.StdLib;
 import * from ABS.Scheduler;
 
 interface Object {}
+
 interface ObjectMirror {
     String getClassName();
-//    Class getClass();
-//    Unit setClass(Class c);
+    Class getClass();
+    Unit setClass(Class c);
     
-//    Object getFieldValue();
-//    Unit setFieldValue(Object val);
-    
+    Object getFieldValue();
+    Unit setFieldValue(Object val);
+    Bool respondsTo(String name);
     Cog getCog();
     Unit setCog(Cog c);
     
@@ -551,10 +552,13 @@ interface Cog {
 //    }
 //}
 
-//interface Class {
-//    Unit addMethod(Method m);
-//    Unit removeMethod(String mName);
-//}
+interface Class {
+    String getName();
+    Method getMethod(String mName);
+    Unit addMethod(Method m);
+    Unit removeMethod(String mName);
+}
+
 interface Method {}
 
 def ObjectMirror reflect<A>(A a) = builtin;
