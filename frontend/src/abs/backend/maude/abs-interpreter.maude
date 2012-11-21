@@ -1475,19 +1475,23 @@ mod ABS-MACHINE-BASICS-TIMED is
     else min(MTE:Rat, mte (< CG : Cog | Object: null, DC: DC:Data > CN,
           < O : C | Cog: CG, Att: S, Pr: idle, PrQ: W, Lcnt: F > CN', MAC))
     fi
-  if MTE:Rat := mte(W, S, CN CN', MAC) .
+  if MTE:Rat := mte(W, S, CN CN', ('.comp |-> DC:Data, MAC)) .
   *** Don't advance clock if process is executing and can execute. "can execute" means
   *** "schedulable" in this case since a get-operation should not block time
   *** advance, even though it _is_ allowed to block the cog (which is the
   *** difference between executable and schedulable)
   ceq mte (
+      < CG : Cog | Object: O, DC: DC:Data >
       < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F >
       CN, CN', MAC)
   =
     if MTE:Rat == 0 then 0
-    else min(MTE:Rat, mte(CN, < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN', MAC))
+    else min(MTE:Rat, mte(< CG : Cog | Object: O, DC: DC:Data > CN,
+          < O : C | Cog: CG, Att: S, Pr: { L | SL }, PrQ: W, Lcnt: F > CN',
+          MAC))
     fi
-  if MTE:Rat := mte(SL, (S :: L), CN CN', $insert('.deadline, L['.deadline], MAC)) .
+  if MTE:Rat := mte(SL, (S :: L), < CG : Cog | Object: O, DC: DC:Data > CN CN',
+          ('.deadline |-> L['.deadline], '.comp |-> DC:Data, MAC)) .
   *** Maximum time advance == 1.
   eq mte(CN, CN', MAC) = 1 [owise] .
   
