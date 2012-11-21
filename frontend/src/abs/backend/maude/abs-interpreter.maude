@@ -1002,10 +1002,9 @@ mod ABS-EVAL is
   *** of names and numbers once we properly support multiple resource types.
   *** Result type is Expr not Data so that we can advance time on insufficient
   *** resources.
-  *** FIXME: don't use variable N (it's an Int)
   op consumeDCResource : Data Rat -> Expr .
-  eq consumeDCResource("num"[RA:Rat], N)
-  = "num"[RA:Rat + N] .
+  eq consumeDCResource("num"[RA:Rat], AMOUNT:Rat)
+  = "num"[RA:Rat + AMOUNT:Rat] .
 
   op findDC : Oid Configuration -> Object .
   eq findDC(DC:Oid, < DC:Oid : 'ABS.DC.DeploymentComponent
@@ -1023,7 +1022,7 @@ mod ABS-EVAL is
       | Cog: CG:Cogid, Att: ('cpu |-> "ABS.DC.CPU"["num"[RA:Rat]], 'internalState |-> "num"[STATE:Rat], S), Pr: P:Process, PrQ: W:MProc, Lcnt: F:Nat > CN, CO:Rat)
   = CO:Rat + STATE:Rat <= RA:Rat  .
 
-  op getFreeResources : Data Data Nat -> Rat .
+  op getFreeResources : Data Data Rat -> Rat .
   eq getFreeResources("num"[RA:Rat], "ABS.DC.CPU"["num"[TOTAL:Rat]], CO:Rat) = TOTAL:Rat - RA:Rat .
   *** The DC is unlimited -- return exactly what's asked for
   eq getFreeResources("num"[RA:Rat], "ABS.DC.InfCPU"[emp], CO:Rat)
