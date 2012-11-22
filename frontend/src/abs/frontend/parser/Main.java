@@ -5,9 +5,11 @@
 package abs.frontend.parser;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,6 +32,7 @@ import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.ast.Attribute;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Product;
@@ -41,6 +44,7 @@ import abs.frontend.ast.FeatureDecl;
 import abs.frontend.ast.FExt;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.StarImport;
+import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
 import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
@@ -50,6 +54,7 @@ import beaver.Parser;
 public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
+    protected boolean preprocess = false; //Preprocessor
     public static final String ABS_DB_LIB_PATH = "abs/lang/db/";
     public static final String[] ABS_DB_LIBS =
             {"DbHelpers.abs", "DbMain.abs", "DbOperators.abs", "DbOperatorsStructure.abs",
@@ -167,14 +172,16 @@ public class Main {
                 numbersol = true;
             } else if (arg.equals("-noattr")) {
                 ignoreattr = true;
+            } else if (arg.equals("-preprocess")) { //Preprocessor
+                    preprocess = true;
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
                 remaindingArgs.add(arg);
         }
         return remaindingArgs;
-    }
-
+    }    
+    
     public Model parse(final String[] args) throws Exception {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
@@ -230,6 +237,13 @@ public class Main {
             m.dropAttributes();
         if (verbose) {
             System.out.println("Analyzing Model...");
+        }
+        //Preprocessor
+        if (preprocess) {
+            System.out.println("Preprocessing Model...");
+            ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
+            oABSPreProcessor.preProcessModel(m);
+            //oABSPreProcessor.ParseMicroTVLFile(m); //Temporary Call
         }
         // flatten before checking error, to avoid calculating *wrong* attributes
         if (fullabs) {
@@ -560,7 +574,8 @@ public class Main {
                 + "                 solve CSP by finding a solution that tries to include PID with minimum number of changes.\n"
                 + "  -nsol          count the number of solutions\n"
                 + "  -noattr        ignore the attributes\n"
-                + "  -check=<PID>   check satisfiability of a product with qualified name PID\n" 
+                + "  -check=<PID>   check satisfiability of a product with qualified name PID\n"
+                + "  -preprocess    Preprocessing the Model\n" //Preprocessor
                 + "  -h             print this message\n");
     }
 
