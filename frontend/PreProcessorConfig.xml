@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Attribute>
+  		<Item>im_memoryConsumption</Item>
+  		<Item>Cost</Item>
+		<Item>im_responseTime</Item>		
+  </Attribute>
+  <Operator>
+        <Item>Plus</Item>
+        <Item>Max</Item>
+  </Operator>
+</Configuration>
