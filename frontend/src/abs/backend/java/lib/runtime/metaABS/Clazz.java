@@ -56,10 +56,9 @@ public class Clazz {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
-                ABSClosure method = (ABSClosure)params[0];
-                
-                // TODO
-                
+                ABSString name = (ABSString)params[0];
+                ABSClosure method = (ABSClosure)((ABSDynamicObject)params[1]).getFieldValue_Internal("method");
+                cls.addMethod(name.getString(), method);
                 return ABSUnit.UNIT;
             }
         });

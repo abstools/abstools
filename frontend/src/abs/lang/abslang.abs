@@ -527,6 +527,8 @@ export *;
 import * from ABS.StdLib;
 import * from ABS.Scheduler;
 
+def ObjectMirror reflect<A>(A a) = builtin;
+
 interface Object {}
 
 interface ObjectMirror {
@@ -543,7 +545,7 @@ interface ObjectMirror {
 }
 
 interface Cog {
- //   List<Process> getQueue();
+//   List<Process> getQueue();
 }
 
 //class CogImpl implements Cog {
@@ -555,19 +557,16 @@ interface Cog {
 interface Class {
     String getName();
     Method getMethod(String mName);
-    Unit addMethod(Method m);
+    Unit addMethod(String mName, Method m);
     Unit removeMethod(String mName);
 }
 
 interface Method {}
 
-def ObjectMirror reflect<A>(A a) = builtin;
-
 interface Runtime {
     Unit applyDelta(String s);
     Unit configureProduct(String s);
 }
-
 
 def Runtime getRuntime() = builtin;
 
