@@ -83,10 +83,13 @@ public class ObjectMirror {
                 
         // TODO: getFieldValue(), setFieldValue()
 
-        thisClass.addMethod(/*COG*/ "getCog", new ABSClosure() {
+        thisClass.addMethod(/*ABSDynamicObject<COG>*/ "getCog", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                return ((ABSDynamicObject)t.dispatch("getObject")).getCOG();
+            public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
+                COG cog = ((ABSDynamicObject)t.dispatch("getObject")).getCOG();
+                ABSDynamicObject o = new ABSDynamicObject(Cog.singleton());
+                o.setFieldValue("cog", cog);
+                return o;
             }
         });
         
@@ -105,11 +108,7 @@ public class ObjectMirror {
             @Override
             public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicObject object;
-                try {
-                    object = (ABSDynamicObject)t.getFieldValue("object");
-                } catch (NoSuchFieldException e) {
-                    object = null; // should not happen
-                }
+                object = (ABSDynamicObject)t.getFieldValue_Internal("object");
                 return object;
             }
         });

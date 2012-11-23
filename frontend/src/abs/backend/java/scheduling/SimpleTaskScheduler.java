@@ -94,7 +94,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
 
     }
 
-    protected final TaskSchedulingStrategy schedulingStrategy;
+    protected TaskSchedulingStrategy schedulingStrategy;
 
     /**
      * Holds a list of all ready tasks. Ready tasks are tasks that can
@@ -392,8 +392,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
         return tasksWithSatisfiedGuards;
     }
 
-    protected TaskInfo schedule(List<TaskInfo> scheduableTasks) {
-        return schedulingStrategy.schedule(this, scheduableTasks );
+    protected TaskInfo schedule(List<TaskInfo> schedulableTasks) {
+        return schedulingStrategy.schedule(this, schedulableTasks);
     }
 
     private volatile View view;
@@ -474,6 +474,15 @@ public class SimpleTaskScheduler implements TaskScheduler {
         return cog;
     }
 
+    public TaskSchedulingStrategy getSchedulingStrategy() {
+        return schedulingStrategy;
+    }
+    
+    public void setSchedulingStrategy(TaskSchedulingStrategy strat) {
+        // enable changing the task scheduling strategy at runtime
+        schedulingStrategy = strat;
+    }
+    
     private class View extends AbstractTaskSchedulerView {
 
         @Override 

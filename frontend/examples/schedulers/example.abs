@@ -25,13 +25,24 @@ def Process fifo_h(Process p1, List<Process> l1) =
 def Bool fifo_comp(Process p1, Process p2) = timeValue(arrival(p1)) <= timeValue(arrival(p2));
 
 
+/* user-defined scheduler class
+ * schedule() defers the scheduling decision to the fifo function
+ */
+class MyScheduler implements ProcessScheduler {
+    Process schedule(List<Process> l) {
+        return fifo(l);
+    }
+}
+
 {
     
-    C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
-    obj!m();
-    
-    ObjectMirror mir = reflect(obj);
-    Cog g = mir.getCog();
-    List<Process> q = g.getQueue();
-    
+//    C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
+
+    C o = new cog CImpl();
+
+    ObjectMirror om = reflect(o);
+    Cog g = om.getCog();
+    ProcessScheduler sched = new MyScheduler();
+    g.setScheduler(sched);
+
 }

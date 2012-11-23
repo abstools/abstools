@@ -538,14 +538,20 @@ interface ObjectMirror {
     
     Object getFieldValue();
     Unit setFieldValue(Object val);
-    Bool respondsTo(String name);
     Cog getCog();
     Unit setCog(Cog c);
     
+    Bool respondsTo(String name);
+//    Object send(Method m, List<T>);
 }
 
 interface Cog {
-//   List<Process> getQueue();
+    Unit setScheduler(ProcessScheduler sched);
+    Unit info();
+}
+
+interface ProcessScheduler {
+    Process schedule(List<Process> l);
 }
 
 //class CogImpl implements Cog {
