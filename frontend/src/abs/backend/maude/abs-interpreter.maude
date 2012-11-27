@@ -251,6 +251,9 @@ fmod ABS-DATA-INT is
   eq fparams("ABS.StdLib.random") = 'Range, 'Position .
   eq fdefn("ABS.StdLib.random") = $builtin("random") .
 
+  eq fparams("ABS.StdLib.truncate") = 'I .
+  eq fdefn("ABS.StdLib.truncate") = $builtin("truncate") .
+
 endfm
 
 fmod ABS-DATA-RAT is
@@ -954,6 +957,7 @@ mod ABS-EVAL is
   --- 4294967296 == 2^32
   ceq eval($builtin("random"), S, CN, MAC) = "num"[ trunc(((S['Range]) asRat) * (N:Rat / 4294967296)) ]
   if N:Rat := eval("ABS.StdLib.nth"(MAC['.random] :: 'Position), S, CN, MAC) asRat .
+  eq eval($builtin("truncate"), S, CN, MAC) = "num"[trunc((S['I]) asRat)] .
 
   *** ABS-DATA-STRING
   ceq eval($builtin("+"), S, CN, MAC) = "str"[I1:String + I2:String]

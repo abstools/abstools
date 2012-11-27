@@ -430,11 +430,21 @@ aspect GenerateJava {
 
     public void ReturnStmt.generateJava(String indent, PrintStream stream) {
       super.generateJava(indent,stream);
+        MethodImpl m = getContextMethod();
+        Type lht = getModel().getUnitType();
+        if (m != null) {
+            lht = m.getMethodSig().getReturnType().getType();
+        }
+        boolean needConversion = lht.isIntType()
+            && getRetExp().getType().isRatType() ;
         stream.print("    if (__ABS_getRuntime().debuggingEnabled()) ");      
         stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
         
         stream.print(indent+"return ");
         getRetExp().generateJava(stream);
+        if (lht.isIntType() && getRetExp().getType().isRatType()) {
+            stream.print(".truncate()");
+        }
         stream.println(";");
     }
 

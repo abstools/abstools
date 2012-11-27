@@ -306,6 +306,12 @@ def Int strlen(String str) = builtin;
 def Int random(Int below) = builtin;
 
 /**
+ * Truncates a towards zero.
+ */
+def Int truncate(Rat a) = builtin;
+
+
+/**
  * Returns a string representation for t.
  */
 def String toString<T>(T t) = builtin;
