@@ -11,6 +11,9 @@ import static abs.backend.prolog.PrologBackend.initialToUpperCase;
 import static abs.backend.prolog.PrologBackend.varTransform;
 import static abs.backend.prolog.PrologBackend.strTransform;
 import static abs.backend.prolog.PrologBackend.quote;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
+import abs.frontend.typechecker.locationtypes.LocationType;
 
 aspect GenerateProlog {
 
@@ -854,8 +857,8 @@ aspect GenerateProlog {
 
 
     public void Call.generateProlog(PrintStream s,ReachabilityInformation reachInfo) {
-        //generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
-        // or "asyncCall(Callee,CalledInterfaces,MethodName,ArgumentsList)"
+  		//generates "syncCall(Callee,CalledInterfaces,MethodName,ArgumentsList,[LocationType])"
+        // or "asyncCall(Callee,CalledInterfaces,MethodName,ArgumentsList,[LocationType])"
 
         if(this instanceof SyncCall)
             s.print("syncCall(");
@@ -873,8 +876,14 @@ aspect GenerateProlog {
             arguments.getChild(i).generateProlog(s,reachInfo);
             if (i != n-1) s.print(",");
         }
+        s.print("],[");
+        LocationTypeInferrerExtension locationTypeSystem=(LocationTypeInferrerExtension)this.getModel().getTypeExt().getFirstRegisteredTypeExtension(LocationTypeInferrerExtension.class);
+        if(locationTypeSystem!=null){
+          LocationTypeVariable lv = LocationTypeInferrerExtension.getLV(this.getCallee().getType());
+          LocationType tv=locationTypeSystem.getResults().get(lv);
+          s.print("'"+tv.toString()+"'");
+        }
         s.print("])");
-
 
     }
     //this function prints the interfaces to whom the called method may belong
