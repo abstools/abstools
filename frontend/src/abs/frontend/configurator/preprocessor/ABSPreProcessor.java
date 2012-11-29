@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -121,8 +122,7 @@ public class ABSPreProcessor {
                     WriteMissingExtension(oFD);                    
                 }
             }   
-            System.out.print("Pre-processing has been done successfully!!");
-            System.exit(0);           
+            System.out.print("Pre-processing has been done successfully!!");                       
         }
         catch(Exception e)
         {
@@ -134,7 +134,7 @@ public class ABSPreProcessor {
     private Boolean WriteToMvtlFile(String sLine)
     {
         //String sFilePath = "E:\\Hiwi\\FM Configurator Code\\output\\extensions.mtvl";
-        String sFilePath = "extensions.mtvl";
+        String sFilePath = "hats\\extensions.mtvl";
         Boolean IsWrittenSuccessfully = false;        
         try
         {
@@ -246,7 +246,9 @@ public class ABSPreProcessor {
     private ArrayList<String> GetXmlTagValues(String sTagName) throws ParserConfigurationException
     {
         try {
-            File file = new File("PreProcessorConfig.xml");
+            //File file = new File("C:\\app\\FeatureIDE\\workspace\\ABSFrontend\\PreProcessorConfig.xml");
+            File file = new File("hats\\PreProcessorConfig.xml");
+            
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc;
@@ -280,101 +282,5 @@ public class ABSPreProcessor {
             e1.printStackTrace();
         }
         return arlNames;
-    }
-    
-    //Ajit - ParseMicroTVLFile
-    public Boolean ParseMicroTVLFile(final Model m) 
-    {
-        Boolean IsFileGeneratedSuccessfully = false;
-        try
-        {
-            List<CompilationUnit> lsCompilationUnits = new List<CompilationUnit>();            
-            List<FNode> lsFnode = new List<FNode>();
-            
-            lsCompilationUnits = m.getCompilationUnits();            
-                        
-            for (CompilationUnit compilationUnit : lsCompilationUnits)
-            {  
-                if(!compilationUnit.getName().contains(".abs"))
-                {
-                lFE = compilationUnit.getFExtList();
-                lFD = compilationUnit.getFeatureDeclList();
-                }               
-                       
-                for (FeatureDecl oFD : lFD) {
-                    lFD1.add(oFD.copy());
-                    //System.out.print("\n Feature Declaration: " + oFD.getName());                    
-                    if(oFD.hasGroup())
-                    {   
-                        lsFnode = oFD.getGroup().getFNodeList();                        
-                        for (FNode oFnode : lsFnode) {
-                            //System.out.print("\nFeature Declaration Child Name: " + oFnode.getFeat().getName() + "\n");
-                            lFD.add(oFnode.getFeat().copy());
-                        }                        
-                    }
-                    else
-                    {   
-                        //System.out.print("\n Else part for this Feature Declaration: " + oFD.getName());
-                    }                             
-                }
-            }
-            
-            for (FeatureDecl oFD : lFD1)
-            {                     
-                System.out.print("\nFD : " + oFD.getName());
-                UpdateXML(oFD);
-            }
-            
-            System.out.print("\n\nPre-processing has been done successfully!!");
-            System.exit(0);
-            IsFileGeneratedSuccessfully = true;
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return IsFileGeneratedSuccessfully;
-    }
-    
-    //Ajit - UpdateXML
-    private Boolean UpdateXML(FeatureDecl oFD)
-    {
-        try
-        {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            Document doc = db.parse("FMSource.xml");            
-            Node struct = doc.getFirstChild().getChildNodes().item(1);
-            
-            if(oFD.hasChildren())
-            {
-                Node nodeAnd = doc.createElement("and");
-                nodeAnd.setTextContent(oFD.getName() + " " + "text");
-                struct.appendChild(nodeAnd);
-                
-                NamedNodeMap nodeAndAttributes = nodeAnd.getAttributes();
-                
-                Attr and = doc.createAttribute("name");                
-                and.setNodeValue("name = " + oFD.getName());
-                and.setValue(oFD.getName());
-                nodeAndAttributes.setNamedItem(and);
-            }
-            
-            TransformerFactory tf = TransformerFactory.newInstance();
-            javax.xml.transform.Transformer t = tf.newTransformer();
-            DOMSource source = new DOMSource(doc);
-            StreamResult result = new StreamResult(new File("FMSource.xml"));
-            t.transform(source, result);
-            
-            
-            
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-        return true;
-    }
-     
-    
+    }    
 }
