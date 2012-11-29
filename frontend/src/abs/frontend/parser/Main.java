@@ -45,6 +45,7 @@ import abs.frontend.ast.FExt;
 import abs.frontend.ast.Opt;
 import abs.frontend.ast.StarImport;
 import abs.frontend.configurator.preprocessor.ABSPreProcessor; //Preprocessor
+import abs.frontend.configurator.visualizer.FMVisualizer;
 import abs.frontend.delta.exceptions.DeltaModellingException;
 import abs.frontend.typechecker.locationtypes.LocationType;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
@@ -242,8 +243,12 @@ public class Main {
         if (preprocess) {
             System.out.println("Preprocessing Model...");
             ABSPreProcessor oABSPreProcessor = new ABSPreProcessor();
-            oABSPreProcessor.preProcessModel(m);
-            //oABSPreProcessor.ParseMicroTVLFile(m); //Temporary Call
+            oABSPreProcessor.preProcessModel(m); //For Pre-processing...
+            
+            // Transformation of microTVL to Future Model Editor compatible XML
+            FMVisualizer oFMVisualizer = new FMVisualizer();
+            
+            oFMVisualizer.ParseMicroTVLFile(m);            
         }
         // flatten before checking error, to avoid calculating *wrong* attributes
         if (fullabs) {
