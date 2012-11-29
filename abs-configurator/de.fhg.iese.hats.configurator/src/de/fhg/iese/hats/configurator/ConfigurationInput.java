@@ -150,8 +150,8 @@ IConfigurationEditorPage {
 		button.addSelectionListener(new SelectionListener(){
 			public void widgetSelected(SelectionEvent e){
 				System.out.println("I am from HATS");
-				Main main = new Main();
-				main.main("-nsol","C:\\projects\\HATS\\experiment\\Features.abs");
+				//Main main = new Main();
+				//main.main("-nsol","C:\\projects\\HATS\\experiment\\Features.abs");
 //				resultPage.showResult();
 				for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
 					System.out.println(page.getPageText());
