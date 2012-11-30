@@ -24,40 +24,38 @@ import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.typechecker.InterfaceType;
 
-public class ClassDeclGenerator extends CodeGenerator {
+public class ClassDeclGenerator {
 
     private final ClassDecl decl;
     private final String className;
+    protected final PrintStream stream;
 
     public ClassDeclGenerator(PrintStream stream, ClassDecl decl) {
-        super(stream);
+        this.stream = stream;
         this.decl = decl;
         className = JavaBackend.getClassName(decl.getName());
     }
 
-    @Override
     public void generate() {
-        JavaGeneratorHelper.generateHelpLine(decl,stream);
+        JavaGeneratorHelper.generateHelpLine(decl, stream);
         generateClassHeader();
         generateClassBody();
     }
 
     private void generateClassBody() {
-        println("{");
-        incIndent();
+        stream.println("{");
 
         generateFieldNamesMethod();
         generateFields();
         generateConstructor();
         generateGetFieldValueMethod();
 
-        println("public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
+        stream.println("public final java.lang.String getClassName() { return \""+decl.getName()+"\"; }");
 
         generateCreateNewCOGMethod();
         generateNewObjectMethods();
         generateMethods();
-        decIndent();
-        println("}");
+        stream.println("}");
     }
 
     private void generateMethods() {
