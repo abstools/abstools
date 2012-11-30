@@ -519,6 +519,7 @@ mod ABS-STATEMENT is
   op assign(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
   op new(_;_;_) : Vid Cid ExprList -> Stmt [ctor format (b d o b o b o b o)] .
   op newcog(_;_;_;_) : Vid Cid ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o)] .
+  op newcog(_;_;_;_;_) : Vid Cid ExprList Expr Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op asynccall(_;_;_;_;_) : Vid Expr Mid ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op synccall(_;_;_;_;_) : Vid Expr Mid ExprList Expr -> Stmt [ctor format (b d o b o b o b o b o b o)] .
   op original(_;_) : Vid ExprList -> Stmt [ctor format (b d o b o b o)] .
@@ -2102,7 +2103,7 @@ mod ABS-NEW-RL is
   var E : Expr .       var A : Vid .     var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
   var CG : Cogid .
-  var SC : Expr .
+  vars SC SC' : Expr .
   var COST : Expr .
 
   rl
@@ -2121,16 +2122,24 @@ mod ABS-NEW-RL is
                       Lcnt: 0 >
     [label new-object] .
 
-  crl
+  eq
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
-    < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+  =
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+    [label newcog-add-scheduler] .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: G >
   =>
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < O : C | Cog: CG, Att: S, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: ob(B, G),
                              Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
@@ -2148,7 +2157,7 @@ mod ABS-NEW-EQ-TIMED is
   var E : Expr .       var A : Vid .      var EL : ExprList .
   var AL : VidList .   var MS : MMtd .
   var T : Rat .        var CG : Cogid .
-  var SC : Expr .
+  vars SC SC' : Expr .
   vars LIM RAND : Nat .
   var COST : Expr .
 
@@ -2170,18 +2179,26 @@ mod ABS-NEW-EQ-TIMED is
                       Lcnt: 0 >
     [label new-object] .
 
-  ceq
+  eq
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E); SL }, PrQ: W >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+  =
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
+    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+    [label newcog-add-scheduler] .
+
+  ceq
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newcog(A ; B ; EL ; E ; SC); SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Lcnt: F >
-    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: G >
+    < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: G >
   =
     *** we synchronize with the call to .init because otherwise another call
     *** immediately afterwards might overtake the call to .init
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)) ; asynccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp ]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Lcnt: (s F) >
-    < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
+    < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: ob(B, G),
                              Att: (S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),

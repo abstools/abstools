@@ -265,11 +265,16 @@ aspect GenerateMaude {
         }
         if (hasCog()) {
             PureExp dc = CompilerUtils.getAnnotationValue(annotations, "DC");
+            PureExp scheduler = CompilerUtils.getAnnotationValue(annotations, "Scheduler");
             stream.print("; ");
             if (dc != null) {
                 dc.generateMaude(stream);
             } else {
                 stream.print("\"ABS.DC.thisDC\"( emp )");
+            }
+            if (scheduler != null) {
+                stream.print("; ");
+                scheduler.generateMaude(stream);
             }
         }
         stream.print(") ");
