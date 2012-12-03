@@ -13,7 +13,7 @@ class D implements I { Int m() {return 2;} }
     Int x = o1.m();
     assert x == 1;
 
-    // change class of o1 to C2 and invoke m() again
+    // change class of o1 from C to D and invoke m() again
     I o2 = new D();
     ObjectMirror m2 = reflect(o2);
     Class class_of_o2 = m2.getClass();

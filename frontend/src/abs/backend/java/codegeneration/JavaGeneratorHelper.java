@@ -196,24 +196,24 @@ public class JavaGeneratorHelper {
 
     public static void generateMethodSig(PrintStream stream, MethodSig sig, boolean async, String modifier, String prefix) {
         JavaGeneratorHelper.generateHelpLine(sig,stream);
-        stream.print("public "+modifier+" ");
+        stream.print("public " + modifier + " ");
         if (async) {
             prefix = "async_";
-            stream.print(ABSFut.class.getName()+"<");
+            stream.print(ABSFut.class.getName() + "<");
         }
 
         sig.getReturnType().generateJava(stream);
 
         if (async)
             stream.print(">");
-        stream.print(" "+prefix+JavaBackend.getMethodName(sig.getName()));
+        stream.print(" " + prefix+JavaBackend.getMethodName(sig.getName()));
         JavaGeneratorHelper.generateParams(stream, sig.getParams());
     }
 
     public static void generateAsyncMethod(PrintStream stream, MethodImpl method) {
         final MethodSig sig = method.getMethodSig();
         generateMethodSig(stream,sig,true,"final","");
-        stream.println("{ return ("+ABSFut.class.getName()+")");
+        stream.println("{ return (" + ABSFut.class.getName() + ")");
         generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig);
         stream.println("; }");
     }
@@ -234,16 +234,16 @@ public class JavaGeneratorHelper {
     {
         final java.util.List<Type> paramTypes
         = sig.getTypes();
-        stream.print(ABSRuntime.class.getName()+".getCurrentRuntime().asyncCall(");
+        stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
-        stream.print("new "+AbstractAsyncCall.class.getName()+"<"+targetType+">(this,");
+        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + targetType + ">(this,");
         if (callee instanceof ThisExp) {
             if (calleeString != null)
                 stream.print(calleeString);
             else
                 callee.generateJava(stream);
         } else { 
-            stream.print(ABSRuntime.class.getName()+".checkForNull(");
+            stream.print(ABSRuntime.class.getName() + ".checkForNull(");
             if (calleeString != null)
                 stream.print(calleeString);
             else
@@ -253,20 +253,20 @@ public class JavaGeneratorHelper {
         stream.print(") {");
         int i = 0;
         for (Type t : paramTypes) {
-            stream.print(JavaBackend.getQualifiedString(t)+" arg"+i+";");
+            stream.print(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
             i++;
         }
 
         generateTaskGetArgsMethod(stream, paramTypes.size());
         generateTaskInitMethod(stream, paramTypes);
 
-        stream.print("public java.lang.String methodName() { return \""+sig.getName()+"\"; }");
+        stream.print("public java.lang.String methodName() { return \"" + sig.getName() + "\"; }");
 
         stream.print("public Object execute() {");
-        stream.print("return target."+JavaBackend.getMethodName(sig.getName())+"(");
+        stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
             if (i > 0) stream.print(",");
-            stream.print("arg"+i);
+            stream.print("arg" + i);
             if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
         }
         stream.print(");");
@@ -281,22 +281,22 @@ public class JavaGeneratorHelper {
 
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         int i;
-        stream.print("public "+abs.backend.java.lib.runtime.AsyncCall.class.getName()+"<?> init(");
+        stream.print("public " + abs.backend.java.lib.runtime.AsyncCall.class.getName() + "<?> init(");
         i = 0;
         for (Type t : paramTypes) {
             if (i > 0) stream.print(",");
-            stream.print(JavaBackend.getQualifiedString(t)+" _arg"+i);
+            stream.print(JavaBackend.getQualifiedString(t) + " _arg" + i);
             i++;
         }
         stream.print(") {");
         for (i = 0; i < paramTypes.size(); i++) {
-            stream.print("arg"+i+" = _arg"+i+";");
+            stream.print("arg" + i + " = _arg" + i + ";");
         }
         stream.print("return this; }");
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.print("public java.util.List<"+ABSValue.class.getName()+"> getArgs() { return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] { ");
+        stream.print("public java.util.List<" + ABSValue.class.getName() + "> getArgs() { return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] { ");
         generateArgStringList(stream, n);
         stream.print(" }); } ");
     }
@@ -304,7 +304,7 @@ public class JavaGeneratorHelper {
     private static void generateArgStringList(PrintStream stream, final int n) {
         for (int i = 0; i < n; i++) {
             if (i > 0) stream.print(",");
-            stream.print("arg"+i);
+            stream.print("arg" + i);
         }
     }
 
@@ -345,11 +345,11 @@ public class JavaGeneratorHelper {
             stream.println(";");
         } else {
             stream.println("if (__ABS_getRuntime().debuggingEnabled()) {");
-            stream.println(Task.class.getName()+"<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
-            stream.println("__ABS_currentTask.newStackFrame(this,\""+m.getMethodSig().getName()+"\");");
+            stream.println(Task.class.getName() + "<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
+            stream.println("__ABS_currentTask.newStackFrame(this,\"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {
                 stream.print("__ABS_currentTask.setLocalVariable(");
-                stream.println("\""+d.getName()+"\","+d.getName()+");");
+                stream.println("\"" + d.getName() + "\"," + d.getName() + ");");
             }
             stream.println("}");
             m.getBlock().generateJava(stream, addReturn);
@@ -427,7 +427,7 @@ public class JavaGeneratorHelper {
 
         replaceLocalVariables((PureExp)expr.copy(), beforeAwaitStream);
 
-        stream.print("new "+JavaBackendConstants.EXPGUARD+"() { public "+ABSBool.class.getName()+" evaluateExp() { return ");
+        stream.print("new " + JavaBackendConstants.EXPGUARD + "() { public " + ABSBool.class.getName() + " evaluateExp() { return ");
         expGuard.getPureExp().generateJava(stream);
         stream.print("; }}");
     }
@@ -472,7 +472,7 @@ public class JavaGeneratorHelper {
      */
     private static void replaceVarUse(PrintStream beforeAwaitStream, VarUse v, TypedVarOrFieldDecl vDecl) {
         String name = JavaBackend.getVariableName(vDecl.getName());
-        String tempName = "temp$"+tempCounter+"$"+name;
+        String tempName = "temp$" + tempCounter + "$" + name;
         tempCounter = Math.max(tempCounter+1, 0);
         // copy value of variable to temporary, final variable
         beforeAwaitStream.print("final ");
@@ -488,7 +488,7 @@ public class JavaGeneratorHelper {
         // Necessary temporary variables are written to "stream" and the 
         // await-expression is written to exprStream
         awaitStmt.getGuard().generateJavaGuard(stream, exprStream);
-        stream.print(JavaBackendConstants.ABSRUNTIME+".await(");
+        stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
         stream.print(exprOStream.toString());
         stream.println(");");
     }

@@ -9,5 +9,5 @@ import java.util.List;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 
 public interface TaskSchedulingStrategy {
-    TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> scheduableTasks);
+    TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> schedulableTasks);
 }

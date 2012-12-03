@@ -34,6 +34,18 @@ class MyScheduler implements ProcessScheduler {
     }
 }
 
+class Scheduler2 implements ProcessScheduler {
+    Process schedule (List<Process> l) {
+        return fifo(l);
+    }
+}
+
+
+// test
+data Tree = Empty
+          | Leaf(Int)
+          | Node(Tree, Tree);
+
 {
     
 //    C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
@@ -45,4 +57,5 @@ class MyScheduler implements ProcessScheduler {
     ProcessScheduler sched = new MyScheduler();
     g.setScheduler(sched);
 
+    o!m();
 }

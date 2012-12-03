@@ -64,7 +64,8 @@ public class ObjectMirror {
         thisClass.addMethod(/*Unit*/ "setClass", new ABSClosure() {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
-                ((ABSDynamicObject)t.dispatch("getObject")).setClazz((ABSDynamicClass)params[0]);
+                ABSDynamicClass cls = (ABSDynamicClass)((ABSDynamicObject)params[0]).getFieldValue_Internal("class");
+                ((ABSDynamicObject)t.dispatch("getObject")).setClazz(cls);
                 return ABSUnit.UNIT;
             }
         });

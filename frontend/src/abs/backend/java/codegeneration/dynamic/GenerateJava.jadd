@@ -131,7 +131,7 @@ aspect GenerateJava {
         stream.print(" extends " + dataTypeDecl.getName());
         DynamicJavaGeneratorHelper.generateTypeParameters(stream,dataTypeDecl, false);
 
-        stream.println("{");
+        stream.println(" {");
 
         int i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
@@ -148,7 +148,7 @@ aspect GenerateJava {
             if (first)
                 first = false;
             else
-                stream.print(",");
+                stream.print(", ");
             stream.print("final ");
             stream.print(JavaBackend.getJavaType(u) + " arg" + i);
             i++;
@@ -162,16 +162,16 @@ aspect GenerateJava {
         stream.println("}");
 
         stream.print("protected " + ABSValue.class.getName() + "[] getArgs() { return new " + ABSValue.class.getName() + "[] { ");
-        i=0;
+        i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
             if (i > 0)
-                stream.print(",");
+                stream.print(", ");
             stream.print("this.arg" + i);
             i++;
         }
-        stream.println("}; }");
+        stream.println(" }; }");
 
-        stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\" ;}");
+        stream.println("public java.lang.String getConstructorName() { return \"" + getName() + "\"; }");
 
         // eq method
         stream.println("public " + ABSBool.class.getName() + " eq(" + ABSValue.class.getName() + " o) {");
@@ -192,7 +192,7 @@ aspect GenerateJava {
         stream.println("if (!c.constructorClass.equals(this.getClass())) return false;");
         i = 0;
         for (ConstructorArg u : getConstructorArgs()) {
-            stream.println("if (!c.subpattern[" + i + "].match(this.arg" + i + ",b)) return false;");
+            stream.println("if (!c.subpattern[" + i + "].match(this.arg" + i + ", b)) return false;");
             i++;
         }
         stream.println("return true;");
@@ -663,7 +663,7 @@ aspect GenerateJava {
     public void DurationGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
         stream.print("new " + JavaBackendConstants.EXPGUARD+
                 "() { public " + ABSBool.class.getName()+
-                " evaluateExp() { return "+
+                " evaluateExp() { return " + 
                 ABSBool.class.getName() + ".TRUE; }}");
     }
 
