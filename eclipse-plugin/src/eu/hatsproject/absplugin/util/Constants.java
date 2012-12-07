@@ -180,6 +180,7 @@ public class Constants {
 	public static final String ALWAYS_COMPILE        = "alwaysCompile";
 	
 	//Type check properties
+	public static final String PRODUCT_TYPECHECK              = "productTypeCheck";
 	public static final String LOCATION_TYPECHECK              = "locationTypeCheck";
 	public static final String LOCATION_TYPE_OVERLAY           = "locationTypeOverlay";
 	public static final String LOCATION_TYPE_HIGHLIGHT         = "locationTypeHighlight";

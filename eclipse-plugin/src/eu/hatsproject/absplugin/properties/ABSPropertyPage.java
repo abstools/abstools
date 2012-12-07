@@ -5,6 +5,7 @@
 package eu.hatsproject.absplugin.properties;
 
 import static eu.hatsproject.absplugin.util.Constants.DEFAULT_LOCATION_TYPE;
+import static eu.hatsproject.absplugin.util.Constants.PRODUCT_TYPECHECK;
 import static eu.hatsproject.absplugin.util.Constants.LOCATION_TYPECHECK;
 import static eu.hatsproject.absplugin.util.Constants.LOCATION_TYPE_OVERLAY;
 import static eu.hatsproject.absplugin.util.Constants.LOCATION_TYPE_PRECISION;
@@ -34,6 +35,7 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtensio
 public class ABSPropertyPage extends PropertyPage{
 
 	private BooleanFieldEditor locationTypecheckEditor;
+	private BooleanFieldEditor typeCheckProductsEditor;
 	private ComboFieldEditor defaultLocationTypeEditor;
 	private IProject project;
 	private IPersistentPreferenceStore prefstore;
@@ -61,6 +63,10 @@ public class ABSPropertyPage extends PropertyPage{
 		locationTypecheckEditor = new BooleanFieldEditor(LOCATION_TYPECHECK, "Enable location type checking", createContainer(parent));
 		locationTypecheckEditor.setPreferenceStore(prefstore);
 		locationTypecheckEditor.load();
+		
+		typeCheckProductsEditor = new BooleanFieldEditor(PRODUCT_TYPECHECK, "Enable products type checking", createContainer(parent));
+		typeCheckProductsEditor.setPreferenceStore(prefstore);
+		typeCheckProductsEditor.load();
 		
 		final Composite locationTypeOverlayContainer = createContainer(parent);
 		locationTypeOverlayEditor = new BooleanFieldEditor(LOCATION_TYPE_OVERLAY, "Show overlays", locationTypeOverlayContainer);
@@ -117,6 +123,7 @@ public class ABSPropertyPage extends PropertyPage{
 	@Override
 	protected void performDefaults() {
 		locationTypecheckEditor.loadDefault();
+		typeCheckProductsEditor.loadDefault();
 		defaultLocationTypeEditor.loadDefault();
 		locationTypePrecisionEditor.loadDefault();
 		locationTypeOverlayEditor.loadDefault();
@@ -126,6 +133,7 @@ public class ABSPropertyPage extends PropertyPage{
 	@Override
 	public boolean performOk() {
 		locationTypecheckEditor.store();
+		typeCheckProductsEditor.store();
 		defaultLocationTypeEditor.store();
 		locationTypePrecisionEditor.store();
 		locationTypeOverlayEditor.store();
