@@ -205,13 +205,13 @@ public class DynamicJavaGeneratorHelper {
             final String method) 
     {
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
-        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + ABSDynamicObject.class.getName() + ">(thisP,");
+        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + ABSDynamicObject.class.getName() + ">(thisP, ");
         stream.print("(" + ABSDynamicObject.class.getName() + ")" + ABSRuntime.class.getName() + ".checkForNull(");
         if (calleeString != null)
             stream.print(calleeString);
         else
             callee.generateJavaDynamic(stream);
-        stream.print(")) {");
+        stream.println(")) {");
         for (int i = 0; i < paramTypes.size(); i++) {
             stream.print(ABSValue.class.getName()+" arg" + i + ";");
         }
@@ -219,15 +219,13 @@ public class DynamicJavaGeneratorHelper {
         generateTaskGetArgsMethod(stream, paramTypes.size());
         generateTaskInitMethod(stream, paramTypes);
 
-        stream.print("public java.lang.String methodName() { return \"" + method + "\"; }");
+        stream.println("public java.lang.String methodName() { return \"" + method + "\"; }");
 
         stream.print("public Object execute() {");
-        stream.print("return ((" + ABSDynamicObject.class.getName() + ")target).dispatch(");
+        stream.print(" return ((" + ABSDynamicObject.class.getName() + ")target).dispatch(");
         generateArgStringList(stream, "\"" + method + "\"", paramTypes.size());
-        stream.print(");");
-        stream.println("}");
-        stream.println("}");
-        stream.print(".init");
+        stream.println("); }");
+        stream.print("}.init");
         if (args != null)
             DynamicJavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
@@ -245,22 +243,22 @@ public class DynamicJavaGeneratorHelper {
     
     
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
-        stream.print("public "+abs.backend.java.lib.runtime.AsyncCall.class.getName()+"<?> init(");
+        stream.print("public " + abs.backend.java.lib.runtime.AsyncCall.class.getName() + "<?> init(");
         for (int i = 0; i < paramTypes.size(); i++) {
-            if (i > 0) stream.print(",");
-            stream.print(ABSValue.class.getName()+" _arg"+i);
+            if (i > 0) stream.print(", ");
+            stream.print(ABSValue.class.getName() + " _arg" + i);
         }
         stream.print(") {");
         for (int i = 0; i < paramTypes.size(); i++) {
-            stream.print("arg"+i+" = _arg"+i+";");
+            stream.print("arg" + i + " = _arg" + i + ";");
         }
-        stream.print(" return this; }");
+        stream.println(" return this; }");
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
         stream.print("public java.util.List<"+ABSValue.class.getName()+"> getArgs() { return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] { ");
         generateArgStringList(stream, n);
-        stream.print(" }); }");
+        stream.println(" }); }");
     }
 
     private static void generateArgStringList(PrintStream stream, String init, final int n) {

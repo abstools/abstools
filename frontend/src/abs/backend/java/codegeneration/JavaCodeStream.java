@@ -49,9 +49,16 @@ public class JavaCodeStream extends PrintStream {
      *
      * @see java.io.PrintStream#print(java.lang.String)
      */
+    @Override
     public void print(String s) {
         //System.err.println("=== " + indent.length() + " === " + s + " ===");
-        if (startNewLine) super.print(indent);
+        if (startNewLine) {
+            if (s.startsWith("}") || s.startsWith(")"))
+                decIndent();
+            super.print(indent);
+        }
+            
+        
         super.print(s);
         startNewLine = false;
     }
@@ -67,6 +74,7 @@ public class JavaCodeStream extends PrintStream {
      *
      * @see java.io.PrintStream#println(java.lang.String)
      */
+    @Override
     public void println(String s) {
        //System.err.println("*** " + indent.length() + " *** " + s + " ***");
         if (s.startsWith("}") || s.equals(")"))
@@ -78,7 +86,13 @@ public class JavaCodeStream extends PrintStream {
         super.println();
         startNewLine = true;
         
-        if (s.endsWith("{") || s.equals("("))
+        if (s.endsWith("{") || s.endsWith("("))
             incIndent();
+    }
+
+    @Override
+    public void println() {
+        startNewLine = true;
+        super.println();
     }
 }
