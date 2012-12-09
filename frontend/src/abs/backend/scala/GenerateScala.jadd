@@ -192,7 +192,7 @@ aspect GenerateScala {
 	public void BuiltinFunctionDef.generateScala(String prefix, PrintWriter writer, boolean suspendable) {
         final FunctionDecl decl = ((FunctionDecl)getContextDecl());
         final String functionName = decl.getName();
-        final String moduleName = decl.getModule().getName();
+        final String moduleName = decl.getModuleDecl().getName();
         if (moduleName.equals(Constants.STDLIB_NAME)) {
             if (functionName.equals("substr")) {
                 writer.write(prefix + "str.substring(start, start + length)");
@@ -368,7 +368,7 @@ aspect GenerateScala {
 		// iterate over all the interfaces
 		for (InterfaceTypeUse intf: getImplementedInterfaceUses())
 			for (MethodSig sig: ((InterfaceDecl)intf.getDecl()).getBodys())
-				generateScalaActorInvocation(intf.getDecl().getModule().getName() + ".I" + intf.getName(), sig, writer);
+				generateScalaActorInvocation(intf.getDecl().getModuleDecl().getName() + ".I" + intf.getName(), sig, writer);
 			
 		// iterate over all the methods
 		for (MethodImpl m: getMethods())
@@ -480,7 +480,7 @@ aspect GenerateScala {
 	
 	public void ParametricDataTypeDecl.generateScala(String prefix, PrintWriter writer) {
 		// specific hacks for standard library
-		if (getModule().getName().equals("ABS.StdLib")) {
+		if (getModuleDecl().getName().equals("ABS.StdLib")) {
 			if (getName().equals("Unit") || getName().equals("Int") ||
 					getName().equals("String") || getName().equals("Bool") ||
 					getName().equals("Fut"))
@@ -549,7 +549,7 @@ aspect GenerateScala {
 	
 	public String Decl.getScalaType() {
 		// hacks for types in standard library
-		if (getModule().getName().equals("ABS.StdLib")) {
+		if (getModuleDecl().getName().equals("ABS.StdLib")) {
 			if (getName().equals("Unit") || getName().equals("Int") ||
 					getName().equals("String"))
 				return getName();
@@ -562,7 +562,7 @@ aspect GenerateScala {
 		if (isFuture())
 			return "ActorRef";
 		if (isDataType())
-			return getModule().getName() + ".D" + getName();
+			return getModuleDecl().getName() + ".D" + getName();
 		if (isTypeParameter())
 			return getName();
 		if (isTypeSyn())
@@ -587,13 +587,13 @@ aspect GenerateScala {
 	
 	public String ParametricDataTypeUse.getScalaType() {
 		// hacks for types in standard library
-		if (getDecl().getModule().getName().equals("ABS.StdLib")) {
+		if (getDecl().getModuleDecl().getName().equals("ABS.StdLib")) {
 			if (getDecl().getName().equals("Fut"))
 				return "ActorRef";
 		}
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append(getDecl().getModule().getName());
+		builder.append(getDecl().getModuleDecl().getName());
 		builder.append(".");
 		
 		if (getDecl().isDataType())
@@ -921,7 +921,7 @@ aspect GenerateScala {
 		return false;
 	}
 	public void DataConstructorExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
-		if (getDecl().getModule().getName().equals("ABS.StdLib")) {
+		if (getDecl().getModuleDecl().getName().equals("ABS.StdLib")) {
 			if (getDecl().getName().equals("True")) {
 				writer.write("true");
 				return;
@@ -1011,8 +1011,8 @@ aspect GenerateScala {
 	}
 	
 	public void ConstructorPattern.generateScala(String prefix, PrintWriter writer, Collection<PatternVarUse> varUses, abs.frontend.ast.List<Annotation> annotations) {
-		//if (getContextDecl().getModule().getName().equals("ABS.StdLib")) {
-		if (getDataConstructor().getModule().getName().equals("ABS.StdLib")) {
+		//if (getContextDecl().getModuleDecl().getName().equals("ABS.StdLib")) {
+		if (getDataConstructor().getModuleDecl().getName().equals("ABS.StdLib")) {
 			if (getConstructor().equals("True")) {
 				writer.write("true");
 				return;
@@ -1024,7 +1024,7 @@ aspect GenerateScala {
 			}
 		}
 		
-		writer.write(getDataConstructor().getModule().getName());
+		writer.write(getDataConstructor().getModuleDecl().getName());
 		writer.write(".");
 		writer.write(getConstructor());
 		
@@ -1255,7 +1255,7 @@ aspect GenerateScala {
 			writer.write("new ");
 					
 		writer.format("%s.%s%s.%s",
-				getMethodSig().getContextDecl().getModule().getName(),
+				getMethodSig().getContextDecl().getModuleDecl().getName(),
 				getMethodSig().getContextDecl().isInterface() ? "I" : "", getMethodSig().getContextDecl().getName(),
 				StringUtils.capitalize(getMethod()));
 
