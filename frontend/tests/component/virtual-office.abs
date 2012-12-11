@@ -1,0 +1,270 @@
+module ABS.Component.VirtualOffice;
+
+
+import * from ABS.StdLib;
+
+
+// First simple part.
+
+
+Interface Test { Unit test(); }
+
+
+interface File { }
+inferface PSFile extends File {  }
+
+interface Printer {
+  int print(File);
+}
+
+interface Status {
+
+  int addToQueue(File f);
+  Unit popFromQueue(int id);
+  Unit isCurrent(int id);
+  Unit isCurrentFile(File f);
+
+}
+
+class PrinterDriverImpl() implements Printer {
+  Status s;
+
+  Status getStatus () { return s; }
+
+  int sendToPrinter(PSFile f) { return 1; }
+  int print(File f) {
+    int id = s.addToQueue(f);
+    await(s!isCurrent(id));
+
+    int code = this.printPhy(f);
+    await(s!popFromQueue(id));
+    return code;
+  }
+}
+
+class StatusImpl() implements Status {
+  List<File> fs = Nil;
+
+  int addToQueue(File f);
+  Unit popFromQueue(int id);
+  Unit isCurrent(int id);
+  Unit isCurrentFile(File f);
+}
+
+// Second part.
+
+class PrintClient() implements Printer {
+  port Printer p;
+  int count = 0;
+
+  void setPrinter(Printer pr) {
+    await | this |;
+    rebind this:p = pr;
+  }
+
+  critical void print(File f) {
+    Fut<int> ferr = p!print(f);
+    int err;
+
+    Fut<Status> fstatus;
+    Status status;
+
+    Fut<Unit> fisfile;
+
+    count = count + 1;
+
+    System.out.println("Job " + count + ": Wating to begin");
+    fstatus = p!getStatus(); await fstatus?;
+    status = fstatus.get;
+
+    fisfile = status!isCurrentFile(f)
+    await fisfile?;
+    System.out.println("Job " + count + ": Being processed");
+
+    await ferr?;
+    err = err.get;
+    System.out.println("Job " + count + ": Completed with error code = " + err);
+  }
+
+  int GetNumberOfJobs() { return count; }
+}
+
+
+class TestSecondPart() imlements Test {
+  Unit test() {
+
+  }
+}
+
+
+// Third part.
+
+interface SimpleOperator {
+  Document modify(Document doc);
+}
+
+interface WorkflowController {  }
+
+
+class OperatorFrontEnd(Operator op) implements SimpleOperator {
+  port Operator _op;
+  critical Document modify(Document doc) { _op!modify(doc); }
+}
+
+
+class WorkflowControllerImpl(Document doc, Operator op, Printer p) imlements WorkflowController {
+  port Document _doc = doc;
+  port Printer _p = p;
+  SimpleOperator _opfe = new OperatorFrontEnd(op);
+
+  critical void newInstanceWF() { ... }
+
+  void changeOperator(Operator op) {
+    await |this| /\ |_opfe|;
+    rebind _opfe:_op = op;
+  }
+}
+
+
+class TestThirdPart() imlements Test {
+  Unit test() {
+
+  }
+}
+
+
+// Fourth part.
+
+interface ServiceA { }
+interface ServiceB { }
+
+interface ServiceFrontEnd {
+  critical void workflow();
+}
+
+
+class ServiceFrontEndImpl {
+  port ServiceA a;
+  port ServiceB b;
+  critical void workflow() { ... }
+}
+
+class WorkerFrontEnd {
+  ServiceFrontEnd s;
+
+  void changeLocation(location l2, ServiceA a2, ServiceB b2) {
+    await |s| ;
+    move group(this) in l2;
+    rebind s:a = a2;
+    rebind s:b = b2;
+  }
+
+  void init(location l, ServiceA a, ServiceB b) {
+    move group(this) in l;
+    s = new ServiceFrontEndImpl();
+    rebind s:a = a;
+    rebind s:b = b;
+  }
+}
+
+class TestFourthPart() imlements Test {
+  Unit test() {
+
+  }
+}
+
+
+// Fifth part.
+
+
+interface Register {
+  ServiceA discoverA();
+  ServiceB discoverB();
+}
+
+interface RootRegister {
+  Register discoverR(location l);
+}
+
+class ServiceFrontEnd {
+  port ServiceA a;
+  port ServiceB b;
+  critical void workflow() { }
+}
+
+class WorkerFrontEnd {
+  RootRegister rr2;
+  ServiceFrontEnd s;
+  
+  void changeLocation(location l2) {
+    Fut<Register> fr=rr2!discoverR(l2); await(fr); Register r=get(fr);
+    await s ;
+    subloc l2 → group(this);
+    rebind s:a = get(r!discoverA());
+    rebind s:b = get(r!discoverB());
+  }
+
+  void init(location l, RootRegister rr) {
+    rr2=rr;
+    Fut<Register> fr=rr2!discoverR(l); await(fr); Register r=get(fr);
+    subloc l → group(this);
+    s = new ServiceFrontEnd();
+    rebind s:a = get(r!discoverA());
+    rebind s:b = get(r!discoverB());
+  }
+}
+
+
+
+
+
+
+class TestFifthPart() imlements Test {
+  Unit test() {
+
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//***************************************************************
+//****************************main******************************
+//***************************************************************
+
+{
+
+  Test t2 = new cog TestSecondPart();
+  Fut<Unit> end2 = t2!test();
+  await end2?;
+
+  Test t3 = new cog TestThirdPart();
+  Fut<Unit> end3 = t3!test();
+  await end3?;
+
+  Test t4 = new cog TestFourthPart();
+  Fut<Unit> end4 = t4!test();
+  await end4?;
+
+  Test t5 = new cog TestFifthPart();
+  Fut<Unit> end5 = t5!test();
+  await end5?;
+
+}
+

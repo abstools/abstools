@@ -1,0 +1,36 @@
+module ABS.Component.DeadLock1;
+
+
+import * from ABS.StdLib;
+
+interface Running {
+
+   Unit start();
+}
+
+class DeadLockExample() implements Running {
+ 
+  port Bool p = False;
+  
+ critical Unit start() {
+    Int k = 1 + 2;
+    Int t = 1;
+    t = k + 1;
+    await |this|;
+    rebind this:p = True;
+  }
+}
+
+
+//***************************************************************
+//****************************main******************************
+//***************************************************************
+
+{
+
+  Running o = new DeadLockExample();
+  
+  o.start();
+
+}
+

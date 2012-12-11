@@ -129,6 +129,8 @@ fmod ABS-EXPRESSION is
   op ?(_)  : Expr -> Expr [ctor format (! o d d d)] .
   *** duration guard expression
   op ?duration(_;_) : Expr Expr -> Expr [ctor format (! o d d d d d) ] .
+  *** Component Model Extension: consistency guard
+  op cr(_) : Expr -> Expr  [ctor format (! o d d d)] .
   *** Error terms
   op $error : String -> Expr [ctor format (r o)] .
 
@@ -402,7 +404,6 @@ view Label from TRIV to ABS-DATA-LABEL is
   sort Elt to Label .
 endv
 
-
 *** The DATATYPES module collects all predefined data types into one module.
 mod ABS-DATATYPES is
     extending ABS-DATA-SIG .
@@ -540,6 +541,13 @@ mod ABS-STATEMENT is
 
   op $pushrandom : -> Stmt [ctor format (r o)] .
   op $poprandom : -> Stmt [ctor format (r o)] .
+
+  *** Component Model Extension: rebind et subloc
+  op rebind(_;_;_) : Expr Vid Expr -> Stmt [ctor format (b d o b o b o b o)] .
+  op newloc(_) : Vid -> Stmt [ctor format (r d o r o)] .
+  op getloc(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
+  op getfather(_;_) : Vid Expr -> Stmt [ctor format (b d o b o b o)] .
+  op subloc(_;_) : Expr Expr -> Stmt [ctor format (b d o b o b o)] .
 
   --- Assertion Failure.
   --- This `statement' represents an assertion failure.  It
@@ -751,6 +759,20 @@ mod ABS-CONFIGURATION is
   op <_: Cog | Object:_, DC:_, Sched:_, Pr:_, PrQ:_ > : Cogid Data Oid Expr Process MProc -> Cog
     [ctor format (nc d d c d d o! d d o! d n o! d n o! d n o!++ c-- on ) ] .
 
+  *** Component Model Extension: Location
+  sort Location .
+  subsort Location  < Data .
+  sort LocInfo .
+  subsort LocInfo  < Configuration .
+  
+  op loc-top     : -> Location [ctor] .
+  op loc-cog(_)  : Cogid -> Location [ctor format (b o b o o)] .
+  op loc-comp(_) : Nat -> Location [ctor format (b o b o o)] .
+
+  op < LocId | _ > : Nat -> LocInfo [ctor] .
+  op < locRel | _ ; _ > : Data Data -> LocInfo [ctor] .
+
+
   *** Useful for real-time maude, and in general for accessing the whole
   *** configuration.  FIXME: We should use another name, since State is used
   *** in LOOP-MODE.
@@ -798,6 +820,10 @@ mod ABS-EVAL is
   var MAC : SSubst .
   var W : MProc .
   var COST : Expr .
+  
+  var OID : Oid .
+  var CID : Cid .
+  var COGID : Cogid .
 
   --- Check if a message is in the queue.
   op completed : Label Configuration -> Bool .
@@ -835,6 +861,13 @@ mod ABS-EVAL is
   eq eval(let AL = EL in E, S, CN, MAC) =
     eval(E, S :: createSubst(AL, evalList(EL, S, CN, MAC)), CN, MAC) .
 
+  *** Component Model Extension: Guard
+  *** Component Model Extension: Check if an object is not in critical section
+  op isntcritical : Oid Configuration -> Bool .
+  eq isntcritical(OID, < OID : CID | Cog: COGID, Att: S, Lcnt: N > CN) = ((S['.nbcr]) asInt == 0) .
+  eq isntcritical(OID, CN) = false [owise] .
+
+  eq eval(cr( QID ), S, CN, MAC) = isntcritical(S[QID], CN) asAbsBool .
 
 
   *** evaluate a case statement.  If the pattern matches, augment environment
@@ -1243,7 +1276,8 @@ mod ABS-MACHINE-BASICS-COMMON is
       Cog: ob('main, 0),
       Att: 'cpu |-> "ABS.DC.InfCPU"[emp], 'creationTime |-> "ABS.StdLib.Time"["num"[0]], 'description |-> "str"["Environment"], 'history |-> "ABS.StdLib.Nil"[emp], 'initialized |-> "ABS.StdLib.True"[ emp ], 'internalState |-> "num"[0], 'nextcpu |-> "ABS.DC.InfCPU"[emp], 'totalhistory |-> "ABS.StdLib.Nil"[emp],
       Lcnt: 0 >
-    < ob('main, 0) : '... | Cog: ob('main, 0), Att: noSubst, Lcnt: 0 > .
+    < ob('main, 0) : '... | Cog: ob('main, 0), Att: noSubst, Lcnt: 0 >
+    < LocId | 0 > . *** Component Model Extension
 
   --- Resource consumption.  Must be a rewrite rule for confluence.
   *** DC variables:
@@ -2117,7 +2151,7 @@ mod ABS-NEW-RL is
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; ob(B, G)); synccall('.staticfuture ; ob(B, G) ; '.init ; emp ; "ABS.StdLib.InfDuration"[ emp]) ; get( '.staticfuture ; '_) ; SL }, PrQ: W >
     < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC, Mtds: MS, Ocnt: (s G) >
-    < ob(B, G) :  B | Cog: CG, Att: (S1,
+    < ob(B, G) :  B | Cog: CG, Att: ('.nbcr |-> "num"[0], S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                       Lcnt: 0 >
     [label new-object] .
@@ -2141,7 +2175,7 @@ mod ABS-NEW-RL is
     < O : C | Cog: CG, Att: S, Lcnt: F >
     < B : Class | Param: AL, Att: S1, Sched: SC', Mtds: MS, Ocnt: (s G) >
     < ob(B, G) :  B | Cog: ob(B, G),
-                             Att: (S1,
+                             Att: ('.nbcr |-> "num"[0], S1,
                                createSubst(AL, evalList(EL, S :: L, none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random])))),
                       Lcnt: 0 >
     < ob(B, G) : Cog | Object: null, DC: NEWDC:Data, Sched: SC, Pr: idle, PrQ: noProc >
@@ -2333,6 +2367,107 @@ mod ABS-RECEIVE-RESULT is
     [label continue-cog] .
 
 endm
+
+
+**********************************************
+*** Component Model Extension: Rebind, Newloc, GetLoc, GetFather and Subloc
+mod ABS-REBIND-RL is
+  protecting ABS-EVAL .
+
+  vars O O' : Oid .    vars C C' : Cid .    vars S L S' : Subst .
+  var SL : StmtList .  vars W W' : MProc .  vars F F' : Nat .      var P : Process .
+  vars E E' : Expr .   var D : Data .       var CG : Cogid .
+  var Q : Qid .
+  var D' : Data .
+  var COST : Expr .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
+    < O' : C | Cog: CG, Att: S, Lcnt: F >
+  =>   
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+    < O' : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
+  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    /\ D' := S[Q]
+    /\ S['.nbcr] == "num"[0]
+    [label rebind] .
+
+endm
+mod ABS-NEWLOC-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        vars C : Cid .  vars S L : Subst .
+  var SL : StmtList .  var W : MProc .   vars G : Nat .
+  var A : Vid .     var EL : ExprList .
+  var CG : Cogid .
+
+  rl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | newloc( A ); SL }, PrQ: W >
+    < LocId | G >
+  =>
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-comp( G )); SL }, PrQ: W  >
+    < locRel | loc-top ; loc-comp( G ) >
+    < LocId | s G >
+    [label new-location] .
+endm
+mod ABS-GETLOC-RL is
+  protecting ABS-EVAL .
+
+  vars O O' : Oid .        vars C C' : Cid .  vars S L S' : Subst .
+  var SL : StmtList .  var P : Process . vars W W' : MProc .   vars F F' : Nat .
+  var A : Vid .     var E : Expr .
+  vars CG CG' : Cogid .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getloc( A ; E ); SL }, PrQ: W >
+    < O' : C | Cog: CG', Att: S, Lcnt: F >
+  =>
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; loc-cog( CG' )); SL }, PrQ: W >
+    < O' : C | Cog: CG', Att: S, Lcnt: F >
+  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    [label get-location] .
+endm
+mod ABS-GETFATHERLOC-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        vars B C : Cid .  vars S L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var A : Vid .     var E : Expr .
+  var CG : Cogid . vars L1 L2 : Location .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | getfather( A ; E ); SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < locRel | L1 ; L2 >
+  =>
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | assign(A ; L1 ); SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < locRel | L1 ; L2 >
+  if L2 := eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    [label get-father-location] .
+endm
+mod ABS-SUBLOC-RL is
+  protecting ABS-EVAL .
+
+  var O : Oid .        vars B C : Cid .  vars S L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var E1 E2 : Expr .     var EL : ExprList .
+  var CG : Cogid . vars Loc Lp Ln : Location .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | subloc( E1 ; E2 ); SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < locRel | Lp ; Loc >
+  =>
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < locRel | Ln ; Loc >
+  if Loc = eval(E1, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+   /\ Ln := eval(E2, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    [label get-move-location] .
+endm
+**********************************************
 
 mod ABS-SIMULATOR-RL is
   --- A machine using rewrite rules.

@@ -1,0 +1,39 @@
+
+module MobilityRebind;
+
+
+interface ServiceA { }
+interface ServiceB { }
+
+interface ServiceFrontEnd {
+  Unit useService();
+}
+
+class ServiceFrontEndImpl(ServiceA aP, ServiceB bP) implements ServiceFrontEnd {
+  port ServiceA a;
+  port ServiceB b;
+  
+ {
+   rebind a = aP;
+   rebind b = bP;
+ }
+ 
+  critical Unit useService() {  }
+}  
+
+class Worker(Location loc, ServiceA a, ServiceB b) {
+  ServiceFrontEnd s;
+  
+  {
+    move location(this) in loc;
+    s = new ServiceFrontEndImpl(a,b);
+  }
+
+  Unit changeLocation(Location newloc, ServiceA aP, ServiceB bP) {
+    await |s|; 
+    move location(this) in newloc;
+    rebind s:a = aP;
+    rebind s:b = bP;
+  }
+
+}

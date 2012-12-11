@@ -1298,4 +1298,25 @@ aspect GenerateScala {
 	public final void IncompleteExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {
 		throw new RuntimeException("Should not happen: incomplete expression, go fix the frontend!");
 	}
+
+	/* Components */
+	public void NewLocExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {  }
+	public void GetLocExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {  }
+	public void GetFatherExp.generateScala(String prefix, PrintWriter writer, abs.frontend.ast.List<Annotation> annotations) {  }
+
+	public boolean NewLocExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) { return true; }
+	public boolean GetFatherExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) { return true; }
+	public boolean GetLocExp.isSuspendable(abs.frontend.ast.List<Annotation> annotations) { return true; }
+
+	public void RebindStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {  }
+	public void MoveStmt.generateScala(String prefix, PrintWriter writer, boolean suspendable) {  }
+	public void ObjectGuard.generateScala(String prefix, PrintWriter writer, List<Annotation> annotations) {  }
+
+	public boolean RebindStmt.isSuspendable() { return true; }
+	public boolean MoveStmt.isSuspendable() { return true; }
+
+
+
 }
+
+

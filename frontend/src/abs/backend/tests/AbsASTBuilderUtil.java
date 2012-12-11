@@ -259,7 +259,7 @@ public final class AbsASTBuilderUtil {
     }
     
     public static final MethodImpl createMethodImpl(MethodSig method) {
-        MethodImpl methodImpl = new MethodImpl(method.copy(), new Block());
+        MethodImpl methodImpl = new MethodImpl(method.copy(), new Block(), false);
         return methodImpl;
     }
 

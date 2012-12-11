@@ -148,6 +148,13 @@ IntLiteral = 0 | [1-9][0-9]*
  //"tt"        { return sym(Terminals.TRUE); }
  //"false"     { return sym(Terminals.FALSE); }
  //"ff"        { return sym(Terminals.FALSE); }
+ // (For Component Model) //
+ "critical"  { return sym(Terminals.CRITICAL); }
+ "port"      { return sym(Terminals.PORT);     }
+ "rebind"    { return sym(Terminals.REBIND);   }
+ "location"  { return sym(Terminals.LOC);      }
+ "move"      { return sym(Terminals.SUBLOC);   }
+ "father"    { return sym(Terminals.FATHER);   }
  "sql"       { yybegin(SQL); sqlParenthesisDepth = 0; return sym(Terminals.SQL); }
 }
 

@@ -76,7 +76,15 @@ public class Keywords {
         "ifout",
         "exclude",
         "require",
-        
+ 
+         // (For Component Model) //
+        "critical",
+        "port",
+        "rebind",
+        "location",
+        "move",
+        "father",
+       
         "sql",
         "select",
         "distinct",

@@ -484,10 +484,11 @@ List field_decl_list =
 	;
 
 FieldDecl field_decl =
-      annotation_list.an? type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e),an); :}
-    | annotation_list.an? type_exp.t IDENTIFIER.i  {: return new FieldDecl(i,t, new Opt(),an); :}
+      annotation_list.an?      type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e),an, false); /* Component */ :}
+    | annotation_list.an?      type_exp.t IDENTIFIER.i                    {: return new FieldDecl(i,t, new Opt(),an, false);  /* Component */ :}
+    | annotation_list.an? PORT type_exp.t IDENTIFIER.i ASSIGN data_exp.e  {: return new FieldDecl(i,t, new Opt(e),an, true);  /* Component */ :}
+    | annotation_list.an? PORT type_exp.t IDENTIFIER.i                    {: return new FieldDecl(i,t, new Opt(),an, true);   /* Component */ :}
     ;
-
 
 
 List param_decls =
@@ -535,8 +536,10 @@ List datatypeparam_list =
    ;
 
 MethodImpl method =
-	  methodsig.ms block.b {: return new MethodImpl(ms, b); :}
-	| methodsig.ms error {: return new MethodImpl(ms, new Block(new List(), new List())); :}
+	           methodsig.ms block.b {: return new MethodImpl(ms, b, false);                                 /* Component */ :}
+	|          methodsig.ms error   {: return new MethodImpl(ms, new Block(new List(), new List()), false); /* Component */ :}
+	| CRITICAL methodsig.ms block.b {: return new MethodImpl(ms, b, true);                                  /* Component */ :}
+	| CRITICAL methodsig.ms error   {: return new MethodImpl(ms, new Block(new List(), new List()), true);  /* Component */ :}
     ;
 
 MethodSig methodsig =
@@ -547,6 +550,8 @@ MethodSig methodsig =
 PureExp pure_exp =
       pure_exp_no_if
     | if_exp
+    | location_exp /* Component */
+    | father_exp   /* Component */
 ;
 
 PureExp pure_exp_no_if =
@@ -559,6 +564,13 @@ PureExp pure_exp_no_if =
     | fnapp_list_exp
     | case_exp
     ;
+
+GetLocExp location_exp =
+	LOC LPAREN pure_exp.param RPAREN                         {: return new GetLocExp(param);    /* Component */ :}
+	;
+GetFatherExp father_exp =
+	FATHER LPAREN pure_exp.param RPAREN                      {: return new GetFatherExp(param); /* Component */ :}
+	;
 
 VarOrFieldUse var_or_field_ref =
 	  THIS DOT IDENTIFIER.id   {: return new FieldUse(id) ; :}
@@ -749,11 +761,16 @@ Exp eff_exp =
     | async_call
     | sync_call
     | original_call
+    | newloc_exp  /* Component */
     | incomplete_exp
 	;
 
 NewExp new_exp =
 	NEW cog.c? type_name.i LPAREN data_exp_list.l? RPAREN {: return new NewExp(i.getName(),l,c) ; :}
+	;
+
+NewLocExp newloc_exp =
+	NEW LOC                                                 {: return new NewLocExp(); /* Component */ :}
 	;
 
 SqlExp sql_exp =
@@ -1016,6 +1033,9 @@ Stmt stmt_without_annotations =
 	|  var_decl.vd  {: return new VarDeclStmt(new List(),vd) ; :}
     |  ASSERT data_exp.e  {: return new AssertStmt(new List(), e) ; :}
 	|  eff_exp.e    {: return new ExpressionStmt(new List(), e) ; :}
+	| REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :} 
+	| REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :} 
+	| SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
 	;
 
 Stmt compound_stmt =
@@ -1055,6 +1075,7 @@ Guard guard =
     | DURATION LPAREN data_exp.min COMMA data_exp.max RPAREN {: return new DurationGuard(min, max) ; :} 
     | data_exp.e    {: return new ExpGuard(e) ; :}
     | guard.g1 GUARDAND guard.g2 {: return new AndGuard(g1,g2) ; :}
+    | BAR exp.e BAR {: return new ObjectGuard(e); /* Component */ :}
     ;
 
 

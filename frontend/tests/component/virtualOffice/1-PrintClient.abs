@@ -1,0 +1,29 @@
+module PrintClient;
+
+interface File { }
+
+interface Printer {
+  Unit print(File f);
+}
+
+interface PrintClient extends Printer {
+  Unit setPrinter(Printer p);
+  Int getNumberOfJobs();
+}
+
+class PrintClientImpl() implements PrintClient {
+  port Printer p;
+  Int count = 0;
+  Unit setPrinter(Printer pr) {
+    await |this|;
+    rebind this:p = pr;  }
+  critical Unit print(File f) { 
+    count = count + 1;
+    Fut<Unit> res = p!print(f);
+    await res?;
+    count = count - 1;
+  }
+
+  Int getNumberOfJobs() { return count; }
+  
+}

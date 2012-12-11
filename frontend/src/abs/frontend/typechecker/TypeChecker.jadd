@@ -913,6 +913,13 @@ aspect TypeCheckProductline {
         if (! definedFeatures.contains(getName()))
             e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
+
+    /* Components */
+    public void MoveStmt.typeCheck(SemanticErrorList e) {}
+    public void RebindStmt.typeCheck(SemanticErrorList e) {}
+    
+    public void ObjectGuard.typeCheck(SemanticErrorList e) { }
+
 }
 // Local Variables:
 // mode: java

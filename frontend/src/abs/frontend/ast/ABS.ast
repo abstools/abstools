@@ -86,7 +86,7 @@ RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 abstract VarOrFieldDecl ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
 VarDecl: TypedVarOrFieldDecl ::= [InitExp:Exp];
-FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation*;
+FieldDecl: TypedVarOrFieldDecl ::= [InitExp:PureExp] Annotation* <Port:boolean>; // (For Component Model) //
 ParamDecl: TypedVarOrFieldDecl ::= Annotation*;
 PatternVarDecl: VarOrFieldDecl;
 
@@ -95,7 +95,7 @@ BuiltinFunctionDef: FunctionDef;
 ExpFunctionDef: FunctionDef ::= Rhs:PureExp;
 
 MethodSig ::= <Name> Annotation* ReturnType:Access Param:ParamDecl*;
-MethodImpl ::= MethodSig Block;
+MethodImpl ::= MethodSig Block <Critical:boolean>; // (For Component Model) //
 
 
 // Uses of various identifiers
@@ -248,6 +248,17 @@ GTEQExp : RelationalExpr ;
 abstract EqualityExpr : RelationalExpr;
 EqExp : EqualityExpr ;
 NotEqExp : EqualityExpr ;
+
+// (For Component Model) //
+  // Component: statements
+RebindStmt: Stmt        ::= Obj:Exp <Field> Val:Exp;
+MoveStmt: Stmt          ::= Loc:PureExp To:PureExp;
+  // Component: Guards of object
+ObjectGuard: Guard      ::= Exp;
+  // Component expressions to get a location
+NewLocExp: EffExp;
+GetLocExp: PureExp       ::= PureExp;
+GetFatherExp: PureExp    ::= PureExp;
 
 
 

@@ -1,0 +1,65 @@
+module WorkfolowController;
+
+
+interface File { }
+interface Operation { }
+
+interface Operator {
+  File changeFigures(File f, List<Operation> l);
+  File changeText(File f, List<Operation> l);
+  File changePositions(File f, List<Operation> l);
+}
+
+
+interface Printer {
+  Unit print(File f);
+}
+
+interface OperatorFrontEnd { File modify(File doc); }
+
+class OperatorFrontEndImpl(Operator opParameter) implements OperatorFrontEnd { 
+  port Operator op;
+  
+  { rebind op = opParameter; }
+  
+  
+  critical File modify(File doc) {
+    Fut<File> futf1 = op!changeFigures(doc, Nil);
+    await futf1?;
+    File f1 = futf1.get;
+    
+    Fut<File> futf2 = op!changeFigures(f1, Nil);
+    await futf2?;
+    File f2 = futf2.get;
+    
+    Fut<File> futf3 = op!changeFigures(f2, Nil);
+    await futf3?;
+    File f3 = futf3.get;
+
+    return f3;
+  }
+  
+}
+   
+   class WFController(File docParameter, Operator opParameter, Printer pParameter) {
+  port File doc;
+  port Printer p;
+  OperatorFrontEnd opfe;
+  {    rebind doc = docParameter;
+    rebind p = pParameter;
+    opfe = new OperatorFrontEndImpl(opParameter);  }
+
+
+  critical Unit newInstanceWF() {
+    Fut<File> futf = opfe!modify(doc);
+    await futf?;
+    File f = futf.get;
+    
+    Fut<Unit> res = p!print(f);
+    await res?;
+  }
+  Unit changeOperator(Operator opParameter) {
+    await |this| & |opfe|;
+    rebind opfe:op = op;  }
+
+}

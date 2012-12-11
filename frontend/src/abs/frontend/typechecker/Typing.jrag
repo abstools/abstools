@@ -376,6 +376,13 @@ aspect Typing {
         TypeCheckerHelper.addTypeParamBinding(node, binding, getTypes(), args);
         return binding;
     }
+
+    /* Component */
+    eq NewLocExp.getType() { return getModel().getStdDataType("Location"); }
+    eq GetLocExp.getType() { return getModel().getStdDataType("Location"); }
+    eq GetFatherExp.getType() { return getModel().getStdDataType("Location"); }
+
+
 }
 
 // Local Variables:
