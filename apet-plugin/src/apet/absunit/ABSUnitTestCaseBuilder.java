@@ -217,7 +217,7 @@ abstract class ABSUnitTestCaseBuilder {
 		sig.setReturnType(getUnit());
 		
 		//add an empty method to be modified
-		MethodImpl setOrAssertMethodForObjectImpl = new MethodImpl(sig, new Block());
+		MethodImpl setOrAssertMethodForObjectImpl = new MethodImpl(sig, new Block(), false);
 		testClass.addMethod(setOrAssertMethodForObjectImpl);
 		
 		ModifyMethodModifier mmm = new ModifyMethodModifier(

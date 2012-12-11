@@ -98,7 +98,7 @@ final class DeltaForGetSetFieldsBuilder {
 		sig.addParam(new ParamDecl("v", type, new abs.frontend.ast.List<Annotation>()));
 		Block block = new Block();
 		block.addStmt(getVAssign(new FieldUse(fieldName), new VarUse("v")));
-		MethodImpl method = new MethodImpl(sig, block);
+		MethodImpl method = new MethodImpl(sig, block, false);
 		AddMethodModifier modifier = new AddMethodModifier(method);
 		return modifier;
 	}
@@ -118,7 +118,7 @@ final class DeltaForGetSetFieldsBuilder {
 		ReturnStmt rs = new ReturnStmt();
 		rs.setRetExp(new FieldUse(fieldName));
 		block.addStmt(rs);
-		MethodImpl method = new MethodImpl(sig, block);
+		MethodImpl method = new MethodImpl(sig, block, false);
 		AddMethodModifier modifier = new AddMethodModifier(method);
 		return modifier;
 	}
