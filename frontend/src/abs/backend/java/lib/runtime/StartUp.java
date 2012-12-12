@@ -11,6 +11,7 @@ import abs.backend.java.lib.net.NodeImpl;
 public class StartUp {
     public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException {
         RuntimeOptions options = new RuntimeOptions(args);
+        Logging.setLogLevel(options.logLevel.stringValue());
         ABSRuntime runtime;
         if (options.useNet.isTrue()) {
             NetworkImpl network = new NetworkImpl();

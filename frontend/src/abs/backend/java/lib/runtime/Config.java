@@ -39,8 +39,6 @@ public class Config {
     }
     
     public void configureRuntime() {
-        Logging.setLogLevel(options.logLevel.stringValue());
-        
         setSimpleOptions();
         loadSystemObserver();
         loadTotalSchedulingStrategy();
@@ -170,7 +168,7 @@ public class Config {
     }
 
     private void loadSchedulerFactory() {
-        
+
         TaskSchedulerFactory taskSchedulerFactory;
         // only the SimpleTaskScheduler supports configuring
         if (options.taskSchedulerStrategy.wasSet() || options.totalScheduler.wasSet()) {
@@ -178,6 +176,7 @@ public class Config {
             taskSchedulerFactory = SimpleTaskScheduler.getFactory();
         } else {
             String schedulerName = options.taskScheduler.stringValue();
+            System.out.println("XXXXXXX " + schedulerName);
             logger.config("Scheduler: " + schedulerName);
             if (schedulerName.equals("default")) {
                 taskSchedulerFactory = DefaultTaskScheduler.getFactory();
