@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 public class Logging {
     public static Level LOGLEVEL = Level.parse(System.getProperty("abs.loglevel", "warning").toUpperCase());
+    public static final boolean DEBUG = !LOGLEVEL.equals(Level.WARNING);
     
     public static void setLogLevel(String levelName) {
         LOGLEVEL = Level.parse(levelName.toUpperCase());
