@@ -176,7 +176,6 @@ public class Config {
             taskSchedulerFactory = SimpleTaskScheduler.getFactory();
         } else {
             String schedulerName = options.taskScheduler.stringValue();
-            System.out.println("XXXXXXX " + schedulerName);
             logger.config("Scheduler: " + schedulerName);
             if (schedulerName.equals("default")) {
                 taskSchedulerFactory = DefaultTaskScheduler.getFactory();
