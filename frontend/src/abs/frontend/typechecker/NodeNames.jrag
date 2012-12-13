@@ -20,6 +20,8 @@ aspect Name {
     syn String AddDataTypeModifier.getName() = this.getDataTypeDecl().getName();
     syn String AddFunctionModifier.getName() = this.getFunctionDecl().getName();
     syn String AddTypeSynModifier.getName() = this.getTypeSynDecl().getName();
+    syn String ModifyTypeSynModifier.getName() = this.getTypeSynDecl().getName();
+    syn String ModifyDataTypeModifier.getName() = this.getDataTypeDecl().getName();
     
     // strip off any module name prefix
     syn String ModuleModifier.getSimpleName() {

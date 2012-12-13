@@ -368,6 +368,8 @@ FunctionalModifier functional_modifier =
   ADDS function_decl.functiondecl {: return new AddFunctionModifier(functiondecl); :}
   | ADDS datatype_decl.datatypedecl {: return new AddDataTypeModifier(datatypedecl); :}
   | ADDS typesyn_decl.typesyndecl {: return new AddTypeSynModifier(typesyndecl); :}
+  | MODIFIES typesyn_decl.typesyndecl {: return new ModifyTypeSynModifier(typesyndecl); :}
+  | MODIFIES datatype_decl.datatypedecl {: return new ModifyDataTypeModifier(datatypedecl); :}
   ;
 
 OOModifier oo_modifier =

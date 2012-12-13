@@ -127,6 +127,42 @@ aspect DeltaModifierApplicator {
         module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
     }
 
+    public void ModifyTypeSynModifier.apply() throws DeltaModellingException {
+        TypeSynDecl syndecl = null;
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof TypeSynDecl && decl.getName().equals(this.getSimpleName()))
+                syndecl = (TypeSynDecl)decl;
+        }
+        if (syndecl == null) {
+            throw new DeltaModellingException(getDelta(), 
+                " wants to modify type synonym [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
+        } else {
+            syndecl.setValue(this.getTypeSynDecl().getValue().fullCopy());
+        }
+    }
+
+    public void ModifyDataTypeModifier.apply() throws DeltaModellingException {
+        DataTypeDecl datatypedecl = null;
+        ModuleDecl module = findModule();
+        for (Decl decl : module.getDecls()) {
+            if (decl instanceof DataTypeDecl && decl.getName().equals(this.getSimpleName()))
+                datatypedecl = (DataTypeDecl)decl;
+        }
+        if (datatypedecl == null) {
+            throw new DeltaModellingException(getDelta(), 
+                " wants to modify datatype [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
+        } else {
+            datatypedecl.setDataConstructorList(this.getDataTypeDecl().getDataConstructorList().fullCopy());
+            if (datatypedecl instanceof ParametricDataTypeDecl
+                && this.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+                ((ParametricDataTypeDecl)datatypedecl).setTypeParameterList(((ParametricDataTypeDecl)this.getDataTypeDecl()).getTypeParameterList().fullCopy());
+            } else {
+                throw new DeltaModellingException(getDelta(), 
+                    " wants to convert datatype [" + this.getSimpleName() + "] from or to a parametric datatype, which is not supported yet.");
+            }
+        }
+    }
 
     /**************************************************************************
      * helper method
