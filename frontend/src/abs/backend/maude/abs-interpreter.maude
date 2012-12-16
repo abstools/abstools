@@ -964,6 +964,8 @@ mod ABS-EVAL is
   eq mte(duration(E ; E') ; SL, S, CN, MAC) = 0 .
   eq mte(await E ; SL, S, CN, MAC) = mte(E, S, CN, MAC) . *** reduce to mte of guard
   eq mte($duration(MIN ; MAX) ; SL, S, CN, MAC) = max(MIN, 0) . *** do we want max(0, min(MAX, 1)) instead?
+  eq mte($cont L ; SL, S, CN, MAC) = 0 . *** If $cont can't execute, something
+                                         *** is wrong
   eq mte(SL, S, CN, MAC) = 0 [owise] .
 
   *** Evaluate various builtin functions.
