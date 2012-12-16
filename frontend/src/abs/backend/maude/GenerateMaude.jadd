@@ -145,7 +145,6 @@ aspect GenerateMaude {
         boolean inlist = false;
         String effvar = var;
         PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
-        final java.util.List<Type> paramTypes = getMethodSig().getTypes();
         
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("asynccall('"
@@ -153,22 +152,8 @@ aspect GenerateMaude {
                      + " ; ");
         getCallee().generateMaude(stream);
         stream.print(" ; '" + getMethod() + " ; ");
-        if (getNumParam() == 0) {
-            stream.print("emp ");
-        } else {
-            stream.print("(");
-            for (int i = 0; i < getParams().getNumChild() ; i++) {
-                PureExp param = getParams().getChild(i);
-                Type t = paramTypes.get(i);
-                boolean needConversion = t.isIntType()
-                    && param.getType().isRatType();
-                if (inlist) stream.print(":: "); else inlist = true;
-                if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
-                param.generateMaude(stream);
-                if (needConversion) stream.print(")");
-            }
-            stream.print(") ");
-        }
+        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+                                                   getMethodSig().getTypes());
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
@@ -186,28 +171,13 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
-        final java.util.List<Type> paramTypes = getMethodSig().getTypes();
 
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
         stream.print("synccall('.staticfuture ; ");
         getCallee().generateMaude(stream);
         stream.print("; '" + getMethod() + " ; ");
-        if (getNumParam() == 0) {
-            stream.print("emp ");
-        } else {
-            stream.print("(");
-            for (int i = 0; i < getParams().getNumChild() ; i++) {
-                PureExp param = getParams().getChild(i);
-                Type t = paramTypes.get(i);
-                boolean needConversion = t.isIntType()
-                    && param.getType().isRatType();
-                if (inlist) stream.print(":: "); else inlist = true;
-                if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
-                param.generateMaude(stream);
-                if (needConversion) stream.print(")");
-            }
-            stream.print(") ");
-        }
+        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+                                                   getMethodSig().getTypes());
         stream.print("; ");
         if (deadline != null) deadline.generateMaude(stream);
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
@@ -354,14 +324,10 @@ aspect GenerateMaude {
     public void DataConstructorExp.generateMaude(PrintStream stream) {
        boolean inlist = false;
        stream.print("\"" + getDataConstructor().getModuleDecl().getName() + "." + getDataConstructor().getName() + "\"[ ");
-       if (getNumParam() == 0) {
-           stream.print("emp ");
-       } else {
-           for (PureExp param : getParams()) {
-               if (inlist) stream.print(":: "); else inlist = true;
-               param.generateMaude(stream);
-           }
-       }
+       DataConstructor decl = (DataConstructor)getDecl();
+
+       MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+                                                  decl.getTypes());
        stream.print("] ");
     }
     public int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {
@@ -386,23 +352,18 @@ aspect GenerateMaude {
 
     public void FnApp.generateMaude(PrintStream stream) {
         boolean inlist = false;
-        Decl decl = getDecl();
+        FunctionDecl decl = (FunctionDecl)getDecl();
         String fnName = decl.getModuleDecl().getName() + "." + decl.getName();
         if (Constants.isFunctionalBreakPointFunctionName(fnName)) {
             getParam(0).generateMaude(stream);
             return;
         }
         stream.print("\"" + fnName + "\"( ");
-        if (getNumParam() == 0) {
-            stream.print("emp ");
-        } else {
-            for (PureExp param : getParams()) {
-                if (inlist) stream.print(":: "); else inlist = true;
-                param.generateMaude(stream);
-            }
-            if (fnName.equals("ABS.StdLib.random")) {
-                stream.print(" :: \"num\"[0] ");
-            }
+        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+                                                   decl.getTypes());
+        if (getNumParam() > 0 && fnName.equals("ABS.StdLib.random")) {
+            // magic extra parameter for random()
+            stream.print(" :: \"num\"[0] ");
         }
         stream.print(") ");
     }

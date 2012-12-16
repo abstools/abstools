@@ -9,6 +9,7 @@ import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypedAnnotation;
+import abs.frontend.typechecker.Type;
 
 import java.io.PrintStream;
 
@@ -22,6 +23,29 @@ public class MaudeCompilerHelper {
             }
         }
         return null;
+    }
+
+    public static void emitParameterValueList(PrintStream stream,
+                                              abs.frontend.ast.List<PureExp> params,
+                                              java.util.List<Type> paramTypes)
+    {
+        if (params.getNumChild() == 0) {
+            stream.print("emp ");
+        } else {
+            boolean inlist = false;
+            stream.print("(");
+            for (int i = 0; i < params.getNumChild() ; i++) {
+                PureExp param = params.getChild(i);
+                Type t = paramTypes.get(i);
+                boolean needConversion = t.isIntType()
+                    && param.getType().isRatType();
+                if (inlist) stream.print(":: "); else inlist = true;
+                if (needConversion) stream.print("\"ABS.StdLib.truncate\"(");
+                param.generateMaude(stream);
+                if (needConversion) stream.print(")");
+            }
+            stream.print(") ");
+        }
     }
 
     public static void emitCostAnnotation(PrintStream stream,
