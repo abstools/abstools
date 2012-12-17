@@ -119,7 +119,6 @@ public class JavaBackend extends Main {
         res.put("String", ABSString.class.getName());
         res.put("Fut", ABSFut.class.getName());
         res.put("Unit", ABSUnit.class.getName());
-        res.put("Pid", ABSPid.class.getName());
         res.put("Process", ABSProcess.class.getName());
         return res;
     }
