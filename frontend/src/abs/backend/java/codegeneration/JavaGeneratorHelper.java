@@ -18,10 +18,12 @@ import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSProcess;
 import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
+import abs.backend.java.scheduling.UserSchedulingStrategy;
 import abs.common.Constants;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
@@ -212,10 +214,12 @@ public class JavaGeneratorHelper {
 
     public static void generateAsyncMethod(PrintStream stream, MethodImpl method) {
         final MethodSig sig = method.getMethodSig();
-        generateMethodSig(stream,sig,true,"final","");
-        stream.println("{ return (" + ABSFut.class.getName() + ")");
+        generateMethodSig(stream, sig, true, "final", "");
+        stream.println(" {");
+        stream.print("return (" + ABSFut.class.getName() + ")");
         generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig);
-        stream.println("; }");
+        stream.println(";");
+        stream.println("}");
     }
 
 
@@ -223,20 +227,18 @@ public class JavaGeneratorHelper {
         final PureExp callee = call.getCallee();
         final List<PureExp> params = call.getParams();
         final MethodSig sig = call.getMethodSig();
-
         generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig);
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
             final PureExp callee, final Type calleeType, final List<PureExp> args, 
             final List<ParamDecl> params,
-            final MethodSig sig) 
-    {
-        final java.util.List<Type> paramTypes
-        = sig.getTypes();
+            final MethodSig sig) {
+        
+        final java.util.List<Type> paramTypes = sig.getTypes();
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
-        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + targetType + ">(this,");
+        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + targetType + ">(this, ");
         if (callee instanceof ThisExp) {
             if (calleeString != null)
                 stream.print(calleeString);
@@ -250,28 +252,30 @@ public class JavaGeneratorHelper {
                 callee.generateJava(stream);
             stream.print(')');
         }
-        stream.print(") {");
+        stream.println(") {");
         int i = 0;
         for (Type t : paramTypes) {
-            stream.print(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
+            stream.println(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
             i++;
         }
 
         generateTaskGetArgsMethod(stream, paramTypes.size());
         generateTaskInitMethod(stream, paramTypes);
 
-        stream.print("public java.lang.String methodName() { return \"" + sig.getName() + "\"; }");
-
-        stream.print("public Object execute() {");
+        stream.println("public java.lang.String methodName() {");
+        stream.println("return \"" + sig.getName() + "\";");
+        stream.println("}");
+                
+        stream.println("public Object execute() {");
         stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
             if (i > 0) stream.print(",");
-            stream.print("arg" + i);
+            stream.println("arg" + i);
             if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
         }
-        stream.print(");");
-        stream.println("}}");
-        stream.print(".init");
+        stream.println(");");
+        stream.println("}");
+        stream.print("}.init");
         if (args != null)
             JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
@@ -288,17 +292,20 @@ public class JavaGeneratorHelper {
             stream.print(JavaBackend.getQualifiedString(t) + " _arg" + i);
             i++;
         }
-        stream.print(") {");
+        stream.println(") {");
         for (i = 0; i < paramTypes.size(); i++) {
-            stream.print("arg" + i + " = _arg" + i + ";");
+            stream.println("arg" + i + " = _arg" + i + ";");
         }
-        stream.print("return this; }");
+        stream.println("return this;");
+        stream.println("}");
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.print("public java.util.List<" + ABSValue.class.getName() + "> getArgs() { return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] { ");
+        stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
+        stream.println("return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] {");
         generateArgStringList(stream, n);
-        stream.print(" }); } ");
+        stream.println("});");
+        stream.println("}");
     }
 
     private static void generateArgStringList(PrintStream stream, final int n) {
@@ -318,7 +325,7 @@ public class JavaGeneratorHelper {
         JavaGeneratorHelper.generateAsyncMethod(stream,m);
 
         // Sync variant
-        generateMethodSig(stream,m.getMethodSig(),false,"final","");
+        generateMethodSig(stream, m.getMethodSig(), false, "final", "");
         generateMethodBody(stream, m, false);
 
         if (m.isForeign()) {
@@ -336,7 +343,8 @@ public class JavaGeneratorHelper {
             }
         }
 
-        stream.println("{ __ABS_checkSameCOG(); ");
+        stream.println(" {");
+        stream.println("__ABS_checkSameCOG(); ");
 
         if (!isFliMethod && m.isForeign()) {
             stream.print("return this.");
@@ -346,7 +354,7 @@ public class JavaGeneratorHelper {
         } else {
             stream.println("if (__ABS_getRuntime().debuggingEnabled()) {");
             stream.println(Task.class.getName() + "<?> __ABS_currentTask = __ABS_getRuntime().getCurrentTask();");
-            stream.println("__ABS_currentTask.newStackFrame(this,\"" + m.getMethodSig().getName() + "\");");
+            stream.println("__ABS_currentTask.newStackFrame(this, \"" + m.getMethodSig().getName() + "\");");
             for (ParamDecl d : m.getMethodSig().getParams()) {
                 stream.print("__ABS_currentTask.setLocalVariable(");
                 stream.println("\"" + d.getName() + "\"," + d.getName() + ");");
@@ -493,21 +501,22 @@ public class JavaGeneratorHelper {
         stream.println(");");
     }
 
-    public static void generateCog(PrintStream stream, Cog cog) {
+    public static String generateCog(PrintStream stream, Cog cog) {
 
         // generate user-defined scheduler class if annotation is present
         for (Annotation a : cog.getAnnotationList()) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
                 if (((DataTypeUse)ta.getAccess()).getName().equals("Scheduler")) {
-                    generateUserSchedulingStrategy(cog, ta.getValue());
+                    return generateUserSchedulingStrategy(cog, ta.getValue());
                 }
             }
         }
+        return null;
     }
 
-    public static void generateUserSchedulingStrategy(Cog cog, PureExp exp) {
-        String className = JavaBackend.getSchedulerName("UserSchedulingStrategy_" + JavaBackend.getRandomName());
+    public static String generateUserSchedulingStrategy(Cog cog, PureExp exp) {
+        String className = "UserSchedulingStrategy_" + JavaBackend.getRandomName();
         PrintStream stream = null;
         try {
             JavaCode.Package pkg = cog.getModuleDecl().getJavaPackage();
@@ -516,32 +525,24 @@ public class JavaGeneratorHelper {
 
             stream.println("package " + pkg.packageName + ";");
             stream.print("public final class " + className);
-            stream.println(" implements " + TaskSchedulingStrategy.class.getName() + " {");
-            stream.print("public " + SimpleTaskScheduler.TaskInfo.class.getCanonicalName());
-            stream.print(" schedule(" + TaskScheduler.class.getName() + " scheduler, ");
-            stream.println(java.util.List.class.getName() + "<" + SimpleTaskScheduler.TaskInfo.class.getCanonicalName() + "> schedulableTasks) {");
-            stream.println("");
-
-            stream.println(java.util.List.class.getName() + "<ABS.Scheduler.Process> queue = new " + java.util.List.class.getName() + "<ABS.Scheduler.Process>();");
-            stream.println("// TODO map List<TaskInfo> schedulableTasks --> List<Process> queue");
-            stream.println("");
-            stream.print("ABS.Scheduler.Process process = ");
+            stream.println(" extends " + UserSchedulingStrategy.class.getName() + " {");
+            
+            stream.print("public synchronized " + ABSProcess.class.getName());
+            stream.println(" userschedule(ABS.StdLib.List<" + ABSProcess.class.getName() + "> queue) {");
+            
+            // call the given scheduling function
+            // here goes whatever is specified in the Scheduler annotation
+            // i.e. a function call or even an inlined function...
+            stream.println("// user-specified scheduler expression");
+            stream.print("return ");
             exp.generateJava(stream);
             stream.println(";");
-
-            stream.println("");
-            stream.println(SimpleTaskScheduler.TaskInfo.class.getCanonicalName() +  " task = new " + SimpleTaskScheduler.TaskInfo.class.getCanonicalName() + "();");
-            stream.println("// TODO map ABS.Scheduler.Process process --> TaskInfo task");
-            stream.println("return task;");
             stream.println("}");
             stream.println("}");
 
-            // TODO 
             // connect generated TaskSchedulingStrategy to the cog's TaskScheduler
-
-            // TODO
-            // reflect the runtime queue in the functional layer (i.e. a queue datatype)
-
+            return pkg.packageName + "." + className;
+            
         } catch (JavaCodeGenerationException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -552,6 +553,7 @@ public class JavaGeneratorHelper {
             if (stream != null)
                 stream.close();
         }
+        return null;
     }
 
 }

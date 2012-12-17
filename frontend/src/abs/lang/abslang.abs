@@ -416,12 +416,19 @@ data Scheduler;
 
 // The Process datatype, passed to custom schedulers.
 // 
-// Pid has no constructor, so this datastructure can't be generated
-// within Abs
+// Pid, Process have no constructor, so this datastructure can't be generated within Abs
 data Pid;
-data Process = Process(Pid pid, String method, Time arrival,
-    Duration cost, Duration procdeadline, Time start, Time finish, Bool crit,
-    Int value);
+data Process;
+
+def Pid pid(Process p) = builtin;
+def String method(Process p) = builtin;
+def Time arrival(Process p) = builtin;
+def Duration cost(Process p) = builtin;
+def Duration procdeadline(Process p) = builtin;
+def Time start(Process p) = builtin;
+def Time finish(Process p) = builtin;
+def Bool crit(Process p) = builtin;
+def Int value(Process p) = builtin;
 
 def Process defaultscheduler(List<Process> queue) = head(queue);
 
@@ -545,7 +552,7 @@ interface ObjectMirror {
     
     Object getFieldValue();
     Unit setFieldValue(Object val);
-    Cog getCog();
+    [Atomic] Cog getCog();
     Unit setCog(Cog c);
     
     Bool respondsTo(String name);
@@ -553,19 +560,13 @@ interface ObjectMirror {
 }
 
 interface Cog {
-    Unit setScheduler(ProcessScheduler sched);
+    [Atomic] Unit setScheduler(ProcessScheduler sched);
     Unit info();
 }
 
 interface ProcessScheduler {
-    Process schedule(List<Process> l);
+    Process schedule(List<Process> queue);
 }
-
-//class CogImpl implements Cog {
-//    List<Process> getQueue() {
-//        return queue;
-//    }
-//}
 
 interface Class {
     String getName();

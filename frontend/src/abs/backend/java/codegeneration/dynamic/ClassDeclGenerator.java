@@ -42,7 +42,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateClassHeader() {
-        stream.print("public class " + className + " ");
+        stream.print("public final class " + className + " ");
     }
 
     private void generateClassBody() {

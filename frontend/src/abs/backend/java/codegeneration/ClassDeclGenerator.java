@@ -17,6 +17,7 @@ import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSClass;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.scheduling.UserSchedulingStrategy;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.InterfaceTypeUse;
@@ -43,7 +44,7 @@ public class ClassDeclGenerator {
     }
 
     private void generateClassBody() {
-        stream.println("{");
+        stream.println(" {");
 
         generateFieldNamesMethod();
         generateFields();
@@ -69,8 +70,7 @@ public class ClassDeclGenerator {
         // Convenience method for new C
         stream.print("public static final <T extends " + className + "> T createNewObject");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
-        stream.print("{ ");
-        stream.print("return (T)");
+        stream.print(" { return (T)");
         stream.print(className + ".__ABS_createNewObject");
         JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
         stream.println("; }");
@@ -93,23 +93,25 @@ public class ClassDeclGenerator {
         // Convenience method for new cog C
         stream.print("public static final <T extends " + className + "> T createNewCOG");
         JavaGeneratorHelper.generateParams(stream, decl.getParams());
-        stream.print("{ ");
+        stream.print(" { ");
         stream.print("return (T)");
         stream.print(className + ".__ABS_createNewCOG");
-        JavaGeneratorHelper.generateParamArgs(stream, "null", decl.getParams());
+        JavaGeneratorHelper.generateParamArgs(stream, "null, null", decl.getParams());
         stream.println("; }");
 
         // static constructor method for new cog C    
         stream.print("public static final <T extends " + className + "> T __ABS_createNewCOG");
-        JavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source",decl.getParams());
+        JavaGeneratorHelper.generateParams(stream, 
+                ABSObject.class.getName() + " __ABS_source, " + UserSchedulingStrategy.class.getName() + " strategy",
+                decl.getParams());
         stream.println(" {");
         stream.println("final " + ABSRuntime.class.getName() + " __ABS_runtime = " + ABSRuntime.class.getName() + ".getCurrentRuntime();");
-        stream.println("final " + COG.class.getName() + " __ABS_cog = __ABS_runtime.createCOG(" + className + ".class);");
+        stream.println("final " + COG.class.getName() + " __ABS_cog = strategy == null ? __ABS_runtime.createCOG(" + className + ".class) : __ABS_runtime.createCOG(" + className + ".class, strategy);");
         stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSRuntime.class.getName() + ".getCurrentThread();");
         stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");
         stream.println("final " + Task.class.getName() + " __ABS_sendingTask = " + ABSRuntime.class.getName() + ".getCurrentTask();");
         stream.println("__ABS_thread.setCOG(__ABS_cog);");
-        stream.println("try { ");
+        stream.println("try {");
         generateObjectConstruction("__ABS_runtime");
 
         stream.println(";");
@@ -203,15 +205,15 @@ public class ClassDeclGenerator {
     private void generateFieldNamesMethod() {
         java.util.List<String> fieldNames = getFieldNames();
 
-        stream.print("private static final java.lang.String[] __fieldNames = new java.lang.String[] {");
+        stream.print("private static final java.lang.String[] __fieldNames = new java.lang.String[] { ");
 
         boolean first = true;
         for (String fieldName : fieldNames) {
             if (first) first = false;
-            else stream.print(",");
+            else stream.print(", ");
             stream.print("\"" + fieldName + "\"");
         }
-        stream.println("};");
+        stream.println(" };");
 
         stream.println("public final java.util.List<java.lang.String> getFieldNames() { return java.util.Arrays.asList(__fieldNames); }");
     }

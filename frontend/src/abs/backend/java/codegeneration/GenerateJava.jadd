@@ -307,7 +307,7 @@ aspect GenerateJava {
     }
 
     public void Block.generateJava(PrintStream stream) {
-        generateJava(stream,false);
+        generateJava(stream, false);
     }
 
     public void Block.generateJava(PrintStream stream, boolean addReturn) {
@@ -358,7 +358,7 @@ aspect GenerateJava {
         } else {
             stream.print("null");
         }
-        stream.print(";");
+        stream.println(";");
 
         stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
         stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getName() + "\"," + name + ");");
@@ -393,7 +393,7 @@ aspect GenerateJava {
 
         if (getVar() instanceof VarUse) {
             stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");
-            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\",");
+            stream.print("__ABS_getRuntime().getCurrentTask().setLocalVariable(\"" + getVar().getName() + "\", ");
             getVar().generateJava(stream);
             stream.print(");");
         }
@@ -432,8 +432,7 @@ aspect GenerateJava {
         if (m != null) {
             lht = m.getMethodSig().getReturnType().getType();
         }
-        boolean needConversion = lht.isIntType()
-                && getRetExp().getType().isRatType() ;
+        boolean needConversion = lht.isIntType() && getRetExp().getType().isRatType();
         stream.print("if (__ABS_getRuntime().debuggingEnabled()) ");      
         stream.println("__ABS_getRuntime().getCurrentTask().popStackFrame();");
 
@@ -564,9 +563,14 @@ aspect GenerateJava {
         String className = JavaBackend.getQualifiedString(decl);
 
         if (hasCog()) {
+            String strategy = JavaGeneratorHelper.generateCog(stream, getCog());
             stream.print(className + ".__ABS_createNewCOG");
-            JavaGeneratorHelper.generateArgs(stream, "this", getParams(), decl.getTypes());
-            JavaGeneratorHelper.generateCog(stream, getCog());
+
+            if (strategy != null)
+                JavaGeneratorHelper.generateArgs(stream, "this, new " + strategy + "()", getParams(), decl.getTypes());
+            else
+                JavaGeneratorHelper.generateArgs(stream, "this, null", getParams(), decl.getTypes());
+            
         } else {
             stream.print(className + ".__ABS_createNewObject");
             JavaGeneratorHelper.generateArgs(stream, "this", getParams(), decl.getTypes());

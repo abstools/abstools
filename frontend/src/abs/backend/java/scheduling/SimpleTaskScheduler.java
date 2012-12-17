@@ -120,16 +120,20 @@ public class SimpleTaskScheduler implements TaskScheduler {
     protected final COG cog;
     private final ABSRuntime runtime;
 
-    public SimpleTaskScheduler(COG cog, ABSRuntime runtime, ABSThreadManager m, ScheduableTasksFilter filter) {
+    public SimpleTaskScheduler(COG cog, TaskSchedulingStrategy strat, ABSRuntime runtime, ABSThreadManager m, ScheduableTasksFilter filter) {
         this.threadManager = m;
         this.cog = cog;
-        TaskSchedulingStrategy strat = runtime.getTaskSchedulingStrategy();
-        if (strat == null) {
+        if (strat != null) {
+            // use user-defined strategy
+            this.schedulingStrategy = strat;
+        } else if (runtime.getTaskSchedulingStrategy() != null) {
+            // use global strategy
+            this.schedulingStrategy = runtime.getTaskSchedulingStrategy();
+        } else {
             // use random scheduling strategy as a fallback
             this.schedulingStrategy = new RandomSchedulingStrategy(runtime.getRandom());
-        } else {
-            this.schedulingStrategy = strat;
         }
+        logger.config("TaskSchedulingStrategy: " + this.schedulingStrategy.getClass().getName());
         this.runtime = runtime;
         this.scheduableTasksFilter = filter;
     }
@@ -464,7 +468,7 @@ public class SimpleTaskScheduler implements TaskScheduler {
         return new TaskSchedulerFactory() {
             @Override
             public TaskScheduler createTaskScheduler(ABSRuntime runtime, COG cog, ABSThreadManager m, ScheduableTasksFilter filter) {
-                return new SimpleTaskScheduler(cog, runtime, m, filter);
+                return new SimpleTaskScheduler(cog, null, runtime, m, filter);
             }
         };
     }
@@ -478,8 +482,8 @@ public class SimpleTaskScheduler implements TaskScheduler {
         return schedulingStrategy;
     }
     
+    // Enable changing the task scheduling strategy at runtime
     public void setSchedulingStrategy(TaskSchedulingStrategy strat) {
-        // enable changing the task scheduling strategy at runtime
         schedulingStrategy = strat;
     }
     

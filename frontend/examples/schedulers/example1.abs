@@ -1,0 +1,23 @@
+module M;
+import * from ABS.Scheduler;
+import * from ABS.Meta;
+
+interface C { Unit m(); }
+class CImpl(Int xx) implements C {
+    Unit m() {
+        Unit u = println("Hello");
+    }
+}
+
+
+{
+    C o = new [Scheduler: defaultscheduler(queue)] cog CImpl(444);
+
+    C o2 = new [Scheduler: nth(queue, random(length(queue)))] cog CImpl(555);
+
+    C o3 = new cog CImpl(0);
+
+    o!m();
+    o!m();
+    o!m();
+}

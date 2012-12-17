@@ -98,7 +98,7 @@ public class ABSDynamicObject extends ABSObject {
         this.getCOG().objectInitialized(this);
     }
     
-    public ABSValue dispatch(String mName, ABSValue... params) {
+    public synchronized ABSValue dispatch(String mName, ABSValue... params) {
         ABSClosure method = clazz.getMethod(mName);
         return method.exec(this, params);
     }

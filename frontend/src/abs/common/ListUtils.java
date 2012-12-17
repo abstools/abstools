@@ -6,6 +6,7 @@ package abs.common;
 
 import java.util.ArrayList;
 
+import abs.backend.java.lib.types.ABSValue;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.List;
 
@@ -18,6 +19,18 @@ public class ListUtils {
             res.add(a);
         }
         return res;
+    }
+
+    /*
+     * Transform a java.util.List into an ABS.StdLib.List
+     */
+    public static ABS.StdLib.List<ABSValue> toABSList(java.util.List<? extends ABSValue> l) {
+        if (l.isEmpty()) {
+            return new ABS.StdLib.List_Nil();
+        } else {
+            ABSValue head = l.remove(0);
+            return new ABS.StdLib.List_Cons(head, toABSList(l));
+        }
     }
 
 }

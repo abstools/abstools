@@ -119,6 +119,8 @@ public class JavaBackend extends Main {
         res.put("String", ABSString.class.getName());
         res.put("Fut", ABSFut.class.getName());
         res.put("Unit", ABSUnit.class.getName());
+        res.put("Pid", ABSPid.class.getName());
+        res.put("Process", ABSProcess.class.getName());
         return res;
     }
 
@@ -251,10 +253,6 @@ public class JavaBackend extends Main {
 
     public static String getFunctionName(String name) {
         return truncate(escapeReservedWords(name) + "_f");
-    }
-
-    public static String getSchedulerName(String name) {
-        return truncate(escapeReservedWords(name) + "_sched");
     }
 
     public static String getMethodName(String name) {

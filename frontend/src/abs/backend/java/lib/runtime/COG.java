@@ -18,6 +18,7 @@ import abs.backend.java.observing.TaskSchedulerView;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
+import abs.backend.java.scheduling.TaskSchedulingStrategy;
 
 public class COG implements ABSValue {
     private final TaskScheduler scheduler;
@@ -29,6 +30,13 @@ public class COG implements ABSValue {
         initialClass = clazz;
         this.runtime = runtime;
         scheduler = runtime.createTaskScheduler(this);
+        id = runtime.freshCOGID();
+    }
+
+    public COG(ABSRuntime runtime, Class<?> clazz, TaskSchedulingStrategy schedulingStrategy) {
+        initialClass = clazz;
+        this.runtime = runtime;
+        scheduler = runtime.createUserTaskScheduler(this, schedulingStrategy);
         id = runtime.freshCOGID();
     }
     

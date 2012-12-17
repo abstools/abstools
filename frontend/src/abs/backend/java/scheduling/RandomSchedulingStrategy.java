@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import abs.backend.java.lib.runtime.ABSRuntime;
-import abs.backend.java.lib.runtime.Config;
 import abs.backend.java.lib.runtime.Logging;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
 

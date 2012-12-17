@@ -176,7 +176,6 @@ public class Config {
             taskSchedulerFactory = SimpleTaskScheduler.getFactory();
         } else {
             String schedulerName = options.taskScheduler.stringValue();
-            logger.config("Scheduler: " + schedulerName);
             if (schedulerName.equals("default")) {
                 taskSchedulerFactory = DefaultTaskScheduler.getFactory();
             } else if (schedulerName.equals("simple")) {
@@ -186,6 +185,7 @@ public class Config {
                         + " does not exist, falling back to the default task scheduler.");
                 taskSchedulerFactory = DefaultTaskScheduler.getFactory();
             }
+            logger.config("Using " + schedulerName + " task scheduler");
         }
         runtime.setTaskSchedulerFactory(taskSchedulerFactory);
     }

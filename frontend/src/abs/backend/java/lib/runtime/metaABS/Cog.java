@@ -4,20 +4,37 @@
  */
 package abs.backend.java.lib.runtime.metaABS;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
+import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.COG;
+import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSInteger;
+import abs.backend.java.lib.types.ABSPid;
+import abs.backend.java.lib.types.ABSProcess;
+import abs.backend.java.lib.types.ABSRational;
+import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
+import abs.common.ListUtils;
+
+import abs.backend.java.lib.runtime.metaABS.DynamicClassHelper;
+import abs.frontend.ast.HasMethod;
 
 public class Cog {
+    private final static Logger logger = Logging.getLogger(Cog.class.getName());
     private static ABSDynamicClass thisClass;
 
     /* 
@@ -64,51 +81,79 @@ public class Cog {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 COG cog = (COG)t.getFieldValue_Internal("cog");
+                if (! (cog.getScheduler() instanceof SimpleTaskScheduler)) {
+                    throw new DynamicException("For user-defined scheduling to work, the Scheduler must be an instance of " + SimpleTaskScheduler.class.getName() + " (use \"-taskscheduler=simple\")"); 
+                }
+
                 
                 // The user-defined scheduler
-                final ABSDynamicObject absScheduler = (ABSDynamicObject)params[0];
-                System.out.println("ABS user-def Scheduler: class: " + absScheduler.getClassName());
+                final ABSDynamicObject userScheduler = (ABSDynamicObject)params[0];
                 
-                // Create a new scheduling strategy that invokes the user-defined scheduler's scheduler method 
+                // Create a new scheduling strategy that invokes the user-defined scheduler's "schedule" method
+                // - convert TaskSchedulingStrategy's List<TaskInfo> to ProcessScheduler's List<Process>
+                // - convert returned Process to TaskInfo.
+                
+                
+                // custom TaskSchedulingStrategy
                 TaskSchedulingStrategy strategy = new TaskSchedulingStrategy() {
                     @Override
-                    public TaskInfo schedule(TaskScheduler scheduler, List<TaskInfo> schedulableTasks) {
-                        // TODO
-                        System.out.println("ABS Scheduler");
+                    public synchronized TaskInfo schedule(final TaskScheduler scheduler, final List<TaskInfo> schedulableTasks) {
+                        System.out.println("Scheduling (" + schedulableTasks.size() + " processes in queue)...");
+
+                        // Remember TaskInfos based on their Pids to speed things up a little
+                        HashMap<Long, TaskInfo> taskMap = new HashMap<Long, TaskInfo>();
                         
-                        System.out.println("scheduling...");
-                        System.out.print("\ttasks (" + schedulableTasks.size());
-                        System.out.println("): " + schedulableTasks.toString());
-                        
-                        
+                        // Convert List<TaskInfo> to ArrayList<ABSProcess>
+                        ArrayList<ABSProcess> processes = new ArrayList<ABSProcess>();
+
                         for (TaskInfo task : schedulableTasks) {
-//                            Process p = new Process_Process();
-                            
+                            taskMap.put(task.id, task);
+
+                            // TODO set: pid, method, arrival, cost, deadline, start, finish, critical, value
+                            ABSProcess proc = new ABSProcess(
+                                    task.id, 
+                                    task.task.getCall().methodName(),
+                                    0,0,0,0,0,false,0);
+
+                            processes.add(proc);
+                            System.out.println("\t" + proc.toString());
                         }
-                        /* 
-                         * 
-                         * 
-                         * 
-                         */
-                        // The schedule method takes a List<Process>
-                        // Process is defined in abslang.abs and generated
+
+                        // Convert ArryList<ABSProcess> to ABS.StdLib.List of ABSProcess
+                        final ABS.StdLib.List queue = ListUtils.toABSList(processes);
+                        ABSValue result = userScheduler.dispatch("schedule", queue);
                         
-                        //return absScheduler.dispatch("schedule", );
-                        return schedulableTasks.get(0);
+                        // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
+                        long selectedPid = ((ABSProcess)result).getPid();
+                        return taskMap.get(selectedPid);
+//                        return schedulableTasks.get(0);
                     }
                 };
                 
                 // Connect the strategy to the cog's scheduler
-                if (cog.getScheduler() instanceof SimpleTaskScheduler) {
-                    System.out.println("Setting new scheduler");
-                    SimpleTaskScheduler scheduler = (SimpleTaskScheduler)cog.getScheduler();
-                    scheduler.setSchedulingStrategy(strategy);
-                } else {
-                    // TODO make sure this case does not happen
-                }
+                System.out.println(cog.toString() + ": Setting TaskSchedulingStrategy to: " + userScheduler.getClassName());
+
+                // move the userScheduler object to the Cog
+                // this WILL cause problems if the user associates the scheduler with multiple cogs!!
+                //userScheduler.setCOG(cog);
+
+                SimpleTaskScheduler scheduler = (SimpleTaskScheduler)cog.getScheduler();
+                scheduler.setSchedulingStrategy(strategy);
                 return ABSUnit.UNIT;
             }
         });
+        
+        
+        // TEST -- Remove
+        thisClass.addMethod(/*ABSPid*/ "getAPid", new ABSClosure() {
+            
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                System.out.println("return a PID...");
+                return ABSPid.fromLong(9999);
+            }
+        });
+
     }
-    
+
 }

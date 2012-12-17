@@ -8,6 +8,25 @@ class CImpl implements C {
     Unit m() {}
 }
 
+/////////////////////////////////////////////////////////////////////////
+
+/*
+def Process minPid(List<Process> list) = minPid_h(head(list), tail(list));
+
+def Process minPid_h(Process p, List<Process> l) = 
+    case l {
+        Nil => p; 
+        Cons(p2,l2) => if procId(p) < procId(p2) then minPid_h(p, l2) else minPid_h(p2, l2);
+    };
+
+def Pid procId(Process p) =
+    case p {
+        Process(pid,_,_,_,_,_,_,_,_) => pid;
+    };
+*/
+  
+/////////////////////////////////////////////////////////////////////////
+
 // FIFO : first in first out
 def Process fifo (List<Process> l) = fifo_h(head(l), tail(l));
 
@@ -28,34 +47,34 @@ def Bool fifo_comp(Process p1, Process p2) = timeValue(arrival(p1)) <= timeValue
 /* user-defined scheduler class
  * schedule() defers the scheduling decision to the fifo function
  */
-class MyScheduler implements ProcessScheduler {
+class MyScheduler1 implements ProcessScheduler {
     Process schedule(List<Process> l) {
         return fifo(l);
     }
 }
 
-class Scheduler2 implements ProcessScheduler {
+class MyScheduler2 implements ProcessScheduler {
     Process schedule (List<Process> l) {
         return fifo(l);
     }
 }
 
 
-// test
-data Tree = Empty
-          | Leaf(Int)
-          | Node(Tree, Tree);
-
 {
-    
 //    C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
 
     C o = new cog CImpl();
 
     ObjectMirror om = reflect(o);
     Cog g = om.getCog();
-    ProcessScheduler sched = new MyScheduler();
+
+    // sched is in a different cog!
+    ProcessScheduler sched = new MyScheduler1();
     g.setScheduler(sched);
 
     o!m();
+    o!m();
+    o!m();
+    
+
 }

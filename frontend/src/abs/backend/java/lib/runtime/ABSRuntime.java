@@ -305,6 +305,11 @@ public class ABSRuntime {
         return taskSchedulerFactory.createTaskScheduler(this, cog, threadManager, scheduableTasksFilter);
     }
 
+    public SimpleTaskScheduler createUserTaskScheduler(COG cog, TaskSchedulingStrategy strategy) {
+        // Bypass the scheduler factory, as we specifically want a SimpleTaskScheduler
+        return new SimpleTaskScheduler(cog, strategy, this, threadManager, scheduableTasksFilter);
+    }
+
     public ABSThreadManager getThreadManager() {
         return threadManager;
     }
@@ -341,6 +346,10 @@ public class ABSRuntime {
 
     public COG createCOG(Class<?> clazz) {
         return new COG(this, clazz);
+    }
+
+    public COG createCOG(Class<?> clazz, TaskSchedulingStrategy strategy) {
+        return new COG(this, clazz, strategy);
     }
 
     public static COG getCurrentCOG() {

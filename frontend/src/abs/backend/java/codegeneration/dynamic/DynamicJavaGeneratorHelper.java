@@ -256,9 +256,11 @@ public class DynamicJavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.print("public java.util.List<"+ABSValue.class.getName()+"> getArgs() { return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] { ");
+        stream.println("public java.util.List<"+ABSValue.class.getName()+"> getArgs() {");
+        stream.println("return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] {");
         generateArgStringList(stream, n);
-        stream.println(" }); }");
+        stream.println("});");
+        stream.println("}");
     }
 
     private static void generateArgStringList(PrintStream stream, String init, final int n) {
