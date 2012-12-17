@@ -1496,7 +1496,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     if MTE:Rat == 0 then 0
     else min(MTE:Rat, mte(W, < O : C | Cog: CG, Att: S, Lcnt: F > CN, MAC)) fi
   if O := L['this]
-  /\ MTE:Rat := mte(SL, (S :: L), CN, $insert('.deadline, L['.deadline], MAC)) .
+  /\ MTE:Rat := mte(SL, (S :: L), < O : C | Cog: CG, Att: S, Lcnt: F > CN, $insert('.deadline, L['.deadline], MAC)) .
   eq mte(noProc, CN, MAC) = 1 .
 
   op mte : Configuration Configuration SSubst -> Rat .
@@ -1524,7 +1524,7 @@ mod ABS-MACHINE-BASICS-TIMED is
     if MTE:Rat == 0 then 0
     else min(MTE:Rat, mte(< O : C | Cog: CG, Att: S, Lcnt: F > CN, < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN', MAC))
     fi
-  if MTE:Rat := mte(SL, S,
+  if MTE:Rat := mte(SL, S :: L,
         < O : C | Cog: CG, Att: S, Lcnt: F > < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W > CN CN',
         ('.deadline |-> L['.deadline], '.comp |-> DC:Data, MAC)) .
   *** Maximum time advance == 1.
