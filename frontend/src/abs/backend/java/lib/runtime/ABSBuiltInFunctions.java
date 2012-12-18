@@ -11,12 +11,10 @@ import java.util.Random;
 import java.util.Scanner;
 
 import abs.backend.java.lib.expr.UnmatchedCaseException;
-import abs.backend.java.lib.runtime.metaABS.DynamicClassHelper;
 import abs.backend.java.lib.runtime.metaABS.ObjectMirror;
 import abs.backend.java.lib.runtime.metaABS.Runtime;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSProcess;
-import abs.backend.java.lib.types.ABSRational;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
@@ -70,9 +68,9 @@ public class ABSBuiltInFunctions {
     public static ABSString method(ABSProcess p) {
         return ABSString.fromString(p.getMethodName());
     }
-    public static ABS.StdLib.Time arrival(ABSProcess p) {
-        return new ABS.StdLib.Time_Time(ABSRational.fromInt(p.getArrivalTime()));
-    }
+//    public static ABS.StdLib.Time arrival(ABSProcess p) {
+//        return new ABS.StdLib.Time_Time(ABSRational.fromInt(p.getArrivalTime()));
+//    }
     
     /* reflect creates a "mirror object" for the given object, 
      * which gives access to the meta API.

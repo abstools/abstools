@@ -53,7 +53,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
     }
     
     // to be implemented by the generated subclass
-    protected abstract ABSProcess userschedule(final ABS.StdLib.List<ABSProcess> queue);
+    //protected abstract ABSProcess userschedule(final ABS.StdLib.List<ABSProcess> queue);
     
 
 }
