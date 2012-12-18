@@ -15,23 +15,13 @@ import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.COG;
 import abs.backend.java.lib.runtime.Logging;
-import abs.backend.java.lib.types.ABSBool;
-import abs.backend.java.lib.types.ABSInteger;
-import abs.backend.java.lib.types.ABSPid;
 import abs.backend.java.lib.types.ABSProcess;
-import abs.backend.java.lib.types.ABSRational;
-import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
-import abs.backend.java.scheduling.RandomSchedulingStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler;
 import abs.backend.java.scheduling.TaskScheduler;
 import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.SimpleTaskScheduler.TaskInfo;
-import abs.common.ListUtils;
-
-import abs.backend.java.lib.runtime.metaABS.DynamicClassHelper;
-import abs.frontend.ast.HasMethod;
 
 public class Cog {
     private final static Logger logger = Logging.getLogger(Cog.class.getName());
@@ -119,6 +109,7 @@ public class Cog {
                             System.out.println("\t" + proc.toString());
                         }
 
+                        /*
                         // Convert ArryList<ABSProcess> to ABS.StdLib.List of ABSProcess
                         final ABS.StdLib.List queue = ListUtils.toABSList(processes);
                         ABSValue result = userScheduler.dispatch("schedule", queue);
@@ -126,7 +117,10 @@ public class Cog {
                         // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
                         long selectedPid = ((ABSProcess)result).getPid();
                         return taskMap.get(selectedPid);
-//                        return schedulableTasks.get(0);
+                        */
+                        
+                        // FIXME
+                        return schedulableTasks.get(0);
                     }
                 };
                 
@@ -143,17 +137,6 @@ public class Cog {
             }
         });
         
-        
-        // TEST -- Remove
-        thisClass.addMethod(/*ABSPid*/ "getAPid", new ABSClosure() {
-            
-            @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                System.out.println("return a PID...");
-                return ABSPid.fromLong(9999);
-            }
-        });
-
     }
 
 }

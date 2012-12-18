@@ -24,6 +24,9 @@ public class ListUtils {
     /*
      * Transform a java.util.List into an ABS.StdLib.List
      */
+    // FIXME
+
+    /*
     public static ABS.StdLib.List<ABSValue> toABSList(java.util.List<? extends ABSValue> l) {
         if (l.isEmpty()) {
             return new ABS.StdLib.List_Nil();
@@ -32,5 +35,6 @@ public class ListUtils {
             return new ABS.StdLib.List_Cons(head, toABSList(l));
         }
     }
+    */
 
 }
