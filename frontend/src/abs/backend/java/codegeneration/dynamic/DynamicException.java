@@ -12,9 +12,6 @@ public class DynamicException extends ABSException {
         super(string);
     }
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -8269533628421261068L;
 
     @Override

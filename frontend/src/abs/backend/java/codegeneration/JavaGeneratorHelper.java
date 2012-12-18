@@ -527,12 +527,12 @@ public class JavaGeneratorHelper {
             stream.print("public final class " + className);
             stream.println(" extends " + UserSchedulingStrategy.class.getName() + " {");
             
-            stream.print("public synchronized " + ABSProcess.class.getName());
-            stream.println(" userschedule(ABS.StdLib.List<" + ABSProcess.class.getName() + "> queue) {");
+            stream.println("public synchronized " + ABSProcess.class.getName() + " userschedule(Object q) {");
+            stream.println("ABS.StdLib.List<" + ABSProcess.class.getName() + "> queue = (ABS.StdLib.List<" + ABSProcess.class.getName() + ">) q;");
             
             // call the given scheduling function
             // here goes whatever is specified in the Scheduler annotation
-            // i.e. a function call or even an inlined function...
+            // i.e. a function call or some other code that returns a Process
             stream.println("// user-specified scheduler expression");
             stream.print("return ");
             exp.generateJava(stream);

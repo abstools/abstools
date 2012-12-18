@@ -7,6 +7,7 @@ package abs.common;
 import java.util.ArrayList;
 
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.utils.DynamicClassUtils;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.List;
 
@@ -24,17 +25,15 @@ public class ListUtils {
     /*
      * Transform a java.util.List into an ABS.StdLib.List
      */
-    // FIXME
-
-    /*
-    public static ABS.StdLib.List<ABSValue> toABSList(java.util.List<? extends ABSValue> l) {
+    public static Object toABSList(java.util.List<? extends ABSValue> l) {
         if (l.isEmpty()) {
-            return new ABS.StdLib.List_Nil();
+//            return new ABS.StdLib.List_Nil();
+            return DynamicClassUtils.instance("ABS.StdLib.List_Nil");
         } else {
             ABSValue head = l.remove(0);
-            return new ABS.StdLib.List_Cons(head, toABSList(l));
+//            return new ABS.StdLib.List_Cons(head, toABSList(l));
+            return DynamicClassUtils.instance("ABS.StdLib.List_Cons", head, toABSList(l));
         }
     }
-    */
 
 }

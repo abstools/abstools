@@ -38,22 +38,19 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
             System.out.println("\t" + proc.toString());
         }
 
-        /*
         // Convert ArryList<ABSProcess> to ABS.StdLib.List of ABSProcess
-        final ABS.StdLib.List queue = ListUtils.toABSList(processes);
+        final Object queue = ListUtils.toABSList(processes);
         ABSProcess result = userschedule(queue);
         
         // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
         long selectedPid = ((ABSProcess)result).getPid();
         return taskMap.get(selectedPid);
-        */
         
-        // FIXME
-        return schedulableTasks.get(0);
+        //return schedulableTasks.get(0);
     }
     
     // to be implemented by the generated subclass
-    //protected abstract ABSProcess userschedule(final ABS.StdLib.List<ABSProcess> queue);
+    protected abstract ABSProcess userschedule(final Object queue);
     
 
 }

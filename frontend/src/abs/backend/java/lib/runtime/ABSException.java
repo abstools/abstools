@@ -6,6 +6,7 @@ package abs.backend.java.lib.runtime;
 
 public abstract class ABSException extends RuntimeException {
 
+    private static final long serialVersionUID = 4203599845970796101L;
     private long randomSeed = -1;
     
     public ABSException(String string) {
