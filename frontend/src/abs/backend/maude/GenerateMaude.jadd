@@ -871,11 +871,11 @@ aspect GenerateMaude {
     public void GetLocExp.generateMaude(PrintStream stream) {stream.print("getfather( "); getPureExp().generateMaude(stream); stream.print(" ) ");}
     
     public void RebindStmt.generateMaude(PrintStream stream) { // I guess the access to the elements of the Rebind is done as specified in ABS.ast
-      stream.print("rebind(");
+      stream.print("rebind( ");
       getObj().generateMaude(stream);
-      stream.print(" ; '" + getField() + " ; ");
+      stream.print("; '" + getField() + " ; ");
       getVal().generateMaude(stream);
-      stream.print(" ) ");
+      stream.print(") ");
     }
 
     public void MoveStmt.generateMaude(PrintStream stream) {
@@ -887,9 +887,9 @@ aspect GenerateMaude {
     }
     
     public void ObjectGuard.generateMaude(PrintStream stream) {
-      stream.print("cr(");
+      stream.print("( cr( ");
       getExp().generateMaude(stream);
-      stream.print(" ) ");
+      stream.print(")) ");
     }
     
     public int GetFatherExp.numberOfRandom(Set<String> visitedFunctions) { return getPureExp().numberOfRandom(visitedFunctions); }

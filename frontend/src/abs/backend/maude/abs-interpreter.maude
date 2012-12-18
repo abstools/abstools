@@ -864,10 +864,10 @@ mod ABS-EVAL is
   *** Component Model Extension: Guard
   *** Component Model Extension: Check if an object is not in critical section
   op isntcritical : Oid Configuration -> Bool .
-  eq isntcritical(OID, < OID : CID | Cog: COGID, Att: S, Lcnt: N > CN) = ((S['.nbcr]) asInt == 0) .
+  eq isntcritical(OID, < OID : CID | Cog: COGID, Att: S, Lcnt: N > CN) = ((S ['.nbcr]) asInt == 0) .
   eq isntcritical(OID, CN) = false [owise] .
 
-  eq eval(cr( QID ), S, CN, MAC) = isntcritical(S[QID], CN) asAbsBool .
+  eq eval(cr( E ), S, CN, MAC) = isntcritical( eval(E, S, CN, MAC) , CN) asAbsBool .
 
 
   *** evaluate a case statement.  If the pattern matches, augment environment
@@ -1953,7 +1953,7 @@ mod ABS-STMT-AWAIT-RL is
       < O : C | Cog: CG, Att: S, Lcnt: F >
       CN  }
   =>
-    if executable(await E, (S :: L), CN, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
+    if executable(await E, (S :: L), (< O : C | Cog: CG, Att: S, Lcnt: F > CN), ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data)) then
       { < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | SL }, PrQ: W >
         < O : C | Cog: CG, Att: S, Lcnt: F >
         CN  }

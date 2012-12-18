@@ -1,0 +1,32 @@
+in abs-interpreter
+
+mod MODEL is
+protecting ABS-SIMULATOR-RL .
+
+  var O : Oid .        vars B C : Cid .  vars S L : Subst .
+  var SL : StmtList .  var W : MProc .   vars F G : Nat .
+  var A : Vid .     var E : Expr .
+  var CG : Cogid . vars L1 L2 : Location .
+
+
+  op start : -> State .
+  eq start = {
+  < ob('main, 0) : Cog | Object: ob('ABS.Component.NormalRebind.DeadLockExample, 0) , DC: ob('ABS.DC.DeploymentComponent, -1),
+    Sched: "ABS.Scheduler.defaultscheduler"('queue),
+    Pr: {'.c |-> "ABS.StdLib.Duration"["num"[0]], '.deadline |-> "ABS.StdLib.InfDuration"[emp], '.label |-> label(ob('.Start, 0), 1), '.method |-> "str"["start"],
+       '.r |-> "ABS.StdLib.Time"["num"[-1]], '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> null, '_ |-> null, 'k |-> "num"[3], 't |-> "num"[4],
+       'this |-> ob('ABS.Component.NormalRebind.DeadLockExample, 0)
+      | await ( "ABS.StdLib.True"[emp] ) ; assign( @ 'p ; cr( 'this ) ) ; await ( cr( 'this ) ) ; rebind( 'this ; 'p ; "ABS.StdLib.True"[emp]) ; return(null) ; $cont label(ob('.Start, 0), 1)},
+    PrQ:
+      {'.deadline |-> "ABS.StdLib.InfDuration"[emp], '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> label(ob('main, 0), 0), '_ |-> null,
+          'this |-> ob('main, 0), 'x |->   ob('.Start, 0) | get('.staticfuture ; '_) }, 
+      {'.c |-> "ABS.StdLib.Duration"["num"[0]], '.deadline |-> "ABS.StdLib.InfDuration"[emp], '.label |-> label(ob('main, 0), 0), '.method |-> "str"[".init"],
+       '.r |-> "ABS.StdLib.Time"["num"[-1]], '.random |-> "ABS.StdLib.Nil"[emp], '.staticfuture |-> label(ob('.Start, 0), 1), '_ |-> null, 'this |-> ob('.Start, 0)
+      | get('.staticfuture ; '_) ; return(null) ; $cont label(ob('main, 0), 0)} 
+       >
+
+  < ob('ABS.Component.NormalRebind.DeadLockExample, 0) : 'ABS.Component.NormalRebind.DeadLockExample |
+    Cog: ob('main, 0),
+    Att: '.nbcr |-> "num"[0], 'p |-> "ABS.StdLib.False"[emp],
+    Lcnt: 0 > } .
+endm
