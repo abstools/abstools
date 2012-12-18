@@ -22,6 +22,10 @@ public class Logging {
     public static Logger getLogger(String name) {
         Logger logger = Logger.getLogger(name);
         Level level = LOGLEVEL;
+        if (DEBUG) {
+            level = Level.ALL;
+        }
+
         Handler h = new ConsoleHandler();
         h.setLevel(level);
         logger.addHandler(h);
