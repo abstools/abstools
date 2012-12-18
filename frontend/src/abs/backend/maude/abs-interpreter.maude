@@ -2377,23 +2377,36 @@ mod ABS-REBIND-RL is
   protecting ABS-EVAL .
 
   vars O O' : Oid .    vars C C' : Cid .    vars S L S' : Subst .
-  var SL : StmtList .  vars W W' : MProc .  vars F F' : Nat .      var P : Process .
-  vars E E' : Expr .   var D : Data .       var CG : Cogid .
+  var SL : StmtList .  vars W : MProc .  vars F F' : Nat .
+  vars E E' : Expr .   vars D D' : Data .       var CG : Cogid .
   var Q : Qid .
-  var D' : Data .
-  var COST : Expr .
 
   crl
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
-    < O' : C | Cog: CG, Att: S, Lcnt: F >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
   =>   
     < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
-    < O' : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
-  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> S['.comp], '.random |-> L['.random]))
+    < O : C | Cog: CG, Att: insert(Q, D, S), Lcnt: F >
+  if O = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
     /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
-    /\ D' := S[Q]
+    /\ D' := (S :: L)[Q]
     /\ S['.nbcr] == "num"[0]
-    [label rebind] .
+    [label rebind-local] .
+
+  crl
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | rebind(E ; Q ; E') ; SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < O' : C' | Cog: CG, Att: S', Lcnt: F' >
+  =>   
+    < CG : Cog | Object: O, DC: DC:Data, Sched: SCH:Expr, Pr: { L | markFutures(D) ; freeFutures(D') ; SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+    < O' : C' | Cog: CG, Att: insert(Q, D, S'), Lcnt: F' >
+  if O' = eval(E, (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    /\ D := eval(E', (S :: L), none, ('.time |-> "num"[-1], '.deadline |-> L['.deadline], '.comp |-> DC:Data, '.random |-> L['.random]))
+    /\ D' := (S :: L)[Q]
+    /\ S'['.nbcr] == "num"[0]
+    [label rebind-distant] .
+
 
 endm
 mod ABS-NEWLOC-RL is
@@ -2486,6 +2499,12 @@ mod ABS-SIMULATOR-RL is
   protecting ABS-NEW-RL .
   protecting ABS-STMT-RETURN-RL .
   protecting ABS-RECEIVE-RESULT .
+  --- Component Model Extension
+  protecting ABS-REBIND-RL .
+  protecting ABS-NEWLOC-RL .
+  protecting ABS-GETLOC-RL .
+  protecting ABS-GETFATHERLOC-RL .
+  protecting ABS-SUBLOC-RL .
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will
   --- generate an operator "start" in the generated module that reduces to
@@ -2517,6 +2536,13 @@ mod ABS-SIMULATOR-EQ-TIMED is
   protecting ABS-NEW-EQ-TIMED .
   protecting ABS-STMT-RETURN-EQ-TIMED .
   protecting ABS-RECEIVE-RESULT .
+  --- Component Model Extension
+  protecting ABS-REBIND-RL .
+  protecting ABS-NEWLOC-RL .
+  protecting ABS-GETLOC-RL .
+  protecting ABS-GETFATHERLOC-RL .
+  protecting ABS-SUBLOC-RL .
+
 
   --- System initialisation with arbitrary class.  In Abs, the compiler will
   --- generate an operator "start" in the generated module that reduces to
