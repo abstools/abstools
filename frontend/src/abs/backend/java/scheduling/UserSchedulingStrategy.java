@@ -17,7 +17,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
 
     @Override
     public synchronized TaskInfo schedule(final TaskScheduler scheduler, final List<TaskInfo> schedulableTasks) {
-        System.out.println("Scheduling (" + schedulableTasks.size() + " processes in queue)...");
+        System.out.println(scheduler.getCOG().toString() + " Scheduling (" + schedulableTasks.size() + " processes in queue)...");
 
         // Remember TaskInfos based on their Pids to speed things up a little
         HashMap<Long, TaskInfo> taskMap = new HashMap<Long, TaskInfo>();

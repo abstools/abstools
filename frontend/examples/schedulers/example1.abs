@@ -5,7 +5,9 @@ import * from ABS.Meta;
 interface C { Unit m(); }
 class CImpl(Int xx) implements C {
     Unit m() {
-        Unit u = println("Hello");
+//        Time t = now(); 
+//        await timeDifference(now(), t) > 5;
+//        Unit u = println("Hello");
     }
 }
 
@@ -17,7 +19,7 @@ class CImpl(Int xx) implements C {
 
     C o3 = new cog CImpl(0);
 
-    o!m();
-    o!m();
-    o!m();
+    o2!m();
+    o2!m();
+    o2!m();
 }
