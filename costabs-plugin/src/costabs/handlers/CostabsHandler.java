@@ -39,6 +39,10 @@ import eu.hatsproject.absplugin.costabslink.CostabsLink;
 public class CostabsHandler extends AbstractHandler {
 
 	public static ResultTracker STORAGE_COSTABS = new ResultTracker();
+	boolean filterUnreachable = true; 
+	// The default is true. In that case the whole project is compiled and the frontend 
+	// calls Antonio's reachability filtering. Otherwise, there's no filtering and it would 
+	// only work with a single ABS file
 	
 	/**
 	 * The constructor.
@@ -90,18 +94,19 @@ public class CostabsHandler extends AbstractHandler {
 	}
 
 	private void callPrologBackend(String filename) throws Exception {
-    	/*
-		int numArgs = 3;
-		String[] args = new String[numArgs];
-		int i = 0;
-		args[i++] = "-d";
-		args[i++] = "/tmp/costabs/absPL";
-		args[i++] = filename;
-		PrologBackend.runFromShell(args);
-		*/
-		
-		Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
-		PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+    	
+		if (!filterUnreachable){
+			int numArgs = 3;
+			String[] args = new String[numArgs];
+			int i = 0;
+			args[i++] = "-d";
+			args[i++] = "/tmp/costabs/absPL";
+			args[i++] = filename;
+			PrologBackend.runFromShell(args);
+		} else {		
+			Model model = CostabsLink.ABS_NATURE.getCompleteModel(); //getCurrentABSModel();
+			PrologBackend.runFromPlugin(model,"/tmp/costabs/absPL","abs.pl",CostabsLink.ENTRIES_NODES);
+		}
 	}
 	
 	/*
