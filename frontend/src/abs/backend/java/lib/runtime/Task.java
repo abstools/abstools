@@ -27,6 +27,18 @@ public class Task<T extends ABSRef> {
     private final TaskStack stack;
     private final AsyncCall<T> call;
 
+    /**
+     * Real time attributes
+     */
+    private final long arrival;
+    private final long cost;
+    private final long deadline;
+    private final long start;
+    private final long finish;
+    private final boolean critical;
+    private final int value;
+
+    
     public Task(AsyncCall<T> call) {
         this.call = call;
         future = new ABSTaskFut(this);
@@ -37,12 +49,48 @@ public class Task<T extends ABSRef> {
         } else {
             stack = null;
         }
+        
+        this.arrival = System.currentTimeMillis();
+        this.cost = 0;          // TODO: from annotation
+        this.deadline = 0;      // TODO: from annotation
+        this.start = 0;         // TODO
+        this.finish = 0;        // TODO
+        this.critical = false;  // TODO: from annotation
+        this.value = 0;         // TODO
     }
 
     public int getID() {
         return id;
     }
     
+    public long getArrival() {
+        return arrival;
+    }
+
+    public long getCost() {
+        return cost;
+    }
+
+    public long getDeadline() {
+        return deadline;
+    }
+
+    public long getStart() {
+        return start;
+    }
+
+    public long getFinish() {
+        return finish;
+    }
+
+    public boolean isCritical() {
+        return critical;
+    }
+
+    public int getValue() {
+        return value;
+    }
+
     public synchronized void setLocalVariable(String name, ABSValue v) {
         if (stack != null) {
             Frame f = stack.getCurrentFrame();

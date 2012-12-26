@@ -123,6 +123,13 @@ public class JavaBackend extends Main {
         return res;
     }
 
+    public static boolean isBuiltinDataType(Type absType) {
+        if (absType.isDataType())
+            return dataTypeMap.containsKey(((DataTypeType)absType).getDecl().getName());
+        else 
+            return false;
+    }
+    
     public static String getJavaType(ConstructorArg u) {
         return getJavaType(u.getDataTypeUse());
     }
@@ -160,7 +167,7 @@ public class JavaBackend extends Main {
                 }
                 sb.append(">"); 
             }
-            return getQualifiedString(dt.getDecl())+sb.toString();
+            return getQualifiedString(dt.getDecl()) + sb.toString();
             /*
              * if (dt.hasTypeArgs() && !containsUnboundedType(dt.getTypeArgs()))
              * {

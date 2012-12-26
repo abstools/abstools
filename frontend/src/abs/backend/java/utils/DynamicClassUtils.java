@@ -8,9 +8,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.logging.Logger;
 
-import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.runtime.ABSException;
 import abs.backend.java.lib.runtime.Logging;
+import abs.backend.java.lib.types.ABSValue;
 
 public class DynamicClassUtils {
 
@@ -21,22 +21,22 @@ public class DynamicClassUtils {
         try {
             cls = Class.forName(name);
         } catch (ClassNotFoundException e) {
-            throw new DynamicException("Failed to dynamically load class " + name);
+            throw new GeneratedClassLoadingException(e.toString());
             
         }
         return cls;
     }
     
-    
-    public static Object instance(String name, Object... args) {
-        Class<?> cls = getClass(name);
+    @SuppressWarnings("unchecked")
+    public static <T extends ABSValue> T instance(Class<?> cls, Object... args) {
+        String name = cls.getName();
         if (cls.getDeclaredConstructors().length != 1)
             logger.warning("Class " + name + " has either more than one, or zero constructors.");
-
         Constructor<?> ctor = cls.getDeclaredConstructors()[0];
-        Object result;
+
+        T result;
         try {
-            result = ctor.newInstance(args);
+            result = (T) ctor.newInstance(args);
         } catch (IllegalArgumentException e) {
             throw new GeneratedClassLoadingException("Failed to instantiate class " + name + "\n" + e.toString());
         } catch (InstantiationException e) {
@@ -48,8 +48,15 @@ public class DynamicClassUtils {
         }
         
         return result;
+        
     }
     
+    public static Object instance(String name, Object... args) {
+        Class<?> cls = getClass(name);
+        return instance(cls, args);
+    }
+    
+
     public static class GeneratedClassLoadingException extends ABSException {
 
         public GeneratedClassLoadingException(String string) {

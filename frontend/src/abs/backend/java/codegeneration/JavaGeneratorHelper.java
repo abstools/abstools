@@ -161,11 +161,20 @@ public class JavaGeneratorHelper {
         if (!builtInFunctionExists(name)) {
             throw new RuntimeException("The built in function '" + name + "' is not implemented in the Java backend.");
         }
+        
+        // if builtin function returns a non-builtin type, cast the returned value to that type
+        boolean returnsGeneratedDataType = ! JavaBackend.isBuiltinDataType(app.getType());
+        if (returnsGeneratedDataType)
+            stream.print("((" + JavaBackend.getQualifiedString(app.getType()) +  ")");
+        
         stream.print(ABSBuiltInFunctions.class.getName() + "." + name);
         String firstArgs = null;
         if (Constants.isFunctionalBreakPointFunctionName(d.getModuleDecl().getName() + "." + name))
             firstArgs = generateFunctionalBreakPointArgs(app);
         generateArgs(stream, firstArgs, app.getParams(), d.getTypes());
+        
+        if (returnsGeneratedDataType)
+            stream.print(")");
     }
 
     private static String generateFunctionalBreakPointArgs(FnApp app) {

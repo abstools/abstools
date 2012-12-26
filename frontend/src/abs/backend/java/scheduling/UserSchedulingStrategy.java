@@ -25,14 +25,20 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         // Convert List<TaskInfo> to ArrayList<ABSProcess>
         ArrayList<ABSProcess> processes = new ArrayList<ABSProcess>();
 
-        for (TaskInfo task : schedulableTasks) {
-            taskMap.put(task.id, task);
+        for (TaskInfo taskInfo : schedulableTasks) {
+            taskMap.put(taskInfo.id, taskInfo);
 
             // TODO set: pid, method, arrival, cost, deadline, start, finish, critical, value
             ABSProcess proc = new ABSProcess(
-                    task.id, 
-                    task.task.getCall().methodName(),
-                    0,0,0,0,0,false,0);
+                    taskInfo.id, // Or use task's id -- what's the difference?
+                    taskInfo.task.getCall().methodName(),
+                    taskInfo.task.getArrival(),
+                    taskInfo.task.getCost(),
+                    taskInfo.task.getDeadline(),
+                    taskInfo.task.getStart(),
+                    taskInfo.task.getFinish(),
+                    taskInfo.task.isCritical(),
+                    taskInfo.task.getValue());
 
             processes.add(proc);
             System.out.println("\t" + proc.toString());

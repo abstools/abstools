@@ -10,11 +10,11 @@ public class ABSProcess extends ABSBuiltInDataType {
 
     private long pid;
     private String methodName;
-    private int arrivalTime;
-    private int cost;
-    private int deadline;
-    private int startTime;
-    private int finishTime;
+    private long arrivalTime;
+    private long cost;
+    private long deadline;
+    private long startTime;
+    private long finishTime;
     private boolean critical;
     private int value;
     
@@ -22,7 +22,7 @@ public class ABSProcess extends ABSBuiltInDataType {
         super("ABSProcess");
     }
 
-    public ABSProcess(long pid, String method, int arrival, int cost, int deadline, int start, int finish, boolean crit, int value) {
+    public ABSProcess(long pid, String method, long arrival, long cost, long deadline, long start, long finish, boolean crit, int value) {
         super("ABSProcess");
         this.pid = pid;
         this.methodName = method;
@@ -38,13 +38,29 @@ public class ABSProcess extends ABSBuiltInDataType {
     public long getPid() {
         return pid;
     }
-
     public String getMethodName() {
         return methodName;
     }
-    
-    public int getArrivalTime() {
+    public long getArrivalTime() {
         return arrivalTime;
+    }
+    public long getCost() {
+        return cost;
+    }
+    public long getDeadline() {
+        return deadline;
+    }
+    public long getStartTime() {
+        return startTime;
+    }
+    public long getFinishTime() {
+        return finishTime;
+    }
+    public boolean isCritical() {
+        return critical;
+    }
+    public int getValue() {
+        return value;
     }
     
     public String toString() {

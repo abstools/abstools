@@ -662,10 +662,9 @@ aspect GenerateJava {
     }
 
     public void DurationGuard.generateJavaGuardDynamic(PrintStream beforeAwaitStream, PrintStream stream) {
-        stream.print("new " + JavaBackendConstants.EXPGUARD+
-                "() { public " + ABSBool.class.getName()+
-                " evaluateExp() { return " + 
-                ABSBool.class.getName() + ".TRUE; }}");
+        stream.print("new " + JavaBackendConstants.EXPGUARD +
+                "() { public " + ABSBool.class.getName() +
+                " evaluateExp() { return " + ABSBool.class.getName() + ".TRUE; }}");
     }
 
     /*
@@ -708,8 +707,24 @@ aspect GenerateJava {
         ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
         String className = JavaBackend.getQualifiedString(decl);
         if (hasCog()) {
+            Cog cog = this.getCog();
+            // generate user-defined scheduler class if annotation is present
+            String strategy = null;
+            for (Annotation a : cog.getAnnotationList()) {
+                if (a instanceof TypedAnnotation) {
+                    TypedAnnotation ta = (TypedAnnotation)a;
+                    if (((DataTypeUse)ta.getAccess()).getName().equals("Scheduler")) {
+                        strategy = DynamicJavaGeneratorHelper.generateUserSchedulingStrategy(cog, ta.getValue());
+                    }
+                }
+            }
             stream.print(className + ".__ABS_createNewCOG");
-            DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+            if (strategy != null)
+                // FIXME: include userScheduler
+                DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+            else
+                DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
+
         } else {
             stream.print(className + ".__ABS_createNewObject");
             DynamicJavaGeneratorHelper.generateArgs(stream, "thisP", getParams(), decl.getTypes());
@@ -732,7 +747,7 @@ aspect GenerateJava {
         throw new JavaBackendException(this,"Type " + getName() + " is unresolved!");
     }
 
-	public abstract void VarOrFieldUse.generateJavaDynamic(PrintStream stream);
+    public abstract void VarOrFieldUse.generateJavaDynamic(PrintStream stream);
     public void FieldUse.generateJavaDynamic(PrintStream stream) {
         //ClassDecl d = (ClassDecl) getContextDecl();
         //String className = JavaBackend.getClassName(d.getName());

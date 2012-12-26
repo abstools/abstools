@@ -629,7 +629,7 @@ aspect GenerateJava {
             stream.print(", ");
         }
 
-        stream.println("final " + varType + " __ABS_value) { ");
+        stream.println("final " + varType + " __ABS_value) {");
         int i = 0;
         for (CaseBranch b : getBranchs()) {
             String bindingName = "__ABS_binding" + i;
@@ -639,18 +639,18 @@ aspect GenerateJava {
             stream.println(".match(__ABS_value);");
             stream.print("if (" + bindingName + " != null) ");
             stream.println("return new Object() {");
-            stream.print("  public " + expType + " execute(");
+            stream.print("public " + expType + " execute(");
             java.util.List<PatternVar> freeVars = pattern.getFreePatternVars();
             boolean first = true;
             for (PatternVar var : freeVars) {
                 if (first) first = false;
-                else stream.print(",");
+                else stream.print(", ");
                 stream.print("final " + JavaBackend.getQualifiedString(var.getType()));
                 stream.print(" " + JavaBackend.getVariableName(var.getVar().getName()));
             }
             stream.print(") { return ");
             b.getRight().generateJava(stream);
-            stream.print("; }");
+            stream.println("; }");
             stream.print("}.execute(");
             first = true;
             for (int j = 0; j < freeVars.size(); j++) {
@@ -666,8 +666,9 @@ aspect GenerateJava {
         }
         Position pos = new Position(this);
         stream.print("throw new " + UnmatchedCaseException.class.getName() + "(\"");
-        stream.println(pos.getPositionString() + " value \" + __ABS_value+\" did not match any pattern.\");");
-        stream.print("}}.of(");
+        stream.println(pos.getPositionString() + " value \" + __ABS_value + \" did not match any pattern.\");");
+        stream.println("}");
+        stream.print("}.of(");
         for (String freeVarName : getFreeVars()) {
             stream.print(JavaBackend.getVariableName(freeVarName));
             stream.print(", ");
@@ -712,7 +713,8 @@ aspect GenerateJava {
         // Have to explicitly type the call due to a bug in the JastAdd Java
         // compiler that generates wrong code otherwise.
         FunctionDecl d = (FunctionDecl)getDecl();
-
+        
+        		
         if (d.getFunctionDef() instanceof BuiltinFunctionDef) {
             JavaGeneratorHelper.generateBuiltInFnApp(stream,this);
             return;

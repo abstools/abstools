@@ -528,6 +528,11 @@ public class DynamicJavaGeneratorHelper {
 
     }
     
+    public static String generateUserSchedulingStrategy(Cog cog, PureExp exp) {
+        // TODO
+        return null;
+    }
+    
     public static void generateDeltaApplication(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
             throws IOException, JavaCodeGenerationException {
         

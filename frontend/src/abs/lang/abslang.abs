@@ -420,11 +420,11 @@ data Scheduler;
 data Pid;
 data Process;
 
-def Pid pid(Process p) = builtin;
+def Pid procId(Process p) = builtin;
 def String method(Process p) = builtin;
 def Time arrival(Process p) = builtin;
 def Duration cost(Process p) = builtin;
-def Duration procdeadline(Process p) = builtin;
+def Duration deadline(Process p) = builtin;
 def Time start(Process p) = builtin;
 def Time finish(Process p) = builtin;
 def Bool crit(Process p) = builtin;

@@ -10,14 +10,22 @@ import java.math.BigInteger;
 import java.util.Random;
 import java.util.Scanner;
 
+import org.apfloat.Apint;
+import org.apfloat.Aprational;
+
 import abs.backend.java.lib.expr.UnmatchedCaseException;
 import abs.backend.java.lib.runtime.metaABS.ObjectMirror;
 import abs.backend.java.lib.runtime.metaABS.Runtime;
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSBuiltInDataType;
+import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSProcess;
+import abs.backend.java.lib.types.ABSRational;
 import abs.backend.java.lib.types.ABSString;
 import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.utils.DynamicClassUtils;
 
 public class ABSBuiltInFunctions {
     
@@ -35,8 +43,8 @@ public class ABSBuiltInFunctions {
         return ABSUnit.UNIT;
     }
 
-    public static ABSInteger currentms() {
-        return ABSInteger.fromLong(System.currentTimeMillis());
+    public static ABSRational currentms() {
+        return ABSRational.fromBigInt(new Aprational(new Apint(System.currentTimeMillis()), new Apint(1000)));
     }
     
     public static ABSInteger lowlevelDeadline() {
@@ -62,15 +70,52 @@ public class ABSBuiltInFunctions {
     }
     
     /* 
-     * functions related to user-defined schedulers
-     * module ABS.Scheduler
+     * functions related to user-defined schedulers (see abslang, module ABS.Scheduler)
      */
+    public static ABSInteger procId(ABSProcess p) {
+        return ABSInteger.fromLong(p.getPid());
+    }
     public static ABSString method(ABSProcess p) {
         return ABSString.fromString(p.getMethodName());
     }
-//    public static ABS.StdLib.Time arrival(ABSProcess p) {
-//        return new ABS.StdLib.Time_Time(ABSRational.fromInt(p.getArrivalTime()));
-//    }
+    public static ABSDataType arrival(ABSProcess p) {
+        Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
+        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getArrivalTime()));
+    }
+    public static ABSDataType cost(ABSProcess p) {
+        if (p.getCost() == -1) {
+            Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
+            return DynamicClassUtils.instance(type);
+        } else {
+            Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
+            return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getCost()));
+        }
+    }
+    public static ABSDataType deadline(ABSProcess p) {
+        if (p.getDeadline() == -1) {
+            Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
+            return DynamicClassUtils.instance(type);
+        } else {
+            Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_Duration");
+            return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getDeadline()));
+        }
+    }
+    public static ABSDataType start(ABSProcess p) {
+        Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
+        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getStartTime()));
+    }
+    public static ABSDataType finish(ABSProcess p) {
+        Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Time_Time");
+        return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getFinishTime()));
+    }
+    public static ABSBool critical(ABSProcess p) {
+        return ABSBool.fromBoolean(p.isCritical());
+    }
+    public static ABSInteger value(ABSProcess p) {
+        return ABSInteger.fromInt(p.getValue());
+    }
+    
+    
     
     /* reflect creates a "mirror object" for the given object, 
      * which gives access to the meta API.
