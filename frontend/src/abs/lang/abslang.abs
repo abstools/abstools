@@ -420,7 +420,6 @@ data Scheduler;
 data Pid;
 data Process;
 
-def Pid procId(Process p) = builtin;
 def String method(Process p) = builtin;
 def Time arrival(Process p) = builtin;
 def Duration cost(Process p) = builtin;
