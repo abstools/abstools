@@ -1,6 +1,10 @@
 #!/bin/bash
 
-BASEDIR="$(dirname $0)/../.."
+PROGNAME="$(readlink $0)"
+if [[ -z $PROGNAME ]] ; then
+    PROGNAME="$0"
+fi
+BASEDIR="$(dirname $PROGNAME)/../.."
 CP=$BASEDIR/bin:$BASEDIR/lib/*
 
 #echo $CP
