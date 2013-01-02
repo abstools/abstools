@@ -70,10 +70,7 @@ aspect Annotations {
     eq ExpressionStmt.getExp().getAnnotations() = this.getAnnotations();
     eq RebindStmt.getVal().getAnnotations() = this.getAnnotations();
     eq RebindStmt.getObj().getAnnotations() = this.getAnnotations();
-    eq ObjectGuard.getExp().getAnnotations() = null; // FIXME?!?!
+    eq ObjectGuard.getExp().getAnnotations() = new List<Annotation>();
     
-    syn boolean AsyncCall.hasAnnotations() {
-        return this.getAnnotations().getNumChild() > 0;
-    }
-    
+    syn boolean AsyncCall.hasAnnotations() = this.getAnnotations().getNumChild() > 0;
 }
