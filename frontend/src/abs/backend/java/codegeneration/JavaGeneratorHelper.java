@@ -10,20 +10,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+
 import abs.backend.java.JavaBackend;
 import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.backend.java.lib.runtime.AbstractAsyncCall;
+import abs.backend.java.lib.runtime.AbstractAsyncCallRT;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSProcess;
 import abs.backend.java.lib.types.ABSValue;
-import abs.backend.java.scheduling.SimpleTaskScheduler;
-import abs.backend.java.scheduling.TaskScheduler;
-import abs.backend.java.scheduling.TaskSchedulingStrategy;
 import abs.backend.java.scheduling.UserSchedulingStrategy;
+import abs.common.CompilerUtils;
 import abs.common.Constants;
 import abs.common.Position;
 import abs.frontend.ast.ASTNode;
@@ -32,7 +32,6 @@ import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Cog;
-import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
@@ -47,7 +46,6 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.ThisExp;
 import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.ast.TypedAnnotation;
 import abs.frontend.ast.TypedVarOrFieldDecl;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.ast.VarOrFieldDecl;
@@ -226,6 +224,7 @@ public class JavaGeneratorHelper {
         generateMethodSig(stream, sig, true, "final", "");
         stream.println(" {");
         stream.print("return (" + ABSFut.class.getName() + ")");
+        
         generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig);
         stream.println(";");
         stream.println("}");
@@ -236,7 +235,13 @@ public class JavaGeneratorHelper {
         final PureExp callee = call.getCallee();
         final List<PureExp> params = call.getParams();
         final MethodSig sig = call.getMethodSig();
-        generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig);
+        
+        if (call.hasAnnotations()) {
+            final List<Annotation> annotations = call.getAnnotations();
+            generateAsyncCallRT(stream, null, callee, callee.getType(), params, null, sig, annotations);
+        } else {
+            generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig);
+        }
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
@@ -275,6 +280,63 @@ public class JavaGeneratorHelper {
         stream.println("return \"" + sig.getName() + "\";");
         stream.println("}");
                 
+        stream.println("public Object execute() {");
+        stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
+        for (i = 0; i < paramTypes.size(); i++) {
+            if (i > 0) stream.print(",");
+            stream.println("arg" + i);
+            if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
+        }
+        stream.println(");");
+        stream.println("}");
+        stream.print("}.init");
+        if (args != null)
+            JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
+        else
+            JavaGeneratorHelper.generateParamArgs(stream, params);
+        stream.print(")");
+    }
+
+    private static void generateAsyncCallRT(PrintStream stream, final String calleeString, 
+            final PureExp callee, final Type calleeType, final List<PureExp> args, 
+            final List<ParamDecl> params,
+            final MethodSig sig,
+            final List<Annotation> annotations) {
+        
+        final java.util.List<Type> paramTypes = sig.getTypes();
+        stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
+        String targetType = JavaBackend.getQualifiedString(calleeType);
+        stream.print("new " + AbstractAsyncCallRT.class.getName() + "<" + targetType + ">(this, ");
+        if (callee instanceof ThisExp) {
+            if (calleeString != null)
+                stream.print(calleeString);
+            else
+                callee.generateJava(stream);
+        } else { 
+            stream.print(ABSRuntime.class.getName() + ".checkForNull(");
+            if (calleeString != null)
+                stream.print(calleeString);
+            else
+                callee.generateJava(stream);
+            stream.print("), ");
+        }
+        stream.print(CompilerUtils.getAnnotationValue(annotations, "Deadline") + ", ");
+        stream.print(CompilerUtils.getAnnotationValue(annotations, "Cost") + ", ");
+        stream.print(CompilerUtils.getAnnotationValue(annotations, "Critical"));
+        stream.println(") {");
+        int i = 0;
+        for (Type t : paramTypes) {
+            stream.println(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
+            i++;
+        }
+        
+        generateTaskGetArgsMethod(stream, paramTypes.size());
+        generateTaskInitMethod(stream, paramTypes);
+        
+        stream.println("public java.lang.String methodName() {");
+        stream.println("return \"" + sig.getName() + "\";");
+        stream.println("}");
+        
         stream.println("public Object execute() {");
         stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
         for (i = 0; i < paramTypes.size(); i++) {
@@ -511,17 +573,12 @@ public class JavaGeneratorHelper {
     }
 
     public static String generateCog(PrintStream stream, Cog cog) {
-
         // generate user-defined scheduler class if annotation is present
-        for (Annotation a : cog.getAnnotationList()) {
-            if (a instanceof TypedAnnotation) {
-                TypedAnnotation ta = (TypedAnnotation)a;
-                if (((DataTypeUse)ta.getAccess()).getName().equals("Scheduler")) {
-                    return generateUserSchedulingStrategy(cog, ta.getValue());
-                }
-            }
-        }
-        return null;
+        PureExp scheduler = CompilerUtils.getAnnotationValue(cog.getAnnotationList(), "Scheduler");
+        if (scheduler != null)
+            return generateUserSchedulingStrategy(cog, scheduler);
+        else
+            return null;
     }
 
     public static String generateUserSchedulingStrategy(Cog cog, PureExp exp) {

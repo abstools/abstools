@@ -51,12 +51,21 @@ public class Task<T extends ABSRef> {
         }
         
         this.arrival = System.currentTimeMillis();
-        this.cost = 0;          // TODO: from annotation
-        this.deadline = 0;      // TODO: from annotation
+        if (call instanceof AbstractAsyncCallRT) {
+            AbstractAsyncCallRT<?> callRT = (AbstractAsyncCallRT<?>)call;
+            this.cost = callRT.getCost();
+            this.deadline = callRT.getDeadline();
+            this.critical = callRT.isCritical();
+        } else {
+            this.cost = -1;
+            this.deadline = -1;
+            this.critical = false;
+        }
         this.start = 0;         // TODO
         this.finish = 0;        // TODO
-        this.critical = false;  // TODO: from annotation
         this.value = 0;         // TODO
+        
+        // System.out.println("Task created from call " + call.toString() + " >> " + call.methodName() + call.getCost());
     }
 
     public int getID() {

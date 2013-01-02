@@ -72,9 +72,6 @@ public class ABSBuiltInFunctions {
     /* 
      * functions related to user-defined schedulers (see abslang, module ABS.Scheduler)
      */
-    public static ABSInteger procId(ABSProcess p) {
-        return ABSInteger.fromLong(p.getPid());
-    }
     public static ABSString method(ABSProcess p) {
         return ABSString.fromString(p.getMethodName());
     }
@@ -91,7 +88,7 @@ public class ABSBuiltInFunctions {
             return DynamicClassUtils.instance(type, ABSRational.fromLong(p.getCost()));
         }
     }
-    public static ABSDataType deadline(ABSProcess p) {
+    public static ABSDataType procDeadline(ABSProcess p) {
         if (p.getDeadline() == -1) {
             Class<?> type = DynamicClassUtils.getClass("ABS.StdLib.Duration_InfDuration");
             return DynamicClassUtils.instance(type);
