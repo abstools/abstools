@@ -98,13 +98,17 @@ public class JavaBackend extends Main {
     }
 
     private void compile(Model m, File destDir) throws IOException, JavaCodeGenerationException {
+
         JavaCode javaCode = new JavaCode(destDir);
         if (this.untypedJavaGen) {
+            if (verbose) System.out.println("Generating dynamic Java code...");
             m.generateJavaCodeDynamic(javaCode);
         } else {
+            if (verbose) System.out.println("Generating Java code...");
             m.generateJavaCode(javaCode);
         }
         if (!sourceOnly) {
+            if (verbose) System.out.println("Compiling generated Java code...");
             javaCode.compile();
         }
     }
