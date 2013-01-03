@@ -334,6 +334,24 @@ fmod ABS-DATA-TIME is
   eq fdefn("ABS.StdLib.lowlevelDeadline") = $builtin("lowlevelDeadline") .
   eq fparams("ABS.DC.thisDC") = noVid .
   eq fdefn("ABS.DC.thisDC") = $builtin("thisDC") .
+
+  eq fparams("ABS.Scheduler.method") = 'P .
+  eq fdefn("ABS.Scheduler.method") = $builtin("method") .
+  eq fparams("ABS.Scheduler.arrival") = 'P .
+  eq fdefn("ABS.Scheduler.arrival") = $builtin("arrival") .
+  eq fparams("ABS.Scheduler.cost") = 'P .
+  eq fdefn("ABS.Scheduler.cost") = $builtin("cost") .
+  eq fparams("ABS.Scheduler.procDeadline") = 'P .
+  eq fdefn("ABS.Scheduler.procDeadline") = $builtin("procDeadline") .
+  eq fparams("ABS.Scheduler.start") = 'P .
+  eq fdefn("ABS.Scheduler.start") = $builtin("start") .
+  eq fparams("ABS.Scheduler.finish") = 'P .
+  eq fdefn("ABS.Scheduler.finish") = $builtin("finish") .
+  eq fparams("ABS.Scheduler.crit") = 'P .
+  eq fdefn("ABS.Scheduler.crit") = $builtin("crit") .
+  eq fparams("ABS.Scheduler.value") = 'P .
+  eq fdefn("ABS.Scheduler.value") = $builtin("value") .
+  
 endfm
 
 
@@ -1011,6 +1029,16 @@ mod ABS-EVAL is
   eq eval($builtin("lowlevelDeadline"), S, CN, MAC) =
     eval((case MAC['.deadline] of { ("ABS.StdLib.Duration"[ 'v ] => 'v) ; ("ABS.StdLib.InfDuration"[ emp ] => "num"[ -1 ]) }), S, CN, MAC) .
   eq eval($builtin("thisDC"), S, CN, MAC) = MAC['.comp] .
+
+  *** Processes
+  eq eval($builtin("method"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = METHOD:Data .
+  eq eval($builtin("arrival"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = ARRIVAL:Data .
+  eq eval($builtin("cost"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = COST:Data .
+  eq eval($builtin("procDeadline"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = DEADLINE:Data .
+  eq eval($builtin("start"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = START:Data .
+  eq eval($builtin("finish"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = FINISH:Data .
+  eq eval($builtin("crit"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = CRIT:Data .
+  eq eval($builtin("value"), ('P |-> "ABS.Scheduler.Process"[ PID:Data :: METHOD:Data :: ARRIVAL:Data :: COST:Data :: DEADLINE:Data :: START:Data :: FINISH:Data :: CRIT:Data :: VALUE:Data ], S), CN, MAC) = VALUE:Data .
 
   op markFutures : DataList -> StmtList .
   ceq markFutures(D) = $mark(D) if D : Label .
