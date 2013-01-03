@@ -225,7 +225,7 @@ public class JavaGeneratorHelper {
         stream.println(" {");
         stream.print("return (" + ABSFut.class.getName() + ")");
         
-        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig);
+        generateAsyncCall(stream, "this", null, method.getContextDecl().getType(), null, sig.getParams(), sig, new List<Annotation>());
         stream.println(";");
         stream.println("}");
     }
@@ -235,69 +235,12 @@ public class JavaGeneratorHelper {
         final PureExp callee = call.getCallee();
         final List<PureExp> params = call.getParams();
         final MethodSig sig = call.getMethodSig();
+        final List<Annotation> annotations = call.getAnnotations();
         
-        if (call.hasAnnotations()) {
-            final List<Annotation> annotations = call.getAnnotations();
-            generateAsyncCallRT(stream, null, callee, callee.getType(), params, null, sig, annotations);
-        } else {
-            generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig);
-        }
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig, annotations);
     }
 
     private static void generateAsyncCall(PrintStream stream, final String calleeString, 
-            final PureExp callee, final Type calleeType, final List<PureExp> args, 
-            final List<ParamDecl> params,
-            final MethodSig sig) {
-        
-        final java.util.List<Type> paramTypes = sig.getTypes();
-        stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
-        String targetType = JavaBackend.getQualifiedString(calleeType);
-        stream.print("new " + AbstractAsyncCall.class.getName() + "<" + targetType + ">(this, ");
-        if (callee instanceof ThisExp) {
-            if (calleeString != null)
-                stream.print(calleeString);
-            else
-                callee.generateJava(stream);
-        } else { 
-            stream.print(ABSRuntime.class.getName() + ".checkForNull(");
-            if (calleeString != null)
-                stream.print(calleeString);
-            else
-                callee.generateJava(stream);
-            stream.print(')');
-        }
-        stream.println(") {");
-        int i = 0;
-        for (Type t : paramTypes) {
-            stream.println(JavaBackend.getQualifiedString(t) + " arg" + i + ";");
-            i++;
-        }
-
-        generateTaskGetArgsMethod(stream, paramTypes.size());
-        generateTaskInitMethod(stream, paramTypes);
-
-        stream.println("public java.lang.String methodName() {");
-        stream.println("return \"" + sig.getName() + "\";");
-        stream.println("}");
-                
-        stream.println("public Object execute() {");
-        stream.print("return target." + JavaBackend.getMethodName(sig.getName()) + "(");
-        for (i = 0; i < paramTypes.size(); i++) {
-            if (i > 0) stream.print(",");
-            stream.println("arg" + i);
-            if (paramTypes.get(i).isIntType()) stream.print(".truncate()");
-        }
-        stream.println(");");
-        stream.println("}");
-        stream.print("}.init");
-        if (args != null)
-            JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
-        else
-            JavaGeneratorHelper.generateParamArgs(stream, params);
-        stream.print(")");
-    }
-
-    private static void generateAsyncCallRT(PrintStream stream, final String calleeString, 
             final PureExp callee, final Type calleeType, final List<PureExp> args, 
             final List<ParamDecl> params,
             final MethodSig sig,
@@ -318,9 +261,9 @@ public class JavaGeneratorHelper {
                 stream.print(calleeString);
             else
                 callee.generateJava(stream);
-            stream.print("), ");
+            stream.print(")");
         }
-        
+        stream.print(", ");
         PureExp rtAttr;
         rtAttr = CompilerUtils.getAnnotationValue(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
@@ -330,6 +273,7 @@ public class JavaGeneratorHelper {
         stream.print(", ");
         rtAttr = CompilerUtils.getAnnotationValue(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
+        
         stream.println(") {");
         int i = 0;
         for (Type t : paramTypes) {
@@ -360,7 +304,7 @@ public class JavaGeneratorHelper {
             JavaGeneratorHelper.generateParamArgs(stream, params);
         stream.print(")");
     }
-
+    
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         int i;
         stream.print("public " + abs.backend.java.lib.runtime.AsyncCall.class.getName() + "<?> init(");
@@ -400,7 +344,7 @@ public class JavaGeneratorHelper {
 
     public static void generateMethodImpl(PrintStream stream, final MethodImpl m) {
         // Async variant
-        JavaGeneratorHelper.generateAsyncMethod(stream,m);
+        JavaGeneratorHelper.generateAsyncMethod(stream, m);
 
         // Sync variant
         generateMethodSig(stream, m.getMethodSig(), false, "final", "");

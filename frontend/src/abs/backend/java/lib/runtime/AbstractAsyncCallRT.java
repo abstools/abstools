@@ -41,7 +41,7 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
     private long convertFromDuration(ABSDataType duration) {
         if (duration.getConstructorName().equals("Duration")) {
             ABSRational rat = (ABSRational)duration.getArg(0);
-            // convert to milliseconds
+            // convert from seconds to milliseconds
             return rat.multiply(ABSRational.fromInt(1000)).toInt();
         } else if (duration.getConstructorName().equals("InfDuration")) {
             return -1;
