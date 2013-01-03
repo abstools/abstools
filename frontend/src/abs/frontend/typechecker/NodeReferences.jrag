@@ -63,7 +63,7 @@ aspect Uses {
     }
 }
 
-aspect Annotations {
+aspect AsyncCallAnnotations {
     inh List<Annotation> AsyncCall.getAnnotations();
     eq AssignStmt.getValue().getAnnotations() = this.getAnnotations();
     eq ReturnStmt.getRetExp().getAnnotations() = this.getAnnotations();

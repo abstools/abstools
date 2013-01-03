@@ -64,8 +64,6 @@ public class Task<T extends ABSRef> {
         this.start = 0;         // TODO
         this.finish = 0;        // TODO
         this.value = 0;         // TODO
-        
-        // System.out.println("Task created from call " + call.toString() + " >> " + call.methodName() + call.getCost());
     }
 
     public int getID() {

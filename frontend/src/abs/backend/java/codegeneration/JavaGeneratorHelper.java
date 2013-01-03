@@ -320,9 +320,16 @@ public class JavaGeneratorHelper {
                 callee.generateJava(stream);
             stream.print("), ");
         }
-        stream.print(CompilerUtils.getAnnotationValue(annotations, "Deadline") + ", ");
-        stream.print(CompilerUtils.getAnnotationValue(annotations, "Cost") + ", ");
-        stream.print(CompilerUtils.getAnnotationValue(annotations, "Critical"));
+        
+        PureExp rtAttr;
+        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
+        stream.print(", ");
+        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Cost");
+        if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
+        stream.print(", ");
+        rtAttr = CompilerUtils.getAnnotationValue(annotations, "Critical");
+        if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
         stream.println(") {");
         int i = 0;
         for (Type t : paramTypes) {

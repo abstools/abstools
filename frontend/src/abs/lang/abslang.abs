@@ -1,5 +1,7 @@
 module ABS.StdLib;
 export *;
+export Cost;
+import Cost from ABS.DC;
 
 data Unit = Unit;               // builtin  
 data String;                    // builtin  
@@ -371,6 +373,7 @@ def Duration subtractFromDuration(Duration d, Rat v) =
 // Annotation data type to express deadlines:
 // [Deadline: Duration(5)] o!m();
 type Deadline = Duration;
+type Critical = Bool;
 
 /**
  * Annotation data type to define the type of annotations

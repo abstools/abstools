@@ -4,20 +4,23 @@
  */
 package abs.backend.java.lib.runtime;
 
+import abs.backend.java.JavaBackendException;
+import abs.backend.java.lib.types.ABSBool;
+import abs.backend.java.lib.types.ABSDataType;
+import abs.backend.java.lib.types.ABSRational;
 import abs.backend.java.lib.types.ABSRef;
-import abs.backend.java.lib.types.ABSValue;
 
 public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyncCall<T> implements AsyncCallRTAttributes {
 
-    long deadline;
-    long cost;
-    boolean critical;
+    private long deadline;    //milliseconds
+    private long cost;        //milliseconds
+    private boolean critical;
 
-    public AbstractAsyncCallRT(ABSObject source, T target, ABSValue dl, ABSValue co, ABSValue cr) {
+    public AbstractAsyncCallRT(ABSObject source, T target, ABSDataType dl, ABSDataType co, ABSBool cr) {
         super(source, target);
-        deadline = 0;      //TODO: convert ABSValue dl to long
-        cost = 0;          //TODO: convert ABSValue co to long
-        critical = false;  //TODO: convert ABSValue cr to long
+        deadline = convertFromDuration(dl);
+        cost = convertFromDuration(co);
+        critical = cr.toBoolean();
     }
     
     @Override
@@ -33,6 +36,19 @@ public abstract class AbstractAsyncCallRT<T extends ABSRef> extends AbstractAsyn
     @Override
     public boolean isCritical() {
         return critical;
+    }
+
+    private long convertFromDuration(ABSDataType duration) {
+        if (duration.getConstructorName().equals("Duration")) {
+            ABSRational rat = (ABSRational)duration.getArg(0);
+            // convert to milliseconds
+            return rat.multiply(ABSRational.fromInt(1000)).toInt();
+        } else if (duration.getConstructorName().equals("InfDuration")) {
+            return -1;
+        } else {
+            // should never happen
+            throw new JavaBackendException("Argument is not of type ABS.StdLib.Duration");
+        }
     }
 
 }
