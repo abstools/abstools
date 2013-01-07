@@ -15,7 +15,7 @@ import org.apfloat.Aprational;
 
 import abs.backend.java.lib.expr.UnmatchedCaseException;
 import abs.backend.java.lib.runtime.metaABS.ObjectMirror;
-import abs.backend.java.lib.runtime.metaABS.Runtime;
+import abs.backend.java.lib.runtime.metaABS.ProductLine;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSDataType;
@@ -131,7 +131,7 @@ public class ABSBuiltInFunctions {
     }
 
     public static ABSDynamicObject getRuntime() {
-        ABSDynamicObject runtime = new ABSDynamicObject(Runtime.singleton());
+        ABSDynamicObject runtime = new ABSDynamicObject(ProductLine.singleton());
         return runtime;
     }
     

@@ -369,11 +369,13 @@ public class SimpleTaskScheduler implements TaskScheduler {
     private synchronized void activateTask(TaskInfo nextTask) {
         activeTask = nextTask;
         if (activeTask.thread != null) {
-            logger.info("COG "+cog.getID()+" awaking "+activeTask);
+            logger.info("COG " + cog.getID() + " awaking " + activeTask);
             activeTask.thread.awake();
         } else {
+            logger.info("COG " + cog.getID() + " creating " + activeTask);
             activeTask.thread = new SimpleSchedulerThread(activeTask);
             activeTask.thread.start();
+            activeTask.task.setStart(System.currentTimeMillis());
         }
     }
     

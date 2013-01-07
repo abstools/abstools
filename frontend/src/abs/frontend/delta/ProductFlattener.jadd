@@ -116,13 +116,12 @@ aspect ProductFlattener {
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(
-            Product prod) throws WrongProgramArgumentException {
+    public Set<String> ProductLine.findApplicableDeltas(Product prod) throws WrongProgramArgumentException {
 
         HashSet<String> deltaids = new HashSet<String>();
 
         for (DeltaClause clause : getDeltaClauses()) {
-            // System.out.println("DeltaClause: " + clause.moduleName() + "." + clause.getDeltaspec().getName());
+            System.out.println("DeltaClause: " + clause.getDeltaspec().getName());
 
             if (clause.evaluateApplicationCondition(prod.getFeatures()))
                 deltaids.add(clause.getDeltaspec().getName());
@@ -144,8 +143,29 @@ aspect ProductFlattener {
         
         if (hasAppCond())
             return getAppCond().evaluate(onFeatureIDs);
+        else
+            return true;
+    }
+    
+    /**************************************************************************
+     * Evaluate the "from" application condition assciated with this DeltaClause 
+     * in the context of the given list of features and attribute values
+     * 
+     * "from" app conditions are only for dynamic product reconfiguration,
+     * where a running product is re-configured into another product.
+     * 
+     * TODO Support feature attributes
+     */
+    public boolean DeltaClause.evaluateApplicationConditionFrom(List<Feature> onFeatures) {
+        // first, log the names of all onFeatures in a set, for easy lookup
+        HashSet<String> onFeatureIDs = new HashSet<String>();
+        for (Feature f : onFeatures)
+            onFeatureIDs.add(f.getName());
         
-        return true;
+        if (hasFromAppCond())
+            return getFromAppCond().evaluate(onFeatureIDs);
+        else
+            return false;
     }
 
     /**************************************************************************

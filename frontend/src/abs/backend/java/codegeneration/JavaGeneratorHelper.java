@@ -561,10 +561,10 @@ public class JavaGeneratorHelper {
             return pkg.packageName + "." + className;
             
         } catch (JavaCodeGenerationException e) {
-            // TODO Auto-generated catch block
+            // TODO properly handle exception
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            // TODO properly handle exception
             e.printStackTrace();
         } finally {
             if (stream != null)

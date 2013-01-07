@@ -33,19 +33,29 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
             }
         }
-        
-        JavaCode.Package pkg = code.createPackage("product");
-        for (Product prod : getProducts()) {
-            try {
-                prod.generateJavaCodeDynamic(pkg);
-            } catch (NotImplementedYetException e) { 
-                throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
-            } catch (RuntimeException e) { 
-                throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+
+        if (hasProductLine()) {
+            ProductLine pl = getProductLine();
+            JavaCode.Package pkg = code.createPackage("product");
+            
+            // first remember all products by name
+            HashMap<String, Product> allProducts = new HashMap<String, Product>();
+            for (Product prod : getProducts()) {
+                allProducts.put(prod.getName(), prod);
             }
             
+            for (Product prod : getProducts()) {
+                try {
+                    prod.generateJavaCodeDynamic(pkg, pl, allProducts);
+                } catch (NotImplementedYetException e) { 
+                    throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+                } catch (RuntimeException e) { 
+                    throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
+                }
+
+            }
         }
-        
+
     }
 
     public void ModuleDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
@@ -374,7 +384,8 @@ aspect GenerateJava {
         stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
-    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, ProductLine pl, HashMap<String, Product> allProducts) 
+            throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
         
@@ -384,7 +395,7 @@ aspect GenerateJava {
             // gen header
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
-            DynamicJavaGeneratorHelper.generateProduct(stream, this);
+            DynamicJavaGeneratorHelper.generateProduct(stream, this, pl, allProducts);
             stream.println("}");
         } finally {
             if (stream != null)

@@ -33,10 +33,10 @@ public class Task<T extends ABSRef> {
     private final long arrival;
     private final long cost;
     private final long deadline;
-    private final long start;
-    private final long finish;
     private final boolean critical;
     private final int value;
+    private long start;
+    private long finish;
 
     
     public Task(AsyncCall<T> call) {
@@ -61,7 +61,7 @@ public class Task<T extends ABSRef> {
             this.deadline = -1;
             this.critical = false;
         }
-        this.start = 0;         // TODO
+        this.start = -1;         // TODO set to time when task is first scheduled
         this.finish = 0;        // TODO
         this.value = 0;         // TODO
     }
@@ -84,6 +84,10 @@ public class Task<T extends ABSRef> {
 
     public long getStart() {
         return start;
+    }
+    
+    public void setStart(long ms) {
+        start = ms;
     }
 
     public long getFinish() {

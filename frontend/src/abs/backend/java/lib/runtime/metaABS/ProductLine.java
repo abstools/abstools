@@ -19,7 +19,7 @@ import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.types.*;
 
-public class Runtime {
+public class ProductLine {
     private static ABSDynamicClass thisClass;
 
     /* 
@@ -41,7 +41,7 @@ public class Runtime {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
-                Runtime.applyDelta(deltaName);
+                ProductLine.applyDelta(deltaName);
                 return ABSUnit.UNIT;
             }
         });
@@ -55,15 +55,32 @@ public class Runtime {
                 ArrayList<String> deltas = new ArrayList<String>();
                 
                 for (String deltaName : deltas) {
-                    Runtime.applyDelta(deltaName);                    
+                    ProductLine.applyDelta(deltaName);                    
                 }
+                return ABSUnit.UNIT;
+            }
+        });
+        
+        thisClass.addMethod("getCurrentProduct", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                // TODO
+                return ABSString.fromString("TODO");
+            }
+        });
+
+        thisClass.addMethod("getConfigurableProducts", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                // TODO return ABS.StdLib.List<ABSString>
                 return ABSUnit.UNIT;
             }
         });
     }
     
     private static void applyDelta(String deltaName) {
-        System.err.println("                                         *** Applying delta." + deltaName);
+        // TODO use logger
+        System.err.println("*** Applying delta." + deltaName);
         String className = "delta." + deltaName + ".Application";
 
         try {

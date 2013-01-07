@@ -14,6 +14,9 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Set;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -32,6 +35,7 @@ import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
 import abs.frontend.typechecker.TypeCheckerHelper;
@@ -556,7 +560,7 @@ public class DynamicJavaGeneratorHelper {
         }
     }
     
-    public static void generateProduct(PrintStream stream, Product prod) {
+    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {
 
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
@@ -574,11 +578,27 @@ public class DynamicJavaGeneratorHelper {
         }
         
         // Deltas
+        System.out.println("*********** Product: " + prod.getName());
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
             stream.print("instance.addDeltas(\"" + ad.getProductID() + "\", ");
             stream.print("new " + ArrayList.class.getName() + "<" + String.class.getName() + ">(" + Arrays.class.getName() + ".asList(");
-            // FIXME
-            stream.print("\"\"" + "/* TODO: obtain sequence of deltas by solving CSP when compiling */");
+            
+            Product toProd = allProducts.get(ad.getProductID());
+
+            // TODO: obtain sequence of applicable deltas
+            for (DeltaClause clause : pl.getDeltaClauses()) {
+                System.out.println("Delta clause: " + clause.getDeltaspec().getName());
+                for (Feature f : prod.getFeatures()) System.out.println(">>> base features: " + f.getName());
+                
+                if (clause.evaluateApplicationConditionFrom(prod.getFeatures())) {
+                    for (Feature f : toProd.getFeatures()) System.out.println(">>>   to features: " + f.getName());
+
+                    if (clause.evaluateApplicationCondition(toProd.getFeatures())) {
+                        stream.print("/* " +  clause.getDeltaspec().getName() + " */");
+                    }
+                }
+            }
+
 
             stream.print("))");
             stream.println(");");
