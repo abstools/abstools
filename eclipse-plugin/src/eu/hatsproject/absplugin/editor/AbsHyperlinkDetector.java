@@ -331,11 +331,11 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
     private static DeltaDecl getDeltaDecl(CompilationUnit cu, String dName) {
         Model m = cu.getModel();
         assert m != null : dName;
-        Map<String, DeltaDecl> res = m.findDeltas(Collections.singleton(dName));
+        java.util.List<DeltaDecl> res = m.findDeltas(Collections.singletonList(dName));
         /* There may be more than one! Think of delta D(True) when ... delta(False) when.
          * We pick the first one.
          */
-        return res.isEmpty() ? null : res.values().iterator().next();
+        return res.isEmpty() ? null : res.iterator().next();
     }
 
 	private static DeltaDecl getDeltaDecl(CompilationUnit cu, Deltaspec deltaspec) {
