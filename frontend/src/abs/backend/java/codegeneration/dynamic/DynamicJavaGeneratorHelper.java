@@ -560,7 +560,7 @@ public class DynamicJavaGeneratorHelper {
         }
     }
     
-    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) throws WrongProgramArgumentException {
+    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {
 
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");

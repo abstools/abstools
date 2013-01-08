@@ -116,7 +116,7 @@ aspect ProductFlattener {
      * Evaluate each delta clause to find the applicable delta names
      * i.e. test each application condition in the context of the features which are ON in the given product
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product prod) throws WrongProgramArgumentException {
+    public Set<String> ProductLine.findApplicableDeltas(Product prod) {
 
         HashSet<String> deltaids = new HashSet<String>();
 
@@ -131,7 +131,7 @@ aspect ProductFlattener {
      * Evaluate both FROM and TO(WHEN) delta clauses to find the applicable delta names
      * relevant for dynamic product reconfiguration
      */
-    public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) throws WrongProgramArgumentException {
+    public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) {
         
         HashSet<String> deltaids = new HashSet<String>();
         
@@ -205,7 +205,7 @@ aspect ProductFlattener {
     /**************************************************************************
      * Find DeltaDecls, given a list of delta names
      */
-    public ArrayList<DeltaDecl> Model.findDeltas(ArrayList<String> deltaids) {
+    public ArrayList<DeltaDecl> Model.findDeltas(java.util.List<String> deltaids) {
         ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (DeltaDecl delta : u.getDeltaDecls()) {

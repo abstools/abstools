@@ -13,7 +13,7 @@ import abs.frontend.ast.*;
 
 aspect GenerateJava {
 
-    public void Model.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException, WrongProgramArgumentException {
+    public void Model.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
         DynamicJavaGeneratorHelper.cleanGenFolder(code);
         for (ModuleDecl decl : getModuleDecls()) {
             try {
@@ -385,7 +385,7 @@ aspect GenerateJava {
     }
     
     public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, ProductLine pl, HashMap<String, Product> allProducts) 
-            throws IOException, JavaCodeGenerationException, WrongProgramArgumentException {
+            throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
         
