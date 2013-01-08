@@ -17,28 +17,23 @@ import abs.frontend.ast.DeltaDecl;
  */
 
 
-class Vertex {
-    public Object label;
+class Vertex<T> {
+    public T label;
 
-    public Vertex(Object lab) {
+    public Vertex(T lab) {
         label = lab;
     }
 }
 
-public class GraphTS {
+public class GraphTS<T> {
 //  private final int MAX_VERTS = 20;
 
-    private Vertex vertexList[]; // list of vertices
-
+    private Vertex<T> vertexList[]; // list of vertices
     private int matrix[][]; // adjacency matrix
-
     private int numVerts; // current number of vertices
-
-    private Map<Object,Integer> indexes = new HashMap<Object,Integer>();
-
+    private Map<T,Integer> indexes = new HashMap<T,Integer>();
     private boolean acyclic = false;
-
-    private Object sortedArray[];
+    private T sortedArray[];
 
     public GraphTS(int MAX_VERTS) {
         vertexList = new Vertex[MAX_VERTS];
@@ -47,10 +42,10 @@ public class GraphTS {
         for (int i = 0; i < MAX_VERTS; i++)
             for (int k = 0; k < MAX_VERTS; k++)
                 matrix[i][k] = 0;
-        sortedArray = new Object[MAX_VERTS]; // sorted vert labels
+        sortedArray = (T[]) new Object[MAX_VERTS]; // sorted vert labels
     }
 
-    public GraphTS (Object[] elems) {
+    public GraphTS (T[] elems) {
         int MAX_VERTS = elems.length;
         vertexList = new Vertex[MAX_VERTS];
         matrix = new int[MAX_VERTS][MAX_VERTS];
@@ -60,10 +55,11 @@ public class GraphTS {
                 matrix[i][k] = 0;
         sortedArray = elems; // sorted vert labels
 
-        for (Object e : elems) addVertex(e);
+        for (T e : elems) 
+            addVertex(e);
     }
 
-    public void addVertex(Object lab) {
+    public void addVertex(T lab) {
         indexes.put(lab,numVerts);
         vertexList[numVerts++] = new Vertex(lab);
     }
@@ -72,7 +68,7 @@ public class GraphTS {
         matrix[start][end] = 1;
     }
 
-    public void addEdge(Object start, Object end) throws VertexNotFoundException {
+    public void addEdge(T start, T end) throws VertexNotFoundException {
         if (!indexes.containsKey(start))
             throw new VertexNotFoundException(start.toString());
         matrix[indexes.get(start)][indexes.get(end)] = 1;
@@ -93,38 +89,41 @@ public class GraphTS {
         }
     }
 
-    public Object[] getSortedArray() {
+    public T[] getSortedArray() {
         return sortedArray;
     }
 
     public ArrayList<DeltaDecl> getSortedDeltas() {
         ArrayList<DeltaDecl> sortedDeltas = new ArrayList<DeltaDecl>();
         
-        for (Object element : sortedArray)
+        for (T element : sortedArray)
             sortedDeltas.add((DeltaDecl)element);
  
         return sortedDeltas;       
+    }
+
+    public ArrayList<T> getSortedElements() {
+        ArrayList<T> sortedTs = new ArrayList<T>();
+        
+        for (T element : sortedArray)
+            sortedTs.add(element);
+        
+        return sortedTs;      
     }
     
     public boolean sort() {
         return topo();
     }
     
-    public boolean topo() // topological sort
-    {
-//    int orig_nVerts = numVerts;
-
-        while (numVerts > 0) // while vertices remain,
-        {
-            // get a vertex with no successors, or -1
+ // topological sort
+    public boolean topo() {
+        while (numVerts > 0) {
+            // while vertices remain, get a vertex with no successors, or -1
             int currentVertex = noSuccessors();
             if (currentVertex == -1) // must be a cycle
-            {
                 return false;
-            }
             // insert vertex label in sorted array (start at end)
             sortedArray[numVerts - 1] = vertexList[currentVertex].label;
-
             deleteVertex(currentVertex); // delete vertex
         }
 
