@@ -45,12 +45,12 @@ aspect ProductFlattener {
         if (pl == null)
           throw new DeltaModellingException("Model is missing a 'productline' definition");
 
-        // find/get applicable deltas
+        // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(prod);
-        Map<String, DeltaDecl> unsorted_deltas = findDeltas(deltaids);
+        ArrayList<String> sorted_deltaids = pl.sortDeltas(deltaids);
 
-        // sort deltas
-        ArrayList<DeltaDecl> deltas = pl.sortDeltas(unsorted_deltas);
+        // find corresponding DeltaDecls
+        ArrayList<DeltaDecl> deltas = findDeltas(sorted_deltaids);
         
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod);
@@ -121,10 +121,24 @@ aspect ProductFlattener {
         HashSet<String> deltaids = new HashSet<String>();
 
         for (DeltaClause clause : getDeltaClauses()) {
-            System.out.println("DeltaClause: " + clause.getDeltaspec().getName());
-
             if (clause.evaluateApplicationCondition(prod.getFeatures()))
                 deltaids.add(clause.getDeltaspec().getName());
+        }
+        return deltaids;
+    }
+
+    /**************************************************************************
+     * Evaluate both FROM and TO(WHEN) delta clauses to find the applicable delta names
+     * relevant for dynamic product reconfiguration
+     */
+    public Set<String> ProductLine.findApplicableDeltas(Product fromProd, Product toProd) throws WrongProgramArgumentException {
+        
+        HashSet<String> deltaids = new HashSet<String>();
+        
+        for (DeltaClause clause : getDeltaClauses()) {
+            if (clause.evaluateFromApplicationCondition(fromProd.getFeatures()))
+                if (clause.evaluateApplicationCondition(toProd.getFeatures()))
+                    deltaids.add(clause.getDeltaspec().getName());
         }
         return deltaids;
     }
@@ -156,7 +170,7 @@ aspect ProductFlattener {
      * 
      * TODO Support feature attributes
      */
-    public boolean DeltaClause.evaluateApplicationConditionFrom(List<Feature> onFeatures) {
+    public boolean DeltaClause.evaluateFromApplicationCondition(List<Feature> onFeatures) {
         // first, log the names of all onFeatures in a set, for easy lookup
         HashSet<String> onFeatureIDs = new HashSet<String>();
         for (Feature f : onFeatures)
@@ -189,16 +203,16 @@ aspect ProductFlattener {
 
 
     /**************************************************************************
-     * Find DeltaDecls, given a set of delta names
+     * Find DeltaDecls, given a list of delta names
      */
-    public Map<String, DeltaDecl> Model.findDeltas(Collection<String> deltaids) {
-        HashMap<String, DeltaDecl> deltas = new HashMap<String, DeltaDecl>();
+    public ArrayList<DeltaDecl> Model.findDeltas(ArrayList<String> deltaids) {
+        ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
         for (CompilationUnit u : this.getCompilationUnits()) {
             for (DeltaDecl delta : u.getDeltaDecls()) {
                 for (String deltaid : deltaids) {
                     if (deltaid.equals(delta.getName())) {
                         //System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
-                        deltas.put(deltaid, delta);
+                        deltas.add(delta);
                     }
                 }
             }
@@ -206,24 +220,21 @@ aspect ProductFlattener {
         return deltas;
     }
         
-    /**************************************************************************
-     * Sort DeltaDecls according to a valid order of application defined by the product line
-     */
-    protected ArrayList<DeltaDecl> ProductLine.sortDeltas(Map<String, DeltaDecl> deltas) {
-        
-        GraphTS g = new GraphTS(deltas.values().toArray());
 
-        for (DeltaClause c : getDeltaClauses()) {
-            String deltaid = c.getDeltaspec().getName();
-            DeltaDecl delta = deltas.get(deltaid);
-            if (delta != null) {
-                // for each afterdelta: add an edge to delta
-                for (DeltaID did : c.getDeltaIDs()) {
+    /**************************************************************************
+     * Sort Delta names according to a valid order of application defined by the product line
+     */
+    public ArrayList<String> ProductLine.sortDeltas(Set<String> deltaIDs) {
+        GraphTS g = new GraphTS(deltaIDs.toArray());
+        
+        for (DeltaClause clause : getDeltaClauses()) {
+            String deltaid = clause.getDeltaspec().getName();
+            if (deltaIDs.contains(deltaid)) {
+                for (DeltaID did : clause.getDeltaIDs()) {
                     String otherid = did.getName();
-                    DeltaDecl otherdelta = deltas.get(otherid);
-                    if (otherdelta != null) {
+                    if (deltaIDs.contains(otherid)) {
                         try {
-                            g.addEdge(otherdelta, delta);
+                            g.addEdge(otherid, deltaid);
                         } catch (VertexNotFoundException e) {
                             assert false; // should never reach this point
                         }
@@ -232,6 +243,7 @@ aspect ProductFlattener {
             }
         }
         g.sort(); // FIXME catch the case when sort fails -- use assert?
-        return g.getSortedDeltas();
+        return g.getSortedElements();
     }
+    
 }

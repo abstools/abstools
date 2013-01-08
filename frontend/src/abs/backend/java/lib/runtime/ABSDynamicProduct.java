@@ -4,7 +4,6 @@
  */
 package abs.backend.java.lib.runtime;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -16,7 +15,7 @@ public class ABSDynamicProduct implements ABSClass {
 
     private String name;
     private Set<String> features;
-    private HashMap<String, ArrayList<String>> deltas = new HashMap<String, ArrayList<String>>();
+    private HashMap<String, String[]> deltas = new HashMap<String, String[]>();
     private HashMap<String, String> update;
     
     public String getName() {
@@ -36,11 +35,11 @@ public class ABSDynamicProduct implements ABSClass {
         this.features.add(feature);
     }
 
-    public void addDeltas(String productName, ArrayList<String> deltaNames) {
+    public void setDeltas(String productName, String[] deltaNames) {
         this.deltas.put(productName, deltaNames);
     }
 
-    public ArrayList<String> getDeltas(String productName) {
+    public String[] getDeltas(String productName) {
         return this.deltas.get(productName);
     }
 

@@ -280,9 +280,9 @@ aspect TypeResolution {
 
     syn Decl DataConstructorExp.getDecl() = getDataConstructor();
 
-/** 
- * @throws TypeCheckerException
- */
+    /** 
+     * @throws TypeCheckerException
+     */
     syn lazy DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (! (decl instanceof DataConstructor)) 
@@ -290,9 +290,9 @@ aspect TypeResolution {
         return (DataConstructor) decl;    
     }
     
-/** 
- * @throws TypeCheckerException
- */
+    /** 
+     * @throws TypeCheckerException
+     */
     syn lazy DataConstructor ConstructorPattern.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (! (decl instanceof DataConstructor)) 
@@ -300,9 +300,9 @@ aspect TypeResolution {
         return (DataConstructor) decl;    
     }
 
-/**
- * TODO Someone should really document why ALSO AsyncCall.isAsync() = false;
- */
+    /**
+     * TODO Someone should really document why ALSO AsyncCall.isAsync() = false;
+     */
     syn boolean Call.isAsync();
     eq SyncCall.isAsync() = false;
     eq Call.isAsync() = false;

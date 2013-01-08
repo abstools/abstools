@@ -5,9 +5,12 @@ import * from ABS.Meta;
 /* user-defined scheduler class
  * schedule() defers the scheduling decision to some scheduling function
  */
-class MyScheduler1 implements ProcessScheduler {
+class MyScheduler1(Int x) implements ProcessScheduler {
+    Unit setX(Int x) {
+        this.x = x;
+    }
     Process schedule(List<Process> l) {
-        return defaultscheduler(l);
+        return head(l);
     }
 }
 
@@ -25,12 +28,15 @@ class CImpl implements C {
 
 {
     C o = new cog CImpl();
-
     ObjectMirror om = reflect(o);
     Cog g = om.getCog();
 
-    // sched is in a different cog!
+    // sched is in a different cog, so movi it to target cog
     ProcessScheduler sched = new MyScheduler1();
+    ObjectMirror om = reflect(sched);
+    om.setCog(g);
+
+    // attach scheduler
     g.setScheduler(sched);
 
     o!m();

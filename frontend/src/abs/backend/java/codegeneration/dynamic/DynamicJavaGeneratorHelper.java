@@ -560,7 +560,7 @@ public class DynamicJavaGeneratorHelper {
         }
     }
     
-    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {
+    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) throws WrongProgramArgumentException {
 
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
@@ -578,29 +578,24 @@ public class DynamicJavaGeneratorHelper {
         }
         
         // Deltas
-        System.out.println("*********** Product: " + prod.getName());
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
-            stream.print("instance.addDeltas(\"" + ad.getProductID() + "\", ");
-            stream.print("new " + ArrayList.class.getName() + "<" + String.class.getName() + ">(" + Arrays.class.getName() + ".asList(");
-            
             Product toProd = allProducts.get(ad.getProductID());
 
-            // TODO: obtain sequence of applicable deltas
-            for (DeltaClause clause : pl.getDeltaClauses()) {
-                System.out.println("Delta clause: " + clause.getDeltaspec().getName());
-                for (Feature f : prod.getFeatures()) System.out.println(">>> base features: " + f.getName());
-                
-                if (clause.evaluateApplicationConditionFrom(prod.getFeatures())) {
-                    for (Feature f : toProd.getFeatures()) System.out.println(">>>   to features: " + f.getName());
-
-                    if (clause.evaluateApplicationCondition(toProd.getFeatures())) {
-                        stream.print("/* " +  clause.getDeltaspec().getName() + " */");
-                    }
-                }
+            // obtain sequence of applicable deltas
+            Set<String> unsortedIDs = pl.findApplicableDeltas(prod, toProd);
+            ArrayList<String> sortedIDs = pl.sortDeltas(unsortedIDs);
+            
+            stream.print("instance.setDeltas(\"" + ad.getProductID() + "\", ");
+            StringBuilder res = new StringBuilder();
+            res.append("new String[]{ ");
+            boolean first = true;
+            for (String did : sortedIDs) {
+                if (first) first = false;
+                else res.append(", ");
+                res.append("\"" + did + "\"");
             }
-
-
-            stream.print("))");
+            res.append(" }");
+            stream.print(res);
             stream.println(");");
         }
         
