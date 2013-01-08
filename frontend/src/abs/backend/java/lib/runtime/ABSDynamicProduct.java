@@ -4,7 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import abs.backend.java.lib.types.ABSBool;
@@ -15,7 +17,7 @@ public class ABSDynamicProduct implements ABSClass {
 
     private String name;
     private Set<String> features;
-    private HashMap<String, String[]> deltas = new HashMap<String, String[]>();
+    private HashMap<String, List<String>> deltas = new HashMap<String, List<String>>();
     private HashMap<String, String> update;
     
     public String getName() {
@@ -35,11 +37,11 @@ public class ABSDynamicProduct implements ABSClass {
         this.features.add(feature);
     }
 
-    public void setDeltas(String productName, String[] deltaNames) {
+    public void setDeltas(String productName, List<String> deltaNames) {
         this.deltas.put(productName, deltaNames);
     }
 
-    public String[] getDeltas(String productName) {
+    public List<String> getDeltas(String productName) {
         return this.deltas.get(productName);
     }
 

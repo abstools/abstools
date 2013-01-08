@@ -587,14 +587,14 @@ public class DynamicJavaGeneratorHelper {
             
             stream.print("instance.setDeltas(\"" + ad.getProductID() + "\", ");
             StringBuilder res = new StringBuilder();
-            res.append("new String[]{ ");
+            res.append(Arrays.class.getName() + ".asList(");
             boolean first = true;
             for (String did : sortedIDs) {
                 if (first) first = false;
                 else res.append(", ");
                 res.append("\"" + did + "\"");
             }
-            res.append(" }");
+            res.append(")");
             stream.print(res);
             stream.println(");");
         }
