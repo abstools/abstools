@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.State;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -56,7 +57,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 */
 	private boolean selectionMovesCursor = true;
 	
-	public ABSContentOutlinePage(IDocumentProvider docProvider,	ABSEditor editor) {
+	public ABSContentOutlinePage(ABSEditor editor) {
 		this.editor = editor;
 		commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
 		assert commandService != null;
@@ -134,9 +135,16 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 		getTreeViewer().setInput(cu);
 	}
 
+	/**
+	 * Two selection listeners:
+	 * - the first propagates a click in the outline to the editor.
+	 * - the second updates the position in the outline based on the editor-position.
+	 * In principle we could add the first listener in ABSEditor.getAdapter(), but
+	 * that wouldn't gain us much in terms of visibility.
+	 */
 	private void addSelectionListener() {
 		// Handle selection changes in the outline
-		getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
+		addSelectionChangedListener(new ISelectionChangedListener() {
 			
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -155,6 +163,19 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 				}
 			}
 		});
+
+		// Select the current element under cursor in the outlineView:
+		editor.getSelectionProvider().addPostSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				ISelection selection = event.getSelection();
+				if (selection instanceof ITextSelection) {
+				    // select the current element in the outlineView
+					ITextSelection ts = (ITextSelection) selection;
+					selectNodeByPos(ts.getStartLine());
+				}				
+			}
+		});
 	}
 	
 	/**
@@ -169,6 +190,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	@Override
 	public void dispose() {
 		editor.removeModelChangeListener(modelChangeListener);
+		super.dispose();
 	}
 	
 	/**
@@ -197,7 +219,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 * selects a node in the outline without moving the cursor
 	 * in the editor
 	 */
-	public void setSelectionWithoutCursorMove(ISelection sel) {
+	private void setSelectionWithoutCursorMove(ISelection sel) {
 		selectionMovesCursor = false;
 		setSelection(sel);
 		selectionMovesCursor = true;
@@ -208,7 +230,7 @@ public class ABSContentOutlinePage extends ContentOutlinePage {
 	 * Note that the outline might actually not be visible.
 	 * startLine < 0 indicates invalid info, e.g. from upstream, will reset selection.
 	 */
-	public void selectNodeByPos(int startLine) {
+	private void selectNodeByPos(int startLine) {
 		// Do nothing if viewer not created yet (e.g. invisible on startup)
 		if (getTreeViewer() == null || !getValueOfCommand(ABSContentOutlineConstants.LINK_EDITOR_COMMAND_ID)) {
 	        // linking with editor not enabled ...

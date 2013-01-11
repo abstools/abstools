@@ -82,7 +82,7 @@ import eu.hatsproject.absplugin.util.UtilityFunctions.EditorPosition;
  * @author tfischer, cseise, fstrauss, mweber
  *
  */
-public class ABSEditor extends TextEditor implements IPersistableEditor, CompilationUnitChangeListener, ISelectionChangedListener{
+public class ABSEditor extends TextEditor implements CompilationUnitChangeListener {
     
 	private final class UpdateEditorIcon implements ResourceBuildListener {
 		@Override
@@ -96,7 +96,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 						updateEditorIcon(editorres);
 						// workaround for squiggly lines not vanishing after rebuild
 						//refresh();
-						
 					}
 				});
 			}
@@ -281,12 +280,22 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	@Override
 	public void createPartControl(Composite parent) {
 	    super.createPartControl(parent);
-
 	    // listen to changes of the caret position:
-	    IPostSelectionProvider sp = (IPostSelectionProvider) this.getSelectionProvider();
-	    sp.addPostSelectionChangedListener(this);
-	    
+	    getSelectionProvider().addPostSelectionChangedListener(new ISelectionChangedListener() {
+	    	@Override
+	    	public void selectionChanged(SelectionChangedEvent event) {
+	    		ISelection selection = event.getSelection();
+	    		if (selection instanceof ITextSelection) {
+	    			ITextSelection ts = (ITextSelection) selection;
+	    			caretPos = ts.getOffset();
+	    		}
+	    	}
+		});    
 	    initCompilationUnit();
+	}
+
+	public IPostSelectionProvider getSelectionProvider() {
+		return (IPostSelectionProvider) super.getSelectionProvider();
 	}
 
 	private void initCompilationUnit() {
@@ -316,7 +325,7 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	public Object getAdapter(Class key){
 		if (IContentOutlinePage.class.equals(key)){
 			if(outlinePage == null){
-				outlinePage = new ABSContentOutlinePage(this.getDocumentProvider(),this);
+				outlinePage = new ABSContentOutlinePage(this);
 			}
 			return outlinePage;
 		}
@@ -345,7 +354,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 	@Override
 	protected void doSetInput(IEditorInput input) throws CoreException {
 		super.doSetInput(input);
-		outlinePage = new ABSContentOutlinePage(this.getDocumentProvider(),this);
 	}
 
 	public IResource getResource() {
@@ -475,17 +483,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
 		this.reconciler = absReconcilingStrategy;
 	}
 
-	@Override
-	public void selectionChanged(SelectionChangedEvent event) {
-		ISelection selection = event.getSelection();
-		if (selection instanceof ITextSelection) {
-		    // select the current element in the outlineView
-			ITextSelection ts = (ITextSelection) selection;
-			caretPos = ts.getOffset();
-			outlinePage.selectNodeByPos(ts.getStartLine());
-		}
-	}
-
 	/**
 	 * returns the current compilationUnit or null 
 	 * when viewing files outside an ABS project
@@ -509,10 +506,6 @@ public class ABSEditor extends TextEditor implements IPersistableEditor, Compila
         return caretPos;
     }
 
-    public ITextViewer getTextViewer() {
-        return getSourceViewer();
-    }
-    
     public AbsInformationPresenter getInformationPresenter() {
         if (informationPresenter == null) {
             informationPresenter = new AbsInformationPresenter();
