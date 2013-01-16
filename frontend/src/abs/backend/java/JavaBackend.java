@@ -43,7 +43,7 @@ public class JavaBackend extends Main {
     
 
     @Override
-    public List<String> parseArgs(String[] args) throws Exception {
+    public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<String>();
 

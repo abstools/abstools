@@ -14,7 +14,13 @@ public class ParseException extends RuntimeException {
         error = e;
     }
 
-    public ParserError getError() {
+    public ParseException(String message) {
+        super(message);
+        error = null;
+    }
+
+    @SuppressWarnings("unused")
+    private ParserError getError() {
         return error;
     }
 }

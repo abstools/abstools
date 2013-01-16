@@ -50,7 +50,7 @@ public class InferMain extends Main {
     private File destDir = new File(".");
 
     @Override
-    public List<String> parseArgs(String[] args) throws Exception {
+    public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<String>();
 
@@ -59,16 +59,23 @@ public class InferMain extends Main {
             if (arg.equals("-d")) {
                 i++;
                 if (i == restArgs.size()) {
-                    throw new WrongProgramArgumentException("Please provide a destination directory");
+                    System.err.println("Please provide a destination directory");
+                    System.exit(1);
                 } else {
                     destDir = new File(args[i]);
                 }
             } if (arg.startsWith("-locinferwritebackscope=")) {
                 String[] s = arg.split("=");
                 if (s.length < 2) {
-                    throw new WrongProgramArgumentException("Please provide a scope");
+                    System.err.println("Please provide a scope");
+                    System.exit(1);
                 } else {
-                    readScopeArg(s[1]);
+                    try {
+                        readScopeArg(s[1]);
+                    } catch (WrongProgramArgumentException e) {
+                        System.err.println(e.getMessage());
+                        System.exit(1);
+                    }
                 }
             } else {
                 remainingArgs.add(arg);

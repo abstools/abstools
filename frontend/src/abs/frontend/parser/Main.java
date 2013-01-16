@@ -114,8 +114,8 @@ public class Main {
         typecheck = b;
     }
     
-    public java.util.List<String> parseArgs(String[] args) throws Exception {
-        ArrayList<String> remaindingArgs = new ArrayList<String>();
+    public java.util.List<String> parseArgs(String[] args) {
+        ArrayList<String> remainingArgs = new ArrayList<String>();
 
         for (String arg : args) {
             if (arg.equals("-dump"))
@@ -178,12 +178,12 @@ public class Main {
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
-                remaindingArgs.add(arg);
+                remainingArgs.add(arg);
         }
-        return remaindingArgs;
+        return remainingArgs;
     }    
     
-    public Model parse(final String[] args) throws Exception {
+    public Model parse(final String[] args) throws IOException, DeltaModellingException, WrongProgramArgumentException {
         Model m = parseFiles(parseArgs(args).toArray(new String[0]));
         analyzeModel(m);
         return m;

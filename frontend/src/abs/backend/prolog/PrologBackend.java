@@ -119,7 +119,7 @@ public class PrologBackend extends Main {
         //System.out.println(reachInfo.toString());  
     }
 
-    public List<String> parseArgs(String[] args) throws Exception {
+    public List<String> parseArgs(String[] args) {
         List<String> restArgs = super.parseArgs(args);
         List<String> remainingArgs = new ArrayList<String>();
 

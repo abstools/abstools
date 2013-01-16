@@ -7,18 +7,23 @@
  */
 package abs.frontend.parser;
 
+import java.io.IOException;
 import java.util.Iterator;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
+import abs.frontend.delta.exceptions.DeltaModellingException;
 
 public class DumpProducts extends Main {
 
     @Override
-    public Model parse(final String[] args) throws Exception {
+    public Model parse(final String[] args) throws DeltaModellingException, IOException, WrongProgramArgumentException {
         Model m = super.parse(args);
-        if (m.hasParserErrors())
-            throw new Error("Can't parse input.");
+        if (m.hasParserErrors()) {
+            // Main.parse() already printed a list of parse errors in this case.
+            throw new ParseException("Can't parse input.");
+        }
         Iterator<Product> pi = m.getProducts().iterator();
         while (pi.hasNext()) {
             System.out.print(pi.next().getName());
