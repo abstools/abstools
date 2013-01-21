@@ -947,10 +947,9 @@ mod ABS-EVAL is
 
   --- The schedulable predicate holds, if a statement is schedulable for
   --- execution, i.e., the corresponding process may be waken up.
-  *** Check resources first.
+  *** We schedule at all costs; ST may take more than one time unit to execute
   eq schedulable([COST]ST:Stmt ; SL, S, CN, MAC)
-  = hasEnoughResources(MAC['.comp], CN, eval(COST, S, CN, MAC) asRat)
-    and schedulable(ST:Stmt ; SL, S, CN, MAC) .
+  = schedulable(ST:Stmt ; SL, S, CN, MAC) .
   eq schedulable(get(QID ; A') ; SL , S, CN, MAC)
   = completed(S[QID], CN) .
   eq schedulable(get(@ QID ; A') ; SL , (SS :: S), CN, MAC)
