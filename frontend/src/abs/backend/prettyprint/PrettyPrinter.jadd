@@ -249,6 +249,7 @@ aspect doPrettyPrinter {
     }
 
     public void Call.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        doPrettyPrintCallPrefix(stream, formatter);
         getCallee().doPrettyPrint(stream, formatter);
         doPrettyPrintCallType(stream, formatter);
         stream.print(getMethod().replaceAll("\\$", ""));
@@ -259,12 +260,28 @@ aspect doPrettyPrinter {
 
     abstract public void Call.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter);
 
+    abstract public void Call.doPrettyPrintCallPrefix(PrintWriter stream, ABSFormatter formatter);
+
     public void AsyncCall.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("!");
+    }
+
+    public void AwaitAsyncCall.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter) {
         stream.print("!");
     }
 
     public void SyncCall.doPrettyPrintCallType(PrintWriter stream, ABSFormatter formatter) {
         stream.print(".");
+    }
+
+    public void AsyncCall.doPrettyPrintCallPrefix(PrintWriter stream, ABSFormatter formatter) {
+    }
+
+    public void AwaitAsyncCall.doPrettyPrintCallPrefix(PrintWriter stream, ABSFormatter formatter) {
+        stream.print("await ");
+    }
+
+    public void SyncCall.doPrettyPrintCallPrefix(PrintWriter stream, ABSFormatter formatter) {
     }
 
     public void GetExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {

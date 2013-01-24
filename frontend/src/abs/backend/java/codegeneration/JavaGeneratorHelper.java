@@ -29,6 +29,7 @@ import abs.common.Position;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AsyncCall;
+import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Cog;
@@ -305,6 +306,17 @@ public class JavaGeneratorHelper {
         stream.print(")");
     }
     
+    public static void generateAwaitAsyncCall(PrintStream stream, AwaitAsyncCall call) {
+        final PureExp callee = call.getCallee();
+        final List<PureExp> params = call.getParams();
+        final MethodSig sig = call.getMethodSig();
+        final List<Annotation> annotations = call.getAnnotations();
+        // FIXME: implement await, assignment afterwards
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig, annotations);
+    }
+
+
+
     private static void generateTaskInitMethod(PrintStream stream, final java.util.List<Type> paramTypes) {
         int i;
         stream.print("public " + abs.backend.java.lib.runtime.AsyncCall.class.getName() + "<?> init(");

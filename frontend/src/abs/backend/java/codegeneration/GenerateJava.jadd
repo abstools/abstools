@@ -530,6 +530,10 @@ aspect GenerateJava {
         JavaGeneratorHelper.generateAsyncCall(stream, this);
     }
 
+    public void AwaitAsyncCall.generateJava(PrintStream stream) {
+        JavaGeneratorHelper.generateAwaitAsyncCall(stream, this);
+    }
+
     public void SyncCall.generateJava(PrintStream stream) {
         PureExp callee = getCallee();
         final List<PureExp> params = getParams();

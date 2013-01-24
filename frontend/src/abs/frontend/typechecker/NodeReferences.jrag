@@ -65,6 +65,7 @@ aspect Uses {
 
 aspect AsyncCallAnnotations {
     inh List<Annotation> AsyncCall.getAnnotations();
+    inh List<Annotation> AwaitAsyncCall.getAnnotations();
     eq AssignStmt.getValue().getAnnotations() = this.getAnnotations();
     eq ReturnStmt.getRetExp().getAnnotations() = this.getAnnotations();
     eq ExpressionStmt.getExp().getAnnotations() = this.getAnnotations();
@@ -73,4 +74,9 @@ aspect AsyncCallAnnotations {
     eq ObjectGuard.getExp().getAnnotations() = new List<Annotation>();
     
     syn boolean AsyncCall.hasAnnotations() = this.getAnnotations().getNumChild() > 0;
+    syn boolean AwaitAsyncCall.hasAnnotations() = this.getAnnotations().getNumChild() > 0;
 }
+
+// Local Variables:
+// mode: java
+// End:

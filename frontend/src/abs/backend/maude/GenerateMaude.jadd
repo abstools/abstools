@@ -140,6 +140,16 @@ aspect GenerateMaude {
         stream.println("--- Hey, you used a side-effecting expression as a normal one! " + getClass().toString());
         throw new NotImplementedYetException(this); // TODO - typecheck failure?
     }
+
+    // handle AsyncCall, SyncCall, AwaitAsyncCall
+    public int Call.numberOfRandom(Set<String> visitedFunctions) {
+        int result = 0;
+        for (PureExp param : getParams()) {
+            result += param.numberOfRandom(visitedFunctions);
+        }
+        return result;
+    }
+    
     public void AsyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
     {
         boolean inlist = false;
@@ -159,12 +169,25 @@ aspect GenerateMaude {
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
         stream.print(") ");
     }
-    public int AsyncCall.numberOfRandom(Set<String> visitedFunctions) {
-        int result = 0;
-        for (PureExp param : getParams()) {
-            result += param.numberOfRandom(visitedFunctions);
-        }
-        return result;
+
+    public void AwaitAsyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
+    {
+        boolean inlist = false;
+        PureExp deadline = CompilerUtils.getAnnotationValue(annotations, "Deadline");
+
+        MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
+        stream.print("asynccall('.staticfuture ; ");
+        getCallee().generateMaude(stream);
+        stream.print("; '" + getMethod() + " ; ");
+        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
+                                                   getMethodSig().getTypes());
+        stream.print("; ");
+        if (deadline != null) deadline.generateMaude(stream);
+        else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
+        stream.print(") ; ");
+
+        stream.print("await(?('.staticfuture)) ; ");
+        stream.print("get( '.staticfuture ; '" + var + ") ");
     }
 
     public void SyncCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)
@@ -183,13 +206,6 @@ aspect GenerateMaude {
         else stream.print("\"ABS.StdLib.InfDuration\"[ emp ]");
         stream.print(") ; ");
         stream.print("get( '.staticfuture ; '" + var + ") ");
-    }
-    public int SyncCall.numberOfRandom(Set<String> visitedFunctions) {
-        int result = 0;
-        for (PureExp param : getParams()) {
-            result += param.numberOfRandom(visitedFunctions);
-        }
-        return result;
     }
 
     public void OriginalCall.generateMaudeAsStatement(PrintStream stream, String var, List<Annotation> annotations)

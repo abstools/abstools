@@ -761,6 +761,7 @@ Exp eff_exp =
     | new_exp
     | SQL LPAREN sql_exp.e RPAREN {: return e; :}
     | async_call
+    | await_async_call
     | sync_call
     | original_call
     | newloc_exp  /* Component */
@@ -973,6 +974,12 @@ AsyncCall async_call =
 	THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(new ThisExp(), method,params) ; :}
 	| pure_exp_prefix.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AsyncCall(callee,method,params) ; :}
 	;
+
+AwaitAsyncCall await_async_call =
+	AWAIT THIS.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AwaitAsyncCall(new ThisExp(), method,params) ; :}
+	| AWAIT pure_exp_prefix.callee BANG IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new AwaitAsyncCall(callee,method,params) ; :}
+	;
+
 
 SyncCall sync_call =
 	THIS.callee DOT IDENTIFIER.method LPAREN data_exp_list.params? RPAREN {: return new SyncCall(new ThisExp(),method,params) ; :}

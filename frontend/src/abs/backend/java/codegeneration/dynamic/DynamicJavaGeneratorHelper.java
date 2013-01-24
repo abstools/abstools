@@ -237,6 +237,16 @@ public class DynamicJavaGeneratorHelper {
         stream.print(")");
     }
 
+    public static void generateAwaitAsyncCall(PrintStream stream, AwaitAsyncCall call) {
+        final PureExp callee = call.getCallee();
+        final List<PureExp> params = call.getParams();
+        final String method = call.getMethod();
+        // FIXME: implement await, assign after async call
+        generateAsyncCall(stream, null, callee, callee.getType(), params, null, 
+                call.getTypesFromExp(), method);
+
+    }
+
     public static void generateSyncCall(PrintStream stream, SyncCall call) {
         stream.print("((" + ABSDynamicObject.class.getName() + ")" + ABSRuntime.class.getName() + ".checkForNull(");
         call.getCallee().generateJavaDynamic(stream);

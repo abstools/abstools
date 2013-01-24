@@ -692,6 +692,10 @@ aspect GenerateJava {
         DynamicJavaGeneratorHelper.generateAsyncCall(stream, this);
     }
 
+    public void AwaitAsyncCall.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateAwaitAsyncCall(stream, this);
+    }
+
     public void SyncCall.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateSyncCall(stream, this);
     }
