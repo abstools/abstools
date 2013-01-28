@@ -864,6 +864,9 @@ aspect TypeCheckProductline {
     	for (DeltaDecl d : getDeltaDecls()) {
             d.typeCheck(e);
         }
+    	for (Product p : getProducts()) {
+    	    p.typeCheck(e);
+    	}
         if (hasProductLine())
             getProductLine().typeCheck(e);
     }
@@ -871,6 +874,14 @@ aspect TypeCheckProductline {
         // TODO type-checking goes here
     }
 
+    protected void Product.typeCheck(SemanticErrorList e) {
+        HashSet<String> productNames = new HashSet<String>();
+        for (Product prod : getModel().getProducts()) {
+            productNames.add(prod.getName());
+        }
+        TypeCheckerHelper.typeCheckProduct(this, productNames, e);
+    }
+    
     protected void ProductLine.typeCheck(SemanticErrorList e) {
         // TODO: JastAdd attributes?
         // cache all names of defined deltas for easy lookup
@@ -885,7 +896,7 @@ aspect TypeCheckProductline {
             
        // TODO: check for undeclared features?
        for (DeltaClause dc : getDeltaClauses()) {
-           dc.typeCheck(deltaNames,definedFeatures,e);
+           dc.typeCheck(deltaNames, definedFeatures, e);
        }
        Set<String> fs = new HashSet<String>();
        for (Feature f : getOptionalFeatures()) {
@@ -895,7 +906,7 @@ aspect TypeCheckProductline {
     }
 
     protected void DeltaClause.typeCheck(Set<String> ds, Set<String> definedFeatures, SemanticErrorList e) {
-    	TypeCheckerHelper.typeCheckDeltaClause(this,ds,definedFeatures,e);
+    	TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);
      }
 
     public abstract void AppCond.typeCheck(Set<String> definedFeatures, SemanticErrorList e);
@@ -914,8 +925,10 @@ aspect TypeCheckProductline {
         if (! definedFeatures.contains(getName()))
             e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
+}
 
-    /* Components */
+/* Components */
+aspect TypeCheckComponents {
     public void MoveStmt.typeCheck(SemanticErrorList e) {}
     public void RebindStmt.typeCheck(SemanticErrorList e) {}
     

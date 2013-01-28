@@ -136,9 +136,12 @@ public class TypeCheckerHelper {
         if (! deltaNames.contains(clause.getDeltaspec().getName()))
             e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
 
+        /* Do the referenced features exist? */
         if (clause.hasAppCond()) {
-            /* Do the referenced features exist? */
             clause.getAppCond().typeCheck(definedFeatures, e);
+        }
+        if (clause.hasFromAppCond()) {
+            clause.getFromAppCond().typeCheck(definedFeatures, e);
         }
         
         /* What about deltas mentioned in the 'after' clause? */
@@ -147,6 +150,15 @@ public class TypeCheckerHelper {
                 e.add(new TypeError(did, ErrorMessage.NAME_NOT_RESOLVABLE, did.getName()));
             }                 
         }
+    }
+    
+    public static void typeCheckProduct(Product prod, Set<String> prodNames, SemanticErrorList e) {
+        /* Does the product named in the adaptation clause exist */
+        for (ProductAdaptation ad : prod.getProductAdaptations()) {
+            if (! prodNames.contains(ad.getProductID()))
+                e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, ad.getProductID()));
+        }
+        // TODO check that features of product exist, also feature attributes
     }
     
     public static <N extends ASTNode<?>&HasType> java.util.List<Type> getTypes(List<N> params) {
