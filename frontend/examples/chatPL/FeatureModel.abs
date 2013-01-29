@@ -1,0 +1,16 @@
+root Chat {
+    group allof {
+     	ChatMode {
+            group oneof { Text, Voice, Video } 
+   	   	},
+      	opt FileTransfer
+    }    	
+}
+
+extension Voice {
+    require: Text;
+}
+
+extension Video {
+    require: Voice;
+}
