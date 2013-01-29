@@ -126,10 +126,15 @@ public class ConcurrencyTests extends SemanticTests {
     
     @Test
     public void illegalSyncCall() throws Exception {
-        // Fails because a synchrous call to an object of a different COG is not
+        // Fails because a synchronous call to an object of a different COG is not
         // allowed
         assertEvalFails(INTERFACE_I + CLASS_C
                 + "{ Bool testresult = False; I i; i = new cog C(); testresult = i.m(); }");
     }
 
+    @Test
+    public void ticket407_concise_await() {
+        assertEvalTrue(INTERFACE_I+CLASS_C+
+                "{ I o = new C(); Bool testresult = await o!m(); }");
+    }
 }
