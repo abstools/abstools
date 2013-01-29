@@ -26,6 +26,7 @@ aspect DeltaModifierApplicator {
     public void AddClassModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         ClassDecl cls = getClassDecl().fullCopy();
+        cls.setFileName(getClassDecl().getFileName());
         cls.setName(getSimpleName());
         module.getDecls().addChild(cls);
     }
@@ -45,7 +46,9 @@ aspect DeltaModifierApplicator {
         
         // add any interfaces added by the ClassModifier
         for (InterfaceTypeUse iface : this.getAddedInterfaces()) {
-            cls.addImplementedInterfaceUse(iface.fullCopy());
+            InterfaceTypeUse iface2 = iface.fullCopy();
+            iface2.setFileName(iface.getFileName());
+            cls.addImplementedInterfaceUse(iface2);
         }
 
         // remove any interfaces removed by the ClassModifier
@@ -73,6 +76,7 @@ aspect DeltaModifierApplicator {
     public void AddInterfaceModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
         InterfaceDecl decl = getInterfaceDecl().fullCopy();
+        decl.setFileName(getInterfaceDecl().getFileName());
         decl.setName(getSimpleName());
         module.getDecls().addChild(decl);
     }
@@ -95,7 +99,9 @@ aspect DeltaModifierApplicator {
     
     public void AddFunctionModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        module.getDecls().addChild(this.getFunctionDecl().fullCopy());
+        FunctionDecl func = getFunctionDecl().fullCopy();
+        func.setFileName(getFunctionDecl().getFileName());
+        module.getDecls().addChild(func);
     }
     
     public String AddDataTypeModifier.toString() {
@@ -106,6 +112,7 @@ aspect DeltaModifierApplicator {
         ModuleDecl module = findModule();
         
         DataTypeDecl dtd = this.getDataTypeDecl().fullCopy();
+        dtd.setFileName(getDataTypeDecl().getFileName());
         module.getDecls().addChild(dtd);
         for (DataConstructor c : dtd.getDataConstructors()) {
             int i = 0;
@@ -124,7 +131,9 @@ aspect DeltaModifierApplicator {
     
     public void AddTypeSynModifier.apply() throws DeltaModellingException {
         ModuleDecl module = findModule();
-        module.getDecls().addChild(this.getTypeSynDecl().fullCopy());
+        TypeSynDecl type = getTypeSynDecl().fullCopy();
+        type.setFileName(getTypeSynDecl().getFileName());
+        module.getDecls().addChild(type);
     }
 
     public void ModifyTypeSynModifier.apply() throws DeltaModellingException {
@@ -259,7 +268,9 @@ aspect DeltaModifierApplicator {
     public void AddMethodModifier.applyTo(ClassDecl cd) {
         assert cd != null;
         assert getMethodImpl() != null;
-        cd.addMethod(getMethodImpl().fullCopy());
+        MethodImpl method = getMethodImpl().fullCopy();
+        method.setFileName(getMethodImpl().getFileName());
+        cd.addMethod(method);
     }
 
     public void ModifyMethodModifier.applyTo(ClassDecl cd) throws DeltaModellingException {
@@ -274,10 +285,12 @@ aspect DeltaModifierApplicator {
                 break;
             }
         }
-        if (found >= 0)
+        if (found >= 0) {
             // replace MethodImpl
-            cd.getMethods().setChild(this.getMethodImpl().fullCopy(), found);
-        else
+            MethodImpl method = getMethodImpl().fullCopy();
+            method.setFileName(getMethodImpl().getFileName());
+            cd.getMethods().setChild(method, found);
+        } else
             throw new DeltaModellingException(getDelta(), 
                     " wants to modify method [" + mysig + "], which was not found in class [" + cd.qualifiedName() + "].");
     }
@@ -302,7 +315,9 @@ aspect DeltaModifierApplicator {
     }
 
     public void AddFieldModifier.applyTo(ClassDecl cd) {
-        cd.addField(this.getFieldDecl().fullCopy());
+        FieldDecl field = getFieldDecl().fullCopy();
+        field.setFileName(getFieldDecl().getFileName());
+        cd.addField(field);
     }
     
     /**************************************************************************
@@ -312,7 +327,9 @@ aspect DeltaModifierApplicator {
     public abstract void MethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException;
 
     public void AddMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
-        iface.addBody(this.getMethodSig().fullCopy());
+        MethodSig sig = getMethodSig().fullCopy();
+        sig.setFileName(getMethodSig().getFileName());
+        iface.addBody(sig);
     }
     public void RemoveMethodSigModifier.applyTo(InterfaceDecl iface) throws DeltaModellingException {
         MethodSig mysig = this.getMethodSig();
@@ -333,6 +350,5 @@ aspect DeltaModifierApplicator {
             throw new DeltaModellingException(getDelta(), 
                     " wants to remove method signature [" + mysig + "], which was not found in interface [" + iface.qualifiedName() + "].");
     }
-    
     
 }

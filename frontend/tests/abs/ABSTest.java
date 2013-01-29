@@ -9,9 +9,11 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Set;
 
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
+import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 import static abs.ABSTest.Config.*;
@@ -125,19 +127,35 @@ public class ABSTest {
         Main main = new Main();
         main.setWithStdLib(isSet(WITH_STD_LIB,config));
         Model m = main.parseFiles(resolveFileName(fileName));
+        return assertParseModelOk(m, config);
+    }
+
+    protected Model assertParseFilesOk(Set<String> fileNames, Config... config) throws IOException {
+        Main main = new Main();
+        main.setWithStdLib(isSet(WITH_STD_LIB,config));
+        Model m = main.parseFiles(fileNames.toArray(new String[0]));
+        return assertParseModelOk(m, config);
+    }
+    
+    protected Model assertParseModelOk(Model m, Config... config) throws IOException {
         if (m != null) {
             int numSemErrs = m.getErrors().size();
             StringBuffer errs = new StringBuffer("Semantic errors: " + numSemErrs + "\n");
+            
+            String fileNames = m.getCompilationUnit(0).getFileName();
+            for (int i = 1; i < m.getCompilationUnits().getNumChild(); i++)
+                fileNames += " & " + m.getCompilationUnit(i).getFileName();
+
             if (numSemErrs > 0) {
                 for (SemanticError error : m.getErrors())
                     errs = errs.append(error.getHelpMessage() + "\n");
-                fail("Failed to parse: " + fileName + "\n" + errs.toString());
+                fail("Failed to parse: " + fileNames + "\n" + errs.toString());
             } else if (isSet(TYPE_CHECK, config)) {
                 SemanticErrorList l = m.typeCheck();
                 if (!l.isEmpty()) {
                     for (SemanticError error : l)
                         errs = errs.append(error.getHelpMessage() + "\n");
-                    fail("Failed to typecheck: " + fileName + "\n" + errs.toString());
+                    fail("Failed to typecheck: " + fileNames + "\n" + errs.toString());
                 }
             }
         }

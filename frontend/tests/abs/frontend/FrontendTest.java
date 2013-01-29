@@ -5,6 +5,10 @@
 package abs.frontend;
 
 import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.util.Set;
+
 import abs.ABSTest;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
@@ -31,7 +35,7 @@ public class FrontendTest extends ABSTest {
         return assertParse(s, WITH_STD_LIB);
     }
 
-    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws Exception {
+    protected Model assertParseFileOk(String fileName, boolean withStdLib) throws IOException {
         if (withStdLib) {
             return assertParseFileOk(fileName, WITH_STD_LIB);
         } else {
@@ -39,7 +43,15 @@ public class FrontendTest extends ABSTest {
         }
     }
 
-    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws Exception {
+    protected Model assertParseFilesOk(Set<String> fileNames, boolean withStdLib) throws IOException {
+        if (withStdLib) {
+            return assertParseFilesOk(fileNames, WITH_STD_LIB);
+        } else {
+            return assertParseFilesOk(fileNames);
+        }
+    }
+
+    protected Model assertTypeCheckFileOk(String fileName, boolean withStdLib) throws IOException {
         if (withStdLib) { 
             return assertParseFileOk(fileName, TYPE_CHECK, WITH_STD_LIB);
         } else {

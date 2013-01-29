@@ -75,12 +75,16 @@ aspect QualifiedName {
     }
 }
 
-// inform ModuleDecls about the name of the file where they were declared
+// inform Nodes about the name of the file where they were declared
 aspect FileName {
-    inh String ModuleDecl.getFileName();
-    eq CompilationUnit.getModuleDecl().getFileName() = this.getFileName();
-
-    inh String Decl.getFileName();
-    eq ModuleDecl.getDecl().getFileName() = this.getFileName();
-
+    /* When flattening, nodes get copied from one CompilationUnit to another, therefore 
+     * the information about the source file where they were originally declared is lost.
+     * We prevent this by setting sourceFileName whenever a node is copied using fullCopy().
+     * When calling getFileName() on a node whose originalFileName is null, we delegate to the parent node.
+     * At the latest when reaching the CompilationUnit, we should get a meaningful value.
+     */
+    private String ASTNode.sourceFileName = null;
+    public void ASTNode.setFileName(String fileName) { this.sourceFileName = fileName; }
+    syn String ASTNode.getFileName() = this.sourceFileName == null ? getParent().getFileName() : this.sourceFileName;
+    syn String Model.getFileName() = "<invalid>";
 }

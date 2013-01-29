@@ -40,7 +40,7 @@ public class SemanticError extends CompilerError {
     @Override
     public String getFileName() {
         if (file == null) {
-            String name = node.getCompilationUnit().getFileName();
+            String name = node.getFileName();
             if (name == null)
                 return "<unkown>";
             file = new File(name);

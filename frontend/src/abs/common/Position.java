@@ -20,7 +20,7 @@ public class Position {
     }
 
     private String calcFileName(ASTNode<?> node) {
-        String res = node.getCompilationUnit().getFileName();
+        String res = node.getFileName();
         return "".equals(res) ? "<unkown>" : res;
     }
 
