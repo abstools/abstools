@@ -14,7 +14,7 @@ class MyScheduler1 implements ProcessScheduler {
 interface C { Unit m(); }
 class CImpl implements C {
     
-    // init: set scheduler from within the cog
+    // init block: set scheduler from within the cog
     {
         ObjectMirror om = reflect(this);
         Cog g = om.getCog();

@@ -17,14 +17,11 @@ class MyScheduler1(Int x) implements ProcessScheduler {
 interface C { Unit m(); }
 class CImpl implements C {
     Unit m() {
-        Time t = now(); 
-        await timeDifference(now(), t) > 1000;
-        Unit u = println("Hello");
+//        Time t = now();
+//        await timeDifference(now(), t) > 1000;
+//        Unit u = println("Hello");
     }
 }
-
-
-
 
 {
     C o = new cog CImpl();
@@ -32,9 +29,9 @@ class CImpl implements C {
     Cog g = om.getCog();
 
     // sched is in a different cog, so movi it to target cog
-    ProcessScheduler sched = new MyScheduler1();
-    ObjectMirror om = reflect(sched);
-    om.setCog(g);
+    ProcessScheduler sched = new MyScheduler1(0);
+    ObjectMirror sm = reflect(sched);
+    sm.setCog(g);
 
     // attach scheduler
     g.setScheduler(sched);
