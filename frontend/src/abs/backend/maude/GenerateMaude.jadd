@@ -339,11 +339,12 @@ aspect GenerateMaude {
 
     public void DataConstructorExp.generateMaude(PrintStream stream) {
        boolean inlist = false;
-       stream.print("\"" + getDataConstructor().getModuleDecl().getName() + "." + getDataConstructor().getName() + "\"[ ");
-       DataConstructor decl = (DataConstructor)getDecl();
+       DataConstructor dc = getDataConstructor(); 
+       assert dc != null;
+       stream.print("\"" + dc.getModuleDecl().getName() + "." + dc.getName() + "\"[ ");
 
        MaudeCompilerHelper.emitParameterValueList(stream, getParams(),
-                                                  decl.getTypes());
+                                                  dc.getTypes());
        stream.print("] ");
     }
     public int DataConstructorExp.numberOfRandom(Set<String> visitedFunctions) {

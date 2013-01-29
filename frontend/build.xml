@@ -89,6 +89,7 @@
 	  <pathelement location="${ext.dir}/${easymock.jar}" />
 	  <pathelement location="${ext.dir}/${cglib.jar}" />
 	  <pathelement location="${ext.dir}/${objenesis.jar}" />
+	  <pathelement location="${ext.dir}/jsr305.jar" />
       <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
         <path refid="common.classpath"/>
 	</path>

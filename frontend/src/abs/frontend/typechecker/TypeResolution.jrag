@@ -4,6 +4,8 @@ import java.util.HashSet;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.ResolvedName;
 
+import javax.annotation.CheckForNull;
+
 aspect TypeResolution {
 
     // Find the type declaration for a type use.
@@ -286,15 +288,17 @@ aspect TypeResolution {
          return dc;
     }
 
-    syn lazy DataConstructor DataConstructorExp.getDataConstructor() {
+    @CheckForNull
+    public DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor)
           return (DataConstructor) decl;
         else
           return null;
     }
-    
-    syn lazy DataConstructor ConstructorPattern.getDataConstructor() {
+
+    @CheckForNull
+    public DataConstructor ConstructorPattern.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
         if (decl instanceof DataConstructor)
           return (DataConstructor) decl;

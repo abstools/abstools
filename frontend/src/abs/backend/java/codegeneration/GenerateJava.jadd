@@ -764,6 +764,7 @@ aspect GenerateJava {
 
     public void DataConstructorExp.generateJava(PrintStream stream) {
         DataConstructor c = getDataConstructor();
+        assert c != null;
         DataTypeDecl decl = c.getDataTypeDecl();
         Type t = decl.getType();
         if (t.isBoolType()) {
