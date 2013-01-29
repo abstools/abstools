@@ -234,6 +234,8 @@ aspect Typing {
     eq DataConstructorExp.getType() {
 
 	 DataConstructor d = getDataConstructor();
+	 if (d == null)
+	   return UnknownType.INSTANCE;
    	 DataTypeDecl dataDecl = d.getDataTypeDecl();
    	 Type declaredResultType = dataDecl.getType();
    	 if (dataDecl instanceof ParametricDataTypeDecl) {

@@ -278,26 +278,28 @@ aspect TypeResolution {
     eq DataTypeDecl.getDataConstructor().getDataTypeDecl() = this;
     eq ModuleDecl.getDecl().getDataTypeDecl() = null; // never called
 
-    syn Decl DataConstructorExp.getDecl() = getDataConstructor();
+    syn Decl DataConstructorExp.getDecl() {
+       DataConstructor dc = getDataConstructor();
+       if (dc == null)
+         return Model.unknownDecl;
+       else
+         return dc;
+    }
 
-    /** 
-     * @throws TypeCheckerException
-     */
     syn lazy DataConstructor DataConstructorExp.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-        if (! (decl instanceof DataConstructor)) 
-            throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
-        return (DataConstructor) decl;    
+        if (decl instanceof DataConstructor)
+          return (DataConstructor) decl;
+        else
+          return null;
     }
     
-    /** 
-     * @throws TypeCheckerException
-     */
     syn lazy DataConstructor ConstructorPattern.getDataConstructor() {
         Decl decl = lookup(new KindedName(Kind.DATA_CONSTRUCTOR,getConstructor()));
-        if (! (decl instanceof DataConstructor)) 
-            throw new TypeCheckerException(new TypeError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, getConstructor()));
-        return (DataConstructor) decl;    
+        if (decl instanceof DataConstructor)
+          return (DataConstructor) decl;
+        else
+          return null;    
     }
 
     /**
