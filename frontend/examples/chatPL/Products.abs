@@ -1,11 +1,17 @@
-product HighEndChat (VideoChat, VoiceChat, TextChat, FileTransfer) {
-    RegularChat by StateUpdate1;
-    LowEndChat by StateUpdate2;
+/* 
+ * Runtime product reconfiguration path:
+ * LowEndChat <--> RegularChat <--> HighEndChat
+ * 
+ */
+product HighEndChat (TextChat, VoiceChat, VideoChat, FileTransfer) {
+    RegularChat by Upd_High2Reg;
 }
 
-product RegularChat (VoiceChat, TextChat) {
-    HighEndChat by Something;
-    LowEndChat by Something;
+product RegularChat (TextChat, VoiceChat) {
+    HighEndChat by Upd_Reg2High;
+    LowEndChat by Upd_Reg2Low;
 }
 
-product LowEndChat (TextChat);
+product LowEndChat (TextChat) {
+    RegularChat by Upd_Low2Reg;
+}

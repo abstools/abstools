@@ -16,28 +16,45 @@ interface Reconfigurator {
 class ConnectionImpl implements Connection {
     Bandwidth checkBandwidth() {
         // randomly return a value
-        return Mid;
+        Int r = random(3);
+        return case r {
+	        0 => Low;
+	        1 => Mid;
+	        2 => High;
+        };
     }
 }
 
 class ReconfiguratorImpl(Connection conn) implements Reconfigurator {
-
     Unit run() {
+        ProductLine pl = getPL();
         while(True) {
-            this.reconfigure();
+//            String p = pl.getCurrentProduct();
+            String p = "LowEndChat";
+            Bandwidth bw = conn.checkBandwidth();
+
+            if (bw == High) {
+                Unit u = println("Reconfiguring: high");
+                p = "HighEndChat";
+//                pl.configureProduct("HighEndChat");
+                
+            } 
+
         }
     }
 
     Unit reconfigure() {
         Bandwidth bw = conn.checkBandwidth();
         if (bw == Low) {
+            Unit u = println("Reconfiguring: low");
             //reconfigureProduct("LowEndChat");
         } else if (bw == Mid) {
+            Unit u = println("Reconfiguring: mid");
             //reconfigureProduct("RegularChat");
         } else {
+            Unit u = println("Reconfiguring: high");
             //reconfigureProduct("HighEndChat");
         }
-        // reconfigureProduct() still needs to be implemented in metaABS.
     }
 }
 

@@ -1,6 +1,6 @@
 productline ChatPL;
  
-features Text, Video, Voice, FileTransfer;
+features Text, Video, Voice;
 
 delta DVideo when Video;
 delta DVoice when Voice;
