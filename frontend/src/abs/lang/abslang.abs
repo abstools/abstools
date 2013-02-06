@@ -579,12 +579,14 @@ interface Class {
 
 interface Method {}
 
-interface Runtime {
+interface ProductLine {
     Unit applyDelta(String s);
+    String getCurrentProduct();
+    List<String> getConfigurableProducts();
     Unit configureProduct(String s);
 }
 
-def Runtime getRuntime() = builtin;
+def ProductLine getPL() = builtin;
 
 // convenience functions (to be removed)
 def Unit println(String s) = builtin;

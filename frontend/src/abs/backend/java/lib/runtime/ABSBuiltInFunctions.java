@@ -130,9 +130,9 @@ public class ABSBuiltInFunctions {
         }
     }
 
-    public static ABSDynamicObject getRuntime() {
-        ABSDynamicObject runtime = new ABSDynamicObject(ProductLine.singleton());
-        return runtime;
+    public static ABSDynamicObject getPL() {
+        ABSDynamicObject pl = new ABSDynamicObject(ProductLine.singleton());
+        return pl;
     }
     
 

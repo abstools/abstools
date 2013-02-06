@@ -31,6 +31,7 @@ import abs.frontend.ast.Annotation;
 import abs.frontend.ast.AsyncCall;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.AwaitStmt;
+import abs.frontend.ast.ClaimGuard;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Cog;
 import abs.frontend.ast.Decl;
@@ -312,6 +313,19 @@ public class JavaGeneratorHelper {
         final MethodSig sig = call.getMethodSig();
         final List<Annotation> annotations = call.getAnnotations();
         // FIXME: implement await, assignment afterwards
+        
+//        OutputStream exprOStream = new ByteArrayOutputStream();
+//        PrintStream exprStream = new PrintStream(exprOStream);
+//        ClaimGuard guard = new ClaimGuard();
+//        // Necessary temporary variables are written to "stream" and the 
+//        // await-expression is written to exprStream
+//
+//        // FIXME: implement await, assignment afterwards
+//        guard.generateJavaGuard(stream, exprStream);
+//        stream.print(JavaBackendConstants.ABSRUNTIME + ".await(");
+//        stream.print(exprOStream.toString());
+//        stream.println(");");
+
         generateAsyncCall(stream, null, callee, callee.getType(), params, null, sig, annotations);
     }
 

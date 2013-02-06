@@ -596,16 +596,20 @@ public class DynamicJavaGeneratorHelper {
             ArrayList<String> sortedIDs = pl.sortDeltas(unsortedIDs);
             
             stream.print("instance.setDeltas(\"" + ad.getProductID() + "\", ");
-            StringBuilder res = new StringBuilder();
-            res.append(Arrays.class.getName() + ".asList(");
-            boolean first = true;
-            for (String did : sortedIDs) {
-                if (first) first = false;
-                else res.append(", ");
-                res.append("\"" + did + "\"");
+            if (sortedIDs.isEmpty()) { // no deltas
+                stream.print(Collections.class.getName() + ".<" + String.class.getName() + ">emptyList()");
+            } else {
+                StringBuilder deltaList = new StringBuilder();
+                deltaList.append(Arrays.class.getName() + ".asList(");
+                boolean first = true;
+                for (String did : sortedIDs) {
+                    if (first) first = false;
+                    else deltaList.append(", ");
+                    deltaList.append("\"" + did + "\"");
+                }
+                deltaList.append(")");
+                stream.print(deltaList);
             }
-            res.append(")");
-            stream.print(res);
             stream.println(");");
         }
         
