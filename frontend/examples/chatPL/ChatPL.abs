@@ -1,6 +1,6 @@
 productline ChatPL;
  
-features Text, Video, Voice;
+features Text, Video, Voice, Files;
 
 delta DVideo when Video;
 delta DVoice when Voice;
@@ -9,5 +9,5 @@ delta DVoice when Voice;
 delta DVoice from Text && ~Voice && ~Video when Voice;
 delta DVideo from Text && Voice && ~Video when Video;
 
-delta DVideo2Voice from Text && Voice && Video when Voice;
-delta DVoice2Text from Text && Voice && ~Video when Text;
+delta DNoVideo from Text && Voice && Video when Text && Voice && ~Video;
+delta DNoVoice from Text && Voice && ~Video when Text && ~Voice && ~Video;

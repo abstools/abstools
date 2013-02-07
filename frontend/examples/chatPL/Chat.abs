@@ -27,49 +27,67 @@ class ClientImpl implements Client, Text {
 delta DVoice;
 uses Chat;
 
-adds interface Voice {
-  Unit call(Client client);
+adds interface Call { 
   Unit pickup();
   Unit hangup();
 }
-
+adds interface Voice {
+  Call call(Client client);
+}
+adds class CallImpl implements Call {
+  Unit pickup() {/*...*/}
+  Unit hangup() {/*...*/}
+}
 modifies class ClientImpl adds Voice {
-  adds Unit call(Client client) {/*...*/}
-  adds Unit pickup() {}
-  adds Unit hangup() {}
+  adds Call call(Client client) { return new CallImpl(); }
 }
 
 
 // delta that adds video functionality
 delta DVideo;
 uses Chat;
+
 adds interface Video {
-  Unit startVideo();
-  Unit stopVideo();
+  Call videoCall(Client client);
 }
 
 modifies class ClientImpl adds Video {
+  adds Call videoCall(Client client) {/*...*/}
+}
+
+modifies interface Call {
+  adds Unit startVideo();
+  adds Unit stopVideo();
+} 
+modifies class CallImpl {
   adds Unit startVideo() {/*...*/}
   adds Unit stopVideo() {/*...*/}
 }
 
 
-
 // deltas that handle dynamic reconfigurations
 
-delta DVideo2Voice;
+delta DNoVideo;
 uses Chat;
+
+modifies interface Client {
+    removes Unit startVideo();
+    removes Unit stopVideo();
+}
 modifies class ClientImpl removes Video {
     removes Unit startVideo();
     removes Unit stopVideo();
 }
 
-delta DVoice2Text;
+delta DNoVoice;
 uses Chat;
+
 modifies class ClientImpl removes Voice {
     removes Unit call(Client client);
 }
 
+removes interface Call;
+removes class CallImpl;
 
 
 
