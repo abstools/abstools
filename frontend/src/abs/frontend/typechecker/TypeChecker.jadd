@@ -13,20 +13,20 @@ aspect TypeChecker {
 
     /* typeCheck() is already cached, no need to cache this simple getter. */
     public boolean Model.hasTypeErrors() { return !typeCheck().isEmpty(); }
-    
+
     syn lazy SemanticErrorList Model.typeCheck() {
         SemanticErrorList res = new SemanticErrorList();
         typeCheck(res);
         return res;
     }
-    
+
     /**
      * @see #typeCheck()
      */
     public SemanticErrorList Model.getTypeErrors() {
         return typeCheck();
     }
-    
+
     public void Model.typeCheck(SemanticErrorList errors) {
         try {
             TypeCheckerHelper.checkForDuplicateModules(errors, getCompilationUnits());
@@ -41,16 +41,16 @@ aspect TypeChecker {
     }
 
     public void ModuleDecl.typeCheck(SemanticErrorList e) {
-    	for (Import i : getImports()) {
-    	   i.typeCheck(e);
-    	}
+        for (Import i : getImports()) {
+            i.typeCheck(e);
+        }
 
         for (Export ex : getExports()) {
-    	  ex.typeCheck(e);
-    	}
-    
-	    TypeCheckerHelper.checkForDuplicateDecls(this,e);
-    
+            ex.typeCheck(e);
+        }
+
+        TypeCheckerHelper.checkForDuplicateDecls(this,e);
+
         for (Decl d : getDecls()) {
             d.typeCheck(e);
         }
@@ -59,98 +59,98 @@ aspect TypeChecker {
             getBlock().typeCheck(e);
         }
     }
-    
+
     public void CompilationUnit.typeCheck(SemanticErrorList e) {
         for (ModuleDecl d : getModuleDecls()) {
             d.typeCheck(e);
         }
     }
-    
+
     public abstract void Import.typeCheck(SemanticErrorList e);
 
     public void NamedImport.typeCheck(SemanticErrorList e) {
-    	
-    	for (Name name : getNames()) {
-    		if (name.isSimple()) {
-    			e.add(new TypeError(this, ErrorMessage.ONLY_QUALIFIED_NAMES_ALLOWED, name.getName()));
-    			continue;
-    		}
 
-	    	ModuleDecl d = lookupModule(name.getModuleName());
-    		if (d == null) {
-    			e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, name.getModuleName()));
-    			continue;
-    		}
-    		
-   			if (!d.exportsName(name.getSimpleName())) {
-   				e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getSimpleName(), name.getModuleName()));
-   			}
-    	}
+        for (Name name : getNames()) {
+            if (name.isSimple()) {
+                e.add(new TypeError(this, ErrorMessage.ONLY_QUALIFIED_NAMES_ALLOWED, name.getName()));
+                continue;
+            }
+
+            ModuleDecl d = lookupModule(name.getModuleName());
+            if (d == null) {
+                e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, name.getModuleName()));
+                continue;
+            }
+
+            if (!d.exportsName(name.getSimpleName())) {
+                e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getSimpleName(), name.getModuleName()));
+            }
+        }
     }
-    
+
     public void StarImport.typeCheck(SemanticErrorList e) {
-    	ModuleDecl d = lookupModule(getModuleName());
-    	if (d == null) {
-    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
-    	}
+        ModuleDecl d = lookupModule(getModuleName());
+        if (d == null) {
+            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+        }
     }
 
     public void FromImport.typeCheck(SemanticErrorList e) {
-    	ModuleDecl d = lookupModule(getModuleName());
-    	if (d == null) {
-    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
-    		return;
-    	}
-    	
-    	for (Name name : getNames()) {
-    		if (!name.isSimple()) {
-    			e.add(new TypeError(this, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED, name.getName()));
-    		} else {
-    			if (!d.exportsName(name.getName())) {
-    				e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getName(), getModuleName()));
-    			}
-    		}
-    	}
+        ModuleDecl d = lookupModule(getModuleName());
+        if (d == null) {
+            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+            return;
+        }
+
+        for (Name name : getNames()) {
+            if (!name.isSimple()) {
+                e.add(new TypeError(this, ErrorMessage.ONLY_UNQUALIFIED_NAMES_ALLOWED, name.getName()));
+            } else {
+                if (!d.exportsName(name.getName())) {
+                    e.add(new TypeError(this, ErrorMessage.NAME_NOT_EXPORTED_BY_MODULE, name.getName(), getModuleName()));
+                }
+            }
+        }
     }
 
     public abstract void Export.typeCheck(SemanticErrorList e);
 
     public void NamedExport.typeCheck(SemanticErrorList e) {
-   		ModuleDecl mod = getModuleDecl();
-    	for (Name name: getNames()) {
-    	    String s = name.getName();
-  	    if (!mod.isVisible(s)) {
-    		e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
-    	    }
-    	}
+        ModuleDecl mod = getModuleDecl();
+        for (Name name: getNames()) {
+            String s = name.getName();
+            if (!mod.isVisible(s)) {
+                e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+            }
+        }
     }
 
     public void FromExport.typeCheck(SemanticErrorList e) {
-    	ModuleDecl d = lookupModule(getModuleName());
-    	if (d == null) {
-    		e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
-    		return;
-    	}
+        ModuleDecl d = lookupModule(getModuleName());
+        if (d == null) {
+            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+            return;
+        }
 
-   		ModuleDecl mod = getModuleDecl();
-    	for (Name name: getNames()) {
-    		String s = d.getName()+"."+name.getName();
-    		if (!mod.isVisible(s)) {
-    			e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
-    		}
-    	}
+        ModuleDecl mod = getModuleDecl();
+        for (Name name: getNames()) {
+            String s = d.getName()+"."+name.getName();
+            if (!mod.isVisible(s)) {
+                e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, s));
+            }
+        }
     }
 
     public void StarExport.typeCheck(SemanticErrorList e) {
-    	if (hasModuleName()) {
-    		ModuleDecl d = lookupModule(getModuleName().getName());
-    		if (d == null) {
-    			e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName().getName()));
-    			return;
-    		}
-    	}
+        if (hasModuleName()) {
+            ModuleDecl d = lookupModule(getModuleName().getName());
+            if (d == null) {
+                e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName().getName()));
+                return;
+            }
+        }
     }
-    
+
     public Collection<MethodSig> ClassDecl.getAllMethodSigs() {
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         for (MethodImpl m : getMethods()) {
@@ -159,19 +159,19 @@ aspect TypeChecker {
         }
         return sigs.values();
     }
-    
+
     public Collection<MethodSig> InterfaceDecl.getAllMethodSigs() {
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         addAllMethodSigs(sigs, new HashSet<InterfaceDecl>());
         return sigs.values();
     }
-    
+
     // DECLS
     public void InterfaceDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs, HashSet<InterfaceDecl> visitedDecls) {
         if (visitedDecls.contains(this)) 
             return;
         visitedDecls.add(this);
-            
+
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
             Decl d = u.getDecl();
             if (d.isInterface()) {
@@ -179,12 +179,12 @@ aspect TypeChecker {
                 id.addAllMethodSigs(sigs,visitedDecls);
             }    
         }
-        
+
         for (MethodSig s : getBodys()) {
             sigs.put(s.getName(),s);
         }
     }
-    
+
     public void ClassDecl.addAllMethodSigs(HashMap<String, MethodSig> sigs, SemanticErrorList e) {
         for (InterfaceTypeUse u : getImplementedInterfaceUses()) {
             Decl d = u.getDecl();
@@ -199,7 +199,7 @@ aspect TypeChecker {
             }
         }
     }
-    
+
     protected void Decl.checkOverloading(HashMap<String, MethodSig> sigs, HashMap<String, MethodSig> mysigs, InterfaceTypeUse u, SemanticErrorList e) {
         for (Map.Entry<String, MethodSig> entry : mysigs.entrySet()) {
             MethodSig s = sigs.get(entry.getKey());
@@ -215,7 +215,7 @@ aspect TypeChecker {
                         overloads |= !texpected.equals(t);
                     }
                 }
-                
+
                 Type expectedReturnType = s.getReturnType().getType();
                 Type actualReturnType = ms.getReturnType().getType(); 
                 overloads |= !expectedReturnType.equals(actualReturnType);
@@ -224,92 +224,92 @@ aspect TypeChecker {
                 }
             }
         }
-        
-    }
-    
-    public abstract void Decl.typeCheck(SemanticErrorList e);  
-    
-    public void ClassDecl.typeCheck(SemanticErrorList e) {
-      Set<String> fields = new HashSet<String>();
-      for (ParamDecl d : getParams()) {
-          d.typeCheck(e);
-          if (!fields.add(d.getName())) {
-              e.add(new TypeError(d, ErrorMessage.DUPLICATE_FIELD_NAME, d.getName()));
-		  }
-      }
-      
-      for (InterfaceTypeUse i : getImplementedInterfaceUses()) {
-      	 i.typeCheck(e);
-      }
-      
-      for (FieldDecl f : getFields()) {
-   		  f.typeCheck(e);
-   		  if (!fields.add(f.getName())) {
-              e.add(new TypeError(f, ErrorMessage.DUPLICATE_FIELD_NAME, f.getName()));
-          }
-   	  }
 
-      if (hasInitBlock()) {
-          getInitBlock().typeCheck(e);
-      }
-      
-      HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
-      addAllMethodSigs(sigs,e);  
-      
-      HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
-      
-   	  for (MethodImpl m : getMethods()) {
-   		  m.typeCheck(e);
-   		  String name = m.getMethodSig().getName();
-   		  if (methodImpls.put(name,m) != null) {
-              e.add(new TypeError(m, ErrorMessage.DUPLICATE_METHOD_NAME, name));
-          }
-   		  MethodSig s = sigs.get(name);
-   		  if (s != null) {
-   		      MethodSig ms = m.getMethodSig();
-   		      InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
-   		      if (s.getNumParam() != ms.getNumParam()) {
-   		          e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_NUM_PARAMS, name, d.getName(), ""+s.getNumParam(), ""+ms.getNumParam()));
-   		      } else {
-   		          for (int i = 0; i < s.getNumParam(); i++) {
-   		              Type texpected = s.getParam(i).getType();
-   		              Type t = ms.getParam(i).getType();
-   		              if (!texpected.equals(t)) {
-   		                  e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_PARAM_TYPE, 
-   		                        ms.getParam(i).getName(), name, d.getName(), 
-   		                        texpected.toString(), t.toString()));
-   		              }
-   		          }
-   		      }
-   		      
-   		      Type expectedReturnType = s.getReturnType().getType();
-   		      Type actualReturnType = ms.getReturnType().getType(); 
-   		      if (!expectedReturnType.equals(actualReturnType)) {
-                  e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_RETURN_TYPE, 
-                          name, d.getName(),
-                          expectedReturnType.toString(), actualReturnType.toString()));
-   		          
-   		      }
-   		  }
-   	  }
-   	  
-      for (MethodSig s : sigs.values()) {
-          if (!methodImpls.containsKey(s.getName())) {
-              ASTNode<?> location = this;
-              InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
-              // find the location where the error should be marked:
-              for (InterfaceTypeUse implementedInterface : getImplementedInterfaceUses()) {
-                  if (implementedInterface.getDecl().getType().isAssignable(d.getType())) {
-                      location = implementedInterface;
-                      break;
-                  }
-              }
-              e.add(new TypeError(location, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));
-          }
-      }
-   	  
     }
-    
+
+    public abstract void Decl.typeCheck(SemanticErrorList e);  
+
+    public void ClassDecl.typeCheck(SemanticErrorList e) {
+        Set<String> fields = new HashSet<String>();
+        for (ParamDecl d : getParams()) {
+            d.typeCheck(e);
+            if (!fields.add(d.getName())) {
+                e.add(new TypeError(d, ErrorMessage.DUPLICATE_FIELD_NAME, d.getName()));
+            }
+        }
+
+        for (InterfaceTypeUse i : getImplementedInterfaceUses()) {
+            i.typeCheck(e);
+        }
+
+        for (FieldDecl f : getFields()) {
+            f.typeCheck(e);
+            if (!fields.add(f.getName())) {
+                e.add(new TypeError(f, ErrorMessage.DUPLICATE_FIELD_NAME, f.getName()));
+            }
+        }
+
+        if (hasInitBlock()) {
+            getInitBlock().typeCheck(e);
+        }
+
+        HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
+        addAllMethodSigs(sigs,e);  
+
+        HashMap<String, MethodImpl> methodImpls = new HashMap<String, MethodImpl>(); 
+
+        for (MethodImpl m : getMethods()) {
+            m.typeCheck(e);
+            String name = m.getMethodSig().getName();
+            if (methodImpls.put(name,m) != null) {
+                e.add(new TypeError(m, ErrorMessage.DUPLICATE_METHOD_NAME, name));
+            }
+            MethodSig s = sigs.get(name);
+            if (s != null) {
+                MethodSig ms = m.getMethodSig();
+                InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+                if (s.getNumParam() != ms.getNumParam()) {
+                    e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_NUM_PARAMS, name, d.getName(), ""+s.getNumParam(), ""+ms.getNumParam()));
+                } else {
+                    for (int i = 0; i < s.getNumParam(); i++) {
+                        Type texpected = s.getParam(i).getType();
+                        Type t = ms.getParam(i).getType();
+                        if (!texpected.equals(t)) {
+                            e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_PARAM_TYPE, 
+                                    ms.getParam(i).getName(), name, d.getName(), 
+                                    texpected.toString(), t.toString()));
+                        }
+                    }
+                }
+
+                Type expectedReturnType = s.getReturnType().getType();
+                Type actualReturnType = ms.getReturnType().getType(); 
+                if (!expectedReturnType.equals(actualReturnType)) {
+                    e.add(new TypeError(m,ErrorMessage.METHOD_IMPL_WRONG_RETURN_TYPE, 
+                            name, d.getName(),
+                            expectedReturnType.toString(), actualReturnType.toString()));
+
+                }
+            }
+        }
+
+        for (MethodSig s : sigs.values()) {
+            if (!methodImpls.containsKey(s.getName())) {
+                ASTNode<?> location = this;
+                InterfaceDecl d = (InterfaceDecl) s.getParent().getParent();
+                // find the location where the error should be marked:
+                for (InterfaceTypeUse implementedInterface : getImplementedInterfaceUses()) {
+                    if (implementedInterface.getDecl().getType().isAssignable(d.getType())) {
+                        location = implementedInterface;
+                        break;
+                    }
+                }
+                e.add(new TypeError(location, ErrorMessage.METHOD_NOT_IMPLEMENTED, s.getName(), d.getName(), getName()));
+            }
+        }
+
+    }
+
     public void FunctionDecl.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.typeCheckParamList(e,this);
         getTypeUse().typeCheck(e);
@@ -320,7 +320,7 @@ aspect TypeChecker {
             TypeCheckerHelper.checkAssignment(e,this,getTypeUse().getType(), def.getRhs());
         }
     }
-    
+
     public void InterfaceDecl.checkCycle(SemanticErrorList e, InterfaceDecl d) {
         if (this == d) {
             e.add(new TypeError(d, ErrorMessage.CYCLIC_INHERITANCE, getName()));
@@ -333,7 +333,7 @@ aspect TypeChecker {
             }
         }
     }
-    
+
     public void InterfaceDecl.typeCheck(SemanticErrorList e) {
         HashMap<String, MethodSig> names = new HashMap<String, MethodSig>();
         for (MethodSig s : getBodys()) {
@@ -341,7 +341,7 @@ aspect TypeChecker {
                 e.add(new TypeError(s, ErrorMessage.DUPLICATE_METHOD_NAME, s.getName()));
             s.typeCheck(e);
         }
-        
+
         HashMap<String, MethodSig> sigs = new HashMap<String, MethodSig>();
         for (InterfaceTypeUse u : getExtendedInterfaceUses()) {
             Decl d = u.getDecl();
@@ -350,14 +350,14 @@ aspect TypeChecker {
             } else {
                 InterfaceDecl id = (InterfaceDecl) d;
                 id.checkCycle(e,this);
-                
+
                 HashMap<String, MethodSig> mysigs = new HashMap<String, MethodSig>();
                 id.addAllMethodSigs(mysigs, new HashSet<InterfaceDecl>());
                 checkOverloading(sigs,mysigs,u,e);
                 mysigs.putAll(sigs);
                 sigs.clear();
                 sigs.putAll(mysigs);
-                
+
                 for (MethodSig s : id.getBodys()) {
                     if (names.containsKey(s.getName())) {
                         e.add(new TypeError(names.get(s.getName()), ErrorMessage.NO_METHOD_OVERRIDE, s.getName(), id.getName()));
@@ -366,12 +366,12 @@ aspect TypeChecker {
             }
         }
     }
-    
+
     public void MethodSig.typeCheck(SemanticErrorList e) {
         getReturnType().typeCheck(e);
         TypeCheckerHelper.typeCheckParamList(e,this);
     }
-     
+
     public void DataTypeDecl.typeCheck(SemanticErrorList e) {
         HashSet<String> names = new HashSet<String>();
         for (DataConstructor c : getDataConstructors()) {
@@ -381,31 +381,31 @@ aspect TypeChecker {
             }
         }
     }
-    
+
     public void DataConstructor.typeCheck(SemanticErrorList e) {
         for (ConstructorArg d : getConstructorArgs()) {
             d.typeCheck(e);
         }
     }
-    
+
     public void ConstructorArg.typeCheck(SemanticErrorList e) {
         getDataTypeUse().typeCheck(e);
     }
-    
+
     public void TypeSynDecl.typeCheck(SemanticErrorList e) {
-      if (getValue().getName().equals(getName()))
-          e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
-      else    
-        getValue().typeCheck(e);
+        if (getValue().getName().equals(getName()))
+            e.add(new TypeCheckerException(new TypeError(getValue(), ErrorMessage.CIRCULAR_TYPESYN, getName())));
+        else    
+            getValue().typeCheck(e);
     }
-    
+
     public void TypeParameterDecl.typeCheck(SemanticErrorList e) {
         /* nothing to check */ }
-    
+
     public void UnknownDecl.typeCheck(SemanticErrorList e) { 
-        /* nothing to check */ }
-    
-    
+    /* nothing to check */ }
+
+
     public void Block.typeCheck(SemanticErrorList e) {
         for (Stmt s : getStmts()) {
             s.typeCheck(e);
@@ -417,47 +417,47 @@ aspect TypeChecker {
      * @see {@link MethodImpl#getType()}
      */
     public Type MethodImpl.getType() { return getMethodSig().getType(); }
-    
-    public void MethodImpl.typeCheck(SemanticErrorList e) {
-   	 Block b = getBlock();
-   	 MethodSig sig = getMethodSig();
-   	 int nerrors = e.size();
-   	 sig.typeCheck(e);
-   	 b.typeCheck(e);
 
-   	 Type lastType = getModel().getUnitType();
-   	 ASTNode<?> errorNode = this;
-   	 if (b.getNumStmt() > 0) {
-   	 	 Stmt lastStmt = b.getStmt(b.getNumStmt()-1); 
-   		 lastType = lastStmt.getType();
-   		 
-   		 // otherwise check is already done in ReturnStmt
-   		 if (lastStmt instanceof ReturnStmt)
-   		 	return;
-   		 errorNode = lastStmt;
-   	 }
-   	 
-   	 if (!lastType.isAssignable(sig.getReturnType().getType())) {
-   		 e.add(new TypeError(errorNode,ErrorMessage.CANNOT_ASSIGN,lastType,sig.getReturnType().getType()));
-   	 }
-   	 
+    public void MethodImpl.typeCheck(SemanticErrorList e) {
+        Block b = getBlock();
+        MethodSig sig = getMethodSig();
+        int nerrors = e.size();
+        sig.typeCheck(e);
+        b.typeCheck(e);
+
+        Type lastType = getModel().getUnitType();
+        ASTNode<?> errorNode = this;
+        if (b.getNumStmt() > 0) {
+            Stmt lastStmt = b.getStmt(b.getNumStmt()-1); 
+            lastType = lastStmt.getType();
+
+            // otherwise check is already done in ReturnStmt
+            if (lastStmt instanceof ReturnStmt)
+                return;
+            errorNode = lastStmt;
+        }
+
+        if (!lastType.isAssignable(sig.getReturnType().getType())) {
+            e.add(new TypeError(errorNode,ErrorMessage.CANNOT_ASSIGN,lastType,sig.getReturnType().getType()));
+        }
+
     }
 
     public void VarDecl.typeCheck(SemanticErrorList e) { 
-         int nerrors = e.size();            
-   	 getAccess().typeCheck(e);
-         if (e.size() > nerrors) return;
+        int nerrors = e.size();            
+        getAccess().typeCheck(e);
+        if (e.size() > nerrors) return;
 
-   	 Type t = getAccess().getType();
-   	 if (hasInitExp()) {
-   		getInitExp().typeCheck(e);
-    	        if (e.size() > nerrors) return;
-                TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
-   	 } else {
-   		 if (!t.isReferenceType() && !t.isFutureType()) {
- 			 e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
-       		 }
-   	 }
+        Type t = getAccess().getType();
+        if (hasInitExp()) {
+            getInitExp().typeCheck(e);
+            if (e.size() > nerrors) return;
+            TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
+        } else {
+            if (!t.isReferenceType() && !t.isFutureType()) {
+                e.add(new TypeError(this, ErrorMessage.VAR_INIT_REQUIRED, new String[0]));
+            }
+        }
     }
 
     public void FieldDecl.typeCheck(SemanticErrorList e) {
@@ -471,14 +471,14 @@ aspect TypeChecker {
             if (e.size() > nerrors) return;
             TypeCheckerHelper.checkAssignment(e,this,t,getInitExp());
         } else {
-                if (!t.isReferenceType() && !t.isFutureType()) {
-                    e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
-                }
+            if (!t.isReferenceType() && !t.isFutureType()) {
+                e.add(new TypeError(this, ErrorMessage.FIELD_INIT_REQUIRED, new String[0]));
+            }
         }
-   }
-    
+    }
+
     public void ParamDecl.typeCheck(SemanticErrorList e) {
-   	 	getAccess().typeCheck(e);
+        getAccess().typeCheck(e);
     }
 
     /**
@@ -490,47 +490,47 @@ aspect TypeChecker {
      * @return
      */
     protected boolean Decl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
-    	return true;
+        return true;
     }
     @Override
     protected boolean UnknownDecl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
-            e.add(new TypeError(use, errorMessage, name));
-            return false;
+        e.add(new TypeError(use, errorMessage, name));
+        return false;
     }
     @Override
     protected boolean AmbiguousDecl.checkDecl(ASTNode<?> use, SemanticErrorList e, ErrorMessage errorMessage, String name) {
-            e.add(new TypeError(use, ErrorMessage.AMBIGIOUS_USE, name, TypeCheckerHelper.getAlternativesAsString(this)));
-            return false;
+        e.add(new TypeError(use, ErrorMessage.AMBIGIOUS_USE, name, TypeCheckerHelper.getAlternativesAsString(this)));
+        return false;
     }
-    
+
 
     // STMTS
-    
+
     public abstract void Stmt.typeCheck(SemanticErrorList e);
-    
+
     public void IncompleteStmt.typeCheck(SemanticErrorList e) {
-       // ignore
+        // ignore
     }
     public void ExpressionStmt.typeCheck(SemanticErrorList e) {
-   	   getExp().typeCheck(e);
+        getExp().typeCheck(e);
     }
-    
-    public void VarDeclStmt.typeCheck(SemanticErrorList e) {
-       getVarDecl().typeCheck(e); 
-       TypeCheckerHelper.checkForDuplicatesOfVarDecl(e, this);
-    }
-    
-    public void AssignStmt.typeCheck(SemanticErrorList e) {
-   	 Type rht = getValue().getType();
-   	 Type lht = getVar().getType();
-   	 	
-     int nerrors = e.size();   	 	
-     getValue().typeCheck(e);
-     getVar().typeCheck(e);
 
-     if (e.size() > nerrors)
-     	return;
-     TypeCheckerHelper.checkAssignment(e,this,lht,getValue());
+    public void VarDeclStmt.typeCheck(SemanticErrorList e) {
+        getVarDecl().typeCheck(e); 
+        TypeCheckerHelper.checkForDuplicatesOfVarDecl(e, this);
+    }
+
+    public void AssignStmt.typeCheck(SemanticErrorList e) {
+        Type rht = getValue().getType();
+        Type lht = getVar().getType();
+
+        int nerrors = e.size();   	 	
+        getValue().typeCheck(e);
+        getVar().typeCheck(e);
+
+        if (e.size() > nerrors)
+            return;
+        TypeCheckerHelper.checkAssignment(e,this,lht,getValue());
     }
 
     public void MoveCogToStmt.typeCheck(SemanticErrorList e) {
@@ -545,34 +545,34 @@ aspect TypeChecker {
     }
 
     public void ReturnStmt.typeCheck(SemanticErrorList e) {
-   	 MethodImpl m = getContextMethod();
-   	 Type lht = getModel().getUnitType();
-   	 Block block = getContextBlock();
+        MethodImpl m = getContextMethod();
+        Type lht = getModel().getUnitType();
+        Block block = getContextBlock();
 
-   	 if (m != null) {
-   	     lht = m.getMethodSig().getReturnType().getType();
-   	     block = m.getBlock();
-   	 }
-   	 
-         Type rht = getRetExp().getType();
-         if (!rht.isAssignable(lht)) {
-             e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
-         }
-   		 
-   	 getRetExp().typeCheck(e);
-   	 
-   	 Stmt lastStmt = block.getStmt(block.getNumStmt()-1);
-   	 if (lastStmt != this) {
-   	     e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
-   	 }
+        if (m != null) {
+            lht = m.getMethodSig().getReturnType().getType();
+            block = m.getBlock();
+        }
+
+        Type rht = getRetExp().getType();
+        if (!rht.isAssignable(lht)) {
+            e.add(new TypeError(this,ErrorMessage.CANNOT_ASSIGN,rht,lht));
+        }
+
+        getRetExp().typeCheck(e);
+
+        Stmt lastStmt = block.getStmt(block.getNumStmt()-1);
+        if (lastStmt != this) {
+            e.add(new TypeError(this, ErrorMessage.RETURN_STMT_MUST_BE_LAST, new String[0]));
+        }
     }
-    
+
     public void AwaitStmt.typeCheck(SemanticErrorList e) {
-   	 getGuard().typeCheck(e);
+        getGuard().typeCheck(e);
     }
 
     public void SuspendStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
-    
+
     public void DurationStmt.typeCheck(SemanticErrorList e) {
         System.out.println("***** Typecheck DurationStmt " + this);
         getMin().typeCheck(e);
@@ -582,50 +582,50 @@ aspect TypeChecker {
     }
 
     public void IfStmt.typeCheck(SemanticErrorList e) {
-   	 getCondition().typeCheck(e);
-   	 getCondition().assertHasType(e,getModel().getBoolType());
-   	 getThen().typeCheck(e);
-   	 if (hasElse())
-   		 getElse().typeCheck(e);
+        getCondition().typeCheck(e);
+        getCondition().assertHasType(e,getModel().getBoolType());
+        getThen().typeCheck(e);
+        if (hasElse())
+            getElse().typeCheck(e);
 
     }
-    
+
     public void WhileStmt.typeCheck(SemanticErrorList e) {
-   	 getCondition().typeCheck(e);
-   	 getCondition().assertHasType(e,getModel().getBoolType());
-   	 getBody().typeCheck(e);
+        getCondition().typeCheck(e);
+        getCondition().assertHasType(e,getModel().getBoolType());
+        getBody().typeCheck(e);
     }
-    
+
     public void SkipStmt.typeCheck(SemanticErrorList e) { 
-        /* nothing to check */ }
+    /* nothing to check */ }
 
     public void AssertStmt.typeCheck(SemanticErrorList e) {
-   	  getCondition().typeCheck(e);
-   	  getCondition().assertHasType(e,getModel().getBoolType());
+        getCondition().typeCheck(e);
+        getCondition().assertHasType(e,getModel().getBoolType());
     }
 
     // GUARDS
     public abstract void Guard.typeCheck(SemanticErrorList e);
     public void AndGuard.typeCheck(SemanticErrorList e) { 
-   	 getLeft().typeCheck(e);
-   	 getRight().typeCheck(e);
+        getLeft().typeCheck(e);
+        getRight().typeCheck(e);
     }
-    
+
     public void ClaimGuard.typeCheck(SemanticErrorList e) { 
-   	 getVar().typeCheck(e);
-   	 Type t = getVar().getType();
-   	 if (!t.isFutureType()) {
-   		 e.add(new TypeError(getVar(),ErrorMessage.EXPECTED_FUT_TYPE, t));
-   	 }
+        getVar().typeCheck(e);
+        Type t = getVar().getType();
+        if (!t.isFutureType()) {
+            e.add(new TypeError(getVar(),ErrorMessage.EXPECTED_FUT_TYPE, t));
+        }
     }
     public void ExpGuard.typeCheck(SemanticErrorList e) { 
-      PureExp exp = getPureExp();
-      // We'll only run "deeper" checks if the types check out. 
-      int size = e.size();
-      exp.typeCheck(e);
-      getPureExp().assertHasType(e,getModel().getBoolType());
-      if (e.size() == size)
-          hasFieldAccess(e); // check for visible change/builtin
+        PureExp exp = getPureExp();
+        // We'll only run "deeper" checks if the types check out. 
+        int size = e.size();
+        exp.typeCheck(e);
+        getPureExp().assertHasType(e,getModel().getBoolType());
+        if (e.size() == size)
+            hasFieldAccess(e); // check for visible change/builtin
     }
     public void DurationGuard.typeCheck(SemanticErrorList e) {
         getMin().typeCheck(e);
@@ -633,14 +633,14 @@ aspect TypeChecker {
         getMin().assertHasType(e, getModel().getIntType());
         getMax().assertHasType(e, getModel().getIntType());
     }
-    
+
     // EXPRESSIONS
-    
+
     public void Exp.typeCheck(SemanticErrorList e) { }
-    
+
     public void OriginalCall.typeCheck(SemanticErrorList e) {
-       /* We are never typeChecking method bodies within deltas at the moment. #386*/
-       e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));
+        /* We are never typeChecking method bodies within deltas at the moment. #386*/
+        e.add(new TypeError(this,ErrorMessage.ORIGINAL_NOT_IN_DELTA,""));
     }
 
     public void TypeUse.typeCheck(SemanticErrorList e) {
@@ -657,7 +657,7 @@ aspect TypeChecker {
     public void UnresolvedTypeUse.typeCheck(SemanticErrorList e) {
         e.add(new TypeError(this,ErrorMessage.TYPE_NOT_RESOLVABLE,getName()));
     }
-    
+
     public void VarOrFieldUse.typeCheck(SemanticErrorList e) {
         TypeCheckerHelper.checkDefBeforeUse(e, this);
     }
@@ -671,7 +671,7 @@ aspect TypeChecker {
             typeCheckEqualParams(e,getMethodSig());
         }
     }
-    
+
     public void NewExp.typeCheck(SemanticErrorList e) {
         Decl decl = lookup(new KindedName(Kind.CLASS,getClassName()));
         if (!decl.checkDecl(this, e, ErrorMessage.NO_CLASS_DECL, getClassName())) {
@@ -683,19 +683,19 @@ aspect TypeChecker {
             typeCheckEqualParams(e,cd);
         }
     }
-    
+
 
     public void GetExp.typeCheck(SemanticErrorList e) {  
-   	 if (!getPureExp().getType().isFutureType()) {
-   		 e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType())); 
-   	 }
-   	 getPureExp().typeCheck(e);
+        if (!getPureExp().getType().isFutureType()) {
+            e.add(new TypeError(getPureExp(), ErrorMessage.EXPECTED_FUT_TYPE, getPureExp().getType())); 
+        }
+        getPureExp().typeCheck(e);
     }
     public void AddAddExp.typeCheck(SemanticErrorList e) {
         // Special case: can also "add" strings.
         Type lt = getLeft().getType();
         Type rt = getRight().getType();
-        
+
         if (! (lt.isNumericType() || lt.isStringType())) {
             e.add(new TypeError(this, ErrorMessage.EXPECTED_ADDABLE_TYPE, lt));
         }
@@ -705,30 +705,30 @@ aspect TypeChecker {
         if (!lt.isAssignable(rt) && !rt.isAssignable(lt)) {
             e.add(new TypeError(this, ErrorMessage.ADD_INCOMPARABLE_TYPE, lt, rt));
         }
-        
+
         getLeft().typeCheck(e);
         getRight().typeCheck(e);
     }
     public void ArithmeticExp.typeCheck(SemanticErrorList e) {  
         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
     }
-    
+
     public void BoolExp.typeCheck(SemanticErrorList e) { 
         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getBoolType());
     }
-    
+
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-         TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
+        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
     }
 
     public void EqualityExpr.typeCheck(SemanticErrorList e) {
-   	 getLeft().typeCheck(e);
-   	 getRight().typeCheck(e);
-         Type tl = getLeft().getType();
-         Type tr = getRight().getType();
-         if (!tl.isAssignable(tr) && !tr.isAssignable(tl)) {
-             e.add(new TypeError(this, ErrorMessage.EQUALITY_INCOMPARABLE_TYPE, tl, tr));
-         }
+        getLeft().typeCheck(e);
+        getRight().typeCheck(e);
+        Type tl = getLeft().getType();
+        Type tr = getRight().getType();
+        if (!tl.isAssignable(tr) && !tr.isAssignable(tl)) {
+            e.add(new TypeError(this, ErrorMessage.EQUALITY_INCOMPARABLE_TYPE, tl, tr));
+        }
     }
 
     public void IfExp.typeCheck(SemanticErrorList e) {
@@ -747,27 +747,27 @@ aspect TypeChecker {
     }
 
     public void CaseExp.typeCheck(SemanticErrorList e) {  
-   	 getExpr().typeCheck(e);
-   	 Type et = getExpr().getType();
-   	 if (!et.isDataType()) {
-   		 e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
-   		 return;
-   	 }
-   	 Type t = getType();
-   	 for (CaseBranch b : getBranchs()) {
-   	     b.typeCheck(e,(DataTypeType) et);
-   	     Type t2 = b.getType();
-   	     if (!t2.isAssignable(t)) {
-  			e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
-   	     }
-   	 }
+        getExpr().typeCheck(e);
+        Type et = getExpr().getType();
+        if (!et.isDataType()) {
+            e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
+            return;
+        }
+        Type t = getType();
+        for (CaseBranch b : getBranchs()) {
+            b.typeCheck(e,(DataTypeType) et);
+            Type t2 = b.getType();
+            if (!t2.isAssignable(t)) {
+                e.add(new TypeError(this,ErrorMessage.BRANCH_INCOMPARABLE_TYPE,t,t2));
+            }
+        }
     } 
-    
+
     public void CaseBranch.typeCheck(SemanticErrorList e, DataTypeType t) {
-   	     getLeft().typeCheck(e,t);
-   	     getRight().typeCheck(e);
+        getLeft().typeCheck(e,t);
+        getRight().typeCheck(e);
     }
-    
+
     public void FnApp.typeCheck(SemanticErrorList e) {
         Decl d = getDecl();
         if (!d.checkDecl(this, e, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName())) {
@@ -775,16 +775,16 @@ aspect TypeChecker {
         } else if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
         } else {
-           ((FunctionDecl)d).typeCheckParams(e, this);
+            ((FunctionDecl)d).typeCheckParams(e, this);
         }
     }
 
     void FunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
-      fa.typeCheckEqualParams(e,this);
+        fa.typeCheckEqualParams(e,this);
     }
 
     void ParametricFunctionDecl.typeCheckParams(SemanticErrorList e, FnApp fa) {
-      TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
+        TypeCheckerHelper.typeCheckMatchingParams(e,fa,this);
     }
 
     public Map<TypeParameter, Type> FnApp.getTypeParamBindingFromParamDecl(ParametricFunctionDecl node) {
@@ -792,64 +792,64 @@ aspect TypeChecker {
     }
 
     public void DataConstructorExp.typeCheck(SemanticErrorList e) {
-   	 Decl decl = getDecl();
-   	 if (!(decl instanceof DataConstructor)) {
-   		 e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
-   	 } else {
-   	 	DataConstructor c = (DataConstructor) decl;
-   	 	
-   	   if (c.getConstructorArgs().getNumChild() != getParams().getNumChild()) {
-   	       e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
-   	   } else {
-   	       if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
-   	   	   TypeCheckerHelper.typeCheckMatchingParams(e,this);
-   	       } else {
-   	           TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
-   	       }
-   	   }
-   	 }
-   	 
+        Decl decl = getDecl();
+        if (!(decl instanceof DataConstructor)) {
+            e.add(new SemanticError(this,ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE,getConstructor()));
+        } else {
+            DataConstructor c = (DataConstructor) decl;
+
+            if (c.getConstructorArgs().getNumChild() != getParams().getNumChild()) {
+                e.add(new SemanticError(this, ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS,c.getName(),""+c.getConstructorArgs().getNumChild(), ""+getParams().getNumChild()));
+            } else {
+                if (c.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+                    TypeCheckerHelper.typeCheckMatchingParams(e,this);
+                } else {
+                    TypeCheckerHelper.typeCheckEqual(e,this,c.getTypes());
+                }
+            }
+        }
+
     }
     public void LetExp.typeCheck(SemanticErrorList e) {  
-   	 getVar().typeCheck(e);
-   	 getVal().typeCheck(e);
-   	 getExp().typeCheck(e);
-		 TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
-   	 
-   	 
+        getVar().typeCheck(e);
+        getVal().typeCheck(e);
+        getExp().typeCheck(e);
+        TypeCheckerHelper.checkAssignment(e,this,getVar().getAccess().getType(),getVal());
+
+
     }
 
     public void MinusExp.typeCheck(SemanticErrorList e) { 
-   	   getOperand().assertHasType(e,getModel().getIntType());
-       getOperand().typeCheck(e);
+        getOperand().assertHasType(e,getModel().getIntType());
+        getOperand().typeCheck(e);
     }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-   	   getOperand().assertHasType(e,getModel().getBoolType());
-       getOperand().typeCheck(e);
+        getOperand().assertHasType(e,getModel().getBoolType());
+        getOperand().typeCheck(e);
     }
-    
-    
+
+
     // PATTERNS
-    
+
     public void Pattern.typeCheck(SemanticErrorList e, Type t) {  }
-    
+
     public void PatternVarUse.typeCheck(SemanticErrorList e, Type t) {
         if (!getType().equals(t)) {
             e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
         }
     }
-    
+
     public void LiteralPattern.typeCheck(SemanticErrorList e, Type t) {
         if (!getType().equals(t)) {
             e.add(new TypeError(this,ErrorMessage.TYPE_MISMATCH,getType(),t));
         }
     }
-    
+
     public void ConstructorPattern.typeCheck(SemanticErrorList e, Type t) {
-	    TypeCheckerHelper.typeCheck(this,e,t);
+        TypeCheckerHelper.typeCheck(this,e,t);
     }
-    
+
     public void Exp.assertHasType(SemanticErrorList l, Type t) {
         if (!getType().isAssignable(t)) {
             l.add(new TypeError(this, ErrorMessage.EXPECTED_TYPE, t, getType()));
@@ -860,17 +860,18 @@ aspect TypeChecker {
 aspect TypeCheckProductline {
 
     refine TypeChecker public void CompilationUnit.typeCheck(SemanticErrorList e) {
-    	refined(e);
-    	for (DeltaDecl d : getDeltaDecls()) {
+        refined(e);
+        for (DeltaDecl d : getDeltaDecls()) {
             d.typeCheck(e);
         }
-    	for (Product p : getProducts()) {
-    	    p.typeCheck(e);
-    	}
+        for (Product p : getProducts()) {
+            p.typeCheck(e);
+        }
         if (hasProductLine())
             getProductLine().typeCheck(e);
     }
     protected void DeltaDecl.typeCheck(SemanticErrorList e) {
+        System.out.println("*** Type checking delta " + getName());
         // TODO type-checking goes here
     }
 
@@ -881,7 +882,7 @@ aspect TypeCheckProductline {
         }
         TypeCheckerHelper.typeCheckProduct(this, productNames, e);
     }
-    
+
     protected void ProductLine.typeCheck(SemanticErrorList e) {
         // TODO: JastAdd attributes?
         // cache all names of defined deltas for easy lookup
@@ -891,23 +892,23 @@ aspect TypeCheckProductline {
         }
         HashSet<String> definedFeatures = new HashSet<String>();
         for (Feature cf : getOptionalFeatures()) {
-              definedFeatures.add(cf.getName());
+            definedFeatures.add(cf.getName());
         }
-            
-       // TODO: check for undeclared features?
-       for (DeltaClause dc : getDeltaClauses()) {
-           dc.typeCheck(deltaNames, definedFeatures, e);
-       }
-       Set<String> fs = new HashSet<String>();
-       for (Feature f : getOptionalFeatures()) {
-           if (!fs.add(f.getName()))
-               e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
-       }
+
+        // TODO: check for undeclared features?
+        for (DeltaClause dc : getDeltaClauses()) {
+            dc.typeCheck(deltaNames, definedFeatures, e);
+        }
+        Set<String> fs = new HashSet<String>();
+        for (Feature f : getOptionalFeatures()) {
+            if (!fs.add(f.getName()))
+                e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
+        }
     }
 
     protected void DeltaClause.typeCheck(Set<String> ds, Set<String> definedFeatures, SemanticErrorList e) {
-    	TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);
-     }
+        TypeCheckerHelper.typeCheckDeltaClause(this, ds, definedFeatures, e);
+    }
 
     public abstract void AppCond.typeCheck(Set<String> definedFeatures, SemanticErrorList e);
     public void AppCondAnd.typeCheck(Set<String> definedFeatures, SemanticErrorList e) {
@@ -931,7 +932,7 @@ aspect TypeCheckProductline {
 aspect TypeCheckComponents {
     public void MoveStmt.typeCheck(SemanticErrorList e) {}
     public void RebindStmt.typeCheck(SemanticErrorList e) {}
-    
+
     public void ObjectGuard.typeCheck(SemanticErrorList e) { }
 
 }
