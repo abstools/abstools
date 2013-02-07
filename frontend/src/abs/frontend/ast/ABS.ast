@@ -75,6 +75,7 @@ AddClassModifier : ClassModifier ::= ClassDecl;
 RemoveClassModifier : ClassModifier ::= <Name>;
 ModifyClassModifier : ClassModifier ::= <Name> AddedInterface:InterfaceTypeUse* RemovedInterface:InterfaceTypeUse* Modifier*;
 AddInterfaceModifier : InterfaceModifier ::= InterfaceDecl;
+RemoveInterfaceModifier : InterfaceModifier ::= <Name>;
 ModifyInterfaceModifier : InterfaceModifier ::= <Name> MethodSigModifier*;
 
 AddFieldModifier : Modifier ::= FieldDecl;

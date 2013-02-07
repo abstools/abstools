@@ -380,6 +380,7 @@ OOModifier oo_modifier =
   | REMOVES CLASS type_name.id SEMICOLON {: return new RemoveClassModifier(id.getString()); :}
   | MODIFIES CLASS type_name.id implement_interfaces_add.ifadd? implement_interfaces_remove.ifremove? LBRACE modifier_fragment_list.fragments? RBRACE {: return new ModifyClassModifier(id.getString(), ifadd, ifremove, fragments); :}
   | ADDS qualified_interface_decl.ifacedecl {: return new AddInterfaceModifier(ifacedecl); :}
+  | REMOVES INTERFACE type_name.id SEMICOLON {: return new RemoveInterfaceModifier(id.getString()); :}
   | MODIFIES INTERFACE type_name.id LBRACE inf_modifier_fragment_list.fragments? RBRACE {: return new ModifyInterfaceModifier(id.getString(), fragments); :}
   ;
 

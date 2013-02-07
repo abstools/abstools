@@ -66,6 +66,37 @@ public class AddRemoveInterfacesTest extends DeltaTest {
     }
 
     @Test
+    public void removeIfaceDecl() throws DeltaModellingException {
+        final ArrayList<String> codeVariants = new ArrayList<String>(Arrays.asList(
+                "module M;"
+                + "interface I { Int fooi(); }"
+                + "delta D;"
+                + "removes interface M.I;"
+                ,
+                "module M;"
+                + "interface I { Int fooi(); }"
+                + "delta D; uses M;"
+                + "removes interface I;"
+        ));
+        
+        // both qualified and unqualified interface names should yield the same result
+        for (String code : codeVariants) {
+            Model model = assertParseOk(code);
+
+            InterfaceDecl iface = (InterfaceDecl) findDecl(model, "M", "I");
+            assertNotNull(iface);
+            DeltaDecl delta = findDelta(model, "D");
+            assertNotNull(delta);
+
+            ModuleDecl m = iface.getModuleDecl();
+            assertEquals(1, m.getDecls().getNumChild());
+            
+            model.applyDelta(delta);
+            assertEquals(0, m.getDecls().getNumChild());
+        }
+    }
+
+    @Test
     public void modifyIfaceDeclAddMethodSig() throws DeltaModellingException {
         final ArrayList<String> codeVariants = new ArrayList<String>(Arrays.asList(
                 "module M;"

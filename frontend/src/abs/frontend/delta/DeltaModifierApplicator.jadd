@@ -87,6 +87,11 @@ aspect DeltaModifierApplicator {
             mod.applyTo(iface);
         }
     }
+    public void RemoveInterfaceModifier.apply() throws DeltaModellingException {
+        InterfaceDecl iface = this.findInterface();
+        ModuleDecl module = iface.getModuleDecl();
+        module.getDecls().removeChild(module.getDecls().getIndexOfChild(iface));
+    }
     
     /**************************************************************************
      * FunctionalModifiers add functions, data types and type synonyms

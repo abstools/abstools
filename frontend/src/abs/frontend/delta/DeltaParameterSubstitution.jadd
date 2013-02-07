@@ -113,6 +113,7 @@ aspect DeltaParameterSubstitution {
             m.applySubstitution(subst);
     }
     protected void AddInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
+    protected void RemoveInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
     protected void ModifyInterfaceModifier.applySubstitution(Map<String,Value> subst) {}
 
     // TODO apply substitution to FunctionalModifier
