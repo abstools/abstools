@@ -870,11 +870,90 @@ aspect TypeCheckProductline {
         if (hasProductLine())
             getProductLine().typeCheck(e);
     }
+    
     protected void DeltaDecl.typeCheck(SemanticErrorList e) {
-        System.out.println("*** Type checking delta " + getName());
+//        System.out.println("*** Type checking delta " + getName());
         // TODO type-checking goes here
+        
+        for (DeltaAccess acc : getDeltaAccessList())
+            acc.typeCheck(e);
+        for (ModuleModifier mod : getModuleModifiers())
+            mod.typeCheck(e);
     }
 
+    public void DeltaAccess.typeCheck(SemanticErrorList e) {
+        ModuleDecl d = lookupModule(getModuleName());
+        if (d == null) {
+            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, getModuleName()));
+        }
+    }
+    
+    protected void ModuleModifier.typeCheck(SemanticErrorList e) {
+//        System.out.println("*** Type checking ModuleModifier " + this.getClass().getName());
+        
+        // Just check the module, the rest is done by more specific methods below
+        ModuleDecl d = lookupModule(targetModuleName());
+        if (d == null) {
+            e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, targetModuleName()));
+        }
+    }
+    
+    protected void AddClassModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+    }
+    protected void RemoveClassModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void ModifyClassModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void AddInterfaceModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void RemoveInterfaceModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void ModifyInterfaceModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void AddDataTypeModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void ModifyDataTypeModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void AddFunctionModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void AddTypeSynModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+    protected void ModifyTypeSynModifier.typeCheck(SemanticErrorList e) {
+        super.typeCheck(e);
+        //TODO
+        
+    }
+
+    
     protected void Product.typeCheck(SemanticErrorList e) {
         HashSet<String> productNames = new HashSet<String>();
         for (Product prod : getModel().getProducts()) {
