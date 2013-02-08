@@ -574,7 +574,6 @@ aspect TypeChecker {
     public void SuspendStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
 
     public void DurationStmt.typeCheck(SemanticErrorList e) {
-        System.out.println("***** Typecheck DurationStmt " + this);
         getMin().typeCheck(e);
         getMax().typeCheck(e);
         getMin().assertHasType(e, getModel().getRatType());
@@ -872,9 +871,6 @@ aspect TypeCheckProductline {
     }
     
     protected void DeltaDecl.typeCheck(SemanticErrorList e) {
-//        System.out.println("*** Type checking delta " + getName());
-        // TODO type-checking goes here
-        
         for (DeltaAccess acc : getDeltaAccessList())
             acc.typeCheck(e);
         for (ModuleModifier mod : getModuleModifiers())
@@ -889,9 +885,7 @@ aspect TypeCheckProductline {
     }
     
     protected void ModuleModifier.typeCheck(SemanticErrorList e) {
-//        System.out.println("*** Type checking ModuleModifier " + this.getClass().getName());
-        
-        // Just check the module, the rest is done by more specific methods below
+        // Just check the module, the rest is done in the subclass
         ModuleDecl d = lookupModule(targetModuleName());
         if (d == null) {
             e.add(new TypeError(this, ErrorMessage.MODULE_NOT_RESOLVABLE, targetModuleName()));

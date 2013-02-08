@@ -386,9 +386,6 @@ public class Main {
 
             }
             if (check) {
-                /*for (CompilationUnit u : m.getCompilationUnits()) {
-                    u.printFM("");
-                }*/
                 assert product != null;
                 ChocoSolver s = m.getCSModel();
                 if (p_product == null ){
