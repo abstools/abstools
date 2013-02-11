@@ -28,32 +28,26 @@ class ConnectionImpl implements Connection {
 class ReconfiguratorImpl(Connection conn) implements Reconfigurator {
     Unit run() {
         ProductLine pl = getPL();
+
         while(True) {
-//            String p = pl.getCurrentProduct();
-            String p = "LowEndChat";
+            String p = pl.getCurrentProduct();
             Bandwidth bw = conn.checkBandwidth();
 
-            if (bw == High) {
-                Unit u = println("Reconfiguring: high");
-                p = "HighEndChat";
-//                pl.configureProduct("HighEndChat");
-                
-            } 
-
-        }
-    }
-
-    Unit reconfigure() {
-        Bandwidth bw = conn.checkBandwidth();
-        if (bw == Low) {
-            Unit u = println("Reconfiguring: low");
-            //reconfigureProduct("LowEndChat");
-        } else if (bw == Mid) {
-            Unit u = println("Reconfiguring: mid");
-            //reconfigureProduct("RegularChat");
-        } else {
-            Unit u = println("Reconfiguring: high");
-            //reconfigureProduct("HighEndChat");
+            if (p == "RegularChat") {
+                if (bw == Low) {
+                    pl.configureProduct("LowEndChat");
+                } else if (bw == High) {
+                    pl.configureProduct("HighEndChat");
+                }
+            } else if (p == "HighEndChat") {
+                if (bw == Low || bw == Mid) {
+                    pl.configureProduct("RegularChat");
+                }
+            } else if (p == "LowEndChat") {
+                if (bw == Mid || bw == High) {
+                    pl.configureProduct("RegularChat");
+                }
+            }
         }
     }
 }

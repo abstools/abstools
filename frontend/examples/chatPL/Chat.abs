@@ -13,12 +13,12 @@ class ClientImpl implements Client, Text {
 }
 
 {
+    Connection conn = new ConnectionImpl();
+    Reconfigurator r = new cog ReconfiguratorImpl(conn);
+
     Text c1 = new ClientImpl();
     Text c2 = new cog ClientImpl();
     c1.message(c2, "Hello");
-
-    Connection conn = new ConnectionImpl();
-    Reconfigurator r = new cog ReconfiguratorImpl(conn);
 }
 
 
