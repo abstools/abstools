@@ -318,6 +318,10 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
             } else if (node instanceof ModifyClassModifier) {
                 ModifyClassModifier cm = (ModifyClassModifier) node;
                 decl = cm.findClass();
+            } else if (node instanceof ModifyInterfaceModifier) {
+                ModifyInterfaceModifier m = (ModifyInterfaceModifier) node;
+                decl = m.findInterface();
+                // TODO: handle all other Modify/Remove-modifiers
             } else if (node instanceof MethodSig) {
                 decl = node;
             }

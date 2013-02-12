@@ -436,12 +436,20 @@ public class ABSContentOutlineUtils {
 	        // FIXME Unfold ProductLine Definition
 	        return new StyledString(((ProductLine) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof Product) {
-	        // FIXME Unfold ProductLine Definition
+	        // FIXME Unfold Product Definition
 	        return new StyledString(((Product) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof DeltaDecl) {
 	        return new StyledString(((DeltaDecl) element).getName(), STYLER_BLACK);
-	    } else if (element instanceof FunctionalModifier) {
-	        return new StyledString("✳" + ((FunctionalModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof AddTypeSynModifier) {
+	        return new StyledString("✳" + ((AddTypeSynModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof ModifyTypeSynModifier) {
+	        return new StyledString("✎" + ((ModifyTypeSynModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof AddDataTypeModifier) {
+	        return new StyledString("✳" + ((AddDataTypeModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof ModifyDataTypeModifier) {
+	        return new StyledString("✎" + ((ModifyDataTypeModifier) element).getName(), STYLER_BLACK);
+	    } else if (element instanceof AddFunctionModifier) {
+	        return new StyledString("✳" + ((AddFunctionModifier) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof AddClassModifier) {
 	        return new StyledString("✳" + ((AddClassModifier) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof RemoveClassModifier) {
@@ -450,6 +458,8 @@ public class ABSContentOutlineUtils {
 	        return new StyledString("✎" + ((ModifyClassModifier) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof AddInterfaceModifier) {
 	        return new StyledString("✳" + ((AddInterfaceModifier) element).getName(), STYLER_BLACK);
+            } else if (element instanceof RemoveInterfaceModifier) {
+                return new StyledString("✘" + ((RemoveInterfaceModifier) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof ModifyInterfaceModifier) {
 	        return new StyledString("✎" + ((ModifyInterfaceModifier) element).getName(), STYLER_BLACK);
 	    } else if (element instanceof ClassDecl) {
