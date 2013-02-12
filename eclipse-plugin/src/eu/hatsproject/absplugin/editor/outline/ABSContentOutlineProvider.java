@@ -256,6 +256,8 @@ public class ABSContentOutlineProvider implements ITreeContentProvider, IResourc
 	 */
 	private ASTNode<?>[] getChildrenOf(DeltaDecl d) {
 	    ArrayList<ASTNode<?>> children = new ArrayList<ASTNode<?>>();
+	    for (DeltaAccess a : d.getDeltaAccessList())
+	        children.add(a);
 	    for (ModuleModifier m : d.getModuleModifiers())
 	        children.add(m);
 	    return children.toArray(EMPTY_NODES);
