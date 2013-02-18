@@ -1,6 +1,7 @@
 module Chat;
 import * from Management;
 
+
 interface Client {}
 
 // core: text-only Chat client
@@ -14,7 +15,7 @@ class ClientImpl implements Client, Text {
 
 {
     Connection conn = new ConnectionImpl();
-    Reconfigurator r = new cog ReconfiguratorImpl(conn);
+    new cog Reconfigurator(conn);
 
     Text c1 = new ClientImpl();
     Text c2 = new cog ClientImpl();
@@ -27,7 +28,7 @@ class ClientImpl implements Client, Text {
 delta DVoice;
 uses Chat;
 
-adds interface Call { 
+adds interface Call {
   Unit pickup();
   Unit hangup();
 }
@@ -37,7 +38,7 @@ adds interface Voice {
 adds class AudioStream {}
 
 adds class CallImpl implements Call {
-  AudioStream singleAudioStream;  
+  AudioStream singleAudioStream;
   Unit pickup() {/*...*/}
   Unit hangup() {/*...*/}
 }
@@ -67,12 +68,12 @@ modifies interface Call {
 adds class AudioVideoStreamManager {
   AudioStream extractSingleMainAudio() {/*...*/}
   Unit includeAudio(AudioStream audio) {/*...*/}
-} 
+}
 
 modifies class CallImpl {
   adds AudioVideoStreamManager avStreamManager;
-  removes AudioStream singleAudioStream; 
-  
+  removes AudioStream singleAudioStream;
+
   adds Unit startVideo() {/*...*/}
   adds Unit stopVideo() {/*...*/}
 }

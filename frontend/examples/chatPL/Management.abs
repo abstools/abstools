@@ -9,9 +9,6 @@ interface Connection {
     Bandwidth checkBandwidth();
 }
 
-interface Reconfigurator {
-    Unit reconfigure();
-}
 
 class ConnectionImpl implements Connection {
     Bandwidth checkBandwidth() {
@@ -25,7 +22,7 @@ class ConnectionImpl implements Connection {
     }
 }
 
-class ReconfiguratorImpl(Connection conn) implements Reconfigurator {
+class Reconfigurator(Connection conn) {
     Unit run() {
         ProductLine pl = getPL();
 
