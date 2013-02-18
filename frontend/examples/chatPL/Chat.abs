@@ -35,10 +35,12 @@ adds interface Voice {
   Call call(Client client);
 }
 adds class CallImpl implements Call {
+  AudioStream singleAudioStream;  
   Unit pickup() {/*...*/}
   Unit hangup() {/*...*/}
 }
 modifies class ClientImpl adds Voice {
+  adds Call callHolder;
   adds Call call(Client client) { return new CallImpl(); }
 }
 
@@ -58,8 +60,17 @@ modifies class ClientImpl adds Video {
 modifies interface Call {
   adds Unit startVideo();
   adds Unit stopVideo();
+}
+adds class AudioStream {}
+
+adds class AudioVideoStreamManager {
+  AudioStream extractSingleMainAudio() {/*...*/}
+  Unit includeAudio(AudioStream audio) {/*...*/}
 } 
 modifies class CallImpl {
+  adds AudioVideoStreamManager avStreamManager;
+  removes AudioStream singleAudioStream; 
+  
   adds Unit startVideo() {/*...*/}
   adds Unit stopVideo() {/*...*/}
 }
@@ -79,10 +90,15 @@ modifies class ClientImpl removes Video {
     removes Unit stopVideo();
 }
 
+modifies class CallImpl removes Video {
+    removes AudioVideoStreamManager avStreamManager;
+}
+
 delta DNoVoice;
 uses Chat;
 
 modifies class ClientImpl removes Voice {
+    removes Call callHolder;
     removes Unit call(Client client);
 }
 
