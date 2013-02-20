@@ -1,0 +1,18 @@
+update StateRegToHigh;
+uses Chat;
+
+update CallImpl {
+    pre: AudioStream tmp = this.singleAudioStream;
+    post: this.avStreamManger.includeAudio(tmp);  
+}
+
+
+
+
+update StateHighToReg;
+uses Chat;
+
+update CallImpl {
+    pre: AudioStream tmp = this.avStreamManger.extractSingleMainAudio();
+    post: this.singleAudioStream = tmp;  
+}
