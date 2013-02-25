@@ -25,7 +25,7 @@ public class ListUtils {
     /*
      * Transform a java.util.List into an ABS.StdLib.List
      */
-    public static Object toABSList(java.util.List<? extends ABSValue> l) {
+    public static ABSValue toABSList(java.util.List<? extends ABSValue> l) {
         if (l.isEmpty()) {
 //            return new ABS.StdLib.List_Nil();
             return DynamicClassUtils.instance("ABS.StdLib.List_Nil");

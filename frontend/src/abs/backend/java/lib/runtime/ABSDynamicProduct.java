@@ -16,6 +16,7 @@ public class ABSDynamicProduct implements ABSClass {
 
     private String name;
     private Set<String> features;
+    private List<ABSDynamicProduct> configurableProducts;
     private HashMap<String, List<String>> deltas = new HashMap<String, List<String>>();
     private HashMap<String, String> update;
     
@@ -33,22 +34,29 @@ public class ABSDynamicProduct implements ABSClass {
         this.features = features;
     }
     public void addFeature(String feature) {
-        this.features.add(feature);
+        features.add(feature);
     }
 
+    public void setConfigurableProducts(List<ABSDynamicProduct> productNames) {
+        configurableProducts = productNames;
+    }
+    public List<ABSDynamicProduct> getConfigurableProducts() {
+        return configurableProducts;
+    }
+    
     public void setDeltas(String productName, List<String> deltaNames) {
-        this.deltas.put(productName, deltaNames);
+        deltas.put(productName, deltaNames);
     }
 
     public List<String> getDeltas(String productName) {
-        return this.deltas.get(productName);
+        return deltas.get(productName);
     }
 
     public void setUpdate(String productName, String upd) {
-        this.update.put(productName, upd);
+        update.put(productName, upd);
     }
     public String getUpdate(String productName) {
-        return this.update.get(productName);
+        return update.get(productName);
     }
     
     @Override

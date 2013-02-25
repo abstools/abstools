@@ -36,7 +36,7 @@ aspect GenerateJava {
 
         if (hasProductLine()) {
             ProductLine pl = getProductLine();
-            JavaCode.Package pkg = code.createPackage("product");
+            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_PRODUCTS_PACKAGE);
             
             // first remember all products by name
             HashMap<String, Product> allProducts = new HashMap<String, Product>();
@@ -52,7 +52,6 @@ aspect GenerateJava {
                 } catch (RuntimeException e) { 
                     throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
                 }
-
             }
         }
 
@@ -76,7 +75,6 @@ aspect GenerateJava {
             try {
                 stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
                 stream.println("package " + p.packageName + ";");
-                //stream.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
 
                 stream.println("public class " + mainName + " extends " + ABSDynamicObject.class.getName() + " {");
                 
@@ -84,14 +82,16 @@ aspect GenerateJava {
                 stream.println(StartUp.class.getName() + ".startup(args," + mainName + ".class);");
                 stream.println("}");
 
-                //stream.println("public java.lang.String getClassName() { return \"Main\"; }");
-                //stream.println("public java.util.List<java.lang.String> getFieldNames() { return java.util.Collections.EMPTY_LIST; }");
                 stream.println("public " + mainName + "(" + COG.class.getName() 
                         + " cog) { super(cog, " + ABSMainClass.class.getName() + ".singleton()); }");
 
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
+                if (! getModel().getProductName().equals("core"))
+                    stream.println("thisP.__ABS_getRuntime().setSPLProduct(" 
+                            + JavaBackendConstants.LIB_PRODUCTS_PACKAGE + "." 
+                            + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
                 block.generateJavaDynamic(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
@@ -113,7 +113,6 @@ aspect GenerateJava {
             File file = pkg.createJavaFile(name);
             s = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             s.println("package " + pkg.packageName + ";");
-            //s.println(JavaBackendConstants.LIB_IMPORT_STATEMENT);
             generateJavaDynamic(s);
         } finally {
             if (s != null)
@@ -259,14 +258,7 @@ aspect GenerateJava {
      * Deltas
      */
     public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
-//        String plName;
-//        try {
-//            plName = getModel().getProductLine().getName();
-//        } catch (NullPointerException e) {
-//            plName = "nopl";
-//        }
-//        String packageName = "delta." + plName + "." + getName();
-        String packageName = "delta." + getName();
+        String packageName = JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + getName();
         JavaCode.Package pkg = code.createPackage(packageName);
         ArrayList<String> classes = new ArrayList<String>();
         for (ModuleModifier mod : getModuleModifiers()) {

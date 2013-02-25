@@ -582,6 +582,24 @@ public class DynamicJavaGeneratorHelper {
         for (Feature feature : prod.getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
         
+        // Reachable Products
+        stream.print("instance.setConfigurableProducts(");
+        if (prod.getProductAdaptations().getNumChild() == 0) { // no reachable products
+            stream.print(Collections.class.getName() + ".<" + String.class.getName() + ">emptyList()");
+        } else {
+            StringBuilder list = new StringBuilder();
+            list.append(Arrays.class.getName() + ".asList(");
+            boolean first = true;
+            for (ProductAdaptation ad : prod.getProductAdaptations()) {
+                if (first) first = false;
+                else list.append(", ");
+                list.append(JavaBackendConstants.LIB_PRODUCTS_PACKAGE + "." + JavaBackend.getProductName(ad.getProductID()) + ".singleton()"); 
+            }
+            list.append(")");
+            stream.print(list);
+        }
+        stream.println(");");
+
         // Updates
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
             stream.println("instance.setUpdate(\"" + ad.getProductID() + "\", \"" + ad.getUpdateID() + "\");");

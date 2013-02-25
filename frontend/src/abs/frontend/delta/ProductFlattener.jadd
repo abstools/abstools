@@ -43,7 +43,7 @@ aspect ProductFlattener {
         // find product line
         ProductLine pl = getProductLine();
         if (pl == null)
-          throw new DeltaModellingException("Model is missing a 'productline' definition");
+            throw new DeltaModellingException("Model is missing a 'productline' definition");
 
         // find/sort applicable delta IDs
         Set<String> deltaids = pl.findApplicableDeltas(prod);
@@ -51,25 +51,26 @@ aspect ProductFlattener {
 
         // find corresponding DeltaDecls
         ArrayList<DeltaDecl> deltas = findDeltas(sorted_deltaids);
-        
+
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod);
-        
+
         // resolve original() calls
         resolveOriginalCalls(deltas);
-        
+
         if (verbose) {
-            System.out.print("--- applying deltas to core << ");
-            String delim = "";
+            System.out.print("--- applying deltas to core");
             for (DeltaDecl delta : deltas) {
-                print(delim + delta.getName());
-                delim = " << ";
+                print(" << " + delta.getName());
             }
             println(" .");
         }
 
         // apply the applicable deltas in the given order
         applyDeltas(deltas);
+        
+        // remember which product was generated
+        productName = prod.getName();
     }
 
     /**************************************************************************

@@ -51,7 +51,7 @@ public class DynamicClassUtils {
         
     }
     
-    public static Object instance(String name, Object... args) {
+    public static <T extends ABSValue> T instance(String name, Object... args) {
         Class<?> cls = getClass(name);
         return instance(cls, args);
     }

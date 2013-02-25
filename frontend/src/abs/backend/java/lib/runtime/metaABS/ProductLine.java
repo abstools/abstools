@@ -10,14 +10,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
+import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
+import abs.backend.java.lib.runtime.ABSDynamicProduct;
 import abs.backend.java.lib.types.*;
+import abs.common.ListUtils;
 
 public class ProductLine {
     private static ABSDynamicClass thisClass;
@@ -28,6 +31,7 @@ public class ProductLine {
     public static ABSDynamicClass singleton() {
         if (thisClass == null) {
             thisClass = new ABSDynamicClass();
+            
             setupAPI();
             new NetworkListenerThread().start();
         }
@@ -35,9 +39,9 @@ public class ProductLine {
     }
 
     private static void setupAPI() {
-        thisClass.setName("Runtime");
+        thisClass.setName("ProductLine");
         
-        thisClass.addMethod("applyDelta", new ABSClosure() {
+        thisClass.addMethod(/* ABSUnit */ "applyDelta", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
@@ -46,34 +50,45 @@ public class ProductLine {
             }
         });
         
-        thisClass.addMethod("configureProduct", new ABSClosure() {
+        thisClass.addMethod(/* ABSUnit */ "configureProduct", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                String productName = ((ABSString)params[0]).getString();
+                ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
+                List<String> deltas;
                 
-                // TODO obtain delta names
-                ArrayList<String> deltas = new ArrayList<String>();
+                // Dynamic dispatch...
+                if (params[0] instanceof ABSString) {
+                    String targetProdName = ((ABSString)params[0]).getString();
+                    deltas = currentProd.getDeltas(targetProdName);
+                    
+                } else if (params[0] instanceof ABSDynamicProduct) {
+                    ABSDynamicProduct targetProd = (ABSDynamicProduct)params[0];
+                    deltas = currentProd.getDeltas(targetProd.getName());
+                
+                } else {
+                    throw new DynamicException("The method \"configureProduct\" in class "
+                            + thisClass.getName() + " is not applicable for the argument of type " + params[0].getClass());
+                }
                 
                 for (String deltaName : deltas) {
-                    ProductLine.applyDelta(deltaName);                    
+                    ProductLine.applyDelta(deltaName);    
                 }
                 return ABSUnit.UNIT;
             }
         });
-        
-        thisClass.addMethod("getCurrentProduct", new ABSClosure() {
+
+        thisClass.addMethod(/* ABSDynamicProduct */ "getCurrentProduct", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                // TODO
-                return ABSString.fromString("TODO");
+                return t.__ABS_getRuntime().getCurrentProduct();
             }
         });
 
-        thisClass.addMethod("getConfigurableProducts", new ABSClosure() {
+        thisClass.addMethod(/* List<ABSDynamicProduct> */ "getConfigurableProducts", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                // TODO return ABS.StdLib.List<ABSString>
-                return ABSUnit.UNIT;
+                ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
+                return ListUtils.toABSList(currentProd.getConfigurableProducts());
             }
         });
     }
@@ -81,7 +96,7 @@ public class ProductLine {
     private static void applyDelta(String deltaName) {
         // TODO use logger
         System.err.println("*** Applying delta." + deltaName);
-        String className = "delta." + deltaName + ".Application";
+        String className = JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + deltaName + ".Application";
 
         try {
             Class<?> clazz = Class.forName(className);

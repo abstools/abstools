@@ -64,7 +64,7 @@ aspect DeltaModifierApplicator {
             if (! found)
                 throw new DeltaModellingException(getDelta(), 
                     " wants to remove interface [" + toRemove.getName() + "] from class [" + cls.getName() 
-                    + "]. However, the class does not implement said interface.");
+                    + "]. However, the class does not implement that interface.");
         }
 
         // apply all modifiers

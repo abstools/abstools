@@ -88,3 +88,9 @@ aspect FileName {
     syn String ASTNode.getFileName() = this.sourceFileName == null ? getParent().getFileName() : this.sourceFileName;
     syn String Model.getFileName() = "<invalid>";
 }
+
+// inform Model about which product of the SPL it represents; default is "core"
+aspect SPLProduct {
+    private String Model.productName = "core";
+    syn String Model.getProductName() = this.productName;
+}
