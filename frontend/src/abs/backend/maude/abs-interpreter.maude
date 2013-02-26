@@ -1308,13 +1308,23 @@ mod ABS-MACHINE-BASICS-COMMON is
     < ob('main, 0) : '... | Cog: ob('main, 0), Att: noSubst, Lcnt: 0 >
     < LocId | 0 > . *** Component Model Extension
 
+  *** evaluate cost expression only once.
+  ceq < T : Clock | Limit: LIM, Random: RAND >
+    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+  =
+    < T : Clock | Limit: LIM, Random: RAND >
+    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COSTN:Data]ST:Stmt ; SL }, PrQ: W >
+    < O : C | Cog: CG, Att: S, Lcnt: F >
+  if COSTN:Data := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random])) .
+    
   --- Resource consumption.  Must be a rewrite rule for confluence.
   *** DC variables:
   var ODC : Oid .    var CG1 : Cogid . var STATE : Data .
   var F1 : Nat .    vars COSTNAT DCRES MINCOST : Rat .
   crl < T : Clock | Limit: LIM, Random: RAND >
     < O : C | Cog: CG, Att: S, Lcnt: F >
-    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COST]ST:Stmt ; SL }, PrQ: W >
+    < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | ["num"[COSTNAT]]ST:Stmt ; SL }, PrQ: W >
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
       Att: 'cpu |-> CPU:Data, 'internalState |-> STATE, 'initialized |-> "ABS.StdLib.True"[ emp ], S1, Lcnt: F1 >
@@ -1324,7 +1334,7 @@ mod ABS-MACHINE-BASICS-COMMON is
     < ODC : 'ABS.DC.DeploymentComponent |
       Cog: CG1,
       Att: 'cpu |-> CPU:Data, 'internalState |-> STATE':Data, 'initialized |-> "ABS.StdLib.True"[ emp ], S1, Lcnt: F1 >
-  if "num"[COSTNAT] := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random]))
+  if COSTNAT > 0
       /\ DCRES := getFreeResources(STATE, CPU:Data, COSTNAT)
       /\ DCRES > 0
       /\ MINCOST := min(COSTNAT, DCRES)
