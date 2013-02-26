@@ -544,6 +544,16 @@ import * from ABS.StdLib;
 import * from ABS.Scheduler;
 
 def ObjectMirror reflect<A>(A a) = builtin;
+def ProductLine getProductLine() = builtin;
+
+// OO wrapper for above functions
+
+interface Runtime {
+    ProductLine getProductLine();   
+}
+class Runtime implements Runtime {
+    ProductLine getProductLine() { return getProductLine(); }
+}
 
 interface Object {}
 
@@ -578,15 +588,15 @@ interface Class {
 }
 
 interface Method {}
+interface Product {}
 
 interface ProductLine {
     Unit applyDelta(String s);
-    String getCurrentProduct();
-    List<String> getConfigurableProducts();
-    Unit configureProduct(String s);
+    Product getCurrentProduct();
+    List<Product> getConfigurableProducts();
+    Unit configureProduct(Product s);
+//    Unit configureProduct(String s);
 }
-
-def ProductLine getPL() = builtin;
 
 // convenience functions (to be removed)
 def Unit println(String s) = builtin;

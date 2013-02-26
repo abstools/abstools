@@ -130,7 +130,7 @@ public class ABSBuiltInFunctions {
         }
     }
 
-    public static ABSDynamicObject getPL() {
+    public static ABSDynamicObject getProductLine() {
         ABSDynamicObject pl = new ABSDynamicObject(ProductLine.singleton());
         return pl;
     }

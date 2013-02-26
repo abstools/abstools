@@ -41,18 +41,18 @@ public class ProductLine {
     private static void setupAPI() {
         thisClass.setName("ProductLine");
         
-        thisClass.addMethod(/* ABSUnit */ "applyDelta", new ABSClosure() {
+        thisClass.addMethod(/*ABSUnit*/ "applyDelta", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 String deltaName = ((ABSString)params[0]).getString();
                 ProductLine.applyDelta(deltaName);
                 return ABSUnit.UNIT;
             }
         });
         
-        thisClass.addMethod(/* ABSUnit */ "configureProduct", new ABSClosure() {
+        thisClass.addMethod(/*ABSUnit*/ "configureProduct", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
                 List<String> deltas;
                 
@@ -77,14 +77,14 @@ public class ProductLine {
             }
         });
 
-        thisClass.addMethod(/* ABSDynamicProduct */ "getCurrentProduct", new ABSClosure() {
+        thisClass.addMethod(/*ABSDynamicProduct*/ "getCurrentProduct", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+            public ABSDynamicProduct exec(ABSDynamicObject t, ABSValue... params) {
                 return t.__ABS_getRuntime().getCurrentProduct();
             }
         });
 
-        thisClass.addMethod(/* List<ABSDynamicProduct> */ "getConfigurableProducts", new ABSClosure() {
+        thisClass.addMethod(/*List<ABSDynamicProduct>*/ "getConfigurableProducts", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();

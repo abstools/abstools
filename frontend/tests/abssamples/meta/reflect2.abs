@@ -1,0 +1,13 @@
+module Test;
+import * from ABS.Meta;
+
+interface I {}
+class C implements I {}
+
+{
+    I o1 = new C();
+    Runtime run = new Runtime();
+    ObjectMirror m1 = run.reflect(o1);
+    String name = m1.getClassName();
+    assert (name == "C");
+}
