@@ -366,6 +366,7 @@ public class ChocoSolver {
   }
   
   private static String prettyConst(Constraint c){
+//    System.out.println( "["+c.getClass()+"] "+c.pretty());
     if (c instanceof MetaConstraint) {
       MetaConstraint<?> mc = (MetaConstraint<?>) c;
       if (mc.getConstraintType() == ConstraintType.IMPLIES)
@@ -387,19 +388,44 @@ public class ChocoSolver {
         else if (c.pretty().endsWith("[1, 1], 1 } )"))
           //cc.getVariable(0).getConstraint(1).pretty()=="1" && mc.getConstraint(0).pretty().endsWith("[0, 1]"))
         return cc.getVariable(0).getName()+"[true]";
-        else return cc.getVariable(0).pretty()+" = "+cc.getVariable(1).pretty();
+        else return prettyVar(cc.getVariable(0))+" = "+prettyVar(cc.getVariable(1));
       if (c.getConstraintType() == ConstraintType.GEQ)
-        return cc.getVariable(0).pretty()+" >= "+cc.getVariable(1).pretty();
+        return prettyVar(cc.getVariable(0))+" >= "+prettyVar(cc.getVariable(1));
       if (c.getConstraintType() == ConstraintType.LEQ)
-        return cc.getVariable(0).pretty()+" <= "+cc.getVariable(1).pretty();
+        return prettyVar(cc.getVariable(0))+" <= "+prettyVar(cc.getVariable(1));
       if (c.getConstraintType() == ConstraintType.GT)
-        return cc.getVariable(0).pretty()+" > "+cc.getVariable(1).pretty();
+        return prettyVar(cc.getVariable(0))+" > "+prettyVar(cc.getVariable(1));
       if (c.getConstraintType() == ConstraintType.LT)
-        return cc.getVariable(0).pretty()+" < "+cc.getVariable(1).pretty();
+        return prettyVar(cc.getVariable(0))+" < "+prettyVar(cc.getVariable(1));
     }
     return //"["+c.getClass()+"] "+c.pretty();
         c.pretty();
   }
+
+  private static String prettyVar(choco.kernel.model.variables.Variable v) {
+//      System.out.println( "--["+v+": "+v.getClass()+"] "+v.pretty());
+      if (v instanceof IntegerExpressionVariable) {
+          IntegerExpressionVariable exp = (IntegerExpressionVariable) v;
+
+          if (exp.getOperator().name() == "SUM") {
+              String res = "";
+              if (exp.getNbVars() > 0) {
+                  res += prettyVar(exp.getVariable(0));
+                  for (int i=1; i<exp.getNbVars(); i++)
+                      res += " + "+prettyVar(exp.getVariable(i));
+              }
+              else
+                  res = "0";
+              return res;
+          }
+      }
+      if (v instanceof IntegerVariable) {
+          IntegerVariable iv = (IntegerVariable) v;
+          if (iv.isBoolean()) return iv.getName();
+      }
+      return v.pretty();
+  }
+
 
   public boolean checkSolution(Map<String,Integer> solution, Model model, CPModel m) {
     // Read the model
