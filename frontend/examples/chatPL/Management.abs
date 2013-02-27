@@ -24,23 +24,23 @@ class ConnectionImpl implements Connection {
 
 class Reconfigurator(Connection conn) {
     Unit run() {
-        ProductLine pl = getPL();
+        ProductLine pl = getProductLine();
 
         while(True) {
-            String p = pl.getCurrentProduct();
+            Product p = pl.getCurrentProduct();
             Bandwidth bw = conn.checkBandwidth();
-
-            if (p == "RegularChat") {
+            String name = p.getName();
+            if (name == "RegularChat") {
                 if (bw == Low) {
                     pl.configureProduct("LowEndChat");
                 } else if (bw == High) {
                     pl.configureProduct("HighEndChat");
                 }
-            } else if (p == "HighEndChat") {
+            } else if (name == "HighEndChat") {
                 if (bw == Low || bw == Mid) {
                     pl.configureProduct("RegularChat");
                 }
-            } else if (p == "LowEndChat") {
+            } else if (name == "LowEndChat") {
                 if (bw == Mid || bw == High) {
                     pl.configureProduct("RegularChat");
                 }

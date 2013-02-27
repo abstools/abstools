@@ -4,10 +4,13 @@
  */
 package abs.backend.java.lib.runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSClass;
 import abs.backend.java.lib.types.ABSValue;
@@ -15,10 +18,10 @@ import abs.backend.java.lib.types.ABSValue;
 public class ABSDynamicProduct implements ABSClass {
 
     private String name;
-    private Set<String> features;
-    private List<ABSDynamicProduct> configurableProducts;
+    private Set<String> features = new HashSet<String>();
+    private List<ABSDynamicProduct> configurableProducts = new ArrayList<ABSDynamicProduct>();
     private HashMap<String, List<String>> deltas = new HashMap<String, List<String>>();
-    private HashMap<String, String> update;
+    private HashMap<String, String> update = new HashMap<String, String>();
     
     public String getName() {
         return name;
@@ -53,7 +56,10 @@ public class ABSDynamicProduct implements ABSClass {
     }
 
     public void setUpdate(String productName, String upd) {
-        update.put(productName, upd);
+        if (! update.containsKey(productName))
+            update.put(productName, upd);
+        else
+            throw new DynamicException("Product " + name + " already defined an update for " + productName + ".");
     }
     public String getUpdate(String productName) {
         return update.get(productName);
