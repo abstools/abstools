@@ -161,7 +161,7 @@ public class TypeCheckerHelper {
         // TODO check that features of product exist, also feature attributes
     }
 
-    public static java.util.List<Type> getTypes(List<ASTNode<?>> params) {
+    public static <T extends ASTNode<?>> java.util.List<Type> getTypes(List<T> params) {
         ArrayList<Type> res = new ArrayList<Type>();
         for (ASTNode<?> u : params) {
             res.add(((HasType)u).getType());
