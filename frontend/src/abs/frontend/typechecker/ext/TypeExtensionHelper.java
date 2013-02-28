@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker.ext;
@@ -19,7 +19,7 @@ import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeExtensionHelper implements TypeSystemExtension {
     private java.util.List<TypeSystemExtension> obs = new ArrayList<TypeSystemExtension>();
-    
+
     private void registerDefaultExtensions(Model m) {
         register(new ClassKindTypeExtension(m));
         register(new FinalAnnotationTypeExtension(m));
@@ -28,7 +28,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         register(new DeadlineChecker(m));
         register(new SchedulerChecker(m));
     }
-    
+
     public TypeSystemExtension getFirstRegisteredTypeExtension(Class<?> clazz) {
         for (TypeSystemExtension tse : obs) {
             if (tse.getClass().equals(clazz)) {
@@ -37,42 +37,42 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
         return null;
     }
-    
+
     public void setSemanticErrorList(SemanticErrorList s) {
         for (TypeSystemExtension tse : obs) {
             tse.setSemanticErrorList(s);
         }
     }
-    
+
     public void typeCheckStarted(Model m, SemanticErrorList e) {
         registerDefaultExtensions(m);
         setSemanticErrorList(e);
     }
-    
+
     public void register(TypeSystemExtension tse) {
         obs = new ArrayList<TypeSystemExtension>(obs);
         obs.add(tse);
     }
-    
+
     public void unregister(TypeSystemExtension tse) {
-        obs = new ArrayList<TypeSystemExtension>(obs); 
+        obs = new ArrayList<TypeSystemExtension>(obs);
         obs.remove(tse);
     }
-    
+
     public void clearTypeSystemExtensions() {
-        obs = new ArrayList<TypeSystemExtension>(); 
+        obs = new ArrayList<TypeSystemExtension>();
     }
-    
+
     public java.util.List<TypeSystemExtension> getTypeSystemExtensionList() {
         return new ArrayList<TypeSystemExtension>(obs);
     }
-    
+
     public void checkMethodCall(Call call) {
         for (TypeSystemExtension tse : obs) {
             tse.checkMethodCall(call);
         }
     }
-    
+
     @Override
     public void checkOverride(MethodSig impl, MethodSig overriden) {
         for (TypeSystemExtension tse : obs) {
@@ -106,7 +106,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             tse.checkGetExp(e);
         }
     }
-    
+
     public void checkAssignStmt(AssignStmt s) {
         for (TypeSystemExtension tse : obs) {
             tse.checkAssignStmt(s);
@@ -114,7 +114,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
 
         checkAssignable(s.getValue().getType(),s.getVar().getType(), s);
     }
-    
+
     public void checkReturnStmt(ReturnStmt s) {
         for (TypeSystemExtension tse : obs) {
             tse.checkReturnStmt(s);
@@ -129,19 +129,19 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         checkAssignable(s.getRetExp().getType(), m.getMethodSig().getType(), s);
     }
 
-    public <N extends ASTNode<?>&HasActualParams> void checkAssignable(Type callee, HasParams params, N n) {
+    public void checkAssignable(Type callee, HasParams params, ASTNode<?> n) {
         java.util.List<Type> paramsTypes = params.getTypes();
         for (int i = 0; i < paramsTypes.size(); i++) {
             Type argType = paramsTypes.get(i);
-            PureExp exp = n.getParams().getChild(i);
+            PureExp exp = ((HasActualParams)n).getParams().getChild(i);
             checkAssignable(callee, AdaptDirection.TO, exp.getType(), argType, n);
         }
     }
-    
+
     public void checkAssignable(Type rht, Type lht, ASTNode<?> n) {
         checkAssignable(null, null, rht, lht, n);
     }
-    
+
     public void checkAssignable(Type adaptTo, AdaptDirection dir, Type rht, Type lht, ASTNode<?> n) {
         rht = resolveBoundedType(rht);
 
@@ -164,54 +164,54 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     public void annotateType(Type t, ASTNode<?> originatingNode) {
         annotateType(t, originatingNode, null);
     }
-    
+
     public void annotateType(Type t, ASTNode<?> originatingNode, ASTNode<?> typeNode) {
         if (t.isDataType()) {
             DataTypeType dt = (DataTypeType) t;
             if (dt.hasTypeArgs()) {
-                
+
                 ParametricDataTypeUse pu = null;
                 // typeNode maybe a type synonym
-                if (typeNode instanceof ParametricDataTypeUse)  
+                if (typeNode instanceof ParametricDataTypeUse)
                     pu = (ParametricDataTypeUse) typeNode;
                 int i = 0;
                 for (Type ta : dt.getTypeArgs()) {
                     ASTNode<?> childTypeNode = null;
-                    if (pu != null) 
+                    if (pu != null)
                         childTypeNode = pu.getParam(i);
                     annotateType(ta, originatingNode, childTypeNode);
                     i++;
                 }
             }
-        } 
+        }
         if (t.isReferenceType() || t.isNullType()) {
             for (TypeSystemExtension tse : obs) {
                 tse.annotateType(t, originatingNode, typeNode);
             }
         }
     }
-    
+
     public void checkCaseExp(CaseExp e) {
         Type t = e.getType();
         for (CaseBranch b : e.getBranchs()) {
             checkAssignable(b.getType(),t, b.getRight());
         }
     }
-    
+
     public void checkIfExp(IfExp e) {
     }
-    
-    
+
+
     public void checkDataConstructorExp(DataConstructorExp e) {
         DataConstructor decl = (DataConstructor) e.getDecl();
-        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) { 
-            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>(); 
-            for (int i = 0; i < decl.getNumConstructorArg(); i++) { 
-                Type rht = e.getParam(i).getType(); 
-                Type arg = decl.getConstructorArg(i).getType(); 
-                checkTypeParameter(map, rht, arg, e.getParam(i)); 
-            } 
-        }      
+        if (decl.getDataTypeDecl() instanceof ParametricDataTypeDecl) {
+            HashMap<TypeParameter, Type> map = new HashMap<TypeParameter, Type>();
+            for (int i = 0; i < decl.getNumConstructorArg(); i++) {
+                Type rht = e.getParam(i).getType();
+                Type arg = decl.getConstructorArg(i).getType();
+                checkTypeParameter(map, rht, arg, e.getParam(i));
+            }
+        }
     }
 
 
@@ -229,7 +229,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
         }
     }
 
-    
+
     private void checkTypeParameter(HashMap<TypeParameter, Type> map, Type rht, Type lht, ASTNode<?> origin) {
         rht = resolveBoundedType(rht);
         if (rht.isBoundedType())
@@ -265,7 +265,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
     }
 
     public void checkEq(Type lht, Type rht, ASTNode<?> origin) {
-        
+
         if (lht.isDataType() && rht.isDataType()) {
             DataTypeType dtl = (DataTypeType) lht;
             DataTypeType dtr = (DataTypeType) rht;
@@ -281,7 +281,7 @@ public class TypeExtensionHelper implements TypeSystemExtension {
             }
         }
     }
-    
+
     public void finished() {
         for (TypeSystemExtension tse : obs) {
             tse.finished();

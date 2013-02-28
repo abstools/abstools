@@ -1,5 +1,5 @@
-/** 
- * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved. 
+/**
+ * Copyright (c) 2009-2011, The HATS Consortium. All rights reserved.
  * This file is licensed under the terms of the Modified BSD License.
  */
 package abs.frontend.typechecker;
@@ -25,18 +25,18 @@ public class TypeCheckerHelper {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
             return;
         }
-        
+
         DataConstructor c = (DataConstructor) decl;
         if (c.getNumConstructorArg() != p.getNumParam()) {
             e.add(new TypeError(p, ErrorMessage.WRONG_NUMBER_OF_ARGS, c.getNumConstructorArg(), p.getNumParam()));
             return;
         }
-        
+
         DataTypeType dtt = (DataTypeType) t;
         if (!dtt.getDecl().equals(c.getDataTypeDecl())) {
             e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
         }
-            
+
 
         Type myType = p.getType();
 
@@ -56,8 +56,8 @@ public class TypeCheckerHelper {
         }
 
         typeCheckMatchingParamsPattern(e, p, c);
-    }    
-    
+    }
+
     public static void checkAssignment(SemanticErrorList l, ASTNode<?> n, Type lht, Exp rhte) {
         Type te = rhte.getType();
         if (!te.isAssignable(lht)) {
@@ -75,7 +75,7 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n) {        
+    public static void typeCheckMatchingParams(SemanticErrorList l, DataConstructorExp n) {
         final Map<TypeParameter, Type> binding = n.getTypeParamBinding(n, n.getDataConstructor());
         typeCheckEqual(l, n, n.getDataConstructor().applyBindings(binding));
     }
@@ -100,8 +100,8 @@ public class TypeCheckerHelper {
         typeCheckEqual(l, n, types);
     }
 
-    public static <N extends ASTNode<?>&HasActualParams> void typeCheckEqual(SemanticErrorList l, N n, java.util.List<Type> params) {
-        List<PureExp> args = n.getParams();
+    public static void typeCheckEqual(SemanticErrorList l, ASTNode<?> n, java.util.List<Type> params) {
+        List<PureExp> args = ((HasActualParams)n).getParams();
         if (params.size() != args.getNumChild()) {
             l.add(new TypeError(n, ErrorMessage.WRONG_NUMBER_OF_ARGS, params.size(), args.getNumChild()));
         } else {
@@ -131,7 +131,7 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckDeltaClause(DeltaClause clause, Set<String> deltaNames, Set<String> definedFeatures, SemanticErrorList e) {
-        
+
         /* Does the delta exist? */
         if (! deltaNames.contains(clause.getDeltaspec().getName()))
             e.add(new TypeError(clause.getDeltaspec(), ErrorMessage.NAME_NOT_RESOLVABLE, clause.getDeltaspec().getName()));
@@ -143,15 +143,15 @@ public class TypeCheckerHelper {
         if (clause.hasFromAppCond()) {
             clause.getFromAppCond().typeCheck(definedFeatures, e);
         }
-        
+
         /* What about deltas mentioned in the 'after' clause? */
         for (DeltaID did : clause.getDeltaIDs()) {
             if (! deltaNames.contains(did.getName())) {
                 e.add(new TypeError(did, ErrorMessage.NAME_NOT_RESOLVABLE, did.getName()));
-            }                 
+            }
         }
     }
-    
+
     public static void typeCheckProduct(Product prod, Set<String> prodNames, SemanticErrorList e) {
         /* Does the product named in the adaptation clause exist */
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
@@ -160,11 +160,11 @@ public class TypeCheckerHelper {
         }
         // TODO check that features of product exist, also feature attributes
     }
-    
-    public static <N extends ASTNode<?>&HasType> java.util.List<Type> getTypes(List<N> params) {
+
+    public static java.util.List<Type> getTypes(List<ASTNode<?>> params) {
         ArrayList<Type> res = new ArrayList<Type>();
-        for (HasType u : params) {
-            res.add(u.getType());
+        for (ASTNode<?> u : params) {
+            res.add(((HasType)u).getType());
         }
         return res;
     }
@@ -285,7 +285,7 @@ public class TypeCheckerHelper {
         // add imported names:
         res.putAll(mod.getImportedNames());
         // defined names hide imported names:
-        res.putAll(mod.getDefinedNames());      
+        res.putAll(mod.getDefinedNames());
         return res;
     }
 
@@ -330,7 +330,7 @@ public class TypeCheckerHelper {
         b.getLeft().typeCheck(e);
         b.getRight().typeCheck(e);
     }
-    
+
     /**
      * checks whether the local variable v was already defined in the current function
      */
@@ -373,7 +373,7 @@ public class TypeCheckerHelper {
             }
         }
     }
-    
+
     /**
      * get all the alternative declarations of an ambiguous declaration formated as a list
      * which can be used in error messages
@@ -383,7 +383,7 @@ public class TypeCheckerHelper {
     public static String getAlternativesAsString(AmbiguousDecl a) {
         String result = "";
         for (Decl alternative : a.getAlternative()) {
-            result += "\n * " + alternative.qualifiedName() +  " (defined in " + 
+            result += "\n * " + alternative.qualifiedName() +  " (defined in " +
                     alternative.getFileName() + ", line " + alternative.getStartLine() + ")";
         }
         return result;
