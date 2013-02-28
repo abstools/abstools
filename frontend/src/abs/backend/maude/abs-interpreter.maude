@@ -1316,7 +1316,8 @@ mod ABS-MACHINE-BASICS-COMMON is
     < T : Clock | Limit: LIM, Random: RAND >
     < CG : Cog | Object: O, DC: ODC, Sched: SCH:Expr, Pr: { L | [COSTN:Data]ST:Stmt ; SL }, PrQ: W >
     < O : C | Cog: CG, Att: S, Lcnt: F >
-  if COSTN:Data := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random])) .
+  if not COST :: Data
+      /\ COSTN:Data := eval(COST, (S :: L), none, ('.time |-> "num"[T], '.deadline |-> L['.deadline], '.comp |-> ODC, '.random |-> L['.random])) .
     
   --- Resource consumption.  Must be a rewrite rule for confluence.
   *** DC variables:
