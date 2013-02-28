@@ -6,6 +6,7 @@ import de.ovgu.featureide.fm.ui.editors.configuration.*;
 
 
 import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -75,6 +76,7 @@ IConfigurationEditorPage {
 	/**
 	 * Contains the TreeItems for coloring.
 	 */
+	
 	private HashMap<SelectableFeature, TreeItem> items = new HashMap<SelectableFeature, TreeItem>();	
 	/**
 	 * Contains the features to be checked at coloring thread.
@@ -87,15 +89,16 @@ IConfigurationEditorPage {
 	private Job job_color;
 	public void cancelColorJob() {
 		returnFormThread = true;
-	}
-	
+	}	
+		
 	private boolean selectionChanged = true;
 	
 	private boolean initialized = false;
 	
 	private LinkedList<String> hiddenFeatures;
 	
-	private int currentConfigurationNumber = 0;
+	static private int currentConfigurationNumber = 0;
+	
 	private String[][] results = null;
 	public void updateTree(){
 		if (errorMessage())
@@ -104,60 +107,69 @@ IConfigurationEditorPage {
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout());
 		
 		Label label = new Label(composite, SWT.HORIZONTAL);
 		label.setText("Result Browsing");
 		
-		Button button = new Button(composite, SWT.PUSH);
-		button.setText("Next");
+		Button btnNext = new Button(composite, SWT.PUSH);
+		btnNext.setText("Next");
 		//button.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));;
 
-		Button button1 = new Button(composite, SWT.PUSH);
-		button1.setText("Previous");
+		Button btnPrevious = new Button(composite, SWT.PUSH);
+		btnPrevious.setText("Previous");
 		//button1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));;
-
-		
-		button.addSelectionListener(new SelectionListener(){
+					
+		btnNext.addSelectionListener(new SelectionListener(){
 			public void widgetSelected(SelectionEvent e){
-				
-				if(currentConfigurationNumber == (results.length - 1)){
-					currentConfigurationNumber = 0;
-				}
-				else {
-					currentConfigurationNumber = currentConfigurationNumber + 1;
-				}
-				System.out.println("current number  " + currentConfigurationNumber );
-				showResult();
+				try{
+										
+					System.out.print("\nNumber of Solutions: " + ConfigurationInput.arlSolutions.size());
+					
+					System.out.println("current number  " + currentConfigurationNumber);				
+					
+					if(currentConfigurationNumber != (ConfigurationInput.arlSolutions.size()))
+					{
+						String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
+						selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
+					}
+					
+					//showResult();				
+					
+					currentConfigurationNumber++;
+						if(currentConfigurationNumber > ConfigurationInput.arlSolutions.size())
+							currentConfigurationNumber = ConfigurationInput.arlSolutions.size();				
+					}
+					catch(Exception ex)
+					{
+						ex.printStackTrace();
+					}				
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
-				
+				// TODO Auto-generated method stub				
 			}
 		});
 		
-		button1.addSelectionListener(new SelectionListener(){
-			public void widgetSelected(SelectionEvent e){
+		btnPrevious.addSelectionListener(new SelectionListener(){
+			public void widgetSelected(SelectionEvent e){			
+								
+				currentConfigurationNumber--;
+				if(currentConfigurationNumber < 0)
+					currentConfigurationNumber = 0;
 				
-				
-				if(currentConfigurationNumber == 0){
-					currentConfigurationNumber = results.length - 1;
-				}
-				else{
-					currentConfigurationNumber = currentConfigurationNumber - 1;
-				}
 				System.out.println("current number  " + currentConfigurationNumber );
-				showResult();
-				
+				//showResult();
+				String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
+				selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));	
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
-				
+				// TODO Auto-generated method stub				
 			}
 		});
 
@@ -373,9 +385,7 @@ IConfigurationEditorPage {
 		}
 		currentConfigurationNumber = 0;
 	};
-	
-	
-	
+		
 	void showResult(){
 		
 		int index = currentConfigurationNumber;
@@ -383,8 +393,7 @@ IConfigurationEditorPage {
 		root.setText(AdvancedConfigurationLabelProvider.getRootlabel(configurationEditor.configuration));
 		setCheckbox(root);
 		selectFeature(root, results[index]);
-		tree.setVisible(true);
-		
+		tree.setVisible(true);		
 	}
 	
 	void selectFeature(TreeItem root, String[] str){
@@ -393,9 +402,9 @@ IConfigurationEditorPage {
 			if(isSelected(item.getText(), str)){
 				item.setChecked(true);
 			}
-//			else{
-//				item.setChecked(false);
-//			}
+			else{
+				item.setChecked(false);
+			}
 			selectFeature(item, str);
 		}
 	}
