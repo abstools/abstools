@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -56,6 +57,7 @@ public class Main {
 
     public static final String ABS_STD_LIB = "abs/lang/abslang.abs";
     protected boolean preprocess = false; //Preprocessor
+    protected boolean maxcostconstraint = false; //For maximal cost constraint
     public static final String ABS_DB_LIB_PATH = "abs/lang/db/";
     public static final String[] ABS_DB_LIBS =
             {"DbHelpers.abs", "DbMain.abs", "DbOperators.abs", "DbOperatorsStructure.abs",
@@ -84,7 +86,9 @@ public class Main {
     protected boolean ignoreattr = false ;
     protected boolean minimise = false ;
     protected boolean maximise = false ;
-
+    protected ArrayList<ArrayList<String>> arlSolutions = new ArrayList<ArrayList<String>>();
+    protected HashMap<String, Object> hmQualtyPrefernces = new HashMap<String, Object>();
+    
 
     public static void main(final String... args)  {
        new Main().mainMethod(args);
@@ -96,6 +100,17 @@ public class Main {
        } catch (Exception e) {
           printErrorAndExit(e.getMessage());
        }
+    }
+    
+    public void maximumCostConstraint(int intCost)
+    {
+        System.out.print("Cost: " + intCost);
+    }
+    
+    public void QualityPreferences(HashMap<String, Object> hm)
+    {
+        hmQualtyPrefernces = hm;
+        System.out.print("Hashmap recieved!!!");
     }
 
     public void setWithStdLib(boolean withStdLib) {
@@ -175,6 +190,8 @@ public class Main {
                 ignoreattr = true;
             } else if (arg.equals("-preprocess")) { //Preprocessor
                     preprocess = true;
+            } else if (arg.equals("-maxcostconstraint")) { //Maximal Cost Constraint
+                    maxcostconstraint = true;
             } else if (arg.equals("-h")) {
                 printUsageAndExit();
             } else
@@ -250,6 +267,10 @@ public class Main {
             
             oFMVisualizer.ParseMicroTVLFile(m);            
         }
+        if(maxcostconstraint)
+        {
+            System.out.println("Maximal Cost Constraint keyword called ...");
+        }
         // flatten before checking error, to avoid calculating *wrong* attributes
         if (fullabs) {
             if (typecheck)
@@ -292,6 +313,7 @@ public class Main {
      */
     private void analyzeMTVL(Model m) {
         Product p_product = null;
+                
         try {
             p_product = product == null ? null : m.findProduct(product);
         } catch (WrongProgramArgumentException e) {
@@ -299,10 +321,12 @@ public class Main {
         }
         if (m.hasMTVL()) {
             if (solve) {
+                arlSolutions.clear();
                 if (verbose)
                     System.out.println("Searching for solutions for the feature model...");
                 ChocoSolver s = m.getCSModel();
                 System.out.print(s.resultToString());
+                arlSolutions.add(s.resultToArrayList());
             }
             if (minimise) {
                 assert product != null;
@@ -310,6 +334,7 @@ public class Main {
                     System.out.println("Searching for minimum solutions of "+product+" for the feature model...");
                 ChocoSolver s = m.getCSModel();
                 System.out.print(s.minimiseToString(product));
+                
             }
             if (maximise) {
                 assert product != null;
@@ -322,10 +347,12 @@ public class Main {
                 int i=1;
                 while(s1.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
-                    System.out.print(s1.resultToString());
+                    System.out.print(s1.resultToString());                    
                 }
             }
             if (solveall) {
+                arlSolutions.clear();
+                System.out.println("\nTemp...");
                 if (verbose)
                     System.out.println("Searching for all solutions for the feature model...");
                 ChocoSolver s = m.getCSModel();
@@ -333,6 +360,7 @@ public class Main {
                 while(s.solveAgain()) {
                     System.out.println("------ "+(i++)+"------");
                     System.out.print(s.resultToString());
+                    arlSolutions.add(s.resultToArrayList());
                 }
             }
             if (solveWith) {
@@ -352,6 +380,7 @@ public class Main {
                 }
             }
             if (minWith) {
+                arlSolutions.clear(); 
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
@@ -361,7 +390,7 @@ public class Main {
                 if (p_product != null) {
                     m.getDiffConstraints(p_product,s.vars,newcs, "difference");
                     for (Constraint c: newcs) s.addConstraint(c);
-                    System.out.println("checking solution: "+s.minimiseToString("difference"));
+                    System.out.println("checking solution: "+s.minimiseToString("difference"));                    
                 } else {
                     System.out.println("Product '"+product+"' not found.");
                     if (!product.contains("."))
@@ -370,6 +399,7 @@ public class Main {
 
             }
             if (maxProduct) {
+                arlSolutions.clear();
                 assert product != null;
                 if (verbose)
                     System.out.println("Searching for solution that includes "+product+"...");
@@ -379,6 +409,7 @@ public class Main {
                 if (m.getMaxConstraints(s.vars,newcs, "noOfFeatures")) {
                     for (Constraint c: newcs) s.addConstraint(c);
                     System.out.println("checking solution: "+s.maximiseToString("noOfFeatures"));
+                    arlSolutions.add(s.resultToArrayList());
                 }
                 else {
                     System.out.println("---No solution-------------");
@@ -697,6 +728,11 @@ public class Main {
 
     public static Model parseString(String s, boolean withStdLib) throws Exception {
         return parseString(s,withStdLib,false);
+    }
+    
+    public ArrayList<ArrayList<String>> GetAllSolutions()
+    {        
+        return arlSolutions;    
     }
 
     /**
