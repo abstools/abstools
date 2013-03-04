@@ -1,10 +1,10 @@
 root Chat {
-    group allof {
-     	ChatMode {
-            group oneof { Text, Voice, Video } 
-   	   	},
-      	opt FileTransfer
-    }    	
+  group allof {
+    ChatMode {
+      group [1..*] { Text, Voice, Video } 
+    },
+    opt FileTransfer
+  }    	
 }
 
 extension Voice {
