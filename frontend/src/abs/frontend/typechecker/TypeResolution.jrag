@@ -182,7 +182,8 @@ aspect TypeResolution {
 
     inh ModuleDecl Export.getModuleDecl();
     eq ModuleDecl.getExport().getModuleDecl() = this;
-
+    eq AddExportModifier.getExport().getModuleDecl() = this.findModule();
+    
     inh ModuleDecl Import.lookupModule(String name);
     inh ModuleDecl Export.lookupModule(String name);
     inh ModuleDecl CompilationUnit.lookupModule(String name);

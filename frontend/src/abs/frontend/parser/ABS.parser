@@ -365,6 +365,7 @@ List module_modifier_list =
 ModuleModifier module_modifier =
     functional_modifier.m {: return m; :}
     | oo_modifier.m {: return m; :}
+    | namespace_modifier.m {: return m; :}
     ;
 
 FunctionalModifier functional_modifier =
@@ -384,6 +385,11 @@ OOModifier oo_modifier =
   | MODIFIES INTERFACE type_name.id LBRACE inf_modifier_fragment_list.fragments? RBRACE {: return new ModifyInterfaceModifier(id.getString(), fragments); :}
   ;
 
+NamespaceModifier namespace_modifier =
+  ADDS import.imp {: return new AddImportModifier(imp); :} 
+  | ADDS export.exp {: return new AddExportModifier(exp); :} 
+  ;
+  
 List inf_modifier_fragment_list =
     inf_modifier_fragment.f {: return new List().add(f); :}
   | inf_modifier_fragment_list.l inf_modifier_fragment.f {: return l.add(f); :}

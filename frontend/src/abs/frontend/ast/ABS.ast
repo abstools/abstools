@@ -53,7 +53,8 @@ HasMethod : HasCondition ::= MethodSig;
 HasInterface : HasCondition ::= InterfaceTypeUse;
 
 abstract ModuleModifier;
-
+abstract NamespaceModifier : ModuleModifier;
+ 
 abstract OOModifier : ModuleModifier;
 abstract ClassModifier : OOModifier;
 abstract Modifier;
@@ -64,6 +65,9 @@ abstract FunctionalModifier : ModuleModifier;
 abstract TypeSynModifier : FunctionalModifier;
 abstract DataTypeModifier : FunctionalModifier;
 abstract FunctionModifier : FunctionalModifier;
+
+AddImportModifier : NamespaceModifier ::= Import;
+AddExportModifier : NamespaceModifier ::= Export;
 
 AddTypeSynModifier : TypeSynModifier ::= TypeSynDecl;
 ModifyTypeSynModifier : TypeSynModifier ::= TypeSynDecl;

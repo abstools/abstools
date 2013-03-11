@@ -179,6 +179,20 @@ aspect DeltaModifierApplicator {
     }
 
     /**************************************************************************
+     * NamespaceModifiers add imports and exports
+     * they are applied to Modules
+     */
+    public void AddImportModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        module.addImport((Import)getImport().fullCopy());
+        
+    }
+    public void AddExportModifier.apply() throws DeltaModellingException {
+        ModuleDecl module = findModule();
+        module.addExport((Export)getExport().fullCopy());
+    }
+    
+    /**************************************************************************
      * helper method
      * find the ModuleDecl to which this ModuleModifier applies
      * if qualified => easy; if unqualified => look in delta's 'uses' list.

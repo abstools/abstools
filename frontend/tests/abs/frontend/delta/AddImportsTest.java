@@ -16,135 +16,67 @@ import abs.frontend.ast.*;
 import abs.frontend.typechecker.*;
 import abs.frontend.delta.exceptions.*;
 
-// Adding imports implicitly is not necessary anymore since deltas are modules
-// TODO add support for the explicit addition of imports
-@Ignore
 public class AddImportsTest extends DeltaTest {
     
     @Test
-    public void addQualImport() throws DeltaModellingException {
+    public void addImport() throws DeltaModellingException {
         Model model = assertParseOk(
-                "module M1; export *;"
+                "module Exporter; export *;"
+                + "interface I {}"
+                + "interface J {}"
+                + "module Exporter2; export *;"
+                + "interface K {}"
+                
+                + "module M;"
                 + "class C {}"
                 
-                + "module M2; export *;"
-                + "interface I { Unit m(); }"
-                
-                + "module D;"
-                + "import * from M1;"
-                + "import * from M2;"
-                
-                + "delta D;"
-                + "modifies class C implements M2.I { adds Unit m() {} } "
+                + "delta D; uses M;"
+                + "adds import Exporter.I;"
+                + "adds import J from Exporter;"
+                + "adds import * from Exporter2;"
+                + "modifies class C { adds Exporter.I field1; } "
+                + "modifies class C { adds          J field2; } "
+                + "modifies class C { adds          K field3; } "
         );
-        ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
-        DeltaDecl delta = findDelta(model, "D");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        
-        // the compiler needs to add an "import M2.I" to M1
-        ModuleDecl clsmodule = cls.getModuleDecl();
-        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
-        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M2.I");
-        assertTrue(clsVisibleSymbols.containsKey(symbol));
-    }
-
-    @Test
-    public void addQualImport2() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M; export *;"
-                + "interface I { Unit m(); }"
-                
-                + "module D;"
-                + "import * from M;"
-                + "delta D;"
-                + "adds class C implements M.I { Unit m() {} }"
-        );
-        DeltaDecl delta = findDelta(model, "D");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        
-        // the compiler doesn't need to add anything 
-        ClassDecl cls = (ClassDecl) findDecl(model, "D", "C");
-        ModuleDecl clsmodule = cls.getModuleDecl();
-        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
-        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M.I");
-        assertTrue(clsVisibleSymbols.containsKey(symbol));
-        symbol = new KindedName(KindedName.Kind.TYPE_DECL, "I");
-        assertTrue(clsVisibleSymbols.containsKey(symbol));
-    }
-
-    @Test
-    public void addQualImport3() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M; export *;"
-                + "interface I { Unit m(); }"
-                + "class C {}" 
-                
-                + "module D;"
-                + "import * from M;"
-                + "delta D;"
-                + "adds class C2 implements I { Unit m() {} }"
-                + "modifies class C { adds Unit n() { I obj = new D.C2(); } }"
-        );
-        DeltaDecl delta = findDelta(model, "D");
-        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-        
-        // the compiler needs to add an "import D.C2" to M
         ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
-        ModuleDecl clsmodule = cls.getModuleDecl();
-        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
-        
-        // TODO
-//        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "D.C2");
-//        assertTrue(clsVisibleSymbols.containsKey(symbol));
-//        symbol = new KindedName(KindedName.Kind.TYPE_DECL, "C2");
-//        assertTrue(clsVisibleSymbols.containsKey(symbol));
-    }
-    
-    @Test
-    public void addUnqualImport() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M1; export *;"
-                + "class C {}"
-                
-                + "module M2; export *;"
-                + "interface I { Unit m(); }"
-                
-                + "module MD;"
-                + "import * from M1;"
-                + "import * from M2;"
-                + "delta D;"
-                + "modifies class C implements I { adds Unit m() {} } "
-        );
-        
-        // the compiler needs to add an "import I from M2" to M1 
-        // TODO
-        
-    }
-
-    @Test
-    public void doNotAddImport() throws DeltaModellingException {
-        Model model = assertParseOk(
-                "module M1; export *;"
-                + "class C {}"
-                
-                + "module M2; export *;"
-                + "interface I { Unit m(); }"
-                
-                + "module D;"
-                + "import * from M1;"
-                + "delta D;"
-                + "modifies class C implements M2.I { adds Unit m() {} } "
-        );
-        
-        ClassDecl cls = (ClassDecl) findDecl(model, "M1", "C");
         DeltaDecl delta = findDelta(model, "D");
         model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(delta)));
-
-        // the compiler should not add an import, because the delta cannot see I!
+        
         ModuleDecl clsmodule = cls.getModuleDecl();
         Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
-        KindedName symbol = new KindedName(KindedName.Kind.TYPE_DECL, "M2.I");
-        assertFalse(clsVisibleSymbols.containsKey(symbol));
+        KindedName symbol1 = new KindedName(KindedName.Kind.TYPE_DECL, "Exporter.I");
+        KindedName symbol2 = new KindedName(KindedName.Kind.TYPE_DECL, "J");
+        KindedName symbol3 = new KindedName(KindedName.Kind.TYPE_DECL, "K");
+        assertTrue(clsVisibleSymbols.containsKey(symbol1));
+        assertTrue(clsVisibleSymbols.containsKey(symbol2));
+        assertTrue(clsVisibleSymbols.containsKey(symbol3));
+    }
+
+    @Test
+    public void addExport() throws DeltaModellingException {
+        Model model = assertParseOk(
+                "module Exporter;"
+                + "interface I {}"
+
+                + "module M;"
+                + "class C {}"
+                
+                + "delta D1; uses Exporter;"
+                + "adds export I;"
+
+                + "delta D2; uses M;"
+                + "adds import Exporter.I;"
+                + "modifies class C { adds Exporter.I field1; } "
+        );
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        DeltaDecl d1 = findDelta(model, "D1");
+        DeltaDecl d2 = findDelta(model, "D2");
+        model.applyDeltas(new ArrayList<DeltaDecl>(Arrays.asList(d1,d2)));
+        
+        ModuleDecl clsmodule = cls.getModuleDecl();
+        Map<KindedName, ResolvedName> clsVisibleSymbols = clsmodule.getVisibleNames();
+        KindedName symbol1 = new KindedName(KindedName.Kind.TYPE_DECL, "Exporter.I");
+        assertTrue(clsVisibleSymbols.containsKey(symbol1));
     }
 
 }

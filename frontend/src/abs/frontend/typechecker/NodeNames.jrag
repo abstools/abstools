@@ -22,6 +22,7 @@ aspect Name {
     syn String AddTypeSynModifier.getName() = this.getTypeSynDecl().getName();
     syn String ModifyTypeSynModifier.getName() = this.getTypeSynDecl().getName();
     syn String ModifyDataTypeModifier.getName() = this.getDataTypeDecl().getName();
+    syn String NamespaceModifier.getName() = "NamespaceModifier"; // not used anywhere
     
     // strip off any module name prefix
     syn String ModuleModifier.getSimpleName() {

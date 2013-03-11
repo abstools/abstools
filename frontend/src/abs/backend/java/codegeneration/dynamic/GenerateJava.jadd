@@ -331,6 +331,9 @@ aspect GenerateJava {
         stream.println("// TODO " + this.getClass().getName());
         stream.println("public static void apply() {}");
     }
+    public void NamespaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
 
     abstract void Modifier.generateJavaDynamic(PrintStream stream);
     abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
