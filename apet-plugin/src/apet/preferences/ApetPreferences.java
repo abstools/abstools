@@ -33,11 +33,12 @@ implements IWorkbenchPreferencePage {
 	IntegerFieldEditor max;
 	IntegerFieldEditor maxPrior;
 	//BooleanFieldEditor aliasing;
-	RadioGroupFieldEditor pruning;
-	RadioGroupFieldEditor maxQL;
+	//RadioGroupFieldEditor pruning;
+	//RadioGroupFieldEditor maxQL;
 	RadioGroupFieldEditor sched;
 	RadioGroupFieldEditor verbosity;
 	RadioGroupFieldEditor numOrConst;
+	RadioGroupFieldEditor selCrit;
 
 	public ApetPreferences() {
 		super(GRID);
@@ -55,9 +56,9 @@ implements IWorkbenchPreferencePage {
 		boolean success = true;
 		kl.store();
 		ks.store();
-		pruning.store();
+		//pruning.store();
 		maxPrior.store();
-		maxQL.store();
+		//maxQL.store();
 		sched.store();
 		numOrConst.store();
 		min.store();
@@ -66,6 +67,7 @@ implements IWorkbenchPreferencePage {
 		//if (aliasing != null) aliasing.store();
 		
 		verbosity.store();
+		selCrit.store();
 		return success;
 	}
 
@@ -111,25 +113,30 @@ implements IWorkbenchPreferencePage {
 			max.setEnabled(false, this.getFieldEditorParent());
 		}
 		
-		maxQL = new RadioGroupFieldEditor(PreferenceConstants.MAXQL,"Number of task interleavings:",
+		selCrit = new RadioGroupFieldEditor(PreferenceConstants.SEL_CRIT,"Selection criterion:",
+				4,new String[][] { { "All paths","all_paths" }, {"All local paths", "alp" }}, getFieldEditorParent());
+		addField(selCrit);
+		
+		/*maxQL = new RadioGroupFieldEditor(PreferenceConstants.MAXQL,"Number of task interleavings:",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(maxQL);
 
 		pruning = new RadioGroupFieldEditor(PreferenceConstants.PRUNING,"Pruning in task interleavings:",
 				4,new String[][] { { "3", "3" }, {"2", "2" }, {"1", "1" }}, getFieldEditorParent());
 		addField(pruning);
-		
+		*/
 		sched = new RadioGroupFieldEditor(PreferenceConstants.SCHED_POLICY,"Scheduling policy:",
 				4,new String[][] { { "fifo", "fifo" }, {"lifo", "lifo" }, {"prior", "prior" }}, getFieldEditorParent());
 		addField(sched);
 
 		maxPrior = new IntegerFieldEditor(PreferenceConstants.MAX_PRIOR, "Number of priorites:",getFieldEditorParent());
 		addField(maxPrior);
-						
-		/*aliasing = new BooleanFieldEditor(PreferenceConstants.ALIASING,
+		/*				
+		aliasing = new BooleanFieldEditor(PreferenceConstants.ALIASING,
 				"References aliasing", getFieldEditorParent());
-		addField(aliasing);*/
+		addField(aliasing);
 
+		*/
 		verbosity = new RadioGroupFieldEditor(PreferenceConstants.VERBOSITY,"Verbosity:",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(verbosity);

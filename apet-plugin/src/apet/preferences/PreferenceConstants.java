@@ -16,4 +16,5 @@ public class PreferenceConstants {
 	public static final String DOM_MAX = "max";
 	public static final String ALIASING = "ref_aliasing";
 	public static final String VERBOSITY = "verbosity";
+	public static final String SEL_CRIT = "sel_crit";
 }
