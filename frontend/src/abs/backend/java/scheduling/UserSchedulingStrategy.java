@@ -51,8 +51,6 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
         // Convert returned ABSValue (actually an ABSProcess) to TaskInfo
         long selectedPid = ((ABSProcess)result).getPid();
         return taskMap.get(selectedPid);
-        
-        //return schedulableTasks.get(0);
     }
     
     // to be implemented by the generated subclass

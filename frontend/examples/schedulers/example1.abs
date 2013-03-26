@@ -5,21 +5,48 @@ import * from ABS.Meta;
 interface C { Unit m(); }
 class CImpl(Int xx) implements C {
     Unit m() {
-//        Time t = now(); 
+//        while(True) {
+//            skip;
+//            suspend;
+//        }
+        Time t = now();
 //        await timeDifference(now(), t) > 5;
 //        Unit u = println("Hello");
     }
 }
 
+// Well know scheduling policies
+// EDF : earliest deadline first
+def Process edf(List<Process> l) = edf_h(head(l), tail(l)); 
+
+def Process edf_h(Process p, List<Process> l) = 
+ case l {
+    Nil => p;
+    Cons(p2,l2) => 
+        case edf_comp(p, p2) {
+            True  => edf_h(p,l2) ;
+            False => edf_h(p2,l2);};};
+                     
+// edf comparison
+def Bool edf_comp(Process p1, Process p2) = 
+        durationLessThan(procDeadline(p1), procDeadline(p2));
+
 
 {
     C o = new [Scheduler: defaultscheduler(queue)] cog CImpl(444);
 
-    C o2 = new [Scheduler: nth(queue, random(length(queue)))] cog CImpl(555);
+//    C o2 = new [Scheduler: nth(queue, random(length(queue)))] cog CImpl(555);
+    C o2 = new [Scheduler: edf(queue)] cog CImpl(555);
 
     C o3 = new cog CImpl(0);
 
-    o2!m();
-    o2!m();
-    o2!m();
+    [Deadline: Duration(1/1)] o2!m();
+    [Deadline: Duration(1/2)] o2!m();
+    [Deadline: Duration(1/3)] o2!m();
+    [Deadline: Duration(1/4)] o2!m();
+    [Deadline: Duration(1/5)] o2!m();
+    [Deadline: Duration(1/6)] o2!m();
+    [Deadline: Duration(1/7)] o2!m();
+    [Deadline: Duration(1/8)] o2!m();
+    [Deadline: Duration(1/9)] o2!m();
 }

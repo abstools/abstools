@@ -52,6 +52,21 @@ adds class CallImpl implements Call {
     Unit hangup() {/*...*/}
 }
 
+// *********************************************************************************
+// delta that removes voice chat functionality
+delta NoVoice;
+uses Chat;
+
+removes interface Voice;
+modifies interface Client removes Voice {}
+modifies class ClientImpl {
+    removes List<Call> ongoingCalls;
+    removes Call call(Client client);
+}
+
+removes interface AudioStream {/*...*/}
+removes interface Call;
+removes class CallImpl;
 
 
 // *********************************************************************************

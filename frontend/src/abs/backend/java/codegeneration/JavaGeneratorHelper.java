@@ -251,7 +251,8 @@ public class JavaGeneratorHelper {
         final java.util.List<Type> paramTypes = sig.getTypes();
         stream.print(ABSRuntime.class.getName() + ".getCurrentRuntime().asyncCall(");
         String targetType = JavaBackend.getQualifiedString(calleeType);
-        stream.print("new " + AbstractAsyncCallRT.class.getName() + "<" + targetType + ">(this, ");
+        stream.println("new " + AbstractAsyncCallRT.class.getName() + "<" + targetType + ">(");
+        stream.println("this,");
         if (callee instanceof ThisExp) {
             if (calleeString != null)
                 stream.print(calleeString);
@@ -265,14 +266,14 @@ public class JavaGeneratorHelper {
                 callee.generateJava(stream);
             stream.print(")");
         }
-        stream.print(", ");
+        stream.println(",");
         PureExp rtAttr;
         rtAttr = CompilerUtils.getAnnotationValue(annotations, "Deadline");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
-        stream.print(", ");
+        stream.println(",");
         rtAttr = CompilerUtils.getAnnotationValue(annotations, "Cost");
         if (rtAttr == null) stream.print("new ABS.StdLib.Duration_InfDuration()"); else rtAttr.generateJava(stream); 
-        stream.print(", ");
+        stream.println(",");
         rtAttr = CompilerUtils.getAnnotationValue(annotations, "Critical");
         if (rtAttr == null) stream.print(ABSBool.class.getName() + ".FALSE"); else rtAttr.generateJava(stream); 
         
@@ -304,7 +305,7 @@ public class JavaGeneratorHelper {
             JavaGeneratorHelper.generateArgs(stream,args, paramTypes);
         else
             JavaGeneratorHelper.generateParamArgs(stream, params);
-        stream.print(")");
+        stream.println(")");
     }
     
     public static void generateAwaitAsyncCall(PrintStream stream, AwaitAsyncCall call) {
