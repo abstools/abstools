@@ -1,0 +1,174 @@
+module Example;
+import * from ABS.Scheduler;
+
+// Type declarations
+// type Duration = Int;
+data Deadline;                 // Type for annotations
+data Scheduler;                // Type for annotations
+data Cost;                     // Type for annotations
+
+// Well know scheduling policies
+// EDF: earliest deadline first
+def Process edf(List<Process> l) = edf_h(head(l), tail(l));
+
+def Process edf_h(Process p, List<Process> l) =
+    case l {
+        Nil => p;
+        Cons(p2,l2) =>
+            case edf_comp(p, p2) {
+                True  => edf_h(p,l2) ;
+                False => edf_h(p2,l2);
+            };
+    };
+
+// edf comparison
+def Bool edf_comp(Process p1, Process p2) = durationLessThan(procDeadline(p1), procDeadline(p2));
+
+
+// combined
+def List<Process> lowPriority(List <Process> l1, List<Process> l2) =
+    case l2 {
+	    Nil => l1;
+	    Cons(h,t) =>
+	        case l1 == Nil {
+	            True => lowPriority(Cons(h,Nil),t);
+	            False  =>
+	                case comp_dp (head(l1),h) {
+	                    True =>
+	                        case value(head(l1)) == value(h) {
+	                            True => lowPriority(Cons(h,l1), t);
+	                            False => lowPriority(l1,t);
+	                        };
+	                    False => lowPriority(Cons(h,Nil),t);
+	                };
+	        };
+    };
+
+
+def Bool comp_dp(Process p1, Process p2) = value(p1) >= value(p2);
+
+// FIFO : first in first out
+def Process fifo (List<Process> l) = fifo_h(head(l), tail(l));
+
+def Process fifo_h(Process p1, List<Process> l1) =
+	case l1 {
+	    Nil => p1;
+	    Cons(p2,l2) =>
+	        case fifo_comp(p1, p2) {
+	            True  => fifo_h(p1,l2);
+	            False => fifo_h(p2,l2);
+	        };
+	};
+
+// fifo comparison
+def Bool fifo_comp(Process p1, Process p2) = timeLessThan(arrival(p1), arrival(p2));
+
+
+// SJF : shortest job first
+def Process sjf (List<Process> l) = sjf_h(head(l), tail(l));
+
+def Process sjf_h(Process p1, List<Process> l1) =
+    case l1 {
+        Nil => p1;
+        Cons(p2,l2) =>
+            case sjf_comp(p1, p2) {
+                True  => sjf_h(p1,l2);
+                False => sjf_h(p2,l2);
+            };
+    };
+
+// fifo comparison
+def Bool sjf_comp(Process p1, Process p2) = durationValue(cost(p1)) <= durationValue(cost(p2));
+
+// scheduler which switches strategy based on a boolean condition
+def Process flagsensitive(Bool switch, List<Process> l) =
+    case switch {
+        True  => sjf(l);
+        False => fifo(l);
+    };
+
+// scheduler which switches strategy based on the length of the queue
+def Process lengthsensitive(Int limit, List<Process> l) =
+    case (length(l)>limit) {
+        True  => sjf(l);
+        False => fifo(l);
+    };
+
+/****************************************************************************/
+/*** The main example                                                     ***/
+/****************************************************************************/
+
+// Interfaces
+interface Server { Bool request(String job, Rat bc, Rat wc); }
+interface Client { }
+
+// I want to make a version which switches between strategies if it believes there is congestion.
+// I will express this by a job getting too close to its deadline...
+// Let's see how that will behave.
+
+/****** Server ******/
+//[Scheduler: fifo(queue)]
+//[Scheduler: sjf(queue)]
+//[Scheduler: flagsensitive(congestion,queue)]
+[Scheduler: lengthsensitive(limit,queue)]
+class ServerImp (Int limit) implements Server {
+    Bool congestion = False; Int misses = 0;
+    // List<Pair<String,Duration>> history = Nil; // Scheduling history
+    [Cost: Duration(wc)]
+        Bool request(String job, Rat bc, Rat wc) {
+            duration(bc, wc);
+            //     history = Cons(Pair(job,deadline),history); // record the name of the executing task
+            if (durationValue(deadline) <= 0) {misses = misses + 1;}
+            congestion = (durationValue(deadline) < limit);
+            return (durationValue(deadline) >= 0);
+        }
+}
+
+/****** Client ******/
+// Job = name of the job
+// Cycles: how many times do we call the run method
+// Frequency: how long must we wait before the next call
+// Best/worst case cost: the cost of each request
+// Limit: the deadline given to requests from this client
+// Server
+class AsyncClientImp (String job, Int cycles, Int frequency, Duration bc, Duration wc, Duration limit, Server s) implements Client {
+    Int replies = 0; Int successes = 0; Int counter = 1;
+    Unit run() {
+        await Delay (frequency);
+        [Deadline: limit]
+            Fut<Bool> res = s!request((job+intToString(counter)), durationValue(bc), durationValue(wc));
+        cycles = cycles - 1;
+        if (cycles > 0) {
+            counter = counter + 1;
+            await Delay (frequency);
+            this!run();
+        }
+        await res?; replies = replies + 1;
+        Bool result = res.get; if (result) {successes = successes + 1;}
+    }
+}
+
+data Task = Task(String, Duration, Duration, Duration) ; // job name, best case, worst case, deadline
+def String taskname(Task t) = case t { Task(s,_,_,_) => s;};
+def Duration best(Task t) = case t { Task(_,b,_,_) => b;};
+def Duration worst(Task t) = case t { Task(_,_,w,_) => w;};
+def Duration limit(Task t) = case t { Task(_,_,_,l) => l;};
+
+
+/****** Main block ******/
+{
+    Server s = new cog ServerImp(4);
+    Client photo1 = new cog AsyncClientImp("APhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video1 = new cog AsyncClientImp("AVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo2 = new cog AsyncClientImp("BPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video2 = new cog AsyncClientImp("BVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo3 = new cog AsyncClientImp("CPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video3 = new cog AsyncClientImp("CVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo4 = new cog AsyncClientImp("DPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video4 = new cog AsyncClientImp("DVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo5 = new cog AsyncClientImp("EPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video5 = new cog AsyncClientImp("EVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+
+    // The last photo object gets a stack overflow for some reason, even if run as the only client...
+    //    Client photo = new cog AsyncClientImp("Photo", 11, 3, Duration(2), Duration(4), Duration(15), s);
+}

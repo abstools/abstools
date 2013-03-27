@@ -3,44 +3,9 @@ import * from ABS.Scheduler;
 
 // Type declarations
 // type Duration = Int ;
-data Deadline ;                 // Type for annotations
-data Scheduler ;                // Type for annotations
-data Cost ;                     // Type for annotations
-
-//data Pid  ;
-
-//data Process = Idle | Proc(Pid , String , Time , Duration ,  Duration , Time , Time , Bool , Int );
-
-/*
-   def Pid procid(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => pid;} ;
-
-   def String name(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => m;} ;
-
-   def Time arrival(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => r;} ;
-
-   def Duration cost(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => c;} ;
-
-   def Duration deadline(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => d;} ;
-
-   def Int value(Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => v;} ;
-
-   def Duration response( Process p) =
-   case p {
-   Proc(pid,m,r,c,d,s,f,crit,v) => Duration(timeval(f)-timeval(r));} ;
-
- */
+data Deadline;                 // Type for annotations
+data Scheduler;                // Type for annotations
+data Cost;                     // Type for annotations
 
 // Well know scheduling policies
 // EDF : earliest deadline first
@@ -126,10 +91,10 @@ interface Client { }
 class ServerImp implements Server {
     // List<Pair<String,Duration>> history = Nil; // Scheduling history
     [Cost: Duration(wc)]
-        Bool request(String job, Rat bc, Rat wc) {
-            duration(bc, wc);
-            //     history = Cons(Pair(job,deadline),history); // record the name of the executing task
-            return (durationValue(procDeadline) >= 0);
+    Bool request(String job, Rat bc, Rat wc) {
+        duration(bc, wc);
+        // history = Cons(Pair(job, deadline()), history); // record the name of the executing task
+        return (durationValue(deadline()) >= 0);
         }
 }
 
@@ -143,13 +108,13 @@ class ServerImp implements Server {
 class AsyncClientImp (String job, Int cycles, Int frequency, Duration bc, Duration wc, Duration limit, Server s) implements Client {
     Int replies = 0; Int successes = 0; Int counter = 1;
     Unit run() {
-        await Delay (frequency);
+        await duration(frequency, frequency);
         [Deadline: limit]
-            Fut<Bool> res = s!request((job+intToString(counter)), durationValue(bc), durationValue(wc));
+        Fut<Bool> res = s!request((job+intToString(counter)), durationValue(bc), durationValue(wc));
         cycles = cycles - 1;
         if (cycles > 0) {
             counter = counter + 1;
-            await Delay (frequency);
+            await duration(frequency, frequency);
             this!run();
         }
         await res?; replies = replies + 1;
@@ -185,17 +150,17 @@ def Duration limit(Task t) = case t { Task(_,_,_,l) => l;};
 
 // Main block
 {
-    Server s = new cog ServerImp();
+    Server s = new [Scheduler: sjf(queue) /*fifo(queue)*/ /*edf(queue)*/] cog ServerImp();
     Client photo1 = new cog AsyncClientImp("APhoto", 10, 15, Duration(2), Duration(2), Duration(40),s);
-    Client video1 = new cog AsyncClientImp("AVideo", 4,40,Duration(15),Duration(15),Duration(80),s);
+    Client video1 = new cog AsyncClientImp("AVideo",  4, 40, Duration(15),Duration(15),Duration(80),s);
     Client photo2 = new cog AsyncClientImp("BPhoto", 10, 15, Duration(2), Duration(2), Duration(40),s);
-    Client video2 = new cog AsyncClientImp("BVideo", 4,40,Duration(15),Duration(15),Duration(80),s);
+    Client video2 = new cog AsyncClientImp("BVideo",  4, 40, Duration(15),Duration(15),Duration(80),s);
     Client photo3 = new cog AsyncClientImp("CPhoto", 10, 15, Duration(2), Duration(2), Duration(40),s);
-    Client video3 = new cog AsyncClientImp("CVideo", 4,40,Duration(15),Duration(15),Duration(80),s);
+    Client video3 = new cog AsyncClientImp("CVideo",  4, 40, Duration(15),Duration(15),Duration(80),s);
     Client photo4 = new cog AsyncClientImp("DPhoto", 10, 15, Duration(2), Duration(2), Duration(40),s);
-    Client video4 = new cog AsyncClientImp("DVideo", 4,40,Duration(15),Duration(15),Duration(80),s);
+    Client video4 = new cog AsyncClientImp("DVideo",  4, 40, Duration(15),Duration(15),Duration(80),s);
     Client photo5 = new cog AsyncClientImp("EPhoto", 10, 15, Duration(2), Duration(2), Duration(40),s);
-    Client video5 = new cog AsyncClientImp("EVideo", 4,40,Duration(15),Duration(15),Duration(80),s);
+    Client video5 = new cog AsyncClientImp("EVideo",  4, 40, Duration(15),Duration(15),Duration(80),s);
 
     // The last photo object gets a stack overflow for some reason, even if run as the only client...
     //    Client photo = new cog AsyncClientImp("Photo", 11, 3, Duration(2), Duration(4), Duration(15),s);

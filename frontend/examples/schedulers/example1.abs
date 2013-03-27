@@ -5,11 +5,10 @@ import * from ABS.Meta;
 interface C { Unit m(); }
 class CImpl(Int xx) implements C {
     Unit m() {
-//        while(True) {
-//            skip;
-//            suspend;
-//        }
-        Time t = now();
+        while(True) {
+            Time t = now();
+            suspend;
+        }
 //        await timeDifference(now(), t) > 5;
 //        Unit u = println("Hello");
     }
