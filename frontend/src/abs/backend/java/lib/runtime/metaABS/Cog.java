@@ -101,7 +101,7 @@ public class Cog {
 
                             // TODO set: pid, method, arrival, cost, deadline, start, finish, critical, value
                             ABSProcess proc = new ABSProcess(
-                                    task.id, 
+                                    task.task.getID(), 
                                     task.task.getCall().methodName(),
                                     0,0,0,0,0,false,0);
 

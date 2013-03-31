@@ -33,7 +33,7 @@ public abstract class UserSchedulingStrategy implements TaskSchedulingStrategy {
 
             // TODO set: pid, method, arrival, cost, deadline, start, finish, critical, value
             ABSProcess proc = new ABSProcess(
-                    taskInfo.task.getID(), //Or use taskInfo.id -- what's the difference?
+                    taskInfo.task.getID(), //Or use taskInfo.id (long)??
                     taskInfo.task.getCall().methodName(),
                     taskInfo.task.getArrival(),
                     taskInfo.task.getCost(),

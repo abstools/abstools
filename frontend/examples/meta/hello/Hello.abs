@@ -1,6 +1,13 @@
 module Hello;
 import * from ABS.Meta;
 
+
+//*************************************************************
+// Feature model
+// Products: English, French, German, (Chinese)
+
+//*************************************************************
+
 interface Greeting {
     String sayHello();
 }
@@ -18,20 +25,20 @@ class Application() {
 	    }
     }
     Unit menu(Greeting bob) {
-        Runtime runtime = getRuntime();
+        ProductLine pl = getProductLine();
 
         String message = bob.sayHello();
         Unit u = println("\n" + message + "\n");
         this.printMenu();
         String selection = readln();
         
-        if (selection == "1") runtime.applyDelta("En");
-        else if (selection == "2") runtime.applyDelta("Es");
-        else if (selection == "3") runtime.applyDelta("De");
+        if (selection == "1") pl.configureProduct("English");
+        else if (selection == "2") pl.configureProduct("French");
+        else if (selection == "3") pl.configureProduct("German");
     }
     Unit printMenu() {
         Unit u = println("(1) English");
-             u = println("(2) Spanish");
+             u = println("(2) French");
              u = println("(3) German");
     }
 }
@@ -50,7 +57,7 @@ modifies class Hello.Greeter {
 modifies class Hello.Application {
     modifies Unit printMenu() {
         Unit u = println("(1) English");
-             u = println("(2) Spanish");
+             u = println("(2) French");
              u = println("(3) German");
     }
 }
@@ -63,9 +70,9 @@ modifies class Hello.Greeter {
 }
 modifies class Hello.Application {
     modifies Unit printMenu() {
-        Unit u = println("(1) Inglés");
-             u = println("(2) Español");
-             u = println("(3) Alemán");
+        Unit u = println("(1) Anglais");
+             u = println("(2) Français");
+             u = println("(3) Allemand");
     }
 }
 //*************************************************************
