@@ -7,6 +7,7 @@
 	<property name="frontend.dir" location="../frontend" />
 	<property name="costabs.dir" location="../costabs-plugin" /> 
 	<property name="apet.dir" location="../apet-plugin" /> 
+	<property name="sda.dir" location="../sda-plugin" />
 	<property name="sdedit.dir" location="../sdedit-for-abs" />
 	<property name="src.dir" location="${basedir}/src" />
 	<property name="build.dir" location="${basedir}/bin" />
@@ -145,6 +146,7 @@
 		<antcall target="build-eclipse-plugin"/>
 		<ant antfile="${costabs.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
 		<ant antfile="${apet.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
+		<ant antfile="${sda.dir}/build.xml" useNativeBasedir="true" target="build-eclipse-plugin" inheritAll="false"/>
     </target>
 	
 	<target name="build-eclipse-plugin" depends="clean,compile,versionstamp">
