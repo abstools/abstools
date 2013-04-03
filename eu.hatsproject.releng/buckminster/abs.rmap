@@ -33,7 +33,7 @@
   </rm:searchPath>
   <rm:searchPath name="sda">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/sda/">
+      <rm:uri format="file:///{0}/sda-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
