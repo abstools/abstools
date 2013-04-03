@@ -348,6 +348,7 @@
       </fileset>
       <fileset dir="${build.dir}">
         <include name="abs/"/>
+        <include name="deadlock/"/>
       </fileset>
       <fileset dir="${src.dir}">
         <include name="abs/backend/maude/abs-interpreter.maude" />
