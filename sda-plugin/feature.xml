@@ -3,8 +3,7 @@
       id="eu.hatsproject.sda"
       label="ABS Deadlock Analysis"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project"
-      os="linux,macosx,win32">
+      provider-name="HATS Project">
 
    <description url="http://www.hats-project.eu">
       This feature adds the ABS Deadlock Analysis plugin.
