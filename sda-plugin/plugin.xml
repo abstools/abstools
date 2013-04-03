@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="eu.hatsproject.sda.actionSet"
+            label="SDA ActionSet"
+            visible="true">
+         <menu
+               id="SDA Menu"
+               label="S&amp;DA">
+            <separator
+                  name="sampleGroup">
+            </separator>
+         </menu>
+         <action
+               class="sdaplugin.actions.SDAction"
+               icon="icons/sample.gif"
+               id="eu.hatsproject.sda.actions.SDA"
+               label="&amp;Begin Analysis"
+               menubarPath="SDA Menu/sampleGroup"
+               toolbarPath="sampleGroup"
+               tooltip="Perform the Analysis on the current project">
+         </action>
+      </actionSet>
+   </extension>
+
+
+</plugin>

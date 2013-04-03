@@ -24,7 +24,7 @@ Export-Package: .,
    abs.backend,
    abs.backend.java.scheduling,
    abs.backend.java.lib.runtime",
- abs.backend.java.absunit,   
+ abs.backend.java.absunit,
  abs.backend.java.codegeneration;uses:="abs.frontend.ast",
  abs.backend.java.debugging;uses:="abs.backend.java.observing,abs.backend.java.lib.types",
  abs.backend.java.lib.expr;uses:="abs.backend.java.lib.types",
@@ -74,7 +74,8 @@ Export-Package: .,
    abs.frontend.typechecker,
    abs.frontend.analyser,
    abs.frontend.ast",
- abs.frontend.typesystem;uses:="abs.frontend"
+ abs.frontend.typesystem;uses:="abs.frontend",
+ deadlock.analyser
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.eclipse.jdt.core,
  org.sat4j.core,

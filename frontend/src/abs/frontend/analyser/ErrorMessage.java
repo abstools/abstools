@@ -101,7 +101,8 @@ public enum ErrorMessage {
     SQL_INSERT_UNEQUAL_ATTR_AND_VALUE_NUMBER("The number of attributes and values must be equal."),
     ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas.")
     , ERROR_IN_PRODUCT("Error within product %s: %s")
-    , ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s")
+    , ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s"),
+    DEADLOCK_GENERATION_ERROR("Generated Edge: %s")
     ;
 
     private String pattern;

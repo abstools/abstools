@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Deadlock Analysis Plugin
+Bundle-SymbolicName: eu.hatsproject.sda;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: sdaplugin.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.hatsproject.abs.compiler;bundle-version="0.0.0",
+ org.eclipse.ui.views;bundle-version="3.5.0",
+ org.eclipse.ui.editors;bundle-version="3.6.1",
+ eu.hatsproject.absplugin;bundle-version="0.0.0",
+ org.eclipse.ui.ide
+Eclipse-BundleShape: dir
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.eclipse.core.filesystem,
+ org.eclipse.core.resources,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.internal.core,
+ org.eclipse.ui.console,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.part
+Export-Package: sdaplugin
