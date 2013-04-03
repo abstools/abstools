@@ -7,7 +7,7 @@
   <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="eu.hatsproject.apet" searchPathRef="apet"/>
   <rm:locator pattern="eu.hatsproject.releng" searchPathRef="by-component"/>
-  <rm:locator pattern="eu.hatsproject.sda" searchPathRef="by-component"/>
+  <rm:locator pattern="eu.hatsproject.sda" searchPathRef="sda"/>
   <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
   <rm:searchPath name="ABSFrontend">
@@ -27,6 +27,13 @@
   <rm:searchPath name="apet">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/apet/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="sda">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/sda/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
