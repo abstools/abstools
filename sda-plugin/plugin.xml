@@ -21,7 +21,7 @@
                label="&amp;Begin Analysis"
                menubarPath="SDA Menu/sampleGroup"
                toolbarPath="sampleGroup"
-               tooltip="Perform the Analysis on the current project">
+               tooltip="Perform Deadlock Analysis on the current project">
          </action>
       </actionSet>
    </extension>
