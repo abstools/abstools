@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="eu.hatsproject.sda"
+      label="ABS Compiler"
+      version="0.0.0.VERSION_STRING"
+      provider-name="HATS Project">
+
+   <description url="http://www.hats-project.eu">
+      
+   </description>
+
+   <url>
+      <update label="ABS Update Site" url="http://tools.hats-project.eu/update-site/"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.ui.console" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.editors" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.ui.ide.views" version="3.5" match="greaterOrEqual"/>
+      <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+      <import plugin="eu.hatsproject.absplugin" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+   </requires>
+
+   <plugin
+         id="eu.hatsproject.sda"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+</feature>
