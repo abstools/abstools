@@ -18,11 +18,13 @@ import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 
+import eu.hatsproject.absplugin.actions.ActionUtils;
+
 import abs.frontend.ast.Model;
-import deadlock.analyser.*;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -60,15 +62,19 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     model.typeCheck();
     /* 4. Perform the analysis */
     SDARun run = new SDARun(model, true, 2, out);
-    new Thread(run).start();
+    run.schedule();
     //Analyser analyser = new Analyser();
     //out.println("Hello");
     //analyser.deadlockAnalysis(model, true, 2, out);
 
   }
 
+  /**
+   * TODO: Use {@link ActionUtils#getCurrentProject(IWorkbenchWindow, IEditorPart)}?
+   */
   private IProject getCurrentProject() {
-    IWorkbench workbench = PlatformUI.getWorkbench();
+	  IWorkbench workbench = PlatformUI.getWorkbench();
+	  // Review: not this.window?
     IWorkbenchWindow workbenchwindow = workbench.getActiveWorkbenchWindow();
     IWorkbenchPage workbenchpage = workbenchwindow.getActivePage();
     IEditorPart editorpart = workbenchpage.getActiveEditor();
