@@ -48,7 +48,7 @@ public class Analyser {
 
      /* 1. Generate contracts */
     String ident = null; if(verbose) { out.println("Analyzing dependencies  to look for deadlocks..."); ident = ""; }
-    try{
+    
     ResultInference InferenceOutput = m.typeInference(ident, g, df, mapInterfaceToClass, out);
     Map<String, MethodContract> methodMap = InferenceOutput.getMethods();
     deadlock.constraints.constraint.Constraint c = InferenceOutput.getConstraint();
@@ -136,11 +136,7 @@ public class Analyser {
     out.println("Deadlock in Main:             " + solver.isDeadlockMain());
     //System.out.println("Await cycle in Main? " + solver.isAwaitLoopMain());
     out.println("Possible Livelock in Main:    " + solver.isCycleMain());
-    
-    } catch(Exception e) {
-      e.printStackTrace();
     }
-  }
 }
 
 
