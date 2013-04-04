@@ -121,6 +121,7 @@ IConfigurationEditorPage {
 	private boolean IsMostSecureSelected = false;
 	private boolean IsQualitySelected = false;
 	
+	public String mtvlPath = "C:\\Users\\arif\\Desktop\\replicationsystem";
 	private ArrayList<String> arlSelectedFeatures = new ArrayList<String>();
 	
 	private LinkedList<String> hiddenFeatures;
@@ -135,19 +136,27 @@ IConfigurationEditorPage {
 		
 		Composite composite = new Composite(parent, SWT.BORDER);
 		
-		composite.setLayout(new GridLayout());
+		GridLayout gridLayout = new GridLayout();
+	    gridLayout.numColumns = 2;
+	    gridLayout.makeColumnsEqualWidth = true;
+		composite.setLayout(gridLayout);
 		
-		//Composite composite2 = new Composite(composite, SWT.BORDER);		
-		//composite2.setLayout(new GridLayout(3,false));
 		
 		Label labelBasic = new Label(composite, SWT.HORIZONTAL);
 		labelBasic.setText("Basic Configuration");
 		labelBasic.setFont( new Font(parent.getDisplay(),"Calibri", 16, SWT.NORMAL));
-	
-		Listener listenerRadioButtons = new Listener () {
-		    public void handleEvent (Event event) {		      
+		
+		
+		GridData gridData = new GridData();
+		gridData.horizontalSpan = 2;
+	    labelBasic.setLayoutData(gridData);
+	    
+
+	    SelectionListener listenerRadioButtons = new SelectionListener () {
+		    //public void handleEvent (Event event) {
+			public void widgetSelected(SelectionEvent event){
 		      Button button = (Button) event.widget;
-		      
+		      	System.out.println("inside listener");
 			  	IsMinSelected = false;
 			  	IsMaxSelected = false;
 			  	IsMinDistantSelected = false;
@@ -157,13 +166,17 @@ IConfigurationEditorPage {
 			  	IsMaxPerformantSelected = false;
 			  	IsMostSecureSelected = false;
 			  	IsQualitySelected = false;
-		      
+			  	
+			  	if(button.getSelection() == false){
+			  		return;
+			  	}
 	            if ((button.getStyle () & SWT.RADIO) != 0) button.setSelection (false);
 	          
 	            button.setSelection (true);
 	            if(button.getText().trim() == "Minimum Configuration")
 	            {
 	            	IsMinSelected = true;	
+	            	
 	            }
 	            else if(button.getText().trim() == "Maximum Configuration")
 	            {
@@ -185,73 +198,129 @@ IConfigurationEditorPage {
 	            {
 	            	IsMaxCostConstraintSelected = true;	
 	            }
-	            else if(button.getText().trim() == "Maximum Performant Configuration")
+	            else if(button.getText().trim() == "Least Response Time Configuration")
 	            {
 	            	IsMaxPerformantSelected = true;	
 	            }
-	            else if(button.getText().trim() == "Most Secure Configuration")
+	            else if(button.getText().trim() == "Minimum Memory Consumption Configuration")
 	            {
 	            	IsMostSecureSelected = true;	
 	            }
-	            else if(button.getText().trim() == "Based on Quality Preference")
+	            else if(button.getText().trim() == "Customized")
 	            {
 	            	IsQualitySelected = true;	
 	            }
 	            System.out.print("\nHello from Listener : " + button.getText());
 	            
 		    }
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
 		  };
+		  
 		  
 		Button btnMinConfig = new Button(composite, SWT.RADIO);
 		btnMinConfig.setText("Minimum Configuration");		
-		btnMinConfig.addListener(SWT.SELECTED, listenerRadioButtons);
-		btnMinConfig.setSelection(true);		
+		//btnMinConfig.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnMinConfig.addSelectionListener(listenerRadioButtons);
+		btnMinConfig.setLayoutData(gridData);
+//		btnMinConfig.setSelection(true);
+//		btnMinConfig.addSelectionListener(new SelectionListener(){
+//			public void widgetSelected(SelectionEvent e){
+//				System.out.println("Minimum Configuration Selected");
+//				
+//				IsMinSelected = true;
+//				
+//			}
+//
+//			@Override
+//			public void widgetDefaultSelected(SelectionEvent e) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
+
 		
 		Button btMaxConfig = new Button(composite, SWT.RADIO);
 		btMaxConfig.setText("Maximum Configuration");		
-		btMaxConfig.addListener(SWT.SELECTED, listenerRadioButtons);
+		//btMaxConfig.addSelectionListener(SWT.SELECTED, listenerRadioButtons);
+		btMaxConfig.addSelectionListener(listenerRadioButtons);
+
+		Label emptybtMaxConfig = new Label(composite, SWT.HORIZONTAL);
+		emptybtMaxConfig.setText("");
 		
 		Button btnMinDistant = new Button(composite, SWT.RADIO);
 		btnMinDistant.setText("Minimum Distant Valid Configuration");		
-		btnMinDistant.addListener(SWT.SELECTED, listenerRadioButtons);		
-					  
+		//btnMinDistant.addListener(SWT.SELECTED, listenerRadioButtons);		
+		btnMinDistant.addSelectionListener(listenerRadioButtons);
+		
+		
+		Label emptybtnMinDistant = new Label(composite, SWT.HORIZONTAL);
+		emptybtnMinDistant.setText("");
+		
+		
 		Label labelCostaware = new Label(composite, SWT.HORIZONTAL);
 		labelCostaware.setText("Cost-aware Configuration");
 		labelCostaware.setFont( new Font(parent.getDisplay(),"Calibri", 16, SWT.NORMAL));
 		
+		Label emptyCostaware = new Label(composite, SWT.HORIZONTAL);
+		emptyCostaware.setText("");
+		
 		Button btnLeastCost = new Button(composite, SWT.RADIO);
 		btnLeastCost.setText("Least Cost Configuration");		
-		btnLeastCost.addListener(SWT.SELECTED, listenerRadioButtons);
+		//btnLeastCost.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnLeastCost.addSelectionListener(listenerRadioButtons);
+		Label emptybtnLeastCost = new Label(composite, SWT.HORIZONTAL);
+		emptybtnLeastCost.setText("");
 		
 		Button btnMaxCost= new Button(composite, SWT.RADIO);		
 		btnMaxCost.setText("Maximum Cost Configuration");		
-		btnMaxCost.addListener(SWT.SELECTED, listenerRadioButtons);
+		//btnMaxCost.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnMaxCost.addSelectionListener(listenerRadioButtons);
+		Label emptybtnMaxCost = new Label(composite, SWT.HORIZONTAL);
+		emptybtnMaxCost.setText("");
+		
+		
 		
 		Button btnMaximalCostConstraint= new Button(composite, SWT.RADIO);		
 		btnMaximalCostConstraint.setText("Maximal Configuration within Cost Constraint");		
-		btnMaximalCostConstraint.addListener(SWT.SELECTED, listenerRadioButtons);
+		//btnMaximalCostConstraint.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnMaximalCostConstraint.addSelectionListener(listenerRadioButtons);
 		
-		Label labelCostConstraint = new Label(composite, SWT.NULL);
-		labelCostConstraint.setText("Cost");				
+//		Label labelCostConstraint = new Label(composite, SWT.NULL);
+//		labelCostConstraint.setText("Cost");				
 		final Text txtCostConstraint = new Text(composite, SWT.SINGLE | SWT.BORDER );
-		txtCostConstraint.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL));
+		//txtCostConstraint.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL));
 		
 		Label labelQualityaware = new Label(composite, SWT.HORIZONTAL);
 		labelQualityaware.setText("Quality-aware Configuration");
 		labelQualityaware.setFont( new Font(parent.getDisplay(),"Calibri", 16, SWT.NORMAL));
+		Label emptyQualityaware = new Label(composite, SWT.HORIZONTAL);
+		emptyQualityaware.setText("");
+		
 		
 		Button btnMaximumPerformant = new Button(composite, SWT.RADIO);
-		btnMaximumPerformant.setText("Maximum Performant Configuration");		
-		btnMaximumPerformant.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnMaximumPerformant.setText("Least Response Time Configuration");		
+		//btnMaximumPerformant.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnMaximumPerformant.addSelectionListener(listenerRadioButtons);
+		Label emptyMaximumPerformant = new Label(composite, SWT.HORIZONTAL);
+		emptyMaximumPerformant.setText("");
 		
 		Button btnSecure = new Button(composite, SWT.RADIO);		
-		btnSecure.setText("Most Secure Configuration");		
-		btnSecure.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnSecure.setText("Minimum Memory Consumption Configuration");		
+		//btnSecure.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnSecure.addSelectionListener(listenerRadioButtons);
+		Label emptybtnSecure = new Label(composite, SWT.HORIZONTAL);
+		emptybtnSecure.setText("");
 		
 		Button btnQualityPreference = new Button(composite, SWT.RADIO);		
-		btnQualityPreference.setText("Based on Quality Preference");		
-		btnQualityPreference.addListener(SWT.SELECTED, listenerRadioButtons);
-		
+		btnQualityPreference.setText("Customized");		
+		//btnQualityPreference.addListener(SWT.SELECTED, listenerRadioButtons);
+		btnQualityPreference.addSelectionListener(listenerRadioButtons);
+		btnQualityPreference.setLayoutData(gridData);
 		// For Label - Textbox to appear...
 		
 		Label labelCost = new Label(composite, SWT.NULL);
@@ -264,43 +333,73 @@ IConfigurationEditorPage {
 		//expGridData.grabExcessHorizontalSpace = true;
         //expGridData.grabExcessVerticalSpace = true;
 		//txtCost.setLayoutData(expGridData); 
-	    txtCost.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    //txtCost.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
 	    
 	    Label labelQuality = new Label(composite, SWT.NULL);
 	    labelQuality.setText("Quality");
-	    labelQuality.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    //labelQuality.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    Label labelImportance = new Label(composite, SWT.NULL);
 	    labelImportance.setText("% of Importance");
-	    labelImportance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
+	    //labelImportance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
 	    
 	    Label labelPerformance = new Label(composite, SWT.NULL);
 	    labelPerformance.setText("Performance");
-	    labelPerformance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    //labelPerformance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    final Text txtPerformance = new Text(composite, SWT.SINGLE | SWT.BORDER);
-	    txtPerformance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    //txtPerformance.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
 	    
 	    Label labelMemoryConsumption = new Label(composite, SWT.NULL);
-	    labelMemoryConsumption.setText("Memory Consumption");
-	    labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    labelMemoryConsumption.setText("    Memory Consumption");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    final Text txtMemoryConsumption = new Text(composite, SWT.SINGLE | SWT.BORDER);
-	    txtMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    //txtMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
 	    
 	    Label labelResponseTime = new Label(composite, SWT.NULL);
-	    labelResponseTime.setText("Response Time");
-	    labelResponseTime.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    labelResponseTime.setText("    Response Time");
+	    //labelResponseTime.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    final Text txtResponseTime = new Text(composite, SWT.SINGLE | SWT.BORDER);
-	    txtResponseTime.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    //txtResponseTime.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
 	    
 	    Label labelSecurity = new Label(composite, SWT.NULL);
 	    labelSecurity.setText("Security");
-	    labelSecurity.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    //labelSecurity.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    final Text txtSecurity = new Text(composite, SWT.SINGLE | SWT.BORDER);
-	    txtSecurity.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    //txtSecurity.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));	    
+	    
+	    Label labelConfidentiality = new Label(composite, SWT.NULL);
+	    labelConfidentiality.setText("    Confidentiality");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    
+	    final Text txtConfidentiality = new Text(composite, SWT.SINGLE | SWT.BORDER);
+
+	    Label labelIntegrity = new Label(composite, SWT.NULL);
+	    labelIntegrity.setText("    Integrity");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    
+	    final Text txtIntegrity = new Text(composite, SWT.SINGLE | SWT.BORDER);
+
+	    Label labelNonRepudiation = new Label(composite, SWT.NULL);
+	    labelNonRepudiation.setText("    Non-repudiation");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    
+	    final Text txtNonRepudiation = new Text(composite, SWT.SINGLE | SWT.BORDER);
+
+	    Label labelAuthentication = new Label(composite, SWT.NULL);
+	    labelAuthentication.setText("    Confidentiality");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    
+	    final Text txtAuthentication = new Text(composite, SWT.SINGLE | SWT.BORDER);
+
+
+	    
+	    
+	    
+	    
 	    
 	    Button btnConfigure = new Button(composite, SWT.PUSH);
 	    btnConfigure.setText("Configure");
@@ -313,10 +412,8 @@ IConfigurationEditorPage {
 				
 				if(IsMinSelected)
 				{
-					System.out.println("\nMinimum Configuration is Selected");
-					
 					Main oMain = new Main();
-					oMain.mainMethod("-solve","C:\\app\\FeatureIDE\\Preprocessor\\test\\output");
+					oMain.mainMethod("-solve",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -337,7 +434,7 @@ IConfigurationEditorPage {
 					System.out.println("\nMaximum Configuration is Selected");
 					
 					Main oMain = new Main();
-					oMain.mainMethod("-maxProduct","C:\\app\\FeatureIDE\\Preprocessor\\test\\output");
+					oMain.mainMethod("-maxProduct",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -357,7 +454,7 @@ IConfigurationEditorPage {
 				{
 					try{						  
 						  // Create file	
-						  FileWriter fstream = new FileWriter("C:\\app\\FeatureIDE\\Preprocessor\\test\\output\\out.abs");
+						  FileWriter fstream = new FileWriter(mtvlPath + "\\out.abs");
 						  BufferedWriter out = new BufferedWriter(fstream);
 						  out.write("product HATSPID(");
 					
@@ -380,13 +477,29 @@ IConfigurationEditorPage {
 						}
 									
 					System.out.println("\nMinimum Distant Valid Configuration is Selected");
+					Main oMain = new Main();
+					oMain.mainMethod("-minWith=HATSPID",mtvlPath);
+					
+					arlSolutions = oMain.GetAllSolutions();
+					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
+									 
+					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
+						System.out.println("\nPage Text: " + page.getPageText());
+						if(page.getPageText().equals("Configuration Result")){
+							ConfigurationResult cr = (ConfigurationResult)page;
+							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
+							cr.setResult(str);	 
+							cr.showResult();						
+							setInput(configurationEditor.configuration);
+						}
+					}		
 					
 				}
 				else if(IsLeastCostSelected)
 				{
 					System.out.println("\nSolveAll option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-solveall","C:\\app\\FeatureIDE\\Preprocessor\\test\\output");
+					oMain.mainMethod("-solveall",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -410,6 +523,29 @@ IConfigurationEditorPage {
 					Main oMain = new Main();					
 					int iCostConstraint = Integer.parseInt(txtCostConstraint.getText().trim());
 					oMain.maximumCostConstraint(iCostConstraint);
+					
+					
+				}
+				else if(IsMaxPerformantSelected){
+					System.out.println("\nMaximum Performant option is Selected");
+					Main oMain = new Main();
+					oMain.mainMethod("-max=ReplicationSystem.im_responseTime",mtvlPath);
+					
+					arlSolutions = oMain.GetAllSolutions();
+					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
+									 
+					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
+						System.out.println("\nPage Text: " + page.getPageText());
+						if(page.getPageText().equals("Configuration Result")){
+							ConfigurationResult cr = (ConfigurationResult)page;
+							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[] s =  {"French", "Dutch"};
+							cr.setResult(str);						
+							//cr.selectFeature(tree.getTopItem(),s);						 
+							cr.showResult();						
+							setInput(configurationEditor.configuration);
+						}
+					}					
 				}
 				else if(IsQualitySelected)
 				{

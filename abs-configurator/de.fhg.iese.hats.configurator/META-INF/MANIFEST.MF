@@ -63,16 +63,17 @@ Import-Package: .,
  abs.frontend.typechecker;uses:="abs.frontend.analyser,abs.frontend.ast",
  abs.frontend.typechecker.ext;uses:="abs.frontend.typechecker,abs.frontend.analyser,abs.frontend.ast",
  abs.frontend.typechecker.locationtypes;
-  uses:="abs.frontend.typechecker.locationtypes.infer,
+ uses:="abs.frontend.typechecker.locationtypes.infer,
    abs.frontend.typechecker.ext,
    abs.frontend.typechecker,
    abs.frontend.analyser,
    abs.frontend.ast",
  abs.frontend.typechecker.locationtypes.infer;
-  uses:="abs.frontend.parser,
+ uses:="abs.frontend.parser,
    abs.frontend.typechecker.locationtypes,
    abs.frontend.typechecker.ext,
    abs.frontend.typechecker,
    abs.frontend.analyser,
    abs.frontend.ast",
- abs.frontend.typesystem;uses:="abs.frontend"
+ abs.frontend.typesystem;
+ uses:="abs.frontend"
