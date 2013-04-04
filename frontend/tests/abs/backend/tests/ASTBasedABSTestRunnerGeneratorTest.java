@@ -100,8 +100,11 @@ public class ASTBasedABSTestRunnerGeneratorTest {
         
     }
 
-    private static class TestClassMatcher 
-    extends BaseMatcher<Entry<InterfaceDecl, Set<ClassDecl>>> {
+    /**
+     * @see ASTBasedABSTestRunnerGeneratorTest.ModuleMatcher below for note about generics!
+     */
+    private static class TestClassMatcher<I,C>
+    extends BaseMatcher<Entry<I, Set<C>>> {
     
         public boolean matches(Object arg0) {
             if (!(arg0 instanceof Entry)) {
@@ -140,8 +143,12 @@ public class ASTBasedABSTestRunnerGeneratorTest {
         
     }
     
-    private static class ModuleMatcher 
-    extends BaseMatcher<ModuleDecl> {
+    /**
+     * NB: type patched to be generic instead of the more specific ModuleDecl because
+     * javac is too picky about hamcrests' generics!
+     */
+    private static class ModuleMatcher<T> 
+    extends BaseMatcher<T> {
 
         public boolean matches(Object arg0) {
             if (arg0 instanceof ModuleDecl) {
