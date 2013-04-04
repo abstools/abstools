@@ -87,6 +87,7 @@
     <pathelement location="${ext.dir}/jastadd2.jar" />
     <pathelement location="${ext.dir}/JastAddParser.jar" />
     <pathelement location="${ext.dir}/${junit.jar}" />
+  	<pathelement location="${ext.dir}/${hamcrest.jar}" />
     <pathelement location="${ext.dir}/${easymock.jar}" />
     <pathelement location="${ext.dir}/${cglib.jar}" />
     <pathelement location="${ext.dir}/${objenesis.jar}" />
