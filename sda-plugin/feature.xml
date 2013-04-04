@@ -20,10 +20,8 @@
       <import plugin="org.eclipse.ui.views" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.editors" version="3.6.1" match="greaterOrEqual"/>
       <import plugin="eu.hatsproject.absplugin"/>
-      <import plugin="org.eclipse.ui.ide"/>
       <import plugin="org.eclipse.core.filesystem"/>
       <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.ui.console"/>
    </requires>
 

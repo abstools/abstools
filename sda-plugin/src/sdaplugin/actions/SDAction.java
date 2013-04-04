@@ -10,9 +10,9 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
@@ -21,6 +21,8 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+
+import sdaplugin.Activator;
 
 import eu.hatsproject.absplugin.actions.ActionUtils;
 
@@ -63,35 +65,15 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     /* 4. Perform the analysis */
     SDARun run = new SDARun(model, true, 2, out);
     run.schedule();
-    //Analyser analyser = new Analyser();
-    //out.println("Hello");
-    //analyser.deadlockAnalysis(model, true, 2, out);
-
   }
 
-  /**
-   * TODO: Use {@link ActionUtils#getCurrentProject(IWorkbenchWindow, IEditorPart)}?
-   */
   private IProject getCurrentProject() {
-	  IWorkbench workbench = PlatformUI.getWorkbench();
-	  // Review: not this.window?
-    IWorkbenchWindow workbenchwindow = workbench.getActiveWorkbenchWindow();
-    IWorkbenchPage workbenchpage = workbenchwindow.getActivePage();
-    IEditorPart editorpart = workbenchpage.getActiveEditor();
-    IEditorInput input;
-    
-    try { input = editorpart.getEditorInput();	}
-    catch(NullPointerException e) {
-      MessageDialog.openInformation(window.getShell(), "SDA Error Message", "No file Selected");
-      return null;
-    }
-    
-    if (!(input instanceof IFileEditorInput)) {
-        MessageDialog.openInformation(window.getShell(), "SDA Error Message", "File cannot be dealt with");
-    	return null;
-    }
-    IFile file = ((IFileEditorInput)input).getFile();	
-    return file.getProject();
+	  try {
+		return ActionUtils.getCurrentProject(window, window.getActivePage().getActiveEditor());
+	} catch (PartInitException e) {
+		Activator.logException(e);
+		return null;
+	}
   }
 
 	private static final String ID_CONSOLE_VIEW = "SDA Console";
