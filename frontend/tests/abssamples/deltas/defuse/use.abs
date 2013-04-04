@@ -1,0 +1,12 @@
+module Test.Use;
+
+delta Use; uses Test; modifies class Test {
+ adds Unit setX() {
+   x = null;
+}
+}
+
+productline P;
+features F;
+delta Use when F;
+product Prod(F);

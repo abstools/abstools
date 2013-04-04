@@ -1,0 +1,6 @@
+module Test;
+
+interface I {}
+class Test {
+  I x;
+}

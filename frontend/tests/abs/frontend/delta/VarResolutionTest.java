@@ -7,6 +7,10 @@ package abs.frontend.delta;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+
 import org.junit.Test;
 
 import abs.frontend.ast.*;
@@ -170,5 +174,12 @@ public class VarResolutionTest extends DeltaTest {
         AddMethodModifier mod = (AddMethodModifier) mmod.getModifier(0);
         ReturnStmt stmt = (ReturnStmt) mod.getMethodImpl().getBlock().getStmt(1);
         assertThat(stmt.getRetExp(), instanceOf(VarUse.class));
+    }
+    
+    @Test
+    public void defUseMultipleFiles() throws Exception {
+        Model m = this.assertParseFilesOk(new HashSet<String>() {{ add("tests/abssamples/deltas/defuse/def.abs"); add("tests/abssamples/deltas/defuse/use.abs");}}, true);
+        m.flattenForProduct("Prod");
+        assertTrue(m.typeCheck().isEmpty());
     }
 }
