@@ -18,8 +18,8 @@ import abs.frontend.ast.Model;
 @RunWith(Parameterized.class)
 public class ParseSamplesTest extends FrontendTest {
 
-    /* TODO: JUnit 4.11 might allow setting reasonable names for a test */
-    @Parameters
+    /* Render filename and product in JUnit output via test name */
+    @Parameters(name="{0}, {1}")
     public static Collection<?> data() {
         final Object[][] data = new Object[][] { { "examples/PeerToPeer.abs" , null }
                                                , { "examples/PingPong.abs" , null }
