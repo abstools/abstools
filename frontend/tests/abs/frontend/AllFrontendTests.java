@@ -13,6 +13,8 @@ import abs.frontend.typesystem.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import deadlock.DeadlockCheckerTests;
+
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         ScannerTest.class, ModuleSystemTests.class, FreeVarTest.class,
@@ -24,5 +26,6 @@ import org.junit.runners.Suite;
         BackPositionTest.class, IncompleteExpTests.class,
         SearchSolutionsTest.class,
         TestABSPackages.class, CaseStudyTypeChecking.class
+        , DeadlockCheckerTests.class
         , SqlTransformationTests.class})
 public class AllFrontendTests {}
