@@ -122,15 +122,20 @@ IConfigurationEditorPage {
 		Button btnPrevious = new Button(composite, SWT.PUSH);
 		btnPrevious.setText("Previous");
 		
-//		final Text txtCost = new Text(composite, SWT.SINGLE | SWT.BORDER);
-//		txtCost.setText("configuration number");
-//		
-//		txtCost.setVisible(true);
+		
 		final Label confNum = new Label(composite, SWT.HORIZONTAL);
 		confNum.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		confNum.setText("                                                                    ");
 		//button1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));;
-					
+		
+//		final Label txtCost = new Label(composite, SWT.HORIZONTAL);
+//		txtCost.setSize(1500, 5500);
+//		//txtCost.setText("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+//		
+//		txtCost.setVisible(true);
+		
+		
+		
 		btnNext.addSelectionListener(new SelectionListener(){
 			public void widgetSelected(SelectionEvent e){
 				try{
