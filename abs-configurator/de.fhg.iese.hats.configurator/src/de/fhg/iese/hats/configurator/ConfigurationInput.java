@@ -420,7 +420,6 @@ IConfigurationEditorPage {
 				{
 					Main oMain = new Main();
 					oMain.mainMethod("-solve",mtvlPath);
-					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
 									 
@@ -428,7 +427,7 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
+							String[][] str = {{"Resources", "JobProcessing"}, {"Resources", "JobProcessing"}};							
 							cr.setResult(str);																			 
 							cr.showResult();						
 							setInput(configurationEditor.configuration);
@@ -598,6 +597,29 @@ IConfigurationEditorPage {
 				}
 				else if(IsQualitySelected)
 				{
+					try{						  
+						  // Create file	
+						  FileWriter fstream = new FileWriter(mtvlPath + "\\out.abs");
+						  BufferedWriter out = new BufferedWriter(fstream);
+						  out.write("product HATSPID(");
+					
+						  System.out.println("\nSelected Features: " + arlSelectedFeatures.size());
+						  
+						  for(int i=0;i<arlSelectedFeatures.size();i++)
+						  {
+							  out.write(arlSelectedFeatures.get(i).trim());
+							  
+							  if(i != (arlSelectedFeatures.size() - 1))
+							  out.write(",");
+						  }
+						  
+						  out.write(");");
+						  out.close();  
+					}
+					catch (Exception e1)
+						{//Catch exception if any
+						  System.err.println("Error: " + e1.getMessage());
+						}
 					System.out.println("\nBased on Quality Preference option is selected");
 					
 					HashMap<String, Object> hmPrefernces = new HashMap<String, Object>();

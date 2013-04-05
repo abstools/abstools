@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.TreeItem;
@@ -120,6 +121,14 @@ IConfigurationEditorPage {
 
 		Button btnPrevious = new Button(composite, SWT.PUSH);
 		btnPrevious.setText("Previous");
+		
+//		final Text txtCost = new Text(composite, SWT.SINGLE | SWT.BORDER);
+//		txtCost.setText("configuration number");
+//		
+//		txtCost.setVisible(true);
+		final Label confNum = new Label(composite, SWT.HORIZONTAL);
+		confNum.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+		confNum.setText("                                                                    ");
 		//button1.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));;
 					
 		btnNext.addSelectionListener(new SelectionListener(){
@@ -128,19 +137,20 @@ IConfigurationEditorPage {
 										
 					System.out.print("\nNumber of Solutions: " + ConfigurationInput.arlSolutions.size());
 					
-					System.out.println("current number  " + currentConfigurationNumber);				
+					if(currentConfigurationNumber == ConfigurationInput.arlSolutions.size() - 1)
+						currentConfigurationNumber = 0;				
+					else
+						currentConfigurationNumber++;
+					System.out.println("current number  " + currentConfigurationNumber);
+					int number = currentConfigurationNumber + 1;
+					confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
+					//txtCost.setText("Configuration number  " + currentConfigurationNumber + " of " + ConfigurationInput.arlSolutions.size());
+					String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
+					selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
 					
-					if(currentConfigurationNumber != (ConfigurationInput.arlSolutions.size()))
-					{
-						String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
-						selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
-					}
 					
 					//showResult();				
 					
-					currentConfigurationNumber++;
-						if(currentConfigurationNumber > ConfigurationInput.arlSolutions.size())
-							currentConfigurationNumber = ConfigurationInput.arlSolutions.size();				
 					}
 					catch(Exception ex)
 					{
@@ -157,9 +167,13 @@ IConfigurationEditorPage {
 		btnPrevious.addSelectionListener(new SelectionListener(){
 			public void widgetSelected(SelectionEvent e){			
 								
-				currentConfigurationNumber--;
-				if(currentConfigurationNumber < 0)
-					currentConfigurationNumber = 0;
+				if(currentConfigurationNumber == 0)
+					currentConfigurationNumber = ConfigurationInput.arlSolutions.size() - 1;				
+				else
+					currentConfigurationNumber--;
+
+				int number = currentConfigurationNumber + 1;
+				confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
 				
 				System.out.println("current number  " + currentConfigurationNumber );
 				//showResult();
