@@ -414,12 +414,14 @@ public class TypeCheckerHelper {
         if (use.getType().isUnknownType()) {
             e.add(new TypeError(use,ErrorMessage.NAME_NOT_RESOLVABLE, use.getName()));
         } else {
-            // check that fields are not used before they are defined:
-            boolean isUsedInFieldDecl = use.getDecl() instanceof FieldDecl;
-            if (isUsedInFieldDecl && use.getDecl().getEndPos() > use.getStartPos()) {
+            /* Check that fields are not used before they are defined,
+             * when we are NOT inside a method, e.g. when initialising a field upon declaration.
+             */
+            boolean isUsedInFieldDecl = use instanceof FieldUse;
+            if (isUsedInFieldDecl && use.getContextMethod() == null && use.getDecl().getEndPos() > use.getStartPos()) {
                 e.add(new TypeError(use,
-                        use instanceof VarUse ? ErrorMessage.VAR_USE_BEFORE_DEFINITION
-                                              : ErrorMessage.FIELD_USE_BEFORE_DEFINITION , use.getName()));
+                        !isUsedInFieldDecl ? ErrorMessage.VAR_USE_BEFORE_DEFINITION
+                                           : ErrorMessage.FIELD_USE_BEFORE_DEFINITION , use.getName()));
             }
         }
     }
