@@ -389,8 +389,14 @@ IConfigurationEditorPage {
 	    
 	    final Text txtNonRepudiation = new Text(composite, SWT.SINGLE | SWT.BORDER);
 
+	    Label labelAccountability = new Label(composite, SWT.NULL);
+	    labelAccountability.setText("    Accountability");
+	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+	    
+	    final Text txtAccountability = new Text(composite, SWT.SINGLE | SWT.BORDER);
+
 	    Label labelAuthentication = new Label(composite, SWT.NULL);
-	    labelAuthentication.setText("    Confidentiality");
+	    labelAuthentication.setText("    Authenticity");
 	    //labelMemoryConsumption.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 	    
 	    final Text txtAuthentication = new Text(composite, SWT.SINGLE | SWT.BORDER);
@@ -499,7 +505,29 @@ IConfigurationEditorPage {
 				{
 					System.out.println("\nSolveAll option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-solveall",mtvlPath);
+					oMain.mainMethod("-min=ReplicationSystem.cost",mtvlPath);
+					
+					arlSolutions = oMain.GetAllSolutions();
+					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
+									 
+					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
+						System.out.println("\nPage Text: " + page.getPageText());
+						if(page.getPageText().equals("Configuration Result")){
+							ConfigurationResult cr = (ConfigurationResult)page;
+							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[] s =  {"French", "Dutch"};
+							cr.setResult(str);						
+							//cr.selectFeature(tree.getTopItem(),s);						 
+							cr.showResult();						
+							setInput(configurationEditor.configuration);
+						}
+					}					
+				}
+				else if(IsMaxCostSelected)
+				{
+					System.out.println("\nSolveAll option is Selected");
+					Main oMain = new Main();
+					oMain.mainMethod("-max=ReplicationSystem.cost",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -529,7 +557,28 @@ IConfigurationEditorPage {
 				else if(IsMaxPerformantSelected){
 					System.out.println("\nMaximum Performant option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-max=ReplicationSystem.im_responseTime",mtvlPath);
+					oMain.mainMethod("-min=ReplicationSystem.im_responseTime",mtvlPath);
+					
+					arlSolutions = oMain.GetAllSolutions();
+					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
+									 
+					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
+						System.out.println("\nPage Text: " + page.getPageText());
+						if(page.getPageText().equals("Configuration Result")){
+							ConfigurationResult cr = (ConfigurationResult)page;
+							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[] s =  {"French", "Dutch"};
+							cr.setResult(str);						
+							//cr.selectFeature(tree.getTopItem(),s);						 
+							cr.showResult();						
+							setInput(configurationEditor.configuration);
+						}
+					}					
+				}
+				else if(IsMostSecureSelected){
+					System.out.println("\nMaximum Performant option is Selected");
+					Main oMain = new Main();
+					oMain.mainMethod("-min=ReplicationSystem.im_memoryConsumption",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -579,7 +628,25 @@ IConfigurationEditorPage {
 						hmPrefernces.put("Security", Integer.parseInt("0"));
 					
 					Main oMain = new Main();
-					oMain.QualityPreferences(hmPrefernces);				
+					oMain.QualityPreferences(hmPrefernces);	
+					
+					oMain.mainMethod("-max=ReplicationSystem.im_responseTime",mtvlPath);
+					
+					arlSolutions = oMain.GetAllSolutions();
+					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
+									 
+					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
+						System.out.println("\nPage Text: " + page.getPageText());
+						if(page.getPageText().equals("Configuration Result")){
+							ConfigurationResult cr = (ConfigurationResult)page;
+							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[] s =  {"French", "Dutch"};
+							cr.setResult(str);						
+							//cr.selectFeature(tree.getTopItem(),s);						 
+							cr.showResult();						
+							setInput(configurationEditor.configuration);
+						}
+					}
 					
 				}
 			}
