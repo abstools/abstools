@@ -50,7 +50,7 @@ public class CaseStudyTypeChecking extends FrontendTest {
             CASESTUDY_DIR += "/";
     }
 
-    @Parameters
+    @Parameters(name="{0}")
     public static Collection<?> data() {
         final Object[][] data = new Object[][] { { "fredhopper/replication/abs" }
                                                , { "fredhopper/replication/abs-single/annual-meeting-2011" }
