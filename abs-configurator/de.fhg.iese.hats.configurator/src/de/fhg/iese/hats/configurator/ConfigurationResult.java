@@ -136,11 +136,11 @@ IConfigurationEditorPage {
 				try{
 										
 					System.out.print("\nNumber of Solutions: " + ConfigurationInput.arlSolutions.size());
+					if(ConfigurationInput.arlSolutions.size() == 0){
+						return;
+					}
 					
-					if(currentConfigurationNumber == ConfigurationInput.arlSolutions.size() - 1)
-						currentConfigurationNumber = 0;				
-					else
-						currentConfigurationNumber++;
+					
 					System.out.println("current number  " + currentConfigurationNumber);
 					int number = currentConfigurationNumber + 1;
 					confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
@@ -148,7 +148,10 @@ IConfigurationEditorPage {
 					String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
 					selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
 					
-					
+					if(currentConfigurationNumber == ConfigurationInput.arlSolutions.size() - 1)
+						currentConfigurationNumber = 0;				
+					else
+						currentConfigurationNumber++;
 					//showResult();				
 					
 					}
@@ -166,11 +169,12 @@ IConfigurationEditorPage {
 		
 		btnPrevious.addSelectionListener(new SelectionListener(){
 			public void widgetSelected(SelectionEvent e){			
-								
-				if(currentConfigurationNumber == 0)
-					currentConfigurationNumber = ConfigurationInput.arlSolutions.size() - 1;				
-				else
-					currentConfigurationNumber--;
+
+				if(ConfigurationInput.arlSolutions.size() == 0){
+					return;
+				}
+				
+				
 
 				int number = currentConfigurationNumber + 1;
 				confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
@@ -178,7 +182,11 @@ IConfigurationEditorPage {
 				System.out.println("current number  " + currentConfigurationNumber );
 				//showResult();
 				String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
-				selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));	
+				selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
+				if(currentConfigurationNumber == 0)
+					currentConfigurationNumber = ConfigurationInput.arlSolutions.size() - 1;				
+				else
+					currentConfigurationNumber--;
 			}
 
 			@Override
@@ -386,28 +394,55 @@ IConfigurationEditorPage {
 	}
 	
 	void setResult(String[][] str){
-		results = new String[str.length][];
-		int i = 0;
-		for(String[]s : str){
-			results[i] = new String[s.length];
-			int j = 0;
-			for (String t : s){
-				results[i][j] = new String(t);
-				j++;
-			}
-			i++;
-		}
+//		results = new String[str.length][];
+//		int i = 0;
+//		for(String[]s : str){
+//			results[i] = new String[s.length];
+//			int j = 0;
+//			for (String t : s){
+//				results[i][j] = new String(t);
+//				j++;
+//			}
+//			i++;
+//		}
 		currentConfigurationNumber = 0;
 	};
 		
 	void showResult(){
-		
-		int index = currentConfigurationNumber;
+		currentConfigurationNumber = 0;
 		TreeItem root = tree.getItem(0);
-		root.setText(AdvancedConfigurationLabelProvider.getRootlabel(configurationEditor.configuration));
-		setCheckbox(root);
-		selectFeature(root, results[index]);
-		tree.setVisible(true);		
+		//root.setText(AdvancedConfigurationLabelProvider.getRootlabel(configurationEditor.configuration));
+		//setCheckbox(root);
+		//selectFeature(root, null);
+		tree.setVisible(true);	
+		
+		
+//		try{
+//			
+//			System.out.print("\nNumber of Solutions: " + ConfigurationInput.arlSolutions.size());
+//			if(ConfigurationInput.arlSolutions.size() == 0){
+//				return;
+//			}
+//			
+//			if(currentConfigurationNumber == ConfigurationInput.arlSolutions.size() - 1)
+//				currentConfigurationNumber = 0;				
+//			else
+//				currentConfigurationNumber++;
+//			System.out.println("current number  " + currentConfigurationNumber);
+//			int number = currentConfigurationNumber + 1;
+////			confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
+//			//txtCost.setText("Configuration number  " + currentConfigurationNumber + " of " + ConfigurationInput.arlSolutions.size());
+//			String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
+//			selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
+//			tree.setVisible(true);
+//			
+//			//showResult();				
+//			
+//			}
+//			catch(Exception ex)
+//			{
+//				ex.printStackTrace();
+//			}
 	}
 	
 	void selectFeature(TreeItem root, String[] str){
@@ -424,6 +459,8 @@ IConfigurationEditorPage {
 	}
 	
 	boolean isSelected(String feature, String[] str){
+		if(str == null)
+			return false;
 		for(String s : str){
 			System.out.println(s + "  " + feature);
 			if(s.equals(feature)){

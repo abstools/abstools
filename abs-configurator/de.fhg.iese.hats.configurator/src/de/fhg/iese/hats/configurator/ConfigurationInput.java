@@ -427,10 +427,10 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Resources", "JobProcessing"}, {"Resources", "JobProcessing"}};							
-							cr.setResult(str);																			 
-							cr.showResult();						
+							//String[][] str = {{"Resources", "JobProcessing"}, {"Resources", "JobProcessing"}};							
+							//cr.setResult(str);																			 
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}
 				}
@@ -448,10 +448,10 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
-							cr.setResult(str);	 
-							cr.showResult();						
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
+							//cr.setResult(str);	 
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}		
 				}
@@ -492,10 +492,10 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
-							cr.setResult(str);	 
-							cr.showResult();						
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
+							//cr.setResult(str);	 
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}		
 					
@@ -515,10 +515,10 @@ IConfigurationEditorPage {
 							ConfigurationResult cr = (ConfigurationResult)page;
 							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
 							//String[] s =  {"French", "Dutch"};
-							cr.setResult(str);						
+							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							cr.showResult();						
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}					
 				}
@@ -535,12 +535,12 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
 							//String[] s =  {"French", "Dutch"};
-							cr.setResult(str);						
+							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							cr.showResult();						
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}					
 				}
@@ -565,12 +565,12 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
 							//String[] s =  {"French", "Dutch"};
-							cr.setResult(str);						
+							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							cr.showResult();						
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}					
 				}
@@ -586,12 +586,12 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
 							//String[] s =  {"French", "Dutch"};
-							cr.setResult(str);						
+							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							cr.showResult();						
 							setInput(configurationEditor.configuration);
+							cr.showResult();						
 						}
 					}					
 				}
@@ -652,7 +652,7 @@ IConfigurationEditorPage {
 					Main oMain = new Main();
 					oMain.QualityPreferences(hmPrefernces);	
 					
-					oMain.mainMethod("-max=ReplicationSystem.im_responseTime",mtvlPath);
+					oMain.mainMethod("-maxQuality",mtvlPath);
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -661,12 +661,12 @@ IConfigurationEditorPage {
 						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
-							String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
+							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};
 							//String[] s =  {"French", "Dutch"};
-							cr.setResult(str);						
+							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							cr.showResult();						
 							setInput(configurationEditor.configuration);
+							cr.showResult();
 						}
 					}
 					
