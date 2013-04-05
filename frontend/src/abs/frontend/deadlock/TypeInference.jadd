@@ -722,11 +722,15 @@ aspect TypeInference {
 
     // 1. Get the method interface
     Type t = getCallee().getType();
-    ClassDecl cl;
-    if(t.isInterfaceType()) { cl = intertoclass.get(((InterfaceType)t).getDecl()); }
-    else { cl = clthis; }
-    
-    if(cl == null) { out.println("Class retrival failed!!!"); } // should NEVER occur
+    final ClassDecl cl;
+    if(t.isInterfaceType()) { 
+        cl = intertoclass.get(((InterfaceType)t).getDecl());
+        assert cl != null : "Couldn't find class " + t.getDecl().getName();
+    }
+    else {
+        cl = clthis; 
+    }
+    assert cl != null;
 
     // 2. Collect contracts and deadlock.constraints.constraint.Constraints from the call
     ResultInferencePureExp resCallee = getCallee().typeInferenceAsPure(nident, env, a, intertoclass, df, cl, out);
