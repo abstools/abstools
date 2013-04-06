@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.Set;
 
 import abs.backend.java.codegeneration.dynamic.DynamicException;
-import abs.backend.java.lib.types.ABSBool;
-import abs.backend.java.lib.types.ABSClass;
-import abs.backend.java.lib.types.ABSValue;
+import abs.backend.java.lib.runtime.metaABS.Product;
 
-public class ABSDynamicProduct implements ABSClass {
+public class ABSDynamicProduct extends ABSDynamicObject {
 
+    public ABSDynamicProduct() {
+        super(Product.singleton());
+    }
+    
     private String name;
     private Set<String> features = new HashSet<String>();
     private List<ABSDynamicProduct> configurableProducts = new ArrayList<ABSDynamicProduct>();
@@ -52,7 +54,10 @@ public class ABSDynamicProduct implements ABSClass {
     }
 
     public List<String> getDeltas(String productName) {
-        return deltas.get(productName);
+        if (deltas.containsKey(productName))
+            return deltas.get(productName);
+        else 
+            throw new DynamicException("Product " + name + " cannot be reconfigured into product " + productName + ".");
     }
 
     public void setUpdate(String productName, String upd) {
@@ -64,28 +69,4 @@ public class ABSDynamicProduct implements ABSClass {
     public String getUpdate(String productName) {
         return update.get(productName);
     }
-    
-    @Override
-    public ABSBool eq(ABSValue o) {
-        if (o instanceof ABSDynamicProduct)
-            return ABSBool.fromBoolean(name.equals(((ABSDynamicProduct)o).getName()));
-        else 
-            return ABSBool.FALSE;
-    }
-
-    @Override
-    public ABSBool notEq(ABSValue o) {
-        return eq(o).negate();
-    }
-
-    @Override
-    public boolean isDataType() {
-        return false;
-    }
-
-    @Override
-    public boolean isReference() {
-        return true;
-    }
-
 }

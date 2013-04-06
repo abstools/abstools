@@ -588,9 +588,10 @@ interface Class {
 }
 
 interface Method {}
+
 interface Product {
     String getName();
-    List<String> getFeatures();
+    Set<String> getFeatures();
     List<String> getDeltas();
 }
 
@@ -598,8 +599,8 @@ interface ProductLine {
     Unit applyDelta(String s);
     Product getCurrentProduct();
     List<Product> getConfigurableProducts();
-//    Unit configureProduct(Product s);
-    Unit configureProduct(String s);
+    Unit configureProduct(Product s);
+//    Unit configureProduct(String s);
 }
 
 // convenience functions (to be removed)

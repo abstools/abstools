@@ -570,7 +570,7 @@ public class ABSRuntime {
     public ABSDynamicProduct getCurrentProduct() {
         return currentProduct;
     }
-    public void setSPLProduct(ABSDynamicProduct prod) {
+    public void setCurrentProduct(ABSDynamicProduct prod) {
         currentProduct = prod;
     }
 

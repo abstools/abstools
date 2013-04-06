@@ -1218,8 +1218,8 @@ List adaptation_list = adaptation.ad {: return new List().add(ad); :}
     | adaptation_list.l adaptation.ad {: return l.add(ad); :}
     ;
 
-ProductAdaptation adaptation = TYPE_IDENTIFIER.product BY TYPE_IDENTIFIER.update SEMICOLON 
-    {: return new ProductAdaptation(product, update); :}
+ProductAdaptation adaptation = TYPE_IDENTIFIER.product WITH delta_list.deltas BY TYPE_IDENTIFIER.update SEMICOLON 
+    {: return new ProductAdaptation(product, deltas, update); :}
     ;
 
 // TODO define what a state update actually is

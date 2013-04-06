@@ -54,25 +54,13 @@ public class ProductLine {
             @Override
             public ABSUnit exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
-                List<String> deltas;
-                
-                // Dynamic dispatch...
-                if (params[0] instanceof ABSString) {
-                    String targetProdName = ((ABSString)params[0]).getString();
-                    deltas = currentProd.getDeltas(targetProdName);
-                    
-                } else if (params[0] instanceof ABSDynamicProduct) {
-                    ABSDynamicProduct targetProd = (ABSDynamicProduct)params[0];
-                    deltas = currentProd.getDeltas(targetProd.getName());
-                
-                } else {
-                    throw new DynamicException("The method \"configureProduct\" in class "
-                            + thisClass.getName() + " is not applicable for the argument of type " + params[0].getClass());
-                }
-                
+                ABSDynamicProduct targetProd = (ABSDynamicProduct)params[0];
+
+                List<String> deltas = currentProd.getDeltas(targetProd.getName());
                 for (String deltaName : deltas) {
-                    ProductLine.applyDelta(deltaName);    
+                    ProductLine.applyDelta(deltaName);
                 }
+                t.__ABS_getRuntime().setCurrentProduct(targetProd);
                 return ABSUnit.UNIT;
             }
         });
@@ -95,7 +83,7 @@ public class ProductLine {
     
     private static void applyDelta(String deltaName) {
         // TODO use logger
-        System.err.println("*** Applying delta." + deltaName);
+        //System.err.println("*** Applying delta." + deltaName);
         String className = JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + deltaName + ".Application";
 
         try {

@@ -108,6 +108,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "after"       { return sym(Terminals.AFTER); }
  "when"        { return sym(Terminals.WHEN); }
  "product"     { return sym(Terminals.PRODUCT); }
+ "with"        { return sym(Terminals.WITH); }
  "by"          { return sym(Terminals.BY); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }

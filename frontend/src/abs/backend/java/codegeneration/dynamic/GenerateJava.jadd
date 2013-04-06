@@ -89,7 +89,7 @@ aspect GenerateJava {
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
                 if (! getModel().getProductName().equals("core"))
-                    stream.println("thisP.__ABS_getRuntime().setSPLProduct(" 
+                    stream.println("thisP.__ABS_getRuntime().setCurrentProduct(" 
                             + JavaBackendConstants.LIB_PRODUCTS_PACKAGE + "." 
                             + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
                 block.generateJavaDynamic(stream);
@@ -528,6 +528,7 @@ aspect GenerateJava {
     public void VarDecl.generateJavaDynamic(PrintStream stream) {
         if (getAccess().getType().isReferenceType()) {
             stream.print(ABSValue.class.getName());
+//            stream.print(JavaBackend.getQualifiedString(getAccess().getType()));
         } else {
             getAccess().generateJavaDynamic(stream);
         }

@@ -1,17 +1,10 @@
 module Hello;
 import * from ABS.Meta;
 
-
-//*************************************************************
-// Feature model
-// Products: English, French, German, (Chinese)
-
-//*************************************************************
-
-interface Greeting {
+interface Hello {
     String sayHello();
 }
-class Greeter implements Greeting {
+class HelloImp implements Hello {
     String sayHello() {
         return "Hello world";
     }
@@ -19,75 +12,59 @@ class Greeter implements Greeting {
 
 class Application() {
     Unit run() {
-        Greeting bob = new Greeter();
+        Hello greeter = new HelloImp();
 	    while (True) {
-            this.menu(bob);	    
+            String message = greeter.sayHello();
+            Unit u = println("\n*** " + message + " ***\n");
+            this.switchLanguage();    
 	    }
     }
-    Unit menu(Greeting bob) {
+    
+    Unit switchLanguage() {
         ProductLine pl = getProductLine();
+        List<Product> items = pl.getConfigurableProducts();
 
-        String message = bob.sayHello();
-        Unit u = println("\n" + message + "\n");
-        this.printMenu();
+        Int i = 0;
+        Unit u = println("Select Language:");
+        while (i < length(items)) {
+            Product item = nth(items, i);
+            String pname = item.getName();
+            u = println(intToString(i) + ": " + pname);
+            i = i + 1;
+        }
         String selection = readln();
-        
-        if (selection == "1") pl.configureProduct("English");
-        else if (selection == "2") pl.configureProduct("French");
-        else if (selection == "3") pl.configureProduct("German");
-    }
-    Unit printMenu() {
-        Unit u = println("(1) English");
-             u = println("(2) French");
-             u = println("(3) German");
+        pl.configureProduct(nth(items, toInt(selection)));
     }
 }
 
+def Int toInt(String s) =
+    case s {
+        "0" => 0; "1" => 1; "2" => 2; "3" => 3; "4" => 4;
+        "5" => 5; "6" => 6; "7" => 7; "8" => 8; "9" => 9;
+    };
+    
 {
     new Application();
 }
 
 //*************************************************************
 delta En;
-modifies class Hello.Greeter {
+modifies class Hello.HelloImp {
     modifies String sayHello() {
         return "Hello World";
     }
 }
-modifies class Hello.Application {
-    modifies Unit printMenu() {
-        Unit u = println("(1) English");
-             u = println("(2) French");
-             u = println("(3) German");
-    }
-}
 //*************************************************************
-delta Es;
-modifies class Hello.Greeter {
+delta Fr;
+modifies class Hello.HelloImp {
     modifies String sayHello() {
-        return "Hola mundo";
-    }
-}
-modifies class Hello.Application {
-    modifies Unit printMenu() {
-        Unit u = println("(1) Anglais");
-             u = println("(2) Français");
-             u = println("(3) Allemand");
+        return "Bonjour tout le monde";
     }
 }
 //*************************************************************
 delta De;
-modifies class Hello.Greeter {
+modifies class Hello.HelloImp {
     modifies String sayHello() {
         return "Hallo Welt";
     }
 }
-modifies class Hello.Application {
-    modifies Unit printMenu() {
-        Unit u = println("(1) Englisch");
-             u = println("(2) Spanisch");
-             u = println("(3) Deutsch");
-    }
-}
-
-

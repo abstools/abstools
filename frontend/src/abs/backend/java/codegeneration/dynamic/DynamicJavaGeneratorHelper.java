@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Set;
 
 import abs.backend.java.JavaBackend;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -35,10 +34,8 @@ import abs.backend.java.lib.runtime.AbstractAsyncCall;
 import abs.backend.java.lib.runtime.Task;
 import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSValue;
-import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.*;
 import abs.frontend.typechecker.Type;
-import abs.frontend.typechecker.TypeCheckerHelper;
 import beaver.Symbol;
 
 public class DynamicJavaGeneratorHelper {
@@ -119,8 +116,7 @@ public class DynamicJavaGeneratorHelper {
         stream.print(")");
     }
 
-    public static void generateTypeParameters(PrintStream stream, Decl dtd,
-            boolean plusExtends) {
+    public static void generateTypeParameters(PrintStream stream, Decl dtd, boolean plusExtends) {
         List<TypeParameterDecl> typeParams = null;
         if (dtd instanceof HasTypeParameters) {
             typeParams = ((HasTypeParameters)dtd).getTypeParameters();
@@ -270,8 +266,8 @@ public class DynamicJavaGeneratorHelper {
     }
 
     private static void generateTaskGetArgsMethod(PrintStream stream, final int n) {
-        stream.println("public java.util.List<"+ABSValue.class.getName()+"> getArgs() {");
-        stream.println("return java.util.Arrays.asList(new "+ABSValue.class.getName()+"[] {");
+        stream.println("public java.util.List<" + ABSValue.class.getName() + "> getArgs() {");
+        stream.println("return java.util.Arrays.asList(new " + ABSValue.class.getName() + "[] {");
         generateArgStringList(stream, n);
         stream.println("});");
         stream.println("}");
@@ -585,7 +581,7 @@ public class DynamicJavaGeneratorHelper {
         // Reachable Products
         stream.print("instance.setConfigurableProducts(");
         if (prod.getProductAdaptations().getNumChild() == 0) { // no reachable products
-            stream.print(Collections.class.getName() + ".<" + String.class.getName() + ">emptyList()");
+            stream.print(Collections.class.getName() + ".<" + ABSDynamicProduct.class.getName() + ">emptyList()");
         } else {
             StringBuilder list = new StringBuilder();
             list.append(Arrays.class.getName() + ".asList(");
@@ -610,20 +606,20 @@ public class DynamicJavaGeneratorHelper {
             Product toProd = allProducts.get(ad.getProductID());
 
             // obtain sequence of applicable deltas
-            Set<String> unsortedIDs = pl.findApplicableDeltas(prod, toProd);
-            ArrayList<String> sortedIDs = pl.sortDeltas(unsortedIDs);
+            // this is now defined by the user in the product definition
+            List<DeltaID> sortedIDs = ad.getDeltaIDs();
             
             stream.print("instance.setDeltas(\"" + ad.getProductID() + "\", ");
-            if (sortedIDs.isEmpty()) { // no deltas
+            if (sortedIDs.getNumChild() == 0) { // no deltas
                 stream.print(Collections.class.getName() + ".<" + String.class.getName() + ">emptyList()");
             } else {
                 StringBuilder deltaList = new StringBuilder();
                 deltaList.append(Arrays.class.getName() + ".asList(");
                 boolean first = true;
-                for (String did : sortedIDs) {
+                for (DeltaID did : sortedIDs) {
                     if (first) first = false;
                     else deltaList.append(", ");
-                    deltaList.append("\"" + did + "\"");
+                    deltaList.append("\"" + did.getName() + "\"");
                 }
                 deltaList.append(")");
                 stream.print(deltaList);
