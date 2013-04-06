@@ -140,13 +140,11 @@ IConfigurationEditorPage {
 			public void widgetSelected(SelectionEvent e){
 				try{
 										
-					System.out.print("\nNumber of Solutions: " + ConfigurationInput.arlSolutions.size());
 					if(ConfigurationInput.arlSolutions.size() == 0){
 						return;
 					}
 					
 					
-					System.out.println("current number  " + currentConfigurationNumber);
 					int number = currentConfigurationNumber + 1;
 					confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
 					//txtCost.setText("Configuration number  " + currentConfigurationNumber + " of " + ConfigurationInput.arlSolutions.size());
@@ -184,7 +182,6 @@ IConfigurationEditorPage {
 				int number = currentConfigurationNumber + 1;
 				confNum.setText("Configuration number  " + number + " of " + ConfigurationInput.arlSolutions.size());
 				
-				System.out.println("current number  " + currentConfigurationNumber );
 				//showResult();
 				String[] s = ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(new String[ConfigurationInput.arlSolutions.get(currentConfigurationNumber).size()]);  
 				selectFeature(tree.getTopItem(),ConfigurationInput.arlSolutions.get(currentConfigurationNumber).toArray(s));
@@ -382,7 +379,7 @@ IConfigurationEditorPage {
 		job_setColor.schedule();
 	}
 
-	private void setInput(Configuration configuration){
+	void setInput(Configuration configuration){
 		hiddenFeatures = new LinkedList<String>();
 		for (Feature feature : configuration.getFeatureModel().getFeatures()) {
 			if (feature.isHidden())
@@ -390,7 +387,8 @@ IConfigurationEditorPage {
 		}
 		tree.removeAll();
 		TreeItem item = new TreeItem(tree, 0);
-		item.setText(AdvancedConfigurationLabelProvider.getRootlabel(configuration));
+		//item.setText(AdvancedConfigurationLabelProvider.getRootlabel(configuration));
+		item.setText("ReplicationSystem");
 		add(item,configuration.getRoot().getChildren());
 		setCheckbox(item);
 		item.setGrayed(true);
@@ -452,7 +450,7 @@ IConfigurationEditorPage {
 	
 	void selectFeature(TreeItem root, String[] str){
 		for(TreeItem item : root.getItems()){
-			System.out.println(item.getText());
+			//System.out.println(item.getText());
 			if(isSelected(item.getText(), str)){
 				item.setChecked(true);
 			}
@@ -467,7 +465,7 @@ IConfigurationEditorPage {
 		if(str == null)
 			return false;
 		for(String s : str){
-			System.out.println(s + "  " + feature);
+			//System.out.println(s + "  " + feature);
 			if(s.equals(feature)){
 				return true;
 			}

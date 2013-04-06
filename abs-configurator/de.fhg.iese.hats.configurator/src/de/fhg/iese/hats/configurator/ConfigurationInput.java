@@ -156,7 +156,7 @@ IConfigurationEditorPage {
 		    //public void handleEvent (Event event) {
 			public void widgetSelected(SelectionEvent event){
 		      Button button = (Button) event.widget;
-		      	System.out.println("inside listener");
+		      	//System.out.println("inside listener");
 			  	IsMinSelected = false;
 			  	IsMaxSelected = false;
 			  	IsMinDistantSelected = false;
@@ -419,17 +419,16 @@ IConfigurationEditorPage {
 				if(IsMinSelected)
 				{
 					Main oMain = new Main();
-					oMain.mainMethod("-solve",mtvlPath);
+					oMain.mainMethod("-solve",mtvlPath + "1");
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
 									 
 					for (IConfigurationEditorPage page : configurationEditor.getExtensionPages()) {
-						System.out.println("\nPage Text: " + page.getPageText());
 						if(page.getPageText().equals("Configuration Result")){
 							ConfigurationResult cr = (ConfigurationResult)page;
 							//String[][] str = {{"Resources", "JobProcessing"}, {"Resources", "JobProcessing"}};							
 							//cr.setResult(str);																			 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}
@@ -439,7 +438,7 @@ IConfigurationEditorPage {
 					System.out.println("\nMaximum Configuration is Selected");
 					
 					Main oMain = new Main();
-					oMain.mainMethod("-maxProduct",mtvlPath);
+					oMain.mainMethod("-maxProduct",mtvlPath + "1");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -450,7 +449,7 @@ IConfigurationEditorPage {
 							ConfigurationResult cr = (ConfigurationResult)page;
 							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
 							//cr.setResult(str);	 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}		
@@ -459,7 +458,7 @@ IConfigurationEditorPage {
 				{
 					try{						  
 						  // Create file	
-						  FileWriter fstream = new FileWriter(mtvlPath + "\\out.abs");
+						  FileWriter fstream = new FileWriter(mtvlPath + "1" + "\\out.abs");
 						  BufferedWriter out = new BufferedWriter(fstream);
 						  out.write("product HATSPID(");
 					
@@ -483,7 +482,7 @@ IConfigurationEditorPage {
 									
 					System.out.println("\nMinimum Distant Valid Configuration is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-minWith=HATSPID",mtvlPath);
+					oMain.mainMethod("-minWith=HATSPID",mtvlPath + "1");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -494,7 +493,7 @@ IConfigurationEditorPage {
 							ConfigurationResult cr = (ConfigurationResult)page;
 							//String[][] str = {{"Site", "ClientNR"}, {"Seq", "Concur", "File"}};							
 							//cr.setResult(str);	 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}		
@@ -504,7 +503,7 @@ IConfigurationEditorPage {
 				{
 					System.out.println("\nSolveAll option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-min=ReplicationSystem.cost",mtvlPath);
+					oMain.mainMethod("-min=ReplicationSystem.cost",mtvlPath + "2");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -517,7 +516,7 @@ IConfigurationEditorPage {
 							//String[] s =  {"French", "Dutch"};
 							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}					
@@ -526,7 +525,7 @@ IConfigurationEditorPage {
 				{
 					System.out.println("\nSolveAll option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-max=ReplicationSystem.cost",mtvlPath);
+					oMain.mainMethod("-max=ReplicationSystem.cost",mtvlPath + "2");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -539,7 +538,7 @@ IConfigurationEditorPage {
 							//String[] s =  {"French", "Dutch"};
 							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}					
@@ -556,7 +555,7 @@ IConfigurationEditorPage {
 				else if(IsMaxPerformantSelected){
 					System.out.println("\nMaximum Performant option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-min=ReplicationSystem.im_responseTime",mtvlPath);
+					oMain.mainMethod("-min=ReplicationSystem.im_responseTime",mtvlPath + "3");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -569,7 +568,7 @@ IConfigurationEditorPage {
 							//String[] s =  {"French", "Dutch"};
 							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}					
@@ -577,7 +576,7 @@ IConfigurationEditorPage {
 				else if(IsMostSecureSelected){
 					System.out.println("\nMaximum Performant option is Selected");
 					Main oMain = new Main();
-					oMain.mainMethod("-min=ReplicationSystem.im_memoryConsumption",mtvlPath);
+					oMain.mainMethod("-min=ReplicationSystem.im_memoryConsumption",mtvlPath + "4");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -590,7 +589,7 @@ IConfigurationEditorPage {
 							//String[] s =  {"French", "Dutch"};
 							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();						
 						}
 					}					
@@ -599,7 +598,7 @@ IConfigurationEditorPage {
 				{
 					try{						  
 						  // Create file	
-						  FileWriter fstream = new FileWriter(mtvlPath + "\\out.abs");
+						  FileWriter fstream = new FileWriter(mtvlPath + "2" + "\\out.abs");
 						  BufferedWriter out = new BufferedWriter(fstream);
 						  out.write("product HATSPID(");
 					
@@ -652,7 +651,7 @@ IConfigurationEditorPage {
 					Main oMain = new Main();
 					oMain.QualityPreferences(hmPrefernces);	
 					
-					oMain.mainMethod("-maxQuality",mtvlPath);
+					oMain.mainMethod("-maxQuality",mtvlPath + "2");
 					
 					arlSolutions = oMain.GetAllSolutions();
 					System.out.print("\nNumber of Solutions: " + arlSolutions.size());
@@ -665,7 +664,7 @@ IConfigurationEditorPage {
 							//String[] s =  {"French", "Dutch"};
 							//cr.setResult(str);						
 							//cr.selectFeature(tree.getTopItem(),s);						 
-							setInput(configurationEditor.configuration);
+							cr.setInput(configurationEditor.configuration);
 							cr.showResult();
 						}
 					}
@@ -874,6 +873,8 @@ IConfigurationEditorPage {
 		tree.removeAll();
 		TreeItem item = new TreeItem(tree, 0);
 		item.setText(AdvancedConfigurationLabelProvider.getRootlabel(configuration));
+		//item.setText("ReplicationSystem");
+		
 		add(item,configuration.getRoot().getChildren());
 		setCheckbox(item);
 		item.setGrayed(true);
