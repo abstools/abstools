@@ -1101,18 +1101,9 @@ Guard guard =
 
 ProductLine product_line =
     PRODUCTLINE TYPE_IDENTIFIER.id SEMICOLON
-    optfeature_list.o
-    corefeature_list.c
+    FEATURES feature_list.f SEMICOLON
     deltaclause_list.d
-    {: return new ProductLine(id, o, c, d); :}
-    ;
-
-List optfeature_list = {: return new List(); :}
-    | OPTFEATURES feature_list.l SEMICOLON {: return l; :}
-    ;
-
-List corefeature_list = {: return new List(); :}
-    | COREFEATURES feature_list.l SEMICOLON {: return l; :}
+    {: return new ProductLine(id, f, d); :}
     ;
 
 List feature_list = feature.f {: return new List().add(f); :}
@@ -1208,7 +1199,6 @@ AppCond factor_appcond = feature.f {: return new AppCondFeature(f.getName()); :}
 List product_list = product.p {: return new List().add(p); :}
     | product_list.l product.p {: return l.add(p); :}
     ;
-
 
 Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new Product(id, l, new List()); :} 
     | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE adaptation_list.al RBRACE {: return new Product(id, l, al); :}

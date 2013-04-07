@@ -271,7 +271,7 @@ GetFatherExp: PureExp    ::= PureExp;
 
 
 // Feature Configuration and Product Selection Language (CL/PSL)
-ProductLine ::= <Name> OptionalFeature:Feature* CoreFeature:Feature* DeltaClause* ;
+ProductLine ::= <Name> Feature* DeltaClause* ;
 Feature ::= <Name> AttrAssignment*;
 
 DeltaClause ::= Deltaspec DeltaID* [FromAppCond:AppCond] [AppCond] ;

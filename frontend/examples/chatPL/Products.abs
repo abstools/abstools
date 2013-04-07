@@ -1,18 +1,21 @@
-/* 
+/*
  * Runtime product reconfiguration path:
- * LowEndChat <--> RegularChat <--> HighEndChat
- * 
+ * LowEnd <--> Regular <--> HighEnd
+ *
  */
 
-product LowEndChat (Text) {
-    RegularChat by Upd_Low2Reg;
+product LowEnd (Text) {
+    Regular with DVoice by Upd_Low2Reg;
 }
 
-product RegularChat (Text, Voice) {
-    HighEndChat by Upd_Reg2High;
-    LowEndChat by Upd_Reg2Low;
+product Regular (Text, Voice) {
+    HighEnd with DVideo,DFiles by Upd_Reg2High;
+    LowEnd with DNoVoice by Upd_Reg2Low;
 }
 
-product HighEndChat (Text, Voice, Video, Files) {
-    RegularChat by Upd_High2Reg;
+product HighEnd (Text, Voice, Video, Files) {
+    Regular with DNoFiles,DNoVideo by Upd_High2Reg;
 }
+
+product HighStatic(Text, Voice, Video, Files);
+

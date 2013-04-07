@@ -104,7 +104,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "hasMethod"   { return sym(Terminals.HASMETHOD); }
  "hasInterface" { return sym(Terminals.HASINTERFACE); }
  "productline" { return sym(Terminals.PRODUCTLINE); }
- "features"    { return sym(Terminals.OPTFEATURES); }
+ "features"    { return sym(Terminals.FEATURES); }
  "after"       { return sym(Terminals.AFTER); }
  "when"        { return sym(Terminals.WHEN); }
  "product"     { return sym(Terminals.PRODUCT); }

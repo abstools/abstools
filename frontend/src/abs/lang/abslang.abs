@@ -600,7 +600,7 @@ interface ProductLine {
     Product getCurrentProduct();
     List<Product> getConfigurableProducts();
     Unit configureProduct(Product s);
-//    Unit configureProduct(String s);
+    Product getProduct(String name);
 }
 
 // convenience functions (to be removed)

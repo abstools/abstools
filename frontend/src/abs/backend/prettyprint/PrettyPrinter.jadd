@@ -122,22 +122,12 @@ aspect doPrettyPrinter {
         stream.print(";");
         formatter.afterStmt();
         boolean hasFeatures = false;
-        if (getNumCoreFeature() > 0) {
-            stream.println();
-            stream.print("core ");
-            hasFeatures = true;
-            getCoreFeatureList().doPrettyPrint(stream, formatter, ",");
-            if (getNumOptionalFeature() > 0) {
-                hasFeatures = true;
-                stream.print(", ");
-            }
-        }
-        if (getNumOptionalFeature() > 0 && ! hasFeatures) {
+        if (getNumFeature() > 0 && ! hasFeatures) {
             hasFeatures = true;
             stream.println();
             stream.print("features ");
         }
-        getOptionalFeatureList().doPrettyPrint(stream, formatter, ",");
+        getFeatureList().doPrettyPrint(stream, formatter, ",");
         if (hasFeatures) {
             stream.println(";");
             formatter.afterStmt();

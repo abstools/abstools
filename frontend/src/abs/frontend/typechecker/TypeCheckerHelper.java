@@ -152,13 +152,24 @@ public class TypeCheckerHelper {
         }
     }
 
-    public static void typeCheckProduct(Product prod, Set<String> prodNames, SemanticErrorList e) {
-        /* Does the product named in the adaptation clause exist */
+    public static void typeCheckProduct(Product prod, Set<String> featureNames, Set<String> prodNames, Set<String> deltaNames, SemanticErrorList e) {
+        // Do the features exist (TODO also check feature attributes)?
+        for (Feature f : prod.getFeatures()) {
+            if (! featureNames.contains(f.getName()))
+                e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
+        }
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
+            // Does the adaptation target product exist?
             if (! prodNames.contains(ad.getProductID()))
                 e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, ad.getProductID()));
+            // Do the deltas used for adaptation exist?
+            for (DeltaID d : ad.getDeltaIDs()) {
+                if (! deltaNames.contains(d.getName()))
+                    e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
+            }
+            // Do the updates used for adaptation exist?
+            // TODO
         }
-        // TODO check that features of product exist, also feature attributes
     }
 
     public static <T extends ASTNode<?>> java.util.List<Type> getTypes(List<T> params) {

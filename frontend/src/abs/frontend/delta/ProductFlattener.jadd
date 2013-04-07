@@ -105,7 +105,9 @@ aspect ProductFlattener {
      */
     public Product Model.findProduct(String id) throws WrongProgramArgumentException {
         for (CompilationUnit u : this.getCompilationUnits()) {
+            System.out.println("*** CompilationUnit " + u.getName());
             for (Product p : u.getProducts()) {
+                System.out.println("*** Product " + p.getName());
                 if (id.equals(p.getName()))
                     return p;
             }

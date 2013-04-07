@@ -1,13 +1,8 @@
 productline ChatPL;
- 
-features Text, Video, Voice, Files;
 
-delta DVideo when Video;
+features Text, Voice, Video, Files;
+
 delta DVoice when Voice;
+delta DVideo when Video;
+delta DFiles when Files;
 
-// deltas used for runtime adaptations
-delta DVoice from Text && ~Voice && ~Video when Voice;
-delta DVideo from Text && Voice && ~Video when Video;
-
-delta DNoVideo from Text && Voice && Video when Text && Voice && ~Video;
-delta DNoVoice from Text && Voice && ~Video when Text && ~Voice && ~Video;

@@ -949,11 +949,19 @@ aspect TypeCheckProductline {
 
     
     protected void Product.typeCheck(SemanticErrorList e) {
+        HashSet<String> featureNames = new HashSet<String>();
+        for (Feature f : getModel().getProductLine().getFeatures()) {
+            featureNames.add(f.getName());
+        }
         HashSet<String> productNames = new HashSet<String>();
         for (Product prod : getModel().getProducts()) {
             productNames.add(prod.getName());
         }
-        TypeCheckerHelper.typeCheckProduct(this, productNames, e);
+        HashSet<String> deltaNames = new HashSet<String>();
+        for (DeltaDecl delta : getModel().getDeltaDecls()) {
+            deltaNames.add(delta.getName());
+        }
+        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, deltaNames, e);
     }
 
     protected void ProductLine.typeCheck(SemanticErrorList e) {
@@ -964,7 +972,7 @@ aspect TypeCheckProductline {
             deltaNames.add(delta.getName());
         }
         HashSet<String> definedFeatures = new HashSet<String>();
-        for (Feature cf : getOptionalFeatures()) {
+        for (Feature cf : getFeatures()) {
             definedFeatures.add(cf.getName());
         }
 
@@ -973,7 +981,7 @@ aspect TypeCheckProductline {
             dc.typeCheck(deltaNames, definedFeatures, e);
         }
         Set<String> fs = new HashSet<String>();
-        for (Feature f : getOptionalFeatures()) {
+        for (Feature f : getFeatures()) {
             if (!fs.add(f.getName()))
                 e.add(new SemanticError(f, ErrorMessage.DUPLICATE_FEATURE, f.getName()));
         }

@@ -26,7 +26,7 @@ public class ProductLine {
     private static ABSDynamicClass thisClass;
 
     /* 
-     * Create the singleton "runtime" class object
+     * Create the singleton "ProductLine" class object
      */
     public static ABSDynamicClass singleton() {
         if (thisClass == null) {
@@ -77,6 +77,21 @@ public class ProductLine {
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
                 return ListUtils.toABSList(currentProd.getConfigurableProducts());
+            }
+        });
+
+        thisClass.addMethod(/*ABSDynamicProduct*/ "getConfigurableProduct", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                ABSDynamicProduct currentProd = t.__ABS_getRuntime().getCurrentProduct();
+                ABSString name = (ABSString)params[0];
+                
+                for (ABSDynamicProduct p : currentProd.getConfigurableProducts()) {
+                    if (p.getName().equals(name))
+                        return p;
+                }
+                throw new DynamicException("Product " + name + " is not configurable from the current product " 
+                        + currentProd.getName() + ".");
             }
         });
     }
