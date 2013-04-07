@@ -56,30 +56,30 @@ import apet.testCases.ApetTestSuite;
 import apet.testCases.TestCase;
 
 /**
- * 
+ *
  * @author pwong
  *
  */
 public class ABSUnitTestCaseTranslator {
-	
+
 	private final Model model;
 	private final ModuleDecl module;
 	private final Set<DeltaWrapper> deltas;
 	private final Set<String> importModules;
 	private ProductLine productline;
 	private Product product;
-	
+
 	private File outputFile;
-	
+
 	private final boolean verbose;
-	
+
 	private final TestCaseNamesBuilder testCaseNameBuilder = new TestCaseNamesBuilder();
 	private final ABSUnitTestCaseTranslatorHelper translatorHelper =  new ABSUnitTestCaseTranslatorHelper();
 	private final PureExpressionBuilder pureExpBuilder;
 	private final DeltaForGetSetFieldsBuilder deltaBuilder;
 	private final MethodTestCaseBuilder methodBuilder;
 	private final FunctionTestCaseBuilder functionBuilder;
-	
+
 	public ABSUnitTestCaseTranslator(Model model, File outputFile, boolean verbose) {
 		if (model == null)
 			throw new IllegalArgumentException("Model cannot be null!");
@@ -94,9 +94,9 @@ public class ABSUnitTestCaseTranslator {
 		this.methodBuilder = new MethodTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
 		this.functionBuilder = new FunctionTestCaseBuilder(pureExpBuilder, deltaBuilder, this.model);
 		this.verbose = verbose;
-		
+
 		console("Gathering ABSUnit annotations");
-		
+
 		/*
 		 * Do not search for test class definitions if this model does not
 		 * contain the necessary ABSUnit annotations
@@ -104,19 +104,19 @@ public class ABSUnitTestCaseTranslator {
 		if (! translatorHelper.gatherABSUnitAnnotations(this.model)) {
 			return;
 		}
-		
+
 		this.outputFile = outputFile;
 		this.translatorHelper.setABSAssertImpl(model);
 	}
-	
+
 	public boolean hasABSUnit() {
 		return translatorHelper.hasABSUnit();
 	}
-	
+
 	/**
-	 * Generates an ABS module {@link ModuleDecl} that defines the 
+	 * Generates an ABS module {@link ModuleDecl} that defines the
 	 * given test suite.
-	 * 
+	 *
 	 * @param suite
 	 * @param validate
 	 * @return
@@ -124,13 +124,13 @@ public class ABSUnitTestCaseTranslator {
 	@SuppressWarnings("rawtypes")
 	public ModuleDecl generateABSUnitTests(ApetTestSuite suite, boolean validate) {
 		console("Add basic imports...");
-		
+
 		for (String key : suite.keySet()) {
 			console("Generating test suite for "+key+"...");
 			generateABSUnitTest(suite.get(key), key);
 		}
-		
-		Set<DeltaDecl> deltaDecls = new HashSet<DeltaDecl>(); 
+
+		Set<DeltaDecl> deltaDecls = new HashSet<DeltaDecl>();
 		for (DeltaWrapper w : deltas) {
 			DeltaDecl delta = w.getDelta();
 			deltaDecls.add(delta);
@@ -140,20 +140,20 @@ public class ABSUnitTestCaseTranslator {
 				importModules.add(use);
 			}
 		}
-		
+
 		addImports(module);
-		
+
 		buildProductLine(module);
 		console("Pretty printing ABSUnit tests...");
-		
-		List<ASTNode<ASTNode>> nodes = 
+
+		List<ASTNode<ASTNode>> nodes =
 				new ArrayList<ASTNode<ASTNode>>();
-		
+
 		nodes.add(module);
 		nodes.addAll(deltaDecls);
 		nodes.add(productline);
 		nodes.add(product);
-		
+
 		printToFile(nodes, outputFile);
 		if (validate) {
 			console("Validating ABSUnit tests...");
@@ -163,19 +163,19 @@ public class ABSUnitTestCaseTranslator {
 		console("ABSUnit tests generation successful");
 		return module;
 	}
-	
+
 	void buildProductLine(ModuleDecl module) {
-		
+
 		if (deltas.isEmpty()) {
 			return;
 		}
-		
+
 		console("Generating product line description...");
 		productline = new ProductLine();
 		productline.setName(CONFIGURATION_NAME);
 		Feature feature = new Feature();
 		feature.setName(FEATURE_NAME);
-		productline.addOptionalFeature(feature);
+		productline.addFeature(feature);
 		AppCond ac = new AppCondFeature(FEATURE_NAME);
 
 		Set<String> applicationConditions = new HashSet<String>();
@@ -193,10 +193,10 @@ public class ABSUnitTestCaseTranslator {
 			} else {
 				applicationConditions.add(name);
 			}
-			
+
 			productline.addDeltaClause(clause);
 		}
-		
+
 		if (lastClause != null) {
 			for (String n : applicationConditions) {
 				lastClause.addDeltaID(new DeltaID(n));
@@ -208,11 +208,11 @@ public class ABSUnitTestCaseTranslator {
 		product.addFeature(feature);
 
 	}
-	
+
 	void generateABSUnitTest(List<TestCase> cs, String mn) {
-		
+
 		String[] sp = mn.split("\\.");
-		final String methodName; 
+		final String methodName;
 		final String className;
 		if (sp.length == 2) {
 			className = sp[0];
@@ -223,9 +223,9 @@ public class ABSUnitTestCaseTranslator {
 		} else {
 			throw new IllegalArgumentException();
 		}
-	
+
 		InterfaceDecl ti = createTestFixture(cs.size(), className, methodName);
-		
+
 		if (className == null) {
 			createTestSuiteForFunction(cs, ti, methodName);
 		} else {
@@ -252,14 +252,14 @@ public class ABSUnitTestCaseTranslator {
 		}
 		unit.setProductLine(productline.fullCopy());
 		unit.addProduct(product.fullCopy());
-		
+
 		Model copy = model.fullCopy();
 		copy.addCompilationUnit(unit);
-		
+
 		validateOutput(copy.fullCopy(), null);
 		validateOutput(copy.fullCopy(), module.getName().concat(".").concat(PRODUCT_NAME));
 	}
-	
+
 	private void validateOutput(Model model, String product) {
 		Model copy = model.fullCopy();
 		if (product != null) {
@@ -269,13 +269,13 @@ public class ABSUnitTestCaseTranslator {
 				throw new IllegalStateException("Cannot select product "+product, e);
 			}
 		}
-		
+
         SemanticErrorList typeerrors = copy.typeCheck();
         for (SemanticError se : typeerrors) {
             System.err.println(se.getHelpMessage());
         }
 	}
-	
+
 	private void addImports(ModuleDecl module) {
 		//export *;
 		//import * from AbsUnit;
@@ -285,12 +285,12 @@ public class ABSUnitTestCaseTranslator {
 		module.addImport(new StarImport("AbsUnit"));
 		module.addImport(new StarImport("AbsUnit.Hamcrest"));
 		module.addImport(new StarImport("AbsUnit.Hamcrest.Core"));
-		
+
 		for (String ip : importModules) {
 			module.addImport(new StarImport(ip));
 		}
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private void printToFile(List<ASTNode<ASTNode>> nodes, File file) {
         try {
@@ -306,10 +306,10 @@ public class ABSUnitTestCaseTranslator {
 				ConsoleHandler.getDefault().newMessageStream()));
 		}
 	}
-	
+
 	/**
 	 * Create a test suite for testing a function.
-	 * 
+	 *
 	 * @param testCases
 	 * @param testInterface
 	 * @param className
@@ -317,13 +317,13 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	private void createTestSuiteForFunction(
 			List<TestCase> testCases,
-			InterfaceDecl testInterface, 
+			InterfaceDecl testInterface,
 			String functionName) {
-	
+
 		//create test class ([Suite])
 		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
 		module.addDecl(testClass);
-		
+
 		//find function under test
 		FunctionDecl functionUnderTest = getDecl(model, FunctionDecl.class,
 				new DeclNamePredicate<FunctionDecl>(functionName));
@@ -331,7 +331,7 @@ public class ABSUnitTestCaseTranslator {
 		final Access access = functionUnderTest.getTypeUse();
 
 		importModules.add(functionUnderTest.getModuleDecl().getName());
-			
+
 		/*
 		 * Test methods and Test cases are ordered that is,
 		 * test case 1 is implemented by test method 1 and so on...
@@ -340,38 +340,38 @@ public class ABSUnitTestCaseTranslator {
 			console("Generating test case "+i+"...");
 			TestCase testCase = testCases.get(i);
 			MethodImpl method = testClass.getMethod(i);
-			functionBuilder.buildTestCase(testCase, testClass, 
+			functionBuilder.buildTestCase(testCase, testClass,
 					method, access, functionName);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Find an interface the given class implements that exposes the given method.
-	 * 
+	 *
 	 * @param methodName
 	 * @param classUnderTest
 	 * @return
 	 */
 	InterfaceDecl findInterfaceUnderTest(String methodName, ClassDecl classUnderTest) {
-		
+
 		Predicate<MethodSig> mp = new MethodSigNamePredicate(methodName);
 		for (InterfaceTypeUse iu : classUnderTest.getImplementedInterfaceUseList()) {
-			InterfaceDecl inf = getDecl(model, InterfaceDecl.class, 
+			InterfaceDecl inf = getDecl(model, InterfaceDecl.class,
 					new DeclNamePredicate<InterfaceDecl>(iu.getName()));
 
 			if (findMethodSig(inf, mp) != null) {
 				return inf;
 			}
 		}
-		
+
 		//no interface exposed the given method.
 		return null;
 	}
-	
+
 	/**
 	 * Create a test suite for testing a method.
-	 * 
+	 *
 	 * @param testCases
 	 * @param testInterface
 	 * @param className
@@ -379,37 +379,37 @@ public class ABSUnitTestCaseTranslator {
 	 */
 	private void createTestSuiteForClassMethod(
 			List<TestCase> testCases,
-			InterfaceDecl testInterface, 
+			InterfaceDecl testInterface,
 			String className,
 			String methodName) {
-	
+
 		//create test class ([Suite])
 		final ClassDecl testClass = translatorHelper.createTestClass(testInterface);
 		module.addDecl(testClass);
 
 		//find class under test.
-		ClassDecl classUnderTest = getDecl(model, ClassDecl.class, 
+		ClassDecl classUnderTest = getDecl(model, ClassDecl.class,
 				new DeclNamePredicate<ClassDecl>(className));
 
-		assert classUnderTest != null : 
+		assert classUnderTest != null :
 			"It should not be possible to not " +
 			"find class under test";
 
 		//find method under test.
-		MethodImpl methodUnderTest = 
+		MethodImpl methodUnderTest =
 				findMethodImpl(classUnderTest, new MethodNamePredicate(methodName));
 
-		assert methodUnderTest != null : 
+		assert methodUnderTest != null :
 			"It should not be possible to not " +
 			"find method under test";
 
 		//find interface of class under test.
-		InterfaceDecl interfaceOfClassUnderTest = 
+		InterfaceDecl interfaceOfClassUnderTest =
 				findInterfaceUnderTest(methodName, classUnderTest);
-				
+
 		if (interfaceOfClassUnderTest == null) {
 			//this method is not exposed by any interface!
-			
+
 		}
 
 		//return type
@@ -419,56 +419,56 @@ public class ABSUnitTestCaseTranslator {
 		//add imports of class/interface under test
 		importModules.add(classUnderTest.getModuleDecl().getName());
 		importModules.add(interfaceOfClassUnderTest.getModuleDecl().getName());
-		
+
 		/*
 		 * Test methods and Test cases are ordered that is,
 		 * test case 1 is implemented by test method 1 and so on...
 		 */
-		for (int i=0; i<testCases.size(); i++) {			
+		for (int i=0; i<testCases.size(); i++) {
 			console("Generating test case "+i+"...");
 			TestCase testCase = testCases.get(i);
 			MethodImpl method = testClass.getMethod(i);
-			methodBuilder.buildTestCase(testCase, testClass, 
+			methodBuilder.buildTestCase(testCase, testClass,
 					method, access, methodName);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Create Test Fixture for a given Class method or a function.
-	 * 
+	 *
 	 * @param testCaseSize
 	 * @param className
 	 * @param methodName
 	 * @return
 	 */
-	private InterfaceDecl createTestFixture(int testCaseSize, String className, 
+	private InterfaceDecl createTestFixture(int testCaseSize, String className,
 			String methodName) {
-		
+
 		String capMethodName = StringUtils.capitalize(methodName);
 
 		if (className == null) {
 			className = testCaseNameBuilder.functionClassName(capMethodName);
 		}
-		
+
 		final String testInterfaceName = testCaseNameBuilder.testInterfaceName(className, capMethodName);
-		
+
 		//create fixture
-		InterfaceDecl testInterface = getDecl(module, InterfaceDecl.class, 
+		InterfaceDecl testInterface = getDecl(module, InterfaceDecl.class,
 				AbsASTBuilderUtil.<InterfaceDecl>namePred(testInterfaceName));
-		
+
 		if (testInterface == null) {
 			testInterface = translatorHelper.createTestInterface(testInterfaceName);
 			module.addDecl(testInterface);
 		}
-		
+
 		for (int i=1; i<=testCaseSize; i++) {
 			testInterface.addBody(
-					translatorHelper.createTestMethodSig(testCaseNameBuilder.testMethodName(capMethodName, 
+					translatorHelper.createTestMethodSig(testCaseNameBuilder.testMethodName(capMethodName,
 					Integer.valueOf(i).toString())));
 		}
-		
+
 		return testInterface;
 	}
-	
+
 }
