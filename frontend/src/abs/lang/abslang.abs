@@ -599,8 +599,8 @@ interface ProductLine {
     Unit applyDelta(String s);
     Product getCurrentProduct();
     List<Product> getConfigurableProducts();
+    Product getConfigurableProduct(String name);
     Unit configureProduct(Product s);
-    Product getProduct(String name);
 }
 
 // convenience functions (to be removed)

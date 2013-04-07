@@ -32,20 +32,20 @@ class Reconfigurator(Connection conn) {
             String name = p.getName();
             if (name == "RegularChat") {
                 if (bw == Low) {
-                    Product p2 = pl.getProduct("LowEndChat");
+                    Product p2 = pl.getConfigurableProduct("LowEndChat");
                     pl.configureProduct(p2);
                 } else if (bw == High) {
-                    Product p2 = pl.getProduct("HighEndChat");
+                    Product p2 = pl.getConfigurableProduct("HighEndChat");
                     pl.configureProduct(p2);
                 }
             } else if (name == "HighEndChat") {
                 if (bw == Low || bw == Mid) {
-                    Product p2 = pl.getProduct("RegularChat");
+                    Product p2 = pl.getConfigurableProduct("RegularChat");
                     pl.configureProduct(p2);
                 }
             } else if (name == "LowEndChat") {
                 if (bw == Mid || bw == High) {
-                    Product p2 = pl.getProduct("RegularChat");
+                    Product p2 = pl.getConfigurableProduct("RegularChat");
                     pl.configureProduct(p2);
                 }
             }
