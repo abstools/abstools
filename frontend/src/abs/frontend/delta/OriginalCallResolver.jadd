@@ -1,3 +1,4 @@
+import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
 import abs.frontend.delta.*;
@@ -10,7 +11,7 @@ aspect OriginalCallResolver {
      * declaration in the list of previously applied deltas + core,
      * copying it, and calling it instead of original().
      */
-    public void Model.resolveOriginalCalls(ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+    public static void Model.resolveOriginalCalls(Collection<DeltaDecl> deltas) throws DeltaModellingException {
         ArrayList<DeltaDecl> prevdeltas = new ArrayList<DeltaDecl>();
         
         for (DeltaDecl delta : deltas) {
@@ -25,10 +26,10 @@ aspect OriginalCallResolver {
      * deal with this case.
      */
     protected void DeltaDecl.resolveOriginalCalls(
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
 
         //System.out.println("*** Processing original calls in delta: " + this.qualifiedName());
-        for (ModuleModifier cm : this.getModuleModifiers()) {
+        for (ModuleModifier cm : getModuleModifiers()) {
            if (cm instanceof ModifyClassModifier)
                for (Modifier m : ((ModifyClassModifier)cm).getModifiers())
                    if (m instanceof ModifyMethodModifier)
@@ -40,7 +41,7 @@ aspect OriginalCallResolver {
     /* This field is used to cache the names of original MethodImpls that have been copied,
      * so we don't need to copy them multiple times (which can result in type errors)
      */
-    private HashSet<String> Model.originalMethodsCache = new HashSet<String>();
+    private Set<String> Model.originalMethodsCache = new HashSet<String>();
     public void Model.cacheOriginalMethod(String id) {
         originalMethodsCache.add(id);
     }
@@ -53,9 +54,9 @@ aspect OriginalCallResolver {
      * inside this ModifyMethodModifier
      */
     protected void ModifyMethodModifier.resolveOriginalCalls(
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
         
-        for (Stmt stmt : this.getMethodImpl().getBlock().getStmts())
+        for (Stmt stmt : getMethodImpl().getBlock().getStmts())
             stmt.resolveOriginalCalls(this, deltas);
     }
     
@@ -64,7 +65,7 @@ aspect OriginalCallResolver {
      */
     protected void ASTNode.resolveOriginalCalls(
             ModifyMethodModifier mod, 
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
         
         for(int i = 0; i < getNumChild(); i++) {
             getChildNoTransform(i).resolveOriginalCalls(mod, deltas);
@@ -82,7 +83,7 @@ aspect OriginalCallResolver {
      */
     public void OriginalCall.resolveOriginalCalls(
             ModifyMethodModifier mod, 
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
         
         // found OriginalCall
         //System.out.println("*** found: " + this);
@@ -90,7 +91,7 @@ aspect OriginalCallResolver {
         // find and copy original method matching this OriginalCall
         MethodImpl originalMethodCopy = mod.findOriginalMethod(this, deltas);
         
-        // Add the copied method to the delta in which this OriginalCall occured
+        // Add the copied method to the delta in which this OriginalCall occurred
         // - omit if the method is already cached
         String methodId = mod.targetClassName() + "." + originalMethodCopy.getMethodSig().getName();
         if (! mod.getModel().containsCachedOriginalMethod(methodId)) {
@@ -119,7 +120,7 @@ aspect OriginalCallResolver {
      */
     protected MethodImpl ModifyMethodModifier.findOriginalMethod(
             OriginalCall oc, 
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
 
         String classid = targetQualifiedClassName();
         MethodSig method = getMethodImpl().getMethodSig();
@@ -159,7 +160,7 @@ aspect OriginalCallResolver {
     private MethodImpl ModifyMethodModifier.findOriginalInAppliedDeltasAndCore(            
             MethodSig method,
             String classid, 
-            ArrayList<DeltaDecl> deltas) throws DeltaModellingException {
+            Collection<DeltaDecl> deltas) throws DeltaModellingException {
 
         //System.out.println("*** searching for method " + classid + "." + method.getName());
         
