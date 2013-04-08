@@ -228,6 +228,9 @@ public class TypeCheckerHelper {
             case TYPE_DECL:
                 msg = ErrorMessage.DUPLICATE_TYPE_DECL;
                 break;
+            case MODULE:
+                assert false; // doesn't happen, no modules within modules
+                break;
             }
             errors.add(new TypeError(rn.getDecl(), msg, n.getName()));
         }
