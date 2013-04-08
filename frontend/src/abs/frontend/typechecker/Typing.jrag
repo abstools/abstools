@@ -12,12 +12,11 @@ aspect Typing {
     * May return UnknownType when running without stdlib.
      */
     syn Type Model.getStdDataType(String n) {
-       TypeDecl res = (TypeDecl)lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n));
+       Decl res = lookup(new KindedName(Kind.TYPE_DECL,Constants.STDLIB_NAME+"."+n));
        return (res instanceof DataTypeDecl) ? (new DataTypeType((DataTypeDecl)res)) : UnknownType.INSTANCE;
     }
     
     syn Model Model.getModel() = this;
-    
     
     inh Model ModuleDecl.getModel();
     inh Model DeltaDecl.getModel();
@@ -34,6 +33,7 @@ aspect Typing {
     inh Model VarOrFieldDecl.getModel();
     inh Model MethodSig.getModel();
     
+    /* TODO: Those will lead to utter confusion when running without stdlib, as e.g. RelExps depend on Bool. */
     syn Type Model.getUnitType() = getStdDataType("Unit");
     syn Type Model.getIntType() = getStdDataType("Int");
     syn Type Model.getRatType() = getStdDataType("Rat");
