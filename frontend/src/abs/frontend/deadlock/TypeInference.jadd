@@ -211,7 +211,7 @@ aspect TypeInference {
   public ResultInference Model.typeInference(String ident, Environment env, Factory df, Map<InterfaceDecl, ClassDecl> intertoclass, PrintStream out) {
     ResultInference res = new ResultInference();
     for (CompilationUnit c : getCompilationUnits()){ res.add(c.typeInference(ident, env, intertoclass, df, out)); }
-    assert getMainBlock() != null : "Model doesn't have a main-block!";
+    assert hasMainBlock() : "Model doesn't have a main-block!";
     ResultInferenceStmt resMain = getMainBlock().typeInference(ident, env, df.newGroupName(), intertoclass, df, null, out);
     res.add(resMain.getConstraint());
     res.setMain(resMain.getContract());
