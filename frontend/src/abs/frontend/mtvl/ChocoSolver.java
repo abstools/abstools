@@ -79,10 +79,11 @@ public class ChocoSolver {
      * @param to - upper limit of the domain of the variable **/
     public void addIntVar(String name, int from, int to) {
       IntegerVariable v = Choco.makeIntVar(name, from, to);
+//      addConstraint(Choco.geq(v,from)); // needed to include the variable in the constraints to be solved.
       vars.put(name,v);
       defaultvals.put(name,from);
       if (ast.debug) ast.println("  adding var '"+name+"' (default -> "+from+")");
-      //m.addVariable(v);
+      m.addVariable(v); // needed to include the variable in the constraints to be solved.
     }
   public void addIntVar(String name, int fromto, boolean from) {
     IntegerVariable v = Choco.makeIntVar(name);
@@ -91,28 +92,28 @@ public class ChocoSolver {
     vars.put(name,v);
     defaultvals.put(name,fromto);
     if (ast.debug) ast.println("  adding var '"+name+"' (default -> "+fromto+")");
-    //m.addVariable(v);
+    //m.addVariable(v); // not needed, since v is used in the constraints
   }
   public void addIntVar(String name, int[] vals) {
       IntegerVariable v = Choco.makeIntVar(name,vals);
       vars.put(name,v);
       defaultvals.put(name,vals[0]); // vals has at least 1 element! (by the parser constraints)
       if (ast.debug) ast.println("  adding var '"+name+"' (default -> "+vals[0]+")");
-      //m.addVariable(v);
+      m.addVariable(v); // needed to include the variable in the constraints to be solved.
   }
   public void addIntVar(String name) {
     IntegerVariable v = Choco.makeIntVar(name);
     vars.put(name,v);
     defaultvals.put(name,0);
     if (ast.debug) ast.println("  adding var '"+name+"' (default -> 0)");
-    //m.addVariable(v);
+    //m.addVariable(v); // not needed - if variable is not constrained in any way, it should not be considered when solving.
   }
   /** add bool variable **/
   public void addBoolVar(String name) {
     IntegerVariable v = Choco.makeBooleanVar(name);
     vars.put(name,v);
     defaultvals.put(name,0);
-    //m.addVariable(v);
+    //m.addVariable(v); // not needed - if variable is not constrained in any way, it should not be considered when solving.
   }
   /** set a bool variable to true **/
   public void forceTrue(String name) {
@@ -341,6 +342,14 @@ public class ChocoSolver {
   public List<String>
           checkSolutionWithErrors(Map<String,Integer> solution, Model model) {
       List<String> res = new ArrayList<String>();
+      // check first for limits of variables
+      for (IntegerVariable v : vars.values()) {
+          CPModel m = new CPModel();
+          m.addVariable(v);
+          if (!checkSolution(solution,model,m))
+              res.add(v.toString());
+      }
+      // now check all explicit constraints
       for (Constraint c: constraints) {
         CPModel m = new CPModel();
         m.addConstraint(c);
