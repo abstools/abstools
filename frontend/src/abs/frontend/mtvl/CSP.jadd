@@ -55,7 +55,7 @@ aspect CSP {
 
 //     Constraint c = collectConstraints(s);
 //     s.addConstraint(c);
-    collectConstraints(s);
+    collectConstraints(s); // is adding intvars to the model!
     return s;
   }
 
@@ -65,6 +65,9 @@ aspect CSP {
 //  }
 
   public void Model.dropAttributes() {
+    // ints and bools store integer and boolean (feature) attributes. Need to be ran twice to be the same collection. 
+    ints() ; ints().clear();
+    bools(); bools().clear();
     for (CompilationUnit c: getCompilationUnits())
       c.dropAttributes();
   }

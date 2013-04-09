@@ -286,7 +286,6 @@ public class ChocoSolver {
       if (!newsol)
         return 0;
 
-      String result = "";
       Iterator<IntegerVariable> it = m.getIntVarIterator();
       while (it.hasNext()) {
         IntegerVariable var = it.next();
