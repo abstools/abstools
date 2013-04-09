@@ -87,7 +87,7 @@ public class ProductLine {
                 ABSString name = (ABSString)params[0];
                 
                 for (ABSDynamicProduct p : currentProd.getConfigurableProducts()) {
-                    if (p.getName().equals(name))
+                    if (p.getName().equals(name.getString()))
                         return p;
                 }
                 throw new DynamicException("Product " + name + " is not configurable from the current product " 
