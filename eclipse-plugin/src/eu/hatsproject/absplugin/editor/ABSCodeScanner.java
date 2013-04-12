@@ -364,10 +364,14 @@ public class ABSCodeScanner implements ITokenScanner {
 		try {
 			String tuname = tu.getName();
 			ModuleDecl moduleDecl = tu.getModuleDecl();
+			if (moduleDecl == null) {
+				// Looks like we're in a delta.
+				return tu;
+			}
 			ModuleDecl typecheckedMDecl = typeCheckedModel.lookupModule(moduleDecl.getName());
 			if(typecheckedMDecl == null)
 				return tu;
-			ASTNode<?> declNode = typecheckedMDecl.lookup(new KindedName(Kind.TYPE_DECL, tuname));
+			Decl declNode = typecheckedMDecl.lookup(new KindedName(Kind.TYPE_DECL, tuname));
 			if (declNode instanceof TypeSynDecl) {
 				TypeSynDecl tsd = (TypeSynDecl) declNode;
 				return resolveTypeUse(tsd.getValue(),typeCheckedModel);
