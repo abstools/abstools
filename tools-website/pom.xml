@@ -25,36 +25,6 @@
     </site>
   </distributionManagement>
 
-<developers>
-    <developer>
-      <id>jschaefer</id>
-      <name>Jan</name>
-      <email>jschaefer at cs uni-kl de</email>
-      <url>http://softech.cs.uni-kl.de/~janschaefer</url>
-      <organization>Universtiy of Kaiserslautern, Software Technology Group</organization>
-      <organizationUrl>http://softech.cs.uni-kl.de</organizationUrl>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <timezone>+1</timezone>
-      <properties>
-    <picUrl>http://softech.informatik.uni-kl.de/twiki/pub/Homepage/JanSchaefer/picture_150x202.jpg</picUrl>
-      </properties>
-    </developer>
-    <developer>
-      <id>pwong</id>
-      <name>Peter</name>
-      <email>peter wong at fredhopper com</email>
-      <url>https://sites.google.com/site/peteryhwong/</url>
-      <organization>Fredhopper B.V.</organization>
-      <organizationUrl>http://www.fredhopper.com</organizationUrl>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <timezone>+1</timezone>
-    </developer>
-</developers>
-
 <issueManagement>
     <system>Trac</system>
     <url>https://trac.hats-project.eu/projects/ABSTools/</url>
