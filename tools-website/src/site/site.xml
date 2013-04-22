@@ -11,7 +11,7 @@
     <src>http://www.hats-project.eu/sites/default/files/garland_logo.png</src>
     <href>http://www.hats-project.eu</href>
   </bannerRight>
-  
+
   <body>
     <menu name="Welcome">
       <item name="Introduction" href="index.html" />
@@ -39,7 +39,7 @@
     <menu name="The Core Tools">
       <item name="Introduction" href="core/introduction.html" />
       <item name="Ant Tasks" href="core/anttasks.html" />
-      <item name="Changelog" href="changes-report.html" />
+<!--      <item name="Changelog" href="changes-report.html" /> -->
       <item name="Java Backend" href="core/java/backend.html" />
 <!--      <item name="Parser" href="core/parser.html" />
       <item name="Type-Checker" href="core/typechecker.html" /> -->
@@ -67,33 +67,33 @@
       <item name="Deploying ABS artifact" href="maven-support/deploy.html"/>
       <item name="Reusing ABS artifacts" href="maven-support/reuse.html"/>
     </menu>
-    
+
     <menu name="Eclipse Integration">
 <!--      <item name="Introduction" href="eclipseplugin/eclipseplugin.html"/>
-	  <item name="News" href="eclipseplugin/changelog.html"/> -->
-	  <item name="Installation" href="eclipseplugin/installation.html"/>
-	  <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
-	  <item name="Executing ABS" href="eclipseplugin/execution.html"/>
-	  <item name="Using Foreign Languages" href="eclipseplugin/fli.html"/>
-	  <item name="Package Dependencies" href="eclipseplugin/packagedependencies.html"/>
-	  <item name="Known issues" href="eclipseplugin/knownissues.html"/>
+    <item name="News" href="eclipseplugin/changelog.html"/> -->
+    <item name="Installation" href="eclipseplugin/installation.html"/>
+    <item name="Using the Plugin" href="eclipseplugin/usage.html"/>
+    <item name="Executing ABS" href="eclipseplugin/execution.html"/>
+    <item name="Using Foreign Languages" href="eclipseplugin/fli.html"/>
+    <item name="Package Dependencies" href="eclipseplugin/packagedependencies.html"/>
+    <item name="Known issues" href="eclipseplugin/knownissues.html"/>
       <item name="Developer Documentation" href="eclipseplugin/devdocu/index.html" collapse="true">
         <item name="API Documentation" href="eclipseplugin/devdocu/api/index.html"/>
         <item name="Editor" href="eclipseplugin/devdocu/editor.html"/>
         <item name="Internals" href="eclipseplugin/devdocu/internal.html"/>
         <item name="Project Explorer" href="eclipseplugin/devdocu/projectexplorer.html"/>
-		<item name="Preferences and Properties" href="eclipseplugin/devdocu/preferences.html"/>
-		<item name="Execution and Debugging" href="eclipseplugin/devdocu/executiondebugging.html"/>
-		<item name="Wizards" href="eclipseplugin/devdocu/wizards.html"/>
-		<item name="Module Explorer" href="eclipseplugin/devdocu/moduleexplorer.html"/>
+    <item name="Preferences and Properties" href="eclipseplugin/devdocu/preferences.html"/>
+    <item name="Execution and Debugging" href="eclipseplugin/devdocu/executiondebugging.html"/>
+    <item name="Wizards" href="eclipseplugin/devdocu/wizards.html"/>
+    <item name="Module Explorer" href="eclipseplugin/devdocu/moduleexplorer.html"/>
       </item>
-	  <item name="Quality Assurance" href="eclipseplugin/testing/index.html" collapse="true">
-		<item name="Test plan" href="eclipseplugin/testing/testplan.html"/>
-	  </item>
+    <item name="Quality Assurance" href="eclipseplugin/testing/index.html" collapse="true">
+    <item name="Test plan" href="eclipseplugin/testing/testplan.html"/>
+    </item>
     </menu>
-    
+
     <menu name="Project Information" href="project-info.html">
-      <item name="Project Information" href="project-info.html"/>
+      <item name="Project Information" href="http://hats-project.eu"/>
     </menu>
   </body>
 
