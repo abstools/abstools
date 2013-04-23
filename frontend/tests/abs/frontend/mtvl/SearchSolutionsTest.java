@@ -8,8 +8,10 @@ import static org.junit.Assert.*;
 
 import java.util.Map;
 
+import org.apache.commons.cli.MissingArgumentException;
 import org.junit.Test;
 
+import abs.common.WrongProgramArgumentException;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.Product;
@@ -44,6 +46,7 @@ public class SearchSolutionsTest extends FrontendTest {
         "    ifin: Repeat ->" +
         "          (Repeat.times >= 2 && Repeat.times <= 5);" +
         " }";
+                
 
     @Test
     public void SearchSolutions() throws Exception {
@@ -68,4 +71,20 @@ public class SearchSolutionsTest extends FrontendTest {
         
         assertEquals(8,s.countSolutions());
     }
+    
+    
+    static private String withoutProducLine = "product P(); root FM";
+    
+    @Test
+    public void CheckEmptyProduct() throws WrongProgramArgumentException {
+        Model model = assertParseOk(withoutProducLine);
+        
+        ChocoSolver s = model.getCSModel();
+        Product product = model.findProduct("P");
+        Map<String,Integer> guess = product.getSolution();
+        assertEquals(true, s.checkSolution(guess,model));
+    }
+            
+            
+
 }

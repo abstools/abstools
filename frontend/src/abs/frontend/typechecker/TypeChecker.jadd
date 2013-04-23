@@ -950,15 +950,18 @@ aspect TypeCheckProductline {
     
     protected void Product.typeCheck(SemanticErrorList e) {
         HashSet<String> featureNames = new HashSet<String>();
-        for (Feature f : getModel().getProductLine().getFeatures()) {
-            featureNames.add(f.getName());
+        Model m = getModel();
+        if (m.hasProductLine()) {
+            for (Feature f : m.getProductLine().getFeatures()) {
+                featureNames.add(f.getName());
+            }            
         }
         HashSet<String> productNames = new HashSet<String>();
-        for (Product prod : getModel().getProducts()) {
+        for (Product prod : m.getProducts()) {
             productNames.add(prod.getName());
         }
         HashSet<String> deltaNames = new HashSet<String>();
-        for (DeltaDecl delta : getModel().getDeltaDecls()) {
+        for (DeltaDecl delta : m.getDeltaDecls()) {
             deltaNames.add(delta.getName());
         }
         TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, deltaNames, e);
