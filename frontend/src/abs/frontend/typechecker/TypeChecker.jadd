@@ -949,9 +949,10 @@ aspect TypeCheckProductline {
 
     
     protected void Product.typeCheck(SemanticErrorList e) {
-        HashSet<String> featureNames = new HashSet<String>();
+        HashSet<String> featureNames = null;
         Model m = getModel();
         if (m.hasProductLine()) {
+            featureNames = new HashSet<String>();
             for (Feature f : m.getProductLine().getFeatures()) {
                 featureNames.add(f.getName());
             }            

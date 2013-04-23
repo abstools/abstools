@@ -153,10 +153,12 @@ public class TypeCheckerHelper {
     }
 
     public static void typeCheckProduct(Product prod, Set<String> featureNames, Set<String> prodNames, Set<String> deltaNames, SemanticErrorList e) {
-        // Do the features exist (TODO also check feature attributes)?
-        for (Feature f : prod.getFeatures()) {
-            if (! featureNames.contains(f.getName()))
-                e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
+        if (featureNames != null) {
+            // Do the features exist in the PL declaration (TODO also check feature attributes)?
+            for (Feature f : prod.getFeatures()) {
+                if (! featureNames.contains(f.getName()))
+                    e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
+            }
         }
         for (ProductAdaptation ad : prod.getProductAdaptations()) {
             // Does the adaptation target product exist?
