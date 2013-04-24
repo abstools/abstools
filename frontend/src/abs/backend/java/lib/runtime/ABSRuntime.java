@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.types.ABSRef;
+import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;
@@ -485,17 +486,23 @@ public class ABSRuntime {
         }
     }
 
-    public Object getForeignObject(String absClassName) {
-        return loadForeignObject(getForeignClass(absClassName));
+    public Object getForeignObject(String absClassName, Object... args) {
+        return loadForeignObject(getForeignClass(absClassName), args);
     }
     
-    private Object loadForeignObject(Class<?> foreignClass) {
+    private Object loadForeignObject(Class<?> foreignClass, Object... args) {
         if (foreignClass != null) {
            try {
-              return foreignClass.newInstance();
+              Constructor<?>[] cs = foreignClass.getConstructors();
+              if (cs.length == 0) return foreignClass.newInstance();
+              return cs[0].newInstance(args);
            } catch (InstantiationException e) {
               e.printStackTrace();
            } catch (IllegalAccessException e) {
+              e.printStackTrace();
+           } catch (IllegalArgumentException e) {
+              e.printStackTrace();
+           } catch (InvocationTargetException e) {
               e.printStackTrace();
            }
         }

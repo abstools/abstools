@@ -132,7 +132,9 @@ public class ClassDeclGenerator {
     private void generateObjectConstruction(String runtime) {
         stream.print(className + " __ABS_result = ");
         if (decl.isForeign()) {
-            stream.println("(" + className + ") " + runtime + ".getForeignObject(\"" + decl.getModuleDecl().getName() + "." + decl.getName() + "\");");
+            stream.println("(" + className + ") " + runtime + ".getForeignObject");
+            JavaGeneratorHelper.generateParamArgs(stream,"\"" + decl.getModuleDecl().getName() + "." + decl.getName() + "\"", decl.getParams());
+            stream.println(";");
             stream.print("if (__ABS_result == null) __ABS_result = ");
         }
 
