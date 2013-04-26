@@ -17,7 +17,6 @@ import abs.backend.java.lib.expr.UnmatchedCaseException;
 import abs.backend.java.lib.runtime.metaABS.ObjectMirror;
 import abs.backend.java.lib.runtime.metaABS.ProductLine;
 import abs.backend.java.lib.types.ABSBool;
-import abs.backend.java.lib.types.ABSBuiltInDataType;
 import abs.backend.java.lib.types.ABSDataType;
 import abs.backend.java.lib.types.ABSInteger;
 import abs.backend.java.lib.types.ABSProcess;
@@ -114,7 +113,9 @@ public class ABSBuiltInFunctions {
     
     
     
-    /* reflect creates a "mirror object" for the given object, 
+    /* Functions to access the meta level
+     * 
+     * reflect creates a "mirror object" for the given object, 
      * which gives access to the meta API.
      */
     public static <T> ABSDynamicObject reflect(T t) {

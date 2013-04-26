@@ -24,7 +24,8 @@ class ConnectionImpl implements Connection {
 
 class Reconfigurator(Connection conn) {
     Unit run() {
-        ProductLine pl = getProductLine();
+        Runtime rt = new Runtime();
+        ProductLine pl = rt.getProductLine();
 
         while(True) {
             Product p = pl.getCurrentProduct();

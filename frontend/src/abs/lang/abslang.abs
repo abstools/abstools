@@ -547,12 +547,15 @@ def ObjectMirror reflect<A>(A a) = builtin;
 def ProductLine getProductLine() = builtin;
 
 // OO wrapper for above functions
-
 interface Runtime {
     ProductLine getProductLine();   
+    // No generic methods in ABS:
+    // ObjectMirror reflect(Any object);
 }
 class Runtime implements Runtime {
     ProductLine getProductLine() { return getProductLine(); }
+    // No generic methods in ABS:
+    //ObjectMirror reflect(Any object) { return reflect(object); }
 }
 
 interface Object {}
