@@ -53,7 +53,7 @@ Unit m() {
 
 
 +---
-// m will return after at least 3 time units
+// Method m will return after at least 3 time units
 Unit m() {
   await duration(3, 5);
 }
@@ -71,7 +71,7 @@ Unit m() {
    changes over time.
 
 +---
-// this datatype is part of the ABS standard library
+// This datatype is part of the ABS standard library
 data Duration = Duration(Int) | InfDuration ;
 
 Duration time_to_complete = deadline(); // can be infinite
