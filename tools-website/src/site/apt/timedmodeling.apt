@@ -22,7 +22,7 @@ Timed Model Simulation in Maude
    over time.
 
 +---
-data Time = Time(Int timeValue);  // this is part of the ABS standard library
+data Time = Time(Rat timeValue);  // this is part of the ABS standard library
 Time t = now();
 +---
 
@@ -72,7 +72,7 @@ Unit m() {
 
 +---
 // This datatype is part of the ABS standard library
-data Duration = Duration(Int) | InfDuration ;
+data Duration = Duration(Rat durationValue) | InfDuration;
 
 Duration time_to_complete = deadline(); // can be infinite
 if (deadline() == Duration(0)) {
