@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import abs.backend.java.lib.types.ABSRef;
-import abs.backend.java.lib.types.ABSValue;
 import abs.backend.java.observing.SystemObserver;
 import abs.backend.java.scheduling.DefaultTaskScheduler;
 import abs.backend.java.scheduling.GlobalScheduler;

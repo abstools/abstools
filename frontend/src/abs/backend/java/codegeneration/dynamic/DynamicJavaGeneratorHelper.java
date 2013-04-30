@@ -25,6 +25,7 @@ import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSClosure;
+import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
 import abs.backend.java.lib.runtime.ABSField;
@@ -542,28 +543,41 @@ public class DynamicJavaGeneratorHelper {
         // TODO
         return null;
     }
-    
-    public static void generateDeltaApplication(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
+
+    public static void generateDelta(DeltaDecl delta, JavaCode.Package pkg, ArrayList<String> classes)
             throws IOException, JavaCodeGenerationException {
         
         PrintStream stream = null;
-        String name = "Application";
+        String className = JavaBackend.getDeltaName(delta.getName());
         try {
-            File file = pkg.createJavaFile(name);
+            File file = pkg.createJavaFile(className);
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+
             stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + name + " {");
-            stream.println("// Run this method to apply delta: " + pkg.packageName + "." + name + ".apply();");
-            stream.println("public static void apply() {");
+            stream.println("public class " + className + " extends " + ABSDynamicDelta.class.getName() + " {");
+            
+            stream.println("private static " + ABSDynamicDelta.class.getName() + " instance;");
+            stream.println("public static " + ABSDynamicDelta.class.getName() + " singleton() {");
+            stream.println("if (instance == null) {");
+            stream.println("instance = new " + className + "();");
+            stream.println("instance.setName(\"" + delta.getName() + "\");");
+            stream.println("}");
+            stream.println("return instance;");
+            stream.println("}");
+            
+            // override apply method
+            stream.println("public void apply() {");
             for (String cls : classes) {
                 stream.println(pkg.packageName + "." + cls + ".apply();");
             }
             stream.println("}");
+            
             stream.println("}");
         } finally {
             if (stream != null)
                 stream.close();
         }
+
     }
     
     public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {
@@ -619,7 +633,9 @@ public class DynamicJavaGeneratorHelper {
                 for (DeltaID did : sortedIDs) {
                     if (first) first = false;
                     else deltaList.append(", ");
-                    deltaList.append("\"" + did.getName() + "\"");
+
+                    deltaList.append(JavaBackend.getDeltaPackageName(did.getName()) + "."
+                            + JavaBackend.getDeltaName(did.getName())  + ".singleton()");
                 }
                 deltaList.append(")");
                 stream.print(deltaList);

@@ -261,6 +261,14 @@ public class JavaBackend extends Main {
         return truncate(name + "_prod");
     }
 
+    public static String getDeltaName(String name) {
+        return truncate(name + "_delta");
+    }
+
+    public static String getDeltaPackageName(String name) {
+        return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
+    }
+
     public static String getFunctionName(String name) {
         return truncate(escapeReservedWords(name) + "_f");
     }

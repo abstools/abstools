@@ -20,9 +20,9 @@ public class ABSDynamicProduct extends ABSDynamicObject {
     }
     
     private String name;
-    private Set<String> features = new HashSet<String>();
+    private Set<ABSDynamicFeature> features = new HashSet<ABSDynamicFeature>();
     private List<ABSDynamicProduct> configurableProducts = new ArrayList<ABSDynamicProduct>();
-    private HashMap<String, List<String>> deltas = new HashMap<String, List<String>>();
+    private HashMap<String, List<ABSDynamicDelta>> deltas = new HashMap<String, List<ABSDynamicDelta>>();
     private HashMap<String, String> update = new HashMap<String, String>();
     
     public String getName() {
@@ -32,14 +32,19 @@ public class ABSDynamicProduct extends ABSDynamicObject {
         this.name = name;
     }
    
-    public Set<String> getFeatures() {
+    public Set<ABSDynamicFeature> getFeatures() {
         return features;
     }
-    public void setFeatures(Set<String> features) {
+    public void setFeatures(Set<ABSDynamicFeature> features) {
         this.features = features;
     }
-    public void addFeature(String feature) {
+    public void addFeature(ABSDynamicFeature feature) {
         features.add(feature);
+    }
+    public void addFeature(String name) {
+        ABSDynamicFeature f = new ABSDynamicFeature();
+        f.setName(name);
+        features.add(f);
     }
 
     public void setConfigurableProducts(List<ABSDynamicProduct> productNames) {
@@ -49,11 +54,11 @@ public class ABSDynamicProduct extends ABSDynamicObject {
         return configurableProducts;
     }
     
-    public void setDeltas(String productName, List<String> deltaNames) {
-        deltas.put(productName, deltaNames);
+    public void setDeltas(String productName, List<ABSDynamicDelta> deltaList) {
+        deltas.put(productName, deltaList);
     }
 
-    public List<String> getDeltas(String productName) {
+    public List<ABSDynamicDelta> getDeltas(String productName) {
         if (deltas.containsKey(productName))
             return deltas.get(productName);
         else 

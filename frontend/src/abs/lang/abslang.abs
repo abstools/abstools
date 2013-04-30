@@ -599,11 +599,19 @@ interface Product {
 }
 
 interface ProductLine {
-    Unit applyDelta(String s);
     Product getCurrentProduct();
     List<Product> getConfigurableProducts();
     Product getConfigurableProduct(String name);
     Unit configureProduct(Product s);
+}
+
+interface Delta {
+    String getName();
+    Unit apply();
+}
+
+interface Feature {
+    String getName();
 }
 
 // convenience functions (to be removed)

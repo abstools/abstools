@@ -5,9 +5,12 @@
 package abs.backend.java.lib.runtime.metaABS;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
+import abs.backend.java.lib.runtime.ABSDynamicDelta;
+import abs.backend.java.lib.runtime.ABSDynamicFeature;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
 import abs.backend.java.lib.types.ABSString;
@@ -43,24 +46,25 @@ public class Product {
             }
         });
 
-        // FIXME return List<Feature>
-        thisClass.addMethod(/*List<ABSString>*/ "getFeatures", new ABSClosure() {
+        thisClass.addMethod(/*List<ABSDynamicFeature>*/ "getFeatures", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicProduct prod = (ABSDynamicProduct)t;
-                ArrayList<ABSString> features = new ArrayList<ABSString>();
-                for (String f : prod.getFeatures()) {
-                    features.add(ABSString.fromString(f));
+                ArrayList<ABSDynamicFeature> features = new ArrayList<ABSDynamicFeature>();
+                for (ABSDynamicFeature f : prod.getFeatures()) {
+                    features.add(f);
                 }
                 return ListUtils.toABSList(features);
             }
         });
 
-        //TODO
-        thisClass.addMethod(/*List<Delta>*/ "getDeltas", new ABSClosure() {
+        thisClass.addMethod(/*List<ABSDynamicDelta>*/ "getDeltas", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                return ABSUnit.UNIT;
+                ABSDynamicProduct prod = (ABSDynamicProduct)t;
+                String targetProd = ((ABSString)params[0]).getString();
+                List<ABSDynamicDelta> deltas = prod.getDeltas(targetProd);
+                return ListUtils.toABSList(deltas);
             }
         });
 

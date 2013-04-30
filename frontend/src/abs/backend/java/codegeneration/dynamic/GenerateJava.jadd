@@ -258,14 +258,14 @@ aspect GenerateJava {
      * Deltas
      */
     public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
-        String packageName = JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + getName();
+        String packageName = JavaBackend.getDeltaPackageName(getName());
         JavaCode.Package pkg = code.createPackage(packageName);
         ArrayList<String> classes = new ArrayList<String>();
         for (ModuleModifier mod : getModuleModifiers()) {
             mod.generateJavaCodeDynamic(pkg);
             classes.add(mod.getGeneratedJavaClassName());
         }
-        DynamicJavaGeneratorHelper.generateDeltaApplication(this, pkg, classes);
+        DynamicJavaGeneratorHelper.generateDelta(this, pkg, classes);
     }
 
     protected String ModuleModifier.generatedJavaClassName;
