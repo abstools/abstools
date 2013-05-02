@@ -39,6 +39,7 @@ public class Keywords {
         "features", 
         "core", 
         "after",
+        "stateupdate", 
         "instanceof",
 
         "when", 

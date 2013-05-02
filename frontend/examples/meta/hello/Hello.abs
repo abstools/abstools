@@ -70,11 +70,11 @@ modifies class Hello.HelloImp {
     }
 }
 
-update En2Ger;
+stateupdate En2Ger;
 instanceof HeloImp {}
 
-update En2Fr;
-update Ger2En;
-update Ger2Fr;
-update Fr2Ger;
-update Fr2En;
+stateupdate En2Fr;
+stateupdate Ger2En;
+stateupdate Ger2Fr;
+stateupdate Fr2Ger;
+stateupdate Fr2En;

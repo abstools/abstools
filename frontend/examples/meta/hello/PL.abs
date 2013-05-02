@@ -5,16 +5,16 @@ delta De when German;
 delta Fr when French;
 
 product English(English) {
-    German delta De update En2Ger;
-    French delta Fr update En2Fr;
+    German delta De stateupdate En2Ger;
+    French delta Fr stateupdate En2Fr;
 }
 product German(German) {
-    English delta En update Ger2En;
-    French delta Fr update Ger2Fr;
+    English delta En stateupdate Ger2En;
+    French delta Fr stateupdate Ger2Fr;
 }
 product French(French) {
-    German delta De update Fr2Ger;
-    English delta En update Fr2En;
+    German delta De stateupdate Fr2Ger;
+    English delta En stateupdate Fr2En;
 }
 
 root Hello {
