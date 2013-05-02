@@ -590,7 +590,9 @@ interface Class {
     Unit removeMethod(String mName);
 }
 
-interface Method {}
+interface Method {
+    //Object exec(Object receiver, List<Object> params);
+}
 
 interface Product {
     String getName();

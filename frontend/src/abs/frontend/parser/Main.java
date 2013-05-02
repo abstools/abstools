@@ -5,11 +5,9 @@
 package abs.frontend.parser;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,9 +30,9 @@ import abs.common.Constants;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.ast.Attribute;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.DeltaDecl;
+import abs.frontend.ast.UpdateDecl;
 import abs.frontend.ast.Product;
 import abs.frontend.ast.ProductLine;
 import abs.frontend.ast.List;
@@ -679,7 +677,7 @@ public class Main {
             try {
                 u = (CompilationUnit) parser.parse(scanner);
             } catch (Parser.Exception e) {
-                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<DeltaDecl>(), new Opt<ProductLine>(), new List<Product>(), new List<FeatureDecl>(), new List<FExt>());
+                u = new CompilationUnit(parser.getFileName(), new List<ModuleDecl>(), new List<DeltaDecl>(), new List<UpdateDecl>(), new Opt<ProductLine>(), new List<Product>(), new List<FeatureDecl>(), new List<FExt>());
                 u.setParserErrors(parser.getErrors());
             }
             if (stdlib) {

@@ -265,6 +265,10 @@ public class JavaBackend extends Main {
         return truncate(name + "_delta");
     }
 
+    public static String getUpdateName(String name) {
+        return truncate(name + "_upd");
+    }
+    
     public static String getDeltaPackageName(String name) {
         return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
     }

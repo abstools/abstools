@@ -103,6 +103,16 @@ aspect TypeResolution {
         return res;
     }
 
+    syn lazy Collection<UpdateDecl> Model.getUpdateDecls() {
+        ArrayList<UpdateDecl> res = new ArrayList<UpdateDecl>();
+        for (CompilationUnit u : getCompilationUnits()) {
+            for (UpdateDecl d : u.getUpdateDecls()) {
+                res.add(d);
+            }
+        }
+        return res;
+    }
+
     syn lazy Collection<Product> Model.getProducts() {
         ArrayList<Product> res = new ArrayList<Product>();
         for (CompilationUnit u : getCompilationUnits()) {

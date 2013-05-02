@@ -4,7 +4,11 @@
  */
 package abs.backend.java.lib.runtime.metaABS;
 
+import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
+import abs.backend.java.lib.runtime.ABSDynamicObject;
+import abs.backend.java.lib.types.ABSUnit;
+import abs.backend.java.lib.types.ABSValue;
 
 public class Method {
     private static ABSDynamicClass thisClass;
@@ -25,6 +29,24 @@ public class Method {
      */
     public static void setupMetaAPI() {
         thisClass.setName("Method");
+        
+        // FIXME This does not work currently, because abslang.abs needs to declare
+        // * the return type
+        // * the number and types of arguments
+        thisClass.addMethod(/*ABSValue*/ "exec", new ABSClosure() {
+            @Override
+            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
+                ABSClosure method = (ABSClosure)t;
+
+                // FIXME
+                // params[0] is the receiver object, 
+                // params[1] is an ABSList with the actual arguments
+                ABSValue res = method.exec((ABSDynamicObject)params[0], params[1]);
+                
+                // FIXME return the result...
+                return ABSUnit.UNIT;
+            }
+        });
+
     }
-    
 }

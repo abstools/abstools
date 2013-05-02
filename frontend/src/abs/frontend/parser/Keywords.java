@@ -39,10 +39,10 @@ public class Keywords {
         "features", 
         "core", 
         "after",
+        "instanceof",
 
         "when", 
         "product", 
-        "by", 
         "while", 
         "return", 
         "skip",

@@ -69,3 +69,12 @@ modifies class Hello.HelloImp {
         return "Hallo Welt";
     }
 }
+
+update En2Ger;
+instanceof HeloImp {}
+
+update En2Fr;
+update Ger2En;
+update Ger2Fr;
+update Fr2Ger;
+update Fr2En;

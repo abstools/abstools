@@ -11,7 +11,7 @@ import abs.backend.java.lib.expr.*;
 import abs.backend.java.lib.types.*;
 import abs.frontend.ast.*;
 
-aspect GenerateJava {
+aspect GenerateJavaDynamic_Core {
 
     public void Model.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
         DynamicJavaGeneratorHelper.cleanGenFolder(code);
@@ -33,7 +33,18 @@ aspect GenerateJava {
                 throw new JavaCodeGenerationException("Delta " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
             }
         }
-
+        {
+            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_UPDATES_PACKAGE);
+            for (UpdateDecl decl : getUpdateDecls()) {
+                try {
+                    decl.generateJavaCodeDynamic(pkg);
+                } catch (NotImplementedYetException e) { 
+                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+                } catch (RuntimeException e) { 
+                    throw new JavaCodeGenerationException("Update " + decl.getName() + ":" + e.getLocalizedMessage(),e); 
+                }
+            }
+        }
         if (hasProductLine()) {
             ProductLine pl = getProductLine();
             JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_PRODUCTS_PACKAGE);
@@ -254,153 +265,6 @@ aspect GenerateJava {
         DynamicJavaGeneratorHelper.generateClassDecl(stream,this);
     }
 
-    /*
-     * Deltas
-     */
-    public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
-        String packageName = JavaBackend.getDeltaPackageName(getName());
-        JavaCode.Package pkg = code.createPackage(packageName);
-        ArrayList<String> classes = new ArrayList<String>();
-        for (ModuleModifier mod : getModuleModifiers()) {
-            mod.generateJavaCodeDynamic(pkg);
-            classes.add(mod.getGeneratedJavaClassName());
-        }
-        DynamicJavaGeneratorHelper.generateDelta(this, pkg, classes);
-    }
-
-    protected String ModuleModifier.generatedJavaClassName;
-    public String ModuleModifier.getGeneratedJavaClassName() {
-        return generatedJavaClassName;
-    }
-
-    public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
-        PrintStream stream = null;
-        generatedJavaClassName = JavaBackend.getModifierName(findModule().getName() + "_" + getSimpleName());
-        // FIXME make sure generatedClassName is uniqe (a delta can modify same class multiple times)
-        try {
-            File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
-            stream.println("package " + pkg.packageName + ";");
-
-            // gen header
-            stream.println("public class " + generatedJavaClassName + " {");
-            generateJavaDynamic(stream);
-            stream.println("}");
-        } finally {
-            if (stream != null)
-                stream.close();
-        }
-    }
-
-    abstract void ModuleModifier.generateJavaDynamic(PrintStream stream);
-    
-    public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
-        // FIXME generate _mod instead of _c class
-        // TODO delta application code
-        // DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
-        stream.println("// TODO " + this.getClass().getName());
-        stream.println("public static void apply() {}");
-  
-    }
-    public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
-        stream.println("public static void apply() {}");
-    }
-    public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
-        for (Modifier m : getModifiers()) {
-            m.generateJavaDynamic(stream);
-        }
-        // generate application method, which applies all modifications defined by the ClassModifier to given clazz
-        stream.println();
-        stream.println("public static void apply() {");
-        stream.println(ABSDynamicClass.class.getName() + " clazz = " + JavaBackend.getClassName(findModule().getName() + "." + getSimpleName()) + ".singleton();");
-        for (Modifier m : getModifiers()) {
-            m.generateJavaDynamicApplication(stream, generatedJavaClassName);
-            // System.out.println("generated " + m.getClass());
-        }
-        stream.println("}");
-        
-        // TODO handle interface additions & removals
-    }
-
-    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
-        stream.println("public static void apply() {}");
-    }
-    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
-        stream.println("public static void apply() {}");
-    }
-    public void NamespaceModifier.generateJavaDynamic(PrintStream stream) {
-        stream.println("// TODO " + this.getClass().getName());
-    }
-
-    abstract void Modifier.generateJavaDynamic(PrintStream stream);
-    abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
-    
-    public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateField(stream, getFieldDecl());
-    }
-    public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String name = JavaBackend.getVariableName(getFieldDecl().getName());
-        stream.println("clazz.addField(\"" + name + "\", " + className + ".field$" + name + ".singleton());");
-    }
-    
-    public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
-        // nothing to generate
-    }
-    public void RemoveFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String name = JavaBackend.getVariableName(getFieldDecl().getName());
-        stream.println("clazz.removeField(\"" + JavaBackend.getVariableName(name) + "\");");
-    }
-    
-    public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
-    }
-    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
-        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
-    }
-    
-    public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
-        // nothing to generate
-    }
-    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodSig().getName());
-        stream.println("clazz.removeMethod(\"" + mName + "\");");
-    }
-    
-    public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) {
-        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
-    }
-    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
-        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
-        stream.println("clazz.removeMethod(\"" + mName + "\");");
-        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
-    }
-    
-    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, ProductLine pl, HashMap<String, Product> allProducts) 
-            throws IOException, JavaCodeGenerationException {
-        PrintStream stream = null;
-        String generatedJavaClassName = JavaBackend.getProductName(getName());
-        
-        try {
-            File file = pkg.createJavaFile(generatedJavaClassName);
-            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
-            // gen header
-            stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + generatedJavaClassName + " {");
-            DynamicJavaGeneratorHelper.generateProduct(stream, this, pl, allProducts);
-            stream.println("}");
-        } finally {
-            if (stream != null)
-                stream.close();
-        }
-    }
-        
-    /*
-     * Deltas END 
-     */
     
     public void MethodImpl.generateJavaDynamic(PrintStream stream) {
         DynamicJavaGeneratorHelper.generateMethodImpl(stream, this);
@@ -1132,5 +996,182 @@ aspect GenerateJava {
         stream.print(")");
     }
 
+
+}
+
+aspect GenerateJavaDynamic_DeltaModelling {
+    
+    /*
+     * Deltas
+     */
+    public void DeltaDecl.generateJavaCodeDynamic(JavaCode code) throws IOException, JavaCodeGenerationException {
+        String packageName = JavaBackend.getDeltaPackageName(getName());
+        JavaCode.Package pkg = code.createPackage(packageName);
+        ArrayList<String> classes = new ArrayList<String>();
+        for (ModuleModifier mod : getModuleModifiers()) {
+            mod.generateJavaCodeDynamic(pkg);
+            classes.add(mod.getGeneratedJavaClassName());
+        }
+        DynamicJavaGeneratorHelper.generateDelta(this, pkg, classes);
+    }
+
+    protected String ModuleModifier.generatedJavaClassName;
+    public String ModuleModifier.getGeneratedJavaClassName() {
+        return generatedJavaClassName;
+    }
+
+    public void ModuleModifier.generateJavaCodeDynamic(JavaCode.Package pkg) throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        generatedJavaClassName = JavaBackend.getModifierName(findModule().getName() + "_" + getSimpleName());
+        // FIXME make sure generatedClassName is uniqe (a delta can modify same class multiple times)
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            stream.println("package " + pkg.packageName + ";");
+
+            // gen header
+            stream.println("public class " + generatedJavaClassName + " {");
+            generateJavaDynamic(stream);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+
+    abstract void ModuleModifier.generateJavaDynamic(PrintStream stream);
+    
+    public void AddClassModifier.generateJavaDynamic(PrintStream stream) {
+        // FIXME generate _mod instead of _c class
+        // TODO delta application code
+        // DynamicJavaGeneratorHelper.generateClassDecl(stream, this.getClassDecl());
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+  
+    }
+    public void RemoveClassModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void ModifyClassModifier.generateJavaDynamic(PrintStream stream) {
+        for (Modifier m : getModifiers()) {
+            m.generateJavaDynamic(stream);
+        }
+        // generate application method, which applies all modifications defined by the ClassModifier to given clazz
+        stream.println();
+        stream.println("public static void apply() {");
+        stream.println(ABSDynamicClass.class.getName() + " clazz = " + JavaBackend.getClassName(findModule().getName() + "." + getSimpleName()) + ".singleton();");
+        for (Modifier m : getModifiers()) {
+            m.generateJavaDynamicApplication(stream, generatedJavaClassName);
+            // System.out.println("generated " + m.getClass());
+        }
+        stream.println("}");
+        
+        // TODO handle interface additions & removals
+    }
+
+    public void InterfaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void FunctionalModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+        stream.println("public static void apply() {}");
+    }
+    public void NamespaceModifier.generateJavaDynamic(PrintStream stream) {
+        stream.println("// TODO " + this.getClass().getName());
+    }
+
+    abstract void Modifier.generateJavaDynamic(PrintStream stream);
+    abstract void Modifier.generateJavaDynamicApplication(PrintStream stream, String className);
+    
+    public void AddFieldModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateField(stream, getFieldDecl());
+    }
+    public void AddFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clazz.addField(\"" + name + "\", " + className + ".field$" + name + ".singleton());");
+    }
+    
+    public void RemoveFieldModifier.generateJavaDynamic(PrintStream stream) {
+        // nothing to generate
+    }
+    public void RemoveFieldModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String name = JavaBackend.getVariableName(getFieldDecl().getName());
+        stream.println("clazz.removeField(\"" + JavaBackend.getVariableName(name) + "\");");
+    }
+    
+    public void AddMethodModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
+    }
+    public void AddMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
+    }
+    
+    public void RemoveMethodModifier.generateJavaDynamic(PrintStream stream) {
+        // nothing to generate
+    }
+    public void RemoveMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodSig().getName());
+        stream.println("clazz.removeMethod(\"" + mName + "\");");
+    }
+    
+    public void ModifyMethodModifier.generateJavaDynamic(PrintStream stream) {
+        DynamicJavaGeneratorHelper.generateMethodImpl(stream, getMethodImpl());
+    }
+    public void ModifyMethodModifier.generateJavaDynamicApplication(PrintStream stream, String className) {
+        String mName = JavaBackend.getMethodName(getMethodImpl().getMethodSig().getName());
+        stream.println("clazz.removeMethod(\"" + mName + "\");");
+        stream.println("clazz.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
+    }
+    
+    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, ProductLine pl, HashMap<String, Product> allProducts) 
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getProductName(getName());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            DynamicJavaGeneratorHelper.generateProduct(stream, this, pl, allProducts);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+        
+    /*
+     * State Updates 
+     */
+    public void UpdateDecl.generateJavaCodeDynamic(JavaCode.Package pkg) 
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getUpdateName(getName());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " extends " + ABSDynamicUpdate.class.getName() + " {");
+            ArrayList<String> classes = new ArrayList<String>();
+            for (ObjectSpec ospec : getObjectSpecs()) {
+                // TODO implement
+                //ospec.generateJavaCodeDynamic(pkg);
+                //classes.add(ospec.getGeneratedJavaClassName());
+                classes.add(ospec.getName());
+            }
+            DynamicJavaGeneratorHelper.generateUpdate(stream, this, generatedJavaClassName, classes);
+            stream.println("}");
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
 
 }

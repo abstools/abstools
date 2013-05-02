@@ -24,4 +24,5 @@ public class JavaBackendConstants {
     // Package names for generated products, deltas
     public static String LIB_PRODUCTS_PACKAGE = "products";
     public static String LIB_DELTAS_PACKAGE = "deltas";
+    public static String LIB_UPDATES_PACKAGE = "updates";
 }

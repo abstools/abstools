@@ -96,6 +96,8 @@ IntLiteral = 0 | [1-9][0-9]*
  "def"         { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
  "delta"       { return sym(Terminals.DELTA); }
+ "update"      { return sym(Terminals.UPDATE); }
+ "instanceof"  { return sym(Terminals.INSTANCEOF); }
  "uses"        { return sym(Terminals.USES); }
  "adds"        { return sym(Terminals.ADDS); }
  "modifies"    { return sym(Terminals.MODIFIES); }
@@ -108,8 +110,6 @@ IntLiteral = 0 | [1-9][0-9]*
  "after"       { return sym(Terminals.AFTER); }
  "when"        { return sym(Terminals.WHEN); }
  "product"     { return sym(Terminals.PRODUCT); }
- "with"        { return sym(Terminals.WITH); }
- "by"          { return sym(Terminals.BY); }
  "while"       { return sym(Terminals.WHILE); }
  "return"      { return sym(Terminals.RETURN); }
  "skip"        { return sym(Terminals.SKIP); }
@@ -126,7 +126,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "this"        { return sym(Terminals.THIS); }
  "core"        { return sym(Terminals.CORE); }
  "original"    { return sym(Terminals.ORIGINAL); }
- ".original"    { return sym(Terminals.DOTORIGINAL); }
+ ".original"   { return sym(Terminals.DOTORIGINAL); }
  "case"        { return sym(Terminals.CASE); }
  "let"         { return sym(Terminals.LET); }
  "in"          { return sym(Terminals.IN); }

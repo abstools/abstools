@@ -39,16 +39,13 @@ public class Clazz {
             }
         });
 
-        thisClass.addMethod(/*ABSDynamicObject<Method>*/ "getMethod", new ABSClosure() {
+        thisClass.addMethod(/*ABSClosure*/ "getMethod", new ABSClosure() {
             @Override
             public ABSDynamicObject exec(ABSDynamicObject t, ABSValue... params) {
                 ABSDynamicClass cls = (ABSDynamicClass)t.getFieldValue_Internal("class");
                 ABSString name = (ABSString)params[0];
                 ABSClosure method = cls.getMethod(name.getString());
-                
-                ABSDynamicObject o = new ABSDynamicObject(Method.singleton());
-                o.setFieldValue("method", method);
-                return o;
+                return method;
             }
         });
 

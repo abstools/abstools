@@ -28,6 +28,7 @@ import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
+import abs.backend.java.lib.runtime.ABSDynamicUpdate;
 import abs.backend.java.lib.runtime.ABSField;
 import abs.backend.java.lib.runtime.ABSFut;
 import abs.backend.java.lib.runtime.ABSRuntime;
@@ -577,7 +578,26 @@ public class DynamicJavaGeneratorHelper {
             if (stream != null)
                 stream.close();
         }
+    }
 
+    public static void generateUpdate(PrintStream stream, UpdateDecl update, String className, ArrayList<String> classes)
+            throws IOException, JavaCodeGenerationException {
+
+        stream.println("private static " + ABSDynamicUpdate.class.getName() + " instance;");
+        stream.println("public static " + ABSDynamicUpdate.class.getName() + " singleton() {");
+        stream.println("if (instance == null) {");
+        stream.println("instance = new " + className + "();");
+        stream.println("instance.setName(\"" + update.getName() + "\");");
+        stream.println("}");
+        stream.println("return instance;");
+        stream.println("}");
+
+        // override apply method
+        stream.println("public void apply() {");
+        for (String cls : classes) {
+            stream.println("// TODO generate class: " + cls + ".apply();");
+        }
+        stream.println("}");
     }
     
     public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {

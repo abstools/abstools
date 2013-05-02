@@ -965,7 +965,11 @@ aspect TypeCheckProductline {
         for (DeltaDecl delta : m.getDeltaDecls()) {
             deltaNames.add(delta.getName());
         }
-        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, deltaNames, e);
+        HashSet<String> updateNames = new HashSet<String>();
+        for (UpdateDecl upd : m.getUpdateDecls()) {
+            updateNames.add(upd.getName());
+        }
+        TypeCheckerHelper.typeCheckProduct(this, featureNames, productNames, deltaNames, updateNames, e);
     }
 
     protected void ProductLine.typeCheck(SemanticErrorList e) {

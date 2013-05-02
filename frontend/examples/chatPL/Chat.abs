@@ -33,10 +33,13 @@ adds interface Voice {
     Call call(Client client);
 }
 
-modifies interface Client adds Voice {}
-modifies class ClientImpl {
+modifies class ClientImpl adds Voice {
     adds List<Call> ongoingCalls;
-    adds Call call(Client client) { Call c = new Call(); ongoingCalls.add(c); return c; }
+    adds Call call(Client client) {
+        Call c = new CallImpl();
+        ongoingCalls = appendright(ongoingCalls, c);
+        return c;
+    }
 }
 
 adds interface AudioStream {/*...*/}
@@ -47,7 +50,7 @@ adds interface Call {
 }
 adds class CallImpl implements Call {
     AudioStream audioStream;
-    Unit run { audioStream = new AudioStream(); }
+    Unit run() { audioStream = new AudioStream(); }
     Unit pickup() {/*...*/}
     Unit hangup() {/*...*/}
 }
@@ -58,13 +61,12 @@ delta NoVoice;
 uses Chat;
 
 removes interface Voice;
-modifies interface Client removes Voice {}
-modifies class ClientImpl {
+modifies class ClientImpl removes Voice {
     removes List<Call> ongoingCalls;
     removes Call call(Client client);
 }
 
-removes interface AudioStream {/*...*/}
+removes interface AudioStream;
 removes interface Call;
 removes class CallImpl;
 
@@ -78,8 +80,7 @@ adds interface Video {
     Call videoCall(Client client);
 }
 
-modifies interface Client adds Video {}
-modifies class ClientImpl {
+modifies class ClientImpl adds Video {
     adds Call videoCall(Client client) {/*...*/}
 }
 
@@ -88,15 +89,28 @@ modifies interface Call {
     adds Unit stopVideo();
 }
 modifies class CallImpl {
-    VideoStream videoStream;
-    modifies Unit run { original(); videoStream = new VideoStream(); }
+    adds VideoStream videoStream;
+    modifies Unit run() { original(); videoStream = new VideoStream(); }
     adds Unit startVideo() {/*...*/}
     adds Unit stopVideo() {/*...*/}
 }
 
+// *********************************************************************************
+// delta that adds File Transfer
+
+delta DFiles;
+uses Chat;
+// TODO
 
 // *********************************************************************************
-// deltas that handle dynamic reconfigurations
+// delta that removes File Transfer
+
+delta DNoFiles;
+uses Chat;
+// TODO
+
+// *********************************************************************************
+// delta that removes Video
 
 delta DNoVideo;
 uses Chat;
@@ -114,6 +128,9 @@ modifies class CallImpl removes Video {
     removes AudioVideoStreamManager avStreamManager;
 }
 
+// *********************************************************************************
+// delta that removes Voice
+
 delta DNoVoice;
 uses Chat;
 
@@ -125,4 +142,12 @@ modifies class ClientImpl removes Voice {
 removes interface Call;
 removes class CallImpl;
 removes class AudioStream;
+
+// *********************************************************************************
+// state update definitions
+
+update L2R;
+update R2L;
+update R2H;
+update H2R;
 

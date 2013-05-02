@@ -103,22 +103,22 @@ import java.io.IOException;
 CompilationUnit goal =
     compilation_unit.cu		{: return cu ; :}
   | error INVALID_CHARACTER? {: // adding dummy-token-type "INVALID_CHARACTER" for the lexer
-		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new Opt(),new List(),new List(),new List());
+		CompilationUnit u = new CompilationUnit(getFileName(),new List(),new List(),new List(),new Opt(),new List(),new List(),new List());
 		u.setParserErrors(getErrors());
 		return u;
 	:}
   ;
 
 CompilationUnit compilation_unit =
-	module_decl_list.m? delta_decl_list.d? product_line.pl? product_list.p? featuremodeldecl.fm {:
-		List fd = fm.getFeatureDecls();
-		List ed = fm.getFExts();
-		fm.setFeatureDeclList(new List());
-		fm.setFExtList(new List());
-        CompilationUnit u = new CompilationUnit(getFileName(),m,d,pl,p,fd,ed);
-		u.setParserErrors(getErrors());
-		return u;
-	:}
+    module_decl_list.m? delta_decl_list.d? update_decl_list.upd? product_line.pl? product_list.p? featuremodeldecl.fm {:
+        List fd = fm.getFeatureDecls();
+        List ed = fm.getFExts();
+        fm.setFeatureDeclList(new List());
+        fm.setFExtList(new List());
+        CompilationUnit u = new CompilationUnit(getFileName(),m,d,upd,pl,p,fd,ed);
+        u.setParserErrors(getErrors());
+        return u;
+    :}
   ;
 
 ModuleDecl module_decl =
@@ -406,15 +406,34 @@ List modifier_fragment_list =
   ;
 
 Modifier modifier_fragment =
-    ADDS field_decl.f SEMICOLON     {: return new AddFieldModifier(f); :}
+  ADDS field_decl.f SEMICOLON       {: return new AddFieldModifier(f); :}
   | REMOVES field_decl.f SEMICOLON  {: return new RemoveFieldModifier(f); :}
   | ADDS method.m                   {: return new AddMethodModifier(m); :}
   | MODIFIES method.m               {: return new ModifyMethodModifier(m); :}
   | REMOVES methodsig.ms SEMICOLON  {: return new RemoveMethodModifier(ms); :}
   ;
 
+List update_decl_list =
+  update_decl.u {: return new List().add(u); :}
+  | update_decl_list.l update_decl.u {: return l.add(u); :}
+  ;
+
+UpdateDecl update_decl =
+  UPDATE TYPE_IDENTIFIER.id SEMICOLON object_spec_list.l? {: return new UpdateDecl(id, l); :}
+  ;
+
+List object_spec_list =
+  object_spec.o {: return new List().add(o); :}
+  | object_spec_list.l object_spec.o {: return l.add(o); :}
+  ;
+
+ObjectSpec object_spec =
+  INSTANCEOF type_name.n LBRACE RBRACE {: return new ObjectSpec(n.getName()); :}
+  ;
+
+
 List data_constructor_list =
-    data_constructor.i                                         {: return new List().add(i); :}
+    data_constructor.i                                      {: return new List().add(i); :}
     | data_constructor_list.l BAR data_constructor.i        {: return l.add(i); :}
   ;
 
@@ -1145,10 +1164,8 @@ DeltaClause delta_clause =
 
 List after_condition = AFTER delta_list.l {: return l; :} ;
 
-DeltaID delta = TYPE_IDENTIFIER.id {: return new DeltaID(id); :} ;
-
-List delta_list = delta.id {: return new List().add(id); :}
-    | delta_list.l COMMA delta.id {: return l.add(id); :}
+List delta_list = delta_id.id {: return new List().add(id); :}
+    | delta_list.l COMMA delta_id.id {: return l.add(id); :}
     ;
 
 // FCL
@@ -1208,12 +1225,9 @@ List adaptation_list = adaptation.ad {: return new List().add(ad); :}
     | adaptation_list.l adaptation.ad {: return l.add(ad); :}
     ;
 
-ProductAdaptation adaptation = TYPE_IDENTIFIER.product WITH delta_list.deltas BY TYPE_IDENTIFIER.update SEMICOLON 
+ProductAdaptation adaptation = TYPE_IDENTIFIER.product DELTA delta_list.deltas UPDATE TYPE_IDENTIFIER.update SEMICOLON 
     {: return new ProductAdaptation(product, deltas, update); :}
     ;
-
-// TODO define what a state update actually is
-//stateupdate = UPDATE TYPE_IDENTIFIER.id SEMICOLON {: return new StateUpdate(id); :};
 
 
 /////////////////////////////////////////
