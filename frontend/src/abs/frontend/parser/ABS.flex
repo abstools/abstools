@@ -96,7 +96,7 @@ IntLiteral = 0 | [1-9][0-9]*
  "def"         { return sym(Terminals.DEF); }
  "implements"  { return sym(Terminals.IMPLEMENTS); }
  "delta"       { return sym(Terminals.DELTA); }
- "update"      { return sym(Terminals.UPDATE); }
+ "stateupdate" { return sym(Terminals.STATEUPDATE); }
  "instanceof"  { return sym(Terminals.INSTANCEOF); }
  "uses"        { return sym(Terminals.USES); }
  "adds"        { return sym(Terminals.ADDS); }

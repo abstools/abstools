@@ -419,7 +419,7 @@ List update_decl_list =
   ;
 
 UpdateDecl update_decl =
-  UPDATE TYPE_IDENTIFIER.id SEMICOLON object_spec_list.l? {: return new UpdateDecl(id, l); :}
+  STATEUPDATE TYPE_IDENTIFIER.id SEMICOLON object_spec_list.l? {: return new UpdateDecl(id, l); :}
   ;
 
 List object_spec_list =
@@ -1225,7 +1225,7 @@ List adaptation_list = adaptation.ad {: return new List().add(ad); :}
     | adaptation_list.l adaptation.ad {: return l.add(ad); :}
     ;
 
-ProductAdaptation adaptation = TYPE_IDENTIFIER.product DELTA delta_list.deltas UPDATE TYPE_IDENTIFIER.update SEMICOLON 
+ProductAdaptation adaptation = TYPE_IDENTIFIER.product DELTA delta_list.deltas STATEUPDATE TYPE_IDENTIFIER.update SEMICOLON 
     {: return new ProductAdaptation(product, deltas, update); :}
     ;
 
