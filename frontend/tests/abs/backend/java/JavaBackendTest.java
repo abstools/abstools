@@ -35,11 +35,16 @@ public class JavaBackendTest extends ABSTest {
      */
     final protected List<String> absArgs = new ArrayList<String>();
 
-    public JavaBackendTest() {}
+    public final long seed;
+    public static long seed_UNUSED = -1;
+
+    public JavaBackendTest() { seed = seed_UNUSED; }
 
     public JavaBackendTest(long randomSeed) {
         jvmArgs.add("-Dabs.totalscheduler="+RandomSchedulingStrategy.class.getName());
         jvmArgs.add("-Dabs.randomseed="+randomSeed);
+        assert randomSeed != seed_UNUSED : "not a valid seed value";
+        seed = randomSeed;
     }
 
     void assertValidStdLib(String absCode) throws Exception {

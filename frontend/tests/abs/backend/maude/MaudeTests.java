@@ -22,22 +22,22 @@ import abs.frontend.ast.Model;
  */
 public class MaudeTests extends ABSTest {
 
-    final String mode;
+    final MaudeCompiler.SIMULATOR mode;
 
-    public MaudeTests(String mode) {
+    public MaudeTests(MaudeCompiler.SIMULATOR mode) {
         this.mode = mode;
     }
 
     /* These two are direct entry-points for JUnit */
     public static class MaudeEqTests extends MaudeTests {
         public MaudeEqTests() {
-            super(MaudeCompiler.SIMULATOR_EQ_TIMED);
+            super(MaudeCompiler.SIMULATOR.EQ_TIMED);
         }
     }
 
     public static class MaudeRlTests extends MaudeTests {
         public MaudeRlTests() {
-            super(MaudeCompiler.SIMULATOR_RL);
+            super(MaudeCompiler.SIMULATOR.RL);
         }
     }
 
@@ -80,7 +80,7 @@ public class MaudeTests extends ABSTest {
         }
     }
 
-    protected String getMaudeCode(String absCode, String module) throws Exception {
+    protected String getMaudeCode(String absCode, MaudeCompiler.SIMULATOR module) throws Exception {
         Model model = assertParseOk(absCode, Config.WITH_STD_LIB);
 
         if (model.hasErrors()) {

@@ -10,8 +10,13 @@ public class MaudeTestDriver implements BackendTestDriver {
 
     final MaudeTests maude;
 
-    public MaudeTestDriver(String mode) {
+    public MaudeTestDriver(MaudeCompiler.SIMULATOR mode) {
         maude = new MaudeTests(mode);
+    }
+
+    @Override
+    public String toString() {
+        return "Maude "+maude.mode;
     }
 
     @Override

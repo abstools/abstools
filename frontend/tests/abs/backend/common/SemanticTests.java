@@ -38,7 +38,7 @@ public abstract class SemanticTests {
         }
     }
 
-    @Parameters
+    @Parameters(name="{0}")
     public static Collection<?> data() {
         final Object[][] data;
         /* TODO: Mark Maude tests as ignored instead of just missing them */
@@ -47,9 +47,9 @@ public abstract class SemanticTests {
          */
         /* Append new tests to the end, so that we can aggregate relative differences in CI */
         if (checkMaude())
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }, { new MaudeTestDriver(MaudeCompiler.SIMULATOR_RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR_EQ_TIMED) }
+            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }, { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) }
             , {new JavaDynamicTestDriver()}
-            // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simplex");}} }
+            // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
             };
         else
             data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }

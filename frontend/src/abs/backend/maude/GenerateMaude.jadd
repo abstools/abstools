@@ -2,6 +2,7 @@
 import java.io.PrintStream;
 import java.util.Set;
 import java.util.TreeSet;
+import abs.backend.maude.MaudeCompiler;
 import abs.backend.maude.MaudeCompilerHelper;
 
 aspect GenerateMaude {
@@ -11,15 +12,15 @@ aspect GenerateMaude {
 
     int Model.defaultResources = 0;
 
-    public void Model.generateMaude(PrintStream stream, String module, int clocklimit, int defaultResources) {
+    public void Model.generateMaude(PrintStream stream, MaudeCompiler.SIMULATOR module, int clocklimit, int defaultResources) {
     	generateMaude(stream,module,null, clocklimit, defaultResources);
     }
 
-    public void Model.generateMaude(PrintStream stream, String module, String mainBlock, int clocklimit, int defaultResources) {
+    public void Model.generateMaude(PrintStream stream, MaudeCompiler.SIMULATOR module, String mainBlock, int clocklimit, int defaultResources) {
         this.defaultResources = defaultResources;
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
-                       + module + " .\n");
+                       + module.getModule() + " .\n");
         for (Decl decl : getDecls()) {
             if (decl instanceof FunctionDecl)
                 decl.generateMaude(stream);

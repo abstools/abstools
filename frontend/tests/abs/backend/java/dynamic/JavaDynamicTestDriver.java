@@ -13,7 +13,12 @@ public class JavaDynamicTestDriver implements BackendTestDriver {
     public JavaDynamicTestDriver() {
         javaTest = new JavaBackendDynamicTest();
     }
-    
+
+    @Override
+    public String toString() {
+        return "Dynamic Java";
+    }
+
     @Override
     public void assertEvalEquals(String absCode, boolean value) throws Exception {
         javaTest.assertEvalEquals(absCode, value);

@@ -17,7 +17,15 @@ public class JavaTestDriver implements BackendTestDriver {
     public JavaTestDriver() {
         javaTest = new JavaBackendTest();
     }
-    
+
+    /**
+     * Used by JUnit.
+     */
+    @Override
+    public String toString() {
+        return "JavaBackend"+ ( javaTest.seed == JavaBackendTest.seed_UNUSED ?  "" : (" seed="+Long.toString(javaTest.seed)));
+    }
+
     @Override
     public void assertEvalEquals(String absCode, boolean value) throws Exception {
         javaTest.assertEvalEquals(absCode, value);

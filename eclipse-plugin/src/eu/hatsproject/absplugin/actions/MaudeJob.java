@@ -214,9 +214,9 @@ public class MaudeJob extends Job{
 				mb = null;
             // KLUDGE: use default values for clock limit, resource cost for now
 			if(realTime){
-                model.generateMaude(ps, MaudeCompiler.SIMULATOR_EQ_TIMED, mb, 100, 0);
+                model.generateMaude(ps, MaudeCompiler.SIMULATOR.EQ_TIMED, mb, 100, 0);
 			} else{
-                model.generateMaude(ps, MaudeCompiler.SIMULATOR_RL, mb, 100, 0);
+                model.generateMaude(ps, MaudeCompiler.SIMULATOR.RL, mb, 100, 0);
 			}
 			ps.close();
 			fis = new FileInputStream(tmpFile);
