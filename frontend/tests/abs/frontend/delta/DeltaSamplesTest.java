@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import org.junit.Assert;
 import org.junit.Test;
 
+import abs.backend.maude.MaudeCompiler;
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticErrorList;
@@ -71,7 +72,7 @@ public class DeltaSamplesTest extends FrontendTest {
         m.flattenForProduct("P");
         /* Run Maude gen (from the ticket), although it's not relevant. */
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        m.generateMaude(new PrintStream(out), null, 100, 0);
+        m.generateMaude(new PrintStream(out), MaudeCompiler.SIMULATOR.RL, 100, 0);
     }
     
     @Test

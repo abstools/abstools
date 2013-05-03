@@ -17,6 +17,7 @@ aspect GenerateMaude {
     }
 
     public void Model.generateMaude(PrintStream stream, MaudeCompiler.SIMULATOR module, String mainBlock, int clocklimit, int defaultResources) {
+        assert module != null;
         this.defaultResources = defaultResources;
         boolean hasClasses = false;
         stream.println("in abs-interpreter\n\nmod MODEL is\nprotecting "
