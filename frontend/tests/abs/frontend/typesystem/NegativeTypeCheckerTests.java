@@ -472,6 +472,11 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     }
 
     @Test
+    public void init_this() {
+        assertTypeErrors("class C {} { this.f(); }");
+    }
+
+    @Test
     public void wrongNumberOfParams() {
         assertTypeErrors("module Bug;"
           + "def String f (String name) = name;"
