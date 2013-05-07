@@ -129,6 +129,8 @@ aspect Typing {
     syn lazy MethodSig Call.getMethodSig() {
   	  if (getCallee() instanceof ThisExp) {
 		  ClassDecl decl = (ClassDecl) getContextDecl();
+		  if (decl == null)
+		      return null;
 		  MethodImpl i = decl.lookupMethod(getMethod());
 		  if (i == null)
 			  return null;

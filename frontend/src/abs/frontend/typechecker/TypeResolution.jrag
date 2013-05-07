@@ -336,6 +336,7 @@ aspect TypeResolution {
             || getContextBlock()  != null && b.getContextBlock() == getContextBlock();
     }
 
+	@CheckForNull
     public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
         ASTNode<?> n = this;
         while (n != null) {
