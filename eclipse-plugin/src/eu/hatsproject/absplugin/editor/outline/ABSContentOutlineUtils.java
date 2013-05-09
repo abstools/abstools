@@ -79,13 +79,12 @@ public class ABSContentOutlineUtils {
 	 */
 	private static void formatParam(StringBuilder sb, ParamDecl p) {
 		if (p != null) {
-			Access acc = ((TypeUse) p.getAccess());
+			TypeUse acc = ((TypeUse) p.getAccess());
 			if (acc instanceof ParametricDataTypeUse) {
 				ParametricDataTypeUse ptd = ((ParametricDataTypeUse) acc);
 				formatParametricDataTypeUse(sb, ptd);
-
-			} else if (acc instanceof TypeUse) {
-				sb.append(((TypeUse) p.getAccess()).getName());
+			} else {
+				sb.append(acc.getName());
 			}
 		}
 	}
