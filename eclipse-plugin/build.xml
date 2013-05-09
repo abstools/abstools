@@ -190,6 +190,7 @@
               quietErrors="true" >
         <sourcePath path="${basedir}/src" />
         <class location="${build.dir}/eu" />
+      	<auxClasspath path="${frontend.dir}/bin" />
       </findbugs>
     </target>
 
