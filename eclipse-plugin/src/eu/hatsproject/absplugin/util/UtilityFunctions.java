@@ -539,22 +539,18 @@ public class UtilityFunctions {
 	}
 	
 	public static boolean hasABSFileExtension(IResource file){
-		if (file != null){
-			return ABS_FILE_EXTENSION.equals(file.getFileExtension());
-		}
-		
-		return false;
+		return file != null && ABS_FILE_EXTENSION.equals(file.getFileExtension());
 	}
 	
 	public static boolean isABSSourceFile(IResource file){
 	    if (file != null && file instanceof IFile) // TODO: IResource?
-	       return hasABSFileExtension((IFile)file);
+	       return hasABSFileExtension(file);
 	    return false;
 	}
 
 	public static boolean isABSFile(IResource file){
 		if (file != null && file instanceof IFile){ // TODO: IResource?
-			return hasABSFileExtension((IFile)file) || isABSPackage((IFile)file);
+			return hasABSFileExtension(file) || isABSPackage((IFile)file);
 		}
 		
 		return false;

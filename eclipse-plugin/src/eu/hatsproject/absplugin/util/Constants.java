@@ -213,6 +213,7 @@ public class Constants {
 	public static final String PARTITION_MULTI_LINE_COMMENT  = "multiComment";
 	public static final String PARTITION_STRING              = "string";
 	public static final String PARTITION_CHARACTER           = "char";
+	// FIXME: This one is not as static as you think (MS_MUTABLE_ARRAY)
 	public static final String[] PARTITION_TYPES = {PARTITION_SINLGE_LINE_COMMENT, PARTITION_MULTI_LINE_COMMENT, PARTITION_STRING, PARTITION_CHARACTER};
 	
 	//PreferenceStore Strings

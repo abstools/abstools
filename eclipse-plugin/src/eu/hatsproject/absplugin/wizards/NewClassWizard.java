@@ -42,7 +42,7 @@ public class NewClassWizard extends NewClassInterfaceWizard implements INewWizar
 	@Override
 	public void addPages(){
 		classInFilePage = new NewClassInFileWizardPage(WIZARD_TITLE);
-		page = (IABSClassInterfaceWizardPage) classInFilePage;
+		page = classInFilePage;
 		page.setInitialModule(mDecl);
 		page.setDescription(WIZARD_DESCRIPTION);
 		page.setTitle(WIZARD_TITLE);

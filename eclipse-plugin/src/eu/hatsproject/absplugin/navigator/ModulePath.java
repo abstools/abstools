@@ -38,7 +38,7 @@ public class ModulePath {
 	/**
 	 * Caching mechanism, mapping a root ModulePath to an ABSNature
 	 */
-	private static HashMap<AbsNature,ModulePath> rootPath = new HashMap<AbsNature,ModulePath>();
+	private static Map<AbsNature,ModulePath> rootPath = new HashMap<AbsNature,ModulePath>();
 	
 	/**
 	 * Creates a new ModulePath
@@ -200,7 +200,7 @@ public class ModulePath {
 	 * @return Only ModuleDecls with a name prefix.Name are returned,
 	 *         ModuleDecls with a name prefix.subPrefix.Name are ignored
 	 */	
-	public LinkedHashSet<InternalASTNode<ModuleDecl>> getModulesForPrefix() {
+	public Set<InternalASTNode<ModuleDecl>> getModulesForPrefix() {
 		LinkedHashSet<InternalASTNode<ModuleDecl>> names = new LinkedHashSet<InternalASTNode<ModuleDecl>>();
 		Model model = absNature.getCompleteModel();
 
@@ -214,7 +214,7 @@ public class ModulePath {
 					if (name.indexOf('.') < 0 &&
 					 !hasSubModule(name) &&
 					 !name.equals(modulePath) &&
-					 !names.contains(m)) {
+					 !names.contains(m)) { // FIXME: Review, can a ModuleDecl really be inside Set<nternalASTNode<..>>? GC_UNRELATED_TYPES
 							names.add(new InternalASTNode<ModuleDecl>(m, absNature));
 					}
 				}

@@ -37,7 +37,7 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 	public Object[] getChildren(Object parentElement) {
 
 		if (parentElement instanceof InternalASTNode) {
-			return outlineProvider.getChildren(((InternalASTNode<?>) parentElement));
+			return outlineProvider.getChildren(parentElement);
 		} else if (parentElement instanceof IProject) {
 			if (((IProject) parentElement).isOpen()) {
 				AbsNature nature = UtilityFunctions.getAbsNature((IProject)parentElement);
@@ -53,7 +53,7 @@ public class NavigatorContentProvider implements ITreeContentProvider {
 			
 			//if the module path has a matching module declaration unfold its content..
 			if (intNode != null) {
-				ModuleDecl md = (ModuleDecl) intNode.getASTNode();
+				ModuleDecl md = intNode.getASTNode();
 				ArrayList<ASTNode<?>> chld = getChildrenOf(md);
 				ASTNode<?>[] chldArr = chld.toArray(new ASTNode<?>[chld.size()]);
 				

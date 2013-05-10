@@ -43,7 +43,7 @@ public class NewInterfaceWizard extends NewClassInterfaceWizard implements INewW
 	@Override
 	public void addPages(){
 		interfaceInFilePage = new NewInterfaceInFileWizardPage(WIZARD_TITLE);
-		page = (IABSClassInterfaceWizardPage) interfaceInFilePage;
+		page = interfaceInFilePage;
 		page.setInitialModule(mDecl);
 		page.setDescription(WIZARD_DESCRIPTION);
 		page.setTitle(WIZARD_TITLE);

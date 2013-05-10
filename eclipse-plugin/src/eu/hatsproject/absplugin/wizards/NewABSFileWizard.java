@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -130,14 +131,9 @@ public class NewABSFileWizard extends Wizard implements INewWizard {
 		if (mp != null) {
 			AbsNature nature = mp.getNature();
 			IProject project = nature.getProject();
-			LinkedHashSet<InternalASTNode<ModuleDecl>> modulesForPrefix = mp.getModulesForPrefix();
-			InternalASTNode<ModuleDecl> m;
-			try {
-				// Get first the of element in the HashSet
-				m = modulesForPrefix.iterator().next();
-			} catch (NoSuchElementException nse) {
-				m = null;
-			}
+			Set<InternalASTNode<ModuleDecl>> modulesForPrefix = mp.getModulesForPrefix();
+			// Get first the of element in the HashSet
+			InternalASTNode<ModuleDecl> m = modulesForPrefix.isEmpty() ? null : modulesForPrefix.iterator().next();
 
 			List<IResource> folders = new ArrayList<IResource>();
 

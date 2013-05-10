@@ -79,7 +79,7 @@ public class NewModuleWizard extends ABSNewWizard implements INewWizard {
 			page.setInitialValue(mp.getModulePath() + ".");
 			InternalASTNode<ModuleDecl> moduleDecl = mp.getModuleDecl();
 			if (moduleDecl.hasASTNodeOfType(ModuleDecl.class)){
-				IFile fileOfModuleDecl = UtilityFunctions.getFileOfModuleDecl((ModuleDecl)mp.getModuleDecl().getASTNode());
+				IFile fileOfModuleDecl = UtilityFunctions.getFileOfModuleDecl(mp.getModuleDecl().getASTNode());
 				page.setInitialFileResource(fileOfModuleDecl);
 			}
 		}
