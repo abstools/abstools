@@ -5,6 +5,7 @@
 package abs.frontend.analyser;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -12,7 +13,12 @@ import java.io.StringWriter;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.AwaitAsyncCall;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.Stmt;
+import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
 
@@ -67,7 +73,6 @@ public class OtherAnalysisTests extends FrontendTest {
         assertFalse(m2.hasErrors());
     }
 
-    
     @Test
     public void parsetreecopyTest2() {
         Model m = assertParseOk("module M; productline TestPL;" +
@@ -87,5 +92,33 @@ public class OtherAnalysisTests extends FrontendTest {
         ABSFormatter f = new EmptyFormatter();
         m2.doPrettyPrint(w,f);
         return writer.toString();
+    }
+
+    @Test
+    public void testContext1() {
+        Model.doAACrewrite = false;
+        Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
+        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
+        ASTNode<?> n = down(cd);
+        assert n != null;
+        assertThat(n.calcContextNode(VarDeclStmt.class), instanceOf(VarDeclStmt.class));
+        assertThat(n.calcContextNode(Stmt.class), instanceOf(VarDeclStmt.class));
+    }
+    
+    private static ASTNode<?> down(ASTNode<?> n) {
+        ASTNode<?> x = null;
+        for(int i =0; i<n.getNumChild(); i++) {
+            x = n.getChild(i);
+            if (x == null)
+                continue;
+            if (x instanceof AwaitAsyncCall)
+                return x;
+            else {
+                x = down(x);
+                if (x != null)
+                    return x;
+            }
+        }
+        return null;
     }
 }
