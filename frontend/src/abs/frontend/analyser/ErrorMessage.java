@@ -99,6 +99,7 @@ public enum ErrorMessage {
     SQL_TOTAL_PROJECTION_WITH_GROUPING("The GROUP BY clause is disallowed in combination with a total projection (*)."),
     SQL_UNKNOWN_AGGREGATE_FUNCTION("Aggregate function with name %s is undefined."),
     SQL_INSERT_UNEQUAL_ATTR_AND_VALUE_NUMBER("The number of attributes and values must be equal."),
+    THIS_STATIC("No context for `this`."),
     ORIGINAL_NOT_IN_DELTA("Calls to original(..) are only permitted in modify-class deltas.")
     , ERROR_IN_PRODUCT("Error within product %s: %s")
     , ERROR_IN_PRODUCT_WITH_DELTA("Error within product %s while processing delta %s: %s"),
