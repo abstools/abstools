@@ -321,7 +321,14 @@ aspect TypeResolution {
     eq Call.isAsync() = false;
 
     syn lazy ModuleDecl ASTNode.getModuleDecl() = (ModuleDecl) calcContextNode(ModuleDecl.class);
-    syn lazy Decl ASTNode.getContextDecl() = (Decl) calcContextNode(Decl.class);
+    /**
+     * Return this objects surrounding declaration. Uses the Null Object Pattern,
+     * so don't cast the result, as it may be an UnknownDecl.
+     */
+    syn lazy Decl ASTNode.getContextDecl() {
+      Decl d = (Decl) calcContextNode(Decl.class);
+      return (d == null ? Model.unknownDecl : d);
+    }
     syn lazy MethodImpl ASTNode.getContextMethod() = (MethodImpl) calcContextNode(MethodImpl.class);
     syn lazy Block ASTNode.getContextBlock() = (Block) calcContextNode(Block.class);
     
@@ -336,13 +343,16 @@ aspect TypeResolution {
             || getContextBlock()  != null && b.getContextBlock() == getContextBlock();
     }
 
+	/**
+	 * This method (presumably) finds the outermost match conforming to `clazz`.
+	 */
 	@CheckForNull
     public ASTNode<?> ASTNode.calcContextNode(Class<?> clazz) {
         ASTNode<?> n = this;
         while (n != null) {
             ASTNode<?> parent = n.getParent();
 
-            if (clazz.isAssignableFrom(n.getClass())) {
+            if (clazz.isInstance(n)) {
                 if (parent == null)
                     return n;
 
@@ -353,6 +363,22 @@ aspect TypeResolution {
                     return n;
             }
             n = parent;
+        }
+        return null;
+    }
+    
+    /**
+	 * This method finds the closest parent conforming to `clazz`, starting from this
+	 * object's parent. May return null.
+	 */
+	@CheckForNull
+    public ASTNode<?> ASTNode.closestParent(Class<?> clazz) {
+            ASTNode<?> n = getParent();
+        while (n != null) {
+            if (clazz.isInstance(n))
+            	return n;
+            else
+                n = n.getParent();
         }
         return null;
     }

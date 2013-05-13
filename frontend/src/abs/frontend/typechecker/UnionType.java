@@ -13,6 +13,7 @@ import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
+import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 
 public class UnionType extends ReferenceType {
@@ -69,6 +70,11 @@ public class UnionType extends ReferenceType {
 
     @Override
     public MethodSig lookupMethod(String name) {
+        // Check declared type first...
+        MethodImpl m = originatingClass.lookupMethod(name);
+        if (m != null)
+          return m.getMethodSig();
+        // ... then interfaces.
         for (InterfaceType t : types) {
             MethodSig s = t.lookupMethod(name);
             if (s != null)

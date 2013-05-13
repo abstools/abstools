@@ -127,19 +127,9 @@ aspect Typing {
     }
     
     syn lazy MethodSig Call.getMethodSig() {
-  	  if (getCallee() instanceof ThisExp) {
-		  ClassDecl decl = (ClassDecl) getContextDecl();
-		  if (decl == null)
-		      return null;
-		  MethodImpl i = decl.lookupMethod(getMethod());
-		  if (i == null)
-			  return null;
-		  return i.getMethodSig();
-	  } else {
-		  Type t = getCallee().getType();
-		  MethodSig s = t.lookupMethod(getMethod());
-		  return s;
-	  }
+		Type t = getCallee().getType();
+		MethodSig s = t.lookupMethod(getMethod());
+		return s;
     }
     
     eq GetExp.getType() { 
@@ -167,13 +157,7 @@ aspect Typing {
 
     syn lazy List<Annotation> DataTypeUse.findAnnotations() = calcAnnotations();
 
-	syn lazy Type VarOrFieldUse.getType();    
-    eq FieldUse.getType() { 
-        VarOrFieldDecl d = getDecl();
-        if (d == null) return UnknownType.INSTANCE;
-        return d.getType();
-    }
-    eq VarUse.getType() { 
+	syn lazy Type VarOrFieldUse.getType() {
         VarOrFieldDecl d = getDecl();
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
