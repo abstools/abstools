@@ -426,7 +426,7 @@ aspect SqlRewrites {
         final String resultVar = getUnusedVarName(occupiedVariables, "dbResult" + "_" + getStart() + "_%s");
         final List<Stmt> callStmts = createDbCalls(dbExp, sync, resultType, resultVar);
         replaceThis(new VarUse(resultVar));
-        for (int i = 0; i < callStmts.getNumChild(); i++)
+        for (int i = 0; i < callStmts.getNumChildNoTransform(); i++)
             newStmts.add(callStmts.getChildNoTransform(i));
         return newStmts;
     }
