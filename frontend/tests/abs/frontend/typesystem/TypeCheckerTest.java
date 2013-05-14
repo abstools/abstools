@@ -12,20 +12,11 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import abs.ABSTest.Config;
 import abs.frontend.FrontendTest;
-import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.FieldUse;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.MethodImpl;
-import abs.frontend.ast.MethodSig;
-import abs.frontend.ast.Model;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ReturnStmt;
-import abs.frontend.ast.VarDeclStmt;
-import abs.frontend.ast.VarOrFieldDecl;
-import abs.frontend.ast.VarOrFieldUse;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
+import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.InterfaceType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.KindedName.Kind;
 
@@ -126,6 +117,34 @@ public class TypeCheckerTest extends FrontendTest {
     @Test
     public void getOk() {
         assertTypeOK("{ Fut<Bool> f; Bool b = True; b = f.get; }");
+    }
+
+    @Test
+    public void ticket414_futNeedsDataType1() {
+        Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }", Config.WITH_STD_LIB);
+        assertFalse(m.hasErrors());
+        Block b = m.getCompilationUnit(1).getMainBlock();
+        assertNotNull(b);
+        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        // Have:
+        DataTypeUse tu = u.getParam(0);
+        assertEquals("I",tu.getName());
+        assertThat(tu.getType(), instanceOf(DataTypeType.class));
+    }
+
+    @Test
+    public void ticket414_futNeedsDataType2() {
+        Model m = assertParseOk("module M; interface I {} { Fut<I> fi; }", Config.WITH_STD_LIB);
+        assertFalse(m.hasErrors());
+        Block b = m.getCompilationUnit(1).getMainBlock();
+        assertNotNull(b);
+        VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
+        ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
+        // Have:
+        DataTypeUse tu = u.getParam(0);
+        assertEquals("I",tu.getName());
+        assertThat(tu.getDecl(), instanceOf(DataTypeDecl.class));
     }
 
     @Test
