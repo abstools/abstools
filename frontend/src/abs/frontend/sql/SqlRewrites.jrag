@@ -39,6 +39,7 @@ aspect SqlRewrites {
 	    if (parent == null)
 	        throw new RuntimeException("Trying to evaluate attribute in subtree not attached to main tree");
 	    final int index = parent.getIndexOfChild(this);
+	    // TODO: Use setChild?
 	    parent.removeChild(index);
 	    parent.insertChild(newNode, index);
 	}
