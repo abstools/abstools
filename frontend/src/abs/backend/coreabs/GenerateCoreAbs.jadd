@@ -72,7 +72,7 @@ aspect GenerateCoreABS {
             final DataTypeUse du = a.getType().toUse();
             final String tmp = "tmp"+Integer.toString(aac.hashCode());
             // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
-            l.add(new VarDeclStmt(new List(), new VarDecl(tmp),
+            l.add(new VarDeclStmt(new List(), new VarDecl(tmp,
                  new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
                                                         new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
                                                       )));
