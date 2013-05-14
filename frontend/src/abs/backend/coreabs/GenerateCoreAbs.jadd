@@ -33,8 +33,103 @@ aspect GenerateCoreABS {
     
     public void Decl.generateCoreABS(PrintStream stream) {
         stream.println("// " + getClass().getSimpleName() + " Declared in " + getFileName() + " line " + Symbol.getLine(getStart()));
-        
     }
 
-        
+	/* EXPERIMENTAL unfolding of AwaitAsyncCalls into temporary variables.
+	 * MAY and in fact WILL EAT YOUR DOG!
+	 *             [stolz]
+	 */
+
+	/** Global switch whether this rewriting is enabled. */
+	public static boolean Model.doAACrewrite = true;
+
+	coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Model;
+	AwaitAsyncCall contributes this to Stmt.getAACs() for closestParent(Stmt.class);
+
+    /**
+     * Only for use by the AwaitAsyncCall-rewriting logic!
+     */
+    public java.util.List<AwaitAsyncCall> Stmt.aacs = new LinkedList();
+
+    rewrite Stmt {
+      /* This is the magic: getAACs() will trigger the rewriting of child nodes. These will store the original AAC
+         UPSTREAM in their parent Stmt. Since Stmts are nested, this statement here might actually not need to
+         be rewritten, ie. aacs.isEmpty() after the DFS traversal. Observe how the FGS, l-to-r traversal nicely
+         establishes the order in which to generate the temporary variables!
+         
+         getAACs() will be NON-EMPTY if there is at least one "failed rewrite" downstream (*):
+         to derive the type for the temporary variable, we need semantic info, which
+         is not available if the AwaitAsyncCall is actually ill-typed! 
+         NB: this is probably gross abuse of JastAdd! [stolz]
+       */
+      when (
+       !(this instanceof Block) && Model.doAACrewrite && getAACs().isEmpty() && !aacs.isEmpty()
+       )
+      to RewriteBlock {
+        List l = new List();
+        for (AwaitAsyncCall aac : aacs) {
+            Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
+            final DataTypeUse du = a.getType().toUse();
+            final String tmp = "tmp"+Integer.toString(aac.hashCode());
+            // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
+            l.add(new VarDeclStmt(new List(), new VarDecl(tmp),
+                 new ParametricDataTypeUse("Fut", new List(), new List().add(du)),
+                                                        new Opt(new AsyncCall(aac.getCallee(), aac.getMethod(), aac.getParamList()))
+                                                      )));
+            l.add(new AwaitStmt(new List(), new ClaimGuard( new VarUse(tmp))));                                                 
+        }
+        aacs.clear(); // flush downstream rewrite info.
+        l.add(this);
+        RewriteBlock b = new RewriteBlock(new List(), l);
+        return b;
+      }
+    }
+
+    public int Block.hasRewriteBlockAt() {
+      for(int i=0;i<getNumStmt();i++) {
+        if (getStmt(i) instanceof RewriteBlock)
+          return i;
+      }
+      return -1;
+    }
+
+	/* Because we are rewriting a statement into a statement sequence, we go this
+	 * intermediate step of replacing a statement with AwaitAsyncCall into a special type
+	 * of Block, the RewriteBlock. Then, an outermost block will check if it contains a
+	 * RewriteBlock, which must be inlined in place. (Otherwise variable scoping would be wrong
+	 * AFTER the block. If we want to have intermediate type-correctness, we could consider
+	 *  "dragging" subsequent statements into the RewriteBlock, but that would complicate things.
+	 */ 
+	rewrite Block {
+	  when (hasRewriteBlockAt() > -1)
+	  to Block {
+	    for(int i=0;i<getNumStmt(); i++) {
+	      ASTNode<?> n = getStmt(i);
+	      if (n != null && n instanceof RewriteBlock) {
+	        RewriteBlock b = (RewriteBlock) n;
+	        // Be careful not to confuse children with statements here!
+	        List<Stmt> list = getStmtList();
+	        int idx = list.getIndexOfChild(b);
+	        for(int j=0;j<b.getNumStmt();j++) {
+	          list.insertChild(b.getStmt(j),idx+j);
+	        }
+	        // Better lookup idx again, I couldn't calculate the index correctly with the info above:
+	        list.removeChild(list.getIndexOfChild(b));
+	      }
+	    }
+	    return this;
+	}}
+
+    rewrite AwaitAsyncCall {
+    /* Preempt typechecking: if there's anything wrong, don't touch it.
+     * Precondition must cover logic in Stmt-rewrite above (*)!
+     */
+    when (Model.doAACrewrite && getCalleeNoTransform().getType().lookupMethod(getMethod()) != null)
+    to GetExp {
+      GetExp g = new GetExp(new VarUse("tmp"+Integer.toString(hashCode())));
+      Stmt s = (Stmt) closestParent(Stmt.class);
+      assert s != null;
+      s.aacs.add(this);
+      return g;
+    }}
 }

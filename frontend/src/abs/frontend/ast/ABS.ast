@@ -164,6 +164,7 @@ WhileStmt: Stmt ::= Condition:PureExp Body:Stmt;
 Block: Stmt ::= Stmt:Stmt*;
 InitBlock: Block; // Initializer block in a class - can be handled specially during code generation
 MainBlock: Block; // Active behavior of the model
+RewriteBlock: Block; // Rewritten, only used in intermediate construction in GenerateCoreAbs.jadd.
 
 
 abstract Guard;

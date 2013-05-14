@@ -35,6 +35,8 @@ public class MaudeCompiler extends Main {
     private int defaultResources = 0;
     
     public static void main(final String... args) {
+        /* Maude has build-in AwaitAsyncCall support */
+        Model.doAACrewrite = false;
         try {
             new MaudeCompiler().compile(args);
         } catch (Exception e) {

@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.ParametricDataTypeUse;
 
 public abstract class Type {
     private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
@@ -253,4 +255,12 @@ public abstract class Type {
     }
     
     public Type applyBinding(Map<TypeParameter, Type> binding) { return this; }
+    
+    /**
+     * Use by the rewriting logic for AwaitAsyncCalls in GenerateCoreAbs.
+     */
+    public DataTypeUse toUse() {
+        assert false : "Should never happen for a well-typed model";
+        return null;
+    }
 }
