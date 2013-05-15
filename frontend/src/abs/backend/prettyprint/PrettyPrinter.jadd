@@ -857,7 +857,7 @@ aspect doPrettyPrinter {
     }
 
     public void UnresolvedTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
-        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        // TODO: getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print(getName());    
     }
 
