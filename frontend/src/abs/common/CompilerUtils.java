@@ -10,6 +10,7 @@ import abs.frontend.ast.DataConstructorExp;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.TypedAnnotation;
 
 public class CompilerUtils {
@@ -18,7 +19,7 @@ public class CompilerUtils {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
-                if (((DataTypeUse)ta.getAccess()).getName().equals(annotationName))
+                if (((TypeUse)ta.getAccess()).getName().equals(annotationName))
                     return ta.getValue();
             }
         }
