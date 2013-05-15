@@ -110,9 +110,9 @@ MethodImpl ::= MethodSig Block <Critical:boolean>; // (For Component Model) //
 // Uses of various identifiers
 abstract Access: PureExp;
 abstract IdUse: Access ::= <Name>;
-abstract TypeUse: IdUse;
+abstract TypeUse: IdUse ::= Annotation*;
 InterfaceTypeUse: TypeUse; // TODO: reconsider hierarchy of expressions?
-DataTypeUse: TypeUse ::= Annotation*;
+DataTypeUse: TypeUse;
 ParametricDataTypeUse: DataTypeUse ::= Param:TypeUse* ;
 TypeParameterUse: TypeUse;
 abstract VarOrFieldUse: Access ::= <Name>;

@@ -351,7 +351,7 @@ HasCondition has_condition =
     HASFIELD field_decl.f   {: return new HasField(f); :}
   | HASMETHOD methodsig.ms  {: return new HasMethod(ms); :}
   | HASINTERFACE type_name.n
-        {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName()) ;
+        {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName(), new List()) ;
            res.setAbsolutePosition(n.getAbsolutePosition());
            return res; :}
   ;
@@ -485,7 +485,7 @@ Annotation annotation =
     ;
 
 InterfaceTypeUse ifname =
-    type_name.n {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName()) ; res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+    type_name.n {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName(), new List()) ; res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
     ;
 
 DataTypeUse datatypeuse =
