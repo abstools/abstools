@@ -73,7 +73,7 @@ aspect GenerateCoreABS {
         List l = new List();
         for (AwaitAsyncCall aac : aacs) {
             Access a = (Access)aac.getCallee().getType().lookupMethod(aac.getMethod()).getReturnType();
-            final DataTypeUse du = a.getType().toUse();
+            final TypeUse du = a.getType().toUse();
             final String tmp = "tmp"+Integer.toString(aac.hashCode());
             // TODO: The typechecker will assert that/if the name is free, but in freak chances it may not.
             l.add(new VarDeclStmt(new List(), new VarDecl(tmp,

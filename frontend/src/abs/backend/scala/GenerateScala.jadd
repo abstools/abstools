@@ -587,7 +587,7 @@ aspect GenerateScala {
 	
 	public String ParametricDataTypeUse.getScalaType() {
 		// hacks for types in standard library
-		if (getDecl().getModuleDecl().getName().equals("ABS.StdLib")) {
+		if (Constants.STDLIB_NAME.equals(getDecl().getModuleDecl().getName())) {
 			if (getDecl().getName().equals("Fut"))
 				return "ActorRef";
 		}
@@ -603,7 +603,7 @@ aspect GenerateScala {
 		if (getNumParam() > 0) {
 			builder.append("[");
 			boolean f = false;
-			for (DataTypeUse t: getParams()) {
+			for (TypeUse t: getParams()) {
 				if (f) builder.append(", ");
 				builder.append(t.getScalaType());
 				f = true;

@@ -17,6 +17,7 @@ import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParametricDataTypeUse;
+import abs.frontend.ast.TypeUse;
 
 public abstract class Type {
     private static final Object ANNOTATION_KEY = "ANNOTATION_KEY";
@@ -259,7 +260,7 @@ public abstract class Type {
     /**
      * Use by the rewriting logic for AwaitAsyncCalls in GenerateCoreAbs.
      */
-    public DataTypeUse toUse() {
+    public TypeUse toUse() {
         assert false : "Should never happen for a well-typed model";
         return null;
     }

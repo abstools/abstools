@@ -138,20 +138,21 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         WhileStmt ws = new WhileStmt();
         ws.setCondition(getFnApp("hasNext",new VarUse(futs)));
         Block body = new Block();
-        ws.setBody(body);
         DataTypeUse u = getType("Pair", getType("Set", 
                 getType("Fut", getType("Unit"))),getType("Fut", getType("Unit")));
         body.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(futs))));
         body.addStmt(getVAssign(fut, getFnApp("snd",new VarUse("nt"))));
         body.addStmt(getVAssign(futs, getFnApp("fst",new VarUse("nt"))));
         body.addStmt(getExpStmt(new GetExp(new VarUse("fut"))));
+        // Attach body at the end, since JastAdd will avoid touching ASTs without parents.
+        ws.setBody(body);
         return ws;
     }
     
     private Set<TypeUse> generateTestClassImplAST(
             InterfaceDecl inf, ClassDecl clazz, MainBlock block) {
         Set<TypeUse> accesses = new HashSet<TypeUse>();
-        DataTypeUse dataType = generateDataPointsAST(inf, clazz, accesses, block);
+        TypeUse dataType = generateDataPointsAST(inf, clazz, accesses, block);
         
         String namePrefix = clazz.getName();
         int instance = 0;
@@ -172,9 +173,9 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
                 Block body = new Block();
                 ws.setBody(body);
                 thisBlock = body;
-                DataTypeUse u = getType("Pair", getType("Set", dataType.copy()), dataType.copy()); 
+                DataTypeUse u = getType("Pair", getType("Set", (TypeUse)dataType.copy()), (TypeUse)dataType.copy()); 
                 thisBlock.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(dataPointSet))));
-                thisBlock.addStmt(getVarDecl(dataValue, dataType.copy(), getFnApp("snd",new VarUse("nt"))));
+                thisBlock.addStmt(getVarDecl(dataValue, (TypeUse)dataType.copy(), getFnApp("snd",new VarUse("nt"))));
                 thisBlock.addStmt(getVAssign(dataPointSet, getFnApp("fst",new VarUse("nt"))));
             }
             
@@ -196,7 +197,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         return accesses;
     }
  
-    private DataTypeUse generateDataPointsAST(InterfaceDecl key, ClassDecl clazz, 
+    private TypeUse generateDataPointsAST(InterfaceDecl key, ClassDecl clazz, 
             Set<TypeUse> use, MainBlock block) {
         MethodSig dataPoint = findDataPoints(key);
         if (dataPoint == null) {
@@ -214,7 +215,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         }
         
         //Set has only one type parameter
-        DataTypeUse u = prt.getParam(0).copy();
+        TypeUse u = (TypeUse) prt.getParam(0).copy();
         use.add(u);
         
         String objName = uncap(clazz.getName()) + "dataPoint";

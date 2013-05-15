@@ -420,7 +420,7 @@ public class TypeCheckerHelper {
                 e.add(new TypeError(use, ErrorMessage.WRONG_NUMBER_OF_TYPE_ARGS,type.toString(),""+expected,""+t.numTypeArgs()));
             } else if (expected > 0) {
                 if (use instanceof ParametricDataTypeUse) {
-                        for (DataTypeUse du : ((ParametricDataTypeUse)use).getParams()) {
+                        for (TypeUse du : ((ParametricDataTypeUse)use).getParams()) {
                                 du.typeCheck(e);
                         }
                 } else if (use.getDecl() instanceof TypeSynDecl) {

@@ -71,7 +71,7 @@ public class ABSContentOutlineUtilsTest {
 		when(pdtu.getName()).thenReturn("Int");
 		when(pdtu.getNumParam()).thenReturn(1);
 		
-		List<DataTypeUse> dtuL = new List<DataTypeUse>();
+		List<TypeUse> dtuL = new List<TypeUse>();
 		DataTypeUse dtu = mock(DataTypeUse.class);
 		when(dtu.getName()).thenReturn("Parametric");
 		dtuL.add(dtu);

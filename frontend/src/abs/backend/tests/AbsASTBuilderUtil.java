@@ -308,11 +308,11 @@ public final class AbsASTBuilderUtil {
         return getType("Fut", getType("Unit"));
     }
 
-    public static final DataTypeUse getType(String n, DataTypeUse... types) {
+    public static final DataTypeUse getType(String n, TypeUse... types) {
         if (types.length > 0) {
             ParametricDataTypeUse set = new ParametricDataTypeUse();
             set.setName(n);
-            for (DataTypeUse d : types) {
+            for (TypeUse d : types) {
                 set.addParam(d);
             }
             return set;
@@ -352,7 +352,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
-        return getVarDecl(name, new InterfaceTypeUse(inf.getName()), newObj(clazz, cog));
+        return getVarDecl(name, new InterfaceTypeUse(inf.getName(), new List<Annotation>()), newObj(clazz, cog));
     }
 
     /**
@@ -369,7 +369,7 @@ public final class AbsASTBuilderUtil {
         Set<Import> imports = new HashSet<Import>();
         for (TypeUse type : typeUses) {
             if (type instanceof DataTypeUse) {
-                imports.addAll(generateImportAST((DataTypeUse) type));
+                imports.addAll(generateImportAST(type));
             } else {
                 imports.add(generateImportAST(type.getName(), type.getModuleDecl().getName()));
             }
@@ -377,11 +377,11 @@ public final class AbsASTBuilderUtil {
         return imports;
     }
 
-    public static final Set<Import> generateImportAST(DataTypeUse t) {
+    public static final Set<Import> generateImportAST(TypeUse t) {
         Set<Import> imports = new HashSet<Import>();
         imports.add(generateImportAST(t.getName(), t.getModuleDecl().getName()));
         if (t instanceof ParametricDataTypeUse) {
-            for (DataTypeUse st : ((ParametricDataTypeUse) t).getParams()) {
+            for (TypeUse st : ((ParametricDataTypeUse) t).getParams()) {
                 imports.addAll(generateImportAST(st));
             }
         }

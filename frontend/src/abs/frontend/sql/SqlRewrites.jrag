@@ -421,7 +421,7 @@ aspect SqlRewrites {
             resultType = new ParametricDataTypeUse(
                     Constants.STDLIB_NAME + ".Fut",
                     new List<Annotation>(),
-                    new List<DataTypeUse>().add(resultType));
+                    new List<TypeUse>().add(resultType));
         // TODO fix getUnusedVarName so that it returns a really unused name
         final String resultVar = getUnusedVarName(occupiedVariables, "dbResult" + "_" + getStart() + "_%s");
         final List<Stmt> callStmts = createDbCalls(dbExp, sync, resultType, resultVar);
@@ -478,7 +478,7 @@ aspect SqlRewrites {
     eq SqlSelectExp.getSqlReturnTypeUse() = new ParametricDataTypeUse(
             Constants.DB_HELPERS_LIB_NAME + ".MaybeEx",
             new List<Annotation>(),
-            new List<DataTypeUse>().add(new DataTypeUse(
+            new List<TypeUse>().add(new DataTypeUse(
                 Constants.DB_STRUCTURE_LIB_NAME + ".Relation",
                 new List<Annotation>())));
     eq SqlSelectExp.getSqlDbMethodName(boolean inTransaction) =
@@ -497,7 +497,7 @@ aspect SqlRewrites {
     eq SqlModifyExp.getSqlReturnTypeUse() = new ParametricDataTypeUse(
             Constants.DB_HELPERS_LIB_NAME + ".MaybeEx",
             new List<Annotation>(),
-            new List<DataTypeUse>().add(new DataTypeUse(
+            new List<TypeUse>().add(new DataTypeUse(
                 modifiesDb() ?
                     Constants.STDLIB_NAME + ".Unit" :
                     Constants.DB_STRUCTURE_LIB_NAME + ".Relation",

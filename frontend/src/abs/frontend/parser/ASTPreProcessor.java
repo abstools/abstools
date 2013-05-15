@@ -29,6 +29,7 @@ import abs.frontend.ast.PatternVar;
 import abs.frontend.ast.PatternVarDecl;
 import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.UnderscorePattern;
 import abs.frontend.ast.VarUse;
 
@@ -118,7 +119,7 @@ public class ASTPreProcessor {
         if (dtd instanceof ParametricDataTypeDecl) {
             ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
             typeParams = (delta) ? pdtd.getTypeParameterList().fullCopy() : pdtd.getTypeParameterList();
-            List<DataTypeUse> typeParams2 = new List<DataTypeUse>();
+            List<TypeUse> typeParams2 = new List<TypeUse>();
             for (TypeParameterDecl p : typeParams) {
                 typeParams2.add(new DataTypeUse(p.getName(), new List<Annotation>()));
             }

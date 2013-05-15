@@ -128,9 +128,10 @@ public class TypeCheckerTest extends FrontendTest {
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
         ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
         // Have:
-        DataTypeUse tu = u.getParam(0);
+        TypeUse tu = u.getParam(0);
         assertEquals("I",tu.getName());
-        assertThat(tu.getType(), instanceOf(DataTypeType.class));
+        assertThat(tu, instanceOf(InterfaceTypeUse.class));
+        assertThat(tu.getType(), instanceOf(InterfaceType.class));
     }
 
     @Test
@@ -142,9 +143,10 @@ public class TypeCheckerTest extends FrontendTest {
         VarDeclStmt s = (VarDeclStmt) b.getStmt(0);
         ParametricDataTypeUse u = (ParametricDataTypeUse) s.getVarDecl().getAccess();
         // Have:
-        DataTypeUse tu = u.getParam(0);
+        TypeUse tu = u.getParam(0);
         assertEquals("I",tu.getName());
-        assertThat(tu.getDecl(), instanceOf(DataTypeDecl.class));
+        assertThat(tu, instanceOf(InterfaceTypeUse.class));
+        assertThat(tu.getDecl(), instanceOf(InterfaceDecl.class));
     }
 
     @Test

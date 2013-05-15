@@ -17,10 +17,13 @@ import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
+import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
+import abs.frontend.typechecker.DataTypeType;
+import abs.frontend.typechecker.Type;
 
 public class OtherAnalysisTests extends FrontendTest {
     
@@ -86,12 +89,37 @@ public class OtherAnalysisTests extends FrontendTest {
         assertFalse(m2.hasErrors());
     }
     
-    private String prettyPrint(Model m2) {
+    public static String prettyPrint(Model m2) {
         StringWriter writer = new StringWriter();
         PrintWriter w = new PrintWriter(writer);
         ABSFormatter f = new EmptyFormatter();
         m2.doPrettyPrint(w,f);
         return writer.toString();
+    }
+
+    //@Test
+    public void awaitTest2() {
+        Model.doAACrewrite = true;
+        Model m = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
+        assertFalse(m.hasErrors());
+        final String p1 = prettyPrint(m);
+        Model.doAACrewrite = false;
+        // Model m2 = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
+        Model m2 = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!m(Unit());}}");
+        assertFalse(m2.hasErrors());
+        assertEquals(p1, prettyPrint(m2));
+    }
+    
+    //@Test
+    public void awaitTest3() {
+        Model.doAACrewrite = true;
+        Model m = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
+        assertFalse(m.hasErrors());
+        final String p1 = prettyPrint(m);
+        Model.doAACrewrite = false;
+        Model m2 = assertParseOk("data Unit; interface I { Unit m(Unit x); } class C implements I {{Unit x = await this!n(Unit());}}");
+        assertFalse(m2.hasErrors());
+        assertEquals(p1, prettyPrint(m2));
     }
 
     @Test
@@ -103,6 +131,29 @@ public class OtherAnalysisTests extends FrontendTest {
         assertThat(n.calcContextNode(VarDeclStmt.class), instanceOf(VarDeclStmt.class));
         assertThat(n.calcContextNode(Stmt.class), instanceOf(VarDeclStmt.class));
     }
+    
+    @Test
+    public void testContext2() {
+        Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
+        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
+        AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
+        assert n != null;
+        assertThat(n.closestParent(VarDeclStmt.class), instanceOf(VarDeclStmt.class));
+        assertThat(n.closestParent(Stmt.class), instanceOf(VarDeclStmt.class));
+    }
+    
+    @Test
+    public void testContext3() {
+        Model m = assertParseOk("data Fut<A>; interface I { } class C implements I {{Fut<I> f;}}");
+        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
+        VarDeclStmt n = (VarDeclStmt) cd.getInitBlock().getStmt(0);
+        assert n != null;
+        Type u = n.getType();
+        ParametricDataTypeUse pu = (ParametricDataTypeUse) n.getVarDecl().getAccess();
+        DataTypeType t = (DataTypeType) pu.getTypes().get(0);
+        System.err.println(t);
+    }
+
     
     private static ASTNode<?> down(ASTNode<?> n) {
         ASTNode<?> x = null;

@@ -265,13 +265,13 @@ public class DataTypeType extends Type  {
     @Override
     public DataTypeUse toUse() {
         if (hasTypeArgs()) {
-            abs.frontend.ast.List<DataTypeUse> ls = new abs.frontend.ast.List();
+            abs.frontend.ast.List<TypeUse> ls = new abs.frontend.ast.List<TypeUse>();
             for (Type arg : getTypeArgs()) {
                 ls.add(arg.toUse());
             }
-            return new ParametricDataTypeUse(getSimpleName(), new abs.frontend.ast.List(), ls);
+            return new ParametricDataTypeUse(getSimpleName(), new abs.frontend.ast.List<Annotation>(), ls);
         } else {
-            return new DataTypeUse(getSimpleName(), new abs.frontend.ast.List()); 
+            return new DataTypeUse(getSimpleName(), new abs.frontend.ast.List<Annotation>()); 
         }
     }
 }
