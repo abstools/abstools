@@ -352,7 +352,7 @@ public final class AbsASTBuilderUtil {
     }
 
     public static final VarDeclStmt newObj(InterfaceDecl inf, ClassDecl clazz, String name, boolean cog) {
-        return getVarDecl(name, new InterfaceTypeUse(inf.getName(), new List<Annotation>()), newObj(clazz, cog));
+        return getVarDecl(name, new InterfaceTypeUse(inf.getName()), newObj(clazz, cog));
     }
 
     /**
