@@ -856,6 +856,11 @@ aspect doPrettyPrinter {
         }
     }
 
+    public void UnresolvedTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
+        getAnnotationList().doPrettyPrint(stream, formatter, "");
+        stream.print(getName());    
+    }
+
     public void DataTypeUse.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         getAnnotationList().doPrettyPrint(stream, formatter, "");
         stream.print(getName());
