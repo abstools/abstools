@@ -137,23 +137,8 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
-        assert n != null;
-        assertThat(n.closestParent(VarDeclStmt.class), instanceOf(VarDeclStmt.class));
-        assertThat(n.closestParent(Stmt.class), instanceOf(VarDeclStmt.class));
+        assertNull("Rewriting failed!",n);
     }
-    
-    @Test
-    public void testContext3() {
-        Model m = assertParseOk("data Fut<A>; interface I { } class C implements I {{Fut<I> f;}}");
-        ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
-        VarDeclStmt n = (VarDeclStmt) cd.getInitBlock().getStmt(0);
-        assert n != null;
-        Type u = n.getType();
-        ParametricDataTypeUse pu = (ParametricDataTypeUse) n.getVarDecl().getAccess();
-        DataTypeType t = (DataTypeType) pu.getTypes().get(0);
-        System.err.println(t);
-    }
-
     
     private static ASTNode<?> down(ASTNode<?> n) {
         ASTNode<?> x = null;
