@@ -88,7 +88,7 @@ class ABSUnitTestCaseTranslatorHelper {
 				new abs.frontend.ast.List<MethodImpl>());
 		
 		ct.addAnnotation(getTestAnnotation(suiteType)); 
-		ct.addImplementedInterfaceUse(new InterfaceTypeUse(inf.getName()));
+		ct.addImplementedInterfaceUse(new InterfaceTypeUse(inf.getName(), new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
 		
 		for (MethodSig m : inf.getAllMethodSigs()) {
 			ct.addMethod(createMethodImpl(m));

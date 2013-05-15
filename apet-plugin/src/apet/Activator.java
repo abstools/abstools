@@ -38,8 +38,7 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		Bundle petbundle = Platform.getBundle(PLUGIN_ID); 
-		File dir = FileLocator.getBundleFile(petbundle);
+		File dir = FileLocator.getBundleFile(context.getBundle());
 		assert dir.isDirectory() : dir;
 		File exe = new File(dir,"apet_exe");
 		assert exe.exists() : dir;

@@ -102,7 +102,7 @@ abstract class ABSUnitTestCaseBuilder {
 			
 			if (! value.equals(NULL)) {
 				map.put(heapRefBuilder.heapReferenceForTest(testName, value), 
-						new InterfaceTypeUse(type));
+						new InterfaceTypeUse(type, new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
 			}
 			
 		} else if (data instanceof ABSTerm) {
@@ -278,7 +278,7 @@ abstract class ABSUnitTestCaseBuilder {
 			FieldDecl field = new FieldDecl();
 			field.setName(r);
 			
-			InterfaceTypeUse inf = (InterfaceTypeUse) objectsInHeap.get(r);
+			InterfaceTypeUse inf = objectsInHeap.get(r);
 			field.setAccess(inf);
 			testClass.addField(field);
 			
@@ -286,7 +286,7 @@ abstract class ABSUnitTestCaseBuilder {
 			cm.addModifier(new RemoveFieldModifier(field.fullCopy()));
 			FieldDecl newField = new FieldDecl();
 			newField.setName(r);
-			newField.setAccess(new InterfaceTypeUse(typeHierarchy.get(inf.getName())));
+			newField.setAccess(new InterfaceTypeUse(typeHierarchy.get(inf.getName()), new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
 			cm.addModifier(new AddFieldModifier(newField));
 		}
 		

@@ -162,7 +162,7 @@ final class DeltaForGetSetFieldsBuilder {
 		//extends the existing interface
 		InterfaceTypeUse inf = interf.fullCopy();
 		ai.addExtendedInterfaceUse(inf.fullCopy());
-		mcm.addAddedInterface(new InterfaceTypeUse(ai.getName()));
+		mcm.addAddedInterface(new InterfaceTypeUse(ai.getName(), new abs.frontend.ast.List<abs.frontend.ast.Annotation>()));
 		typeHierarchy.put(inf.getName(), interfaceForModifyingClassFieldName);
 
 		for (MethodImpl m : clazz.getMethodList()) {
