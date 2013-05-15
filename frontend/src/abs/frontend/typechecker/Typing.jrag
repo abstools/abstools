@@ -74,7 +74,7 @@ aspect Typing {
     syn Type ConstructorArg.getType();
     eq ConstructorArg.getType() = getDataTypeUse().getType();
     
-    syn Type VarOrFieldDecl.getType() = UnknownType.INSTANCE;
+    syn Type VarOrFieldDecl.getType();
     eq TypedVarOrFieldDecl.getType() = getAccess().getType();
     eq PatternVarDecl.getType() {
    	 PatternVar v = (PatternVar) getParent(); 
