@@ -63,7 +63,11 @@ aspect GenerateCoreABS {
          NB: this is probably gross abuse of JastAdd! [stolz]
        */
       when (
-       !(this instanceof Block) && Model.doAACrewrite && getAACs().isEmpty() && !aacs.isEmpty()
+       !(this instanceof Block) && Model.doAACrewrite
+          /* must be attached to model for semantic info; can't use getModel() as it's an inh attribute. */
+          && calcContextNode(Model.class) != null
+          /* trigger DFS */ 
+          && getAACs().isEmpty() && !aacs.isEmpty()
        )
       to RewriteBlock {
         List l = new List();
@@ -123,6 +127,7 @@ aspect GenerateCoreABS {
     rewrite AwaitAsyncCall {
     /* Preempt typechecking: if there's anything wrong, don't touch it.
      * Precondition must cover logic in Stmt-rewrite above (*)!
+     * TODO: Do we have to check if we're actually in a model here as well? 
      */
     when (Model.doAACrewrite && getCalleeNoTransform().getType().lookupMethod(getMethod()) != null)
     to GetExp {
