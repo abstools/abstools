@@ -43,7 +43,7 @@ aspect GenerateCoreABS {
 	/** Global switch whether this rewriting is enabled. */
 	public static boolean Model.doAACrewrite = true;
 
-	coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Model;
+	coll Set<AwaitAsyncCall> Stmt.getAACs() [new HashSet()] with add root Stmt;
 	AwaitAsyncCall contributes this to Stmt.getAACs() for closestParent(Stmt.class);
 
     /**
