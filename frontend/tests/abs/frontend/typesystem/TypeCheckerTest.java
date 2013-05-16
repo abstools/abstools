@@ -311,6 +311,11 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void synonym1() {
+        assertTypeOK("type A = Int; type B = A; { B b = 1; }");
+    }
+
+    @Test
     public void covariantTypeArgs() {
         assertTypeOK("interface I {} " +
                      "interface J extends I {} " +

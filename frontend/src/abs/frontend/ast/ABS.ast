@@ -40,7 +40,7 @@ InterfaceDecl: TypeDecl ::= Annotation* ExtendedInterfaceUse:InterfaceTypeUse* B
 DataTypeDecl: TypeDecl ::= Annotation* DataConstructor* ;
 TypeParameterDecl : TypeDecl ::= <Name>; // local declaration
 ParametricDataTypeDecl : DataTypeDecl ::= Annotation* TypeParameter:TypeParameterDecl* ;
-TypeSynDecl: TypeDecl ::= Annotation* Value:DataTypeUse ;
+TypeSynDecl: TypeDecl ::= Annotation* Value:TypeUse ;
 
 ConstructorArg ::= DataTypeUse [SelectorName:Name];
 

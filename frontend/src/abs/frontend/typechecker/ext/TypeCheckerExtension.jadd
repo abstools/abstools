@@ -42,8 +42,8 @@ aspect TypeCheckerExtension {
 //        return t;
 //    }
 
-    refine Typing eq DataTypeUse.getType() {
-        Type t = Typing.DataTypeUse.getType();        
+    refine Typing eq TypeUse.getType() {
+        Type t = refined();        
         getModel().getTypeExt().annotateType(t, this, this);
         return t;
     }

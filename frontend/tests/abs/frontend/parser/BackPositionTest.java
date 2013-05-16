@@ -41,7 +41,7 @@ public class BackPositionTest extends FrontendTest {
 
     @Test
     public void test6() {
-        assertNodeAtPos("module M; interface Intf { } class C { C m() { Intf someName; } } ", 1, 51, DataTypeUse.class);
+        assertNodeAtPos("module M; interface Intf { } class C { C m() { Intf someName; } } ", 1, 51, InterfaceTypeUse.class);
     }
 
 

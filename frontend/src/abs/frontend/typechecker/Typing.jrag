@@ -164,8 +164,7 @@ aspect Typing {
         if (d == null) return UnknownType.INSTANCE;
         return d.getType();
     }
-    eq TypeUse.getType() = getDecl().getType();
-    eq DataTypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
+    eq TypeUse.getType() = getDecl().getType().withAnnotations(findAnnotations());
     eq ParametricDataTypeUse.getType() {
         Decl d = getDecl();
         if (d == null || !(d instanceof ParametricDataTypeDecl))

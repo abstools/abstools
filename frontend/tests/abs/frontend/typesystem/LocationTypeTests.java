@@ -371,7 +371,7 @@ public class LocationTypeTests extends FrontendTest {
         if (expected != null) {
             VarDeclStmt vds = ((VarDeclStmt)m.getMainBlock().getStmt(0));
             LocationType t = ltie.getResults().get(LocationTypeInferrerExtension.getLV(vds.getVarDecl().getType()));
-            assertTrue(expected == LocationType.FAR ? t == LocationType.FAR || t.isParametricFar() : expected == t);
+            assertTrue(t.toString(), expected == LocationType.FAR ? t == LocationType.FAR || t.isParametricFar() : expected == t);
         }
         return m;
     }

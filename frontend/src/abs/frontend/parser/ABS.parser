@@ -248,7 +248,7 @@ DataTypeDecl datatype_decl =
   ;
 
 TypeSynDecl typesyn_decl =
-	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN datatypeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
+	annotation_list.al? TYPE TYPE_IDENTIFIER.lhs ASSIGN typeuse.rhs SEMICOLON  {: return new TypeSynDecl(lhs, al, rhs); :}
   ;
 
 
@@ -488,8 +488,17 @@ InterfaceTypeUse ifname =
     type_name.n {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName(), new List()) ; res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
     ;
 
+TypeUse typeuse =
+      annotation_list.l? type_name.n LT typeuse_list.p GT {: 
+            ParametricDataTypeUse res = new ParametricDataTypeUse(n.getName(),l, p);
+            res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+	| annotation_list.l? type_name.n {: 
+	       TypeUse res = new UnresolvedTypeUse(n.getName(),l);
+	       res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
+    ;
+
 DataTypeUse datatypeuse =
-      annotation_list.l? type_name.n LT datatypeuse_list.p GT {: 
+      annotation_list.l? type_name.n LT typeuse_list.p GT {: 
             ParametricDataTypeUse res = new ParametricDataTypeUse(n.getName(),l, p);
             res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
 	| annotation_list.l? type_name.n {: 
@@ -502,9 +511,9 @@ TypeParameterDecl datatypeparam =
     ;
 
 Access type_exp =
-	  type_name.n LT datatypeuse_list.p GT {: Access res = new ParametricDataTypeUse(n.getName(), new List(), p);
+	  type_name.n LT typeuse_list.p GT {: Access res = new ParametricDataTypeUse(n.getName(), new List(), p);
 	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
-	| type_name.n 		{: Access res = new DataTypeUse(n.getName(), new List());
+	| type_name.n 		{: Access res = new UnresolvedTypeUse(n.getName(), new List());
 	    res.setAbsolutePosition(n.getAbsolutePosition()); return res; :}
 	;
 
@@ -551,9 +560,9 @@ List ifname_list =
 	;
 
 
-List datatypeuse_list =
-      datatypeuse.i                              {: return new List().add(i); :}
-    | datatypeuse_list.l COMMA datatypeuse.i        {: return l.add(i); :}
+List typeuse_list =
+      typeuse.i                              {: return new List().add(i); :}
+    | typeuse_list.l COMMA typeuse.i        {: return l.add(i); :}
     ;
 
 

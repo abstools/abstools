@@ -152,7 +152,7 @@ aspect DeltaModifierApplicator {
             throw new DeltaModellingException(getDelta(), 
                 " wants to modify type synonym [" + this.getSimpleName() + "], which was not found in module [" + module.getName() + "].");
         } else {
-            syndecl.setValue(this.getTypeSynDecl().getValue().fullCopy());
+            syndecl.setValue((TypeUse) getTypeSynDecl().getValue().fullCopy());
         }
     }
 
