@@ -12,9 +12,12 @@ import java.util.Map.Entry;
 import abs.common.FileUtils;
 import abs.common.WrongProgramArgumentException;
 import abs.frontend.ast.ASTNode;
+import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.FieldDecl;
+import abs.frontend.ast.InterfaceDecl;
+import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.VarDecl;
 import abs.frontend.parser.Main;
@@ -201,6 +204,10 @@ public class InferMain extends Main {
         Decl contextDecl = node.getContextDecl();
         
         if (contextDecl != null) {
+            // Don't print interface annotations in "implements/extends" clauses:
+            if (node instanceof InterfaceTypeUse && (contextDecl instanceof ClassDecl || contextDecl instanceof InterfaceDecl))
+                return false;
+
             if (contextDecl.isClass() && !config.contains(Config.CLASSES))
                 return false;
         
