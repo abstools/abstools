@@ -146,16 +146,18 @@ aspect Typing {
         return d.getType();
     }
 
-    protected List<Annotation> DataTypeUse.calcAnnotations() {
-        if (getParent() instanceof MethodSig) {
-            return ((MethodSig)getParent()).getAnnotations();
-        } else if (getParent() instanceof TypedVarOrFieldDecl) {
-            return ((TypedVarOrFieldDecl)getParent()).getAnnotations();
+    protected List<Annotation> TypeUse.calcAnnotations() {
+        ASTNode<?> p = getParent();
+        if (p instanceof MethodSig) {
+            return ((MethodSig)p).getAnnotations();
+        } else if (p instanceof TypedVarOrFieldDecl) {
+            return ((TypedVarOrFieldDecl)p).getAnnotations();
         }
         return getAnnotations();            
     }
 
-    syn lazy List<Annotation> DataTypeUse.findAnnotations() = calcAnnotations();
+    // TODO: This looks really more like an 'inh'.
+    syn lazy List<Annotation> TypeUse.findAnnotations() = calcAnnotations();
 
 	syn lazy Type VarOrFieldUse.getType() {
         VarOrFieldDecl d = getDecl();
