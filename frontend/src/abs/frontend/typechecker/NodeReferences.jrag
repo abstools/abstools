@@ -67,15 +67,15 @@ aspect Uses {
 aspect AsyncCallAnnotations {
     inh List<Annotation> AsyncCall.getAnnotations();
     inh List<Annotation> AwaitAsyncCall.getAnnotations();
-    eq AssignStmt.getValue().getAnnotations() = this.getAnnotations();
-    eq ReturnStmt.getRetExp().getAnnotations() = this.getAnnotations();
-    eq ExpressionStmt.getExp().getAnnotations() = this.getAnnotations();
-    eq RebindStmt.getVal().getAnnotations() = this.getAnnotations();
-    eq RebindStmt.getObj().getAnnotations() = this.getAnnotations();
+    eq AssignStmt.getValue().getAnnotations() = getAnnotations();
+    eq ReturnStmt.getRetExp().getAnnotations() = getAnnotations();
+    eq ExpressionStmt.getExp().getAnnotations() = getAnnotations();
+    eq RebindStmt.getVal().getAnnotations() = getAnnotations();
+    eq RebindStmt.getObj().getAnnotations() = getAnnotations();
     eq ObjectGuard.getExp().getAnnotations() = new List<Annotation>();
     
-    syn boolean AsyncCall.hasAnnotations() = this.getAnnotations().getNumChild() > 0;
-    syn boolean AwaitAsyncCall.hasAnnotations() = this.getAnnotations().getNumChild() > 0;
+    syn boolean AsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
+    syn boolean AwaitAsyncCall.hasAnnotations() = getAnnotations().getNumChild() > 0;
 }
 
 // Local Variables:
