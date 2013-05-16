@@ -24,6 +24,7 @@ import abs.frontend.ast.PureExp;
 import abs.frontend.ast.StringLiteral;
 import abs.frontend.ast.TypeParameterDecl;
 import abs.frontend.ast.TypeSynDecl;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.ast.VarUse;
 import apet.testCases.ABSData;
 import apet.testCases.ABSRef;
@@ -112,7 +113,7 @@ final class PureExpressionBuilder {
 	 * @return
 	 */
 	Decl resolveTypeSynonym(TypeSynDecl d) {
-		DataTypeUse use = d.getValue();
+		TypeUse use = d.getValue();
 		Decl decl = getDecl(model, Decl.class, namePred(use.getName()));
 		if (decl instanceof TypeSynDecl) {
 			return resolveTypeSynonym((TypeSynDecl) decl);
