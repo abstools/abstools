@@ -127,9 +127,7 @@ public class OtherAnalysisTests extends FrontendTest {
         Model m = assertParseOk("data Unit; interface I { Unit m(); } class C implements I {{Unit x = await this!m();}}");
         ClassDecl cd = (ClassDecl) m.getCompilationUnit(0).getModuleDecl(0).getDecl(2);
         AwaitAsyncCall n = (AwaitAsyncCall) down(cd);
-        assert n != null;
-        assertThat(n.calcContextNode(VarDeclStmt.class), instanceOf(VarDeclStmt.class));
-        assertThat(n.calcContextNode(Stmt.class), instanceOf(VarDeclStmt.class));
+        assertNull("Rewrite failed!", n);
     }
     
     @Test
