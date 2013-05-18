@@ -64,8 +64,6 @@ aspect GenerateCoreABS {
        */
       when (
        !(this instanceof Block) && Model.doAACrewrite
-          /* must be attached to model for semantic info */
-          && getModel() != null
           /* trigger DFS */ 
           && getAACs().isEmpty() && !aacs.isEmpty()
        )
@@ -126,10 +124,9 @@ aspect GenerateCoreABS {
 
     rewrite AwaitAsyncCall {
     /* Preempt typechecking: if there's anything wrong, don't touch it.
-     * Precondition must cover logic in Stmt-rewrite above (*)!
-     * TODO: Do we have to check if we're actually in a model here as well? 
+     * Precondition must cover logic in Stmt-rewrite above (*)! 
      */
-    when (Model.doAACrewrite && getCalleeNoTransform().getType().lookupMethod(getMethod()) != null)
+    when (Model.doAACrewrite && closestParent(Model.class) != null && getCalleeNoTransform().getType().lookupMethod(getMethod()) != null)
     to GetExp {
       GetExp g = new GetExp(new VarUse("tmp"+Integer.toString(hashCode())));
       Stmt s = (Stmt) closestParent(Stmt.class);
