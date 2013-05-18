@@ -8,8 +8,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import abs.frontend.ast.Annotation;
+import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
+import abs.frontend.ast.List;
 import abs.frontend.ast.MethodSig;
 
 public class InterfaceType extends ReferenceType {
@@ -104,5 +107,10 @@ public class InterfaceType extends ReferenceType {
     @Override
     public Collection<MethodSig> getAllMethodSigs() {
         return decl.getAllMethodSigs();
+    }
+
+    @Override
+    public InterfaceTypeUse toUse() {
+        return new InterfaceTypeUse(getQualifiedName(), new List<Annotation>());
     }
 }

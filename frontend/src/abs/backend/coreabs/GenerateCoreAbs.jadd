@@ -49,7 +49,7 @@ aspect GenerateCoreABS {
     /**
      * Only for use by the AwaitAsyncCall-rewriting logic!
      */
-    public java.util.List<AwaitAsyncCall> Stmt.aacs = new LinkedList();
+    protected java.util.List<AwaitAsyncCall> Stmt.aacs = new LinkedList();
 
     rewrite Stmt {
       /* This is the magic: getAACs() will trigger the rewriting of child nodes. These will store the original AAC
@@ -64,8 +64,8 @@ aspect GenerateCoreABS {
        */
       when (
        !(this instanceof Block) && Model.doAACrewrite
-          /* must be attached to model for semantic info; can't use getModel() as it's an inh attribute. */
-          && calcContextNode(Model.class) != null
+          /* must be attached to model for semantic info */
+          && getModel() != null
           /* trigger DFS */ 
           && getAACs().isEmpty() && !aacs.isEmpty()
        )

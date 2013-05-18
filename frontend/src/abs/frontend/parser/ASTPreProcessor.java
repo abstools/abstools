@@ -4,34 +4,7 @@
  */
 package abs.frontend.parser;
 
-import abs.frontend.ast.ASTNode;
-import abs.frontend.ast.Annotation;
-import abs.frontend.ast.CaseBranch;
-import abs.frontend.ast.CaseExp;
-import abs.frontend.ast.CompilationUnit;
-import abs.frontend.ast.ConstructorArg;
-import abs.frontend.ast.ConstructorPattern;
-import abs.frontend.ast.DataConstructor;
-import abs.frontend.ast.DataTypeDecl;
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.Decl;
-import abs.frontend.ast.ExpFunctionDef;
-import abs.frontend.ast.FunctionDecl;
-import abs.frontend.ast.FunctionDef;
-import abs.frontend.ast.List;
-import abs.frontend.ast.ModuleDecl;
-import abs.frontend.ast.ParamDecl;
-import abs.frontend.ast.ParametricDataTypeDecl;
-import abs.frontend.ast.ParametricDataTypeUse;
-import abs.frontend.ast.ParametricFunctionDecl;
-import abs.frontend.ast.Pattern;
-import abs.frontend.ast.PatternVar;
-import abs.frontend.ast.PatternVarDecl;
-import abs.frontend.ast.StringLiteral;
-import abs.frontend.ast.TypeParameterDecl;
-import abs.frontend.ast.TypeUse;
-import abs.frontend.ast.UnderscorePattern;
-import abs.frontend.ast.VarUse;
+import abs.frontend.ast.*;
 
 /**
  * Preprocesses the AST directly after it has been parsed, before any name and type analysis.
@@ -115,18 +88,18 @@ public class ASTPreProcessor {
         // the type parameters of the function
         List<TypeParameterDecl> typeParams;
         // the type of the parameter of the function
-        DataTypeUse paramType;
+        TypeUse paramType;
         if (dtd instanceof ParametricDataTypeDecl) {
             ParametricDataTypeDecl pdtd = (ParametricDataTypeDecl) dtd;
             typeParams = (delta) ? pdtd.getTypeParameterList().fullCopy() : pdtd.getTypeParameterList();
             List<TypeUse> typeParams2 = new List<TypeUse>();
             for (TypeParameterDecl p : typeParams) {
-                typeParams2.add(new DataTypeUse(p.getName(), new List<Annotation>()));
+                typeParams2.add(p.getType().toUse());
             }
             paramType = new ParametricDataTypeUse(dtd.getName(), new List<Annotation>(), typeParams2);
         } else {
             typeParams = new List<TypeParameterDecl>();
-            paramType = new DataTypeUse(dtd.getName(), new List<Annotation>());
+            paramType = dtd.getType().toUse();
         }
         
         

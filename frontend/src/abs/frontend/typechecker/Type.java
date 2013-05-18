@@ -261,7 +261,7 @@ public abstract class Type {
      * Use by the rewriting logic for AwaitAsyncCalls in GenerateCoreAbs.
      */
     public TypeUse toUse() {
-        assert false : "Should never happen for a well-typed model";
+        assert false : "Should never happen for a well-typed model:" + getClass().getSimpleName()+"/"+getSimpleName();
         return null;
     }
 }

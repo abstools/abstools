@@ -269,9 +269,9 @@ public class DataTypeType extends Type  {
             for (Type arg : getTypeArgs()) {
                 ls.add(arg.toUse());
             }
-            return new ParametricDataTypeUse(getSimpleName(), new abs.frontend.ast.List<Annotation>(), ls);
+            return new ParametricDataTypeUse(getQualifiedName(), new abs.frontend.ast.List<Annotation>(), ls);
         } else {
-            return new DataTypeUse(getSimpleName(), new abs.frontend.ast.List<Annotation>()); 
+            return new DataTypeUse(getQualifiedName(), new abs.frontend.ast.List<Annotation>()); 
         }
     }
 }

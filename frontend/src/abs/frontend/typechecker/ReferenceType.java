@@ -13,9 +13,4 @@ public abstract class ReferenceType extends Type {
     public boolean isReferenceType() {
         return true;
     }
-
-    @Override
-    public DataTypeUse toUse() {
-        return new DataTypeUse(getSimpleName(), new List());
-    }
 }
