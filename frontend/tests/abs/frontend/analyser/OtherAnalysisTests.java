@@ -12,12 +12,14 @@ import java.io.StringWriter;
 
 import org.junit.Test;
 
+import abs.ABSTest.Config;
 import abs.frontend.FrontendTest;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricDataTypeUse;
+import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
 import abs.frontend.tests.ABSFormatter;
@@ -153,5 +155,22 @@ public class OtherAnalysisTests extends FrontendTest {
             }
         }
         return null;
+    }
+
+    @Test
+    public void awaitRewriteModule1() {
+        Model.doAACrewrite = false;
+        Model m = assertParseOk("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}");
+        ClassDecl c = (ClassDecl) m.lookupModule("C").getDecl(0);
+        ReturnStmt ret = (ReturnStmt) c.getMethod(0).getBlock().getStmt(0);
+        assertThat(ret.getRetExp().getType(), instanceOf(DataTypeType.class));
+        assertEquals("A.X",ret.getRetExp().getType().getQualifiedName());
+        Model.doAACrewrite = true;
+        m = assertParseOk("module A; export *; data X; module B; export *; data X; module C; import * from A; import B.X; class C { X m() { return await this!m();}}", Config.WITH_STD_LIB);
+        c = (ClassDecl) m.lookupModule("C").getDecl(0);
+        Stmt s = c.getMethod(0).getBlock().getStmt(0);
+        VarDeclStmt b = (VarDeclStmt) s;
+        Type t = ((DataTypeType) b.getVarDecl().getType()).getTypeArg(0);
+        assertEquals("A.X",t.getQualifiedName());
     }
 }
