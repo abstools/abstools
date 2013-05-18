@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import abs.frontend.FrontendTest;
 import abs.frontend.analyser.ErrorMessage;
+import abs.frontend.analyser.SemanticError;
 import abs.frontend.ast.Model;
 
 public class NegativeTypeCheckerTests extends FrontendTest {
@@ -559,5 +560,16 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void typeRecursive1() throws Exception {
         assertTypeErrors("type Foo = Foo;");
     }
+
+    @Test
+    public void constNull1() throws Exception {
+        SemanticError e = assertTypeErrors("{ null!m(); }");
+        assertEquals(ErrorMessage.NULL_NOT_HERE, e.msg);
+    }
     
+    @Test
+    public void constNull2() throws Exception {
+        SemanticError e = assertTypeErrors("{ null!m(); }");
+        assertEquals(ErrorMessage.NULL_NOT_HERE, e.msg);
+    }
 }
