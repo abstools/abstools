@@ -36,7 +36,7 @@ public class JavaBackendTest extends ABSTest {
     final protected List<String> absArgs = new ArrayList<String>();
 
     public final long seed;
-    public static long seed_UNUSED = -1;
+    public final static long seed_UNUSED = -1;
 
     public JavaBackendTest() { seed = seed_UNUSED; }
 
@@ -195,6 +195,7 @@ public class JavaBackendTest extends ABSTest {
             if (expectFail) {
                 throw e;
             } else {
+            	assert output != null; // we're sure that runJava returned.
                 System.err.println(output.toString());
                 //System.out.println(javaCode);
                 return false;
