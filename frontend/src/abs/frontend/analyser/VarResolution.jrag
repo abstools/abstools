@@ -89,20 +89,19 @@ aspect VarResolution {
     }
 
     eq Block.getStmt(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
-        if (i>0) {
+      if (!fieldOnly) {
+        while (i>0) {
             Stmt s = getStmt(i-1); // we can only see variables defined in previous statements
-            if (!fieldOnly) {
-                if (s instanceof VarDeclStmt) {
-                    VarDeclStmt vds = (VarDeclStmt) s;
-                    VarOrFieldDecl d = vds.locallookupVarOrFieldName(name,fieldOnly);
-                    if (d != null)
-                        return d;
-                }
+            if (s instanceof VarDeclStmt) {
+                 VarDeclStmt vds = (VarDeclStmt) s;
+                 VarOrFieldDecl d = vds.locallookupVarOrFieldName(name,fieldOnly);
+                 if (d != null)
+                     return d;
             }
-            return s.lookupVarOrFieldName(name,fieldOnly);
-        } else {
-            return lookupVarOrFieldName(name,fieldOnly);
-        }
+            i--;
+		}
+	  }
+      return lookupVarOrFieldName(name,fieldOnly);
     }
     
     
