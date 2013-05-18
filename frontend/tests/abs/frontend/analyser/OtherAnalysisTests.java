@@ -7,7 +7,9 @@ package abs.frontend.analyser;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 
 import org.junit.Test;
@@ -17,11 +19,14 @@ import abs.frontend.FrontendTest;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.DeltaDecl;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricDataTypeUse;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.Stmt;
 import abs.frontend.ast.VarDeclStmt;
+import abs.frontend.parser.ABSParser;
+import abs.frontend.parser.ABSScanner;
 import abs.frontend.tests.ABSFormatter;
 import abs.frontend.tests.EmptyFormatter;
 import abs.frontend.typechecker.DataTypeType;
@@ -172,5 +177,23 @@ public class OtherAnalysisTests extends FrontendTest {
         VarDeclStmt b = (VarDeclStmt) s;
         Type t = ((DataTypeType) b.getVarDecl().getType()).getTypeArg(0);
         assertEquals("A.X",t.getQualifiedName());
+    }
+
+    @Test
+    public void awaitRewriteDecl1() {
+        Model m = assertParseOk("module A; class C { } delta D; modifies class C { adds Unit m() { return await this!m();}}", Config.WITH_STD_LIB);
+        DeltaDecl c = m.getDeltaDecls().iterator().next();
+        AwaitAsyncCall a = (AwaitAsyncCall) down(c);
+        assertNotNull(a); // pity, would like this to work.
+    }
+
+    @Test
+    public void awaitRewriteDecl2() throws Exception {
+        String deltaDecl = "delta D; modifies class C { adds Unit m() { return await this!m();}}";
+        ABSScanner scanner = new ABSScanner(new StringReader(deltaDecl));
+        ABSParser parser = new ABSParser() {{ setRaiseExceptions(true);}};
+        DeltaDecl d = (DeltaDecl) parser.parse(scanner,ABSParser.AltGoals.delta_decl);
+        AwaitAsyncCall a = (AwaitAsyncCall) down(d);
+        assertNotNull(a); // pity, would like this to work.
     }
 }
