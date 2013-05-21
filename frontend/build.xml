@@ -378,7 +378,7 @@
                 excludefilter="findbugs-jastadd-filter.xml"
               quietErrors="true" >
         <sourcePath path="${basedir}/src" />
-        <class location="${build.dir}/abs" />
+        <class location="${build.dir}" />
       </findbugs>
     </target>
 
