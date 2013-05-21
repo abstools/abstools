@@ -558,7 +558,14 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     
     @Test
     public void typeRecursive1() throws Exception {
-        assertTypeErrors("type Foo = Foo;");
+       SemanticError e = assertTypeErrors("type Foo = Foo;");
+       assertEquals(ErrorMessage.CIRCULAR_TYPESYN, e.msg);
+    }
+    
+    @Test
+    public void typeRecursive2() throws Exception {
+       SemanticError e = assertTypeErrors("type Foo = Bar; type Bar = Foo;");
+       assertEquals(ErrorMessage.CIRCULAR_TYPESYN, e.msg);
     }
 
     @Test
@@ -569,7 +576,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     
     @Test
     public void constNull2() throws Exception {
-        SemanticError e = assertTypeErrors("{ null!m(); }");
+        SemanticError e = assertTypeErrors("{ null.m(); }");
         assertEquals(ErrorMessage.NULL_NOT_HERE, e.msg);
     }
 }
