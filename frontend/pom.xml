@@ -104,9 +104,9 @@
 		 </dependency>
 		 
 		 <dependency>
-		 	<groupId>eu.hats-project</groupId>
+		 	<groupId>org.apfloat</groupId>
 		 	<artifactId>apfloat</artifactId>
-		 	<version>1.0</version>
+		 	<version>1.6.3</version>
 		 </dependency>
 		 
 		 <dependency>
@@ -398,6 +398,7 @@
 				<configuration>
 					<test>AllFrontendTests</test>
 					<forkMode>never</forkMode>
+					<testFailureIgnore>true</testFailureIgnore>
 				</configuration>
 			</plugin>
 			
