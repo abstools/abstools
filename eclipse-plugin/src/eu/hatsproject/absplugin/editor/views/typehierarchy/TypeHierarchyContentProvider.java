@@ -9,6 +9,7 @@ import org.eclipse.jface.viewers.Viewer;
 import abs.frontend.ast.DataConstructor;
 import abs.frontend.ast.DataTypeDecl;
 import abs.frontend.ast.Decl;
+import abs.frontend.ast.HasTypeHierarchy;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.TypeSynDecl;
 import abs.frontend.typechecker.InterfaceType;
@@ -54,7 +55,7 @@ public class TypeHierarchyContentProvider implements ITreeContentProvider {
     public Object[] getChildren(Object node) {
         if (node instanceof InterfaceDecl) {
             InterfaceDecl interfaceDecl = (InterfaceDecl) node;
-            Collection<Decl> subTypes = interfaceDecl.getDirectSubTypes();
+            Collection<HasTypeHierarchy> subTypes = interfaceDecl.getDirectSubTypes();
             return subTypes.toArray();
         } else if (node instanceof DataTypeDecl) {
             DataTypeDecl dataTypeDecl = (DataTypeDecl) node;

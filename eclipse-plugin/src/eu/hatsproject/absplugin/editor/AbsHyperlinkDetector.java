@@ -92,7 +92,7 @@ public class AbsHyperlinkDetector extends AbstractHyperlinkDetector {
         public void open() {
             InterfaceDecl i = (InterfaceDecl) calleeType.getDecl();
             final List<MethodImpl> implementingMethods = new ArrayList<MethodImpl>();
-            for (Decl t : i.getSubTypes()) {
+            for (HasTypeHierarchy t : i.getSubTypes()) {
                 if (t instanceof ClassDecl) {
                     ClassDecl c = (ClassDecl) t;
                     MethodImpl m = c.lookupMethod(methodName);
