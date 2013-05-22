@@ -5,6 +5,7 @@
 package abs.frontend.delta;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -80,7 +81,7 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
         SemanticErrorList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        Assert.assertTrue(errs.getFirst() instanceof TypeError);
+        assertThat(errs.getFirst(), instanceOf(TypeError.class));
         TypeError te = (TypeError) errs.getFirst();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
     }
@@ -90,7 +91,7 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug329.abs", true);
         SemanticErrorList errs = m.typeCheck();
         /* We are expecting a missing delta in product M.PL: */
-        Assert.assertTrue(errs.getFirst() instanceof TypeError);
+        assertThat(errs.getFirst(), instanceOf(TypeError.class));
         TypeError te = (TypeError) errs.getFirst();
         Assert.assertEquals(ErrorMessage.NAME_NOT_RESOLVABLE, te.msg);
         Assert.assertEquals(10, te.getLine());
@@ -101,7 +102,7 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
         m.flattenForProduct("A");
         m.flushCache();
-        Assert.assertFalse(m.hasTypeErrors());
+        assertFalse(m.hasTypeErrors());
     }
 
     @Test(expected=DeltaModellingException.class)
@@ -109,16 +110,10 @@ public class DeltaSamplesTest extends FrontendTest {
         Model m = assertParseFileOk("tests/abssamples/deltas/bug324.abs", true);
         m.flattenForProduct("B");
     }
-    
-    @Test
-    public void test_ticket322_base() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/bug322.abs", true);
-        assertFalse(m.hasErrors());
-        assertFalse(m.hasTypeErrors());
-    }
+
     @Test
     public void test_ticket322_P() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/bug322.abs", true);
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug322.abs", true);
         m.flattenForProduct("P");
         m.flushCache();
         assertFalse(m.hasErrors());
@@ -130,7 +125,7 @@ public class DeltaSamplesTest extends FrontendTest {
     }
     @Test
     public void test_ticket322_Q() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/bug322.abs", true);
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/bug322.abs", true);
         m.flattenForProduct("Q");
         m.flushCache();
         assertFalse(m.hasErrors());
@@ -140,16 +135,10 @@ public class DeltaSamplesTest extends FrontendTest {
         InterfaceDecl j = (InterfaceDecl) DeltaTest.findDecl(m, "M", "J");
         assertNull(j);
     }
-    
-    @Test
-    public void test_ticket361_base() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
-        assertFalse(m.hasErrors());
-        assertFalse(m.hasTypeErrors());
-    }
+
     @Test
     public void test_ticket361_P() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/ticket361.abs", true);
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket361.abs", true);
         m.flattenForProduct("P");
         m.flushCache();
         if (m.hasErrors())
@@ -158,16 +147,8 @@ public class DeltaSamplesTest extends FrontendTest {
     }
 
     @Test
-    public void test_ticket332_base() throws Exception {
-        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", true);
-        assertFalse(m.hasParserErrors());
-        assertFalse(m.hasErrors());
-        assertTrue(m.typeCheck().isEmpty());
-    }
-
-    @Test
     public void test_ticket332_parse() throws Exception {
-        Model m = assertParseFileOk("tests/abssamples/deltas/ticket332.abs", true);
+        Model m = assertTypeCheckFileOk("tests/abssamples/deltas/ticket332.abs", true);
         m.flushCache();
         m.flattenForProduct("C");
         m.flushCache();

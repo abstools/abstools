@@ -180,8 +180,8 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void interfaceCyclicExtend() {
-        assertTypeErrors("interface I extends I {} ");
-        assertTypeErrors("interface I extends J {}  interface J extends I {}");
+        assertTypeErrors("interface I extends I {} ", ErrorMessage.CYCLIC_INHERITANCE);
+        assertTypeErrors("interface I extends J {}  interface J extends I {}", ErrorMessage.CYCLIC_INHERITANCE);
     }
 
     @Test
