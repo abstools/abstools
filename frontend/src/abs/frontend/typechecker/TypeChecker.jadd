@@ -682,9 +682,7 @@ aspect TypeChecker {
 
     public void NewExp.typeCheck(SemanticErrorList e) {
         Decl decl = lookup(new KindedName(Kind.CLASS,getClassName()));
-        if (!decl.checkDecl(this, e, ErrorMessage.NO_CLASS_DECL, getClassName())) {
-            return;
-        } else if (!decl.isClass()) {
+        if (!decl.isClass()) {
             e.add(new TypeError(this, ErrorMessage.NO_CLASS_DECL, getClassName()));
         } else {
             ClassDecl cd = (ClassDecl) decl;
@@ -778,9 +776,7 @@ aspect TypeChecker {
 
     public void FnApp.typeCheck(SemanticErrorList e) {
         Decl d = getDecl();
-        if (!d.checkDecl(this, e, ErrorMessage.FUNCTION_NOT_RESOLVABLE, getName())) {
-            return;
-        } else if (!d.isFunction()) {
+        if (!d.isFunction()) {
             e.add(new TypeError(this,ErrorMessage.FUNCTION_NOT_RESOLVABLE,getName()));
         } else {
             ((FunctionDecl)d).typeCheckParams(e, this);
@@ -827,14 +823,18 @@ aspect TypeChecker {
 
     }
 
-    public void MinusExp.typeCheck(SemanticErrorList e) { 
-        getOperand().assertHasType(e,getModel().getIntType());
-        getOperand().typeCheck(e);
+    public void MinusExp.typeCheck(SemanticErrorList e) {
+         int size = e.size();
+         getOperand().typeCheck(e);
+         if (e.size() == size)
+             getOperand().assertHasType(e,getModel().getIntType());
     }
 
     public void NegExp.typeCheck(SemanticErrorList e) {
-        getOperand().assertHasType(e,getModel().getBoolType());
-        getOperand().typeCheck(e);
+         int size = e.size();
+         getOperand().typeCheck(e);
+         if (e.size() == size)
+             getOperand().assertHasType(e,getModel().getBoolType());
     }
 
 

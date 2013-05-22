@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import abs.ABSTest;
+import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.AssignStmt;
@@ -179,6 +180,11 @@ public class FrontendTest extends ABSTest {
 
     protected SemanticError assertTypeErrors(String absCode) {
         return assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+    }
+
+    protected void assertTypeErrors(String absCode, ErrorMessage expected) {
+        SemanticError e = assertTypeErrors(absCode, EXPECT_TYPE_ERROR, WITH_STD_LIB);
+        assertEquals(expected,e.msg);
     }
 
     protected SemanticError assertTypeErrors(String absCode, Config... config) {

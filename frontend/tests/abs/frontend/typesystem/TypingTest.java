@@ -12,6 +12,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import abs.frontend.FrontendTest;
+import abs.frontend.analyser.ErrorMessage;
 import abs.frontend.analyser.SemanticError;
 import abs.frontend.analyser.SemanticErrorList;
 import abs.frontend.ast.ClassDecl;
@@ -21,6 +22,7 @@ import abs.frontend.ast.Model;
 import abs.frontend.ast.ParametricFunctionDecl;
 import abs.frontend.ast.ReturnStmt;
 import abs.frontend.ast.TypeParameterDecl;
+import abs.frontend.ast.TypeUse;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
@@ -178,9 +180,6 @@ public class TypingTest extends FrontendTest {
     
     @Test
     public void test_DuplicateFeature() {
-        Model m = assertParseOk("productline Bar; features A,A;");
-        SemanticErrorList errs = m.getTypeErrors();
-        assertTrue(!errs.isEmpty());
-        assertThat(errs.getFirst(),instanceOf(SemanticError.class));
+        assertTypeErrors("productline Bar; features A,A;", ErrorMessage.DUPLICATE_FEATURE);
     }
 }

@@ -25,7 +25,6 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     @Test
     public void varDeclAssign() {
         assertTypeErrors("{ Unit u = True; } ");
-        
     }
     
     @Test
@@ -374,7 +373,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void methodMissingReturn() {
-        assertTypeErrors("class C { Bool m() {  } }");
+        assertTypeErrors("class C { Bool m() {  } }", ErrorMessage.CANNOT_ASSIGN);
     }
 
     @Test
@@ -481,7 +480,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void wrongNumberOfParams() {
         assertTypeErrors("module Bug;"
           + "def String f (String name) = name;"
-          + "{ List<String> s = Cons(f(\"foo\", Nil)); }");
+          + "{ List<String> s = Cons(f(\"foo\", Nil)); }", ErrorMessage.WRONG_NUMBER_OF_DATA_CONSTRUCTOR_ARGUMENTS);
     }
     
     @Test
@@ -558,25 +557,21 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     
     @Test
     public void typeRecursive1() throws Exception {
-       SemanticError e = assertTypeErrors("type Foo = Foo;");
-       assertEquals(ErrorMessage.CIRCULAR_TYPESYN, e.msg);
+       assertTypeErrors("type Foo = Foo;", ErrorMessage.CIRCULAR_TYPESYN);
     }
     
     @Test
     public void typeRecursive2() throws Exception {
-       SemanticError e = assertTypeErrors("type Foo = Bar; type Bar = Foo;");
-       assertEquals(ErrorMessage.CIRCULAR_TYPESYN, e.msg);
+        assertTypeErrors("type Foo = Bar; type Bar = Foo;", ErrorMessage.CIRCULAR_TYPESYN);
     }
 
     @Test
     public void constNull1() throws Exception {
-        SemanticError e = assertTypeErrors("{ null!m(); }");
-        assertEquals(ErrorMessage.NULL_NOT_HERE, e.msg);
+        assertTypeErrors("{ null!m(); }", ErrorMessage.NULL_NOT_HERE);
     }
     
     @Test
     public void constNull2() throws Exception {
-        SemanticError e = assertTypeErrors("{ null.m(); }");
-        assertEquals(ErrorMessage.NULL_NOT_HERE, e.msg);
+        assertTypeErrors("{ null.m(); }", ErrorMessage.NULL_NOT_HERE);
     }
 }
