@@ -574,4 +574,9 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     public void constNull2() throws Exception {
         assertTypeErrors("{ null.m(); }", ErrorMessage.NULL_NOT_HERE);
     }
+
+    @Test
+    public void constructorPatternBorked1() {
+        assertTypeErrors("interface I {} { List<I> is = Nil;   Unit u = case is { Cons(I(x), Nil) => Unit; }; }");
+    }
 }
