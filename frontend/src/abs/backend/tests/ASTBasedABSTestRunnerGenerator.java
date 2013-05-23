@@ -171,12 +171,12 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
                 ws = new WhileStmt();
                 ws.setCondition(getFnApp("hasNext",new VarUse(dataPointSet)));
                 Block body = new Block();
-                ws.setBody(body);
                 thisBlock = body;
                 DataTypeUse u = getType("Pair", getType("Set", (TypeUse)dataType.copy()), (TypeUse)dataType.copy()); 
                 thisBlock.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(dataPointSet))));
                 thisBlock.addStmt(getVarDecl(dataValue, (TypeUse)dataType.copy(), getFnApp("snd",new VarUse("nt"))));
                 thisBlock.addStmt(getVAssign(dataPointSet, getFnApp("fst",new VarUse("nt"))));
+                ws.setBody(body);
             }
             
             /*
@@ -184,7 +184,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
              */
             if (! isIgnored(clazz,method)) {
                 String objectRef = uncap(namePrefix) + instance;
-                thisBlock.addStmt(newObj(inf, clazz, objectRef, true));
+                thisBlock.addStmtNoTransform(newObj(inf, clazz, objectRef, true));
                 generateAsyncTestCallAST(thisBlock, objectRef, method);
             }
             
@@ -233,8 +233,8 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         if (method.getNumParam() > 0) {
             args.add(new VarUse(dataValue));
         }
-        block.addStmt(getVAssign(fut, new AsyncCall(new VarUse(objectRef), method.getName(), args)));
-        block.addStmt(getVAssign(futs, getFnApp("Insert", new VarUse(fut), new VarUse(futs))));
+        block.addStmtNoTransform(getVAssign(fut, new AsyncCall(new VarUse(objectRef), method.getName(), args)));
+        block.addStmtNoTransform(getVAssign(futs, getFnApp("Insert", new VarUse(fut), new VarUse(futs))));
     }
 
 

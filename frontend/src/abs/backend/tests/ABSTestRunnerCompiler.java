@@ -27,6 +27,7 @@ public class ABSTestRunnerCompiler extends Main {
         } catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
 
+            // FIXME: switch doesn't work.
             if (Arrays.asList(args).contains("-debug")) {
                 e.printStackTrace();
             }
