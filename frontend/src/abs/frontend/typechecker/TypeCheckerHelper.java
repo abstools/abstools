@@ -17,9 +17,6 @@ import abs.frontend.typechecker.KindedName.Kind;
 
 public class TypeCheckerHelper {
     public static void typeCheck(ConstructorPattern p, SemanticErrorList e, Type t) {
-        if (!t.isDataType())
-            return;
-
         Decl decl = p.lookup(new KindedName(Kind.DATA_CONSTRUCTOR, p.getConstructor()));
         if (!(decl instanceof DataConstructor)) {
             e.add(new SemanticError(p, ErrorMessage.CONSTRUCTOR_NOT_RESOLVABLE, p.getConstructor()));
@@ -32,8 +29,9 @@ public class TypeCheckerHelper {
             return;
         }
 
-        DataTypeType dtt = (DataTypeType) t;
-        if (!dtt.getDecl().equals(c.getDataTypeDecl())) {
+        assert t.isDataType();
+
+        if (!t.getDecl().equals(c.getDataTypeDecl())) {
             e.add(new TypeError(p, ErrorMessage.WRONG_CONSTRUCTOR, t.toString(), p.getConstructor()));
         }
 
