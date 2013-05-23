@@ -231,8 +231,7 @@ public class DataTypeType extends Type  {
                 } else {
                     TypeParameter tp = (TypeParameter) arg;
                     Type st = substitution.get(tp.getDecl().getName());
-                    if (st == null)
-                        throw new NullPointerException();
+                    assert st != null : "We're pretty sure getSubstitution() took care of it: "+tp.getDecl().getName();
                     substitutedArgs.add(st);
                 }
             }
