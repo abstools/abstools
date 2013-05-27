@@ -117,10 +117,10 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         
         DataConstructorExp empty = new DataConstructorExp("EmptySet",new List<PureExp>());
         VarDeclStmt futsStatement = getVarDecl(futs, getType("Set", getFutUnitType()), empty);
-        block.addStmt(futsStatement);
+        block.addStmtNoTransform(futsStatement);
         
         VarDeclStmt futStatement = getVarDecl(fut, getFutUnitType(), null);
-        block.addStmt(futStatement);
+        block.addStmtNoTransform(futStatement);
         
         Set<TypeUse> use = new HashSet<TypeUse>();
         for (InterfaceDecl key : tests.keySet()) {
@@ -129,7 +129,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
             }
         }
         
-        block.addStmt(generateWaitSyncAST());
+        block.addStmtNoTransform(generateWaitSyncAST());
         
         return block;
     }
@@ -140,10 +140,10 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         Block body = new Block();
         DataTypeUse u = getType("Pair", getType("Set", 
                 getType("Fut", getType("Unit"))),getType("Fut", getType("Unit")));
-        body.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(futs))));
-        body.addStmt(getVAssign(fut, getFnApp("snd",new VarUse("nt"))));
-        body.addStmt(getVAssign(futs, getFnApp("fst",new VarUse("nt"))));
-        body.addStmt(getExpStmt(new GetExp(new VarUse("fut"))));
+        body.addStmtNoTransform(getVarDecl("nt", u, getFnApp("next",new VarUse(futs))));
+        body.addStmtNoTransform(getVAssign(fut, getFnApp("snd",new VarUse("nt"))));
+        body.addStmtNoTransform(getVAssign(futs, getFnApp("fst",new VarUse("nt"))));
+        body.addStmtNoTransform(getExpStmt(new GetExp(new VarUse("fut"))));
         // Attach body at the end, since JastAdd will avoid touching ASTs without parents.
         ws.setBody(body);
         return ws;
@@ -173,9 +173,9 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
                 Block body = new Block();
                 thisBlock = body;
                 DataTypeUse u = getType("Pair", getType("Set", (TypeUse)dataType.copy()), (TypeUse)dataType.copy()); 
-                thisBlock.addStmt(getVarDecl("nt", u, getFnApp("next",new VarUse(dataPointSet))));
-                thisBlock.addStmt(getVarDecl(dataValue, (TypeUse)dataType.copy(), getFnApp("snd",new VarUse("nt"))));
-                thisBlock.addStmt(getVAssign(dataPointSet, getFnApp("fst",new VarUse("nt"))));
+                thisBlock.addStmtNoTransform(getVarDecl("nt", u, getFnApp("next",new VarUse(dataPointSet))));
+                thisBlock.addStmtNoTransform(getVarDecl(dataValue, (TypeUse)dataType.copy(), getFnApp("snd",new VarUse("nt"))));
+                thisBlock.addStmtNoTransform(getVAssign(dataPointSet, getFnApp("fst",new VarUse("nt"))));
                 ws.setBody(body);
             }
             
@@ -189,7 +189,7 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
             }
             
             if (ws != null) {
-               block.addStmt(ws);
+               block.addStmtNoTransform(ws);
             }
             instance++;
         }
@@ -220,8 +220,8 @@ public class ASTBasedABSTestRunnerGenerator extends AbstractABSTestRunnerGenerat
         
         String objName = uncap(clazz.getName()) + "dataPoint";
         String dataSet = dataPointSetName(clazz);
-        block.addStmt(newObj(key, clazz, objName, false));
-        block.addStmt(getVarDecl(dataSet, prt.copy(), 
+        block.addStmtNoTransform(newObj(key, clazz, objName, false));
+        block.addStmtNoTransform(getVarDecl(dataSet, prt.copy(), 
              new SyncCall(new VarUse(objName), dataPoint.getName(), new List<PureExp>())));
         
         return u;

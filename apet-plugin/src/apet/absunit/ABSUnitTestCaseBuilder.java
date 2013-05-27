@@ -149,10 +149,10 @@ abstract class ABSUnitTestCaseBuilder {
 		final boolean hasReturnValue;
 		if (access instanceof DataTypeUse &&
 			((DataTypeUse) access).getName().equals("Unit")) {
-			block.addStmt(getExpStmt(test)); //no return value
+			block.addStmtNoTransform(getExpStmt(test)); //no return value
 			hasReturnValue = false;
 		} else {
-			block.addStmt(getVarDecl("returnValue", (Access) access.fullCopy(), test));
+			block.addStmtNoTransform(getVarDecl("returnValue", (Access) access.fullCopy(), test));
 			hasReturnValue = true;
 		}
 		
@@ -173,7 +173,7 @@ abstract class ABSUnitTestCaseBuilder {
 		if (hasReturnValue) {
 			ABSData rd = getReturnData(testCase);
 			PureExp exp = pureExpBuilder.createPureExpression(testName, finalHeapNames, rd);
-			block.addStmt(getExpStmt(getCall(
+			block.addStmtNoTransform(getExpStmt(getCall(
 				new VarUse(ASSERT_HELPER), "assertTrue", true, 
 				new EqExp(new VarUse("returnValue"), exp))));
 		}
@@ -242,7 +242,7 @@ abstract class ABSUnitTestCaseBuilder {
 		Block modifyBlock = initialiseDeltaForTestClass(testClass, 
 				testCaseNameBuilder.initialTestMethodName(testMethodName));
 		
-		testMethodBlock.addStmt(
+		testMethodBlock.addStmtNoTransform(
 				getExpStmt(getCall(getThis(), setMethodForTest, true)));
 
 		Map<String, String> typeHierarchy = new HashMap<String, String>();
@@ -260,7 +260,7 @@ abstract class ABSUnitTestCaseBuilder {
 		
 		for (String ref : initialisationsOrders) {
 			for (Stmt s : initialisations.get(ref)) {
-				modifyBlock.addStmt(s);
+				modifyBlock.addStmtNoTransform(s);
 			}
 		}
 		
@@ -365,7 +365,7 @@ abstract class ABSUnitTestCaseBuilder {
 		
 		Block modifyBlock = initialiseDeltaForTestClass(testClass, assertMethodForTest);
 		
-		testMethodBlock.addStmt(
+		testMethodBlock.addStmtNoTransform(
 				getExpStmt(getCall(getThis(), assertMethodForTest, true)));
 		
 		for (ABSRef r : finalHeap.keySet()) {
@@ -400,7 +400,7 @@ abstract class ABSUnitTestCaseBuilder {
 			String fn = field.getName();
 			if (fields.containsKey(fn)) {
 				ABSData d = fields.get(fn);
-				block.addStmt(getVarDecl(testCaseNameBuilder.resultOfGetterMethodName(fn), 
+				block.addStmtNoTransform(getVarDecl(testCaseNameBuilder.resultOfGetterMethodName(fn), 
 						(Access) field.getAccess().fullCopy(), 
 						getCall(new VarUse(rn), testCaseNameBuilder.getterMethodName(fn), true)));
 				makeOracle(testName, heapNames, finalHeap, 
@@ -421,7 +421,7 @@ abstract class ABSUnitTestCaseBuilder {
 		}
 		
 		PureExp exp = pureExpBuilder.createPureExpression(testName, heapNames, data);
-		block.addStmt(getExpStmt(getCall(
+		block.addStmtNoTransform(getExpStmt(getCall(
 				new VarUse(ASSERT_HELPER), "assertTrue", true, 
 				new EqExp(new VarUse(actual), exp))));
 

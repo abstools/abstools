@@ -100,7 +100,7 @@ class ABSUnitTestCaseTranslatorHelper {
 		ct.addField(assertImpl);
 		
 		InitBlock block = new InitBlock();
-		block.addStmt(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));
+		block.addStmtNoTransform(getVAssign(ASSERT_HELPER, newObj(absAssertImpl, false)));
 		ct.setInitBlock(block);
 		
 		return ct;
