@@ -568,16 +568,4 @@ public class ABSRuntime {
         return terminateOnException;
     }
 
-    /*
-     * Keep track of currently configured product of the SPL
-     * (used for runtime-adaptable models)
-     */
-    private ABSDynamicProduct currentProduct = null;
-    public ABSDynamicProduct getCurrentProduct() {
-        return currentProduct;
-    }
-    public void setCurrentProduct(ABSDynamicProduct prod) {
-        currentProduct = prod;
-    }
-
 }

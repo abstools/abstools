@@ -253,10 +253,6 @@ public class JavaBackend extends Main {
         return truncate(name + "_c");
     }
 
-    public static String getModifierName(String name) {
-        return truncate(name + "_mod");
-    }
-
     public static String getProductName(String name) {
         return truncate(name + "_prod");
     }
@@ -273,6 +269,14 @@ public class JavaBackend extends Main {
         return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
     }
 
+    public static String getModifierPackageName(String name) {
+        return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
+    }
+
+    public static String getModifierName() {
+        return truncate("Mod_" + getRandomName());
+    }
+    
     public static String getFunctionName(String name) {
         return truncate(escapeReservedWords(name) + "_f");
     }

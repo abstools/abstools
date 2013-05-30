@@ -124,6 +124,8 @@ public class RuntimeOptions {
         addOption(CLASSLIST, "loggedClasses", "comma-separated list of classes to be logged", new String[0]);
     public final Option scheduableTasksFilter = 
             addOption(CLASS, "scheduableTasksFilter", "sets a filter class for scheduable tasks", null);
+    public final Option dynamicUpdates = 
+            addOption(BOOLEAN, "dynamic", "enables dynamic program updates", false);
     
     public RuntimeOptions(String[] args) {
         evaluateSystemProperties();

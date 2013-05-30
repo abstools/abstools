@@ -14,14 +14,13 @@ import java.util.List;
 import java.util.Scanner;
 
 import abs.backend.java.JavaBackend;
-import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.dynamic.DynamicException;
 import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
-import abs.backend.java.lib.runtime.ABSRuntime;
+import abs.backend.java.lib.runtime.ABSDynamicRuntime;
 import abs.backend.java.lib.types.*;
 import abs.common.ListUtils;
 
@@ -92,7 +91,7 @@ public class ProductLine {
         });
     }
     
-    private static ABSDynamicProduct getCurrentProduct(ABSRuntime runtime) {
+    private static ABSDynamicProduct getCurrentProduct(ABSDynamicRuntime runtime) {
         ABSDynamicProduct currentProd = runtime.getCurrentProduct();
         if (currentProd == null)
             throw new DynamicException("The current system does not represent a product of the SPL. Please specify the initial product when compiling.");

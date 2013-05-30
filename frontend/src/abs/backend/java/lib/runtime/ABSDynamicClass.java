@@ -24,6 +24,7 @@ public class ABSDynamicClass implements ABSClass {
     private Map<String, ABSClosure> methods;
     private ABSClosure constructor;
     private List<String> params;
+    private ABSDynamicClass nextVersion;
 
     public void setName(String name) {
         this.name = name;
@@ -126,6 +127,26 @@ public class ABSDynamicClass implements ABSClass {
             return Collections.emptyList();
         }
         return params;
+    }
+    
+    // Create the "next version" of this class, which can be updated independently
+    public ABSDynamicClass createNextVersion() {
+        ABSDynamicClass copy = new ABSDynamicClass();
+        copy.name = name;
+        for (String f : fields.keySet())
+            copy.fields.put(f, fields.get(f));
+        for (String m : methods.keySet())
+            copy.methods.put(m, methods.get(m));
+        for (String p : params)
+            copy.params.add(p);
+        copy.constructor = constructor;
+        copy.nextVersion = null;
+        nextVersion = copy;
+        return copy;
+    }
+
+    public ABSDynamicClass getNextVersion() {
+        return nextVersion;
     }
     
     private View __view;

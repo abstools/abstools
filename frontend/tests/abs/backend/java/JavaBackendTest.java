@@ -150,7 +150,7 @@ public class JavaBackendTest extends ABSTest {
         }
     }
 
-    StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
+    protected StringBuffer runJava(JavaCode javaCode, String... jvmargs) throws Exception {
         StringBuffer output = new StringBuffer();
         javaCode.compile("-classpath", "bin", "-d", javaCode.getSrcDir().getAbsolutePath()+"/gen/test");
 

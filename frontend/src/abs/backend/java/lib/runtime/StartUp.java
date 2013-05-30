@@ -12,11 +12,13 @@ public class StartUp {
     public static void startup(String[] args, Class<?> mainClass) throws InstantiationException, IllegalAccessException {
         RuntimeOptions options = new RuntimeOptions(args);
         Logging.setLogLevel(options.logLevel.stringValue());
-        ABSRuntime runtime;
+        final ABSRuntime runtime;
         if (options.useNet.isTrue()) {
             NetworkImpl network = new NetworkImpl();
             network.addNode(new NodeImpl(0));
             runtime = new ABSNetRuntime(network);
+        } else if (options.dynamicUpdates.isTrue()) {
+            runtime = new ABSDynamicRuntime();
         } else {
             runtime = new ABSRuntime();
         }

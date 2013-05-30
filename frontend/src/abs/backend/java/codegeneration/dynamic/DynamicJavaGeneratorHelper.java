@@ -569,7 +569,7 @@ public class DynamicJavaGeneratorHelper {
             // override apply method
             stream.println("public void apply() {");
             for (String cls : classes) {
-                stream.println(pkg.packageName + "." + cls + ".apply();");
+                stream.println(cls + ".apply();");
             }
             stream.println("}");
             
