@@ -29,12 +29,14 @@ extends FieldEditorPreferencePage
 implements IWorkbenchPreferencePage {
 	IntegerFieldEditor kl;
 	IntegerFieldEditor ks;
+	IntegerFieldEditor kstr;
 	IntegerFieldEditor min;
 	IntegerFieldEditor max;
 	IntegerFieldEditor maxPrior;
-	//BooleanFieldEditor aliasing;
-	//RadioGroupFieldEditor pruning;
-	//RadioGroupFieldEditor maxQL;
+	BooleanFieldEditor aliasing;
+	BooleanFieldEditor tracing;
+	RadioGroupFieldEditor pruning;
+	RadioGroupFieldEditor maxQL;
 	RadioGroupFieldEditor sched;
 	RadioGroupFieldEditor verbosity;
 	RadioGroupFieldEditor numOrConst;
@@ -56,16 +58,16 @@ implements IWorkbenchPreferencePage {
 		boolean success = true;
 		kl.store();
 		ks.store();
-		//pruning.store();
+		kstr.store();
+		pruning.store();
+		tracing.store();
 		maxPrior.store();
-		//maxQL.store();
+		maxQL.store();
 		sched.store();
 		numOrConst.store();
 		min.store();
 		max.store();
-		
-		//if (aliasing != null) aliasing.store();
-		
+		if (aliasing != null) aliasing.store();
 		verbosity.store();
 		selCrit.store();
 		return success;
@@ -91,6 +93,8 @@ implements IWorkbenchPreferencePage {
 		addField(kl);
 		ks = new IntegerFieldEditor(PreferenceConstants.KS, "Limit on task switchings per object:",getFieldEditorParent());
 		addField(ks);
+		kstr = new IntegerFieldEditor(PreferenceConstants.KSTR, "Recursion limit on string builtins:",getFieldEditorParent());
+		addField(kstr);
 		
 		numOrConst = new RadioGroupFieldEditor(PreferenceConstants.NUM_OR_CONST,"Concrete test-cases or path-constraints:",
 				4,new String[][] { { "Concrete","num" }, {"Path-constraints", "constraint" }}, getFieldEditorParent());
@@ -104,7 +108,6 @@ implements IWorkbenchPreferencePage {
 		max.setValidRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
 		max.setErrorMessage("The domain maximum must be an integer");
 		addField(max);
-
 		if (Activator.getDefault().getPreferenceStore().getString(PreferenceConstants.NUM_OR_CONST).equals("num")){
 			min.setEnabled(true, this.getFieldEditorParent());
 			max.setEnabled(true, this.getFieldEditorParent());
@@ -117,26 +120,29 @@ implements IWorkbenchPreferencePage {
 				4,new String[][] { { "All paths","all_paths" }, {"All local paths", "alp" }}, getFieldEditorParent());
 		addField(selCrit);
 		
-		/*maxQL = new RadioGroupFieldEditor(PreferenceConstants.MAXQL,"Number of task interleavings:",
+		maxQL = new RadioGroupFieldEditor(PreferenceConstants.MAXQL,"Maximum number of task interleavings (max. queue length):",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(maxQL);
 
 		pruning = new RadioGroupFieldEditor(PreferenceConstants.PRUNING,"Pruning in task interleavings:",
 				4,new String[][] { { "3", "3" }, {"2", "2" }, {"1", "1" }}, getFieldEditorParent());
 		addField(pruning);
-		*/
+		
 		sched = new RadioGroupFieldEditor(PreferenceConstants.SCHED_POLICY,"Scheduling policy:",
 				4,new String[][] { { "fifo", "fifo" }, {"lifo", "lifo" }, {"prior", "prior" }}, getFieldEditorParent());
 		addField(sched);
 
 		maxPrior = new IntegerFieldEditor(PreferenceConstants.MAX_PRIOR, "Number of priorites:",getFieldEditorParent());
 		addField(maxPrior);
-		/*				
+						
 		aliasing = new BooleanFieldEditor(PreferenceConstants.ALIASING,
 				"References aliasing", getFieldEditorParent());
 		addField(aliasing);
 
-		*/
+		tracing = new BooleanFieldEditor(PreferenceConstants.TRACING,
+				"Compute/display the trace associated to each test case", getFieldEditorParent());
+		addField(tracing);
+		
 		verbosity = new RadioGroupFieldEditor(PreferenceConstants.VERBOSITY,"Verbosity:",
 				4,new String[][] { { "0", "0" }, {"1", "1" }, {"2", "2" }}, getFieldEditorParent());
 		addField(verbosity);

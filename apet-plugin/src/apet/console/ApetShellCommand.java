@@ -90,11 +90,13 @@ public class ApetShellCommand {
 		}
 		command.append("-kl " + store.getString(PreferenceConstants.KL) + " ");
 		command.append("-ks " + store.getString(PreferenceConstants.KS) + " ");
-		if (store.getString(PreferenceConstants.SEL_CRIT) == "alp") command.append("-g ");
+		command.append("-kstr " + store.getString(PreferenceConstants.KSTR) + " ");
+		if (store.getString(PreferenceConstants.SEL_CRIT) == "alp") command.append("-alp ");
 		command.append("-mp " + store.getString(PreferenceConstants.MAX_PRIOR) + " ");
 		command.append("-sc " + store.getString(PreferenceConstants.SCHED_POLICY) + " ");
-		//command.append("-pr " + store.getString(PreferenceConstants.PRUNING) + " ");
-		//command.append("-ql " + store.getString(PreferenceConstants.MAXQL) + " ");
+		command.append("-pr " + store.getString(PreferenceConstants.PRUNING) + " ");
+		command.append("-ql " + store.getString(PreferenceConstants.MAXQL) + " ");
+		if (store.getBoolean(PreferenceConstants.TRACING) == true) command.append("-tr ");
 		command.append("-verbosity " + store.getString(PreferenceConstants.VERBOSITY) + " ");
 		command.append("-xmlpath " + XML_FILE_PATH);	
 	}
