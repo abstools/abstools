@@ -16,6 +16,7 @@ public class TestCase {
 	HashMap<ABSRef,ABSObject> heapIn;
 	ABSData returnData;
 	HashMap<ABSRef,ABSObject> heapOut;
+	ArrayList<PreviousCall> prevCalls;
 	
 	public TestCase(Element elem) throws Exception{
 		// get method name
@@ -31,7 +32,10 @@ public class TestCase {
 		this.parseReturn(elem);
 		
 		//get heap out
-		this.parseHeapOut(elem);	
+		this.parseHeapOut(elem);
+		
+		//get previous calls (task interleavings)
+		//this.parsePrevCalls(elem);
 	}
 		
 	private void parseMethodName(Element elem) throws Exception{ 	
@@ -108,5 +112,10 @@ public class TestCase {
 			this.parseCell((Element) cellList.item(i), this.heapOut);
 		}
 	}
+
+	private void parsePrevCalls(Element elem) throws Exception{
+    	this.prevCalls = new ArrayList<PreviousCall>();
+    	NodeList argsInList = elem.getElementsByTagName("tasks");
+    }
 
 }
