@@ -35,7 +35,7 @@ public class TestCase {
 		this.parseHeapOut(elem);
 		
 		//get previous calls (task interleavings)
-		//this.parsePrevCalls(elem);
+		this.parsePrevCalls(elem);
 	}
 		
 	private void parseMethodName(Element elem) throws Exception{ 	
@@ -114,8 +114,17 @@ public class TestCase {
 	}
 
 	private void parsePrevCalls(Element elem) throws Exception{
-    	this.prevCalls = new ArrayList<PreviousCall>();
-    	NodeList argsInList = elem.getElementsByTagName("tasks");
+		this.prevCalls = new ArrayList<PreviousCall>();
+    	NodeList tasksElems = elem.getElementsByTagName("tasks");	
+    	
+    	if (tasksElems.getLength() != 1) throw new Exception();
+		Element tasksElem = (Element) tasksElems.item(0);
+		
+		NodeList calls = tasksElem.getChildNodes();
+		for (int i = 0; i < calls.getLength(); i++) {
+			if (calls.item(i).getNodeType() == Node.ELEMENT_NODE) 		
+				prevCalls.add(new PreviousCall((Element) calls.item(i)));
+		}
     }
 
 }

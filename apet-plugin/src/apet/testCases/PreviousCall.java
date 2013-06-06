@@ -9,7 +9,7 @@ import org.w3c.dom.NodeList;
 
 public class PreviousCall {
 	String method;
-	ArrayList<ABSData> args;
+	ArrayList<ABSData> args = new ArrayList<ABSData>();
 	
 	public PreviousCall(Element elem) throws Exception{
 		method = elem.getAttribute("method");
