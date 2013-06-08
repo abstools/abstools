@@ -14,10 +14,15 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import abs.backend.java.JavaBackendTest;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
+import abs.backend.java.lib.runtime.ABSDynamicRuntime;
+import abs.backend.java.lib.runtime.ABSRuntime;
 import abs.frontend.ast.Model;
 import abs.frontend.parser.Main;
 
@@ -26,6 +31,11 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
     public JavaBackendDynamicTest() {
         super();
         absArgs.add("-dynamic");
+    }
+    
+    @Override
+    protected ABSRuntime makeAbsRuntime() {
+        return new ABSDynamicRuntime();
     }
 
     @Override
@@ -69,23 +79,4 @@ public class JavaBackendDynamicTest extends JavaBackendTest {
         return buffer;
     }
     
-    /*
-     * Test (i.e. run) all ABS code samples in tests/abssamples/meta/
-     */
-    @Test
-    public void metaSamples() throws Exception {
-        final String s = File.separator;
-        final String dir = "tests" + s + "abssamples" + s + "meta";
-        ABSFileNameFilter filter = new ABSFileNameFilter();
-        File dirHandle = new File(dir);
-        String[] absFiles = dirHandle.list(filter);
-        // TODO: use JUnit's Parameterized
-        for (int i=0; i < absFiles.length; i++) {
-            String file = absFiles[i];
-            System.out.println("ABS sample: " + file);
-//            assertValidJavaExecution(dir + s + file, true);
-            JavaCode code = getJavaCode(readAbsFile(dir + s + file), true);
-            runJava(code);
-        }
-    }
 }

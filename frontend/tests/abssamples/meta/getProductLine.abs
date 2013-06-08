@@ -6,9 +6,8 @@ class C implements I {}
 
 
 {
-//    Runtime run = new Runtime();
-//    ProductLine pl = run.getProductLine();
-    ProductLine pl = getProductLine();
-    Product p = pl.getCurrentProduct();
+    Runtime run = new Runtime();
+    ProductLine pl = run.getProductLine();
+//    ProductLine pl = getProductLine();
 }
 

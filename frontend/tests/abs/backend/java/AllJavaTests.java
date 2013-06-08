@@ -17,7 +17,7 @@ import abs.backend.java.lib.net.AllNetTests;
     JavaExamplesTests.class,
     JavaObservationTest.class,
     JavaFLITest.class
-    // XXX doesn't terminate, JavaBackendDynamicTest.class
+    , JavaBackendDynamicTest.class
     , abs.backend.java.dynamic.CaseStudies.class
     , AllNetTests.class
     , CaseStudies.class
