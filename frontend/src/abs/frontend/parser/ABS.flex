@@ -98,6 +98,8 @@ IntLiteral = 0 | [1-9][0-9]*
  "delta"       { return sym(Terminals.DELTA); }
  "stateupdate" { return sym(Terminals.STATEUPDATE); }
  "instanceof"  { return sym(Terminals.INSTANCEOF); }
+ "pre:"        { return sym(Terminals.PRE); }
+ "post:"       { return sym(Terminals.POST); }
  "uses"        { return sym(Terminals.USES); }
  "adds"        { return sym(Terminals.ADDS); }
  "modifies"    { return sym(Terminals.MODIFIES); }

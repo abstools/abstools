@@ -238,7 +238,7 @@ aspect VarResolution {
             if (d != null)
                 return d;
         }
-        return lookupVarOrFieldName(name,fieldOnly);
+        return lookupVarOrFieldName(name, fieldOnly);
     }
 
     eq LetExp.getExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
@@ -248,7 +248,10 @@ aspect VarResolution {
     }
 
     eq HasMethod.getMethodSig().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
-
+    
+    // TODO: return something more meaningful here?
+    eq UpdateDecl.getObjectUpdate().lookupVarOrFieldName(String name, boolean fieldOnly) = null;
+    
     inh VarOrFieldDecl Exp.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl Stmt.lookupVarOrFieldName(String name, boolean fieldOnly);
     inh VarOrFieldDecl MethodSig.lookupVarOrFieldName(String name, boolean fieldOnly);

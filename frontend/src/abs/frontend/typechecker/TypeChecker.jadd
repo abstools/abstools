@@ -32,6 +32,7 @@ aspect TypeChecker {
             TypeCheckerHelper.checkForDuplicateModules(errors, getCompilationUnits());
             TypeCheckerHelper.checkForDuplicateDeltas(errors, getCompilationUnits());
             TypeCheckerHelper.checkForDuplicateProducts(errors, getCompilationUnits());
+            TypeCheckerHelper.checkForDuplicateUpdates(errors, getCompilationUnits());
             for (CompilationUnit u : getCompilationUnits()) {
                 u.typeCheck(errors);
             }
@@ -1024,6 +1025,15 @@ aspect TypeCheckProductline {
         if (! definedFeatures.contains(getName()))
             e.add(new TypeError(this, ErrorMessage.NAME_NOT_RESOLVABLE, getName()));
     }
+    
+    protected void UpdateDecl.typecheck(Set<String> definedFeatures, SemanticErrorList e) {
+        for (ObjectUpdate u : getObjectUpdates())
+            u.typeCheck(e);
+    }
+    protected void ObjectUpdate.typeCheck(SemanticErrorList e) {
+        // TODO
+    }
+    
 }
 
 /* Components */

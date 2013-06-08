@@ -237,7 +237,11 @@ InitBlock init_block =
 
 VarDecl var_decl =
     type_exp.t IDENTIFIER.i ASSIGN exp.e  {: return new VarDecl(i,t, new Opt(e)); :}
-    | type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t, new Opt()); :}
+    | var_decl_noinit.v {: return v; :}
+    ;
+    
+VarDecl var_decl_noinit =
+    type_exp.t IDENTIFIER.i  {: return new VarDecl(i,t, new Opt()); :}
     ;
 
 DataTypeDecl datatype_decl =
@@ -419,18 +423,42 @@ List update_decl_list =
   ;
 
 UpdateDecl update_decl =
-  STATEUPDATE TYPE_IDENTIFIER.id SEMICOLON object_spec_list.l? {: return new UpdateDecl(id, l); :}
+  STATEUPDATE TYPE_IDENTIFIER.id SEMICOLON object_update_list.l? {: return new UpdateDecl(id, l); :}
   ;
 
-List object_spec_list =
-  object_spec.o {: return new List().add(o); :}
-  | object_spec_list.l object_spec.o {: return l.add(o); :}
+List object_update_list =
+  object_update.o {: return new List().add(o); :}
+  | object_update_list.l object_update.o {: return l.add(o); :}
   ;
 
-ObjectSpec object_spec =
-  INSTANCEOF type_name.n LBRACE RBRACE {: return new ObjectSpec(n.getName()); :}
+ObjectUpdate object_update =
+  INSTANCEOF qualified_type_name.n LBRACE 
+  AWAIT data_exp.e SEMICOLON
+  update_preamble.p
+  PRE assign_stmt_list.pre
+  POST assign_stmt_list.post
+  RBRACE {: return new ObjectUpdate(n.getName(), new ExpGuard(e), new UpdatePreamble(p), pre, post); :}
   ;
 
+List update_preamble =
+  update_preamble_decl.d {: return new List().add(d); :}
+  | update_preamble.l SEMICOLON update_preamble_decl.d {: return l.add(d); :}
+  ;
+  
+VarDeclStmt update_preamble_decl = 
+  var_decl_noinit.d SEMICOLON {: return new VarDeclStmt(new List(), d); :}
+// TODO: | function_decl.d {: return d; :}
+//       | datatype_decl.d {: return d; :}
+//       | typesyn_decl.d {: return d; :}
+  ;
+
+List assign_stmt_list = 
+  assign_stmt.s {: return new List().add(s); :}
+  | assign_stmt_list.l assign_stmt.s {: return l.add(s); :}
+  ;
+  
+assign_stmt = var_or_field_ref.r ASSIGN exp.e SEMICOLON {: return new AssignStmt(new List(), r, e); :}
+  ;
 
 List data_constructor_list =
     data_constructor.i                                      {: return new List().add(i); :}

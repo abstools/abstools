@@ -393,6 +393,15 @@ public class TypeCheckerHelper {
             }
         }
     }
+    public static void checkForDuplicateUpdates(SemanticErrorList errors, Iterable<CompilationUnit> compilationUnits) {
+        Set<String> seen = new HashSet<String>();
+        for (CompilationUnit u : compilationUnits) {
+            for (UpdateDecl d : u.getUpdateDecls()) {
+                if (!seen.add(d.getName()))
+                    errors.add(new TypeError(d, ErrorMessage.DUPLICATE_UPDATE, d.getName()));
+            }
+        }
+    }
 
     /**
      * get all the alternative declarations of an ambiguous declaration formated as a list

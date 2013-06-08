@@ -128,7 +128,7 @@ public class ABSDynamicClass implements ABSClass {
         }
         return params;
     }
-    
+   
     // Create the "next version" of this class, which can be updated independently
     public ABSDynamicClass createNextVersion() {
         ABSDynamicClass copy = new ABSDynamicClass();

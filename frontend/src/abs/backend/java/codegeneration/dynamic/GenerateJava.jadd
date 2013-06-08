@@ -1161,11 +1161,14 @@ aspect GenerateJavaDynamic_DeltaModelling {
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " extends " + ABSDynamicUpdate.class.getName() + " {");
             ArrayList<String> classes = new ArrayList<String>();
-            for (ObjectSpec ospec : getObjectSpecs()) {
+            for (ObjectUpdate upd : getObjectUpdates()) {
                 // TODO implement
-                //ospec.generateJavaCodeDynamic(pkg);
-                //classes.add(ospec.getGeneratedJavaClassName());
-                classes.add(ospec.getName());
+                //upd.generateJavaCodeDynamic(pkg);
+                //classes.add(upd.getGeneratedJavaClassName());
+                classes.add(upd.getClassName());
+                
+                stream.println("// generate Update for instances of " + upd.getClassName());
+                
             }
             DynamicJavaGeneratorHelper.generateUpdate(stream, this, generatedJavaClassName, classes);
             stream.println("}");

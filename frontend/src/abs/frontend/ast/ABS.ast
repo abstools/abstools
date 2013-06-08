@@ -10,8 +10,7 @@ Model ::= CompilationUnit* ;
 CompilationUnit ::= <Name> ModuleDecl* DeltaDecl* UpdateDecl* [ProductLine] Product* FeatureDecl* FExt*;
 ModuleDecl ::= <Name> Export* Import* Decl* [Block:MainBlock];
 DeltaDecl ::= <Name> Param:DeltaParamDecl* DeltaAccess* ModuleModifier* ;
-UpdateDecl ::= <Name> ObjectSpec* ;
-ObjectSpec ::= <Name>;
+UpdateDecl ::= <Name> ObjectUpdate* ;
 
 abstract Import;
 NamedImport : Import ::= Name* ;
@@ -91,6 +90,9 @@ RemoveMethodModifier : Modifier ::= MethodSig;
 ModifyMethodModifier : Modifier ::= MethodImpl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
+
+ObjectUpdate ::= <ClassName> ExpGuard UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
+UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls
 
 abstract VarOrFieldDecl ::= <Name>;
 abstract TypedVarOrFieldDecl : VarOrFieldDecl ::= Access ;
