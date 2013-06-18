@@ -17,7 +17,7 @@ a) Compile to Maude with
 
    To run the model, start Maude (download it from
    http://maude.cs.uiuc.edu/download/) and load the compiled model.
-   Maude must be able to find ../interpreter/abs-interpreter.maude -
+   Maude must be able to find src/abs/backend/maude/abs-interpreter.maude -
    either set the MAUDE_LIB environment variable or copy/symlink
    abs-interpreter.maude into the directory where the compiled model
    resides.
