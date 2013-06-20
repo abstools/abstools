@@ -38,6 +38,36 @@ public final class ABSTestCaseExtractor {
 	}
 	
 	/**
+	 * Get the list of previous calls of the test case
+	 * 
+	 * @param c
+	 * @return
+	 */
+	public static List<PreviousCall> getPreviousCalls(TestCase c) {
+		return c.prevCalls;
+	}
+	
+	/**
+	 * Method name of the given previous call
+	 * 
+	 * @param call
+	 * @return
+	 */
+	public static String getMethodName(PreviousCall call) {
+		return call.method;
+	}
+	
+	/**
+	 * Arguments of the previous call
+	 * 
+	 * @param call
+	 * @return
+	 */
+	public static List<ABSData> getCallArgs(PreviousCall call) {
+		return call.args;
+	}
+	
+	/**
 	 * Get the return value of the test case
 	 * @param c
 	 * @return

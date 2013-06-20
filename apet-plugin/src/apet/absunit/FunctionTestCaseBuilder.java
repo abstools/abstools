@@ -1,5 +1,6 @@
 package apet.absunit;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import abs.frontend.ast.FnApp;
 import abs.frontend.ast.Model;
 import abs.frontend.ast.PureExp;
 import apet.testCases.ABSData;
+import apet.testCases.PreviousCall;
 
 final class FunctionTestCaseBuilder extends ABSUnitTestCaseBuilder {
 
@@ -39,6 +41,12 @@ final class FunctionTestCaseBuilder extends ABSUnitTestCaseBuilder {
 			fa.setParam(exp,i);
 		}
 		return fa;
+	}
+	
+	@Override
+	List<Exp> makePreviousCalls(String testName, Set<String> heapNames, List<PreviousCall> calls) {
+		//function is sequential
+		return Collections.emptyList();
 	}
 
 }

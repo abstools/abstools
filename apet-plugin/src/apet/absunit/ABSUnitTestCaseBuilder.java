@@ -19,6 +19,7 @@ import static apet.testCases.ABSTestCaseExtractor.getABSTermArgs;
 import static apet.testCases.ABSTestCaseExtractor.getAfterState;
 import static apet.testCases.ABSTestCaseExtractor.getInitialState;
 import static apet.testCases.ABSTestCaseExtractor.getInputArgs;
+import static apet.testCases.ABSTestCaseExtractor.getPreviousCalls;
 import static apet.testCases.ABSTestCaseExtractor.getReturnData;
 
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import apet.testCases.ABSData;
 import apet.testCases.ABSObject;
 import apet.testCases.ABSRef;
 import apet.testCases.ABSTerm;
+import apet.testCases.PreviousCall;
 import apet.testCases.TestCase;
 
 abstract class ABSUnitTestCaseBuilder {
@@ -142,6 +144,12 @@ abstract class ABSUnitTestCaseBuilder {
 		Set<String> initialHeapNames = referenceNames(initial.keySet());
 		createObjectsInHeap(testName, initialHeapNames, typesOfObjectInHeap, 
 				testClass, initial, block);
+		
+		List<PreviousCall> calls = getPreviousCalls(testCase);
+		List<Exp> previous = makePreviousCalls(testName, initialHeapNames, calls);
+		for (Exp pc : previous) {
+			block.addStmtNoTransform(getExpStmt(pc)); //does not care about return value
+		}
 		
 		//test execution
 		Exp test = makeTestExecution(testName, initialHeapNames, unitUnderTest, inputArguments);
@@ -437,6 +445,8 @@ abstract class ABSUnitTestCaseBuilder {
 		}
 		
 	}
+	
+	abstract List<Exp> makePreviousCalls(String testName, Set<String> heapNames, List<PreviousCall> calls);
 
 	abstract Exp makeTestExecution(String testName, Set<String> heap, 
 			String functionName, List<ABSData> inArgs);
