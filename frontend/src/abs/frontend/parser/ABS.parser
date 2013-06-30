@@ -432,7 +432,7 @@ List object_update_list =
   ;
 
 ObjectUpdate object_update =
-  INSTANCEOF qualified_type_name.n LBRACE 
+  OBJECTUPDATE qualified_type_name.n LBRACE 
   AWAIT data_exp.e SEMICOLON
   update_preamble.p
   PRE assign_stmt_list.pre
