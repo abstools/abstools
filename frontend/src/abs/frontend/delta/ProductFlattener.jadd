@@ -51,7 +51,7 @@ aspect ProductFlattener {
 
         // find corresponding DeltaDecls
         ArrayList<DeltaDecl> deltas = findDeltas(sorted_deltaids);
-
+        
         // substitute delta parameters
         pl.substituteDeltaParams(deltas, prod);
 
@@ -204,13 +204,13 @@ aspect ProductFlattener {
 
 
     /**************************************************************************
-     * Find DeltaDecls, given a list of delta names
+     * Find DeltaDecls, given a list of delta names; keep order
      */
     public ArrayList<DeltaDecl> Model.findDeltas(java.util.List<String> deltaids) {
         ArrayList<DeltaDecl> deltas = new ArrayList<DeltaDecl>();
-        for (CompilationUnit u : this.getCompilationUnits()) {
-            for (DeltaDecl delta : u.getDeltaDecls()) {
-                for (String deltaid : deltaids) {
+        for (String deltaid : deltaids) {
+            for (CompilationUnit u : this.getCompilationUnits()) {
+                for (DeltaDecl delta : u.getDeltaDecls()) {
                     if (deltaid.equals(delta.getName())) {
                         //System.out.println("$$$ found applicable DeltaDecl : " + deltaid);
                         deltas.add(delta);
@@ -231,7 +231,7 @@ aspect ProductFlattener {
         for (DeltaClause clause : getDeltaClauses()) {
             String deltaid = clause.getDeltaspec().getName();
             if (deltaIDs.contains(deltaid)) {
-                for (DeltaID did : clause.getDeltaIDs()) {
+                for (DeltaID did : clause.getDeltaIDs()) { // 'after' deltas
                     String otherid = did.getName();
                     if (deltaIDs.contains(otherid)) {
                         try {
