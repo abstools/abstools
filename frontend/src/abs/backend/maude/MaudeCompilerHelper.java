@@ -5,7 +5,7 @@
 package abs.backend.maude;
 
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataTypeUse;
+import abs.frontend.ast.IdUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypedAnnotation;
@@ -18,8 +18,10 @@ public class MaudeCompilerHelper {
         for (Annotation a : annotations) {
             if (a instanceof TypedAnnotation) {
                 TypedAnnotation ta = (TypedAnnotation)a;
-                if (((DataTypeUse)ta.getAccess()).getName().equals(annotationName))
+                if (ta.getAccess() instanceof IdUse) {
+                    if (((IdUse)ta.getAccess()).getName().equals(annotationName))
                     return ta.getValue();
+                }
             }
         }
         return null;
