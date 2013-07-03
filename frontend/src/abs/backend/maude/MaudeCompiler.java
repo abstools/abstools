@@ -33,6 +33,7 @@ public class MaudeCompiler extends Main {
     private String mainBlock;
     private int clocklimit = 100;
     private int defaultResources = 0;
+    private static boolean debug = false;
     
     public static void main(final String... args) {
         /* Maude has build-in AwaitAsyncCall support */
@@ -42,7 +43,7 @@ public class MaudeCompiler extends Main {
         } catch (Exception e) {
             System.err.println("An error occurred during compilation: " + e.getMessage());
 
-            if (Arrays.asList(args).contains("-debug")) {
+            if (debug) {
                 e.printStackTrace();
             }
 
@@ -73,6 +74,8 @@ public class MaudeCompiler extends Main {
                 clocklimit = Integer.parseInt(arg.split("=")[1]);
             } else if (arg.startsWith("-defaultcost=")) {
                 defaultResources = Integer.parseInt(arg.split("=")[1]);
+            } else if (arg.startsWith("-debug")) {
+                debug  = true;
             }else {
                 remainingArgs.add(arg);
             }
@@ -108,6 +111,7 @@ public class MaudeCompiler extends Main {
                 + "  -timed         generate code for timed interpreter\n"
                 + "  -limit=n       set clock limit for timed interpreter to n (default 100)\n"
                 + "  -defaultcost=n set default statement execution cost (default 0)\n"
+                + "  -debug         print stacktrace on exception\n"
         );
     }
 
