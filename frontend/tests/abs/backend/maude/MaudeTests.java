@@ -87,6 +87,10 @@ public class MaudeTests extends ABSTest {
             Assert.fail(model.getErrors().getFirst().getHelpMessage());
             return null;
         }
+        if (model.hasTypeErrors()) {
+            Assert.fail(model.getTypeErrors().getFirst().getHelpMessage());
+            return null;
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         // TODO: handle delta generation / testing / flattening
         model.generateMaude(new PrintStream(out), module, 100, 0);
