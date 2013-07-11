@@ -26,7 +26,7 @@ public class AbsSamples extends JavaBackendDynamicTest {
     /*
      * Collect all ABS code samples in tests/abssamples/meta/
      */
-    @Parameters
+    @Parameters(name="{0}")
     public static Collection<String[]> fileNames() {
         final String s = File.separator;
         final String dir = "tests" + s + "abssamples" + s + "meta";
