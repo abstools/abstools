@@ -28,6 +28,7 @@ import abs.backend.java.lib.runtime.ABSClosure;
 import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
+import abs.backend.java.lib.runtime.ABSDynamicReconfiguration;
 import abs.backend.java.lib.runtime.ABSDynamicUpdate;
 import abs.backend.java.lib.runtime.ABSField;
 import abs.backend.java.lib.runtime.ABSFut;
@@ -600,69 +601,70 @@ public class DynamicJavaGeneratorHelper {
         stream.println("}");
     }
     
-    public static void generateProduct(PrintStream stream, Product prod, ProductLine pl, HashMap<String, Product> allProducts) {
-
+    public static void generateProduct(PrintStream stream, Product prod, HashMap<String, Product> allProducts) {
         stream.println("private static " + ABSDynamicProduct.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicProduct.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
         stream.println("instance = new " + ABSDynamicProduct.class.getName() + "();");
         stream.println("instance.setName(\"" + prod.getName() + "\");");
 
-        // Features
+        // Features (just names, currently not used)
         for (Feature feature : prod.getFeatures())
             stream.println("instance.addFeature(\"" + feature.getName() + "\");");
         
-        // Reachable Products
-        stream.print("instance.setConfigurableProducts(");
-        if (prod.getProductAdaptations().getNumChild() == 0) { // no reachable products
-            stream.print(Collections.class.getName() + ".<" + ABSDynamicProduct.class.getName() + ">emptyList()");
+        // Reconfigurations
+        for (Reconfiguration recf : prod.getReconfigurations()) {
+            stream.println("instance.addReconfiguration("
+                    + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
+                    + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton()"
+                    + ", "
+                    + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
+                    + JavaBackend.getReconfigurationName(prod.getName(), recf.getTargetProductID()) + ".singleton());");
+        }
+
+        stream.println("}");
+        stream.println("return instance;");
+        stream.println("}");
+    }
+    
+    public static void generateReconfiguration(PrintStream stream, Reconfiguration recf, Product currentP, HashMap<String, Product> allProducts) {
+        stream.println("private static " + ABSDynamicReconfiguration.class.getName() + " instance;");
+        stream.println("public static " + ABSDynamicReconfiguration.class.getName() + " singleton() {");
+        stream.println("if (instance == null) {");
+        stream.println("instance = new " + ABSDynamicReconfiguration.class.getName() + "();");
+        stream.println("instance.setName(\"" + currentP.getName() + "->" + recf.getTargetProductID() + "\");");
+        
+        // Current and Target products
+        stream.println("instance.setCurrentProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
+                + JavaBackend.getProductName(currentP.getName()) + ".singleton());");
+        stream.println("instance.setTargetProduct(" + JavaBackendConstants.LIB_RDM_PACKAGE + "."
+                + JavaBackend.getProductName(recf.getTargetProductID()) + ".singleton());");
+        
+        // StateUpdate
+        stream.println("instance.setUpdate(" + JavaBackendConstants.LIB_UPDATES_PACKAGE + "."
+                + JavaBackend.getUpdateName(recf.getUpdateID()) + ".singleton());");
+        
+        // Deltas
+        List<DeltaID> deltaIDs = recf.getDeltaIDs();
+        stream.print("instance.setDeltas(");
+        if (deltaIDs.getNumChild() == 0) { // no deltas
+            stream.print(Collections.class.getName() + ".<" + ABSDynamicDelta.class.getName() + ">emptyList()");
         } else {
-            StringBuilder list = new StringBuilder();
-            list.append(Arrays.class.getName() + ".asList(");
+            StringBuilder deltaList = new StringBuilder();
+            deltaList.append(Arrays.class.getName() + ".asList(");
             boolean first = true;
-            for (ProductAdaptation ad : prod.getProductAdaptations()) {
+            for (DeltaID did : deltaIDs) {
                 if (first) first = false;
-                else list.append(", ");
-                list.append(JavaBackendConstants.LIB_PRODUCTS_PACKAGE + "." + JavaBackend.getProductName(ad.getProductID()) + ".singleton()"); 
+                else deltaList.append(", ");
+
+                deltaList.append(JavaBackend.getDeltaPackageName(did.getName()) + "."
+                        + JavaBackend.getDeltaName(did.getName())  + ".singleton()");
             }
-            list.append(")");
-            stream.print(list);
+            deltaList.append(")");
+            stream.print(deltaList);
         }
         stream.println(");");
 
-        // Updates
-        for (ProductAdaptation ad : prod.getProductAdaptations()) {
-            stream.println("instance.setUpdate(\"" + ad.getProductID() + "\", \"" + ad.getUpdateID() + "\");");
-        }
-        
-        // Deltas
-        for (ProductAdaptation ad : prod.getProductAdaptations()) {
-            Product toProd = allProducts.get(ad.getProductID());
-
-            // obtain sequence of applicable deltas
-            // this is now defined by the user in the product definition
-            List<DeltaID> sortedIDs = ad.getDeltaIDs();
-            
-            stream.print("instance.setDeltas(\"" + ad.getProductID() + "\", ");
-            if (sortedIDs.getNumChild() == 0) { // no deltas
-                stream.print(Collections.class.getName() + ".<" + String.class.getName() + ">emptyList()");
-            } else {
-                StringBuilder deltaList = new StringBuilder();
-                deltaList.append(Arrays.class.getName() + ".asList(");
-                boolean first = true;
-                for (DeltaID did : sortedIDs) {
-                    if (first) first = false;
-                    else deltaList.append(", ");
-
-                    deltaList.append(JavaBackend.getDeltaPackageName(did.getName()) + "."
-                            + JavaBackend.getDeltaName(did.getName())  + ".singleton()");
-                }
-                deltaList.append(")");
-                stream.print(deltaList);
-            }
-            stream.println(");");
-        }
-        
         stream.println("}");
         stream.println("return instance;");
         stream.println("}");

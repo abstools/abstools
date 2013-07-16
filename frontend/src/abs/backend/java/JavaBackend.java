@@ -257,18 +257,22 @@ public class JavaBackend extends Main {
         return truncate(name + "_prod");
     }
 
+    public static String getReconfigurationName(String from, String to) {
+        return truncate(from + "__" + to + "_recf");
+    }
+
     public static String getDeltaName(String name) {
         return truncate(name + "_delta");
     }
 
+    public static String getDeltaPackageName(String name) {
+        return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
+    }
+    
     public static String getUpdateName(String name) {
         return truncate(name + "_upd");
     }
     
-    public static String getDeltaPackageName(String name) {
-        return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
-    }
-
     public static String getModifierPackageName(String name) {
         return truncate(JavaBackendConstants.LIB_DELTAS_PACKAGE + "." + name);
     }

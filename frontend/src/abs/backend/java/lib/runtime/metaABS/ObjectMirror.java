@@ -25,12 +25,12 @@ public class ObjectMirror {
     public static ABSDynamicClass singleton() {
         if (thisClass == null) {
             thisClass = new ABSDynamicClass();
-            setupMetaAPI();
+            setupAPI();
         }
         return thisClass;
     }
     
-    public static void setupMetaAPI() {
+    public static void setupAPI() {
         thisClass.setName("ObjectMirror");
         
         /*

@@ -163,18 +163,22 @@ public class TypeCheckerHelper {
                     e.add(new TypeError(prod, ErrorMessage.NAME_NOT_RESOLVABLE, f.getName()));
             }
         }
-        for (ProductAdaptation ad : prod.getProductAdaptations()) {
-            // Does the adaptation target product exist?
-            if (! prodNames.contains(ad.getProductID()))
-                e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, ad.getProductID()));
-            // Do the deltas used for adaptation exist?
-            for (DeltaID d : ad.getDeltaIDs()) {
+        Set<String> seen = new HashSet<String>();
+        for (Reconfiguration recf : prod.getReconfigurations()) {
+            if (!seen.add(recf.getTargetProductID()))
+                e.add(new TypeError(recf, ErrorMessage.DUPLICATE_RECONFIGURATION, recf.getTargetProductID()));
+
+            // Does the reconfiguration target product exist?
+            if (! prodNames.contains(recf.getTargetProductID()))
+                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getTargetProductID()));
+            // Do the deltas used for reconfiguration exist?
+            for (DeltaID d : recf.getDeltaIDs()) {
                 if (! deltaNames.contains(d.getName()))
-                    e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
+                    e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, d.getName()));
             }
-            // Does the update used for adaptation exist?
-            if (! updateNames.contains(ad.getUpdateID()))
-                e.add(new TypeError(ad, ErrorMessage.NAME_NOT_RESOLVABLE, ad.getUpdateID()));
+            // Does the update used for reconfiguration exist?
+            if (! updateNames.contains(recf.getUpdateID()))
+                e.add(new TypeError(recf, ErrorMessage.NAME_NOT_RESOLVABLE, recf.getUpdateID()));
         }
     }
 

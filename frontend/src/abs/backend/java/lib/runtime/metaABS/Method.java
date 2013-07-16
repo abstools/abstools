@@ -19,7 +19,7 @@ public class Method {
     public static ABSDynamicClass singleton() {
         if (thisClass == null) {
             thisClass = new ABSDynamicClass();
-            setupMetaAPI();
+            setupAPI();
         }
         return thisClass;
     }
@@ -27,7 +27,7 @@ public class Method {
     /*
      * Define the methods of this class
      */
-    public static void setupMetaAPI() {
+    public static void setupAPI() {
         thisClass.setName("Method");
         
         // FIXME This does not work currently, because abslang.abs needs to declare

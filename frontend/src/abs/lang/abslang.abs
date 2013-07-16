@@ -594,20 +594,41 @@ interface Method {
     //Object exec(Object receiver, List<Object> params);
 }
 
+interface ProductLine {
+    Product getCurrentProduct();
+    String getProduct(String s);
+    Unit reconfigure(Product p);
+    Unit addProduct(Product p);
+    Unit removeProduct(Product p);
+    Unit addReconfiguration(Reconfiguration r);   
+    Unit removeReconfiguration(Reconfiguration r);   
+}
+
 interface Product {
     String getName();
     Set<String> getFeatures();
-    List<String> getDeltas();
+    Set<Product> getConfigurableProducts();
+    Reconfiguration getReconfiguration(Product p);
 }
 
-interface ProductLine {
+interface Reconfiguration {
+    String getName();
     Product getCurrentProduct();
-    List<Product> getConfigurableProducts();
-    Product getConfigurableProduct(String name);
-    Unit configureProduct(Product s);
+    Unit setCurrentProduct(Product p);
+    Product getTargetProduct();
+    Unit setTargetProduct(Product p);
+    List<Delta> getDeltas();
+    Unit setDeltas(List<Delta> deltas);
+    StateUpdate getStateUpdate();
+    Unit setStateUpdate(StateUpdate u);
 }
 
 interface Delta {
+    String getName();
+    Unit apply();
+}
+
+interface StateUpdate {
     String getName();
     Unit apply();
 }

@@ -45,19 +45,16 @@ aspect GenerateJavaDynamic_Core {
                 }
             }
         }
-        if (hasProductLine()) {
-            ProductLine pl = getProductLine();
-            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_PRODUCTS_PACKAGE);
-            
+        {   /* The Reconfiguration Decision Model (RDM) */
             // first remember all products by name
             HashMap<String, Product> allProducts = new HashMap<String, Product>();
             for (Product prod : getProducts()) {
                 allProducts.put(prod.getName(), prod);
             }
-            
+            JavaCode.Package pkg = code.createPackage(JavaBackendConstants.LIB_RDM_PACKAGE);
             for (Product prod : getProducts()) {
                 try {
-                    prod.generateJavaCodeDynamic(pkg, pl, allProducts);
+                    prod.generateJavaCodeDynamic(pkg, allProducts);
                 } catch (NotImplementedYetException e) { 
                     throw new JavaCodeGenerationException("Product " + prod.getName() + ":" + e.getLocalizedMessage(),e); 
                 } catch (RuntimeException e) { 
@@ -99,10 +96,11 @@ aspect GenerateJavaDynamic_Core {
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
-                if (! getModel().getProductName().equals("core"))
-                    stream.println("thisP.__ABS_getRuntime().setCurrentProduct(" 
-                            + JavaBackendConstants.LIB_PRODUCTS_PACKAGE + "." 
+                if (! getModel().getProductName().equals("core")) {
+                    stream.println("thisP.__ABS_getRuntime().initDSPL(" 
+                            + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
                             + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
+                }
                 block.generateJavaDynamic(stream);
                 stream.println("return " + JavaBackendConstants.UNITVALUE + ";");
                 stream.println("}");
@@ -1127,7 +1125,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
         stream.println("clsNew.addMethod(\"" + mName + "\", " + className + "." + mName + ".singleton());");
     }
     
-    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, ProductLine pl, HashMap<String, Product> allProducts) 
+    public void Product.generateJavaCodeDynamic(JavaCode.Package pkg, HashMap<String, Product> allProducts) 
             throws IOException, JavaCodeGenerationException {
         PrintStream stream = null;
         String generatedJavaClassName = JavaBackend.getProductName(getName());
@@ -1138,13 +1136,37 @@ aspect GenerateJavaDynamic_DeltaModelling {
             // gen header
             stream.println("package " + pkg.packageName + ";");
             stream.println("public class " + generatedJavaClassName + " {");
-            DynamicJavaGeneratorHelper.generateProduct(stream, this, pl, allProducts);
+            DynamicJavaGeneratorHelper.generateProduct(stream, this, allProducts);
+            stream.println("}");
+            
+            for (Reconfiguration recf : getReconfigurations()) {
+                recf.generateJavaCodeDynamic(pkg, this, allProducts);
+            }
+        } finally {
+            if (stream != null)
+                stream.close();
+        }
+    }
+    
+    public void Reconfiguration.generateJavaCodeDynamic(JavaCode.Package pkg, Product currentP, HashMap<String, Product> allProducts)
+            throws IOException, JavaCodeGenerationException {
+        PrintStream stream = null;
+        String generatedJavaClassName = JavaBackend.getReconfigurationName(currentP.getName(), getTargetProductID());
+        
+        try {
+            File file = pkg.createJavaFile(generatedJavaClassName);
+            stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
+            // gen header
+            stream.println("package " + pkg.packageName + ";");
+            stream.println("public class " + generatedJavaClassName + " {");
+            DynamicJavaGeneratorHelper.generateReconfiguration(stream, this, currentP, allProducts);
             stream.println("}");
         } finally {
             if (stream != null)
                 stream.close();
         }
     }
+    
         
     /*
      * State Updates 

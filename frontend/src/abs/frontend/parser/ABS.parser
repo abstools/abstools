@@ -435,8 +435,9 @@ ObjectUpdate object_update =
   OBJECTUPDATE qualified_type_name.n LBRACE 
   AWAIT data_exp.e SEMICOLON
   update_preamble.p
-  PRE assign_stmt_list.pre
-  POST assign_stmt_list.post
+  assign_stmt_list.pre
+  CLASSUPDATE SEMICOLON
+  assign_stmt_list.post
   RBRACE {: return new ObjectUpdate(n.getName(), new ExpGuard(e), new UpdatePreamble(p), pre, post); :}
   ;
 
@@ -1255,15 +1256,15 @@ List product_list = product.p {: return new List().add(p); :}
     ;
 
 Product product = PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN SEMICOLON {: return new Product(id, l, new List()); :} 
-    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE adaptation_list.al RBRACE {: return new Product(id, l, al); :}
+    | PRODUCT TYPE_IDENTIFIER.id LPAREN feature_list.l? RPAREN LBRACE reconfiguration_list.rl RBRACE {: return new Product(id, l, rl); :}
     ;
 
-List adaptation_list = adaptation.ad {: return new List().add(ad); :}
-    | adaptation_list.l adaptation.ad {: return l.add(ad); :}
+List reconfiguration_list = reconfiguration.r {: return new List().add(r); :}
+    | reconfiguration_list.l reconfiguration.r {: return l.add(r); :}
     ;
 
-ProductAdaptation adaptation = TYPE_IDENTIFIER.product DELTA delta_list.deltas STATEUPDATE TYPE_IDENTIFIER.update SEMICOLON 
-    {: return new ProductAdaptation(product, deltas, update); :}
+Reconfiguration reconfiguration = TYPE_IDENTIFIER.product DELTA delta_list.deltas STATEUPDATE TYPE_IDENTIFIER.update SEMICOLON 
+    {: return new Reconfiguration(product, deltas, update); :}
     ;
 
 

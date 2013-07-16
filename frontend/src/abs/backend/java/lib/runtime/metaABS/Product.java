@@ -13,8 +13,8 @@ import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicFeature;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
+import abs.backend.java.lib.runtime.ABSDynamicReconfiguration;
 import abs.backend.java.lib.types.ABSString;
-import abs.backend.java.lib.types.ABSUnit;
 import abs.backend.java.lib.types.ABSValue;
 import abs.common.ListUtils;
 
@@ -38,41 +38,44 @@ public class Product {
     public static void setupMetaAPI() {
         thisClass.setName("Product");
         
+        /* 
+         * MetaABS Product API -- cf. abslang.abs module ABS.Meta 
+         */
+        
         thisClass.addMethod(/*ABSString*/ "getName", new ABSClosure() {
             @Override
             public ABSString exec(ABSDynamicObject t, ABSValue... params) {
-                ABSDynamicProduct prod = (ABSDynamicProduct)t;
-                return ABSString.fromString(prod.getName());
+                ABSDynamicProduct thisP = (ABSDynamicProduct)t;
+                return ABSString.fromString(thisP.getName());
             }
         });
 
         thisClass.addMethod(/*List<ABSDynamicFeature>*/ "getFeatures", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                ABSDynamicProduct prod = (ABSDynamicProduct)t;
+                ABSDynamicProduct thisP = (ABSDynamicProduct)t;
                 ArrayList<ABSDynamicFeature> features = new ArrayList<ABSDynamicFeature>();
-                for (ABSDynamicFeature f : prod.getFeatures()) {
+                for (ABSDynamicFeature f : thisP.getFeatures()) {
                     features.add(f);
                 }
                 return ListUtils.toABSList(features);
             }
         });
 
-        thisClass.addMethod(/*List<ABSDynamicDelta>*/ "getDeltas", new ABSClosure() {
+        thisClass.addMethod(/*Set<ABSDynamicProduct>*/ "getConfigurableProducts", new ABSClosure() {
             @Override
             public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                ABSDynamicProduct prod = (ABSDynamicProduct)t;
-                String targetProd = ((ABSString)params[0]).getString();
-                List<ABSDynamicDelta> deltas = prod.getDeltas(targetProd);
-                return ListUtils.toABSList(deltas);
+                ABSDynamicProduct thisP = (ABSDynamicProduct)t;
+                return ListUtils.toABSSet(thisP.getConfigurableProducts());
             }
         });
 
-        thisClass.addMethod(/*List<ABSDynamicProduct>*/ "getConfigurableProducts", new ABSClosure() {
+        thisClass.addMethod(/*ABSDynamicReconfiguration*/ "getReconfiguration", new ABSClosure() {
             @Override
-            public ABSValue exec(ABSDynamicObject t, ABSValue... params) {
-                ABSDynamicProduct prod = (ABSDynamicProduct)t;
-                return ListUtils.toABSList(prod.getConfigurableProducts());
+            public ABSDynamicReconfiguration exec(ABSDynamicObject t, ABSValue... params) {
+                ABSDynamicProduct thisP = (ABSDynamicProduct)t;
+                ABSDynamicProduct targetP = (ABSDynamicProduct)params[0];
+                return thisP.getReconfiguration(targetP);
             }
         });
 

@@ -301,5 +301,5 @@ FID: Deltaparam ::= <FeatName>;
 FIDAID: Deltaparam ::= <FeatName> <AttrName>;
 Const: Deltaparam ::= Value ;
 
-Product ::= <Name> Feature* ProductAdaptation* ;
-ProductAdaptation ::= <ProductID> DeltaID* <UpdateID> ;
+Product ::= <Name> Feature* Reconfiguration* ;
+Reconfiguration ::= <TargetProductID> DeltaID* <UpdateID> ;

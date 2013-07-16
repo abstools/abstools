@@ -22,7 +22,7 @@ public class JavaBackendConstants {
     public static String EXPGUARD = ABSExpGuard.class.getName();
 
     // Package names for generated products, deltas
-    public static String LIB_PRODUCTS_PACKAGE = "products";
+    public static String LIB_RDM_PACKAGE = "rdm";
     public static String LIB_DELTAS_PACKAGE = "deltas";
     public static String LIB_UPDATES_PACKAGE = "updates";
 }

@@ -4,10 +4,9 @@
  */
 package abs.backend.java.lib.runtime;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import abs.backend.java.codegeneration.dynamic.DynamicException;
@@ -21,9 +20,7 @@ public class ABSDynamicProduct extends ABSDynamicObject {
     
     private String name;
     private Set<ABSDynamicFeature> features = new HashSet<ABSDynamicFeature>();
-    private List<ABSDynamicProduct> configurableProducts = new ArrayList<ABSDynamicProduct>();
-    private HashMap<String, List<ABSDynamicDelta>> deltas = new HashMap<String, List<ABSDynamicDelta>>();
-    private HashMap<String, String> update = new HashMap<String, String>();
+    private Map<ABSDynamicProduct,ABSDynamicReconfiguration> reconfigurations = new HashMap<ABSDynamicProduct,ABSDynamicReconfiguration>();
     
     public String getName() {
         return name;
@@ -47,31 +44,19 @@ public class ABSDynamicProduct extends ABSDynamicObject {
         features.add(f);
     }
 
-    public void setConfigurableProducts(List<ABSDynamicProduct> productNames) {
-        configurableProducts = productNames;
-    }
-    public List<ABSDynamicProduct> getConfigurableProducts() {
-        return configurableProducts;
+    public Set<ABSDynamicProduct> getConfigurableProducts() {
+        return reconfigurations.keySet();
     }
     
-    public void setDeltas(String productName, List<ABSDynamicDelta> deltaList) {
-        deltas.put(productName, deltaList);
+    public void addReconfiguration(ABSDynamicProduct targetP, ABSDynamicReconfiguration recf) {
+        reconfigurations.put(targetP, recf);
     }
-
-    public List<ABSDynamicDelta> getDeltas(String productName) {
-        if (deltas.containsKey(productName))
-            return deltas.get(productName);
-        else 
-            throw new DynamicException("Product " + name + " cannot be reconfigured into product " + productName + ".");
-    }
-
-    public void setUpdate(String productName, String upd) {
-        if (! update.containsKey(productName))
-            update.put(productName, upd);
+    
+    public ABSDynamicReconfiguration getReconfiguration(ABSDynamicProduct targetP) {
+        if (! reconfigurations.containsKey(targetP))
+            return reconfigurations.get(targetP);
         else
-            throw new DynamicException("Product " + name + " already defined an update for " + productName + ".");
-    }
-    public String getUpdate(String productName) {
-        return update.get(productName);
+            throw new DynamicException("The product " + name + " cannot be reconfigured into product " + targetP.getName() + ".");
+
     }
 }
