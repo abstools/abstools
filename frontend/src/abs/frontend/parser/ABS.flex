@@ -280,14 +280,14 @@ IntLiteral = 0 | [1-9][0-9]*
 
 
 <STRING> {
+ \\\"          { string.append('\"'); }
  \"            { yybegin(previousState);
                  return symString(string.toString()); }
- [^\n\r\"\\]+  { string.append( yytext() ); }
  \\t           { string.append('\t'); }
  \\n           { string.append('\n'); }
  \\r           { string.append('\r'); }
- \\\"          { string.append('\"'); }
- \\            { string.append('\\'); }
+ [^\n\r\"\\]+  { string.append( yytext() ); }
+ \\\\          { string.append('\\'); }
 }
 
 
