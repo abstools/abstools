@@ -36,6 +36,18 @@ public class StmtTests extends SemanticTests {
     public void assignStmt() {
         assertEvalTrue("{ Bool testresult = False; Bool x = True; testresult = x; }");
     }
+    
+    @Test
+    public void declIfExpStmt() {
+        // dynamic Java backend generated invalid code for this case
+        assertEvalTrue("{Bool x = True; Int i = if x then 1 else 2; Bool testresult = (i == 1); }");
+    }
+
+    @Test
+    public void assignIfExpStmt() {
+        // dynamic Java backend generated invalid code for this case
+        assertEvalTrue("{Bool x = True; Int i = 0; i = if x then 1 else 2; Bool testresult = (i == 1); }");
+    }
 
     @Test
     public void useOfVariablesInsideExpr() {
