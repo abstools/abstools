@@ -61,6 +61,46 @@ public class FunctionalTests extends SemanticTests {
     }
 
     @Test
+    public void dataTypeGt() {
+        assertEvalTrue("{ Bool testresult = Nil > Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeGt2() {
+        assertEvalTrue("{ Bool testresult = Cons(10, Nil) > Cons(5, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLt() {
+        assertEvalTrue("{ Bool testresult = Cons(10, Nil) < Nil;  }");
+    }
+
+    @Test
+    public void dataTypeLt2() {
+        assertEvalTrue("{ Bool testresult = Cons(5, Nil) < Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLtEq() {
+        assertEvalTrue("{ Bool testresult = Cons(5, Nil) <= Cons(10, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeLtEq2() {
+        assertEvalTrue("{ Bool testresult = Cons(5, Nil) <= Cons(5, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeGtEq() {
+        assertEvalTrue("{ Bool testresult = Cons(10, Nil) >= Cons(5, Nil);  }");
+    }
+
+    @Test
+    public void dataTypeGtEq2() {
+        assertEvalTrue("{ Bool testresult = Cons(5, Nil) >= Cons(5, Nil);  }");
+    }
+    
+    @Test
     public void parametericDataType() {
         assertEvalTrue("data Foo<A> = Bar(A); { Bool testresult = True; Foo<Bool> f = Bar(True); }");
     }

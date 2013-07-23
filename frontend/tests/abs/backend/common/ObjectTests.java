@@ -23,6 +23,43 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void refEq() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); Bool testresult = i1 == i1; }");
+    }
+
+    @Test
+    public void refEq2() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = ~(i1 == i2); }");
+    }
+    
+    @Test
+    public void refGt() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 > i2 || i2 > i1; }");
+    }
+    
+    @Test
+    public void refLt() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 < i2 || i2 < i1; }");
+    }
+    
+    @Test
+    public void refGtEq() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 >= i2 || i1 < i2; }");
+    }
+
+    @Test
+    public void refLtEq() {
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 <= i2 || i1 > i2; }");
+    }
+
+    @Test
+    public void futLt() {
+        assertEvalTrue("interface I {Int m(Int i); Unit doit();}"
+                + "class C implements I {Bool flag = False; Int m (Int i) {await flag; return i;} Unit doit() {flag = True;}}"
+                + "{I i1 = new cog C(); I i2 = new cog C(); Bool reforder = i1 < i2; Int inti1 = if reforder then 1 else 2; Int inti2 = if reforder then 2 else 1; Fut<Int> fi1 = i1!m(inti1); Fut<Int> fi2 = i2!m(inti2); Bool futorder = fi1 < fi2; i1!doit(); i2!doit(); fi1.get; fi2.get; Bool testresult = if futorder then fi1 < fi2 else fi2 < fi1;}");
+    }
+
+    @Test
     public void classDecl() {
         assertEvalTrue("class C { } { Bool testresult = True; }");
     }
@@ -37,11 +74,6 @@ public class ObjectTests extends SemanticTests {
     @Test
     public void newExp() {
         assertEvalTrue(EMPTY_CLASS_C + " { Bool testresult = True; I i = new C();}");
-    }
-
-    @Test
-    public void refEq() {
-        assertEvalTrue(EMPTY_CLASS_C + " { Bool testresult = True; I i = new C(); testresult = i == i;}");
     }
 
     private static String CLASS_WITH_METHOD = "interface I { Bool m(); } class C implements I { Bool m() { return True; } }";
