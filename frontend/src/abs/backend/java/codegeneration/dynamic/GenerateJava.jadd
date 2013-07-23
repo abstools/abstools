@@ -388,6 +388,7 @@ aspect GenerateJavaDynamic_Core {
     }
 
     public void VarDecl.generateJavaDynamic(PrintStream stream) {
+        boolean castNeeded = !getAccess().getType().isReferenceType();
         if (getAccess().getType().isReferenceType()) {
             stream.print(ABSValue.class.getName());
 //            stream.print(JavaBackend.getQualifiedString(getAccess().getType()));
@@ -397,10 +398,10 @@ aspect GenerateJavaDynamic_Core {
         String name = JavaBackend.getVariableName(getName());
         stream.print(" " + name + " = ");
 
-        if (! getAccess().getType().isReferenceType()) {
+        if (castNeeded) {
             stream.print("(");
             getAccess().generateJavaDynamic(stream);
-            stream.print(")");
+            stream.print(")(");
         }
         if (hasInitExp()) {
             getInitExp().generateJavaDynamic(stream);
@@ -409,6 +410,9 @@ aspect GenerateJavaDynamic_Core {
             }
         } else {
             stream.print("null");
+        }
+        if (castNeeded) {
+            stream.print(")");
         }
         stream.println(";");
 

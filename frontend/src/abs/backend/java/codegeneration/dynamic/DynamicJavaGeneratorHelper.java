@@ -509,6 +509,7 @@ public class DynamicJavaGeneratorHelper {
         VarOrFieldUse vfu = assign.getVar();
         boolean truncateNeeded
             = vfu.getType().isIntType() && assign.getValue().getType().isRatType();
+        boolean castNeeded = !assign.getVar().getType().isReferenceType();
         if (vfu instanceof FieldUse) {
             stream.print("thisP.setFieldValue(\"" + vfu.getName() + "\", ");
             if (truncateNeeded) stream.print("(");
@@ -519,14 +520,17 @@ public class DynamicJavaGeneratorHelper {
             vfu.generateJavaDynamic(stream);
             stream.print(" = ");
             if (truncateNeeded) stream.print("(");
-            if (! assign.getVar().getType().isReferenceType()) {
+            if (castNeeded) {
                 // cast ABSValue to more specific type
                 stream.print("(");
                 stream.print(JavaBackend.getQualifiedString(assign.getVar().getType()));
-                stream.print(")");
+                stream.print(")(");
             }
             assign.getValue().generateJavaDynamic(stream);
-            if (vfu.getType().isIntType() && assign.getValue().getType().isRatType()) {
+            if (castNeeded) {
+                stream.print(")");
+            }
+            if (truncateNeeded) {
                 stream.print(").truncate()");
             }
             stream.println(";");
