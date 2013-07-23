@@ -166,6 +166,15 @@ fmod ABS-DATA-BOOL is
   eq fparams("||") = 'D1, 'D2 .
   eq fdefn("||") = $builtin("||") .
 
+  eq fparams("<") = 'I1, 'I2 .
+  eq fdefn("<") = $builtin("<") .
+  eq fparams("<=") = 'I1, 'I2 .
+  eq fdefn("<=") = $builtin("<=") .
+  eq fparams(">") = 'I1, 'I2 .
+  eq fdefn(">") = $builtin(">") .
+  eq fparams(">=") = 'I1, 'I2 .
+  eq fdefn(">=") = $builtin(">=") .
+
 endfm
 
 
@@ -236,15 +245,6 @@ fmod ABS-DATA-INT is
 
   *** eq "**" ("num"[I] :: "num"[I']) = "num"[I ^ I'] .
   *** eq "real_of_int" ("int"[I]) = "float"[float(I)] .
-
-  eq fparams("<") = 'I1, 'I2 .
-  eq fdefn("<") = $builtin("<") .
-  eq fparams("<=") = 'I1, 'I2 .
-  eq fdefn("<=") = $builtin("<=") .
-  eq fparams(">") = 'I1, 'I2 .
-  eq fdefn(">") = $builtin(">") .
-  eq fparams(">=") = 'I1, 'I2 .
-  eq fdefn(">=") = $builtin(">=") .
 
   *** We're punning here: random has one argument, but the code generator adds
   *** a second one that gets one of the pre-generated random numbers.  Random
@@ -812,13 +812,16 @@ mod ABS-EVAL is
   vars L L' : Label .
   vars E E' E'' : Expr .
   vars D D' : Data .
-  var DL : DataList .
+  vars DL DL1 DL2 CDL1 CDL2 : DataList .
   var EL : ExprList .
   var NeEL : NeExprList .
   var CBL : CaseBranchList .
   vars A A' : Vid .
   var AL : VidList .
   vars Q C : String .
+  vars Q1 Q2 : String .
+  vars R1 R2 : Rat .
+  vars I1 I2 : Rat .
   var QID : Qid .
   var M : Mid .
   vars S S' : Subst .
@@ -832,7 +835,7 @@ mod ABS-EVAL is
   var O : Oid .
   var CG : Cogid .
   var MS : Msg .
-  var N : Nat .
+  vars N N1 N2 : Nat .
   var B : Bool .
   vars MIN MAX : Rat .
   var MAC : SSubst .
@@ -840,7 +843,7 @@ mod ABS-EVAL is
   var COST : Expr .
   
   var OID : Oid .
-  var CID : Cid .
+  vars CID CID1 CID2 : Cid .
   var COGID : Cogid .
 
   --- Check if a message is in the queue.
@@ -994,6 +997,29 @@ mod ABS-EVAL is
   eq eval($builtin("&&"), S, CN, MAC) = ((S['D1]) asBool and (S['D2]) asBool) asAbsBool .
   eq eval($builtin("||"), S, CN, MAC) = ((S['D1]) asBool or (S['D2]) asBool) asAbsBool .
 
+  op dataLessThan : DataList DataList -> Bool .
+  eq dataLessThan(emp, emp) = false .
+  eq dataLessThan("num"[R1] :: DL1, "num"[R2] :: DL2) =
+  R1 < R2 or-else (R1 == R2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan("str"[Q1] :: DL1, "str"[Q2] :: DL2) = Q1 < Q2 or-else (Q1 == Q2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan(Q1[CDL1] :: DL1, Q2[CDL2] :: DL2) =
+  Q1 < Q2 or-else ((Q1 == Q2 and dataLessThan(CDL1, CDL2)) or-else dataLessThan(DL1, DL2)) .
+  eq dataLessThan(ob(CID1, I1) :: DL1, ob(CID2, I2) :: DL2) =
+    string(CID1) < string(CID2)
+    or-else (CID1 == CID2 and I1 < I2)
+    or-else (CID1 == CID2 and I1 == I2 and dataLessThan(DL1, DL2)) .
+  eq dataLessThan(label(ob(CID1, I1), N1) :: DL1, label(ob(CID2, I2), N2) :: DL2) =
+    string(CID1) < string(CID2)
+    or-else (CID1 == CID2 and I1 < I2)
+    or-else (CID1 == CID2 and I1 == I2 and N1 < N2)
+    or-else (CID1 == CID2 and I1 == I2 and N1 == N2 and dataLessThan(DL1, DL2)) .
+
+  eq eval($builtin("<"), S, CN, MAC) = dataLessThan(S['I1], S['I2]) asAbsBool .
+  eq eval($builtin("<="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I1], S['I2])) asAbsBool .
+  eq eval($builtin(">"), S, CN, MAC) = dataLessThan(S['I2], S['I1]) asAbsBool .
+  eq eval($builtin(">="), S, CN, MAC) = ((S['I1] == S['I2]) or-else dataLessThan(S['I2], S['I1])) asAbsBool .
+
+
   *** ABS-DATA-RAT
   eq eval($builtin("--"), S, CN, MAC) = "num"[-(S['I]) asRat] .
   ceq eval($builtin("+"), S, CN, MAC) = "num"[I1:Rat + I2:Rat]
@@ -1004,11 +1030,6 @@ mod ABS-EVAL is
   *** if "num"[I1:Int] := S['I1] /\ "num"[I2:Int] := S['I2] .
   eq eval($builtin("/"), S, CN, MAC) = "num"[(S['I1]) asRat / (S['I2]) asRat] .
   eq eval($builtin("%"), S, CN, MAC) = "num"[(S['I1]) asRat rem (S['I2]) asRat] .
-  eq eval($builtin("<"), S, CN, MAC) = ((S['I1]) asRat < (S['I2]) asRat) asAbsBool .
-  eq eval($builtin("<="), S, CN, MAC) = ((S['I1]) asRat <= (S['I2]) asRat) asAbsBool .
-  eq eval($builtin(">"), S, CN, MAC) = ((S['I1]) asRat > (S['I2]) asRat) asAbsBool .
-  eq eval($builtin(">="), S, CN, MAC) = ((S['I1]) asRat >= (S['I2]) asRat) asAbsBool .
-
   --- 4294967296 == 2^32
   ceq eval($builtin("random"), S, CN, MAC) = "num"[ trunc(((S['Range]) asRat) * (N:Rat / 4294967296)) ]
   if N:Rat := eval("ABS.StdLib.nth"(MAC['.random] :: 'Position), S, CN, MAC) asRat .
