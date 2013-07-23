@@ -725,16 +725,12 @@ aspect TypeChecker {
     }
 
     public void RelationalExpr.typeCheck(SemanticErrorList e) { 
-        TypeCheckerHelper.typeCheckBinary(e,this,getModel().getRatType());
-    }
-
-    public void EqualityExpr.typeCheck(SemanticErrorList e) {
         getLeft().typeCheck(e);
         getRight().typeCheck(e);
         Type tl = getLeft().getType();
         Type tr = getRight().getType();
         if (!tl.isAssignable(tr) && !tr.isAssignable(tl)) {
-            e.add(new TypeError(this, ErrorMessage.EQUALITY_INCOMPARABLE_TYPE, tl, tr));
+            e.add(new TypeError(this, ErrorMessage.COMPARISON_INCOMPARABLE_TYPE, tl, tr));
         }
     }
 
