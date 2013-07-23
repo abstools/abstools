@@ -68,5 +68,23 @@ public class ABSProcess extends ABSBuiltInDataType {
                 getConstructorName(), pid, methodName, arrivalTime, cost, deadline, startTime, finishTime, critical, value);
     }
     
+    public ABSBool gt(ABSValue o) {
+        if (o.getClass() == ABSProcess.class) {
+            return ABSBool.fromBoolean(this.pid > ((ABSProcess)o).getPid());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    public ABSBool lt(ABSValue o) {
+        if (o.getClass() == ABSProcess.class) {
+            return ABSBool.fromBoolean(this.pid < ((ABSProcess)o).getPid());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
 
 }

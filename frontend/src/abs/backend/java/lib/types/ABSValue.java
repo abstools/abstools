@@ -9,6 +9,14 @@ public interface ABSValue extends ABSType {
 
     ABSBool notEq(ABSValue o);
 
+    ABSBool gt(ABSValue other);
+
+    ABSBool lt(ABSValue other);
+
+    ABSBool gtEq(ABSValue other);
+
+    ABSBool ltEq(ABSValue other);
+
     boolean isDataType();
 
     boolean isReference();

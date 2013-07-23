@@ -85,6 +85,46 @@ public abstract class ABSObject implements ABSRef {
     }
 
     @Override
+    public ABSBool gt(ABSValue other) {
+        if (other instanceof ABSObject) {
+            return ABSBool.fromBoolean(this.__id > ((ABSObject)other).getView().getID());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool lt(ABSValue other) {
+        if (other instanceof ABSObject) {
+            return ABSBool.fromBoolean(this.__id < ((ABSObject)other).getView().getID());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool gtEq(ABSValue other) {
+        if (other instanceof ABSObject) {
+            return eq(other).or(gt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool ltEq(ABSValue other) {
+        if (other instanceof ABSObject) {
+            return eq(other).or(lt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
     public final boolean isDataType() {
         return false;
     }

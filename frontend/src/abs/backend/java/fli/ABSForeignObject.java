@@ -8,7 +8,7 @@ import abs.backend.java.lib.types.ABSBool;
 import abs.backend.java.lib.types.ABSRef;
 import abs.backend.java.lib.types.ABSValue;
 
-public class ABSForeignObject implements ABSRef {
+public abstract class ABSForeignObject implements ABSRef {
 
     @Override
     public final ABSBool eq(ABSValue o) {

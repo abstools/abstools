@@ -168,6 +168,46 @@ public class COG implements ABSValue {
     }
 
     @Override
+    public ABSBool gt(ABSValue other) {
+        if (other.getClass() == COG.class) {
+            return ABSBool.fromBoolean(this.id > ((COG)other).getID());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool lt(ABSValue other) {
+        if (other.getClass() == COG.class) {
+            return ABSBool.fromBoolean(this.id < ((COG)other).getID());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool gtEq(ABSValue other) {
+        if (other.getClass() == COG.class) {
+            return eq(other).or(gt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool ltEq(ABSValue other) {
+        if (other.getClass() == COG.class) {
+            return eq(other).or(lt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
     public boolean isDataType() {
         return false;
     }

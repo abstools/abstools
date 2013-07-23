@@ -19,6 +19,63 @@ public abstract class ABSDataType implements ABSValue {
         return this.eq(other).negate();
     }
 
+    public ABSBool gtEq(ABSValue o) {
+        if (this.eq(o).toBoolean())
+            return ABSBool.TRUE;
+        else
+            return this.gt(o);
+    }
+
+    public ABSBool ltEq(ABSValue o) {
+        if (this.eq(o).toBoolean())
+            return ABSBool.TRUE;
+        else
+            return this.lt(o);
+    }
+
+    public ABSBool gt(ABSValue o) {
+        if (o instanceof ABSDataType) {
+            ABSDataType other = (ABSDataType)o;
+            int constructorComparison = this.getConstructorName().compareTo(other.getConstructorName());
+            if (constructorComparison > 0) {
+                return ABSBool.TRUE;
+            } else if (constructorComparison == 0) {
+                for (int i = 0; i < getNumArgs(); i++) {
+                    if (getArg(i).gt(other.getArg(i)).equals(ABSBool.TRUE))
+                        return ABSBool.TRUE;
+                }
+                return ABSBool.FALSE;
+            } else {
+                return ABSBool.FALSE;
+            }
+            // return ABSBool.fromBoolean(this.pid > ((ABSProcess)o).getPid());
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    public ABSBool lt(ABSValue o) {
+        if (o instanceof ABSDataType) {
+            ABSDataType other = (ABSDataType)o;
+            int constructorComparison = this.getConstructorName().compareTo(other.getConstructorName());
+            if (constructorComparison > 0) {
+                return ABSBool.FALSE;
+            } else if (constructorComparison == 0) {
+                for (int i = 0; i < getNumArgs(); i++) {
+                    if (getArg(i).lt(other.getArg(i)).equals(ABSBool.TRUE))
+                        return ABSBool.TRUE;
+                }
+                return ABSBool.FALSE;
+            } else {
+                return ABSBool.TRUE;
+            }
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
     public abstract boolean match(PatternConstructor p, PatternBinding b);
 
     private static final ABSValue[] NO_ARGS = new ABSValue[0];

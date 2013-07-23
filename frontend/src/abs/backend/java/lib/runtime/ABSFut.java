@@ -122,6 +122,38 @@ public abstract class ABSFut<V extends ABSValue> extends ABSBuiltInDataType {
         return ABSBool.fromBoolean(other == this);
     }
 
+
+    public ABSBool gt(ABSValue o) {
+        if (o == null)
+            return ABSBool.FALSE;
+        if (!(o instanceof ABSFut))
+            return ABSBool.FALSE;
+        return ABSBool.fromBoolean(getID() > ((ABSFut)o).getID());
+    }
+
+    public ABSBool lt(ABSValue o) {
+        if (o == null)
+            return ABSBool.FALSE;
+        if (!(o instanceof ABSFut))
+            return ABSBool.FALSE;
+        return ABSBool.fromBoolean(getID() < ((ABSFut)o).getID());        
+    }
+
+    public ABSBool gtEq(ABSValue o) {
+        if (this.eq(o).toBoolean())
+            return ABSBool.TRUE;
+        else
+            return this.gt(o);
+    }
+
+    public ABSBool ltEq(ABSValue o) {
+        if (this.eq(o).toBoolean())
+            return ABSBool.TRUE;
+        else
+            return this.lt(o);
+    }
+
+
     public synchronized String toString() {
         return "Future (" + (isResolved ? value : "unresolved") + ")";
     }

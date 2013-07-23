@@ -11,4 +11,11 @@ public class ABSUnit extends ABSBuiltInDataType {
         super("Unit");
     }
 
+    public ABSBool gt(ABSValue o) {
+        return ABSBool.FALSE;
+    }
+
+    public ABSBool lt(ABSValue o) {
+        return ABSBool.FALSE;
+    }
 }

@@ -200,6 +200,46 @@ public class ABSDynamicClass implements ABSClass {
     }
 
     @Override
+    public ABSBool gt(ABSValue other) {
+        if (other.getClass() == ABSDynamicClass.class) {
+            return ABSBool.fromBoolean(this.name.compareTo(((ABSDynamicClass)other).getName()) > 0);
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool lt(ABSValue other) {
+        if (other.getClass() == ABSDynamicClass.class) {
+            return ABSBool.fromBoolean(this.name.compareTo(((ABSDynamicClass)other).getName()) < 0);
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool gtEq(ABSValue other) {
+        if (other.getClass() == ABSDynamicClass.class) {
+            return eq(other).or(gt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
+    public ABSBool ltEq(ABSValue other) {
+        if (other.getClass() == ABSDynamicClass.class) {
+            return eq(other).or(lt(other));
+        } else {
+            // type error, not reached
+            return ABSBool.FALSE;
+        }
+    }
+
+    @Override
     public boolean isDataType() {
         return false;
     }

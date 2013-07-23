@@ -25,6 +25,26 @@ public class ABSBool extends ABSBuiltInDataType {
         return ABSBool.fromBoolean(o != this);
     }
 
+    public ABSBool gt(ABSValue o) {
+        if (o == null)
+            return ABSBool.FALSE;
+        if (!o.getClass().equals(ABSBool.class))
+            return ABSBool.FALSE;
+        ABSBool oi = (ABSBool) o;
+        // True > False
+        return this.and(oi.negate());
+    }
+
+    public ABSBool lt(ABSValue o) {
+        if (o == null)
+            return ABSBool.FALSE;
+        if (!o.getClass().equals(ABSBool.class))
+            return ABSBool.FALSE;
+        ABSBool oi = (ABSBool) o;
+        // False < True
+        return oi.and(this.negate());
+    }
+
     public ABSBool negate() {
         return fromBoolean(!value);
     }

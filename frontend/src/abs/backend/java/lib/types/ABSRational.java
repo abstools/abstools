@@ -59,36 +59,32 @@ public class ABSRational extends ABSBuiltInDataType {
     @Override
     public ABSBool eq(ABSValue o) {
         if (o == null) return ABSBool.FALSE;
-        if (!o.getClass().equals(ABSRational.class) && !o.getClass().equals(ABSInteger.class))
-            return ABSBool.FALSE;
+        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
         ABSRational oi = (ABSRational) o;
         return ABSBool.fromBoolean(oi.value.compareTo(this.value) == 0);
     }
 
-    public ABSBool gt(ABSRational i) {
-        if (i == null)
+    public ABSBool gt(ABSValue o) {
+        if (o == null)
             return ABSBool.FALSE;
-        return ABSBool.fromBoolean(this.value.compareTo(i.value) == 1);
+        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
+        ABSRational oi = (ABSRational) o;
+        return ABSBool.fromBoolean(this.value.compareTo(oi.value) > 0);
     }
 
-    public ABSBool lt(ABSRational i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        return ABSBool.fromBoolean(this.value.compareTo(i.value) == -1);
+    public ABSBool lt(ABSValue o) {
+        if (o == null) return ABSBool.FALSE;
+        if (!(o instanceof ABSRational)) return ABSBool.FALSE;
+        ABSRational oi = (ABSRational) o;
+        return ABSBool.fromBoolean(this.value.compareTo(oi.value) < 0);
     }
 
-    public ABSBool gtEq(ABSRational i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        int res = this.value.compareTo(i.value);
-        return ABSBool.fromBoolean(res == 0 || res == 1);
+    public ABSBool gtEq(ABSValue o) {
+        return this.eq(o).or(this.gt(o));
     }
 
-    public ABSBool ltEq(ABSRational i) {
-        if (i == null)
-            return ABSBool.FALSE;
-        int res = this.value.compareTo(i.value);
-        return ABSBool.fromBoolean(res == 0 || res == -1);
+    public ABSBool ltEq(ABSValue o) {
+        return this.eq(o).or(this.lt(o));
     }
 
     public static ABSRational fromBigInt(BigInteger i) {
