@@ -87,7 +87,10 @@ public abstract class ABSObject implements ABSRef {
     @Override
     public ABSBool gt(ABSValue other) {
         if (other instanceof ABSObject) {
-            return ABSBool.fromBoolean(this.__id > ((ABSObject)other).getView().getID());
+            ABSObject o = (ABSObject)other;
+            int comp = getClassName().compareTo(o.getClassName()); 
+            if (comp == 0) return ABSBool.fromBoolean(this.__id > ((ABSObject)other).getView().getID());
+            else return ABSBool.fromBoolean(comp > 0);
         } else {
             // type error, not reached
             return ABSBool.FALSE;
@@ -97,7 +100,10 @@ public abstract class ABSObject implements ABSRef {
     @Override
     public ABSBool lt(ABSValue other) {
         if (other instanceof ABSObject) {
-            return ABSBool.fromBoolean(this.__id < ((ABSObject)other).getView().getID());
+            ABSObject o = (ABSObject)other;
+            int comp = getClassName().compareTo(o.getClassName()); 
+            if (comp == 0) return ABSBool.fromBoolean(this.__id < ((ABSObject)other).getView().getID());
+            else return ABSBool.fromBoolean(comp < 0);
         } else {
             // type error, not reached
             return ABSBool.FALSE;

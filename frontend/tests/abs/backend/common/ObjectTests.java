@@ -60,6 +60,14 @@ public class ObjectTests extends SemanticTests {
     }
 
     @Test
+    public void refLtDiffClass() {
+        assertEvalTrue("interface I {}"
+                + "class C1 implements I {}"
+                + "class C2 implements I {}"
+                + "{ I i1 = new cog C1(); I i2 = new cog C2(); Bool testresult = i1 < i2 || i2 < i1; }");
+    }
+    
+    @Test
     public void classDecl() {
         assertEvalTrue("class C { } { Bool testresult = True; }");
     }
