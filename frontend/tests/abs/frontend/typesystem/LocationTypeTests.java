@@ -21,6 +21,7 @@ import abs.frontend.typechecker.locationtypes.LocationTypeCheckerException;
 import abs.frontend.typechecker.locationtypes.LocationTypeExtension;
 import abs.frontend.typechecker.locationtypes.infer.InferMain;
 import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension;
+import abs.frontend.typechecker.locationtypes.infer.LocationTypeInferrerExtension.LocationTypingPrecision;
 import static abs.ABSTest.Config.*;
 
 public class LocationTypeTests extends FrontendTest {
@@ -325,13 +326,26 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void testInferenceRetypeChecking() {
         String code = "interface I { Unit m(); } { [Far] I i; I j; i = j; j.m(); }";
-        Model m = assertParse(code,WITH_STD_LIB);
+        Model m = assertParseOkStdLib(code);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
         SemanticErrorList e = m.typeCheck();
         m.typeCheck(new SemanticErrorList());
     }
     
+    @Test
+    public void testAwaitFail() {
+        LocationType lt = LocationType.INFER;
+        Model m = assertParseOkStdLib("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
+        assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
+        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+        ltie.setDefaultType(lt);
+        ltie.setLocationTypingPrecision(LocationTypingPrecision.CLASS_LOCAL_FAR);
+        m.registerTypeSystemExtension(ltie);
+        m.getErrors();
+        SemanticErrorList e = m.typeCheck();
+    }
+
     private void assertLocationTypeError(String code) {
         assertLocationTypeErrorOnly(INT+code);
     }
@@ -353,6 +367,7 @@ public class LocationTypeTests extends FrontendTest {
         Model m = assertParse(code,WITH_STD_LIB);
         LocationTypeExtension te = new LocationTypeExtension(m);
         m.registerTypeSystemExtension(te);
+        m.getErrors();
         SemanticErrorList e = m.typeCheck();
         assertTrue(e.isEmpty() ? "" : "Found error "+e.get(0).getMessage(),e.isEmpty());
         assertInferOk(code);

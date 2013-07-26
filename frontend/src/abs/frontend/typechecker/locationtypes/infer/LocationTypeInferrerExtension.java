@@ -229,6 +229,7 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
     @Override
     public void checkMethodCall(Call call) {
         LocationTypeVariable lv = getLV(call.getCallee().getType());
+        assert lv != null : "Can't get LV for " + call.getCallee().getType().toString(); 
         if (call instanceof SyncCall) {
             //checkEq(lv, LocationTypeVariable.ALWAYS_NEAR, Constraint.SHOULD_HAVE);
             constraints.add(Constraint.constConstraint(lv, LocationType.NEAR, Constraint.SHOULD_HAVE));
