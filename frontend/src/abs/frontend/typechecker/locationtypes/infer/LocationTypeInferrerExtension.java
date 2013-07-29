@@ -133,12 +133,12 @@ public class LocationTypeInferrerExtension extends DefaultTypeSystemExtension {
         }
         if (precision == LocationTypingPrecision.CLASS_LOCAL_FAR) {
             Decl d = originatingNode.getContextDecl();
-            if (d != null && d instanceof ClassDecl) {
+            if (d instanceof ClassDecl) {
                 node = d;
                 prefix = "C";
             }
             Block b = originatingNode.getContextBlock();
-            if (b != null && b instanceof MainBlock) {
+            if (b instanceof MainBlock) {
                 node = b;
                 prefix = "C";
             }

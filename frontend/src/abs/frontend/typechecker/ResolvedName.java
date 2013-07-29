@@ -41,7 +41,7 @@ public abstract class ResolvedName {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof ResolvedName))
+        if (!(obj instanceof ResolvedName))
             return false;
         return ((ResolvedName) obj).getQualifiedString().equals(getQualifiedString());
     }

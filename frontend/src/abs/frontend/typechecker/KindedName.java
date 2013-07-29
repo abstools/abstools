@@ -27,7 +27,7 @@ public class KindedName {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof KindedName))
+        if (!(obj instanceof KindedName))
             return false;
         KindedName o = (KindedName) obj;
         return name.equals(o.name) && kind.equals(o.kind);
