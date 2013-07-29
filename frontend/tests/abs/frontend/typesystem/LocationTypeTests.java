@@ -345,6 +345,21 @@ public class LocationTypeTests extends FrontendTest {
         m.getErrors();
         SemanticErrorList e = m.typeCheck();
     }
+    
+    @Test
+    public void testAwaitFailRewriteOff() {
+        LocationType lt = LocationType.INFER;
+        Model.doAACrewrite = false;
+        Model m = assertParseOkStdLib("interface T { Unit foo(); } class C { T t = null; Unit bar() { await t!foo(); }}");
+        assertFalse(m.hasErrors()); // This line is essential to trigger the NPE!
+        LocationTypeInferrerExtension ltie = new LocationTypeInferrerExtension(m);
+        ltie.setDefaultType(lt);
+        ltie.setLocationTypingPrecision(LocationTypingPrecision.CLASS_LOCAL_FAR);
+        m.registerTypeSystemExtension(ltie);
+        m.getErrors();
+        SemanticErrorList e = m.typeCheck();
+        Model.doAACrewrite = true;
+    }
 
     private void assertLocationTypeError(String code) {
         assertLocationTypeErrorOnly(INT+code);
