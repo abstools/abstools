@@ -25,7 +25,7 @@ public class IncompleteExpTests extends FrontendTest {
     
     @Test
     public void incompleteThisAsyncAccess() {
-        assertParse(" { this!x await x!foo();}", ALLOW_INCOMPLETE_EXPR); 
+        assertParse(" { this!x await x!foo();}", ALLOW_INCOMPLETE_EXPR, EXPECT_PARSE_ERROR); 
     }
 
     @Test

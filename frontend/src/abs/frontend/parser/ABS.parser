@@ -655,7 +655,7 @@ VarOrFieldUse var_or_field_ref =
         if (!allowIncompleteExpr) {
             addSyntaxError("Missing method arguments.",new ThisExp());
         }
-        return new IncompleteAsyncAccess(new ThisExp());
+        return new FieldUse(""); // TODO: can't use Incomplete* here, see #418
         :}
 	;
 
