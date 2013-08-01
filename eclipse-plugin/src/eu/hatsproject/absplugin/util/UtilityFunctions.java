@@ -86,7 +86,6 @@ public class UtilityFunctions {
 			this.lineend   = lineend;
 			this.colend    = colend;
 		}
-		
 	}
 
 	/**
@@ -462,7 +461,13 @@ public class UtilityFunctions {
 		IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
 		if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
 		    try {
-		        return (ABSEditor)IDE.openEditorOnFileStore(getActiveWorkbenchPage(), fileStore);
+		        IEditorPart part = IDE.openEditorOnFileStore(getActiveWorkbenchPage(), fileStore);
+		        // Could be an ErrorEditorPart:
+		        if (part instanceof ABSEditor) {
+		        	return (ABSEditor) part;
+		        } else {
+		        	throw new PartInitException("Couldn't open editor, sorry.");
+		        }
 		    } catch (PartInitException e) {
 		    	standardExceptionHandling(e);
 		    }
