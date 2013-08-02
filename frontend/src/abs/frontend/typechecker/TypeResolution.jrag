@@ -176,6 +176,7 @@ aspect TypeResolution {
 
 
     syn lazy ModuleDecl Model.lookupModule(String name) {
+    	assert name != null;
         for (CompilationUnit u : getCompilationUnits()) {
             for (ModuleDecl d : u.getModuleDecls()) {
                 if (d.getName().equals(name)) {

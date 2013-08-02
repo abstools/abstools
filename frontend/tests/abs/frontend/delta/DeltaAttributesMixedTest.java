@@ -83,18 +83,16 @@ public class DeltaAttributesMixedTest extends DeltaTest {
 
     @Test
     public void passBooleanFeatureAttributes3() throws DeltaModellingException, WrongProgramArgumentException {
-        assertParse(
+        Model m = assertParse(
                 "module M;"
                 + "delta D(Bool a1, Bool a2, Bool a3);"
-                + "    adds class C { Bool a1 = a1; Bool a2 = a2; Bool a3 = a3; }"
+                + "    adds class M.C { Bool a1 = a1; Bool a2 = a2; Bool a3 = a3; }"
                 + "productline PL;"
-                + "    features F; delta D(A, B) when A;"
+                + "    features A; delta D(A, B) when A;"
                 + "product P1(A);",
                 Config.TYPE_CHECK, Config.EXPECT_TYPE_ERROR);
         
         // There should be a type error if the Config defines only two delta params, but the delta itself expects 3
-    
-    }
-
-    
+        // XXX assert m.getTypeErrors().getFirst() instanceof ...
+    }   
 }
