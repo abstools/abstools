@@ -160,6 +160,16 @@ public class TypeCheckerTest extends FrontendTest {
     }
 
     @Test
+    public void testIfExp1() {
+        assertTypeOK("def X frob<X>(X x) = x;");
+    }
+
+    @Test
+    public void testIfExp2() {
+        assertTypeOK("def X frob<X>(X x) = if (True) then x else x;");
+    }
+    
+    @Test
     public void caseVarOk() {
         assertTypeOK("data Foo = Bar(Bool); { Foo x = Bar(True);" + " Bool b = case x { Bar(y) => y; }; }");
     }
