@@ -248,18 +248,6 @@ public class Main {
             
             oFMVisualizer.ParseMicroTVLFile(m);            
         }
-        // flatten before checking error, to avoid calculating *wrong* attributes
-        if (fullabs) {
-            if (typecheck)
-                // apply deltas that correspond to given product
-                m.flattenForProduct(product);
-            else
-                m.flattenForProductUnsafe(product);
-        }
-        if (dump) {
-            m.dumpMVars();
-            m.dump();
-        }
 
         if (m.hasParserErrors()) {
             System.err.println("Syntactic errors: " + m.getParserErrors().size());
@@ -268,6 +256,20 @@ public class Main {
                 System.err.flush();
             }
         } else {
+            
+            // flatten before checking error, to avoid calculating *wrong* attributes
+            if (fullabs) {
+                if (typecheck)
+                    // apply deltas that correspond to given product
+                    m.flattenForProduct(product);
+                else
+                    m.flattenForProductUnsafe(product);
+            }
+            if (dump) {
+                m.dumpMVars();
+                m.dump();
+            }
+
             final SemanticErrorList semErrs = m.getErrors();
             int numSemErrs = semErrs.size();
 
