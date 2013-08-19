@@ -66,6 +66,14 @@ final class MethodTestCaseBuilder extends ABSUnitTestCaseBuilder {
 		return makeMethodCall(testName, heapNames, testExecutionName, inArgs, true);
 	}
 	
+	String removeClassName(String name) {
+		int index = name.indexOf('.');
+		if (0 <= index && index < name.length() - 1) {
+			name = name.substring(index + 1);
+		}
+		return name;
+	}
+	
 	@Override
 	List<Exp> makePreviousCalls(String testName, Set<String> heapNames, List<PreviousCall> calls) {
 		//task interleaving
@@ -73,7 +81,7 @@ final class MethodTestCaseBuilder extends ABSUnitTestCaseBuilder {
 		for (PreviousCall call : calls) {
 			//test execution
 			List<ABSData> callInputArguments = getCallArgs(call);
-			String methodName = getMethodName(call);
+			String methodName = removeClassName(getMethodName(call));
 			expressions.add(makeMethodCall(testName, heapNames, methodName, callInputArguments, false));
 		}
 		return expressions;
