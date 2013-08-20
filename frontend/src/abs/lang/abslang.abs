@@ -19,6 +19,17 @@ def Rat min(Rat a, Rat b) = if a < b then a else b;
     
 def Rat abs(Rat x) = if x > 0 then x else -x;
 
+/**
+ * Returns a random number between 0 (inclusive) and below (exclusive).
+ */
+def Int random(Int below) = builtin;
+
+/**
+ * Truncates a towards zero.
+ */
+def Int truncate(Rat a) = builtin;
+
+
 data Maybe<A> = Nothing | Just(A fromJust);
 
 def Bool isJust<A>(Maybe<A> a) = 
@@ -302,17 +313,6 @@ def String substr(String str, Int start, Int length) = builtin;
  * Returns the length of the given string
  */
 def Int strlen(String str) = builtin;
-
-/**
- * Returns a random number between 0 (inclusive) and below (exclusive).
- */
-def Int random(Int below) = builtin;
-
-/**
- * Truncates a towards zero.
- */
-def Int truncate(Rat a) = builtin;
-
 
 /**
  * Returns a string representation for t.
