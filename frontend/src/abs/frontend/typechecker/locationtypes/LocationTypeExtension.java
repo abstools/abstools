@@ -37,7 +37,7 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         LocationType rhtl = getLocationType(rht);
         LocationType lhtl = getLocationType(lht);
         
-        if (n instanceof NewExp && ((NewExp)n).hasCog()) {
+        if (n instanceof NewExp && !((NewExp)n).hasLocal()) {
             if (!rhtl.isSubtypeOfFarAdapted(lhtl)) {
                 errors.add(new TypeError(n,ErrorMessage.LOCATION_TYPE_CANNOT_ASSIGN,rhtl.toString(),lhtl.toString()));
             }
@@ -63,9 +63,9 @@ public class LocationTypeExtension extends DefaultTypeSystemExtension {
         } else            
         if (origNode instanceof NewExp) {
             NewExp newExp = (NewExp)origNode;
-            LocationType type = LocationType.NEAR;
-            if (newExp.hasCog()) {
-                type = LocationType.FAR;
+            LocationType type = LocationType.FAR;
+            if (newExp.hasLocal()) {
+                type = LocationType.NEAR;
             } 
             setLocationType(t,type);
         } else

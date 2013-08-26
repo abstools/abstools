@@ -923,10 +923,10 @@ aspect GenerateProlog {
         }
         s.print("],'");
         
-        if(hasCog())
-            s.print("cog");
-        else
+        if(hasLocal())
             s.print("noCog");
+        else
+            s.print("cog");
             
         s.print("')");
     }

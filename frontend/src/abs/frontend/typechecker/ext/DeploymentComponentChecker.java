@@ -56,7 +56,7 @@ public class DeploymentComponentChecker extends DefaultTypeSystemExtension {
     
     @Override
     public void checkNewExp(NewExp e) {
-        if (isDeploymentComponent(e.getType()) && !e.hasCog()) {
+        if (isDeploymentComponent(e.getType()) && e.hasLocal()) {
             errors.add(new SemanticError(e, ErrorMessage.DEPLOYMENT_COMPONENT_NOT_COG, "dummy string to keep constructor happy"));
         }
     }

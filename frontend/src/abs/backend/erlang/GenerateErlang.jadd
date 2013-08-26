@@ -163,7 +163,7 @@ aspect GenerateErlang {
     String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
     if (((UnionType) getType()).getOriginatingClass().isForeign())
       className = "ffi_" + className;
-    if (hasCog()) {
+    if (!hasLocal()) {
       ecs.format("object:new(cog:start(),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars);
       ecs.print(",true)");

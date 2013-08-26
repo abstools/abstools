@@ -15,7 +15,6 @@ import abs.frontend.ast.Block;
 import abs.frontend.ast.Call;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.ModuleModifier;
-import abs.frontend.ast.Cog;
 import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.DeltaDecl;
@@ -28,6 +27,7 @@ import abs.frontend.ast.Import;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
+import abs.frontend.ast.Local;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.Model;
@@ -339,14 +339,14 @@ public final class AbsASTBuilderUtil {
         return fd;
     }
     
-    public static final NewExp newObj(ClassDecl clazz, boolean cog, PureExp... ps) {
+    public static final NewExp newObj(ClassDecl clazz, boolean local, PureExp... ps) {
         NewExp ne = new NewExp();
         ne.setClassName(clazz.getName());
         for (int i=0; i < ps.length; i++) {
             ne.setParam(ps[i], i);
         }
-        if (cog) {
-            ne.setCog(new Cog());
+        if (local) {
+            ne.setLocal(new Local());
         }
         return ne;
     }

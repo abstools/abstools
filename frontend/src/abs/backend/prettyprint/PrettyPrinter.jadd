@@ -281,8 +281,8 @@ aspect doPrettyPrinter {
 
     public void NewExp.doPrettyPrint(PrintWriter stream, ABSFormatter formatter) {
         stream.print("new ");
-        if (hasCog()) {
-            stream.print("cog ");
+        if (hasLocal()) {
+            stream.print("local ");
         }
         stream.print(getClassName());
         stream.print("(");

@@ -235,10 +235,10 @@ aspect GenerateMaude {
     {
         boolean inlist = false;
         MaudeCompilerHelper.emitCostAnnotation(stream, annotations, getModel().defaultResources);
-        if (hasCog()) {
-            stream.print("newcog(");
-        } else {
+        if (hasLocal()) {
             stream.print("new(");
+        } else {
+            stream.print("newcog(");
         }
         stream.print("'" + var + " ; '" + (((UnionType)getType()).getOriginatingClass()).qualifiedName() + " ; ");
         if (getNumParam() == 0) {
@@ -251,7 +251,7 @@ aspect GenerateMaude {
             }
             stream.print(") ");
         }
-        if (hasCog()) {
+        if (!hasLocal()) {
             PureExp dc = CompilerUtils.getAnnotationValue(annotations, "DC");
             PureExp scheduler = CompilerUtils.getAnnotationValue(annotations, "Scheduler");
             stream.print("; ");
