@@ -1,0 +1,20 @@
+%%% Compile behaviours first...
+
+%%% Compile the rest of the code...
+{ 
+    [
+    "./runtime/src/task.erl",
+    "./runtime/src/object.erl",
+        "./*",
+	"./runtime/src/*"
+    ], 
+    [
+	{ i, "./runtime/include" },
+    { i, "./ebin" },
+    {source,"./ebin"},
+    { outdir, "./ebin" },
+    debug_info,
+	nowarn_unused_vars,
+	nowarn_unused_function
+    ]
+}.
