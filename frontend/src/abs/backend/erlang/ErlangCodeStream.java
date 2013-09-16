@@ -26,13 +26,15 @@ public class ErlangCodeStream extends PrintStream {
         super(file, "UTF-8");
     }
 
-    public void incIndent() {
+    public ErlangCodeStream incIndent() {
         indent = indent + INDENT1;
+        return this;
     }
 
-    public void decIndent() {
+    public ErlangCodeStream decIndent() {
         if (indent.length() >= INDENT_LENGTH)
             indent = indent.substring(0, indent.length() - INDENT_LENGTH);
+        return this;
     }
 
     @Override

@@ -1,6 +1,7 @@
 -module(object).
 
--export([new/4,loop/2]).
+-export([new/4,init/2,activate/1,await_active/1]).
+
 -include_lib("abs_types.hrl").
 -export([behaviour_info/1]).
 
@@ -13,19 +14,41 @@ behaviour_info(_) ->
 
 new(Cog,Class,Args,false)->
     O=start(Cog,Class),
-    Class:init(O,Args).
+	object:activate(O),
+    Class:init(O,Args);
+new(Cog,Class,Args,true)->
+    O=start(Cog,Class),
+    cog:add(Cog,init_task,[O,Args]),
+	O.
 
     
 
 start(Cog,Class)->
-    O=spawn(object,loop,[Class,Class:init_internal()]),
+    O=spawn(object,init,[Class,Class:init_internal()]),
     io:format("Object ~p: new of ~p~n",[O, Class]),
     #object{class=Class,ref=O,cog=Cog}.
 
+activate(#object{ref=O})->
+	O!activate.
+await_active(#object{ref=O})->
+  	O!{is_active,self()},
+	receive
+		active->
+			ok
+	end.
 
+init(Class,Status)->
+	receive 
+		activate->
+			loop(Class,Status)
+	end.
+  
 
 loop(Class,Status) ->
-    receive 
+    receive
+        {is_active,P}->
+			S=Status,
+			P!active;
         {O=#object{class=Class},Field,Val,Pid}->
             io:format("Object ~p: set ~p to ~p~n",[self(),Field,Val]),
             S=Class:set_val_internal(Status,Field,Val),

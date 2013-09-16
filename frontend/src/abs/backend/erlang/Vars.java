@@ -4,11 +4,13 @@
  */
 package abs.backend.erlang;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import abs.frontend.ast.ParamDecl;
 
-public class Vars extends HashMap<String, Integer> {
+import com.google.common.collect.Sets;
+
+public class Vars extends LinkedHashMap<String, Integer> {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,6 +52,11 @@ public class Vars extends HashMap<String, Integer> {
         return get(name);
     }
 
+    public void incAll() {
+        for (java.util.Map.Entry<String, Integer> a : this.entrySet())
+            a.setValue(a.getValue() + 1);
+    }
+
     public String get(String name) {
         int c = super.get(name);
         return PREFIX + name + "_" + c;
@@ -57,5 +64,23 @@ public class Vars extends HashMap<String, Integer> {
 
     public Vars pass() {
         return new Vars(this);
+    }
+
+    public String toParamList() {
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (java.util.Map.Entry<String, Integer> a : this.entrySet()) {
+            if (!first)
+                sb.append(',');
+            first = false;
+            sb.append(PREFIX).append(a.getKey()).append("_").append(a.getValue());
+        }
+        return sb.append("]").toString();
+    }
+
+    public void retainAll(Vars vars) {
+        for (String k : Sets.difference(this.keySet(), vars.keySet()))
+            remove(k);
+
     }
 }

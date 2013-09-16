@@ -1,8 +1,8 @@
 -module(cog).
--export([start/0,add/3,add_and_notify/3]).
+-export([start/0,add/3,add_and_notify/3,new_state/3]).
 
--record(state,{tasks}).
--record(task,{ref,state=runnable}).
+-record(state,{tasks,running=false}).
+-record(task,{ref,state=waiting}).
 
 
 start()->
@@ -22,61 +22,77 @@ add_and_notify(Cog,Task,Args)->
             Ref
     end.
 
-    
+new_state(Cog,TaskRef,State)->
+	Cog!{newState,TaskRef,State}.
 
 init() ->
     io:format("COG ~p: new~n",[self()]),
-    loop(#state{tasks=[]}).
-
-
-loop(State)->
+    loop(#state{tasks=gb_trees:empty()}).
+loop(S=#state{running=non_found})->
     New_State=
-        receive 
+        receive
+			{newState,TaskRef,State}->
+				set_state(S,TaskRef,State);
             {newT,Task,Args,Sender,Notify}->
-                initTask(State,Task,Args,Sender,Notify)
+                initTask(S,Task,Args,Sender,Notify)
+		end,
+    loop(New_State#state{running=false});
+loop(S=#state{running=false})->
+    New_State=
+        receive
+			{newState,TaskRef,State}->
+				set_state(S,TaskRef,State);
+            {newT,Task,Args,Sender,Notify}->
+                initTask(S,Task,Args,Sender,Notify)
         after 
             0 ->
-                  execute(State)
+                  execute(S)
         end,
-    loop(New_State).
+    loop(New_State);
+loop(S=#state{running=true})->
+    New_State=
+        receive
+			{newState,TaskRef,State}->
+				set_state(S,TaskRef,State);
+            {newT,Task,Args,Sender,Notify}->
+                initTask(S,Task,Args,Sender,Notify);
+        	{token,R,Task_state}->
+                io:format("COG ~p: fin ~p with ~p~n",[self(),R,Task_state]),   
+                set_state(S#state{running=false},R,Task_state)
+            end,
+	loop(New_State).
 
 initTask(S=#state{tasks=T},Task,Args,Sender,Notify)->
     Ref=task:start(Task,Args),
     io:format("COG ~p: new task ~p ~p~n",[self(),Task,Ref]),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},
-    S#state{tasks=[#task{ref=Ref}|T]}.
+    S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
 
-execute(S=#state{tasks=[]}) ->
-    timer:sleep(1000),
-    S;
-execute(S=#state{tasks=List}) ->
-    T=get_runnable(List),
+
+execute(S=#state{tasks=Tasks}) ->
+    T=get_runnable(Tasks),
     case T of
         none->
-           timer:sleep(1000),
-            S;
+            S#state{running=non_found};
         #task{ref=R} ->
             R!token,
             io:format("COG ~p: schedule ~p~n",[self(),T]),
-            receive 
-                {token,Task_state}->
-                    New_List=[ case X of
-                                  TS=#task{ref=R} ->TS#task{state=Task_state};
-                                   _ -> X end || X <- List],
-                   io:format("COG ~p: fin ~p with ~p~n",[self(),T,Task_state]),   
-                    S#state{tasks=New_List}
-            end
+  			set_state(S#state{running=true},R,running)
     end.
 
+set_state(S=#state{tasks=Tasks},TaskRef,State)->
+	Old=gb_trees:get(TaskRef,Tasks),
+	S#state{tasks=gb_trees:update(TaskRef,Old#task{state=State},Tasks)}.
 
-get_runnable([])->
-    none;
-get_runnable([T=#task{state=runnable}|_]) ->
-    T;
-get_runnable([_|L]) ->
-    get_runnable(L).
-
+get_runnable(Tasks)->
+    get_runnable_i(gb_trees:iterator(Tasks)).
 
 
+get_runnable_i(It) ->
+    case gb_trees:next(It) of 	
+		{_K,T=#task{state=runnable},_It} -> T;
+		{_K,_T,I} -> get_runnable_i(I);
+		none -> none
+	end.
 

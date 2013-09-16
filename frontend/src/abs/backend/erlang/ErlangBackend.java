@@ -69,7 +69,8 @@ public class ErlangBackend extends Main {
     }
 
     private static final Set<String> files = ImmutableSet.of("src/cog.erl", "src/init_task.erl", "src/main_task.erl",
-            "src/object.erl", "src/runtime.erl", "src/task.erl", "include/abs_types.hrl", "Emakefile", "Makefile");
+            "src/object.erl", "src/runtime.erl", "src/task.erl", "src/async_call_task.erl", "include/abs_types.hrl",
+            "Emakefile", "Makefile");
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 
     private void copyRuntime(File destDir) throws IOException {
@@ -78,6 +79,8 @@ public class ErlangBackend extends Main {
         try {
             for (String f : files) {
                 is = ClassLoader.getSystemResourceAsStream(RUNTIME_PATH + f);
+                if (is == null)
+                    throw new RuntimeException("Could not locate Runtime file:" + f);
                 String outputFile = ("Emakefile".equals(f) || "Makefile".equals(f) ? f : "runtime/" + f).replace('/',
                         File.separatorChar);
                 File file = new File(destDir, outputFile);

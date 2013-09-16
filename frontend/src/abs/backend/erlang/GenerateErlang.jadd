@@ -69,19 +69,17 @@ aspect GenerateErlang {
   public void ModuleDecl.generateErlangCode(ErlApp ea) throws IOException{
    ErlangCodeStream ecs=null;
    try{
-     MainBlock mb=getBlock();
-     if(mb!=null)
-     {
-       ecs=ea.createFile(ErlUtil.getName(this));
-       ecs.pf("-module(%s).","m_"+getName());
+     if (hasBlock()) {
+       ecs = ea.createFile(ErlUtil.getName(this));
+       ecs.pf("-module(%s).", "m_" + getName());
        ecs.println("-include_lib(\"abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs,"main",Mask.none,"Cog");
-       mb.generateErlangCode(ecs,Vars.n());
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog");
+       getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
-     }
+   }
     
      
    }
@@ -132,13 +130,14 @@ aspect GenerateErlang {
   }
   @Override
   public void AssignStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
+    Vars save=vars.pass();
     if(getVar() instanceof VarUse){
       ecs.format("%s = ",vars.inc(getVar().getName()));
-      getValue().generateErlangCode(ecs,vars);
+      getValue().generateErlangCode(ecs,save);
       
     }else if(getVar() instanceof FieldUse){
       ecs.format("set(O,%s,", getVar().getName()); 
-          getValue().generateErlangCode(ecs,vars);
+          getValue().generateErlangCode(ecs,save);
           ecs.print(")");}
     else
       throw new NotImplementedYetException(this); 
@@ -154,7 +153,9 @@ aspect GenerateErlang {
 
 
     if (hasCog()) {
-      throw new UnsupportedOperationException("create cog");
+      ecs.format("object:new(cog:start(),%s,",className);
+      ErlUtil.buildParams(ecs,getParams(),vars);
+      ecs.print(",true)");
         
     } else {
       ecs.format("object:new(Cog,%s,",className);
@@ -181,10 +182,10 @@ aspect GenerateErlang {
   }
   @Override
   public void AsyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.print("task:start(async_call_task,[");
+    ecs.print("cog:add(Cog,async_call_task,[");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",m_%s",getMethod());
-    if(hasParam())
+    if(getParams().getNumChild() > 0)
       ecs.print(",");
     ErlUtil.buildParamsWithOutBrackets(ecs,getParams(),vars);
     ecs.print("])"); 
@@ -203,6 +204,10 @@ aspect GenerateErlang {
   @Override
   public void IntLiteral.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
     ecs.print( getContent());
+  }
+  @Override
+  public void NullExp.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
+    ecs.print( "null");
   }
   
   @Override
@@ -417,7 +422,7 @@ aspect GenerateErlang {
     if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
       ecs.print(getDataConstructor().getName().toLowerCase());
     else{
-      if(hasParam())
+      if(getParams().getNumChild() > 0)
         ecs.print("{");
       ecs.print("data");
       ecs.print(getDataConstructor().getName());
@@ -425,7 +430,7 @@ aspect GenerateErlang {
         ecs.print(",");
         p.generateErlangCode(ecs,vars);
       }
-      if(hasParam())
+      if(getParams().getNumChild() > 0)
         ecs.print("}");
       }
   }
@@ -434,7 +439,7 @@ aspect GenerateErlang {
     if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
       ecs.print(getDataConstructor().getName().toLowerCase());
     else{
-      if(hasParam())
+      if(getParams().getNumChild() > 0)
         ecs.print("{");
       ecs.print("data");
       ecs.print(getDataConstructor().getName());
@@ -442,7 +447,7 @@ aspect GenerateErlang {
         ecs.print(",");
         p.generateErlangCode(ecs,vars);
       }
-      if(hasParam())
+      if(getParams().getNumChild() > 0)
         ecs.print("}");
       }
   }
@@ -459,18 +464,47 @@ aspect GenerateErlang {
     //Ignore DataTypeDecl
   }
   
+  public void AwaitStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  {
+    getGuard().generateErlangCode(ecs,vars);
+    ecs.print("task:ready(Cog)");
+  }
   
+  public void Guard.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  {
+    throw new NotImplementedYetException(this); 
+  }
+  public void ClaimGuard.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  {  
+    ecs.println("task:return_token(Cog,waiting),");
+    getVar().generateErlangCode(ecs,vars);
+    ecs.println("!{wait,self()},");
+    ecs.println("receive {ok} -> ok end,");
+  }
+  public void GetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  { ecs.print("async_call_task:get(");
+    getPureExp().generateErlangCode(ecs,vars);
+    ecs.print(")");
+  }
   
-  
-//  public void ParametricDataTypeDecl.generateErlangCode(ErlApp ea) throws IOException{
-//    if (getModuleDecl().getName().equals("ABS.StdLib")) {
-//      if (getName().equals("Unit") || getName().equals("Int") ||
-//                      getName().equals("String") || getName().equals("Bool") || getName().equals("Rat")||getName().equals("Location")||
-//                      getName().equals("Fut"))
-//              return;
-//      throw new NotImplementedYetException(this); 
-//  }
-//  }
+  @Override
+  public void WhileStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+      String va = vars.toParamList();
+      Vars save=vars.pass();
+      vars.incAll();
+      ecs.pf("%s=((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList(), va);
+      ecs.incIndent().print("case ");
+      getCondition().generateErlangCode(ecs, save);
+      ecs.println(" of ");
+      ecs.print("false ->");
+      ecs.incIndent().print(va + ";");
+      ecs.decIndent().print("true ->");
+      ecs.incIndent();
+      getBody().generateErlangCode(ecs, save);
+      ecs.println(",");
+      save.retainAll(vars);
+      ecs.format("Self(Self,%s)  end end))(%s) ", save.toParamList(), va);
+  }
 
   
 }

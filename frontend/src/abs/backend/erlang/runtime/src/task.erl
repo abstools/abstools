@@ -1,7 +1,9 @@
 -module(task).
 
 -export([start/2,init/3,join/1,notifyEnd/1,notifyEnd/2]).
+-export([ready/1,return_token/2,wait/1]).
 -export([behaviour_info/1]).
+
 
 %-record(state,{is,cog,task}).
 
@@ -15,12 +17,13 @@ start(Task,Args)->
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
+	ready(Cog),
     %loop(#state{cog=Cog,is=InnerState,task=Task}),
     Val=receive token->
             Task:start(InnerState)
     end,
     send_notifications(Val),
-    Cog!{token,done}.
+    Cog!{token,self(),done}.
 
 
 
@@ -48,4 +51,11 @@ send_notifications(Val)->
     end.
             
 
+ready(Cog)->
+	cog:new_state(Cog,self(),runnable).
+wait(Cog)->
+	cog:new_state(Cog,self(),waiting).
 
+
+return_token(Cog,State)->
+	Cog!{token,self(),State}.
