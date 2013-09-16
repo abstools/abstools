@@ -94,6 +94,8 @@
       <pathelement location="${ext.dir}/sat4j-pb.jar" />
     <pathelement location="${ext.dir}/choco-solver-2.1.1.jar" />
     <pathelement location="${ext.dir}/apfloat.jar" />
+  	<pathelement location="${ext.dir}/guava-15.0.jar" />
+    <pathelement location="${ext.dir}/commons-io-2.4.jar" />
   </path>
 
   <path id="run.classpath">
