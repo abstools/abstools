@@ -18,14 +18,14 @@ new(Cog,Class,Args,false)->
     Class:init(O,Args);
 new(Cog,Class,Args,true)->
     O=start(Cog,Class),
-    cog:add(Cog,init_task,[O,Args]),
+    cog:add(Cog,init_task,{O,Args}),
 	O.
 
     
 
 start(Cog,Class)->
     O=spawn(object,init,[Class,Class:init_internal()]),
-    io:format("Object ~p: new of ~p~n",[O, Class]),
+    io:format("Object ~p start on ~p: new of ~p~n",[O,Cog, Class]),
     #object{class=Class,ref=O,cog=Cog}.
 
 activate(#object{ref=O})->
@@ -50,13 +50,13 @@ loop(Class,Status) ->
 			S=Status,
 			P!active;
         {O=#object{class=Class},Field,Val,Pid}->
-            io:format("Object ~p: set ~p to ~p~n",[self(),Field,Val]),
-            S=Class:set_val_internal(Status,Field,Val),
-            Pid!{reply,O};
+			S=Class:set_val_internal(Status,Field,Val),
+            Pid!{reply,O},
+			io:format("Object ~p: set ~p to ~p~n",[self(),Field,Val]);
         {O=#object{class=Class},Field,Pid} ->
-            io:format("Object ~p: get ~p val ~p~n",[self(),Field,get(Field)]),
 			{S,Val}=Class:get_val_internal(Status,Field),
-            Pid!{res,O,Val}
+            Pid!{reply,O,Val},	
+            io:format("Object ~p: get ~p val ~p~n",[self(),Field,Val])
     end,
     loop(Class,S).
                 

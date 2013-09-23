@@ -6,7 +6,7 @@
 
 
 
-init(Cog,[Obj|Args])->
+init(Cog,{Obj,Args})->
     {Obj,Args}.
 
 

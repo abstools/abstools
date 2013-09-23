@@ -6,6 +6,7 @@ package abs.backend.erlang;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
@@ -24,6 +25,15 @@ public class ErlangCodeStream extends PrintStream {
 
     public ErlangCodeStream(File file) throws FileNotFoundException, UnsupportedEncodingException {
         super(file, "UTF-8");
+    }
+
+    public ErlangCodeStream(OutputStream out, String initIndent) {
+        super(out);
+        indent = initIndent;
+    }
+
+    public String getIndent() {
+        return indent;
     }
 
     public ErlangCodeStream incIndent() {

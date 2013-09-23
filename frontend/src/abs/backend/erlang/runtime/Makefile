@@ -6,6 +6,10 @@ ebin/runtime.beam :
 	
 run	: ebin/runtime.beam
 	erl -pa ebin
+	
+runM	: ebin/runtime.beam
+	erl -pa ebin -s runtime start m_M
+	
 
 clean :
 	rm -R ebin/* 

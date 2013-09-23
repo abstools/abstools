@@ -13,9 +13,11 @@ import com.google.common.collect.Sets;
 public class Vars extends LinkedHashMap<String, Integer> {
 
     private static final long serialVersionUID = 1L;
+    private int temp = 1;
 
     public Vars(Vars vars) {
         super(vars);
+        temp = vars.temp;
     }
 
     public Vars() {
@@ -33,6 +35,10 @@ public class Vars extends LinkedHashMap<String, Integer> {
         for (String n : name)
             l.put(n, 0);
         return l;
+    }
+
+    public String getTemp() {
+        return "T_" + temp++;
     }
 
     public String nV(String name) {

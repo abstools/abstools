@@ -10,7 +10,9 @@ import abs.frontend.typechecker.locationtypes.infer.LocationTypeVariable;
 import abs.frontend.typechecker.locationtypes.LocationType;
 
 import abs.backend.erlang.ErlUtil.Mask;
-
+import org.apache.commons.io.output.WriterOutputStream;
+import java.nio.charset.Charset;
+import com.google.common.collect.ImmutableSet;
 aspect GenerateErlang {
 
   public void Model.generateErlangCode(ErlApp ea) throws IOException{
@@ -48,9 +50,14 @@ aspect GenerateErlang {
   public  void BuiltinFunctionDef.generateErlangCode(ErlangCodeStream ecs,Vars vars) throws IOException{
     ecs.print("builtin");
   }
+  
+  private final static Set<String> FnApp.BUILTINS=ImmutableSet.of("substr","currentms","lowlevelDeadline",
+      "random","getProductLine","strlen","toString","truncate"); 
   public  void FnApp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     FunctionDecl decl = (FunctionDecl)getDecl();
     if(decl.getFunctionDef() instanceof BuiltinFunctionDef){
+      if(!BUILTINS.contains(decl.getName()))
+        throw new NotImplementedYetException("builtin: "+decl.getName(), this);
       ecs.print("builtin:");
       ecs.print(decl.getName());
     }
@@ -119,9 +126,10 @@ aspect GenerateErlang {
   
   public void VarDecl.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
     if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse){
+      Vars v=vars.pass();
       ecs.format("%s = ",vars.inc(getName()));
       if(hasInitExp())
-        getInitExp().generateErlangCode(ecs,vars);
+        getInitExp().generateErlangCode(ecs,v);
       else 
         ecs.print("null");
     }
@@ -182,7 +190,9 @@ aspect GenerateErlang {
   }
   @Override
   public void AsyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.print("cog:add(Cog,async_call_task,[");
+    ecs.print("cog:add((fun(#object{cog=T})-> T end(");
+    getCallee().generateErlangCode(ecs,vars);
+    ecs.print(")),async_call_task,[");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(",m_%s",getMethod());
     if(getParams().getNumChild() > 0)
@@ -373,51 +383,66 @@ aspect GenerateErlang {
   
   //Case
   @Override
-  public void CaseExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void CaseExp.generateErlangCode(ErlangCodeStream external,Vars vars)
   {
+    external.println("begin");
+    external.incIndent();
+    StringWriter sw = new StringWriter();
+    ErlangCodeStream ecs = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),external.getIndent());
     ecs.print("case ");
-    getExpr().generateErlangCode(ecs,vars);
+    getExpr().generateErlangCode(ecs, vars);
     ecs.println(" of ");
     ecs.incIndent();
-    boolean first=true;
+    boolean first = true;
     for (CaseBranch b : getBranchs()) {
-      Vars v=vars.pass();
-      if(!first)
-        ecs.println(";");
-      first=false;
-      b.getLeft().generateErlangCode(ecs,v);
-      ecs.print("->");
-      b.getRight().generateErlangCode(ecs,v);
+        Vars v = vars.pass();
+        if (!first)
+            ecs.println(";");
+        first = false;
+        b.getLeft().generateErlangCode(external, ecs, v);
+        ecs.print("->");
+        b.getRight().generateErlangCode(ecs, v);
     }
     ecs.println();
     ecs.decIndent();
     ecs.print("end");
+    ecs.close();
+    external.println(sw.toString());
+    external.decIndent();
+    external.print("end");
   }
   
-  public void Pattern.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void Pattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
   {
     throw new NotImplementedYetException(this); 
   }
   
   @Override
-  public void PatternVar.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void PatternVar.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
   {
       ecs.print(vars.nV(getVar().getName()));  
   }
   
   @Override
-  public void PatternVarUse.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void PatternVarUse.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
   {
-     ecs.print(vars.get(getName()));
+     if(vars.containsKey(getName()))
+        ecs.print(vars.get(getName()));
+     else
+     {
+       String tmp=vars.getTemp();
+       prePattern.pf("%s=get(O,%s),",tmp,getName());
+       ecs.print(tmp);
+     }
   }
   @Override
-  public void LiteralPattern.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void LiteralPattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
   {
     getLiteral().generateErlangCode(ecs,vars);
   }
   
   @Override
-  public void ConstructorPattern.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void ConstructorPattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
   {
     if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
       ecs.print(getDataConstructor().getName().toLowerCase());
@@ -428,12 +453,18 @@ aspect GenerateErlang {
       ecs.print(getDataConstructor().getName());
       for (Pattern p : getParams()) {
         ecs.print(",");
-        p.generateErlangCode(ecs,vars);
+        p.generateErlangCode(prePattern,ecs,vars);
       }
       if(getParams().getNumChild() > 0)
         ecs.print("}");
       }
   }
+  
+  public void UnderscorePattern.generateErlangCode(ErlangCodeStream prePattern,ErlangCodeStream ecs,Vars vars)
+  {
+    ecs.print("_");
+  }
+  
   public void DataConstructorExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
   {
     if(getDataConstructor().getName().equals("True") || getDataConstructor().getName().equals("False"))
@@ -452,10 +483,7 @@ aspect GenerateErlang {
       }
   }
 
-  public void UnderscorePattern.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  {
-    ecs.print("_");
-  }
+
   
   
   //DataTypes
@@ -503,7 +531,8 @@ aspect GenerateErlang {
       getBody().generateErlangCode(ecs, save);
       ecs.println(",");
       save.retainAll(vars);
-      ecs.format("Self(Self,%s)  end end))(%s) ", save.toParamList(), va);
+      ecs.decIndent().pf("Self(Self,%s)  end end))", save.toParamList());
+      ecs.decIndent().format("(%s)",va);
   }
 
   

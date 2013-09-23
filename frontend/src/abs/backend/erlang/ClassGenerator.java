@@ -10,6 +10,7 @@ import java.util.Set;
 
 import abs.backend.erlang.ErlUtil.Mask;
 import abs.frontend.ast.ClassDecl;
+import abs.frontend.ast.FieldDecl;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
@@ -68,7 +69,14 @@ public class ClassGenerator {
     private void generateConstructor() {
         ErlUtil.functionHeaderParamsAsList(ecs, "init", generatorClassMatcher(), classDecl.getParamList(), Mask.none);
         for (ParamDecl p : classDecl.getParamList()) {
-            ecs.pf("%s:set(O,%s,%s),", modName, p.getName(), "P_" + p.getName());
+            ecs.pf("set(O,%s,%s),", p.getName(), "P_" + p.getName());
+        }
+        for (FieldDecl p : classDecl.getFields()) {
+            if (p.hasInitExp()) {
+                ecs.format("set(O,%s,", p.getName());
+                p.getInitExp().generateErlangCode(ecs, Vars.n());
+                ecs.println("),");
+            }
         }
         if (classDecl.getInitBlock() != null) {
             classDecl.getInitBlock().generateErlangCode(ecs, Vars.n());
