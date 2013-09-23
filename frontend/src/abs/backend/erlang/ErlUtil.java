@@ -115,7 +115,8 @@ public class ErlUtil {
         ecs.print("(");
         if (callee != null) {
             callee.generateErlangCode(ecs, vars);
-            ecs.print(",");
+            if (params.hasChildren())
+                ecs.print(",");
         }
         buildParamsWithOutBrackets(ecs, params, vars);
         ecs.print(")");

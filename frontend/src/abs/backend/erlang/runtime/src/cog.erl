@@ -1,7 +1,7 @@
 -module(cog).
 -export([start/0,add/3,add_and_notify/3,new_state/3]).
 
--record(state,{tasks,running=false}).
+-record(state,{tasks,running=false,polling=[]}).
 -record(task,{ref,state=waiting}).
 
 
@@ -70,19 +70,31 @@ initTask(S=#state{tasks=T},Task,Args,Sender,Notify)->
     S#state{tasks=gb_trees:insert(Ref,#task{ref=Ref},T)}.
 
 
-execute(S=#state{tasks=Tasks}) ->
+execute(S) ->
+	{S1=#state{tasks=Tasks},Polled}=poll_waiting(S),
     T=get_runnable(Tasks),
-    case T of
+    State=case T of
         none->
-            S#state{running=non_found};
+			S2=reset_polled(S1,Polled),
+            S2#state{running=non_found};		  
         #task{ref=R} ->
             R!token,
             io:format("COG ~p: schedule ~p~n",[self(),T]),
-  			set_state(S#state{running=true},R,running)
+			S2=reset_polled(S1,lists:delete(T,Polled)),
+  			set_state(S2#state{running=true},R,running)
     end.
 
-set_state(S=#state{tasks=Tasks},TaskRef,State)->
-	Old=gb_trees:get(TaskRef,Tasks),
+set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
+	Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
+	S=case State of 
+		  waiting_poll ->
+			  S1#state{polling=[Old|Pol]};
+		  _ when OldState == waiting_poll ->
+			  S1#state{polling=lists:delete(Old, Pol)};
+		  _ ->
+			  S1
+	  end,  
+	io:format("COG ~p: set ~p state to ~p~n",[self(),TaskRef,State]),
 	S#state{tasks=gb_trees:update(TaskRef,Old#task{state=State},Tasks)}.
 
 get_runnable(Tasks)->
@@ -95,4 +107,23 @@ get_runnable_i(It) ->
 		{_K,_T,I} -> get_runnable_i(I);
 		none -> none
 	end.
+
+poll_waiting(S=#state{tasks=Tasks1,polling=Pol}) ->
+	lists:foreach(fun(#task{ref=R})->  R!check end, Pol),
+	{NT,Polled}=lists:foldl(fun (T=#task{ref=R},{Tasks,List}) ->
+					receive {R,true}->
+					 	{gb_trees:update(R,T#task{state=runnable},Tasks),[T|List]};
+					 {R,false}->
+						{Tasks,List}
+					end end ,
+				 {Tasks1,[]},Pol),
+	{S#state{tasks=NT},Polled}.
+
+	
+reset_polled(S=#state{tasks=Tasks},Polled) ->
+	S#state{tasks=lists:foldl(fun (T=#task{ref=R},Tasks) ->
+					R!wait,
+					 gb_trees:update(R,T,Tasks) end ,
+				 Tasks,Polled)}.
+	
 

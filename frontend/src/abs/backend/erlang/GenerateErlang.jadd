@@ -491,24 +491,74 @@ aspect GenerateErlang {
   {
     //Ignore DataTypeDecl
   }
-  
+  public void SuspendStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  {
+    ecs.println("task:return_token(Cog,runnable),");
+    ecs.print("task:ready(Cog)");
+  }
   public void AwaitStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars)
   {
-    getGuard().generateErlangCode(ecs,vars);
+    StringWriter sw = new StringWriter();
+    ErlangCodeStream after = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    ecs.println("task:return_token(Cog,waiting),");
+    getGuard().generateErlangCode(ecs,after,vars);
+    after.close();
+    if(getGuard().hasPoll())
+    {
+      ecs.println("task:wait_poll(Cog),");
+      ecs.pf("((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList());
+      ecs.println("receive check -> ");
+      ecs.incIndent().pf("case %s of",sw);
+      ecs.incIndent().println("true -> Cog!{self(),true},");
+      ecs.incIndent().pf("receive wait -> Self(Self,%s);",vars.toParamList());
+      ecs.println("token -> ok end;");
+      ecs.decIndent().pf("false -> Cog!{self(),false},  Self(Self,%s)",vars.toParamList());
+      ecs.decIndent().decIndent().println("end end end))");
+      ecs.format("(%s)",vars.toParamList());
+    }
+    else
     ecs.print("task:ready(Cog)");
   }
   
-  public void Guard.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  public void  Guard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars)
   {
     throw new NotImplementedYetException(this); 
   }
-  public void ClaimGuard.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  {  
-    ecs.println("task:return_token(Cog,waiting),");
-    getVar().generateErlangCode(ecs,vars);
-    ecs.println("!{wait,self()},");
-    ecs.println("receive {ok} -> ok end,");
+  public  boolean Guard.hasPoll()
+  {
+    throw new NotImplementedYetException(this); 
   }
+  public boolean AndGuard.hasPoll()
+  {
+    return getLeft().hasPoll()||getRight().hasPoll();
+  }
+  public boolean ExpGuard.hasPoll()
+  {
+    return true;
+  }
+  public boolean ClaimGuard.hasPoll()
+  {
+    return false;
+  }
+  
+  public void AndGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars)
+  {
+    getLeft().generateErlangCode( preAwait, ecs, vars);
+    if(getLeft().hasPoll()&&getRight().hasPoll())
+      ecs.print(" andalso ");
+    getRight().generateErlangCode( preAwait, ecs, vars) ;
+  }
+  public void ClaimGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars)
+  {  
+    getVar().generateErlangCode(preAwait,vars);
+    preAwait.println("!{wait,self()},");
+    preAwait.println("receive {ok} -> ok end,");
+  }
+  
+ public void ExpGuard.generateErlangCode(ErlangCodeStream preAwait,ErlangCodeStream ecs,Vars vars)
+  { getPureExp().generateErlangCode(ecs,vars);
+  }
+  
   public void GetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
   { ecs.print("async_call_task:get(");
     getPureExp().generateErlangCode(ecs,vars);
