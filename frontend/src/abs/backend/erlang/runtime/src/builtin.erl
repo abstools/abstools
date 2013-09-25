@@ -5,7 +5,8 @@
 lowlevelDeadline() ->
 	-1.
 currentms()->
-	calendar:datetime_to_gregorian_seconds(calendar:local_time()).
+	{MS,S,MuS}=erlang:now(),	
+	(MS*1000000 + S)*1000 + MuS div 1000.
 
 substr(S,Start,Len) ->
 	lists:sublist(S, Start+1, Len).
