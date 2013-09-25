@@ -158,8 +158,8 @@ aspect GenerateErlang {
   
   public void NewExp.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
     String className = ErlUtil.getName(((UnionType)getType()).getOriginatingClass());
-
-
+    if (((UnionType) getType()).getOriginatingClass().isForeign())
+      className = "ffi_" + className;
     if (hasCog()) {
       ecs.format("object:new(cog:start(),%s,",className);
       ErlUtil.buildParams(ecs,getParams(),vars);
@@ -231,9 +231,10 @@ aspect GenerateErlang {
   
   @Override
   public void OrBoolExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" or ");
+    ecs.print("("); getLeft().generateErlangCode(ecs,vars);
+    ecs.print(") or (");
     getRight().generateErlangCode(ecs,vars);
+    ecs.print(")"); 
   }
   
   @Override
@@ -241,6 +242,30 @@ aspect GenerateErlang {
     ecs.print("not (");
     getOperand().generateErlangCode(ecs,vars);
     ecs.print(")"); 
+  }
+  
+  @Override
+  public void IfStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    Vars left=vars.pass();
+    Vars right=vars.pass();
+    StringWriter sw = new StringWriter();
+    ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    ecs.print("case ");
+    getCondition().generateErlangCode(ecs,vars);
+    ecs.println(" of");
+    ecs.incIndent();
+    ecs.print("true -> ");
+    getThen().generateErlangCode(ecs,left);
+    getElse().generateErlangCode(buffer,right);
+    String[] mergeLines=vars.merge(left,right);
+    ecs.print(mergeLines[0]);
+    ecs.println(";");
+    ecs.print("false -> ");
+    buffer.close();
+    ecs.print(sw);
+    ecs.println(mergeLines[1]);
+    ecs.decIndent();
+    ecs.print("end");  
   }
   
   @Override
@@ -254,22 +279,6 @@ aspect GenerateErlang {
     ecs.println(";");
     ecs.print("false -> ");
     getElseExp().generateErlangCode(ecs,vars);
-    ecs.println();
-    ecs.decIndent();
-    ecs.print("end");  
-  }
-  
-  @Override
-  public void IfStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.print("case ");
-    getCondition().generateErlangCode(ecs,vars);
-    ecs.println(" of");
-    ecs.incIndent();
-    ecs.print("true -> ");
-    getThen().generateErlangCode(ecs,vars);
-    ecs.println(";");
-    ecs.print("false -> ");
-    getElse().generateErlangCode(ecs,vars);
     ecs.println();
     ecs.decIndent();
     ecs.print("end");  

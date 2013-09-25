@@ -89,4 +89,23 @@ public class Vars extends LinkedHashMap<String, Integer> {
             remove(k);
 
     }
+
+    public String[] merge(Vars var1, Vars var2) {
+        StringBuilder left = new StringBuilder(",");
+        StringBuilder right = new StringBuilder(",");
+        for (java.util.Map.Entry<String, Integer> a : this.entrySet()) {
+            int leftN = var1.get((Object) a.getKey());
+            int rightN = var2.get((Object) a.getKey());
+            if (a.getValue() != leftN || a.getValue() != rightN) {
+                if (leftN > rightN)
+                    right.append(String.format("%s=%s,", var1.get(a.getKey()), var2.get(a.getKey())));
+                if (leftN < rightN)
+                    left.append(String.format("%s=%s,", var2.get(a.getKey()), var1.get(a.getKey())));
+                a.setValue(Math.max(leftN, rightN));
+            }
+        }
+        left.deleteCharAt(left.length() - 1);
+        right.deleteCharAt(right.length() - 1);
+        return new String[] { left.toString(), right.toString() };
+    }
 }
