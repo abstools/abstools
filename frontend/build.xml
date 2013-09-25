@@ -270,6 +270,9 @@
       <zipfileset src="${ext.dir}/org.sat4j.pb.jar" />
       <zipfileset src="${ext.dir}/sat4j-maxsat.jar" />
             <zipfileset src="${ext.dir}/choco-solver-2.1.1.jar" />
+
+      	<zipfileset src="${ext.dir}/guava-15.0.jar" />
+        <zipfileset src="${ext.dir}/commons-io-2.4.jar" />
       <manifest>
         <attribute name="Main-Class" value="abs.frontend.parser.Main"/>
         <attribute name="Implementation-Version" value="${frontend.version}"/>
