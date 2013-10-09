@@ -5,14 +5,10 @@
 package abs.backend.erlang;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import abs.backend.erlang.ErlUtil.Mask;
 import abs.frontend.ast.ClassDecl;
 import abs.frontend.ast.FieldDecl;
-import abs.frontend.ast.InterfaceDecl;
-import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
 import abs.frontend.ast.ParamDecl;
@@ -82,6 +78,8 @@ public class ClassGenerator {
             classDecl.getInitBlock().generateErlangCode(ecs, Vars.n());
             ecs.println(",");
         }
+        if (classDecl.isActiveClass())
+            ecs.println("cog:add(Cog,async_call_task,[O,m_run]),");
         ecs.println("O.");
         ecs.decIndent();
     }
@@ -155,26 +153,19 @@ public class ClassGenerator {
     }
 
     private void generateExports() {
-        ecs.println("-export([init/2]).");
-
-        ecs.println("-export([get_val_internal/2,set_val_internal/3,init_internal/0]).");
-        for (InterfaceTypeUse i : classDecl.getImplementedInterfaceUses()) {
-            InterfaceDecl id = (InterfaceDecl) i.getDecl();
-            ecs.pf("%% Interface: %s", id.getName());
-            ecs.print("-export([");
-            Set<String> s = new HashSet<String>();
-            Boolean first = true;
-            for (MethodSig ms : id.getBodys()) {
-                String n = "m_" + ms.getName() + "/" + (ms.getParamList().getNumChild() + 1);
-                if (s.add(n)) {
-                    if (!first)
-                        ecs.print(",");
-                    first = false;
-                    ecs.print(n);
-                }
-            }
-            ecs.println("]).");
-        }
-        ecs.println();
+        /*
+         * ecs.println("-export([init/2])."); if (classDecl.isActiveClass())
+         * ecs.println("-export([m_run/1])."); ecs.println(
+         * "-export([get_val_internal/2,set_val_internal/3,init_internal/0]).");
+         * for (InterfaceTypeUse i : classDecl.getImplementedInterfaceUses()) {
+         * InterfaceDecl id = (InterfaceDecl) i.getDecl();
+         * ecs.pf("%% Interface: %s", id.getName()); ecs.print("-export([");
+         * Set<String> s = new HashSet<String>(); Boolean first = true; for
+         * (MethodSig ms : id.getBodys()) { String n = "m_" + ms.getName() + "/"
+         * + (ms.getParamList().getNumChild() + 1); if (s.add(n)) { if (!first)
+         * ecs.print(","); first = false; ecs.print(n); } } ecs.println("]).");
+         * } ecs.println();
+         */
+        ecs.println("-compile(export_all).");
     }
 }

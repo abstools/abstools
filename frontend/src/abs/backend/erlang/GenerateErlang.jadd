@@ -78,7 +78,7 @@ aspect GenerateErlang {
    try{
      if (hasBlock()) {
        ecs = ea.createFile(ErlUtil.getName(this));
-       ecs.pf("-module(%s).", "m_" + getName());
+       ecs.pf("-module(%s).", ErlUtil.getModuleName(getName()));
        ecs.println("-include_lib(\"abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
@@ -113,6 +113,8 @@ aspect GenerateErlang {
       first=false;
       stmt.generateErlangCode(ecs,vars);  
     }
+    if(first)
+        ecs.print("ok");
   }
   
   
@@ -256,7 +258,10 @@ aspect GenerateErlang {
     ecs.incIndent();
     ecs.print("true -> ");
     getThen().generateErlangCode(ecs,left);
+    if(hasElse())
     getElse().generateErlangCode(buffer,right);
+    else 
+      buffer.print("ok");
     String[] mergeLines=vars.merge(left,right);
     ecs.print(mergeLines[0]);
     ecs.println(";");
@@ -323,9 +328,15 @@ aspect GenerateErlang {
   }
   
   @Override
-  public void EqualityExpr.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+  public void EqExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     getLeft().generateErlangCode(ecs,vars);
     ecs.print(" =:= ");
+    getRight().generateErlangCode(ecs,vars);
+  }
+  @Override
+  public void NotEqExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
+    getLeft().generateErlangCode(ecs,vars);
+    ecs.print(" =/= ");
     getRight().generateErlangCode(ecs,vars);
   }
  
@@ -338,9 +349,12 @@ aspect GenerateErlang {
   
   @Override
   public void AddAddExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" + ");
-    getRight().generateErlangCode(ecs,vars);
+    getLeft().generateErlangCode(ecs, vars);
+    if (this.getType().isStringType())
+        ecs.print(" ++ ");
+    else
+        ecs.print(" + ");
+    getRight().generateErlangCode(ecs, vars);
   }
   
   @Override
