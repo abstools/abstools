@@ -2,45 +2,69 @@
 <?eclipse version="3.4"?>
 <plugin>
 
-   <extension
-         point="org.eclipse.ui.commands">
+   <extension point="org.eclipse.ui.commands">
       <category
-            name="%category.name"
+            name="costabs"
             id="costabs.commands.category">
       </category>
       <command
-            name="%command.name"
+            name="Analyze Method"
             categoryId="costabs.commands.category"
-            id="costabs.commands.noStdCommand">
+            id="costabs.commands.analyzeMethod">
+      </command>
+      <command
+            name="Clean Markers"
+            categoryId="costabs.commands.category"
+            id="costabs.commands.cleanMarkers">
       </command>
    </extension>
-   <extension
-         point="org.eclipse.ui.handlers">
+   <extension point="org.eclipse.ui.handlers">
       <handler
-            commandId="costabs.commands.noStdCommand"
+            commandId="costabs.commands.analyzeMethod"
             class="costabs.handlers.CostabsHandler">
+      </handler>
+       <handler
+            commandId="costabs.commands.cleanMarkers"
+            class="costabs.handlers.CleanMarkersHandler">
       </handler>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="costabs.commands.noStdCommand"
+            commandId="costabs.commands.analyzeMethod"
             contextId="org.eclipse.ui.contexts.window"
             sequence="M1+6"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration">
       </key>
    </extension>
+<!--   <extension point="org.eclipse.ui.menus">
+		<menuContribution
+    		class="costabs.menus.MarkerContributionFactory"
+	    	locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+	  		<dynamic
+	         	class="costabs.menus.MarkerMenuContribution"
+	         	id="costabs.menus.MarkerMenuContribution">
+	  		</dynamic>
+		</menuContribution>
+	</extension> -->
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
          <menu
-               label="Costa"
+               label="SACO"
                id="costabs.menus.mainMenu">
             <command
-                  commandId="costabs.commands.noStdCommand"
+                  commandId="costabs.commands.analyzeMethod"
                   id="costabs.menus.noStdCommand"
-                  label="Analyze with Costa">
+                  label="Analyze with SACO"
+                  icon="icons/costa_icon.png">
+            </command>
+            <command
+                  commandId="costabs.commands.cleanMarkers"
+                  id="costabs.menus.cleanMarkers"
+                  label="Clean SACO Markers" 
+                  icon="icons/costa_clean.png">
             </command>
          </menu>
       </menuContribution>
@@ -49,8 +73,8 @@
          <toolbar
                id="costabs.toolbars.mainToolbar">
             <command
-                  commandId="costabs.commands.noStdCommand"
-                  icon="icons/palmtree16x16.png"
+                  commandId="costabs.commands.analyzeMethod"
+                  icon="icons/costa_icon.png"
                   id="costabs.toolbars.noStdCommand"
                   tooltip="Analyze with Costa">
            <!--<visibleWhen>
@@ -70,7 +94,7 @@
       <page
             class="costabs.preferences.CostabsPreferences"
             id="costabs.preferences.CostabsPreferences"
-            name="Costa">
+            name="SACO">
       </page>
    </extension>
    <extension
@@ -78,47 +102,345 @@
       <page
             class="costabs.WorkbenchPreferencePage1"
             id="costabs.preferences.CostabsPreferences"
-            name="Costabs preferences">
+            name="SACO preferences">
       </page>
       <initializer
             class="costabs.preferences.PreferenceInitializer">
       </initializer>
    </extension>
+   
+      <extension
+         point="org.eclipse.ui.workbench.texteditor.rulerColumns">
+      <column
+            class="costabs.rulers.CostabsResultsRuler"
+            enabled="true"
+            global="true"
+            id="Costabs.plugin.ruler"
+            includeInMenu="true"
+            name="SACO results">
+         <placement
+               gravity="1.0">
+         </placement>
+         <targetClass
+               class="org.eclipse.ui.texteditor.AbstractDecoratedTextEditor">
+         </targetClass>
+      </column>
+   </extension>
+   <!-- NOTE: All markers must extend this marker -->
+   
    <extension
          id="CostabsPlugin.costabs.marker"
          name="Costabs Marker"
          point="org.eclipse.core.resources.markers">
+         <super type="org.eclipse.core.resources.textmarker"/>
+   </extension>
+   <!-- Normal markers -->
+   <extension
+         id="CostabsPlugin.costabs.marker.info"
+         name="SACO Info Marker"
+         point="org.eclipse.core.resources.markers">
+         <super type="CostabsPlugin.costabs.marker"/>
+   </extension>
+   <extension
+		id="CostabsPlugin.costabs.marker.warn"
+		name="Costabs Warning Marker"
+		point="org.eclipse.core.resources.markers">
+		<super 
+            type="CostabsPlugin.costabs.marker">
+      	</super>
+   </extension>
+   <extension
+         id="CostabsPlugin.costabs.marker.inter.info"
+         name="Costabs Inter Info Marker"
+         point="org.eclipse.core.resources.markers">
+         <super type="CostabsPlugin.costabs.marker"/>
+   </extension>
+   <extension
+		id="CostabsPlugin.costabs.marker.inter.warn"
+		name="Costabs Inter Warning Marker"
+		point="org.eclipse.core.resources.markers">
+		<super 
+            type="CostabsPlugin.costabs.marker">
+      	</super>
+   </extension>
+   <extension
+          point="org.eclipse.ui.ide.markerImageProviders">
+       <imageprovider
+             icon="icons/costabs_marker_warning.png"
+             id="Costabs.CostabsImageProviderWarn"
+             markertype="CostabsPlugin.costabs.marker.warn">
+       </imageprovider>
+       <imageprovider
+             icon="icons/costabs_marker_info.png"
+             id="Costabs.CostabsImageProvider"
+             markertype="CostabsPlugin.costabs.marker.info">
+       </imageprovider>
+       <imageprovider
+             icon="icons/costabs_marker_inter_info.png"
+             id="Costabs.CostabsImageProviderInter"
+             markertype="CostabsPlugin.costabs.marker.inter.info">
+       </imageprovider>
+       <imageprovider
+             icon="icons/costabs_marker_inter_warn.png"
+             id="Costabs.CostabsImageProviderInterWarn"
+             markertype="CostabsPlugin.costabs.marker.inter.warn">
+       </imageprovider>
+   </extension>
+   <!-- Highlight Markers -->
+	<extension
+         id="CostabsPlugin.costabs.marker.highlight"
+         name="Costabs Highlight"
+         point="org.eclipse.core.resources.markers">
+	      <super type="CostabsPlugin.costabs.marker"/>
+   </extension>
+	<extension
+         id="CostabsPlugin.costabs.marker.highlightwarn"
+         name="Costabs Highlight Warning"
+         point="org.eclipse.core.resources.markers">
       <super
-            type="org.eclipse.core.resources.textmarker">
+            type="CostabsPlugin.costabs.marker">
+      </super>
+   </extension>
+	<extension
+         id="CostabsPlugin.costabs.marker.inter.highlight"
+         name="Costabs Highlight"
+         point="org.eclipse.core.resources.markers">
+	      <super type="CostabsPlugin.costabs.marker"/>
+   </extension>
+	<extension
+         id="CostabsPlugin.costabs.marker.inter.highlightwarn"
+         name="Costabs Highlight Warning"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="CostabsPlugin.costabs.marker">
       </super>
    </extension>
    <extension
-         id="CostabsPlugin.costabs.annotation"
-         name="Costabs Annotation"
+         id="CostabsPlugin.costabs.marker.selected"
+         name="Costabs Selected"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="CostabsPlugin.costabs.marker">
+      </super>
+   </extension>
+   <extension
+         id="Costabs.plugin.annotationhighlight"
+         name="Costabs Highlight Annotation Types"
          point="org.eclipse.ui.editors.annotationTypes">
       <type
-            markerType="CostabsPlugin.costabs.marker"
-            name="CostabsPlugin.costabs.annotation">
+            markerType="CostabsPlugin.costabs.marker.highlight"
+            name="Costabs.plugin.annotationhighlight"
+            super="org.eclipse.ui.workbench.texteditor.warning">
+      </type>
+      <type
+            markerType="CostabsPlugin.costabs.marker.highlightwarn"
+            name="Costabs.plugin.exceptionannotation"
+            super="org.eclipse.ui.workbench.texteditor.warning">
+      </type>
+      <type
+            markerType="CostabsPlugin.costabs.marker.inter.highlight"
+            name="Costabs.plugin.annotationhighlight.inter"
+            super="org.eclipse.ui.workbench.texteditor.warning">
+      </type>
+      <type
+            markerType="CostabsPlugin.costabs.marker.inter.highlightwarn"
+            name="Costabs.plugin.exceptionannotation.inter"
+            super="org.eclipse.ui.workbench.texteditor.warning">
+      </type>
+      <type
+            markerType="CostabsPlugin.costabs.marker.selected"
+            name="Costabs.plugin.annotation.selected"
+            super="org.eclipse.ui.workbench.texteditor.warning">
       </type>
    </extension>
    <extension
-         id="CostabsPlugin.costabs.annotationSpecification"
-         name="Costabs Annotation Specification"
+         id="Costabs.plugin.annotationSpecification"
+         name="Costabs Highlight Specification"
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
       <specification
-            annotationType="CostabsPlugin.costabs.annotation"
-            colorPreferenceKey="ub.colorPref"
-            colorPreferenceValue="0,255,0"
+            annotationType="Costabs.plugin.annotationhighlight"
+            colorPreferenceKey="costabs.highlight.colorPref"
+            colorPreferenceValue="72,118,255"
+            highlightPreferenceKey="costabs.highlight.high"
+            highlightPreferenceValue="true"
+            icon="icons/costabs_highlight_info.gif"
             includeOnPreferencePage="true"
-            label="Costabs UB"
-            overviewRulerPreferenceKey="ub.ovRuler"
+            label="Costabs Highlight Info Marker"
+            overviewRulerPreferenceKey="costabs.highlight.ovRuler"
             overviewRulerPreferenceValue="true"
-            symbolicIcon="bookmark"
-            textPreferenceKey="ub.text"
+            presentationLayer="0"
+            symbolicIcon="warning"
+            textPreferenceKey="costabs.highlight.text"
             textPreferenceValue="true"
-            textStylePreferenceKey="ub.textStyle"
-            textStylePreferenceValue="NONE">
+            textStylePreferenceKey="costabs.highlight.textStyle"
+            textStylePreferenceValue="IBEAM">
       </specification>
-   </extension>
+      <specification
+            annotationType="Costabs.plugin.exceptionannotation"
+            colorPreferenceKey="costabs.highlight.colorPrefwarn"
+            colorPreferenceValue="238,154,0"
+            highlightPreferenceKey="costabs.highlight.highwarn"
+            highlightPreferenceValue="true"
+            icon="icons/costabs_highlight_warn.gif"
+            includeOnPreferencePage="true"
+            label="Costabs Highlight Warn Marker"
+            overviewRulerPreferenceKey="costabs.highlight.ovRulerwarn"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            symbolicIcon="warning"
+            textPreferenceKey="costabs.highlight.textwarn"
+            textPreferenceValue="true"
+            textStylePreferenceKey="costabs.highlight.textStylewarn"
+            textStylePreferenceValue="IBEAM">
+      </specification>
+      <specification
+            annotationType="Costabs.plugin.annotationhighlight.inter"
+            colorPreferenceKey="costabs.highlight.inter.colorPref"
+            colorPreferenceValue="135,206,235"
+            highlightPreferenceKey="costabs.highlight.inter.high"
+            highlightPreferenceValue="true"
+            icon="icons/costabs_highlight_inter_info.png"
+            includeOnPreferencePage="true"
+            label="Costabs Highlight Info Marker"
+            overviewRulerPreferenceKey="costabs.highlight.inter.ovRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            symbolicIcon="warning"
+            textPreferenceKey="costabs.highlight.inter.text"
+            textPreferenceValue="true"
+            textStylePreferenceKey="costabs.highlight.inter.textStyle"
+            textStylePreferenceValue="IBEAM">
+      </specification>
+      <specification
+            annotationType="Costabs.plugin.exceptionannotation.inter"
+            colorPreferenceKey="costabs.highlight.inter.colorPrefwarn"
+            colorPreferenceValue="255,178,102"
+            highlightPreferenceKey="costabs.highlight.inter.highwarn"
+            highlightPreferenceValue="true"
+            icon="icons/costabs_highlight_inter_warn.png"
+            includeOnPreferencePage="true"
+            label="Costabs Highlight Warn Marker"
+            overviewRulerPreferenceKey="costabs.highlight.inter.ovRulerwarn"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            symbolicIcon="warning"
+            textPreferenceKey="costabs.highlight.inter.textwarn"
+            textPreferenceValue="true"
+            textStylePreferenceKey="costabs.highlight.inter.textStylewarn"
+            textStylePreferenceValue="IBEAM">
+      </specification>
+      <specification
+            annotationType="Costabs.plugin.annotation.selected"
+            colorPreferenceKey="costabs.highlight.inter.color.selected"
+            colorPreferenceValue="255,255,0"
+            highlightPreferenceKey="costabs.highlight.selected.high"
+            highlightPreferenceValue="true"
+            icon="icons/costabs_rule_marker_selected.png"
+            includeOnPreferencePage="true"
+            label="Costabs Highlight Warn Marker"
+            overviewRulerPreferenceKey="costabs.highlight.selected.ovRulerwarn"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            symbolicIcon="warning"
+            textPreferenceKey="costabs.highlight.selected.textwarn"
+            textPreferenceValue="true"
+            textStylePreferenceKey="costabs.highlight.selected.textStylewarn"
+            textStylePreferenceValue="IBEAM">
+      </specification>
 
+   </extension>
+ 	<!-- COSTABS VIEW -->
+ 	
+ 	<extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="eu.hatsproject.absplugin.absperspective">
+         <view
+               closeable="true"
+               id="costabs.view"
+               minimized="false"
+               moveable="true"
+               ratio="0.5"
+               relationship="right"
+               relative="org.eclipse.ui.views.TaskList"
+               showTitle="true"
+               standalone="true"
+               visible="true">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="costabs.CostabsCategory"
+            name="Costabs">
+      </category>
+      <view
+            category="costabs.CostabsCategory"
+            class="costabs.views.CostabsView"
+            icon="icons/costa_icon.png"
+            id="costabs.view"
+            name="Costabs View">
+      </view>
+   </extension>
+    <extension
+         point="org.eclipse.ui.ide.markerSupport">
+      <markerContentGenerator
+            id="costabs.plugin.CostabsMarkerContentGenerator"
+            name="CostabsMarkerContentGenerator" >
+				<markerTypeReference id="CostabsPlugin.costabs.marker.info"/>
+				<markerTypeReference id="CostabsPlugin.costabs.marker.warn"/>
+				<markerFieldReference visible="true" id="org.eclipse.ui.ide.severityAndDescriptionField"/>
+				<markerFieldReference visible="true" id="org.eclipse.ui.ide.resourceField"/>
+				<markerFieldReference visible="true" id="org.eclipse.ui.ide.locationField"/>
+      </markerContentGenerator>
+   </extension>
+ 	 
+ 	 <!-- Costabs graph view -->
+ 	  	<extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="eu.hatsproject.absplugin.absperspective">
+         <view
+               closeable="true"
+               id="costabs.view.graph"
+               minimized="false"
+               moveable="true"
+               ratio="0.5"
+               relationship="right"
+               relative="org.eclipse.ui.views.TaskList"
+               showTitle="true"
+               standalone="true"
+               visible="true">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   <extension point="org.eclipse.ui.views"> 
+      <category 
+         id="costabs.views.CostabsGraphView" 
+         name="SACO Graph View"/> 
+      <view 
+         id="costabs.view.graph" 
+         name="SACO Graph Viewer" 
+         category="costabs.CostabsCategory" 
+         class="costabs.views.CostabsGraphView" 
+         icon="icons/costa_icon.png"/>
+   </extension> 
+   <!--extension
+         point="org.eclipse.ui.views">
+      <category
+            id="costabs.CostabsCategory"
+            name="Costabs">
+      </category>
+      <view
+            category="costabs.CostabsCategory"
+            class="costabs.views.CostabsView"
+            icon="icons/palmtree16x16.png"
+            id="costabs.view.graph"
+            name="Costa Graph View">
+      </view>
+   </extension-->
+ 	 
+ 	 
+	
 </plugin>
