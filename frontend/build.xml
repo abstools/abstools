@@ -180,7 +180,7 @@
 
   <!-- generate ABS -->
 
-  <target name="gen" depends="genshell, genparser, genast, genlang">
+  <target name="gen" depends="genshell, genparser, genast, genlang, genruntime">
   </target>
 
   <target name="genast">
@@ -199,6 +199,12 @@
       <fileset dir="${src.dir}/abs/lang" includes="**/*.abs" />
     </copy>
   </target>
+  
+  <target name="genruntime">
+    <copy todir="${build.dir}/abs/backend/erlang" >
+      <fileset dir="${src.dir}/abs/backend/erlang/" includes="runtime/**/*" />
+    </copy>
+  </target>	
 
   <target name="genshell">
     <copy todir="${bash.build.dir}">

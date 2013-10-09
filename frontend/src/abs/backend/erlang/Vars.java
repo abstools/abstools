@@ -44,9 +44,14 @@ public class Vars extends LinkedHashMap<String, Var> {
     }
 
     public String nV(String name) {
-        if (containsKey(name))
-            throw new RuntimeException("Var already exists");
-        put(name, new Var());
+        Var v = get((Object) name);
+        if (v != null)
+            if (v.isSet())
+                throw new RuntimeException("Var already exists");
+            else
+                put(name, v.inc());
+        else
+            put(name, new Var());
         return get(name);
     }
 
@@ -121,6 +126,12 @@ public class Vars extends LinkedHashMap<String, Var> {
         left.deleteCharAt(left.length() - 1);
         right.deleteCharAt(right.length() - 1);
         return new String[] { left.toString(), right.toString() };
+    }
+
+    public void hideIntroduced(Vars child) {
+        for (java.util.Map.Entry<String, Var> k : child.entrySet())
+            if (!containsKey(k.getKey()) || !k.getValue().isSet())
+                this.put(k.getKey(), new Var(k.getValue().getCount(), false));
     }
 }
 

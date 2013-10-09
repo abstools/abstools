@@ -128,27 +128,28 @@ aspect GenerateErlang {
   
   public void VarDecl.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
     if(getAccess() instanceof TypeParameterUse || getAccess() instanceof InterfaceTypeUse|| getAccess() instanceof DataTypeUse){
-      Vars v=vars.pass();
-      ecs.format("%s = ",vars.inc(getName()));
+      StringWriter sw = new StringWriter();
+      ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
       if(hasInitExp())
-        getInitExp().generateErlangCode(ecs,v);
+        getInitExp().generateErlangCode(buffer,vars);
       else 
-        ecs.print("null");
+        buffer.print("null");
+      buffer.close();
+      ecs.format("%s = %s",vars.nV(getName()),sw.toString().substring(ecs.getIndent().length()));
     }
     else
       throw new NotImplementedYetException(this); 
   }
   @Override
   public void AssignStmt.generateErlangCode(ErlangCodeStream ecs,Vars vars) {
-    Vars save=vars.pass();
-    if(getVar() instanceof VarUse){
-      ecs.format("%s = ",vars.inc(getVar().getName()));
-      getValue().generateErlangCode(ecs,save);
-      
-    }else if(getVar() instanceof FieldUse){
-      ecs.format("set(O,%s,", getVar().getName()); 
-          getValue().generateErlangCode(ecs,save);
-          ecs.print(")");}
+    StringWriter sw = new StringWriter();
+    ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),ecs.getIndent());
+    getValue().generateErlangCode(buffer,vars);
+    buffer.close();
+    if(getVar() instanceof VarUse)
+      ecs.format("%s = %s",vars.inc(getVar().getName()),sw.toString().substring(ecs.getIndent().length()));
+    else if(getVar() instanceof FieldUse)
+      ecs.format("set(O,%s,%s)", getVar().getName(),sw.toString().substring(ecs.getIndent().length()));
     else
       throw new NotImplementedYetException(this); 
   }
@@ -425,6 +426,7 @@ aspect GenerateErlang {
         b.getLeft().generateErlangCode(external, ecs, v);
         ecs.print("->");
         b.getRight().generateErlangCode(ecs, v);
+        vars.hideIntroduced(v);
     }
     ecs.println();
     ecs.decIndent();
