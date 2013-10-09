@@ -3,11 +3,18 @@ package costabs.console;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import costabs.Activator;
+import costabs.beans.Analyses;
+import costabs.beans.Analysis;
+import costabs.beans.Option;
+import costabs.exceptions.CostabsException;
 import costabs.preferences.PreferenceConstants;
+import costabs.preferences.PreferencesManager;
+import costabs.structures.CostabsConstants;
 
 public class CostabsShellCommand {
 
@@ -46,57 +53,81 @@ public class CostabsShellCommand {
 	 * @param file ABS to be passed to costabs.
 	 * @param entries The names of methods / functions to use in costabs.
 	 */
-	public void analyze(String file, ArrayList<String> entries) {
-
-		executeCommand(buildCommand(entries));
+	public void analyze(String file, ArrayList<String> entries, String analysis) throws CostabsException {
+		executeCommand(buildCommand(file,entries, analysis));
 	}
 
+	
+	public static final String PARAMS_ID = "$PARAMS";
+	public static final String FILE_ID = "$FILE";
+	public static final String ENTRIES_ID = "$ENTRIES";
+	
+	
 	/**
 	 * Auxiliar method, just to build the shell command with the entries and
 	 * preferences setup.
 	 * @param entries The entries to be used in costabs.
 	 * @return The string that has the shell command to use costabs.
 	 */
-	private String buildCommand(ArrayList<String> entries) {
+	private String buildCommand(String file, ArrayList<String> entries, String idAnalysis) throws CostabsException {
 
-		StringBuffer command2 = new StringBuffer();
+		Analysis analysis = PreferencesManager.getInstance().getAnalysis(idAnalysis);
+		String aCommand = analysis.getCommand();
 		
-		if ((new File(COSTABS_EXECUTABLE_PATH)).exists())
-			command2.append(COSTABS_EXECUTABLE_PATH);
-		else // In case the executable is not there we try with the costabs command	
-			command2.append("costabs");
-		
-		command2.append(" -mode analyze ");
-				
+//		if ((new File(COSTABS_EXECUTABLE_PATH)).exists())
+//			command2.append(COSTABS_EXECUTABLE_PATH);
+//		else // In case the executable is not there we try with the costabs command	
+//			command2.append(aCommand);
+
 		// Build entries
-		command2.append("-entries ");
+		StringBuffer entriesBuf = new StringBuffer ();
 		for (int i = 0; i < entries.size(); i++) {
-			command2.append("'"+entries.get(i)+"' ");
+			entriesBuf.append("'"+entries.get(i)+"' ");
 		}
 
 		// Build options checking preferences
-		buildOptions(command2);
+		String options = buildOptions(idAnalysis);
+		
 
-		ConsoleHandler.write(command2.toString());
+		String c2 = aCommand.replace(PARAMS_ID, options);
+		String c3 = c2.replace(FILE_ID, file);
+		String cFinal = c3.replace(ENTRIES_ID, entriesBuf.toString());
 
-		return command2.toString();
+		ConsoleHandler.write(cFinal.toString());
+		
+		
+		return cFinal;
 	}
 
 	/**
 	 * Auxiliar method to add to a string the options checked in preferences.
 	 * @param command The String with the shell command to ABS.
 	 */
-	private void buildOptions(StringBuffer command) {
+	private String buildOptions(String idAnalysis) throws CostabsException {
+		StringBuffer command = new StringBuffer();
+
+		//		command.append("-cost_model " + store.getString(PreferenceConstants.PCOST_MODEL) + " ");
+		//		command.append("-cost_centers " + store.getString(PreferenceConstants.PCOST_CENTER) + " ");
+		//		command.append("-norm " + store.getString(PreferenceConstants.PSIZE_ABST) + " ");
+		//		if (store.getString(PreferenceConstants.PASYMPTOTIC) == "yes") command.append("-a ");
+		//		if (store.getString(PreferenceConstants.PDEBUG_MODE) == "yes") command.append("-debug ");
+		//		command.append("-verbosity " + store.getString(PreferenceConstants.PVERBOSITY) + " ");
+
 
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		
-		command.append("-cost_model " + store.getString(PreferenceConstants.PCOST_MODEL) + " ");
-		command.append("-cost_centers " + store.getString(PreferenceConstants.PCOST_CENTER) + " ");
-		command.append("-norm " + store.getString(PreferenceConstants.PSIZE_ABST) + " ");
-		if (store.getString(PreferenceConstants.PASYMPTOTIC) == "yes") command.append("-a ");
-		if (store.getString(PreferenceConstants.PDEBUG_MODE) == "yes") command.append("-debug ");
-		command.append("-verbosity " + store.getString(PreferenceConstants.PVERBOSITY) + " ");
-
+		Analysis analysis = PreferencesManager.getInstance().getAnalysis(idAnalysis);
+		for(Option op: analysis.getOptions().getOptions()) {
+			String optId = PreferencesManager.getInstance().getOptionId(analysis.getAnalysisId(), op.getOptname());
+			if (PreferencesManager.getInstance().isBooleanOption(optId)) {
+				if (store.getBoolean(optId)) {
+					command.append(" -" + op.getOptname() + " ");
+				}
+			}
+			else {
+				command.append(" -" + op.getOptname() + " " + store.getString(optId));
+			}
+		}
+		return command.toString();
 	}
 
 	/**
