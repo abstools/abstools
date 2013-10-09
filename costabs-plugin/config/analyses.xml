@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<analyses>
+	<analysis id="resource">
+		<command>costabs -mode analyze -entries $ENTRIES $PARAMS</command>
+	    <description>
+	      <short>Resource Analysis</short>
+	      <long>Resource analysis for ABS programs</long>
+	    </description>
+	    <optionsCommand>costabs -params cost;cat /tmp/costabs/parameters.xml</optionsCommand>
+	</analysis>
+	<analysis id="mhp">
+		<command>/Users/groman/Systems/costa/costabs/src/interfaces/mhp/shell/mhp_shell $ENTRIES -i '$FILE' -mode complete -type full -highlight '/dev/null' $PARAMS</command>
+	    <description>
+	      <short>May-Happen-in-Parallel Analysis</short>
+	      <long>May-Happen-in-Parallel Analysis for ABS programs</long>
+	    </description>
+	    <optionsCommand>costabs -params mhp;cat /tmp/costabs/parameters.xml</optionsCommand>
+	</analysis>
+	<analysis id="termination">
+		<command>costabs -mode analyze -entries $ENTRIES -rely_guarantee_termination yes $PARAMS</command>
+	    <description>
+	      <short>Termination Analysis</short>
+	      <long>Termination analysis for ABS programs</long>
+	    </description>
+	    <optionsCommand>costabs -params termination;cat /tmp/costabs/parameters.xml</optionsCommand>
+	</analysis>
+	<analysis id="deadlock">
+		<command>/Users/groman/Systems/costa/costabs/src/interfaces/deadlock/shell/deadlock_shell -i '$FILE' $PARAMS</command>
+	    <description>
+	      <short>Deadlock Analysis</short>
+	      <long>Deadlock analysis for ABS programs</long>
+	    </description>
+	    <optionsCommand>costabs -params deadlock;cat /tmp/costabs/parameters.xml</optionsCommand>
+	</analysis>
+</analyses>
