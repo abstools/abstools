@@ -61,7 +61,7 @@ public class apetHandler extends AbstractHandler {
 	private final String defaultAbsUnitOutputFile = "/tmp/" + absUnitOutputFile;
 	
 	/**
-	 * The constructor.
+	 * The constructor
 	 */
 	public apetHandler() {
 	}
