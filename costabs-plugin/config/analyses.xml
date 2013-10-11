@@ -1,35 +1,422 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <analyses>
 	<analysis id="resource">
-		<command>costabs -mode analyze -entries $ENTRIES $PARAMS</command>
+		<command>costabs_static -mode analyze -entries $ENTRIES $PARAMS</command>
 	    <description>
 	      <short>Resource Analysis</short>
 	      <long>Resource analysis for ABS programs</long>
 	    </description>
-	    <optionsCommand>costabs -params cost;cat /tmp/costabs/parameters.xml</optionsCommand>
+	    <!-- optionsCommand>costabs -params cost;cat /tmp/costabs/parameters.xml</optionsCommand -->
+	    <parameters>
+			<parameter type="combo" optname="cost_model">
+			  <default>steps</default>
+			  <description>
+			    <short>Cost model</short>
+			    <long>Cost model</long>
+			  </description>
+			  <values>
+			    <value vname="termination" selected="no">
+			      <description>
+				<short>Termination</short>
+				<long>Termination</long>
+			      </description>
+			    </value>
+			    <value vname="steps" selected="no">
+			      <description>
+				<short>Steps</short>
+				<long>Steps</long>
+			      </description>
+			    </value>
+			    <value vname="memory" selected="no">
+			      <description>
+				<short>Memory</short>
+				<long>Memory</long>
+			      </description>
+			    </value>
+			    <value vname="objects" selected="no">
+			      <description>
+				<short>Objects</short>
+				<long>Objects</long>
+			      </description>
+			    </value>
+			    <value vname="task_level" selected="no">
+			      <description>
+				<short>Tasks</short>
+				<long>Tasks</long>
+			      </description>
+			    </value>
+			    <value vname="cogs" selected="no">
+			      <description>
+				<short>Object groups</short>
+				<long>Object groups</long>
+			      </description>
+			    </value>
+			    <value vname="user" selected="no">
+			      <description>
+				<short>User-defined</short>
+				<long>User-defined</long>
+			      </description>
+			    </value>
+			    <value vname="bandwidth" selected="no">
+			      <description>
+				<short>Bandwidth</short>
+				<long>Bandwidth</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="cost_centers">
+			  <default>no</default>
+			  <description>
+			    <short>Cost centers</short>
+			    <long>Distribute the cost according to the cost centers found by the points-to analysis</long>
+			  </description>
+			  <values>
+			    <value vname="no" selected="no">
+			      <description>
+				<short>no</short>
+				<long>no</long>
+			      </description>
+			    </value>
+			    <value vname="class" selected="no">
+			      <description>
+				<short>class</short>
+				<long>class</long>
+			      </description>
+			    </value>
+			    <value vname="object" selected="no">
+			      <description>
+				<short>object</short>
+				<long>object</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="asymp">
+			  <default>no</default>
+			  <description>
+			    <short>Asymptotic bounds</short>
+			    <long>Obtain asymptotic bounds</long>
+			  </description>
+			  <values>
+			    <value vname="yes" selected="no">
+			      <description>
+				<short>yes</short>
+				<long>yes</long>
+			      </description>
+			    </value>
+			    <value vname="no" selected="no">
+			      <description>
+				<short>no</short>
+				<long>no</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="size_abst">
+			  <default>term_size</default>
+			  <description>
+			    <short>Size abstraction for terms</short>
+			    <long>Size abstraction to be used in functional ABS</long>
+			  </description>
+			  <values>
+			    <value vname="term_size" selected="no">
+			      <description>
+				<short>Size</short>
+				<long>Size</long>
+			      </description>
+			    </value>
+			    <value vname="term_depth" selected="no">
+			      <description>
+				<short>Depth</short>
+				<long>Depth</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="symb_or_num">
+			  <default>num</default>
+			  <description>
+			    <short>Symbolic or numeric UBs (for memory and objects)</short>
+			    <long>Symbolic or numeric UBs (for memory and objects)</long>
+			  </description>
+			  <values>
+			    <value vname="symb" selected="no">
+			      <description>
+				<short>Symbolic</short>
+				<long>Symbolic</long>
+			      </description>
+			    </value>
+			    <value vname="num" selected="no">
+			      <description>
+				<short>Numeric</short>
+				<long>Numeric</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="verbosity">
+			  <default>2</default>
+			  <description>
+			    <short>Debug information</short>
+			    <long>Debug information and verbosity of the output</long>
+			  </description>
+			  <values>
+			    <value vname="0" selected="no">
+			      <description>
+				<short>0</short>
+				<long>0</long>
+			      </description>
+			    </value>
+			    <value vname="1" selected="no">
+			      <description>
+				<short>1</short>
+				<long>1</long>
+			      </description>
+			    </value>
+			    <value vname="2" selected="no">
+			      <description>
+				<short>2</short>
+				<long>2</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="cc_pt_len">
+			  <default>2</default>
+			  <description>
+			    <short>Points-to analysis precision</short>
+			    <long>Points-to analysis precision</long>
+			  </description>
+			  <values>
+			    <value vname="1" selected="no">
+			      <description>
+				<short>1</short>
+				<long>1</long>
+			      </description>
+			    </value>
+			    <value vname="2" selected="no">
+			      <description>
+				<short>2</short>
+				<long>2</long>
+			      </description>
+			    </value>
+			    <value vname="3" selected="no">
+			      <description>
+				<short>3</short>
+				<long>3</long>
+			      </description>
+			    </value>
+			    <value vname="4" selected="no">
+			      <description>
+				<short>4</short>
+				<long>4</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			</parameters>
 	</analysis>
 	<analysis id="mhp">
-		<command>/Users/groman/Systems/costa/costabs/src/interfaces/mhp/shell/mhp_shell $ENTRIES -i '$FILE' -mode complete -type full -highlight '/dev/null' $PARAMS</command>
+		<command>mhp_static $ENTRIES -i '$FILE' -mode complete -type full -highlight '/dev/null' $PARAMS</command>
 	    <description>
 	      <short>May-Happen-in-Parallel Analysis</short>
 	      <long>May-Happen-in-Parallel Analysis for ABS programs</long>
 	    </description>
-	    <optionsCommand>costabs -params mhp;cat /tmp/costabs/parameters.xml</optionsCommand>
+	    <!-- optionsCommand>costabs -params mhp;cat /tmp/costabs/parameters.xml</optionsCommand -->
+	    <parameters>
+			<parameter type="combo" optname="verbosity">
+			  <default>2</default>
+			  <description>
+			    <short>Debug information</short>
+			    <long>Debug information and verbosity of the output</long>
+			  </description>
+			  <values>
+			    <value vname="0" selected="no">
+			      <description>
+				<short>0</short>
+				<long>0</long>
+			      </description>
+			    </value>
+			    <value vname="1" selected="no">
+			      <description>
+				<short>1</short>
+				<long>1</long>
+			      </description>
+			    </value>
+			    <value vname="2" selected="no">
+			      <description>
+				<short>2</short>
+				<long>2</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			</parameters>
+	    
+	    
 	</analysis>
 	<analysis id="termination">
-		<command>costabs -mode analyze -entries $ENTRIES -rely_guarantee_termination yes $PARAMS</command>
+		<command>costabs_static -mode analyze -entries $ENTRIES -rely_guarantee_termination yes $PARAMS</command>
 	    <description>
 	      <short>Termination Analysis</short>
 	      <long>Termination analysis for ABS programs</long>
 	    </description>
-	    <optionsCommand>costabs -params termination;cat /tmp/costabs/parameters.xml</optionsCommand>
+	    <!-- optionsCommand>costabs -params termination;cat /tmp/costabs/parameters.xml</optionsCommand -->
+	    <parameters>
+			<parameter type="combo" optname="verbosity">
+			  <default>2</default>
+			  <description>
+			    <short>Debug information</short>
+			    <long>Debug information and verbosity of the output</long>
+			  </description>
+			  <values>
+			    <value vname="0" selected="no">
+			      <description>
+				<short>0</short>
+				<long>0</long>
+			      </description>
+			    </value>
+			    <value vname="1" selected="no">
+			      <description>
+				<short>1</short>
+				<long>1</long>
+			      </description>
+			    </value>
+			    <value vname="2" selected="no">
+			      <description>
+				<short>2</short>
+				<long>2</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			<parameter type="combo" optname="cc_pt_len">
+			  <default>2</default>
+			  <description>
+			    <short>Points-to analysis precision</short>
+			    <long>Points-to analysis precision</long>
+			  </description>
+			  <values>
+			    <value vname="1" selected="no">
+			      <description>
+				<short>1</short>
+				<long>1</long>
+			      </description>
+			    </value>
+			    <value vname="2" selected="no">
+			      <description>
+				<short>2</short>
+				<long>2</long>
+			      </description>
+			    </value>
+			    <value vname="3" selected="no">
+			      <description>
+				<short>3</short>
+				<long>3</long>
+			      </description>
+			    </value>
+			    <value vname="4" selected="no">
+			      <description>
+				<short>4</short>
+				<long>4</long>
+			      </description>
+			    </value>
+			  </values>
+			</parameter>
+			</parameters>
+	    
+	    
 	</analysis>
 	<analysis id="deadlock">
-		<command>/Users/groman/Systems/costa/costabs/src/interfaces/deadlock/shell/deadlock_shell -i '$FILE' $PARAMS</command>
+		<command>deadlock_static -i '$FILE' $PARAMS</command>
 	    <description>
 	      <short>Deadlock Analysis</short>
 	      <long>Deadlock analysis for ABS programs</long>
 	    </description>
-	    <optionsCommand>costabs -params deadlock;cat /tmp/costabs/parameters.xml</optionsCommand>
+	    <!-- optionsCommand>costabs -params deadlock;cat /tmp/costabs/parameters.xml</optionsCommand -->
+	    <parameters>
+		<parameter type="combo" optname="verbosity">
+		  <default>2</default>
+		  <description>
+		    <short>Debug information</short>
+		    <long>Debug information and verbosity of the output</long>
+		  </description>
+		  <values>
+		    <value vname="0" selected="no">
+		      <description>
+			<short>0</short>
+			<long>0</long>
+		      </description>
+		    </value>
+		    <value vname="1" selected="no">
+		      <description>
+			<short>1</short>
+			<long>1</long>
+		      </description>
+		    </value>
+		    <value vname="2" selected="no">
+		      <description>
+			<short>2</short>
+			<long>2</long>
+		      </description>
+		    </value>
+		  </values>
+		</parameter>
+		<parameter type="combo" optname="cc_pt_len">
+		  <default>2</default>
+		  <description>
+		    <short>Points-to analysis precision</short>
+		    <long>Points-to analysis precision</long>
+		  </description>
+		  <values>
+		    <value vname="1" selected="no">
+		      <description>
+			<short>1</short>
+			<long>1</long>
+		      </description>
+		    </value>
+		    <value vname="2" selected="no">
+		      <description>
+			<short>2</short>
+			<long>2</long>
+		      </description>
+		    </value>
+		    <value vname="3" selected="no">
+		      <description>
+			<short>3</short>
+			<long>3</long>
+		      </description>
+		    </value>
+		    <value vname="4" selected="no">
+		      <description>
+			<short>4</short>
+			<long>4</long>
+		      </description>
+		    </value>
+		  </values>
+		</parameter>
+		<parameter type="boolean" optname="ignore_mhp">
+		  <default>no</default>
+		  <description>
+		    <short>Ignore MHP information in deadlock analysis</short>
+		    <long>Ignore MHP information in deadlock analysis</long>
+		  </description>
+		  <values>
+		    <value vname="yes" selected="no">
+		      <description>
+			<short>yes</short>
+			<long>yes</long>
+		      </description>
+		    </value>
+		    <value vname="no" selected="no">
+		      <description>
+			<short>no</short>
+			<long>no</long>
+		      </description>
+		    </value>
+		  </values>
+		</parameter>
+		</parameters>
 	</analysis>
 </analyses>
