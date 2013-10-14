@@ -8,7 +8,7 @@ public class CostabsConstants {
 	public static final String OUTPUT_XML = "/tmp/costabs/output.xml";
 	public static final String TMP_DIR = "/tmp/costabs/absPL";
 	public static final String ABS_PL_FILE = "abs.pl";
-	public static final String OPTIONS_EXEC = "costabs_exe";
+	public static final String EXEC_DIR = "binary/";
 	public static final String OPTIONS_FILE = "config/analyses.xml";
 	public static final String PLUGIN_ID = "eu.hatsproject.costabs";
 

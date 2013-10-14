@@ -4,7 +4,7 @@
 
    <extension point="org.eclipse.ui.commands">
       <category
-            name="costabs"
+            name="SACO"
             id="costabs.commands.category">
       </category>
       <command
@@ -360,12 +360,11 @@
                id="costabs.view"
                minimized="false"
                moveable="true"
-               ratio="0.5"
-               relationship="right"
+               relationship="stack"
                relative="org.eclipse.ui.views.TaskList"
                showTitle="true"
                standalone="true"
-               visible="true">
+               visible="false">
          </view>
       </perspectiveExtension>
    </extension>
@@ -373,14 +372,14 @@
          point="org.eclipse.ui.views">
       <category
             id="costabs.CostabsCategory"
-            name="Costabs">
+            name="SACO">
       </category>
       <view
             category="costabs.CostabsCategory"
             class="costabs.views.CostabsView"
             icon="icons/costa_icon.png"
             id="costabs.view"
-            name="Costabs View">
+            name="SACO Markers View">
       </view>
    </extension>
     <extension
@@ -396,8 +395,7 @@
       </markerContentGenerator>
    </extension>
  	 
- 	 <!-- Costabs graph view -->
- 	  	<extension
+ 	<extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="eu.hatsproject.absplugin.absperspective">
@@ -406,12 +404,10 @@
                id="costabs.view.graph"
                minimized="false"
                moveable="true"
-               ratio="0.5"
-               relationship="right"
-               relative="org.eclipse.ui.views.TaskList"
+               relationship="stack"
                showTitle="true"
                standalone="true"
-               visible="true">
+               visible="false">
          </view>
       </perspectiveExtension>
    </extension>

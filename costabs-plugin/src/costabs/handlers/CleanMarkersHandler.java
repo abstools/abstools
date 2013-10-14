@@ -33,7 +33,6 @@ public class CleanMarkersHandler extends AbstractHandler {
 		} catch (CostabsException e) {
 			DialogPrinter.printError(shellEclipse, e, e.getMessage());
 		}
-		System.out.println("Vamos alla ");
 		return null;
 	}
 

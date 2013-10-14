@@ -154,6 +154,7 @@ public class OutputTracker {
 		}
 	}
 	
+	
 	public CostabsGraph getGraph () {
 		return graph;
 	}

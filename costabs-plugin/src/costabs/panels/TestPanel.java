@@ -98,17 +98,12 @@ public class TestPanel extends JPanel implements MouseListener
 			pickedElements = diagram.pick(arg0.getPoint(),null);
 
 			for (int i = 0; i < pickedElements.size(); i++) {
-				System.out.println("--------------");
 				ArrayList<SVGElement> elements = (ArrayList<SVGElement>)pickedElements.get(i);
 				for (SVGElement element: elements) {
 					if (element.getId() != null) {
 						ids.add(element.getId());
 					}
 				}
-			}
-
-			for(String id: ids) {
-				System.out.println("Remarcando... " + id);
 			}
 			markNodes(ids, "red");
 
@@ -126,15 +121,12 @@ public class TestPanel extends JPanel implements MouseListener
 
 	private void markNodes (TreeSet<String> ids, String color) throws SVGElementException {
 		for(String id: ids) {
-			System.out.println("*** Procesando id " + id + " ****");
 			SVGElement element = diagram.getElement(id);
 
 			if (!element.hasAttribute("class", AnimationElement.AT_XML) || 
 					!"node".equals(element.getPresAbsolute("class").getStringValue())){
-				System.out.println("No tiene class");
 				continue;
 			}
-			System.out.println("Tiene class");
 			markNode(element, color);
 		}
 		repaint();
@@ -145,7 +137,6 @@ public class TestPanel extends JPanel implements MouseListener
 		for(int i=0; i < element.getNumChildren(); i ++) {
 
 			SVGElement child = element.getChild(i);
-			System.out.println("   " + child.getTagName());
 			if (child.hasAttribute("fill", AnimationElement.AT_XML)) {
 				child.setAttribute("fill", AnimationElement.AT_XML, color);
 			}

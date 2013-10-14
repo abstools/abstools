@@ -18,7 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package costabs.views;
 
+import java.awt.BorderLayout;
+
 import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -28,6 +32,7 @@ import costabs.awt.EmbeddedSwingComposite;
 import costabs.panels.GraphPanelHandler;
 import costabs.trackers.OutputManager;
 
+import costabs.panels.CostabsGraphPanel;
 /**
  * Costa view to show the costa markers
  * @author groman
@@ -57,10 +62,11 @@ public class CostabsGraphView extends ViewPart {
 
 		EmbeddedSwingComposite embeddedComposite = new EmbeddedSwingComposite(parent, SWT.NONE) {
 			protected JComponent createSwingComponent() {
-				GraphPanelHandler panel = new GraphPanelHandler (this);
-				OutputManager.getInstance().setGraphPanel(panel);
-				//CostabsGraphPanel panel = new CostabsGraphPanel(null);
-				//OutputManager.getInstance().setPanel(panel);
+				//GraphPanelHandler panel = new GraphPanelHandler (this);
+				//OutputManager.getInstance().setGraphPanel(panel);
+				
+				CostabsGraphPanel panel = new CostabsGraphPanel(null);
+				OutputManager.getInstance().setPanel(panel);
 				return panel;
 			}
 		};

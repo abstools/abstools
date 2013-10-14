@@ -49,10 +49,18 @@ public class Activator extends AbstractUIPlugin {
 		Bundle petbundle = Platform.getBundle(CostabsConstants.PLUGIN_ID); 
 		File dir = FileLocator.getBundleFile(petbundle);
 		assert dir.isDirectory() : dir;
-		File exe = new File(dir,CostabsConstants.OPTIONS_EXEC);
+		File exe = new File(dir,CostabsConstants.EXEC_DIR);
 		assert exe.exists() : dir;
-		CostabsShellCommand.COSTABS_EXECUTABLE_PATH = exe.getAbsolutePath();
-
+		CostabsShellCommand.COSTABS_EXECUTABLE_PATH = exe.getAbsolutePath() + "/";
+		//Runtime.getRuntime().exec("chmod +x " + CostabsShellCommand.COSTABS_EXECUTABLE_PATH + "*");
+		String cmd[] = { "bash", "-c", "chmod +x " + CostabsShellCommand.COSTABS_EXECUTABLE_PATH + "*" };
+		
+		Runtime.getRuntime().exec(cmd);
+		
+//		Runtime.getRuntime().exec("chmod +x " + CostabsShellCommand.COSTABS_EXECUTABLE_PATH + "costabs_static");
+//		Runtime.getRuntime().exec("chmod +x " + CostabsShellCommand.COSTABS_EXECUTABLE_PATH + "deadlock_static");
+//		Runtime.getRuntime().exec("chmod +x " + CostabsShellCommand.COSTABS_EXECUTABLE_PATH + "mhp_static");
+			
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		ResourceChangeListener listener = new ResourceChangeListener();
 		workspace.addResourceChangeListener(listener, IResourceChangeEvent.POST_BUILD);

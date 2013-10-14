@@ -21,7 +21,6 @@ public class GraphTracker extends CommandTracker{
 	@Override
 	public void track() throws CostabsException {
 		File f = new File (getFile());
-		System.out.println("Existe el fichero " + f.getAbsolutePath() + " ?????");
 		if (!f.exists()) {
 			ConsoleHandler.write("warning","WARN: File " + getFile() + " does not exist");
 			return;

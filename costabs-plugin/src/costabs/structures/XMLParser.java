@@ -32,7 +32,6 @@ public class XMLParser {
 		}
 		catch (Exception spe) {
 		   System.out.println(ERROR_LOADING_FILE);
-
 		}
 		
 	}

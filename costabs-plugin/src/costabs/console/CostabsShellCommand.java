@@ -72,13 +72,16 @@ public class CostabsShellCommand {
 	private String buildCommand(String file, ArrayList<String> entries, String idAnalysis) throws CostabsException {
 
 		Analysis analysis = PreferencesManager.getInstance().getAnalysis(idAnalysis);
-		String aCommand = analysis.getCommand();
+		StringBuffer aCommand = new StringBuffer(analysis.getCommand());
+		aCommand.insert(0, COSTABS_EXECUTABLE_PATH);
 		
 //		if ((new File(COSTABS_EXECUTABLE_PATH)).exists())
 //			command2.append(COSTABS_EXECUTABLE_PATH);
 //		else // In case the executable is not there we try with the costabs command	
 //			command2.append(aCommand);
 
+		
+			
 		// Build entries
 		StringBuffer entriesBuf = new StringBuffer ();
 		for (int i = 0; i < entries.size(); i++) {
@@ -89,7 +92,7 @@ public class CostabsShellCommand {
 		String options = buildOptions(idAnalysis);
 		
 
-		String c2 = aCommand.replace(PARAMS_ID, options);
+		String c2 = aCommand.toString().replace(PARAMS_ID, options);
 		String c3 = c2.replace(FILE_ID, file);
 		String cFinal = c3.replace(ENTRIES_ID, entriesBuf.toString());
 
@@ -170,7 +173,7 @@ public class CostabsShellCommand {
 			error=errorThread.getContent();
 		}
 		catch (IOException e) {
-			System.out.println("Error to execute the command : "+e);
+			System.out.println("Error in the execution of the command : "+e);
 			return false;
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

@@ -63,7 +63,6 @@ public class GraphPanel extends JPanel implements MouseListener {
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		try {
-			System.out.println("Gestionando el click ");
 			if (tracker.getGraph() != null) {
 				tracker.getGraph().handleClick(e.getX(), e.getY());
 			}

@@ -62,8 +62,6 @@ public class CostabsXMLFrontend {
 				if (analysis.getOptionsCommand() != null) {
 					String optString = CostabsXMLFrontend.execOptionsCommand(analysis.getOptionsCommand());
 					
-					System.out.println("OPTION ");
-					System.out.println(optString);
 					Options opt = CostabsXMLFrontend.readOptions(optString, analysis.getOptionsCommand());
 					analysis.setOptions(opt);
 				}

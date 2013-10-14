@@ -2,6 +2,7 @@ package costabs.panels;
 
 import java.awt.CardLayout;
 
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.eclipse.core.resources.IFile;
@@ -28,8 +29,11 @@ public class GraphPanelHandler extends JPanel {
 	public void showPanel(IFile file) {
 		String id = file.getFullPath().toOSString();
 		if (OutputManager.getInstance().getOutputTracker(file) != null) {
-			JPanel newpanel = new GraphPanel(file, OutputManager.getInstance()
-					.getOutputTracker(file));
+			JLabel label = new JLabel (id);
+			JPanel newpanel = new JPanel();
+			newpanel.add(label);
+			//JPanel newpanel = new GraphPanel(file, OutputManager.getInstance()
+			//		.getOutputTracker(file));
 			add(newpanel, id);
 		} else {
 			id = EMPTY;

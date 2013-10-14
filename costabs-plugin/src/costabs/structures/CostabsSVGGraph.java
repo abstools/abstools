@@ -61,20 +61,19 @@ public class CostabsSVGGraph extends CostabsGraph {
 		this.file = file;
 		//		FileReader reader;
 		icon = new SVGIcon();
-		icon.setScaleToFit(true);
+		icon.setScaleToFit(false);
 		try {
 			// Arghh!! It is needed to create a temporary file to to read all graphs from different files. 
 			// Work-around to fix the problem of SVGSalamander while loading multiple graphs
 			// using the same file name.
 			File tmpfile = copy(this.command.getFile());
-
+			
 			SVGUniverse universe = new SVGUniverse();
 			URI uri = universe.loadSVG(new URL("file://" + tmpfile.getAbsolutePath()));
 			diagram = universe.getDiagram(uri);
 			icon.setSvgURI(uri);
-
 			idsTable = new HashMap<String, String> ();
-
+			
 			fillIdsTable(diagram.getRoot());
 		} catch (Exception  e) {
 			throw new CostabsException("Graph file cannot be found " + command.getFile());
@@ -96,7 +95,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 	}
 
 //	public void paint(Graphics g, JPanel panel) {
-//		System.out.println("Llamando de nuevo a pintar... ");
 //		if (icon != null) {
 ////			g.setColor(panel.getBackground());
 ////			g.fillRect(0, 0, getWidth(), getHeight());
@@ -129,6 +127,7 @@ public class CostabsSVGGraph extends CostabsGraph {
 				e.printStackTrace();
 			}
 		}	
+		panel.setPreferredSize(new Dimension(getWidth(),getHeight()));
 	}
 
 
@@ -196,7 +195,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 
 			}
 			lastClicked = allNodes;
-			System.out.println("All nodes " + allNodes);
 
 			// Other commands like highlight's or markers
 
@@ -234,7 +232,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 			lastClicked.add(getSVGId(n.getId()));
 			try {
 				markNode(getSVGId(n.getId()), color);
-				System.out.println("Marcando nodo " + n.getId());
 			} catch (SVGElementException e) {
 				e.printStackTrace();
 			}
@@ -243,7 +240,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 
 	private void markNode (String id, String color) throws SVGElementException {
 		SVGElement element = diagram.getElement(id);
-		System.out.println("Element vale " + element);
 		if (element == null) {
 			return;
 		}
@@ -251,7 +247,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 			!"node".equals(element.getPresAbsolute("class").getStringValue())){
 			return;
 		}
-		System.out.println("Al lio, tiene class " + element.getPresAbsolute("class").getStringValue());
 		markNodeAux(element, color);
 	}
 
@@ -259,7 +254,6 @@ public class CostabsSVGGraph extends CostabsGraph {
 		for(int i=0; i < element.getNumChildren(); i ++) {
 			SVGElement child = element.getChild(i);
 			if (child.hasAttribute("fill", AnimationElement.AT_XML)) {
-				System.out.println("Cambiando color " + color + " " + child.getTagName() + " " + child.getPresAbsolute("stroke").getStringValue());
 				child.setAttribute("fill", AnimationElement.AT_XML, color);
 			}
 			markNodeAux(child, color);

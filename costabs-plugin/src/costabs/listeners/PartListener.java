@@ -16,7 +16,7 @@ public class PartListener implements IPartListener2 {
 	@Override
 	public void partActivated(IWorkbenchPartReference partRef) {
 		if (partRef instanceof EditorReference) {
-			System.out.println("Activando " + partRef.getId());
+			
 			EditorReference editor = (EditorReference)partRef;
 			IEditorInput input = editor.getPage().getActiveEditor().getEditorInput();
 			IFile file = ((FileEditorInput)input).getFile();
@@ -25,12 +25,12 @@ public class PartListener implements IPartListener2 {
 	}
 	@Override
 	public void partBroughtToTop(IWorkbenchPartReference partRef) {
-		if (partRef instanceof EditorReference) {
-			EditorReference editor = (EditorReference)partRef;
-			IEditorInput input = editor.getPage().getActiveEditor().getEditorInput();
-			IFile file = ((FileEditorInput)input).getFile();
-			OutputManager.getInstance().updateView(file);
-		}
+//		if (partRef instanceof EditorReference) {
+//			EditorReference editor = (EditorReference)partRef;
+//			IEditorInput input = editor.getPage().getActiveEditor().getEditorInput();
+//			IFile file = ((FileEditorInput)input).getFile();
+//			OutputManager.getInstance().updateView(file);
+//		}
 	}
 
 	@Override

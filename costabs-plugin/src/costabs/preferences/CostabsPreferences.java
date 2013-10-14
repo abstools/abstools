@@ -91,16 +91,16 @@ public class CostabsPreferences extends PreferencePage implements IWorkbenchPref
 		Analyses analyses;
 		try {
 			analyses = PreferencesManager.getInstance().getAnalyses();
-			TabFolder tabs = new TabFolder(parent, SWT.V_SCROLL | SWT.H_SCROLL);
+			
+			TabFolder tabs = new TabFolder(parent, 1 | SWT.V_SCROLL | SWT.H_SCROLL);
 
 			int selected = 0; 
 			for(int i = 0; i < analyses.getAnalyses().size(); i++)	 {
-				TabItem tabItem = new TabItem(tabs, SWT.NULL);
+				TabItem tabItem = new TabItem(tabs, SWT.NONE);
 				tabItem.setText(analyses.getAnalyses().get(i).getDescription().getShortdesc() );
 
-				Composite form = new Composite(tabs, SWT.CENTER);
+				Composite form = new Composite(tabs, SWT.NONE);
 				tabItem.setControl(form);	
-
 				ArrayList<FieldEditor> lfields = createFields(analyses.getAnalyses().get(i),form);
 				this.fields.put(analyses.getAnalyses().get(i).getDescription().getShortdesc(), lfields);
 				if (analyses.getAnalyses().get(i).getAnalysisId().equals(anSelected)) {
@@ -108,7 +108,7 @@ public class CostabsPreferences extends PreferencePage implements IWorkbenchPref
 				}
 			}
 			tabs.setSelection(selected);
-
+			
 			return new Composite(parent, SWT.NULL);
 		} catch (CostabsException e) {
 			DialogPrinter.logError(new Exception ("Error while loading the Costabs plugin, an error has ocurred while reading the options: " + e.getMessage()));
