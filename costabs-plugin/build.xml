@@ -8,7 +8,6 @@
 	<property name="build.dir" location="${basedir}/bin" />
 	<property name="dist.dir" location="${basedir}/dist" />
 	<property name="ext.dir" location="${basedir}/lib" />
-	<property name="binary.dir" location="${basedir}/binary" />
 	
 	<property name="plugin.name" value="eu.hatsproject.costabs" />
 	<property name="frontend.version" value="1.0.0" />
@@ -21,19 +20,10 @@
 	</taskdef>	
 	
 	<target name="download-costa-binary">
-		<mkdir dir="${binary.dir}" />
-	   <get src="http://costa.ls.fi.upm.es/~groman/saco/bin/costabs_static" 
-		    dest="${binary.dir}/"
+	   <get src="http://costa.ls.fi.upm.es/~mzamalloa/costabs_exe" 
+		    dest="${basedir}"
 		    usetimestamp="true"/>
-	   <chmod perm="a+x" file="${binary.dir}/costabs_static" />
-	   <get src="http://costa.ls.fi.upm.es/~groman/saco/bin/mhp_static" 
-		    dest="${binary.dir}"
-		    usetimestamp="true"/>
-	   <chmod perm="a+x" file="${binary.dir}/mhp_static" />
-	   <get src="http://costa.ls.fi.upm.es/~groman/saco/bin/deadlock_static" 
-		    dest="${binary.dir}"
-		    usetimestamp="true"/>
-	   <chmod perm="a+x" file="${binary.dir}/deadlock_static" />
+	   <chmod perm="a+x" file="${basedir}/costabs_exe" />
 
 	</target>
 	
@@ -59,7 +49,6 @@
            <pathelement location="${frontend.dir}/bin" />
            <path location="${frontend.dir}/lib/beaver.jar"/>
            <fileset dir="${frontend.dir}/lib" includes="**/*.jar" />
-           <fileset dir="${ext.dir}" includes="**/*.jar" />
            <fileset refid="eclipse-plugin-jars" />
 	   <pathelement location="${absplugin.dir}/bin" />
         </path>
@@ -100,17 +89,11 @@
 			<fileset dir="${basedir}">
 				<include name="META-INF/"/>
 				<include name="icons/"/>
-				<include name="binary/"/>
 				<include name="plugin.xml"/>
 				<include name="feature.xml"/>
-				<include name="lib/"/>
-				<include name="config/"/>
+				<include name="costabs_exe"/>
 			</fileset>
-			<fileset dir="${build.dir}"/>
-			<fileset dir="${src.dir}">
-				<include name="**/*.properties"/>
-			</fileset>
-			
+			<fileset dir="${build.dir}" />
 			<!-- <fileset dir="icons/" /> -->
 			<!-- <include name="abs/"/> -->
 		</copy>

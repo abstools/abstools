@@ -15,10 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- */
+*/
 package costabs.utils;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -48,8 +47,8 @@ import costabs.exceptions.CostabsException;
  */
 public class SourceUtils {
 
-
-
+	
+	
 	public static IMethod[] getMethodsFromJavaFile (IJavaElement element) throws Exception{
 		try {
 			ICompilationUnit unit = (ICompilationUnit)element;
@@ -70,7 +69,7 @@ public class SourceUtils {
 		}
 
 	}
-
+	
 	public static IResource extractResource(IEditorPart editor) {
 		IEditorInput input = editor.getEditorInput();
 		if (!(input instanceof FileEditorInput))
@@ -93,7 +92,7 @@ public class SourceUtils {
 		IResource jresource = extractResource (ieditorpart);
 		if(jresource==null)
 			throw(new CostabsException("Could not extract file from the current editor"));
-
+		
 		return jresource.getProject();
 	}
 	public static Class ObtainCurrentlyEditingClass()throws CostabsException{
@@ -103,10 +102,10 @@ public class SourceUtils {
 		try{
 			ieditorpart = SourceUtils.obtainActiveEditor();
 
-			//If the file is not safe we fail and say it
-			if (ieditorpart.isDirty()) {
-				throw(new CostabsException("Java file must be saved to analyze it."));
-			}
+		//If the file is not safe we fail and say it
+		if (ieditorpart.isDirty()) {
+			throw(new CostabsException("Java file must be saved to analyze it."));
+		}
 		}catch(NullPointerException e){
 			throw(new CostabsException("There is not any selected class."));
 
@@ -120,7 +119,7 @@ public class SourceUtils {
 		IJavaProject jproject=obtainJavaProjectFromResource(jresource);
 		if(jproject==null)
 			throw(new CostabsException("Cannot load the File: project must be a Java Project"));
-
+	
 		IJavaElement javaFile=JavaCore.create(jresource, jproject);
 		if(javaFile==null)
 			throw(new CostabsException("Cannot load the File: file must be a Java File"));
@@ -130,11 +129,11 @@ public class SourceUtils {
 		catch (Exception e ) {
 			throw(new CostabsException("Non valid project, failed to buid class loader"));
 		}
-
+		
 		fileEvaluations(javaFile);
 		return getClassFromResource((ICompilationUnit)javaFile,loader);
 
-
+	
 
 	}
 	public static IEditorPart obtainActiveEditor()throws NullPointerException{
@@ -156,7 +155,7 @@ public class SourceUtils {
 			if (!javaFile.getElementName().endsWith(".java")) {
 				throw new CostabsException ("The file is not a Java File");
 			}
-
+		
 			if (!javaFileComp.isConsistent()) {
 				throw new CostabsException ("The file is not consistent, cannot proccess it");
 			}
@@ -167,7 +166,7 @@ public class SourceUtils {
 
 		}
 	}
-
+	
 	private static Class getClassFromResource (ICompilationUnit javaFile,ClassLoader loader) throws CostabsException {
 		try {
 			String className = javaFile.getElementName();
@@ -179,22 +178,10 @@ public class SourceUtils {
 
 			return clazz;
 		}
-
+		
 		catch (ClassNotFoundException t) {
 			//t.printStackTrace();
 			throw new CostabsException ("The class loading failed... Classpath may be wrong");
 		}
 	}
-
-	public static IFile getActiveFile () {
-		// Get the IFile from editor
-		IWorkbench iworkbench = PlatformUI.getWorkbench();
-		IWorkbenchWindow iworkbenchwindow = iworkbench.getActiveWorkbenchWindow();
-		IWorkbenchPage iworkbenchpage = iworkbenchwindow.getActivePage();
-		IEditorPart ieditorpart = iworkbenchpage.getActiveEditor();
-		IEditorInput input = ieditorpart.getEditorInput();
-		IFile file = ((FileEditorInput)input).getFile();
-		return file;
-	}
-	
 }
