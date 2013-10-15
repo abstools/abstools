@@ -1,0 +1,14 @@
+module M;
+// nada
+
+delta D(Int param);
+adds class M.C { Int myField = param; }
+
+productline PL;
+features F;
+delta D(F.a) when F;
+
+product P1(F{a=0});
+product P2(F{a=17});
+
+root F { Int param in [0..99]; }

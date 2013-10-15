@@ -348,7 +348,7 @@ List delta_param_decl_list =
 
 DeltaParamDecl delta_param_decl =
     param_decl.p   {: return new DeltaFieldParam(p); :}
-  | TYPE_IDENTIFIER.id has_condition.c   {: return new DeltaClassParam(id,c); :}
+  | type_name.id has_condition.c   {: return new DeltaClassParam(id,c); :}
   ;
 
 HasCondition has_condition =
@@ -357,7 +357,7 @@ HasCondition has_condition =
   | HASINTERFACE type_name.n
         {: InterfaceTypeUse res = new InterfaceTypeUse(n.getName(), new List()) ;
            res.setAbsolutePosition(n.getAbsolutePosition());
-           return res; :}
+           return new HasInterface(res); :}
   ;
 
 
@@ -433,12 +433,12 @@ List object_update_list =
 
 ObjectUpdate object_update =
   OBJECTUPDATE qualified_type_name.n LBRACE 
-  AWAIT data_exp.e SEMICOLON
-  update_preamble.p
-  assign_stmt_list.pre
+  AWAIT guard SEMICOLON
+  update_preamble.p?
+  assign_stmt_list.pre?
   CLASSUPDATE SEMICOLON
-  assign_stmt_list.post
-  RBRACE {: return new ObjectUpdate(n.getName(), new ExpGuard(e), new UpdatePreamble(p), pre, post); :}
+  assign_stmt_list.post?
+  RBRACE {: return new ObjectUpdate(n.getName(), new AwaitStmt(new List(), guard), new UpdatePreamble(p), pre, post); :}
   ;
 
 List update_preamble =

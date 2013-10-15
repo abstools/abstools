@@ -25,10 +25,12 @@ import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.JavaCode;
 import abs.backend.java.lib.runtime.ABSBuiltInFunctions;
 import abs.backend.java.lib.runtime.ABSClosure;
+import abs.backend.java.lib.runtime.ABSDynamicClass;
 import abs.backend.java.lib.runtime.ABSDynamicDelta;
 import abs.backend.java.lib.runtime.ABSDynamicObject;
 import abs.backend.java.lib.runtime.ABSDynamicProduct;
 import abs.backend.java.lib.runtime.ABSDynamicReconfiguration;
+import abs.backend.java.lib.runtime.ABSDynamicRuntime;
 import abs.backend.java.lib.runtime.ABSDynamicUpdate;
 import abs.backend.java.lib.runtime.ABSField;
 import abs.backend.java.lib.runtime.ABSFut;
@@ -560,19 +562,19 @@ public class DynamicJavaGeneratorHelper {
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
 
             stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + className + " extends " + ABSDynamicDelta.class.getName() + " {");
+            stream.println("public class " + className + " {");
             
             stream.println("private static " + ABSDynamicDelta.class.getName() + " instance;");
             stream.println("public static " + ABSDynamicDelta.class.getName() + " singleton() {");
             stream.println("if (instance == null) {");
-            stream.println("instance = new " + className + "();");
+            stream.println("instance = new " + ABSDynamicDelta.class.getName() + "();");
             stream.println("instance.setName(\"" + delta.getName() + "\");");
             stream.println("}");
             stream.println("return instance;");
             stream.println("}");
             
-            // override apply method
-            stream.println("public void apply() {");
+            //static apply method
+            stream.println("public static void apply(" + ABSDynamicRuntime.class.getName() + " runtime) {");
             for (String cls : classes) {
                 stream.println(cls + ".apply();");
             }
@@ -585,24 +587,59 @@ public class DynamicJavaGeneratorHelper {
         }
     }
 
-    public static void generateUpdate(PrintStream stream, UpdateDecl update, String className, ArrayList<String> classes)
-            throws IOException, JavaCodeGenerationException {
+    public static void generateUpdate(PrintStream stream, UpdateDecl update, String className, ArrayList<String> classes) {
 
         stream.println("private static " + ABSDynamicUpdate.class.getName() + " instance;");
         stream.println("public static " + ABSDynamicUpdate.class.getName() + " singleton() {");
         stream.println("if (instance == null) {");
-        stream.println("instance = new " + className + "();");
+        stream.println("instance = new " + ABSDynamicUpdate.class.getName() + "();");
         stream.println("instance.setName(\"" + update.getName() + "\");");
         stream.println("}");
         stream.println("return instance;");
         stream.println("}");
 
         // override apply method
-        stream.println("public void apply() {");
-        for (String cls : classes) {
-            stream.println("// TODO generate class: " + cls + ".apply();");
+        stream.println("public static void apply(" + ABSDynamicRuntime.class.getName() + " runtime) {");
+        for (ObjectUpdate ou :update.getObjectUpdates()) {
+            stream.println("{");
+            stream.println("// Call apply() for to update objects of class " + ou.getClassName());
+            
+            stream.println(ABSDynamicClass.class.getName() + " cls = " + JavaBackend.getClassName(ou.getClassName()) + ".singleton();"); 
+            stream.println("for (" + ABSDynamicObject.class.getName() + " obj : runtime.getAllObjects(cls)) {");
+            stream.println("// exec update...");
+            stream.println("System.out.println(obj.toString());");
+            
+            stream.println("}");
+            stream.println("}");
+            
         }
         stream.println("}");
+
+        for (ObjectUpdate ou :update.getObjectUpdates()) {
+            generateObjectUpdate(stream, ou);
+        }
+    }
+    
+    public static void generateObjectUpdate(PrintStream stream, ObjectUpdate ou) {
+        // object updates are mapped to static inner classes
+        DynamicJavaGeneratorHelper.generateHelpLine(ou, stream);
+//        stream.println("public static class " + ou.getClassName() + " extends " + ABSClosure.class.getName() + " {");
+//        stream.println("public " + ABSValue.class.getName() + " exec(final " + ABSDynamicObject.class.getName() + " thisP, " + ABSValue.class.getName() + "... args) {");
+
+        // generate body
+        // FIXME Var resolution
+//        ou.getAwaitStmt().generateJavaDynamic(stream);
+//        for (VarDeclStmt stmt : ou.getUpdatePreamble().getVarDeclStmts())
+//            stmt.generateJavaDynamic(stream);
+//        for (AssignStmt stmt : ou.getPreBodyList())
+//            stmt.generateJavaDynamic(stream);
+//        for (AssignStmt stmt : ou.getPostBodyList())
+//            stmt.generateJavaDynamic(stream);
+        
+        
+//        stream.println("}");
+//        stream.println("}");
+
     }
     
     public static void generateProduct(PrintStream stream, Product prod, HashMap<String, Product> allProducts) {

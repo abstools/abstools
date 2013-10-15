@@ -39,7 +39,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
     public void passIntegerFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr);"
+                + "delta D(Int attr);"
                 + "    adds class M.C { Int myField = attr; }"
                 + "productline PL;"
                 + "    features F;"
@@ -61,7 +61,7 @@ public class DeltaAttributesIntegerTest extends DeltaTest {
     public void passIntegerConstant() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"
-                + "delta D(Bool attr);"
+                + "delta D(Int attr);"
                 + "    adds class M.C { Int myField = attr; }"
                 + "productline PL;"
                 + "    features A,B;"

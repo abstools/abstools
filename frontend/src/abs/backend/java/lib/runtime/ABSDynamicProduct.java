@@ -18,7 +18,7 @@ public class ABSDynamicProduct extends ABSDynamicObject {
         super(Product.singleton());
     }
     
-    private String name;
+    protected String name;
     private Set<ABSDynamicFeature> features = new HashSet<ABSDynamicFeature>();
     private Map<ABSDynamicProduct,ABSDynamicReconfiguration> reconfigurations = new HashMap<ABSDynamicProduct,ABSDynamicReconfiguration>();
     

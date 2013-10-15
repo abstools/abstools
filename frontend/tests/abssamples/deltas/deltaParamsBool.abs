@@ -1,0 +1,19 @@
+module M;
+class C {}
+
+delta D (Bool a, Bool b, Bool c);
+modifies class M.C {
+    adds Bool featureA = a;
+    adds Bool featureB = b;
+    adds Bool featureC = c;
+}
+
+productline PL;
+features A,B,C,F;
+delta D(A,B,C) when F;
+
+product P1(A,F);
+product P2(A,B,F);
+product P3(A,B,C,F);
+
+root F { group [0..*] { A, B, C } }

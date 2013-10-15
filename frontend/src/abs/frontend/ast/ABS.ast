@@ -91,7 +91,7 @@ ModifyMethodModifier : Modifier ::= MethodImpl;
 AddMethodSigModifier : MethodSigModifier ::= MethodSig;
 RemoveMethodSigModifier : MethodSigModifier ::= MethodSig;
 
-ObjectUpdate ::= <ClassName> ExpGuard UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
+ObjectUpdate ::= <ClassName> AwaitStmt UpdatePreamble PreBody:AssignStmt* PostBody:AssignStmt* ;
 UpdatePreamble ::= VarDeclStmt* ; // TODO also allow FunctionDecls and DataTypeDecls
 
 abstract VarOrFieldDecl ::= <Name>;

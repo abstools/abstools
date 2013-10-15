@@ -20,8 +20,8 @@ import abs.backend.java.observing.manipulation.ClassManipulator;
 
 public class ABSDynamicClass implements ABSClass {
     private String name;
-    private Map<String, ABSField> fields;
-    private Map<String, ABSClosure> methods;
+    private Map<String, ABSField> fields = new HashMap<String, ABSField>();
+    private Map<String, ABSClosure> methods = new HashMap<String,ABSClosure>();
     private ABSClosure constructor;
     private List<String> params;
     private ABSDynamicClass nextVersion;
@@ -35,9 +35,6 @@ public class ABSDynamicClass implements ABSClass {
     }
 
     public void addField(String fName, ABSField f) throws DynamicException {
-        if (fields == null) {
-            fields = new HashMap<String, ABSField>();
-        }
         if (! fields.containsKey(fName))
             fields.put(fName,f);
         else
@@ -52,9 +49,6 @@ public class ABSDynamicClass implements ABSClass {
     }
     
     public ABSField getField(String fName) throws DynamicException {
-        if (fields == null) {
-            fields = new HashMap<String, ABSField>();
-        }
         if (fields.containsKey(fName))
             return fields.get(fName);
         else
@@ -66,9 +60,6 @@ public class ABSDynamicClass implements ABSClass {
     }
     
     public void addMethod(String mName, ABSClosure m) throws DynamicException {
-        if (methods == null) {
-            methods = new HashMap<String,ABSClosure>();
-        }
         if (! hasMethod(mName))
             methods.put(mName, m);
         else
@@ -83,9 +74,6 @@ public class ABSDynamicClass implements ABSClass {
     }
 
     public ABSClosure getMethod(String mName) throws DynamicException {
-        if (methods == null) {
-            methods = new HashMap<String,ABSClosure>();
-        }
         if (hasMethod(mName))
             return methods.get(mName);
         else
@@ -101,16 +89,10 @@ public class ABSDynamicClass implements ABSClass {
     }
 
     public Set<String> getFieldNames() {
-        if (fields == null) {
-            return Collections.emptySet();
-        }
         return fields.keySet();
     }
 
     public Set<String> getMethodNames() {
-        if (methods == null) {
-            return Collections.emptySet();
-        }
         return methods.keySet();
     }
 
@@ -137,8 +119,7 @@ public class ABSDynamicClass implements ABSClass {
             copy.fields.put(f, fields.get(f));
         for (String m : methods.keySet())
             copy.methods.put(m, methods.get(m));
-        for (String p : params)
-            copy.params.add(p);
+        copy.params = params;
         copy.constructor = constructor;
         copy.nextVersion = null;
         nextVersion = copy;

@@ -1,0 +1,9 @@
+delta D1 (C hasField Int f);
+delta D1a (M.C hasField Int f);
+
+delta D2 (C hasMethod Unit setF(Int x));
+delta D2a (M.C hasMethod Unit setF(Int x));
+
+delta D3 (C hasInterface T);
+
+delta D4 (C hasField Int f, C hasMethod Unit m(), C hasInterface T);

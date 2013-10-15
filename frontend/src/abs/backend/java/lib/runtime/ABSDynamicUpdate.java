@@ -6,7 +6,7 @@ package abs.backend.java.lib.runtime;
 
 import abs.backend.java.lib.runtime.metaABS.Update;
 
-public abstract class ABSDynamicUpdate extends ABSDynamicObject {
+public class ABSDynamicUpdate extends ABSDynamicObject {
 
     public ABSDynamicUpdate() {
         super(Update.singleton());
@@ -20,8 +20,9 @@ public abstract class ABSDynamicUpdate extends ABSDynamicObject {
     public void setName(String name) {
         this.name = name;
     }
+    public void apply() {
+        // TODO implement
+        
+    }
     
-    // Apply the state update; to be implemented by subclasses
-    public abstract void apply();
-
 }

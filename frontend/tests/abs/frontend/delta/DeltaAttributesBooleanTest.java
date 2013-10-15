@@ -55,6 +55,28 @@ public class DeltaAttributesBooleanTest extends DeltaTest {
     }
 
     @Test
+    public void passFeatureAsBoolean2() throws DeltaModellingException, WrongProgramArgumentException {
+        Model model = assertParseOk(
+                "module M;"
+                        + "delta D(Bool a, Bool b, Bool c);"
+                        + "    adds class M.C { Bool featureA = a; Bool featureB = b; Bool featureC = c; }"
+                        + "productline PL;"
+                        + "    features A,B,C,F;"
+                        + "    delta D(A,B,C) when F;"
+                        + "product P1(F,A);"
+                        + "product P2(F,B);"
+                        + "root F { group [0..*] { A, B, C } }"
+                );
+        
+        model.flattenForProduct(product);
+        ClassDecl cls = (ClassDecl) findDecl(model, "M", "C");
+        assertTrue(cls.getField(0).getName().equals("featureA"));
+//        assertTrue(cls.getField(1).getName().equals("featureB"));
+//        assertTrue(cls.getField(2).getName().equals("featureC"));
+        assertTrue(cls.getField(0).getInitExp().value.toString().equals(expected));
+    }
+
+    @Test
     public void passBooleanFeatureAttribute() throws DeltaModellingException, WrongProgramArgumentException {
         Model model = assertParseOk(
                 "module M;"

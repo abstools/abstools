@@ -128,7 +128,7 @@ public class ClassDeclGenerator {
         stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewObject");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
-        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = (" + ABSDynamicRuntime.class.getName() + ")" + ABSRuntime.class.getName() + ".getCurrentRuntime();");
+        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");
         generateObjectConstruction(ABSRuntime.class.getName() + ".getCurrentRuntime()");
         stream.println("__ABS_result.__ABS_init();");
         if (decl.isActiveClass()) {
@@ -155,7 +155,7 @@ public class ClassDeclGenerator {
         stream.print("public static final <T extends " + ABSDynamicObject.class.getName() + "> T __ABS_createNewCOG");
         DynamicJavaGeneratorHelper.generateParams(stream, ABSObject.class.getName() + " __ABS_source", decl.getParams());
         stream.println(" {");
-        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = (" + ABSDynamicRuntime.class.getName() + ")" + ABSRuntime.class.getName() + ".getCurrentRuntime();");
+        stream.println("final " + ABSDynamicRuntime.class.getName() + " __ABS_runtime = " + ABSDynamicRuntime.class.getName() + ".getCurrentRuntime();");
         stream.println("final " + COG.class.getName() + " __ABS_cog = __ABS_runtime.createCOG(" + className + ".class);");
         stream.println("final " + ABSThread.class.getName() + " __ABS_thread = " + ABSRuntime.class.getName() + ".getCurrentThread();");
         stream.println("final " + COG.class.getName() + " __ABS_oldCOG = " + ABSRuntime.class.getName() + ".getCurrentCOG();");

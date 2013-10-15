@@ -96,7 +96,9 @@ aspect GenerateJavaDynamic_Core {
                 // main block
                 stream.println("public " + ABSUnit.class.getName() + " run() {");
                 stream.println("final " + ABSDynamicObject.class.getName() + " thisP = this;");
-                if (! getModel().getProductName().equals("core")) {
+                if (getModel().getProductName().equals("core")) {
+                    stream.println("thisP.__ABS_getRuntime().initDSPL(new " + ABSDynamicProductCore.class.getName() + "());");
+                } else {
                     stream.println("thisP.__ABS_getRuntime().initDSPL(" 
                             + JavaBackendConstants.LIB_RDM_PACKAGE + "." 
                             + JavaBackend.getProductName(getModel().getProductName()) + ".singleton());");
@@ -1185,7 +1187,7 @@ aspect GenerateJavaDynamic_DeltaModelling {
             stream = new JavaCodeStream(new BufferedOutputStream(new FileOutputStream(file)));
             // gen header
             stream.println("package " + pkg.packageName + ";");
-            stream.println("public class " + generatedJavaClassName + " extends " + ABSDynamicUpdate.class.getName() + " {");
+            stream.println("public class " + generatedJavaClassName + " {");
             ArrayList<String> classes = new ArrayList<String>();
             for (ObjectUpdate upd : getObjectUpdates()) {
                 // TODO implement

@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import abs.backend.java.JavaBackend;
+import abs.backend.java.JavaBackendConstants;
 import abs.backend.java.codegeneration.dynamic.DynamicException;
 
 public class ABSDynamicRuntime extends ABSRuntime {
@@ -38,6 +39,16 @@ public class ABSDynamicRuntime extends ABSRuntime {
             objectSet = objectRoster.get(obj.getClazz());
         }
         objectSet.add(new WeakReference<ABSDynamicObject>(obj));
+        System.out.println("*** Runtime registered instance of " + obj.getClazz().getName());
+    }
+    
+    public Set<ABSDynamicObject> getAllObjects(ABSDynamicClass cls) {
+        Set<ABSDynamicObject> allObjects = new HashSet<ABSDynamicObject>();
+        for (WeakReference<ABSDynamicObject> weakObject : objectRoster.get(cls)) {
+            if (weakObject.get() != null)
+               allObjects.add(weakObject.get());
+        }
+        return allObjects;
     }
     
     
@@ -47,14 +58,14 @@ public class ABSDynamicRuntime extends ABSRuntime {
     private ABSDynamicProductLine dspl = null;
     public void initDSPL(ABSDynamicProduct initP) {
         dspl = new ABSDynamicProductLine();
-        System.out.println("*** DSPL init");
         
         dspl.addProduct(initP);
         dspl.setCurrentProduct(initP);
         // TODO add all products and reconfigurations that are reachable from initP
         
-        // FIXME this hangs the program for some reason
-        //new NetworkListenerThread().start();
+        // A rudimentary but practical management interface
+        Thread listener = new NetworkListenerThread(this, "ABS Runtime Network Interface");
+        listener.start();
 
     }
     
@@ -62,19 +73,34 @@ public class ABSDynamicRuntime extends ABSRuntime {
         return dspl;
     }
 
+    public static ABSDynamicRuntime getCurrentRuntime() {
+        ABSRuntime rt = ABSRuntime.getCurrentRuntime();
+        if (rt == null) {
+            System.out.println("Runtime is null");
+        } else {
+            System.out.println("Got runtime.");
+        }
+        return (ABSDynamicRuntime) rt;
+    }
     
     
     
     /*
      * The Open Adaptivity Interface
      */
-    static class NetworkListenerThread extends Thread {
-
+    private static class NetworkListenerThread extends Thread {
+        private ABSDynamicRuntime runtime;
+        public NetworkListenerThread(ABSDynamicRuntime r, String name) {
+            super(name);
+            this.runtime = r;
+        }
+        
         public void run() {
             final int myPort = 8810;
             ServerSocket ssock;
             try {
                 ssock = new ServerSocket(myPort);
+                System.out.println("*** Socket created at port " + myPort);
                 Socket sock = ssock.accept();
                 Scanner scanner = new Scanner(sock.getInputStream());
                 PrintStream out = new PrintStream(sock.getOutputStream(), true, "UTF-8");
@@ -82,18 +108,23 @@ public class ABSDynamicRuntime extends ABSRuntime {
                 while(true) {
                     out.print("[ABSRuntime]>> ");
                     String line = scanner.nextLine();
-
-                    if (line.startsWith("apply ")) {
-                        String delta = (line.substring(6)).trim();
-                        out.print("[ABSRuntime] Applying delta " + delta + " ... ");
-                        applyDelta(delta);
-                        out.println("done.");
-                    } else if (line.startsWith("q")) {
+                    String className;
+                    if (line.startsWith("q")) {
                         out.println("[ABSRuntime] Exiting.");
                         break;
+                    } else if (line.startsWith("delta ")) {
+                        String name = (line.split("\\s+"))[1];
+                        className = JavaBackend.getDeltaPackageName(name) + "." + JavaBackend.getDeltaName(name);
+                    } else if (line.startsWith("update ")) {
+                        String name = (line.split("\\s+"))[1];
+                        className = JavaBackendConstants.LIB_UPDATES_PACKAGE + "." + JavaBackend.getUpdateName(name);
                     } else {
                         out.println("[ABSRuntime] Unrecognised command.");
+                        continue;
                     }
+                    out.print("[ABSRuntime] Applying " + className + " ");
+                    loadAndApply(className, out);
+                    out.println(".");
                 }
 
                 out.close();
@@ -105,43 +136,38 @@ public class ABSDynamicRuntime extends ABSRuntime {
                 e.printStackTrace();
             }
         }
-    }
 
-    // FIXME this method is only needed for the network listener interface
-    // Otherwise deltas are now applied via ABSDynamicDelta.apply()
-    private static void applyDelta(String deltaName) {
-        //System.err.println("*** Applying delta." + deltaName);
-        String className = JavaBackend.getDeltaPackageName(deltaName) + "." + deltaName;
-        
-        try {
-            Class<?> clazz = Class.forName(className);
-            Method method;
+        private void loadAndApply(String className, PrintStream out) {
+
             try {
-                method = clazz.getDeclaredMethod("apply", new Class[0]);
+                Class<?> clazz = Class.forName(className);
+                Method method;
                 try {
-                    method.invoke(null, new Object[0]);
-                } catch (IllegalArgumentException e) {
+                    method = clazz.getDeclaredMethod("apply", ABSDynamicRuntime.class);
+                    try {
+                        method.invoke(null, runtime);
+                    } catch (IllegalArgumentException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                } catch (SecurityException e1) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
+                    e1.printStackTrace();
+                } catch (NoSuchMethodException e1) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    e1.printStackTrace();
                 }
-            } catch (SecurityException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            } catch (NoSuchMethodException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
 
-        } catch (ClassNotFoundException e) {
-            throw new DynamicException("Error loading class: " + className);
+            } catch (ClassNotFoundException e) {
+                out.print("error loading class: " + className);
+            }
         }
     }
-
 
 }
