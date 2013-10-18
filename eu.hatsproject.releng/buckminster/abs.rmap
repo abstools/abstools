@@ -2,7 +2,7 @@
 <rm:rmap xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns:xi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:rm="http://www.eclipse.org/buckminster/RMap-1.0" xmlns:psf="http://www.eclipse.org/buckminster/PSFProvider-1.0">
   <rm:locator pattern="eu.hatsproject.abs.compiler" searchPathRef="ABSFrontend"/>
   <rm:locator pattern="eu.hatsproject.sdedit" searchPathRef="sdedit"/>
-  <rm:locator pattern="eu.hatsproject.absplugin" searchPathRef="by-component"/>
+  <rm:locator pattern="eu.hatsproject.absplugin" searchPathRef="eclipse-plugin"/>
   <rm:locator pattern="eu.hatsproject.absplugin.tests" searchPathRef="by-component"/>
   <rm:locator pattern="eu.hatsproject.costabs" searchPathRef="costabs"/>
   <rm:locator pattern="eu.hatsproject.apet" searchPathRef="apet"/>
@@ -12,21 +12,28 @@
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
   <rm:searchPath name="ABSFrontend">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/ABSFrontend/">
+      <rm:uri format="file:///{0}/frontend/">
+        <bc:propertyRef key="workspace.root"/>
+      </rm:uri>
+    </rm:provider>
+  </rm:searchPath>
+  <rm:searchPath name="eclipse-plugin">
+    <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
+      <rm:uri format="file:///{0}/eclipse-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="costabs">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/costabs/">
+      <rm:uri format="file:///{0}/costabs-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
   </rm:searchPath>
   <rm:searchPath name="apet">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
-      <rm:uri format="file:///{0}/apet/">
+      <rm:uri format="file:///{0}/apet-plugin/">
         <bc:propertyRef key="workspace.root"/>
       </rm:uri>
     </rm:provider>
@@ -52,11 +59,6 @@
         <bc:propertyRef key="buckminster.component"/>
       </rm:uri>
     </rm:provider>
-  </rm:searchPath>
-  <rm:searchPath name="repo">
-     <rm:provider readerType="svn" componentTypes="eclipse.feature" mutable="false" source="true">
-     	<rm:uri format="https://repos.hats-project.eu:444/svn/hats/Tools/ABS/trunk/frontend" />
-     </rm:provider>     	  
   </rm:searchPath>
   <rm:searchPath name="org.eclipse.platform">
 		<rm:provider readerType="eclipse.import" componentTypes="osgi.bundle,eclipse.feature" mutable="false" source="false">
