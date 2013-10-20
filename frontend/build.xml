@@ -46,6 +46,27 @@
   <!-- The package name of JastAdd generated files -->
   <property name="ast.package" value="abs.frontend.ast" />
 
+  <macrodef name="git-revision">
+    <attribute name="output"/>
+    <attribute name="failonerror" default="false" />
+    <sequential>
+      <exec executable="git" outputproperty="head"
+            failonerror="@{failonerror}" >
+        <arg value="rev-parse"/>
+        <arg value="--short"/>
+        <arg value="HEAD"/>
+      </exec>
+      <exec executable="git" outputproperty="dirty"
+            failonerror="@{failonerror}" >
+        <arg value="diff"/>
+        <arg value="--shortstat"/>
+      </exec>
+      <condition  property="@{output}" value="${head}" else="${head}-dirty" >
+        <equals arg1="${dirty}" arg2=""/>
+      </condition>
+    </sequential>
+  </macrodef>
+
   <!-- "jflex" is an ant task class for the scanner generator in JFlex.jar -->
   <taskdef name="jflex" classname="JFlex.anttask.JFlexTask" classpath="${ext.dir}/JFlex.jar" />
 
@@ -227,12 +248,11 @@
 
   <target name="versionstamp">
     <tstamp/>
-    <svn failonerror="false" javahl="false">
-      <wcVersion path="${basedir}" />
-    </svn>
-    <condition property="frontend.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-svn${revision.max}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
-      <isset property="revision.max" />
+    <git-revision output="git-revision"/>
+    <condition property="frontend.version" value="${revision.prefix}.${DSTAMP}${TSTAMP}-${git-revision}" else="${revision.prefix}.${DSTAMP}${TSTAMP}">
+      <isset property="git-revision" />
     </condition>
+    <echo message="Version: ${frontend.version}"/>
   </target>
 
   <!-- create distribution files for ABS -->
