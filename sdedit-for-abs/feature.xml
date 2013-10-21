@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="eu.hatsproject.sdedit"
+      id="org.abs-models.sdedit"
       label="ABS UML Sequence Diagram Editor"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project"
+      provider-name="ABS-Models"
       os="linux,macosx,win32">
 
-   <description url="http://www.hats-project.eu">
+   <description url="http://www.abs-models.org">
       ABS Frontend
    </description>
 
@@ -15,7 +15,7 @@
    </url>
 
    <plugin
-         id="eu.hatsproject.sdedit"
+         id="org.abs-models.sdedit"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -5,15 +5,15 @@
     <extension
           point="org.eclipse.ui.perspectives">
        <perspective
-             class="eu.hatsproject.absplugin.ABSPerspectiveFactory"
+             class="org.absmodels.abs.plugin.ABSPerspectiveFactory"
              icon="icons/abs_logo.png"
-             id="eu.hatsproject.absplugin.absperspective"
+             id="org.abs-models.abs.plugin.absperspective"
              name="ABS">
        </perspective>
        <perspective
-             class="eu.hatsproject.absplugin.debug.perspective.ABSDebugPerspectiveFactory"
+             class="org.absmodels.abs.plugin.debug.perspective.ABSDebugPerspectiveFactory"
              icon="icons/duke_hats_debug_small.gif"
-             id="eu.hatsproject.absplugin.debug.perspective.debugperspective"
+             id="org.abs-models.abs.plugin.debug.perspective.debugperspective"
              name="ABS Debug">
        </perspective>
     </extension>
@@ -28,16 +28,16 @@
              type="org.eclipse.core.resources.problemmarker">
        </super>
        <attribute
-             name="eu.hatsproject.absplugin.startline">
+             name="org.abs-models.abs.plugin.startline">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.endline">
+             name="org.abs-models.abs.plugin.endline">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.startcol">
+             name="org.abs-models.abs.plugin.startcol">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.endcol">
+             name="org.abs-models.abs.plugin.endcol">
        </attribute>
     </extension>
     <extension
@@ -45,7 +45,7 @@
           name="ABSParseProblem"
           point="org.eclipse.core.resources.markers">
        <super
-             type="eu.hatsproject.absplugin.absproblem">
+             type="org.abs-models.abs.plugin.absproblem">
        </super>
        <persistent
              value="true">
@@ -56,7 +56,7 @@
           name="ABSTypecheckProblem"
           point="org.eclipse.core.resources.markers">
        <super
-             type="eu.hatsproject.absplugin.absproblem">
+             type="org.abs-models.abs.plugin.absproblem">
        </super>
        <persistent
              value="true">
@@ -73,16 +73,16 @@
              value="true">
        </persistent>
        <attribute
-             name="eu.hatsproject.absplugin.startline">
+             name="org.abs-models.abs.plugin.startline">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.endline">
+             name="org.abs-models.abs.plugin.endline">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.startcol">
+             name="org.abs-models.abs.plugin.startcol">
        </attribute>
        <attribute
-             name="eu.hatsproject.absplugin.endcol">
+             name="org.abs-models.abs.plugin.endcol">
        </attribute>
     </extension>
     <extension
@@ -101,43 +101,43 @@
           point="org.eclipse.ui.editors.annotationTypes">
        <type
              markerSeverity="0"
-             markerType="eu.hatsproject.absplugin.locationtypeinferenceinfo"
-             name="eu.hatsproject.absplugin.locationtypeinferenceannotation.near"
+             markerType="org.abs-models.abs.plugin.locationtypeinferenceinfo"
+             name="org.abs-models.abs.plugin.locationtypeinferenceannotation.near"
              >
        </type>
        <type
              markerSeverity="1"
-             markerType="eu.hatsproject.absplugin.locationtypeinferenceinfo"
-             name="eu.hatsproject.absplugin.locationtypeinferenceannotation.somewhere"
+             markerType="org.abs-models.abs.plugin.locationtypeinferenceinfo"
+             name="org.abs-models.abs.plugin.locationtypeinferenceannotation.somewhere"
              >
        </type>
        <type
              markerSeverity="2"
-             markerType="eu.hatsproject.absplugin.locationtypeinferenceinfo"
-             name="eu.hatsproject.absplugin.locationtypeinferenceannotation.far">
+             markerType="org.abs-models.abs.plugin.locationtypeinferenceinfo"
+             name="org.abs-models.abs.plugin.locationtypeinferenceannotation.far">
        </type>
        <type
              markerSeverity="2"
-             markerType="eu.hatsproject.absplugin.absparseproblem"
-             name="eu.hatsproject.absplugin.parseannotation"
+             markerType="org.abs-models.abs.plugin.absparseproblem"
+             name="org.abs-models.abs.plugin.parseannotation"
              super="org.eclipse.ui.workbench.texteditor.error">
        </type>
        <type
              markerSeverity="2"
-             markerType="eu.hatsproject.absplugin.abstypecheckproblem"
-             name="eu.hatsproject.absplugin.typecheckannotation"
+             markerType="org.abs-models.abs.plugin.abstypecheckproblem"
+             name="org.abs-models.abs.plugin.typecheckannotation"
              super="org.eclipse.ui.workbench.texteditor.error">
        </type>
        <type
              markerSeverity="0"
-             markerType="eu.hatsproject.absplugin.currentIP"
-             name="eu.hatsproject.absplugin.currentipannotation">
+             markerType="org.abs-models.abs.plugin.currentIP"
+             name="org.abs-models.abs.plugin.currentipannotation">
        </type>
     </extension>
     <extension
           point="org.eclipse.ui.editors.markerAnnotationSpecification">
        <specification
-             annotationType="eu.hatsproject.absplugin.locationtypeinferenceannotation.near"
+             annotationType="org.abs-models.abs.plugin.locationtypeinferenceannotation.near"
              colorPreferenceKey="locationtype.near.color"
              colorPreferenceValue="0,128,0"
              includeOnPreferencePage="true"
@@ -150,7 +150,7 @@
              textStylePreferenceValue="UNDERLINE">
        </specification>
        <specification
-             annotationType="eu.hatsproject.absplugin.locationtypeinferenceannotation.far"
+             annotationType="org.abs-models.abs.plugin.locationtypeinferenceannotation.far"
              colorPreferenceKey="locationtype.far.color"
              colorPreferenceValue="150,0,0"
              includeOnPreferencePage="true"
@@ -163,7 +163,7 @@
              textStylePreferenceValue="UNDERLINE">
        </specification>
        <specification
-             annotationType="eu.hatsproject.absplugin.locationtypeinferenceannotation.somewhere"
+             annotationType="org.abs-models.abs.plugin.locationtypeinferenceannotation.somewhere"
              colorPreferenceKey="locationtype.somewhere.color"
              colorPreferenceValue="128,0,128"
              includeOnPreferencePage="true"
@@ -176,15 +176,15 @@
              textStylePreferenceValue="UNDERLINE">
        </specification>
        <specification
-             annotationType="eu.hatsproject.absplugin.parseannotation"
+             annotationType="org.abs-models.abs.plugin.parseannotation"
              label="Parser Problem">
        </specification>
        <specification
-             annotationType="eu.hatsproject.absplugin.typecheckannotation"
+             annotationType="org.abs-models.abs.plugin.typecheckannotation"
              label="Typecheck Problem">
        </specification>
        <specification
-             annotationType="eu.hatsproject.absplugin.currentipannotation"
+             annotationType="org.abs-models.abs.plugin.currentipannotation"
              colorPreferenceKey="currentip.color"
              colorPreferenceValue="198,219,175"
              highlightPreferenceKey="currentip.highlight"
@@ -207,18 +207,18 @@
     <extension
           point="org.eclipse.ui.perspectiveExtensions">
        <perspectiveExtension
-             targetID="eu.hatsproject.absplugin.absperspective">
+             targetID="org.abs-models.abs.plugin.absperspective">
           <actionSet
-                id="eu.hatsproject.absplugin.frontendActionSet">
+                id="org.abs-models.abs.plugin.frontendActionSet">
           </actionSet>
           <actionSet
                id="org.eclipse.debug.ui.launchActionSet">
          </actionSet>
        </perspectiveExtension>
        <perspectiveExtension
-             targetID="eu.hatsproject.absplugin.debug.perspective.debugperspective">
+             targetID="org.abs-models.abs.plugin.debug.perspective.debugperspective">
           <actionSet
-                id="eu.hatsproject.absplugin.frontendActionSet">
+                id="org.abs-models.abs.plugin.frontendActionSet">
           </actionSet>
           <actionSet
                 id="org.eclipse.debug.ui.launchActionSet">
@@ -228,56 +228,56 @@
     <extension
           point="org.eclipse.ui.actionSets">
        <actionSet
-             id="eu.hatsproject.absplugin.frontendActionSet"
+             id="org.abs-models.abs.plugin.frontendActionSet"
              label="frontendactions"
              visible="false">
           <action
-                class="eu.hatsproject.absplugin.actions.JavaAction"
+                class="org.absmodels.abs.plugin.actions.JavaAction"
                 icon="icons/duke_hats_uml_small2.gif"
-                id="eu.hatsproject.absplugin.startsdedit"
+                id="org.abs-models.abs.plugin.startsdedit"
                 label="Start SDEdit (Java)"
-                menubarPath="eu.hatsproject.absplugin.absMenu/java"
+                menubarPath="org.abs-models.abs.plugin.absMenu/java"
                 toolbarPath="absfrontend"
                 tooltip="Start SDEdit (Java)">
           </action>
           <action
-                class="eu.hatsproject.absplugin.actions.JavaAction"
+                class="org.absmodels.abs.plugin.actions.JavaAction"
                 icon="icons/duke_hats_debug_small.gif"
-                id="eu.hatsproject.absplugin.debugJava"
+                id="org.abs-models.abs.plugin.debugJava"
                 label="Debug Model (Java)"
-                menubarPath="eu.hatsproject.absplugin.absMenu/java"
+                menubarPath="org.abs-models.abs.plugin.absMenu/java"
                 toolbarPath="absfrontend"
                 tooltip="Debug Model (Java)">
           </action>
           <action
-                class="eu.hatsproject.absplugin.actions.JavaAction"
+                class="org.absmodels.abs.plugin.actions.JavaAction"
                 icon="icons/duke_hats_small2.gif"
-                id="eu.hatsproject.absplugin.compileJava"
+                id="org.abs-models.abs.plugin.compileJava"
                 label="Generate Java Code"
-                menubarPath="eu.hatsproject.absplugin.absMenu/java"
+                menubarPath="org.abs-models.abs.plugin.absMenu/java"
                 toolbarPath="absfrontend"
                 tooltip="Generate Java Code">
           </action>
           <action
-                class="eu.hatsproject.absplugin.actions.MaudeCompilerAction"
+                class="org.absmodels.abs.plugin.actions.MaudeCompilerAction"
                 icon="icons/maude_debug2.gif"
-                id="eu.hatsproject.absplugin.execMaude"
+                id="org.abs-models.abs.plugin.execMaude"
                 label="Execute Model (Maude)"
-                menubarPath="eu.hatsproject.absplugin.absMenu/maude"
+                menubarPath="org.abs-models.abs.plugin.absMenu/maude"
                 toolbarPath="absfrontend"
                 tooltip="Execute Model (Maude)">
           </action>
           <action
-                class="eu.hatsproject.absplugin.actions.MaudeCompilerAction"
+                class="org.absmodels.abs.plugin.actions.MaudeCompilerAction"
                 icon="icons/maude_compile2.gif"
-                id="eu.hatsproject.absplugin.compileMaude"
+                id="org.abs-models.abs.plugin.compileMaude"
                 label="Generate Maude Code"
-                menubarPath="eu.hatsproject.absplugin.absMenu/maude"
+                menubarPath="org.abs-models.abs.plugin.absMenu/maude"
                 toolbarPath="absfrontend"
                 tooltip="Generate Maude Code">
           </action>
           <menu
-                id="eu.hatsproject.absplugin.absMenu"
+                id="org.abs-models.abs.plugin.absMenu"
                 label="ABS">
           </menu>
        </actionSet>
@@ -286,9 +286,9 @@
           point="org.eclipse.core.contenttype.contentTypes">
        <content-type
              base-type="org.eclipse.core.runtime.text"
-             describer="eu.hatsproject.absplugin.editor.ABSContentTypeDescriptor"
+             describer="org.absmodels.abs.plugin.editor.ABSContentTypeDescriptor"
              file-extensions="abs"
-             id="eu.hatsproject.absplugin.abscontenttype"
+             id="org.abs-models.abs.plugin.abscontenttype"
              name="ABS File"
              priority="normal">
        </content-type>
@@ -296,14 +296,14 @@
     <extension
           point="org.eclipse.ui.editors">
        <editor
-             class="eu.hatsproject.absplugin.editor.ABSEditor"
+             class="org.absmodels.abs.plugin.editor.ABSEditor"
              default="false"
              extensions="abs"
              icon="icons/absicon.gif"
-             id="eu.hatsproject.absplugin.abseditor"
+             id="org.abs-models.abs.plugin.abseditor"
              name="ABSEditor">
           <contentTypeBinding
-                contentTypeId="eu.hatsproject.absplugin.abscontenttype">
+                contentTypeId="org.abs-models.abs.plugin.abscontenttype">
           </contentTypeBinding>
        </editor>
     </extension>
@@ -314,7 +314,7 @@
        <builder
              callOnEmptyDelta="true">
           <run
-                class="eu.hatsproject.absplugin.builder.AbsBuilder">
+                class="org.absmodels.abs.plugin.builder.AbsBuilder">
           </run>
        </builder>
     </extension>
@@ -324,7 +324,7 @@
           point="org.eclipse.core.resources.natures">
        <runtime>
           <run
-                class="eu.hatsproject.absplugin.builder.AbsNature">
+                class="org.absmodels.abs.plugin.builder.AbsNature">
           </run>
        </runtime>
        <options
@@ -334,39 +334,39 @@
     <extension
           point="org.eclipse.ui.newWizards">
        <wizard
-             category="eu.hatsproject.absplugin.abswizardcat"
-             class="eu.hatsproject.absplugin.wizards.NewABSProjectWizard"
-             finalPerspective="eu.hatsproject.absplugin.absperspective"
+             category="org.abs-models.abs.plugin.abswizardcat"
+             class="org.absmodels.abs.plugin.wizards.NewABSProjectWizard"
+             finalPerspective="org.abs-models.abs.plugin.absperspective"
              icon="icons/abs_project.gif"
-             id="eu.hatsproject.absplugin.abswizard"
+             id="org.abs-models.abs.plugin.abswizard"
              name="ABS Project"
              project="true">
        </wizard>
        <category
-             id="eu.hatsproject.absplugin.abswizardcat"
+             id="org.abs-models.abs.plugin.abswizardcat"
              name="ABS">
        </category>
        <wizard
-             category="eu.hatsproject.absplugin.abswizardcat"
-             class="eu.hatsproject.absplugin.wizards.NewABSFileWizard"
+             category="org.abs-models.abs.plugin.abswizardcat"
+             class="org.absmodels.abs.plugin.wizards.NewABSFileWizard"
              icon="icons/absicon.gif"
-             id="eu.hatsproject.absplugin.absfilewizard"
+             id="org.abs-models.abs.plugin.absfilewizard"
              name="ABS Module (new File)"
              project="false">
        </wizard>
        <wizard
              canFinishEarly="false"
-             category="eu.hatsproject.absplugin.abswizardcat"
-             class="eu.hatsproject.absplugin.wizards.NewClassWizard"
+             category="org.abs-models.abs.plugin.abswizardcat"
+             class="org.absmodels.abs.plugin.wizards.NewClassWizard"
              descriptionImage="icons/abs_class.gif"
-             finalPerspective="eu.hatsproject.absplugin.absperspective"
+             finalPerspective="org.abs-models.abs.plugin.absperspective"
              hasPages="true"
              icon="icons/abs_class.gif"
-             id="eu.hatsproject.absplugin.abswizard.newclass"
+             id="org.abs-models.abs.plugin.abswizard.newclass"
              name="ABS Class"
              project="false">
           <selection
-                class="eu.hatsproject.absplugin.navigator.ModulePath">
+                class="org.absmodels.abs.plugin.navigator.ModulePath">
           </selection>
           <selection
                 class="abs.frontend.ast.ModuleDecl">
@@ -374,17 +374,17 @@
        </wizard>
        <wizard
              canFinishEarly="false"
-             category="eu.hatsproject.absplugin.abswizardcat"
-             class="eu.hatsproject.absplugin.wizards.NewInterfaceWizard"
+             category="org.abs-models.abs.plugin.abswizardcat"
+             class="org.absmodels.abs.plugin.wizards.NewInterfaceWizard"
              descriptionImage="icons/abs_interface.gif"
-             finalPerspective="eu.hatsproject.absplugin.absperspective"
+             finalPerspective="org.abs-models.abs.plugin.absperspective"
              hasPages="true"
              icon="icons/abs_interface.gif"
-             id="eu.hatsproject.absplugin.abswizard.newinterface"
+             id="org.abs-models.abs.plugin.abswizard.newinterface"
              name="ABS Interface"
              project="false">
           <selection
-                class="eu.hatsproject.absplugin.navigator.ModulePath">
+                class="org.absmodels.abs.plugin.navigator.ModulePath">
           </selection>
           <selection
                 class="abs.frontend.ast.ModuleDecl">
@@ -392,15 +392,15 @@
        </wizard>
        <wizard
              canFinishEarly="false"
-             category="eu.hatsproject.absplugin.abswizardcat"
-             class="eu.hatsproject.absplugin.wizards.NewModuleWizard"
+             category="org.abs-models.abs.plugin.abswizardcat"
+             class="org.absmodels.abs.plugin.wizards.NewModuleWizard"
              hasPages="true"
              icon="icons/abs_module.gif"
-             id="eu.hatsproject.absplugin.abswizard.newmodule"
+             id="org.abs-models.abs.plugin.abswizard.newmodule"
              name="ABS Module (existing file)"
              project="false">
           <selection
-                class="eu.hatsproject.absplugin.navigator.ModulePath">
+                class="org.absmodels.abs.plugin.navigator.ModulePath">
           </selection>
           <selection
                 class="abs.frontend.ast.ModuleDecl">
@@ -413,51 +413,51 @@
     <extension
           point="org.eclipse.ui.preferencePages">
        <page
-             class="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
-             id="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
+             class="org.absmodels.abs.plugin.preferences.ABSPreferencePage"
+             id="org.abs-models.abs.plugin.preferences.ABSPreferencePage"
              name="ABS">
        </page>
        <page
-             category="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
-             class="eu.hatsproject.absplugin.preferences.ABSSyntaxColoring"
-             id="eu.hatsproject.absplugin.preferences.ABSSyntaxColoring"
+             category="org.abs-models.abs.plugin.preferences.ABSPreferencePage"
+             class="org.absmodels.abs.plugin.preferences.ABSSyntaxColoring"
+             id="org.abs-models.abs.plugin.preferences.ABSSyntaxColoring"
              name="ABS Syntax Coloring">
        </page>
        <page
-             category="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
-             class="eu.hatsproject.absplugin.preferences.ABSMaudePreferences"
-             id="eu.hatsproject.absplugin.preferences.ABSMaudePreferences"
+             category="org.abs-models.abs.plugin.preferences.ABSPreferencePage"
+             class="org.absmodels.abs.plugin.preferences.ABSMaudePreferences"
+             id="org.abs-models.abs.plugin.preferences.ABSMaudePreferences"
              name="ABS Maude Preferences">
        </page>
        <page
-             category="eu.hatsproject.absplugin.preferences.ABSPreferencePage"
-             class="eu.hatsproject.absplugin.preferences.ABSMavenPreferences"
-             id="eu.hatsproject.absplugin.preferences.ABSMavenPreferences"
+             category="org.abs-models.abs.plugin.preferences.ABSPreferencePage"
+             class="org.absmodels.abs.plugin.preferences.ABSMavenPreferences"
+             id="org.abs-models.abs.plugin.preferences.ABSMavenPreferences"
              name="ABS Maven Preferences">
        </page>
     </extension>
     <extension
           point="org.eclipse.ui.commands">
        <command
-             id="eu.hatsproject.absplugin.jumpdecl"
+             id="org.abs-models.abs.plugin.jumpdecl"
              name="Jump to declaration">
        </command>
        <command
-             id="eu.hatsproject.absplugin.openTypeHierarchy"
+             id="org.abs-models.abs.plugin.openTypeHierarchy"
              name="Jump to declaration">
        </command>
     </extension>
     <extension
           point="org.eclipse.ui.bindings">
        <key
-             commandId="eu.hatsproject.absplugin.jumpdecl"
-             contextId="eu.hatsproject.absplugin.abseditorscope"
+             commandId="org.abs-models.abs.plugin.jumpdecl"
+             contextId="org.abs-models.abs.plugin.abseditorscope"
              schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
              sequence="F3">
        </key>
        <key
-             commandId="eu.hatsproject.absplugin.openTypeHierarchy"
-             contextId="eu.hatsproject.absplugin.abseditorscope"
+             commandId="org.abs-models.abs.plugin.openTypeHierarchy"
+             contextId="org.abs-models.abs.plugin.abseditorscope"
              schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
              sequence="F4">
        </key>
@@ -465,7 +465,7 @@
     <extension
           point="org.eclipse.ui.contexts">
        <context
-             id="eu.hatsproject.absplugin.abseditorscope"
+             id="org.abs-models.abs.plugin.abseditorscope"
              name="ABS Editor Scope"
              parentId="org.eclipse.ui.textEditorScope">
        </context>
@@ -473,20 +473,20 @@
     <extension
           point="org.eclipse.ui.popupMenus">
        <viewerContribution
-             id="eu.hatsproject.absplugin.viewerContribution1"
+             id="org.abs-models.abs.plugin.viewerContribution1"
              targetID="#TextEditorContext">
           <action
-                class="eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate"
-                definitionId="eu.hatsproject.absplugin.jumpdecl"
-                id="eu.hatsproject.absplugin.jumpToDeclaration"
+                class="org.absmodels.abs.plugin.editor.JumpToDeclarationDelegate"
+                definitionId="org.abs-models.abs.plugin.jumpdecl"
+                id="org.abs-models.abs.plugin.jumpToDeclaration"
                 label="Jump to declaration"
                 menubarPath="additions"
                 style="push">
           </action>
           <action
-                class="eu.hatsproject.absplugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
-                definitionId="eu.hatsproject.absplugin.openTypeHierarchy"
-                id="eu.hatsproject.absplugin.openTypeHierarchy"
+                class="org.absmodels.abs.plugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
+                definitionId="org.abs-models.abs.plugin.openTypeHierarchy"
+                id="org.abs-models.abs.plugin.openTypeHierarchy"
                 label="Open Type Hierarchy"
                 menubarPath="additions"
                 style="push">
@@ -496,19 +496,19 @@
     <extension
           point="org.eclipse.ui.editorActions">
        <editorContribution
-             id="eu.hatsproject.absplugin.editorContribution1"
-             targetID="eu.hatsproject.absplugin.abseditor">
+             id="org.abs-models.abs.plugin.editorContribution1"
+             targetID="org.abs-models.abs.plugin.abseditor">
           <action
-                class="eu.hatsproject.absplugin.editor.JumpToDeclarationDelegate"
-                definitionId="eu.hatsproject.absplugin.jumpdecl"
-                id="eu.hatsproject.absplugin.jumpToDeclaration"
+                class="org.absmodels.abs.plugin.editor.JumpToDeclarationDelegate"
+                definitionId="org.abs-models.abs.plugin.jumpdecl"
+                id="org.abs-models.abs.plugin.jumpToDeclaration"
                 label="Jump to declaration"
                 style="push">
           </action>
           <action
-                class="eu.hatsproject.absplugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
-                definitionId="eu.hatsproject.absplugin.openTypeHierarchy"
-                id="eu.hatsproject.absplugin.openTypeHierarchy"
+                class="org.absmodels.abs.plugin.editor.views.typehierarchy.OpenTypeHierarchyDelegate"
+                definitionId="org.abs-models.abs.plugin.openTypeHierarchy"
+                id="org.abs-models.abs.plugin.openTypeHierarchy"
                 label="Open Type Hierarchy"
                 style="push">
           </action>
@@ -516,86 +516,86 @@
     </extension>
     <extension point="org.eclipse.ui.elementFactories">
       <factory 
-      		id="eu.hatsproject.absplugin.editor.outline.PackageAbsFileInputFactory" 
-      		class="eu.hatsproject.absplugin.editor.outline.PackageAbsFileInputFactory" /> 
+      		id="org.abs-models.abs.plugin.editor.outline.PackageAbsFileInputFactory" 
+      		class="org.absmodels.abs.plugin.editor.outline.PackageAbsFileInputFactory" /> 
     </extension>
     <extension
           point="org.eclipse.ui.navigator.navigatorContent">
        <commonWizard
              type="new"
-             wizardId="eu.hatsproject.absplugin.abswizard">
+             wizardId="org.abs-models.abs.plugin.abswizard">
           <enablement>
              <or>
                 <adapt
                       type="org.eclipse.core.resources.IProject">
                    <test
                          property="org.eclipse.core.resources.projectNature"
-                         value="eu.hatsproject.absplugin.ABSNature">
+                         value="org.abs-models.abs.plugin.ABSNature">
                    </test>
                 </adapt>
              </or></enablement>
        </commonWizard>
        <commonWizard
              type="new"
-             wizardId="eu.hatsproject.absplugin.absfilewizard">
+             wizardId="org.abs-models.abs.plugin.absfilewizard">
           <enablement>
              <or>
                 <adapt
                       type="org.eclipse.core.resources.IFolder">
                    <test
                          property="org.eclipse.core.resources.projectNature"
-                         value="eu.hatsproject.absplugin.ABSNature">
+                         value="org.abs-models.abs.plugin.ABSNature">
                    </test>
                 </adapt>
                 <adapt
                       type="org.eclipse.core.resources.IProject">
                    <test
                          property="org.eclipse.core.resources.projectNature"
-                         value="eu.hatsproject.absplugin.ABSNature">
+                         value="org.abs-models.abs.plugin.ABSNature">
                    </test>
                 </adapt>
                 <instanceof
-                      value="eu.hatsproject.absplugin.navigator.ModulePath">
+                      value="org.absmodels.abs.plugin.navigator.ModulePath">
                 </instanceof>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.util.InternalASTNode">
+                         value="org.absmodels.abs.plugin.util.InternalASTNode">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.isModuleNode">
+                         property="org.abs-models.abs.plugin.isModuleNode">
                    </test>
                 </and>
              </or></enablement>
        </commonWizard>
        <navigatorContent
-             contentProvider="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineProvider"
+             contentProvider="org.absmodels.abs.plugin.editor.outline.ABSContentOutlineProvider"
              icon="icons/absicon.gif"
-             id="eu.hatsproject.absplugin.navigatorOutline"
-             labelProvider="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineStyledLabelProvider"
+             id="org.abs-models.abs.plugin.navigatorOutline"
+             labelProvider="org.absmodels.abs.plugin.editor.outline.ABSContentOutlineStyledLabelProvider"
              name="ABS Outline"
              priority="normal">
           <commonSorter
-                class="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
+                class="org.absmodels.abs.plugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
           </commonSorter>
           <actionProvider
-          		class="eu.hatsproject.absplugin.navigator.actionProvider.RefreshDependenciesProvider">
+          		class="org.absmodels.abs.plugin.navigator.actionProvider.RefreshDependenciesProvider">
           	 <enablement>
           	   <or>
           	     <instanceof
-                	  value="eu.hatsproject.absplugin.editor.outline.PackageContainer">
+                	  value="org.absmodels.abs.plugin.editor.outline.PackageContainer">
                  </instanceof>
           	   </or>
              </enablement>
           </actionProvider>
           <actionProvider
-                class="eu.hatsproject.absplugin.navigator.actionProvider.DoubleClickActionProvider">
+                class="org.absmodels.abs.plugin.navigator.actionProvider.DoubleClickActionProvider">
              <enablement>
              	<or>
                   <instanceof
-                       value="eu.hatsproject.absplugin.util.InternalASTNode">
+                       value="org.absmodels.abs.plugin.util.InternalASTNode">
                   </instanceof>
                   <instanceof
-                	   value="eu.hatsproject.absplugin.editor.outline.PackageAbsFile">
+                	   value="org.absmodels.abs.plugin.editor.outline.PackageAbsFile">
                   </instanceof>
                 </or>
              </enablement>
@@ -614,20 +614,20 @@
                   </instanceof>
                   <test
                          property="org.eclipse.core.resources.projectNature"
-                         value="eu.hatsproject.absplugin.ABSNature">
+                         value="org.abs-models.abs.plugin.ABSNature">
                    </test>
                 </and>
 				<instanceof
                       value="org.eclipse.core.resources.IFolder">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.editor.outline.PackageContainer">
+                	  value="org.absmodels.abs.plugin.editor.outline.PackageContainer">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.editor.outline.PackageEntry">
+                	  value="org.absmodels.abs.plugin.editor.outline.PackageEntry">
                 </instanceof>
                 <instanceof
-                	  value="eu.hatsproject.absplugin.editor.outline.PackageAbsFile">
+                	  value="org.absmodels.abs.plugin.editor.outline.PackageAbsFile">
                 </instanceof>
              </or>
           </enablement>
@@ -637,14 +637,14 @@
              <enablement>
                 <or>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <and>
                       <instanceof
-                            value="eu.hatsproject.absplugin.util.InternalASTNode">
+                            value="org.absmodels.abs.plugin.util.InternalASTNode">
                       </instanceof>
                       <test
-                            property="eu.hatsproject.absplugin.isModuleNode">
+                            property="org.abs-models.abs.plugin.isModuleNode">
                       </test>
                    </and>
                 </or>
@@ -653,46 +653,46 @@
        </navigatorContent>
        <commonWizard
              type="new"
-             wizardId="eu.hatsproject.absplugin.abswizard.newclass">
+             wizardId="org.abs-models.abs.plugin.abswizard.newclass">
           <enablement>
              <or>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.hasModule">
+                         property="org.abs-models.abs.plugin.hasModule">
                    </test>
                 </and>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.util.InternalASTNode">
+                         value="org.absmodels.abs.plugin.util.InternalASTNode">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.isModuleNode">
+                         property="org.abs-models.abs.plugin.isModuleNode">
                    </test></and>
              </or>
           </enablement>
        </commonWizard>
        <commonWizard
              type="new"
-             wizardId="eu.hatsproject.absplugin.abswizard.newinterface">
+             wizardId="org.abs-models.abs.plugin.abswizard.newinterface">
           <enablement>
              <or>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.hasModule">
+                         property="org.abs-models.abs.plugin.hasModule">
                    </test>
                 </and>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.util.InternalASTNode">
+                         value="org.absmodels.abs.plugin.util.InternalASTNode">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.isModuleNode">
+                         property="org.abs-models.abs.plugin.isModuleNode">
                    </test>
                 </and>
              </or>
@@ -700,21 +700,21 @@
        </commonWizard>
        <commonWizard
              type="new"
-             wizardId="eu.hatsproject.absplugin.abswizard.newmodule">
+             wizardId="org.abs-models.abs.plugin.abswizard.newmodule">
           <enablement>
              <or>
                 <adapt
                       type="org.eclipse.core.resources.IFile">
                 </adapt>
                 <instanceof
-                      value="eu.hatsproject.absplugin.navigator.ModulePath">
+                      value="org.absmodels.abs.plugin.navigator.ModulePath">
                 </instanceof>
                 <and>
                    <instanceof
-                         value="eu.hatsproject.absplugin.util.InternalASTNode">
+                         value="org.absmodels.abs.plugin.util.InternalASTNode">
                    </instanceof>
                    <test
-                         property="eu.hatsproject.absplugin.isModuleNode">
+                         property="org.abs-models.abs.plugin.isModuleNode">
                    </test>
                 </and>
              </or></enablement>
@@ -723,60 +723,60 @@
 	<extension
           point="org.eclipse.ui.propertyPages">
         <page
-              class="eu.hatsproject.absplugin.properties.ABSPropertyPage"
-              id="eu.hatsproject.absplugin.properties.ABSPropertyPage"
+              class="org.absmodels.abs.plugin.properties.ABSPropertyPage"
+              id="org.abs-models.abs.plugin.properties.ABSPropertyPage"
               name="ABS">
            <enabledWhen>
               <adapt
                     type="org.eclipse.core.resources.IProject">
                  <test
                        property="org.eclipse.core.resources.projectNature"
-                       value="eu.hatsproject.absplugin.ABSNature">
+                       value="org.abs-models.abs.plugin.ABSNature">
                  </test>
               </adapt>
            </enabledWhen>
        </page>
         <page
-              category="eu.hatsproject.absplugin.properties.ABSPropertyPage"
-              class="eu.hatsproject.absplugin.properties.MaudePropertyPage"
-              id="eu.hatsproject.absplugin.properties.MaudePropertyPage"
+              category="org.abs-models.abs.plugin.properties.ABSPropertyPage"
+              class="org.absmodels.abs.plugin.properties.MaudePropertyPage"
+              id="org.abs-models.abs.plugin.properties.MaudePropertyPage"
               name="Maude Backend">
            <enabledWhen>
               <adapt
                     type="org.eclipse.core.resources.IProject">
                  <test
                        property="org.eclipse.core.resources.projectNature"
-                       value="eu.hatsproject.absplugin.ABSNature">
+                       value="org.abs-models.abs.plugin.ABSNature">
                  </test>
               </adapt>
            </enabledWhen>
         </page>
         <page
-              category="eu.hatsproject.absplugin.properties.ABSPropertyPage"
-              class="eu.hatsproject.absplugin.properties.JavaPropertyPage"
-              id="eu.hatsproject.absplugin.properties.JavaPropertyPage"
+              category="org.abs-models.abs.plugin.properties.ABSPropertyPage"
+              class="org.absmodels.abs.plugin.properties.JavaPropertyPage"
+              id="org.abs-models.abs.plugin.properties.JavaPropertyPage"
               name="Java Backend">
            <enabledWhen>
               <adapt
                     type="org.eclipse.core.resources.IProject">
                  <test
                        property="org.eclipse.core.resources.projectNature"
-                       value="eu.hatsproject.absplugin.ABSNature">
+                       value="org.abs-models.abs.plugin.ABSNature">
                  </test>
               </adapt>
            </enabledWhen>
         </page>
         <page
-        	  category="eu.hatsproject.absplugin.properties.ABSPropertyPage"
-              class="eu.hatsproject.absplugin.properties.MavenPropertyPage"
-              id="eu.hatsproject.absplugin.properties.MavenPropertyPage"
+        	  category="org.abs-models.abs.plugin.properties.ABSPropertyPage"
+              class="org.absmodels.abs.plugin.properties.MavenPropertyPage"
+              id="org.abs-models.abs.plugin.properties.MavenPropertyPage"
               name="Maven">
            <enabledWhen>
               <adapt
                     type="org.eclipse.core.resources.IProject">
                  <test
                        property="org.eclipse.core.resources.projectNature"
-                       value="eu.hatsproject.absplugin.ABSNature">
+                       value="org.abs-models.abs.plugin.ABSNature">
                  </test>
               </adapt>
            </enabledWhen>
@@ -785,11 +785,11 @@
     <extension
          point="org.eclipse.core.expressions.definitions">
       <definition
-            id="eu.hatsproject.definition.activeEditor">
+            id="org.abs-models.definition.activeEditor">
          <with
                variable="activeEditorId">
             <equals
-                  value="eu.hatsproject.absplugin.abseditor">
+                  value="org.abs-models.abs.plugin.abseditor">
             </equals>
          </with>
       </definition>
@@ -800,7 +800,7 @@
              allPopups="false"
              locationURI="toolbar:org.eclipse.ui.views.Content?after=additions">
           <command
-                commandId="eu.hatsproject.absplugin.sortCommand"
+                commandId="org.abs-models.abs.plugin.sortCommand"
                 icon="icons/sort_icon.gif"
                 label="Sort"
                 style="toggle"
@@ -810,13 +810,13 @@
                 <with
                       variable="activeEditor">
                    <instanceof
-                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                         value="org.absmodels.abs.plugin.editor.ABSEditor">
                    </instanceof>
                 </with>
              </visibleWhen>
           </command>
           <command
-                commandId="eu.hatsproject.absplugin.hideFieldCommand"
+                commandId="org.abs-models.abs.plugin.hideFieldCommand"
                 icon="icons/hide_field_icon.gif"
                 label="Hide Fields"
                 style="toggle"
@@ -826,15 +826,15 @@
                 <with
                       variable="activeEditor">
                    <instanceof
-                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                         value="org.absmodels.abs.plugin.editor.ABSEditor">
                    </instanceof>
                 </with>
              </visibleWhen>
           </command>
           <command
-                commandId="eu.hatsproject.absplugin.hideImportsCommand"
+                commandId="org.abs-models.abs.plugin.hideImportsCommand"
                 icon="icons/hide_imports.gif"
-                id="eu.hatsproject.absplugin.outline.hideImports"
+                id="org.abs-models.abs.plugin.outline.hideImports"
                 label="Hide Imports"
                 style="toggle"
                 tooltip="Hide Imports">
@@ -843,13 +843,13 @@
                 <with
                       variable="activeEditor">
                    <instanceof
-                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                         value="org.absmodels.abs.plugin.editor.ABSEditor">
                    </instanceof>
                 </with>
              </visibleWhen>
           </command>
           <command
-                commandId="eu.hatsproject.absplugin.hideExportsCommand"
+                commandId="org.abs-models.abs.plugin.hideExportsCommand"
                 icon="icons/hide_exports.gif"
                 label="Hide Exports"
                 style="toggle"
@@ -859,13 +859,13 @@
                 <with
                       variable="activeEditor">
                    <instanceof
-                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                         value="org.absmodels.abs.plugin.editor.ABSEditor">
                    </instanceof>
                 </with>
              </visibleWhen>
           </command>
           <command
-                commandId="eu.hatsproject.absplugin.linkEditorCommand"
+                commandId="org.abs-models.abs.plugin.linkEditorCommand"
                 icon="icons/synced.gif"
                 label="Link with Editor"
                 style="toggle"
@@ -875,7 +875,7 @@
                 <with
                       variable="activeEditor">
                    <instanceof
-                         value="eu.hatsproject.absplugin.editor.ABSEditor">
+                         value="org.absmodels.abs.plugin.editor.ABSEditor">
                    </instanceof>
                 </with>
              </visibleWhen>
@@ -885,9 +885,9 @@
     <extension
           point="org.eclipse.ui.commands">
        <command
-             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineSortHandler"
+             defaultHandler="org.absmodels.abs.plugin.editor.outline.handlers.ABSContentOutlineSortHandler"
              description="Sorts the content outline view alphabetically"
-             id="eu.hatsproject.absplugin.sortCommand"
+             id="org.abs-models.abs.plugin.sortCommand"
              name="Sort">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:false"
@@ -895,9 +895,9 @@
           </state>
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
+             defaultHandler="org.absmodels.abs.plugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
              description="Hide Fields"
-             id="eu.hatsproject.absplugin.hideFieldCommand"
+             id="org.abs-models.abs.plugin.hideFieldCommand"
              name="Hide Fields">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:false"
@@ -905,9 +905,9 @@
           </state>
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
+             defaultHandler="org.absmodels.abs.plugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
              description="Hide Imports"
-             id="eu.hatsproject.absplugin.hideImportsCommand"
+             id="org.abs-models.abs.plugin.hideImportsCommand"
              name="Hide Imports">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:false"
@@ -915,9 +915,9 @@
           </state>
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
+             defaultHandler="org.absmodels.abs.plugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
              description="Hide Exports"
-             id="eu.hatsproject.absplugin.hideExportsCommand"
+             id="org.abs-models.abs.plugin.hideExportsCommand"
              name="Hide Exports">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:false"
@@ -925,9 +925,9 @@
           </state>
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
+             defaultHandler="org.absmodels.abs.plugin.editor.outline.handlers.ABSContentOutlineFilterHandler"
              description="Link with Editor"
-             id="eu.hatsproject.absplugin.linkEditorCommand"
+             id="org.abs-models.abs.plugin.linkEditorCommand"
              name="Link with Editor">
           <state
                 class="org.eclipse.ui.handlers.RegistryToggleState:true"
@@ -941,7 +941,7 @@
              viewerId="org.eclipse.ui.navigator.ProjectExplorer">
           <includes>
              <contentExtension
-                   pattern="eu.hatsproject.absplugin.navigatorOutline">
+                   pattern="org.abs-models.abs.plugin.navigatorOutline">
              </contentExtension>
           </includes>
        </viewerContentBinding>
@@ -949,7 +949,7 @@
              viewerId="org.eclipse.ui.navigator.ProjectExplorer">
           <includes>
              <actionExtension
-                   pattern="eu.hatsproject.absplugin.navigator.NewActions">
+                   pattern="org.abs-models.abs.plugin.navigator.NewActions">
              </actionExtension>
           </includes>
        </viewerActionBinding>
@@ -957,14 +957,14 @@
     <extension
           point="org.eclipse.debug.core.launchConfigurationTypes">
        <launchConfigurationType
-             delegate="eu.hatsproject.absplugin.actions.runconfig.JavaRunConfiguration"
-             id="eu.hatsproject.absplugin.javaLaunchConfigurationType"
+             delegate="org.absmodels.abs.plugin.actions.runconfig.JavaRunConfiguration"
+             id="org.abs-models.abs.plugin.javaLaunchConfigurationType"
              modes="run"
              name="ABS Java Backend">
        </launchConfigurationType>
        <launchConfigurationType
-             delegate="eu.hatsproject.absplugin.actions.runconfig.MaudeRunConfiguration"
-             id="eu.hatsproject.absplugin.maudeLaunchConfigurationType"
+             delegate="org.absmodels.abs.plugin.actions.runconfig.MaudeRunConfiguration"
+             id="org.abs-models.abs.plugin.maudeLaunchConfigurationType"
              modes="run"
              name="ABS Maude Backend">
        </launchConfigurationType>
@@ -972,65 +972,65 @@
     <extension
           point="org.eclipse.debug.ui.launchConfigurationTypeImages">
        <launchConfigurationTypeImage
-             configTypeID="eu.hatsproject.absplugin.javaLaunchConfigurationType"
+             configTypeID="org.abs-models.abs.plugin.javaLaunchConfigurationType"
              icon="icons/duke_hats_debug_small.gif"
-             id="eu.hatsproject.absplugin.javaLaunchConfigurationTypeImage">
+             id="org.abs-models.abs.plugin.javaLaunchConfigurationTypeImage">
        </launchConfigurationTypeImage>
        <launchConfigurationTypeImage
-             configTypeID="eu.hatsproject.absplugin.maudeLaunchConfigurationType"
+             configTypeID="org.abs-models.abs.plugin.maudeLaunchConfigurationType"
              icon="icons/maude_debug2.gif"
-             id="eu.hatsproject.absplugin.maudeLaunchConfigurationTypeImage">
+             id="org.abs-models.abs.plugin.maudeLaunchConfigurationTypeImage">
        </launchConfigurationTypeImage>
     </extension>
     <extension
           point="org.eclipse.debug.ui.launchConfigurationTabGroups">
        <launchConfigurationTabGroup
-             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabGroup"
-             id="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
-             type="eu.hatsproject.absplugin.javaLaunchConfigurationType">
+             class="org.absmodels.abs.plugin.actions.runconfig.java.JavaTabGroup"
+             id="org.abs-models.abs.plugin.javaLaunchConfigurationTabGroup"
+             type="org.abs-models.abs.plugin.javaLaunchConfigurationType">
        </launchConfigurationTabGroup>
        <launchConfigurationTabGroup
-             class="eu.hatsproject.absplugin.actions.runconfig.MaudeTabGroup"
-             id="eu.hatsproject.absplugin.maudeLaunchConfigurationTabGroup"
-             type="eu.hatsproject.absplugin.maudeLaunchConfigurationType">
+             class="org.absmodels.abs.plugin.actions.runconfig.MaudeTabGroup"
+             id="org.abs-models.abs.plugin.maudeLaunchConfigurationTabGroup"
+             type="org.abs-models.abs.plugin.maudeLaunchConfigurationType">
        </launchConfigurationTabGroup>
     </extension>
     <extension
           point="org.eclipse.debug.ui.launchConfigurationTabs">
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabMain"
-             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
-             id="eu.hatsproject.absplugin.javaTab1"
+             class="org.absmodels.abs.plugin.actions.runconfig.java.JavaTabMain"
+             group="org.abs-models.abs.plugin.javaLaunchConfigurationTabGroup"
+             id="org.abs-models.abs.plugin.javaTab1"
              name="Java Tab 1">
        </tab>
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabSchedulerOptions"
-             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
-             id="eu.hatsproject.absplugin.javaTab2"
+             class="org.absmodels.abs.plugin.actions.runconfig.java.JavaTabSchedulerOptions"
+             group="org.abs-models.abs.plugin.javaLaunchConfigurationTabGroup"
+             id="org.abs-models.abs.plugin.javaTab2"
              name="Java Tab 2">
-             <placement after="eu.hatsproject.absplugin.javaTab1" />
+             <placement after="org.abs-models.abs.plugin.javaTab1" />
        </tab>
        
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabForeignLanguageInterface"
-             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
-             id="eu.hatsproject.absplugin.javaTab3"
+             class="org.absmodels.abs.plugin.actions.runconfig.java.JavaTabForeignLanguageInterface"
+             group="org.abs-models.abs.plugin.javaLaunchConfigurationTabGroup"
+             id="org.abs-models.abs.plugin.javaTab3"
              name="Java Tab 3">
-             <placement after="eu.hatsproject.absplugin.javaTab2" />
+             <placement after="org.abs-models.abs.plugin.javaTab2" />
        </tab>
        
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.java.JavaTabAdvancedOptions"
-             group="eu.hatsproject.absplugin.javaLaunchConfigurationTabGroup"
-             id="eu.hatsproject.absplugin.javaTab4"
+             class="org.absmodels.abs.plugin.actions.runconfig.java.JavaTabAdvancedOptions"
+             group="org.abs-models.abs.plugin.javaLaunchConfigurationTabGroup"
+             id="org.abs-models.abs.plugin.javaTab4"
              name="Java Tab 4">
-             <placement after="eu.hatsproject.absplugin.javaTab3" />
+             <placement after="org.abs-models.abs.plugin.javaTab3" />
        </tab>
        
        <tab
-             class="eu.hatsproject.absplugin.actions.runconfig.MaudeTab"
-             group="eu.hatsproject.absplugin.maudeLaunchConfigurationTabGroup"
-             id="eu.hatsproject.absplugin.maudeTab1"
+             class="org.absmodels.abs.plugin.actions.runconfig.MaudeTab"
+             group="org.abs-models.abs.plugin.maudeLaunchConfigurationTabGroup"
+             id="org.abs-models.abs.plugin.maudeTab1"
              name="Maude Tab 1">
        </tab>
     </extension>
@@ -1038,58 +1038,58 @@
           point="org.eclipse.ui.views">
        <view
              allowMultiple="false"
-             category="eu.hatsproject.absplugin.category"
-             class="eu.hatsproject.absplugin.navigator.ABSNavigator"
+             category="org.abs-models.abs.plugin.category"
+             class="org.absmodels.abs.plugin.navigator.ABSNavigator"
              icon="icons/abs_navigator.gif"
-             id="eu.hatsproject.absplugin.navigator.view"
+             id="org.abs-models.abs.plugin.navigator.view"
              name="ABS Module Explorer">
        </view>
        <category
-             id="eu.hatsproject.absplugin.category"
+             id="org.abs-models.abs.plugin.category"
              name="ABS">
        </category>
        <view
              allowMultiple="false"
-             category="eu.hatsproject.absplugin.category"
-             class="eu.hatsproject.absplugin.debug.views.debugview.DebugView"
+             category="org.abs-models.abs.plugin.category"
+             class="org.absmodels.abs.plugin.debug.views.debugview.DebugView"
              icon="icons/duke_hats_debug_small.gif"
-             id="eu.hatsproject.absplugin.debug.views.debugview.DebugView"
+             id="org.abs-models.abs.plugin.debug.views.debugview.DebugView"
              name="ABS Debug">
        </view>
        <view
              allowMultiple="false"
-             category="eu.hatsproject.absplugin.category"
-             class="eu.hatsproject.absplugin.debug.views.variablesview.VariableView"
+             category="org.abs-models.abs.plugin.category"
+             class="org.absmodels.abs.plugin.debug.views.variablesview.VariableView"
              icon="icons/debug/variable_view.gif"
-             id="eu.hatsproject.absplugin.debug.views.variableview.VariableView"
+             id="org.abs-models.abs.plugin.debug.views.variableview.VariableView"
              name="ABS Variables">
        </view>
        <view
              allowMultiple="false"
-             category="eu.hatsproject.absplugin.category"
-             class="eu.hatsproject.absplugin.editor.views.typehierarchy.TypeHierarchyView"
+             category="org.abs-models.abs.plugin.category"
+             class="org.absmodels.abs.plugin.editor.views.typehierarchy.TypeHierarchyView"
              icon="icons/class_hi.gif"
-             id="eu.hatsproject.absplugin.editor.views.typehierarchy"
+             id="org.abs-models.abs.plugin.editor.views.typehierarchy"
              name="Type Hierarchy">
        </view>
     </extension>
     <extension
           point="org.eclipse.ui.navigator.viewer">
        <viewer
-             viewerId="eu.hatsproject.absplugin.navigator.view">
+             viewerId="org.abs-models.abs.plugin.navigator.view">
        </viewer>
        <viewerContentBinding
-             viewerId="eu.hatsproject.absplugin.navigator.view">
+             viewerId="org.abs-models.abs.plugin.navigator.view">
           <includes>
              <contentExtension
                    isRoot="true"
-                   pattern="eu.hatsproject.absplugin.navigator.content">
+                   pattern="org.abs-models.abs.plugin.navigator.content">
              </contentExtension>
              <contentExtension
-                   pattern="eu.hatsproject.absplugin.navigator.LinkHelper">
+                   pattern="org.abs-models.abs.plugin.navigator.LinkHelper">
              </contentExtension>
              <contentExtension
-                   pattern="eu.hatsproject.absplugin.navigator.hideNonABSFilter">
+                   pattern="org.abs-models.abs.plugin.navigator.hideNonABSFilter">
              </contentExtension>
              <contentExtension
                    pattern="org.eclipse.ui.navigator.resources.filters.*">
@@ -1097,13 +1097,13 @@
           </includes>
        </viewerContentBinding>
        <viewerActionBinding
-             viewerId="eu.hatsproject.absplugin.navigator.view">
+             viewerId="org.abs-models.abs.plugin.navigator.view">
           <includes>
              <actionExtension
                    pattern="org.eclipse.ui.navigator.resources.*">
              </actionExtension>
              <actionExtension
-                   pattern="eu.hatsproject.absplugin.navigator.*">
+                   pattern="org.abs-models.abs.plugin.navigator.*">
              </actionExtension>
           </includes>
        </viewerActionBinding>
@@ -1112,13 +1112,13 @@
           point="org.eclipse.ui.navigator.navigatorContent">
        <navigatorContent
              activeByDefault="true"
-             contentProvider="eu.hatsproject.absplugin.navigator.NavigatorContentProvider"
+             contentProvider="org.absmodels.abs.plugin.navigator.NavigatorContentProvider"
              icon="icons/abs_navigator.gif"
-             id="eu.hatsproject.absplugin.navigator.content"
-             labelProvider="eu.hatsproject.absplugin.navigator.ABSNavigatorStyledLabelProvider"
+             id="org.abs-models.abs.plugin.navigator.content"
+             labelProvider="org.absmodels.abs.plugin.navigator.ABSNavigatorStyledLabelProvider"
              name="ABS Module Explorer Content">
           <commonSorter
-                class="eu.hatsproject.absplugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
+                class="org.absmodels.abs.plugin.editor.outline.ABSContentOutlineFiltersAndComparators$ABSViewComparator">
           </commonSorter>
           <enablement>
              <instanceof
@@ -1127,18 +1127,18 @@
           </enablement>
           <actionProvider
                 class="org.eclipse.ui.internal.navigator.resources.actions.NewActionProvider"
-                id="eu.hatsproject.absplugin.navigator.NewActions">
+                id="org.abs-models.abs.plugin.navigator.NewActions">
              <enablement>
                 <or>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <and>
                       <instanceof
-                            value="eu.hatsproject.absplugin.util.InternalASTNode">
+                            value="org.absmodels.abs.plugin.util.InternalASTNode">
                       </instanceof>
                       <test
-                            property="eu.hatsproject.absplugin.isModuleNode">
+                            property="org.abs-models.abs.plugin.isModuleNode">
                       </test>
                    </and>
                 </or>
@@ -1146,36 +1146,36 @@
           </actionProvider>
           <commonWizard
                 type="new"
-                wizardId="eu.hatsproject.absplugin.absfilewizard">
+                wizardId="org.abs-models.abs.plugin.absfilewizard">
              <enablement>
                 <or>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <and>
                       <instanceof
-                            value="eu.hatsproject.absplugin.util.InternalASTNode">
+                            value="org.absmodels.abs.plugin.util.InternalASTNode">
                       </instanceof>
                       <test
-                            property="eu.hatsproject.absplugin.isModuleNode">
+                            property="org.abs-models.abs.plugin.isModuleNode">
                       </test>
                    </and></or>
              </enablement>
           </commonWizard>
           <commonWizard
                 type="new"
-                wizardId="eu.hatsproject.absplugin.abswizard.newmodule">
+                wizardId="org.abs-models.abs.plugin.abswizard.newmodule">
              <enablement>
                 <or>
                    <instanceof
-                         value="eu.hatsproject.absplugin.navigator.ModulePath">
+                         value="org.absmodels.abs.plugin.navigator.ModulePath">
                    </instanceof>
                    <and>
                       <instanceof
-                            value="eu.hatsproject.absplugin.util.InternalASTNode">
+                            value="org.absmodels.abs.plugin.util.InternalASTNode">
                       </instanceof>
                       <test
-                            property="eu.hatsproject.absplugin.isModuleNode">
+                            property="org.abs-models.abs.plugin.isModuleNode">
                       </test>
                    </and>
                 </or></enablement>
@@ -1185,7 +1185,7 @@
        <commonFilter
              activeByDefault="false"
              description="Hides all projects that do not have an ABS Project nature"
-             id="eu.hatsproject.absplugin.navigator.hideNonABSFilter"
+             id="org.abs-models.abs.plugin.navigator.hideNonABSFilter"
              name="Hide non-ABS Projects"
              visibleInUI="true">
           <filterExpression>
@@ -1194,7 +1194,7 @@
                       type="org.eclipse.core.resources.IProject">
                    <test
                          property="org.eclipse.core.resources.projectNature"
-                         value="eu.hatsproject.absplugin.AbsNature">
+                         value="org.abs-models.abs.plugin.AbsNature">
                    </test>
                 </adapt>
              </or>
@@ -1204,8 +1204,8 @@
     <extension
           point="org.eclipse.ui.navigator.linkHelper">
        <linkHelper
-             class="eu.hatsproject.absplugin.navigator.LinkHelper"
-             id="eu.hatsproject.absplugin.navigator.LinkHelper">
+             class="org.absmodels.abs.plugin.navigator.LinkHelper"
+             id="org.abs-models.abs.plugin.navigator.LinkHelper">
           <editorInputEnablement></editorInputEnablement>
           <selectionEnablement></selectionEnablement>
        </linkHelper>
@@ -1214,8 +1214,8 @@
           point="org.eclipse.ui.decorators">
        <decorator
              adaptable="true"
-             class="eu.hatsproject.absplugin.decorators.ModuleDecorator"
-             id="eu.hatsproject.absplugin.decorator.problemmarker"
+             class="org.absmodels.abs.plugin.decorators.ModuleDecorator"
+             id="org.abs-models.abs.plugin.decorator.problemmarker"
              label="ABS Module problem marker"
              lightweight="true"
              location="BOTTOM_LEFT"
@@ -1223,21 +1223,21 @@
           <enablement>
              <or>
                 <objectClass
-                      name="eu.hatsproject.absplugin.navigator.ModulePath">
+                      name="org.absmodels.abs.plugin.navigator.ModulePath">
                 </objectClass>
                 <objectClass
                       name="org.eclipse.core.resources.IProject">
                 </objectClass>
                 <objectClass
-                      name="eu.hatsproject.absplugin.util.InternalASTNode">
+                      name="org.absmodels.abs.plugin.util.InternalASTNode">
                 </objectClass>
              </or>
           </enablement>
        </decorator>
        <decorator
              adaptable="true"
-             class="eu.hatsproject.absplugin.decorators.FolderDecorator"
-             id="eu.hatsproject.absplugin.decorator.foldermarker"
+             class="org.absmodels.abs.plugin.decorators.FolderDecorator"
+             id="org.abs-models.abs.plugin.decorator.foldermarker"
              label="ABS Folder Marker"
              lightweight="true"
              location="BOTTOM_RIGHT"
@@ -1252,121 +1252,121 @@
     <extension
          point="org.eclipse.ui.viewActions">
 		<viewContribution
-            id="eu.hatsproject.absplugin.ABSViewContribution"
-            targetID="eu.hatsproject.absplugin.debug.views.debugview.DebugView">
+            id="org.abs-models.abs.plugin.ABSViewContribution"
+            targetID="org.abs-models.abs.plugin.debug.views.debugview.DebugView">
      <menu
-           id="eu.hatsproject.absplugin.debug.someMenu"
+           id="org.abs-models.abs.plugin.debug.someMenu"
            label="menulabel"
            path="additions">
         <groupMarker
-              name="eu.hatsproject.absplugin.schedulerChoice">
+              name="org.abs-models.abs.plugin.schedulerChoice">
         </groupMarker>
         <groupMarker
-              name="eu.hatsproject.absplugin.group22">
+              name="org.abs-models.abs.plugin.group22">
         </groupMarker>
         <separator
-              name="eu.hatsproject.absplugin.separator1">
+              name="org.abs-models.abs.plugin.separator1">
         </separator>
         <groupMarker
-              name="eu.hatsproject.absplugin.group1">
+              name="org.abs-models.abs.plugin.group1">
         </groupMarker>
      </menu>
      <action
-           class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+           class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
            disabledIcon="icons/debug/terminate_inactive.gif"
            icon="icons/debug/terminate.gif"
-           id="eu.hatsproject.absplugin.debug.perspective.Terminate"
+           id="org.abs-models.abs.plugin.debug.perspective.Terminate"
            label="Terminate"
            state="false"
            style="push"
-           toolbarPath="eu.hatsproject.absplugin.group1"
+           toolbarPath="org.abs-models.abs.plugin.group1"
            tooltip="Terminate">
      </action>
     <!-- <action
-           class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+           class="org.abs-models.abs.plugin.debug.perspective.DebugActionDelegate"
            disabledIcon="icons/debug/suspend_inactive.gif"
            icon="icons/debug/suspend.gif"
-           id="eu.hatsproject.absplugin.debug.perspective.Suspend"
+           id="org.abs-models.abs.plugin.debug.perspective.Suspend"
            label="Suspend"
            state="false"
            style="push"
-           toolbarPath="eu.hatsproject.absplugin.group1"
+           toolbarPath="org.abs-models.abs.plugin.group1"
            tooltip="Suspend">
      </action> -->
      <action
-           class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+           class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
            disabledIcon="icons/debug/resume_inactive.gif"
            icon="icons/debug/resume.gif"
-           id="eu.hatsproject.absplugin.debug.perspective.Resume"
+           id="org.abs-models.abs.plugin.debug.perspective.Resume"
            label="Resume"
            state="false"
            style="push"
-           toolbarPath="eu.hatsproject.absplugin.group1"
+           toolbarPath="org.abs-models.abs.plugin.group1"
            tooltip="Resume">
      </action>
      <action
-           class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+           class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
            disabledIcon="icons/debug/run_to_line_inactive.gif"
            icon="icons/debug/run_to_line.gif"
-           id="eu.hatsproject.absplugin.debug.perspective.RunToLine"
+           id="org.abs-models.abs.plugin.debug.perspective.RunToLine"
            label="Run to line"
            state="true"
            style="push"
-           toolbarPath="eu.hatsproject.absplugin.group2"
+           toolbarPath="org.abs-models.abs.plugin.group2"
            tooltip="Run to line">
      </action>
      <action
-           class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+           class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
            disabledIcon="icons/debug/step_over_inactive.gif"
            icon="icons/debug/step_over.gif"
-           id="eu.hatsproject.absplugin.debug.perspective.StepOver"
+           id="org.abs-models.abs.plugin.debug.perspective.StepOver"
            label="Step over"
            state="true"
            style="push"
-           toolbarPath="eu.hatsproject.absplugin.group2"
+           toolbarPath="org.abs-models.abs.plugin.group2"
            tooltip="Step over current line">
      </action>
 			<action
-	               class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+	               class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
 	               disabledIcon="icons/debug/step_n_inactive.gif"
 	               icon="icons/debug/step_n.gif"
-	               id="eu.hatsproject.absplugin.debug.perspective.ExecuteNSteps"
+	               id="org.abs-models.abs.plugin.debug.perspective.ExecuteNSteps"
 	               label="Execute n steps"
 	               state="true"
 	               style="push"
 	               tooltip="Execute n steps"
-	               toolbarPath="eu.hatsproject.absplugin.group2">
+	               toolbarPath="org.abs-models.abs.plugin.group2">
 			</action>
 			<action
-         class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+         class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
          disabledIcon="icons/debug/single_step_inactive.gif"
          icon="icons/debug/single_step.gif"
-         id="eu.hatsproject.absplugin.debug.perspective.ExecuteSingleStep"
+         id="org.abs-models.abs.plugin.debug.perspective.ExecuteSingleStep"
          label="Execute single step"
          state="true"
          style="push"
-         toolbarPath="eu.hatsproject.absplugin.group2"
+         toolbarPath="org.abs-models.abs.plugin.group2"
          tooltip="Execute single step">
 			</action>
    <action
-         class="eu.hatsproject.absplugin.debug.perspective.SchedulerChoiceDelegate"
+         class="org.absmodels.abs.plugin.debug.perspective.SchedulerChoiceDelegate"
          icon="icons/debug/debug_mode.gif"
-         id="eu.hatsproject.absplugin.debug.perspective.SelectScheduler"
+         id="org.abs-models.abs.plugin.debug.perspective.SelectScheduler"
          label="Scheduler"
          state="false"
          style="pulldown"
-         toolbarPath="eu.hatsproject.absplugin.debug.someMenu/schedulerChoice"
+         toolbarPath="org.abs-models.abs.plugin.debug.someMenu/schedulerChoice"
          tooltip="Choose Scheduler">
    </action>
    <action
-         class="eu.hatsproject.absplugin.debug.perspective.DebugActionDelegate"
+         class="org.absmodels.abs.plugin.debug.perspective.DebugActionDelegate"
          disabledIcon="icons/debug/save_history_inactive.gif"
          icon="icons/debug/save_history.gif"
-         id="eu.hatsproject.absplugin.debug.perspective.SaveHistory"
+         id="org.abs-models.abs.plugin.debug.perspective.SaveHistory"
          label="Save history"
          state="true"
          style="push"
-         toolbarPath="eu.hatsproject.absplugin.debug.someMenu/schedulerChoice"
+         toolbarPath="org.abs-models.abs.plugin.debug.someMenu/schedulerChoice"
          tooltip="save history">
    </action>
 		</viewContribution>
@@ -1375,8 +1375,8 @@
           point="org.eclipse.ui.ide.projectNatureImages">
        <image
              icon="icons/abs_project_logo.gif"
-             id="eu.hatsproject.absplugin.builder.AbsNatureImage"
-             natureId="eu.hatsproject.absplugin.ABSNature">
+             id="org.abs-models.abs.plugin.builder.AbsNatureImage"
+             natureId="org.abs-models.abs.plugin.ABSNature">
        </image>
     </extension>
     <extension
@@ -1402,34 +1402,34 @@
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </iterate>
                    </with>
                 </visibleWhen>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddalllocations"
+                      commandId="org.abs-models.abs.plugin.projectaddalllocations"
                       label="add all"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddclasslocations"
+                      commandId="org.abs-models.abs.plugin.projectaddclasslocations"
                       label="add for classes"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddfieldlocations"
+                      commandId="org.abs-models.abs.plugin.projectaddfieldlocations"
                       label="add for fields"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddfunctionlocations"
+                      commandId="org.abs-models.abs.plugin.projectaddfunctionlocations"
                       label="add for functions"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddinterfacelocations"
+                      commandId="org.abs-models.abs.plugin.projectaddinterfacelocations"
                       label="add for interfaces"
                       style="push">
                 </command>
@@ -1452,34 +1452,34 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </iterate>
                    </with>
                 </visibleWhen>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddalllocations"
+                      commandId="org.abs-models.abs.plugin.fileaddalllocations"
                       label="add all"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddclasslocations"
+                      commandId="org.abs-models.abs.plugin.fileaddclasslocations"
                       label="add for classes"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddfieldlocations"
+                      commandId="org.abs-models.abs.plugin.fileaddfieldlocations"
                       label="add for fields"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddfunctionlocations"
+                      commandId="org.abs-models.abs.plugin.fileaddfunctionlocations"
                       label="add for functions"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddinterfacelocations"
+                      commandId="org.abs-models.abs.plugin.fileaddinterfacelocations"
                       label="add for interfaces"
                       style="push">
                 </command>
@@ -1489,7 +1489,7 @@
        
        <menuContribution
              allPopups="false"
-             locationURI="popup:eu.hatsproject.absplugin.navigator.view">
+             locationURI="popup:org.abs-models.abs.plugin.navigator.view">
           <menu
                 id="absexplorerpopup2"
                 label="ABS">
@@ -1507,34 +1507,34 @@
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </iterate>
                    </with>
                 </visibleWhen>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddalllocations"
+                      commandId="org.abs-models.abs.plugin.projectaddalllocations"
                       label="add all"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddclasslocations"
+                      commandId="org.abs-models.abs.plugin.projectaddclasslocations"
                       label="add for classes"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddfieldlocations"
+                      commandId="org.abs-models.abs.plugin.projectaddfieldlocations"
                       label="add for fields"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddfunctionlocations"
+                      commandId="org.abs-models.abs.plugin.projectaddfunctionlocations"
                       label="add for functions"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.projectaddinterfacelocations"
+                      commandId="org.abs-models.abs.plugin.projectaddinterfacelocations"
                       label="add for interfaces"
                       style="push">
                 </command>
@@ -1557,34 +1557,34 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </iterate>
                    </with>
                 </visibleWhen>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddalllocations"
+                      commandId="org.abs-models.abs.plugin.fileaddalllocations"
                       label="add all"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddclasslocations"
+                      commandId="org.abs-models.abs.plugin.fileaddclasslocations"
                       label="add for classes"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddfieldlocations"
+                      commandId="org.abs-models.abs.plugin.fileaddfieldlocations"
                       label="add for fields"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddfunctionlocations"
+                      commandId="org.abs-models.abs.plugin.fileaddfunctionlocations"
                       label="add for functions"
                       style="push">
                 </command>
                 <command
-                      commandId="eu.hatsproject.absplugin.fileaddinterfacelocations"
+                      commandId="org.abs-models.abs.plugin.fileaddinterfacelocations"
                       label="add for interfaces"
                       style="push">
                 </command>
@@ -1595,62 +1595,62 @@
     <extension
           point="org.eclipse.ui.commands">
        <command
-             defaultHandler="eu.hatsproject.absplugin.ProjectAddLocationHandler"
-             id="eu.hatsproject.absplugin.projectaddalllocations"
+             defaultHandler="org.absmodels.abs.plugin.ProjectAddLocationHandler"
+             id="org.abs-models.abs.plugin.projectaddalllocations"
              name="projectAddAllLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.ProjectAddLocationHandler"
-             id="eu.hatsproject.absplugin.projectaddfieldlocations"
+             defaultHandler="org.absmodels.abs.plugin.ProjectAddLocationHandler"
+             id="org.abs-models.abs.plugin.projectaddfieldlocations"
              name="projectAddFieldLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.ProjectAddLocationHandler"
-             id="eu.hatsproject.absplugin.projectaddfunctionlocations"
+             defaultHandler="org.absmodels.abs.plugin.ProjectAddLocationHandler"
+             id="org.abs-models.abs.plugin.projectaddfunctionlocations"
              name="projectAddFunctionLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.ProjectAddLocationHandler"
-             id="eu.hatsproject.absplugin.projectaddinterfacelocations"
+             defaultHandler="org.absmodels.abs.plugin.ProjectAddLocationHandler"
+             id="org.abs-models.abs.plugin.projectaddinterfacelocations"
              name="projectAddInterfaceLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.ProjectAddLocationHandler"
-             id="eu.hatsproject.absplugin.projectaddclasslocations"
+             defaultHandler="org.absmodels.abs.plugin.ProjectAddLocationHandler"
+             id="org.abs-models.abs.plugin.projectaddclasslocations"
              name="projectAddClassLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.FileAddLocationHandler"
-             id="eu.hatsproject.absplugin.fileaddfieldlocations"
+             defaultHandler="org.absmodels.abs.plugin.FileAddLocationHandler"
+             id="org.abs-models.abs.plugin.fileaddfieldlocations"
              name="fileAddFieldLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.FileAddLocationHandler"
-             id="eu.hatsproject.absplugin.fileaddalllocations"
+             defaultHandler="org.absmodels.abs.plugin.FileAddLocationHandler"
+             id="org.abs-models.abs.plugin.fileaddalllocations"
              name="fileAddAllLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.FileAddLocationHandler"
-             id="eu.hatsproject.absplugin.fileaddfunctionlocations"
+             defaultHandler="org.absmodels.abs.plugin.FileAddLocationHandler"
+             id="org.abs-models.abs.plugin.fileaddfunctionlocations"
              name="fileAddFunctionLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.FileAddLocationHandler"
-             id="eu.hatsproject.absplugin.fileaddinterfacelocations"
+             defaultHandler="org.absmodels.abs.plugin.FileAddLocationHandler"
+             id="org.abs-models.abs.plugin.fileaddinterfacelocations"
              name="fileAddInterfaceLocations">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.FileAddLocationHandler"
-             id="eu.hatsproject.absplugin.fileaddclasslocations"
+             defaultHandler="org.absmodels.abs.plugin.FileAddLocationHandler"
+             id="org.abs-models.abs.plugin.fileaddclasslocations"
              name="fileAddClassLocations">
        </command>
     </extension>
     <extension
           point="org.eclipse.debug.ui.launchShortcuts">
        <shortcut
-             class="eu.hatsproject.absplugin.actions.shortcuts.LaunchMaudeShortcut"
+             class="org.absmodels.abs.plugin.actions.shortcuts.LaunchMaudeShortcut"
              icon="icons/maude_debug2.gif"
-             id="eu.hatsproject.absplugin.maudeShortcut"
+             id="org.abs-models.abs.plugin.maudeShortcut"
              label="ABS Maude Backend"
              modes="run">
           <contextualLaunch>
@@ -1672,14 +1672,14 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                          <adapt
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </or>
@@ -1689,9 +1689,9 @@
           </contextualLaunch>
        </shortcut>
        <shortcut
-             class="eu.hatsproject.absplugin.actions.shortcuts.LaunchJavaShortcut"
+             class="org.absmodels.abs.plugin.actions.shortcuts.LaunchJavaShortcut"
              icon="icons/duke_hats_small.gif"
-             id="eu.hatsproject.absplugin.javaShortcut"
+             id="org.abs-models.abs.plugin.javaShortcut"
              label="ABS Java Backend"
              modes="run">
           <contextualLaunch>
@@ -1713,14 +1713,14 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                          <adapt
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </or>
@@ -1730,9 +1730,9 @@
           </contextualLaunch>
        </shortcut>
        <shortcut
-             class="eu.hatsproject.absplugin.actions.shortcuts.LaunchJavaDebugShortcut"
+             class="org.absmodels.abs.plugin.actions.shortcuts.LaunchJavaDebugShortcut"
              icon="icons/duke_hats_debug_small.gif"
-             id="eu.hatsproject.absplugin.javaDebugShortcut"
+             id="org.abs-models.abs.plugin.javaDebugShortcut"
              label="ABS Java Backend (Debug)"        
              modes="run">
           <contextualLaunch>
@@ -1754,14 +1754,14 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                          <adapt
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </or>
@@ -1771,9 +1771,9 @@
           </contextualLaunch>
        </shortcut>
        <shortcut
-             class="eu.hatsproject.absplugin.actions.shortcuts.LaunchJavaUmlShortcut"
+             class="org.absmodels.abs.plugin.actions.shortcuts.LaunchJavaUmlShortcut"
              icon="icons/duke_hats_uml_small2.gif"
-             id="eu.hatsproject.absplugin.javaUmlShortcut"
+             id="org.abs-models.abs.plugin.javaUmlShortcut"
              label="ABS Java Backend (Debug with Sequence Diagram)"
              modes="run">
           <contextualLaunch>
@@ -1795,14 +1795,14 @@
                             </test>
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                          <adapt
                                type="org.eclipse.core.resources.IProject">
                             <test
                                   property="org.eclipse.core.resources.projectNature"
-                                  value="eu.hatsproject.absplugin.ABSNature">
+                                  value="org.abs-models.abs.plugin.ABSNature">
                             </test>
                          </adapt>
                       </or>
@@ -1815,29 +1815,29 @@
     <extension
           point="org.eclipse.core.expressions.propertyTesters">
        <propertyTester
-             class="eu.hatsproject.absplugin.testexpressions.navigator.ModulePathTester"
-             id="eu.hatsproject.absplugin.ModulePathTester"
-             namespace="eu.hatsproject.absplugin"
+             class="org.absmodels.abs.plugin.testexpressions.navigator.ModulePathTester"
+             id="org.abs-models.abs.plugin.ModulePathTester"
+             namespace="org.abs-models.abs.plugin"
              properties="hasModule, hasModuleWithDecls"
-             type="eu.hatsproject.absplugin.navigator.ModulePath">
+             type="org.absmodels.abs.plugin.navigator.ModulePath">
        </propertyTester>
        <propertyTester
-             class="eu.hatsproject.absplugin.testexpressions.navigator.InternalASTNodeTester"
-             id="eu.hatsproject.absplugin.InternalASTNodeTester"
-             namespace="eu.hatsproject.absplugin"
+             class="org.absmodels.abs.plugin.testexpressions.navigator.InternalASTNodeTester"
+             id="org.abs-models.abs.plugin.InternalASTNodeTester"
+             namespace="org.abs-models.abs.plugin"
              properties="isModuleNode"
-             type="eu.hatsproject.absplugin.util.InternalASTNode">
+             type="org.absmodels.abs.plugin.util.InternalASTNode">
        </propertyTester>
     </extension>
     <extension
           point="org.eclipse.ui.bindings">
        <key
-             commandId="eu.hatsproject.absplugin.debugStepCommand"
+             commandId="org.abs-models.abs.plugin.debugStepCommand"
              schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
              sequence="F6">
        </key>
        <key
-             commandId="eu.hatsproject.absplugin.debugResumeCommand"
+             commandId="org.abs-models.abs.plugin.debugResumeCommand"
              schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
              sequence="F8">
        </key>
@@ -1845,20 +1845,20 @@
     <extension
           point="org.eclipse.ui.contexts">
        <context
-             id="eu.hatsproject.absplugin.debugViewContext"
+             id="org.abs-models.abs.plugin.debugViewContext"
              name="debug view context">
        </context>
     </extension>
     <extension
           point="org.eclipse.ui.commands">
        <command
-             defaultHandler="eu.hatsproject.absplugin.debug.perspective.commands.StepOverCommand"
-             id="eu.hatsproject.absplugin.debugStepCommand"
+             defaultHandler="org.absmodels.abs.plugin.debug.perspective.commands.StepOverCommand"
+             id="org.abs-models.abs.plugin.debugStepCommand"
              name="command for step">
        </command>
        <command
-             defaultHandler="eu.hatsproject.absplugin.debug.perspective.commands.ResumeCommandHandler"
-             id="eu.hatsproject.absplugin.debugResumeCommand"
+             defaultHandler="org.absmodels.abs.plugin.debug.perspective.commands.ResumeCommandHandler"
+             id="org.abs-models.abs.plugin.debugResumeCommand"
              name="command for resume">
        </command>
     </extension>
@@ -1868,19 +1868,19 @@
     <extension
 	  point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
 	  <target
-	    id="eu.hatsproject.absplugin.absCode"
+	    id="org.abs-models.abs.plugin.absCode"
 	    name="Abs Editor">
-	    <context type="eu.hatsproject.absplugin.editor.ABSEditor"/>
+	    <context type="org.absmodels.abs.plugin.editor.ABSEditor"/>
 	  </target>
 	</extension>
     
     <extension
   		point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectors">
   	<hyperlinkDetector
-         class="eu.hatsproject.absplugin.editor.AbsHyperlinkDetector"
-         id="eu.hatsproject.absplugin.editor.AbsHyperlinkDetector"
+         class="org.absmodels.abs.plugin.editor.AbsHyperlinkDetector"
+         id="org.abs-models.abs.plugin.editor.AbsHyperlinkDetector"
          name="Abs Hyperlink Detector"
-         targetId="eu.hatsproject.absplugin.absCode">
+         targetId="org.abs-models.abs.plugin.absCode">
 	  </hyperlinkDetector>
 	</extension>
     

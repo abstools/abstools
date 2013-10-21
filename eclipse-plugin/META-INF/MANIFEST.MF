@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ABS Eclipse Integration
-Bundle-SymbolicName: eu.hatsproject.absplugin;singleton:=true
+Bundle-SymbolicName: org.abs-models.abs.plugin;singleton:=true
 Bundle-Version: 0.0.0.qualifier
-Bundle-Activator: eu.hatsproject.absplugin.Activator
+Bundle-Activator: org.absmodels.abs.plugin.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources;bundle-version="3.6.0",
@@ -19,18 +19,18 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.navigator.resources,
  org.eclipse.core.filesystem,
  org.eclipse.core.expressions,
- eu.hatsproject.sdedit;bundle-version="0.0.0",
- eu.hatsproject.abs.compiler;bundle-version="0.0.0",
+ org.abs-models.sdedit;bundle-version="0.0.0",
+ org.abs-models.abs.compiler;bundle-version="0.0.0",
  org.eclipse.ui.views
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  lib/mockito-all-1.8.5.jar
-Bundle-Vendor: HATS Project
-Export-Package: eu.hatsproject.absplugin.actions,
- eu.hatsproject.absplugin.builder,
- eu.hatsproject.absplugin.costabslink,
- eu.hatsproject.absplugin.editor,
- eu.hatsproject.absplugin.util
+Bundle-Vendor: ABS-Models
+Export-Package: org.absmodels.abs.plugin.actions,
+ org.absmodels.abs.plugin.builder,
+ org.absmodels.abs.plugin.costabslink,
+ org.absmodels.abs.plugin.editor,
+ org.absmodels.abs.plugin.util
 Import-Package: org.eclipse.jdt.debug.ui.launchConfigurations,
  org.eclipse.jdt.launching

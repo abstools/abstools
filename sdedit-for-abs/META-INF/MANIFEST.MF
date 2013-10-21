@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ABS UML Sequence Diagram Editor
-Bundle-SymbolicName: eu.hatsproject.sdedit;singleton:=true
+Bundle-SymbolicName: org.abs-models.sdedit;singleton:=true
 Bundle-Version: 0.0.0.qualifier
 Bundle-ClassPath: .,
  lib/commons-cli-1.1.jar,
@@ -19,7 +19,7 @@ Bundle-ClassPath: .,
  lib/freehep-xml-2.1.1.jar,
  lib/openide-lookup-1.9-patched-1.0.jar,
  lib/freehep-export-2.1.1.jar
-Bundle-Vendor: HATS Project
+Bundle-Vendor: ABS-Models
 Export-Package: net.sf.sdedit
 Eclipse-BundleShape: dir
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

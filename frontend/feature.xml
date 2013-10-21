@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="eu.hatsproject.abs.compiler"
+      id="org.abs-models.abs.compiler"
       label="ABS Compiler"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project">
+      provider-name="ABS-Models">
 
-   <description url="http://www.hats-project.eu">
+   <description url="http://www.abs-models.org">
       ABS Frontend
    </description>
 
@@ -18,7 +18,7 @@
    </requires>
 
    <plugin
-         id="eu.hatsproject.abs.compiler"
+         id="org.abs-models.abs.compiler"
          download-size="0"
          install-size="0"
          version="0.0.0"/>

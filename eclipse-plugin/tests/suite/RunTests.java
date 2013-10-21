@@ -6,18 +6,18 @@ package suite;
 
 
 
+import org.absmodels.abs.plugin.console.ConsoleManagerTest;
+import org.absmodels.abs.plugin.editor.outline.ABSContentOutlineUtilsTest;
+import org.absmodels.abs.plugin.internal.ModelBuilderTest;
+import org.absmodels.abs.plugin.navigator.ModulePathTest;
+import org.absmodels.abs.plugin.navigator.NavigatorUtilsTests;
+import org.absmodels.abs.plugin.util.InternalASTNodeTests;
+import org.absmodels.abs.plugin.util.UtilityFunctionsTest;
+import org.absmodels.abs.plugin.wizards.WizardUtilsTests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import eu.hatsproject.absplugin.console.ConsoleManagerTest;
-import eu.hatsproject.absplugin.editor.outline.ABSContentOutlineUtilsTest;
-import eu.hatsproject.absplugin.internal.ModelBuilderTest;
-import eu.hatsproject.absplugin.navigator.ModulePathTest;
-import eu.hatsproject.absplugin.navigator.NavigatorUtilsTests;
-import eu.hatsproject.absplugin.util.InternalASTNodeTests;
-import eu.hatsproject.absplugin.util.UtilityFunctionsTest;
-import eu.hatsproject.absplugin.wizards.WizardUtilsTests;
 
 
 

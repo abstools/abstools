@@ -1,0 +1,16 @@
+import "${WORKSPACE}/org.abs-models.releng/buckminster/eclipse.cquery"
+importtargetdefinition -A "${WORKSPACE}/org.abs-models.releng/ABS.target"
+import "${WORKSPACE}/org.abs-models.releng/buckminster/abs.cquery"
+import "${WORKSPACE}/org.abs-models.releng/buckminster/costabs.cquery"
+import "${WORKSPACE}/org.abs-models.releng/buckminster/apet.cquery"
+build
+junit -l org.abs-models.abs.plugin.tests/JARTest.launch -o out/junit-jartest.xml --stdout --stderr
+emma -l org.abs-models.abs.plugin/junit-SchedulingTest.launch -o out/junit-SchedulingTest.xml -m --stdout --stderr --xml out/coverage-SchedulingTest.xml
+emma -l org.abs-models.abs.compiler/junit-frontend.launch -o out/junit-frontend.xml -m --stdout --stderr --xml out/coverage-frontend.xml
+emma -l org.abs-models.abs.compiler/junit-deltas.launch -o out/junit-deltas.xml -m --stdout --stderr --xml out/coverage-deltas.xml
+emma -l org.abs-models.abs.plugin/junit-plugin.launch -o out/junit-plugin.xml -m --stdout --stderr --xml out/coverage-plugin.xml
+perform -Dqualifier.replacement.*=generator:lastRevision org.abs-models.abs.compiler:eclipse.feature#site.p2
+perform -Dqualifier.replacement.*=generator:lastRevision org.abs-models.sdedit:eclipse.feature#site.p2
+perform -Dqualifier.replacement.*=generator:lastRevision org.abs-models.absplugin:eclipse.feature#site.p2
+perform -Dqualifier.replacement.*=generator:lastRevision org.abs-models.costabs:eclipse.feature#site.p2
+perform -Dqualifier.replacement.*=generator:lastRevision org.abs-models.apet:eclipse.feature#site.p2

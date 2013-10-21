@@ -16,7 +16,7 @@
     <property name="doc.dir" location="${basedir}/doc" />
     <property name="doc.api.dir" location="${doc.dir}/api" />
 
-  <property name="plugin.name" value="eu.hatsproject.absplugin" />
+  <property name="plugin.name" value="org.abs-models.abs.plugin" />
   <property name="frontend.version" value="1.0.0" />
 
   <taskdef name="svn" classname="org.tigris.subversion.svnant.SvnTask">
@@ -168,8 +168,8 @@
       <attribute name="Bundle-Version" value="${plugin.version}"/>
     </manifest>
     <replaceregexp file="${basedir}/${plugin.name}_${plugin.version}/META-INF/MANIFEST.MF"
-                   match="eu.hatsproject.abs.compiler;bundle-version=\&quot;(.*)\&quot;"
-                   replace="eu.hatsproject.abs.compiler;bundle-version=&quot;${frontend.version}&quot;"
+                   match="org.abs-models.abs.compiler;bundle-version=\&quot;(.*)\&quot;"
+                   replace="org.abs-models.abs.compiler;bundle-version=&quot;${frontend.version}&quot;"
         />
     <zip destfile="${dist.dir}/plugins/${plugin.name}_${plugin.version}.jar" basedir="${basedir}/${plugin.name}_${plugin.version}" filesonly="true" whenempty="skip" update="false">
       <exclude name="feature.xml" />

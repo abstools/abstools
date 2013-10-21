@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ABS Compiler
-Bundle-SymbolicName: eu.hatsproject.abs.compiler;singleton:=true
+Bundle-SymbolicName: org.abs-models.abs.compiler;singleton:=true
 Bundle-Version: 0.0.0.qualifier
-Bundle-Vendor: HATS Project
+Bundle-Vendor: ABS-Models
 Bundle-ClassPath: .,
  bin,
  lib/apfloat.jar,
@@ -84,6 +84,4 @@ Export-Package: .,
  deadlock.constraints.substitution,
  deadlock.constraints.term
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: org.eclipse.jdt.core,
- org.sat4j.core,
- org.sat4j.pb
+Require-Bundle: org.eclipse.jdt.core
