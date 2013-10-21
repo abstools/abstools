@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="eu.hatsproject.costabs"
+      id="org.abs-models.costabs"
       label="COSTABS Eclipse Integration"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project"
+      provider-name="ABS-Models"
       os="linux">
 
-   <description url="http://hats-project.eu">
+   <description url="http://www.abs-models.org">
       This feature adds the Costabs plugin.
    </description>
 
@@ -22,11 +22,11 @@
       <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+      <import plugin="org.abs-models.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
    </requires>
 
    <plugin
-         id="eu.hatsproject.costabs"
+         id="org.abs-models.costabs"
          download-size="0"
          install-size="0"
          version="0.0.0"/>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="eu.hatsproject.apet"
+      id="org.abs-models.apet"
       label="Apet Eclipse Integration"
       version="0.0.0.VERSION_STRING"
-      provider-name="HATS Project"
+      provider-name="ABS-Models"
       os="linux">
 
-   <description url="http://hats-project.eu">
+   <description url="http://www.abs-models.org">
       This feature adds the aPET plugin.
    </description>
 
@@ -24,12 +24,12 @@
       <import plugin="org.eclipse.ui.ide" version="3.5" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.views" version="3.5.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui.editors" version="3.6.1" match="greaterOrEqual"/>
-      <import plugin="eu.hatsproject.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
-      <import plugin="eu.hatsproject.absplugin"/>
+      <import plugin="org.abs-models.abs.compiler" version="0.0.0.FRONTEND_VERSION" match="greaterOrEqual"/>
+      <import plugin="org.abs-models.abs.plugin"/>
    </requires>
 
    <plugin
-         id="eu.hatsproject.apet"
+         id="org.abs-models.apet"
          download-size="0"
          install-size="0"
          version="0.0.0"/>
