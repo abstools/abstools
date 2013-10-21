@@ -16,7 +16,7 @@ import costabs.console.CostabsShellCommand;
 public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
-	public static final String PLUGIN_ID = "eu.hatsproject.costabs";
+	public static final String PLUGIN_ID = "org.abs-models.costabs";
 
 	// The shared instance
 	private static Activator plugin;

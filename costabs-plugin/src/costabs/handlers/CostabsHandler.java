@@ -28,7 +28,7 @@ import costabs.dialogs.OptionsDialog;
 import costabs.markers.UBMarker;
 import costabs.structures.ResultTracker;
 import costabs.utils.SourceUtils;
-import eu.hatsproject.absplugin.costabslink.CostabsLink;
+import org.absmodels.abs.plugin.costabslink.CostabsLink;
 
 
 /**
