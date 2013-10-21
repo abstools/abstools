@@ -10,7 +10,7 @@
   <rm:locator pattern="org.abs-models.sda" searchPathRef="sda"/>
   <rm:locator pattern="org.eclipse.swtbot.*" searchPathRef="SWTBot"/>
   <rm:locator pattern="org.hamcrest" searchPathRef="SWTBot"/>
-  <rm:searchPath name="ABSFrontend">
+  <rm:searchPath name="frontend">
     <rm:provider componentTypes="jar,buckminster,osgi.bundle,eclipse.feature" readerType="local" source="true" mutable="true">
       <rm:uri format="file:///{0}/frontend/">
         <bc:propertyRef key="workspace.root"/>
