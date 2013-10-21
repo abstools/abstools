@@ -29,7 +29,7 @@ import apet.preferences.ApetPreferences;
 import apet.testCases.ApetTestSuite;
 import apet.testCases.XMLParser;
 import apet.utils.SourceUtils;
-import eu.hatsproject.absplugin.costabslink.CostabsLink;
+import org.absmodels.abs.plugin.costabslink.CostabsLink;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
