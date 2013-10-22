@@ -7,12 +7,15 @@ package abs.backend.tests;
 import static org.junit.Assert.*;
 
 import java.io.*;
+
 import org.junit.*;
 
+import abs.backend.erlang.ErlApp;
 import abs.frontend.typesystem.CaseStudyTypeChecking;
 
 public class OtherCodeGenTests extends CaseStudyTypeChecking {
 
+    /* TODO: use random dir */
     public OtherCodeGenTests(String input) {
         super(input);
     }
@@ -45,4 +48,16 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
         m.generateProlog(new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile))), null);
     }
 
+    @Test
+    public void testErlang() throws Exception {
+        super.test();
+        File tmpD = new File(System.getProperty("java.io.tmpdir"));
+        assertTrue(tmpD.exists() && tmpD.canWrite());
+        File tmp = new File(tmpD,"tmp_erl");
+        tmp.mkdir();
+        tmp.deleteOnExit();
+        ErlApp ea = new ErlApp(tmp);
+        m.generateErlangCode(ea);
+        ea.close();
+    }
 }
