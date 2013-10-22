@@ -4,8 +4,9 @@ ABS Tools
 Inside this repository we develop the core tools of the ABS modelling language. 
 The layout follows the usual svn convention with trunk, branches and tags.
 
-This project is organised via "trac" which provides a bug tracker, wiki and more:
-          https://trac.hats-project.eu/projects/ABSTools/wiki
+This project is organised via "redmine" which provides a bug tracker, wiki and more:
+	https://envisage.ifi.uio.no:8080/redmine/projects/abstools
+Further information can als be found on http://abs-models.org/
 
 
 Folders
