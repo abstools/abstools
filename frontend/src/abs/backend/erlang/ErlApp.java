@@ -18,7 +18,7 @@ public class ErlApp {
 
     public File destDir;
 
-    public Map<String, ErlangCodeStream> funMod = new HashMap<>();
+    public Map<String, ErlangCodeStream> funMod = new HashMap<String, ErlangCodeStream>();
 
     public ErlApp(File destDir) throws IOException {
         super();

@@ -105,7 +105,7 @@ public class Vars extends LinkedHashMap<String, Var> {
     public String[] merge(Vars var1, Vars var2) {
         StringBuilder left = new StringBuilder(",");
         StringBuilder right = new StringBuilder(",");
-        Set<String> used = new HashSet<>();
+        Set<String> used = new HashSet<String>();
         for (java.util.Map.Entry<String, Var> a : this.entrySet()) {
             if (a.getValue().isSet()) {
                 used.add(a.getKey());
