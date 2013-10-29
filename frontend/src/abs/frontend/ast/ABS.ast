@@ -224,6 +224,7 @@ SyncCall: Call;
 AsyncCall: Call;
 AwaitAsyncCall: Call;
 GetExp: EffExp ::= PureExp;
+SafegetExp: EffExp ::= PureExp;
 OriginalCall: EffExp ::= Param:PureExp*;
 TargetedOriginalCall: OriginalCall ::= Target:DeltaID Param:PureExp*;
 

@@ -719,6 +719,11 @@ aspect GenerateErlang {
     getPureExp().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
+  public void SafegetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
+  { ecs.print("async_call_task:safeget(");
+    getPureExp().generateErlangCode(ecs,vars);
+    ecs.print(")");
+  }
   
   @Override
   public void WhileStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {

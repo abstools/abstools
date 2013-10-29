@@ -110,7 +110,11 @@ public class Keywords {
         "true",
         "false",
         "is",
-        "end"};
+        "end",
+        
+        
+        "safeget"
+        };
 
     
     public static String[] getKeywords() {

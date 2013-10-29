@@ -40,6 +40,8 @@ aspect Typing {
     syn Type Model.getBoolType() = getStdDataType("Bool");
     syn Type Model.getStringType() = getStdDataType("String");
     syn Type Model.getFutType(Type typeArg) = ((DataTypeType)getStdDataType("Fut")).withTypeArgs(typeArg);
+    syn Type Model.getResultType(Type typeArg) = ((DataTypeType)getStdDataType("Result")).withTypeArgs(typeArg);
+    
 
 //    eq ClassDecl.getMethod().getUnitType() = getUnitType();
 //    inh Type MethodImpl.getUnitType();
@@ -140,6 +142,15 @@ aspect Typing {
    	 if (!dt.hasTypeArgs())
    		 return UnknownType.INSTANCE;
    	 return dt.getTypeArg(0);
+    }
+    eq SafegetExp.getType() { 
+   	 Type t = getPureExp().getType();
+   	 if (! (t instanceof DataTypeType))
+   		 return UnknownType.INSTANCE;
+   	 DataTypeType dt = (DataTypeType) t;
+   	 if (!dt.hasTypeArgs())
+   		 return UnknownType.INSTANCE;
+   	 return getModel().getResultType(dt.getTypeArg(0));
     }
     eq NewExp.getType() {
         Decl d = lookup(new KindedName(Kind.CLASS,getClassName()));
