@@ -170,6 +170,9 @@ InitBlock: Block; // Initializer block in a class - can be handled specially dur
 MainBlock: Block; // Active behavior of the model
 RewriteBlock: Block; // Rewritten, only used in intermediate construction in GenerateCoreAbs.jadd.
 
+AbortStmt: Stmt ::= Reason:StringLiteral;
+DieStmt: Stmt ::= Reason:StringLiteral;
+
 
 abstract Guard;
 ClaimGuard: Guard ::= Var:PureExp;

@@ -874,6 +874,12 @@ aspect TypeChecker {
             l.add(new TypeError(this, ErrorMessage.EXPECTED_TYPE, t, getType()));
         }
     }
+    //ASPECT
+    public void AbortStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+
+    public void DieStmt.typeCheck(SemanticErrorList e) { /* nothing to check */ }
+
+
 }
 
 aspect TypeCheckProductline {

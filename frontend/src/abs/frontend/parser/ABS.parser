@@ -1114,9 +1114,11 @@ Stmt stmt_without_annotations =
 	|  var_decl.vd  {: return new VarDeclStmt(new List(),vd) ; :}
     |  ASSERT data_exp.e  {: return new AssertStmt(new List(), e) ; :}
 	|  eff_exp.e    {: return new ExpressionStmt(new List(), e) ; :}
-	| REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :} 
-	| REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :} 
-	| SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
+	|  REBIND exp.obj COLON IDENTIFIER.field ASSIGN exp.e  {: return new RebindStmt(new List(), obj,field,e);                /* Component */ :}
+	|  REBIND IDENTIFIER.field ASSIGN exp.e                {: return new RebindStmt(new List(), new VarUse("this"),field,e); /* Component */ :}
+	|  SUBLOC pure_exp.sub IN pure_exp.father              {: return new MoveStmt(new List(), sub,father);                   /* Component */ :}
+	|  ABORT  string_literal.s  {: return new AbortStmt(new List(), s) ; :}
+	|  DIE    string_literal.s  {: return new DieStmt  (new List(), s) ; :}
 	;
 
 Stmt compound_stmt =

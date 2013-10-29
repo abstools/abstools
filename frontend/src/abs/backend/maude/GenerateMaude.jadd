@@ -806,6 +806,14 @@ aspect GenerateMaude {
         }
         stream.print("} ");
     }
+
+    public void AbortStmt.generateMaude(PrintStream stream) {
+      throw new RuntimeException("Method not implemented");
+    }
+
+    public void DieStmt.generateMaude(PrintStream stream) {
+      throw new RuntimeException("Method not implemented");
+    }
     
     public void ExpressionStmt.generateMaude(PrintStream stream) {
         getExp().generateMaudeAsStatement(stream, "_", getAnnotations());

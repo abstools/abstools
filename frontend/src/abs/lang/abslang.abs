@@ -9,7 +9,7 @@ data Int;                       // builtin
 data Rat;                       // builtin
 data Bool = True | False;       // builtin
 data Fut<A>;                    // builtin
-data Result<A> = Value(A val)|Error;
+data Result<A> = Value(A val)|Error(String s);
 data Location;                  // (For Component model) //
 
 def Bool and(Bool a, Bool b) = a && b;
