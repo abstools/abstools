@@ -13,6 +13,7 @@ import abs.backend.erlang.ErlUtil.Mask;
 import org.apache.commons.io.output.WriterOutputStream;
 import java.nio.charset.Charset;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 aspect GenerateErlang {
 
   public void Model.generateErlangCode(ErlApp ea) throws IOException{
@@ -263,13 +264,13 @@ aspect GenerateErlang {
     getElse().generateErlangCode(buffer,right);
     else 
       buffer.print("ok");
-    String[] mergeLines=vars.merge(left,right);
-    ecs.print(mergeLines[0]);
+    java.util.List<String> mergeLines = vars.merge(Lists.newArrayList(left,right));
+    ecs.print(mergeLines.get(0));
     ecs.println(";");
     ecs.print("false -> ");
     buffer.close();
     ecs.print(sw);
-    ecs.println(mergeLines[1]);
+    ecs.println(mergeLines.get(1));
     ecs.decIndent();
     ecs.print("end");  
   }
@@ -406,6 +407,48 @@ aspect GenerateErlang {
   }
   
   //Case
+  public void CaseStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+    Vars safe = vars.pass();
+    java.util.List<Vars> branches_vars = new LinkedList<Vars>();
+    java.util.List<String> branches = new LinkedList<String>();
+    for (CaseBranchStmt b : getBranchs()) {
+        Vars v = vars.pass();
+        StringWriter sw = new StringWriter();
+        ErlangCodeStream buffer = new ErlangCodeStream(new WriterOutputStream(sw, Charset.forName("UTF-8")),
+                ecs.getIndent());
+        b.getLeft().generateErlangCode(ecs, buffer, v);
+        buffer.println("->");
+        buffer.incIndent();
+        buffer.incIndent();
+        buffer.incIndent();
+        b.getRight().generateErlangCode(buffer, v);
+        buffer.decIndent();
+        buffer.decIndent();
+        buffer.decIndent();
+        buffer.close();
+        branches_vars.add(v);
+        branches.add(sw.toString());
+    }
+    ecs.print("case ");
+    getExpr().generateErlangCode(ecs, safe);
+    ecs.println(" of");
+    ecs.incIndent();
+    java.util.List<String> mergeLines = vars.merge(branches_vars);
+    boolean first = true;
+    Iterator<String> ib = branches.iterator();
+    Iterator<String> im = mergeLines.iterator();
+    while (ib.hasNext()) {
+        if (!first)
+            ecs.println(";");
+        first = false;
+        ecs.print(ib.next());
+        ecs.print(im.next());
+    }
+    ecs.println();
+    ecs.decIndent();
+    ecs.print("end");
+}
+  
   @Override
   public void CaseExp.generateErlangCode(ErlangCodeStream external,Vars vars)
   {
