@@ -241,6 +241,15 @@ aspect VarResolution {
         return lookupVarOrFieldName(name, fieldOnly);
     }
 
+    eq CaseStmt.getBranch(int i).lookupVarOrFieldName(String name, boolean fieldOnly) {
+        if (!fieldOnly) {
+            VarOrFieldDecl d = getBranch(i).getLeft().locallookupVarOrFieldName(name,fieldOnly);
+            if (d != null)
+                return d;
+        }
+        return lookupVarOrFieldName(name, fieldOnly);
+    }
+
     eq LetExp.getExp().lookupVarOrFieldName(String name, boolean fieldOnly) {
         if (!fieldOnly && getVar().getName().equals(name))
             return getVar();

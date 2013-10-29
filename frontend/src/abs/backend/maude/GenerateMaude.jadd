@@ -787,6 +787,10 @@ aspect GenerateMaude {
         stream.print("fi ");
     }
 
+    public void CaseStmt.generateMaude(PrintStream stream) {
+        throw new RuntimeException("Method not implemented");
+    }
+    
     public void ExpressionStmt.generateMaude(PrintStream stream) {
         getExp().generateMaudeAsStatement(stream, "_", getAnnotations());
     }

@@ -595,7 +595,24 @@ aspect TypeChecker {
         getCondition().assertHasType(e,getModel().getBoolType());
         getBody().typeCheck(e);
     }
+    
+    public void CaseStmt.typeCheck(SemanticErrorList e) {
+        getExpr().typeCheck(e); 
+        Type et = getExpr().getType();
+        if (!et.isDataType()) {
+           e.add(new TypeError(getExpr(),ErrorMessage.CASE_NO_DATATYPE,et));
+           return;
+        }
+        Type t = getType();
+        for (CaseBranchStmt b : getBranchs()) {
+          b.typeCheck(e,(DataTypeType) et);      
+        }
+    } 
 
+    public void CaseBranchStmt.typeCheck(SemanticErrorList e, DataTypeType t) {
+        getLeft().typeCheck(e,t);
+        getRight().typeCheck(e);
+    }       
     public void SkipStmt.typeCheck(SemanticErrorList e) { 
     /* nothing to check */ }
 
