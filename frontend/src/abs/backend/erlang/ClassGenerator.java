@@ -89,14 +89,14 @@ public class ClassGenerator {
     }
 
     private void generateDataAccess() {
-        ErlUtil.functionHeader(ecs, "set", Mask.none, generatorClassMatcher(), "Var", "Val");
-        ecs.println("Ref!{O,Var,Val,self()},");
-        ecs.println("receive {reply,O} -> ok end.");
+        ErlUtil.functionHeader(ecs, "set", Mask.none,
+                String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{tracker=Tracker}}", modName), "Var", "Val");
+        ecs.println("object_tracker:dirty(Tracker,O),");
+        ecs.println("gen_fsm:send_event(Ref,{O,set,Var,Val}).");
         ecs.decIndent();
         ecs.println();
         ErlUtil.functionHeader(ecs, "get", Mask.none, generatorClassMatcher(), "Var");
-        ecs.println("Ref!{O,Var,self()},");
-        ecs.println("receive {reply,O,Val} -> Val end.");
+        ecs.println("gen_fsm:sync_send_event(Ref,{O,get,Var}).");
         ecs.decIndent();
         ecs.println();
         ecs.print("-record(state,{");
@@ -120,9 +120,9 @@ public class ClassGenerator {
                     ecs.decIndent();
                 }
                 first = false;
-                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none,
-                        String.format("S=#state{%s=G}", f.getName()), f.getName());
-                ecs.print("{S,G}");
+                ErlUtil.functionHeader(ecs, "get_val_internal", Mask.none, String.format("#state{%s=G}", f.getName()),
+                        f.getName());
+                ecs.print("G");
             }
             ecs.println(".");
             ecs.decIndent();

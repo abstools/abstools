@@ -1,35 +1,37 @@
 -module(cog).
 -export([start/0,add/3,add_and_notify/3,new_state/3]).
-
+-export([init/1]).
 -include_lib("log.hrl").
--record(state,{tasks,running=false,polling=[]}).
+-include_lib("abs_types.hrl").
+-record(state,{tasks,running=false,polling=[],tracker}).
 -record(task,{ref,state=waiting}).
 
 
 start()->
-    spawn(fun init/0).
+    {ok,T}=object_tracker:start_link(),
+    #cog{ref=spawn(cog,init, [T]),tracker=T}.
 
-add(Cog,Task,Args)->
+add(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),false},
     receive 
         {started,Task,Ref}->
             Ref
     end.
 
-add_and_notify(Cog,Task,Args)->
+add_and_notify(#cog{ref=Cog},Task,Args)->
     Cog!{newT,Task,Args,self(),true},
     receive 
         {started,Task,Ref}->
             Ref
     end.
 
-new_state(Cog,TaskRef,State)->
+new_state(#cog{ref=Cog},TaskRef,State)->
 	Cog!{newState,TaskRef,State}.
 
-init() ->
+init(Tracker) ->
     ?DEBUG({new}),
 	eventstream:event({cog,self(),active}),
-    loop(#state{tasks=gb_trees:empty()}).
+    loop(#state{tasks=gb_trees:empty(),tracker=Tracker}).
 loop(S=#state{running=non_found})->
 	eventstream:event({cog,self(),idle}),
     New_State=
@@ -66,8 +68,8 @@ loop(S=#state{running=true})->
             end,
 	loop(New_State).
 
-initTask(S=#state{tasks=T},Task,Args,Sender,Notify)->
-    Ref=task:start(Task,Args),
+initTask(S=#state{tasks=T,tracker=Tracker},Task,Args,Sender,Notify)->
+    Ref=task:start(#cog{ref=self(),tracker=Tracker},Task,Args),
     ?DEBUG({new_task,Ref,Task,Args}),
     case Notify of true -> task:notifyEnd(Ref,Sender);false->ok end,
     Sender!{started,Task,Ref},

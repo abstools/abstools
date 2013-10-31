@@ -1,1 +1,2 @@
 -record(object,{class,ref,cog}).
+-record(cog,{ref,tracker}).

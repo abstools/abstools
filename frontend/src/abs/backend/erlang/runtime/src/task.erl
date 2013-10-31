@@ -1,9 +1,9 @@
 -module(task).
 
--export([start/2,init/3,join/1,notifyEnd/1,notifyEnd/2]).
--export([ready/1,return_token/2,wait/1,wait_poll/1]).
+-export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
+-export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1]).
 -export([behaviour_info/1]).
-
+-include_lib("abs_types.hrl").
 
 %-record(state,{is,cog,task}).
 
@@ -12,16 +12,16 @@ behaviour_info(callbacks) ->
 behaviour_info(_) ->
     undefined.
 
-start(Task,Args)->
-    spawn(task,init,[Task,self(),Args]).
+start(Cog,Task,Args)->
+    spawn_link(task,init,[Task,Cog,Args]).
 
 init(Task,Cog,Args)->
     InnerState=Task:init(Cog,Args),
 	ready(Cog),
     %loop(#state{cog=Cog,is=InnerState,task=Task}),
     Val=Task:start(InnerState),
-    send_notifications(Val),
-    return_token(Cog,done).
+    return_token(Cog,done),
+	send_notifications(Val).
 
 
 
@@ -55,9 +55,15 @@ ready(Cog)->
 				ok
     end.
 wait(Cog)->
+	commit(Cog),
 	cog:new_state(Cog,self(),waiting).
 wait_poll(Cog)->
+	commit(Cog),
 	cog:new_state(Cog,self(),waiting_poll).
 
-return_token(Cog,State)->
+return_token(C=#cog{ref=Cog},State)->
+	commit(C),
 	Cog!{token,self(),State}.
+
+commit(#cog{tracker=T})->
+    [object:commit(O) ||O<-object_tracker:get_all_dirty(T)].
