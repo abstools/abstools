@@ -5,7 +5,8 @@
 
 
 
-init(Cog,[Main])->
+init(Cog,[Main,Starter])->
+	link(Starter),
     {Main,Cog}.
 
 

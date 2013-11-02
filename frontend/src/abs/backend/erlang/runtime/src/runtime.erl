@@ -43,7 +43,7 @@ start_mod(Arguments)  ->
 	end,
 	eventstream:add_handler(cog_monitor,[self()]),
     Cog=cog:start(),
-    R=cog:add_and_notify(Cog,main_task,[Module]),
+    R=cog:add_and_notify(Cog,main_task,[Module,self()]),
     RetVal=task:join(R),
 	cog_monitor:waitfor(),
 	timer:sleep(1),
