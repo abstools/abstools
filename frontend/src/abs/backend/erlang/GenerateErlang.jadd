@@ -91,7 +91,7 @@ aspect GenerateErlang {
        ecs.println("-include_lib(\"abs_types.hrl\").");
        ecs.println("-export([main/1]).");
        ecs.println();
-       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog");
+       ErlUtil.functionHeader(ecs, "main", Mask.none, "Cog=#cog{ref=CogRef}");
        getBlock().generateErlangCode(ecs, Vars.n());
        ecs.println('.');
        ecs.decIndent();
@@ -664,10 +664,10 @@ aspect GenerateErlang {
       ecs.pf("((fun(Inner)->fun(Param)->Inner(Inner,Param) end end)(fun (Self,%s)->",vars.toParamList());
       ecs.println("receive check -> ");
       ecs.incIndent().pf("case %s of",sw);
-      ecs.incIndent().println("true -> Cog!{self(),true},");
+      ecs.incIndent().println("true -> CogRef!{self(),true},");
       ecs.incIndent().pf("receive wait -> Self(Self,%s);",vars.toParamList());
       ecs.println("token -> ok end;");
-      ecs.decIndent().pf("false -> Cog!{self(),false},  Self(Self,%s)",vars.toParamList());
+      ecs.decIndent().pf("false -> CogRef!{self(),false},  Self(Self,%s)",vars.toParamList());
       ecs.decIndent().decIndent().println("end end end))");
       ecs.format("(%s)",vars.toParamList());
     }
@@ -744,6 +744,14 @@ aspect GenerateErlang {
       ecs.decIndent().pf("Self(Self,%s)  end end))", save.toParamList());
       ecs.decIndent().format("(%s)",va);
   }
+
+  @Override
+  public void AbortStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+    ecs.print("exit(");
+    getReason().generateErlangCode( ecs,  vars);
+    ecs.print(")");
+  }
+  
 
   
 }

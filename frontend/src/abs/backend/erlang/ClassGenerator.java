@@ -85,7 +85,7 @@ public class ClassGenerator {
     }
 
     private String generatorClassMatcher() {
-        return String.format("O=#object{class=%s=C,ref=Ref,cog=Cog}", modName);
+        return String.format("O=#object{class=%s=C,ref=Ref,cog=Cog=#cog{ref=CogRef}}", modName);
     }
 
     private void generateDataAccess() {

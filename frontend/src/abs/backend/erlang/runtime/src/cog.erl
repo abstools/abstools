@@ -30,6 +30,7 @@ new_state(#cog{ref=Cog},TaskRef,State)->
 
 init(Tracker) ->
     ?DEBUG({new}),
+	process_flag(trap_exit, true),
 	eventstream:event({cog,self(),active}),
     loop(#state{tasks=gb_trees:empty(),tracker=Tracker}).
 loop(S=#state{running=non_found})->
@@ -50,13 +51,16 @@ loop(S=#state{running=false})->
 			{newState,TaskRef,State}->
 				set_state(S,TaskRef,State);
             {newT,Task,Args,Sender,Notify}->
-                initTask(S,Task,Args,Sender,Notify)
+                initTask(S,Task,Args,Sender,Notify);
+			{'EXIT',R,Reason} when Reason /= normal ->
+		       ?DEBUG({task_died,R,Reason}),
+               set_state(S#state{running=false},R,abort)
         after 
             0 ->
                   execute(S)
         end,
     loop(New_State);
-loop(S=#state{running=true})->
+loop(S=#state{running=R}) when is_pid(R)->
     New_State=
         receive
 			{newState,TaskRef,State}->
@@ -64,7 +68,10 @@ loop(S=#state{running=true})->
             {newT,Task,Args,Sender,Notify}->
                 initTask(S,Task,Args,Sender,Notify);
         	{token,R,Task_state}->
-                set_state(S#state{running=false},R,Task_state)
+                set_state(S#state{running=false},R,Task_state);
+			{'EXIT',R,Reason} when Reason /= normal ->
+		       ?DEBUG({task_died,R,Reason}),
+			   set_state(S#state{running=false},R,abort)
             end,
 	loop(New_State).
 
@@ -87,9 +94,13 @@ execute(S) ->
             R!token,
             ?DEBUG({schedule,T}),
 			S2=reset_polled(R,Polled,S1),
-  			set_state(S2#state{running=true},R,running)
+  			set_state(S2#state{running=R},R,running)
     end.
 
+set_state(S=#state{tasks=Tasks},TaskRef,done)->
+	S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
+set_state(S=#state{tasks=Tasks},TaskRef,abort)->
+	S#state{tasks=gb_trees:delete(TaskRef,Tasks)};
 set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
 	Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
 	New_state=Old#task{state=State},
