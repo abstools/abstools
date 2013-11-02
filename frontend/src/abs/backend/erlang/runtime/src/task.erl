@@ -1,7 +1,7 @@
 -module(task).
 
 -export([start/3,init/3,join/1,notifyEnd/1,notifyEnd/2]).
--export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1]).
+-export([ready/1,return_token/2,wait/1,wait_poll/1,commit/1,rollback/1]).
 -export([behaviour_info/1]).
 -include_lib("abs_types.hrl").
 
@@ -65,5 +65,8 @@ return_token(C=#cog{ref=Cog},State)->
 	commit(C),
 	Cog!{token,self(),State}.
 
+rollback(#cog{tracker=T})->
+ rpc:pmap({object,rollback},[],object_tracker:get_all_dirty(T)).
+
 commit(#cog{tracker=T})->
-    [object:commit(O) ||O<-object_tracker:get_all_dirty(T)].
+ rpc:pmap({object,commit},[],object_tracker:get_all_dirty(T)).

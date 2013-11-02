@@ -77,6 +77,8 @@ public class ErlApp {
             "src/task.erl",
             "src/async_call_task.erl",
             "src/builtin.erl",
+	    "src/object_tracker.erl",
+	    "src/future.erl",
             "include/abs_types.hrl",
             "include/log.hrl",
             "Emakefile",
@@ -87,8 +89,7 @@ public class ErlApp {
             "lib/console_logger.erl",
             "lib/eventstream.erl",
             "lib/cog_monitor.erl",
-            "lib/getopt.erl",
-	    "src/object_tracker.erl"
+            "lib/getopt.erl"
             );
     private static final String RUNTIME_PATH = "abs/backend/erlang/runtime/";
 

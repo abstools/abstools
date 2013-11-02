@@ -227,15 +227,11 @@ aspect GenerateErlang {
   }
   @Override
   public void AsyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
-    ecs.print("cog:add((fun(#object{cog=T})-> T end(");
+    ecs.print("future:start(");
     getCallee().generateErlangCode(ecs,vars);
-    ecs.print(")),async_call_task,[");
-    getCallee().generateErlangCode(ecs,vars);
-    ecs.format(",m_%s",getMethod());
-    if(getParams().getNumChild() > 0)
-      ecs.print(",");
-    ErlUtil.buildParamsWithOutBrackets(ecs,getParams(),vars);
-    ecs.print("])"); 
+    ecs.format(",m_%s,",getMethod());
+    ErlUtil.buildParams(ecs,getParams(),vars);
+    ecs.print(")"); 
   }
   
   @Override
@@ -715,12 +711,12 @@ aspect GenerateErlang {
   }
   
   public void GetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  { ecs.print("async_call_task:get(");
+  { ecs.print("future:get(");
     getPureExp().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
   public void SafegetExp.generateErlangCode(ErlangCodeStream ecs,Vars vars)
-  { ecs.print("async_call_task:safeget(");
+  { ecs.print("future:safeget(");
     getPureExp().generateErlangCode(ecs,vars);
     ecs.print(")");
   }
