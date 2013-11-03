@@ -11,7 +11,12 @@ init(_Cog,O)->
 
 
 start(O=#object{class=C,cog=Cog=#cog{tracker=Tracker}})->
-     	Res=apply(C, m_run,[O]).
+	 try 
+     	Res=apply(C, m_run,[O])
+	 catch
+	  _:Reason ->
+		object:die(O,Reason)
+	 end.
 
 
 

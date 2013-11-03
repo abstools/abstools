@@ -18,9 +18,9 @@ init(Callee=#object{class=C,cog=Cog=#cog{ref=CogRef}},Method,Params)->
 	demonitor(MonRef),
 	receive
 		{'DOWN', _ , process, _,Reason} when Reason /= normal ->
-			loopFail(Reason);
+			loopFail(error_transform:transform(Reason));
 		{'EXIT',_,Reason} ->
-			loopFail(Reason);
+			loopFail(error_transform:transform(Reason));
 		{completed, Value}->
 			loopValue(Value)
 	end.

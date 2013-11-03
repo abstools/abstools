@@ -1,8 +1,9 @@
 -module(object).
+-behaviour(gen_fsm).
+-export([new/4,activate/1,commit/1,rollback/1,new_object_task/2,die/2]).
 
--export([new/4,activate/1,commit/1,rollback/1,new_object_task/2]).
+-export([init/1,active/3,active/2,inactive/2,inactive/3,code_change/4,handle_event/3,handle_info/3,handle_sync_event/4,terminate/3]).
 -include_lib("log.hrl").
--export([init/1,active/3,active/2,inactive/2,inactive/3]).
 -include_lib("abs_types.hrl").
 -export([behaviour_info/1]).
 
@@ -39,12 +40,11 @@ rollback(#object{ref=O})->
 
 
 new_object_task(#object{ref=O},TaskRef)->
-	case gen_fsm:sync_send_event(O, {new_task,TaskRef}) of
-		active->
-			ok;
-		invalid_ref->
-			exit(invalid_ref)
-	end.
+	io:format("Call New_task ~p~n",[TaskRef]),
+	active=gen_fsm:sync_send_event(O, {new_task,TaskRef}).
+
+die(#object{ref=O},Reason)->
+	gen_fsm:sync_send_all_state_event(O,{die,Reason,self()},infinity).
 %%Internal
 -record(state,{await,tasks,class,int_status,new_vals}).
 init([Cog,Class,Status])->
@@ -56,7 +56,9 @@ inactive(activate,S=#state{await=A})->
 	{next_state,active,S#state{await=[]}}.
 
 inactive({new_task,TaskRef},From,S=#state{await=A,tasks=Tasks})->
- 	{next_state,active,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
+	monitor(process,TaskRef),
+	io:format("New_task ~p~n",[TaskRef]),
+ 	{next_state,inactive,S#state{await=[From|A],tasks=gb_sets:add_element(TaskRef, Tasks)}}.
 
 
 
@@ -70,6 +72,8 @@ active({#object{class=Class},get,Field},_From,S=#state{class=C,int_status=IS,new
      ?DEBUG({get,Field,Reply}),
 	 {reply,Reply,active,S};
 active({new_task,TaskRef},_From,S=#state{tasks=Tasks})->
+ io:format("New_task ~p~n",[TaskRef]),
+	monitor(process,TaskRef),
     {reply,active,active,S#state{tasks=gb_sets:add_element(TaskRef, Tasks)}};
 active(commit,_From,S=#state{class=C,int_status=IS,new_vals=NV}) ->
 	?DEBUG({commit}),
@@ -84,8 +88,24 @@ active({#object{class=Class},set,Field,Val},S=#state{class=C,new_vals=NV}) ->
 	?DEBUG({set,Field,Val}),
         {next_state,active,S#state{new_vals=gb_trees:enter(Field,Val,NV)}}.
 
+handle_sync_event({die,Reason,By},_From,_StateName,S=#state{tasks=Tasks})->
+  io:format("~p~n",[Tasks]),
+  [begin io:format("take down ~p~n",[T]),exit(T,Reason) end ||T<-gb_sets:to_list(Tasks), T/=By],
+  exit(By,Reason),
+  {stop,normal,S}.
 
 
+handle_info({'DOWN', _MonRef, process, TaskRef,Reason} ,StateName,S=#state{tasks=Tasks})->
+	io:format("rem_task ~p~n",[TaskRef]),
+   {next_state,StateName,S#state{tasks=gb_sets:del_element(TaskRef, Tasks)}}.
 
                 
+
+terminate(_Reason,_StateName,_Data)->
+	ok.
+handle_event(_Event,_StateName,State)->
+  {stop,not_implemented,State}.
+
+code_change(_OldVsn,_StateName,_Data,_Extra)->
+	not_implemented.
 

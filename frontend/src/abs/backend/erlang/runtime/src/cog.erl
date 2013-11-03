@@ -8,7 +8,7 @@
 
 
 start()->
-    {ok,T}=object_tracker:start_link(),
+    {ok,T}=object_tracker:start(),
     #cog{ref=spawn(cog,init, [T]),tracker=T}.
 
 add(#cog{ref=Cog},Task,Args)->
@@ -40,9 +40,12 @@ loop(S=#state{running=non_found})->
 			{newState,TaskRef,State}->
 				eventstream:event({cog,self(),active}),
 				set_state(S,TaskRef,State);
-            {newT,Task,Args,Sender,Notify}->
+                        {newT,Task,Args,Sender,Notify}->
 				eventstream:event({cog,self(),active}),
-                initTask(S,Task,Args,Sender,Notify)
+                                initTask(S,Task,Args,Sender,Notify);
+			{'EXIT',R,Reason} when Reason /= normal ->
+		       io:format("COG ~p: died ~p with ~p ~n",[self(),R,Reason]),   
+               set_state(S#state{running=false},R,abort)
 		end,
     loop(New_State#state{running=false});
 loop(S=#state{running=false})->

@@ -748,7 +748,12 @@ aspect GenerateErlang {
     ecs.print(")");
   }
   
-
+  @Override
+  public void DieStmt.generateErlangCode(ErlangCodeStream ecs, Vars vars) {
+    ecs.print("object:die(O,");
+    getReason().generateErlangCode( ecs,  vars);
+    ecs.print(")");
+  }
   
 }
 

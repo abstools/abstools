@@ -17,7 +17,7 @@ start(#state{fut=Future,obj=O=#object{class=C,cog=Cog=#cog{tracker=Tracker}},met
      	Res=apply(C, M,[O|P]),
 		Future!{completed, Res}
 	 catch
-	  _:Reason ->
+	   _:Reason ->
 		  task:rollback(Cog),
 		  exit(Reason)
 	 end.

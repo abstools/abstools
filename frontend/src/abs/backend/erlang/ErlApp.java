@@ -80,6 +80,7 @@ public class ErlApp {
 	    "src/object_tracker.erl",
 	    "src/future.erl",
  	    "src/active_object_task.erl",
+	    "src/error_transform.erl",
             "include/abs_types.hrl",
             "include/log.hrl",
             "Emakefile",
