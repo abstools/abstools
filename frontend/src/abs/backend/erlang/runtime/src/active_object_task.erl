@@ -6,7 +6,7 @@
 -include_lib("abs_types.hrl").
 
 init(_Cog,O)->
-	%%object:new_object_task(O,self()),
+	object:new_object_task(O,self()),
     O.
 
 

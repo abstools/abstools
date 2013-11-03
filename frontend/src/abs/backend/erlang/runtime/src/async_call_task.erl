@@ -8,7 +8,7 @@
 
 init(_Cog,[Future,O,Method|Params])->
 	link(Future),
-	object:await_active(O),
+	object:new_object_task(O,self()),
     #state{fut=Future,obj=O,meth=Method,params=Params}.
 
 
