@@ -79,7 +79,7 @@ public class ClassGenerator {
             ecs.println(",");
         }
         if (classDecl.isActiveClass())
-            ecs.println("cog:add(Cog,async_call_task,[O,m_run]),");
+            ecs.println("cog:add(Cog,active_object_task,O),");
         ecs.println("O.");
         ecs.decIndent();
     }
