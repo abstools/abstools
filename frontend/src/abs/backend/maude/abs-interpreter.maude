@@ -882,14 +882,6 @@ mod ABS-EVAL is
   eq eval(let AL = EL in E, S, CN, MAC) =
     eval(E, S :: createSubst(AL, evalList(EL, S, CN, MAC)), CN, MAC) .
 
-  *** Component Model Extension: Guard
-  *** Component Model Extension: Check if an object is not in critical section
-  op isntcritical : Oid Configuration -> Bool .
-  eq isntcritical(OID, < OID : CID | Cog: COGID, Att: S, Lcnt: N > CN) = ((S ['.nbcr]) asInt == 0) .
-  eq isntcritical(OID, CN) = false [owise] .
-
-  eq eval(cr( E ), S, CN, MAC) = isntcritical( eval(E, S, CN, MAC) , CN) asAbsBool .
-
 
   *** evaluate a case statement.  If the pattern matches, augment environment
   *** with the resulting bindings.
