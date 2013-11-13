@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            id="eu.hatsproject.sda.actionSet"
+            id="org.abs-models.sda.actionSet"
             label="SDA ActionSet"
             visible="true">
          <menu
@@ -17,7 +17,7 @@
          <action
                class="sdaplugin.actions.SDAction"
                icon="icons/sample.gif"
-               id="eu.hatsproject.sda.actions.SDA"
+               id="org.abs-models.sda.actions.SDA"
                label="&amp;Begin Analysis"
                menubarPath="SDA Menu/sampleGroup"
                toolbarPath="sampleGroup"
@@ -25,6 +25,4 @@
          </action>
       </actionSet>
    </extension>
-
-
 </plugin>

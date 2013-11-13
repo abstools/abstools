@@ -4,27 +4,20 @@ import java.io.PrintStream;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
-import org.eclipse.ui.handlers.HandlerUtil;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 
 import sdaplugin.Activator;
 
-import eu.hatsproject.absplugin.actions.ActionUtils;
+import org.absmodels.abs.plugin.actions.ActionUtils;
+import org.absmodels.abs.plugin.builder.AbsNature;
 
 import abs.frontend.ast.Model;
 
@@ -59,7 +52,7 @@ public class SDAction implements IWorkbenchWindowActionDelegate {
     outConsole.setActivateOnWrite(true);
     PrintStream out = new PrintStream(outConsole);
     /* 3. Get the model in a good shape (typed. For now, there is nothing we can do about deltas) */
-    eu.hatsproject.absplugin.builder.AbsNature nature =  eu.hatsproject.absplugin.util.UtilityFunctions.getAbsNature(project);
+    AbsNature nature =  org.absmodels.abs.plugin.util.UtilityFunctions.getAbsNature(project);
     Model model = nature.getCompleteModel();
     model.typeCheck();
     /* 4. Perform the analysis */
