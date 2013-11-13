@@ -34,10 +34,13 @@ public class SourcePosition {
         return findPosition(node, Symbol.makePosition(line, col));
     }
 
+    /**
+     * [TODO: Review] Here we are also called from the Eclipse scanner, so don't apply rewrites?
+     */
     private static SourcePosition findPosition(ASTNode<?> node, int searchPos) {
         if (inNode(node, searchPos)) {
-            for (int i = 0; i < node.getNumChild(); i++) {
-                SourcePosition pos = findPosition(node.getChild(i), searchPos);
+            for (int i = 0; i < node.getNumChildNoTransform(); i++) {
+                SourcePosition pos = findPosition(node.getChildNoTransform(i), searchPos);
                 if (pos != null) {
                     return pos;
                 }
@@ -52,19 +55,19 @@ public class SourcePosition {
         if (node instanceof Opt<?>) {
             Opt<?> opt = (Opt<?>) node;
             if (opt.hasChildren()) {
-                node = opt.getChild(0);
+                node = opt.getChildNoTransform(0);
             } else {
                 return false;
             }
         } else if (node instanceof List<?>) {
-            if (node.getNumChild() == 0) {
+            if (node.getNumChildNoTransform() == 0) {
                 return false;
             } else if (node.getEnd() == 0) {
                 // if position is not set, check children
-                if (node.getNumChild() == 0) {
+                if (node.getNumChildNoTransform() == 0) {
                     return false;
                 }
-                if (smaller(pos, node.getChild(0).getStart()) || larger(pos, node.getChild(node.getNumChild()-1).getEnd())) {
+                if (smaller(pos, node.getChildNoTransform(0).getStart()) || larger(pos, node.getChild(node.getNumChildNoTransform()-1).getEnd())) {
                     return false;
                 }
                 return true;
