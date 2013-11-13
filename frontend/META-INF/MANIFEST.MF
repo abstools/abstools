@@ -9,7 +9,9 @@ Bundle-ClassPath: .,
  lib/apfloat.jar,
  lib/beaver-rt.jar,
  lib/sat4j-maxsat.jar,
- lib/choco-solver-2.1.1.jar
+ lib/choco-solver-2.1.1.jar,
+ lib/commons-io-2.4.jar,
+ lib/guava-15.0.jar
 Eclipse-BundleShape: dir
 Export-Package: .,
  abs;uses:="abs.frontend.ast",
