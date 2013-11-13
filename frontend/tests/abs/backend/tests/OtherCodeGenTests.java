@@ -7,7 +7,6 @@ package abs.backend.tests;
 import static org.junit.Assert.*;
 
 import java.io.*;
-
 import org.junit.*;
 
 import abs.backend.erlang.ErlApp;
@@ -27,17 +26,6 @@ public class OtherCodeGenTests extends CaseStudyTypeChecking {
         File outFile = File.createTempFile("absjunit-core", null);
         outFile.deleteOnExit();
         m.generateCoreABS(new PrintStream(new BufferedOutputStream(new FileOutputStream(outFile))));
-    }
-
-    @Test
-    public void testScala() throws Exception {
-        super.test();
-        File tmp = new File(System.getProperty("java.io.tmpdir"));
-        assertTrue(tmp.exists() && tmp.canWrite());
-        File outputDir = new File(tmp, "absjunit-scala");
-        outputDir.mkdir();
-        outputDir.deleteOnExit();
-        m.generateScala(outputDir);
     }
 
     @Test
