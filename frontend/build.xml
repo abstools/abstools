@@ -378,6 +378,8 @@
         <include name="lib/beaver-rt.jar"/>
         <include name="lib/choco-solver-2.1.1.jar"/>
         <include name="lib/sat4j-maxsat.jar" />
+      	<include name="lib/guava-15.0.jar" />
+        <include name="lib/commons-io-2.4.jar" />
         <include name="feature.xml"/>
       </fileset>
       <fileset dir="${build.dir}">
