@@ -5,6 +5,9 @@
 
    ant dist
 
+   You may need to set the following variable:
+   export ANT_OPTS=-Xmx1g
+
 2. Use the ABS frontend with
 
    bin/bash/parseABS [options] <absfiles>
