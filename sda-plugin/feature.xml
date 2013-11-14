@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="eu.hatsproject.sda"
+      id="org.abs-models.sda"
       label="ABS Deadlock Analysis"
       version="0.0.0.VERSION_STRING"
       provider-name="ABS-Models">
