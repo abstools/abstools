@@ -5,7 +5,6 @@
 package abs.frontend.analyser;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.DataConstructorExp;
