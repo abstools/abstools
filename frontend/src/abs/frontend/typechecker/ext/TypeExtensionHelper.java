@@ -13,7 +13,6 @@ import abs.frontend.typechecker.BoundedType;
 import abs.frontend.typechecker.DataTypeType;
 import abs.frontend.typechecker.KindedName;
 import abs.frontend.typechecker.Type;
-import abs.frontend.typechecker.TypeCheckerHelper;
 import abs.frontend.typechecker.TypeParameter;
 import abs.frontend.typechecker.KindedName.Kind;
 
