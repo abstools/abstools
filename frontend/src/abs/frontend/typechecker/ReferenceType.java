@@ -4,9 +4,6 @@
  */
 package abs.frontend.typechecker;
 
-import abs.frontend.ast.DataTypeUse;
-import abs.frontend.ast.List;
-
 public abstract class ReferenceType extends Type {
     
     @Override
