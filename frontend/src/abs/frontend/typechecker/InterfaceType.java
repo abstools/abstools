@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import abs.frontend.ast.Annotation;
-import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.InterfaceDecl;
 import abs.frontend.ast.InterfaceTypeUse;
 import abs.frontend.ast.List;
