@@ -7,7 +7,6 @@ package abs.common;
 import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.Annotation;
 import abs.frontend.ast.DataConstructorExp;
-import abs.frontend.ast.DataTypeUse;
 import abs.frontend.ast.List;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.TypeUse;
