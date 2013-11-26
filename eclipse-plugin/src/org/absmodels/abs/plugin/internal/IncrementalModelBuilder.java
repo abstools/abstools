@@ -42,12 +42,16 @@ public class IncrementalModelBuilder {
         return ltie;
     }
 
-    @SuppressWarnings("rawtypes")
-	private static void flushAll(ASTNode node){
-		for(int i=0; i<node.getNumChild(); i++){
-			flushAll(node.getChild(i));
-		}
-		node.flushCache();
+	/**
+	 * This code was introduced for SQL. Iterating over the
+	 * transformed nodes will cause errors in Eclipse. #85 
+	 */
+	public static void flushAll(ASTNode<?> node){
+		return;
+//		for(int i=0; i<node.getNumChildNoTransform(); i++){
+//			flushAll(node.getChildNoTransform(i));
+//		}
+//		node.flushCache();
 	}
 
     public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {

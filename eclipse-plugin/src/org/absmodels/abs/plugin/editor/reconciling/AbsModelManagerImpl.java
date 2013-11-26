@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.absmodels.abs.plugin.Activator;
 import org.absmodels.abs.plugin.builder.AbsNature;
+import org.absmodels.abs.plugin.internal.IncrementalModelBuilder;
 import org.absmodels.abs.plugin.util.Constants;
 import org.absmodels.abs.plugin.util.CoreControlUnit;
 import org.absmodels.abs.plugin.util.CoreControlUnit.ResourceBuildListener;
@@ -19,7 +20,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 
 import abs.frontend.analyser.SemanticErrorList;
-import abs.frontend.ast.ASTNode;
 import abs.frontend.ast.CompilationUnit;
 import abs.frontend.ast.Model;
 import abs.frontend.typechecker.locationtypes.LocationType;
@@ -75,7 +75,7 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
     private void extendedTypechecking() {
         if (absNature.getProject() != null) {
             IPersistentPreferenceStore projectPreferences = absNature.getProjectPreferenceStore();
-            flushAll(model);
+            IncrementalModelBuilder.flushAll(model);
             model.getTypeExt().clearTypeSystemExtensions();
             boolean dolocationtypecheck = projectPreferences.getBoolean(LOCATION_TYPECHECK);
             if (dolocationtypecheck) {
@@ -104,14 +104,6 @@ public class AbsModelManagerImpl implements AbsModelManager, ResourceBuildListen
         } catch (CoreException e) {
             Activator.logException(e);
         }
-    }
-
-    @SuppressWarnings("rawtypes")
-    private static void flushAll(ASTNode node){
-        for(int i=0; i<node.getNumChild(); i++){
-            flushAll(node.getChild(i));
-        }
-        node.flushCache();
     }
 
     @Override

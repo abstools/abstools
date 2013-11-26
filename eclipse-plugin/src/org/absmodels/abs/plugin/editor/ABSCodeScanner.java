@@ -18,7 +18,6 @@ import java.util.regex.Pattern;
 
 import org.absmodels.abs.plugin.builder.AbsNature;
 import org.absmodels.abs.plugin.util.Preferences;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
@@ -41,7 +40,7 @@ import abs.frontend.typechecker.KindedName.Kind;
  *
  */
 public class ABSCodeScanner implements ITokenScanner {
-	private static final boolean doDebug = false;
+	private static final boolean doDebug = true;
 	
 	protected static final int UNDEFINED = -1;
 	protected static final int EOF = -1;
@@ -209,6 +208,8 @@ public class ABSCodeScanner implements ITokenScanner {
 					new File(fEditor.getEditorInput().getName()),
 					doccontent,
 					new StringReader(doccontent));
+			// Redmine #86: inh eq CompilationUnit...lookupModule() requires a parent.
+			new Model().addCompilationUnit(compilationUnit);
 		} catch (ParseException e) {
 			if (doDebug)
 				e.printStackTrace();
