@@ -7,7 +7,6 @@ package abs.backend.maude;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import abs.frontend.ast.Model;
