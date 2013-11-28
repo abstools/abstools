@@ -108,12 +108,16 @@ public class UnionType extends ReferenceType {
         return originatingClass;
     }
 
-    /**
-     * Returns "UnionType"
-     */
+    
+    // Use the name of the originating class
+    @Override
+    public String getModuleName() {
+        return originatingClass.getModuleDecl().getName();
+    }
+    
     @Override
     public String getSimpleName() {
-        return "UnionType";
+        return originatingClass.getName();
     }
 
     @Override
