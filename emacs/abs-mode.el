@@ -120,7 +120,7 @@ Note that you can set this variable as a file-local variable as well."
     (regexp-opt
      '("module" "import" "export" "from"              ; the top levels
        "data" "type" "def" "interface" "class"
-       "case" "=>" "new" "cog"                        ; the functionals
+       "case" "=>" "new" "local"                      ; the functionals
        "extends"                                      ; the interfaces
        "implements"                                   ; the class
        "delta" "adds" "modifies" "removes" "uses"
