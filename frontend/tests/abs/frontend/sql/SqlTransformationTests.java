@@ -19,7 +19,7 @@ import abs.frontend.ast.SyncCall;
 
 public class SqlTransformationTests extends FrontendTest {
 
-    private static String DB_INITIALIZATION = "RelationalTransactionalDatabase db = new RelationalDatabase(Pair(EmptyMap, EmptySet)); ";
+    private static String DB_INITIALIZATION = "RelationalTransactionalDatabase db = new local RelationalDatabase(Pair(EmptyMap, EmptySet)); ";
 
     protected Model assertParseOk(String s) {
         Model m = assertParse(s, WITH_STD_LIB, WITH_DB_LIB, TYPE_CHECK);
@@ -88,7 +88,7 @@ public class SqlTransformationTests extends FrontendTest {
     public void testSqlProc() {
         Model m = assertParseOk("[DatabaseConnection: conn] class C(DatabaseConnection conn) { [SqlProc] Unit p() {} } { "
                 + DB_INITIALIZATION
-                + "TransmissionTimeCalculator calc = new IdealTransmissionTimeCalculator(); DatabaseConnection conn = new DatabaseConnection(db, 0, calc); new C(conn);}");
+                + "TransmissionTimeCalculator calc = new local IdealTransmissionTimeCalculator(); DatabaseConnection conn = new local DatabaseConnection(db, 0, calc); new local C(conn);}");
         Stmt propagationDelayStmt = getFirstClassDecl(m).getMethod(0).getBlock().getStmt(0);
         assertEquals(ExpressionStmt.class, propagationDelayStmt.getClass());
         Exp propagationDelayExp = ((ExpressionStmt) propagationDelayStmt).getExp();
@@ -101,7 +101,7 @@ public class SqlTransformationTests extends FrontendTest {
     @Test
     public void testSqlProcNoConnection() {
         assertParseSemanticError("[TX: tx] class C(Transaction tx) { [SqlProc] Unit p() {} } { " + DB_INITIALIZATION
-                + "Transaction tx = db.beginTransaction(); new C(tx);}");
+                + "Transaction tx = db.beginTransaction(); new local C(tx);}");
     }
 
     @Test

@@ -24,39 +24,39 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void refEq() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); Bool testresult = i1 == i1; }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); Bool testresult = i1 == i1; }");
     }
 
     @Test
     public void refEq2() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = ~(i1 == i2); }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = ~(i1 == i2); }");
     }
     
     @Test
     public void refGt() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 > i2 || i2 > i1; }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 > i2 || i2 > i1; }");
     }
     
     @Test
     public void refLt() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 < i2 || i2 < i1; }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 < i2 || i2 < i1; }");
     }
     
     @Test
     public void refGtEq() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 >= i2 || i1 < i2; }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 >= i2 || i1 < i2; }");
     }
 
     @Test
     public void refLtEq() {
-        assertEvalTrue("interface I {} class C implements I {} { I i1 = new C(); I i2 = new C(); Bool testresult = i1 <= i2 || i1 > i2; }");
+        assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 <= i2 || i1 > i2; }");
     }
 
     @Test
     public void futLt() {
         assertEvalTrue("interface I {Int m(Int i); Unit doit();}"
                 + "class C implements I {Bool flag = False; Int m (Int i) {await flag; return i;} Unit doit() {flag = True;}}"
-                + "{I i1 = new cog C(); I i2 = new cog C(); Bool reforder = i1 < i2; Int inti1 = if reforder then 1 else 2; Int inti2 = if reforder then 2 else 1; Fut<Int> fi1 = i1!m(inti1); Fut<Int> fi2 = i2!m(inti2); Bool futorder = fi1 < fi2; i1!doit(); i2!doit(); fi1.get; fi2.get; Bool testresult = if futorder then fi1 < fi2 else fi2 < fi1;}");
+                + "{I i1 = new C(); I i2 = new C(); Bool reforder = i1 < i2; Int inti1 = if reforder then 1 else 2; Int inti2 = if reforder then 2 else 1; Fut<Int> fi1 = i1!m(inti1); Fut<Int> fi2 = i2!m(inti2); Bool futorder = fi1 < fi2; i1!doit(); i2!doit(); fi1.get; fi2.get; Bool testresult = if futorder then fi1 < fi2 else fi2 < fi1;}");
     }
 
     @Test
@@ -64,7 +64,7 @@ public class ObjectTests extends SemanticTests {
         assertEvalTrue("interface I {}"
                 + "class C1 implements I {}"
                 + "class C2 implements I {}"
-                + "{ I i1 = new cog C1(); I i2 = new cog C2(); Bool testresult = i1 < i2 || i2 < i1; }");
+                + "{ I i1 = new C1(); I i2 = new C2(); Bool testresult = i1 < i2 || i2 < i1; }");
     }
     
     @Test
@@ -81,21 +81,21 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void newExp() {
-        assertEvalTrue(EMPTY_CLASS_C + " { Bool testresult = True; I i = new C();}");
+        assertEvalTrue(EMPTY_CLASS_C + " { Bool testresult = True; I i = new local C();}");
     }
 
     private static String CLASS_WITH_METHOD = "interface I { Bool m(); } class C implements I { Bool m() { return True; } }";
 
     @Test
     public void methodCall() {
-        assertEvalTrue(CLASS_WITH_METHOD + " { Bool testresult = True; I i = new C(); testresult = i.m();}");
+        assertEvalTrue(CLASS_WITH_METHOD + " { Bool testresult = True; I i = new local C(); testresult = i.m();}");
     }
 
     private static String INTERFACE_I = "interface I { Bool m(); }";
     private static String CLASS_WITH_FIELD = INTERFACE_I
             + " class C(Bool f) implements I { Bool m() { return this.f; } }";
 
-    private static String CALL_M = " { Bool testresult = True; I i = new C(True); testresult = i.m();}";
+    private static String CALL_M = " { Bool testresult = True; I i = new local C(True); testresult = i.m();}";
 
     @Test
     public void fieldAccess() {
@@ -127,12 +127,12 @@ public class ObjectTests extends SemanticTests {
     @Test
     public void classMethodShadowsField1() {
         assertEvalTrue("interface I { Bool m(Bool f); } class C(Bool f) implements I { Bool m(Bool f) { return f; } }"
-                + "{ Bool testresult = False; I i = new C(False); testresult = i.m(True);}");
+                + "{ Bool testresult = False; I i = new local C(False); testresult = i.m(True);}");
     }
 
     @Test
     public void classMethodShadowsField2() {
         assertEvalTrue("interface I { Bool m(Bool f); } class C(Bool f) implements I { Bool m(Bool f) { return this.f; } }"
-                + "{ Bool testresult = False; I i = new C(True); testresult = i.m(False);}");
+                + "{ Bool testresult = False; I i = new local C(True); testresult = i.m(False);}");
     }
 }

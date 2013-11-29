@@ -56,12 +56,12 @@ public class TypeCheckerTest extends FrontendTest {
     
     @Test
     public void testClass() {
-        assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new C(); }");
+        assertNoTypeErrorsNoLib("interface I {} class C implements I {} { I i; i = new local C(); }");
     }
 
     @Test
     public void testClass2() {
-        assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new C(); }");
+        assertNoTypeErrorsNoLib("interface I {} interface J {} class C implements I,J {} { J j; j = new local C(); }");
     }
 
     @Test
@@ -330,14 +330,14 @@ public class TypeCheckerTest extends FrontendTest {
         assertTypeOK("interface I {} " +
                      "interface J extends I {} " +
                      "class C implements J {} " +
-                     "{ I i = new C(); " +
+                     "{ I i = new local C(); " +
                      "  Maybe<I> o = Just(i); }");
     }
     
     @Test
     public void testListArgs() {
         assertTypeOK(" interface Database { } class DataBaseImpl(Map<String, List<String>> db) implements Database { } "
-                + "{ Database db; db = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
+                + "{ Database db; db = new local DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db\"])]); }");
     }
 
     @Test
@@ -400,7 +400,7 @@ public class TypeCheckerTest extends FrontendTest {
 
     @Test
     public void newExp() {
-        assertTypeOK("class C(Bool b) { } { new C(True); }");
+        assertTypeOK("class C(Bool b) { } { new local C(True); }");
     }
     
     @Test

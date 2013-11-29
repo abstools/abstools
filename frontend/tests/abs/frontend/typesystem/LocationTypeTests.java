@@ -77,13 +77,13 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void newCog() {
-        assertLocationTypeOk("{ [Far] I i; i = new cog C(i); }");
+        assertLocationTypeOk("{ [Far] I i; i = new C(i); }");
     }
 
     @Test
     public void newObject() {
-        assertLocationTypeOk("{ [Near] J i; i = new E(); }");
-        assertLocationTypeOk("{ [Somewhere] J i; i = new E(); }");
+        assertLocationTypeOk("{ [Near] J i; i = new local E(); }");
+        assertLocationTypeOk("{ [Somewhere] J i; i = new local E(); }");
     }
 
     @Test
@@ -108,7 +108,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void defaultTyping() {
-        assertLocationTypeOk("{ I i; [Far] I f; i = new C(f); }");
+        assertLocationTypeOk("{ I i; [Far] I f; i = new local C(f); }");
     }
     
     @Test
@@ -118,7 +118,7 @@ public class LocationTypeTests extends FrontendTest {
 
     @Test
     public void futureTyping() {
-        assertLocationTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new C(f); fut = i!m(); }");
+        assertLocationTypeOk("{ I i; [Far] I f; Fut<I> fut; i = new local C(f); fut = i!m(); }");
     }
     
     
@@ -166,7 +166,7 @@ public class LocationTypeTests extends FrontendTest {
     /*
     @Test
     public void callParamInfer() {
-        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; j = new C(); i.m(j); } } { }");
+        Model m = assertInferOk("interface I { Unit m(I i); } class C implements I { Unit m(I i) { I j; j = new local C(); i.m(j); } } { }");
         ClassDecl cd = (ClassDecl) m.getCompilationUnit(1).getModuleDecl(0).getDecl(1);
         Type t = cd.getMethod(0).getMethodSig().getParam(0).getType();
         LocationType lt = m.getLocationTypeInferenceResult().get(LocationTypeInferrerExtension.getLV(t));
@@ -176,28 +176,28 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void newCOGInfer() {
-        assertInferOk("interface I { } class C implements I {} { I i; i = new cog C(); }", LocationType.FAR);
+        assertInferOk("interface I { } class C implements I {} { I i; i = new C(); }", LocationType.FAR);
     }
 
     @Test
     public void newCOGInferAnn() {
-        assertInferOk("interface I { } class C implements I {} { [Infer] I i; i = new cog C(); }", LocationType.FAR);
+        assertInferOk("interface I { } class C implements I {} { [Infer] I i; i = new C(); }", LocationType.FAR);
     }
     
     @Test
     public void newObjectInfer() {
-        assertInferOk("interface I { } class C implements I {} { I i; i = new C(); }", LocationType.NEAR);
+        assertInferOk("interface I { } class C implements I {} { I i; i = new local C(); }", LocationType.NEAR);
     }
 
     @Test
     public void newObjectInfer2() {
-        assertInferOk("interface I { I getI(); } class C implements I { I i; { i = new C(); } I getI() { return i; } } " +
-        		"{ I i; I j; j = new C(); i = j.getI(); }", LocationType.NEAR);
+        assertInferOk("interface I { I getI(); } class C implements I { I i; { i = new local C(); } I getI() { return i; } } " +
+        		"{ I i; I j; j = new local C(); i = j.getI(); }", LocationType.NEAR);
     }
     
     @Test
     public void newObjectInfer3() {
-        assertInferOk("interface I { } class C implements I {} { I i; i = new C(); i = new cog C(); }", LocationType.SOMEWHERE);
+        assertInferOk("interface I { } class C implements I {} { I i; i = new local C(); i = new C(); }", LocationType.SOMEWHERE);
     }
     
     @Test
@@ -233,7 +233,7 @@ public class LocationTypeTests extends FrontendTest {
     @Test
     public void callReturn2() {
         assertInferOk("module M.S1; export *; interface I { [Near] I m(); } class C implements I { [Near] I m() { return null; } } " +
-                      "module M.S2; import * from M.S1; { I i; i = new cog C(); i!m(); }", LocationType.FAR);
+                      "module M.S2; import * from M.S1; { I i; i = new C(); i!m(); }", LocationType.FAR);
     }
     
     @Test
@@ -243,7 +243,7 @@ public class LocationTypeTests extends FrontendTest {
     
     @Test
     public void typeImprovedInfer() {
-        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
+        assertInferOk("interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new C(); i2 = new C(); i1!m(i2); }");
     }
     
     @Test
@@ -251,16 +251,16 @@ public class LocationTypeTests extends FrontendTest {
         assertInferOk("interface I { Unit m([Far] I i); } " +
         	"class C implements I { " +
         	"    I i1; I i2; " +
-        	"    Unit m([Far] I i) { i1 = new cog C(); i2 = new cog C(); i1!m(i2); } } { }");
+        	"    Unit m([Far] I i) { i1 = new C(); i2 = new C(); i1!m(i2); } } { }");
     }
     
     @Test
     public void writeBackTest() throws Exception {
-        String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }");
+        String s = writeBackSolutions("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { I i1; I i2; i1 = new C(); i2 = new C(); i1!m(i2); }");
         //System.out.println(s);
         // TODO: Do something later (2010+)
         assertTypeOK(s);
-        assertEquals("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { [Far] I i1; [Far] I i2; i1 = new cog C(); i2 = new cog C(); i1!m(i2); }",s);
+        assertEquals("module M; interface I { Unit m([Far] I i); } class C implements I { Unit m([Far] I i) { } } { [Far] I i1; [Far] I i2; i1 = new C(); i2 = new C(); i1!m(i2); }",s);
     }
     
     // negative tests:

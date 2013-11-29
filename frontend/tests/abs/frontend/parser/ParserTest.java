@@ -35,7 +35,7 @@ public class ParserTest extends FrontendTest {
             "case set { EmptyStringSet => False ; InsertString(string2,set2) => True ;}",
             "if True then 5 else 6"};
 
-    private String[] effExp = { "new Foo()  ", "new Foo(a,b)  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
+    private String[] effExp = { "new local Foo()  ", "new local Foo(a,b)  ", "o!init()  ", "o!init(y)  ", "o!init(y,z)  ",
             "this!init(y,z)  ", "o.init(y,z,w)  ",
             // "this.init(y,z)",
             "y.get" };

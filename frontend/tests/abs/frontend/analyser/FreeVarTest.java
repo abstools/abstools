@@ -102,7 +102,7 @@ public class FreeVarTest extends FrontendTest {
 
     @Test
     public void newExp() {
-        Exp e = getSecondExp("class C(Bool b) {}  { Bool b = True; new C(b); }");
+        Exp e = getSecondExp("class C(Bool b) {}  { Bool b = True; new local C(b); }");
         assertEquals(e.getFreeVars(), "b");
     }
 

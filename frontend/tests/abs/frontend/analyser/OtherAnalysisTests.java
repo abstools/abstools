@@ -36,7 +36,7 @@ public class OtherAnalysisTests extends FrontendTest {
     
     @Test
     public void countCOG() {
-        Model m = assertParseOk("interface I { } class C { { I i = new cog C(); } Unit m() { I i = new cog C(); } } { I i; i = new cog C(); i = new C(); while (true) { i = new cog C(); }}");
+        Model m = assertParseOk("interface I { } class C { { I i = new C(); } Unit m() { I i = new C(); } } { I i; i = new C(); i = new local C(); while (true) { i = new C(); }}");
         assertEquals(4, m.getNumberOfNewCogExpr());
     }
     
