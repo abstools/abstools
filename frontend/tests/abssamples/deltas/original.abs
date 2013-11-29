@@ -68,7 +68,7 @@ delta D3 {
 
 class Application(IO io) {
 	Unit run() {
-		FooI foo = new Foo(io);
+		FooI foo = new local Foo(io);
 		foo.bar();
 	}
 }
@@ -95,8 +95,8 @@ product P12(Core, F1, F2);
 
 // MainBlock
 {
-	IO io = new IO();
+	IO io = new local IO();
 	io.println("HEEELP!!");
-    new Application(io);
+    new local Application(io);
 }
 

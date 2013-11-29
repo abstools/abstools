@@ -23,5 +23,5 @@ product P(F);
 
 
 {
-    I i = new X();
+    I i = new local X();
 }

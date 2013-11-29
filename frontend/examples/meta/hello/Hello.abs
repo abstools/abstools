@@ -12,7 +12,7 @@ class HelloImp implements Hello {
 
 class Application() {
     Unit run() {
-        Hello greeter = new HelloImp();
+        Hello greeter = new local HelloImp();
 	    while (True) {
             String message = greeter.sayHello();
             Unit u = println("\n*** " + message + " ***\n");
@@ -21,7 +21,7 @@ class Application() {
     }
 
     Unit switchLanguage() {
-        Runtime rt = new Runtime();
+        Runtime rt = new local Runtime();
         ProductLine pl = rt.getProductLine();
         List<Product> items = pl.getConfigurableProducts();
 
@@ -45,7 +45,7 @@ def Int toInt(String s) =
     };
 
 {
-    new Application();
+    new local Application();
 }
 
 //*************************************************************

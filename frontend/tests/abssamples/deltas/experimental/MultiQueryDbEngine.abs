@@ -35,7 +35,7 @@ class Database() implements Database {
 class Client(Database db, Int min, Int max, Int rate) {
     Unit run() {
         Time t = now;
-        Query q = new Query(min, max);
+        Query q = new local Query(min, max);
         Fut<Bool> rc = db!perform(q);
         await now >= t + rate;
         this!run();
@@ -66,9 +66,9 @@ class Main {
     }
     Unit run() {
         DeploymentComponent dc = this.getComponent();
-//        Database db = new Database() in dc;
-        Database db = new Database();
-        Client c = new Client(db, min(), max(), rate());
+//        Database db = new local Database() in dc;
+        Database db = new local Database();
+        Client c = new local Client(db, min(), max(), rate());
     }
 }
 
@@ -138,5 +138,5 @@ product DbCloud (
         ) { main(); }
 
 {
-    new Main();
+    new local Main();
 }

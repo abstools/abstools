@@ -47,7 +47,7 @@ implements Server {
 	Int timeout = 1000;
 
 	Unit run() {
-		sys = new System();
+		sys = new local System();
 		
 		Fut<ServerSocket> fs = provider!newServerSocket(); 
 		serversocket = fs.get;
@@ -95,16 +95,16 @@ implements Server {
 		
 		InputStream input = fis.get;
 		OutputStream output = fos.get;
-		ServerEnd node = new cog Worker(input,output);
+		ServerEnd node = new Worker(input,output);
 		return node;
 	}
 		
 }
 
 {
-	System sys = new System();
-	SocketProvider provider = new cog SocketProviderImpl();
-	Server server = new cog SimpleServer("server:20180",provider,20180);
+	System sys = new local System();
+	SocketProvider provider = new SocketProviderImpl();
+	Server server = new SimpleServer("server:20180",provider,20180);
 	Fut<ServerEnd> g = server!accept(); ServerEnd w1 = g.get;
 		
 	Fut<Int> r; 

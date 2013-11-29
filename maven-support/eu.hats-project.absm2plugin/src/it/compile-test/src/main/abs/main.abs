@@ -14,12 +14,12 @@ class C(Int x) implements I {
 
 class Main {
 	Unit run() {
-		I i = new C(3);	
+		I i = new local C(3);	
 	}
 }
 
 {
-  new Main();
+  new local Main();
 }
 
 module D; 
@@ -40,7 +40,7 @@ modifies class C { //implements J {
 modifies class Main {
 	modifies Unit run() {
 		original();
-		//J j = new C(4);
+		//J j = new local C(4);
 	}
 } 
 

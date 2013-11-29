@@ -59,17 +59,17 @@ class C implements J {
    J j1;
    J j2;
    Fut<Unit> fut1;
-   a = new cog A();
+   a = new A();
    fut1 = a!m();
    fut1.get;
 
-   j1 = new cog C();
-   j2 = new cog C();
+   j1 = new C();
+   j2 = new C();
    j1!m(j2);
 
 
    Fut<Unit> fut2;
-   b = new cog B();
+   b = new B();
    b ! m();
    b ! n();
    fut2 = a!n();

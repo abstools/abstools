@@ -22,10 +22,10 @@ class FileTestImpl(List<String> lines) implements FileTest {
 	String fullName = "";
 	
 	{
-		sys = new System();
-		handler = new FileHandler();
-		writer = new FileWriter();
-		reader = new FileReader();
+		sys = new local System();
+		handler = new local FileHandler();
+		writer = new local FileWriter();
+		reader = new local FileReader();
 	}
 
 	Unit setup(String name) {
@@ -98,7 +98,7 @@ class FileTestImpl(List<String> lines) implements FileTest {
 }
 	
 {
-	FileTest test = new FileTestImpl(list["This is line1","This is line2"]);
+	FileTest test = new local FileTestImpl(list["This is line1","This is line2"]);
 	test.setup("hello.txt");
 	test.create();
 	test.writeTo();

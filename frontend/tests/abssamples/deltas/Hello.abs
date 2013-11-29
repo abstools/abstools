@@ -14,14 +14,14 @@ class Application {
     // active class
     Unit run() {
         Greeting bob;
-        bob = new Greeter();
+        bob = new local Greeter();
         s = bob.sayHello();
     }
 }
 
 {
     // main block
-    new Application(); // this runs the application
+    new local Application(); // this runs the application
 }
 
 delta De;

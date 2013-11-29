@@ -12,14 +12,14 @@ interface House {
 class House implements House {
 	SmartHomeInterface houseInterface;
 	{
-		this.houseInterface = new SmartHomeInterface(this);
+		this.houseInterface = new local SmartHomeInterface(this);
 	}
 	Unit run() {
-		Printer printer = new Printer();
+		Printer printer = new local Printer();
 		printer.printS("Finished");
 	}
 }
 
 {
-	House house = new cog House();
+	House house = new House();
 }

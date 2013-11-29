@@ -9,9 +9,9 @@ class Application(IO io, Int n) { // active class
 
 
 {
-    IO io = new IO();
-    Random rnd = new Random();
+    IO io = new local IO();
+    Random rnd = new local Random();
     Int n = rnd.random(100);
     
-    new Application(io, n);
+    new local Application(io, n);
 }

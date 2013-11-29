@@ -12,7 +12,7 @@ class Greeter implements Greeting {
 
 class Application() {
     Unit run() {
-        Greeting bob = new Greeter();
+        Greeting bob = new local Greeter();
 	    while (True) {
             this.menu(bob);	    
 	    }
@@ -38,7 +38,7 @@ class Application() {
 }
 
 {
-    new Application();
+    new local Application();
 }
 
 //*************************************************************

@@ -170,14 +170,14 @@ implements Network
 
 { 
   // Map<Filename, File>
-  DataBase db0 = new cog DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
-  DataBase db1 = new cog DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
-  DataBase db2 = new cog DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
-  Peer node0 = new cog Node(db0, "file2");
-  Peer node1 = new cog Node(db1, "file2");
-  Peer node2 = new cog Node(db2, "file1");
-  Peer node3 = new cog Node(db2, "file0");
-  Network admin = new cog OurTopology(node0, node1, node2, node3);
+  DataBase db0 = new DataBaseImpl(map[Pair("file0", list["file", "from", "db0"])]);
+  DataBase db1 = new DataBaseImpl(map[Pair("file1", list["file", "from", "db1"])]);
+  DataBase db2 = new DataBaseImpl(map[Pair("file2", list["file", "from", "db2"])]);
+  Peer node0 = new Node(db0, "file2");
+  Peer node1 = new Node(db1, "file2");
+  Peer node2 = new Node(db2, "file1");
+  Peer node3 = new Node(db2, "file0");
+  Network admin = new OurTopology(node0, node1, node2, node3);
   node0!setAdmin(admin);
   node1!setAdmin(admin);
   node2!setAdmin(admin);

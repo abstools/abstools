@@ -35,8 +35,8 @@ adds interface FireAlarm extends Alarm, Observer {
 }
 modifies class Alarm adds FireAlarm {
 	adds Unit alert() {
-		Printer printer = new Printer();
-		Sleeper sleeper = new cog Sleeper();
+		Printer printer = new local Printer();
+		Sleeper sleeper = new Sleeper();
 		while (this.active) {
 			printer.printS("*** Fire ***\nContacting fire department");
 			Fut<Unit> s = sleeper!sleep(2000);
@@ -45,7 +45,7 @@ modifies class Alarm adds FireAlarm {
 	}
 	
 	adds Unit notify(String message) {
-		Printer printer = new Printer();
+		Printer printer = new local Printer();
 		if (this.armed && message == "fire" && ~this.active) {
 			this.active = True;
 			this.alert();

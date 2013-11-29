@@ -19,7 +19,7 @@ implements Client {
 	Socket socket = null;
 
 	Unit run() {
-		sys = new System();
+		sys = new local System();
 		
 		Feedback<Unit> result = Error("Not done");
 		Fut<Socket> fs = provider!newSocket(); 
@@ -61,9 +61,9 @@ implements Client {
 }
 
 {
-	System sys = new System();
-	SocketProvider provider = new cog SocketProviderImpl();
-	Client client = new cog SimpleClient("client1:20180",provider,20180);
+	System sys = new local System();
+	SocketProvider provider = new SocketProviderImpl();
+	Client client = new SimpleClient("client1:20180",provider,20180);
 		
 	Fut<Unit> f;
 	Int c = 1; 

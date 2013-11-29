@@ -22,11 +22,11 @@ class Test {
     String output = "";
 
     Unit run() {
-        {a=new Lit(3);
+        {a=new local Lit(3);
         output = a.print();}
         {Int result = 0; result = a.eval();
         output = output + " " + intToString(result);}
-        {a = new Add(a, a);
+        {a = new local Add(a, a);
         String result = ""; result = a.print();
         output = output + " " + result;}
         {Int result = 0; result = a.eval();
@@ -82,7 +82,7 @@ class Add(Exp expr1, Exp expr2) implements Exp {
 //     modifies class Test {
 //         modifies Unit run() {
 //             original();
-//             a = new Add(a, a);
+//             a = new local Add(a, a);
 //             String result = a.print();
 //             output = output + " " + result;
 //         }
@@ -124,7 +124,7 @@ class Add(Exp expr1, Exp expr2) implements Exp {
 //     modifies class Test {
 //         modifies Unit run() {
 //             original();
-//             a = new Neg(a);
+//             a = new local Neg(a);
 //             String result = a.print();
 //             output = output + " " + result;
 //         }
@@ -171,5 +171,5 @@ class Add(Exp expr1, Exp expr2) implements Exp {
 // product LitPrintAddEval is Lit, Print, Add, Eval;
 
 {
-    new Test();
+    new local Test();
 }

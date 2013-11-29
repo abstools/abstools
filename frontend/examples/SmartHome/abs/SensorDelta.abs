@@ -40,7 +40,7 @@ adds class Sensor(House house, SensorType typE) implements Sensor {
     }
     
     Unit notifyObservers(String message) {
-    	Printer printer = new Printer();
+    	Printer printer = new local Printer();
     	Set<Observer> obs = this.observers;
     	while (hasNext(obs)) {
     		Pair<Set<Observer>, Observer> pair = next(obs);
@@ -50,7 +50,7 @@ adds class Sensor(House house, SensorType typE) implements Sensor {
     }
 
     Unit run() {
-        sleeper = new cog Sleeper();
+        sleeper = new Sleeper();
         while (True) {
             if (enabled) {
                 this.gatherInformation();

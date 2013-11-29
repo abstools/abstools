@@ -24,7 +24,7 @@ class ServerImpl implements ServerIntern {
    Session connect(Client c) {
        await running;
        SessionIntern s;
-       s = new SessionImpl(this, c);
+       s = new local SessionImpl(this, c);
        sessions = Cons(s,sessions);
        s!init();
        return s;

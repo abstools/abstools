@@ -21,8 +21,8 @@ class ApplicationTest implements ApplicationTest {
 	Application app;
 	
 	{
-		app = new Application(); // AUT
-		helper = new ABSAssertImpl(); // helper
+		app = new local Application(); // AUT
+		helper = new local ABSAssertImpl(); // helper
 	}
 	
 	[Test]
@@ -35,7 +35,7 @@ class ApplicationTest implements ApplicationTest {
 
 
 {
-	ApplicationTest tester = new ApplicationTest();
+	ApplicationTest tester = new local ApplicationTest();
 	Set<Pair<Int,Int>> datas = getData();
 	while (hasNext(datas)) {
 		Pair<Set<Pair<Int,Int>>,Pair<Int,Int>> test = next(datas);

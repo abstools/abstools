@@ -11,7 +11,7 @@ productline ProductLine {
 }
 
 product P1 (D1) { 
-	Application app = new Application();
+	Application app = new local Application();
 	Int result = app.calculate(10);
 	assert result > 1;
 }

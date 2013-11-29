@@ -157,18 +157,18 @@ def Duration limit(Task t) = case t { Task(_,_,_,l) => l;};
 
 /****** Main block ******/
 {
-    Server s = new cog ServerImp(4);
-    Client photo1 = new cog AsyncClientImp("APhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
-    Client video1 = new cog AsyncClientImp("AVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
-    Client photo2 = new cog AsyncClientImp("BPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
-    Client video2 = new cog AsyncClientImp("BVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
-    Client photo3 = new cog AsyncClientImp("CPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
-    Client video3 = new cog AsyncClientImp("CVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
-    Client photo4 = new cog AsyncClientImp("DPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
-    Client video4 = new cog AsyncClientImp("DVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
-    Client photo5 = new cog AsyncClientImp("EPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
-    Client video5 = new cog AsyncClientImp("EVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Server s = new ServerImp(4);
+    Client photo1 = new AsyncClientImp("APhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video1 = new AsyncClientImp("AVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo2 = new AsyncClientImp("BPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video2 = new AsyncClientImp("BVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo3 = new AsyncClientImp("CPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video3 = new AsyncClientImp("CVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo4 = new AsyncClientImp("DPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video4 = new AsyncClientImp("DVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
+    Client photo5 = new AsyncClientImp("EPhoto", 10, 15, Duration(2),  Duration(2),  Duration(40), s);
+    Client video5 = new AsyncClientImp("EVideo",  4, 40, Duration(15), Duration(15), Duration(80), s);
 
     // The last photo object gets a stack overflow for some reason, even if run as the only client...
-    //    Client photo = new cog AsyncClientImp("Photo", 11, 3, Duration(2), Duration(4), Duration(15), s);
+    //    Client photo = new AsyncClientImp("Photo", 11, 3, Duration(2), Duration(4), Duration(15), s);
 }

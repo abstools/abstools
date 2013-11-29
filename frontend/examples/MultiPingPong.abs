@@ -72,7 +72,7 @@ interface PongIntern {
 class PongImpl implements Pong, PongIntern {
     List<[Near] PongSession> sessions = Nil;
     PongSession hello(Ping ping) {
-       PongSession s = new PongSessionImpl(ping,this);
+       PongSession s = new local PongSessionImpl(ping,this);
        sessions = appendright(sessions,s);
        return s;
     }
@@ -83,7 +83,7 @@ class PongImpl implements Pong, PongIntern {
 }
 
 {
-    Pong pong = new cog PongImpl(); 
-    new cog PingImpl(pong); 
-    new cog PingImpl(pong);
+    Pong pong = new PongImpl(); 
+    new PingImpl(pong); 
+    new PingImpl(pong);
 }

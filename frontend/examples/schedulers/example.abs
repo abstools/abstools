@@ -61,15 +61,15 @@ class MyScheduler2 implements ProcessScheduler {
 
 
 {
-//    C obj = new [Scheduler: defaultscheduler(queue)] cog CImpl();
+//    [Scheduler: defaultscheduler(queue)] C obj = new CImpl();
 
-    C o = new cog CImpl();
+    C o = new CImpl();
 
     ObjectMirror om = reflect(o);
     Cog g = om.getCog();
 
     // sched is in a different cog!
-    ProcessScheduler sched = new MyScheduler1();
+    ProcessScheduler sched = new local MyScheduler1();
     g.setScheduler(sched);
 
     o!m();

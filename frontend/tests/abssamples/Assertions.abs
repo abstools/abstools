@@ -30,6 +30,6 @@ class D implements I {
 }
 
 {
-   I i = new D();
+   I i = new local D();
    i.m(True);
 }

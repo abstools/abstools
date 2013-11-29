@@ -20,11 +20,11 @@ interface I { Unit m(); }
 class C implements I { Unit m() {} }
 
 {
-    I o = new C();
+    I o = new local C();
     o.m();
     ObjectMirror m = reflect(o);
     String name = m.getClassName();
 
-    IO io = new IO();
+    IO io = new local IO();
     io.println(name);
 }

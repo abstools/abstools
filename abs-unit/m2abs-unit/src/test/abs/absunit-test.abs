@@ -26,7 +26,7 @@ class AbsUnitTestClass implements AbsUnitTest {
 	ABSAssert aut;
 	
 	{
-		aut = new ABSAssertImpl(); // AUT
+		aut = new local ABSAssertImpl(); // AUT
 		comps = set[Pair(1,1),Pair(2,2),Pair(3,3),Pair(4,4)]; //demo
 	}
 	
@@ -55,29 +55,29 @@ class AbsUnitTestClass implements AbsUnitTest {
 	}
 	
 	Unit testAssertEquals(Pair<Int,Int> comp) {
-		Comparator c = new IntComparator(fst(comp),snd(comp));
+		Comparator c = new local IntComparator(fst(comp),snd(comp));
 		aut.assertEquals(c);
 	}
 	
 	Unit testAssertNotEquals() {
-		Comparator c1 = new IntComparator(1,2);
-		Comparator c2 = new IntComparator(2,1);
+		Comparator c1 = new local IntComparator(1,2);
+		Comparator c2 = new local IntComparator(2,1);
 		aut.assertNotEquals(c1);
 		aut.assertNotEquals(c2);
 	}
 	
 	Unit testAssertThat() {
-		Comparator c = new IntComparator(1,2);
-		Matcher m1 = new LessThan(c);
-		Matcher m2 = new MoreThan(c);
-		Matcher m3 = new Is(c);
+		Comparator c = new local IntComparator(1,2);
+		Matcher m1 = new local LessThan(c);
+		Matcher m2 = new local MoreThan(c);
+		Matcher m3 = new local Is(c);
 		
-		Matcher tt = new TrueMatcher();
-		Matcher ff = new FalseMatcher();
+		Matcher tt = new local TrueMatcher();
+		Matcher ff = new local FalseMatcher();
 		Set<Formula> fs = set[fm(ff),fm(ff),fm(tt),fm(ff),fm(ff)];
 		
 		Formula f = And(And(fm(m1),Not(Or(fm(m2),fm(m3)))),AnyOf(fs));
-		Matcher corem = new CoreMatcher(f);
+		Matcher corem = new local CoreMatcher(f);
 		
 		aut.assertThat(corem);
 	}
