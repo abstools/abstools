@@ -211,14 +211,14 @@ public class ModelBuilderTest {
 			"  DataBase db2;\n"+
 			"  Network admin;\n"+
 			"  // Map<Filename, File>\n"+
-			"  db0 = new cog DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db0\"])]);\n"+
-			"  db1 = new cog DataBaseImpl(map[Pair(\"file1\", list[\"file\", \"from\", \"db1\"])]);\n"+
-			"  db2 = new cog DataBaseImpl(map[Pair(\"file2\", list[\"file\", \"from\", \"db2\"])]);\n"+
-			"  node0 = new cog Node(db0, \"file2\");\n"+
-			"  node1 = new cog Node(db1, \"file2\");\n"+
-			"  node2 = new cog Node(db2, \"file1\");\n"+
-			"  node3 = new cog Node(db2, \"file0\");\n"+
-			"  admin = new cog OurTopology(node0, node1, node2, node3);\n"+
+			"  db0 = new DataBaseImpl(map[Pair(\"file0\", list[\"file\", \"from\", \"db0\"])]);\n"+
+			"  db1 = new DataBaseImpl(map[Pair(\"file1\", list[\"file\", \"from\", \"db1\"])]);\n"+
+			"  db2 = new DataBaseImpl(map[Pair(\"file2\", list[\"file\", \"from\", \"db2\"])]);\n"+
+			"  node0 = new Node(db0, \"file2\");\n"+
+			"  node1 = new Node(db1, \"file2\");\n"+
+			"  node2 = new Node(db2, \"file1\");\n"+
+			"  node3 = new Node(db2, \"file0\");\n"+
+			"  admin = new OurTopology(node0, node1, node2, node3);\n"+
 			"  node0!setAdmin(admin);\n"+
 			"  node1!setAdmin(admin);\n"+
 			"  node2!setAdmin(admin);\n"+
