@@ -134,4 +134,16 @@ public abstract class CompilerError {
     public abstract int getColumn();
 
     public abstract int getLine();
+    
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        // Surprise: according to the docs, new StringBuffer(null) is different from new StringBuffer().append(null)
+        buf.append(getFileName());
+        buf.append('@');
+        buf.append(getLine());
+        buf.append(':');
+        buf.append(getMessage());
+        return buf.toString();
+    }
 }

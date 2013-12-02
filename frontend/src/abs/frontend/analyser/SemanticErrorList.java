@@ -24,4 +24,17 @@ public class SemanticErrorList extends ArrayList<SemanticError> {
     public void add(TypeCheckerException e) {
         add(e.getTypeError());
     }
+    
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        boolean first = true;
+        for(SemanticError e : this) {
+            if (!first)
+                buf.append(',');
+            buf.append(e.toString());
+            first = false;
+        }
+        return buf.toString();
+    }
 }
