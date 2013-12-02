@@ -232,7 +232,7 @@ public class ModelBuilderTest {
 
 		Main absParser = new Main();
 		CompilationUnit testcu = absParser.parseUnit(new File("PeerToPeer.abs"), moduleText, new StringReader(moduleText));
-		assertEquals(0, testcu.getParserErrors().size());
+		assertEquals(testcu.getParserErrors().toString(), 0, testcu.getParserErrors().size());
 		modelbuilder.addCompilationUnit(testcu);
 		SemanticErrorList testel = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
 		assertEquals(testel.toString(),1, testel.size());
@@ -242,7 +242,7 @@ public class ModelBuilderTest {
 		CompilationUnit importTestCU = absParser.parseUnit(new File("importtest.abs"), importTestText, new StringReader(importTestText));
 		modelbuilder.addCompilationUnit(importTestCU);
 		SemanticErrorList testel1 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);
-		assertEquals(0, testel1.size());
+		assertEquals(testel1.toString(), 0, testel1.size());
 		System.err.println("Test 2 finished");
 		modelbuilder.removeCompilationUnit(importTestCU);
 		SemanticErrorList testel2 = modelbuilder.typeCheckModel(new NullProgressMonitor(), true, "Somewhere", LocationTypingPrecision.BASIC.toString(),false);

@@ -47,11 +47,11 @@ public class IncrementalModelBuilder {
 	 * transformed nodes will cause errors in Eclipse. #85 
 	 */
 	public static void flushAll(ASTNode<?> node){
-		return;
 //		for(int i=0; i<node.getNumChildNoTransform(); i++){
 //			flushAll(node.getChildNoTransform(i));
 //		}
-//		node.flushCache();
+		node.flushCache();
+		return;
 	}
 
     public synchronized void addCompilationUnits(Iterable<CompilationUnit> units) throws IOException, NoModelException {
