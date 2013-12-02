@@ -6,7 +6,7 @@ import * from Application;
 
 //auto-generated?
 {
-	ApplicationImplTest test = new ApplicationImplTest();
+	ApplicationImplTest test = new local ApplicationImplTest();
 	Set<Type> datas = getData();
 	while (hasNext(datas)) {
 		Pair<Set<Type>,Type> ndatas = next(datas);

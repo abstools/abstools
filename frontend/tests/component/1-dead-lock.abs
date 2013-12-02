@@ -28,7 +28,7 @@ class DeadLockExample() implements Running {
 
 {
 
-  Running o = new DeadLockExample();
+  Running o = new local DeadLockExample();
   
   o.start();
 

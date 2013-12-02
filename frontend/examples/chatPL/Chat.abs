@@ -15,11 +15,11 @@ class ClientImpl implements Client {
 }
 
 {
-    Connection conn = new ConnectionImpl();
-    new cog Reconfigurator(conn);
+    Connection conn = new local ConnectionImpl();
+    new Reconfigurator(conn);
 
-    Client c1 = new ClientImpl();
-    Client c2 = new cog ClientImpl();
+    Client c1 = new local ClientImpl();
+    Client c2 = new ClientImpl();
     c1.message(c2, "Hello");
 }
 
@@ -36,7 +36,7 @@ adds interface Voice {
 modifies class ClientImpl adds Voice {
     adds List<Call> ongoingCalls;
     adds Call call(Client client) {
-        Call c = new CallImpl();
+        Call c = new local CallImpl();
         ongoingCalls = appendright(ongoingCalls, c);
         return c;
     }
@@ -50,7 +50,7 @@ adds interface Call {
 }
 adds class CallImpl implements Call {
     AudioStream audioStream;
-    Unit run() { audioStream = new AudioStream(); }
+    Unit run() { audioStream = new local AudioStream(); }
     Unit pickup() {/*...*/}
     Unit hangup() {/*...*/}
 }
@@ -90,7 +90,7 @@ modifies interface Call {
 }
 modifies class CallImpl {
     adds VideoStream videoStream;
-    modifies Unit run() { original(); videoStream = new VideoStream(); }
+    modifies Unit run() { original(); videoStream = new local VideoStream(); }
     adds Unit startVideo() {/*...*/}
     adds Unit stopVideo() {/*...*/}
 }

@@ -21,7 +21,7 @@ class Application implements Application {
 
 class Main(Int n) {
 	Unit run() {
-		Application app = new Application();
+		Application app = new local Application();
 		Int result = app.calculate(n);
 	}
 }

@@ -12,7 +12,7 @@ class C(Int p) implements I {
 
 
 {
-    I o = new C(100);
+    I o = new local C(100);
 
     Int f = o.getF();
     Int p = o.getP();
@@ -30,7 +30,7 @@ class C(Int p) implements I {
     // now NewClass is part of module M
     // so we can use it to instantiate objects
 
-    //I o2 = new NewClass();
+    //I o2 = new local NewClass();
 
 }
 

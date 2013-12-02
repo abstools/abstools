@@ -701,8 +701,8 @@ aspect TypeInference {
     }
     // 1.3. Group Name
     GroupName aprime; // depends if the new object is in the same cog or not
-    if(this.hasCog()) { aprime = df.newGroupName(); }
-    else { aprime = a; }
+    if(this.hasLocal()) { aprime = a; }
+    else { aprime = df.newGroupName(); }
     Record r = df.newRecordPresent(aprime,fields);
 
     // 1.4. Calling the init of r

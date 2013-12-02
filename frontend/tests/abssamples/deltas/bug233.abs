@@ -45,7 +45,7 @@ product P2(F2);
 // ******************************************************************
 
 {
-    I2 obj = new C();
+    I2 obj = new local C();
 //    Int result = obj.foo1() + obj.foo2();
     Int result = obj.foo2();
     assert result == 2;

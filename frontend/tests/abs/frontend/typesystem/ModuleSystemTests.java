@@ -181,7 +181,7 @@ public class ModuleSystemTests extends FrontendTest {
     public void ambigiousUseClass() {
         assertTypeErrors("module A; export *; interface I {} class K implements I {}" +
                      "module B; export *; interface J {} class K implements J {}" +
-                     "module C; import * from A; import * from B; { I k = new K(); } ");
+                     "module C; import * from A; import * from B; { I k = new local K(); } ");
     }
     
     @Test

@@ -48,7 +48,7 @@ aspect ParseTreeCopy {
     public ClaimGuard ClaimGuard.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ClassDecl ClassDecl.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public ModuleModifier ModuleModifier.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
-    public Cog Cog.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
+    public Local Local.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public CompilationUnit CompilationUnit.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Const Const.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }
     public Constr Constr.parseTreeCopy() { return ParseTreeCopyHelper.parseTreeCopy(this); }

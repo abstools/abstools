@@ -16,7 +16,7 @@ aspect NewExpCounter {
 
     @Override
     protected int NewExp.getNumberOfNewCogExpr() {
-        return hasCog() ? 1 : 0;
+        return hasLocal() ? 0 : 1;
     }
 
     // increase visibility where it's needed and cache:

@@ -347,7 +347,7 @@ class Lock implements Lock {
 	
 	[Atomic] Lock getTimerLock() {
 		if (timerLock == null)
-			timerLock = new Lock();
+			timerLock = new local Lock();
 		return timerLock;
 	}
 	
@@ -378,7 +378,7 @@ class TransactionData(DatabaseValue snapshot) implements TransactionData {
 	Lock lock;
 	
 	{
-		this.lock = new Lock();
+		this.lock = new local Lock();
 	}
 
 	DatabaseValue getSnapshot() {

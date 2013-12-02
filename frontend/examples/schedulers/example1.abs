@@ -32,12 +32,12 @@ def Bool edf_comp(Process p1, Process p2) =
 
 
 {
-    C o = new [Scheduler: defaultscheduler(queue)] cog CImpl(444);
+     [Scheduler: defaultscheduler(queue)] C o = new CImpl(444);
 
-//    C o2 = new [Scheduler: nth(queue, random(length(queue)))] cog CImpl(555);
-    C o2 = new [Scheduler: edf(queue)] cog CImpl(555);
+//    [Scheduler: nth(queue, random(length(queue)))] C o2 = new CImpl(555);
+    [Scheduler: edf(queue)] C o2 = new CImpl(555);
 
-    C o3 = new cog CImpl(0);
+    C o3 = new CImpl(0);
 
     [Deadline: Duration(1/1)] o2!m();
     [Deadline: Duration(1/2)] o2!m();

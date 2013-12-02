@@ -15,7 +15,7 @@ delta D {
     modifies class C {
         adds Unit n() {
             // need to add an "import D.C2" to M
-            I obj = new D.C2();
+            I obj = new local D.C2();
         }
     }
 }

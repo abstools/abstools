@@ -18,7 +18,7 @@ class CImpl implements C {
     {
         ObjectMirror om = reflect(this);
         Cog g = om.getCog();
-        ProcessScheduler sched = new MyScheduler1();
+        ProcessScheduler sched = new local MyScheduler1();
         g.setScheduler(sched);
         Unit u = println("*** init done. ***");
     }
@@ -31,7 +31,7 @@ class CImpl implements C {
 
 
 {
-    C o = new CImpl();
+    C o = new local CImpl();
     
     o!m();
     o!m();

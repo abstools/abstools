@@ -19,9 +19,9 @@ class SocketTestImpl(Int port) implements SocketTest {
 	Socket socket = null;
 	
 	{
-		sys = new System();
-		server = new cog ServerSocket();
-		client = new cog Socket();
+		sys = new local System();
+		server = new ServerSocket();
+		client = new Socket();
 	}
 	
 	Unit setupServer() { 
@@ -47,7 +47,7 @@ class SocketTestImpl(Int port) implements SocketTest {
 	}
 	
 	Unit setupClient() { 
-		socket = new cog Socket();
+		socket = new Socket();
 		Fut<Feedback<Unit>> fu = socket!connect("localhost",port,0); await fu?; 
 		Feedback<Unit> u = fu.get;
 		if (isError(u)) {
@@ -97,7 +97,7 @@ class SocketTestImpl(Int port) implements SocketTest {
 }
 
 {
-	SocketTest test = new cog SocketTestImpl(10180);
+	SocketTest test = new SocketTestImpl(10180);
 	Fut<Unit> sr = test!setupServer();
 	Fut<Unit> cr = test!setupClient();
 	

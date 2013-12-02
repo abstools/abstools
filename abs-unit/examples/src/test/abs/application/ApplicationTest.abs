@@ -24,8 +24,8 @@ implements ApplicationImplTest {
 	Application app;
 	
 	{
-		app = new ApplicationImpl(); // AUT
-		helper = new ABSAssertImpl(); // helper
+		app = new local ApplicationImpl(); // AUT
+		helper = new local ABSAssertImpl(); // helper
 	}
 	
 	[Test]

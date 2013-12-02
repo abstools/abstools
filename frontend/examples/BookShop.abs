@@ -278,7 +278,7 @@ class AgentImp(Database db) implements Agent {
   Session getsession() {
     Session session; 
     if (isEmpty(sessions)) {
-       session = new SessionImp(this,db);  } 
+       session = new local SessionImp(this,db);  } 
     else {
        session = head(sessions);
        sessions = tail(sessions); } 
@@ -390,10 +390,10 @@ Spain   10   100
     Client client1;
     Client client2;
     Database db;
-    db = new  DatabaseImp(bDB, cDB);
-    agent = new AgentImp(db);
-    client1 = new SyncClient(agent,lb1, map2list(cDB));
-    client2 = new SyncClient(agent,lb2, map2list(cDB));
+    db = new local  DatabaseImp(bDB, cDB);
+    agent = new local AgentImp(db);
+    client1 = new local SyncClient(agent,lb1, map2list(cDB));
+    client2 = new local SyncClient(agent,lb2, map2list(cDB));
 
 /* result
 

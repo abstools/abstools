@@ -47,12 +47,12 @@ class NodeImpl(Int id) implements Node {
    Node n;
    Node first;
 
-   first = new cog NodeImpl(0);
+   first = new NodeImpl(0);
    prevNode = first;
 
    Int id = 1;
    while (id < num) {
-      n = new cog NodeImpl(id);
+      n = new NodeImpl(id);
       n!setNextNode(prevNode);
       prevNode = n;
       nodes = Cons(n,nodes);

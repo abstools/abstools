@@ -9,7 +9,7 @@ import org.junit.Test;
 public class JavaFLITest extends JavaBackendTest {
 
     private final static String EXAMPLE_CODE = "import * from ABS.FLI; interface I { Unit foo(String s); } " +
-    "[Foreign] class A implements I { Unit foo(String s) { } } { Bool testresult = True; I i = new A(); i.foo(\"test\"); } ";
+    "[Foreign] class A implements I { Unit foo(String s) { } } { Bool testresult = True; I i = new local A(); i.foo(\"test\"); } ";
     
     @Test
     public void foreignClass() throws Exception {

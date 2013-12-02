@@ -547,7 +547,7 @@ public class DynamicJavaGeneratorHelper {
 
     }
     
-    public static String generateUserSchedulingStrategy(Cog cog, PureExp exp) {
+    public static String generateUserSchedulingStrategy(NewExp e, PureExp exp) {
         // TODO
         return null;
     }

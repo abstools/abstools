@@ -47,7 +47,7 @@ class OperatorFrontEndImpl(Operator opParameter) implements OperatorFrontEnd {
   OperatorFrontEnd opfe;
   {    rebind doc = docParameter;
     rebind p = pParameter;
-    opfe = new OperatorFrontEndImpl(opParameter);  }
+    opfe = new local OperatorFrontEndImpl(opParameter);  }
 
 
   critical Unit newInstanceWF() {

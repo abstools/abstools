@@ -191,29 +191,29 @@ class RelationalDatabase(DatabaseScheme scheme) implements RelationalTransaction
 	{
 		this.initialize();
 		beforeUnaryRelationalOperatorCaller = 
-			new BeforeUnaryRelationalOperatorCaller();
+			new local BeforeUnaryRelationalOperatorCaller();
 		afterUnaryRelationalOperatorCaller = 
-			new AfterUnaryRelationalOperatorCaller();
+			new local AfterUnaryRelationalOperatorCaller();
 		beforeBinaryRelationalOperatorCaller = 
-			new BeforeBinaryRelationalOperatorCaller();
+			new local BeforeBinaryRelationalOperatorCaller();
 		afterBinaryRelationalOperatorCaller = 
-			new AfterBinaryRelationalOperatorCaller();
+			new local AfterBinaryRelationalOperatorCaller();
 		afterRelationLoadingCaller =
-			new AfterRelationLoadingCaller();
-		afterCommitCaller = new AfterCommitCaller();
+			new local AfterRelationLoadingCaller();
+		afterCommitCaller = new local AfterCommitCaller();
 		beforeDbModificationOperatorCaller =
-			new BeforeDbModificationOperatorCaller();
+			new local BeforeDbModificationOperatorCaller();
 		afterDbModificationOperatorCaller =
-			new AfterDbModificationOperatorCaller();
+			new local AfterDbModificationOperatorCaller();
 		beforeTransactionLockReleaseCaller =
-			new BeforeTransactionLockReleaseCaller();
+			new local BeforeTransactionLockReleaseCaller();
 	}
 	
 	[Atomic] Unit initialize() {
 		scheme = Pair(convertExtendedRelationSchemesToTransactional(fst(scheme)), snd(scheme));
 		database = createRelationsForSchemes(fst(scheme));
-		dbLockObjectsLock = new Lock();
-		databaseLock = new Lock();
+		dbLockObjectsLock = new local Lock();
+		databaseLock = new local Lock();
 	}
 
 	MaybeEx<Relation> executeTree(ExecutionTree tree) {
@@ -371,7 +371,7 @@ class RelationalDatabase(DatabaseScheme scheme) implements RelationalTransaction
 	[Atomic] Transaction beginTransactionFailFastIntern(Bool failFast) {
 		Transaction transaction = TransactionCons(this, time, failFast);
 		time = time + 1;
-		TransactionData trxData = new TransactionData(database);
+		TransactionData trxData = new local TransactionData(database);
 		transactionData = put(transactionData, transaction, trxData);
 		return transaction;
 	}
@@ -579,7 +579,7 @@ class RelationalDatabase(DatabaseScheme scheme) implements RelationalTransaction
 				if (isJust(dbLockObjectMaybe))
 					dbLockObject = fromJust(dbLockObjectMaybe);
 				else {
-					dbLockObject = new Lock();
+					dbLockObject = new local Lock();
 					dbLockObjects = put(dbLockObjects, lock, dbLockObject);
 				}
 				dbLockObjectsLock.release();

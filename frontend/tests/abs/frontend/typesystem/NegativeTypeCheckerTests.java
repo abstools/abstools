@@ -59,7 +59,7 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void missingInterface() {
-        assertTypeErrors("class C implements I { } { I i; i = new C(); }");
+        assertTypeErrors("class C implements I { } { I i; i = new local C(); }");
     }
 
     @Test
@@ -98,12 +98,12 @@ public class NegativeTypeCheckerTests extends FrontendTest {
     
     @Test
     public void testClassError() {
-        assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new C(); }");
+        assertTypeErrors("interface I {} interface J{} class C implements J {} { I i; i = new local C(); }");
     }
 
     @Test
     public void testClassTypeUseError() {
-        assertTypeErrors("class C {} { C c; c = new C(); }");
+        assertTypeErrors("class C {} { C c; c = new local C(); }");
     }
 
     @Test
@@ -282,17 +282,17 @@ public class NegativeTypeCheckerTests extends FrontendTest {
 
     @Test
     public void newError() {
-        assertTypeErrors("interface I { } { I i; i = new I(); }");
+        assertTypeErrors("interface I { } { I i; i = new local I(); }");
     }
 
     @Test
     public void newError2() {
-        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(); }");
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new local C(); }");
     }
 
     @Test
     public void newError3() {
-        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new C(5); }");
+        assertTypeErrors("interface I { } class C(Bool b) implements I { } { I i; i = new local C(5); }");
     }
 
     @Test

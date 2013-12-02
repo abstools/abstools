@@ -28,18 +28,18 @@ public class JavaObservationTest extends JavaBackendTest {
     
     @Test
     public void objectCreated() throws Exception {
-        assertOutputContains("class C { } { new C(); }", "OBJECT CREATED: C");
+        assertOutputContains("class C { } { new local C(); }", "OBJECT CREATED: C");
     }
 
     @Test
     public void fieldValue() throws Exception {
-        assertOutputContains("class FieldClass { String field = \"HELLO WORLD\"; } { new FieldClass(); }",
+        assertOutputContains("class FieldClass { String field = \"HELLO WORLD\"; } { new local FieldClass(); }",
                 "FIELD VALUE=HELLO WORLD");
     }
 
     @Test
     public void fieldValue2() throws Exception {
-        assertOutputContains("class FieldClass(String field) { } { new FieldClass(\"HELLO WORLD\"); }",
+        assertOutputContains("class FieldClass(String field) { } { new local FieldClass(\"HELLO WORLD\"); }",
                 "FIELD VALUE=HELLO WORLD");
     }
 
@@ -48,17 +48,17 @@ public class JavaObservationTest extends JavaBackendTest {
 
     @Test
     public void taskCreation() throws Exception {
-        assertOutputContains(I_AND_C + " { I i; i = new C(); i!m();}", "TASK CREATED");
+        assertOutputContains(I_AND_C + " { I i; i = new local C(); i!m();}", "TASK CREATED");
     }
 
     @Test
     public void taskCreation2() throws Exception {
-        assertOutputContains(I_AND_C + " { I i; i = new C(); i!m(); i!n(\"HALLO\"); }", "TASK CREATED");
+        assertOutputContains(I_AND_C + " { I i; i = new local C(); i!m(); i!n(\"HALLO\"); }", "TASK CREATED");
     }
 
     @Test
     public void taskCreation3() throws Exception {
-        assertOutputContains(I_AND_C + "  { I i; i = new C(); i!m(); i!k(Bar(\"HALLO\",\"Welt\")); }", "TASK CREATED");
+        assertOutputContains(I_AND_C + "  { I i; i = new local C(); i!m(); i!k(Bar(\"HALLO\",\"Welt\")); }", "TASK CREATED");
     }
 
     static final String STDDATA = "data Foo = Bar(String,String);";

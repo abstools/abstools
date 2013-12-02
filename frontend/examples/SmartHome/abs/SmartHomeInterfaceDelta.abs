@@ -35,7 +35,7 @@ modifies class SmartHomeInterface {
     adds TemperatureSensor temperatureSensor;
 	modifies Unit init() {
 		original();
-		this.temperatureSensor = new cog Sensor(this.house, TemperatureSensor);
+		this.temperatureSensor = new Sensor(this.house, TemperatureSensor);
 		Sensor s = this.temperatureSensor;
 //		this.addSensor("temperature sensor", temperatureSensor);
 	}
@@ -61,7 +61,7 @@ modifies class SmartHomeInterface {
     
     modifies Unit init() {
         original();
-        this.heating = new cog Heating(this.house);
+        this.heating = new Heating(this.house);
         this.temperatureSensor!register(this.heating);
     }
     
@@ -110,8 +110,8 @@ modifies class SmartHomeInterface {
 	
 	modifies Unit init() {
 		original();
-		fireSensor = new cog Sensor(this.house, FireSensor);
-		FireAlarm fireAlarm = new cog Alarm();
+		fireSensor = new Sensor(this.house, FireSensor);
+		FireAlarm fireAlarm = new Alarm();
 		Alarm a = fireAlarm;
 		alarms = put(alarms, "fire alarm", a);
 		Fut<Unit> u = this.fireSensor!register(fireAlarm);

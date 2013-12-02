@@ -115,7 +115,7 @@ class OperatorFrontEnd(Operator op) implements SimpleOperator {
 class WorkflowControllerImpl(Document doc, Operator op, Printer p) imlements WorkflowController {
   port Document _doc = doc;
   port Printer _p = p;
-  SimpleOperator _opfe = new OperatorFrontEnd(op);
+  SimpleOperator _opfe = new local OperatorFrontEnd(op);
 
   critical void newInstanceWF() { ... }
 
@@ -161,7 +161,7 @@ class WorkerFrontEnd {
 
   void init(location l, ServiceA a, ServiceB b) {
     move group(this) in l;
-    s = new ServiceFrontEndImpl();
+    s = new local ServiceFrontEndImpl();
     rebind s:a = a;
     rebind s:b = b;
   }
@@ -208,7 +208,7 @@ class WorkerFrontEnd {
     rr2=rr;
     Fut<Register> fr=rr2!discoverR(l); await(fr); Register r=get(fr);
     subloc l → group(this);
-    s = new ServiceFrontEnd();
+    s = new local ServiceFrontEnd();
     rebind s:a = get(r!discoverA());
     rebind s:b = get(r!discoverB());
   }
@@ -250,19 +250,19 @@ class TestFifthPart() imlements Test {
 
 {
 
-  Test t2 = new cog TestSecondPart();
+  Test t2 = new TestSecondPart();
   Fut<Unit> end2 = t2!test();
   await end2?;
 
-  Test t3 = new cog TestThirdPart();
+  Test t3 = new TestThirdPart();
   Fut<Unit> end3 = t3!test();
   await end3?;
 
-  Test t4 = new cog TestFourthPart();
+  Test t4 = new TestFourthPart();
   Fut<Unit> end4 = t4!test();
   await end4?;
 
-  Test t5 = new cog TestFifthPart();
+  Test t5 = new TestFifthPart();
   Fut<Unit> end5 = t5!test();
   await end5?;
 

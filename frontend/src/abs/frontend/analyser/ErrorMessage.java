@@ -76,6 +76,7 @@ public enum ErrorMessage {
     ATOMIC_METHOD_WRONG_OVERRIDE("Method %s has not the same atomicity annotation from the method %s defined in interface %s"),
     WRONG_CONSTRUCTOR("Data type %s has no constructor with name %s"),
     WRONG_DEPLOYMENT_COMPONENT("Wrong type %s in deployment component annotation"),
+    DEPLOYMENT_COMPONENT_NOT_COG("Deployment component cannot be created inside a cog"),
     UNDECLARED_VARIABLE("Unknown variable: %s."),
     NOT_A_LEAF("Feature cannot have more than one group of sub-features: %s."),
     OPT_NOT_IN_ALLOF("The %s feature is optional but the cardinality of its parent is not 'allof'."),

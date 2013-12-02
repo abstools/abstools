@@ -78,12 +78,12 @@ class BoundedBuffer implements Buffer {
 	   with side effects.
 	 */
 	Foo1 foo;
-	foo = new BazClass2() ;
+	foo = new local BazClass2() ;
 	Bar b;
-	b = new FooClass();
+	b = new local FooClass();
 	Foo foo2;
-	foo2 = new FooClass();
-	//y = new cog FooClass() ; FIXME: support cog in Eclipse Plugin parser
+	foo2 = new local FooClass();
+	//y = new FooClass() ; FIXME: support cog in Eclipse Plugin parser
 	f = o!m();
 	y = o.m();
 	

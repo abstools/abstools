@@ -51,7 +51,7 @@ product P2(F2);
 product P3(F3);
 
 {
-  Application app = new ApplicationImpl();
+  Application app = new local ApplicationImpl();
   Int result = app.calculate(10);
   assert result == 11;
 }

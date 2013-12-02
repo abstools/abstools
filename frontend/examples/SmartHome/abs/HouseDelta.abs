@@ -12,10 +12,10 @@ modifies class House {
 	
 	modifies Unit run() {
 		this.houseInterface.init();
-		Printer printer = new Printer();
+		Printer printer = new local Printer();
 //		houseInterface.setTemperature(15);
 //		houseInterface.activateHeating();
-		Sleeper sleeper = new Sleeper();
+		Sleeper sleeper = new local Sleeper();
 		Int i = 0;
 		Int t = 10;
 		while (i < 300) {
@@ -53,10 +53,10 @@ modifies class House {
 	
 	modifies Unit run() {
 		this.houseInterface.init();
-		Printer printer = new Printer();
+		Printer printer = new local Printer();
 		this.houseInterface.monitorFire(True);
 		this.setFire(True);
-		Sleeper sleeper = new cog Sleeper();
+		Sleeper sleeper = new Sleeper();
 		Fut<Unit> u = sleeper!sleep(5000);
 		await u?;
 		this.houseInterface.monitorFire(False);

@@ -30,12 +30,12 @@ public class ClassKindTypeExtension extends DefaultTypeSystemExtension {
             
         if (!anns.isEmpty()) {
             String name = ((DataConstructorExp) anns.get(0).getValue()).getDecl().getName();
-            if (e.hasCog()) {
-                if (!name.equals("COG")) {
+            if (e.hasLocal()) {
+                if (name.equals("COG")) {
                     errors.add(new TypeError(e,ErrorMessage.CLASSKIND_PLAIN,d.getName()));
                 }
             } else {
-                if (name.equals("COG")) {
+                if (!name.equals("COG")) {
                     errors.add(new TypeError(e,ErrorMessage.CLASSKIND_COG,d.getName()));
                 }
             }

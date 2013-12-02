@@ -26,7 +26,7 @@ class Worker(Location loc, ServiceA a, ServiceB b) {
   
   {
     move location(this) in loc;
-    s = new ServiceFrontEndImpl(a,b);
+    s = new local ServiceFrontEndImpl(a,b);
   }
 
   Unit changeLocation(Location newloc, ServiceA aP, ServiceB bP) {

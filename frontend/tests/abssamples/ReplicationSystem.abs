@@ -224,7 +224,7 @@ interface SyncServerAcceptor extends ServerAcceptor {
 	 *   R   ::= a R     a.retVal = ~ R.suspend; R.suspend = R.suspend; 
      *         | s S     R.suspend = True;
      *         | r R'    R.suspend = False;
-     *         | g R'    g.retVal = new cog ConnectionThread(g.job); R.suspend = R'.suspend;
+     *         | g R'    g.retVal = new ConnectionThread(g.job); R.suspend = R'.suspend;
 	 *   S   ::= a S     a.retVal = S.suspend; S.suspend = S.suspend; 
      *         | s S     S.suspend = True;
      *         | r R     S.suspend = False;
@@ -328,7 +328,7 @@ implements ClientJob {
 	// starts a replication job
 	Unit scheduleNewJob() {
 		await newJob;
-		new ClientJobImpl(this.client,Replication);
+		new local ClientJobImpl(this.client,Replication);
 	}
 	
 	Unit run() {
@@ -501,7 +501,7 @@ implements InternalClient, ClientConnector {
 		this.machine = map[start,waitToBoot,booting,waitToReplicate,workOnReplicate];
 	
 		// initialize the client side data base
-		this.db = new DataBaseImpl(EmptyMap);
+		this.db = new local DataBaseImpl(EmptyMap);
 	}
 	
 	ClientId getId() {
@@ -534,7 +534,7 @@ implements InternalClient, ClientConnector {
 		this.incrementJob();
 		
 		// starts a boot job
-		new cog ClientJobImpl(this,Boot);
+		new ClientJobImpl(this,Boot);
 	}
 	
 	ClientDataBase getClientDataBase() {
@@ -636,8 +636,8 @@ class Main {
 		TestData items = this.getDatas();
 		List<Schedule> schedules = this.getSchedules();
 		Set<ClientId> cids = this.getCids();
-		new ReplicationSystem(takeMap(datas,1),take(schedules,1),set[0]);
-		//new ReplicationSystem(items,schedules,cids);
+		new local ReplicationSystem(takeMap(datas,1),take(schedules,1),set[0]);
+		//new local ReplicationSystem(items,schedules,cids);
 	}
 	
 	List<Schedule> getSchedules() {
@@ -669,7 +669,7 @@ class ReplicationSystem(
 	
 	Unit run() {
 		// One SyncServer
-		[Far] SyncServer syncserver = new cog SyncServerImpl(items,listToSet(schedules),cids);
+		[Far] SyncServer syncserver = new SyncServerImpl(items,listToSet(schedules),cids);
 		
 		Set<[Far] ClientConnector> syncclients = EmptySet;
 		Set<[Far] Tester> testers = EmptySet;
@@ -677,10 +677,10 @@ class ReplicationSystem(
 		Set<ClientId> iterator = cids;
 		while (hasNext(iterator)) {
 			Pair<Set<ClientId>,ClientId> nt = next(iterator);
-			ClientConnector syncclient = new cog SyncClientImpl(snd(nt));
+			ClientConnector syncclient = new SyncClientImpl(snd(nt));
 			syncclients = insertElement(syncclients,syncclient);
 			
-			Tester tester = new cog TesterImpl(syncserver,syncclient);
+			Tester tester = new TesterImpl(syncserver,syncclient);
 			testers = insertElement(testers,tester);
 			iterator = fst(nt);
 		}
@@ -807,7 +807,7 @@ implements SyncServerAcceptor {
 		Bool shutdown = this.server.isShutdownRequested();
 		if (~ shutdown) {
 			await accept;
-			thread = new cog ConnectionThreadImpl(job,server,threads);
+			thread = new ConnectionThreadImpl(job,server,threads);
 			threads = threads + 1; // for debugging
 		} 
 		
@@ -1219,7 +1219,7 @@ class ReplicationSnapshotImpl(
 	[Modifies]
 	Unit replicationItem(Schedule schedule) {
 		if (isSearchItem(schedule)) {
-			ServerReplicationItem item = new SearchDirectoryItem(left(item(schedule)),this.db);
+			ServerReplicationItem item = new local SearchDirectoryItem(left(item(schedule)),this.db);
 			this.items = Insert(item,this.items);
 		} 
 		
@@ -1227,13 +1227,13 @@ class ReplicationSnapshotImpl(
 		if (isFileItem(schedule)) { 
 			// this will be defined in the deltas
 			Pair<FileId,String> it = right(item(schedule));
-			ServerReplicationItem item = new ReplicationFilePattern(fst(it),snd(it),this.db);
+			ServerReplicationItem item = new local ReplicationFilePattern(fst(it),snd(it),this.db);
 			this.items = Insert(item,this.items);
 		} 
 		
 		if (isLogItem(schedule)) { 
 			// this will be defined in the deltas
-			ServerReplicationItem item = new ReplicationLogItem(left(item(schedule)),this.db);
+			ServerReplicationItem item = new local ReplicationLogItem(left(item(schedule)),this.db);
 			this.items = Insert(item,this.items);
 		} 
 		*/
@@ -1319,13 +1319,13 @@ implements ServerReplicationItem {
 	[Near] ReplicationSnapshot snapshot = null;
 	
 	{
-		this.db = new DataBaseImpl(datas);
-		this.snapshot = new ReplicationSnapshotImpl(this.db,this.schedules);
+		this.db = new local DataBaseImpl(datas);
+		this.snapshot = new local ReplicationSnapshotImpl(this.db,this.schedules);
 	}
 	
 	Unit run() {
-		this.coordinator = new cog SyncServerClientCoordinatorImpl(this,snapshot,clients);
-		this.acceptor = new SyncServerAcceptorImpl(this);
+		this.coordinator = new SyncServerClientCoordinatorImpl(this,snapshot,clients);
+		this.acceptor = new local SyncServerAcceptorImpl(this);
 		this.coordinator!process();
 	}
 	
@@ -1939,5 +1939,5 @@ interface ClientDataBase extends DataBase {
 }
 
 { 
-	new Main();
+	new local Main();
 }

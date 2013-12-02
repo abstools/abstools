@@ -38,11 +38,11 @@ class TextFieldImpl implements TextField {
 [COG]
 class WindowImpl implements Window {
    [Near] Button newButton(String label) {
-      return new ButtonImpl(this, label);
+      return new local ButtonImpl(this, label);
    }
    
    TextField newTextField() {
-   	  return new TextFieldImpl();
+   	  return new local TextFieldImpl();
    }
 }
 

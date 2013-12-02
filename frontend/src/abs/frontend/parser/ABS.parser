@@ -810,7 +810,7 @@ List pattern_list =
     | pattern_list.l COMMA pattern.i        {: return l.add(i); :}
 	;
 
-Cog cog = annotation_list.annotations? COG {: return new Cog(annotations); :} ;
+Local local = LOCAL {: return new Local(); :} ;
 
 Exp exp =
 	  eff_exp.e   {: return e; :}
@@ -836,7 +836,7 @@ Exp eff_exp =
 	;
 
 NewExp new_exp =
-	NEW cog.c? type_name.i LPAREN data_exp_list.l? RPAREN {: return new NewExp(i.getName(),l,c) ; :}
+	NEW local? type_name.i LPAREN data_exp_list.l? RPAREN {: return new NewExp(i.getName(),l,local) ; :}
 	;
 
 NewLocExp newloc_exp =
@@ -1077,7 +1077,7 @@ IncompleteExp incomplete_exp =
         }
         return new IncompleteAsyncAccess(callee);
         :}
-    | NEW cog.c? {: return new IncompleteNewExp(c) ; :}
+    | NEW local.l? {: return new IncompleteNewExp(l) ; :}
 
 ;
 

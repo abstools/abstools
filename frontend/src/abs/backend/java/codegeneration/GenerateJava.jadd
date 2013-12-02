@@ -570,8 +570,12 @@ aspect GenerateJava {
         ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
         String className = JavaBackend.getQualifiedString(decl);
 
-        if (hasCog()) {
-            String strategy = JavaGeneratorHelper.generateCog(stream, getCog());
+        if (!hasLocal()) {
+            String strategy = null;
+            PureExp scheduler = getInheritedAnnotationValue("Scheduler");
+            if (scheduler != null) {
+                strategy = JavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
+            }
             stream.print(className + ".__ABS_createNewCOG");
 
             if (strategy != null)

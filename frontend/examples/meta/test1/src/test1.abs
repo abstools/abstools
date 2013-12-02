@@ -14,6 +14,6 @@ class MyClass(Int x) implements I {
 
 {
 
-    I o = new MyClass(1111);
+    I o = new local MyClass(1111);
     Int val = o.getX();
 }

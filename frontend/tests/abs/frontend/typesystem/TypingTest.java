@@ -51,7 +51,7 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testInterfaceType() {
-        Model m = assertParseOk("interface I { } class C {} { I i = new C(); I i2 = i; }");
+        Model m = assertParseOk("interface I { } class C {} { I i = new local C(); I i2 = i; }");
         assertEquals(m.getCompilationUnit(0).getModuleDecl(0).getDecl(0).getType(), getTypeOfNthAssignment(m, 2));
     }
 
@@ -99,7 +99,7 @@ public class TypingTest extends FrontendTest {
 
     @Test
     public void testNew() {
-        Model m = assertParseOk("interface I {} class C implements I {} { I i; i = new C(); }");
+        Model m = assertParseOk("interface I {} class C implements I {} { I i; i = new local C(); }");
         assertEquals(m.lookup(new KindedName(Kind.TYPE_DECL, "UnitTest.I")).getType(),
                 ((UnionType) getTypeOfFirstAssignment(m)).getType(0));
     }

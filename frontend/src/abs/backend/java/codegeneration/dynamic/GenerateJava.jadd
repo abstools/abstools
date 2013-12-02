@@ -585,17 +585,12 @@ aspect GenerateJavaDynamic_Core {
     public void NewExp.generateJavaDynamic(PrintStream stream) {
         ClassDecl decl = ((UnionType)getType()).getOriginatingClass();
         String className = JavaBackend.getQualifiedString(decl);
-        if (hasCog()) {
-            Cog cog = this.getCog();
+        if (!hasLocal()) {
             // generate user-defined scheduler class if annotation is present
             String strategy = null;
-            for (Annotation a : cog.getAnnotationList()) {
-                if (a instanceof TypedAnnotation) {
-                    TypedAnnotation ta = (TypedAnnotation)a;
-                    if (((DataTypeUse)ta.getAccess()).getName().equals("Scheduler")) {
-                        strategy = DynamicJavaGeneratorHelper.generateUserSchedulingStrategy(cog, ta.getValue());
-                    }
-                }
+            PureExp scheduler = this.getInheritedAnnotationValue("Scheduler");
+            if (scheduler != null) {
+                strategy = DynamicJavaGeneratorHelper.generateUserSchedulingStrategy(this, scheduler);
             }
             stream.print(className + ".__ABS_createNewCOG");
             if (strategy != null)

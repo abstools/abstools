@@ -33,7 +33,6 @@ import abs.frontend.ast.AwaitAsyncCall;
 import abs.frontend.ast.AwaitStmt;
 import abs.frontend.ast.ClaimGuard;
 import abs.frontend.ast.ClassDecl;
-import abs.frontend.ast.Cog;
 import abs.frontend.ast.Decl;
 import abs.frontend.ast.ExpGuard;
 import abs.frontend.ast.FnApp;
@@ -43,6 +42,7 @@ import abs.frontend.ast.LetExp;
 import abs.frontend.ast.List;
 import abs.frontend.ast.MethodImpl;
 import abs.frontend.ast.MethodSig;
+import abs.frontend.ast.NewExp;
 import abs.frontend.ast.ParamDecl;
 import abs.frontend.ast.PureExp;
 import abs.frontend.ast.ReturnStmt;
@@ -550,20 +550,11 @@ public class JavaGeneratorHelper {
         stream.println(");");
     }
 
-    public static String generateCog(PrintStream stream, Cog cog) {
-        // generate user-defined scheduler class if annotation is present
-        PureExp scheduler = CompilerUtils.getAnnotationValue(cog.getAnnotationList(), "Scheduler");
-        if (scheduler != null)
-            return generateUserSchedulingStrategy(cog, scheduler);
-        else
-            return null;
-    }
-
-    public static String generateUserSchedulingStrategy(Cog cog, PureExp exp) {
+    public static String generateUserSchedulingStrategy(NewExp exp, PureExp scheduler) {
         String className = "UserSchedulingStrategy_" + JavaBackend.getRandomName();
         PrintStream stream = null;
         try {
-            JavaCode.Package pkg = cog.getModuleDecl().getJavaPackage();
+            JavaCode.Package pkg = exp.getModuleDecl().getJavaPackage();
             File file = pkg.createJavaFile(className);
             stream = new JavaCodeStream(file);
 
@@ -579,7 +570,7 @@ public class JavaGeneratorHelper {
             // i.e. a function call or some other code that returns a Process
             stream.println("// user-specified scheduler expression");
             stream.print("return ");
-            exp.generateJava(stream);
+            scheduler.generateJava(stream);
             stream.println(";");
             stream.println("}");
             stream.println("}");

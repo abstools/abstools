@@ -126,7 +126,7 @@ abstract IncompleteExp: PureExp;
 abstract IncompleteAccess: IncompleteExp ::= Target:PureExp;
 IncompleteSyncAccess: IncompleteAccess; // something like "x."
 IncompleteAsyncAccess: IncompleteAccess; // something like "x!"
-IncompleteNewExp: IncompleteExp ::= [Cog]; // a "new" without a classname
+IncompleteNewExp: IncompleteExp ::= [Local]; // a "new" without a classname
 IncompleteStmt: Stmt ::= Stmt;
 
 UnresolvedTypeUse: TypeUse; // A type expression whose type cannot be resolved at parse time.
@@ -213,10 +213,10 @@ LiteralPattern: Pattern ::= Literal:LiteralExp;
 UnderscorePattern: Pattern;
 
 
-Cog ::= Annotation* ; // just the COG marker
+Local ; // just the local marker
 
 // Expressions with side effects.
-NewExp: EffExp ::= <ClassName> Param:PureExp* [Cog] ;
+NewExp: EffExp ::= <ClassName> Param:PureExp* [Local] ;
 abstract Call: EffExp ::= Callee:PureExp <Method> Param:PureExp*;
 SyncCall: Call;
 AsyncCall: Call;

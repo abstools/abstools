@@ -218,7 +218,7 @@ class CostPatternConsumer implements CostPatternConsumer {
 				pipeline);
 		} else if (isPipelinedCost(pattern)) {
 			Int transformedLength = this.transformCost(pipelineLength(pattern));
-			CostPipeline newPipeline = new CostPipeline(
+			CostPipeline newPipeline = new local CostPipeline(
 				transformedLength, pipelineDelay(pattern), pipeline);
 			this.consumeCostPatternIntern(initialCostPattern(pattern), newPipeline);
 			newPipeline.awaitCompletion();

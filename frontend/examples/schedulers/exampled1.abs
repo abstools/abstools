@@ -24,12 +24,12 @@ class CImpl implements C {
 }
 
 {
-    C o = new cog CImpl();
+    C o = new CImpl();
     ObjectMirror om = reflect(o);
     Cog g = om.getCog();
 
     // sched is in a different cog, so movi it to target cog
-    ProcessScheduler sched = new MyScheduler1(0);
+    ProcessScheduler sched = new local MyScheduler1(0);
     ObjectMirror sm = reflect(sched);
     sm.setCog(g);
 

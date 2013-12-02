@@ -31,7 +31,7 @@ adds class Heating(House house) implements Heating {
 	* every 3 seconds
 	*/
     Unit cooling() {
-    	Sleeper sleeper = new cog Sleeper();
+    	Sleeper sleeper = new Sleeper();
     	while (this.cooling) {
     		Fut<Unit> s = sleeper!sleep(3000);
     		await s?;
@@ -103,7 +103,7 @@ adds class Heating(House house) implements Heating {
 	* Recieve a new temperature
 	*/
     Unit notify(String message) {
-        Parser parser = new Parser();
+        Parser parser = new local Parser();
         this.lastRcvdTemperature = parser.intFromString(message);
         // Stop heating when goal temperature is reached
         if (this.lastRcvdTemperature >= this.goalTemperature) {
@@ -138,7 +138,7 @@ modifies class Heating {
 	* Heats 1 degree after 1 second
 	*/
     modifies Unit warm() {
-    	Sleeper sleeper = new cog Sleeper();
+    	Sleeper sleeper = new Sleeper();
     	Fut<Unit> s = sleeper!sleep(1000);
     	await s?;
     	if (this.warming) {
@@ -154,7 +154,7 @@ modifies class Heating {
 	* Heats 1 degree after 1.5 seconds
 	*/
 	modifies Unit warm() {
-		Sleeper sleeper = new cog Sleeper();
+		Sleeper sleeper = new Sleeper();
 		Fut<Unit> s = sleeper!sleep(1500);
 		await s?;
 		if (this.warming) {

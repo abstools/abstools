@@ -20,13 +20,13 @@ class ClientGUIImpl([Near] ClientIntern client) implements ClientGUIIntern {
    Bool initialized = False;
    
    {   
-   	  gui = new cog WindowImpl();
+   	  gui = new WindowImpl();
    } 
    
    Unit init() { 
    	  Fut<Button> f = gui!newButton("Send");
    	  sendButton = f.get;
-   	  ButtonListener l = new SendButtonListener(this);
+   	  ButtonListener l = new local SendButtonListener(this);
    	  sendButton!registerListener(l);
 
       Fut<TextField> tf;
@@ -75,7 +75,7 @@ class ClientImpl implements ClientIntern {
 
    ClientGUI getGUI() {
 	  if (gui == null) {
-	     gui = new ClientGUIImpl(this);
+	     gui = new local ClientGUIImpl(this);
 	     gui.init();
 	  }
    	  return gui;

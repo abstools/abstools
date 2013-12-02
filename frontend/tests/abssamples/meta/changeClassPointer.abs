@@ -6,7 +6,7 @@ class C implements I { Int m() {return 1;} }
 class D implements I { Int m() {return 2;} }
 
 {
-    I o1 = new C();
+    I o1 = new local C();
     ObjectMirror m1 = reflect(o1);
     String name = m1.getClassName();
     assert (name == "C");
@@ -14,7 +14,7 @@ class D implements I { Int m() {return 2;} }
     assert x == 1;
 
     // change class of o1 from C to D and invoke m() again
-    I o2 = new D();
+    I o2 = new local D();
     ObjectMirror m2 = reflect(o2);
     Class class_of_o2 = m2.getClass();
     m1.setClass(class_of_o2);

@@ -16,13 +16,13 @@ class C2(String p) implements I2 {
 
 
 {
-    I o = new C(100);
+    I o = new local C(100);
     Int p = o.getP();
     Int f = o.getF();
     assert p == 100;
     assert f == 99;
 
-    I2 o2 = new C2("World");
+    I2 o2 = new local C2("World");
     String p2 = o2.getP();
     String f2 = o2.getF();
     assert p2 == "World";
