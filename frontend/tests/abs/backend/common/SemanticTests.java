@@ -7,12 +7,14 @@ package abs.backend.common;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import abs.backend.BackendTestDriver;
+import abs.backend.erlang.ErlangTestDriver;
 import abs.backend.java.JavaTestDriver;
 import abs.backend.java.dynamic.JavaDynamicTestDriver;
 import abs.backend.maude.MaudeCompiler;
@@ -27,8 +29,16 @@ public abstract class SemanticTests {
     }
 
     public static boolean checkMaude() {
+        return checkProg("maude");
+    }
+
+    public static boolean checkErlang() {
+        return checkProg("erl");
+    }
+
+    public static boolean checkProg(String prog) {
         ProcessBuilder pb = new ProcessBuilder();
-        pb.command("maude");
+        pb.command(prog);
         try {
             Process p = pb.start();
             p.destroy();
@@ -39,24 +49,25 @@ public abstract class SemanticTests {
     }
 
     @Parameters(name="{0}")
-    public static Collection<?> data() {
-        final Object[][] data;
+    public static Collection<Object[]> data() {
+        final Collection<Object[]> data = new LinkedList<Object[]>();
         /* TODO: Mark Maude tests as ignored instead of just missing them */
         /* TODO: For the Java backend, we just use different RUNTIME options, not code-gen options.
          * So we could actually just compile the code to Java once, and then run it with the different options.
          */
         /* Append new tests to the end, so that we can aggregate relative differences in CI */
-        if (checkMaude())
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }, { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) } , { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) }
-            , {new JavaDynamicTestDriver()}
-            // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
-            };
-        else
-            data = new Object[][] { { new JavaTestDriver() }, { new JavaTestDriver(1) }
-            , {new JavaDynamicTestDriver()}
-            //, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
-            };
-        return Arrays.asList(data);
+        data.add( new Object[] { new JavaTestDriver() });
+        data.add( new Object[] { new JavaTestDriver(1) });
+        data.add( new Object[] { new JavaDynamicTestDriver() });
+        if (checkMaude()) {
+            data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.RL) });
+            data.add(new Object[] { new MaudeTestDriver(MaudeCompiler.SIMULATOR.EQ_TIMED) });
+        }
+        if (checkErlang()) {
+            data.add(new Object[] { new ErlangTestDriver() });
+        }
+        // FIXME: enable after #302 is done, {new JavaTestDriver(){{absArgs.add("-taskScheduler=simple");}} }
+        return data;
     }
 
     public void assertEvalTrue(String absCode) {
