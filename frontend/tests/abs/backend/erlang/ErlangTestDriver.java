@@ -4,6 +4,7 @@
  */
 package abs.backend.erlang;
 
+import org.junit.Assert;
 import abs.ABSTest;
 import abs.backend.BackendTestDriver;
 
@@ -12,19 +13,19 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     @Override
     public void assertEvalEquals(String absCode, boolean value) throws Exception {
         // TODO Auto-generated method stub
-
+        Assert.fail();
     }
 
     @Override
     public void assertEvalFails(String absCode) throws Exception {
         // TODO Auto-generated method stub
-
+        Assert.fail();
     }
 
     @Override
     public void assertEvalTrue(String absCode) throws Exception {
         // TODO Auto-generated method stub
-
+        Assert.fail();
     }
 
 }
