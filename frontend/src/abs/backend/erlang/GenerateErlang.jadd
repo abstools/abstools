@@ -186,7 +186,7 @@ aspect GenerateErlang {
   @Override
   public void SyncCall.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     final List<PureExp> params = getParams();
-    ecs.print("(fun(#object{class=T})-> T end(");
+    ecs.print("(fun(#object{class=T,cog =C}) when C=:=Cog -> T end(");
     getCallee().generateErlangCode(ecs,vars);
     ecs.format(")):m_%s",getMethod());
     ErlUtil.argumentList(ecs,getCallee(),params,vars);
