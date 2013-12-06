@@ -89,7 +89,7 @@ public class BackPositionTest extends FrontendTest {
     @Test
     public void testSourcePosLoop() {
         assertNodeAtPos("module Foo; type InKeyType = String; type InValueType = List<String>; type OutKeyType = String; type OutValueType = Int; interface IMap {  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value);}"
-                , 1, 170, DataTypeUse.class);
+                , 1, 170, UnresolvedTypeUse.class);
     }
 
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
