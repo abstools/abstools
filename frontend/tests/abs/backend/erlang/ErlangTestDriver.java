@@ -30,6 +30,11 @@ import com.google.common.io.Files;
 
 public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
 
+    @Override
+    public String toString() {
+        return "Erlang";
+    }
+
     @BeforeClass
     public static void checkRequired() {
         Assert.assertTrue(SemanticTests.checkErlang());
