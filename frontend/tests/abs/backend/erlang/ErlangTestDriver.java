@@ -105,13 +105,14 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     }
 
     /**
-     * Calls make in workDir
+     * Complies code in workDir
      */
     private void make(File workDir) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder("erl", "-pa ebin", "-make");
+        ProcessBuilder pb = new ProcessBuilder("erl", "-pa", "ebin", "-noshell", "-noinput", "-eval",
+                "case make:all() of up_to_date -> halt(0); _ -> halt(1) end.");
         pb.directory(workDir);
         Process p = pb.start();
-        Assert.assertEquals("Make failed", 0, p.waitFor());
+        Assert.assertEquals("Compile failed", 0, p.waitFor());
     }
 
     private static final String RUN_SCRIPT=  
