@@ -85,7 +85,13 @@ public class BackPositionTest extends FrontendTest {
     public void testDeltaClause() {
         assertNodeAtPos("module Bla; productline PL; features X; delta KX when X;", 1, 48, Deltaspec.class);
     }
-    
+
+    @Test
+    public void testSourcePosLoop() {
+        assertNodeAtPos("module Foo; type InKeyType = String; type InValueType = List<String>; type OutKeyType = String; type OutValueType = Int; interface IMap {  List<Pair<OutKeyType, OutValueType>> invokeMap(InKeyType key, InValueType value);}"
+                , 1, 170, DataTypeUse.class);
+    }
+
     private void assertNodeAtPos(String absCode, int line, int col, Class<?> clazz) {
         Model m = assertParseOk(absCode, WITHOUT_MODULE_NAME,ALLOW_INCOMPLETE_EXPR);
         SourcePosition pos = SourcePosition.findPosition(m.getCompilationUnit(0), line, col);

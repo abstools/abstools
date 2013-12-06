@@ -300,6 +300,11 @@ aspect TypeResolution {
           return tu;
         }
         when (getDecl().isTypeSyn() && 
+              /* May point to something else Undefined, especially for partial models.
+                 If we would drop into the default case, we'd create new nodes in an
+                 infinite loop! (And returning "this" in the body won't save you.)
+              */        
+            !(((TypeSynDecl)getDecl()).getValue() instanceof UnresolvedTypeUse) &&
             // Avoid "type Foo = Foo":
             closestParent(Decl.class) != ((TypeSynDecl)getDecl())
         ) to TypeUse {
