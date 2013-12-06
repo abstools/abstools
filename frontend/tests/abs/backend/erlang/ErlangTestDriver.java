@@ -38,7 +38,6 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
     @BeforeClass
     public static void checkRequired() {
         Assert.assertTrue(SemanticTests.checkErlang());
-        Assert.assertTrue(SemanticTests.checkProg("make", "-v"));
     }
 
     @Override
@@ -105,13 +104,11 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
         return mb.getModuleDecl().getName();
     }
 
-    
-    
     /**
-    * Calls make in workDir
+     * Calls make in workDir
      */
     private void make(File workDir) throws Exception {
-        ProcessBuilder pb = new ProcessBuilder("make");
+        ProcessBuilder pb = new ProcessBuilder("erl", "-pa ebin", "-make");
         pb.directory(workDir);
         Process p = pb.start();
         Assert.assertEquals("Make failed", 0, p.waitFor());
@@ -127,14 +124,15 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
      /**
      * Executes mainModule
      * 
-     * We replace the run script by a new version, which will write the Result to STDOUT
-     * Furthermore to detect faults, we have a Timeout process, which will kill the runtime system after 2 seconds
+     * We replace the run script by a new version, which will write the Result
+     * to STDOUT Furthermore to detect faults, we have a Timeout process, which
+     * will kill the runtime system after 2 seconds
      */
     private String run(File workDir, String mainModule) throws Exception {
         String val = null;
         File runFile = new File(workDir, "run");
-        Files.write(RUN_SCRIPT,runFile, Charset.forName("UTF-8"));
-        
+        Files.write(RUN_SCRIPT, runFile, Charset.forName("UTF-8"));
+        runFile.setExecutable(true);
         ProcessBuilder pb = new ProcessBuilder(runFile.getAbsolutePath(), mainModule);
         pb.directory(workDir);
         pb.redirectErrorStream(true);
@@ -142,7 +140,7 @@ public class ErlangTestDriver extends ABSTest implements BackendTestDriver {
        
         Thread t = new Thread(new TimeoutThread(p));
         t.start();
-        //Search for result
+        // Search for result
         BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
         while (true) {
             String line = br.readLine();
