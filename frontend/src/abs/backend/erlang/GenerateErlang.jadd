@@ -373,7 +373,10 @@ aspect GenerateErlang {
   @Override
   public void DivMultExp.generateErlangCode(ErlangCodeStream ecs,Vars vars){
     getLeft().generateErlangCode(ecs,vars);
-    ecs.print(" / ");
+    if ("Int".equals(getLeft().getType().getSimpleName()) && "Int".equals(getRight().getType().getSimpleName()))
+      ecs.print(" div ");
+    else
+      ecs.print(" / ");
     getRight().generateErlangCode(ecs,vars);
   }
   @Override
