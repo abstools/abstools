@@ -75,27 +75,28 @@ execute(S) ->
     T=get_runnable(Tasks),
     State=case T of
         none->
-			S2=reset_polled(S1,Polled),
+			S2=reset_polled(none,Polled,S1),
             S2#state{running=non_found};		  
         #task{ref=R} ->
             R!token,
             io:format("COG ~p: schedule ~p~n",[self(),T]),
-			S2=reset_polled(S1,lists:delete(T,Polled)),
+			S2=reset_polled(R,Polled,S1),
   			set_state(S2#state{running=true},R,running)
     end.
 
 set_state(S1=#state{tasks=Tasks,polling=Pol},TaskRef,State)->
 	Old=#task{state=OldState}=gb_trees:get(TaskRef,Tasks),
+	New_state=Old#task{state=State},
 	S=case State of 
 		  waiting_poll ->
-			  S1#state{polling=[Old|Pol]};
+			  S1#state{polling=[New_state|Pol]};
 		  _ when OldState == waiting_poll ->
 			  S1#state{polling=lists:delete(Old, Pol)};
 		  _ ->
 			  S1
 	  end,  
 	io:format("COG ~p: set ~p state to ~p~n",[self(),TaskRef,State]),
-	S#state{tasks=gb_trees:update(TaskRef,Old#task{state=State},Tasks)}.
+	S#state{tasks=gb_trees:update(TaskRef,New_state,Tasks)}.
 
 get_runnable(Tasks)->
     get_runnable_i(gb_trees:iterator(Tasks)).
@@ -120,9 +121,14 @@ poll_waiting(S=#state{tasks=Tasks1,polling=Pol}) ->
 	{S#state{tasks=NT},Polled}.
 
 	
-reset_polled(S=#state{tasks=Tasks},Polled) ->
+reset_polled(Choosen,Polled,S=#state{tasks=Tasks}) ->
 	S#state{tasks=lists:foldl(fun (T=#task{ref=R},Tasks) ->
-					R!wait,
+					case R of 
+						Choosen -> 
+							noop;
+						_->
+							R!wait
+					end,
 					 gb_trees:update(R,T,Tasks) end ,
 				 Tasks,Polled)}.
 	
