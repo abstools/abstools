@@ -31,17 +31,17 @@ public class ObjectTests extends SemanticTests {
     public void refEq2() {
         assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = ~(i1 == i2); }");
     }
-    
+
     @Test
     public void refGt() {
         assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 > i2 || i2 > i1; }");
     }
-    
+
     @Test
     public void refLt() {
         assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 < i2 || i2 < i1; }");
     }
-    
+
     @Test
     public void refGtEq() {
         assertEvalTrue("interface I {} class C implements I {} { I i1 = new local C(); I i2 = new local C(); Bool testresult = i1 >= i2 || i1 < i2; }");
@@ -61,12 +61,10 @@ public class ObjectTests extends SemanticTests {
 
     @Test
     public void refLtDiffClass() {
-        assertEvalTrue("interface I {}"
-                + "class C1 implements I {}"
-                + "class C2 implements I {}"
+        assertEvalTrue("interface I {}" + "class C1 implements I {}" + "class C2 implements I {}"
                 + "{ I i1 = new C1(); I i2 = new C2(); Bool testresult = i1 < i2 || i2 < i1; }");
     }
-    
+
     @Test
     public void classDecl() {
         assertEvalTrue("class C { } { Bool testresult = True; }");
@@ -134,5 +132,19 @@ public class ObjectTests extends SemanticTests {
     public void classMethodShadowsField2() {
         assertEvalTrue("interface I { Bool m(Bool f); } class C(Bool f) implements I { Bool m(Bool f) { return this.f; } }"
                 + "{ Bool testresult = False; I i = new local C(True); testresult = i.m(False);}");
+    }
+
+    @Test
+    public void fieledPatternMatch() {
+        assertEvalTrue(INTERFACE_I
+                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;};  } }"
+                + CALL_M);
+    }
+
+    @Test
+    public void fieledPatternMatch2() {
+        assertEvalTrue(INTERFACE_I
+                + "class C(Bool f) implements I { Int a=2; Int b=4; Bool m() { return case 2 {a => True;} && case 4{b=> True;};   } }"
+                + CALL_M);
     }
 }

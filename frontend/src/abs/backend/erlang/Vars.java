@@ -120,7 +120,7 @@ public class Vars extends LinkedHashMap<String, Var> {
                 }
             }
         }
-
+        temp = Math.max(var1.temp, var2.temp);
         for (String k : Sets.union(Sets.difference(var1.keySet(), used), Sets.difference(var2.keySet(), used)))
             this.put(k, new Var(Var.max(var1.get((Object) k), var2.get((Object) k)), false));
         left.deleteCharAt(left.length() - 1);
@@ -132,6 +132,7 @@ public class Vars extends LinkedHashMap<String, Var> {
         for (java.util.Map.Entry<String, Var> k : child.entrySet())
             if (!containsKey(k.getKey()) || !k.getValue().isSet())
                 this.put(k.getKey(), new Var(k.getValue().getCount(), false));
+        temp = Math.max(temp, child.temp);
     }
 }
 
