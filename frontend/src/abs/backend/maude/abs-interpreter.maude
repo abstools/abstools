@@ -722,8 +722,7 @@ mod ABS-CONFIGURATION is
   --- S: Flag indicating whether the call was made synchronously, i.e. whether
   ---    a $cont statement should be generated at the end.
   --- AUX: additional process variables, currently .deadline (deadline)
-  op invoc(_,_,_,_,_,_) : Oid Label Mid DataList Bool SSubst -> Msg
-    [ctor format (b d o  b so  b so  b so  b so  b so b on)] .
+  op invoc : Oid Label Mid DataList Bool SSubst -> Msg .
 
   --- Process creation in target object:
   --- M: the method.
@@ -733,7 +732,7 @@ mod ABS-CONFIGURATION is
   --- AUX: additional process variables, currently .deadline (deadline)
   --- T: arrival time
   --- S: the object state, needed for calculation of method cost
-  op makeProcess(_,_,_,_,_,_,_) : Method Label DataList Bool SSubst Nat Subst -> Process .
+  op makeProcess : Method Label DataList Bool SSubst Nat Subst -> Process .
 
 
   --- Error and warning messages are intended to stop the machine.
