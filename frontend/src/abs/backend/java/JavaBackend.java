@@ -63,6 +63,8 @@ public class JavaBackend extends Main {
                 this.untypedJavaGen = true;
             } else if (arg.equals("-debug")) {
                 /* Print stacktrace on exception, used in main(), must be removed from remaining args. */
+            } else if(arg.equals("-java")) {
+                // nothing to do
             } else {
                 remainingArgs.add(arg);
             }

@@ -7,6 +7,8 @@ package abs.backend.erlang;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import abs.backend.java.codegeneration.JavaCodeGenerationException;
@@ -34,6 +36,23 @@ public class ErlangBackend extends Main {
 
             System.exit(1);
         }
+    }
+
+    @Override
+    public List<String> parseArgs(String[] args) {
+        List<String> restArgs = super.parseArgs(args);
+        List<String> remainingArgs = new ArrayList<String>();
+
+        for (int i = 0; i < restArgs.size(); i++) {
+            String arg = restArgs.get(i);
+            if (arg.equals("-erlang")) {
+                // nothing to do
+            } else {
+                remainingArgs.add(arg);
+            }
+        }
+
+        return remainingArgs;
     }
 
     private File destDir = new File("gen/erl/");
