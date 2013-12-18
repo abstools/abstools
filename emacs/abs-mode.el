@@ -290,17 +290,24 @@ value.")
 (defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
 
-The language backend is chosen via `abs-target-language', which
-can be set file-local.
+The language backend for compilation can be chosen by giving a
+`C-u' prefix to this command.  The default backend is set via
+customizing or setting `abs-target-language' and can be
+overridden for a specific abs file by giving a file-local value
+via `add-file-local-variable'.
 
-Remember to make `abs-interpreter.maude' accessible to Maude!
-This can be done either by copying or symlinking that file to the
-current directory, or via the `MAUDE_LIB' environment variable.
+To execute on the Maude backend, remember to make
+`abs-interpreter.maude' accessible to Maude!  This can be done
+either by copying or symlinking that file to the current
+directory, or via the `MAUDE_LIB' environment variable.
 
 To determine whether to compile or load, `abs-next-action'
 assumes that the result of compilation is stored in a file with
 the same name as the current buffer but with a `.maude'
-extension.  Set the variable `abs-output-file' to override this."
+extension.  Set the variable `abs-output-file' to override this.
+
+TODO: at the moment, this command only run models on the Maude
+backend."
   (interactive "p")
   (let* ((abs-target-language (if (= 1 flag)
                                   abs-target-language
