@@ -37,11 +37,19 @@
   "Major mode for editing files in the programming / modeling language Abs."
   :group 'languages)
 
-(defcustom abs-compiler-command (executable-find "generateMaude")
-  "Path to the Abs compiler.
-The given command will be called with a filename, followed by
-\"-o\" and the name of an output file."
+(defcustom abs-target-language 'maude
+  "The default target language for code generation."
+  :type '(radio (const maude)
+                (const java)
+                (const erlang))
+  :group 'abs)
+(put 'abs-target-language 'safe-local-variable
+     #'(lambda (x) (member x '(maude java erlang))))
+
+(defcustom abs-compiler-program (or (executable-find "absc") "absc")
+  "Path to the Abs compiler."
   :type 'file
+  :risky t
   :group 'abs)
 
 (defcustom abs-indent standard-indent
@@ -51,7 +59,7 @@ The given command will be called with a filename, followed by
 (put 'abs-indent 'safe-local-variable 'integerp)
 
 (defcustom abs-use-timed-interpreter nil
-  "Controls whether to compile Abs code using the timed interpreter by default.
+  "Control whether to compile Abs code using the timed interpreter by default.
 This influences the default compilation command executed by
 \\[abs-next-action].  Note that you can set this variable as a
 file-local variable as well."
@@ -73,7 +81,7 @@ Note that you can set this variable as a file-local variable as well."
 (put 'abs-clock-limit 'safe-local-variable 'integerp)
 
 (defcustom abs-default-resourcecost 0
-  "Default resource cost of executing one ABS statement."
+  "Default resource cost of executing one ABS statement in the timed interpreter."
   :type 'integer
   :group 'abs)
 (put 'abs-default-resourcecost 'safe-local-variable 'integerp)
@@ -91,7 +99,8 @@ Note that you can set this variable as a file-local variable as well."
 (defvar abs-constant-face 'abs-constant-face
   "Face for Abs constants")
 
-(defface abs-function-name-face '((default (:inherit font-lock-function-name-face)))
+(defface abs-function-name-face
+    '((default (:inherit font-lock-function-name-face)))
   "Face for Abs function-names"
   :group 'abs)
 (defvar abs-function-name-face 'abs-function-name-face
@@ -103,7 +112,8 @@ Note that you can set this variable as a file-local variable as well."
 (defvar abs-type-face 'abs-type-face
   "Face for Abs types")
 
-(defface abs-variable-name-face '((default (:inherit font-lock-variable-name-face)))
+(defface abs-variable-name-face
+    '((default (:inherit font-lock-variable-name-face)))
   "Face for Abs variables"
   :group 'abs)
 (defvar abs-variable-name-face 'abs-variable-name-face
@@ -151,7 +161,8 @@ Note that you can set this variable as a file-local variable as well."
      (cons abs-keywords 'abs-keyword-face)
      (cons abs-constants 'abs-constant-face)
      (cons (concat "\\(" abs--cid-regexp "\\)") 'abs-type-face)
-     (list (concat "\\(" abs--id-regexp "\\)[[:space:]]*(") 1 'abs-function-name-face)
+     (list (concat "\\(" abs--id-regexp "\\)[[:space:]]*(") 1
+           'abs-function-name-face)
      (cons (concat "\\(" abs--id-regexp "\\)") 'abs-variable-name-face)
      (list "\\<\\(# \w+\\)\\>" 1 'font-lock-warning-face t))
     "Abs keywords")
@@ -220,7 +231,7 @@ Add a file-local setting to override the default value.")
   "The compile command called by \\[abs-next-action].
 The default behavior is to call \"make\" if a Makefile is in the
 current directory, otherwise call the program named by
-`abs-compiler-command' on the current file.  This behavior can be
+`abs-compiler-program' on the current file.  This behavior can be
 changed by giving `abs-compile-comand' a file-local or dir-local
 value.")
 (put 'abs-compile-command 'safe-local-variable
@@ -261,17 +272,26 @@ value.")
         (maude-filename (abs--maude-filename)))
     (cond (abs-compile-command)
           (makefilep compile-command)
-          (t (concat abs-compiler-command " " filename " -o " maude-filename
-                     (if abs-use-timed-interpreter
-                         (concat " -timed -limit=" (number-to-string abs-clock-limit))
-                       "")
-                     (if (< 0 abs-default-resourcecost)
+          (t (concat abs-compiler-program
+                     " -" (symbol-name abs-target-language) " "
+                     filename
+                     (when (eql abs-target-language 'maude)
+                       (concat " -o " maude-filename))
+                     (when (and (eql abs-target-language 'maude)
+                                abs-use-timed-interpreter)
+                       (concat " -timed -limit="
+                               (number-to-string abs-clock-limit)))
+                     (when (and (eql abs-target-language 'maude)
+                                (< 0 abs-default-resourcecost))
                          (concat " -defaultcost="
                                  (number-to-string abs-default-resourcecost)))
                      " ")))))
 
-(defun abs-next-action ()
+(defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
+
+The language backend is chosen via `abs-target-language', which
+can be set file-local.
 
 Remember to make `abs-interpreter.maude' accessible to Maude!
 This can be done either by copying or symlinking that file to the
@@ -281,8 +301,14 @@ To determine whether to compile or load, `abs-next-action'
 assumes that the result of compilation is stored in a file with
 the same name as the current buffer but with a `.maude'
 extension.  Set the variable `abs-output-file' to override this."
-  (interactive)
-  (let* ((abs-maude-file (abs--absolute-maude-filename))
+  (interactive "p")
+  (let* ((abs-target-language (if (= 1 flag)
+                                  abs-target-language
+                                (intern
+                                 (completing-read "Target language: "
+                                                  '("maude" "erlang" "java")
+                                                  nil t nil nil "maude"))))
+         (abs-maude-file (abs--absolute-maude-filename))
          (abs-modtime (nth 5 (file-attributes (buffer-file-name))))
          (maude-modtime (nth 5 (file-attributes abs-maude-file))))
     (if (or (not maude-modtime)
