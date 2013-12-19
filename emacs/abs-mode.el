@@ -29,6 +29,7 @@
 (require 'custom)
 (eval-when-compile (require 'rx))
 (require 'maude-mode)
+(require 'cl-lib)
 
 ;;; Code:
 
@@ -220,12 +221,31 @@ Note that you can set this variable as a file-local variable as well."
 
 ;;; Compiling the current buffer.
 ;;;
-(defvar abs-output-file nil
-  "The Maude file that will be loaded by \\[abs-next-action].
-Defaults to the buffer filename with a \".maude\" extension.
+(defvar abs-maude-output-file nil
+  "The Maude file that will be generated or loaded by \\[abs-next-action].
+Defaults to the buffer filename with a \".maude\" extension if
+`abs-input-files' is unset, or to the name of the first element
+in `abs-input-files' with a \".maude\" extension otherwise.
 
 Add a file-local setting to override the default value.")
-(put 'abs-output-file 'safe-local-variable 'stringp)
+(put 'abs-maude-output-file 'safe-local-variable 'stringp)
+
+(defvar abs-input-files nil
+  "List of Abs files to be compiled by \\[abs-next-action].
+If nil, the file visited in the current buffer will be used.  If
+set, the first element determines the name of the generated Maude
+file if generating Maude code.
+
+Add a file-local setting (\\[add-file-local-variable]) to
+override the default value.  Put a section like the following at
+the end of your buffer:
+
+// Local Variables:
+// abs-input-files: (\"file1.abs\" \"file2.abs\")
+// End:
+")
+(put 'abs-input-files 'safe-local-variable
+     (lambda (list) (every #'stringp list)))
 
 (defvar abs-compile-command nil
   "The compile command called by \\[abs-next-action].
@@ -254,38 +274,39 @@ value.")
            (< (second d1) (second d2)))
       (< (first d1) (first d2))))
 
+(defun abs--input-files ()
+  (or abs-input-files (list (file-name-nondirectory (buffer-file-name)))))
+
 (defun abs--maude-filename ()
-  (or abs-output-file 
-      (concat (file-name-sans-extension 
-               (file-name-nondirectory (buffer-file-name)))
-              ".maude")))
+  (or abs-maude-output-file
+      (concat (file-name-sans-extension (car (abs--input-files))) ".maude")))
 
 (defun abs--absolute-maude-filename ()
-  (let ((abs-output-file (abs--maude-filename)))
-    (if (file-name-absolute-p abs-output-file)
-        abs-output-file
-      (concat (file-name-directory (buffer-file-name)) abs-output-file))))
+  (let ((abs-maude-output-file (abs--maude-filename)))
+    (if (file-name-absolute-p abs-maude-output-file)
+        abs-maude-output-file
+      (concat (file-name-directory (buffer-file-name)) abs-maude-output-file))))
 
 (defun abs--calculate-compile-command ()
-  (let ((filename (file-name-nondirectory (buffer-file-name)))
-        (makefilep (file-exists-p "Makefile"))
-        (maude-filename (abs--maude-filename)))
-    (cond (abs-compile-command)
-          (makefilep compile-command)
-          (t (concat abs-compiler-program
-                     " -" (symbol-name abs-target-language) " "
-                     filename
-                     (when (eql abs-target-language 'maude)
-                       (concat " -o " maude-filename))
-                     (when (and (eql abs-target-language 'maude)
-                                abs-use-timed-interpreter)
-                       (concat " -timed -limit="
-                               (number-to-string abs-clock-limit)))
-                     (when (and (eql abs-target-language 'maude)
-                                (< 0 abs-default-resourcecost))
-                         (concat " -defaultcost="
-                                 (number-to-string abs-default-resourcecost)))
-                     " ")))))
+  (cl-flet ((quotify (string) (concat "\"" string "\"")))
+     (cond (abs-compile-command)
+           ((file-exists-p "Makefile") compile-command)
+           (t (concat abs-compiler-program
+                      " -" (symbol-name abs-target-language)
+                      " "
+                      ;; FIXME: make it work with filenames with spaces
+                      (mapconcat #'quotify (abs--input-files) " ")
+                      (when (eql abs-target-language 'maude)
+                        (concat " -o " (quotify (abs--maude-filename))))
+                      (when (and (eql abs-target-language 'maude)
+                                 abs-use-timed-interpreter)
+                        (concat " -timed -limit="
+                                (number-to-string abs-clock-limit)))
+                      (when (and (eql abs-target-language 'maude)
+                                 (< 0 abs-default-resourcecost))
+                        (concat " -defaultcost="
+                                (number-to-string abs-default-resourcecost)))
+                      " ")))))
 
 (defun abs-next-action (flag)
   "Compile the buffer or load it into Maude.
@@ -304,7 +325,8 @@ directory, or via the `MAUDE_LIB' environment variable.
 To determine whether to compile or load, `abs-next-action'
 assumes that the result of compilation is stored in a file with
 the same name as the current buffer but with a `.maude'
-extension.  Set the variable `abs-output-file' to override this.
+extension.  Set the variable `abs-maude-output-file' to override
+this.
 
 TODO: at the moment, this command only run models on the Maude
 backend."
