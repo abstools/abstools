@@ -1,0 +1,12 @@
+\chapter{Models}
+\label{sec:model}
+A \emph{model} in ABS represents a type-closed set of \emph{modules}.
+A module defines a set of declarations and an optional \emph{main block}.
+Modules reside in \emph{compilation units}, which are typically represented by files ending with \texttt{.abs}.
+A model is thus set of compilation units.
+
+\begin{abssyntax}
+\NT{Model}           \defn \MANY{\NT{CompilationUnit}}\\
+\NT{CompilationUnit} \defn \MANY{\NT{ModuleDecl}} \NT{FeatureModel}
+\end{abssyntax}
+

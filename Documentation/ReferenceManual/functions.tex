@@ -1,0 +1,39 @@
+\chapter{Functions}
+\emph{Functions} in ABS define names for parametrized data expressions.
+A function in ABS is always side effect-free, which means that it cannot
+manipulate the heap.
+
+\begin{abssyntax}
+\NT{FunctionDecl} \defn \TR{def}\ \TR{Type}\ \NT{Identifier}\ \OPTG{\TRS{<}\ \NT{TypeIdList}\ \TRS{>}}\ \TRS{(} \NT{ParamList} \TRS{)}\ \TRS{=}\ 
+                 \NT{FunBody}\ \TRS{;}  \\
+\NT{FunBody}      \defn \TR{builtin} ~|~ \NT{PureExp}\\
+\NT{TypeIdList}   \defn \NT{TypeId}\ \MANYG{\TRS{,}\ \NT{TypeId}}
+\end{abssyntax}
+
+\begin{absexample}
+def Int length(IntList list) =
+  case list { 
+    Nil => 0;
+    Cons(n, ls) => 1 + length(ls);
+  };
+\end{absexample}
+
+\section{Parametric Functions}
+\label{sec:parametric-functions}
+
+\emph{Parametric Functions} allow to work with parametric data types in a
+general way.  For example, given a list of any type, a parametric
+function \absinline{head} can return the first element, regardless of its
+type.  Parametric functions are defined like normal functions but have
+an additional \texttt{type parameter} section inside angle brackets
+(\texttt{< >}) after the function name.
+
+\begin{absexample}
+def A head<A>(List<A> list) =
+  case list {
+    Cons(x, xs) => x;
+  };
+\end{absexample}
+
+\noindent
+(Note that \absinline{head} is a partial function.)

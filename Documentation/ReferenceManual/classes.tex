@@ -1,0 +1,148 @@
+\chapter{Classes and Interfaces}
+\label{sec:classandint}
+Objects in ABS are built from \emph{classes}, which implement
+\emph{interfaces}. Only interfaces can be used as types for objects in
+ABS.
+
+\section{Interfaces}
+\label{sec:interfacedecl}
+Interfaces in ABS are similar to interfaces in Java.
+They have a name, which defines a nominal type, and 
+they can \emph{extend} arbitrary many other interfaces.
+The interface body consists of a list of method signature declarations. 
+Method names start with a lowercase letter.
+
+\begin{abssyntax}
+\NT{InterfaceDecl} \defn \TR{interface}\ \NT{TypeId}\ \OPTG{\TR{extends}\
+  \NT{TypeName}\ \MANYG{\TRS{,}\ \NT{TypeName}}}\
+  \TRS{\{}\ \MANY{\NT{MethSig}}\ \TRS{\}}\\
+%\NT{MethSigList}   \defn \MANY{\NT{MethSig}}\\
+\NT{MethSig}       \defn \NT{Type}\ \NT{Identifier}\ \TRS{(}\ \OPT{\NT{ParamList}}\ \TRS{)}\ \TRS{;}\\
+\NT{ParamList}     \defn \NT{Param}\ \MANYG{\TRS{,}\ \NT{Param}}\\
+\NT{Param}         \defn \NT{Type}\ \NT{Identifier}
+\end{abssyntax}
+
+%\begin{absexample}
+%interface Foo {
+%   Unit m(Bool b, Int i);
+%}
+%
+%interface Bar extends Foo {
+%   Bool n();    
+%}
+%\end{absexample}
+
+The interfaces in the example below represent a database system, providing
+functionality to store and retrieve files, and a node of a peer-to-peer file
+sharing system. Each node of a peer-to-peer system plays both the role of a
+server and a client. The data types are defined in the ABS standard library,
+included in Appendix~\ref{ch:absstdlib}, and the remainder types are type synonyms
+included in Section~\ref{sec:typesynonyms}.
+
+\begin{absexample}
+interface DB {
+  File getFile(Filename fId);
+  Int getLength(Filename fId);
+  Unit storeFile(Filename fId, File file);
+  Filenames listFiles();
+}
+
+interface Client {
+  List<Pair<Server,Filenames>> availFiles(List<Server> sList);
+  Unit reqFile(Server sId, Filename fId);
+}
+
+interface Server {
+  Filenames inquire();
+  Int getLength(Filename fId);
+  Packet getPack(Filename fId, Int pNbr);
+}
+
+interface Peer extends Client, Server {
+  List<Server> getNeighbors();
+}
+\end{absexample}
+
+\section{Classes}
+Like in typical class-based languages, classes in ABS 
+are used to create objects. 
+Classes can implement an arbitrary number of interfaces.
+ABS does not support class inheritance, as code reuse in ABS is realized by delta modules (see Chapter~\ref{ch:deltas}).
+Classes do not have constructors in ABS but instead have
+\emph{class parameters} and an optional \emph{init block}.
+Class parameters actually define additional fields of the 
+class that can be used like any other declared field.
+\newpage
+
+\begin{abssyntax}
+\NT{ClassDecl}     \defn \TR{\NT{class}}\ \NT{TypeId}\ \OPTG{\TRS{(} \NT{ParamList} \TRS{)}}\ \OPTG{\TR{implements}\ \NT{TypeName}\ \MANYG{\TRS{,}\ \NT{TypeName}}} 
+\\&&
+                  \TRS{\{}\ \OPT{\NT{FieldDeclList}}\ \OPT{\NT{Block}}\ \OPT{\NT{MethDeclList}}\ \TRS{\}}\\  
+\NT{FieldDeclList} \defn \NT{FieldDecl}\ \MANYG{\TRS{,}\ \NT{FieldDecl}}\\
+\NT{FieldDecl}     \defn \NT{TypeId}\ \NT{Identifier}\ \OPTG{\TRS{=}\ \NT{PureExp}}\ \TRS{;}\\
+\NT{MethDeclList}  \defn \NT{MethDecl}\ \MANYG{\TRS{,}\ \NT{MethDecl}}\\
+\NT{MethDecl}      \defn \NT{Type}\ \NT{Identifier}\ \TRS{(} \NT{ParamList} \TRS{)}\ \NT{Block}
+\end{abssyntax}
+
+%\begin{absexample}
+%class Foo(Bool b, Int i) implements Bar, Baz {
+%   Int j = 5;
+%   Bar b;
+%
+%   {   
+%     j = i;
+%   }  
+%
+%   Bool m() { 
+%     return True;
+%   }
+%}
+%\end{absexample}
+
+We continue with the peer-to-peer example with an implementation of
+the \absinline{DB} interface, and the signature of a node that
+implements the \absinline{Peer} interface.
+%The remainder types, 
+%\absinline{Filename}, \absinline{Filenames}, \absinline{File}, \absinline{Packet}, and \absinline{Catalog}, are defined as type synonyms, that we will introduce 
+%
+%... sec:typesynonyms
+
+\begin{absexample}
+class DataBase(Map<Filename,File> db) implements DB {
+  File getFile(Filename fId) {
+      return lookup(db, fId);
+  }
+  
+  Int getLength(Filename fId){
+      return length(lookup(db, fId));
+  }
+  
+  Unit storeFile(Filename fId, File file) {
+      db = insert(Pair(fId,file), db);
+  }
+  
+  Filenames listFiles() {
+      return keys(db);
+  }
+}
+
+class Node(DB db, Peer admin, Filename file) implements Peer {
+  Catalog catalog;
+  List<Server> myNeighbors;
+
+  // implementation...
+}
+\end{absexample}
+
+\subsection{Active Classes}
+\label{sec:active-classes}
+
+A class can be \emph{active} or \emph{passive}.  Active classes start an
+activity on their own upon creation. Passive classes only react to
+incoming method calls. A class is active if and only if it has a \emph{run method}:
+\begin{absexample}
+Unit run() {
+  // active behavior ...
+}
+\end{absexample}
+The run method is activated after object initialization.  

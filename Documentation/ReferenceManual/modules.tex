@@ -1,0 +1,122 @@
+\chapter{Modules}\label{sec:modules}
+For name spacing, code structuring, and code hiding purposes, ABS offers a module system.
+The module system of ABS is very similar to that of Haskell \cite{Haskell98}.
+It uses, however, a different syntax that is similar to that of Java \cite{gosling96} and Python.
+
+\begin{abssyntax}
+\NT{ModuleDecl}  \defn \TR{module}\ \NT{TypeName}\ \TRS{;}\ \OPT{\NT{ExportList}}\ \OPT{\NT{ImportList}}\ \MANY{\NT{Decl}}\ \OPT{\NT{Block}}\\
+\NT{ExportList}  \defn \NT{Export}\ \MANYG{\TRS{,}\ \NT{Export}}\\
+\NT{ImportList}  \defn \NT{Import}\ \MANYG{\TRS{,}\ \NT{Import}}\\
+\NT{Export}      \defn \TR{export}\ \NT{AnyNameList}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}
+            \defc \TR{export}\ \TRS{*}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}\\
+\NT{Import}      \defn \TR{import}\ \NT{AnyNameList}\ \OPTG{\TR{from}\ \NT{TypeName}}\ \TRS{;}
+            \defc \TR{import}\ \TRS{*}\ \TR{from}\ \NT{TypeName}\ \TRS{;}\\
+\NT{AnyNameList} \defn \NT{AnyName}\ \OPTG{\TRS{,}\ \NT{AnyName}}\\
+\NT{AnyName}     \defn \NT{Name} ~|~ \NT{TypeName}\\
+\NT{Decl}        \defn \NT{FunDecl} ~|~ \NT{TypeSynDecl} ~|~ \NT{DataTypeDecl}
+                 \defc
+                \NT{InterfaceDecl} ~|~ \NT{ClassDecl} ~|~ \NT{DeltaDecl}
+\end{abssyntax}
+
+
+A module with name \absinline{MyModule} is declared by writing 
+\begin{abscode}
+module MyModule;
+\end{abscode}
+This declaration introduces a new module name \absinline{MyModule} which can be
+used to qualify names.
+All declarations which follow this statement belong to the module \absinline{MyModule}.
+A module name is a type name and must always start with an upper case letter.
+
+\section{Exporting}
+By default, modules do not export any names.
+In order to make names of a module usable to other modules, the names have to be \emph{exported}.
+Exporting is done by writing one or several \emph{exports} after the module declaration.
+% \begin{abscode}
+% export <Name>, <Name>, ... , <Name> ;
+% export <Name>, ...
+% \end{abscode}
+%Where the exported \verb_<Name>_ refers to any name that is visible in the %scope of the module.
+For example, to export a data type and a data constructor, one can write something like this:
+\begin{abscode}
+module Drinks;
+export Drink, Milk;
+data Drink = Milk | Water;
+\end{abscode}
+
+Note that in this example, the data constructor \absinline{Water} is not exported, and can thus not be used by other modules.
+By only exporting the data type without any of its constructors one can realize \emph{abstract data types} (cf. Section~\ref{sec:abstract data types}).
+
+\subsection{Exporting Everything}
+Sometimes it is required to export everything from a module. 
+This can be achieved by writing:
+\begin{abscode}
+export *;
+\end{abscode}
+In this case, all names that are \emph{defined} in the module are exported, in particular, this means that imported names are \emph{not} exported.
+
+\section{Importing}
+In order to use exported names of a module in another module, the names have to be \emph{imported}.
+After the list of export statements follows an optional list of \emph{imports}, which are used to import names from other modules.
+For example, to write a module that imports the \absinline{Drink} data type of the module \absinline{Drinks} one can write:
+\begin{abscode}
+module Bar;
+import Drinks.Drink;  
+\end{abscode}
+After a name has been imported, it can be used inside the module in a fully qualified way.
+
+\subsection{Unqualified Importing}
+To use a name from another module in an unqualified way requires an
+\emph{unqualified import}.
+For example, to use the \absinline{Milk} data constructor inside the
+\absinline{Bar} module, without having to qualify it with the \absinline{Drinks}
+module each time, the following unqualified import statement is used:
+\begin{abscode}
+module Bar;
+import Milk from Drinks;
+\end{abscode}
+Note that this kind of import also imports the qualified names. 
+So in this example the names \absinline{Milk} and \absinline{Drinks.Milk} can be used inside the module \absinline{Bar}.
+
+To use all exported names from another module in an unqualified way one can write:
+\begin{abscode}
+import * from SomeModule;
+\end{abscode}
+
+\section{Exporting Imported Names}
+It is possible to export names that have been imported. For example,
+\begin{abscode}
+module Bar;
+export Drink;
+import * from Drinks;
+\end{abscode}
+exports data type \absinline{Drink} that has been imported from \absinline{Drinks}
+
+To export all names imported from a certain module one can write
+\begin{abscode}
+export * from SomeModule;
+\end{abscode}
+In this case, all names that have been imported from module \absinline{SomeModule} are exported. For example,
+\begin{abscode}
+module Bar;
+export * from Drinks;
+import * from Drinks;
+\end{abscode}
+exports all names that are exported by module \absinline{Drinks}.
+
+However, in this example:
+\begin{abscode}
+module Bar;
+export * from Drinks;
+import Drink from Drinks;
+\end{abscode}
+only \absinline{Drink} is exported as this is the only name imported from module \absinline{Drinks}.
+Note: only names that are visible in a module can be exported by that module.
+
+To only export some names from a certain module one can write, for example:
+\begin{abscode}
+module Bar;
+export Drink from Drinks;
+import * from Drinks;
+\end{abscode}
+This only exports \absinline{Drink} from module \absinline{Drinks}.

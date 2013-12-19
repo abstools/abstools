@@ -1,0 +1,34 @@
+%%%% command line snippets
+\lstdefinelanguage{cmdline}{
+    keywords={},
+    sensitive=true,
+%     comment=[l]{//},
+%     morecomment=[s]{/*}{*/},
+    morestring=[b]"
+}
+
+\lstdefinestyle{cmdstyle}{
+    language=cmdline,
+    columns=fullflexible,
+    mathescape=false,
+    showstringspaces=false,
+    keywordstyle=\bf\sffamily,
+    commentstyle=\sl\sffamily,
+    basicstyle=\normalsize\ttfamily,
+    inputencoding=latin1,
+    extendedchars,
+    xleftmargin=4pt,
+    xrightmargin=4pt,
+    breaklines=true,
+    breakatwhitespace=true
+%    keepspaces=false,
+%    resetmargins=true
+}
+
+\lstnewenvironment{cmdline}[1][]{
+    \lstset{style=cmdstyle,#1}
+    \csname lst@SetFirstLabel\endcsname}
+{\csname lst@SaveFirstLabel\endcsname}
+
+\newcommand{\cmd}[1]{\lstset{style=cmdstyle}\lstinline!#1!}
+

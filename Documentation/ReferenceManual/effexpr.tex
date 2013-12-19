@@ -1,0 +1,143 @@
+\chapter{Expressions With Side Effects}
+Beside pure expressions, ABS has expressions with side effects.
+However, these expressions are defined in such a way that they can only have a
+single side effect. This means that subexpressions of expressions can only be
+pure expressions again. This restriction simplifies the reasoning about ABS
+expressions.
+
+\begin{abssyntax}
+\NT{Exp}    \defn \NT{PureExp}
+         ~|~ \NT{EffExp}\\
+\NT{EffExp} \defn \NT{NewExp}
+         \defc  \NT{SyncCall}
+         \defc  \NT{AsyncCall}
+         \defc  \NT{GetExp}
+\end{abssyntax}
+
+\section{New Expression}
+A \emph{New Expression} creates a new object from a class name and a list of arguments. In ABS objects can be created in two different ways.
+Either they are created in the current COG, using the standard \absinline{new} expression,
+or they are created in a new COG by using the \absinline{new cog} expression.
+
+\begin{abssyntax}
+\NT{NewExp} \defn \TR{new}\ \OPT{\TR{cog}}\ \NT{TypeName}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+new Foo(5)
+new cog Bar()
+\end{absexample}
+
+\subsection{Standard Object Creation}
+When using the standard \absinline{new} expression, the new object is created in the \emph{current} COG, i.e., the COG of the current receiver object.
+Figure~\ref{fig:newExpr} illustrates this by showing two different runtime states, one before the creation of an object \absinline{b} and one after its creation.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\node[object] (a) {this:A};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a)] (coga) {};
+\end{pgfonlayer}
+\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new B()}};
+
+\node[object, right=1cm] (a2) at (arrow.east) {this:A};
+\node[object, right=1cm] (b2) at (a2) {b:B};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a2) (b2)] (cogb) {};
+\end{pgfonlayer}
+
+\node[fit=(coga) (arrow) (cogb)] (pic) {};
+\matrix[below=0.5cm] (legend) at (pic.south) {
+   \node[object,legendsymbol] {~}; & \node[legendtext] {objects}; 
+ & \node[cog,legendsymbol] {~}; & \node[legendtext] {COGs}; 
+\\
+};
+\draw[gray!50] (legend.north west) -- (legend.north east);
+\end{tikzpicture}
+\caption{Process of creating an object inside the current COG by using the standard \absinline{new} expression.}
+\label{fig:newExpr}
+\end{figure}
+
+\subsection{COG Object Creation}
+The concurrency model of ABS is based on the notion of
+COGs~\cite{johnsen10fmco}.
+An ABS system at runtime is a set of concurrently running COGs. A COGs can be
+seen as an isolated subsystem, which has its own state (an object-heap) and its
+own internal behavior. COGs are created implicitly when creating a new object by
+using the \absinline{new cog} expression. Figure~\ref{fig:newCogExpr}
+illustrates this by showing two different runtime states, one before the
+creation of an object \absinline{b} using the \absinline{new cog} expression and
+one after its creation. In the second runtime state, two COGs exists.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\node[object] (a) {this:A};
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a)] (coga) {};
+\end{pgfonlayer}
+\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new cog B()}};
+
+\node[object, right=1cm] (a2) at (arrow.east) {this:A};
+\node[object, right=1cm] (b2) at (a2.east) {b:B};
+
+\begin{pgfonlayer}{cogs}
+  \node[cog, fit=(a2)] (coga2) {};
+  \node[cog, fit=(b2)] (cogb2) {};
+\end{pgfonlayer}
+
+
+
+\node[fit=(coga) (arrow) (cogb2)] (pic) {};
+\matrix[below=0.5cm] (legend) at (pic.south) {
+   \node[object,legendsymbol] {~}; & \node[legendtext] {objects}; 
+ & \node[cog,legendsymbol] {~}; & \node[legendtext] {COGs}; 
+\\
+};
+\draw[gray!50] (legend.north west) -- (legend.north east);
+\end{tikzpicture}
+\caption{Process of creating an object in a new COG by using the \absinline{new cog} expression.}
+\label{fig:newCogExpr}
+\end{figure}
+
+
+\section{Synchronous Call Expression}
+A \emph{Synchronous Call} consists of a target expression, a method name, and a list of argument expressions.
+
+\begin{abssyntax}
+\NT{SyncCall} \defn \NT{PureExp}\ \TRS{.}\ \NT{Identifier}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+Bool b = x.m(5);  
+\end{absexample}
+
+\section{Asynchronous Call Expression}
+An \emph{Asynchronous Call} consists of a target expression, a method name, and a list of argument expressions.
+Instead of directly invoking the method, an asynchronous method call creates a new \emph{task} in the target COG, which is executed asynchronously. This means that the calling task proceeds independently after the call, without waiting for the result~\cite{johnsen10fmco}.
+The result of an asynchronous method call is a future (\absinline{Fut<V>}), which can be used by the calling
+task to later obtain the result of the method call.
+That future is \emph{resolved} by the task that has been created in the target COG to execute the method.
+
+\begin{abssyntax}
+\NT{AsyncCall} \defn \NT{PureExp}\ \TRS{!}\ \NT{Identifier}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\end{abssyntax}
+
+\begin{absexample}
+Fut<Bool> f = x!m(5);  
+\end{absexample}
+
+\section{Get Expression}\label{sec:getexpr}
+A \emph{Get Expression} is used to obtain the value from a future.
+The current task is blocked until the value of the future is available, i.e., until
+the future has been resolved. No other task in the COG can be activated in
+the meantime~\cite{johnsen10fmco}.
+
+\begin{abssyntax}
+\NT{GetExp} \defn \NT{PureExp}\ \TRS{.}\ \TR{get}
+\end{abssyntax}
+
+\begin{absexample}
+Bool b = f.get;
+\end{absexample}

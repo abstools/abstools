@@ -1,0 +1,108 @@
+\chapter{Lexical Structure}
+\label{ch:lexical structure}
+This section describes the lexical structure of the ABS language.
+ABS programs are written in Unicode.\footnote{\url{http://www.unicode.org}}
+
+\section{Line Terminators and White Spaces}
+Line terminators and white spaces are defined as in Java.
+%\begin{absgrammar}
+%LineTerminator ::= \n | \r | \r\n
+%WhiteSpace     ::= LineTerminator | ' ' | \t | \f
+%\end{absgrammar}
+%
+\begin{abssyntax}
+\NT{LineTerminator}
+\concrDefn{} \verb_\_\TR{n}  ~|~ \verb_\_\TR{r} ~|~ \TR{rn} 
+\\
+\NT{WhiteSpace} \concrDefn{}
+  \NT{LineTerminator} ~|~ \verb*_ _ ~|~ \verb_\_\TR{t} ~|~ \verb_\_\TR{f}
+\end{abssyntax}
+
+\section{Comments}
+Comments are code fragments that are completely ignored and have no semantics in the ABS language.
+ABS supports two styles of comments:
+\emph{end-of-line comments} and \emph{traditional comments}.
+
+\subsection{End-Of-Line Comments}
+An end-of-line comment is a code fragment that starts with two slashes, e.g., \verb_// text_. All text that follows \verb_//_ until the end of the line is treated as a comment.
+
+\begin{absexample}
+// this is a comment
+module A; // this is also a comment
+\end{absexample}
+
+\subsection{Traditional Comments}
+A traditional comment is a code fragment that is enclosed in \absinline{/* */}, e.g., \absinline{/* this is a comment */}.
+Nested traditional comments are not possible.
+
+\begin{absexample}
+/* this
+is a multiline
+comment */  
+\end{absexample}
+
+
+\section{Identifiers}
+ABS distinguishes \emph{identifier} and \emph{type identifier}.
+They differ in the first character, which must be a lower-case character
+for identifiers and an upper-case character for type identifiers.
+%
+%\begin{absgrammar}
+%Identifier     ::= [:lowercase:] {[:letter:] | [:digit:] | '_'}
+%TypeId         ::= [:uppercase:] {[:letter:] | [:digit:] | '_'}
+%\end{absgrammar}
+%
+\begin{abssyntax}
+\NT{Identifier}  \defn
+  \text{[:lower:]} \MANYG{\text{[:alpha:] ~|~ [:digit:] ~|~ \TR{\_}}}
+\\
+\NT{TypeId}      \defn
+  \text{[:upper:]} \MANYG{\text{[:alpha:] ~|~ [:digit:] ~|~ \TR{\_}}}
+\end{abssyntax}
+
+\section{Keywords}
+The following words are keywords in the ABS language and are \emph{not}
+regarded as identifiers.
+
+\noindent
+\begin{center}
+\begin{tabular}{llllll}
+\TR{adds} & \TR{after} & \TR{assert} & \TR{await} & \TR{builtin} & \TR{case} \\
+\TR{cog} & \TR{core} & \TR{class} & \TR{data} & \TR{def} & \TR{delta} \\
+\TR{else} & \TR{export} & \TR{features} & \TR{from} & \TR{get} & \TR{hasField} \\
+\TR{hasInterface} & \TR{hasMethod} & \TR{if} & \TR{implements} & \TR{import} & \TR{in} \\
+\TR{interface} & \TR{let} & \TR{modifies} & \TR{module} & \TR{new} & \TR{null} \\
+\TR{product} & \TR{productline} & \TR{removes} & \TR{return} & \TR{skip} & \TR{suspend} \\
+\TR{this} & \TR{type} & \TR{when} & \TR{while} & &\\ 
+\end{tabular}
+\end{center}
+
+\section{Literals}
+A \emph{literal} is a textual representation of a value.
+ABS supports three kinds of literals, \emph{integer literals}, \emph{string literals}, and the \emph{null literal}.
+
+\begin{abssyntax}
+\NT{Literal}       \defn \NT{IntLiteral}
+                ~|~ \NT{StringLiteral}
+                ~|~ \NT{NullLiteral}
+                \\
+\NT{IntLiteral}    \defn 0 ~|~ [1-9]\MANY{[0-9]}\\
+\NT{StringLiteral} \defn \TR{"} \MANY{\NT{StringCharacter}} \TR{"}\\
+\NT{NullLiteral}   \defn \TR{null}
+\end{abssyntax}
+
+\noindent
+Where a \NT{StringCharacter} is defined as in the Java language \cite[p.~28]{gosling96}
+
+\section{Separators}
+The following characters are \emph{separators}:
+\begin{verbatim}
+    (   )   {   }   [   ]   ,   ;   :
+\end{verbatim}
+
+\section{Operators}
+The following tokens are \emph{operators}:
+\begin{verbatim}
+    ||   &&   ==   !=   <   >   <=   >=   +   -   *   /   %   ~   &   
+\end{verbatim}
+% .   !   =   _
