@@ -86,7 +86,7 @@ implements DeploymentComponent {
 
 \subsection{Using Deployment Components}
 
-   An optional annotation \absinline{[DC: x]} attached to a \absinline{new cog}
+   An optional annotation \absinline{[DC: x]} attached to a \absinline{new}
    statement expresses that the new object's cog will run in the context
    of deployment component \absinline{x}.  By default, a new cog runs in the
    same context as the process that generates it.  The main block runs
@@ -100,8 +100,8 @@ class ServerImp implements Server { ... }
 {
   DeploymentComponent machine = new DeploymentComponent("remote",
       CPU(20));
-  [DC: machine] Server x = new cog ServerImp();  // running in dc `machine'
-  Server y = new cog ServerImp();                // running in current DC
+  [DC: machine] Server x = new ServerImp();  // running in dc `machine'
+  Server y = new ServerImp();                // running in current DC
 }
 \end{absexample} 
 
@@ -112,8 +112,8 @@ def DeploymentComponent thisDC() = builtin;
 \end{absexample} 
 
    The \absinline{thisDC()} function returns the current deployment
-   component, i.e., the one that was given as annotation at the \absinline{new
-   cog} object instantiation.  \absinline{thisDC} returns \absinline{null} if no
+   component, i.e., the one that was given as annotation at the \absinline{new}
+   object instantiation.  \absinline{thisDC} returns \absinline{null} if no
    deployment component was specified.  (Due to implementation issues,
    models containing \absinline{thisDC()} cannot be currently compiled on the
    Java platform.)

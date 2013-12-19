@@ -426,8 +426,8 @@ data LocationType = Far | Near | Somewhere | Infer;
  * Can be used to annotated classes and to ensure that
  * classes are always instantiated in the right way.
  * I.e. classes annotated with [COG] must be created by using
- * new cog, class annotated with [Plain] must be created by using
- * just new, without cog.
+ * new, class annotated with [Plain] must be created by using
+ * new local
  */
 data ClassKindAnnotation = COG | Plain;
 

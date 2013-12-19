@@ -16,20 +16,20 @@ expressions.
 
 \section{New Expression}
 A \emph{New Expression} creates a new object from a class name and a list of arguments. In ABS objects can be created in two different ways.
-Either they are created in the current COG, using the standard \absinline{new} expression,
-or they are created in a new COG by using the \absinline{new cog} expression.
+Either they are created in the current COG, using the standard \absinline{new local} expression,
+or they are created in a new COG by using the \absinline{new} expression.
 
 \begin{abssyntax}
-\NT{NewExp} \defn \TR{new}\ \OPT{\TR{cog}}\ \NT{TypeName}\ \TRS{(} \NT{PureExpList} \TRS{)}  
+\NT{NewExp} \defn \TR{new}\ \OPT{\TR{local}}\ \NT{TypeName}\ \TRS{(} \NT{PureExpList} \TRS{)}  
 \end{abssyntax}
 
 \begin{absexample}
-new Foo(5)
-new cog Bar()
+new local Foo(5)
+new Bar()
 \end{absexample}
 
 \subsection{Standard Object Creation}
-When using the standard \absinline{new} expression, the new object is created in the \emph{current} COG, i.e., the COG of the current receiver object.
+When using the \absinline{new local} expression, the new object is created in the \emph{current} COG, i.e., the COG of the current receiver object.
 Figure~\ref{fig:newExpr} illustrates this by showing two different runtime states, one before the creation of an object \absinline{b} and one after its creation.
 
 \begin{figure}
@@ -39,7 +39,7 @@ Figure~\ref{fig:newExpr} illustrates this by showing two different runtime state
 \begin{pgfonlayer}{cogs}
   \node[cog, fit=(a)] (coga) {};
 \end{pgfonlayer}
-\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new B()}};
+\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new local B()}};
 
 \node[object, right=1cm] (a2) at (arrow.east) {this:A};
 \node[object, right=1cm] (b2) at (a2) {b:B};
@@ -55,7 +55,7 @@ Figure~\ref{fig:newExpr} illustrates this by showing two different runtime state
 };
 \draw[gray!50] (legend.north west) -- (legend.north east);
 \end{tikzpicture}
-\caption{Process of creating an object inside the current COG by using the standard \absinline{new} expression.}
+\caption{Process of creating an object inside the current COG by using the standard \absinline{new local} expression.}
 \label{fig:newExpr}
 \end{figure}
 
@@ -65,9 +65,9 @@ COGs~\cite{johnsen10fmco}.
 An ABS system at runtime is a set of concurrently running COGs. A COGs can be
 seen as an isolated subsystem, which has its own state (an object-heap) and its
 own internal behavior. COGs are created implicitly when creating a new object by
-using the \absinline{new cog} expression. Figure~\ref{fig:newCogExpr}
+using the \absinline{new} expression. Figure~\ref{fig:newCogExpr}
 illustrates this by showing two different runtime states, one before the
-creation of an object \absinline{b} using the \absinline{new cog} expression and
+creation of an object \absinline{b} using the \absinline{new} expression and
 one after its creation. In the second runtime state, two COGs exists.
 
 \begin{figure}
@@ -77,7 +77,7 @@ one after its creation. In the second runtime state, two COGs exists.
 \begin{pgfonlayer}{cogs}
   \node[cog, fit=(a)] (coga) {};
 \end{pgfonlayer}
-\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new cog B()}};
+\node[myarrow, right=2cm] (arrow) at (coga) {\absinline{new B()}};
 
 \node[object, right=1cm] (a2) at (arrow.east) {this:A};
 \node[object, right=1cm] (b2) at (a2.east) {b:B};
@@ -97,7 +97,7 @@ one after its creation. In the second runtime state, two COGs exists.
 };
 \draw[gray!50] (legend.north west) -- (legend.north east);
 \end{tikzpicture}
-\caption{Process of creating an object in a new COG by using the \absinline{new cog} expression.}
+\caption{Process of creating an object in a new COG by using the \absinline{new} expression.}
 \label{fig:newCogExpr}
 \end{figure}
 
